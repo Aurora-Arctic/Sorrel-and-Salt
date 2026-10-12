@@ -79,7 +79,7 @@ const everything = (): CompendiumWrite => ({
   description: 'An invented herb.',
   folkNames: ['Test Root', 'Fixture Leaf'],
   elements: ['spirit', 'air'],
-  planets: ['Venus', 'Moon'],
+  celestialBodies: ['Venus', 'Moon'],
   zodiacSigns: ['Taurus'],
   colors: ['Green', 'Pink'],
   deities: [{ deityId: hecate.id }],
@@ -94,7 +94,7 @@ const everything = (): CompendiumWrite => ({
       description: 'The dried herb.',
       safetyNotes: 'Not for burning.',
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       zodiacSigns: ['Virgo'],
       colors: ['Brown'],
       categoryIds: [healing],
@@ -108,7 +108,7 @@ const everything = (): CompendiumWrite => ({
       description: '',
       safetyNotes: '',
       elements: [],
-      planets: [],
+      celestialBodies: [],
       zodiacSigns: [],
       colors: [],
       categoryIds: [],
@@ -149,7 +149,7 @@ async function childrenOf(id: string) {
       where ingredient_id = ${id} order by variant_id nulls first`,
       // `updated_at` is the trigger's, as the row's is.
       sql`
-      select id, form, form_id, description, safety_notes, elements, planets, zodiac_signs, colors
+      select id, form, form_id, description, safety_notes, elements, celestial_bodies, zodiac_signs, colors
       from ingredient_variants where ingredient_id = ${id} and deleted_at is null`,
       sql`
       select reference_id, locator from reference_links
@@ -203,7 +203,7 @@ describe('entryValues', () => {
           description: 'The dried herb.',
           safetyNotes: 'Not for burning.',
           elements: ['earth'],
-          planets: [{ value: 'Saturn' }],
+          celestialBodies: [{ value: 'Saturn' }],
           zodiacSigns: [{ value: 'Virgo' }],
           colors: [{ value: 'Brown' }],
           categoryIds: [healing],
@@ -228,7 +228,7 @@ describe('entryValues', () => {
           description: '',
           safetyNotes: '',
           elements: [],
-          planets: [],
+          celestialBodies: [],
           zodiacSigns: [],
           colors: [],
           categoryIds: [],
@@ -239,7 +239,7 @@ describe('entryValues', () => {
       description: 'An invented herb.',
       folkNames: expect.arrayContaining([{ value: 'Test Root' }, { value: 'Fixture Leaf' }]),
       elements: ['spirit', 'air'],
-      planets: [{ value: 'Venus' }, { value: 'Moon' }],
+      celestialBodies: [{ value: 'Venus' }, { value: 'Moon' }],
       zodiacSigns: [{ value: 'Taurus' }],
       colors: [{ value: 'Green' }, { value: 'Pink' }],
       deities: [{ value: 'Hecate', link: { id: hecate.id, tradition: hecate.tradition } }],
@@ -305,7 +305,7 @@ describe('entryValues', () => {
       variants: [],
       folkNames: [],
       elements: [],
-      planets: [],
+      celestialBodies: [],
       deities: [],
       substitutes: [],
       references: [],

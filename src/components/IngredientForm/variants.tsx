@@ -28,7 +28,7 @@ import {
   curatedOnly,
   useCompendiumSubstitutes,
   useFormSuggestions,
-  usePlanetSuggestions,
+  useCelestialBodySuggestions,
   useSubstituteSuggestions,
   useZodiacSuggestions,
 } from './suggestions';
@@ -467,15 +467,15 @@ function VariantFieldset({
             />
             <LookupListField
               workspaceId={workspaceId}
-              useSuggestions={usePlanetSuggestions}
-              name={`${at}.planets`}
+              useSuggestions={useCelestialBodySuggestions}
+              name={`${at}.celestialBodies`}
               ordered
               pickOnly={compendium}
               legend="Celestial Bodies"
               entry="Celestial Body"
               placeholder="Add a body"
               action={(announce) => (
-                <CopyFromIngredient at={at} field="planets" announce={announce} />
+                <CopyFromIngredient at={at} field="celestialBodies" announce={announce} />
               )}
             />
             <LookupListField

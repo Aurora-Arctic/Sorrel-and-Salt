@@ -151,7 +151,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
         description: variant.description ?? '',
         safetyNotes: variant.safetyNotes ?? '',
         elements: variant.elements ?? [],
-        planets: entries(variant.planets),
+        celestialBodies: entries(variant.celestialBodies),
         zodiacSigns: entries(variant.zodiacSigns),
         colors: entries(variant.colors),
         categoryIds: only([variantCategories[i]]).map((category) => category.id),
@@ -162,7 +162,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
     folkNames: folkNames.map((value) => ({ value })),
     description: entry.description ?? '',
     elements: entry.elements ?? [],
-    planets: entries(entry.planets),
+    celestialBodies: entries(entry.celestialBodies),
     zodiacSigns: entries(entry.zodiacSigns),
     colors: entries(entry.colors),
     deities: deities.map(({ name, deity }) =>

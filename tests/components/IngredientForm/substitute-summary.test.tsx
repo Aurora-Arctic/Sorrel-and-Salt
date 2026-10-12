@@ -46,7 +46,7 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
   isGlobal: true,
   slug: 'mockwort-fixtura-vulgaris',
   elements: ['water'],
-  planets: ['Moon'],
+  celestialBodies: ['Moon'],
   zodiacSigns: null,
   colors: [],
   // The form adds a planet of its own to the ingredient's (MB.215).
@@ -55,7 +55,7 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
       id: DRIED_LEAF_ID,
       form: 'Dried leaf',
       elements: null,
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       zodiacSigns: null,
       colors: null,
     },

@@ -233,7 +233,7 @@ export const DeitiesEmpty: Story = () => (
 );
 
 // The flat kinds (MB.95): no group column and no group filter.
-const flat = (kind: 'planet' | 'zodiacSign', name: string, description: string) => {
+const flat = (kind: 'celestialBody' | 'zodiacSign', name: string, description: string) => {
   const slug = slugify(name);
   return {
     id: slug,
@@ -246,17 +246,17 @@ const flat = (kind: 'planet' | 'zodiacSign', name: string, description: string) 
   };
 };
 
-export const PlanetsOnePageOfSeveral: Story = () => (
+export const CelestialBodiesOnePageOfSeveral: Story = () => (
   <GroupedValueList
-    kind="planet"
+    kind="celestialBody"
     values={[
-      flat('planet', 'Testwort Star', 'An invented body, for the workshop.'),
-      flat('planet', 'Fixture Comet', 'Another, with a longer tail than the first.'),
-      flat('planet', 'Fixture Moonlet', 'Invented too.'),
+      flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.'),
+      flat('celestialBody', 'Fixture Comet', 'Another, with a longer tail than the first.'),
+      flat('celestialBody', 'Fixture Moonlet', 'Invented too.'),
     ]}
     filter={NO_FILTER}
-    previousHref={groupedValuesHref('planet', { before: 'cursor' })}
-    nextHref={groupedValuesHref('planet', { after: 'cursor' })}
+    previousHref={groupedValuesHref('celestialBody', { before: 'cursor' })}
+    nextHref={groupedValuesHref('celestialBody', { after: 'cursor' })}
     position={{ page: 2, pages: 3 }}
   />
 );
@@ -272,20 +272,20 @@ export const Signs: Story = () => (
   />
 );
 
-export const PlanetsFiltered: Story = () => (
+export const CelestialBodiesFiltered: Story = () => (
   <GroupedValueList
-    kind="planet"
-    values={[flat('planet', 'Testwort Star', 'An invented body, for the workshop.')]}
+    kind="celestialBody"
+    values={[flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.')]}
     filter={{ query: 'star', group: '' }}
   />
 );
 
-export const PlanetsNoMatch: Story = () => (
-  <GroupedValueList kind="planet" values={[]} filter={{ query: 'nothing', group: '' }} />
+export const CelestialBodiesNoMatch: Story = () => (
+  <GroupedValueList kind="celestialBody" values={[]} filter={{ query: 'nothing', group: '' }} />
 );
 
-export const PlanetsEmpty: Story = () => (
-  <GroupedValueList kind="planet" values={[]} filter={NO_FILTER} />
+export const CelestialBodiesEmpty: Story = () => (
+  <GroupedValueList kind="celestialBody" values={[]} filter={NO_FILTER} />
 );
 
 // Inside the admin layout and the Categories page with its Categories tab

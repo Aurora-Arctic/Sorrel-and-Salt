@@ -7,6 +7,6 @@ export const metadata: Metadata = {
 };
 
 // The curated celestial bodies (MB.95), in the page shape every curated value shares.
-export default function AdminPlanetsPage({ searchParams }: ValueRouteProps) {
-  return ValuePage({ kind: 'planet', searchParams });
+export default function AdminCelestialBodiesPage({ searchParams }: ValueRouteProps) {
+  return ValuePage({ kind: 'celestialBody', searchParams });
 }

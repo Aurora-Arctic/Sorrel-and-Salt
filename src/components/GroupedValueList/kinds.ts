@@ -32,7 +32,7 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     plural: 'deities',
     group: { label: 'Tradition', plural: 'Traditions', param: 'tradition' },
   },
-  planet: {
+  celestialBody: {
     path: '/admin/celestial-bodies',
     title: 'Celestial Bodies',
     label: 'Celestial Body',

@@ -15,15 +15,13 @@ const SOURCED: [column: string, table: string][] = [
   ['ingredient_id', 'ingredients'],
   ['deity_id', 'deities'],
   ['deity_tradition_id', 'deity_traditions'],
-  ['planet_id', 'celestial_bodies'],
+  ['celestial_body_id', 'celestial_bodies'],
   ['zodiac_sign_id', 'zodiac_signs'],
   ['ingredient_variant_id', 'ingredient_variants'],
 ];
 const COLUMNS = SOURCED.map(([column]) => column);
 
-// `celestial_body_id` is `planet_id`'s successor, outside the registry until
-// MB.253 (claude-docs/design-decisions/mb.252-table-rename.md).
-const OWN_COLUMNS = ['id', 'reference_id', ...COLUMNS, 'celestial_body_id', 'locator'];
+const OWN_COLUMNS = ['id', 'reference_id', ...COLUMNS, 'locator'];
 
 const CHECK_ONE_ROW = 'reference_links_one_row';
 const CHECK_LOCATOR_NOT_BLANK = 'reference_links_locator_not_blank';

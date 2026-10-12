@@ -116,8 +116,8 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ deityTraditions(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
-  planets: {
-    source: '{ planets(first: 1) { edges { node { id } } } }',
+  celestialBodies: {
+    source: '{ celestialBodies(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
   zodiacSigns: {
@@ -154,7 +154,7 @@ const PROBES: Record<string, ScopeProbe> = {
   },
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
-  planetSuggestions: suggestion('planetSuggestions'),
+  celestialBodySuggestions: suggestion('celestialBodySuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),
 };
 
@@ -189,7 +189,7 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
   commonNameSuggestions: nullWorkspaceSuggestion('commonNameSuggestions'),
   deitySuggestions: nullWorkspaceSuggestion('deitySuggestions'),
   formSuggestions: nullWorkspaceSuggestion('formSuggestions'),
-  planetSuggestions: nullWorkspaceSuggestion('planetSuggestions'),
+  celestialBodySuggestions: nullWorkspaceSuggestion('celestialBodySuggestions'),
   zodiacSuggestions: nullWorkspaceSuggestion('zodiacSuggestions'),
   possibleDuplicates: {
     source: `query ($workspaceId: ID) {
@@ -250,7 +250,7 @@ const WHOLE_INGREDIENT = {
   variants: [],
   description: '',
   elements: [],
-  planets: [],
+  celestialBodies: [],
   zodiacSigns: [],
   deities: [],
   colors: [],
@@ -352,9 +352,11 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { updateDeityTradition(id: "${NOWHERE}", input: ${NAMED}) { id } }`,
   ),
   deleteDeityTradition: write(`mutation { deleteDeityTradition(id: "${NOWHERE}") }`),
-  createPlanet: write(`mutation { createPlanet(input: ${NAMED}) { id } }`),
-  updatePlanet: write(`mutation { updatePlanet(id: "${NOWHERE}", input: ${NAMED}) { id } }`),
-  deletePlanet: write(`mutation { deletePlanet(id: "${NOWHERE}") }`),
+  createCelestialBody: write(`mutation { createCelestialBody(input: ${NAMED}) { id } }`),
+  updateCelestialBody: write(
+    `mutation { updateCelestialBody(id: "${NOWHERE}", input: ${NAMED}) { id } }`,
+  ),
+  deleteCelestialBody: write(`mutation { deleteCelestialBody(id: "${NOWHERE}") }`),
   createZodiacSign: write(`mutation { createZodiacSign(input: ${NAMED}) { id } }`),
   updateZodiacSign: write(
     `mutation { updateZodiacSign(id: "${NOWHERE}", input: ${NAMED}) { id } }`,
@@ -422,9 +424,9 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   createIngredientFormGroup: { governs: 'form groups' },
   updateIngredientFormGroup: { governs: 'form groups' },
   deleteIngredientFormGroup: { governs: 'form groups' },
-  createPlanet: { governs: 'planets' },
-  updatePlanet: { governs: 'planets' },
-  deletePlanet: { governs: 'planets' },
+  createCelestialBody: { governs: 'celestialBodies' },
+  updateCelestialBody: { governs: 'celestialBodies' },
+  deleteCelestialBody: { governs: 'celestialBodies' },
   createZodiacSign: { governs: 'zodiac signs' },
   updateZodiacSign: { governs: 'zodiac signs' },
   deleteZodiacSign: { governs: 'zodiac signs' },

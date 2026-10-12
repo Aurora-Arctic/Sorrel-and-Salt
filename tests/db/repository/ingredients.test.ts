@@ -877,13 +877,13 @@ describe('findCompendiumPage', () => {
   // The lists hold spellings, not picks (MB.162): what a planet's or a sign's
   // delete and rename read (MB.95), matched entry by entry under the
   // suggestions' fold.
-  describe('planet and zodiacSign', () => {
+  describe('celestialBody and zodiacSign', () => {
     beforeEach(async () => {
-      await add('Fixture Held', { planets: ['Venus', 'Mars'] });
-      await add('Fixture Folded', { planets: [' mars '] });
-      await add('Fixture Other', { planets: ['Venus'], zodiacSigns: ['Aries'] });
-      await add('Fixture Coven', { planets: ['Mars'], workspaceId: WORKSPACE_W_ID });
-      const gone = await add('Fixture Gone', { planets: ['Mars'] });
+      await add('Fixture Held', { celestialBodies: ['Venus', 'Mars'] });
+      await add('Fixture Folded', { celestialBodies: [' mars '] });
+      await add('Fixture Other', { celestialBodies: ['Venus'], zodiacSigns: ['Aries'] });
+      await add('Fixture Coven', { celestialBodies: ['Mars'], workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { celestialBodies: ['Mars'] });
       await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
     });
 
@@ -891,12 +891,12 @@ describe('findCompendiumPage', () => {
       // Why the others could have been listed: each holds Mars in its planets.
       const [{ count }] = await sql`
         select count(*)::int as count from ingredients
-        where exists (select 1 from unnest(planets) as p(v) where lower(btrim(v)) = 'mars')`;
+        where exists (select 1 from unnest(celestial_bodies) as p(v) where lower(btrim(v)) = 'mars')`;
       expect(count).toBe(4);
 
-      expect(await namesOf({ planet: 'Mars' })).toEqual(['Fixture Folded', 'Fixture Held']);
-      expect(await namesOf({ planet: 'MARS ' })).toEqual(['Fixture Folded', 'Fixture Held']);
-      await expect(findCompendiumCount({ planet: 'Mars' }, undefined)).resolves.toEqual({
+      expect(await namesOf({ celestialBody: 'Mars' })).toEqual(['Fixture Folded', 'Fixture Held']);
+      expect(await namesOf({ celestialBody: 'MARS ' })).toEqual(['Fixture Folded', 'Fixture Held']);
+      await expect(findCompendiumCount({ celestialBody: 'Mars' }, undefined)).resolves.toEqual({
         totalCount: 2,
         countBefore: null,
       });
@@ -905,11 +905,11 @@ describe('findCompendiumPage', () => {
     it('reads the list it names, a sign from the signs alone', async () => {
       expect(await namesOf({ zodiacSign: 'Aries' })).toEqual(['Fixture Other']);
       expect(await namesOf({ zodiacSign: 'Mars' })).toEqual([]);
-      expect(await namesOf({ planet: 'Aries' })).toEqual([]);
+      expect(await namesOf({ celestialBody: 'Aries' })).toEqual([]);
     });
 
     it('treats a blank value as no filter, as the form text does', async () => {
-      expect(await namesOf({ planet: ' ' })).toHaveLength(3);
+      expect(await namesOf({ celestialBody: ' ' })).toHaveLength(3);
     });
   });
 
@@ -1249,51 +1249,57 @@ describe('findWorkspaceIngredientByIdentity', () => {
 // an entry's identity or slug.
 describe('write.carryAstrologyRename', () => {
   const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
-  const rename = (field: 'planets' | 'zodiacSigns', from: string, to: string) =>
+  const rename = (field: 'celestialBodies' | 'zodiacSigns', from: string, to: string) =>
     withAudit(asUser(E), (write) =>
       write.carryAstrologyRename(assertSiteAdmin(asUser(E)), field, from, to),
     );
 
   it('rewrites each holding entry’s list in place, by the fold, stamped by the session', async () => {
-    const held = await add('Testwort', { planets: ['Venus', 'Mars', 'Moon'] });
-    const folded = await add('Testleaf', { planets: [' mars '], zodiacSigns: ['Mars'] });
+    const held = await add('Testwort', { celestialBodies: ['Venus', 'Mars', 'Moon'] });
+    const folded = await add('Testleaf', { celestialBodies: [' mars '], zodiacSigns: ['Mars'] });
     const before = await rowOf(held);
 
-    const rows = await rename('planets', 'Mars', 'Ares');
+    const rows = await rename('celestialBodies', 'Mars', 'Ares');
 
     expect(rows.map((row) => row.id).sort()).toEqual([held, folded].sort());
     expect(await rowOf(held)).toMatchObject({
-      planets: ['Venus', 'Ares', 'Moon'],
+      celestialBodies: ['Venus', 'Ares', 'Moon'],
       slug: before.slug,
       identity_key: before.identity_key,
       created_by: A.id,
       updated_by: E.id,
     });
     // The other list holds a "Mars" too, and is not the one renamed.
-    expect(await rowOf(folded)).toMatchObject({ planets: ['Ares'], zodiac_signs: ['Mars'] });
+    expect(await rowOf(folded)).toMatchObject({
+      celestialBodies: ['Ares'],
+      zodiac_signs: ['Mars'],
+    });
   });
 
   // Why each could have been written: each holds the old spelling in the list renamed.
   it('leaves a coven’s ingredient and a deleted entry as they were', async () => {
-    const coven = await add('Testwort', { planets: ['Mars'], workspaceId: WORKSPACE_W_ID });
-    const gone = await add('Testgone', { planets: ['Mars'] });
+    const coven = await add('Testwort', { celestialBodies: ['Mars'], workspaceId: WORKSPACE_W_ID });
+    const gone = await add('Testgone', { celestialBodies: ['Mars'] });
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
-    const kept = await add('Testleaf', { planets: ['Venus'] });
+    const kept = await add('Testleaf', { celestialBodies: ['Venus'] });
     const before = await Promise.all([coven, gone, kept].map(rowOf));
-    expect(before.map((row) => row.planets)).toEqual([['Mars'], ['Mars'], ['Venus']]);
+    expect(before.map((row) => row.celestialBodies)).toEqual([['Mars'], ['Mars'], ['Venus']]);
 
-    const rows = await rename('planets', 'Mars', 'Ares');
+    const rows = await rename('celestialBodies', 'Mars', 'Ares');
 
     expect(rows).toEqual([]);
     expect(await Promise.all([coven, gone, kept].map(rowOf))).toEqual(before);
   });
 
   it('renames a sign in the signs alone', async () => {
-    const id = await add('Testwort', { planets: ['Aries'], zodiacSigns: ['Aries', 'Leo'] });
+    const id = await add('Testwort', { celestialBodies: ['Aries'], zodiacSigns: ['Aries', 'Leo'] });
 
     await rename('zodiacSigns', 'Aries', 'The Ram');
 
-    expect(await rowOf(id)).toMatchObject({ planets: ['Aries'], zodiac_signs: ['The Ram', 'Leo'] });
+    expect(await rowOf(id)).toMatchObject({
+      celestialBodies: ['Aries'],
+      zodiac_signs: ['The Ram', 'Leo'],
+    });
   });
 });
 

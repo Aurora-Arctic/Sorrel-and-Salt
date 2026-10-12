@@ -4,7 +4,7 @@ import type {
   CreateReferenceMutation,
   CreateWorkspaceIngredientMutation,
   FormSuggestionsQueryVariables,
-  PlanetSuggestionsQuery,
+  CelestialBodySuggestionsQuery,
   PossibleDuplicatesQuery,
 } from '../../gql/graphql';
 import type {
@@ -201,7 +201,7 @@ export interface IngredientFormValues {
   description: string;
   /** In the order chosen; none chosen is the answer "none". */
   elements: IngredientElement[];
-  planets: ListEntry[];
+  celestialBodies: ListEntry[];
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
   deities: DeityListEntry[];
@@ -242,7 +242,7 @@ export interface VariantFormValues {
   description: string;
   safetyNotes: string;
   elements: IngredientElement[];
-  planets: ListEntry[];
+  celestialBodies: ListEntry[];
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
   substitutes: SubstituteListEntry[];
@@ -522,7 +522,7 @@ export interface SubstituteFormsProps {
 
 /** A planet or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */
 export type CorrespondenceNode =
-  PlanetSuggestionsQuery['planetSuggestions']['edges'][number]['node'];
+  CelestialBodySuggestionsQuery['celestialBodySuggestions']['edges'][number]['node'];
 
 /** The duplicate warning's state, which the form owns and the name field draws. */
 export interface DuplicateWarning {
@@ -667,7 +667,7 @@ export type CopiedField =
   | 'description'
   | 'safetyNotes'
   | 'elements'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiacSigns'
   | 'colors'
   | 'categoryIds'

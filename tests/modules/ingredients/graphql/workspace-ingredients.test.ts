@@ -40,7 +40,7 @@ beforeEach(async () => {
 
 const FIELDS = `
   id name slug canonicalName nomenclature description
-  elements planets zodiacSigns deities { name deity { id tradition { name } } } colors safetyNotes
+  elements celestialBodies zodiacSigns deities { name deity { id tradition { name } } } colors safetyNotes
   substitutes { name ingredient { id } } isGlobal folkNames
   categories { name } variants { form formChoice { id name group { name } } }
   audit { createdBy updatedBy }
@@ -99,7 +99,7 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     variants: fixture.variants.map((variant) => variantInput(variant)),
     description: fixture.description ?? '',
     elements: fixture.elements ?? [],
-    planets: fixture.planets ?? [],
+    celestialBodies: fixture.celestialBodies ?? [],
     zodiacSigns: fixture.zodiacSigns ?? [],
     deities: fixture.deities.map((name) => ({ name })),
     colors: fixture.colors ?? [],
@@ -132,7 +132,7 @@ describe('createWorkspaceIngredient', () => {
       nomenclature: 'botanical',
       variants: [variantInput(makeVariant({ form: 'root' }), { formId: root })],
       elements: ['water', 'earth'],
-      planets: ['Venus', 'Moon'],
+      celestialBodies: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer'],
       deities: [{ name: 'Testara' }, { deityId: hecate }],
       colors: ['Green', 'Silver'],
@@ -156,7 +156,7 @@ describe('createWorkspaceIngredient', () => {
     ]);
     expect(answered).toMatchObject({
       elements: ['water', 'earth'],
-      planets: ['Venus', 'Moon'],
+      celestialBodies: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer'],
       colors: ['Green', 'Silver'],
     });
@@ -222,7 +222,7 @@ describe('updateIngredient', () => {
     const id = await seed(
       local({
         description: 'Dug at dusk',
-        planets: ['Moon', 'Venus'],
+        celestialBodies: ['Moon', 'Venus'],
         folkNames: ['Dropped Root'],
       }),
     );
@@ -234,7 +234,7 @@ describe('updateIngredient', () => {
         local({
           name: 'Testroot',
           elements: ['fire'],
-          planets: ['Mars'],
+          celestialBodies: ['Mars'],
           colors: ['Red', 'Black'],
           folkNames: ['Added Root'],
         }),
@@ -248,7 +248,7 @@ describe('updateIngredient', () => {
       name: 'Testroot',
       elements: ['fire'],
       description: null,
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['Red', 'Black'],
       folkNames: ['Added Root'],
       audit: { createdBy: A.id, updatedBy: B.id },
@@ -261,7 +261,7 @@ describe('updateIngredient', () => {
       local({
         description: 'Dug at dusk',
         elements: ['water', 'air'],
-        planets: ['Moon'],
+        celestialBodies: ['Moon'],
         zodiacSigns: ['Cancer'],
         deities: ['Testara'],
         colors: ['Silver'],
@@ -277,7 +277,7 @@ describe('updateIngredient', () => {
       variants: [],
       description: null,
       elements: null,
-      planets: null,
+      celestialBodies: null,
       zodiacSigns: null,
       deities: [],
       colors: null,
@@ -287,7 +287,7 @@ describe('updateIngredient', () => {
     // Cleared to NULL, not to an empty array: "none" has one representation.
     expect(await rowOf(id)).toMatchObject({
       elements: null,
-      planets: null,
+      celestialBodies: null,
       zodiac_signs: null,
       colors: null,
     });

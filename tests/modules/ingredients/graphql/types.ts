@@ -53,7 +53,7 @@ export interface IngredientVariantNode {
   description: string | null;
   safetyNotes: string | null;
   elements: string[] | null;
-  planets: string[] | null;
+  celestialBodies: string[] | null;
   zodiacSigns: string[] | null;
   colors: string[] | null;
   categories: { name: string }[];

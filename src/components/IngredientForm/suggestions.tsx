@@ -11,7 +11,7 @@ import type {
   DeitySuggestionsQuery,
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
-  PlanetSuggestionsQuery,
+  CelestialBodySuggestionsQuery,
   ZodiacSuggestionsQuery,
 } from '../../gql/graphql';
 import { useDebouncedValue } from '../../lib/debounce';
@@ -76,9 +76,9 @@ const CommonNameSuggestionsDocument = graphql(`
   }
 `);
 
-const PlanetSuggestionsDocument = graphql(`
-  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {
-    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
+const CelestialBodySuggestionsDocument = graphql(`
+  query CelestialBodySuggestions($workspaceId: ID, $query: String, $first: Int) {
+    celestialBodySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {
       edges {
         node {
           value
@@ -247,8 +247,8 @@ const correspondenceOption = (node: CorrespondenceNode): ListOption => ({
   curated: node.curated,
 });
 
-const planetOptions = (data: PlanetSuggestionsQuery): ListOption[] =>
-  data.planetSuggestions.edges.map(({ node }) => correspondenceOption(node));
+const celestialBodyOptions = (data: CelestialBodySuggestionsQuery): ListOption[] =>
+  data.celestialBodySuggestions.edges.map(({ node }) => correspondenceOption(node));
 
 const zodiacOptions = (data: ZodiacSuggestionsQuery): ListOption[] =>
   data.zodiacSuggestions.edges.map(({ node }) => correspondenceOption(node));
@@ -329,8 +329,8 @@ export const useCommonNameSuggestions: UseSuggestions = (workspaceId, text, acti
   useLookup(CommonNameSuggestionsDocument, { workspaceId }, text, active, commonNameOptions);
 
 /** The planets, curated and in use. */
-export const usePlanetSuggestions: UseSuggestions = (workspaceId, text, active) =>
-  useLookup(PlanetSuggestionsDocument, { workspaceId }, text, active, planetOptions);
+export const useCelestialBodySuggestions: UseSuggestions = (workspaceId, text, active) =>
+  useLookup(CelestialBodySuggestionsDocument, { workspaceId }, text, active, celestialBodyOptions);
 
 /** The zodiac signs, curated and in use. */
 export const useZodiacSuggestions: UseSuggestions = (workspaceId, text, active) =>

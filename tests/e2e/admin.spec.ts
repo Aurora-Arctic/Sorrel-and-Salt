@@ -317,7 +317,7 @@ test(
     const granting = page.getByRole('dialog', { name: 'Promote to Admin' });
     await expect(granting).toContainText('Fixture Person');
     await expect(granting.getByRole('button', { name: 'Promote' })).toBeFocused();
-    await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the planets');
+    await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
     await assertNoAccessibilityViolations(page);
 
     await granting.getByRole('button', { name: 'Promote' }).click();
@@ -327,8 +327,13 @@ test(
     await expect(row.getByRole('cell').nth(2)).toHaveText(/^Admin/);
     await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
     expect(await privilegeChanges(userId)).toEqual([
-      { privilege: 'admin', change: 'grant', via: 'admin', note: 'Curates the planets' },
-      { privilege: 'create_workspace', change: 'grant', via: 'admin', note: 'Curates the planets' },
+      { privilege: 'admin', change: 'grant', via: 'admin', note: 'Curates the celestial bodies' },
+      {
+        privilege: 'create_workspace',
+        change: 'grant',
+        via: 'admin',
+        note: 'Curates the celestial bodies',
+      },
     ]);
 
     // And revoked again, behind its own red modal; the flag stays.
@@ -587,7 +592,7 @@ test('an admin adds, renames and deletes a celestial body in the modal over the 
   await signInAs(page, 'an-admin@admin-astrology.test', ['discord'], 'admin');
 
   // The old address is gone, with no redirect.
-  expect((await page.goto('/admin/planets'))?.status()).toBe(404);
+  expect((await page.goto('/admin/celestialBodies'))?.status()).toBe(404);
 
   const response = await page.goto('/admin/celestial-bodies');
   expect(response?.status()).toBe(200);

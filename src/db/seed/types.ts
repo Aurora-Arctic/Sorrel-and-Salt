@@ -73,7 +73,7 @@ export type SeedIngredient = Pick<
   | 'nomenclature'
   | 'description'
   | 'elements'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiacSigns'
   | 'safetyNotes'
 > & {
@@ -202,14 +202,14 @@ export interface SeedSource {
   reference: CitationFields;
   traditions?: string[];
   deities?: SeedSourceDeity[];
-  planets?: string[];
+  celestialBodies?: string[];
   zodiacSigns?: string[];
 }
 
 /** A `reference_links` row the sources seed wants, before its stamps: a curated row's link. */
 export type SeedSourceLink = Pick<
   typeof referenceLinks.$inferInsert,
-  'referenceId' | 'deityId' | 'deityTraditionId' | 'planetId' | 'zodiacSignId' | 'locator'
+  'referenceId' | 'deityId' | 'deityTraditionId' | 'celestialBodyId' | 'zodiacSignId' | 'locator'
 >;
 
 /** A table a seeded source links, found by the `seed_key` its own seed gave each row: a vocabulary, never an ingredient or its form. */
@@ -228,7 +228,7 @@ export type CompendiumEntryField =
   | 'nomenclature'
   | 'description'
   | 'elements'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiacSigns'
   | 'colors'
   | 'safetyNotes'
@@ -243,7 +243,7 @@ export type CompendiumVariantField =
   | 'description'
   | 'safetyNotes'
   | 'elements'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiacSigns'
   | 'colors'
   | 'categories'
@@ -272,7 +272,7 @@ export type SeedCompendiumVariant = Pick<typeof ingredientVariants.$inferInsert,
   Partial<
     Pick<
       typeof ingredientVariants.$inferInsert,
-      'description' | 'safetyNotes' | 'elements' | 'planets' | 'zodiacSigns' | 'colors'
+      'description' | 'safetyNotes' | 'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors'
     >
   > & {
     categories?: string[];
@@ -292,7 +292,7 @@ export type SeedCompendiumEntry = Pick<
   | 'nomenclature'
   | 'description'
   | 'elements'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiacSigns'
   | 'colors'
   | 'safetyNotes'

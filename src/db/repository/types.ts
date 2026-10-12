@@ -562,7 +562,7 @@ export interface IngredientFilter {
    * suggestions' fold (MB.162): how a planet's delete and rename find the
    * entries holding it (MB.95). Blank means no filter.
    */
-  planet?: string;
+  celestialBody?: string;
   /** A sign the entry's `zodiacSigns` list holds, as `planet` reads the planets. */
   zodiacSign?: string;
   /**
@@ -756,7 +756,7 @@ export interface CategoryFilter {
 }
 
 /** An ingredient list a curated astrology vocabulary's values are written to, by its property name. */
-export type AstrologyList = 'planets' | 'zodiacSigns';
+export type AstrologyList = 'celestialBodies' | 'zodiacSigns';
 
 /** One of the two astrology vocabularies, flat and alike (MB.95). */
 export type AstrologyVocabulary = FlatTable;

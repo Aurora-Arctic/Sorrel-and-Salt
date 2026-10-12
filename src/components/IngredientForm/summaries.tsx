@@ -85,14 +85,14 @@ const textLine = (text: string): ReactNode => oneLine(text) || NOTHING;
 /** Correspondences' line, a variant's having no deities, which are the ingredient's alone. */
 function correspondencesLine(
   elements: readonly IngredientElement[],
-  planets: readonly ListEntry[],
+  celestialBodies: readonly ListEntry[],
   zodiacSigns: readonly ListEntry[],
   colors: readonly ListEntry[],
   deities: readonly ListEntry[] = [],
 ): ReactNode {
   return joined([
     listPart(elements.map(capitalise), FIELD_NOUNS.elements),
-    listPart(texts(planets), FIELD_NOUNS.planets),
+    listPart(texts(celestialBodies), FIELD_NOUNS.celestialBodies),
     listPart(texts(zodiacSigns), FIELD_NOUNS.zodiacSigns),
     listPart(texts(colors), FIELD_NOUNS.colors),
     listPart(texts(deities), FIELD_NOUNS.deities),
@@ -122,7 +122,7 @@ const sourcesLine = (references: readonly ReferenceListEntry[]): ReactNode =>
 /** What a variant counts on its card line, between its description and its safety note, in its fields' order. */
 const CARD_COUNTED = [
   'elements',
-  'planets',
+  'celestialBodies',
   'zodiacSigns',
   'colors',
   'categoryIds',
@@ -161,11 +161,11 @@ function TextSummary({ name }: TextSummaryProps): ReactNode {
 
 function CorrespondencesSummary(): ReactNode {
   const { control } = useFormContext<IngredientFormValues>();
-  const [elements, planets, zodiacSigns, colors, deities] = useWatch({
+  const [elements, celestialBodies, zodiacSigns, colors, deities] = useWatch({
     control,
-    name: ['elements', 'planets', 'zodiacSigns', 'colors', 'deities'],
+    name: ['elements', 'celestialBodies', 'zodiacSigns', 'colors', 'deities'],
   });
-  return correspondencesLine(elements, planets, zodiacSigns, colors, deities);
+  return correspondencesLine(elements, celestialBodies, zodiacSigns, colors, deities);
 }
 
 function RelationsSummary(): ReactNode {
@@ -229,7 +229,7 @@ export function variantSectionSummary(
     case 'correspondences':
       return correspondencesLine(
         variant.elements,
-        variant.planets,
+        variant.celestialBodies,
         variant.zodiacSigns,
         variant.colors,
       );

@@ -60,7 +60,7 @@ const IngredientVariantInput = builder.inputType('IngredientVariantInput', {
     description: t.string({ required: true }),
     safetyNotes: t.string({ required: true }),
     elements: t.field({ type: [IngredientElementEnum], required: true }),
-    planets: t.stringList({ required: true }),
+    celestialBodies: t.stringList({ required: true }),
     zodiacSigns: t.stringList({ required: true }),
     colors: t.stringList({ required: true }),
     categoryIds: t.idList({
@@ -99,7 +99,7 @@ export function ingredientInputFields<T extends Tier, Whole extends boolean>(
     nomenclature: t.field({ type: NomenclatureEnum, required: nomenclatureRequired }),
     description: t.string({ required: whole }),
     elements: t.field({ type: [IngredientElementEnum], required: whole }),
-    planets: t.stringList({ required: whole }),
+    celestialBodies: t.stringList({ required: whole }),
     zodiacSigns: t.stringList({ required: whole }),
     deities: t.field({ type: [IngredientDeityInput], required: whole }),
     colors: t.stringList({ required: whole }),

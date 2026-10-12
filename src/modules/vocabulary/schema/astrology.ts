@@ -2,7 +2,7 @@ import { pgTable } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 
-// The vocabularies behind `ingredients.planets` and `ingredients.zodiacSigns`, and
+// The vocabularies behind `ingredients.celestialBodies` and `ingredients.zodiacSigns`, and
 // deliberately not foreign key targets for them (ingredients-schema.test.ts
 // holds the table's own keys to its workspace and form pick): a member must be able to write `Eris` before anyone curates it.
 // Two tables rather than one with a `kind`, so a suggestion query has no
@@ -10,10 +10,7 @@ import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 // (claude-docs/db/astrology-vocabularies.md, "The astrology vocabularies").
 // The description is search surface, which the trigram index serves: Lilith's
 // carries "Black Moon".
-// The celestial bodies, still exported as `planets` until MB.253 renames the
-// code; a `planets` view over the table serves the deploy before MB.252
-// (claude-docs/db/expand-contract.md, "Renaming a table").
-export const planets = pgTable(
+export const celestialBodies = pgTable(
   'celestial_bodies',
   { ...vocabularyColumns(), ...auditColumns },
   (table) => vocabularyIndexes('celestial_bodies', table, { trigram: true }),

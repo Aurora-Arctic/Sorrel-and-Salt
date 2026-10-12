@@ -1,4 +1,4 @@
-import type { planets, zodiacSigns } from './schema/astrology';
+import type { celestialBodies, zodiacSigns } from './schema/astrology';
 import type { categories, categoryGroups } from './schema/categories';
 import type { deities, deityTraditions } from './schema/deities';
 import type { ingredientFormGroups, ingredientForms } from './schema/ingredient-forms';
@@ -15,7 +15,7 @@ export type {
  * A planet or a zodiac sign: the two tables share one shape, so the planets'
  * row type stands for both (MB.95).
  */
-export type AstrologyValueRow = typeof planets.$inferSelect;
+export type AstrologyValueRow = typeof celestialBodies.$inferSelect;
 
 export type CategoryRow = typeof categories.$inferSelect;
 
@@ -47,7 +47,7 @@ export type CuratedTable =
   | typeof deityTraditions
   | typeof ingredientForms
   | typeof ingredientFormGroups
-  | typeof planets
+  | typeof celestialBodies
   | typeof zodiacSigns;
 
 /**
@@ -114,7 +114,7 @@ export type DeityTraditionRow = typeof deityTraditions.$inferSelect;
  * vocabulary by spelling, by the input's name (MB.162): the planets and the
  * signs, which record no pick.
  */
-export type CuratedField = 'planets' | 'zodiacSigns';
+export type CuratedField = 'celestialBodies' | 'zodiacSigns';
 
 /**
  * An ingredient field that records the curated row a member picked beside its

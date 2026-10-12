@@ -6,7 +6,7 @@ import { citationText } from '../../lib/citation';
 import { slugify } from '../../lib/slugify';
 import { referenceLinks, SOURCED_KEYS } from '../../modules/ingredients/schema/reference-links';
 import { deities, deityTraditions } from '../../modules/vocabulary/schema/deities';
-import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
+import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type {
   SeedDatabase,
   SeedSource,
@@ -4416,7 +4416,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.luckymojo.com/planetaryrulers.html',
       accessed: '2026-10-06',
     },
-    planets: ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'],
+    celestialBodies: ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'],
     zodiacSigns: [
       'Aries',
       'Taurus',
@@ -4442,7 +4442,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.ancientastrology.com/articles-/the-planetary-rulership-of-plants',
       accessed: '2026-10-06',
     },
-    planets: ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'],
+    celestialBodies: ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'],
   },
   {
     reference: {
@@ -4452,7 +4452,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.alchemy-works.com/planets_pluto.html',
       accessed: '2026-10-06',
     },
-    planets: ['Pluto'],
+    celestialBodies: ['Pluto'],
   },
   {
     reference: {
@@ -4463,7 +4463,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://animamundiherbals.com/blogs/blog/the-astrology-of-herbs',
       accessed: '2026-10-06',
     },
-    planets: [
+    celestialBodies: [
       'Sun',
       'Moon',
       'Mercury',
@@ -4485,7 +4485,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://mysticalmagicalherbs.com/2013/10/26/herbs-of-the-solar-system/',
       accessed: '2026-10-06',
     },
-    planets: [
+    celestialBodies: [
       'Sun',
       'Moon',
       'Mercury',
@@ -4509,7 +4509,7 @@ export const SOURCES: SeedSource[] = [
       published: '1986',
       note: "Confirmed through Open Library, https://openlibrary.org/books/OL8339254M, and read through a reader's highlights on Goodreads, https://www.goodreads.com/notes/20698760-asteroid-goddesses/7429292-erik",
     },
-    planets: ['Ceres', 'Pallas', 'Juno', 'Vesta'],
+    celestialBodies: ['Ceres', 'Pallas', 'Juno', 'Vesta'],
   },
   {
     reference: {
@@ -4521,7 +4521,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.booksie.com/509359-reading-astrological-charts-chapter-36',
       accessed: '2026-10-06',
     },
-    planets: ['Ceres', 'Pallas', 'Juno', 'Vesta', 'Lilith'],
+    celestialBodies: ['Ceres', 'Pallas', 'Juno', 'Vesta', 'Lilith'],
   },
 ];
 
@@ -4550,7 +4550,7 @@ export async function seedVocabularySources(tx: SeedTransaction): Promise<void> 
   const targets = {
     traditions: await idsBySeedKey(tx, deityTraditions),
     deities: await idsBySeedKey(tx, deities),
-    planets: await idsBySeedKey(tx, planets),
+    celestialBodies: await idsBySeedKey(tx, celestialBodies),
     zodiacSigns: await idsBySeedKey(tx, zodiacSigns),
   };
 
@@ -4590,11 +4590,14 @@ function linksOf(
   {
     traditions = [],
     deities: named = [],
-    planets: bodies = [],
+    celestialBodies: bodies = [],
     zodiacSigns: signs = [],
   }: SeedSource,
   referenceId: string,
-  targets: Record<'traditions' | 'deities' | 'planets' | 'zodiacSigns', Map<string, string | null>>,
+  targets: Record<
+    'traditions' | 'deities' | 'celestialBodies' | 'zodiacSigns',
+    Map<string, string | null>
+  >,
 ): SeedSourceLink[] {
   const target = (kind: keyof typeof targets, name: string) =>
     requireFrom(
@@ -4618,7 +4621,7 @@ function linksOf(
 
   for (const name of traditions) add('deityTraditionId', target('traditions', name));
   for (const [name, locator] of deityLocators) add('deityId', target('deities', name), locator);
-  for (const name of bodies) add('planetId', target('planets', name));
+  for (const name of bodies) add('celestialBodyId', target('celestialBodies', name));
   for (const name of signs) add('zodiacSignId', target('zodiacSigns', name));
 
   return links;

@@ -1,12 +1,12 @@
 import 'server-only';
 import { findCuratedRowsByIds, findCuratedRowsByName } from '../../../db/repository';
 import { inIdOrder } from '../../../lib/in-id-order';
-import { planets, zodiacSigns } from '../schema/astrology';
+import { celestialBodies, zodiacSigns } from '../schema/astrology';
 import { deities } from '../schema/deities';
 import { ingredientForms } from '../schema/ingredient-forms';
 import type { CuratedField, IngredientFormValueRow, PickedField } from '../types';
 
-const VOCABULARY_OF = { planets, zodiacSigns } satisfies Record<CuratedField, unknown>;
+const VOCABULARY_OF = { celestialBodies, zodiacSigns } satisfies Record<CuratedField, unknown>;
 
 const PICKED_FROM = { form: ingredientForms, deities } satisfies Record<PickedField, unknown>;
 

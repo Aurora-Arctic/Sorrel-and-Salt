@@ -139,7 +139,7 @@ describe('ingredient', () => {
         description: 'Fixture shavings',
         safetyNotes: 'Fixture caution',
         elements: ['earth', 'fire'],
-        planets: ['Fixture Star'],
+        celestialBodies: ['Fixture Star'],
         zodiacSigns: ['Fixture Sign'],
         colors: ['Fixture Grey'],
         categories: ['Protection'],
@@ -160,7 +160,7 @@ describe('ingredient', () => {
       `query ($id: ID!) {
         ingredient(id: $id) {
           variants {
-            id form formChoice { id } description safetyNotes elements planets zodiacSigns colors
+            id form formChoice { id } description safetyNotes elements celestialBodies zodiacSigns colors
             categories { name }
             substitutes { name ingredient { id } variant { id form } }
             references { reference { title } locator }
@@ -180,7 +180,7 @@ describe('ingredient', () => {
         description: 'Fixture shavings',
         safetyNotes: 'Fixture caution',
         elements: ['earth', 'fire'],
-        planets: ['Fixture Star'],
+        celestialBodies: ['Fixture Star'],
         zodiacSigns: ['Fixture Sign'],
         colors: ['Fixture Grey'],
         categories: [{ name: 'Protection' }],

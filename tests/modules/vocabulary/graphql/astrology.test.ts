@@ -25,10 +25,10 @@ beforeAll(() => {
 
 const VOCABULARIES = [
   {
-    query: 'planets',
-    type: 'Planet',
-    table: 'planets',
-    field: 'planets',
+    query: 'celestialBodies',
+    type: 'CelestialBody',
+    table: 'celestial_bodies',
+    field: 'celestialBodies',
   },
   {
     query: 'zodiacSigns',

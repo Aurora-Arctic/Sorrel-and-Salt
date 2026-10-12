@@ -53,11 +53,11 @@ const VOCABULARIES: [string, CachedVocabulary][] = [
     },
   ],
   [
-    'planets',
+    'celestialBodies',
     {
-      table: 'planets',
-      list: () => listAstrologyValues('planets', {}, PAGE),
-      count: () => countAstrologyValues('planets', {}, undefined),
+      table: 'celestial_bodies',
+      list: () => listAstrologyValues('celestialBodies', {}, PAGE),
+      count: () => countAstrologyValues('celestialBodies', {}, undefined),
     },
   ],
   [

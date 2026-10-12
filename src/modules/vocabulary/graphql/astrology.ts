@@ -18,7 +18,12 @@ import { curatedVocabularyWrites } from './curated';
 
 /** How each vocabulary is named on the schema. */
 const VOCABULARIES = [
-  { field: 'planets', type: 'Planet', noun: 'planet', listNoun: 'planets' },
+  {
+    field: 'celestialBodies',
+    type: 'CelestialBody',
+    noun: 'celestial body',
+    listNoun: 'celestial bodies',
+  },
   { field: 'zodiacSigns', type: 'ZodiacSign', noun: 'sign', listNoun: 'zodiac signs' },
 ] as const satisfies readonly {
   field: CuratedField;

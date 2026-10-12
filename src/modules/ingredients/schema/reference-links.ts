@@ -3,7 +3,7 @@ import { check, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import type { PgUUIDBuilderInitial } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { deities, deityTraditions } from '../../vocabulary/schema/deities';
-import { planets, zodiacSigns } from '../../vocabulary/schema/astrology';
+import { celestialBodies, zodiacSigns } from '../../vocabulary/schema/astrology';
 import { ingredients } from './ingredients';
 import { ingredientVariants } from './ingredient-variants';
 import { references } from './references';
@@ -33,7 +33,7 @@ export const SOURCED = {
   ingredientId: { column: 'ingredient_id', table: ingredients },
   deityId: { column: 'deity_id', table: deities },
   deityTraditionId: { column: 'deity_tradition_id', table: deityTraditions },
-  planetId: { column: 'planet_id', table: planets },
+  celestialBodyId: { column: 'celestial_body_id', table: celestialBodies },
   zodiacSignId: { column: 'zodiac_sign_id', table: zodiacSigns },
   // One form's own sources, beside its ingredient's (MB.217).
   ingredientVariantId: { column: 'ingredient_variant_id', table: ingredientVariants },
@@ -63,10 +63,6 @@ export const referenceLinks = pgTable(
       .notNull()
       .references(() => references.id),
     ...sourcedColumns(),
-    // `planet_id`'s successor, outside `SOURCED` so that nothing reads or
-    // writes it until MB.253 moves the registry onto it and MB.254 drops
-    // `planet_id` (claude-docs/db/expand-contract.md, "Renaming a table").
-    celestialBodyId: uuid('celestial_body_id').references(() => planets.id),
     // "p. 112", `under "Hecate"`: the link's, not the reference's, since the
     // citation names the work and the page shows the locator beside it.
     locator: text('locator'),
@@ -83,18 +79,18 @@ export const referenceLinks = pgTable(
         .on(table[key], table.referenceId)
         .where(sql`${table[key]} is not null and ${table.deletedAt} is null`),
     ),
-    uniqueIndex('reference_links_celestial_body_unique')
-      .on(table.celestialBodyId, table.referenceId)
-      .where(sql`${table.celestialBodyId} is not null and ${table.deletedAt} is null`),
-
     // Exactly one sourced row per link, a body counted once whichever of its
-    // two columns hold it: the deploy before MB.252 and the sources seed write
-    // `planet_id` alone, and 0067's fill sets both. MB.254 counts the new one alone.
+    // two columns hold it. The column the body had before MB.252 is no longer
+    // declared, but until MB.254 drops it a link the deploy before this one
+    // wrote names it alone, and 0067 and 0068's fills leave both set. MB.254
+    // counts `celestial_body_id` alone (PENDING_DROPS in schema-drift.test.ts).
     check(
       'reference_links_one_row',
       sql.raw(
         `num_nonnulls(${SOURCED_KEYS.map((key) =>
-          key === 'planetId' ? 'coalesce(celestial_body_id, planet_id)' : SOURCED[key].column,
+          key === 'celestialBodyId'
+            ? 'coalesce(celestial_body_id, planet_id)'
+            : SOURCED[key].column,
         ).join(', ')}) = 1`,
       ),
     ),

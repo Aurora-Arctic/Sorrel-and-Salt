@@ -92,7 +92,7 @@ export interface DeityRow {
 }
 
 /** What a seeded source links, as the seed docs name it. */
-export type DocLinkKind = 'tradition' | 'deity' | 'planet' | 'zodiacSign';
+export type DocLinkKind = 'tradition' | 'deity' | 'celestialBody' | 'zodiacSign';
 
 /** One link a source's place in the seed docs gives it. */
 export interface DocLink {
@@ -136,7 +136,7 @@ export interface ReferenceLinkRow {
   reference_id: string;
   deity_id: string | null;
   deity_tradition_id: string | null;
-  planet_id: string | null;
+  celestial_body_id: string | null;
   zodiac_sign_id: string | null;
   locator: string | null;
   created_by: string;

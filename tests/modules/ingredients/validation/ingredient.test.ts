@@ -3,7 +3,7 @@ import {
   CompendiumIngredientInput,
   LocalIngredientInput,
 } from '@/modules/ingredients/validation/ingredient';
-import { PLANETS } from '@/db/seed/astrology';
+import { CELESTIAL_BODIES } from '@/db/seed/astrology';
 
 // The two variants share every field and `crossFieldRules`, and differ in
 // how `nomenclature` is reached: the shared fields run once, on the local
@@ -440,12 +440,17 @@ describe('the ingredient fields, on the local variant', () => {
   // autofill list is written as readily as one on it.
   // DESIGN.md §5 (MB.134): planets, zodiac signs and colours are one list
   // builder, so it runs once, on the planets.
-  describe('planets', () => {
+  describe('celestialBodies', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
-    const field = 'planets';
+    const field = 'celestialBodies';
 
     it('takes every suggestion, and values off the list, in one list', () => {
-      const values = [...PLANETS.map((row) => row.name), 'sedna', 'Eris', 'Black Moon Lilith'];
+      const values = [
+        ...CELESTIAL_BODIES.map((row) => row.name),
+        'sedna',
+        'Eris',
+        'Black Moon Lilith',
+      ];
 
       expect(Schema.parse({ ...base, [field]: values })).toMatchObject({ [field]: values });
     });
@@ -483,7 +488,7 @@ describe('the ingredient fields, on the local variant', () => {
       canonicalName: 'Fixtura testalis',
       description: 'An invented herb.',
       elements: ['water', 'earth'],
-      planets: ['moon', 'Venus'],
+      celestialBodies: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],
       deities: [{ name: ' Testara ' }],
       colors: ['green', 'silver'],
@@ -495,7 +500,7 @@ describe('the ingredient fields, on the local variant', () => {
     expect(parsed).toMatchObject({
       elements: ['water', 'earth'],
       deities: [{ deityId: null, name: 'Testara' }],
-      planets: ['moon', 'Venus'],
+      celestialBodies: ['moon', 'Venus'],
       zodiacSigns: ['cancer'],
       colors: ['green', 'silver'],
     });
@@ -600,7 +605,7 @@ describe('the ingredient fields, on the local variant', () => {
       description: '',
       safetyNotes: '',
       elements: [],
-      planets: [],
+      celestialBodies: [],
       zodiacSigns: [],
       colors: [],
       categoryIds: [],
@@ -613,7 +618,11 @@ describe('the ingredient fields, on the local variant', () => {
       const parsed = Schema.parse({
         ...base,
         variants: [
-          formOf(' Dried leaf ', { id: KEPT, description: ' Pressed. ', planets: ['Venus', ' '] }),
+          formOf(' Dried leaf ', {
+            id: KEPT,
+            description: ' Pressed. ',
+            celestialBodies: ['Venus', ' '],
+          }),
           formOf('Testoil', {
             elements: ['fire'],
             categoryIds: [LINKED],
@@ -624,7 +633,7 @@ describe('the ingredient fields, on the local variant', () => {
       });
 
       expect(parsed.variants).toMatchObject([
-        { id: KEPT, form: 'Dried leaf', description: 'Pressed.', planets: ['Venus'] },
+        { id: KEPT, form: 'Dried leaf', description: 'Pressed.', celestialBodies: ['Venus'] },
         {
           form: 'Testoil',
           elements: ['fire'],
@@ -703,7 +712,11 @@ describe('the ingredient fields, on the local variant', () => {
 
     // One row each for the ingredient's own rules, run on the variant's lists.
     it.each([
-      ['a repeated planet', { planets: ['Venus', 'venus'] }, ['planets', 1]],
+      [
+        'a repeated celestial body',
+        { celestialBodies: ['Venus', 'venus'] },
+        ['celestialBodies', 1],
+      ],
       ['a repeated element', { elements: ['fire', 'fire'] }, ['elements', 1]],
       ['a substitute neither linked nor named', { substitutes: [{}] }, ['substitutes', 0]],
       [

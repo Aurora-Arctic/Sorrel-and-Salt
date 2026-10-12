@@ -7,7 +7,7 @@ import type postgres from 'postgres';
 /** Every form of the ingredient, live and soft-deleted, by form and then age. */
 export function variantRowsOf(sql: postgres.Sql, ingredientId: string) {
   return sql`
-    select id, form, form_id, description, safety_notes, planets, deleted_at, deleted_by,
+    select id, form, form_id, description, safety_notes, celestial_bodies, deleted_at, deleted_by,
       xmin::text as xmin
     from ingredient_variants where ingredient_id = ${ingredientId}
     order by lower(form), created_at`;

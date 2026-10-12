@@ -90,7 +90,7 @@ describe('GroupedValueList', () => {
   // MB.95's flat kinds, folded in at MB.115: filed under nothing, so
   // neither the table nor the filter offers a group.
   it('shows a flat kind with no group column and no group filter', () => {
-    render(<GroupedValueList {...props({ kind: 'planet', groups: undefined })} />);
+    render(<GroupedValueList {...props({ kind: 'celestialBody', groups: undefined })} />);
 
     const headings = within(screen.getByRole('table')).getAllByRole('columnheader');
     expect(headings).toHaveLength(3);
@@ -141,7 +141,7 @@ describe('GroupedValueList', () => {
       { kind: 'category', path: '/admin/categories', group: 'group=g&' },
       { kind: 'form', path: '/admin/forms', group: 'group=g&' },
       // A flat kind has no group to write.
-      { kind: 'planet', path: '/admin/celestial-bodies', group: '' },
+      { kind: 'celestialBody', path: '/admin/celestial-bodies', group: '' },
       { kind: 'zodiacSign', path: '/admin/zodiac-signs', group: '' },
     ] as const)('addresses the $kind page, its group as it names one', (other) => {
       expect(groupedValuesHref(other.kind, { query: 'q', group: 'g', after: 'a' }, 'new')).toBe(

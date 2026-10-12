@@ -12,7 +12,7 @@ import type {
   IngredientSuggestionsQuery,
   IngredientSummaryQuery,
   PickerCategoriesQuery,
-  PlanetSuggestionsQuery,
+  CelestialBodySuggestionsQuery,
   PossibleDuplicatesQuery,
   ReferenceQuery,
   ReferenceSuggestionsQuery,
@@ -96,7 +96,7 @@ const COMMON_NAMES = [
   { value: 'Fixture Bane', claimants: [{ name: 'Mockleaf', canonicalName: null }] },
 ];
 
-const PLANETS = [
+const CELESTIAL_BODIES = [
   ...['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].map((value) => ({
     value,
     description: null,
@@ -230,14 +230,14 @@ const SUMMARIES = Object.fromEntries(
       isGlobal: row.isGlobal,
       slug: row.name.toLowerCase(),
       elements: ['water', 'earth'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       zodiacSigns: ['Cancer'],
       colors: ['Green'],
       variants: row.variants.map(({ id, form }) => ({
         id,
         form,
         elements: null,
-        planets: form === 'Oil' ? ['Venus'] : null,
+        celestialBodies: form === 'Oil' ? ['Venus'] : null,
         zodiacSigns: null,
         colors: null,
       })),
@@ -366,13 +366,13 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           first,
         ),
       } satisfies CommonNameSuggestionsQuery;
-    case 'PlanetSuggestions':
+    case 'CelestialBodySuggestions':
       return {
-        planetSuggestions: page(
-          PLANETS.filter((row) => matches(query, row.value)),
+        celestialBodySuggestions: page(
+          CELESTIAL_BODIES.filter((row) => matches(query, row.value)),
           first,
         ),
-      } satisfies PlanetSuggestionsQuery;
+      } satisfies CelestialBodySuggestionsQuery;
     case 'ZodiacSuggestions':
       return {
         zodiacSuggestions: page(
@@ -833,7 +833,7 @@ const ENTRY = {
           description: null,
         },
         safetyNotes: 'Dry away from damp.',
-        planets: [{ value: 'Mercury' }],
+        celestialBodies: [{ value: 'Mercury' }],
         categoryIds: [CATEGORIES[0].id, CATEGORIES[1].id],
         // A form's link names one form of what it links (MB.115): Fixturewort
         // in its one form, beside a name typed.
@@ -860,7 +860,7 @@ const ENTRY = {
       },
     ],
     description: 'A fixture herb, for the workshop.',
-    planets: [{ value: 'Mercury' }],
+    celestialBodies: [{ value: 'Mercury' }],
     // Two linked compendium entries, one in a form of it, and a name typed
     // (MB.115): the linked chips lead with a link mark and open a summary.
     substitutes: [

@@ -333,7 +333,7 @@ describe('a curated value page, for each other kind', () => {
       dialog: 'Edit Deity, Testwort Shard, Fixture Protection',
     },
     {
-      kind: 'planet',
+      kind: 'celestialBody',
       path: '/admin/celestial-bodies',
       address: {},
       list: listAstrologyValues,
@@ -341,8 +341,8 @@ describe('a curated value page, for each other kind', () => {
       groups: undefined,
       get: getAstrologyValueBySlug,
       filter: { query: 'te' },
-      getArgs: ['planets', 'testwort-shard'],
-      row: { ...VALUE, description: 'A planet' },
+      getArgs: ['celestialBodies', 'testwort-shard'],
+      row: { ...VALUE, description: 'A celestial body' },
       dialog: 'Edit Celestial Body, Testwort Shard',
     },
     {

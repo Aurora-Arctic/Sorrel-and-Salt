@@ -257,11 +257,11 @@ export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAdd
 
 /** What each field named by spelling is called in a refusal. */
 const NOUN_OF: Record<CuratedField, string> = {
-  planets: 'celestial body',
+  celestialBodies: 'celestial body',
   zodiacSigns: 'zodiac sign',
 };
 
-const SPELLED_FIELDS = ['planets', 'zodiacSigns'] as const satisfies CuratedField[];
+const SPELLED_FIELDS = ['celestialBodies', 'zodiacSigns'] as const satisfies CuratedField[];
 
 /**
  * `fields` and the checked lists holding curated values alone, as a
@@ -292,12 +292,12 @@ async function inCuratedValues(
     ...(parsed[field] ?? []),
     ...variants.flatMap((variant) => variant[field]),
   ];
-  const [picks, planets, zodiacSigns] = await Promise.all([
+  const [picks, celestialBodies, zodiacSigns] = await Promise.all([
     resolvePicks('compendium', parsed, picked, held),
-    curatedSpellings('planets', valuesOf('planets')),
+    curatedSpellings('celestialBodies', valuesOf('celestialBodies')),
     curatedSpellings('zodiacSigns', valuesOf('zodiacSigns')),
   ]);
-  const spellingsOf = { planets, zodiacSigns };
+  const spellingsOf = { celestialBodies, zodiacSigns };
   const spellingOf = (field: CuratedField, value: string) =>
     spellingsOf[field].get(foldVocabularyValue(value));
 
@@ -343,7 +343,7 @@ async function inCuratedValues(
 const FIELD_ORDER = [
   'form',
   'formId',
-  'planets',
+  'celestialBodies',
   'zodiacSigns',
   'deities',
   'categoryIds',

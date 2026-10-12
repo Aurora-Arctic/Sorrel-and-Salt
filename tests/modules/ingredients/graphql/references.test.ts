@@ -222,7 +222,7 @@ describe('Ingredient.references', () => {
     variants: [],
     description: '',
     elements: [],
-    planets: [],
+    celestialBodies: [],
     zodiacSigns: [],
     deities: [],
     colors: [],

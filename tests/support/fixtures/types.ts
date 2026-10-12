@@ -47,7 +47,7 @@ export interface IngredientFixture extends Required<
     | 'nomenclature'
     | 'description'
     | 'elements'
-    | 'planets'
+    | 'celestialBodies'
     | 'zodiacSigns'
     | 'colors'
     | 'safetyNotes'
@@ -75,7 +75,13 @@ export type VariantFixture = Pick<typeof ingredientVariants.$inferInsert, 'form'
   Partial<
     Pick<
       typeof ingredientVariants.$inferInsert,
-      'formId' | 'description' | 'safetyNotes' | 'elements' | 'planets' | 'zodiacSigns' | 'colors'
+      | 'formId'
+      | 'description'
+      | 'safetyNotes'
+      | 'elements'
+      | 'celestialBodies'
+      | 'zodiacSigns'
+      | 'colors'
     >
   > & {
     /** Categories this form adds, named as `IngredientFixture.categories` are. */

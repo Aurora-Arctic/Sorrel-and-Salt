@@ -28,8 +28,6 @@ export const ingredientVariants = pgTable(
     safetyNotes: text('safety_notes'),
     // The four lists the ingredient carries, added to it for this form alone.
     elements: ingredientElement('elements').array(),
-    planets: text('planets').array(),
-    // The successor to `planets`, unread and unwritten until MB.253.
     celestialBodies: text('celestial_bodies').array(),
     zodiacSigns: text('zodiac_signs').array(),
     colors: text('colors').array(),

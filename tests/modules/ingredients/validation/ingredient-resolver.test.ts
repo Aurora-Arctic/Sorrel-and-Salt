@@ -59,15 +59,15 @@ describe('ingredientResolver', () => {
 
   it('moves a variant’s repeated list entry onto that entry’s value', async () => {
     const { errors } = await ingredientResolver(
-      withVariant({ planets: [{ value: 'Mars' }, { value: 'mars' }] }),
+      withVariant({ celestialBodies: [{ value: 'Mars' }, { value: 'mars' }] }),
       undefined,
       OPTIONS,
     );
 
-    expect(at(errors, ['variants', 0, 'planets', 1, 'value'])).toMatchObject({
+    expect(at(errors, ['variants', 0, 'celestialBodies', 1, 'value'])).toMatchObject({
       message: expect.any(String),
     });
-    expect(at(errors, ['variants', 0, 'planets', 0])).toBeUndefined();
+    expect(at(errors, ['variants', 0, 'celestialBodies', 0])).toBeUndefined();
   });
 
   it.each([
@@ -153,7 +153,7 @@ describe('fieldNameOf', () => {
       {
         ...EMPTY_VARIANT,
         form: 'Wax',
-        planets: [{ value: 'Mars' }],
+        celestialBodies: [{ value: 'Mars' }],
         substitutes: [{ value: 'Mockwort' }],
         references: [{ value: 'A Herbal', link: SOURCE_LINK, locator: '' }],
       },
@@ -166,8 +166,8 @@ describe('fieldNameOf', () => {
     { path: ['variants', 1, 'formId'], field: 'variants.1.form' },
     { path: ['variants', 1, 'id'], field: 'variants.1.form' },
     { path: ['variants', 1], field: 'variants.1.form' },
-    { path: ['variants', 0, 'planets', 0], field: 'variants.0.planets.0.value' },
-    { path: ['variants', 0, 'planets', 1], field: undefined },
+    { path: ['variants', 0, 'celestialBodies', 0], field: 'variants.0.celestialBodies.0.value' },
+    { path: ['variants', 0, 'celestialBodies', 1], field: undefined },
     {
       path: ['variants', 0, 'substitutes', 0, 'substituteVariantId'],
       field: 'variants.0.substitutes.0.value',

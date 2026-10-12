@@ -13,10 +13,10 @@ import { plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { parseInput } from '../../../lib/validation';
 import { assertSiteAdmin } from '@/modules/identity';
-import { planets, zodiacSigns } from '../schema/astrology';
+import { celestialBodies, zodiacSigns } from '../schema/astrology';
 import {
   type AstrologyValueInput,
-  PlanetInput,
+  CelestialBodyInput,
   ZodiacSignInput,
 } from '../validation/astrology-value';
 import { readableFilter } from './curated-lists';
@@ -41,13 +41,13 @@ import type { AstrologyValueFilter, AstrologyValueRow, CuratedField } from '../t
 
 /** What each vocabulary is called, read and checked by. */
 const VOCABULARY = {
-  planets: {
-    table: planets,
-    input: PlanetInput,
+  celestialBodies: {
+    table: celestialBodies,
+    input: CelestialBodyInput,
     noun: 'celestial body',
     listNoun: 'celestial bodies',
     slugIndex: 'celestial_bodies_slug_unique',
-    holding: (name: string) => ({ planet: name }),
+    holding: (name: string) => ({ celestialBody: name }),
   },
   zodiacSigns: {
     table: zodiacSigns,

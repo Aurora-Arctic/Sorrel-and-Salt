@@ -12,7 +12,10 @@ import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
 import { ConfirmQuestion, useDiscardGuard } from '../Modal';
 import { FormActions, SelectField, TextField } from '../Field';
 import Notice from '../Notice';
-import { PlanetInput, ZodiacSignInput } from '@/modules/vocabulary/validation/astrology-value';
+import {
+  CelestialBodyInput,
+  ZodiacSignInput,
+} from '@/modules/vocabulary/validation/astrology-value';
 import { CategoryInput } from '@/modules/vocabulary/validation/category';
 import { DeityInput } from '@/modules/vocabulary/validation/deity';
 import { IngredientFormValueInput } from '@/modules/vocabulary/validation/ingredient-form-value';
@@ -110,25 +113,25 @@ const DeleteDeityDocument = graphql(`
   }
 `);
 
-const CreatePlanetDocument = graphql(`
-  mutation CreatePlanet($input: PlanetInput!) {
-    createPlanet(input: $input) {
+const CreateCelestialBodyDocument = graphql(`
+  mutation CreateCelestialBody($input: CelestialBodyInput!) {
+    createCelestialBody(input: $input) {
       id
     }
   }
 `);
 
-const UpdatePlanetDocument = graphql(`
-  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {
-    updatePlanet(id: $id, input: $input) {
+const UpdateCelestialBodyDocument = graphql(`
+  mutation UpdateCelestialBody($id: ID!, $input: CelestialBodyInput!) {
+    updateCelestialBody(id: $id, input: $input) {
       id
     }
   }
 `);
 
-const DeletePlanetDocument = graphql(`
-  mutation DeletePlanet($id: ID!) {
-    deletePlanet(id: $id)
+const DeleteCelestialBodyDocument = graphql(`
+  mutation DeleteCelestialBody($id: ID!) {
+    deleteCelestialBody(id: $id)
   }
 `);
 
@@ -283,17 +286,17 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   // The flat kinds (MB.95): filed under nothing, and no part of an entry's
   // address, so a rename moves none; it still carries onto the entries
   // listing the value (MB.162).
-  planet: defineKind({
-    noun: LIST_KINDS.planet.label,
+  celestialBody: defineKind({
+    noun: LIST_KINDS.celestialBody.label,
     describe: 'What this body is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
     renameNote: USED_RENAME_NOTE,
-    schema: PlanetInput,
+    schema: CelestialBodyInput,
     toInput: withoutGroup,
-    create: CreatePlanetDocument,
-    update: UpdatePlanetDocument,
-    remove: DeletePlanetDocument,
+    create: CreateCelestialBodyDocument,
+    update: UpdateCelestialBodyDocument,
+    remove: DeleteCelestialBodyDocument,
   }),
   zodiacSign: defineKind({
     // The long form on every button (the MB.115 sign-off): Save Zodiac Sign.

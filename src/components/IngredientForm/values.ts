@@ -44,7 +44,7 @@ import type {
 /** The ingredient's own lists that take entries in a box. */
 export const LIST_FIELDS = [
   'folkNames',
-  'planets',
+  'celestialBodies',
   'zodiacSigns',
   'colors',
   'deities',
@@ -52,7 +52,7 @@ export const LIST_FIELDS = [
 ] as const;
 
 /** A variant's lists, each a box beneath its form as the ingredient's are beneath it. */
-export const VARIANT_LISTS = ['planets', 'zodiacSigns', 'colors', 'substitutes'] as const;
+export const VARIANT_LISTS = ['celestialBodies', 'zodiacSigns', 'colors', 'substitutes'] as const;
 
 /**
  * What each field is called where the form counts or names its entries: the
@@ -65,7 +65,7 @@ export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
   description: { label: 'Description', one: 'description', many: 'description' },
   safetyNotes: { label: 'Safety Notes', one: 'safety notes', many: 'safety notes' },
   elements: { label: 'Element', one: 'element', many: 'elements' },
-  planets: { label: 'Celestial Bodies', one: 'celestial body', many: 'celestial bodies' },
+  celestialBodies: { label: 'Celestial Bodies', one: 'celestial body', many: 'celestial bodies' },
   zodiacSigns: { label: 'Zodiac Signs', one: 'zodiac sign', many: 'zodiac signs' },
   colors: { label: 'Colours', one: 'colour', many: 'colours' },
   deities: { label: 'Deities', one: 'deity', many: 'deities' },
@@ -85,14 +85,14 @@ export const EMPTY_VARIANT: VariantFormValues = {
   description: '',
   safetyNotes: '',
   elements: [],
-  planets: [],
+  celestialBodies: [],
   zodiacSigns: [],
   colors: [],
   substitutes: [],
   categoryIds: [],
   references: [],
   referencePanelOpen: false,
-  drafts: { planets: '', zodiacSigns: '', colors: '', substitutes: '', references: '' },
+  drafts: { celestialBodies: '', zodiacSigns: '', colors: '', substitutes: '', references: '' },
 };
 
 export const EMPTY_VALUES: IngredientFormValues = {
@@ -102,7 +102,7 @@ export const EMPTY_VALUES: IngredientFormValues = {
   folkNames: [],
   description: '',
   elements: [],
-  planets: [],
+  celestialBodies: [],
   zodiacSigns: [],
   colors: [],
   deities: [],
@@ -114,7 +114,7 @@ export const EMPTY_VALUES: IngredientFormValues = {
   variants: [],
   drafts: {
     folkNames: '',
-    planets: '',
+    celestialBodies: '',
     zodiacSigns: '',
     colors: '',
     deities: '',
@@ -169,7 +169,7 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
   const {
     nomenclature,
     folkNames,
-    planets,
+    celestialBodies,
     zodiacSigns,
     colors,
     deities,
@@ -184,7 +184,7 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
     ...text,
     nomenclature: nomenclature || null,
     folkNames: texts(folkNames),
-    planets: texts(planets),
+    celestialBodies: texts(celestialBodies),
     zodiacSigns: texts(zodiacSigns),
     colors: texts(colors),
     deities: deities.map(({ value, link }) => (link ? { deityId: link.id } : { name: value })),
@@ -220,7 +220,7 @@ function variantInput(variant: VariantFormValues) {
   const {
     variantId,
     formLink,
-    planets,
+    celestialBodies,
     zodiacSigns,
     colors,
     substitutes,
@@ -233,7 +233,7 @@ function variantInput(variant: VariantFormValues) {
     ...(variantId ? { id: variantId } : {}),
     ...text,
     formId: formLink?.id ?? '',
-    planets: texts(planets),
+    celestialBodies: texts(celestialBodies),
     zodiacSigns: texts(zodiacSigns),
     colors: texts(colors),
     substitutes: substituteInputs(substitutes),
@@ -552,7 +552,11 @@ export function repeatedForm(
  * substitute is picked from the compendium already. A variant's planets and
  * signs are picks as the ingredient's are.
  */
-export const PICK_ONLY_LISTS: readonly IngredientListName[] = ['planets', 'zodiacSigns', 'deities'];
+export const PICK_ONLY_LISTS: readonly IngredientListName[] = [
+  'celestialBodies',
+  'zodiacSigns',
+  'deities',
+];
 
 /** One field's errors as the resolver hands them back: the ingredient's, or a variant's. */
 type Issues = Record<string, unknown>;
@@ -719,7 +723,7 @@ export const SECTION_KEYS = [...VARIANT_SECTION_KEYS, 'variants'] as const;
 const SHARED_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
   description: 'description',
   elements: 'correspondences',
-  planets: 'correspondences',
+  celestialBodies: 'correspondences',
   zodiacSigns: 'correspondences',
   colors: 'correspondences',
   categoryIds: 'relations',

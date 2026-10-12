@@ -7,7 +7,7 @@ import {
   LookupListField,
   useCommonNameSuggestions,
   useDeitySuggestions,
-  usePlanetSuggestions,
+  useCelestialBodySuggestions,
   useSubstituteSuggestions,
 } from '@/components/IngredientForm/suggestions';
 import type { IngredientFormInput, IngredientFormValues } from '@/components/IngredientForm/types';
@@ -25,7 +25,7 @@ import {
   offerForms,
   offerIngredients,
   offerNames,
-  offerPlanets,
+  offerCelestialBodies,
 } from '../../support/msw/ingredient-lookups';
 import type {
   CorrespondenceNode,
@@ -269,9 +269,9 @@ describe('LookupListField', () => {
     legend: 'Folk Names',
     entry: 'Folk Name',
   };
-  const PLANETS: LookupList = {
-    useSuggestions: usePlanetSuggestions,
-    name: 'planets',
+  const CELESTIAL_BODIES: LookupList = {
+    useSuggestions: useCelestialBodySuggestions,
+    name: 'celestialBodies',
     ordered: true,
     legend: 'Celestial Bodies',
     entry: 'Celestial Body',
@@ -399,7 +399,7 @@ describe('LookupListField', () => {
   });
 
   // The planets and the signs share one shape and one split.
-  it.each([{ list: PLANETS, offer: offerPlanets, rows: [MOON, MOONFIXTURE] }])(
+  it.each([{ list: CELESTIAL_BODIES, offer: offerCelestialBodies, rows: [MOON, MOONFIXTURE] }])(
     'offers the curated $list.legend apart from those in use, with their descriptions',
     async ({ list, offer, rows: [curated, inUse] }) => {
       renderList(list);
@@ -421,9 +421,9 @@ describe('LookupListField', () => {
 
   // MB.174: the rows reach the list's filter, which list-field.test.tsx
   // proves on given rows.
-  it('leaves a listed planet out whatever its case, and offers what was typed only when it is no repeat', async () => {
-    renderList(PLANETS);
-    const calls = offerPlanets([{ ...MOON, description: null }, MOONFIXTURE]);
+  it('leaves a listed celestial body out whatever its case, and offers what was typed only when it is no repeat', async () => {
+    renderList(CELESTIAL_BODIES);
+    const calls = offerCelestialBodies([{ ...MOON, description: null }, MOONFIXTURE]);
 
     type('Celestial Body', 'moon');
     fireEvent.click(screen.getByRole('button', { name: 'Add Celestial Body' }));

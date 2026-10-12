@@ -761,7 +761,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Adam and Eve root is the underground tuber of Aplectrum hyemale, an orchid native to Canada and the eastern United States, and the only species in its genus, whose name is Greek for 'spurless'. It ranges from Oklahoma to the Carolinas and north into Minnesota, Ontario, Quebec and Massachusetts, and is commonest in the Appalachians, around the Great Lakes and along the Ohio and upper Mississippi valleys. The tubers creep underground and build large colonies. Each plant puts up one leaf, striped silvery white and green, which shows in late November and lasts until March; in late spring a purplish-green stalk carries a few tiny flowers, pale green or yellow and purplish at the tips. The roots come linked in pairs, sometimes in threes. Crushed, the tubers give a sticky fluid that Native Americans used to mend pottery, the source of its other name, putty root. Kynes treats it under Orchid, beside the early purple orchid, and the lore she gives is of orchid roots generally: medieval European witches were said to put the larger root into love potions and the smaller into remedies for heartbreak. In magic the root is carried as an amulet to draw love or help fertility, split between two partners to strengthen their commitment, or held in the hands for a few minutes each day to build psychic ability.",
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       zodiacSigns: ['Libra', 'Scorpio'],
       safetyNotes: 'Toxic if swallowed, and it may irritate the skin.',
       folkNames: ['Putty Root', 'Putty Root Orchid', 'Adam, Eve, and Son Root'],
@@ -774,7 +774,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -808,7 +808,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "The adder's tongue here is the yellow trout lily, Erythronium americanum, a spring ephemeral of the lily family that grows in colonies in the woods of eastern North America, from Labrador south to Georgia and west to Mississippi and Minnesota. It grows from a small corm set deep in the soil, white and starchy inside, and its white bulb's shape gives it the name dogtooth violet. A flowering plant raises two basal leaves mottled with brown, grey or purple, a pattern likened to the markings of a brook trout, and one nodding yellow flower whose six petal-like segments curl back. It blooms early in spring, before the canopy above it leafs out, and the flowers close at night; a plant may go four to seven years before it first flowers. Some colonies have been dated to three hundred years old. In nineteenth-century America the trout lily was reckoned an aphrodisiac. Cunningham gives it a healing charm: soak the herb in cold water, bind it in cloth over a wound or bruise until it grows warm, then bury it in muddy ground. Kynes notes that it is endangered or threatened in some places, and asks anyone who finds it wild to sense its energy, state their purpose, and send it healing before leaving.",
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       folkNames: [
         "American Adder's Tongue",
         "Serpent's Tongue",
@@ -830,7 +830,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -842,7 +842,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -913,7 +913,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'The African violet, Streptocarpus ionanthus, is a flowering plant native to eastern and south-western Tanzania. Its synonym, Saintpaulia ionantha, from a genus no longer recognised, is the name both Cunningham and Kynes give it. It sits in the Saintpaulia section of the genus Streptocarpus, and several plants once counted as separate Saintpaulia species are now treated as its subspecies and varieties; in the wild it is rated near threatened. Its rounded, softly hairy, dark green leaves spring from a central crown, with stalks of clustered purple flowers rising among them, and in the right conditions it will flower all year indoors. Europeans came to know it through Baron Walter von Saint Paul-Illaire, a German serving as a regional commissioner in what is now Tanzania, who, out of an interest in botany, carried samples home to Hanover for a friend at its royal botanical gardens; it quickly became a much-loved houseplant, now grown in many sizes, shapes and colours. Its species name means violet-coloured flowers. In magic it belongs to the home. Cunningham grows the purple-flowered plants indoors to encourage spirituality and finds them mildly protective. Kynes says they raise the energy of a house and draw blessings in: set a flowering plant wherever energy needs to move, and put one with deep blue or purple flowers on the altar to lift the spiritual tone of meditation or ritual.',
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       colors: ['purple', 'blue'],
       safetyNotes: 'Cunningham marks it as currently recognised as safe (his health code G).',
       categories: ['Protection', 'Abundance', 'Harmony', 'Love'],
@@ -921,12 +921,19 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "African Violet"; p. 266',
-          supports: ['elements', 'planets', 'colors', 'categories', 'description', 'safetyNotes'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'description',
+            'safetyNotes',
+          ],
         },
         {
           source: 'kynes-plants',
           locator: 'under "African Violet"',
-          supports: ['elements', 'planets', 'colors', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'colors', 'categories', 'description'],
         },
         {
           source: 'wikipedia-streptocarpus-ionanthus',
@@ -958,7 +965,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Agrimony, Agrimonia eupatoria, is a softly hairy perennial of the rose family, native to Europe and south-western Asia, found there in damp meadows and pastures, by streams and among shrubs; in England it is common on hedge-banks and field margins. From a dark, woody root it raises a stem two feet or more tall, with toothed, pinnate leaves, and from June to September slender spikes of small yellow five-petalled flowers with a scent like apricots. The seed heads ripen into hooked burrs that catch on clothing and fur, which gave it names such as sticklewort and cocklebur, while the tall spikes earned it church steeples. Grieve traces its name to the Greek argemone, used of plants that healed the eyes, and its species name to King Mithridates Eupator. The Anglo-Saxons used it to heal wounds and in an ointment against poison and evil spirits, it went into the arquebusade water put on gunshot wounds, and the whole plant gives a yellow dye. Old lore held that a sprig laid under the head brought a sleep lasting until it was taken away. Medieval witches were said both to cast spells with it and to break them; it went into a potion, and a Tyrolean posy of herbs, that let the bearer see witches, and in Scotland it cured elf shot. Magically it goes into protection sachets, banishes negative energies and spirits, and turns a hex back on its sender.',
       elements: ['air', 'earth'],
-      planets: ['Jupiter', 'Mercury'],
+      celestialBodies: ['Jupiter', 'Mercury'],
       zodiacSigns: ['Cancer', 'Taurus'],
       safetyNotes:
         'AHPA safety class 1 and interaction class A: no contraindications, other precautions, drug interactions or adverse effects are known. Its safety in pregnancy and while nursing has not been conclusively established, though the review found no concern. It contains 4–10% tannins. Cunningham marks it as currently recognised as safe (his health code G).',
@@ -995,7 +1002,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -1008,7 +1015,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -1023,7 +1030,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Agrimony"',
-          supports: ['planets', 'zodiacSigns'],
+          supports: ['celestialBodies', 'zodiacSigns'],
         },
         {
           source: 'grieve-agrimony',
@@ -1088,7 +1095,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Ague root is a perennial herb of eastern North America, found through most of the eastern United States and reported from southern Ontario, where it favours damp ground that is peaty, sandy or gravelly. It spreads by underground rhizomes and forms a star-shaped rosette of narrow, yellowish-green leaves, from which a single slender stalk rises as high as a metre, bearing small white flowers shaped like urns and dusted on the outside with a mealy bloom. Several Native American peoples, among them the Catawba and Cherokee, used it as medicine, and settlers in Appalachia took it up after them; in the nineteenth century it entered the United States Pharmacopeia. Grieve describes the dried rhizome as intensely bitter and valued as a tonic for the stomach. Its names have long been tangled with those of false unicorn root, Chamaelirium luteum, so that 'true' and 'false' were attached to each plant at different times. In magic it is a herb of protection: it is scattered around a home to keep evil away or carried in a sachet, it is used in hex-breaking and uncrossing work, and it is called on for banishing, psychic abilities and success.",
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       safetyNotes:
         'AHPA safety class 1 (its interaction class is A): no contraindications, other cautions, drug interactions or side effects are known. One early animal study found that it depressed the uterus and countered the oxytocin-like action of the pituitary, but AHPA finds no evidence that this would matter when oxytocin is given in labour; its safety while nursing has not been conclusively established. Cunningham flags possible drug interactions and says it may work against some oxytocins (Pitocin). Kynes advises against taking it in pregnancy or while breastfeeding, and warns that swallowing the fresh root is mildly poisonous.',
       folkNames: [
@@ -1127,7 +1134,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'safetyNotes',
@@ -1188,7 +1195,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "The common or black alder is a tree of the birch family, native to most of Europe, Britain and Ireland included, and to south-west Asia and north Africa. It grows in wet ground by rivers, ponds and swamps, where nodules on its roots, formed by a nitrogen-fixing bacterium, let it flourish in poor soil. Its rounded, glossy leaves are sticky when young, its male catkins hang slender and drooping, and its woody female catkins look like tiny cones. In folklore from Britain and Ireland to the Continent, the alder was a tree of great magic. Irish lore names it the forest's warrior witch and says faeries guard it and open their realm through it; in Denmark faeries were thought to live in or beneath it; Germanic peoples burned its wood in sacred fires; and Germans and Belgians hung its sprigs on houses and stables against witches, though they also believed witches used it to work the weather. A Herefordshire rhyme times the trout season on the Wye by the size of its buds. Culpeper places it under Venus. In magic it is used for divination, dream work, prophecy, protection, healing and banishing.",
       elements: ['air', 'fire', 'water'],
-      planets: ['Mars', 'Moon', 'Venus'],
+      celestialBodies: ['Mars', 'Moon', 'Venus'],
       zodiacSigns: ['Aries', 'Cancer', 'Pisces'],
       folkNames: [
         'Black Alder',
@@ -1220,7 +1227,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -1230,7 +1237,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "The Common Alder-Tree"',
-          supports: ['planets', 'zodiacSigns', 'description'],
+          supports: ['celestialBodies', 'zodiacSigns', 'description'],
         },
         {
           source: 'grieve-alder-common',
@@ -1317,7 +1324,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Alfalfa, called lucerne in Britain, South Africa and Australia, is a perennial of the pea family that usually lives four to eight years, with leaves in threes, clusters of mostly purple flowers and roots that can reach deep groundwater. It is thought to have arisen in south-central Asia and been first farmed in Central Asia; Pliny records that it reached Greece around 490 BC with the Persian invasion, and was called the Median grass. Spanish colonists carried it to the Americas in the sixteenth century to feed their horses, and today it is grown worldwide as forage, cut for hay and silage or grazed. The English name came through Spanish from an Arabic word, while lucerne was borrowed from French. Grieve describes a deep-rooting plant with spikes of violet-blue, clover-like flowers, prized for fattening horses and cattle and for raising the milk yield of cows. In magic Cunningham gives it to Venus and earth and to prosperity: a little jar of it is kept in the pantry or a cupboard so that the household never goes short of food or money, and it is added to money spells.',
       elements: ['earth'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       safetyNotes:
         'AHPA safety class 1 (its interaction class is A) for the herb: no contraindications, other cautions, drug interactions or side effects are known. Its coumarins have led some to call it an anticoagulant; one laboratory study found slight anticoagulant activity, but how that bears on human use is unknown. Safety in pregnancy and nursing has not been conclusively established. Cunningham marks it as recognised as safe. Wikipedia nonetheless names pregnancy, breastfeeding, hormone-sensitive conditions and diabetes as concerns, and says it may interact with warfarin, birth control pills and oestrogens.',
       folkNames: ['Lucerne', 'Buffalo Herb', 'Purple Medic', 'Jat', 'Qadb'],
@@ -1328,7 +1335,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           locator: 'under "Alfalfa"; p. 266',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -1403,7 +1410,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Dyer's alkanet is a herb of the borage family, native to the Mediterranean region and the Balkans and reaching east to Ukraine. Its stems sprawl along the ground, thick with hairy oblong leaves, and it bears small bright-blue flowers shaped like cups. The root is the prized part: dark outside and blue-red within, it gives a red colouring that dissolves in oil or alcohol but not in water, and like litmus it turns blue in alkali and crimson in acid. It has coloured cloth, cosmetics and wood since antiquity, staining furniture to imitate rosewood or mahogany, tinting salves in pharmacy and colouring cheap wines; its pigment, alkannin, was the food colouring E103, whose approval the European Union has withdrawn. The name comes from the Arabic for henna, which was sometimes used in its place. Pliny reported that the plant taken in wine lifted the spirits, medieval Europeans carried the root as a luck charm, and in hoodoo it goes into red fast luck oil. In magic it is burned as incense to cleanse a space of negativity and draw prosperity, and a piece of root is kept in a purse or wallet as a charm for prosperity and success.",
       elements: ['water', 'earth'],
-      planets: ['Jupiter', 'Venus'],
+      celestialBodies: ['Jupiter', 'Venus'],
       zodiacSigns: ['Taurus'],
       safetyNotes:
         "AHPA safety classes 2a, 2b and 2c (its interaction class is A): for external use only, and not to be taken in pregnancy or while nursing unless a qualified practitioner is supervising, because the plant contains unsaturated pyrrolizidine alkaloids, whose levels in its different parts are not known. Under AHPA's trade rule, products containing it are not sold for internal use and are labelled for external use only, not for broken or abraded skin, and not while nursing. Cunningham likewise marks it as not recommended for internal use.",
@@ -1443,7 +1450,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -1514,7 +1521,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Allspice is the dried berry of Pimenta dioica, an evergreen tree of the myrtle family native to the Greater Antilles, southern Mexico and Central America and now grown in many warm countries. Crushing its dark, oval leaves releases a scent like clove; small white flowers grow in clusters at the branch tips, followed by pea-sized berries that are picked while still green and dried in the sun until brown. Jamaica long supplied most of the spice in trade, and there the tree grew thickly enough to make whole forests. The English were calling it allspice by 1621, because its taste seemed to unite cinnamon, nutmeg and clove, though it is one spice and not a blend. Its genus name comes from the Spanish word for black pepper, which the dried berries resemble. Long before Columbus, the Indigenous peoples of the West Indies and Central America used it as food and medicine; the Maya mixed it into smoking tobacco, and both the Maya and the Aztec used it in embalming. Today it flavours Jamaican jerk seasoning among much else. In magic it serves as an incense, burned to draw money and luck, and it is used to promote healing, carried as a single dried berry for luck, and used to bless amulets, altars and the space for a rite.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: ['Aries', 'Scorpio'],
       safetyNotes:
         'AHPA safety class 1 and interaction class A: no contraindications, other precautions or drug interactions are known. One food-service worker developed allergic contact dermatitis from handling allspice at work, confirmed by patch testing. Its safety in pregnancy and while nursing has not been conclusively established, although no concern was identified. Cunningham marks it as currently recognised as safe.',
@@ -1547,7 +1554,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -1560,7 +1567,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -1652,7 +1659,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "The almond, Prunus amygdalus, is a deciduous tree of the plum and cherry genus, grouped with the peach in the subgenus Amygdalus, and grows three to four and a half metres tall. Its scented flowers, white to pale pink with five petals, open in early spring ahead of the leaves. The fruit is a drupe: a leathery grey-green hull around a hard shell, inside which lies the edible seed that is commonly called a nut. Wild almonds are mostly bitter, and picking out the sweet kind began the tree's domestication; it was among the first fruit trees farmed, with Early Bronze Age evidence from the Middle East, though its homeland is disputed, placed anywhere from Central Asia and Iran to the lands between Mongolia and Uzbekistan. In the Bible, Aaron's rod put out almond blossom, and the Hebrew name for the tree plays on a word for watching. Greek myth tells of Phyllis, turned into an almond tree, which burst into flower when her returning lover embraced it. The Greeks used crushed almonds in water to stand for the seed of Zeus and scattered them at weddings for fertility, and almonds were long eaten to ward off drunkenness. In magic the nuts, leaves and wood serve prosperity and money spells, climbing the tree is said to bring success in business, a pocketful of almonds is said to lead to treasure, and almond milk is poured as a libation.",
       elements: ['air', 'fire'],
-      planets: ['Mercury', 'Jupiter', 'Mars', 'Sun', 'Venus'],
+      celestialBodies: ['Mercury', 'Jupiter', 'Mars', 'Sun', 'Venus'],
       zodiacSigns: ['Aquarius', 'Gemini', 'Virgo'],
       safetyNotes:
         'Sweet almonds, the kind commonly eaten, hold only traces of amygdalin, which releases cyanide; bitter almonds hold some forty times as much, and are not for internal use. AHPA has no monograph of its own on almond, but applies its cautions on bitter apricot kernel (safety class 3: only under the supervision of a qualified expert) to bitter almond. As few as five to ten bitter almonds may kill a child, and around fifty an adult, with vertigo among the signs of cyanide poisoning. Kynes warns that raw bitter almonds are lethal and that the seeds and leaves of Prunus species produce cyanide in the gut. Almonds can also cause food allergy, often alongside allergy to peach or other tree nuts, and mouldy almonds may carry aflatoxin and should not be eaten.',
@@ -1686,7 +1693,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           locator: 'under "Almond"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -1700,7 +1707,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -1791,7 +1798,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Aloe vera is a succulent of the genus Aloe, an evergreen perennial whose native home is the Hajar Mountains of north-eastern Oman and the eastern United Arab Emirates; it now grows wild across much of the tropical, subtropical and arid world, and is a common house plant. It has little or no stem and reaches 60 to 100 centimetres, with thick, fleshy green to grey-green leaves edged in small white teeth, and in summer it sends up a spike of drooping, tube-shaped yellow flowers. Its leaves yield two different products: a clear inner gel, put on the skin for burns and other complaints, and a bitter yellow latex, once taken as a purgative. The specific name vera is Latin for true. Aloe is recorded in healing texts from Sumer and Egypt; the Egyptians, who linked it with immortality, used it in embalming, and the Greeks and Romans dressed wounds with it. In the Muslim world a pilgrim back from Mecca might hang an aloe over the door, and in Arabia it was planted at graves, where its Arabic name, saber, means patience. In magic it is a plant of protection and luck: hung above doors and over houses to keep evil out, kept indoors against accidents in the home, and its gel dabbed over the outside doorways to raise a guard around the house.',
       elements: ['water'],
-      planets: ['Moon', 'Jupiter', 'Venus'],
+      celestialBodies: ['Moon', 'Jupiter', 'Venus'],
       zodiacSigns: ['Cancer', 'Libra', 'Pisces'],
       safetyNotes:
         'Cunningham marks the fresh plant as not recommended for internal use, and the dried plant as not for internal use and not to be taken in pregnancy, while nursing or with diarrhoea. AHPA rates the inner leaf gel safety class 1, but the dried yellow latex of the leaf class 2b, 2c and 2d (see the Sap form). Taken by mouth, aloe can cause abdominal cramps and diarrhoea, which may reduce the absorption of medicines, and hepatitis with long use; it may interact with drugs for blood clots, diabetes and heart disease and with diuretics, and it should not be used in pregnancy. Some people are allergic to it on the skin. Aloe vera whole-leaf extract is classed by the International Agency for Research on Cancer as a possible human carcinogen (group 2B).',
@@ -1822,7 +1829,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -1835,7 +1842,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -1920,7 +1927,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Amaranthus hypochondriacus, known as prince's feather or Prince-of-Wales feather, is a strong-growing, upright plant of the amaranth family, grown as an annual, that stands from 40 centimetres to two metres tall. In summer and autumn it carries dense, catkin-like flower spikes, usually a deep purplish red though sometimes yellow-green, followed by small fruits holding glossy seeds that range from whitish pink to almost black. It is one of the grain amaranths, native to Central America and elsewhere in North America, and in Africa and El Salvador its leaves and seeds are eaten. Its name comes from the Greek for unwithering, since the flowers keep their looks long after cutting, and so it became an emblem of immortality: in ancient Greece it was sacred to Artemis of Ephesus, adorned tombs and the images of gods, and was used in pagan burial rites. The Aztecs used amaranth in their own rituals, which led the Spanish colonial authorities in Mexico to outlaw it. Culpeper put it under Saturn and held that its flowers staunched bleeding. In magic a crown of its flowers is worn to speed healing, the dried flowers are carried to mend a broken heart and have been used to call up the dead, and its seeds are scattered round an altar candle to help reach the spirits.",
       elements: ['fire'],
-      planets: ['Saturn', 'Sun', 'Venus'],
+      celestialBodies: ['Saturn', 'Sun', 'Venus'],
       zodiacSigns: ['Aquarius', 'Leo'],
       folkNames: [
         'Flower of Immortality',
@@ -1945,7 +1952,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -1955,7 +1962,14 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'kynes-plants',
           locator: 'under "Amaranth"',
-          supports: ['elements', 'planets', 'zodiacSigns', 'deities', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'grieve-amaranths',
@@ -1964,7 +1978,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Amaranthus"',
-          supports: ['planets', 'folkNames', 'description'],
+          supports: ['celestialBodies', 'folkNames', 'description'],
         },
         {
           source: 'wikipedia-amaranthus-hypochondriacus',
@@ -2017,7 +2031,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'American bittersweet is a sturdy woody vine of the family Celastraceae, found wild across central and eastern North America, where it grows on rich, well-drained woodland soils and flowers mostly in June. Its twining stems can pass thirty feet in length and an inch in thickness at the base, and they coil so tightly round young trees that they can choke them. The tiny flowers have no scent. In autumn come pea-sized fruits, red berries framed by yellow-orange petals, which birds relish but which are poisonous to people. Colonists named it bittersweet in the eighteenth century because its fruit looked like that of the European nightshade of the same name, and the word American now marks it off from its invasive Asian relative, Oriental bittersweet. Native Americans and settlers took the root to bring on vomiting and against venereal disease and the symptoms of tuberculosis, and it was winter food for the Menominee, Ojibwe and Potawatomi when supplies ran short. It is grown today in gardens and for seasonal flower arrangements. In magic a small piece tied on the body is said to shield people and animals from evil and draw it out of them, and a sprig under the pillow helps one forget an old love.',
       elements: ['air'],
-      planets: ['Mercury', 'Pluto', 'Saturn'],
+      celestialBodies: ['Mercury', 'Pluto', 'Saturn'],
       zodiacSigns: ['Aquarius'],
       safetyNotes:
         'Poisonous. The berries are toxic if swallowed, and every part of the plant should be handled with care.',
@@ -2039,7 +2053,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -2052,7 +2066,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2090,7 +2104,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "American ginseng is a small herbaceous perennial of the ivy family, Araliaceae, at home in south-eastern Canada and the eastern United States, where it keeps to the deep shade of deciduous hardwood forest, above all in the Appalachians and the Ozarks. It stands six to eighteen inches tall, usually with three compound leaves of three to five leaflets each, and its fragrant root is shaped like a little parsnip and divides with age. It flowers in July, and its berries ripen to deep red by September. The Jesuit missionary Joseph-François Lafitau found it near Montreal in 1716 with the help of the Haudenosaunee, whose name for it means 'resembles man', and by 1720 roots from Quebec were going to China, beginning a trade with Asia now three centuries old. Overharvesting and lost habitat have made the wild plant rare; it is listed under CITES Appendix II, is endangered in Canada, and has been grown as a crop since the late nineteenth century. Among the Pawnee, Meskwaki, Delaware and Mohegan it served both as medicine and in love charms. In magic the root is carried to draw love, guard health and secure sexual potency, burned to drive off evil spirits and break hexes, or charged with a wish and thrown into running water.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       safetyNotes:
         'AHPA safety class 1. It may weaken the effect of warfarin, so the two should be taken together only under the supervision of a healthcare professional. Allergic reactions, asthma and rashes among them, have been reported, and improper use is reported to cause headache, weakness, vomiting and other effects. It may alter blood sugar, so people with diabetes should watch theirs closely and consult a qualified practitioner first. Its safety in pregnancy and while nursing is not established, and it should not be taken while pregnant or breastfeeding.',
       folkNames: [
@@ -2111,7 +2125,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -2123,7 +2137,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -2178,7 +2192,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Angelica is a tall biennial of the carrot family, Apiaceae, growing wild through the far north of Europe, from Russia and Scandinavia to Greenland, the Faroes and Iceland, always in damp ground near water. In its first year it makes only leaves; in its second a fluted stem rises as high as two and a half metres, carrying round heads of small greenish-yellow flowers. Grown as a vegetable and a medicine since the tenth century and taken up in Sámi cooking, it flavours gin and liqueurs such as Chartreuse and Bénédictine, and its stems are candied. It looks like several poisonous members of its family, so a wild plant must be identified with certainty. Northern European folklore held it a guard against contagion and enchantment. Grieve gives the belief that it blooms on the feast of Michael the Archangel and so keeps off evil spirits and witchcraft, and its old name, Root of the Holy Ghost; Anglo-Saxons wore the root on a string against spells, it shielded cattle from elf shot, Lapland poets were crowned with it, and the Cherokee and Delaware used it against evil spirits. Culpeper placed it under the Sun in Leo. In magic it goes into protection and exorcism incenses, is sprinkled round a house to keep evil out, and in a bath lifts curses and hexes; burning the root breaks a hex and consecrates ritual space.',
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       zodiacSigns: ['Aries', 'Leo'],
       safetyNotes:
         'AHPA safety class 2b: not for use in pregnancy except under the supervision of a qualified healthcare practitioner, because it was traditionally used to bring on menstruation. Safety while nursing is not established. It contains furanocoumarins, which can make skin that touches the plant react more strongly to sunlight, and some sources advise avoiding long exposure to the sun while taking it, though no case of such a reaction from internal use has been found.',
@@ -2219,7 +2233,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -2233,7 +2247,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2249,7 +2263,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Angelica"',
-          supports: ['planets', 'zodiacSigns', 'description'],
+          supports: ['celestialBodies', 'zodiacSigns', 'description'],
         },
         {
           source: 'grieve-angelica',
@@ -2310,7 +2324,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Anise is an annual herb of the carrot family, Apiaceae, whose homeland is south-west Asia and the eastern Mediterranean, growing two to three feet tall. Its lowest leaves are simple and shallowly lobed, the upper ones finely cut and feathery; small white or yellow flowers crowd into umbels and give way to the small ribbed fruits known as aniseed. Their sweet, liquorice-like flavour goes into sweets, cakes and drinks such as ouzo, sambuca, pastis, raki and arak. It was first grown in the Middle East and has been farmed in Egypt for some four thousand years; Dioscorides and Pliny knew it, and in Virgil's day it was already a spice. Romans closed a rich meal, and sometimes a wedding feast, with a spiced cake containing it, and the seeds were once taken in part payment of taxes. Theophrastus held that seeds kept by the bed brought sweet dreams, the Romans laid a sprig by the pillow against bad ones, and in medieval England it was believed to turn aside the evil eye. In magic a little pillow stuffed with the seeds keeps nightmares away, the herb goes into protection and meditation incenses, the seed into purification baths, and fresh leaves set about a room or round a magic circle drive off evil.",
       elements: ['air'],
-      planets: ['Jupiter', 'Mars', 'Mercury'],
+      celestialBodies: ['Jupiter', 'Mars', 'Mercury'],
       zodiacSigns: ['Gemini', 'Leo', 'Pisces'],
       safetyNotes:
         'AHPA safety class 1. Allergic reactions have been reported, among them occupational asthma, a case of eye and nose symptoms with stomach upset, and swelling of the tongue. Some herbals advise against taking it internally in pregnancy; AHPA records that infusions may be used then, but not alcohol extracts or the essential oil. Safety while nursing is not established.',
@@ -2333,7 +2347,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -2346,7 +2360,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2456,7 +2470,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'The orchard apple is a deciduous tree whose round fruit is now grown all over the world. It comes from Central Asia, where the wild species it descends from, Malus sieversii, can still be found, and was cultivated across Eurasia for thousands of years before European colonists carried it to the Americas. In spring it bears five-petalled blossoms, rose-pink as they open and paling to white, and the fruit ripens in late summer or autumn around a core of seed chambers. Grieve records charred apples in the Swiss lake dwellings and the English custom of wassailing orchards with cider at Christmas, and in Norse myth the goddess Iðunn kept the apples that gave the gods their youth. Celtic lore made it a fruit of knowledge, prophecy and the otherworld: Avalon takes its name from the Welsh for apple tree, and a branch bearing bud, blossom and ripe fruit together was a charm for entering the land of the gods. Wiccan altars are heaped with apples at Samhain, when the fruit is counted among the foods of the dead. In magic the apple belongs above all to love: it is halved and shared with a lover, given to the one desired, and its seeds are counted to foretell a marriage. It also serves healing, rubbed on an ailing part and buried while the Moon wanes, and stands for immortality.',
       elements: ['water', 'air'],
-      planets: ['Venus', 'Jupiter'],
+      celestialBodies: ['Venus', 'Jupiter'],
       zodiacSigns: ['Aquarius', 'Cancer', 'Libra', 'Taurus'],
       safetyNotes:
         'The seeds contain amygdalin, which releases cyanide once digested. A few seeds do no harm, but very large amounts can cause adverse reactions, which may take hours to appear; Cunningham marks the seeds, in large amounts, as poison, and Kynes cautions against swallowing them. Raw apple can set off an oral allergy in people allergic to birch pollen, which leaves the mouth and throat itchy and inflamed and in rare cases brings on life-threatening anaphylaxis; cooking destroys that allergen. A second form, found around the Mediterranean and related to peach allergy, survives cooking and can be more severe, with vomiting, stomach pain and hives.',
@@ -2507,7 +2521,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           locator: 'under "Apple"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -2521,7 +2535,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2609,7 +2623,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Prunus armeniaca, the apricot most widely grown, is a small tree of eight to twelve metres with oval, finely toothed leaves and white to pinkish five-petalled flowers that open one or two together in early spring, ahead of the leaves. Its fruit, like a small peach, ripens from yellow to orange, often flushed red on the side facing the sun, and holds a single seed inside a hard stone. Genetic studies place its origin in Central Asia; the species name records an older belief that it came from Armenia, which Grieve set aside in favour of northern China and the Himalaya. She dates its arrival in England, from Italy, to the reign of Henry VIII. Apricots have long been dried for keeping and for trade. In China the tree is tied to learning and to medicine: Confucius was said to teach among apricot trees, and the physician Dong Feng took as his only fee that cured patients set apricot trees in his orchard. Kynes records that in north-eastern China the fruit was thought to confer prophecy, and that it is one candidate for the golden apples of Hera’s garden. In magic it is a plant of love: the fruit is eaten to sweeten the temper, its juice goes into love potions, and its flowers suit a handfasting or an anniversary.',
       elements: ['water'],
-      planets: ['Venus', 'Neptune', 'Sun'],
+      celestialBodies: ['Venus', 'Neptune', 'Sun'],
       zodiacSigns: ['Taurus'],
       safetyNotes:
         'The kernel inside the stone is poisonous. Kynes warns that it is toxic if eaten and can kill, and that in Prunus species both seeds and leaves give rise to cyanide in the gut; Cunningham marks the seeds as not recommended for internal use. The Seed form gives the safety handbook’s detail.',
@@ -2640,7 +2654,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -2654,7 +2668,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2778,7 +2792,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Arnica is an aromatic perennial of the daisy family, about 18 to 60 centimetres tall, with a flat rosette of downy, oval leaves and large orange-yellow flower heads from May to August. It grows across most of Europe on poor, acid ground, above all in alpine meadows up to almost three thousand metres, and never on lime; it is becoming rarer as farming intensifies and wild plants are gathered for sale. It has a long history in European folk medicine, where a tincture of the flowers or the root was applied to sprains, bruises and wounds, although the plant is toxic when swallowed. German custom was to pick it at Midsummer and hang it on houses as a guard against lightning, hail and fire. Hildegard von Bingen linked it with wolves and noted it as an aphrodisiac used in love magic, and the old name leopard’s bane comes from confusing it with a different plant, Doronicum pardalianches. Kynes associates it with water, Saturn and Hecate, and uses it for love, protection, peace and psychic ability: a candle dressed with its oil serves a love spell, its seeds are scattered at the corners of a property to raise a shield of safety, and its energy quietens restless spirits in a home.',
       elements: ['water'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       safetyNotes:
         'AHPA safety class 3 for internal use and 2d for external use: not to be taken by mouth unless a qualified expert oversees it, and never to be applied to broken skin or open wounds. Swallowing it has caused severe poisoning, with fever, racing heart and raised liver enzymes, and deaths have been reported; it irritates the mucous membranes and can cause stomach pain, diarrhoea and vomiting. It contains sesquiterpene lactones that cause allergic contact dermatitis in sensitive people, and people allergic to other plants of the daisy family, sunflower, marigold and feverfew among them, should be cautious. Overdoses have caused miscarriage, and safety while nursing is not established. Kynes adds that long external use can irritate the skin.',
       folkNames: [
@@ -2808,7 +2822,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -2907,7 +2921,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'The common or European ash is a tall deciduous tree of the olive family, native across mainland Europe from the north of Spain to Russia, east to the Caucasus, and throughout Britain and Ireland, where it favours limestone. Its compound leaves carry seven to thirteen toothed leaflets, its winter buds are jet black, and its winged seeds, called keys, hang in bunches until the following spring. Its tough, springy timber has made spears, bows, tool handles and carts, and in Ireland every hurley. In Norse myth the world tree Yggdrasil, which holds up the nine worlds, is an ash. Old superstitions recorded by Grieve used it to charm away warts and, by passing a child through a split sapling, to cure rupture; Cunningham adds that snakes will not cross its wood, and Kynes that where ash, oak and hawthorn grow together the faery realm may be seen. Culpeper places it under the Sun. In magic it is a tree of protection and of the sea: a solar cross carved from its wood guards against drowning, a staff of it over the door keeps harm away, its leaves under the pillow bring prophetic dreams, and ash burned at Yule brings prosperity.',
       elements: ['fire', 'air', 'earth', 'water'],
-      planets: ['Sun', 'Mercury', 'Neptune', 'Uranus'],
+      celestialBodies: ['Sun', 'Mercury', 'Neptune', 'Uranus'],
       zodiacSigns: ['Capricorn', 'Libra', 'Taurus', 'Virgo'],
       folkNames: [
         'Nion',
@@ -2957,7 +2971,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -2970,7 +2984,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2981,7 +2995,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Ash Tree"',
-          supports: ['planets', 'description'],
+          supports: ['celestialBodies', 'description'],
         },
         {
           source: 'grieve-ash',
@@ -3085,7 +3099,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Asian ginseng is a herbaceous perennial, thirty to sixty centimetres tall, native to the mountains of the Russian Far East, north-east China and the Korean peninsula. Its leaves are divided like an open hand into three to five toothed leaflets, a single rounded cluster of small flowers stands above them, and the fruits ripen into round red berries. Below ground is a spindle-shaped taproot, usually branching once or twice, which is the part harvested, most often after five or six years of slow growth. The wild plant is protected in Russia and China, so most ginseng sold is farmed. Its species name is read as 'man-herb' or 'forked root', and a French Jesuit writing from China in 1711 reported that the Chinese name meant 'form of man', after the shape of the root. In Asia it has been taken as medicine for thousands of years and was long counted a cure-all. Chinese myth makes it a gift from the gods to a woman longing for a child; Korean legend says it must be dug with a blade of wood, since metal would spoil its virtue; other tales have the plant glowing and roaming at night. In medieval and Renaissance Europe it was prized as an aphrodisiac, the most human-shaped roots fetching the most. In magic it serves fertility, love, healing and protection: a root bound with pink or red ribbon goes into love and fertility spells, or a small piece is carried to draw romance.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       safetyNotes:
         'AHPA safety class 1 (its interaction class is A): no contraindications are known. Taking it with stimulants is not advised, since susceptible people may become over-stimulated, and red (steamed) ginseng may strengthen the effect of caffeine. A few case reports describe altered blood clotting in people also taking warfarin, though trials in people and rats found no interaction. It may change blood sugar, so people with diabetes should watch their levels and speak to a qualified practitioner first. Allergic reactions have been reported, and high doses or very long use can bring sleeplessness, nervousness and diarrhoea. Its safety while nursing is not established. Kynes says it should not be taken in pregnancy or while breastfeeding; AHPA notes that a British herbal text rules it out in pregnancy while texts on traditional Chinese medicine raise no such concern. Wikipedia calls its use in pregnancy and breastfeeding potentially unsafe and says children should not take it.',
       folkNames: ['Korean Ginseng', 'Chinese Ginseng', 'Ren Shen'],
@@ -3098,7 +3112,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'safetyNotes',
@@ -3155,7 +3169,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Quaking aspen is a deciduous tree of the cooler parts of North America and the most widespread tree on that continent, found from Canada down to the mountains of central Mexico. It grows quickly, with a tall trunk, smooth pale bark marked by black scars, and nearly round leaves on long, flattened stalks, so that the lightest air sets them shivering: the habit behind its names quaking and trembling aspen. In autumn the foliage turns gold or yellow. A stand often rises from one shared root system, every trunk a clone of the rest, and one such colony, Pando, is thought to be the oldest and heaviest organism alive. Its bitter bark was once taken against fevers in place of quinine and Peruvian bark. Aspen lore from Europe and Ireland links the tree with death and with healing: an Irish glossary of about 900 CE describes an aspen rod for measuring a fresh grave, Russians laid one over the grave of a suspected witch, and in northern England a lock of hair was pinned to an aspen as a cure. Its bark, like willow's, holds salicin. In magic it guards against theft, worked into spells or planted in a garden or field, and a leaf held under the tongue is said to make the speaker eloquent. A pressed leaf is kept to draw prosperity, a dried leaf is crumbled and burned to send a hex back, and a twig on the altar helps in reaching the ancestors.",
       elements: ['air', 'water'],
-      planets: ['Mercury', 'Saturn', 'Venus'],
+      celestialBodies: ['Mercury', 'Saturn', 'Venus'],
       zodiacSigns: ['Aquarius', 'Capricorn', 'Libra'],
       safetyNotes: 'Cunningham marks it as currently recognised as safe (his health code G).',
       folkNames: [
@@ -3202,7 +3216,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'safetyNotes',
           ],
@@ -3214,7 +3228,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -3270,7 +3284,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'The China aster is the only species in its genus, a member of the aster family native to China and Korea. It is an annual or biennial with one upright, mostly unbranched stem between twenty centimetres and a metre tall, leaves with serrated edges, and a single large flower head at the top whose rays are reddish purple in the wild. Grown in China for some two thousand years and in Europe from 1728 or earlier, it has been bred into flowers of many colours and heights, single and double, and is now planted worldwide in cottage gardens and for cutting, flowering from late summer into autumn. Greek myth told that asters were born from the tears of Virgo, falling to earth as stardust, and Cunningham writes that the classical Greeks set the flower on temple altars on feast days, holding it sacred to all the gods; they also burned it to drive off snakes and used it against snakebite. In medieval France and Germany its leaves were burned against evil spirits, and in Germany the flower was used, like a daisy, as a love oracle. Love is its chief work in magic: it goes into love sachets, a bloom is carried to win love, and it is grown in a garden while wishing for love. It is also used for clarity, intuition, inspiration, truth and psychic work.',
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       zodiacSigns: ['Sagittarius', 'Virgo'],
       safetyNotes: 'Cunningham marks it as currently recognised as safe (his health code G).',
       folkNames: [
@@ -3300,7 +3314,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -3314,7 +3328,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -3356,7 +3370,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Wood avens, or herb bennet, is a downy perennial of the rose family that grows in shady woodland edges, hedgerows and waysides across temperate Eurasia, and has been introduced to North America. Its wiry stems reach up to sixty centimetres and bear small flowers of five bright yellow petals, followed by bristling seed heads whose hooks catch in the fur of passing animals. Freshly dug, the root smells of cloves, because it holds eugenol, the compound found in the spice; it seasoned soups and flavoured ale, was laid among linen to keep moths away, and old physicians named a day in late March for lifting it, when its scent was strongest. Herb bennet is a worn-down form of the Latin herba benedicta, the blessed herb. Medieval Christians saw the Trinity in its three-part leaves and the Five Wounds in its five petals, and thirteenth-century masons carved it on the capitals of columns. Folk belief held that the root put evil spirits and the Devil to flight, so people wore it as an amulet against venomous creatures and mad dogs and hung over doorways. Culpeper set it under Jupiter. Magically, it goes into incenses for exorcism, scattered around a room to cleanse it, used in purification rites and love charms, and kept for abundance and protection.',
       elements: ['fire'],
-      planets: ['Jupiter'],
+      celestialBodies: ['Jupiter'],
       zodiacSigns: ['Pisces'],
       safetyNotes: 'Cunningham marks it as not recommended for internal use (his health code X).',
       folkNames: [
@@ -3390,7 +3404,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'safetyNotes',
@@ -3403,7 +3417,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -3416,11 +3430,11 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Avens"',
-          supports: ['description', 'planets', 'folkNames'],
+          supports: ['description', 'celestialBodies', 'folkNames'],
         },
         {
           source: 'wikipedia-geum-urbanum',
-          supports: ['canonicalName', 'description', 'planets', 'folkNames'],
+          supports: ['canonicalName', 'description', 'celestialBodies', 'folkNames'],
         },
       ],
       variants: [
@@ -3483,7 +3497,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "An evergreen of the laurel family, the avocado is native to the Americas and grows nine to twenty metres tall with glossy, lance-shaped leaves and small pale green or yellowish flowers that have no petals. Botanically its fruit is a large berry around a single big seed; by cultivar the skin ripens green, brown, purplish or black over buttery, golden-green flesh. Archaeology shows people in Central and South America eating it thousands of years ago, and in Mesoamerica it was an important food crop, often handed over as tribute. The English name came by way of the Spanish aguacate from the Nahuatl āhuacatl. Kynes relates that the Aztecs, seeing the fruit hang in pairs, also used that word for 'testicle', though the fruit was its first sense and the other a euphemism. Eating avocados was thought to give a man strength and vigour and to heighten his virility, even the scent of the ripening fruit was counted erotic, and the English buccaneer William Dampier wrote that it roused lust. In magic the fruit is eaten to take on that lust and to draw a lover, a tree raised from the stone is kept indoors to bring love into the house, and the stone itself is carried for beauty.",
       elements: ['water', 'earth'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       zodiacSigns: ['Libra'],
       safetyNotes:
         'The leaves, branches and seeds are not for internal use. Some people are allergic to avocado: people allergic to tree pollen can react in the mouth and throat soon after eating it, and in latex-fruit syndrome, linked to latex allergy, the reaction can include hives over the body, stomach pain and vomiting, and is occasionally life-threatening. The leaves, bark, skin and stone can badly harm or kill many animals, among them cats, dogs, horses, cattle, goats, rabbits, birds and fish; the leaves hold a toxin, persin, to which birds seem especially sensitive.',
@@ -3511,7 +3525,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           locator: 'under "Avocado"; p. 266',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -3524,7 +3538,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -3612,7 +3626,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Common bamboo is a towering, woody grass that grows in open clumps. Its native range runs from Bangladesh, India and Sri Lanka through Southeast Asia to the Yunnan province of southern China, and it is now the most widely planted bamboo across the tropics and subtropics. Its culms, or stems, rise ten to twenty metres; in the golden forms they are lemon-yellow with green stripes. It seldom flowers and sets no seed, spreading by its rhizomes and from cuttings instead. The culms are built into shelters, boats, furniture and flutes, and the young shoots are eaten cooked or pickled across Asia. Many Asian cultures held bamboo sacred. In China temple priests cast pieces or sticks of it to read omens, and the sticks later used for fortune telling were also called the Oracle of Kuan Yin; the Chinese burned it and kept it as a charm to repel evil spirits, a power the Tibetans and Indonesians credited it with too. In magic a wish or a pentagram is carved on a length of bamboo that is then buried or planted, a clump grown by the house brings luck to all inside, and a piece hung over the door is lucky because the wood keeps its colour. It is carried, grown or burned as powdered wood to break hexes, a bamboo flute is played to call good spirits, and divination tools are kept in a bamboo box.',
       elements: ['air'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       safetyNotes:
         'Cunningham lists bamboo as recognised as safe. The shoots of this species, alone among bamboos, contain taxiphyllin, a highly toxic cyanogenic glycoside that breaks down readily in boiling water; the shoots are eaten cooked or pickled. Eating large amounts of the leaves has caused neurological illness in horses. In Nigeria people drink a leaf infusion to bring on abortion, an effect shown in rabbits.',
       folkNames: ['Common Bamboo', 'Golden Hawaiian Bamboo', 'Ohe', 'Kauayan-Kiling'],
@@ -3641,7 +3655,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -3678,7 +3692,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "The banyan is a fig tree whose home is the Indian subcontinent, and it is India's national tree. Like many figs it is a strangler: it begins life as an epiphyte resting on another tree, which in time it wraps round and engulfs. An evergreen that can reach thirty metres, it lets down aerial roots that take hold in the soil and thicken into woody trunks, so that one tree may spread outward over a great area. Indian specimens rank with the world's biggest trees by the ground their crowns cover; Thimmamma Marrimanu in Andhra Pradesh spreads over more than nineteen thousand square metres. Birds such as mynas eat the figs, and seeds that pass through a bird sprout more readily. The tree is sacred in India. Hindus revere it and plant it beside their temples, which are often built close to one. In Theravada Buddhism the Kassapa Buddha is said to have reached enlightenment under a banyan, and Jains hold that Adhinath, the first Tirthankara, did likewise. In Hawaii and across Polynesia it was bound up with Maui's worship. In magic merely sitting under a banyan, or even looking at one, is said to bring good luck, and a couple wed beneath its branches are assured of a happy marriage.",
       elements: ['air'],
-      planets: ['Jupiter'],
+      celestialBodies: ['Jupiter'],
       safetyNotes: 'Cunningham lists the banyan as recognised as safe.',
       folkNames: [
         'Arched Fig',
@@ -3697,7 +3711,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'description',
             'safetyNotes',
@@ -3732,7 +3746,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Barberry is a thorny deciduous shrub of up to four metres. It grows wild from southern England across central and southern Europe to north-west Africa and western Asia, and has naturalised in northern Europe and in North America. Its small oval leaves, finely toothed, grow in clusters above three-pronged spines; drooping sprays of yellow flowers open in late spring, and oblong red berries follow, edible but sharply sour. The berries have long gone into jams, jellies and comfits, and in Iran the dried fruit, zereshk, is cooked with rice. Roots and bark were used to dye wool, leather and linen yellow. The shrub hosts wheat stem rust, which bears out the long-held belief of English and French farmers that it spoiled nearby grain, and a medieval French law barred planting it near grain fields. The Greeks, Romans and Egyptians used it as medicine, and Culpeper set it under Mars as a purge for choler. In medieval Europe it was believed to keep evil away, in England felling the bush was thought to break a spell, and Italians called it Holy Thorn, believing Christ's crown of thorns was made from it. In magic a dried root is worn for protection as a talisman, or several are laid around a property to drive off negative energy and draw abundance.",
       elements: ['earth'],
-      planets: ['Jupiter', 'Mars', 'Venus'],
+      celestialBodies: ['Jupiter', 'Mars', 'Venus'],
       zodiacSigns: ['Scorpio', 'Taurus'],
       safetyNotes:
         'AHPA safety class 2b: not for use in pregnancy except under the supervision of a qualified healthcare practitioner. The caution rests mainly on the isolated alkaloid berberine, which stimulated the womb in tests on excised mouse tissue and may displace bilirubin and cause jaundice in newborns, though several studies of berberine in pregnant rats and mice found no harm to the unborn young at more than 75 times the usual human dose. Use while nursing is not recommended, and berberine passes into breast milk. Use is cautioned for people with severe or acute liver disease, septic inflammation of the gallbladder, unconjugated hyperbilirubinaemia, intestinal spasm or blockage, or liver cancer. Studies of berberine taken with the drug cyclosporine have given mixed results, one showing raised levels of the drug. Kynes warns that every part of the plant is mildly toxic if eaten.',
@@ -3754,7 +3768,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -3774,7 +3788,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Barberry"',
-          supports: ['planets', 'description'],
+          supports: ['celestialBodies', 'description'],
         },
         {
           source: 'wikipedia-berberis-vulgaris',
@@ -3849,7 +3863,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Barley is a cereal of the grass family, grown for its grain in temperate regions all over the world. It was one of the first crops ever domesticated, in the Fertile Crescent in roughly 9000 BC, and had spread across Eurasia by 2000 BC. Each of its spikelets bears a long, slender bristle, which gives the ears their tufted look. Most of today's crop feeds livestock; much of the remainder is malted for brewing beer and distilling whisky, and the grain also goes into soups, stews and bread. The initiates of the Eleusinian Mysteries in Greece drank a preparation of barley and herbs, and Demeter's name may first have meant 'barley-mother', while in English folk song John Barleycorn is a personification of the grain and of the beer brewed from it. Kynes notes that in Palestine children wore barley as an amulet of protection, and that across Europe and the British Isles its grains were used to read the future in love. Cunningham puts the grain, or barley water, into love spells, and scatters it about to ward off evil and negativity.",
       elements: ['earth'],
-      planets: ['Venus', 'Saturn'],
+      celestialBodies: ['Venus', 'Saturn'],
       zodiacSigns: ['Virgo'],
       safetyNotes:
         'AHPA safety class 1 (the sprouted seed). Allergic reactions to barley, anaphylaxis among them, have been reported, some after drinking beer, and workers handling barley grain dust day to day have developed asthma and contact dermatitis. Barley may lower blood sugar, so people with diabetes should watch theirs closely and consult a qualified practitioner first. Large doses of sprouted barley are taken to reduce or stop breast milk, so a nursing mother who wishes to continue should avoid them. Safety in pregnancy has not been established, and Cunningham marks the sprouted seed as not to be taken internally while pregnant. Because barley contains gluten, it is unsuitable for people with coeliac disease or other gluten-related disorders.',
@@ -3882,7 +3896,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           locator: 'under "Barley"; p. 266',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -3895,7 +3909,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -3906,7 +3920,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Barley"',
-          supports: ['planets'],
+          supports: ['celestialBodies'],
         },
         {
           source: 'ahpa-safety',
@@ -3990,7 +4004,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Basil, also called great basil or sweet basil, is a tender herb of the mint family, native to tropical and subtropical parts of Asia and Australasia, ranging from Sri Lanka and India across South-East Asia to northern Australia; in cooler countries it is raised each year as an annual. Its glossy oval leaves grow in opposite pairs on square stems, small white flowers crown the plant in a spike, and a bruised leaf gives off a scent of cloves. The name is usually traced to a Greek word for a king. In India it is sacred to Krishna and Vishnu and kept in Hindu homes, and the Greek, Bulgarian, Serbian, Macedonian and Romanian Orthodox churches use it with holy water. Old European writers quarrelled over it: Parkinson passed on the notion that basil, roughly bruised, would breed scorpions, and Culpeper, reasoning it out for himself, assigned it to Mars and Scorpio. The story of Isabella and her pot of basil kept the plant remembered in poetry. In magic it is first a herb of love and of peace between partners; Cunningham also has it carried in the pocket for wealth, put in a shop's till to draw customers, strewn on floors against evil and added to purification baths, and Kynes records it hung in medieval homes against misfortune and given as a love token in Tudor England.",
       elements: ['fire'],
-      planets: ['Mars', 'Pluto', 'Venus'],
+      celestialBodies: ['Mars', 'Pluto', 'Venus'],
       zodiacSigns: ['Aries', 'Leo', 'Scorpio'],
       safetyNotes:
         'AHPA safety class 2b: avoid in pregnancy unless a qualified healthcare practitioner is supervising. The caution concerns the larger doses taken as medicine, not the amounts used in cooking. Safety while nursing has not been established, and Kynes advises avoiding therapeutic doses both in pregnancy and while breastfeeding. One allergic reaction to basil is on record. Basil may lower blood sugar, so people with diabetes should monitor theirs and consult a practitioner first. Cunningham codes it, in more than ordinary food amounts, as not to be taken internally in pregnancy or while nursing, and not for internal use by infants and toddlers.',
@@ -4029,7 +4043,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -4043,7 +4057,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -4054,7 +4068,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Garden Bazil, or Sweet Bazil"',
-          supports: ['planets', 'zodiacSigns', 'description'],
+          supports: ['celestialBodies', 'zodiacSigns', 'description'],
         },
         {
           source: 'northcote-herbs',
@@ -4168,7 +4182,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Bay laurel is an aromatic evergreen shrub or tree of the laurel family, native to the Mediterranean. Its leathery, smooth-edged leaves come to a sharp point and are the bay leaves of the kitchen; male and female flowers, small and pale yellow-green, grow on separate plants, and the small berries ripen black. The Greeks called it daphne after the nymph who, in Ovid's version of the myth, was turned into a laurel to escape Apollo, and the tree became the god's own: victors at the Pythian Games won its wreaths, and his priestess at Delphi reputedly chewed the leaves before uttering prophecy. Rome made it a token of victory, and generals sent the Senate news of their triumphs wrapped in its leaves. People long believed lightning would spare the spot where a bay grew, yet in England a withering bay tree foretold a death, and bays were paired with rosemary at weddings and funerals alike. Culpeper placed it under the Sun and Leo as a tree that resists witchcraft. In magic it stands among the chief herbs of protection and purification: Cunningham has it worn against evil, burned at exorcisms, hung to stop poltergeists and set under the pillow for prophetic dreams, while wishes are written on its leaves and burned to bring them about.",
       elements: ['fire', 'air'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       zodiacSigns: ['Gemini', 'Leo', 'Pisces'],
       safetyNotes:
         "AHPA safety class 1. Foods and skin products containing the leaf or its essential oil have caused allergic skin reactions (contact dermatitis), confirmed by patch tests. Safety in pregnancy and while nursing has not been established; Kynes advises avoiding bay in pregnancy and while breastfeeding, and not taking it alongside pain or sedative medication. Cunningham codes it as currently recognised safe. Grieve warns against mistaking the leaves of the poisonous cherry laurel, which now usually takes the name laurel, for bay's.",
@@ -4237,7 +4251,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -4251,7 +4265,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -4262,7 +4276,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "The Bay Tree"',
-          supports: ['planets', 'zodiacSigns', 'description'],
+          supports: ['celestialBodies', 'zodiacSigns', 'description'],
         },
         {
           source: 'northcote-herbs',
@@ -4385,7 +4399,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'The common bean, Phaseolus vulgaris, is an annual of the legume family, Fabaceae, whose climbing or bushy vines bear leaves in three leaflets, small white, pink or purple flowers, and pods holding four to eight kidney-shaped seeds in a wide range of colours. Wild plants are native to the Americas, and it was domesticated on two separate occasions, once in Mesoamerica and once in the far south of the Andes, some eight thousand years ago; with maize and squash it formed the Three Sisters of Indigenous American farming. It reached Europe in the Columbian exchange, and Culpeper knew it as the French or kidney bean, a weak climber that fruits only when staked, and set it under Venus. Beans in general carry old lore of harvest and death. Cunningham calls them sacred to harvest goddesses and records Roman offerings of beans and pork to Cardea each first of June and beans shared at Roman funerals; Grieve notes that Italians gave beans to the poor each year on the date of a death. Telling fortunes with beans has its own name, favomancy. In magic a dried bean is carried against negativity and hostile sorcery, shaken in rattles to drive off spirits, rubbed on warts under a waning moon, laid with six others in a circle to draw a lover, and held in open palms while meditating on the truth of a matter.',
       elements: ['air', 'water'],
-      planets: ['Mercury', 'Saturn', 'Venus'],
+      celestialBodies: ['Mercury', 'Saturn', 'Venus'],
       zodiacSigns: ['Gemini', 'Libra', 'Virgo'],
       safetyNotes:
         'Uncooked or undercooked beans hold phytohaemagglutinin, a lectin found at its highest levels in red kidney beans; eating just four or five soaked but uncooked beans can bring on nausea, vomiting and diarrhoea one to three hours later, usually passing within hours. To destroy it, steep dried beans in water for five hours or more, throw the water away, then boil them for thirty minutes; a slow cooker at about 80 °C is not hot enough. Cunningham warns that beans not meant for eating may be poisonous.',
@@ -4416,7 +4430,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           locator: 'under "Bean"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -4430,7 +4444,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -4441,7 +4455,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "French Beans"',
-          supports: ['planets', 'folkNames', 'description'],
+          supports: ['celestialBodies', 'folkNames', 'description'],
         },
         {
           source: 'grieve-bean-kidney',
@@ -4485,7 +4499,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Bearberry, Arctostaphylos uva-ursi, is a low evergreen shrub of the heath family, Ericaceae, standing five to thirty centimetres high, whose long trailing stems root as they spread and knit into thick mats. Its small leathery leaves are glossy dark green above and paler below; in May and June drooping clusters of urn-shaped flowers, white to pink, open at the shoot tips and are followed by shiny red berries that bears and other animals eat. It grows right round the northern world, in the far north and on high ground further south, and in Britain mostly on the Scottish hills. Its Greek genus name and its Latin species name both mean the bear's grape. The astringent leaves, rich in tannin and arbutin, are an old remedy for the bladder and urinary tract: the thirteenth-century Welsh Physicians of Myddfai knew them, and in Sweden and Russia they were used to tan leather. Kinnikinnick, an Algonquian word for a smoking mixture, names both the plant and the blends of its dried leaves smoked in North American ceremonies, sometimes with tobacco, to seal a pact or calm a thunderstorm. In magic the leaves go into sachets to raise psychic power, the plant serves protection, intuition and strength, and in hoodoo it is put into mojo bags and candle work.",
       elements: ['earth'],
-      planets: ['Mars', 'Pluto', 'Venus'],
+      celestialBodies: ['Mars', 'Pluto', 'Venus'],
       zodiacSigns: ['Scorpio'],
       safetyNotes:
         'AHPA safety class 1, interaction class A: no contraindications, other precautions or drug interactions are known, and the handbook found no evidence behind the older warning against use with kidney disorders. The dried leaf holds up to 12 per cent arbutin and related compounds that give rise to hydroquinone. One case of damage to the retina (maculopathy) followed long-term use, and it can turn the urine brownish green. No studies of its safety in pregnancy were found, and its safety while nursing is not established. Kynes warns that large amounts can be toxic and that it is not for use in pregnancy. Cunningham marks it Poison and codes it against internal use in pregnancy, with kidney problems or acidic urine, and for long periods, as liable to upset digestion, and as a gastrointestinal irritant.',
@@ -4521,7 +4535,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -4596,7 +4610,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Bee balm, Monarda didyma, is a perennial of the mint family, Lamiaceae, native to the east of North America, from Maine, Ontario and Michigan south to northern Georgia, where it grows thickly along stream banks, in damp thickets and in ditches. It stands sixty centimetres to a little over a metre tall on square stems, with paired, toothed leaves that smell of mint when bruised, and through the summer it carries rounded heads of ragged, tubular scarlet flowers whose nectar draws bees and hummingbirds. Its scent recalls the bergamot orange, which is why it is also called bergamot. The genus honours Nicolas Monardes, who in 1569 became the first European to write a description of the plants of the Americas. Many Indigenous nations used it as medicine; the Blackfoot made poultices of it for wounds and skin infections. The people of Oswego brewed its leaves, and the drink caught on among English settlers once the Boston Harbor protest cut off their tea, so it is still known as Oswego tea. In England its flowers were thought unlucky to bring indoors, though a leaf carried in a pocket or purse was believed to bring money. In magic it serves purification, clarity, peace and success.',
       elements: ['air'],
-      planets: ['Mercury', 'Moon', 'Venus'],
+      celestialBodies: ['Mercury', 'Moon', 'Venus'],
       zodiacSigns: ['Gemini', 'Virgo'],
       safetyNotes:
         'AHPA safety class 2b, interaction class A, in its monograph on Monarda species, this one among them: traditionally used to bring on menstruation, so not to be taken during pregnancy unless a qualified practitioner oversees it. No other precautions, drug interactions or side effects are known, and its safety while nursing has not been conclusively established.',
@@ -4622,7 +4636,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -4720,7 +4734,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Beech, Fagus sylvatica, the European or common beech, is a big deciduous tree of the family Fagaceae, native across much of Europe and usually twenty-five to thirty-five metres tall, with smooth, silvery-grey bark and a short trunk branching low. Saplings and clipped hedges often hold their dead brown leaves all winter. Its small three-sided nuts, two to each prickly husk, ripen in autumn as mast, fed to park deer in England and to pigs and poultry in France, and pressed for an oil used in cooking and lamps. Grieve traces its name, across the Germanic tongues, to a word meaning either beech or book, since runic tablets, the first books, were made of its wood, and Kynes adds that beech sticks often carried runes. Greeks and Romans counted it a lucky tree: the Romans turned bowls and jugs for libations from it, Bacchus was said to drink from a beech cup, and in Greek legend the oracle of Zeus's grove at Dodona lived in a great beech. Norse people held it sacred as an oracle of Thor, and the Swiss, Germans and Belgians read weather and harvest from it. Culpeper put it under Saturn. In magic a wish is carved on a beech stick and buried, and its wood or leaves are carried to stir creativity.",
       elements: ['fire', 'water'],
-      planets: ['Saturn', 'Jupiter'],
+      celestialBodies: ['Saturn', 'Jupiter'],
       zodiacSigns: ['Gemini', 'Sagittarius', 'Virgo'],
       folkNames: [
         'European Beech',
@@ -4770,7 +4784,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Beech"',
-          supports: ['canonicalName', 'planets', 'folkNames', 'description'],
+          supports: ['canonicalName', 'celestialBodies', 'folkNames', 'description'],
         },
         {
           source: 'kynes-plants',
@@ -4778,7 +4792,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -4789,7 +4803,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "The Beech Tree"',
-          supports: ['planets', 'description'],
+          supports: ['celestialBodies', 'description'],
         },
         {
           source: 'grieve-beech',
@@ -4904,7 +4918,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Beet is a single species of the amaranth family that people have bred into several quite different crops: the red root vegetable called beetroot, the leafy chard, the sugar beet, and the mangelwurzel grown as cattle fodder. All descend from the sea beet, a wild plant of shorelines from western Europe and the Mediterranean to North Africa and western Asia. Usually grown as a biennial, it can reach about 120 centimetres, and the swollen roots of cultivated plants may be deep red, white or yellow. Its earliest written record comes from Mesopotamia in the eighth century BC; Romans gave the root for fevers and constipation, and Grieve records that the ancients presented it on silver to Apollo at Delphi. Jewish households serve it at Rosh Hashana, praying that their enemies depart, a pun on its Aramaic name. Culpeper treats the red and white sorts as two plants under different planets, putting the red beet under Saturn. In magic it is a love plant: Cunningham says a couple who eat from one beet will fall in love, and that its juice serves as an ink for love spells and as a stand-in for blood.',
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       folkNames: ['Mangel', 'Mangold'],
       categories: ['Love'],
       references: [
@@ -4914,7 +4928,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -4923,7 +4937,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Beets"',
-          supports: ['planets', 'description'],
+          supports: ['celestialBodies', 'description'],
         },
         {
           source: 'grieve-beetroots',
@@ -4985,7 +4999,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Belladonna, or deadly nightshade, is a bushy perennial of the nightshade family, native to Europe, western Asia and north-west Africa and partial to chalk and limestone; in Britain it is native only to England. It bears dull purple, bell-shaped flowers and glossy black berries about the size of a cherry, sweet enough to tempt children, and it ranks among the most poisonous plants known, every part carrying atropine and related alkaloids. Linnaeus named the genus after Atropos, the Fate who cuts the thread of life, while the species name, Italian for 'beautiful woman', recalls the drops women once put in their eyes to widen the pupils. Its older English name was dwale. Lore makes it a poisoner's plant: Livia was rumoured to have killed Augustus with its juice, and the Scots are said to have drugged an invading army with it during a truce. The priests of Bellona, the Roman war goddess, reputedly drank it before invoking her, and it was named among the ingredients of the witches' flying ointment. Old legend held that the Devil tended it himself, leaving it only on Walpurgis Night. Today's writers urge great care: Cunningham calls it best avoided, and Kynes suggests working with a picture of the plant, for journeying, astral work or keeping a secret, and leaving an offering to Hecate where it grows wild.",
       elements: ['water'],
-      planets: ['Saturn', 'Pluto'],
+      celestialBodies: ['Saturn', 'Pluto'],
       zodiacSigns: ['Libra', 'Scorpio'],
       safetyNotes:
         'Poisonous in every part: never take it internally or put it on the skin. AHPA safety class 3, to be used only under the supervision of an expert qualified in its use. An overdose brings on anticholinergic poisoning: a flushed face, widened pupils, a racing heart, a dry mouth, agitation, hallucinations and meaningless speech. The sweet berries are the commonest cause of poisoning in children. Touching the plant can irritate the skin, so wear gloves, and never handle it with cuts or grazes on the hands. Its alkaloid atropine crosses the placenta quickly. Cats and dogs are very susceptible to it.',
@@ -5016,14 +5030,21 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Belladonna"; "How to Read the Entries"',
-          supports: ['elements', 'planets', 'deities', 'folkNames', 'description', 'safetyNotes'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'deities',
+            'folkNames',
+            'description',
+            'safetyNotes',
+          ],
         },
         {
           source: 'kynes-plants',
           locator: 'under "Nightshade"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -5087,7 +5108,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'The bergamot orange is a small citrus tree with glossy leaves and clusters of white, star-shaped flowers. Its fruit, about the size of an orange, ripens from green to a pale yellow and is slightly flattened and knobbly. It is most likely a cross between the lemon and the bitter orange, and it is unrelated to the mint-family herbs also called bergamot, which only share something of its scent. It is grown chiefly around the Mediterranean, above all on the Ionian coast of Reggio di Calabria in southern Italy, where the fruit has become an emblem of the city; French and Ivorian growers also raise it for its oil. The fragrant oil drawn from the rind has been used in French perfumery since the seventeenth century, was part of the original eau de Cologne, and gives Earl Grey tea its character. In magical practice Kynes ties it to air, Mercury and the Sun, and to confidence, protection and prosperity: its oil is diffused to reach and speak with spirits or worn for psychic protection, and the fruit goes into spells for luck and wealth.',
       elements: ['air'],
-      planets: ['Mercury', 'Sun'],
+      celestialBodies: ['Mercury', 'Sun'],
       safetyNotes:
         'Used on the skin it can raise sensitivity to sunlight, so the sun does more damage. The reaction comes from bergapten and is not expected after eating the fruit or peel.',
       categories: ['Confidence', 'Prosperity', 'Protection'],
@@ -5095,7 +5116,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'kynes-plants',
           locator: 'under "Bergamot"',
-          supports: ['canonicalName', 'elements', 'planets', 'categories', 'description'],
+          supports: ['canonicalName', 'elements', 'celestialBodies', 'categories', 'description'],
         },
         {
           source: 'ahpa-safety',
@@ -5173,7 +5194,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Bilberry is a low deciduous shrub of the family Ericaceae, usually under half a metre tall, that spreads by creeping rhizomes over acid heaths, moorland and open woods across most of Europe and northern and central Asia, with outposts in Greenland and western North America. Its small leaves turn red in autumn, and its round berries ripen a deep blue-black under a greyish bloom; unlike the highbush blueberry, the fruit is coloured right through, and its juice stains hands and lips. In Britain the berries long served to dye food and cloth, and during the First World War dyers bought up much of the crop. The Anglo-Saxons called it the hart's berry. Irish custom read a heavy crop as the sign of a good harvest, and at Lughnasadh people in County Limerick laid bilberries and flowers on the cairn atop Knockfierna, the hill of a faery king; patches where the berries grew were thought of as places where the faery folk might be met. Culpeper put the plant under Jupiter. In magic it is used for luck, to ward off evil and to undo hexes and curses, and to make dreams come to pass; Kynes also sets the berries or their jam on the Lughnasadh altar.",
       elements: ['water', 'fire'],
-      planets: ['Venus', 'Jupiter'],
+      celestialBodies: ['Venus', 'Jupiter'],
       zodiacSigns: ['Pisces', 'Sagittarius'],
       folkNames: [
         'Whortleberry',
@@ -5216,7 +5237,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -5228,7 +5249,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -5239,7 +5260,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Bilberries, Called by Some Whorts, and Whortle-Berries"',
-          supports: ['planets', 'folkNames', 'description'],
+          supports: ['celestialBodies', 'folkNames', 'description'],
         },
         {
           source: 'grieve-bilberry',
@@ -5319,7 +5340,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Field bindweed is a twining perennial of the morning-glory family, Convolvulaceae, native across Europe and Asia. Its stems, half a metre to two metres long, either clamber over whatever stands near or trail along the ground, and its roots can go several metres down, which makes it notoriously hard to clear. The leaves are arrow-shaped, and the small trumpet flowers, white or pale pink and marked with five darker stripes, last a single day. Probably carried to North America in contaminated crop seed, perhaps as early as 1739, it is now one of the costliest weeds of farmland there. Grieve counts it among Britain's three native bindweeds and notes that the whole family is purgative, and its leaves have served in folk medicine as a laxative and diuretic. Kynes traces its bad name to the way it strangles other plants and starves the soil: English witches were said to wind a stem nine times round a poppet to bewitch the person it stood for, and Scottish children were told that picking the flowers would call up a thunderstorm. Because the stems coil widdershins, she recommends it for widdershins work, knot magic and handfasting.",
       elements: ['air', 'water'],
-      planets: ['Mercury', 'Saturn'],
+      celestialBodies: ['Mercury', 'Saturn'],
       zodiacSigns: ['Aquarius', 'Gemini'],
       safetyNotes:
         'Kynes cautions that every part of the plant, the roots and seeds above all, is toxic if eaten. It contains alkaloids, chiefly pseudotropine, which are toxic to mice and reported to be psychoactive; in quantity it may poison horses, its roots are reported as possibly poisonous to pigs, and it can cause photosensitisation in susceptible animals.',
@@ -5347,7 +5368,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -5404,7 +5425,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "The silver birch is a slender deciduous tree of the birch family, Betulaceae, named for the white bark that peels from its trunk in papery flakes. It grows wild from western Europe to Siberia, Mongolia and Xinjiang, south to the Caucasus and northern Iran, and in the uplands of northern Morocco; as a pioneer it is among the first trees to take hold on bare or burnt ground. It is the national tree of Finland, where bunches of its leafy twigs are used to beat the skin in the sauna, and Grieve notes that Coleridge called it the Lady of the Woods. In northern and central Europe the tree stood for birth and for rebirth after death, and in Scandinavia it was thought to house the spirits of ancestors; Siberian shamans used it in rites of purification and initiation. Branches set before Swedish houses at Walpurgis, or crossed twigs over English doorways, kept witches and enchantment away, though in medieval France witches were said to fly on birch and work weather magic with it. Cunningham counts it a cleansing tree, used to drive out spirits and to guard against lightning and the evil eye, and says the witch's broom was traditionally made of its twigs.",
       elements: ['water'],
-      planets: ['Venus', 'Jupiter', 'Moon', 'Sun'],
+      celestialBodies: ['Venus', 'Jupiter', 'Moon', 'Sun'],
       zodiacSigns: ['Capricorn', 'Sagittarius'],
       safetyNotes:
         'AHPA safety class 1 and interaction class A: no contraindications, precautions, drug interactions or side effects are known, and it is noted as a diuretic. No concern was identified for use in pregnancy or while nursing, though safety in either has not been firmly proven. Cunningham marks it as recognised safe.',
@@ -5444,7 +5465,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -5458,7 +5479,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -5474,7 +5495,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "The Birch Tree"',
-          supports: ['planets'],
+          supports: ['celestialBodies'],
         },
         {
           source: 'grieve-birch-common',
@@ -5578,7 +5599,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Bistort is a clump-forming perennial of the dock family, Polygonaceae, native to Europe and to northern and western Asia, where it favours damp meadows and the margins of woods. A thick rootstock bent twice over gives it its Latin name, from bis, twice, and torta, twisted, and its old names of snakeweed and adderwort; from it rise long oval leaves and slender stems, each ending in a dense spike of pink flowers. The root is rich in tannin, among the strongest astringents of any native British plant, and was once used to tan leather, while the young leaves and shoots were eaten as spring greens; in northern England they went into a bitter herb pudding at Lent. Kynes gathers its lore: some northern English cures worked only if it was picked at the full moon, in sixteenth-century France it was worn as an amulet to help conception, Irish travellers pocketed a few flowers for a safe journey, and Scots knotted the leaves into a cloth to break a spell. Cunningham has it carried by those hoping to conceive, burned with frankincense to strengthen psychic powers and divination, sprinkled as an infusion to drive out poltergeists, and added to sachets and incenses for money and wealth.',
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       zodiacSigns: ['Aquarius', 'Virgo'],
       safetyNotes:
         'AHPA safety class 1 and interaction class A, with no known contraindications or drug interactions. It is 15–21% tannin, and mild abdominal pain and diarrhoea have been reported, thought to come from irritation of the gut lining. No concern was identified for pregnancy or nursing, though safety in either has not been firmly proven, and Kynes cautions that it is an abortifacient.',
@@ -5616,7 +5637,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Bistort"',
-          supports: ['elements', 'planets', 'categories', 'folkNames', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'folkNames', 'description'],
         },
         {
           source: 'kynes-plants',
@@ -5624,7 +5645,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -5640,7 +5661,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Bistort, or Snakeweed"',
-          supports: ['planets', 'folkNames'],
+          supports: ['celestialBodies', 'folkNames'],
         },
         {
           source: 'grieve-bistort',
@@ -5836,7 +5857,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Bittersweet nightshade is a scrambling, partly woody perennial vine in the same genus as the potato and the tomato. It is native to Europe, northern Africa and eastern Asia and has spread far beyond, North America included, favouring damp ground, hedges and the edges of woods. Its leaves are roughly arrow-shaped, frequently with lobes at the base; small purple, star-like flowers with a jutting yellow centre hang in loose sprays, and the oval berries ripen from green through orange to red. The name records a taste said to turn from bitter to sweet, and the medieval Latin Amara dulcis means the same. Herbalists have prized the plant since Theophrastus, and Grieve notes that its dried young twigs stayed in the British Pharmacopoeia until 1907. In Britain and Ireland it was hung on cattle and horses against witchcraft and the evil eye, and Culpeper, who gives it to Mercury, says it rids both people and animals of witchcraft. In magical practice a small piece is tied on to guard against evil and draw it out, a little laid under the pillow helps a person forget a former love, and its berries serve spells of release and of remembrance at Samhain.',
       elements: ['air'],
-      planets: ['Mercury', 'Pluto', 'Saturn'],
+      celestialBodies: ['Mercury', 'Pluto', 'Saturn'],
       zodiacSigns: ['Aquarius'],
       safetyNotes:
         'Poisonous. The whole plant is regarded as poisonous; any medicinal use calls for caution and professional advice, has been recorded for adults only, and should be avoided by anyone allergic to it. Kynes warns that the berries and leaves are toxic if eaten, sometimes fatally, and advises handling every part of the plant with care.',
@@ -5870,7 +5891,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -5882,7 +5903,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -5894,7 +5915,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Amara Dulcis"',
-          supports: ['planets', 'folkNames', 'description'],
+          supports: ['celestialBodies', 'folkNames', 'description'],
         },
         {
           source: 'grieve-nightshade-woody',
@@ -5955,7 +5976,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Black cohosh is a tall perennial of the buttercup family, found wild in eastern North America, from southernmost Ontario down to Georgia and westward as far as Missouri and Arkansas, where it grows in woodland and small clearings. From a dark, knotted rootstock it raises large, much-divided, toothed leaves and, in early summer, slender spires of white flowers on stems that can pass two metres, with a sweet but fetid scent that draws flies and beetles. That smell earned it the name bugbane, and Kynes notes that when its dry seed heads stir in a breeze they sound faintly like a rattlesnake. She traces the word cohosh to an Algonquian term for rough, after the feel of the root. The Iroquois, Delaware, Algonquin and Cherokee all used it as medicine; it entered the United States Pharmacopoeia as black snakeroot in 1830, and Grieve records the American belief that the root countered poison and rattlesnake bite. Its root extracts are now sold mainly for menopausal complaints. In hoodoo it defends against tricks and conjured trouble. Cunningham puts it in love sachets, has it carried to give the timid courage, and sprinkles an infusion around a room or adds it to the bath to drive away evil presences.',
       elements: ['fire'],
-      planets: ['Mars', 'Pluto'],
+      celestialBodies: ['Mars', 'Pluto'],
       zodiacSigns: ['Scorpio'],
       safetyNotes:
         'AHPA safety class 2b, with A as its interaction class: not to be used in pregnancy unless a qualified healthcare practitioner supervises, a restriction AHPA bases on reported cases of liver toxicity whose meaning is not yet understood. Liver damage has been reported in people taking black cohosh products; most reports are poorly documented and the link is unproven, and some products involved proved to contain other species, but practitioners and users should keep the possible link in mind. Occasional stomach upset and rashes are the most common reported effects. Cunningham advises against taking it internally when pregnant or nursing, and Kynes says to avoid it during pregnancy and breastfeeding.',
@@ -5983,7 +6004,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -6056,7 +6077,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Black hellebore, better known as the Christmas rose, is a low evergreen perennial of the buttercup family and no rose at all. It grows wild in the mountains of the Alps, the Apennines and the northern Dinaric Alps. Dark, leathery, deeply cut leaves surround broad white flowers, sometimes flushed pink or green, which open around a yellow centre from midwinter into early spring; the name niger, black, is thought to refer to the dark roots. A legend has it spring up from the snow where a girl with no gift for the Christ child shed her tears. It was the leading purgative of the ancient world, said to have been brought into use by the seer Melampus to cure the daughters of Proteus of their madness, which gave it the old name Melampode. Culpeper places it under Saturn. In medieval Europe it was strewn on floors against evil, cattle were blessed with it to keep spells away, and it served in exorcism, yet witches were believed to use it for hexes and flight, and French sorcerers to throw its powdered root into the air to become invisible. Kynes adds that picking its flowers was unlucky, though the plant protected the house where it grew.',
       elements: ['water'],
-      planets: ['Saturn', 'Mars'],
+      celestialBodies: ['Saturn', 'Mars'],
       zodiacSigns: ['Aquarius', 'Capricorn'],
       safetyNotes:
         'Poisonous: Cunningham marks it as a poison and calls it too dangerous to use, and Kynes warns that it is dangerously toxic, possibly fatally so, if swallowed, and that the sap can irritate the skin. All parts are considered toxic if eaten or if sap from damaged plant tissue touches the body. The leaves, stems and flowers release protoanemonin, which irritates the skin, mouth and eyes and, in large amounts, can cause blisters in the mouth and throat, gastroenteritis and vomiting of blood, in people and animals alike.',
@@ -6080,7 +6101,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'description',
             'safetyNotes',
@@ -6092,7 +6113,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -6104,7 +6125,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Black Hellebore"',
-          supports: ['planets', 'folkNames', 'description'],
+          supports: ['celestialBodies', 'folkNames', 'description'],
         },
         {
           source: 'grieve-hellebore-black',
@@ -6253,7 +6274,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Black mustard is an upright annual native to the cooler parts of North Africa, temperate Europe and parts of Asia, close enough to cabbage and turnip to share their tribe. It reaches about 1.2 metres, with large stalked leaves that are hairy or bristly at the base, four-petalled yellow flowers in summer and beaked pods of small seeds, dark brown to black, which give the plant its Latin epithet and are the reason it is grown. Carried as a crop to North America's western seaboard, it now runs wild there as an invasive, and Kynes notes that it is reckoned a noxious weed in some places. Columella wrote of it in the first century, and Grieve records that Greek physicians credited its discovery to Aesculapius; the word mustard comes from must, new grape juice, made fiery with the ground seed. It is often taken for the seed of the Gospel parable. Kynes traces it to Sumerian and Sanskrit texts of about 3000 BCE, tells of English brownies grinding the seed by night, and of seed strewn over thresholds in the American South to stop witches, who had to pick up every grain. Cunningham carries the seed in a red sachet against colds and to sharpen the mind, sprinkles or buries it at the door to keep supernatural beings out, and has women eat it for fertility. Culpeper made it an herb of Mars, with a share for Aries.",
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: ['Aries'],
       safetyNotes:
         'AHPA safety class 1 taken internally and class 2d used externally. Not to be put on the skin of children under six, or of anyone with varicose veins, severe circulatory damage or another vein disorder. A mustard plaster left on longer than a quarter to half an hour can blister the skin, sometimes leaving weeping, slow-healing ulcers and dead tissue, and the irritation lasts a day or two. Taken by mouth it can irritate the digestive tract, so people with a peptic ulcer or gastric bleeding should take care, and large doses can bring on enteritis, abdominal pain and diarrhoea. Allergic reactions, including hives and anaphylactic shock, have followed both internal and external use. Animal studies suggest the seed may alter blood sugar, so people with diabetes should consult a qualified practitioner first. Safety in pregnancy and while nursing is not established. Cunningham marks it as not to be abused internally or taken long term.',
@@ -6263,12 +6284,19 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Mustard, Black"; p. 266',
-          supports: ['elements', 'planets', 'categories', 'description', 'safetyNotes'],
+          supports: ['elements', 'celestialBodies', 'categories', 'description', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
           locator: 'under "Mustard"',
-          supports: ['elements', 'planets', 'zodiacSigns', 'deities', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'ahpa-safety',
@@ -6278,7 +6306,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Mustard"',
-          supports: ['planets', 'zodiacSigns', 'description'],
+          supports: ['celestialBodies', 'zodiacSigns', 'description'],
         },
         {
           source: 'grieve-mustards',
@@ -6344,7 +6372,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Black nightshade is a herb or short-lived shrubby perennial of the nightshade family, Solanaceae. Native to Eurasia, it has spread to the Americas, to Australasia and to South Africa; Grieve calls it one of the world's most widespread wild plants, and it is a weed of crops in dozens of countries. It grows 30 to 120 centimetres tall, with oval to heart-shaped, wavy-edged leaves, small white flowers round a bright yellow centre, and clusters of berries that ripen from green to black. It has been found in Palaeolithic and Mesolithic deposits in Britain, and Dioscorides knew it. Older herbalists called it petty morel to set it apart from the great morel, deadly nightshade, with which it is still confused: black nightshade carries its berries in bunches and has white petals, where belladonna bears its berries singly and has purple flowers. Culpeper found it under walls and along paths, called it a cold plant of Saturn, and warned readers not to take the deadly kind for it. In several countries its cooked leaves and ripe berries are eaten. Kynes notes that the Anglo-Saxons used it in medicine and in healing charms, and that Central Europeans hung it above cradles to help babies sleep, as Grieve also records of Bohemia. Kynes treats it beside belladonna, advises working with it symbolically, and asks anyone who finds it growing wild to lay an offering for Hecate next to it.",
       elements: ['water'],
-      planets: ['Pluto', 'Saturn'],
+      celestialBodies: ['Pluto', 'Saturn'],
       zodiacSigns: ['Libra', 'Scorpio'],
       safetyNotes:
         'Every part is toxic except the ripe berries. The plant is rarely fatal, but eating unripe green berries or mature leaves raw can cause solanine poisoning, usually 6 to 12 hours later, with fever, sweating, vomiting, abdominal pain, diarrhoea, confusion and drowsiness; very large amounts have killed through heart-rhythm disturbance and respiratory failure. Toxin levels vary with the strain and with growing conditions, so its berries should not be eaten unless they come from a strain known to be edible. Livestock have been poisoned by grazing its mature leaves and green berries.',
@@ -6364,7 +6392,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -6376,7 +6404,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Nightshade"',
-          supports: ['planets', 'folkNames', 'description'],
+          supports: ['celestialBodies', 'folkNames', 'description'],
         },
         {
           source: 'grieve-nightshade-black',
@@ -6446,7 +6474,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Black pepper is the dried fruit of Piper nigrum, a perennial woody vine of the family Piperaceae native to South or South-east Asia; wild vines still grow in the Western Ghats of India. Climbing trees or poles to about four metres, it carries small flowers on hanging spikes that ripen into strings of small drupes. For black pepper the fruit is picked unripe, scalded briefly and dried until its skin shrinks into a wrinkled black coat; white pepper is the seed alone, stripped of the ripe fruit's flesh. Indian cooks have used it since at least 2000 BCE, and peppercorns were packed into the nostrils of the mummified Ramesses II. Rome imported it in bulk: Kynes describes great storehouses, ornate pots of gold and silver, pepper as far off as Hadrian's Wall, and peppercorns given as presents at Saturnalia. In medieval Europe it stood for wealth and paid dowries and taxes, and the token peppercorn rent survives in law; it was also thought an aphrodisiac. In magic, Cunningham adds it to amulets against the evil eye, wears it to free the mind of envy, and mixes it with salt to scatter round a property against evil. Kynes keeps a few peppercorns with her ritual tools to cleanse them and release old energy, and diffuses the oil in spells for justice or to break out of a rut.",
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: ['Aries'],
       safetyNotes:
         'AHPA safety class 1 and interaction class B: piperine, its pungent compound, can raise the body’s uptake of certain drugs, so clinically relevant interactions are plausible. Large doses may irritate the urinary tract, and overdoses can cause burning heat in the abdomen, thirst, vomiting, fever and occasionally convulsions; hives have also been reported. A four-year-old who habitually ate non-food items died after inhaling ground pepper. Animal studies found some anti-implantation activity, and safety while nursing is not established. These cautions concern the larger doses taken as medicine, not pepper used in cooking. Cunningham marks it safe.',
@@ -6470,7 +6498,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'description',
             'safetyNotes',
@@ -6482,7 +6510,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -6552,14 +6580,14 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Black snakeroot, also called Maryland sanicle, is Sanicula marilandica, a low North American plant found across much of the continent but rare on the Pacific coast and in Texas, and Washington State lists it as sensitive. Its leaves are cut into deep lobes that spread from one point, most often five to seven of them. In spring a fruiting stalk up to about two feet tall carries tiny green flowers, and in autumn it bears fruits that split open and are covered with small spines. Grieve, writing on its European relative the wood sanicle, notes that the root of this American species holds resin and volatile oil and was given, with what she calls alleged success, for intermittent fever and chorea. It is a different plant from the snakeroot of the genus Aristolochia, which Cunningham treats under its own heading. Cunningham gives black snakeroot to Mars and fire: it is worn to draw lovers, kept in the bedroom or added to the bath, and carried to attract money.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       folkNames: ['Maryland Sanicle', 'Maryland Black Snakeroot'],
       categories: ['Love', 'Lust'],
       references: [
         {
           source: 'cunningham-herbs',
           locator: 'under "Snakeroot, Black"',
-          supports: ['canonicalName', 'elements', 'planets', 'categories', 'description'],
+          supports: ['canonicalName', 'elements', 'celestialBodies', 'categories', 'description'],
         },
         {
           source: 'wikipedia-sanicula-marilandica',
@@ -6648,7 +6676,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Blackberries are the fruit of a large and tangled group of brambles in the rose family, more than 375 species; because they hybridise freely and include many closely related microspecies, botanists have often grouped them as aggregates. They are native across Europe, north-west Africa, the temperate west and centre of Asia, and both Americas. The plant is a perennial whose arching, prickly canes live two years, flowering and fruiting in the second, with white to pink five-petalled flowers; the fruit is not a true berry but a cluster of small drupelets, red before it turns black. Grieve derives 'bramble' from an old word for prickly. People have eaten blackberries for a very long time: a Danish bog body about 2,500 years old had them in her stomach. Folklore in Britain and Ireland forbids picking them after 11 October, Old Michaelmas Day, by which time a púca or the devil is said to have spoiled them, and some traditions say Christ was crowned with bramble thorns. Culpeper places it under Venus, in Aries. Cunningham says it was sacred to old Pagan gods and that some Wiccans bake blackberry pies at Lughnasadh for the harvest; in magic it serves healing, protection and wealth.",
       elements: ['water'],
-      planets: ['Venus', 'Moon'],
+      celestialBodies: ['Venus', 'Moon'],
       zodiacSigns: ['Aries', 'Scorpio', 'Taurus'],
       safetyNotes: 'Cunningham marks blackberry as safe (code G).',
       folkNames: [
@@ -6689,7 +6717,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           locator: 'under "Blackberry"; p. 266',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -6701,7 +6729,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           locator: 'under "Blackberry"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -6712,7 +6740,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "The Bramble, or Black-Berry Bush"',
-          supports: ['planets', 'zodiacSigns', 'description'],
+          supports: ['celestialBodies', 'zodiacSigns', 'description'],
         },
         {
           source: 'grieve-blackberry',
@@ -6843,7 +6871,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         'Blackthorn, or sloe, is a big deciduous shrub or small tree of the rose family, at home in Europe and western Asia and locally in north-west Africa, and naturalised in eastern North America and Tasmania. It grows to about five metres, a tangle of stiff, spiny branches with very dark bark, and its small creamy-white flowers open early in spring, ahead of the leaves. The name contrasts its dark bark and thorns with the paler hawthorn, or whitethorn, and a cold spell in early spring while it blooms is called a blackthorn winter in rural England. Its thorns made it a traditional cattle-proof hedge in Britain, and its flowering may once have been linked with Imbolc. Lore makes it a guardian against harm: Kynes records that the Greeks thought it shielded against witchcraft, that in Eastern Europe a piece was sewn into clothes for protection, that moon faeries called the Lunantishee watch over it, and that in the Balkans a vampire was to be staked with it. English witches were said to carve spells into its wood. Cunningham says that hung over a door or carried it keeps evil and calamity away and drives out demons and negative energy.',
       elements: ['fire', 'earth'],
-      planets: ['Mars', 'Saturn'],
+      celestialBodies: ['Mars', 'Saturn'],
       zodiacSigns: ['Aries', 'Scorpio'],
       safetyNotes:
         'AHPA safety class 1. The seeds hold cyanogenic glycosides; Kynes warns that in Prunus species the seeds and leaves release cyanide once swallowed, and Wikipedia notes trace hydrogen cyanide in the seed. Cunningham marks the seeds as not for internal use and the plant as not for long-term or excessive internal use. It is a diuretic. Safety in pregnancy and while nursing has not been established.',
@@ -6875,7 +6903,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -6888,7 +6916,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -7007,7 +7035,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       description:
         "Blessed thistle is an annual, thistle-like member of the daisy family, native to the Mediterranean parts of Europe and to western and central Asia, and introduced elsewhere, where it is often a noxious weed. It sprawls rather than standing upright, reaching about 60 centimetres, with reddish stems, leathery, hairy leaves edged in small spines, and pale yellow flowerheads wrapped in spiny bracts; the whole plant wears a light down. Grieve says the name came from its fame as a heal-all, thought able even to cure the plague, and English plague treatises praised it. In Much Ado About Nothing Margaret prescribes distilled Carduus Benedictus to Beatrice, punning on Benedick. Culpeper calls it a herb of Mars under Aries. Herbalists gave it as a bitter tonic and to bring on sweating in fevers, and Grieve records the warm infusion as a favourite for increasing a nursing mother's milk, a use Wikipedia notes has no scientific support; Northcote calls its medicinal virtues discredited. It is also a flavouring in alcoholic drinks. In magic Cunningham has it worn to protect against evil, added to purifying baths and used in spells to break hexes.",
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: ['Aries'],
       safetyNotes:
         'AHPA safety class 1. Allergic reactions have been reported, and anyone allergic to other daisy-family plants, such as feverfew or echinacea, should take care, since cross-reactions are common. Large doses, above about 5 g to a cup of tea, can upset the stomach and bring on vomiting. Cunningham marks it as not to be taken in pregnancy; AHPA finds safety in pregnancy and nursing not established.',
@@ -7032,7 +7060,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -7047,7 +7075,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         {
           source: 'culpeper-herbal',
           locator: 'under "Carduus Benedictus"',
-          supports: ['planets', 'zodiacSigns', 'folkNames', 'description'],
+          supports: ['celestialBodies', 'zodiacSigns', 'folkNames', 'description'],
         },
         {
           source: 'ahpa-safety',

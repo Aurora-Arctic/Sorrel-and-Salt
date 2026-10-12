@@ -69,7 +69,7 @@ const TESTWORT: IngredientFormValues = {
   name: 'Testwort',
   nomenclature: 'botanical',
   canonicalName: 'Fixtura testalis',
-  planets: [{ value: 'Mockury' }],
+  celestialBodies: [{ value: 'Mockury' }],
   categoryIds: [CATEGORY_ID],
 };
 
@@ -417,7 +417,7 @@ describe('IngredientForm on the compendium', () => {
           name: 'Mockwort',
           nomenclature: 'botanical',
           canonicalName: 'Fixtura testalis',
-          planets: ['Mockury'],
+          celestialBodies: ['Mockury'],
           categoryIds: [CATEGORY_ID],
         },
       });

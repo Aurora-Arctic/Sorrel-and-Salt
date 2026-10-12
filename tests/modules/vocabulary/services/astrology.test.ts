@@ -47,12 +47,12 @@ it('is testing sessions whose site role is `user`, beside an admin', () => {
 const VOCABULARIES: {
   field: CuratedField;
   table: 'celestial_bodies' | 'zodiac_signs';
-  column: 'planets' | 'zodiac_signs';
+  column: 'celestial_bodies' | 'zodiac_signs';
 }[] = [
   {
-    field: 'planets',
+    field: 'celestialBodies',
     table: 'celestial_bodies',
-    column: 'planets',
+    column: 'celestial_bodies',
   },
   {
     field: 'zodiacSigns',
