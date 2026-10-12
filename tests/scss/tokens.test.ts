@@ -170,6 +170,15 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     // and the linked chip pointed at, its text and mark in the accent's
     // hover, at 4.5:1. The accent itself is held to 3:1 alone, so the text
     // keeps the body ink and its underline until pointed at.
+    // `$fill-quiet` (_variables.scss) names this wash once, so it must be the 18% mix.
+    const named = declarations(
+      compile(
+        `@use 'variables' as v; .probe { --wash: #{v.$fill-quiet}; --edge: #{v.$hairline}; }`,
+      ),
+      '.probe',
+    );
+    expect(named['--wash']).toContain('var(--text-muted) 18%, var(--surface-card)');
+    expect(named['--edge']).toContain('var(--text-muted) 45%, transparent');
     const wash = mixed(toHex(tokens['--text-muted'], theme), card, 0.18);
     row("a chip's text on its wash", tokens['--text-primary'], wash, 4.5);
     row("a linked chip's mark on its wash", tokens['--accent'], wash, 3);

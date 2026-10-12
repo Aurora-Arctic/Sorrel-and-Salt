@@ -256,6 +256,20 @@ $text-on-color: var(--surface-page);
 // placeholder as it does any text.
 $text-placeholder: color-mix(in srgb, $text-muted 85%, $surface-card);
 
+// A quiet fill: the muted ink 18% into the card. A chip's wash, the skeleton's
+// bars and the open nav summary each wrote this mix; the chip's text holds
+// 4.5:1 on it (tests/scss/tokens.test.ts).
+$fill-quiet: color-mix(in srgb, $text-muted 18%, $surface-card);
+
+// A hairline: the muted ink 45% into whatever is behind, so one line reads on
+// the page and on a card alike. The ingredient form's section rules and the
+// tab strip's shade each wrote this mix.
+$hairline: color-mix(in srgb, $text-muted 45%, transparent);
+
+// How much of a control remains when it is busy or cannot be used: the
+// switch, the pending tab panel and the busy list frame each wrote 0.55.
+$opacity-disabled: 0.55;
+
 // A function rather than variables: a typo fails at compile time where
 // `var(--badge-saftey-fill)` fails silently in the browser.
 @function badge-token($palette, $part) {
@@ -318,6 +332,10 @@ $top-inset: var(--top-inset, 0px);
 // ---------------------------------------------------------------------------
 $theme-transition-duration: 400ms;
 $theme-transition-easing: ease-in-out;
+
+// How long a tip bubble takes to fade in and out: 500ms, the owner's pace
+// (claude-docs/components/info-tip.md, "Styling").
+$tip-fade: 500ms;
 
 // The only width-based breakpoint; everything else keys off media preferences.
 $breakpoint-desktop: 1024px;
