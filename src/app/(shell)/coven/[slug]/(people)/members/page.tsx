@@ -60,7 +60,15 @@ export default async function MembersPage({
   const soleOwner =
     (await memberRoster(session, workspace)).filter(({ role }) => role === 'owner').length === 1;
 
-  const ids = [...new Set(page.edges.flatMap(({ node }) => [node.userId, node.updatedBy]))];
+  const ids = [
+    ...new Set(
+      page.edges.flatMap(({ node }) =>
+        node.invitedBy
+          ? [node.userId, node.updatedBy, node.invitedBy]
+          : [node.userId, node.updatedBy],
+      ),
+    ),
+  ];
   const names = await displayNamesOf(session, ids);
   // A name the service withholds (it answers co-members only) reads as Unknown.
   const nameOf = (id: string) => names[ids.indexOf(id)] ?? 'Unknown';
@@ -74,6 +82,7 @@ export default async function MembersPage({
     joinedAt: node.joinedAt,
     updatedBy: editorOf(node.updatedBy),
     updatedAt: editorOf(node.updatedBy) ? node.updatedAt : null,
+    invitedBy: node.invitedBy ? editorOf(node.invitedBy) : null,
   }));
 
   const canChangeRoles = rolePermits(membership.role, { member: ['update'] });

@@ -10,9 +10,33 @@ export default {
 };
 
 const MEMBERS: readonly MemberListEntry[] = [
-  { userId: 'u-ada', name: 'Ada Fixturewort', role: 'owner', joinedAt: new Date('2026-03-04') },
-  { userId: 'u-bo', name: 'Bo Fixturewort', role: 'member', joinedAt: new Date('2026-05-06') },
-  { userId: 'u-cy', name: 'Cy Fixturewort', role: 'viewer', joinedAt: new Date('2026-06-07') },
+  {
+    userId: 'u-ada',
+    name: 'Ada Fixturewort',
+    role: 'owner',
+    joinedAt: new Date('2026-03-04'),
+    updatedBy: 'Ada Fixturewort',
+    updatedAt: new Date('2026-03-04'),
+    invitedBy: null,
+  },
+  {
+    userId: 'u-bo',
+    name: 'Bo Fixturewort',
+    role: 'member',
+    joinedAt: new Date('2026-05-06'),
+    updatedBy: 'Ada Fixturewort',
+    updatedAt: new Date('2026-05-06'),
+    invitedBy: 'Ada Fixturewort',
+  },
+  {
+    userId: 'u-cy',
+    name: 'Cy Fixturewort',
+    role: 'viewer',
+    joinedAt: new Date('2026-06-07'),
+    updatedBy: 'Ada Fixturewort',
+    updatedAt: new Date('2026-06-07'),
+    invitedBy: 'Bo Fixturewort',
+  },
 ];
 
 export const ReadOnly: Story = () => <MemberList members={MEMBERS} currentUserId="u-bo" />;

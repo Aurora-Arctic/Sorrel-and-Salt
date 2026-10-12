@@ -295,7 +295,7 @@ describe('a link that cannot be used', () => {
 
   describe('a coven’s invitation (M7.5)', () => {
     const memberRows = (userId: string) =>
-      sql`select role::text, joined_at, deleted_at from workspace_members
+      sql`select role::text, joined_at, deleted_at, invited_by from workspace_members
         where workspace_id = ${WORKSPACE_W_ID} and user_id = ${userId}`;
 
     it('seats the person at the invited role, stamps the invitation and answers the coven’s slug', async () => {
@@ -318,6 +318,31 @@ describe('a link that cannot be used', () => {
       expect(stamped.accepted_by).toBe(GRANTEE);
       expect(stamped.accepted_at).not.toBeNull();
     });
+
+    // The same checks as the site tier's, before the tier branch (MB.70): the
+    // reader is not a member, so no message may name the coven (story 7).
+    it.each([
+      ['already accepted', { accepted: true }, 'accepted'],
+      ['revoked', { revoked: true }, 'revoked'],
+      ['expired', { expired: true }, 'expired'],
+      ['expired and revoked', { expired: true, revoked: true }, 'revoked'],
+    ] as const)(
+      'rejects one %s as %s, seating no one and naming no coven',
+      async (_what, state, reason) => {
+        await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id, ...state });
+        const [{ name }] = await sql`select name from workspaces where id = ${WORKSPACE_W_ID}`;
+
+        const standing = await invitationStanding(asUser(AS_GRANTEE), TOKEN);
+
+        expect(standing).toMatchObject({ acceptable: false, reason });
+        expect(JSON.stringify(standing)).not.toContain(name as string);
+        const error = await acceptInvitation(asUser(AS_GRANTEE), TOKEN).catch((e: unknown) => e);
+        expect(error).toBeInstanceOf(Forbidden);
+        expect((error as Error).message).not.toContain(name as string);
+        expect(await memberRows(GRANTEE)).toHaveLength(0);
+        expect((await roleOf(GRANTEE)).can_create_workspace).toBe(false);
+      },
+    );
 
     it('grants the creation flag, as one invitation-declared ledger row, for a viewer too', async () => {
       await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: A.id });
@@ -392,6 +417,52 @@ describe('a link that cannot be used', () => {
       expect(stamped.acceptedBy).toBe(GRANTEE);
       expect(await memberRows(GRANTEE)).toEqual(before);
       expect(before[0].role).toBe('owner');
+    });
+
+    it('records the invitation’s sender on a fresh membership', async () => {
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+      expect(await memberRows(GRANTEE)).toHaveLength(0);
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect((await memberRows(GRANTEE))[0].invited_by).toBe(A.id);
+    });
+
+    it('overwrites a revived row’s inviter with the latest sender', async () => {
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, deleted_at, deleted_by, invited_by, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${GRANTEE}, 'member', now(), ${A.id}, ${A.id}, ${A.id}, ${A.id})
+      `;
+      // The precondition: the removed row names A, so a changed value is the revival’s doing.
+      expect((await memberRows(GRANTEE))[0].invited_by).toBe(A.id);
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: PRIMARY });
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      const rows = await memberRows(GRANTEE);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].invited_by).toBe(PRIMARY);
+    });
+
+    it('leaves the inviter alone when the person is already seated', async () => {
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, invited_by, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${GRANTEE}, 'member', ${A.id}, ${A.id}, ${A.id})
+      `;
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: PRIMARY });
+      const before = await memberRows(GRANTEE);
+      expect(before[0].invited_by).toBe(A.id);
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(await memberRows(GRANTEE)).toEqual(before);
+    });
+
+    it('leaves a coven creator’s inviter empty', async () => {
+      const [creator] = await sql`
+        select invited_by from workspace_members
+        where workspace_id = ${WORKSPACE_W_ID} and user_id = ${A.id}`;
+      expect(creator.invited_by).toBeNull();
     });
 
     it('refuses an unverified matching account and a different verified one, so the match admits', async () => {

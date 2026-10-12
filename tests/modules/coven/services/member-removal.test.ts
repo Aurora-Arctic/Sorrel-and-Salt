@@ -183,7 +183,7 @@ describe('reviveMembership', () => {
     expect((await seat(covenId, B.id)).deleted_at).not.toBeNull();
 
     const rows = await withAudit(asUser(A), (write) =>
-      write.reviveMembership(covenId, B.id, 'viewer'),
+      write.reviveMembership(covenId, B.id, 'viewer', null),
     );
 
     expect(rows).toHaveLength(1);
@@ -210,7 +210,7 @@ describe('reviveMembership', () => {
     expect(before.deleted_at).toBeNull();
 
     const rows = await withAudit(asUser(A), (write) =>
-      write.reviveMembership(covenId, B.id, 'owner'),
+      write.reviveMembership(covenId, B.id, 'owner', null),
     );
 
     expect(rows).toHaveLength(0);

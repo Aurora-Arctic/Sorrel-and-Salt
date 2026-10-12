@@ -13,6 +13,8 @@ export interface MemberListEntry {
   updatedBy: string | null;
   /** When the membership last changed: a role change moves it, the joining date does not. */
   updatedAt: Date | null;
+  /** Who invited them, by display name; null for a coven's creator, or when the name is withheld. */
+  invitedBy: string | null;
 }
 
 export interface MemberListProps {

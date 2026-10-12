@@ -59,3 +59,7 @@ the page shows. Render-only.
 sends the accept against MSW with the token as its variable and checks the
 landing, and shows a refusal. `tests/e2e/invite.spec.ts` follows a mailed
 link signed out and signed in against the built server, with axe.
+`tests/e2e/workspace-invitation.spec.ts` walks a coven's invitation (M7.7):
+the owner invites by mail, the invited account accepts and lands in the
+coven, and a used link and a revoked one are each refused with a different
+message, neither naming the coven.
