@@ -15,18 +15,15 @@ The session decides one thing: a signed-out visitor is offered **Sign In**
 (`/sign-in`), a signed-in one **Continue** to the landing for their role —
 `postSignInLanding` (`src/lib/sign-in.ts`), the rule a sign-in with no return
 path lands by: `/admin` for an admin (MB.113), and `/coven`, the post-sign-in
-landing M2.8 builds, for anyone else. The page computes it and passes it as
+landing (M2.8), for anyone else. The page computes it and passes it as
 `landing`, absent while signed out; the component never sees a role.
 Nothing else on the page depends on who is looking, and the page never
 redirects. Where the landing lives, and why it is not `/`, is
 [`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md).
 
-**The sign-in link is a `next/link`; the landing link is a plain `<a>`.**
-`typedRoutes` refuses an `href` for a route the build does not contain, and
-`/coven` has no page until M2.8, which switches it to `<Link>` in its own PR.
-Until then a signed-in visitor other than an admin who follows _Continue_
-reaches a 404 behind the proxy, which the decision record names as the
-interim state. In the workshop, `next/link`
+**Both links are `next/link`.** `landing` is typed as Next's `Route`
+(`postSignInLanding` returns one), so `typedRoutes` checks it, now that
+`/coven` has a page. In the workshop, `next/link`
 is aliased to a plain anchor (`.ladle/UnoptimizedLink.tsx`), as Ladle's
 Next.js guide prescribes.
 

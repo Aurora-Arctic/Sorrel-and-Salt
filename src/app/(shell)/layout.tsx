@@ -13,11 +13,7 @@ import { viewerOf } from '../../lib/viewer';
 // unverified one to the email page, the one page it lets through.
 export default async function ShellLayout({ children }: { children: ReactNode }) {
   await requireSession();
-  const { viewer, workspaces } = await viewerOf();
+  const { viewer } = await viewerOf();
 
-  return (
-    <AppShell viewer={viewer} workspaces={workspaces}>
-      {children}
-    </AppShell>
-  );
+  return <AppShell viewer={viewer}>{children}</AppShell>;
 }
