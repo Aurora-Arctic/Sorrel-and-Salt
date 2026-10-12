@@ -104,7 +104,7 @@ the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
   Forms and Deities, then More (Astrology, People), which opens a sheet above
   the bar at its end, the same disclosure as the row's. There is no
   chevron, except on a More button standing in for a hidden current page
-  (it wears that page's icon and label), where an accent one at the tab's end
+  (it wears that page's icon and label), where a muted one at the tab's end
   says there is more.
 - **Motion.** The tab fills ease with the theme's transition; More's sheet
   fades in and out over the theme's duration (it stays displayed, and
