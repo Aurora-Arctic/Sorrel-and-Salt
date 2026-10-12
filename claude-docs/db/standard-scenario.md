@@ -63,7 +63,7 @@ the 26 entries carry §5's own hard cases:
   looked it up, which is the row `where nomenclature = 'unknown'` returns as a
   curation to-do.
 - **Only curated values** in the four curated fields (MB.162): the sixteen
-  in-use forms come from M4.3a's vocabulary, and every planet, zodiac sign and
+  in-use forms come from M4.3a's vocabulary, and every celestial body, zodiac sign and
   deity from MB.93's and MB.129's, each spelt as its curated row spells it
   (`Herb`, not `herb`), since the compendium may hold nothing else. A few
   entries carry signs and deities — Bay Laurel's `Leo` and `Apollo`,
@@ -113,7 +113,7 @@ no pick — and that a second run writes no variant.
 
 `standard` is "a populated compendium", and that is all of it: M4.3a's forms
 and M4.3's categories as well as the ingredients, and since MB.93 and MB.129
-the planet, zodiac and deity vocabularies the autofills read. An assignment
+the celestial body, zodiac and deity vocabularies the autofills read. An assignment
 points at a category by foreign key, so those rows have to exist first — which
 is why both seeds land a task ahead of this one.
 

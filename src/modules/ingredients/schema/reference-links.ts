@@ -3,7 +3,7 @@ import { check, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import type { PgUUIDBuilderInitial } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { deities, deityTraditions } from '../../vocabulary/schema/deities';
-import { planets, zodiacSigns } from '../../vocabulary/schema/astrology';
+import { celestialBodies, zodiacSigns } from '../../vocabulary/schema/astrology';
 import { ingredients } from './ingredients';
 import { ingredientVariants } from './ingredient-variants';
 import { references } from './references';
@@ -33,7 +33,7 @@ export const SOURCED = {
   ingredientId: { column: 'ingredient_id', table: ingredients },
   deityId: { column: 'deity_id', table: deities },
   deityTraditionId: { column: 'deity_tradition_id', table: deityTraditions },
-  planetId: { column: 'planet_id', table: planets },
+  celestialBodyId: { column: 'celestial_body_id', table: celestialBodies },
   zodiacSignId: { column: 'zodiac_sign_id', table: zodiacSigns },
   // One form's own sources, beside its ingredient's (MB.217).
   ingredientVariantId: { column: 'ingredient_variant_id', table: ingredientVariants },

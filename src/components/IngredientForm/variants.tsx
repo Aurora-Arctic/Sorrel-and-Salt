@@ -28,7 +28,7 @@ import {
   curatedOnly,
   useCompendiumSubstitutes,
   useFormSuggestions,
-  usePlanetSuggestions,
+  useCelestialBodySuggestions,
   useSubstituteSuggestions,
   useZodiacSuggestions,
 } from './suggestions';
@@ -63,7 +63,7 @@ import {
 // fields stay in the page while closed, hidden, so nothing typed in them,
 // an open reference panel included, is lost by closing it. They are the
 // ingredient's own field components at its place in the values,
-// `variants.1.planets`, so they validate, err and focus as the ingredient's
+// `variants.1.celestialBodies`, so they validate, err and focus as the ingredient's
 // do (claude-docs/components/ingredient-form.md, "The variants").
 
 const BOX = 'drafts.variants';
@@ -473,15 +473,15 @@ function VariantFieldset({
             />
             <LookupListField
               workspaceId={workspaceId}
-              useSuggestions={usePlanetSuggestions}
-              name={`${at}.planets`}
+              useSuggestions={useCelestialBodySuggestions}
+              name={`${at}.celestialBodies`}
               ordered
               pickOnly={compendium}
               legend="Celestial Bodies"
               entry="Celestial Body"
               placeholder="Add a body"
               action={(announce) => (
-                <CopyFromIngredient at={at} field="planets" announce={announce} />
+                <CopyFromIngredient at={at} field="celestialBodies" announce={announce} />
               )}
             />
             <LookupListField

@@ -77,7 +77,7 @@ const WHOLE_INGREDIENT = {
   variants: [],
   description: '',
   elements: [],
-  planets: [],
+  celestialBodies: [],
   zodiacSigns: [],
   deities: [],
   colors: [],
@@ -94,7 +94,7 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
   commonNameSuggestions: suggestion('commonNameSuggestions'),
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
-  planetSuggestions: suggestion('planetSuggestions'),
+  celestialBodySuggestions: suggestion('celestialBodySuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),
   ingredientSuggestions: {
     source: `query ($workspaceId: ID!) {

@@ -62,7 +62,7 @@ const DEITIES: Variant = {
 };
 
 /**
- * The two shapes a list sends a typed entry in: the folk names, planets,
+ * The two shapes a list sends a typed entry in: the folk names, celestial bodies,
  * signs and colours as text, a deity or substitute as a name (DESIGN.md §5,
  * `ingredient_deities` and `ingredient_substitutes`).
  */

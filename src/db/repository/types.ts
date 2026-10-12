@@ -389,10 +389,10 @@ export interface AuditWriter {
     form: string,
   ): Promise<(typeof ingredientVariants.$inferSelect)[]>;
   /**
-   * Carry a planet's or a sign's new name onto the compendium's lists (MB.95):
+   * Carry a celestial body's or a sign's new name onto the compendium's lists (MB.95):
    * in every live compendium entry whose `list` holds an entry folding to
    * `from`, under the suggestions' fold, that entry becomes `to`, in its
-   * place. Nothing else in the row moves, since a planet or a sign is no part
+   * place. Nothing else in the row moves, since a celestial body or a sign is no part
    * of an entry's identity or slug; a coven's ingredient and a deleted entry
    * are left alone and not returned. Named for its tables, as
    * `carryFormRename` is.
@@ -581,12 +581,12 @@ export interface IngredientFilter {
    */
   formId?: string;
   /**
-   * A planet the entry's `planets` list holds, an entry at a time under the
-   * suggestions' fold (MB.162): how a planet's delete and rename find the
+   * A celestial body the entry's `celestialBodies` list holds, an entry at a time under the
+   * suggestions' fold (MB.162): how a celestial body's delete and rename find the
    * entries holding it (MB.95). Blank means no filter.
    */
-  planet?: string;
-  /** A sign the entry's `zodiacSigns` list holds, as `planet` reads the planets. */
+  celestialBody?: string;
+  /** A sign the entry's `zodiacSigns` list holds, as `celestialBody` reads the celestial bodies. */
   zodiacSign?: string;
   /**
    * A curated deity the entry holds a live link to, by `ingredient_deities.deity_id`
@@ -779,7 +779,7 @@ export interface CategoryFilter {
 }
 
 /** An ingredient list a curated astrology vocabulary's values are written to, by its property name. */
-export type AstrologyList = 'planets' | 'zodiacSigns';
+export type AstrologyList = 'celestialBodies' | 'zodiacSigns';
 
 /** One of the two astrology vocabularies, flat and alike (MB.95). */
 export type AstrologyVocabulary = FlatTable;

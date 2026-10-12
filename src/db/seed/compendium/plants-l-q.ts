@@ -382,7 +382,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Lady's bedstraw is an upright herbaceous perennial of the family Rubiaceae, standing from about fifteen centimetres to over a metre, with fine, lance-shaped leaves set in whorls and dense clusters of tiny yellow flowers whose scent grows stronger as they dry. It grows wild across most of Europe, North Africa and temperate Asia as far as Japan, and has naturalised in Tasmania, New Zealand, Canada and the northern United States. Since ancient Greece it has stood in for rennet in cheese-making, which gave the genus its name from the Greek word for milk, and in Gloucestershire its flowers coloured Double Gloucester. In medieval Europe the dried plant was strewn to freshen houses and stuffed into mattresses, where its coumarin scent kept fleas away. It also yields yellow and red dyes, and in Denmark it flavours a spirit called bjæsk. Scandinavians, who took it as a sedative, named it Frigg's grass after the goddess who helped women in childbirth, and a bedstraw mattress was thought to ease labour and soothe mother and baby. A marriage bed of it was said to bring many children, and it went into love potions and marriage divination. In Romania it shares its name with Midsummer's Day and that day's fairies, and Serbian Midsummer wreaths woven from it are set at gates to guard the home. In magic it is hung about the house for abundance and peace, or offered to the fae on the Midsummer fire.",
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       safetyNotes:
         'Considered safe to take when used appropriately (AHPA safety class 1), with no known contraindications, interactions or side effects. No information on its safety in pregnancy or while nursing was found, and although none of concern was identified, safety in either has not been conclusively established.',
       folkNames: [
@@ -403,7 +403,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -456,7 +456,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Lady's mantle is a herbaceous perennial of the family Rosaceae, native to Europe and introduced to the United States, found in unimproved grassland, on road verges and banks, on chalk downland and on mountain slopes. It grows in spreading mounds of rounded, pleated leaves with five to eleven shallow lobes, cupped so that they hold beads of rain and dew, and in Britain and Ireland it bears clusters of tiny yellowish-green flowers without true petals from June to September. Its aerial parts are gathered for herbal infusions. The genus name is traced to the Arabic word for alchemy, and medieval German alchemists thought the dew collected from its leaves especially potent for working metals. The Anglo-Saxons used it to cure bewitchment; in Scotland and Ireland it lifted faery enchantment and countered elf shot, the unseen weapon elves were thought to strike people with to cause disease; and it was held to ward off the evil eye. Scottish potions used it to restore a youthful look, and in Scandinavia a leaf slept on under the pillow was said to bring pleasant dreams. In magic it belongs above all to love, its herb going into love spells and sachets, and a leaf held between the hands is said to focus the mind before divination, while its flowers are set on the altar for full-moon and healing rituals.",
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       safetyNotes:
         'Considered safe to take when used appropriately (AHPA safety class 1, under the name Alchemilla xanthochlora), with no known contraindications, interactions or side effects; it contains about 6 to 16% tannins. No information on its safety in pregnancy or while nursing was found, and safety in either has not been conclusively established. Cunningham marks it as recognised as safe.',
       folkNames: [
@@ -488,7 +488,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
             'safetyNotes',
@@ -501,7 +501,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -571,7 +571,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Yellow lady's slipper is an orchid native to North America, ranging from Alaska south to Arizona and Georgia, in fens, wetlands, shorelines and damp woodland. Each stem usually bears a single flower, one of whose petals is swollen into a slipper-like pouch, with three thin, twisted sepals reaching out to either side; in this species the sepals are purplish and the leaves climb the stem. It is a highly variable species, and many authors treat its large-flowered variety as a species of its own, Cypripedium pubescens. An Ojibwe legend tells that the plant first grew from the moccasin prints left in the snow by a young woman who made a hard journey to bring medicine home to her village. The Ojibwe and other peoples from the upper Midwest to the Northeast used it medicinally: the Meskwaki as a love medicine, the Menominee to bring dreams of the supernatural. European settlers in North America took it up as a substitute for valerian. Lady's slippers need very particular habitats and are difficult to grow, and they are counted endangered in some areas, so a supplier's reputation is worth checking. In magic the plant is chiefly protective, carried in sachets to guard against hexes, curses, spells and the evil eye, and it is also linked to love, peace and dream work.",
       elements: ['water'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       safetyNotes: 'May cause dermatitis when handled.',
       folkNames: [
         'Yellow Moccasin Flower',
@@ -586,7 +586,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Lady\'s Slipper"',
-          supports: ['description', 'elements', 'planets', 'folkNames', 'categories'],
+          supports: ['description', 'elements', 'celestialBodies', 'folkNames', 'categories'],
         },
         {
           source: 'kynes-plants',
@@ -595,7 +595,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
             'safetyNotes',
@@ -626,7 +626,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Lady's smock is a hairless perennial herb of the cabbage family, Brassicaceae, native to Eurasia, widespread in Europe and common across the British Isles, where it does best close to water. Grown in gardens, it has naturalised in North America, while in parts of Germany it is now under threat. It reaches about sixty centimetres, with a rosette of rounded leaves at the base, narrow leaves up the stem and loose clusters of four-petalled flowers, usually a pale pinkish mauve and occasionally white. Its species name means of the meadow, and the name cuckoo flower is put down to its blooming as the first cuckoos reach the British Isles each spring. Lady's smock is said to be a worn-down form of Our Lady's Smock, a plant dedicated to the Virgin because it was held to flower about Ladytide. The plant is edible, with a peppery taste like watercress; it was once reckoned a remedy for scurvy, and in the early nineteenth century it was an ordinary salad herb. It is the county flower of Cheshire and of Brecknockshire. In English folklore the flowers were sacred to the fairies, said to be little dresses they had sewn, so they were left out of May Day garlands and kept out of the house, lest a fairy come in with them; other tales held that witches used them in spells. In magic it serves love, fertility, healing and divination.",
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       folkNames: [
         'Meadow Cress',
         'Bittercress',
@@ -646,7 +646,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
           ],
@@ -713,7 +713,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Larches are the deciduous conifers of the genus Larix, in the pine family: unlike most conifers they drop their needles each autumn, after the needles have turned golden yellow. The tallest species reach fifty to sixty metres. The needles grow singly along long shoots and in dense tufts of twenty to fifty on short ones, and the small seed cones usually stand upright. The genus ranges across the cool and cold zones of the Northern Hemisphere, from North America through Europe to Siberia, China and Japan, and dominates much of the boreal forest of Siberia and Canada. Its tough, durable timber is used for boats, cladding, decking and fencing, and the tree also gives arabinogalactan, Venice turpentine, rosin for violin bows and an essential oil. In fourteenth-century Germany a few larch planks were built into a house to guard it from fire, and twigs hung on the house kept off lightning; Slavic children wore larch amulets against the evil eye, and in the Austrian Tyrol offerings to deities were laid beneath the trees. In magical practice larch is carried or worn against enchantment and the evil eye, and put into sachets meant to prevent fires.',
       elements: ['fire'],
-      planets: ['Jupiter'],
+      celestialBodies: ['Jupiter'],
       safetyNotes:
         "Cunningham's health code marks larch as not recommended for internal use in large amounts.",
       folkNames: [
@@ -743,7 +743,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
         {
           source: 'kynes-plants',
           locator: 'under "Larch"',
-          supports: ['elements', 'planets', 'categories', 'folkNames', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'folkNames', 'description'],
         },
         {
           source: 'wikipedia-larch',
@@ -823,7 +823,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Forking larkspur, also called field or rocket larkspur, is an annual herb of the buttercup family that grows thirty to eighty centimetres tall on an upright, hairy stem branching freely near the top. Its leaves are deeply lobed and feathery, and from May to August it bears small clusters of dark blue or purple flowers, each with a backward-pointing spur. It is native from Spain and France across Europe to Turkey, Georgia and western Siberia, favouring sandy or chalky soil, dry weedy ground, roadside ditches and cereal fields, and it has grown scarce in central and southern Europe as herbicides and intensive tillage have spread. It is also grown as an ornamental. A medieval Italian legend held that larkspur sprang up where knights wiped a slain dragon's blood from their swords, and in Germany it was thrown with vervain through a wreath of mugwort into the Midsummer bonfire for protection. Magical tradition says that it keeps ghosts away, that looking through a bunch of it at a Midsummer fire preserves the eyes for a year, and that its flowers drive off scorpions and other venomous creatures.",
       elements: ['water'],
-      planets: ['Venus', 'Mars'],
+      celestialBodies: ['Venus', 'Mars'],
       safetyNotes:
         "Poisonous. Kynes cautions that every part of the plant is toxic, the seeds above all, and can be fatal if eaten, and Cunningham's health code marks it as not recommended for internal use.",
       folkNames: [
@@ -844,7 +844,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           locator: 'under "Larkspur"; p. 266',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -857,7 +857,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -918,7 +918,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Lavender, also known as true, English or common lavender, is a strongly scented evergreen shrub of the family Lamiaceae, native to the Mediterranean basin despite its English name, and grows one to two metres tall. Its narrow leaves, which give the species its name, are grey-green or silvery, and its small purple flowers sit in whorls on spikes at the top of slender, leafless stems. It is widely grown for its colourful flowers and fragrance, tolerates drought, dislikes soil that stays damp, and prefers neutral to alkaline ground. Its flowers and leaves are used in herbal medicine, the flowers flavour food, notably the North American form of herbes de Provence, and its essential oil goes into perfumes, cosmetics, massage and aromatherapy. Lavender has scented laundry since Greek and Roman times, and in medieval Europe it was linked with love and thought an aphrodisiac. Folk belief held that carrying a sprig let a person see ghosts; in Tuscany it guarded children against the evil eye, and in Wales a sprig was worn for luck and protection. In magical practice it goes into love sachets, is burned to bring sleep, is strewn about the house to keep it peaceful, is added to purification baths, and is slipped under the pillow for a wish divination.',
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       safetyNotes:
         "Considered safe when used appropriately (AHPA safety class 1), with no known contraindications or drug interactions, and Cunningham's health code marks the flower as safe; NCCIH regards it as likely safe in the amounts used in food. Taken by mouth it may cause diarrhoea, headache, nausea or burping in some people. It may interact with sedative drugs or herbs: NCCIH calls the concern theoretical, and Kynes advises against using it while taking sedative medication. Little is known about its safety in pregnancy or while breastfeeding; AHPA found only a 1935 study in which lavender stimulated contractions of isolated pregnant guinea-pig uteruses. Skin products containing lavender can cause allergic reactions, and a few cases of breast swelling have been reported in children using them, though it is unclear whether lavender was the cause.",
       folkNames: [
@@ -955,7 +955,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           locator: 'under "Lavender"; p. 266',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -968,7 +968,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -1082,7 +1082,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'The leek is a cultivated form of Allium ampeloprasum, a member of the onion genus whose wild plant, the wild or broadleaf wild leek, is native from southern Europe through south-western Asia to North Africa and has naturalised in many other countries. The common leek, sometimes ranked as the variety porrum, is known by its stout false stem, and the same species has given rise to elephant garlic, the pearl onion, kurrat and Persian leek. Wild plants form small bulbs and send up round flowering stalks as tall as 1.8 metres, each crowned by an umbel of up to five hundred small, urn-shaped flowers in white, pink or red. In Britain the wild plant grows in rocky places near the coast of south-west England and Wales, where prehistoric people may have brought it. Its species name joins the Greek words for vine and leek. In magical lore, when two people eat leeks they are said to fall in love with each other; leeks are also carried as protective amulets, and bitten to break hexes and drive evil away.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       safetyNotes: "Cunningham's health code marks leek as safe.",
       folkNames: ['Wild Leek', 'Broadleaf Wild Leek', 'Yorktown Onion'],
       categories: ['Love', 'Protection'],
@@ -1090,7 +1090,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Leek"; p. 266',
-          supports: ['elements', 'planets', 'categories', 'description', 'safetyNotes'],
+          supports: ['elements', 'celestialBodies', 'categories', 'description', 'safetyNotes'],
         },
         {
           source: 'wikipedia-allium-ampeloprasum',
@@ -1117,7 +1117,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "The lemon is a small evergreen tree of the citrus family, Rutaceae, grown the world over for its pointed oval yellow fruit, a modified berry with a tough rind whose outer zest holds aromatic oils. Wikipedia gives the true lemon's parents as the citron and the bitter orange, and says some evidence places its origin in north-eastern India in the first millennium BC; Kynes names the citron and the lime as its parents instead. It had reached southern Italy by the second century AD, spread through the Arab world and the Mediterranean in the eleventh and twelfth centuries, and crossed to the Americas with Columbus in 1493. Its sour juice, rich in citric acid, goes into lemonade, marinades and baking, the peel yields pectin and oil, and the leaves are brewed as tea. Late medieval Europe valued the fruit as medicine, and it was believed to guard against poison, plague and bewitchment. In India a lemon may be circled around a person to drive off negative energies, or crushed under the wheels of a new car to keep its driver safe. In magical practice Cunningham washes second-hand amulets and jewellery in lemon juice and water to clear whatever clings to them, adds the juice to a full-moon bath, and hangs an unripe lemon bristling with coloured pins in the home to draw blessings. Kynes dabs newly acquired ritual tools with lemon hydrosol to purify them.",
       elements: ['water', 'air', 'earth'],
-      planets: ['Moon', 'Mercury'],
+      celestialBodies: ['Moon', 'Mercury'],
       zodiacSigns: ['Aquarius', 'Cancer', 'Gemini', 'Pisces'],
       safetyNotes:
         'Cunningham marks lemon as safe (health code G). AHPA found no information on its safety in pregnancy or while nursing: it identified no concern, but safety has not been conclusively established.',
@@ -1144,7 +1144,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'safetyNotes',
@@ -1156,7 +1156,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -1291,7 +1291,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Lemon balm is a bushy perennial of the mint family, Lamiaceae, growing up to a metre tall, with soft, hairy, heart-shaped leaves that smell gently of lemon and small white or pale pink flowers in summer. It is native to south-central Europe, the Mediterranean, Central Asia and Iran, and has naturalised widely. Its genus name is the Greek word for honey bee, after the bees its flowers draw; Gerard held that balm rubbed over a hive keeps the bees there and brings others, and Cunningham repeats the advice. Pliny and Dioscorides both wrote of it as a medicine, the Tudors strewed its leaves over their floors, and it later went into Carmelite water and balm wine. Today it flavours herbal teas and ice cream. Kynes notes the tradition that it was among the mints taken by the oracle priestesses at Delphi, and that in medieval France and Germany it was worn as an amulet to make a person friendly. Aubrey’s tale, retold by Northcote, has the Wandering Jew curing a consumptive Staffordshire cottager with three balm leaves steeped in small beer. In magic it serves love, healing and success: Cunningham passes on an Arabian practice of steeping it in wine to share with a friend, carries it to find love, and adds it to healing incenses and sachets.',
       elements: ['water', 'air'],
-      planets: ['Moon', 'Jupiter'],
+      celestialBodies: ['Moon', 'Jupiter'],
       zodiacSigns: ['Cancer'],
       safetyNotes:
         'Cunningham marks lemon balm as safe (health code G). AHPA safety class 1, interaction class A: no known contraindications or interactions, and clinical trials found it well tolerated taken internally or on the skin. Animal and laboratory studies suggest it may affect thyroid hormone levels, though no human cases are reported, and in animals its extracts strengthened the effect of barbiturate sedatives; Kynes cautions that it may interact with sedative and thyroid medication. Contact dermatitis has been reported from a cosmetic containing it. Its safety in pregnancy and while nursing has not been conclusively established.',
@@ -1320,7 +1320,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'safetyNotes',
@@ -1333,7 +1333,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -1414,7 +1414,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Lemon verbena is a perennial shrub of the verbena family, Verbenaceae, native to South America and reaching two to three metres. Its glossy, pointed leaves, about eight centimetres long, release a strong lemon scent when bruised, which is what its specific epithet means, and sprays of tiny purple or white flowers appear in late spring or early summer. The Spanish and Portuguese brought it to Europe in the seventeenth century and grew it for its oil, which perfumers once distilled from the leaves. The leaves flavour fish, poultry, marinades, dressings, jams and puddings, are made into herbal teas and liqueurs, scent potpourri, and serve as a traditional medicine in Latin America. In Cunningham’s magic it belongs to love and purification: it is worn to make oneself attractive, added to love spells and mixtures, used to purify a space or a bath, and mixed into other blends to strengthen them. Hung around the neck, or a little of its juice drunk, it was said to keep the wearer from dreaming. Cunningham lists it as Lippia citriodora, one of several synonyms the plant has carried.',
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       safetyNotes:
         'Cunningham marks lemon verbena as safe (health code G). AHPA safety class 1, interaction class A: no known contraindications, precautions, interactions or side effects, and no reported adverse events. Its safety in pregnancy and while nursing has not been conclusively established.',
       folkNames: ['Cedron', 'Yerba Louisa', 'Verbena', 'Lemon Beebrush', 'Hierba de la Princesa'],
@@ -1426,7 +1426,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'safetyNotes',
@@ -1485,7 +1485,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Lemongrass, also called West Indian lemongrass, is a tropical grass of the family Poaceae, native to South Asia and Maritime Southeast Asia and now naturalised across the tropics and subtropics. It grows in large, dense clumps of long, narrow, bluish-green leaves, cannot survive frost, and is often sold in markets as stems. Its leaves season roast meats in the Philippines, it is essential to the Thai soups tom yam and tom kha kai, and its dried leaves make a mild, lemony tea. Its essential oil, mostly citral, goes into aromatherapy blends, and beekeepers bait swarm traps with it. Kynes records that the ancient Greeks, Romans and Egyptians used lemongrass in food and medicine, and that it was widely used in perfumery in the Middle East and India, but finds no older magical use outside hoodoo, where it goes into Van Van oil to clear negative energy and spirits from a home, counter magic and bring luck. Cunningham plants it around the house and garden to keep snakes away, adds it to lust potions, and drinks it as an infusion to develop psychic powers. Kynes dresses a candle with its oil before divination, and diffuses the oil to open the way to intuition.',
       elements: ['air'],
-      planets: ['Mercury', 'Sun', 'Venus'],
+      celestialBodies: ['Mercury', 'Sun', 'Venus'],
       zodiacSigns: ['Gemini'],
       safetyNotes:
         'Cunningham advises against taking it internally during pregnancy (health code P), and Kynes advises avoiding it during pregnancy and while breastfeeding. AHPA safety class 1, interaction class A: it notes that one Caribbean text records its use as an abortifacient, which no other reference it found repeats, and that safety while nursing has not been established. An animal study suggests it may alter blood sugar regulation, so people with diabetes should watch their blood sugar and consult a qualified practitioner before using it. Allergic contact dermatitis followed drinking the tea in one person repeatedly exposed to the essential oil.',
@@ -1520,7 +1520,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'safetyNotes',
           ],
@@ -1532,7 +1532,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -1700,7 +1700,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Lettuce is an annual of the daisy family, grown nearly everywhere as a leaf vegetable and eaten mostly raw in salads, though its stems and seeds are used as well. Its native range runs from the Mediterranean to Siberia. Once past the edible stage, a plant sends up a flower stalk up to a metre tall bearing small yellow flowers. It was first domesticated from its wild ancestor near the Caucasus for the oil pressed from its seeds, and spread to Egypt, where its cultivation is pictured as early as 2680 BC. The Egyptians held it sacred to Min, a god of reproduction, carrying it in his festivals and setting it beside his images. Greeks and Romans took it up in turn, and the Roman name lactuca, from the milky latex that seeps from cut stems, is the root of the English word. Medieval writers such as Hildegard of Bingen treated it as a medicinal herb. Cunningham makes it a plant of the Moon and water, for sleep, chastity and protection. Rubbing its juice on the forehead or eating the leaves is meant to bring easy sleep, eating it guards against temptations of the flesh and seasickness, and a lettuce patch protects the garden, though some held that growing too much of it would leave a household barren.',
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       safetyNotes: "Cunningham's health code G marks lettuce as currently recognised as safe.",
       folkNames: ['Garden Lettuce', 'Lattouce', 'Sleep Wort'],
       deities: ['Min'],
@@ -1712,7 +1712,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -1766,7 +1766,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Life everlasting is a daisy-family plant of eastern North America, a biennial up to about a metre tall that grows in dry, sandy, open places such as clearings, fields and the edges of woods. In its first year it makes a tight rosette clothed in woolly hairs; in its second it sends up a stem of narrow leaves crowned with clusters of small flower heads, white with yellowish or brownish tips, and its leaves and stems are thick with white wool. Carl Linnaeus described it in 1753 as a Gnaphalium, and it was moved to Pseudognaphalium in 1981. Many Indigenous peoples used it in medicine: the Cherokee for cramps, colds and coughs, the Choctaw for lung pain and colds, the Koasati for fevers. It was also a guard against the unseen. The Creek washed people afflicted by ghosts with a decoction of it, and the Menominee burned it to drive ghosts out and to bring back a lost mind. Because the flowers keep their beauty when dried, everlastings came to stand for long life and immortality. Kynes gives it to earth and Saturn, for banishing, courage, healing, protection and purification: a little bag of the dried flowers kept on the person shores up courage, and the dried flowers cleanse parts of a home troubled by an unwanted spirit.',
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       folkNames: [
         'Cudweed',
         'Everlasting',
@@ -1784,7 +1784,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
           ],
@@ -1832,7 +1832,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Common lilac is a deciduous shrub or small, many-stemmed tree of the olive family, reaching six or seven metres and sending up suckers that over decades can form a small thicket. Its heart-shaped leaves grow in opposite pairs, and in early summer it bears dense clusters of small, scented, four-lobed tubular flowers, usually lilac to mauve and now and then white. It is native to rocky hills in the southern Balkans, but reached northern European gardens from Ottoman ones at the end of the sixteenth century, the diplomat Ogier Ghiselin de Busbecq being credited with sending cuttings to Carolus Clusius around 1562. It came to the American colonies in the eighteenth century, has naturalised widely, and is the state flower of New Hampshire. Its flowers are edible and flavour honey, sugar and sweets. English lore held it unlucky to wear white lilac on any day but May Day; in Norfolk purple lilac, a mourning colour, was unlucky too, and the flowers often lined coffins and decorated graves. A white flower with five petals rather than four was a luck lilac, a gift from the fae. For Cunningham lilac drives evil from wherever it is planted or strewn, and New Englanders, he says, first planted it to keep evil off their land.',
       elements: ['water'],
-      planets: ['Venus', 'Mercury', 'Moon'],
+      celestialBodies: ['Venus', 'Mercury', 'Moon'],
       zodiacSigns: ['Libra', 'Taurus'],
       safetyNotes: "Cunningham's health code G marks lilac as currently recognised as safe.",
       folkNames: ['Common Lilac', 'French Lilac', 'Blue Pipe'],
@@ -1856,7 +1856,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -1869,7 +1869,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'categories',
@@ -1924,7 +1924,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Lilies proper are the genus Lilium: tall herbaceous perennials, from about thirty centimetres to nearly two metres high, that rise each year from a scaly underground bulb and carry large, often fragrant flowers in white, yellow, orange, pink, red or purple. Most species belong to the temperate Northern Hemisphere, from Europe across Asia to Japan, India and the Philippines, and from southern Canada through much of the United States, usually in woodland, on mountains or in grassland. Plenty of plants called lilies, the lily of the valley and the water lily among them, sit outside the genus altogether. The starchy bulbs are cooked as a vegetable in China, and those of several species are used in Chinese medicine. Lilies are the flowers most often seen at funerals, as they were among the Greeks and Romans, and in Western Christianity the Madonna lily has stood for the Virgin Mary since medieval times. A Roman tale held that every lily was orange until a drop of Juno's milk whitened one. In England white lilies were hung above doorways to keep witches out, and in Wiltshire they were grown to keep ghosts away. In magical practice lilies are planted to guard a home from ghosts, evil and the evil eye, and a fresh flower is worn to undo a love spell aimed at a particular person.",
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       zodiacSigns: ['Gemini', 'Pisces', 'Scorpio', 'Virgo'],
       safetyNotes:
         'Cunningham warns that some lilies are poisonous. The above-ground parts of the tiger lily are toxic to cats, damaging the kidneys and sometimes causing kidney failure.',
@@ -1949,7 +1949,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'description',
@@ -1959,7 +1959,14 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
         {
           source: 'kynes-plants',
           locator: 'under "Lily"',
-          supports: ['elements', 'planets', 'zodiacSigns', 'deities', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'zodiacSigns',
+            'deities',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'ahpa-safety',
@@ -2026,7 +2033,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Lily of the valley is a low woodland perennial of Europe and of western and northern Asia that creeps by underground rhizomes into broad colonies. Each shoot bears two wide leaves and, in late spring, a one-sided spray of six to twelve small, nodding white bells with a sweet scent, followed by little orange-red berries. Gardeners plant it as ground cover in shade, and it has long been forced in pots for flowers in winter. No natural extract can be drawn from the flower, so perfumes such as Dior's Diorissimo copy its scent synthetically. The English name echoes the 'lily of the valleys' of the Song of Songs, whose Latin wording also gave Linnaeus the genus name. It is Finland's national flower, is sold in France on the first of May and is worn at Helston on Flora Day. Across Europe it was gathered at Beltane to dress maypoles and offered as a love token, and in France a sprig worn or given on May Day was meant to bring a year of luck. A legend has the flowers springing up from the blood of a dragon slain by Saint Leonard, while in Ireland bringing them indoors was thought unlucky. In magical practice the flowers are set in a room to raise the spirits of those present, and are used to sharpen the memory and the mind.",
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       zodiacSigns: ['Gemini', 'Taurus', 'Virgo'],
       safetyNotes:
         'Poisonous: every part of the plant is toxic and can kill if swallowed. AHPA safety class 3, to be used only under the supervision of an expert qualified in its use. Its interactions are those of digoxin and the other digitalis glycosides. It may cause nausea and vomiting; large amounts have been linked with changes in heart rate and rhythm, and with pain in the mouth, abdominal pain, cramping and diarrhoea. Its use in pregnancy or while nursing is not recommended except under expert supervision.',
@@ -2066,7 +2073,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'folkNames',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'description',
             'safetyNotes',
@@ -2079,7 +2086,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'folkNames',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2139,7 +2146,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'The Key lime, also called the West Indian or Mexican lime, is a thorny, shrubby tree up to about five metres tall that arose as a natural cross between a wild papeda, Citrus micrantha, and the citron. Its round fruit, three to six centimetres across, has a thin peel and very sour, juicy, fragrant flesh; it is usually picked green and turns yellow as it ripens. Native to South-east Asia, it travelled by way of the Middle East and North Africa to Sicily and Andalusia, and with Spanish explorers to the West Indies and the Florida Keys, which gave it its name and the pie it is best known for. Boiled in brine and dried, it becomes the black lime used as a seasoning across the Middle East. Kynes records limes used in Sumatra and elsewhere in South-east Asia to cleanse and consecrate, cut open in ceremony to drive out demons, and strung with red chillies in India to keep evil from houses and shops. In magical practice a fresh lime stuck with old nails and pins and thrown into a deep hole is said to carry off ills and hexes, the peel goes into love mixtures and incenses, twigs are carried against the evil eye, and the fruit purifies ritual space and consecrates tools.',
       elements: ['fire', 'water'],
-      planets: ['Sun', 'Mercury'],
+      celestialBodies: ['Sun', 'Mercury'],
       zodiacSigns: ['Leo'],
       folkNames: [
         'Loomi',
@@ -2157,14 +2164,14 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Lime"',
-          supports: ['elements', 'planets', 'categories', 'folkNames', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'folkNames', 'description'],
         },
         {
           source: 'kynes-plants',
           locator: 'under "Lime"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -2245,7 +2252,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'The common lime or European linden is a natural hybrid of the small-leaved and large-leaved limes, growing wild at scattered places in Europe wherever both parents are native. It is a big deciduous tree, fifteen to fifty metres tall, often with burrs and a thicket of shoots at its foot, heart-shaped leaves, and fragrant clusters of four to ten flowers in early summer, each cluster hung from a yellow-green leafy bract and worked by bees. Cheap to raise by layering, it is the commonest lime of town avenues and streets, though it drips aphid honeydew on whatever stands below. Its flowers make a mildly relaxing tea, and its leaves, stalks removed, can be eaten raw. It is no kin to the citrus lime. The Greeks and Romans held the linden sacred, Scythian soothsayers stood beneath it to prophesy, and in medieval France couples made their marriage vows under it. In Germany witches were said to meet beneath lindens on Walpurgis, yet linden branches were hung to keep them from houses, and in Poland a piece of the bark guarded against magic and witches. In magical practice branches are hung over the door for protection, the flowers and leaves go into love spells, and linden mixed with lavender fills pillows to bring sleep.',
       elements: ['air'],
-      planets: ['Jupiter', 'Mercury', 'Sun'],
+      celestialBodies: ['Jupiter', 'Mercury', 'Sun'],
       zodiacSigns: ['Gemini', 'Sagittarius', 'Taurus'],
       safetyNotes:
         'Linden flower and leaf are AHPA safety class 1, and Cunningham marks both safe. Contact urticaria has been reported after use of a shampoo containing linden extract. Safety in pregnancy and while nursing has not been established.',
@@ -2291,7 +2298,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'folkNames',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'description',
@@ -2305,7 +2312,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'folkNames',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2415,7 +2422,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Liquorice is a herbaceous perennial of the bean family, Fabaceae, native to West Asia, tropical Asia, North Africa and southern Europe. It grows to about a metre tall, with pinnate leaves of nine to seventeen leaflets, loose clusters of purple to pale whitish-blue flowers and oblong pods holding several seeds. Its roots yield a sweet, aromatic flavouring that now goes into confectionery, tobacco, drinks and medicines. The root was a medicine across the ancient world from Europe to the Far East; Roman soldiers are said to have chewed it before battle, and the Egyptians laid it in tombs. In England it was grown from Queen Elizabeth's reign at Pontefract, Worksop, Godalming and Mitcham, and it was long a favourite remedy for coughs; Pontefract is also where it was first mixed with sugar into sweets. Many cultures held it to be an aphrodisiac, and in Europe it went into love charms and charms to keep a lover faithful, while in hoodoo the root is used to dominate another person. In magical practice the root, not the sweet, is chewed to kindle passion and as a help in giving up smoking; it is added to love and lust sachets, carried to draw love and used in fidelity spells, and its sticks serve as wands. Kynes adds knot magic worked with a liquorice lace, and binding two roots together in a love spell.",
       elements: ['water'],
-      planets: ['Venus', 'Jupiter', 'Mercury'],
+      celestialBodies: ['Venus', 'Jupiter', 'Mercury'],
       safetyNotes:
         "Not for use in pregnancy except under a qualified practitioner's supervision, and not for people with high blood pressure, liver disorders, oedema, severe kidney insufficiency, low blood potassium, heart disease with oedema or congestive heart failure (AHPA safety classes 2b and 2d); Cunningham also advises against taking it with diabetes. Nor is it for prolonged use or high doses without such supervision: taken for long periods it can deplete potassium and retain sodium, and its glycyrrhizin can cause serious effects, including an irregular heartbeat and cardiac arrest. Even small amounts have been linked to severe effects in people who eat a lot of salt or who have hypertension or heart or kidney disease. At high doses or with long use it may add to the potassium loss caused by some diuretics, stimulant laxatives and corticosteroids, and strengthen the action of digoxin. These cautions apply to products containing glycyrrhizin, not to deglycyrrhizinated liquorice. Kynes advises against it while nursing, where its safety has not been established. Applied to the skin it may irritate some people.",
       folkNames: [
@@ -2441,7 +2448,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -2454,7 +2461,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'deities',
@@ -2515,7 +2522,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Liverwort here is the common hepatica, a small herbaceous perennial of the buttercup family, Ranunculaceae, native to woodland in the temperate Northern Hemisphere. It stands only five to fifteen centimetres high, its leaves and flowers rising straight from a rhizome rather than from a stem above ground. The fleshy, three-lobed leaves are dark green with whitish streaks above and violet or reddish brown beneath, and they stay green through the winter. It is also known under the genus Hepatica, as Hepatica nobilis, but phylogenetic studies indicate that the hepaticas belong within Anemone. In Japan, where it is called yukiwarisō, the snow-breaking plant, it is celebrated at winter flower festivals and appears often in nineteenth-century art, and as Hepatica nobilis it holds the Royal Horticultural Society's Award of Garden Merit. Ethnobotanical records cited in the AHPA handbook describe its traditional use as a contraceptive, for pain during pregnancy, for absent menstruation and to bring on labour. Cunningham's entry notes that in England the name liverwort is given to another plant, Peltigera canina. In magical practice it is a love herb: a woman is said to secure a man's love by keeping liverwort in a sachet about her at all times.",
       elements: ['fire'],
-      planets: ['Jupiter'],
+      celestialBodies: ['Jupiter'],
       safetyNotes:
         "Not for use in pregnancy except under a qualified practitioner's supervision (AHPA safety class 2b; Cunningham's pregnancy code), as it was traditionally used as a contraceptive and to bring on labour. In large doses its protoanemonin may irritate the kidneys and urinary tract, and the fresh herb can blister the skin; the compound is destroyed when the plant is dried. Its safety while nursing has not been established.",
       folkNames: [
@@ -2538,7 +2545,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -2574,7 +2581,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Lobelia, or Indian tobacco, is an annual or biennial herb of the family Campanulaceae, native to eastern North America from Nova Scotia and south-eastern Ontario south to Alabama and west to Kansas. It grows from fifteen centimetres to a metre tall on finely hairy stems, with toothed, oval leaves about eight centimetres long, and from midsummer into autumn it bears violet flowers tinged yellow inside, followed by small, brown, papery seed capsules. It has a long history as a medicinal plant, taken as an emetic, as an entheogen and as an aid to the skin and breathing. The Cherokee, Iroquois, Penobscot and other Indigenous peoples used it in medicine; its leaves were chewed and smoked, and the Cherokee burned the foliage to drive off gnats. Kynes records that the Iroquois took it against sickness caused by witchcraft and that the Creek used it to keep ghosts away, and she calls it a plant of two natures that can curse or cure. In magical practice it draws love, and Kynes keeps a sachet of the dried leaves by the bed to help dream work. Cunningham's weather charm is to throw powdered lobelia towards an approaching storm to halt it.",
       elements: ['water'],
-      planets: ['Saturn', 'Neptune'],
+      celestialBodies: ['Saturn', 'Neptune'],
       safetyNotes:
         "Poisonous: Cunningham marks it as a poison, and Kynes warns that it is toxic if swallowed and can be fatal. Not for use in pregnancy except under a qualified practitioner's supervision (AHPA safety class 2b), and not to be taken internally in high doses. It is a strong emetic and may cause nausea or vomiting; in clinical trials its alkaloid lobeline caused nausea and a burning mouth and throat, and higher doses brought vertigo and a fast heartbeat. Deaths from excessive doses were reported in older literature, though reviews found the evidence too thin to name lobelia as the cause. Its safety while nursing has not been established.",
       folkNames: [
@@ -2595,7 +2602,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -2608,7 +2615,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -2689,7 +2696,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Lords and ladies, also called cuckoo pint, is a woodland plant of the arum family, Araceae, native across most of Europe and into eastern Turkey and the Caucasus. In spring it puts up arrow-shaped leaves, often blotched with purple, then a pale green hood, the spathe, wrapped round a poker-shaped spike, the spadix, which is usually purple but may be yellow. The spadix gives off a faecal smell and warms itself well above the surrounding air, drawing in small owl-midges that are trapped beneath a ring of hairs and dusted with pollen before they escape. In autumn a cluster of bright red berries stands on after the leaves have withered. The starchy roots once stiffened linen and ruffs, and the nuns of Syon Abbey used them for church linen in 1440. Several of its names, cuckoo pint among them, liken the spike to a penis, and Dioscorides counted the plant an aphrodisiac. Girls in Dorset were warned that touching it would make them pregnant, Fenland legend had its flowers glowing at night, and it serves as a fertility symbol in several of the sixteenth-century unicorn tapestries. In magical practice it stands for the union of goddess and god on a Beltane altar, and its seeds are added to fertility spells.',
       elements: ['air'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: ['Aries'],
       safetyNotes:
         'Poisonous: every part is toxic if eaten, the roots especially, and all parts can irritate the skin or cause allergic reactions, so handle it with care. The berries contain needle-shaped oxalate crystals that irritate the skin, mouth, tongue and throat and can bring swelling of the throat, difficulty breathing, burning pain and stomach upset. Their acrid taste usually stops anyone eating much, but the plant is one of the commonest causes of accidental plant poisoning seen in hospital emergency departments, and there is no known antidote. The leaves are toxic and can be mistaken for edible sorrel.',
@@ -2728,7 +2735,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -2797,7 +2804,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'The sacred lotus is an aquatic perennial, one of just two living species in the family Nelumbonaceae, and often confused with the true water lilies, although modern classification places its nearest relatives among the sycamores. It roots in the mud of ponds and river beds, and its round leaves, up to a metre across, either float or stand high above the water on long stalks. The flowers, as much as 35 centimetres wide, are usually pink with a yellow centre, and the central cone ripens into the seed head. Its native range runs from East Asia through northern Indochina to central and northern India. It has been grown for its edible seeds for some three thousand years, and its starchy rhizomes are a common vegetable across Asia. It is the national flower of India, sacred in both Hinduism and Buddhism, and closely tied to Lakshmi and Vishnu. Kynes notes that Hindu texts make it an emblem of the womb and the life-giving mother, while Buddhists see the four elements in its rise from mud through water into air and sunlight. The ancient Egyptians held it sacred and offered it to their gods. In magical practice its scent is said to protect whoever breathes it in, and carrying any part of it is meant to win divine favour and good fortune.',
       elements: ['water', 'air', 'earth', 'fire'],
-      planets: ['Moon', 'Sun'],
+      celestialBodies: ['Moon', 'Sun'],
       zodiacSigns: ['Cancer'],
       safetyNotes: 'Cunningham warns that it may upset the digestive system if taken internally.',
       folkNames: [
@@ -2847,7 +2854,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -2860,7 +2867,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2979,7 +2986,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Lovage is a tall, upright perennial of the carrot family, Apiaceae, and the only species in its genus, reaching about two and a half metres. Its glossy, deeply divided leaves recall parsley or celery, and in late spring it bears tiny yellow to greenish-yellow flowers in rounded umbels. It is native to Afghanistan and Iran, and has been introduced to most of Europe, parts of South-east Asia and the Americas. Long grown in Europe, it gives leaves for the kitchen, roots eaten as a vegetable and seeds used as a spice, all tasting like a sharper celery or parsley. Charlemagne's Capitulare de villis, written around 800, recommends growing it on royal estates, and in Cornwall a lovage cordial was added to brandy. The English name grew out of 'love-ache', a folk reshaping of the older French levesche, from the late Latin levisticum. Kynes traces its standing as a love herb to the Anglo-Saxons, whose name for it, lufestice, sounded close to the Latin; medieval Europe counted it an aphrodisiac, though it flavoured ale more often, and Romanian custom hung it on doors and windows against evil spirits. In Ukraine women rinsed their hair in an infusion of the leaves to draw men. Cunningham adds a sachet of it to the bath to make the bather more attractive.",
       elements: ['fire', 'earth'],
-      planets: ['Sun', 'Venus'],
+      celestialBodies: ['Sun', 'Venus'],
       zodiacSigns: ['Pisces', 'Taurus'],
       safetyNotes:
         'Not to be taken internally during pregnancy or by anyone with kidney problems. Handling the plant while harvesting it can make sensitive skin react to sunlight.',
@@ -3006,7 +3013,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -3019,7 +3026,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -3108,7 +3115,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Sweetbay magnolia is a tree of the magnolia family that can reach 30 metres, evergreen in the milder south of its range and semi-evergreen or deciduous further north. It is native to the lowlands and swamps of the Atlantic coastal plain of the eastern United States, from Florida to Long Island, with an outlying stand on Cape Ann in Massachusetts and a subspecies found only in Cuba's Matanzas Province, and it copes with both flood and drought. Its leaves are silvery beneath, its smooth grey bark is faintly scented like bay laurel, and in late spring or early summer it opens creamy white, strongly vanilla-scented flowers, followed by pinkish-red fruits whose black seeds wear a red coat that birds eat. It was the first magnolia described under modern botanical rules and is the type species of its genus; John Banister collected it in 1678 and it became the first magnolia grown in England. Gardeners plant it for its scented flowers, clean foliage and quick growth. Kynes notes that the Cherokee, Choctaw and Houma used magnolia medicinally. In magical practice magnolia placed by or beneath the bed is meant to hold a couple faithful, Kynes makes a love sachet of the dried leaves, and a seedpod near where a couple sleeps is meant to deepen romance.",
       elements: ['earth', 'water'],
-      planets: ['Venus', 'Jupiter', 'Saturn'],
+      celestialBodies: ['Venus', 'Jupiter', 'Saturn'],
       zodiacSigns: ['Capricorn', 'Libra', 'Taurus'],
       safetyNotes: 'Cunningham marks magnolia as currently recognised as safe.',
       folkNames: [
@@ -3141,7 +3148,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -3154,7 +3161,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -3264,7 +3271,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "The maidenhair ferns make up Adiantum, a genus of about 250 species in the family Pteridaceae, distinct from the similar-looking maidenhair spleenwort. Their dark, often black stalks carry bright green, delicately cut fronds that Kynes likens to strands of hair, and in spring the new fronds unroll from red fiddleheads. They like moist, well-drained ground rich in humus, from valley-bottom soils to sheer rock walls, and many grow around waterfalls and seeps. Species are most numerous in the Andes, with nearly 40 in China; the five-fingered fern is native to North America, and the Venus-hair fern is found across the world. Many are grown in horticulture. The genus name comes from the Greek for 'unwetted', because the fronds shed water. The Romans linked the fern with Venus, who rose from the sea with her hair dry, and in England, Wales and Ireland it was used against baldness. Legend crowns faeries with it on festive days, yet in Norfolk it was thought unlucky to bring indoors, and in Brazil a maidenhair that wilted under someone's gaze showed the evil eye at work. In magical practice a little maidenhair is soaked in water and then carried or kept where one sleeps, for grace, beauty and love.",
       elements: ['water', 'air', 'earth'],
-      planets: ['Venus', 'Mercury'],
+      celestialBodies: ['Venus', 'Mercury'],
       safetyNotes:
         'AHPA safety class 2b: not for use in pregnancy except under the supervision of a qualified healthcare practitioner, as it has traditionally been used to bring on menstruation. Large doses may cause vomiting. Its safety while nursing has not been established. Cunningham also advises against taking it internally in pregnancy, and against high doses.',
       folkNames: ['Venus Hair', 'Rock Fern', 'Fairy Fern'],
@@ -3286,7 +3293,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           locator: 'under "Maidenhair"; p. 266',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -3300,7 +3307,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -3366,7 +3373,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Maize, known in North America as corn, is a tall annual grass, from about 1.2 to 4 metres high, grown for its cereal grain. Its male flowers form a tassel at the top of the stem and shed pollen on the wind, while the female flowers sit lower down as ears, first appearing as silk, each strand of which becomes a kernel. Modern varieties usually have yellow or white kernels, though others are red, blue, purple or black. Indigenous peoples of southern Mexico domesticated it from wild teosinte some nine thousand years ago, and it still depends on people to spread. It is now a staple across the world, eaten as tortillas, polenta and grits, fed to livestock, and pressed or processed into oil, starch, syrup and fuel. Its name reached English through Spanish from the Taíno word mahis. In Mesoamerica maize was honoured as a god, and Kynes notes that it was held sacred in Mexico and in Central and South America. Cunningham tells of the Corn Mother, a goddess of plenty and fertility, and of the Zuni use of differently coloured corn in ritual, with blue cornmeal scattered to bless and as an offering. In folk magic an ear of corn laid in a cradle guards the baby, cornstalks hung over a mirror bring the household luck, and a necklace of dried red kernels is worn against nosebleeds.',
       elements: ['earth'],
-      planets: ['Venus', 'Sun'],
+      celestialBodies: ['Venus', 'Sun'],
       zodiacSigns: ['Virgo'],
       safetyNotes:
         'Cunningham marks both the seed and the silk as safe. AHPA places corn silk in safety class 1, with no known contraindications, precautions, drug interactions or side effects; it notes that the silk is a diuretic, and that its safety in pregnancy and while nursing has not been conclusively established.',
@@ -3400,7 +3407,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -3413,7 +3420,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -3478,7 +3485,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Male fern is a common fern of the temperate Northern Hemisphere, native to much of Europe, Asia and North America. It grows in damp shade beneath woodland trees and in shady spots on hedge-banks, rocks and screes, though near the northern edge of its range it prefers sunny, well-drained sites. Its upright, semi-evergreen fronds, twice divided into many pairs of leaflets, reach about one and a half metres and rise from a single crown on each rootstock; their stalks are clothed in orange-brown scales, and rows of spore cases form on the underside of mature fronds, opening to release spores between late summer and autumn. The epithet filix-mas means male fern: its robust growth once led people to take it for the male of the more delicate lady fern. Its rhizome has been made into medicines against tapeworms, and a pharmaceutical factory at Nurmijärvi in Finland produced such medicines from it between 1899 and 1964, which is why the fern is that municipality’s emblem plant. Several garden cultivars hold the Royal Horticultural Society’s Award of Garden Merit. In magic, Cunningham assigns it to Mercury and the element of air, and says it is carried to draw luck and to attract women.',
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       safetyNotes:
         'Poisonous. Cunningham labels it poison, and AHPA puts it in safety class 3: to be used only under the supervision of an expert qualified in its use. Reported poisonings have caused vomiting, diarrhoea, vertigo, headache, tremors, cold sweats, difficulty breathing, cyanosis, convulsions, stupor and mental disturbance, sometimes with disturbed vision or blindness that was permanent in several cases, and deaths have been reported. Taking it with castor oil, as was once done, is considered dangerous, since the oil is believed to raise the absorption of its toxins. AHPA advises against its use in pregnancy and while nursing.',
       folkNames: [
@@ -3497,7 +3504,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -3541,7 +3548,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Common mallow is a herbaceous plant of the mallow family, Malvaceae, and the type species of its genus. Native to Western Europe, North Africa and Asia, it grows in meadows, hedgerows and fallow fields and on waste and rough ground, and it has naturalised as an invasive plant in eastern Australia and North America. It stands up to about a metre and a half, with softly hairy stems and palmately lobed leaves, and through the summer bears showy mauve to reddish-purple flowers streaked with dark veins. Its round fruit, likened to a little wheel of cheese, gave it names such as cheeses and fairy cheese. The young leaves and shoots are eaten from the Mediterranean to the Caucasus, the plant has long served as a yellow dye, and gardeners grow many named cultivars. The Greeks planted it on graves. Irish legend held mallow so strong that nothing natural or supernatural could harm it; in Germany it was used to cure someone bewitched, and on the Isle of Man to lift afflictions caused by faeries. In magic it is a herb of love and protection: Cunningham sets a bouquet of mallow outside the door to turn an absent lover’s thoughts homeward and carries it to attract love, and makes an ointment of its leaves and stems that protects the wearer against black magic.',
       elements: ['water'],
-      planets: ['Moon', 'Venus'],
+      celestialBodies: ['Moon', 'Venus'],
       safetyNotes:
         'Cunningham marks it safe. AHPA places the flower and leaf in safety class 1, with no known contraindications. It should be taken with at least 250 ml of liquid, and other medicines taken an hour before it or several hours after, since its mucilage may slow their absorption. Its safety in pregnancy and while nursing has not been conclusively established.',
       folkNames: [
@@ -3578,7 +3585,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -3591,7 +3598,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
           ],
@@ -3697,7 +3704,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Mandrake is a perennial of the nightshade family, Solanaceae, and the type species of its genus. It has almost no stem: its variable, often hairy leaves, up to about 45 centimetres long, lie in a rosette above a long, thick and often branched root. Bell-shaped flowers, greenish white to pale blue or violet, open between autumn and spring and are followed by glossy yellow to orange berries rather like small tomatoes. Botanists disagree on how widely to draw the species; taken broadly, it grows around the Mediterranean, from North Africa and southern Iberia through Italy, Greece and Turkey to the Levant, in light woodland, olive groves, fallow land and ruins. Its hallucinogenic alkaloids and the human shape of its roots have long tied it to ritual and magic. The root was used to put patients under for surgery in antiquity, and amulets made from it were thought to bring good fortune and cure sterility. Legend said the root screamed as it was pulled up, killing anyone who heard, so animals were tied to it to draw it out. Kynes notes that it has been prized as an aphrodisiac since the Egyptians, and that in Germany owning a root could see a woman executed for witchcraft. Cunningham keeps a whole root on the mantelpiece for the protection, fertility and prosperity of the house.',
       elements: ['fire', 'earth'],
-      planets: ['Mercury', 'Pluto', 'Saturn', 'Uranus'],
+      celestialBodies: ['Mercury', 'Pluto', 'Saturn', 'Uranus'],
       zodiacSigns: ['Gemini', 'Taurus'],
       safetyNotes:
         'Poisonous. Kynes warns that every part of the plant is toxic and can be fatal if eaten, and Cunningham labels it poison. Its tropane alkaloids, among them atropine, hyoscyamine and scopolamine, make the plant poisonous, the root and leaves above all. Reported poisonings resemble atropine poisoning: blurred vision, dilated pupils, a dry mouth, difficulty passing urine, dizziness, headache, vomiting, flushing and a racing heart, with hyperactivity and hallucinations in most patients, and its anticholinergic effects can lead to asphyxiation.',
@@ -3762,7 +3769,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'deities',
@@ -3777,7 +3784,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -3840,7 +3847,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'The maples make up the genus Acer, about 132 species of trees and shrubs in the soapberry family, most of them native to East Asia, with others in Europe, northern Africa and North America. Most are trees of ten to forty-five metres with opposite, palmately lobed leaves, many are prized for their autumn colour, and all bear paired, winged fruits, the samaras or keys, which spin as they fall and ride the wind. Sugar maple sap is boiled down into maple syrup, the hard timber goes into furniture, bowling pins and the backs of violins, and a maple leaf is the emblem on the flag of Canada. The Latin acer means sharp, which may come from the Greek and Roman use of the wood for spears; the Anglo-Saxons made shields of it, and in medieval England both the tree and a drinking bowl made from a large maple burl were called a mazer. An old belief held that a child passed through the branches of a maple would live long, and Kynes adds that it could also cure illness and turn aside the evil eye. In magical practice the leaves go into love spells and money rituals, branches have long been cut for wands, and three seeds hung in a sachet on the bedpost are said to foster prophetic dreams.',
       elements: ['air', 'earth'],
-      planets: ['Jupiter'],
+      celestialBodies: ['Jupiter'],
       zodiacSigns: ['Cancer', 'Libra', 'Virgo'],
       safetyNotes: "Cunningham's health code for maple marks it as currently recognised as safe.",
       folkNames: ['Hedge Maple', 'Maplin Tree', 'Mazer', "Bird's Eye Maple", 'Hard Maple'],
@@ -3864,7 +3871,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'description',
             'safetyNotes',
@@ -3875,7 +3882,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           locator: 'under "Maple"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -3968,7 +3975,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Pot marigold is a short-lived, aromatic perennial of the daisy family, often grown as an annual, standing up to about eighty centimetres with hairy, oblong leaves and yellow or orange flower heads that can open in any month where the climate allows. It is probably native to southern Europe, though its long cultivation has blurred where it began, and it has naturalised widely. The English name honours the Virgin Mary, and the generic name comes from the Latin calends, the first day of the month, after the belief that it flowered every month of the year. The petals are eaten in salads and used in place of saffron, the flowers have served as medicine and dye since Greek and Roman times, and an oil made from them goes into skin products. Greek myth had marigolds spring from the tears Aphrodite shed for Adonis, garlands of them were offered in Hindu temples, and there was once a strong belief in England that the flowers followed the sun. In England they were used to dream of a future love and marriage, and were believed to reveal thieves. In magical practice marigold garlands on the doorposts keep evil out, flowers scattered under the bed protect the sleeper and bring prophetic dreams, a few carried in the pocket win a fair hearing in court, and dried petals strewn around a home dispel negativity.',
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       zodiacSigns: ['Leo'],
       safetyNotes:
         'Considered safe when used appropriately (AHPA safety class 1), and Cunningham marks it as currently recognised as safe. People allergic to other daisy-family plants, such as feverfew, chamomile or echinacea, should take care, because cross-reactions are common. Allergic reactions, including anaphylaxis, are rare but have been reported, and so has contact dermatitis from handling the plant. Older references report that it acts as an emmenagogue, and a calendula extract stimulated contractions in isolated animal wombs, though how far that applies to people is unknown. Its safety while nursing has not been established.',
@@ -4015,7 +4022,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -4028,7 +4035,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -4115,7 +4122,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Marjoram is a perennial herb or low shrub that does not stand much cold, with small, smooth, oval leaves, white, pink or purplish flowers, and a sweet flavour with notes of pine and citrus. It is native to Cyprus and the Mediterranean, Turkey, western Asia, the Arabian Peninsula and the Levant, and may have reached the British Isles in the Middle Ages. Its leaves, fresh or dried, season soups, stews, sausages and blends such as herbes de Provence and za'atar, and the flowering tops are distilled for an essential oil. The Greeks believed Aphrodite created it, the Romans called it the herb of happiness, Greek brides wore garlands of it, and marjoram growing on a grave was taken as a sign that the dead had found happiness. Its scent was once highly valued: it was put in nosegays, sweet bags and washing waters and used as a strewing herb, and in Germany it was hung over the door to keep witchcraft, ghosts and goblins out of the house. In magical practice it is added to food to strengthen love, carried or set in every room for protection, grown in the garden against evil, and given to a downcast person to bring happiness, and the dried herb sprinkled at the corners of a house is said to bring security.",
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       zodiacSigns: ['Aries', 'Gemini', 'Libra', 'Virgo'],
       safetyNotes:
         'Considered safe when used appropriately (AHPA safety class 1), with no known cautions, and Cunningham marks it as currently recognised as safe. No concerns were found for use in pregnancy or while nursing, but safety then has not been conclusively established.',
@@ -4146,7 +4153,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -4159,7 +4166,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           locator: 'under "Oregano and Marjoram"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -4230,7 +4237,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Marsh marigold, also called kingcup, is a fleshy, hairless perennial of the buttercup family that grows in marshes, fens, ditches and wet woodland across the temperate Northern Hemisphere. It stands ten to eighty centimetres tall with broad, kidney-shaped leaves, and from April to August carries glossy yellow flowers whose colour comes from petal-like sepals, for it has no true petals. Despite its name it is not related to the other plants called marigolds. The name is said to come from its use in medieval churches at Easter in honour of the Virgin Mary, and it has many local names across Britain, from Molly-blob to publicans-and-sinners. In Ireland the flowers were gathered on May Eve or before dawn on Beltane and hung in houses and barns, laid on windowsills and strewn on doorsteps against malicious faeries. On the Isle of Man it was called the herb of Beltane, used against faeries and witches on Beltane and as a protective charm all through May, in Scotland it protected the milk, and a flower kept in a jar of water was a charm against lightning. In magical practice the flowers are laid on the altar to deepen the bond with spirit guides, and a picture of the flowering plant helps bring clarity about a path of personal growth.',
       elements: ['water'],
-      planets: ['Sun', 'Uranus'],
+      celestialBodies: ['Sun', 'Uranus'],
       safetyNotes:
         'Every part of the plant contains an irritant, chiefly protoanemonin, and its juice can blister or inflame the skin and mucous membranes. The leaves are toxic if eaten, and larger amounts can cause convulsions, a burning throat, vomiting, bloody diarrhoea, dizziness and fainting. Early spring greens and buds are edible only when cooked, since heat breaks the toxins down; they are poisonous raw.',
       folkNames: [
@@ -4277,7 +4284,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -4332,7 +4339,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Marshmallow is a herbaceous perennial of the mallow family, native to Europe, western Asia and North Africa, and grown both as a garden ornamental and for herbal use. It can stand up to about 1.8 metres tall with few side branches, and the whole plant is clothed in soft, star-shaped hairs. Its broad, toothed leaves are often shallowly lobed, and in August and September it bears pale pink flowers, followed by flat, round fruits known as cheeses. The name of the genus comes from a Greek word meaning to heal. The leaves, flowers and root, the last especially rich in mucilage, have long served in herbal medicine to soothe irritated mucous membranes, and country people used the plant against inflammation both inside and out. The Romans counted a dish of it among their delicacies, and in France the young tops went into spring salads. Kynes notes that the Egyptians wove it into funeral garlands, and that in medieval Europe the slippery sap of the root was rubbed on the hands and body of anyone facing trial by fire. In magical practice it belongs to protection rites, is burned as incense or carried in a sachet to stir the psychic powers, and is set on the altar to draw good spirits into a ritual.',
       elements: ['water'],
-      planets: ['Moon', 'Venus'],
+      celestialBodies: ['Moon', 'Venus'],
       safetyNotes:
         'Considered safe when used appropriately (AHPA safety class 1), and Cunningham marks it as currently recognised as safe. It should be taken with plenty of liquid, at least 250 ml. Because it may slow the absorption of drugs taken by mouth, other medicines should be taken an hour before it or several hours after. Its safety in pregnancy and while nursing has not been established, although no concerns were identified.',
       folkNames: [
@@ -4377,7 +4384,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -4482,7 +4489,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Masterwort is a perennial of the family Apiaceae, native to the mountains of central and southern Europe, from the Alps and Carpathians to the Massif Central and the northern Apennines, though it has been planted so widely that its true native range is uncertain. Kynes describes it as growing to a little under a metre, with toothed, three-lobed leaves and broad, lacy heads of small white flowers. It flavours a number of liqueurs and bitters, and in Austrian folk medicine its roots and leaves were drunk as tea, wine or liqueur and used outwardly as fumigation, tincture or incense. In the Middle Ages it was prized so highly as a healer that Germans, Danes and Swedes simply called it master and counted it a divine medicine, and it was thought to counter poisons, even the bite of a rabid dog. In the Tyrol the dried root was burned to cleanse the house on Christmas Eve, New Year’s Eve and Twelfth Night, and in hoodoo the root serves in spirit work and protection and is the chief ingredient of master key oil. In magical practice it is worn to lend bodily strength, carried to steady the will and calm the feelings, kept as an amulet against evil, and sprinkled about to make spirits appear.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       safetyNotes:
         'Kynes cautions that the sap may cause dermatitis, sensitivity to sunlight, or both.',
       folkNames: ['Hog Fennel', 'Imperatoria', 'Master Root'],
@@ -4499,7 +4506,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Masterwort"',
-          supports: ['elements', 'planets', 'categories', 'folkNames', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'folkNames', 'description'],
         },
         {
           source: 'kynes-plants',
@@ -4507,7 +4514,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'safetyNotes',
@@ -4539,7 +4546,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Mayapple is a herbaceous perennial of the barberry family from the woodlands of the eastern United States and south-eastern Canada, where it grows in colonies that spread from a single creeping rootstock. Its stems stand thirty to forty centimetres tall, each under one umbrella-like, deeply lobed leaf, or a pair on a flowering stem, and a white flower grows in the fork, usually hidden by the leaves. In some places it is the flower that appears in early May, while the egg-shaped yellow fruit, which looks like a small lemon, ripens later in the summer. All parts of the plant are poisonous, though the ripe fruit can be eaten in small amounts and is sometimes made into jelly. Indigenous Americans used it as an emetic, a purge and a remedy for worms, and two of its derivatives have shown promise against some cancers; one of them, etoposide, is on the World Health Organization’s list of essential medicines. Despite its name of American mandrake, it is no relation of the true mandrake, and Kynes traces the confusion to both plants being used as purgatives in England. Appalachian lore told of male and female plants, and the Delaware used it as a love charm. Cunningham treats it as a stand-in for European mandrake, with practically the same uses.',
       elements: ['fire'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       safetyNotes:
         'Poisonous. AHPA places it in safety class 3: not to be used except under the supervision of an expert qualified in its use. Poisoning has followed both swallowing it and putting it on the skin, with nausea, vomiting, nerve damage in the limbs, difficulty breathing, lethargy and coma, and some cases have been fatal. It acts as an abortifacient, an emetic and a stimulant laxative; putting its compounds podophyllin and podophyllotoxin on the skin in pregnancy is strongly contraindicated, and its safety while nursing has not been established. Cunningham marks it Poison, never to be taken internally or put on the skin, and Kynes warns that the unripe fruit and other parts are toxic and can be fatal if eaten.',
       folkNames: [
@@ -4562,7 +4569,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'safetyNotes',
             'description',
@@ -4574,7 +4581,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'safetyNotes',
@@ -4672,7 +4679,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Meadowsweet is a perennial herb of the rose family that favours damp meadows, fens and wet woods. It is native to most of Europe and western Asia, is common throughout the British Isles, and has naturalised in North America. Its furrowed, reddish stems reach one to two metres, its divided leaves are dark green above and pale and downy beneath, and from early summer into early autumn it carries dense clusters of small, creamy-white, strongly scented flowers. The name first meant a herb for sweetening mead rather than a sweet plant of the meadow, and the Anglo-Saxons called it meadwort. It was strewn in churches and woven into bridal garlands, which earned it the name bridewort, and Elizabeth I liked it above every other herb for strewing her rooms. It has been found with cremated remains in a Bronze Age cairn in Carmarthenshire, and in Welsh legend Gwydion and Math made Blodeuwedd partly from its flowers. Salicylic acid was first obtained from its buds in 1838, and its old name, Spiraea ulmaria, gave aspirin its name. Irish lore put it under the bed of someone made ill by the faeries, and an Icelandic custom gathered it at Midsummer and dropped it on water to tell whether a thief was a man, if it sank, or a woman, if it floated. In magical practice it is laid fresh on the altar or mixed dried into love blends, and strewn through the house to keep the peace.',
       elements: ['air', 'water'],
-      planets: ['Jupiter'],
+      celestialBodies: ['Jupiter'],
       zodiacSigns: ['Pisces'],
       safetyNotes:
         'Considered safe when used appropriately (AHPA safety class 1), and marked safe by Cunningham. People sensitive to aspirin or other salicylate-containing medicines, and people with G6PD deficiency, should take care: it contains salicylates and tannins. In laboratory tests on isolated animal uterine tissue an extract strengthened contractions, though what that means for human use is unknown, and its safety while nursing has not been established.',
@@ -4714,7 +4721,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -4727,7 +4734,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -4799,7 +4806,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Mesquite here is Neltuma juliflora, long known as Prosopis juliflora: a thorny shrub or small tree of the legume family, native to Mexico, South America and the Caribbean. It grows to about twelve metres, with light green, feathery leaves, thorns set in pairs, and greenish-yellow flowers in cylindrical spikes, followed by long pods holding ten to thirty seeds each. Its roots reach deep for water, and it has become an invasive weed in Africa, India, Australia and elsewhere; since 2019 the European Union has forbidden importing or planting it. Indigenous peoples in Peru, Chile and California ate the sweet pods raw, ground them into flour for bread or fermented them into a mild drink, and the tree also gives fodder, firewood, timber and honey. Best known today as a barbecue flavouring, mesquite takes its name from mizquitl, the Aztec word for the tree. In the Aztec creation story Quetzalcoatl, remaking the world, fed its people on mesquite fruit; the Yuma used mesquite charcoal for tattooing at girls’ puberty ceremonies, and the Moapa hardened mesquite sticks in fire for arrow tips. In magical practice it is added to healing incenses and mixtures, used to feed ritual fires, and burned as wood chips to cleanse an outdoor space before ritual.',
       elements: ['water', 'air', 'fire'],
-      planets: ['Moon', 'Saturn'],
+      celestialBodies: ['Moon', 'Saturn'],
       safetyNotes:
         "Cunningham's health code marks it safe. The AHPA safety handbook has no entry for it.",
       folkNames: [
@@ -4824,7 +4831,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           locator: 'under "Mesquite"; p. 266',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -4834,7 +4841,14 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
         {
           source: 'kynes-plants',
           locator: 'under "Mesquite"',
-          supports: ['elements', 'planets', 'deities', 'categories', 'folkNames', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'deities',
+            'categories',
+            'folkNames',
+            'description',
+          ],
         },
         {
           source: 'wikipedia-neltuma-juliflora',
@@ -4891,7 +4905,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Milk thistle is an annual or biennial thistle of the daisy family, from about thirty centimetres to two metres tall, with shiny, spiny-edged leaves marbled with milk-white veins and large red-purple flower heads ringed by spine-tipped bracts. Its fruits are black, each with a long white plume that carries it on the wind. Native from the Mediterranean and much of Europe to Central Asia and India, it has spread far beyond that range and is treated as an invasive weed in North America, Australia and New Zealand. It is grown mainly as a medicinal crop: the seeds, botanically whole fruits, yield silymarin, and herbal tradition used the plant for liver complaints and to increase breast milk, though there is still no good clinical evidence that it helps. It was also eaten. Northcote, quoting older writers, describes the young stalks cooked like cardoon or eaten as salad, the bracts eaten like artichoke and the roots in spring, and notes that goldfinches feed on its seeds; by the doctrine of signatures its prickles made it a cure for a stitch in the side. Sometimes called Scotch thistle, it was once put forward as the thistle of Scotland. Cunningham records an Anglo-Saxon belief that milk thistle hung round a man’s neck would set every snake near him fighting.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       safetyNotes:
         'Considered safe when used appropriately (AHPA safety class 1), with no known contraindications, and marked safe by Cunningham. Taken by mouth it is usually well tolerated; the commonest side effects are bloating, nausea and wind. Allergic reactions, including anaphylaxis, have been reported, especially in people allergic to related plants such as ragweed, chrysanthemum, marigold and daisy. It may change blood sugar control, so people with diabetes should watch their levels closely and talk to a qualified practitioner first. Limited studies of its extract silymarin in pregnancy and while nursing found no harm, but little is known about its safety at those times. Some supplements hold far more or less silymarin than the label says, or are contaminated with pesticides, microbes or mould toxins. Anyone taking medicines should ask a healthcare provider before using it.',
       folkNames: [
@@ -4913,7 +4927,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'description',
             'safetyNotes',
@@ -4970,7 +4984,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Mimosa in this entry is Acacia dealbata, the silver or blue wattle: a shrub or spreading tree of the legume family that can reach thirty metres. It has smooth bark, fern-like, twice-divided leaves of bluish grey or silver, and round heads of yellow to bright yellow flowers, borne from July to November, followed by flat, bluish pods dusted with a white bloom; its species name means whitewashed. It is native to south-eastern mainland Australia, where the Wiradjuri call it giigandul, and it is grown as an ornamental across warm temperate regions, where it has naturalised widely and become an invasive weed in South Africa, Portugal, Spain and California. The Ngunnawal and Wiradjuri peoples made rope from its bark, glue and poultices from its sap, tools from its timber and flour from its seeds. Florists sell its flowering shoots as mimosa, a name not to be confused with the genus Mimosa; in Italy, Albania, Russia and Georgia the flowers are given to women on International Women’s Day, and their essence goes into perfume. In England its flowers were generally thought unlucky to bring indoors, and in some places the tree was unlucky to plant in a house garden. In magical practice it is scattered about a space to purify it, used in love and healing spells, and laid beneath the pillow for prophetic dreams.',
       elements: ['water', 'air'],
-      planets: ['Saturn', 'Venus'],
+      celestialBodies: ['Saturn', 'Venus'],
       zodiacSigns: ['Aquarius', 'Cancer', 'Capricorn', 'Pisces', 'Virgo'],
       safetyNotes:
         'Cunningham advises against taking it internally during pregnancy. The AHPA safety handbook has no entry for it.',
@@ -4992,7 +5006,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'description',
             'safetyNotes',
@@ -5004,7 +5018,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'categories',
             'folkNames',
@@ -5043,7 +5057,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'European mistletoe is an evergreen shrub that lives as a hemiparasite on the branches of trees such as apple, lime, hawthorn and poplar, drawing water and nutrients from its host. It is native to Europe and to western and southern Asia, and is found only rarely in North America, where it was introduced. Its forked stems carry pairs of leathery, strap-shaped, yellowish-green leaves and tiny flowers of the same colour, followed by sticky white or yellow berries that each hold a single seed; the berry juice was once made into birdlime for trapping small birds. Pre-Christian Europe read it as a sign of the male life force and so of fertility, and it is thought to be the golden bough of Aeneas, while Greek myth gave it to heroes passing into the underworld. Pliny described Gaulish druids cutting it from oak with a golden sickle on the sixth day of the moon, and in Norse myth it is the one thing that swore no oath to spare Baldr, and so the thing that killed him. In Germany, England, Wales and France a sprig was kept in the house for luck and changed each Yule, and kissing beneath it at Christmas is recorded from sixteenth-century England. In magical practice it is carried against lightning, illness and misfortune, laid in cradles so fairies cannot swap the child for a changeling, carried by women hoping to conceive, and burned to drive out evil.',
       elements: ['air'],
-      planets: ['Sun', 'Mercury'],
+      celestialBodies: ['Sun', 'Mercury'],
       zodiacSigns: ['Leo'],
       safetyNotes:
         'AHPA places European mistletoe in safety classes 2b and 2d: it is not for use in pregnancy except under the supervision of a qualified practitioner, and the recommended dose should not be exceeded. Allergic reactions, anaphylaxis among them, have been reported. Animal studies suggest it may alter blood-sugar control, so people with diabetes should watch their levels and talk to a practitioner first, and some authorities advise regular blood-pressure checks for anyone drinking the tea. NCCIH says the berries and leaves can do serious harm when taken by mouth, that it is probably unsafe in pregnancy, and that little is known about its safety while breastfeeding. Cunningham advises against taking it internally with a protein hypersensitivity or a chronic progressive infection, and Kynes warns that it is toxic if eaten.',
@@ -5095,7 +5109,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -5109,7 +5123,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -5191,7 +5205,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Monkshood is a hairless herbaceous perennial of the family Ranunculaceae, native to western and central Europe. It grows to about a metre and bears rounded leaves cut into five to seven deep lobes, topped by spikes of dark purple to bluish-purple flowers shaped like narrow helmets; gardeners grow it for these showy spikes and as a cut flower. It is reckoned the most poisonous plant in Europe, dangerous both eaten and touched, because it holds aconitine and related alkaloids that poison the heart. It was put on spears and arrows for hunting and war, the Romans used it to dispose of criminals and enemies until anyone growing it could be sentenced to death, and Dioscorides knew it only as a poison for killing wolves. The old English herbalists dreaded it, though Parkinson commended it to hunters for dipping their arrowheads. The Greeks dedicated the aconites to Hecate, and Ovid told how Medea's aconite sprang from the spittle of Cerberus. In medieval Europe it was counted a witches' plant and believed to go into flying ointment. In magical practice it is added to protection sachets against vampires and werewolves, guards a home when grown in its garden, and its seed, carried wrapped in a lizard's skin, was said to make the bearer invisible.",
       elements: ['water'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       safetyNotes:
         'Every part of the plant is extremely poisonous. Kynes warns that eating any part can be fatal and that the poison can enter through broken skin, so it should be handled only in gloves; Cunningham marks it as a poison, never to be eaten or rubbed on the skin. AHPA, in its monograph on Sichuan aconite, says every Aconitum species in trade should be treated as safety class 3, for use only under the supervision of a qualified expert, and records cases of aconite poisoning, some of them fatal, with nausea, vomiting, numbness, an irregular heartbeat and cold extremities.',
       folkNames: [
@@ -5217,7 +5231,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -5231,7 +5245,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -5292,7 +5306,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         "Moonworts are the small ferns of the genus Botrychium, in the family Ophioglossaceae. Each has fleshy roots and a leaf in two parts: a sterile, fern-like blade and a fertile stalk carrying clusters of spore cases, which shed their spores into the air. The leaves stand only two to ten centimetres above the soil, and most of a population lives out of sight underground, where a plant fed by mycorrhizal fungi can lie dormant for up to ten years; that dependence also makes moonworts hard to grow. They are found in prairies, forests and mountains, and some species are rare. Common moonwort carries up to nine pairs of fan- or half-moon-shaped leaves, and their crescent outline led German alchemists to credit it with the moon's power, call it lunary and use it to draw silver out of mercury. English and Irish legend said it could pull the shoes off a horse that trod on it, and Culpeper repeated a tale of thirty horseshoes found torn from the Earl of Essex's horses on a Devon down; pushed into a keyhole, it was said to open the lock. In magical practice it is put in boxes and bags to bring silver and used in money and love spells. Because common moonwort is endangered, Kynes suggests working with a picture of it instead.",
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       zodiacSigns: ['Cancer'],
       folkNames: ['Unshoe-Horse', 'Grape-Fern', 'Moon Fern', 'Lunary', 'Martagon'],
       deities: ['Aine', 'Arianrhod', 'Artemis', 'Diana', 'Hecate', 'Rhiannon', 'Selene', 'Shiva'],
@@ -5315,7 +5329,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -5326,7 +5340,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           locator: 'under "Moonwort"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -5364,7 +5378,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
       description:
         'Ipomoea is the largest genus in the plant family Convolvulaceae, with more than six hundred species across the tropics and subtropics. Most are twining climbers, though the genus also holds annual and perennial herbs, shrubs and small trees, and its name, built from Greek words for a woodworm and for resembling, refers to that twining habit. The flowers may be blue, red, pink, purple, white, orange or yellow. Morning glory is the commonest name, but the genus also takes in the sweet potato, water spinach and the moonflowers. The common morning glory has heart-shaped leaves and purple trumpet flowers that open in the morning and close at night or in rain. Aztec and Zapotec priests took the seeds of Mexican morning glory in divination rituals, and Kynes adds that the Aztecs used the plant to commune with their gods; the seeds of some species contain lysergamides such as ergine. English lore held that witches used morning glories in their spells. In magical practice the seeds are laid under the pillow against nightmares, blue morning glories grown in the garden are said to bring peace and happiness, a length of the vine serves in binding spells, and a vine hung over the bed aids dream work.',
       elements: ['water'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       safetyNotes:
         'Kynes warns that every part of the morning glories is toxic if eaten and can be fatal, and Cunningham marks the genus as a poison, never to be taken internally or applied to the skin.',
       folkNames: ['Bindweed', 'Tall Morning Glory', 'Grannyvine'],
@@ -5385,7 +5399,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -5397,7 +5411,7 @@ export const PLANTS_L_Q: SeedCompendiumShard = {
           locator: 'under "Morning Glory and Moonflower"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',

@@ -80,7 +80,7 @@ as a step after its own migrations, gated on a diff so it only fires when a
 push actually changed a reference seed's files. Deploys are CI-only
 and there is no shell on either database, so a vocabulary nobody can run by
 hand has to arrive with the deploy that needs it. M4.3a's form vocabulary
-and MB.93's planet and zodiac vocabularies share that step, that gate and
+and MB.93's celestial body and zodiac vocabularies share that step, that gate and
 that summary — see ["The form vocabulary seed"](form-vocabulary-seed.md),
 ["The astrology vocabulary seed"](astrology-vocabulary-seed.md) and
 `claude-docs/ci/deploy.md`.

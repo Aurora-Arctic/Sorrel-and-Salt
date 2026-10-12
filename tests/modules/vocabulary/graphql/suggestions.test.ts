@@ -29,7 +29,7 @@ beforeEach(async () => {
       workspaceId: WORKSPACE_W_ID,
       name: 'Sedna Water',
       nomenclature: 'none',
-      planets: ['Sedna'],
+      celestialBodies: ['Sedna'],
       zodiacSigns: ['Cetus'],
     }),
     A.id,
@@ -43,7 +43,7 @@ const PAGE = `{
 
 const run = (
   session: Session | null,
-  field: 'planetSuggestions' | 'zodiacSuggestions',
+  field: 'celestialBodySuggestions' | 'zodiacSuggestions',
   variables: Record<string, unknown>,
 ) =>
   runOperation<Record<string, AstrologySuggestionConnection>>(
@@ -54,31 +54,31 @@ const run = (
     { workspaceId: WORKSPACE_W_ID, ...variables },
   );
 
-describe('planetSuggestions', () => {
+describe('celestialBodySuggestions', () => {
   it('answers a member with a page of both buckets', async () => {
-    const result = await run(asUser(B), 'planetSuggestions', { query: 'sedna' });
+    const result = await run(asUser(B), 'celestialBodySuggestions', { query: 'sedna' });
 
     expect(result.errors).toBeUndefined();
-    expect(result.data?.planetSuggestions.edges.map((edge) => edge.node)).toEqual([
+    expect(result.data?.celestialBodySuggestions.edges.map((edge) => edge.node)).toEqual([
       { value: 'Sedna', description: null, curated: false },
     ]);
   });
 
   it('pages by cursor', async () => {
-    const first = await run(asUser(B), 'planetSuggestions', { query: 'moon', first: 1 });
+    const first = await run(asUser(B), 'celestialBodySuggestions', { query: 'moon', first: 1 });
     expect(first.errors).toBeUndefined();
-    const page = first.data?.planetSuggestions as AstrologySuggestionConnection;
+    const page = first.data?.celestialBodySuggestions as AstrologySuggestionConnection;
     expect(page.edges.map((edge) => edge.node.value)).toEqual(['Moon']);
     expect(page.pageInfo.hasNextPage).toBe(true);
 
-    const next = await run(asUser(B), 'planetSuggestions', {
+    const next = await run(asUser(B), 'celestialBodySuggestions', {
       query: 'moon',
       first: 100,
       after: page.pageInfo.endCursor,
     });
 
     expect(next.errors).toBeUndefined();
-    const rest = next.data?.planetSuggestions as AstrologySuggestionConnection;
+    const rest = next.data?.celestialBodySuggestions as AstrologySuggestionConnection;
     expect(rest.edges.map((edge) => edge.node.value)).not.toContain('Moon');
     expect(rest.edges[0]?.node).toMatchObject({ value: 'Lilith', curated: true });
     expect(rest.pageInfo.hasNextPage).toBe(false);
@@ -105,7 +105,7 @@ describe('zodiacSuggestions', () => {
 // workspaceId reads the compendium tier alone — the curated rows, and the
 // values written in the compendium, never a coven's.
 describe.each([
-  ['planetSuggestions', 'sedna', 'Sedna', 'Sedna Fixture'],
+  ['celestialBodySuggestions', 'sedna', 'Sedna', 'Sedna Fixture'],
   ['zodiacSuggestions', 'cetus', 'Cetus', 'Cetus Fixture'],
 ] as const)('%s without a coven', (field, query, covens, compendiums) => {
   beforeEach(async () => {
@@ -114,7 +114,7 @@ describe.each([
       makeIngredient({
         name: 'Fixture Starwort',
         nomenclature: 'none',
-        planets: ['Sedna Fixture'],
+        celestialBodies: ['Sedna Fixture'],
         zodiacSigns: ['Cetus Fixture'],
       }),
       A.id,

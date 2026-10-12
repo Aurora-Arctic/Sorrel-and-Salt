@@ -548,7 +548,7 @@ describe('GroupedValueForm, a deity', () => {
 // runs on the category above; each flat kind gets only what it changes, its
 // three mutations (claude-docs/testing/layer-ownership.md, rule 5).
 const FLAT = [
-  { kind: 'planet', type: 'Planet', noun: 'Celestial Body' },
+  { kind: 'celestialBody', type: 'CelestialBody', noun: 'Celestial Body' },
   { kind: 'zodiacSign', type: 'ZodiacSign', noun: 'Zodiac Sign' },
 ] as const;
 

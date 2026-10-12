@@ -97,7 +97,7 @@ function merged(
       const next = copiedText(own[field], theirs[field]);
       return { next, added: next === own[field] ? 0 : 1 };
     }
-    case 'planets':
+    case 'celestialBodies':
     case 'zodiacSigns':
     case 'colors': {
       const next = copiedEntries(own[field], theirs[field], ({ value }) => fold(value));

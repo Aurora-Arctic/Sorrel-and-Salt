@@ -119,6 +119,14 @@ with an invitation's id, which the lists show. SHA-256 unsalted rather than
 a password hash, because a token is `crypto.randomBytes` output with no
 dictionary to resist.
 
+A CSPRNG is a cryptographically secure pseudorandom number generator:
+a source of random numbers that cannot be predicted from the numbers it has
+already produced. `crypto.randomBytes()` is one, drawing on the operating
+system's entropy pool (its store of unpredictable events). `Math.random()` is
+fast but predictable: anyone who collects a few outputs can work out its
+internal state and compute the next ones, so a token made with it could be
+guessed.
+
 The finders:
 
 - **`findInvitationByToken(token)`** returns the live row the token names,
@@ -129,8 +137,9 @@ The finders:
 - **`findPendingInvitationsInWorkspace(membership)`**, the members page's
   pending list (M7.6), and **`findPendingSiteInvitationPage(admin, filter, page)`**,
   `/admin/invitations`' (MB.70): each tier's pending rows under its own proof.
-  The workspace's is unordered, since the members page sorts the handful it
-  holds. The site tier's is a cursor page (a page of results that resumes
+  The workspace's pages newest first with a count, as the site tier does,
+  through a workspace page finder and count finder that M7.6 adds under the
+  `Membership` proof; until M7.6 lands the finder is unpaged. The site tier's is a cursor page (a page of results that resumes
   from the last row rather than counting rows to skip; CLAUDE.md rule 8),
   newest first: keyed on `created_at` negated as `numeric`, as the privilege
   ledger is, so the microseconds survive the cursor, and by id among rows of

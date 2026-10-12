@@ -34,7 +34,7 @@ const mapped = async <T>(
   (await entries).map((entry) => ({ ...entry, node: toRow(entry.node) }));
 
 /** A flat vocabulary, read through the astrology services by its field. */
-const flat = (field: 'planets' | 'zodiacSigns'): ValueKindSource => ({
+const flat = (field: 'celestialBodies' | 'zodiacSigns'): ValueKindSource => ({
   // Only a query: a flat vocabulary has no group to filter by.
   list: ({ query }, page) => listAstrologyValues(field, { query }, page),
   count: ({ query }, start) => countAstrologyValues(field, { query }, start),
@@ -68,6 +68,6 @@ export const VALUE_KINDS: Record<GroupedValueKind, ValueKindSource> = {
     },
     readGroups: GROUP_READERS.deity,
   },
-  planet: flat('planets'),
+  celestialBody: flat('celestialBodies'),
   zodiacSign: flat('zodiacSigns'),
 };

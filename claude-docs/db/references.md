@@ -20,7 +20,7 @@ DESIGN.md §5, "References", is the specification this doc expands.
   `kind` is the enum `reference_kind`: `book`, `chapter`, `article`, `entry`,
   `web_page`.
 - **`reference_links`** — `id`, `reference_id` (NOT NULL), `ingredient_id`,
-  `deity_id`, `deity_tradition_id`, `planet_id`, `zodiac_sign_id` (each
+  `deity_id`, `deity_tradition_id`, `celestial_body_id`, `zodiac_sign_id` (each
   nullable, exactly one set), `locator` (nullable, non-blank), + audit.
   Soft-deleted, with its own `set_updated_at` trigger line.
 
@@ -40,18 +40,18 @@ CHECK (accessed IS NULL OR url IS NOT NULL);
 CHECK (kind NOT IN ('chapter', 'article', 'entry') OR container IS NOT NULL);
 CHECK (kind <> 'web_page' OR (url IS NOT NULL AND accessed IS NOT NULL));
 
-CHECK (num_nonnulls(ingredient_id, deity_id, deity_tradition_id, planet_id, zodiac_sign_id) = 1);
+CHECK (num_nonnulls(ingredient_id, deity_id, deity_tradition_id, celestial_body_id, zodiac_sign_id) = 1);
 
 CREATE UNIQUE INDEX reference_links_ingredient_unique
   ON reference_links (ingredient_id, reference_id)
   WHERE ingredient_id IS NOT NULL AND deleted_at IS NULL;
--- and reference_links_deity_unique, _deity_tradition_unique, _planet_unique
+-- and reference_links_deity_unique, _deity_tradition_unique, _celestial_body_unique
 -- and _zodiac_sign_unique in the same shape
 ```
 
 **The sourced tables are listed once** (MB.207). `SOURCED` in
 `src/modules/ingredients/schema/reference-links.ts` maps each property —
-`ingredientId`, `deityId`, `deityTraditionId`, `planetId`, `zodiacSignId` —
+`ingredientId`, `deityId`, `deityTraditionId`, `celestialBodyId`, `zodiacSignId` —
 to its column and the table it keys into, and the five foreign keys, the five
 partial uniques and the `num_nonnulls` CHECK are built from it, in its order.
 A sixth sourced table is one entry there, and the migration `db:generate`

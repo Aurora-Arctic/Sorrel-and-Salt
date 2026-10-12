@@ -74,7 +74,7 @@ export const ingredients = pgTable(
     // replaced (MB.134): new names, because a column cannot turn from `text` to
     // `text[]` under a deployed reader. MB.136 undeclared the singles and MB.137
     // dropped them (claude-docs/db/identity-model.md, "The ingredient identity model").
-    planets: text('planets').array(),
+    celestialBodies: text('celestial_bodies').array(),
     zodiacSigns: text('zodiac_signs').array(),
     colors: text('colors').array(),
     safetyNotes: text('safety_notes'),

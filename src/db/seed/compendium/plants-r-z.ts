@@ -473,7 +473,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Radish is an annual or biennial member of the mustard family, Brassicaceae, grown chiefly for its swollen taproot, which may be round, tapering or cylindrical. The skin of the root runs from white through pink, red and purple to yellow, green and black, while the flesh is usually white, and its peppery bite comes from compounds such as glucosinolates and isothiocyanates. The leaves grow in a rosette, and the flowers range from white to pale violet with dark veins. Its wild forms have been found only in Southeast Asia, where its origin is tentatively placed; it was grown widely in the Egypt of the Pharaohs, yet seems not to have reached Britain until the sixteenth century. Eaten raw in salads, cooked, or pickled as young green pods, it has also served as a homely remedy: Grieve describes the juice given against gallstones and gravel, and the root prized against scurvy. In Oaxaca, Mexico, outsized radishes are carved into figures for the Night of the Radishes each 23 December, and in Japan the daikon is one of the seven herbs of a new-year festival. In magical practice Cunningham gives it to Mars and fire, with two powers: carried, it guards against the evil eye, and eaten, it is said to stir lust. He adds that a kind of wild radish was once carried in Germany to find out where sorcerers were.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['white', 'pink', 'red', 'purple', 'yellow', 'green', 'black'],
       safetyNotes:
         "Cunningham's health codes mark the root as safe, and the greens as safe when cooked.",
@@ -487,7 +487,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -541,7 +541,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Ragwort is a member of the daisy family, Asteraceae, usually biennial but able to persist longer, native to northern Eurasia and carried as a weed to North America, Australasia and elsewhere. Its upright stems bear pinnately lobed leaves whose unpleasant smell when bruised explains its many 'stinking' names, and from June into autumn it carries dense, flat-topped clusters of bright yellow flower heads whose seeds drift away on the wind. It is a rich source of nectar and the food of the cinnabar moth's caterpillars, yet farmers treat it as a pest because its alkaloids poison cattle and horses. Grieve records its old use as a poultice for aching joints, a wash for burns and sores, and a source of green and yellow dyes, and its name Staggerwort from a supposed cure for the staggers in horses. Under its Manx name, Cushag, it is the national flower of the Isle of Man. Folklore makes it a steed: witches were said to ride ragwort stems by night in Cornwall and Scotland, Irish fairies to turn it into horses, and leprechauns to hide treasure beneath it. In magic Cunningham gives it to Venus and water, and to protection, noting the Greek amulet against charms; Kynes adds courage, divination and prosperity, and ties it to Samhain.",
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       safetyNotes:
         "Not recommended for internal use (Cunningham's health code X), and Kynes warns that every part of the plant is toxic if eaten. AHPA's profile of pyrrolizidine alkaloids names the unsaturated alkaloids of Senecio species, the genus ragwort was long placed in, as a recognised cause of liver damage when eaten in sufficient amounts, and notes that livestock have been poisoned by grazing Senecio.",
       folkNames: [
@@ -573,7 +573,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -586,7 +586,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -672,7 +672,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Raspberry is a shrub of the rose family, native to Europe and northern Asia and cultivated throughout temperate regions; in the wild it forms stands in woods and clearings. A perennial root sends up canes that live for two years: the first year's shoot grows tall and leafy, and the second year's side shoots carry small white five-petalled flowers in late spring, followed by sweet but sharp red fruits. These are not true berries but clusters of tiny drupelets that come away from the core when picked, leaving the fruit hollow. The species name points to Mount Ida, and Kynes retells the legend that the fruit was white until the nymph Ida, nursing the infant Zeus, scratched herself and stained it with her blood. Grieve records raspberry vinegar as a cooling summer drink and gargle, a home-made wine, a dye from the fruit, and the leaf infusion as a gargle, a wash for wounds, a remedy for loose bowels and a warm drink in childbirth. In magic Cunningham gives it to Venus and water: the bramble branches hung at doors and windows protect the house, and after a death keep the departed spirit from coming back in, while the fruit is served to kindle love. Kynes adds fertility and fidelity, and notes its use for luck and faithfulness in hoodoo.",
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       zodiacSigns: ['Leo', 'Taurus'],
       safetyNotes:
         "AHPA rates the leaf safety class 1, safe when used appropriately, with no known contraindications, drug interactions or side effects; it contains tannins. In human studies, raspberry leaf taken from the 32nd week of pregnancy until birth showed no harm to mother or baby, though in one animal study it lengthened gestation. No information on its safety while breastfeeding was found, so that has not been firmly established. Cunningham's health code marks raspberry as safe (G).",
@@ -695,7 +695,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -708,7 +708,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -803,7 +803,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Rhubarb here is Chinese or Turkey rhubarb, a herbaceous perennial of the knotweed family, Polygonaceae, native to western China, northern Tibet and the Mongolian Plateau. It stands up to two metres tall, roughly twice the height of garden rhubarb, with large, jagged, hand-shaped leaves, tall sprays of tiny flowers and a thick, deep root that is brown outside and deep yellow within. That root, dahuang, has been used in traditional Chinese medicine for more than two thousand years; dried, it became one of the great goods of the Silk Road, and Europe used it for centuries before learning which plant it came from. Grieve describes it as a valued purgative whose after-effect is astringent, so that it can check diarrhoea, and in small doses a tonic for sluggish digestion. Kynes adds that China and medieval Europe both thought it a cure for plague, and that French and German alchemists called it by the secret name zipar. In magic Cunningham gives it to Venus and earth: a piece of root worn on a string at the neck guards against stomach pains, and rhubarb pie served to a partner keeps them faithful. Kynes adds air, Gemini, Jupiter and Saturn, and uses it for love, fidelity and abundance.',
       elements: ['earth', 'air'],
-      planets: ['Venus', 'Jupiter', 'Saturn'],
+      celestialBodies: ['Venus', 'Jupiter', 'Saturn'],
       zodiacSigns: ['Gemini'],
       safetyNotes:
         "AHPA classes the root and rhizome 2b, 2c and 2d: not for use in pregnancy or while nursing except under a qualified practitioner's supervision; not with intestinal obstruction, abdominal pain of unknown cause, inflammatory bowel conditions such as colitis, Crohn's disease or irritable bowel syndrome, or during menstruation; not for more than eight days running; and not for children under twelve. It is a stimulant laxative and contains tannins. It can cause cramping, nausea, vomiting and poor appetite, and may turn the urine red-brown or bright yellow. Long laxative use can lose potassium, so take care alongside heart-rhythm drugs, cardiac glycoside plants, thiazide diuretics, corticosteroids or liquorice; it may also lessen the absorption of other drugs taken by mouth. Cunningham's codes for the root say not to take it internally when pregnant or nursing, or with kidney stones, intestinal obstruction or abdominal pain, and not for long-term use. Kynes warns that only the stalks are edible and the rest of the plant is toxic if eaten.",
@@ -826,7 +826,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'categories',
           ],
@@ -838,7 +838,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -928,7 +928,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Rice is the more widely grown of the two cultivated rice species, a grass of the family Poaceae first domesticated in the Yangtze basin of China many thousands of years ago. Grieve describes an annual whose jointed stems may float in water or lie along the ground, rooting at the joints, and end in a loose head that bows as the seed grows heavy; she thought it native to China and India. Its two main kinds are the sticky, short-grained japonica and the long-grained, non-sticky indica, and the grain may be white, brown, black or red. It is above all a food, and Grieve notes that the peoples who live on it mostly eat it unhusked; she also records a rice-water drink for fevers and a rice poultice used in place of linseed. Kynes, writing of grains together, says rice was used in important rites in Asia and was sometimes thought to have a soul. Cunningham gives it to the Sun and to air, and to protection and fertility: rice on the roof or in a small jar by the door guards a household, Brahmins carried it as an amulet against evil, and it is thrown after newly married couples. For grains, Kynes adds earth, Venus and Virgo, and powers that include abundance, divination, love and prosperity.',
       elements: ['air', 'earth'],
-      planets: ['Sun', 'Venus'],
+      celestialBodies: ['Sun', 'Venus'],
       zodiacSigns: ['Virgo'],
       safetyNotes:
         'Cunningham classes it as safe (health code G), with the warning not to eat it raw.',
@@ -971,7 +971,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -984,7 +984,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -1053,7 +1053,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Roman chamomile is a low, creeping perennial of the daisy family, native to Western Europe and the north-west of the Maghreb and naturalised well beyond; in Britain it grows wild in the south of England and parts of Wales. Its feathery leaves and daisy-like flowers, white rays round a yellow centre, smell of apples, which gave it the Greek name meaning 'ground apple'. It is often confused with German chamomile, a quite different plant. Grieve records that the Egyptians dedicated it to their gods, that it was a strewing herb in the Middle Ages, and that it was planted along garden walks, where treading on it releases the scent; the tea of its flowers was an old remedy for nervous complaints and indigestion, and the herb went into herb beers. Today the plant goes into teas, perfumes, cosmetics and aromatherapy, though no medicinal effect has been established. Kynes tells of chamomile thrown on Midsummer bonfires for protection and prosperity, and hung in German houses against thunderstorms and bewitchment. Cunningham gives it to the Sun and water, and to money, sleep, love and purification: gamblers wash their hands in the infusion, and it is sprinkled round a property to lift curses. Kynes adds air, Mercury, Cancer and Leo, and powers that include divination, healing and psychic abilities.",
       elements: ['water', 'air'],
-      planets: ['Sun', 'Mercury'],
+      celestialBodies: ['Sun', 'Mercury'],
       zodiacSigns: ['Cancer', 'Leo'],
       safetyNotes:
         "AHPA safety class 2b: not to be used in pregnancy except under a qualified practitioner's supervision, as it was once an ingredient of abortifacient formulas and is reported to stimulate menstrual flow; interaction class A, with no drug interactions known. People allergic to other members of the daisy family, such as feverfew or chamomile, should take care, since allergic reactions and contact dermatitis from the tea and from creams have been confirmed by patch testing. Its safety while breastfeeding has not been established. Cunningham likewise warns against taking it internally in pregnancy (health code P).",
@@ -1102,7 +1102,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -1115,7 +1115,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -1212,7 +1212,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Roses are the woody perennial shrubs and climbers of the genus Rosa, in the family Rosaceae, with more than three hundred species and tens of thousands of cultivars. Most species come from Asia, with fewer from Europe, North America and north-west Africa; many carry sharp prickles on their stems, and their flowers, five-petalled in most species, are usually white or pink. Grieve traces the cultivated rose to Persia, whence it reached Greece and then southern Italy; the Romans strewed its petals at banquets, and a rose hung over a table once meant that what was said there stayed secret. The petals yield rose oil, or attar, for perfume, and rose water for cooking, cosmetics, medicine and worship, while the hips, rich in vitamin C, make jams, syrups and tea. The flower belonged to Aphrodite in Greece and later to the Virgin Mary. Kynes tells of petals scattered on Roman graves at the Rosalia, of dried rose hips as a charm against enchantment in medieval Germany, Belgium and France, and of the Germanic name Frigg's thorn. Cunningham and Kynes both give it to Venus and water, and to love, healing, protection, psychic powers and divination; Cunningham's uses include chaplets of roses in love spells and rose water in love baths, and Kynes adds Cancer, Libra, Sagittarius and Taurus, and banishing, communication and dream work.",
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       zodiacSigns: ['Cancer', 'Libra', 'Sagittarius', 'Taurus'],
       safetyNotes:
         'AHPA, treating the hips of the commonly used species together, gives safety class 1 (safe when used appropriately) and interaction class A, with no contraindications or drug interactions known; safety in pregnancy and while breastfeeding has not been established. Cunningham classes the petals as safe (health code G) but the green parts as not for internal use (X).',
@@ -1251,7 +1251,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'deities',
             'categories',
@@ -1263,7 +1263,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -1438,7 +1438,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Rosemary is an evergreen shrub of the mint family, Lamiaceae, with fragrant, needle-like leaves, green above and pale beneath, and small flowers that are commonly pale blue or purple, sometimes white or pink. It is native to the Mediterranean region, Portugal and north-west Spain; long known as Rosmarinus officinalis, it was moved into the sage genus, Salvia, in 2017. The leaves flavour stews, roasts and marinades, its oil goes into perfumes and household products, and Hungary water, one of Europe's first alcohol-based perfumes, was distilled mainly from it. Grieve records its old fame for strengthening the memory, which made it an emblem of fidelity between lovers: it was woven into bridal wreaths, given to wedding guests and used at funerals, and burned with juniper berries in sickrooms and French hospitals. Kynes adds that it was laid in graves and carried by mourners, and used across Europe in love magic and against witches, demons and the evil eye. Cunningham calls it one of the oldest incenses, burned to cleanse a place before magic, put under the pillow against nightmares and hung at the door against thieves; he gives it to the Sun and fire, and to protection, love, lust, purification, healing and sleep. Kynes adds Mercury and the Moon, five signs, and powers that include clarity, creativity, dream work and fidelity.",
       elements: ['fire'],
-      planets: ['Sun', 'Mercury', 'Moon'],
+      celestialBodies: ['Sun', 'Mercury', 'Moon'],
       zodiacSigns: ['Aquarius', 'Aries', 'Leo', 'Sagittarius', 'Virgo'],
       safetyNotes:
         'AHPA safety class 1 and interaction class A: no contraindications or drug interactions are known, and its concerns apply to therapeutic doses, not to rosemary as a kitchen spice. It is listed as an emmenagogue (it may bring on menstruation). Skin allergy to rosemary has been confirmed by patch testing; an extract reduced the absorption of iron from food; and because rosemary lowered blood sugar in animal studies, people with diabetes on insulin or tablets should keep monitoring their glucose. Cunningham advises against high internal doses and against internal use in pregnancy (health codes D+ and P). Kynes, in Herbal Remedies, says to avoid it in pregnancy, while breastfeeding, and with high blood pressure or epilepsy, and warns that too much may irritate the stomach.',
@@ -1480,7 +1480,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -1492,7 +1492,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -1626,7 +1626,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Rowan, or mountain ash, is a small tree or shrub of the rose family, native to most of Europe and to parts of Asia and northern Africa, its range running from Madeira, Iceland and the British Isles to Russia and northern China. Despite the name it is no relation of the true ashes, sharing only their pinnate leaves. In May and June it bears dense, upright heads of small creamy-white flowers, followed by clusters of orange to scarlet berries that many birds eat; its species name recalls the berries' old use as bait for catching birds. The bitter berries, which Kynes says are safe to eat only when cooked, are debittered and made into jelly, jam, syrup, wine and liqueurs, and Grieve records a gargle of the ripe berries for sore throats and a decoction of the bark for diarrhoea. Its tough, flexible wood was used for carving and turning. Across Europe and the British Isles rowan was a defence against witches: branches were hung in houses, stables and byres, twigs carried as amulets, and in Norse myth Thor saved himself from a raging river by grasping a rowan. Cunningham gives it to the Sun and fire, and to Thor, psychic powers, healing, success and protection, with the wood for wands and dowsing rods and a cross of twigs bound with red thread as an amulet. Kynes adds earth, the Moon, Saturn and Uranus, three signs, and powers that include divination, fertility, strength and wisdom.",
       elements: ['fire', 'earth'],
-      planets: ['Sun', 'Moon', 'Saturn', 'Uranus'],
+      celestialBodies: ['Sun', 'Moon', 'Saturn', 'Uranus'],
       zodiacSigns: ['Aquarius', 'Capricorn', 'Sagittarius'],
       safetyNotes:
         'Cunningham advises against taking the fruit internally (health code X), and Kynes warns that rowanberries are safe to eat only when cooked.',
@@ -1688,7 +1688,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'deities',
@@ -1702,7 +1702,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -1813,7 +1813,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Rue is a small, woody, evergreen shrub of the family Rutaceae, native to the Mediterranean and southern Europe and grown in gardens far beyond for its bluish-green, finely divided leaves, which smell strongly when bruised and taste intensely bitter. Its small flowers are dull or greenish yellow, with four or five petals. It flavoured Roman and Near Eastern cooking and is still used sparingly, in Italian grappa and some Mediterranean dishes. Grieve counts it among England's oldest garden plants: Hippocrates praised it, Mithridates put it in his antidote to poison, holy water was once sprinkled from brushes of rue, which is said to have earned it the name herb of grace, and judges at the assizes kept sprigs on the bench against gaol fever. It has long been a charm against the evil eye, among the Romans, in Italy and in Sephardic tradition, and it is the national herb of Lithuania. Kynes recalls the herb that freed Ulysses's companions from Circe's enchantment, and an English belief that no witch could enter a house whose floors had been washed with rue. Cunningham gives it to Mars and fire, and to healing and love: rue in the bath breaks hexes, hung at the door it protects, and a sprig sprinkles salt water to clear a house of negativity. Kynes adds Saturn, the Sun, three signs, and powers that include banishing, divination, purification and wisdom.",
       elements: ['fire'],
-      planets: ['Mars', 'Saturn', 'Sun'],
+      celestialBodies: ['Mars', 'Saturn', 'Sun'],
       zodiacSigns: ['Capricorn', 'Leo', 'Pisces'],
       safetyNotes:
         "AHPA safety class 2b: not to be used in pregnancy except under a qualified practitioner's supervision, since it has traditionally been used to cause abortion and stimulates menstruation; interaction class A, with no drug interactions known. Avoid long exposure to sunlight after taking it, and note that its furanocoumarins can inflame the skin (phytophotodermatitis) when skin it has touched is then exposed to sunlight. At normal therapeutic doses it has been linked with low mood, poor sleep, drowsiness, dizziness and cramps, and it can irritate the stomach; its safety while breastfeeding has not been established. Cunningham warns against taking it internally in pregnancy, with kidney problems or with blood-thinning medication, and says it may increase sensitivity to sunlight (health codes P, K, B, S). Kynes adds that it may cause dermatitis and that it is unsafe to burn.",
@@ -1857,7 +1857,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'deities',
@@ -1871,7 +1871,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -1981,7 +1981,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Rye is a tall annual or biennial grass of the wheat tribe, grown for its seed as a grain, as a winter cover crop and as fodder. It stands one to three metres high, with long, pointed, blue-green leaves and its seeds held in a curved spike. Better able than other cereals to bear cold weather and poor, sandy or peaty ground, it is grown chiefly from eastern and northern Europe into Russia, and remains from a site in northern Syria suggest it was among the first cereals people ever cultivated, some 13,000 years ago. The grain goes into bread, crispbread, beer and whiskey, and was a staple of medieval Scandinavia. Rye is very prone to ergot, a fungus whose infected grains brought epidemics of poisoning to the damp northern countries that lived on it. German folklore peoples its fields with the Roggenwolf, a wolf-shaped spirit said to carry off children, and the Roggenmutter who runs with a pack of them. Kynes records rye laid on the threshold or under the rafters of a new German house for luck and protection, its grains used across Europe and the British Isles in love divination, and the Dutch use of rye to unmask a witch. Cunningham gives it to Venus and earth, for love and fidelity, noting its place in Romany love spells and that rye bread served to those you love keeps their love.',
       elements: ['earth'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       safetyNotes:
         "Cunningham's health code marks rye as safe (code G: currently recognised as safe).",
       categories: [
@@ -1999,7 +1999,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Rye"; p. 266',
-          supports: ['description', 'elements', 'planets', 'safetyNotes', 'categories'],
+          supports: ['description', 'elements', 'celestialBodies', 'safetyNotes', 'categories'],
         },
         {
           source: 'kynes-plants',
@@ -2008,7 +2008,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -2055,7 +2055,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Saffron is the dried stigmas of the saffron crocus, a small perennial of the iris family that grows from a corm to between ten and thirty centimetres and flowers purple in autumn, each bloom bearing three red or orange stigmas. Being a sterile triploid, it is unknown in the wild and survives only because growers divide and replant its corms; botanists think it was bred from a wild crocus of southern mainland Greece. People have grown it and traded the spice for more than 3,500 years, and tens of thousands of flowers go into a single pound, which keeps it costly. Grieve identifies it with the Karcom of the Song of Solomon, notes that it was once grown widely round Saffron Walden in Essex, and records how highly the East prized its yellow dye; Northcote repeats Hakluyt's tale of a pilgrim who smuggled a corm into England inside his hollowed staff. Kynes tells of Phoenician moon-shaped cakes for Astarte, Egyptians burning it for Thoth, medieval German magicians burning it to call up spirits, and Moroccan amulets against jinn. Cunningham gives it to the Sun and fire, for love, lust, healing, strength and psychic powers: it goes into love sachets, its infusion washes the hands before healing rites and, drunk, is said to show the future, and the ancient Persians used it to raise the wind.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       zodiacSigns: ['Leo', 'Scorpio'],
       safetyNotes:
         "AHPA safety class 2b and interaction class A: not for use in pregnancy except under the supervision of a qualified practitioner, since saffron stimulates the muscles of the womb and has been used to cause abortion; safety while nursing is not established, and no drug interactions are known. Overdose (the German Commission E sets 1.5 g a day as the maximum) has brought on vomiting, bleeding, vertigo, confusion and a jaundice-like yellowing of the skin; AHPA notes these concerns come from medicinal doses, not its use as a spice. Cunningham's health codes: not to be taken internally in high doses, or while pregnant. Kynes cautions that overuse can be toxic, and that saffron must not be confused with the highly toxic autumn crocus, Colchicum autumnale.",
@@ -2093,7 +2093,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'deities',
@@ -2107,7 +2107,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -2170,7 +2170,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Common sage is an evergreen subshrub of the mint family, native to the Mediterranean and now naturalised widely, with woody stems, wrinkled grey-green leaves that are softly hairy beneath, and whorls of blue to purple flowers in late spring or summer. Grieve found it growing wild on the limestone hills along the Adriatic, where gathering it was a cottage industry in Dalmatia. Its genus name comes from the Latin salvere, to be saved, a nod to its healing fame: the Romans called it a holy herb, Charlemagne had it grown, and an old saying asked why anyone should die while sage grows in the garden. It is a staple of European cooking, from Italian saltimbocca to British sage and onion stuffing, and has long been drunk as a tea and used as a gargle for sore throats. Folklore sowed it on graves to soften grief and held that it thrived or withered with its owner's business. In magic Cunningham gives it to Jupiter and air, for longevity, wisdom and protection, quoting the rhyme that whoever would live for ever must eat sage in May, and has it carried for wisdom; Kynes adds earth and Mercury, uses it for divination, healing, purification and psychic work, and notes that common sage now often stands in for white sage in smoke cleansing.",
       elements: ['air', 'earth'],
-      planets: ['Jupiter', 'Mercury'],
+      celestialBodies: ['Jupiter', 'Mercury'],
       zodiacSigns: ['Aquarius', 'Pisces', 'Sagittarius', 'Taurus'],
       safetyNotes:
         "AHPA safety classes 2b and 2d, interaction class A: not for use in pregnancy except under the supervision of a qualified practitioner, and do not exceed the recommended dose (given as 3 to 12 g of dried leaf as a tea). The leaf holds thujone. Sage is traditionally used to dry up breast milk, so it should be avoided by anyone nursing who wishes to continue. No drug interactions are known; AHPA notes these concerns come from medicinal doses, not its use in cooking. Cunningham's health codes: not if pregnant, not for long-term internal use, and not internally in high doses. Kynes cautions that it is an abortifacient, and in Herbal Remedies advises against daily use, and against it in pregnancy and breastfeeding, with epilepsy or another seizure disorder, high blood pressure or diabetes.",
@@ -2208,7 +2208,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -2221,7 +2221,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -2325,7 +2325,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Sassafras is a deciduous tree of the laurel family native to eastern North America, from southern Maine and Ontario to Florida and Texas, growing fifteen to twenty metres tall with deeply furrowed red-brown bark. It is known for carrying three shapes of leaf on one branch, unlobed, mitten-shaped and three-lobed, and for its yellowish spring flowers and dark blue fruits on red stalks. Peoples of the south-east such as the Choctaw used it as food and medicine, thickening soups with it and rubbing the leaves into wounds, and the dried, ground leaves live on as filé powder in Louisiana gumbo. European settlers took it up as a medicine: Grieve notes its early fame in Spain as a cure for syphilis and rheumatism, it was sold on London street corners as a morning drink called saloop, and its root flavoured the original root beer until the safrole in it was found to cause liver damage and cancer in laboratory animals. Ozark lore heard a coming death in sassafras wood popping on the fire. In magic Cunningham gives it to Jupiter and fire, carried in a purse or burned to draw money and added to healing sachets; Kynes adds Saturn, Venus and Leo, uses it for prosperity and protection, and notes its place in hoodoo work to attract wealth.',
       elements: ['fire'],
-      planets: ['Jupiter', 'Saturn', 'Venus'],
+      celestialBodies: ['Jupiter', 'Saturn', 'Venus'],
       zodiacSigns: ['Leo'],
       safetyNotes:
         "AHPA safety classes 2b and 2d, interaction class A: not for use in pregnancy except under the supervision of a qualified practitioner, not for long-term use, and do not exceed the recommended dose. The root bark holds 5 to 8% safrole and the essential oil about 80%; safrole caused cancer in animals fed high amounts over long periods, and United States rules allow sassafras in food only when it is safrole-free. AHPA considers occasional sassafras tea safe but discourages alcohol extracts, and its concerns do not apply to safrole-free products. No drug interactions are known. Cunningham's health codes: not for long-term internal use, and not internally in high doses. Kynes cautions that, as a potential carcinogen, sassafras is considered unsafe to ingest.",
@@ -2350,7 +2350,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
           ],
@@ -2362,7 +2362,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -2458,7 +2458,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Scarlet pimpernel is a small, low-growing annual of the primrose family, long known as Anagallis arvensis, with weak, square, sprawling stems and paired, stalkless, oval leaves. From spring to autumn single flowers about a centimetre across open in the leaf axils, usually scarlet or orange-red but sometimes blue, pink or white. They open only in sunshine and shut when the sky clouds over, which earned it names such as poor man's weather-glass and shepherd's barometer. Native to Europe, western Asia and North Africa, it now grows as a weed of light soils, field edges and roadsides almost worldwide. The plant is bitter and acrid and has poisoned animals fed on it, yet it was once prized as a cure-all: the ancient Greeks gave it for low spirits and eye complaints, and Grieve records it as a cosmetic wash against freckles and a remedy for melancholy and epilepsy. An old writer she quotes held it good against witchcraft, and Kynes adds that it was hung over doorways in medieval England for that purpose, used in sixteenth-century Scotland to tell whether a wounded person would live, and believed in Ireland to give second sight and an understanding of birds and beasts. Kynes gives it to air, Mercury and the Sun, for clarity, protection, psychic abilities and truth.",
       elements: ['air'],
-      planets: ['Mercury', 'Sun'],
+      celestialBodies: ['Mercury', 'Sun'],
       zodiacSigns: ['Gemini', 'Leo', 'Virgo'],
       safetyNotes:
         'Kynes cautions that every part of the plant, the roots above all, is toxic if eaten.',
@@ -2483,7 +2483,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -2547,7 +2547,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Sea holly is the common name of Eryngium, a genus of some 250 species in the celery family, Apiaceae, found across much of the world, with its richest diversity in the western Mediterranean, South America and Mexico. They are annual or perennial herbs with stiff, mostly spiny leaves and domed heads of steely blue or white flowers set in a collar of spiny bracts; despite the name they are no relation of the true hollies. The British species, Eryngium maritimum, grows on sandy shores, its long fleshy roots reaching several feet down into the sand. Its young shoots have been cooked like asparagus and its roots boiled, roasted or candied: Grieve tells of a Colchester apothecary who made candied eryngo a trade in the seventeenth century, and connects the sweet with the 'kissing comfits' Falstaff mentions. Old herbalists gave the root for coughs, liver and kidney complaints and nervous disorders, and in Iran the plant is still taken as a tea. In the language of flowers it means admiration. In magic Cunningham places eryngo under Venus and water, with powers of love, lust and peace: travellers carry or wear it for a safe and lucky journey, it is scattered about a place or given to a quarrelling couple to restore peace, and, having once been eaten to stir desire, it now goes into love spells of every kind.",
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       safetyNotes:
         "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected) for eryngo, plains eryngo and button eryngo: no contraindications, precautions or drug interactions are known. Large doses of button eryngo may cause nausea or vomiting. AHPA found no information on its use in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe.",
       folkNames: ['Eryngo', 'Yerba del Sapo', 'Sea Hulver', 'Sea Holme'],
@@ -2560,7 +2560,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -2610,7 +2610,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Self-heal is a low, creeping perennial of the mint family, native to Europe, Asia, Africa and North America and common through most temperate regions. Its squarish, often reddish stems carry pairs of blunt oval leaves and end in a dense, cylindrical spike of two-lipped purple flowers, with a pair of stalkless leaves standing out beneath it like a collar. It is plentiful in pastures, roadsides and waste ground, and can spread into dense mats and turn weedy in lawns. Its English names record its old standing as a wound herb: Gerard rated none better, saying the bruised herb alone made a healing salve, and Grieve gives an infusion as a general tonic and, sweetened with honey, as a gargle for a sore throat or ulcered mouth. Its Latin name is traced to the German word for diphtheria, which it was once used to treat. Peoples of the Pacific Northwest put its juice on boils, it is the xia ku cao of Chinese medicine, and its young leaves and stems can be eaten raw in salads. Folklore gave it two faces: the Irish held it so strong that nothing natural or supernatural could harm it and used it to cure a fairy-struck child, while English children were told it was the devil's and that he would carry off whoever picked its flowers. Kynes places it under earth and Venus, for clarity, healing, peace and release.",
       elements: ['earth'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       safetyNotes:
         'AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected): no contraindications, precautions or drug interactions are known. Rare allergic reactions have been reported, with rashes, swelling of the throat, lips and tongue, and nausea, vomiting or diarrhoea. An animal study found it may alter blood-sugar regulation, so anyone with diabetes should watch their blood sugar closely and talk to a qualified practitioner before using it. Little is known of its safety in pregnancy or while nursing, so its safety then has not been established.',
       folkNames: [
@@ -2637,7 +2637,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
           ],
@@ -2751,7 +2751,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Senna is a large genus of the legume family, Fabaceae: somewhere between 260 and 350 species of shrubs, small trees and perennial herbs, native throughout the tropics with a few in temperate regions. Their leaves are divided into paired leaflets, their flowers usually have five yellow petals, and their fruit is a leathery pod holding several seeds. The name comes from the Arabic sanā, given to plants whose leaves and pods purge the bowels, and the type species, Senna alexandrina, known as Alexandrian or Indian senna, is the one long sold as a laxative. Arab physicians brought it into European medicine in the ninth or tenth century. Grieve describes the leaves being cut in Nubia, dried on sun-baked rocks and sent by camel and down the Nile to Cairo, and notes that it was grown in England by about 1640. It is still a common stimulant laxative and the working part of syrup of figs, while other species give cassia gum and the leaves and flowers cooked in Thai curries. In Arab tradition senna was used to lift illness caused by sorcery, the evil eye or possession by jinn, and in India to foster cooperation and in love sachets. Cunningham gives it to Mercury and air for love spells; Kynes adds earth, Taurus, Virgo, the Moon, Saturn and the Sun, and uses it for love, fidelity and protection.',
       elements: ['air', 'earth'],
-      planets: ['Mercury', 'Moon', 'Saturn', 'Sun'],
+      celestialBodies: ['Mercury', 'Moon', 'Saturn', 'Sun'],
       zodiacSigns: ['Taurus', 'Virgo'],
       safetyNotes:
         "AHPA safety class 2d, interaction class A, covering both the leaf and the pod. Not for anyone with an intestinal blockage, abdominal pain of unknown cause, or an inflammatory bowel condition such as appendicitis, colitis, Crohn's disease or irritable bowel syndrome, and not for more than eight days in a row. As a stimulant laxative it may hurry other medicines through the gut and cut how much is absorbed; long-term use can drain potassium, so take care alongside heart-rhythm drugs, thiazide diuretics, corticosteroids, liquorice or herbs containing cardiac glycosides. An overdose may cause griping and severe diarrhoea with loss of fluids and salts, hepatitis has been linked to chronic use, and young children who swallowed senna laxatives have suffered severe nappy rash and blistering. AHPA's reviews call it the laxative of choice in pregnancy and nursing, though some authorities advise cautious or supervised use in pregnancy. Cunningham's health codes: not if pregnant or nursing.",
@@ -2774,7 +2774,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -2786,7 +2786,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'categories',
@@ -2860,7 +2860,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Sesame is an upright plant with opposite, lance-shaped leaves and tubular flowers of white, pink or purple, followed by capsules that split open with a pop when ripe to release small, flattened seeds. Charred remains show it was domesticated in the Indian subcontinent at least 5,500 years ago, and it is counted the oldest oilseed crop; today it grows naturalised through the tropics, prized as a hardy crop that survives drought where others fail, with India, Myanmar and Sudan the largest producers. It is listed among the drugs of Egypt's Ebers Papyrus, and baskets of it lay among Tutankhamun's grave goods. The seeds and oil run through the cooking of the world, from the West African soups and puddings that enslaved Africans carried to colonial America to Japanese gomashio and Indian chikki. Its lore is as old: Mesopotamians used the oil for offerings and anointing, Hindu legend makes Yama, the god of death, its creator, and Greeks offered cakes of sesame and honey to Demeter and Persephone at the Thesmophoria and served sesame cakes at weddings as a sign of fertility. The 'open sesame' of Ali Baba may echo the popping pods. Cunningham gives it to the Sun, fire and Ganesha, for money and lust, keeping an open jar of seeds in the house to draw cash; Kynes adds the Moon and uses it for banishing, fertility, healing, prosperity and truth.",
       elements: ['fire'],
-      planets: ['Sun', 'Moon'],
+      celestialBodies: ['Sun', 'Moon'],
       safetyNotes:
         "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected): no contraindications, precautions or drug interactions are known. Sesame is a relatively common cause of food allergy, and severe reactions, including anaphylaxis, have been reported and confirmed by testing. In an animal study a diet very high in sesame counteracted the breast-cancer drug tamoxifen. Nothing is known of its safety in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe, with a note that serious allergic reactions have been reported.",
       folkNames: [
@@ -2885,7 +2885,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'deities',
@@ -2899,7 +2899,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -3011,7 +3011,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Skullcap is the common name of Scutellaria, a genus of some 300 or more species in the mint family, found almost worldwide but mostly in temperate regions, and especially plentiful in America. Most are annual or perennial herbs from a few centimetres to about a metre tall, with square stems, paired leaves and two-lipped flowers, often blue. The genus is known at once by the small shield on the calyx, which gave it both its Latin name, from scutella, a little dish, and its English one, from a likeness to a close-fitting medieval cap. Britain has two native species, the common and the lesser skullcap, both of riverbanks, bogs and wet ground. Skullcaps have a long medicinal history: in England common skullcap was given as a sedative for anything from headache to madness, from 1773 the Virginian or mad-dog skullcap became a North American remedy for rabies, and several Native American nations used skullcaps chiefly for menstrual complaints and in purification ceremonies for girls coming of age. The root of Baikal skullcap is so widely used in Chinese medicine that the wild plant has been overharvested. In magic Cunningham assigns skullcap to Saturn and water, for love, fidelity and peace, using it in spells of relaxation and saying that a wife who wears it shields her husband from other women's charms; Kynes adds Pluto, Aquarius, Capricorn and Virgo, and uses it for harmony, creativity and healing.",
       elements: ['water'],
-      planets: ['Saturn', 'Pluto'],
+      celestialBodies: ['Saturn', 'Pluto'],
       zodiacSigns: ['Aquarius', 'Capricorn', 'Virgo'],
       safetyNotes:
         "AHPA safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant interactions expected) for Virginian skullcap, Scutellaria lateriflora: no contraindications, precautions, drug interactions or side effects are known. Reports of liver damage from products sold as skullcap are most likely due to adulteration with germander (Teucrium), which is known to harm the liver. Nothing is known of its safety in pregnancy or while nursing, so its safety then has not been established. Cunningham's health code: safe.",
@@ -3024,7 +3024,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -3036,7 +3036,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'categories',
@@ -3087,7 +3087,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Skunk cabbage is a low-growing plant of the arum family, native to the wetlands and damp hill slopes of eastern North America, from Nova Scotia across to Manitoba and south to Tennessee and North Carolina. It rises from a thick rhizome, and early in spring, often while snow and ice still lie, it sends up a spathe, yellowish green when young and smeared with purple as it ages, around a spadix that carries the flowers. The spadix makes its own heat, enough to melt a way up through frozen ground. Bruised, the plant gives off the rank smell that names it, and that carrion-like smell draws the blowflies that pollinate it. Many Native American peoples used it as a medicine, a seasoning and a talisman, the Winnebago and Dakota among them to loosen phlegm in asthma, and from 1820 to 1882 it was sold in pharmacy as the drug dracontium. Grieve calls it antispasmodic, expectorant and narcotic, tried for asthma, catarrh, rheumatism and dropsy, and counts the seeds stronger than the root. Cunningham makes it a feminine herb of Saturn and water whose power is legal matters: a little of it wrapped in a bay leaf on a Sunday makes a talisman that draws good fortune, and it is said to help in court cases.',
       elements: ['water'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       safetyNotes:
         "AHPA places skunk cabbage in safety class 2d (specific use restrictions apply) and interaction class A (no clinically relevant drug interactions expected). Do not exceed the recommended dose, and anyone with a history of kidney stones should use it with caution. Large doses have been linked with nausea, vomiting, headache, dizziness and dimmed vision. The plant holds needle-like calcium oxalate crystals that burn the lips and mouth when eaten and can bring swelling, blistering, hoarseness and difficulty swallowing. Its safety in pregnancy and while nursing has not been established. Cunningham's health code says not to take it internally if you have kidney stones.",
       folkNames: [
@@ -3109,7 +3109,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -3175,7 +3175,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Slippery elm is a medium-sized deciduous tree of eastern North America, found from south-eastern North Dakota to Maine and southern Quebec and south to northern Florida and eastern Texas, mostly on moist uplands. It usually grows twelve to nineteen metres tall, with a spreading crown, reddish-brown heartwood and broad leaves that are rough above and velvety beneath; its downy twigs, hairy reddish buds and slimy red inner bark set it apart from the American elm. Both its English names come from the tree itself: red elm from the colour of the heartwood, slippery elm from the mucilage in the inner bark. Native Americans ate that bark raw or boiled, and it has long been taken as a demulcent for sore throats and upset stomachs and laid on the skin for rashes. Grieve, noting that it was an official drug of the United States Pharmacopoeia, commends it as a gruel for infants and invalids and above all as a poultice for wounds, boils and burns. The timber, of little commercial worth, has gone into fence posts, wagon-wheel hubs and archery bows. Cunningham makes it a feminine herb of Saturn and air whose power is to halt gossip: burn it and throw a knotted yellow cord into the fire, and talk against you will stop.',
       elements: ['air'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       safetyNotes:
         "AHPA places slippery elm in safety class 1 (safe when used appropriately) and interaction class A (no clinically relevant drug interactions expected). Take it with at least 250 ml (8 oz) of liquid. Take other medicines an hour before it or several hours after, since its mucilage may slow their absorption. Bladder stones have followed the insertion of the bark into the vagina in attempted abortions, which would not happen in normal use by mouth. Its safety in pregnancy and while nursing has not been established. Cunningham's health code marks the bark as safe.",
       folkNames: ['Indian Elm', 'Moose Elm', 'Red Elm', 'Gray Elm', 'Soft Elm'],
@@ -3183,7 +3183,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Slippery Elm"; p. 266',
-          supports: ['description', 'elements', 'planets', 'safetyNotes', 'folkNames'],
+          supports: ['description', 'elements', 'celestialBodies', 'safetyNotes', 'folkNames'],
         },
         {
           source: 'ahpa-safety',
@@ -3246,7 +3246,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'The common snapdragon is a herbaceous perennial, now placed in the family Plantaginaceae and usually grown as an annual or biennial, standing half a metre to a metre tall. Its flowers crowd a tall spike, each a tube closed by two lips that spring apart like a mouth when the sides are squeezed, which is how it got its name; wild plants flower pink to purple, often with yellow lips, while garden kinds run through red, orange, yellow, white and more. It is native from south-central France and the eastern Pyrenees to north-eastern Spain and the Balearic Islands, where it grows in crevices and walls, and after centuries in gardens it is naturalised on every continent but Antarctica. Grieve records its leaves laid on tumours and ulcers on the Continent and its old reputation as a guard against witchcraft, and botanists have used it as a model plant in genetics for nearly a century. Kynes tells of Dioscorides and Pliny recommending a bracelet of the flowers against illness and poison, of Irish snapdragons grown on thatched roofs for luck and against fire, and of its hoodoo use against evil spirits and ghosts. Cunningham calls it a masculine herb of Mars and fire for protection: worn, it keeps others from deceiving you, and flowers set before a mirror send curses back.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: ['Gemini', 'Scorpio'],
       safetyNotes: "Cunningham's health code marks the leaf as not recommended for internal use.",
       folkNames: [
@@ -3273,7 +3273,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -3286,7 +3286,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'categories',
@@ -3476,7 +3476,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Solomon's seal is a rhizomatous perennial of the family Asparagaceae, native to Europe and temperate Asia, and one of three species of its genus native to Britain. Its arching stems, up to about ninety centimetres tall, carry alternate oval leaves along their upper half, with small tubular white flowers tipped with green hanging beneath them in clusters of two to seven, followed by pea-sized blackish-blue berries. It likes light soil and shade, spreading readily through woodland by its creeping rootstock. The name is usually traced to the round scars on the rootstock, said to look like the impression of a seal, or to marks like Hebrew letters seen when the root is cut across. Grieve records the root as astringent, demulcent and tonic, laid on bruises and black eyes and given in wine to help broken bones knit, while the young shoots were boiled and eaten like asparagus in Turkey. Kynes tells how medieval Europeans prized the root as an amulet if King Solomon's seal could be made out on it, how Germans called it a key to underground treasure chambers, and how in France and Belgium its fronds were hung on houses and barns for luck on May Day. Cunningham and Kynes both give it to Saturn and water; Cunningham names it for protection and exorcism and adds it to offertory incenses.",
       elements: ['water'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       zodiacSigns: ['Capricorn', 'Gemini'],
       safetyNotes: 'Kynes cautions that every part of the plant is poisonous if eaten.',
       folkNames: [
@@ -3505,7 +3505,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Solomon\'s Seal"',
-          supports: ['description', 'elements', 'planets', 'folkNames', 'categories'],
+          supports: ['description', 'elements', 'celestialBodies', 'folkNames', 'categories'],
         },
         {
           source: 'kynes-plants',
@@ -3514,7 +3514,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -3595,7 +3595,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         "Southernwood is a bushy, shrub-like perennial of the daisy family and a close cousin of mugwort and wormwood, native to Eurasia and Africa and naturalised in scattered places in North America. Grieve calls it the southern wormwood, native to Spain and Italy and brought into England in 1548, where it seldom flowers. It grows to about a metre, with feathery grey-green leaves and small yellow flowers, and gives off a strong camphor-like scent. That scent made it a strewing herb and a guard for stored clothes against moths, which is why the French call it garderobe; churchgoers carried bunches of it to stay awake, and a bunch with rue was set beside prisoners in the dock against jail fever. Its branches dye wool a deep yellow, Grieve gives the herb as a tonic, an emmenagogue and a worm remedy for children, and Northcote records Turner's belief that its smoke drives away serpents. Kynes traces its long tie to love: Pliny put it under the mattress as an aphrodisiac, British women used it in divination to learn whom they would marry, and French lovers gave it in bouquets as a sign of fidelity. Cunningham gives it to Mercury and air for love, lust and protection, carried or kept in the bedroom in love spells and burned as an incense against trouble of every kind.",
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       zodiacSigns: ['Aries', 'Scorpio'],
       safetyNotes:
         "AHPA places southernwood in safety class 2b (not to be used in pregnancy) and interaction class A (no clinically relevant drug interactions expected): it is not for use in pregnancy except under a qualified practitioner, having been reported to bring on menstruation. Its safety while nursing has not been established. Kynes cautions that it is poisonous if eaten in large amounts, and Cunningham's health code says not to take it internally if pregnant.",
@@ -3640,7 +3640,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -3653,7 +3653,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -3711,7 +3711,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Yew is an evergreen conifer of the family Taxaceae, native to much of Europe and to parts of West Asia, the Caucasus and north-west Africa. It is a small to medium tree, often with several trunks, thin reddish-brown bark that flakes away, and flat, glossy, dark green needles that are paler beneath. Each seed sits almost enclosed in a soft, bright red cup, the aril, which ripens in autumn. Yews can live for many centuries, and some British trees are thought to be older than the tenth century; they are a familiar sight in the churchyards of Britain, Ireland and Normandy. The wood was prized for longbows and lutes. Kynes traces its long tie to death and the underworld among the Greeks and Romans, alongside hope and rebirth; its sacredness to the Celts of Gaul and the Druids; yew branches carried at French funerals; amulets of yew worn against bewitchment in Germanic lands; and Welsh and Scottish lore of faeries seen beneath it. Cunningham places it under Saturn and water and says it is used to call up the spirits of the dead, though rarely, because it is so poisonous. Kynes adds air and fire, Jupiter, Mars and Capricorn, and ties it to ancestors, divination and protection.',
       elements: ['water', 'air', 'fire'],
-      planets: ['Saturn', 'Jupiter', 'Mars'],
+      celestialBodies: ['Saturn', 'Jupiter', 'Mars'],
       zodiacSigns: ['Capricorn'],
       safetyNotes:
         'Highly poisonous. Every part of the tree except the red flesh around the seed is toxic: the seeds and foliage can be fatal if eaten, and the toxins can also be taken in through the skin and by breathing. Its taxine alkaloids act on the heart, and swallowing leaves or seeds needs urgent medical attention; there is no known antidote. Livestock are often killed by eating it.',
@@ -3743,7 +3743,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Yew"',
-          supports: ['canonicalName', 'description', 'elements', 'planets', 'safetyNotes'],
+          supports: ['canonicalName', 'description', 'elements', 'celestialBodies', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
@@ -3752,7 +3752,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'safetyNotes',
             'folkNames',
@@ -3810,7 +3810,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Yucca is a genus of about fifty perennial species native to North America, from Panama north into Canada, classed in the asparagus family alongside the agaves. Its plants range from small shrubs to tree-like forms, with stiff, sword-shaped, often spine-tipped leaves gathered in rosettes and tall stalks of white, bell-like flowers. Each species depends on yucca moths, which pollinate the flowers and lay their eggs in the seed capsules, a well-known case of mutual dependence. For the Indigenous peoples of the American Southwest and Mexico it has been one of the most useful wild plants: its fibres made sandals, rope, baskets, nets and mats, its roots a soap, and its stalks and flowers food. Kynes records that the Navajo washed with the root soap for ceremonial purification, that the Tewa used banana yucca in naming ceremonies, and that parts of the plant were offered to deities. The flower is the state flower of New Mexico and, as flor de izote, the national flower of El Salvador. Cunningham gives it to Mars and fire, for protection, purification and transmutation, describing a cross of twisted fibres laid on the hearth to guard the house; Kynes adds earth and Pluto, and the root in spells to purify ritual space.',
       elements: ['fire', 'earth'],
-      planets: ['Mars', 'Pluto'],
+      celestialBodies: ['Mars', 'Pluto'],
       safetyNotes:
         "AHPA safety class 2d: do not exceed the recommended dose. Allergic reactions to yucca have been reported. Safety while nursing is not established. Cunningham's health code marks the root as safe.",
       folkNames: ["Adam's Needle", 'Spanish Bayonet', 'Soapweed', 'Amole', 'Dagger Plant'],
@@ -3824,7 +3824,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'categories',
           ],
@@ -3832,7 +3832,14 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
         {
           source: 'kynes-plants',
           locator: 'under "Yucca"',
-          supports: ['description', 'elements', 'planets', 'folkNames', 'deities', 'categories'],
+          supports: [
+            'description',
+            'elements',
+            'celestialBodies',
+            'folkNames',
+            'deities',
+            'categories',
+          ],
         },
         {
           source: 'ahpa-safety',
@@ -3895,7 +3902,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
       description:
         'Zedoary is a perennial herb of the ginger family, Zingiberaceae, native to South and Southeast Asia and now naturalised elsewhere, Florida among them. It grows in clumps up to about a metre tall, with broad, lance-shaped leaves, and its yellow flowers sit among red and green bracts. The large, branching rhizome is white inside, smells somewhat of mango and tastes like ginger with a bitter finish; it is ground into white curry pastes in Indonesia, pickled or used fresh in India, and cut raw into Thai salads. Austronesian peoples carried it across the Pacific in prehistoric times. Grieve describes the dried rhizome as an aromatic stimulant once given for colic and weak digestion, though seldom used, since ginger served as well. Kynes records that Arab physicians held it an aphrodisiac, that it reached Europe in the sixth century, that the Anglo-Saxons used it against elf enchantment, that Hildegard von Bingen called it a strong healer, and that it was taken against the plague in seventeenth-century Britain and Europe. She gives it to fire, Mars and the Sun, for healing, and suggests a sachet of the dried root hung on the bedpost to keep bad dreams away.',
       elements: ['fire'],
-      planets: ['Mars', 'Sun'],
+      celestialBodies: ['Mars', 'Sun'],
       safetyNotes:
         'AHPA safety classes 2b and 2d: not for use in pregnancy except under the supervision of a qualified practitioner, and not when menstrual bleeding is heavy. A Chinese medicine text it cites advises caution alongside anticoagulant or antiplatelet drugs, a theoretical concern with no interaction documented. Safety while nursing is not established. These cautions concern therapeutic doses, not its use as a spice.',
       folkNames: [
@@ -3914,7 +3921,7 @@ export const PLANTS_R_Z: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
           ],

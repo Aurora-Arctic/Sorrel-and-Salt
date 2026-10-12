@@ -69,7 +69,7 @@ export interface PickedVariant {
   description: string | null;
   safetyNotes: string | null;
   elements: VariantRecord['elements'];
-  planets: string[] | null;
+  celestialBodies: string[] | null;
   zodiacSigns: string[] | null;
   colors: string[] | null;
   categoryIds: string[];

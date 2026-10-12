@@ -15,7 +15,7 @@ const SOURCED: [column: string, table: string][] = [
   ['ingredient_id', 'ingredients'],
   ['deity_id', 'deities'],
   ['deity_tradition_id', 'deity_traditions'],
-  ['planet_id', 'planets'],
+  ['celestial_body_id', 'celestial_bodies'],
   ['zodiac_sign_id', 'zodiac_signs'],
   ['ingredient_variant_id', 'ingredient_variants'],
 ];

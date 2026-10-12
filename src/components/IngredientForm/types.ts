@@ -4,7 +4,7 @@ import type {
   CreateReferenceMutation,
   CreateWorkspaceIngredientMutation,
   FormSuggestionsQueryVariables,
-  PlanetSuggestionsQuery,
+  CelestialBodySuggestionsQuery,
   PossibleDuplicatesQuery,
 } from '../../gql/graphql';
 import type {
@@ -201,7 +201,7 @@ export interface IngredientFormValues {
   description: string;
   /** In the order chosen; none chosen is the answer "none". */
   elements: IngredientElement[];
-  planets: ListEntry[];
+  celestialBodies: ListEntry[];
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
   deities: DeityListEntry[];
@@ -242,7 +242,7 @@ export interface VariantFormValues {
   description: string;
   safetyNotes: string;
   elements: IngredientElement[];
-  planets: ListEntry[];
+  celestialBodies: ListEntry[];
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
   substitutes: SubstituteListEntry[];
@@ -252,7 +252,7 @@ export interface VariantFormValues {
   drafts: Record<VariantDraftName, string>;
 }
 
-/** A variant's lists that take entries in a box: its own planets, signs, colours and substitutes. */
+/** A variant's lists that take entries in a box: its own celestial bodies, signs, colours and substitutes. */
 export type VariantListName = (typeof VARIANT_LISTS)[number];
 
 /** A variant's boxes: its lists', and its references' search. */
@@ -295,10 +295,10 @@ export type MultiSelectFieldName = 'elements' | `${VariantPath}.elements`;
 /** The ingredient's own lists that take entries in a box. */
 export type IngredientListName = (typeof LIST_FIELDS)[number];
 
-/** A list taking entries in a box: the ingredient's, or a variant's, `variants.1.planets`. */
+/** A list taking entries in a box: the ingredient's, or a variant's, `variants.1.celestialBodies`. */
 export type ListFieldName = IngredientListName | `${VariantPath}.${VariantListName}`;
 
-/** A list's box, as `draftOf` names it: `drafts.planets`, or `variants.1.drafts.planets`. */
+/** A list's box, as `draftOf` names it: `drafts.celestialBodies`, or `variants.1.drafts.celestialBodies`. */
 export type DraftPath = `drafts.${DraftName}` | `${VariantPath}.drafts.${VariantDraftName}`;
 
 /** A closed set holding several values, chosen as chips on the select-only box. */
@@ -348,7 +348,7 @@ export interface ListFieldProps {
   /**
    * An entry is only ever a curated suggestion picked: the box offers the
    * curated rows alone, no typed row and no Add — a compendium entry's
-   * planets, signs and deities (MB.162).
+   * celestial bodies, signs and deities (MB.162).
    */
   pickOnly?: boolean;
   /** A control at the right end of the legend, handed the list's announcer: a variant's Copy From Ingredient. */
@@ -520,9 +520,9 @@ export interface SubstituteFormsProps {
   name: `${'' | `${VariantPath}.`}substitutes`;
 }
 
-/** A planet or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */
+/** A celestial body or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */
 export type CorrespondenceNode =
-  PlanetSuggestionsQuery['planetSuggestions']['edges'][number]['node'];
+  CelestialBodySuggestionsQuery['celestialBodySuggestions']['edges'][number]['node'];
 
 /** The duplicate warning's state, which the form owns and the name field draws. */
 export interface DuplicateWarning {
@@ -660,7 +660,7 @@ export type CopiedField =
   | 'description'
   | 'safetyNotes'
   | 'elements'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiacSigns'
   | 'colors'
   | 'categoryIds'

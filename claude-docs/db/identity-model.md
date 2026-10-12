@@ -17,7 +17,7 @@ What follows describes all three as built.
 - **`ingredients`** — `id`, `workspaceId` (nullable: `NULL` is the compendium
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, the generated `identityKey` (MB.216; below), the correspondence
-  columns (`description`, `elements[]`, `planets[]`, `zodiacSigns[]`,
+  columns (`description`, `elements[]`, `celestialBodies[]`, `zodiacSigns[]`,
   `colors[]`, `safetyNotes`), `seedKey` (MB.241), + audit. `seedKey` is the
   key the compendium seed (MB.242) gives an entry it writes, so an entry an
   admin renames is not seeded again beside itself; it is null on every other
@@ -30,9 +30,9 @@ What follows describes all three as built.
   correspondences only `elements` is constrained: a list of the `ingredient_element`
   `pgEnum` of `earth`, `air`, `fire`, `water`, `spirit`, closed and fixed —
   the exact opposite of a variant's `form`, and the reason the two are easy to confuse
-  but never interchangeable. `planets`, `zodiacSigns` and
+  but never interchangeable. `celestialBodies`, `zodiacSigns` and
   `colors` are native `text[]` columns, one of the things SQLite could not
-  have run (DESIGN.md §14). `planets`, `zodiacSigns` and `colors` replaced
+  have run (DESIGN.md §14). `celestialBodies`, `zodiacSigns` and `colors` replaced
   single columns in MB.136, and `elements[]` replaced the single `element`
   in MB.159 (both below); MB.160 dropped `element`. Substitutes were a `substitutes[]` column
   too, until MB.140 moved every reader and writer to `ingredient_substitutes`
@@ -222,18 +222,18 @@ writes is text with an optional link to the curated row picked.
 Each of a compendium entry's forms and each of its deities is a pick of a live
 curated row — a form under a live group, a deity under a live tradition —
 held or not, so a curated value typed rather than picked is refused as an
-uncurated one is (MB.167, which moved the rule onto the pick). Its `planets`
+uncurated one is (MB.167, which moved the rule onto the pick). Its `celestialBodies`
 and `zodiac_signs` each name one, matched as the suggestions fold,
 `lower(btrim(value)) = lower(name)`. Every value is stored in its row's own
 spelling. `createCompendiumEntry` and `updateCompendiumEntry` enforce it after
-the parse, the picks through `resolvePicks` and the planets and signs through
+the parse, the picks through `resolvePicks` and the celestial bodies and signs through
 `curatedSpellings` in `vocabulary`, and refuse a value as a `ValidationError`
 at `['variants', i, 'form']` or `['variants', i, 'formId']`, or
-`['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
+`['celestialBodies', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
 ([`../validation.md`](../validation.md), "The two ingredient variants"). Not
 Zod, since the check reads the database, and not a key or a CHECK, since the
 columns are shared with the coven tier, which keeps free text. Deleting a
-curated row a live entry holds — a form or deity it picks, or a planet or
+curated row a live entry holds — a form or deity it picks, or a celestial body or
 sign's last live spelling — is refused, and renaming one carries onto the
 entries, so the rule holds after the write as well
 ([`../design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)).
@@ -256,8 +256,8 @@ are all IMMUTABLE and used freely throughout this model.
 
 **Planet, zodiac sign and colour become lists (MB.134).** DESIGN.md §5 gives
 an ingredient several of each, so `planet`, `zodiac` and `color`, single
-`text` columns as built, give way to `planets`, `zodiac_signs` and `colors`,
-nullable `text[]` with no default, declared in Drizzle as `planets`,
+`text` columns as built, give way to `celestial_bodies`, `zodiac_signs` and `colors`,
+nullable `text[]` with no default, declared in Drizzle as `celestialBodies`,
 `zodiacSigns` and `colors`. They are stored as the retired `deities` list was:
 the shared schema trims each entry, drops a blank one and turns a list left
 empty into null
@@ -269,7 +269,7 @@ sorts one on write or read.
 
 - **Arrays, not child tables, unlike folk names.** Folk names moved to a
   table so a trigram index could reach them. No single column carried one —
-  the planet and zodiac autofill reads the in-use values of the compendium
+  the celestial body and zodiac autofill reads the in-use values of the compendium
   and one workspace with no index behind them — so a list
   loses no index, and a table per list would buy three joins for nothing.
 - **New names, by rule 10.** A column cannot turn from `text` to `text[]`
@@ -296,7 +296,7 @@ sorts one on write or read.
   overwrite that member's edit to recover a write from a deploy-length
   window, one the app has not read since MB.136 went live, so the drop takes
   it (`0036_drop-ingredient-singles.ack.md`, "What is lost").
-- **The in-use scan unnests.** Tier 2 of the planet and zodiac autofill
+- **The in-use scan unnests.** Tier 2 of the celestial body and zodiac autofill
   reads entries rather than a column: `cross join lateral unnest(…)` gives
   one row per entry before anything trims or folds it, so a value counts
   once however many lists hold it, or however often one does

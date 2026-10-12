@@ -10,7 +10,7 @@ import {
   findIngredientFormValueCount,
   findIngredientFormValues,
 } from '@/db/repository';
-import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
+import { celestialBodies, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
 import { deityTraditions } from '@/modules/vocabulary/schema/deities';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { A } from '../../support/as-user';
@@ -131,24 +131,24 @@ describe('findIngredientFormValueCount', () => {
   });
 });
 
-// The planets and the signs as `planets` and `zodiacSigns` page them (MB.95):
+// The celestial bodies and the signs as `celestialBodies` and `zodiacSigns` page them (MB.95):
 // every live row, in (name, id) order — one tier, so nothing else decides
 // what is curated — narrowed by a name fragment read literally.
 describe('findAstrologyValues', () => {
   afterEach(async () => {
-    await sql`delete from planets where name like 'Fixture%'`;
-    await sql`update planets set deleted_at = null, deleted_by = null`;
+    await sql`delete from celestial_bodies where name like 'Fixture%'`;
+    await sql`update celestial_bodies set deleted_at = null, deleted_by = null`;
   });
 
   /** The live rows of `table` in the finder's order, from the database's own collation. */
-  async function expectedAstrology(table: 'planets' | 'zodiac_signs'): Promise<string[]> {
+  async function expectedAstrology(table: 'celestial_bodies' | 'zodiac_signs'): Promise<string[]> {
     const rows = await sql<{ id: string }[]>`
       select id from ${sql(table)} where deleted_at is null order by name, id`;
     return rows.map((row) => row.id);
   }
 
   async function idsOf(
-    vocabulary: typeof planets | typeof zodiacSigns,
+    vocabulary: typeof celestialBodies | typeof zodiacSigns,
     query?: string,
   ): Promise<string[]> {
     const page = await resolvePage({ first: 100 }, (request) =>
@@ -157,24 +157,24 @@ describe('findAstrologyValues', () => {
     return page.edges.map((edge) => edge.node.id);
   }
 
-  it('lists every live planet and every live sign, each table alone, in (name, id) order', async () => {
-    const [expectedPlanets, expectedSigns] = await Promise.all([
-      expectedAstrology('planets'),
+  it('lists every live celestial body and every live sign, each table alone, in (name, id) order', async () => {
+    const [expectedCelestialBodies, expectedSigns] = await Promise.all([
+      expectedAstrology('celestial_bodies'),
       expectedAstrology('zodiac_signs'),
     ]);
     // The precondition: the seed's nineteen bodies and thirteen signs, Ophiuchus among them.
-    expect(expectedPlanets).toHaveLength(19);
+    expect(expectedCelestialBodies).toHaveLength(19);
     expect(expectedSigns).toHaveLength(13);
 
-    expect(await idsOf(planets)).toEqual(expectedPlanets);
+    expect(await idsOf(celestialBodies)).toEqual(expectedCelestialBodies);
     expect(await idsOf(zodiacSigns)).toEqual(expectedSigns);
   });
 
-  it('omits a soft-deleted planet', async () => {
-    const [mars] = await sql`select id from planets where slug = 'mars'`;
-    await sql`update planets set deleted_at = now(), deleted_by = ${A.id} where id = ${mars.id}`;
+  it('omits a soft-deleted celestial body', async () => {
+    const [mars] = await sql`select id from celestial_bodies where slug = 'mars'`;
+    await sql`update celestial_bodies set deleted_at = now(), deleted_by = ${A.id} where id = ${mars.id}`;
 
-    const ids = await idsOf(planets);
+    const ids = await idsOf(celestialBodies);
 
     expect(ids).toHaveLength(18);
     expect(ids).not.toContain(mars.id);
@@ -182,11 +182,11 @@ describe('findAstrologyValues', () => {
 
   it('narrows by a name fragment, case-insensitively, reading % and _ literally', async () => {
     await sql`
-      insert into planets (name, slug, description, created_by, updated_by)
+      insert into celestial_bodies (name, slug, description, created_by, updated_by)
       values ('Fixture 100%', 'fixture-100', 'A test body', ${A.id}, ${A.id})`;
     const names = async (query: string) => {
       const page = await resolvePage({ first: 100 }, (request) =>
-        findAstrologyValues(planets, { query }, request),
+        findAstrologyValues(celestialBodies, { query }, request),
       );
       return page.edges.map((edge) => edge.node.name);
     };

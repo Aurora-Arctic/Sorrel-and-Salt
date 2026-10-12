@@ -38,7 +38,7 @@ and a rename carries onto it
 the pick since [MB.167](../design-decisions/mb.167-read-and-write-the-pick.md)).
 `tradition_id` can be a key because only an admin
 writes it, as `ingredient_forms.group_id` is. MB.127 was minted to follow the
-planet and zodiac vocabularies, which are flat; the owner then asked for
+celestial body and zodiac vocabularies, which are flat; the owner then asked for
 deities grouped by tradition, which makes them two-tier like the forms, and
 the forms are the closer precedent throughout.
 
@@ -58,7 +58,7 @@ as on the four tables in [the categories section](categories.md), and global
 rather than per tradition, as `ingredient_forms_slug_unique` is. The display
 name carries no constraint.
 
-**`description` is required on both, as on the forms and the planets.** MB.127
+**`description` is required on both, as on the forms and the celestial bodies.** MB.127
 was asked to settle it, given a seed of many deities across pantheons, and
 the size of the seed is the argument for it, not against: a curated value
 explains itself, and here the description is also search surface. The
@@ -84,11 +84,11 @@ returns a tradition's name, and never searches it.
   unnested the `ingredients.deities` list before (MB.130, on MB.136's scan),
   and a value counts once however many rows hold it.
 - **The list lives outside DESIGN.md.** §5 carries the forms' and the
-  planets' values, but 216 deities with their descriptions are data, so §5
+  celestial bodies' values, but 216 deities with their descriptions are data, so §5
   states the model and points at the seed doc, whose two tables MB.129 parses.
 - **`standard`'s compendium deities are curated picks** (MB.167), so every value the autofill offers before a member types one is curated; a
   test wanting an uncurated value writes its own on a coven's ingredient, as
-  MB.94's do for planets, since a compendium entry may not hold one (MB.162).
+  MB.94's do for celestial bodies, since a compendium entry may not hold one (MB.162).
 - **Curating a value is not one click.** `description` and `tradition_id`
   are both required, so the admin writes both with the name (MB.132).
 

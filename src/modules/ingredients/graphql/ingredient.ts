@@ -108,7 +108,7 @@ IngredientVariantRef.implement({
     description: t.exposeString('description', { nullable: true }),
     safetyNotes: t.exposeString('safetyNotes', { nullable: true }),
     elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
-    planets: t.exposeStringList('planets', { nullable: true }),
+    celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
     colors: t.exposeStringList('colors', { nullable: true }),
     // This form's own additions, never its ingredient's, which the client
@@ -144,7 +144,7 @@ IngredientRef.implement({
     nomenclature: t.expose('nomenclature', { type: NomenclatureEnum }),
     description: t.exposeString('description', { nullable: true }),
     elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
-    planets: t.exposeStringList('planets', { nullable: true }),
+    celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
     colors: t.exposeStringList('colors', { nullable: true }),
     safetyNotes: t.exposeString('safetyNotes', { nullable: true }),

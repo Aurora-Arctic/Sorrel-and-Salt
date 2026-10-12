@@ -42,10 +42,13 @@ import * as ingredientForms from '@/modules/vocabulary/schema/ingredient-forms';
 // migrated database holds what the schema no longer declares. An undeclare
 // task adds its line here and the drop task removes it, so the window is
 // declared rather than tolerated; a line outliving its drop fails below
-// (claude-docs/testing/db-harness.md, "The db test harness").
+// (claude-docs/testing/db-harness.md, "The db test harness"). A `view` is the
+// old name a renamed table leaves behind for the deploy before it, its `table`
+// and `name` both the view's (claude-docs/db/expand-contract.md, "Renaming a
+// table").
 const PENDING_DROPS: readonly {
   table: string;
-  kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table';
+  kind: 'column' | 'index' | 'check' | 'foreignKey' | 'table' | 'view';
   name: string;
   droppedBy: string;
 }[] = [];
@@ -247,6 +250,15 @@ async function migratedTables(): Promise<string[]> {
   return rows.map((row) => row.name).sort();
 }
 
+/** The public views the migrations built, which the schema declares none of. */
+async function migratedViews(): Promise<string[]> {
+  const rows = await sql<{ name: string }[]>`
+    select relname as name from pg_class
+    where relnamespace = 'public'::regnamespace and relkind = 'v'
+  `;
+  return rows.map((row) => row.name).sort();
+}
+
 describe('the Drizzle schema against the migrated database', () => {
   it('declares exactly the tables the migrations built', async () => {
     const pending = new Set(
@@ -256,6 +268,13 @@ describe('the Drizzle schema against the migrated database', () => {
     // Precondition: there is something to compare.
     expect(NAMES.length).toBeGreaterThan(0);
     expect((await migratedTables()).filter((name) => !pending.has(name))).toEqual(NAMES);
+  });
+
+  // The schema declares no view, so every view is a pending drop or a mistake.
+  it('holds no view but the pending drops declare', async () => {
+    const pending = PENDING_DROPS.filter((drop) => drop.kind === 'view').map((drop) => drop.name);
+
+    expect(await migratedViews()).toEqual(pending.sort());
   });
 
   it.each(NAMES)(
@@ -277,8 +296,13 @@ describe('the Drizzle schema against the migrated database', () => {
       return;
     }
     const tables = await migratedTables();
+    const views = await migratedViews();
 
     for (const drop of PENDING_DROPS) {
+      if (drop.kind === 'view') {
+        expect(views, drop.droppedBy).toContain(drop.name);
+        continue;
+      }
       expect(tables, drop.droppedBy).toContain(drop.table);
       if (drop.kind === 'table') continue;
       const held = await migrated(drop.table);

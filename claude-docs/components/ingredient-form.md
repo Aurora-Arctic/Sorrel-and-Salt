@@ -352,7 +352,7 @@ at a time, around them (["The variants"](#the-variants)).
 Six boxes suggest, through `/api/graphql` with TanStack Query
 ([`graphql/client.md`](../graphql/client.md)): the form and folk names from
 M4.7a's `formSuggestions` and `commonNameSuggestions` (M5.10a), and the
-celestial bodies, zodiac signs, deities and substitutes from `planetSuggestions`,
+celestial bodies, zodiac signs, deities and substitutes from `celestialBodySuggestions`,
 `zodiacSuggestions`, `deitySuggestions` and `ingredientSuggestions`
 (MB.131). Colours take none. `suggestions.tsx` holds them all, on one hook,
 `useLookup`, and a shape per source: each debounces the box's text through
@@ -760,7 +760,7 @@ as the ingredient's page shows its forms after it (MB.221).
 - **Its fields** are the variant's Form, Description, Safety Notes, Element, Celestial
   Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
   References, in the ingredient's sections (["The fields"](#the-fields)), the ingredient's own field components at the variant's
-  place in the values, `variants.1.planets`, so each validates, errs, focuses
+  place in the values, `variants.1.celestialBodies`, so each validates, errs, focuses
   and is held by text left in its box as the ingredient's is. Deities and
   folk names are the plant's, and stay on the ingredient alone.
 - **The New Form box adds one**, a list's box for whole variants, at the

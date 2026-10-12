@@ -144,7 +144,10 @@ describe('checkCompendium', () => {
       ['form', (shard: SeedCompendiumShard) => (testwort(shard).variants[1].form = 'Twig')],
       ['category', (shard: SeedCompendiumShard) => testwort(shard).categories?.push('Weather')],
       ['deity', (shard: SeedCompendiumShard) => testwort(shard).deities?.push('Fixturon')],
-      ['planet', (shard: SeedCompendiumShard) => testwort(shard).planets?.push('Vulcan')],
+      [
+        'celestialBody',
+        (shard: SeedCompendiumShard) => testwort(shard).celestialBodies?.push('Vulcan'),
+      ],
       ['zodiac sign', (shard: SeedCompendiumShard) => testwort(shard).zodiacSigns?.push('Arachne')],
       ['colour', (shard: SeedCompendiumShard) => testwort(shard).colors?.push('teal')],
       [

@@ -39,7 +39,7 @@ export type Governed =
   | 'category groups'
   | 'forms'
   | 'form groups'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiac signs'
   | 'deities'
   | 'deity traditions'

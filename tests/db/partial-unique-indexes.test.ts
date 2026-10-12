@@ -49,7 +49,7 @@ const category = async () =>
 const formGroup = async () => vocabulary('Testformgroup');
 const form = async () =>
   vocabulary('Testform', { group_id: await idOf('ingredient_form_groups', await formGroup()) });
-const planet = async () => vocabulary('Testara');
+const celestialBody = async () => vocabulary('Testara');
 const zodiacSign = async () => vocabulary('Fixturus');
 const tradition = async () => vocabulary('Testtradition');
 const deity = async () =>
@@ -166,6 +166,8 @@ const ROWS: Record<string, PartialIndexRow> = {
   categories_slug_unique: { row: category },
   category_groups_seed_key_unique: { row: categoryGroup },
   category_groups_slug_unique: { row: categoryGroup },
+  celestial_bodies_seed_key_unique: { row: celestialBody },
+  celestial_bodies_slug_unique: { row: celestialBody },
   deities_seed_key_unique: { row: deity },
   deities_slug_unique: { row: deity },
   deity_traditions_seed_key_unique: { row: tradition },
@@ -230,8 +232,9 @@ const ROWS: Record<string, PartialIndexRow> = {
   invitations_token_hash_unique: {
     row: async () => stamped({ email: address(), token_hash: token() }),
   },
-  planets_seed_key_unique: { row: planet },
-  planets_slug_unique: { row: planet },
+  reference_links_celestial_body_unique: {
+    row: referenceLink('celestial_body_id', 'celestial_bodies', celestialBody),
+  },
   reference_links_deity_tradition_unique: {
     row: referenceLink('deity_tradition_id', 'deity_traditions', tradition),
   },
@@ -242,7 +245,6 @@ const ROWS: Record<string, PartialIndexRow> = {
   reference_links_ingredient_variant_unique: {
     row: referenceLink('ingredient_variant_id', 'ingredient_variants', variant),
   },
-  reference_links_planet_unique: { row: referenceLink('planet_id', 'planets', planet) },
   reference_links_zodiac_sign_unique: {
     row: referenceLink('zodiac_sign_id', 'zodiac_signs', zodiacSign),
   },

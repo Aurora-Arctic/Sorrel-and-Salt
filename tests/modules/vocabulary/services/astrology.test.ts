@@ -19,9 +19,9 @@ import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
 
-// Story 18's planet and sign half (MB.95): the two flat astrology
+// Story 18's celestial body and sign half (MB.95): the two flat astrology
 // vocabularies' writes, the site admin's alone, and the reads the admin pages
-// list them by. A compendium entry's planets and signs are spellings the
+// list them by. A compendium entry's celestial bodies and signs are spellings the
 // vocabulary curates (MB.162), so a value a live entry's list holds is held:
 // its delete is refused, and its rename is carried onto the list. A coven's
 // ingredient is neither. Every test runs once per vocabulary; the seeded rows
@@ -46,13 +46,13 @@ it('is testing sessions whose site role is `user`, beside an admin', () => {
 
 const VOCABULARIES: {
   field: CuratedField;
-  table: 'planets' | 'zodiac_signs';
-  column: 'planets' | 'zodiac_signs';
+  table: 'celestial_bodies' | 'zodiac_signs';
+  column: 'celestial_bodies' | 'zodiac_signs';
 }[] = [
   {
-    field: 'planets',
-    table: 'planets',
-    column: 'planets',
+    field: 'celestialBodies',
+    table: 'celestial_bodies',
+    column: 'celestial_bodies',
   },
   {
     field: 'zodiacSigns',

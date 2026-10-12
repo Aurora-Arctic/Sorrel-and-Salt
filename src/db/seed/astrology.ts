@@ -1,9 +1,9 @@
 import { beginSeedTransaction } from './idempotent';
-import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
+import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { seedFlatVocabulary } from './flat-vocabulary';
 import type { SeedAstrologyValue, SeedDatabase, SeedTransaction } from './types';
 
-// DESIGN.md §5's planet and zodiac vocabularies, a starting set an admin may
+// DESIGN.md §5's celestial body and zodiac vocabularies, a starting set an admin may
 // edit. Reference data, not a scenario — migrate.yml seeds it alone, so it
 // inserts the bootstrap user itself. §5's table is lower-case; each name here
 // is the proper noun it renders as, and no slug is written down. A description
@@ -12,7 +12,7 @@ import type { SeedAstrologyValue, SeedDatabase, SeedTransaction } from './types'
 // astrology vocabulary seed").
 
 /** The luminaries, the planets outward from the Sun, then the other bodies modern practice reads. */
-export const PLANETS: SeedAstrologyValue[] = [
+export const CELESTIAL_BODIES: SeedAstrologyValue[] = [
   { name: 'Sun', description: 'The luminary of the day, Sol - vitality, success, the self.' },
   { name: 'Moon', description: 'The luminary of the night, Luna - dreams, intuition, cycles.' },
   { name: 'Mercury', description: 'The messenger - speech, travel, trade, cunning.' },
@@ -98,6 +98,6 @@ export async function seedAstrology(db: SeedDatabase): Promise<void> {
  * is published and the bootstrap user exists.
  */
 export async function seedAstrologyVocabularies(tx: SeedTransaction): Promise<void> {
-  await seedFlatVocabulary(tx, planets, PLANETS);
+  await seedFlatVocabulary(tx, celestialBodies, CELESTIAL_BODIES);
   await seedFlatVocabulary(tx, zodiacSigns, ZODIAC_SIGNS);
 }

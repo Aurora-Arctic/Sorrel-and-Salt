@@ -6,9 +6,9 @@ import type { z } from 'zod';
  * Which curated vocabulary the form writes. Three are grouped: the
  * categories, filed under category groups; the ingredient forms, filed under
  * form groups; and the deities, filed under traditions (MB.132). Two are
- * flat, filed under nothing: the planets and the zodiac signs (MB.95).
+ * flat, filed under nothing: the celestial bodies and the zodiac signs (MB.95).
  */
-export type GroupedValueKind = 'category' | 'form' | 'deity' | 'planet' | 'zodiacSign';
+export type GroupedValueKind = 'category' | 'form' | 'deity' | 'celestialBody' | 'zodiacSign';
 
 /** A group the value can be filed under: the choices of the group field. */
 export interface GroupedValueGroupChoice {

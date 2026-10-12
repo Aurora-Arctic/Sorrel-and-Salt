@@ -28,7 +28,7 @@ import { assertMembership } from '@/modules/coven';
 import {
   suggestDeities,
   suggestForms,
-  suggestPlanets,
+  suggestCelestialBodies,
   suggestZodiacSigns,
 } from '@/modules/vocabulary';
 import type { PageRequest } from '@/lib/types';
@@ -171,18 +171,18 @@ describe('createCompendiumEntry', () => {
     expect(created.slug).toBe(ingredientSlug('Testwort', 'Fixtura testalis'));
   });
 
-  it('saves several elements, planets, signs and colours, each in the order entered', async () => {
+  it('saves several elements, celestial bodies, signs and colours, each in the order entered', async () => {
     const created = await createCompendiumEntry(admin, {
       ...entry(),
       elements: ['spirit', 'air'],
-      planets: ['Venus', 'Moon'],
+      celestialBodies: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Libra'],
       colors: ['Green', '', 'Pink'],
     });
 
     expect(await rowOf(created.id)).toMatchObject({
       elements: ['spirit', 'air'],
-      planets: ['Venus', 'Moon'],
+      celestial_bodies: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Libra'],
       colors: ['Green', 'Pink'],
     });
@@ -269,7 +269,7 @@ describe('updateCompendiumEntry', () => {
   it('replaces each list whole, an empty one clearing it', async () => {
     const id = await seed({
       elements: ['water'],
-      planets: ['Moon', 'Venus'],
+      celestialBodies: ['Moon', 'Venus'],
       zodiacSigns: ['Cancer'],
       colors: ['Silver'],
     });
@@ -277,14 +277,14 @@ describe('updateCompendiumEntry', () => {
     await updateCompendiumEntry(admin, id, {
       ...entry(),
       elements: ['fire', 'water'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: [],
       colors: ['White', 'Silver'],
     });
 
     expect(await rowOf(id)).toMatchObject({
       elements: ['fire', 'water'],
-      planets: ['Mars'],
+      celestial_bodies: ['Mars'],
       zodiac_signs: null,
       colors: ['White', 'Silver'],
     });
@@ -524,9 +524,9 @@ describe('a deleted entry', () => {
         ),
     ],
     [
-      "a coven's planet suggestions",
+      "a coven's celestial body suggestions",
       async () =>
-        (await suggestPlanets(member, WORKSPACE_W_ID, 'fixture star', PAGE)).some(
+        (await suggestCelestialBodies(member, WORKSPACE_W_ID, 'fixture star', PAGE)).some(
           ({ node }) => node.value === 'Fixture Star',
         ),
     ],
@@ -552,7 +552,7 @@ describe('a deleted entry', () => {
       categories: ['Protection'],
       substitutes: ['Fixture Stand-in'],
       deities: ['Fixture Deity'],
-      planets: ['Fixture Star'],
+      celestialBodies: ['Fixture Star'],
       zodiacSigns: ['Fixture Sign'],
     });
     await insertReferenceLink(sql, id, await insertReference(sql, {}, A.id), A.id);
@@ -1009,7 +1009,7 @@ describe('resolveCompendiumSlug', () => {
 });
 
 // MB.162, moved onto the links by MB.167: a compendium entry's form and
-// deities each pick a curated row, and its planets and signs name one, where a
+// deities each pick a curated row, and its celestial bodies and signs name one, where a
 // coven's ingredients keep free text (claude-docs/db/compendium-writes.md).
 // Retired vocabulary rows are put back after each test, since the clone is
 // shared by the file and the seed retires nothing.
@@ -1018,7 +1018,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     for (const table of [
       'ingredient_forms',
       'ingredient_form_groups',
-      'planets',
+      'celestial_bodies',
       'zodiac_signs',
       'deities',
       'deity_traditions',
@@ -1067,7 +1067,12 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   // A curated value before the stranger in each list, so the refusal is
   // placed at the entry rather than the field.
   const UNCURATED: [string, Overrides<IngredientFixture>, (string | number)[], string][] = [
-    ['planets', { planets: ['Venus', 'Testplanet'] }, ['planets', 1], 'Testplanet'],
+    [
+      'celestialBodies',
+      { celestialBodies: ['Venus', 'Testbody'] },
+      ['celestialBodies', 1],
+      'Testbody',
+    ],
     ['zodiacSigns', { zodiacSigns: ['Taurus', 'Testsign'] }, ['zodiacSigns', 1], 'Testsign'],
   ];
 
@@ -1136,7 +1141,13 @@ describe('the curated vocabularies a compendium entry is held to', () => {
 
   // A two-tier row is curated only while its group or tradition is live too.
   const RETIRED: [string, string, string, Overrides<IngredientFixture>, (string | number)[]][] = [
-    ['a retired planet', 'planets', 'Mars', { planets: ['Venus', 'Mars'] }, ['planets', 1]],
+    [
+      'a retired celestial body',
+      'celestial_bodies',
+      'Mars',
+      { celestialBodies: ['Venus', 'Mars'] },
+      ['celestialBodies', 1],
+    ],
     ['a retired sign', 'zodiac_signs', 'Aries', { zodiacSigns: ['Aries'] }, ['zodiacSigns', 0]],
   ];
 
@@ -1206,10 +1217,10 @@ describe('the curated vocabularies a compendium entry is held to', () => {
 
   it('places a list refusal at the entry the input sent, blanks counted', async () => {
     const issues = await issuesOf(
-      createCompendiumEntry(admin, entry({ planets: ['', 'Venus', ' ', 'Testplanet'] })),
+      createCompendiumEntry(admin, entry({ celestialBodies: ['', 'Venus', ' ', 'Testbody'] })),
     );
 
-    expect(issues).toEqual([{ path: ['planets', 3], message: expect.any(String) }]);
+    expect(issues).toEqual([{ path: ['celestialBodies', 3], message: expect.any(String) }]);
   });
 
   it('refuses every unpicked or uncurated value at once, each beside its own field', async () => {
@@ -1218,14 +1229,14 @@ describe('the curated vocabularies a compendium entry is held to', () => {
         admin,
         entry({
           variants: [makeVariant({ form: 'Testform' })],
-          planets: ['Testplanet'],
+          celestialBodies: ['Testbody'],
           deities: ['Testgod', 'Thor'],
         }),
       ),
     );
 
     expect(issues.map((issue) => issue.path)).toEqual([
-      ['planets', 0],
+      ['celestialBodies', 0],
       ['deities', 0],
       ['deities', 1],
       ['variants', 0, 'form'],
@@ -1236,14 +1247,14 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     const created = await createCompendiumEntry(admin, {
       ...entry({
         variants: [makeVariant({ form: '  hERB ' })],
-        planets: [' venus', 'MOON '],
+        celestialBodies: [' venus', 'MOON '],
         zodiacSigns: ['taurus'],
       }),
       deities: [{ deityId: await curatedDeityId(sql, 'Thor') }],
     });
 
     expect(await rowOf(created.id)).toMatchObject({
-      planets: ['Venus', 'Moon'],
+      celestial_bodies: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus'],
     });
     expect(await variantRowsOf(sql, created.id)).toMatchObject([
@@ -1257,24 +1268,27 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   it("stores the row's spelling on update too, and keeps the coven's own as typed", async () => {
     const id = await seed({ name: 'Testwort' });
     const local = await savesInACoven(
-      entry({ variants: [makeVariant({ form: 'hERB', formId: null })], planets: ['venus'] }),
+      entry({
+        variants: [makeVariant({ form: 'hERB', formId: null })],
+        celestialBodies: ['venus'],
+      }),
     );
 
     await updateCompendiumEntry(
       admin,
       id,
-      entry({ variants: [makeVariant({ form: 'hERB' })], planets: ['venus'] }),
+      entry({ variants: [makeVariant({ form: 'hERB' })], celestialBodies: ['venus'] }),
     );
 
-    expect(await rowOf(id)).toMatchObject({ planets: ['Venus'] });
+    expect(await rowOf(id)).toMatchObject({ celestial_bodies: ['Venus'] });
     expect(await liveFormsOf(sql, id)).toEqual(['Herb']);
-    expect(await rowOf(local.id)).toMatchObject({ planets: ['venus'] });
+    expect(await rowOf(local.id)).toMatchObject({ celestial_bodies: ['venus'] });
     expect(await variantRowsOf(sql, local.id)).toMatchObject([{ form: 'hERB', form_id: null }]);
   });
 });
 
 // MB.219: a compendium entry's forms are written inside its own save, each a
-// curated pick with its own curated planets and signs (DESIGN.md §5, "The
+// curated pick with its own curated celestial bodies and signs (DESIGN.md §5, "The
 // compendium is held to the vocabularies"). The write's mechanics — matching
 // and unchanged rows — are the coven's file's, on the one shared path.
 describe('its forms', () => {
@@ -1308,7 +1322,7 @@ describe('its forms', () => {
     const created = await createCompendiumEntry(
       admin,
       withForms(
-        { form: 'herb', categoryIds: [protection], planets: ['venus'] },
+        { form: 'herb', categoryIds: [protection], celestialBodies: ['venus'] },
         {
           form: 'Oil',
           formId: oil,
@@ -1320,9 +1334,9 @@ describe('its forms', () => {
     );
 
     const [herbRow, oilRow] = await variantRowsOf(sql, created.id);
-    // Each in its curated row's spelling, the planet's too.
+    // Each in its curated row's spelling, the celestial body's too.
     expect([herbRow, oilRow]).toMatchObject([
-      { form: 'Herb', form_id: herb, planets: ['Venus'] },
+      { form: 'Herb', form_id: herb, celestial_bodies: ['Venus'] },
       { form: 'Oil', form_id: oil, safety_notes: 'Dilute.' },
     ]);
     expect((await variantChildrenOf(sql, herbRow.id)).categories).toMatchObject([
@@ -1391,7 +1405,11 @@ describe('its forms', () => {
 
   it.each([
     ['a typed form, curated or not', { form: 'Testform', formId: '' }, ['form']],
-    ['an uncurated planet', { planets: ['Venus', 'Testplanet'] }, ['planets', 1]],
+    [
+      'an uncurated celestial body',
+      { celestialBodies: ['Venus', 'Testbody'] },
+      ['celestialBodies', 1],
+    ],
   ])('refuses %s on a form, beside it, that a coven saves', async (_case, fields, path) => {
     const input = withForms({ form: 'Herb' }, { form: 'Oil', formId: oil, ...fields });
     await savesInACoven(input);

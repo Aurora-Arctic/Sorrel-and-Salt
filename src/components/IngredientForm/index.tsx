@@ -28,7 +28,7 @@ import {
   useCommonNameSuggestions,
   useCompendiumSubstitutes,
   useDeitySuggestions,
-  usePlanetSuggestions,
+  useCelestialBodySuggestions,
   useSubstituteSuggestions,
   useZodiacSuggestions,
 } from './suggestions';
@@ -448,20 +448,20 @@ const IngredientForm = ({
                   placeholder="Add an element"
                   options={ELEMENT_OPTIONS}
                 />
-                {/* Each list but the colours suggests (MB.131): planets, signs and
+                {/* Each list but the colours suggests (MB.131): celestial bodies, signs and
             deities from their curated vocabularies and the values in use, a
             pick adding the text, and a curated deity's a link to it as well
             (MB.169); substitutes from the compendium and this coven, a pick
-            adding a link to the ingredient. On the compendium the planets,
+            adding a link to the ingredient. On the compendium the celestial bodies,
             signs and deities are picks of the curated rows alone, and the
-            substitutes its other entries (MB.162, MB.138). Planets, signs,
+            substitutes its other entries (MB.162, MB.138). Celestial bodies, signs,
             colours and deities keep the order entered, so their entries move
             (MB.170); folk names and substitutes read alphabetically, so
             theirs do not. */}
                 <LookupListField
                   workspaceId={workspaceId}
-                  useSuggestions={usePlanetSuggestions}
-                  name="planets"
+                  useSuggestions={useCelestialBodySuggestions}
+                  name="celestialBodies"
                   ordered
                   pickOnly={compendium}
                   legend="Celestial Bodies"

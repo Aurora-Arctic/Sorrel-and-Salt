@@ -332,7 +332,7 @@ function compendiumList(filter: IngredientFilter): {
       ...categoryArms(filter.categoryIds ?? []),
       formArm(filter.form),
       pickedFormArm(filter.formId),
-      listArm(ingredients.planets, filter.planet),
+      listArm(ingredients.celestialBodies, filter.celestialBody),
       listArm(ingredients.zodiacSigns, filter.zodiacSign),
       filter.deityId
         ? existsIn(

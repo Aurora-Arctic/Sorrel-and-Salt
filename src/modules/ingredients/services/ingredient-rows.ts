@@ -63,7 +63,7 @@ export function ingredientColumns(fields: IngredientFields) {
     nomenclature: fields.nomenclature,
     description: fields.description ?? null,
     elements: fields.elements ?? null,
-    planets: fields.planets ?? null,
+    celestialBodies: fields.celestialBodies ?? null,
     zodiacSigns: fields.zodiacSigns ?? null,
     colors: fields.colors ?? null,
     safetyNotes: fields.safetyNotes ?? null,
@@ -300,7 +300,7 @@ function asPicked(variant: VariantEntry, at: IssuePath): PickedVariant {
     description: variant.description || null,
     safetyNotes: variant.safetyNotes || null,
     elements: listOrNone(variant.elements),
-    planets: listOrNone(variant.planets),
+    celestialBodies: listOrNone(variant.celestialBodies),
     zodiacSigns: listOrNone(variant.zodiacSigns),
     colors: listOrNone(variant.colors),
     at,
@@ -883,7 +883,7 @@ async function writeVariant(
   variant: PickedVariant,
   row?: VariantRecord,
 ): Promise<string> {
-  const { form, formId, description, safetyNotes, elements, planets, zodiacSigns, colors } =
+  const { form, formId, description, safetyNotes, elements, celestialBodies, zodiacSigns, colors } =
     variant;
   const columns = {
     form,
@@ -891,7 +891,7 @@ async function writeVariant(
     description,
     safetyNotes,
     elements,
-    planets,
+    celestialBodies,
     zodiacSigns,
     colors,
   };

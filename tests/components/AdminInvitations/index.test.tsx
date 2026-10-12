@@ -92,7 +92,7 @@ describe('AdminInvitations', () => {
       target: { value: ' cass@example.test ' },
     });
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Reason' }), {
-      target: { value: '  Knows the planets ' },
+      target: { value: '  Knows the celestial bodies ' },
     });
     expect(send()).toBeEnabled();
     fireEvent.click(send());
@@ -102,7 +102,7 @@ describe('AdminInvitations', () => {
         status.textContent?.includes('cass@example.test'),
       ),
     ).toHaveLength(1);
-    expect(calls).toEqual([{ email: 'cass@example.test', note: 'Knows the planets' }]);
+    expect(calls).toEqual([{ email: 'cass@example.test', note: 'Knows the celestial bodies' }]);
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/admin/invitations'));
     expect(router.refresh).toHaveBeenCalled();
 
@@ -124,7 +124,7 @@ describe('AdminInvitations', () => {
 
     expectGuardedWaysOut(router.replace, () =>
       fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Reason' }), {
-        target: { value: 'Knows the planets' },
+        target: { value: 'Knows the celestial bodies' },
       }),
     );
     expect(router.replace).toHaveBeenCalledWith('/admin/invitations');

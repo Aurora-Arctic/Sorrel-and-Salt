@@ -10,12 +10,12 @@ transcribes both tables, every deity filed under one of the thirty-five;
 review holds the two in step, and `deities.test.ts` what a re-run leaves of
 an admin's edits (MB.225).
 
-The list lives here rather than in DESIGN.md §5, where the planet and zodiac
+The list lives here rather than in DESIGN.md §5, where the celestial body and zodiac
 values are, because 216 rows with their descriptions are data, not
 specification: §5 states the model and points here.
 
 **Names are written as their tradition spells them in English**, one spelling
-each, and the seed copies them exactly: unlike §5's lower-case planet table,
+each, and the seed copies them exactly: unlike §5's lower-case celestial body table,
 this one is already cased, and not every word is capitalised (`Manannan mac
 Lir`). Every name is plain ASCII, so a slug is the name and its tradition
 lower-cased and hyphenated (`apollo-greek`, MB.132), and the other
@@ -47,7 +47,7 @@ changed: the sources below stand as they were, and so does every slug, since
 `0066_ampersand-deity-traditions.sql` renames the five on databases already
 seeded, wherever a row still holds its old seeded name.
 
-**A description is a gloss**, as the planets' are: the tradition, what the
+**A description is a gloss**, as the celestial bodies' are: the tradition, what the
 deity is god or goddess of, and the other names, because the suggestion query
 matches descriptions and a name match outranks a description match. It names
 no herb: which plants are sacred to a deity is an ingredient's correspondence,

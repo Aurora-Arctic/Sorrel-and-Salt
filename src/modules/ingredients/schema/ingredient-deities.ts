@@ -25,7 +25,7 @@ export const ingredientDeities = pgTable(
     // still reads as its name, with no finder reaching the deleted row.
     name: text('name').notNull(),
     // Stored, never inferred from insertion order: the list keeps the order
-    // entered, as planets, signs and colours do (MB.165, "The order rule").
+    // entered, as celestial bodies, signs and colours do (MB.165, "The order rule").
     position: integer('position').notNull(),
     ...auditColumns,
   },
