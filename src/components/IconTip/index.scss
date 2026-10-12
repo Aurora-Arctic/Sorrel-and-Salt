@@ -34,6 +34,13 @@
     opacity: 0;
     transform: translateX(2px);
   }
+
+  // Closed: faded back out the way it came, over `$tip-fade`, before the
+  // component takes it out of the page.
+  &--closing {
+    opacity: 0;
+    transform: translateX(2px);
+  }
 }
 
 // In a table row, centred above the control, the owner's call at MB.115's

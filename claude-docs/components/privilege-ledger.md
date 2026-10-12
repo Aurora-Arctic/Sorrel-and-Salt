@@ -109,6 +109,6 @@ the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filt
 address a change or the magnifier opens, Clear offered by a query or a privilege and absent
 with neither, the row starting again from a filter shown anew, no table when there is nothing to show, and
 `privilegeLedgerHref`. Paging is Pager's.
-`tests/app/admin/(people)/privilege-changes/page.test.tsx` covers what the page hands
+`tests/app/(shell)/admin/(people)/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built
 server, with axe.

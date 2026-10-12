@@ -152,7 +152,7 @@ it. Covens' ingredients keep what they wrote, as their own value.` A refusal com
 ## On the admin pages
 
 `/admin/categories`, `/admin/forms`, `/admin/deities`, `/admin/celestial-bodies` and
-`/admin/zodiac-signs` are one page, `src/app/admin/value-page.tsx`'s
+`/admin/zodiac-signs` are one page, `src/app/(shell)/admin/value-page.tsx`'s
 `ValuePage`. Each route's `page.tsx` keeps its tab title and hands its kind
 and address over. `value-kinds.ts` holds each kind's readers from
 `@/modules/vocabulary` (its list, count, value by slug and, for a grouped
@@ -250,7 +250,7 @@ its delete refusal. The flat kinds, the celestial body and the zodiac sign, are 
 `describe.each` getting only what they change, their three mutations, the
 create sending no group and asking for none. The shared pieces the form is
 built from, `TextField`, `SelectField` and `BusyButton`, have no test file
-of their own: this one covers them as it uses them. The pages' half, `tests/app/admin/value-page.test.tsx`, is
+of their own: this one covers them as it uses them. The pages' half, `tests/app/(shell)/admin/value-page.test.tsx`, is
 described in [`grouped-value-list.md`](grouped-value-list.md#testing); what the
 modal shows once open is this file's. `tests/e2e/admin.spec.ts`
 adds, renames and deletes a category, a form and a celestial body through the real server, adds

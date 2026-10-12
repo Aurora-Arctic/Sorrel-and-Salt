@@ -6,7 +6,7 @@
 | -------------------- | ------------------------------------------------------- | --------------------------------------- |
 | Signed out           | 307 to `/sign-in?next=<path and query>`                 | The proxy, then `requireSession()`      |
 | Signed in, not admin | **403**, the styled not-authorized page at the same URL | `requireAdminSession()`'s `forbidden()` |
-| Admin                | The layout: `AdminNav` above the page                   | `src/app/admin/layout.tsx`              |
+| Admin                | The layout: `AdminNav` above the page                   | `src/app/(shell)/admin/layout.tsx`      |
 
 - **`requireAdminSession()`** (`src/lib/request-session.ts`) is
   `requireSession()` — so a signed-out visitor and an unverified account are
@@ -23,10 +23,13 @@
   for access ([`components/not-authorized.md`](../components/not-authorized.md)).
 - **`forbidden()` is Next's, behind `experimental.authInterrupts`** in
   `next.config.ts`. It throws, and Next answers 403 with a `noindex` robots
-  tag and `src/app/forbidden.tsx` at the same URL. The boundary is at the root
-  because the layout is what throws it, and a segment's own `forbidden.tsx`
-  sits inside that segment's layout. It is the one `forbidden()` in the app:
+  tag and `src/app/(shell)/forbidden.tsx` at the same URL. The boundary sits in
+  the `(shell)` group, above the admin layout, because the layout is what throws
+  it, and a segment's own `forbidden.tsx` sits inside that segment's layout. It is the one `forbidden()` in the app:
   `/coven/[slug]` answers 404.
+- **The 403 renders inside the navigation shell.** `src/app/(shell)/layout.tsx`
+  (MB.7) wraps `/admin`, so a signed-in non-admin sees the shell's bar around
+  the not-authorised page, with no Admin entry in it.
 - **The browser renders that page, not the server.** A `forbidden()` or
   `notFound()` thrown during render with no `<Suspense>` above it fails the
   server render, so Next sends the status with an empty
@@ -61,11 +64,11 @@
   private — `/admin/users` (MB.52) — carries its own service-level assertion
   ([`admin-users.md`](admin-users.md), "The user list").
 - **A tabbed page's own layout runs no guard** (MB.115). Each tabbed page is
-  a route group, `src/app/admin/(people)/` and the like, whose `layout.tsx`
+  a route group, `src/app/(shell)/admin/(people)/` and the like, whose `layout.tsx`
   draws the heading and the tabs and reads nothing
   ([`components/tabbed-page.md`](../components/tabbed-page.md)). A layout
   does not re-run on a tab press, so a guard there would add nothing to
-  `src/app/admin/layout.tsx`'s and each tab page's. The tabbed pages add no
+  `src/app/(shell)/admin/layout.tsx`'s and each tab page's. The tabbed pages add no
   `loading.tsx` and no other `<Suspense>` boundary: a tab's loading state
   is the tab row's own, shown only while a pressed tab is on its way. So
   nothing streams ahead of the guard on a direct request, and a refusal any

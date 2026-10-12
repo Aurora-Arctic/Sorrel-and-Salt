@@ -63,7 +63,7 @@ for (const role of ['owner', 'member', 'viewer'] as const) {
 
     expect(response?.status()).toBe(200);
     await expect(page.getByRole('heading', { level: 1, name: COVEN_NAME })).toBeVisible();
-    const nav = page.getByRole('navigation', { name: 'Workspace' });
+    const nav = page.getByRole('navigation', { name: 'Coven' });
     const overview = nav.getByRole('link', { name: 'Overview', exact: true });
     await expect(overview).toHaveAttribute('href', `/coven/${COVEN_SLUG}`);
     await expect(overview).toHaveAttribute('aria-current', 'page');
@@ -91,7 +91,7 @@ test('a signed-in user in no coven gets the same 404 as an unknown slug, with no
   // The server's own answer carries nothing of the coven, not in the markup
   // and not in the RSC payload: the address is the visitor's, the name is not.
   expect(await refused?.text()).not.toContain(COVEN_NAME);
-  await expect(page.getByRole('navigation', { name: 'Workspace' })).toHaveCount(0);
+  await expect(page.getByRole('navigation', { name: 'Coven' })).toHaveCount(0);
 
   const unknown = await page.goto('/coven/no-such-coven');
   expect(unknown?.status()).toBe(404);
@@ -104,7 +104,7 @@ test('real Tab presses reach the Overview link, and the page passes the scans', 
   await page.goto(`/coven/${COVEN_SLUG}`);
 
   const overview = page
-    .getByRole('navigation', { name: 'Workspace' })
+    .getByRole('navigation', { name: 'Coven' })
     .getByRole('link', { name: 'Overview', exact: true });
   // Bounded: the shell's own stops come first, and a few spare presses
   // tolerate another.

@@ -320,7 +320,7 @@ every admin page's add and edit modal takes. A page renders it always, at one
 fixed place (M9.18). It shows its `content` when the address opens a modal, a
 skeleton under the pressed row's head while a press is on its way
 ("Opening at once"), and nothing otherwise. Eight wrappers under
-`src/app/admin/` each wrote the same lines until MB.115, and the celestial bodies and
+`src/app/(shell)/admin/` each wrote the same lines until MB.115, and the celestial bodies and
 zodiac signs' one handed the navigation straight to its form, so a save there
 skipped the fade.
 
@@ -355,7 +355,7 @@ at once, with its head over a skeleton, the way a filter shows it is loading.
 The form arrives in the same dialog.
 
 - **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
-  mounted once, in `src/app/admin/layout.tsx`. It keeps the heading of the
+  mounted once, in `src/app/(shell)/admin/layout.tsx`. It keeps the heading of the
   modal just pressed and runs `router.push(href)` inside `useTransition`
   (a React call that marks a change as in progress until it finishes). It
   offers `loading` (that heading while the push is pending, otherwise
@@ -368,7 +368,7 @@ The form arrives in the same dialog.
   button, is the browser's (a new tab or window), and so is a press before
   the page's script has loaded: the link still works as a link. Outside a
   provider the hook returns nothing, and the link stays plain. `EditLink`
-  ([`icon-tip.md`](icon-tip.md)), `AddAction` (`src/app/admin/add-action.tsx`)
+  ([`icon-tip.md`](icon-tip.md)), `AddAction` (`src/app/(shell)/admin/add-action.tsx`)
   and Invite Admin all use it, and so does each name on `/admin/users`, which
   opens the user's modal, `?user=<id>` (M9.19, [`user-list.md`](user-list.md)).
 - **The heading is known before the form.** The page builds each row's

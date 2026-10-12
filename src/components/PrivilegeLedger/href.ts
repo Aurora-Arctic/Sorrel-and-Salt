@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import { listHref } from '../../lib/list-href';
-import type { PagerCursor } from '../../app/admin/types';
+import type { PagerCursor } from '../../app/(shell)/admin/types';
 import type { PrivilegeLedgerFilter } from './types';
 
 // The address of `/admin/privilege-changes` under a filter, at a cursor: the

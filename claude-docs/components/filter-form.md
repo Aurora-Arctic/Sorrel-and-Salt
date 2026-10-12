@@ -149,7 +149,7 @@ inside the type-ahead keeps its room while hidden
 ([`combobox.md`](combobox.md)), so typing does not change the width either.
 
 **An on-or-off filter is a switch**, `SwitchField` ([`field.md`](field.md)):
-a `.field` like the rest, its label above and the slide toggle beneath at
+a `.field` like the rest, its label above and the slide toggle beneath it, centred under the label, at
 `$control-height`, so it stands level with the boxes and selects beside it
 at desktop width and in the stacked row, and keeps its own width. The
 owner's call at MB.115's review, over a checkbox with its name beside it,

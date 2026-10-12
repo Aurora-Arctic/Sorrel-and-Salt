@@ -182,7 +182,7 @@ Clear (its address with each control set, not drawn while the page shows no
 filter, text typed or not, and the loading state while the unfiltered list
 loads), and `compendiumHref`. It is the one list test of the filter's
 loading state, its focus, its
-reset and Clear; paging is Pager's. `tests/app/admin/compendium/page.test.tsx`
+reset and Clear; paging is Pager's. `tests/app/(shell)/admin/compendium/page.test.tsx`
 covers the page's side: `?form=` read trimmed into the list and its count,
 blank as none, kept on every Edit, the pager, Add Ingredient and the
 redirect, and the forms read past their first page, each name once.

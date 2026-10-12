@@ -1,7 +1,10 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, type Page } from '@playwright/test';
 
+// Settles first: a spec that switches the theme and scans straight after would
+// otherwise read a colour part-way along its ease (the account disc, MB.7).
 export async function assertNoAccessibilityViolations(page: Page) {
+  await settleTransitions(page);
   const { violations } = await new AxeBuilder({ page }).analyze();
   const summary = violations
     .map((v) => `${v.id}: ${v.help} (${v.nodes.length} node(s))`)
@@ -36,4 +39,19 @@ export async function assertNoSidewaysScroll(page: Page) {
     scrollWidth,
     `wider than the window: ${wide.join('; ') || 'nothing named'}`,
   ).toBeLessThanOrEqual(clientWidth);
+}
+
+// Every colour eases over the theme's 400ms; a scan straight after a theme
+// change would read a colour part-way along, so each running transition is
+// let finish first.
+export async function settleTransitions(page: Page) {
+  // Transitions only: a scroll-driven animation (the sorrel's) never finishes.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((each) => each instanceof CSSTransition)
+        .map((each) => each.finished),
+    ),
+  );
 }

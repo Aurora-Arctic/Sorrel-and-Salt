@@ -2,4 +2,4 @@
 // pencil they share (claude-docs/components/icon-tip.md).
 export { default } from './icon-tip';
 export { EditLink } from './edit-link';
-export { PencilIcon } from './icons';
+export { PencilIcon, PlusIcon } from './icons';

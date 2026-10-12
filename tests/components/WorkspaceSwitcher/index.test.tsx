@@ -19,7 +19,7 @@ const WORKSPACES = [
   { slug: 'testwort-circle', name: 'Testwort Circle' },
 ];
 
-const box = () => screen.getByRole('combobox', { name: 'Workspace' });
+const box = () => screen.getByRole('combobox', { name: 'Coven' });
 
 beforeEach(() => {
   push.mockClear();
@@ -82,20 +82,20 @@ describe('WorkspaceSwitcher', () => {
       expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
         'Fixture Coven',
         'Testwort Circle',
-        'Create Workspace',
+        'Create Coven',
       ]);
       unmount();
 
       render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate={false} />);
       fireEvent.click(box());
-      expect(screen.queryByRole('option', { name: 'Create Workspace' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('option', { name: 'Create Coven' })).not.toBeInTheDocument();
     });
 
     it('goes to the create page, from a click or the keyboard', () => {
       render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
 
       fireEvent.click(box());
-      fireEvent.click(screen.getByRole('option', { name: 'Create Workspace' }));
+      fireEvent.click(screen.getByRole('option', { name: 'Create Coven' }));
       expect(push).toHaveBeenCalledExactlyOnceWith('/coven/new');
 
       push.mockClear();
@@ -112,7 +112,7 @@ describe('WorkspaceSwitcher', () => {
 
       render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
 
-      expect(box()).toHaveTextContent('Select Workspace');
+      expect(box()).toHaveTextContent('Select Coven');
     });
   });
 });

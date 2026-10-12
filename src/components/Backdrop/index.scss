@@ -54,11 +54,53 @@
   background-image: url('./sorrel-plate.webp');
 }
 
+// Inside the shell the sorrel starts below its bars rather than behind them:
+// the top inset, the bar (its hairline is inside its height), and where a
+// context row follows, its height (a control with the lead's air above and below) and its own 1px
+// hairline. Pages without the shell keep `$top-inset` above.
+body:has(.app-shell) .backdrop--sorrel {
+  top: calc(#{$top-inset} + #{$shell-bar-height});
+}
+
+body:has(.context-row) .backdrop--sorrel {
+  --sorrel-row: calc(#{$context-row-height} + 1px);
+
+  top: calc(#{$top-inset} + #{$shell-bar-height} + var(--sorrel-row));
+
+  @media (max-width: #{$shell-phone-width}) {
+    --sorrel-row: calc(#{$context-row-height-phone} + 1px);
+  }
+
+  // The context row scrolls away but the bar stays, so a fixed offset would
+  // leave a gap between them once the page moves. Over the row's own height
+  // of scroll the sorrel climbs to the bar's foot and stays there. A browser
+  // with no scroll-driven animations keeps the fixed offset.
+  @supports (animation-timeline: scroll()) {
+    animation: sorrel-follow-bar linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 var(--sorrel-row);
+  }
+}
+
+@keyframes sorrel-follow-bar {
+  to {
+    top: calc(#{$top-inset} + #{$shell-bar-height});
+  }
+}
+
 .backdrop--salt {
   right: 0;
   bottom: 0;
   aspect-ratio: 3 / 2;
   background-image: url('./salt-spoon.webp');
+}
+
+// On a phone the section nav is a bar fixed along the bottom; the salt
+// sits above it rather than behind it.
+@media (max-width: #{$shell-phone-width}) {
+  body:has(.section-nav) .backdrop--salt {
+    bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 // Larger on the front door, the one page with room for it; the page's own

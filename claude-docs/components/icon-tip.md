@@ -7,11 +7,11 @@ with a "Edit" tooltip. Make it larger outside the form though." The directory
 also holds what every Edit control shares: the pencil, and the list rows'
 Edit link.
 
-| File            | What it holds                                                                    |
-| --------------- | -------------------------------------------------------------------------------- |
-| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip  |
-| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip     |
-| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well |
+| File            | What it holds                                                                                                           |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                         |
+| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip                                            |
+| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, and `PlusIcon`, the shared Add's plus |
 
 ## The props contract
 
@@ -62,8 +62,11 @@ It follows WCAG 1.4.13, content on hover or focus, through the same
   heard on the document and marked handled while a tip is open, so it
   closes the tip alone: inside a modal, as the ingredient form is, the
   first Escape shuts the tip and the next one reaches the modal.
-- **It is in the page only while open**, so an open tip is one that exists.
-  It fades in from a starting style and goes at once.
+- **It is in the page while open and for its fade after**, so an open tip is
+  one that exists. It fades in from a starting style and, closed, fades back
+  out over `$tip-fade` (a closing class, and a timer of the same length that
+  then takes it out of the page) rather than vanishing (the owner's call at
+  MB.7's review, 2026-10-12).
 
 ## Accessibility
 
@@ -73,6 +76,12 @@ tip carries `role="tooltip"` and `aria-hidden="true"`, and no control lists
 it in `aria-describedby`: as a description it would read "Edit" a second
 time. A link stays a link and a button a button, with the names they had as
 words, so the tests and the e2e specs find them as before.
+
+- **The admin pages' shared Add** (`add-action.tsx`): the tip is its label,
+  "Add Category", and draws only at the page header's narrow width, where the
+  label is hidden and the link is a plus alone, and, on a tabbed page, at or under
+  680px of the header's own width; never at or under 350px (`$add-below-width`), where the Add is labelled again
+  ([`page-header.md`](page-header.md), "Styling").
 
 ## Placement
 
@@ -90,6 +99,8 @@ inside the frame, so nothing is clipped. A phone card (a `.data-table--stack`
 table under `$table-stack-width`) keeps the tip to the left: above the first
 card's top-right Edit is only the card's padding, and the frame would cut it
 off.
+
+**Over the Add's plus, above it and right-aligned** to the plus's right edge, so it stays inside the window at the line's end, at `layer('floating')`. The action's wrapper carries no `translate` (it is brought down to the heading's letters with `position: relative; top` instead): a `translate` makes the wrapper a stacking context, which would rank the tip's layer only inside it and hold the tip under the shell's bar once the page is scrolled.
 
 ## Styling
 

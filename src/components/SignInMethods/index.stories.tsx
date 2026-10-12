@@ -19,7 +19,7 @@ const ALL_PROVIDERS: readonly ProviderId[] = ['discord', 'google', 'facebook', '
 const DISCORD: LinkedAccount = { id: 'a-discord', providerId: 'discord' };
 const MICROSOFT: LinkedAccount = { id: 'a-microsoft', providerId: 'microsoft' };
 
-// The account page's Sign-In Methods section as src/app/account/page.tsx
+// The account page's Sign-In Methods section as src/app/(shell)/account/page.tsx
 // writes it, on its panel inside the real frame, so the workshop shows what
 // the page shows.
 const Section = ({ id, children }: { id?: string; children: ReactNode }) => (

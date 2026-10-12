@@ -1,8 +1,66 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
-// Sized to its widest workspace name within bounds, so the nav it sits in
-// does not jump as the name changes.
+// The coven's name set as the context row's lead (MB.7): the chosen name in
+// the display face with a chevron inside a hairline border, so the row reads
+// "Whitethorn Coven" and the name is also the control. The Combobox's select
+// is restyled from here rather than given a variant: every part of it is
+// reached by its own class, and the compound `.input.combobox__control` is
+// outweighed by one more class. It looks the same on a phone as on a
+// desktop; a long name wraps to two lines rather than being cut.
 .workspace-switcher {
   min-width: 12rem;
   max-width: 100%;
+
+  // On a phone the control fills the row, as the context row gives it the
+  // whole width (MB.7).
+  @media (max-width: $shell-phone-width) {
+    width: 100%;
+  }
+
+  .input.combobox__control {
+    min-height: $control-height;
+    padding: 0 space(3);
+    border-color: $hairline;
+    background-color: transparent;
+    cursor: pointer;
+    @include theme-transition(background-color, border-color);
+    @include reduced-motion {
+      transition: none;
+    }
+
+    &:hover {
+      border-color: $hairline;
+      background-color: $fill-quiet;
+    }
+
+    // Open is told by the edge going from a hairline to the body ink, a
+    // change of weight and not of hue.
+    &[aria-expanded='true'] {
+      border-color: $text-primary;
+    }
+  }
+
+  .combobox__values {
+    flex: 1 1 auto;
+  }
+
+  .combobox__value {
+    min-height: 0;
+    padding-block: space(1);
+    overflow: visible;
+    font-family: $font-heading;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+    text-overflow: clip;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .combobox__list {
+    z-index: layer('floating');
+    min-width: 15rem;
+  }
 }

@@ -49,10 +49,9 @@ $impersonation-banner-reach: space(4);
     top: 0;
     right: 0;
     left: 0;
-    // Under ThemeToggle (`z-index: 2`), so aiming at the toggle reaches the
-    // toggle and never opens the banner. Raw, as ThemeToggle's is: a site-wide
-    // map of layers is MB.124's.
-    z-index: 1;
+    // Under the corner toggle (`layer('toggle')`), so aiming at the toggle
+    // reaches the toggle and never opens the banner, and over the shell's bar.
+    z-index: layer('banner');
     padding-right: calc(#{$toggle-corner} + #{space(3)});
     padding-bottom: space(2);
     transform: translateY(calc(-100% + #{$impersonation-banner-peek}));

@@ -113,8 +113,8 @@ for a rule only one kind's rows need.
   ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, Add Celestial Body and the rest, the tab's action beside the
-  page's heading (`ValueAction` in `src/app/admin/value-page.tsx`, from the
-  route group's `@action` slot, built on `AddAction` in `src/app/admin/add-action.tsx`,
+  page's heading (`ValueAction` in `src/app/(shell)/admin/value-page.tsx`, from the
+  route group's `@action` slot, built on `AddAction` in `src/app/(shell)/admin/add-action.tsx`,
   which takes the dialog's `heading` apart from the button's label, M9.18) and so the page's rather than this
   component's, is `?new`.
   `href.ts`'s `groupedValuesHref(kind, place, dialog?)`, on the shared
@@ -169,7 +169,7 @@ page's Add is `.btn--solid` beside its heading, its one primary action, and
 each row's Edit is the larger green pencil, a 2rem target
 ([`icon-tip.md`](icon-tip.md), "Styling"). The pager is `Pager`
 ([`pager.md`](pager.md)), soft. At phone width the filter's fields stack
-full width and the Add spans its line, the sign-off's two phone calls,
+full width and the Add is a plus on the heading's line (it spanned its line until MB.7's review, 2026-10-12), the sign-off's two phone calls,
 which `FilterForm` and `TabbedPage` own
 ([`filter-form.md`](filter-form.md), [`tabbed-page.md`](tabbed-page.md)),
 so the list adds no rule for either.
@@ -184,7 +184,7 @@ kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
 `PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
 categories page inside `.admin-layout` at 375px: the real `TabbedPage`
 with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear drawn, the
-full-width Add and the rows as cards. `CategoriesPending`, with
+Add as a plus and the rows as cards. `CategoriesPending`, with
 `PendingPhoneDark` and `PendingPhoneLight` at 375px, is the same page with
 a filter applied and the list on its way: a `ListNavigationContext` holding
 one pending above the page, since the stub router goes nowhere, so the
@@ -212,7 +212,7 @@ filter shown run as the shared filter rows (`tests/support/filter-form.tsx`,
 [`filter-form.md`](filter-form.md), "Testing"); its loading state is
 CompendiumList's, the type-ahead's narrowing Combobox's, paging Pager's, and the category chip's colours
 presentation.
-`tests/app/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
+`tests/app/(shell)/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
 ([`layer-ownership.md`](../testing/layer-ownership.md), "The owning layer"):
 the guard refusing before any read; the first page of 25 read (26, to know of
 a next) and an unreadable cursor read as the first page; every group read on

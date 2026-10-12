@@ -305,6 +305,10 @@ $type-sizes: (
   'caption': 0.8125rem,
   // The uppercase, letter-spaced .eyebrow.
   'overline': 0.75rem,
+  // The label under an icon in the phone's bottom bar (MB.7), where five
+  // sit across a 375px screen: the one role below overline, since Lexend's
+  // "Compendium" is wider than a fifth of that at 0.75rem.
+  'tab': 0.6875rem,
 );
 
 @function type-size($role) {
@@ -440,6 +444,76 @@ $switch-width: 2.75rem;
 // finger lifts; the combobox's group bar widens on a highlight in the same 150ms.
 $motion-short: 150ms;
 
+// The application shell (MB.7, drawn in its design review): the global bar
+// across the top of every signed-in page, the context row beneath it that
+// names the coven (as the switcher) or the admin area and carries the section
+// nav, and at a phone's width the section nav's bar along the bottom instead.
+// The bar is a little taller than a control, so a control sits inside it
+// with a step of air; the context row on a phone is exactly a control, the
+// switcher's own height. The page keeps the bottom bar's height clear
+// beneath its content, so the last row is never under it.
+$shell-bar-height: 3.25rem;
+$bottom-bar-height: 4rem;
+
+// The width at or under which the shell takes its phone shape (the switcher
+// on its own row, the section nav along the bottom, the account button an
+// avatar alone): the one width the admin tables stack into cards at, so a
+// page changes shape once rather than twice. A screen width, where
+// `$table-stack-width` is a container's, since the shell's bars are the window's.
+$shell-phone-width: $table-stack-width;
+
+// The width at or under which the admin section nav keeps its first pages in
+// view and tucks the rest behind More (Priority+), between the phone shape
+// and a desktop where all six fit the row.
+$shell-tablet-width: 48rem;
+// Under this the bar's brand is its initials: a narrow phone, since the bar
+// has room for the full name wider than that once the site links have gone.
+$shell-brand-width: 26rem;
+// Under this width of its own (680px, the owner's measure on the Astrology
+// page at MB.7's review, 2026-10-12) a tabbed page's Add is a plus; the pills
+// keep the heading's line.
+$tabbed-plus-width: 42.5rem;
+// Under this width of its own (a 568px window's header, the owner's measure
+// at MB.7's review, 2026-10-12) a tabbed page's pills drop beneath the
+// heading and the plus, a concern of its own, apart from the plus's switch.
+$tabbed-reflow-width: 33.5rem;
+// The same for a tabbed page whose action keeps its label (People's Pause
+// Admin Changes): under 700px of the header's own width the pills drop
+// beneath the heading and the action, which keep the line (the owner's
+// measure at MB.7's review, 2026-10-12).
+$tabbed-reflow-width-labelled: 43.75rem;
+// Under 400px of the header's own width that labelled action goes beneath
+// the heading, at the line's start (the owner's measure at MB.7's review,
+// 2026-10-12); wider, the two keep the line, the forms' column included.
+$tabbed-action-below-width: 25rem;
+// At 350px of the header's own width and under, the Add is the labelled
+// button again, beneath the heading at the line's start (the owner's measure
+// at MB.7's review, 2026-10-12): the plus is for the widths between.
+$add-below-width: 21.875rem;
+
+// The one place a z-index comes from (MB.124's handoff, settled by MB.7):
+// what stacks above the page, named by what it is rather than by a number
+// each component chose for itself. A component inside its own stacking
+// context (a combobox's list over its field) keeps a small local index; these
+// are the layers that meet each other at the window. `floating` is a popover
+// or list opened from the shell, over the bars; `dialog` is a non-native
+// overlay, since a <dialog> sits in the browser's top layer above every one.
+$layers: (
+  'shell': 10,
+  'banner': 11,
+  'toggle': 12,
+  'floating': 20,
+  'dialog': 30,
+);
+
+@function layer($name) {
+  @if not map.has-key($layers, $name) {
+    @error "Unknown layer \"#{$name}\". The layers are: #{map.keys($layers)}.";
+  }
+
+  @return map.get($layers, $name);
+}
+
 // ---------------------------------------------------------------------------
 // Spacing and radius
 // ---------------------------------------------------------------------------
@@ -464,6 +538,16 @@ $space-steps: (
 
   @return map.get($space-steps, $step);
 }
+
+// Written after `space()` above: a Sass function is not in scope before its
+// definition, and inside `calc()` an unknown name is left as plain CSS text,
+// which is invalid and drops the declaration.
+// The context row's height: a control with a step of air above and below
+// (the lead's padding, ContextRow/index.scss), so the Admin row, which holds
+// text alone, stands as tall as the coven row's switcher, and the backdrop's
+// offset below it is exact. On a phone the air is the half step.
+$context-row-height: calc(#{$control-height} + 2 * #{space(2)});
+$context-row-height-phone: calc(#{$control-height} + #{space(3)});
 
 // The admin table's inline cell padding (MB.115): a step of space, written
 // once so the filter row above a table insets its fields by the same amount

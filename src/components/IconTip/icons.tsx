@@ -20,3 +20,19 @@ export function PencilIcon(): ReactElement {
     </svg>
   );
 }
+
+/** A plus: add one. The shared Add shows it alone at a phone's width. */
+export function PlusIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 3v10M3 8h10"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

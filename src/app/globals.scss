@@ -23,6 +23,24 @@ html[data-theme='light'] {
   @include theme-light;
 }
 
+// A jump to a section (PageNav) glides rather than cuts; the page scrolls at
+// the root. Switched off for a reader who asks for less motion.
+html {
+  scroll-behavior: smooth;
+}
+
+// Inside the shell a scroll that brings a focused control into view lands
+// it below the sticky bar, and on a phone above the fixed section bar.
+html:has(.app-shell) {
+  scroll-padding-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+}
+
+@media (max-width: $shell-phone-width) {
+  html:has(.section-nav) {
+    scroll-padding-bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 body {
   @include typography-base;
   @include layout-base;
@@ -38,6 +56,10 @@ body {
 }
 
 @include reduced-motion {
+  html {
+    scroll-behavior: auto;
+  }
+
   body {
     transition: none;
   }

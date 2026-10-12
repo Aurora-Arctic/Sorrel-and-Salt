@@ -31,32 +31,38 @@ const groupTab = (kind: GroupKind): PageTab => ({
 export const ADMIN_PAGES = {
   compendium: {
     label: 'Compendium',
+    icon: 'compendium',
     description: 'Every ingredient in the shared reference, with its forms and sources.',
     tabs: [{ href: '/admin/compendium', label: 'Compendium' }],
   },
   categories: {
     label: 'Categories',
+    icon: 'categories',
     description: 'The categories an ingredient is filed under, and the groups that colour them.',
     tabs: [valueTab('category'), groupTab('category')],
   },
   forms: {
     label: 'Forms',
+    icon: 'forms',
     description:
       'The forms an ingredient comes in, and the groups that tell two forms of one name apart.',
     tabs: [valueTab('form'), groupTab('form')],
   },
   deities: {
     label: 'Deities',
+    icon: 'deities',
     description: 'The deities an ingredient can be linked with, and the traditions they belong to.',
     tabs: [valueTab('deity'), groupTab('tradition')],
   },
   astrology: {
     label: 'Astrology',
+    icon: 'astrology',
     description: 'The celestial bodies and zodiac signs an ingredient can be linked with.',
     tabs: [valueTab('planet'), valueTab('zodiacSign')],
   },
   people: {
     label: 'People',
+    icon: 'people',
     description:
       'Every account and its role, the admin invitations waiting, and who changed which privilege.',
     tabs: [

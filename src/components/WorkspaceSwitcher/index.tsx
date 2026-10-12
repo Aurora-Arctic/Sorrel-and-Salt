@@ -8,7 +8,7 @@ import { ComboboxSelect } from '../Combobox';
 import type { WorkspaceSwitcherProps } from './types';
 import './index.scss';
 
-// A select over the viewer's workspaces. Which one is current is read off the
+// A select over the viewer's workspaces, called covens on screen. Which one is current is read off the
 // address, never kept in state, so two tabs in two workspaces do not
 // interfere; choosing another goes to the same section there. The list is the
 // caller's: the layout already holds the memberships. A viewer holding
@@ -16,7 +16,7 @@ import './index.scss';
 // create page (M9.16); its value is that page's path, which no slug can equal
 // since a slug holds no slash. See claude-docs/components/workspace-switcher.md.
 
-const CREATE = { value: NEW_COVEN_PATH, label: 'Create Workspace' };
+const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
 
 export default function WorkspaceSwitcher({
   workspaces,
@@ -31,13 +31,13 @@ export default function WorkspaceSwitcher({
     <div className="workspace-switcher">
       <ComboboxSelect
         id={id}
-        label="Workspace"
+        label="Coven"
         value={covenSlugOf(pathname) ?? ''}
         onChange={(value) =>
           router.push((value === CREATE.value ? value : pathInCoven(pathname, value)) as Route)
         }
         choices={canCreate ? [...choices, CREATE] : choices}
-        placeholder="Select Workspace"
+        placeholder="Select Coven"
       />
     </div>
   );

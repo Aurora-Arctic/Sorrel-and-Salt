@@ -21,3 +21,16 @@ component that is not obvious from the code:
 State the decision, not how it was reached. The reasoning behind a single
 contested choice belongs in a decision record; blow-by-blow history belongs in
 the PR that made it.
+
+## The Navigation Shell (MB.7)
+
+These five docs are written with the shell's components. The reasoning behind the
+design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md).
+
+| Doc                                  | Component                                                                                                                         |
+| ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| [`app-shell.md`](app-shell.md)       | The frame around every signed-in page: the slim bar, the context row, the page's content, and the bottom-bar clearance on a phone |
+| [`account-menu.md`](account-menu.md) | The disclosure in the bar offering Your Account and Sign Out, and the theme toggle on a phone                                     |
+| [`context-row.md`](context-row.md)   | The row under the bar: the coven switcher or "Admin" at the left, the section nav beside it                                       |
+| [`section-nav.md`](section-nav.md)   | The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone                          |
+| [`page-nav.md`](page-nav.md)         | A page's own menu of jump links to its sections, marking the one in view                                                          |

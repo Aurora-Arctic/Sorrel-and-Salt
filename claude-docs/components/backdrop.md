@@ -87,8 +87,8 @@ no prop. Each modifier pins its corner and its photograph's own aspect ratio,
 which `mask-size: 100% 100%` relies on; the sorrel also sets
 `--backdrop-scale: 0.75`, since its subject fills more of its frame than the
 salt does. The sorrel's top is `$top-inset` rather than 0, so it starts below
-the impersonation banner on a touch screen ([`styling.md`](../styling.md),
-"The top inset").
+the impersonation banner, and inside the shell below its bar and context row too ([`styling.md`](../styling.md),
+"The top inset"). The bar and context-row offsets apply on every device; only `$top-inset` is touch-only. The context row's offset is its minimum height, so a coven name that wraps to two lines makes the row taller than the offset and the sorrel's edge then sits under it. On a phone the section nav is a bar fixed along the bottom, so the salt is lifted above it (by `$bottom-bar-height` plus the safe-area inset) rather than left behind it; it stays lifted while a dialog or the keyboard hides the bar. As the page scrolls the context row leaves but the bar stays, so a scroll-driven animation (`animation-timeline: scroll(root)`, over the row's own height of scroll) lifts the sorrel to the bar's foot and holds it there, leaving no gap; a browser without scroll-driven animations keeps the fixed offset.
 
 ## Stacking
 

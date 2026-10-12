@@ -1,7 +1,7 @@
 # SignOutButton
 
-`src/components/SignOutButton/` — Sign Out, beside the account page's
-"Your Account" heading in its `.page-header` (added in MB.63's PR, on the
+`src/components/SignOutButton/` — Sign Out, held in the shell's account menu
+(`AccountMenu`; it sat beside the account page's heading until MB.7) (added in MB.63's PR, on the
 owner's call, since no task builds a way to sign out). A client component
 with no props.
 

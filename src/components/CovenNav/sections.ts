@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { CovenSection } from './types';
+import type { SectionNavItem } from '../SectionNav/types';
 
 // `Route<T>` checks a dynamic address against the built routes only when `T`
 // is inferred from the address itself, as `<Link href>` infers it; a field
@@ -13,7 +13,8 @@ const route = <T extends string>(href: Route<T>): Route => href as Route;
 // (claude-docs/components/coven-nav.md). A later task adds its row in its own
 // PR, the one that builds the page, since `typedRoutes` refuses a link to a
 // route the build does not contain: Members (M6.13), Ingredients (M9.6),
-// Grimoire (M10.11).
-export const covenSections = (slug: string): readonly CovenSection[] => [
-  { label: 'Overview', href: route(`/coven/${slug}`), exact: true },
+// Grimoire (M10.11), each with its icon (`ingredients`, `grimoire`, `members`)
+// already drawn in `SectionNav/icons.tsx`.
+export const covenSections = (slug: string): readonly SectionNavItem[] => [
+  { label: 'Overview', href: route(`/coven/${slug}`), icon: 'overview', exact: true },
 ];

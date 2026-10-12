@@ -28,7 +28,7 @@ export const OutsideWorkspace: Story = () => (
   </WorkshopPathname.Provider>
 );
 
-// A viewer holding creation rights: the list ends with Create Workspace (M9.16).
+// A viewer holding creation rights: the list ends with Create Coven (M9.16).
 export const CanCreate: Story = () => (
   <WorkshopPathname.Provider value="/coven/testwort-circle">
     <WorkspaceSwitcher workspaces={WORKSPACES} canCreate />

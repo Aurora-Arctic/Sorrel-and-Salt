@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { PagerHrefs } from '../../app/admin/types';
+import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { PagePosition } from '../../lib/types';
 
 /** One pending admin invitation, as `/admin/invitations` lists it (MB.70). */

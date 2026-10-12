@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
@@ -9,7 +9,7 @@ import { signInAgainAs, signInAs } from './session';
 // owner, makes a second, and a coven named "New" never takes the page's own
 // address. A user without the right is offered no form; that the service
 // refuses them is tests/modules/coven/services/workspace-creation.test.ts's.
-// The switcher's entry is walked once MB.7's shell renders the switcher.
+// The switcher's entry to this page is walked in shell.spec.ts.
 test.describe.configure({ mode: 'serial' });
 
 const users = { holder: { id: '' }, outsider: { id: '' } };
@@ -60,9 +60,10 @@ test(
     await page.goto('/coven/new');
 
     const name = page.getByRole('textbox', { name: 'Name' });
-    // Bounded: the theme toggle comes first, and a few spare presses tolerate another stop.
+    // Bounded: the shell's stops (the skip link, the brand, the bar's buttons)
+    // come first, and a few spare presses tolerate another.
     let reached = false;
-    for (let i = 0; i < 10 && !reached; i++) {
+    for (let i = 0; i < 12 && !reached; i++) {
       await page.keyboard.press('Tab');
       reached = await name.evaluate((element) => element === document.activeElement);
     }
@@ -86,7 +87,7 @@ test(
     await page.goto('/coven/new');
 
     await page.getByRole('textbox', { name: 'Name' }).fill('New');
-    await page.getByRole('button', { name: 'Create Workspace', exact: true }).click();
+    await page.getByRole('button', { name: 'Create Coven', exact: true }).click();
 
     await expect(page).toHaveURL(/\/coven\/new-2$/);
     await expect(page.getByRole('heading', { level: 1, name: 'New' })).toBeVisible();
@@ -107,7 +108,7 @@ test('a user without the right is offered no form', async ({ page }) => {
   expect(response?.status()).toBe(200);
   await expect(page.getByRole('main').getByRole('status')).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Name' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Create Workspace', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Create Coven', exact: true })).toHaveCount(0);
 });
 
 test('the page passes the scans in both themes, with and without the form', async ({ page }) => {
@@ -116,6 +117,7 @@ test('the page passes the scans in both themes, with and without the form', asyn
     await page.goto('/coven/new');
     for (const colorScheme of ['dark', 'light'] as const) {
       await page.emulateMedia({ colorScheme });
+      await settleTransitions(page);
       await assertNoAccessibilityViolations(page);
     }
     await assertNoSidewaysScroll(page);

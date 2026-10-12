@@ -45,7 +45,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   `readNumberedPage`. A list of one page shows no pager.
 - **Invite Admin is the tab's action, beside the page's heading** (MB.115,
   on the owner's call), exported as `InviteAdmin` and drawn by
-  `src/app/admin/(people)/@action/invitations/page.tsx`. The heading line
+  `src/app/(shell)/admin/(people)/@action/invitations/page.tsx`. The heading line
   and the list are rendered apart, so the button can no longer hold the
   form's state: Invite Admin is a link to `/admin/invitations?invite`
   (`href.ts`), and the page opens the form over the list by that address,
@@ -167,7 +167,7 @@ reason; and the filter: the address a change or the magnifier opens, from the fi
 page whatever page is shown, the email trimmed and the switch a bare flag,
 which values offer Clear, the row starting again from a filter shown anew, and Invite Admin and
 the form's close keeping the filter and the page. The cards at phone width are presentation.
-`tests/app/admin/(people)/invitations/page.test.tsx` covers the tab's page:
+`tests/app/(shell)/admin/(people)/invitations/page.test.tsx` covers the tab's page:
 the guard first, the hash never rendered, the filter read off the address
 and handed to the service, the first page of 25 and its count, `after` and
 `before` read off the address, a cursor of another list reading the first

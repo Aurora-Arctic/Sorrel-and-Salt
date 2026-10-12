@@ -31,7 +31,7 @@ export const RouteModalContext = createContext<RouteModalOpener | null>(null);
 
 /**
  * Holds the opening the links and the page's modal share, around every admin
- * page (`src/app/admin/layout.tsx`). A provider already above, the
+ * page (`src/app/(shell)/admin/layout.tsx`). A provider already above, the
  * workshop's, is kept rather than shadowed.
  */
 export const RouteModalProvider = ({ children }: RouteModalProviderProps): ReactElement => {

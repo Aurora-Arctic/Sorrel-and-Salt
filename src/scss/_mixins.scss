@@ -463,7 +463,9 @@
 // for the open state's element) matches an ancestor: a disclosure's marker.
 // Drawn only, so a press on it reaches the control beneath: turned over, it
 // paints above an overlay stretched from a button, and would take the press.
-@mixin disclosure-chevron($open) {
+// With `$flip`, it is flipped about its horizontal edge (`rotateX`) instead of
+// turned in the plane, and the caller names the transition (`transform`).
+@mixin disclosure-chevron($open, $flip: false) {
   display: inline-flex;
   flex: none;
   width: $glyph-size;
@@ -477,7 +479,11 @@
   }
 
   #{$open} & {
-    rotate: 180deg;
+    @if $flip {
+      transform: rotateX(180deg);
+    } @else {
+      rotate: 180deg;
+    }
   }
 }
 

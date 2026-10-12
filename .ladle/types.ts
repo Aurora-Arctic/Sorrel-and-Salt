@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import type { ShellViewer, ShellWorkspace } from '../src/lib/types';
 import type { ADMIN_PAGES } from '../src/components/AdminNav/sections';
 
 /** What `AdminTabbedFrame` draws a story inside (./admin-frame.tsx). */
@@ -12,4 +13,17 @@ export interface AdminTabbedFrameProps {
   /** Draws the admin nav beside the page, as the layout does at a desktop's width. */
   nav?: boolean;
   children: ReactNode;
+}
+
+/** What `ShellFrame` draws a story inside (./shell-frame.tsx). */
+export interface ShellFrameProps {
+  /** Which area's context row to draw: a coven's (switcher and nav), the admin area's, or none (the account pages). */
+  area?: 'coven' | 'admin' | 'none';
+  /** The viewer, by what differs from a verified member who may not create covens. */
+  viewer?: Partial<ShellViewer>;
+  /** The viewer's covens; three fixture ones by default. */
+  workspaces?: readonly ShellWorkspace[];
+  /** The address the workshop pretends to be on. */
+  open?: string;
+  children?: ReactNode;
 }

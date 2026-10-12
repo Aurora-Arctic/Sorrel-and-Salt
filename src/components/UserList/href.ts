@@ -1,6 +1,6 @@
 import type { Route } from 'next';
 import { listHref } from '../../lib/list-href';
-import type { PagerCursor } from '../../app/admin/types';
+import type { PagerCursor } from '../../app/(shell)/admin/types';
 import type { UserListFilterValue } from './types';
 
 // The address of `/admin/users` under a filter, at a cursor, with a user's

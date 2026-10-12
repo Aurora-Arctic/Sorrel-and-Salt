@@ -2,7 +2,7 @@ import type { Route } from 'next';
 import type { ReactNode, RefObject } from 'react';
 import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
-import type { PagerHrefs } from '../../app/admin/types';
+import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { PagePosition } from '../../lib/types';
 
 /** One listed user: the row's own facts and the providers read beside it. */

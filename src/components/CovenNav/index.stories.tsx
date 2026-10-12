@@ -8,7 +8,8 @@ export default {
   title: 'CovenNav',
 };
 
-// On the coven index: Overview is the current link.
+// On the coven index: Overview is the current section. The shapes the nav
+// takes by width are SectionNav's stories.
 export const Default: Story = () => (
   <WorkshopPathname.Provider value="/coven/fixture-coven">
     <CovenNav slug="fixture-coven" />
