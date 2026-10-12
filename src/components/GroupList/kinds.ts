@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import type { GroupKind } from '../GroupForm/types';
 import type { GroupListKind } from './types';
 
@@ -9,7 +8,7 @@ import type { GroupListKind } from './types';
 // `GroupForm`'s.
 export const KINDS: Record<GroupKind, GroupListKind> = {
   category: {
-    path: '/admin/category-groups' as Route,
+    path: '/admin/category-groups',
     title: 'Category Groups',
     label: 'Category Group',
     noun: 'group',
@@ -18,7 +17,7 @@ export const KINDS: Record<GroupKind, GroupListKind> = {
     holds: 'category',
   },
   form: {
-    path: '/admin/form-groups' as Route,
+    path: '/admin/form-groups',
     title: 'Form Groups',
     label: 'Form Group',
     noun: 'group',
@@ -27,7 +26,7 @@ export const KINDS: Record<GroupKind, GroupListKind> = {
     holds: 'form',
   },
   tradition: {
-    path: '/admin/deity-traditions' as Route,
+    path: '/admin/deity-traditions',
     title: 'Deity Traditions',
     label: 'Tradition',
     noun: 'tradition',

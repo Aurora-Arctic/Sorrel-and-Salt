@@ -19,14 +19,6 @@ vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 // The invite form and Revoke hold the router, which only a mounted app provides.
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn(), refresh: vi.fn() }) }));
 
-// jsdom implements no modal dialog; stood in for as a browser behaves.
-HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-  this.setAttribute('open', '');
-};
-HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-  this.removeAttribute('open');
-};
-
 const adminRoleChangePauseState = vi.fn();
 const listPendingAdminInvitations = vi.fn();
 const countPendingAdminInvitations = vi.fn();

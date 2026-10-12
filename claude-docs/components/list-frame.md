@@ -33,13 +33,16 @@ parts, and the table passes through them from the server.
 
 - **One navigation for filter, clear and pager.** `go(href, kind)` opens
   another page of the list and does nothing while one is pending, so a second
-  press cannot send a second request. `kind` is the caller's: a filter's
-  `navigation` and a pager's `soft` say it, as before.
+  press cannot send a second request. `kind` is the caller's. A filter's is
+  always `soft`, through FilterForm's `useApplyFilter`, on every list,
+  the three that once filtered by a full load too, since every page under
+  `/admin` runs the guard itself (`src/app/admin/layout.tsx`; MB.115, the
+  owner's call). A pager's `soft` says which its ends take.
   - `soft` pushes the address inside a React transition (`useTransition`).
     Next runs its navigation inside the caller's transition, so `pending`
     stays true until the new page has rendered.
-  - `full` is `window.location.assign`, a whole page load, which runs the
-    admin layout's guard again. It has no transition to wait on, so a flag
+  - `full` is `window.location.assign`, a whole page load, a plain pager
+    end's, which runs the admin layout's guard again. It has no transition to wait on, so a flag
     holds `pending` from the press until the browser unloads the page: the
     browser keeps painting the old page, skeleton and all, until the new
     one's first paint. A `pageshow` from the back-forward cache (the browser
@@ -52,7 +55,8 @@ parts, and the table passes through them from the server.
   status. The filter row greys out and is off
   ([`filter-form.md`](filter-form.md)).
 - **When the new page renders** the body shows it, keyed afresh so it fades
-  in over 200ms, as a tab's new content does. A list the server drew,
+  in over 200ms, as a tab's new content does: `ListBody` and the tabbed
+  page's `TabPanel` both swap through `SwapPanel` (`TabbedPage/swap-panel.tsx`). A list the server drew,
   before any press, carries no `data-arrived` and shows at once.
 - **Only the filter and the pager trigger it.** A row's Edit and the page's
   Add (`?edit=`, `?new`) are `next/link` soft navigations of their own and
@@ -85,8 +89,8 @@ row and all, inside its tabbed page, is GroupedValueList's
 
 No file of its own (claude-docs/testing/layer-ownership.md, "What a test may
 assert", rule 6): the soft filter's skeleton, greyed row, refused second
-press and the list's return are `CompendiumList`'s, the full load's and
-Back's `UserList`'s, and a pager press of either kind `Pager`'s, each
+press and the list's return are `CompendiumList`'s, and a pager press of
+either kind, the full load's Back from the cache included, `Pager`'s, each
 rendering the pager in a `ListFrame`. `tests/support/navigating.tsx` holds a
 mocked `push` pending as the App Router does, and its `arrives` promise lets
 a test settle it.

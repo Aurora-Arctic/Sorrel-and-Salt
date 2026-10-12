@@ -43,7 +43,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   privilege ledger beside it counts its pages. Plain anchors rather than
   soft links, for the user list's reason: a full load runs the admin
   layout's guard again. The page builds the two hrefs through
-  `list-page.ts`'s `pagerHrefs`, and a cursor that names no row of this list
+  `list-page.tsx`'s `pagerHrefs`, and a cursor that names no row of this list
   (one copied from another list) reads the first page, through
   `readNumberedPage`. A list of one page shows no pager.
 - **Invite Admin is the tab's action, beside the page's heading** (MB.115,
@@ -126,8 +126,8 @@ beneath it ([`filter-form.md`](filter-form.md), "Styling"). Its own stylesheet h
 notice and the list's frame `space(5)` apart as the tab's content is, the
 muted "None given", and the sent confirmation's
 margin and full line, `.notice.admin-invitations__sent` compounded with its
-primitive, which the app scopes as `body .notice`. The Reason field takes the
-user list's `.user-list__note` (`UserList/controls.scss`: a step of room
+primitive, which the app scopes as `body .notice`. The Reason field, the
+shared [`ReasonField`](field.md), takes the user list's `.user-list__note` (`UserList/controls.scss`: a step of room
 above and `space(6)` below), as the user list's reason does. The section's look is MB.115's,
 signed off as it stands.
 

@@ -12,13 +12,16 @@ import type { SwitchFieldProps } from './types';
  * `name=value` with a GET form before hydration, keeps Space and its label's
  * click, and its checked state is the switch's to a screen reader. The label
  * and the toggle are each marked `data-pressed` while a pointer holds them,
- * since a phone shows `:active` late or not at all.
+ * since a phone shows `:active` late or not at all. Controlled by `checked`,
+ * or uncontrolled from `defaultChecked`, as a filter that applies on the
+ * change draws it: the new list draws it again from the filter it shows.
  */
 export function SwitchField({
   label,
   name,
   value,
   checked,
+  defaultChecked,
   onChange,
   disabled,
 }: SwitchFieldProps): ReactElement {
@@ -40,6 +43,7 @@ export function SwitchField({
           name={name}
           value={value}
           checked={checked}
+          defaultChecked={defaultChecked}
           disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
           {...pressFeedback}

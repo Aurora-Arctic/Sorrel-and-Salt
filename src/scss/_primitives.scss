@@ -359,75 +359,76 @@
     }
   }
 
-  // A filter form's row (MB.115): the query field, any selects and checks,
-  // and the Filter button, wrapping, all on the line's end so a check or a
-  // button stands level with the boxes beside it. Written five times as each
-  // list's own `__search` rule until it was one. A size container for the
-  // same reason `.page-header` is: under 28rem of its own width the query
-  // field, its first child, takes the whole line and the rest wrap beneath
-  // it, rather than a phone squeezing the query box to the width of a select.
+  // A filter form's row (MB.115), a toolbar that applies as it changes
+  // (claude-docs/components/filter-form.md): the search box first, then any
+  // selects, type-aheads and switches, then Clear while a filter is shown,
+  // wrapping, all on the line's end so a switch stands level with the boxes
+  // beside it. Inset by the table's own cell padding, `$table-cell-inset`, so
+  // each label stands flush with the column heading beneath it rather than a
+  // step to its left. Written five times as each list's own `__search` rule
+  // until it was one. A size container for the same reason `.page-header` is:
+  // under 28rem of its own width every child takes the whole line, rather
+  // than a phone squeezing the search box to the width of a select.
   .filter-row {
     display: flex;
     flex-wrap: wrap;
     align-items: end;
     gap: space(3) space(5);
+    padding-inline: $table-cell-inset;
     container: filter-row / inline-size;
+
+    // The search, always first, starts at `$filter-search-basis` and takes
+    // the line's spare room, so the row reaches the table's width without a
+    // gap at its end, and the choices wrap beneath it before it gives way.
+    > :first-child {
+      flex: 1 1 $filter-search-basis;
+      min-width: 0;
+    }
+
+    // A choice, a plain select or a type-ahead, stands at one width,
+    // `$filter-choice-width`, rather than its control's own: a native select
+    // sizes itself by its longest option, and a type-ahead by its few
+    // letters, so the server's select and the type-ahead that replaces it
+    // once hydrated would differ, and two selects beside each other would
+    // too. A type-ahead opts in by its block's `filter-row__typeahead`, since
+    // once hydrated it holds no select. A switch, a `.field` with no select
+    // in it, keeps its own width. Each gives way on a narrow row.
+    > :is(.field:has(> .select), .filter-row__typeahead) {
+      flex: 0 1 $filter-choice-width;
+      min-width: 0;
+    }
   }
 
-  // A type-ahead field in the row, opted into by its `.field` block: one
-  // width, `$filter-choice-width`, rather than its control's own, since the
-  // native select the server draws sizes itself by its longest option and
-  // the type-ahead that replaces it once hydrated by its few letters, and the
-  // swap shrank the field (MB.115). The select and the type-ahead each fill
-  // the block, so both stand at its width, and it gives way on a narrow row.
-  .filter-row__typeahead {
-    flex: 0 1 $filter-choice-width;
-    min-width: 0;
+  // Clear, drawn only while the page shows a filter: a plain text link, the
+  // owner's call over a quiet button, so it takes the page's own link style
+  // from typography-base and nothing here. Pushed to the line's end, and a
+  // control's height with its text centred, so it stands level with the
+  // boxes and its target is as tall as theirs.
+  .filter-row__clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-height: $control-height;
+    margin-inline-start: auto;
   }
 
-  // Filter and Clear, one block, so they wrap together: on a wide row they
-  // sit after the fields as two buttons, a row's gap apart.
-  .filter-row__actions {
-    display: flex;
-    gap: space(3) space(5);
-  }
-
-  // Alone on their line, under the fields, they span the fields above them,
-  // half each, the owner's calls at MB.115's review. FilterForm marks the
-  // block `data-alone` with the fields' reach, since CSS cannot ask whether
-  // it wrapped; on a phone's narrow row it takes the whole line by CSS
-  // alone, so before hydration too.
+  // On a phone's narrow row every child takes the whole line, so the boxes
+  // share one edge, and Clear ends the line beneath them. One `:is()`, its
+  // weight the choice rule's above, so it overrides that rule by coming
+  // later rather than by a heavier selector.
   @container filter-row (max-width: #{$narrow-column}) {
-    .filter-row > :first-child,
-    .filter-row > .filter-row__typeahead,
-    .filter-row > .filter-row__actions {
+    .filter-row > :is(*, .field:has(> .select)) {
       flex-basis: 100%;
-    }
-
-    .filter-row__actions > .btn {
-      flex: 1 1 0;
-      min-width: 0;
-    }
-  }
-
-  .filter-row > .filter-row__actions[data-alone] {
-    flex-basis: var(--filter-actions-width);
-
-    > .btn {
-      flex: 1 1 0;
-      min-width: 0;
     }
   }
 
   // The row while the list it filters is on its way, greyed as a tabbed
-  // page's tabs are (claude-docs/components/filter-form.md): every field
-  // faded to 55% with its colour taken out and the not-allowed cursor, and
-  // hover changing nothing. Filter and Clear are `aria-disabled`
-  // meanwhile, so `.btn`'s own disabled look greys them, and they are left
-  // out here rather than faded twice. Here, under `body`, so it outweighs
+  // page's tabs are (claude-docs/components/filter-form.md): every field,
+  // and Clear, faded to 55% with its colour taken out and the not-allowed
+  // cursor, and hover changing nothing. Here, under `body`, so it outweighs
   // the fields' own hover.
   .filter-row[aria-busy='true'] {
-    > :not(.filter-row__actions) {
+    > * {
       opacity: 0.55;
       filter: grayscale(1);
     }
@@ -635,8 +636,9 @@
 
     th,
     td {
-      // Inset on both sides, as the rows are banded, so no text meets a band's edge.
-      padding: space(2) space(3);
+      // Inset on both sides, as the rows are banded, so no text meets a band's
+      // edge; `$table-cell-inset` across, which the filter row above shares.
+      padding: space(2) $table-cell-inset;
       text-align: start;
       // The baseline, so a row's small button reads on its text's line.
       vertical-align: baseline;
@@ -1228,6 +1230,68 @@
 
     input:is(:disabled, [aria-disabled='true']) {
       cursor: not-allowed;
+    }
+  }
+
+  // A list filter's search box (MB.115), `SearchField`: one `.input` box on a
+  // flex row holding a borderless text input and, at its end, the submit, a
+  // magnifier named Search, as Combobox's control holds its text and its
+  // indicators. Here among the primitives, after `.input`, rather than in a
+  // stylesheet of the Field folder's own: the folder has none, since every
+  // control it draws, `.input`, `.select` and `.switch`, is a primitive, and
+  // coming after `.input` under the same `body` this outweighs its padding
+  // without compounding, where Combobox's own stylesheet has to write
+  // `.input.combobox__control`.
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: space(1);
+    padding-block: 0;
+    padding-inline-end: space(2);
+
+    // The ring is the inner input's focus, drawn on the box that looks like
+    // the input.
+    &:has(.search-field__input:focus-visible) {
+      @include focus-ring;
+    }
+  }
+
+  // The text itself, unboxed: the box around it is the edge. It takes the
+  // row's rest and its whole height, so a press anywhere left of the mark
+  // puts the caret in it.
+  .search-field__input {
+    flex: 1 1 auto;
+    align-self: stretch;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    outline: none;
+
+    &::placeholder {
+      color: $text-placeholder;
+      opacity: 1;
+    }
+  }
+
+  // The submit: a square `$icon-size` target around the mark, muted until
+  // pointed at or focused, then the accent, the colour of what acts, as a
+  // link's is.
+  .search-field__submit {
+    @include icon-button;
+
+    flex: none;
+
+    &:hover,
+    &:focus-visible {
+      color: $accent;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
     }
   }
 

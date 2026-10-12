@@ -276,7 +276,16 @@ export interface ComboboxTypeaheadProps {
   labelId?: string;
   /** The chosen value, `''` while the text names no choice. */
   value: string;
+  /** Every change of value, typing included: text naming a choice in full chooses it. */
   onChange: (value: string) => void;
+  /**
+   * The value once the person is done with the box, never mid-typing: a pick
+   * from the list, the clear (`''`), or leaving the box (the choice its text
+   * names in full, or `''`). Called whether or not the value changed; a
+   * filter, which applies a choice rather than each letter typed, compares it
+   * with the one it shows.
+   */
+  onSettle?: (value: string) => void;
   onBlur?: () => void;
   /** Every choice, in order; typing narrows them to those whose label holds the text. */
   choices: readonly ComboboxChoice[];

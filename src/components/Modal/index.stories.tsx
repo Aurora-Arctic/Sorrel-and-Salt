@@ -2,7 +2,8 @@ import type { Story } from '@ladle/react';
 import { useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
 import { ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
-import Modal, { DiscardQuestion, RouteModal, useDiscardGuard } from '.';
+import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
+import Modal, { ConfirmQuestion, DiscardQuestion, RouteModal, useDiscardGuard } from '.';
 
 // Render-only; behaviour is asserted in tests/components/Modal. The owner
 // closes it by unmounting it, so the story keeps an Open button to bring it
@@ -222,11 +223,53 @@ export const PhoneLight: Story = () => <AskingToDiscardChanges />;
 PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
 
-const PICKS = [
-  { value: 'fixture-mineral', label: 'Fixture Mineral' },
-  { value: 'fixture-substance', label: 'Fixture Substance' },
-  { value: 'mock-preparation', label: 'Mock Preparation' },
-];
+// The shared form groups, the first three, by slug as a picker's values are.
+const PICKS = asSlugs(GROUP_NAMES.form.slice(0, 3)).map(({ slug, name }) => ({
+  value: slug,
+  label: name,
+}));
+
+/**
+ * A form asked to confirm a delete over itself: Delete, destructive, and
+ * Keep It, the focus on it. A press of Delete leaves it busy, "Deleting",
+ * as a delete in flight does, since this one never lands; Keep It closes
+ * the question.
+ */
+function DeletingForm() {
+  const [asked, setAsked] = useState(true);
+  const [busy, setBusy] = useState(false);
+  return (
+    <form className="form" onSubmit={(event) => event.preventDefault()}>
+      <p>Fixture Healing holds no categories.</p>
+      <div className="form__actions">
+        <button type="button" className="btn btn--destructive" onClick={() => setAsked(true)}>
+          Delete Group
+        </button>
+      </div>
+      <ConfirmQuestion
+        asked={asked}
+        question={<>Delete &quot;Fixture Healing&quot;? No categories are filed under it.</>}
+        busy={busy}
+        onConfirm={() => {
+          setBusy(true);
+          return new Promise(() => {});
+        }}
+        onKeep={() => {
+          setBusy(false);
+          setAsked(false);
+        }}
+      />
+    </form>
+  );
+}
+
+export const AskingToConfirm: Story = () => (
+  <Modal eyebrow="Edit Group" title="Fixture Healing" onClose={() => {}}>
+    <DeletingForm />
+  </Modal>
+);
+
+AskingToConfirm.meta = { iframed: true };
 
 // A picker and a multi-picker in a modal: Escape on an open list closes the
 // list alone, and a second Escape, the list shut, closes the modal (MB.115).

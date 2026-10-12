@@ -270,17 +270,26 @@ folder's index and the lint refuses an import cycle.
   chevron, as a list's does, offered while the box holds text or a choice and
   hidden in its place while it does not, so the box keeps one width: it
   empties both and leaves the focus in the box.
+- **`onSettle` hears the value once the person is done with the box**, never
+  while they type: on a pick from the list (the choice's value), on the
+  clear (`''`), and on leaving the box (the choice its text names in full,
+  or `''`). It is called whether or not the value changed. A list filter
+  applies on it, comparing it with the choice the page shows, so typing
+  "mock" opens no list on the way to "Mockish" (MB.115, the owner's call;
+  [`filter-form.md`](filter-form.md)). `onChange` still hears every change,
+  typing included, for the caller's own state.
 
-| Prop                 | Meaning                                                                                                                |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                      |
-| `label`              | What the box is called, and its list's name, "Tradition choices".                                                      |
-| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                             |
-| `choices`            | `{ value, label }` in order; typing narrows them.                                                                      |
-| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                               |
-| `required`           | `aria-required`, as the field marks it.                                                                                |
-| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both. |
-| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                     |
+| Prop                 | Meaning                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                         |
+| `label`              | What the box is called, and its list's name, "Tradition choices".                                                         |
+| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                                |
+| `onSettle`           | Optional: the value on a pick, the clear (`''`) or leaving the box (the choice the text names, or `''`); never on typing. |
+| `choices`            | `{ value, label }` in order; typing narrows them.                                                                         |
+| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                                  |
+| `required`           | `aria-required`, as the field marks it.                                                                                   |
+| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both.    |
+| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                        |
 
 ## The multi-select box
 
@@ -691,7 +700,9 @@ on every choice; and the value `''` while the text names no choice, the
 choice once it names one in any case, and its label written in as the box
 is left; and its clear, out of the accessibility tree and the tab order while
 the box is empty but still drawn, offered while it holds something, emptying
-it and keeping the focus. The control's width, which jsdom does not lay out,
+it and keeping the focus; and `onSettle`, heard on a pick, the clear and
+leaving the box, with the choice the text names or `''`, and never while
+typed. The control's width, which jsdom does not lay out,
 was measured in the workshop at MB.115: one width empty, mid-typing, chosen
 and cleared.
 

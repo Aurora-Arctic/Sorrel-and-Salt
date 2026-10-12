@@ -1,7 +1,7 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import type { ReactNode } from 'react';
+import { AdminFrame as InAdminLayout } from '../../../.ladle/admin-frame';
 import PageHeader from '.';
 
 // Render-only: a heading and its action are the whole component, so the
@@ -12,10 +12,6 @@ import PageHeader from '.';
 export default {
   title: 'Layout / Page Header',
 };
-
-const InAdminLayout = ({ children }: { children: ReactNode }) => (
-  <div className="admin-layout">{children}</div>
-);
 
 // The compendium's, the one admin page with a heading of its own since the
 // others went into tabs (MB.115).

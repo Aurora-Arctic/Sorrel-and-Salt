@@ -16,7 +16,7 @@ The traditions' list has a name search; the category and form groups' have none.
 | `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                   |
 | `filter`                   | `{ query }`, the name search the page shows, `''` for none; absent, the list draws no search at all                 |
 
-`groupsHref(kind, place, dialog?)` builds `/admin/category-groups`, `/admin/form-groups` or `/admin/deity-traditions` with the page's search and cursor, and `?new` or `?edit=<slug>` for a modal, through the shared `listHref` (`src/lib/list-href.ts`): `/admin/deity-traditions?query=wort&after=c&new`. A blank search is written as none. `groupsPath(kind)` is the bare page, which the search submits to and Clear opens. Each kind's table name, row nouns and Add label are `kinds.ts`'s.
+`groupsHref(kind, place, dialog?)` builds `/admin/category-groups`, `/admin/form-groups` or `/admin/deity-traditions` with the page's search and cursor, and `?new` or `?edit=<slug>` for a modal, through the shared `listHref` (`src/lib/list-href.ts`): `/admin/deity-traditions?query=wort&after=c&new`. A blank search is written as none. `groupsPath(kind)` is the bare page, which the search submits to and Clear opens. Each kind's address, table name, row nouns, Add label and the value kind it holds are `kinds.ts`'s `KINDS`, the one table the form, the page and the nav's tabs read too (`GroupForm` takes its nouns from it and from the held kind's in [`grouped-value-list.md`](grouped-value-list.md)).
 
 ## Contracts
 

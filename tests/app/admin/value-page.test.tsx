@@ -59,14 +59,6 @@ vi.mock('@/modules/vocabulary', () => ({
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// jsdom implements no modal dialog; stood in for as a browser behaves.
-HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-  this.setAttribute('open', '');
-};
-HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-  this.removeAttribute('open');
-};
-
 const { ValueAction, ValuePage } = await import('@/app/admin/value-page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;

@@ -1,5 +1,6 @@
 import type { Story } from '@ladle/react';
-import { type ReactElement, type ReactNode, useEffect, useRef } from 'react';
+import { type ReactElement, useEffect, useRef } from 'react';
+import { AdminFrame as Frame } from '../../../.ladle/admin-frame';
 import AdminNav, { AdminContents } from '.';
 
 // Render-only; behaviour is asserted in tests/components/AdminNav. It takes
@@ -10,10 +11,6 @@ import AdminNav, { AdminContents } from '.';
 export default {
   title: 'AdminNav',
 };
-
-const Frame = ({ children }: { children: ReactNode }): ReactElement => (
-  <div className="admin-layout">{children}</div>
-);
 
 // Wider than a phone: the wrapping row, People marked by weight and an
 // offset underline.

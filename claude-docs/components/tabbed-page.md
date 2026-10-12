@@ -23,7 +23,8 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
 wrapper), `TabPanel` (the content area) and `useTabSwitch`.
-`panel-loading.tsx` is `TabPanelLoading`, the skeleton the content area
+`swap-panel.tsx` is `SwapPanel`, the keyed swap of content for skeleton that
+`TabPanel` and a list's `ListBody` share. `panel-loading.tsx` is `TabPanelLoading`, the skeleton the content area
 shows while a pressed tab is on its way. A tab's `filtered`, set in
 `ADMIN_PAGES` on every tab whose list opens with a filter, tells it whether
 to draw a filter row. A list reuses it, with no filter row, while a filter
@@ -204,8 +205,9 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   list's.
 - **The loading state is a skeleton** of the list it stands in for, on the
   owner's call, so the page does not snap from one tab to the next: where
-  the pressed tab has a filter, a filter row of the query field, a narrower
-  select and the Filter button, with no Add, which sits beside the heading;
+  the pressed tab has a filter, a filter row of the search box and a narrower
+  select, inset as the real row is and with no button, since the real row
+  has none (MB.115), and no Add, which sits beside the heading;
   then a table's heading over the muted hairline and six rows, every second
   one banded on the card surface as the admin tables are, their bars of
   uneven lengths; then the pager's two ends, centred. One skeleton serves

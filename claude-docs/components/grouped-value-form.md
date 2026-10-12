@@ -198,7 +198,8 @@ The form is the shared pieces on the form primitives
 [`TextField`](field.md)s in a `FormProvider`, "Add a name" and the kind's `describe` their placeholders, the group a `SelectField`, each
 with its label row and the `.field__required` asterisk; Save is a
 `BusyButton` in a wrapping `.form__actions` row, with Delete pushed to the far
-end by `.form__aside`; and the confirmation is the modal's `ConfirmOverlay`
+end by `.form__aside`, the shared [`FormActions`](field.md); and the confirmation is the modal's
+[`ConfirmQuestion`](modal.md), a `ConfirmOverlay`
 card over the form, with its own `.modal__actions` row, the form's buttons
 staying beneath it. Under 28rem of the form's own width every row stacks,
 full width, the card's too. Its one rule of its own, `.grouped-value-form__note`, sets the
@@ -209,7 +210,7 @@ failed request is read by the shared `readGraphqlIssues`
 (`src/lib/graphql-failure.ts`, MB.116), which gives every field error of a
 `VALIDATION` refusal at once, where `readGraphqlFailure` answers only the
 first field it finds. The form places each issue under its field and joins
-the rest into the alert. Anything that is not a `VALIDATION` refusal comes
+the rest into the alert, through the shared `placeServerIssues` beside it. Anything that is not a `VALIDATION` refusal comes
 back as one issue carrying the server's sentence, or `GENERIC_FAILURE` when
 there is none.
 

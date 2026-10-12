@@ -416,6 +416,22 @@ export interface PanelChanges {
   report: (panel: string, changed: boolean) => void;
 }
 
+/** The edit's panel while it reads the source: the panel's props, the source to edit given. */
+export interface EditSourcePanelProps extends ReferencePanelProps {
+  editing: NonNullable<ReferencePanelProps['editing']>;
+}
+
+/** The panel's form itself: the panel's props, and the values it opens with. */
+export interface PanelFormProps extends ReferencePanelProps {
+  defaults: ReferenceFormValues;
+}
+
+/** What a copy leaves a variant's field as, and how many entries it added. */
+export interface MergedCopy {
+  next: unknown;
+  added: number;
+}
+
 export interface ReferencePanelProps {
   /** The coven the new source is written to, or null for the compendium's. */
   workspaceId: string | null;

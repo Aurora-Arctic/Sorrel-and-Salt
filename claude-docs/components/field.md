@@ -6,7 +6,7 @@ tied to each other by id. MB.115 lifted it out of `IngredientForm`, which had
 the one good copy, once the same block had been written by hand fifteen
 times across the admin forms and the account forms.
 
-It has three ways in:
+It has four ways in:
 
 - **The shell**, `FieldShell` with `fieldDescription`, knows no form library.
   A plain-state form (one holding its values in `useState`, such as NameForm
@@ -16,7 +16,10 @@ It has three ways in:
   `<FormProvider>`. Each draws the shell around its control and reads its own
   error out of the form state.
 - **The switch**, `SwitchField`, an on-or-off choice held in the caller's
-  own state: a list filter's No Refs and Needs Approval (MB.115).
+  own state or left to the checkbox: a list filter's No Refs and Needs
+  Approval (MB.115).
+- **The search box**, `SearchField`, a list filter's text box with its own
+  submit, a magnifier named Search, at its end (MB.115).
 
 `IngredientForm`'s three fields of its own, `SuggestField`,
 `MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
@@ -31,6 +34,8 @@ the same shell until its design review (MB.120).
 | `text-field.tsx`   | `TextField`                                                                         |
 | `select-field.tsx` | `SelectField`                                                                       |
 | `switch-field.tsx` | `SwitchField`                                                                       |
+| `search-field.tsx` | `SearchField`                                                                       |
+| `icons.tsx`        | `MagnifierIcon`, the search's mark                                                  |
 | `types.ts`         | The props, and `SelectOption`                                                       |
 
 ## The exports
@@ -47,6 +52,7 @@ the same shell until its design review (MB.120).
 | `SwitchField`      | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
 | `FormActions`      | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
 | `ReasonField`      | An admin change's optional Reason, in a plain-state form                                                      |
+| `SearchField`      | A list filter's search box, its submit a magnifier at the box's end                                           |
 
 ### `FormActions`
 
@@ -120,7 +126,12 @@ against the form's own paths; left out, any string passes.
 
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),
-`checked` with `onChange(checked)`, and `disabled`. It draws a `.field`
+`onChange(checked)`, `disabled`, and either `checked`, held by the caller,
+or `defaultChecked`, the state it is first drawn in, the native checkbox
+holding it after. A list filter takes `defaultChecked`: the switch applies
+the filter on its change, and the new list draws the filter again, switch
+and all, from the filter it shows, so there is no state of the caller's to
+keep ([`filter-form.md`](filter-form.md)). It draws a `.field`
 block of its own rather than `FieldShell`, since it has no hint, note or
 error and its label takes the press feedback: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
@@ -131,6 +142,20 @@ each marked `data-pressed` while a pointer holds them
 checked state is the switch's, and one written beside it would go stale on
 a press before hydration, so the lint rule asking for it is switched off on
 that line with the reason.
+
+`SearchField` (`SearchFieldProps`) takes `label`, `name` (the parameter
+the text submits under, `query`), `placeholder`, `value` and
+`onChange(value)`, the text held by the caller, and an optional `id`, the
+base its ids grow from, its own `useId()` when left out. It draws
+`FieldShell` around one box, `.input.search-field`: a borderless
+`type="search"` input and, at its end, a `type="submit"` button holding
+`MagnifierIcon` (`aria-hidden`) and the visually hidden text "Search", its
+accessible name. The submit is its form's, so in a `FilterForm` the search
+applies by a press on the mark, which a first-time user can see, or by
+Enter, which a text box sends natively in a form with a submit button, and
+before hydration the same press sends the whole form as a GET. It is never
+disabled: the same text again reads the list again, which is harmless. The
+button carries an id, `<control id>-submit`.
 
 ## Contracts
 
@@ -180,17 +205,23 @@ None of its own: the block is the field primitives (`.field`,
 with `.field__label-row` holding the label and its tip, positioned so the tip
 can place itself above it, and `.field__required` the asterisk
 ([`styling.md`](../styling.md), "Form fields"). `SwitchField` is the
-`.switch` primitive, its toggle's states set out there.
+`.switch` primitive, its toggle's states set out there. `SearchField` is
+`.search-field`, beside it in the primitives rather than a stylesheet of
+the folder's own, since the folder has none: the box is `.input`'s edge and
+fill on a flex row, as Combobox's control is, the inner input borderless
+and taking the row's rest, the box drawing the input's focus ring, and the
+submit an `icon-button`, a `$icon-size` target in the muted ink, the
+accent when pointed at or focused.
 
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Field/index.stories.tsx), `Forms /
 Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
-`WithError`, `Multiline` and `Disabled`, each in a `FormProvider`; and
+`WithError`, `Multiline` and `Disabled`, each in a `FormProvider`;
 `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
-nothing to save, with something to save and Delete, and saving; and `Reason`,
-`ReasonField`.
+nothing to save, with something to save and Delete, and saving; `Reason`,
+`ReasonField`; and `SearchBox`, `SearchField` in a form that goes nowhere.
 
 ## Testing
 
@@ -201,6 +232,9 @@ No file of its own: the forms that use it cover it (claude-docs/testing/layer-ow
 shell around a plain control. `FormActions` is covered by the forms that use
 it, `ReasonField` by the UserList and AdminInvitations tests. The CompendiumList and UserList tests cover
 `SwitchField`, found by its `switch` role: turned by a click, sent with the
-form, the server's before hydration included, emptied by Clear, and
+form, the server's before hydration included, applying the filter on its change, and
 `aria-disabled` while a list is on its way. Space is the platform's and
-jsdom does not run it, so it was checked in the workshop's Chromium.
+jsdom does not run it, so it was checked in the workshop's Chromium. The
+lists' tests cover `SearchField` too, found by its `searchbox` role and its
+`Search` button: the submit applying the search, and the button in the
+server's markup.

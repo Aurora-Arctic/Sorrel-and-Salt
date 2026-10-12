@@ -1,6 +1,6 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { useState } from 'react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { ComboboxTypeahead } from '@/components/Combobox/typeahead';
 
 // The type-ahead box (MB.115): a closed set chosen by typing, the list
@@ -14,7 +14,15 @@ const TRADITIONS = [
 ];
 
 /** The box with its value held outside it, and shown, as a form holds a field's. */
-function Harness({ initial = '', clearable }: { initial?: string; clearable?: boolean }) {
+function Harness({
+  initial = '',
+  clearable,
+  onSettle,
+}: {
+  initial?: string;
+  clearable?: boolean;
+  onSettle?: (value: string) => void;
+}) {
   const [value, setValue] = useState(initial);
   return (
     <>
@@ -23,6 +31,7 @@ function Harness({ initial = '', clearable }: { initial?: string; clearable?: bo
         label="Tradition"
         value={value}
         onChange={setValue}
+        onSettle={onSettle}
         choices={TRADITIONS}
         placeholder="Choose a tradition"
         required
@@ -161,5 +170,32 @@ describe('ComboboxTypeahead', () => {
     expect(box()).toHaveFocus();
     expect(clear()).not.toBeInTheDocument();
     expect(kept()).toHaveAttribute('tabindex', '-1');
+  });
+
+  // A filter applies a choice, not each letter typed (MB.115): it hears the
+  // value once a pick, the clear or leaving the box settles it.
+  it('settles on a pick, on its clear and on leaving the box, never while typed', () => {
+    const onSettle = vi.fn();
+    render(<Harness clearable onSettle={onSettle} />);
+
+    type('mock');
+    type('mockish');
+    expect(value()).toHaveTextContent('mockish');
+    expect(onSettle).not.toHaveBeenCalled();
+
+    fireEvent.blur(box());
+    expect(onSettle).toHaveBeenLastCalledWith('mockish');
+
+    type('zz');
+    fireEvent.blur(box());
+    expect(onSettle).toHaveBeenLastCalledWith('');
+
+    type('fix');
+    fireEvent.click(screen.getByRole('option', { name: 'Fixtural' }));
+    expect(onSettle).toHaveBeenLastCalledWith('fixtural');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Tradition' }));
+    expect(onSettle).toHaveBeenLastCalledWith('');
+    expect(onSettle).toHaveBeenCalledTimes(4);
   });
 });

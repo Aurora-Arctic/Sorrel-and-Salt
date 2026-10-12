@@ -9,6 +9,7 @@ import type {
   CopiedField,
   CopyFromIngredientProps,
   IngredientFormValues,
+  MergedCopy,
   SkippedCopy,
   SkippedNoticeProps,
   SubstituteListEntry,
@@ -89,7 +90,7 @@ function merged(
   field: CopiedField,
   own: VariantFormValues,
   theirs: IngredientFormValues,
-): { next: unknown; added: number } {
+): MergedCopy {
   switch (field) {
     case 'description':
     case 'safetyNotes': {
