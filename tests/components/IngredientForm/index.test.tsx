@@ -1,12 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor as waitForDom,
-  within,
-} from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { HttpResponse } from 'msw';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -25,22 +17,20 @@ import type {
   PossibleDuplicatesQueryVariables,
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import {
-  graphqlLink,
-  mockGraphQLError,
-  mockGraphQLMutation,
-  mockGraphQLQuery,
-} from '../../support/msw/graphql';
+import { box, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
+import { choose, press, type } from '../../support/interact';
+import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import {
   WORKSPACE_ID,
+  acceptCreate,
+  offerCategories,
   offerDeities,
   offerDuplicates,
   offerForms,
   offerIngredients,
-  offerList,
   offerNames,
+  offerNothing,
   offerPlanets,
   offerSigns,
 } from '../../support/msw/ingredient-lookups';
@@ -52,14 +42,6 @@ import type { CategoryNode, DuplicateNode } from './types';
 // the route's own mapping rather than a hand-written body
 // (claude-docs/components/ingredient-form.md).
 
-/** Answers `PickerCategories` with these rows, as the one page the picker reads, or refuses it. */
-function offerCategories(nodes: CategoryNode[] | 'refused') {
-  if (nodes === 'refused') return mockGraphQLError('PickerCategories', { code: 'FORBIDDEN' });
-  mockGraphQLQuery<Record<string, unknown>>('PickerCategories', () => ({
-    categories: { edges: nodes.map((node) => ({ node })) },
-  }));
-}
-
 /**
  * Renders the form with every lookup answered empty; a test about a lookup
  * answers it after rendering, since the later answer wins. The categories are
@@ -67,56 +49,14 @@ function offerCategories(nodes: CategoryNode[] | 'refused') {
  */
 function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refused' } = {}) {
   const onSaved = vi.fn();
+  offerNothing();
   offerCategories(categories);
-  offerForms([]);
-  offerNames([]);
-  offerPlanets([]);
-  offerSigns([]);
-  offerDeities([]);
-  offerIngredients([]);
-  offerList('ReferenceSuggestions', 'referenceSuggestions', []);
-  offerDuplicates([]);
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />
-    </QueryClientProvider>,
-  );
+  renderWithClient(<IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />);
   return onSaved;
 }
 
-/**
- * RTL's waitFor, polled every 5 ms rather than its 50: most waits here are
- * for a mock to have been called — a save sent, a lookup asked — which no DOM
- * mutation announces, so each would otherwise cost a whole tick (MB.181).
- */
-const waitFor: typeof waitForDom = (callback, options) =>
-  waitForDom(callback, { interval: 5, ...options });
-
-// The controls are found by their labels rather than by role and name: a
-// role query names every element of the role in a 25-field form, and was most
-// of this file's time (MB.181). The selector keeps each to its kind, and the
-// required marker, hidden from the name, is dropped from the label's text.
-const byLabel = (name: string, selector: string) =>
-  screen.getByLabelText(name, {
-    selector,
-    normalizer: (text) => text.replace(/\*$/, '').trim(),
-  });
-const textbox = (name: string) => byLabel(name, 'input:not([role]), textarea');
-/** A suggesting box: the form field, or a list's. A closed set's box is a combobox too, select-only. */
-const box = (name: string) => byLabel(name, '[role="combobox"]');
+/** A closed set's box: a combobox too, select-only. */
 const select = box;
-const control = (name: string) => byLabel(name, 'input:not([role]), textarea, [role="combobox"]');
-const type = (name: string, value: string) =>
-  fireEvent.change(control(name), { target: { value } });
-/** Opens a closed set's box and picks the choice reading `label`. */
-const choose = (name: string, label: string) => {
-  fireEvent.click(select(name));
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: `${name} choices` })).getByRole('option', {
-      name: label,
-    }),
-  );
-};
 /** Opens a multi-select's box, picks each choice in turn, and closes it: it stays open between picks. */
 const chooseEach = (name: string, ...labels: string[]) => {
   fireEvent.click(select(name));
@@ -124,20 +64,10 @@ const chooseEach = (name: string, ...labels: string[]) => {
   for (const label of labels) fireEvent.click(within(list).getByRole('option', { name: label }));
   fireEvent.keyDown(select(name), { key: 'Escape' });
 };
-/** A button among the form's saves, by its role and name. */
-const saveButton = (name: string) => screen.getByRole('button', { name });
 /** Presses Save, focusing it first as a real click would: fireEvent moves no focus. */
-const save = () => {
-  const button = saveButton('Save Ingredient');
-  button.focus();
-  fireEvent.click(button);
-};
+const save = () => press('Save Ingredient');
 /** Presses Save & Add Another, the secondary save, focusing it first as `save` does. */
-const saveAnother = () => {
-  const button = saveButton('Save & Add Another');
-  button.focus();
-  fireEvent.click(button);
-};
+const saveAnother = () => press('Save & Add Another');
 /** Types an entry into a list's box and presses its Add button. */
 const addEntry = (entry: string, value: string) => {
   type(entry, value);
@@ -145,21 +75,6 @@ const addEntry = (entry: string, value: string) => {
 };
 const removeButton = (value: string) =>
   screen.getByLabelText(`Remove ${value}`, { selector: 'button' });
-
-/** Answers `CreateWorkspaceIngredient` with a saved row, recording the variables it was sent. */
-function acceptCreate() {
-  const calls: CreateWorkspaceIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    CreateWorkspaceIngredientMutation,
-    CreateWorkspaceIngredientMutationVariables
-  >('CreateWorkspaceIngredient', (variables) => {
-    calls.push(variables);
-    return {
-      createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name, slug: 'saved' },
-    };
-  });
-  return calls;
-}
 
 /** The control is flagged invalid and described, the error read with it. */
 function expectErrorOn(control: HTMLElement) {

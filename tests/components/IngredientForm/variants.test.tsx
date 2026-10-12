@@ -1,37 +1,21 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor as waitForDom,
-  within,
-} from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
-import type {
-  CreateCompendiumIngredientMutation,
-  CreateCompendiumIngredientMutationVariables,
-  CreateWorkspaceIngredientMutation,
-  CreateWorkspaceIngredientMutationVariables,
-  UpdateCompendiumIngredientMutation,
-  UpdateCompendiumIngredientMutationVariables,
-} from '@/gql/graphql';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { VARIANT_SECTIONS, openSections, openSectionsIn } from '../../support/ingredient-sections';
-import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { renderWithClient, waitFor } from '../../support/ingredient-form';
+import { press } from '../../support/interact';
+import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import {
+  ENTRY_ID,
   WORKSPACE_ID,
-  offerDeities,
-  offerDuplicates,
+  acceptCompendiumCreate,
+  acceptCreate,
+  acceptUpdate,
   offerForms,
   offerIngredients,
-  offerNames,
-  offerPlanets,
-  offerReferences,
-  offerSigns,
+  offerNothing,
 } from '../../support/msw/ingredient-lookups';
 import type { FormNode, IngredientNode } from './types';
 
@@ -43,7 +27,6 @@ import type { FormNode, IngredientNode } from './types';
 // index.test.tsx and the fields' own files prove
 // (claude-docs/components/ingredient-form.md, "The variants").
 
-const ENTRY_ID = '3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93';
 const OIL_ID = '8d2c4e6f-1a3b-4c5d-9e7f-0a1b2c3d4e5f';
 const HERB_VARIANT_ID = '1c2d3e4f-5a6b-4c7d-8e9f-0a1b2c3d4e5f';
 const HERB_FORM_ID = '9e8d7c6b-5a4f-4e3d-8c2b-1a0f9e8d7c6b';
@@ -90,24 +73,6 @@ const SUBSTITUTES = [
   substitute(OILWORT_ID, 'Oilwort', [{ id: OILWORT_OIL_ID, form: ' OIL', formChoice: null }]),
 ];
 
-/** Every lookup answered empty; a test about one answers it after rendering. */
-function offerNothing() {
-  offerForms([]);
-  offerNames([]);
-  offerPlanets([]);
-  offerSigns([]);
-  offerDeities([]);
-  offerIngredients([]);
-  offerReferences([]);
-  offerDuplicates([]);
-  mockGraphQLQuery<Record<string, unknown>>('PickerCategories', () => ({
-    categories: { edges: [] },
-  }));
-  mockGraphQLQuery<Record<string, unknown>>('CompendiumSubstitutes', () => ({
-    compendium: { edges: [] },
-  }));
-}
-
 function renderForm(
   props: { workspaceId: string } | { workspaceId: null; values?: IngredientFormValues },
 ) {
@@ -123,19 +88,16 @@ function renderForm(
     ) : (
       <IngredientForm workspaceId={props.workspaceId} onSaved={onSaved} />
     );
-  render(<QueryClientProvider client={makeQueryClient()}>{form}</QueryClientProvider>);
+  renderWithClient(form);
   // An edit opens with every section closed (MB.115): its variants are what
   // these tests work in.
   if (props.workspaceId === null && props.values) openSections('Variants');
   return onSaved;
 }
 
-/** RTL's waitFor polled every 5 ms, as index.test.tsx's is (MB.181). */
-const waitFor: typeof waitForDom = (callback, options) =>
-  waitForDom(callback, { interval: 5, ...options });
-
-// Found by label, as index.test.tsx finds them (MB.181): a role query names
-// every element of the role in a form this long. The required marker, hidden
+// Found by label, as tests/support/interact.tsx finds them (MB.181), but
+// within a variant's card: its fields share their labels with the
+// ingredient's and with each other variant's. The required marker, hidden
 // from the name, is dropped from the label's text.
 const byLabel = (scope: HTMLElement, name: string, selector: string) =>
   within(scope).getByLabelText(name, {
@@ -203,49 +165,7 @@ const addVariant = (form: string) => {
   fireEvent.click(screen.getByLabelText('Add Variant', { selector: 'button' }));
 };
 
-const save = () => {
-  const button = screen.getByRole('button', { name: 'Save Ingredient' });
-  button.focus();
-  fireEvent.click(button);
-};
-
-function acceptCreate() {
-  const calls: CreateWorkspaceIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    CreateWorkspaceIngredientMutation,
-    CreateWorkspaceIngredientMutationVariables
-  >('CreateWorkspaceIngredient', (variables) => {
-    calls.push(variables);
-    return { createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name, slug: 's' } };
-  });
-  return calls;
-}
-
-function acceptCompendiumCreate() {
-  const calls: CreateCompendiumIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    CreateCompendiumIngredientMutation,
-    CreateCompendiumIngredientMutationVariables
-  >('CreateCompendiumIngredient', (variables) => {
-    calls.push(variables);
-    return { createCompendiumIngredient: { id: ENTRY_ID, name: variables.input.name, slug: 's' } };
-  });
-  return calls;
-}
-
-function acceptUpdate() {
-  const calls: UpdateCompendiumIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    UpdateCompendiumIngredientMutation,
-    UpdateCompendiumIngredientMutationVariables
-  >('UpdateCompendiumIngredient', (variables) => {
-    calls.push(variables);
-    return {
-      updateCompendiumIngredient: { id: ENTRY_ID, name: variables.input.name, slug: 's' },
-    };
-  });
-  return calls;
-}
+const save = () => press('Save Ingredient');
 
 describe('IngredientForm’s variants', () => {
   beforeEach(() => {

@@ -5,6 +5,14 @@ import { describe, expect, it, vi } from 'vitest';
 import ReferencePanel from '@/components/IngredientForm/reference-panel';
 import type { CreateReferenceMutation, CreateReferenceMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
+import {
+  chooseKind,
+  inPanel,
+  labelled,
+  referencePanel,
+  renderWithClient,
+} from '../../support/ingredient-form';
+import { press, typeIn } from '../../support/interact';
 import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import {
   NEW_REFERENCE_ID,
@@ -21,7 +29,11 @@ import { server } from '../../support/msw/server';
 // how each field is tidied is tests/modules/ingredients/validation/'s
 // (claude-docs/components/ingredient-form.md, "Testing").
 
-/** The panel, asked for `summons` times; `summon` asks for it again, as New Reference does. */
+/**
+ * The panel, asked for `summons` times; `summon` asks for it again, as New
+ * Reference does. Rendered here rather than by `renderWithClient`: a summons
+ * re-renders the panel under the client it opened with.
+ */
 function renderPanel() {
   const onSaved = vi.fn();
   const onCancel = vi.fn();
@@ -40,29 +52,11 @@ function renderPanel() {
   return { onSaved, onCancel, summon: (summons: number) => rerender(panelFor(summons)) };
 }
 
-const panel = () => screen.getByRole('group', { name: 'New Reference' });
-/** A label's text less a required field's asterisk, which is hidden from its name. */
-const labelled = (label: string) => (content: string) => content.replace(/\*$/, '') === label;
-const inPanel = (label: string) => within(panel()).getByLabelText(labelled(label));
+const panel = () => referencePanel();
 const notInPanel = (label: string) =>
   expect(within(panel()).queryByLabelText(labelled(label))).toBeNull();
 const kindBox = () => within(panel()).getByRole('combobox', { name: 'Kind' });
-const typeIn = (control: HTMLElement, value: string) =>
-  fireEvent.change(control, { target: { value } });
-/** Presses a button, focusing it first as a real click would: fireEvent moves no focus. */
-const press = (button: HTMLElement) => {
-  button.focus();
-  fireEvent.click(button);
-};
 const saveReference = () => press(within(panel()).getByRole('button', { name: 'Save Reference' }));
-const chooseKind = (label: string) => {
-  fireEvent.click(kindBox());
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: 'Kind choices' })).getByRole('option', {
-      name: label,
-    }),
-  );
-};
 
 /** Every label a panel field may carry, across the five kinds. */
 const ALL_LABELS = [
@@ -437,23 +431,21 @@ describe('ReferencePanel', () => {
       code: 'VALIDATION',
       fieldErrors: [{ path: ['published'], message: 'Give the year it was published' }],
     });
-    render(
-      <QueryClientProvider client={makeQueryClient()}>
-        <ReferencePanel
-          workspaceId={WORKSPACE_ID}
-          editing={{
-            id: NEW_REFERENCE_ID,
-            isGlobal: false,
-            kind: 'book',
-            authors: 'Mock, Cyril',
-            title: 'A Fixture Grimoire',
-            container: null,
-          }}
-          summons={1}
-          onSaved={vi.fn()}
-          onCancel={vi.fn()}
-        />
-      </QueryClientProvider>,
+    renderWithClient(
+      <ReferencePanel
+        workspaceId={WORKSPACE_ID}
+        editing={{
+          id: NEW_REFERENCE_ID,
+          isGlobal: false,
+          kind: 'book',
+          authors: 'Mock, Cyril',
+          title: 'A Fixture Grimoire',
+          container: null,
+        }}
+        summons={1}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
     );
     const editPanel = () => screen.getByRole('group', { name: 'Edit Source' });
     const published = await waitFor(() =>

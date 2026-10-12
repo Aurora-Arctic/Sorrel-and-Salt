@@ -8,6 +8,7 @@ import type {
   RevokeAdminInvitationMutation,
   RevokeAdminInvitationMutationVariables,
 } from '@/gql/graphql';
+import { expectGuardedWaysOut } from '../../support/discard-guard';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The Invitations tab (MB.70; MB.115): render-only, so the page owns the read
@@ -16,14 +17,6 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
-
-// jsdom implements no modal dialog; stood in for as a browser behaves.
-HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-  this.setAttribute('open', '');
-};
-HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-  this.removeAttribute('open');
-};
 
 // The pause's reason, as the page passes it.
 const PAUSED = ADMIN_CHANGES_PAUSED_REFUSAL;
@@ -125,20 +118,12 @@ describe('AdminInvitations', () => {
   // it makes is the modal's, back to the tab.
   it('asks before Cancel or Escape discards what was typed, and closes on Discard Changes', () => {
     render(<AdminInvitations invitations={[]} inviting />);
-    const cancel = () => within(dialog()).getByRole('button', { name: 'Cancel' });
-    const discard = () => within(dialog()).queryByRole('button', { name: 'Discard Changes' });
 
-    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Reason' }), {
-      target: { value: 'Knows the planets' },
-    });
-    fireEvent.click(cancel());
-    expect(discard()).toBeInTheDocument();
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Keep Editing' }));
-    fireEvent(dialog(), new Event('cancel', { cancelable: true }));
-    expect(discard()).toBeInTheDocument();
-    expect(router.replace).not.toHaveBeenCalled();
-
-    fireEvent.click(discard()!);
+    expectGuardedWaysOut(router.replace, () =>
+      fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Reason' }), {
+        target: { value: 'Knows the planets' },
+      }),
+    );
     expect(router.replace).toHaveBeenCalledWith('/admin/invitations');
   });
 

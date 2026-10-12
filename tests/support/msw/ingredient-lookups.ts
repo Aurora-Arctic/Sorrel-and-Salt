@@ -1,8 +1,14 @@
 import type {
   CommonNameSuggestionsQuery,
   CommonNameSuggestionsQueryVariables,
+  CompendiumSubstitutesQuery,
+  CompendiumSubstitutesQueryVariables,
+  CreateCompendiumIngredientMutation,
+  CreateCompendiumIngredientMutationVariables,
   CreateReferenceMutation,
   CreateReferenceMutationVariables,
+  CreateWorkspaceIngredientMutation,
+  CreateWorkspaceIngredientMutationVariables,
   FormSuggestionsQuery,
   FormSuggestionsQueryVariables,
   PlanetSuggestionsQueryVariables,
@@ -12,10 +18,13 @@ import type {
   ReferenceQueryVariables,
   ReferenceSuggestionsQuery,
   ReferenceSuggestionsQueryVariables,
+  UpdateCompendiumIngredientMutation,
+  UpdateCompendiumIngredientMutationVariables,
   UpdateReferenceMutation,
   UpdateReferenceMutationVariables,
 } from '@/gql/graphql';
 import type {
+  CategoryNode,
   CorrespondenceNode,
   DeityNode,
   DuplicateNode,
@@ -24,17 +33,21 @@ import type {
   NameNode,
   ReferenceNode,
 } from '../../components/IngredientForm/types';
-import { mockGraphQLMutation, mockGraphQLQuery } from './graphql';
+import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from './graphql';
 
 // The ingredient form's lookups answered as /api/graphql answers them, each
 // recording the variables it was asked with: shared by the form's test and
 // the tests of the fields that ask them (MB.181), with the reference panel's
 // `CreateReference` beside them (MB.182), and the edit's `Reference` and
-// `UpdateReference` (MB.115). A later answer wins, so a
-// test answers a lookup after whatever answered it empty.
+// `UpdateReference`, and the saves the form sends, each test file had its
+// own copy of (MB.115). A later answer wins, so a test answers a lookup after
+// whatever answered it empty: `offerNothing` answers every one.
 
 /** The coven the form's tests act in. */
 export const WORKSPACE_ID = '7b0c1c3e-5f4a-4d8e-9a51-3c2f0e6d9b17';
+
+/** The entry an edit opens, and the id a compendium save answers with. */
+export const ENTRY_ID = '3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93';
 
 /** Answers `FormSuggestions` with these rows, recording the variables each ask was sent with. */
 export function offerForms(nodes: FormNode[]) {
@@ -179,5 +192,103 @@ export function acceptReferenceUpdate(citation: string) {
       };
     },
   );
+  return calls;
+}
+
+/** Answers the substitutes' `CompendiumSubstitutes`, the compendium's form's, with these entries, recording each ask. */
+export function offerCompendium(
+  nodes: CompendiumSubstitutesQuery['compendium']['edges'][number]['node'][],
+) {
+  const calls: CompendiumSubstitutesQueryVariables[] = [];
+  mockGraphQLQuery<CompendiumSubstitutesQuery, CompendiumSubstitutesQueryVariables>(
+    'CompendiumSubstitutes',
+    (variables) => {
+      calls.push(variables);
+      return { compendium: { edges: nodes.map((node) => ({ node })) } };
+    },
+  );
+  return calls;
+}
+
+/** Answers `PickerCategories` with these rows, as the one page the picker reads, or refuses it. */
+export function offerCategories(nodes: CategoryNode[] | 'refused') {
+  if (nodes === 'refused') return mockGraphQLError('PickerCategories', { code: 'FORBIDDEN' });
+  mockGraphQLQuery<Record<string, unknown>>('PickerCategories', () => ({
+    categories: { edges: nodes.map((node) => ({ node })) },
+  }));
+}
+
+/**
+ * Every lookup the form asks, in either tier, answered empty, each one's asks
+ * recorded; the categories are read as the form opens, and recorded by none.
+ */
+export function offerNothing() {
+  offerCategories([]);
+  return {
+    forms: offerForms([]),
+    names: offerNames([]),
+    planets: offerPlanets([]),
+    signs: offerSigns([]),
+    deities: offerDeities([]),
+    ingredients: offerIngredients([]),
+    compendium: offerCompendium([]),
+    references: offerReferences([]),
+    duplicates: offerDuplicates([]),
+  };
+}
+
+/** Answers `CreateWorkspaceIngredient` with a saved row, recording the variables it was sent. */
+export function acceptCreate() {
+  const calls: CreateWorkspaceIngredientMutationVariables[] = [];
+  mockGraphQLMutation<
+    CreateWorkspaceIngredientMutation,
+    CreateWorkspaceIngredientMutationVariables
+  >('CreateWorkspaceIngredient', (variables) => {
+    calls.push(variables);
+    return {
+      createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name, slug: 'saved' },
+    };
+  });
+  return calls;
+}
+
+/** Answers `CreateCompendiumIngredient` with a saved entry, `ENTRY_ID`, recording each ask. */
+export function acceptCompendiumCreate() {
+  const calls: CreateCompendiumIngredientMutationVariables[] = [];
+  mockGraphQLMutation<
+    CreateCompendiumIngredientMutation,
+    CreateCompendiumIngredientMutationVariables
+  >('CreateCompendiumIngredient', (variables) => {
+    calls.push(variables);
+    return {
+      createCompendiumIngredient: {
+        id: ENTRY_ID,
+        name: variables.input.name,
+        slug: 'testwort-fixtura-testalis',
+      },
+    };
+  });
+  return calls;
+}
+
+/**
+ * Answers `UpdateCompendiumIngredient`, the one update the form's tests save,
+ * with the entry it was sent, recording each ask.
+ */
+export function acceptUpdate() {
+  const calls: UpdateCompendiumIngredientMutationVariables[] = [];
+  mockGraphQLMutation<
+    UpdateCompendiumIngredientMutation,
+    UpdateCompendiumIngredientMutationVariables
+  >('UpdateCompendiumIngredient', (variables) => {
+    calls.push(variables);
+    return {
+      updateCompendiumIngredient: {
+        id: String(variables.id),
+        name: variables.input.name,
+        slug: 'mockwort-fixtura-testalis',
+      },
+    };
+  });
   return calls;
 }
