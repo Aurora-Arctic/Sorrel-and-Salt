@@ -760,13 +760,21 @@ down the window, since a list page runs as long as its rows. The width is
 the owner's call at MB.115's review: the user list's seven columns need
 about 77rem before they stop scrolling inside their frame, the privilege
 ledger has seven too, and at the old 64rem the user list's sticky Impersonate
-column sat over Signed Up on a 1280px window. Only `.admin-layout` reads the
-token, so nothing outside `/admin` widens with it. Its paragraphs
+column sat over Signed Up on a 1280px window. Only `.admin-layout` and
+`.coven-layout` read the token, so nothing outside `/admin` and `/coven/` widens
+with it. Its paragraphs
 still stop at the measure. The width and its cap sit inside `:where()`, as
 the page frame's do, so a single class can change them. It is a primitive
 rather than AdminNav's own rule because the admin layout and the admin
 components' stories use the class as their frame. Inside it a page header's
 action, and a tab's, spans the line at phone width ("Buttons", above).
+
+`.coven-layout` is the same frame around every `/coven/[slug]` page, its
+section nav (`CovenNav`) above and the page below (M9.15). It shares the rule
+rather than copying it until the workspace section's design review decides
+its own; its pages will hold the ingredient and grimoire tables, so the wide
+column suits it in the meantime. The admin area's page-header rules stay
+scoped to `.admin-layout`.
 
 ## Tables at phone width
 

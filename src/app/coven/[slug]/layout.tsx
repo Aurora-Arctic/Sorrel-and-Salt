@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import CovenNav from '../../../components/CovenNav';
 import { requireCovenMembership } from '../../../lib/request-session';
 import type { CovenLayoutParams, CovenLayoutProps } from './types';
 
@@ -20,10 +21,16 @@ export async function generateMetadata({ params }: CovenLayoutParams): Promise<M
 // "current workspace" on the session, so two tabs can sit in two covens. A
 // non-member and an unknown slug both get the 404 (claude-docs/auth/coven-guard.md,
 // "The coven guard"). Every page beneath calls the guard too, with its own
-// `params`: a layout does not re-run on client-side navigation.
+// `params`: a layout does not re-run on client-side navigation. The section
+// nav is here rather than on each page, so every page beneath has it (M9.15).
 export default async function CovenLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
   await requireCovenMembership(slug);
 
-  return children;
+  return (
+    <div className="coven-layout">
+      <CovenNav slug={slug} />
+      {children}
+    </div>
+  );
 }
