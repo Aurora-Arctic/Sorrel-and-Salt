@@ -10,8 +10,8 @@ import { FIXTURE_USERS } from '@/db/seed/standard';
 
 // Rule 7 (claude-docs/testing/layer-ownership.md, "What a test may assert"):
 // a migration data test, retired with the `planets` view and the old columns
-// in MB.254. It re-runs `0067`'s own fill against rows written here, which the
-// code leaves the new columns empty on, and asserts what the deploy before
+// in MB.254. It re-runs `0067`'s own fill against rows written here to the old
+// columns alone, as the deploy before MB.252 writes them, and asserts what the deploy before
 // MB.252 meets: the renamed table behind a view under the old name, and a
 // one-row CHECK that admits a link naming the old column, the new, or both
 // (claude-docs/db/expand-contract.md, "Renaming a table").
@@ -53,14 +53,15 @@ async function bodyThroughView(): Promise<string> {
   return row.id as string;
 }
 
-/** A compendium ingredient whose list, and its one variant's, name bodies. */
+/** A compendium ingredient whose old list, and its one variant's, name bodies. */
 async function ingredientNaming(own: string[] | null, variant: string[] | null): Promise<string> {
   const t = token();
   const id = await insertIngredient(
     sql,
-    makeIngredient({ name: `Testwort ${t}`, canonicalName: `Fixtura testalis ${t}`, planets: own }),
+    makeIngredient({ name: `Testwort ${t}`, canonicalName: `Fixtura testalis ${t}` }),
     AUTHOR,
   );
+  await sql`update ingredients set planets = ${own} where id = ${id}`;
   await sql`update ingredient_variants set planets = ${variant} where ingredient_id = ${id}`;
   return id;
 }

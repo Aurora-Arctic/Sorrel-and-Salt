@@ -77,7 +77,7 @@ export interface AstrologyValueNode {
   description: string;
 }
 
-/** A `planets` or `zodiacSigns` page as the tests ask for it: the count, the rows and where it stands. */
+/** A `celestialBodies` or `zodiacSigns` page as the tests ask for it: the count, the rows and where it stands. */
 export interface AstrologyValueConnection {
   totalCount: number;
   countBefore: number | null;

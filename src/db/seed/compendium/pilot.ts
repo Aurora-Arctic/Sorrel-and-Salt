@@ -173,7 +173,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         'Mugwort is an aromatic perennial that can reach about one and a half metres, with angular, purplish stems and deeply cut leaves that are dark green above and pale and woolly beneath. Small yellowish or reddish flower heads open from midsummer into early autumn. It is native to temperate Europe, Asia, North Africa and Alaska, has naturalised in North America, where some treat it as an invasive weed, and spreads chiefly through its creeping rhizomes. Before hops were adopted, it flavoured English beer and gruit ales, and it is still a cooking herb in Germany. Older writers credited it with keeping the traveller safe from fatigue, sunstroke and wild beasts, and traced the name of its genus to Artemis. In several European countries it was hung from the rafters against witches, lightning and plague, and at Midsummer it was worn, hung up or thrown on the bonfire for protection. In magical practice it belongs to dreams and seeing: it is stuffed into pillows for prophetic dreams, burned during scrying, drunk as a honeyed infusion before divination, and used to wash crystal balls and magic mirrors.',
       elements: ['earth', 'air', 'water'],
-      planets: ['Venus', 'Moon', 'Neptune'],
+      celestialBodies: ['Venus', 'Moon', 'Neptune'],
       zodiacSigns: ['Cancer', 'Gemini', 'Libra', 'Sagittarius', 'Taurus'],
       safetyNotes:
         'Not for use in pregnancy except under the supervision of a qualified healthcare practitioner: it has been reported as an abortifacient and is classed as an emmenagogue (AHPA safety class 2b). Its safety while nursing has not been established. Mugwort is a relatively common cause of contact dermatitis, and allergic reactions have been reported, including cross-reactivity in people allergic to pine nut or lettuce. It can be toxic if swallowed in large quantities.',
@@ -216,7 +216,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -230,7 +230,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -296,7 +296,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         "Yarrow is an upright perennial native to the temperate Northern Hemisphere, across Europe, Asia and North America, growing from about twenty centimetres to a metre tall and spreading by rhizomes. Its feathery leaves are divided so finely that they gave the plant the names milfoil and thousand leaf, and its tiny white to pink flowers gather in flat-topped clusters from spring into autumn. It carries a spicy scent that lasts after drying. The genus takes its name from Achilles, who in legend treated his soldiers' wounds with it, and many old names, such as soldier's woundwort and knight's milfoil, recall its use in stanching blood. Linnaeus recorded that the people of Dalecarlia in Sweden steeped it in beer, and its flowers and leaves still go into some liqueurs and bitters. In China its dried stalks are cast for I Ching divination. Across the British Isles it was used to divine a future sweetheart, often slept on under the pillow, and at Midsummer it was hung over doors and cradles, strewn on thresholds against witches and kept against the evil eye. In magical practice it is worn for protection, held to dispel fear, hung over the marriage bed to keep love lasting, and drunk as a flower tea to sharpen psychic powers.",
       elements: ['water', 'air'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       zodiacSigns: ['Cancer', 'Gemini', 'Libra'],
       safetyNotes:
         'Considered safe to take when used appropriately (AHPA safety class 1). People allergic to other daisy-family plants, such as feverfew, chamomile or echinacea, should take care, because cross-reactions are common, and contact allergy and skin rashes from yarrow have been reported. Safety in pregnancy and while nursing is not established; one animal study at high doses showed lower fetal weight, and a herbal source advises against taking it internally when pregnant. It is reported to be toxic to dogs, cats and horses, and it can be mistaken for the deadly hemlock.',
@@ -362,7 +362,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -375,7 +375,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -435,7 +435,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         "True or Ceylon cinnamon is a small evergreen tree of the laurel family, native to Sri Lanka, which still grows most of the world's supply; it is also farmed in the Seychelles, Madagascar and Tanzania, and at low altitudes on Borneo. Left to grow, it reaches ten to fifteen metres, with oval to oblong leaves, scented greenish flowers in loose sprays and a small purple fruit holding one seed. The spice is the dried inner bark, a name long shared with the related cassia, and cinnamon has a long history in traditional medicine as an aid to digestion. It is among the oldest spices in trade, carried by Phoenician and Arab merchants to Egypt, Greece and Rome. The Egyptians used it in embalming, Roman temples were hung with wreaths of its leaves, and Greek legend had the phoenix build its nest from cinnamon twigs; in medieval Europe it was a favourite for spicing wine. In magical practice it is burned as an incense to raise spiritual vibrations, help healing, draw money, stir psychic powers and lay down protection, and it goes into sachets and infusions for the same purposes.",
       elements: ['fire'],
-      planets: ['Sun', 'Jupiter', 'Mercury'],
+      celestialBodies: ['Sun', 'Jupiter', 'Mercury'],
       zodiacSigns: ['Aries', 'Capricorn', 'Leo'],
       safetyNotes:
         'Not for use in pregnancy except under the supervision of a qualified healthcare practitioner (AHPA safety class 2b); safety while nursing is not established. These cautions concern the larger doses taken as medicine, not ordinary amounts in cooking. Allergic and sensitisation reactions affecting the skin and the lining of the mouth are relatively common, and people sensitive to balsam of Peru should take care. It may alter blood sugar, so people with diabetes should monitor it and consult a practitioner first. In overdose it can over-stimulate the nervous system, raising heart rate and breathing, sometimes followed by drowsiness. Avoid more than normal food amounts and long-term internal use.',
@@ -470,7 +470,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'categories',
             'folkNames',
@@ -484,7 +484,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -556,7 +556,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         'Bladderwrack is a brown seaweed of the North Sea, the western Baltic and the Atlantic coasts of Europe and North America. It is common around the British Isles and thrives on sheltered rocky shores between the tides. Its flat, forking fronds reach about a metre and a half, run with a strong midrib and cling to the rock by a disc-shaped holdfast; the almost round air bladders that name it usually sit in pairs either side of the midrib, and are often missing on shores battered by waves. Iodine was first obtained from it when the element was discovered in 1811, and it was long used against goitre. It can be cooked and eaten and is sold as a supplement. In Ireland and Scotland it fertilised the fields and fed cattle through the winter, and Hebridean islanders once poured ale into the sea at Samhain, asking the sea god Shony for a good harvest of weed; strands of seaweed were hung up to forecast the weather. In magical practice, seaweeds are carried to keep travellers safe at sea or flying over it, cast onto the waves to call the sea spirits, and steeped to wash the floors and doors of a shop to bring in custom, while bladderwrack goes into sachets to strengthen psychic powers.',
       elements: ['water'],
-      planets: ['Moon', 'Neptune'],
+      celestialBodies: ['Moon', 'Neptune'],
       zodiacSigns: ['Cancer', 'Pisces'],
       safetyNotes:
         'Not for anyone with an overactive thyroid, and anyone taking thyroid medication should use it only under a qualified practitioner (AHPA safety class 2d). It contains iodine; long-term, uncontrolled use has been linked with thyroid over-activity, too much iodine can cause goitre, and infants are especially sensitive, with goitre reported in babies whose mothers took iodine while pregnant or nursing. Seaweeds can carry heavy metals, including arsenic, so caution is advised in pregnancy and for young children, and kidney damage has been reported from an arsenic-contaminated supplement. Take other medicines an hour before it or several hours after, as it may slow their absorption. It may reduce platelet activity and strengthen the effect of warfarin, so avoid it before surgery, and some people react to its iodine. A herbal source also advises against taking it internally when pregnant or nursing.',
@@ -596,7 +596,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'folkNames',
             'description',
@@ -609,7 +609,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'deities',
             'categories',
@@ -652,7 +652,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         'Beard lichen is the everyday name for Usnea, a genus of roughly 130 shrubby (fruticose) lichens in the family Parmeliaceae. Like every lichen it is a partnership between a fungus and an alga. It grows as small leafless tufts or trailing strands fixed to bark and twigs, now and then to rock, and is told apart from its look-alikes by the stretchy cord that runs through the centre of each branch. Its colour ranges from pale or yellowish green to grey-green, reddish or mottled. The genus is spread across temperate and tropical regions of both hemispheres, but thrives only where the air is clean, so it is used as a marker of air quality. People have used it as a traditional medicine, a source of textile dyes, a fire starter and, in hard winters, an emergency food. In European lore, Anglo-Saxon healers turned to Usnea against elf sickness, an illness blamed on elves, and lichen was carried in charms to draw luck and keep negative energy away. Modern witchcraft links lichen with luck, prosperity, psychic work and contact with forest spirits, and lays it on the altar at Samhain in memory of loved ones who have died.',
       elements: ['earth', 'water'],
-      planets: ['Jupiter', 'Mercury', 'Moon', 'Saturn'],
+      celestialBodies: ['Jupiter', 'Mercury', 'Moon', 'Saturn'],
       colors: ['green'],
       safetyNotes:
         'The AHPA handbook rates usnea (Usnea barbata) Safety Class 1 and Interaction Class A: no known contraindications, precautions or drug interactions. Liver failure and other liver damage have been reported in people taking the isolated compound usnic acid, on its own or in multi-herb products, though the editors note that findings on the isolated compound may not apply to the lichen or its extracts. Safety in pregnancy and breastfeeding has not been established.',
@@ -672,7 +672,14 @@ export const PILOT: SeedCompendiumShard = {
         {
           source: 'kynes-plants',
           locator: 'under "Lichen"',
-          supports: ['description', 'elements', 'planets', 'colors', 'folkNames', 'categories'],
+          supports: [
+            'description',
+            'elements',
+            'celestialBodies',
+            'colors',
+            'folkNames',
+            'categories',
+          ],
         },
         {
           source: 'ahpa-safety',
@@ -705,7 +712,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         'Frankincense, also called olibanum, is the fragrant gum resin of Boswellia sacra, a small deciduous tree of the Burseraceae family with papery bark that peels away easily; the older name Boswellia carterii is now treated as the same species. The tree is native to Oman and Yemen in southern Arabia and to Somalia and Ethiopia in the Horn of Africa, and often grows on steep, rocky slopes. Harvesters cut shallow nicks in the trunk or branches; a milky sap seeps out, hardens in the air into tears and is gathered by hand, then sorted by hand into grades. A tree starts yielding at around eight to ten years old. The resin has been traded around Arabia and the Horn of Africa for centuries and burned as an offering by Egyptians, Babylonians, Assyrians, Greeks and Romans, and it is still burned in Catholic churches; the Gospel of Matthew names it among the gifts of the Magi. In medieval Europe it was used to fumigate divinatory mirrors and mark out ritual circles, and carried as a charm for luck. Magical practice burns it above all for protection, purification, consecration, meditation and contact with spirits. Wild stands are declining from over-tapping, and the IUCN listed B. sacra as near threatened in 1998.',
       elements: ['air', 'fire', 'water'],
-      planets: ['Sun', 'Moon'],
+      celestialBodies: ['Sun', 'Moon'],
       zodiacSigns: ['Aquarius', 'Aries', 'Leo', 'Sagittarius'],
       folkNames: [
         'Olibanum',
@@ -743,7 +750,7 @@ export const PILOT: SeedCompendiumShard = {
           locator: 'under "Frankincense"',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -758,7 +765,7 @@ export const PILOT: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -826,7 +833,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         'Sandalwood is the scented heartwood of Santalum album, a small evergreen tropical tree of the family Santalaceae, also known as white or Indian sandalwood. It is native to India, Java and the Lesser Sunda Islands, the Philippines and Western Australia, and Austronesian sailors carried it into South Asia along the ancient spice routes, where it had become naturalised in the south of India by at least 1300 BCE. The tree is partly parasitic, drawing nutrients from the roots of neighbouring plants. Only the yellow-brown heartwood is fragrant; it takes about ten years to develop its scent and some twenty before it is worth harvesting. Heavy cutting has left wild trees vulnerable to extinction, India has banned export of the timber, and buyers are urged to choose sustainably harvested stock. Across India, China and Southeast Asia the wood and its oil have been treated as sacred and burned in temples and censers; they have also served in cremation and embalming, in carving and in perfume. In magical practice sandalwood is burned for protection, healing and driving out harmful spirits, mixed with frankincense for seances and Full Moon rituals, and written on and burned to send a wish on its way.',
       elements: ['air', 'water'],
-      planets: ['Moon', 'Mercury', 'Venus'],
+      celestialBodies: ['Moon', 'Mercury', 'Venus'],
       zodiacSigns: ['Aquarius', 'Cancer', 'Leo', 'Pisces', 'Virgo'],
       safetyNotes:
         'The AHPA handbook rates sandalwood Safety Class 1 and Interaction Class A: no known contraindications, precautions or drug interactions. Fewer than 3% of patients already allergic to fragrances reacted to sandalwood in patch tests. Safety in pregnancy has not been conclusively established.',
@@ -861,7 +868,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
             'description',
@@ -874,7 +881,7 @@ export const PILOT: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -1130,7 +1137,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         'Iron is the chemical element Fe, atomic number 26: by mass the commonest element on the planet, making up much of its core, and the fourth most abundant in its crust. Bare metallic iron is rare at the surface because it rusts, and the first iron people worked came from meteorites; beads of meteoric iron from Gerzeh in Egypt date to 3500 BC or earlier. Smelting it from ore took hotter furnaces than copper needed and spread from the second millennium BC, opening the Iron Age. Clean iron is a silvery grey, and the symbol of Mars has stood for it since antiquity. Cunningham gives iron to Mars, fire and the goddess Selene and calls its energy projective. Many peoples kept it out of sacred work, from Greek temples to herbs cut with knives of other metals, yet it was also thought to frighten demons, ghosts and fairies: pieces were set in every room or buried at the corners of a property for protection, and iron was worn for strength, healing and grounding. In Hoodoo, reverence for iron goes back to the Yoruba orisha Ogun, and horseshoes, metal tools and bundles holding iron were used to protect people and keep spirits out.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['grey'],
       deities: ['Selene', 'Ogun'],
       categories: ['Protection', 'Strength', 'Healing', 'Grounding', 'Warding'],
@@ -1138,7 +1145,7 @@ export const PILOT: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 158–160',
-          supports: ['elements', 'planets', 'deities', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'deities', 'categories', 'description'],
         },
         {
           source: 'wikipedia-iron',
@@ -1193,7 +1200,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         "Amethyst is the purple-to-violet variety of quartz, the silicon dioxide mineral, and its colour comes from iron impurities acted on by natural irradiation. Heating turns it yellow-orange or brownish, and long exposure to strong light can fade it. It grows as pointed crystals, clusters and geodes; much of the world's supply comes from large geodes in the volcanic rocks of southern Brazil and neighbouring Uruguay. The name comes from a Greek word meaning 'not intoxicated': the ancient Greeks wore the stone and carved drinking vessels from it in the hope of staying sober, Anglican bishops' rings are often set with it in allusion to the Apostles' sobriety at Pentecost, and it is the birthstone of February. In Cunningham's magical lore it is above all a stone of peace, placed beneath the pillow against insomnia and nightmares, worn for courage and as a protective amulet, especially by travellers, set on meditation altars, kept with divination tools to sharpen psychic awareness, and exchanged between lovers. Hall describes it as a strongly protective and calming stone that supports meditation, intuition, memory and restful sleep, and connects it with sobriety and with overcoming addiction.",
       elements: ['water'],
-      planets: ['Jupiter', 'Neptune'],
+      celestialBodies: ['Jupiter', 'Neptune'],
       colors: ['purple', 'violet'],
       safetyNotes: 'Hall cautions against using amethyst in cases of paranoia or schizophrenia.',
       deities: ['Bacchus', 'Dionysus', 'Diana'],
@@ -1223,7 +1230,7 @@ export const PILOT: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'colors',
             'deities',
             'categories',
@@ -1266,7 +1273,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         "Hematite, also spelt haematite, is a common iron oxide mineral and one of the chief ores of iron. It ranges from black and steel- or silver-grey to brown and red, yet always leaves a rust-red streak, and its name comes from the Greek word for blood. Polished, it is a heavy, shiny, metallic stone, shaped into beads, tumbled stones and other jewellery, and it was once worn as mourning jewellery; Cunningham mentions Italian necklaces of it sold as 'volcano spit'. Ground fine, it has coloured paint since the earliest human art, and red ochre owes its colour to it. Cunningham warns that most of what older books say about 'hematite' really concerns the stone now called bloodstone, and that genuine lore for this stone is scarce. He uses it for grounding, for drawing illness out of the body, and for scrying by gazing at a candle flame reflected on its surface. Hall likewise stresses grounding and protection, and adds confidence, willpower, memory and concentration, help in legal situations, and a close link with the blood.",
       elements: ['fire'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       colors: ['silver', 'red', 'black', 'grey', 'brown'],
       safetyNotes:
         'Hall advises against using hematite where inflammation is present, or for long periods.',
@@ -1284,7 +1291,14 @@ export const PILOT: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 100–101',
-          supports: ['elements', 'planets', 'colors', 'folkNames', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'folkNames',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -1338,7 +1352,7 @@ export const PILOT: SeedCompendiumShard = {
       description:
         "Devil's shoestring is a root carried and sold in folk magic under a name that the sources read here give to more than one plant, so no formal name is recorded for it. Cunningham's Encyclopedia of Magical Herbs heads its entry Viburnum alnifolium. Kynes's Witches' Encyclopedia of Magical Plants heads its Devil's Shoestring entry with hobblebush, Viburnum lantanoides, listing V. alnifolium as a synonym of it, but its yucca entry also gives devil's shoestring as another name for Adam's needle, Yucca filamentosa. Wikipedia applies the name to a third plant, Nolina lindheimeriana, a grass-like beargrass found only in central Texas. Kynes describes the hobblebush as a straggling shrub whose drooping stems take root where they touch the ground, leaving loops that trip the unwary, and reports that the Cherokee planted it beside the front door to keep evil spirits away and that hoodoo uses it for protection and for breaking hexes. Cunningham has it worn at the neck against evil, carried by gamblers for luck, and kept in a pocket when seeking work, facing trouble at work or asking for a rise. Both books work with the root: Cunningham steeps pieces in whiskey and spirits of camphor to rub on the hands, and Kynes ties a bundle of roots with red yarn to hang over a door.",
       elements: ['fire'],
-      planets: ['Jupiter'],
+      celestialBodies: ['Jupiter'],
       categories: ['Protection', 'Gambling', 'Banishing', 'Hex-Breaking'],
       references: [
         {
@@ -1349,7 +1363,7 @@ export const PILOT: SeedCompendiumShard = {
         {
           source: 'kynes-plants',
           locator: 'under "Devil\'s Shoestring"; under "Yucca"',
-          supports: ['nomenclature', 'elements', 'planets', 'categories', 'description'],
+          supports: ['nomenclature', 'elements', 'celestialBodies', 'categories', 'description'],
         },
         {
           source: 'wikipedia-nolina-lindheimeriana',

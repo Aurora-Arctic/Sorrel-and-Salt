@@ -639,13 +639,13 @@ describe('UserList admin role', () => {
     expect(confirm).not.toHaveAccessibleDescription();
     const reason = within(asking).getByRole('textbox', { name: 'Reason' });
     expect(reason).toHaveAccessibleDescription(/\S/);
-    fireEvent.change(reason, { target: { value: '  Curates the planets  ' } });
+    fireEvent.change(reason, { target: { value: '  Curates the celestial bodies  ' } });
     fireEvent.click(confirm);
 
     expect(confirm).toBeDisabled();
     expect(confirm).toHaveAttribute('aria-busy', 'true');
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-    expect(calls).toEqual([{ userId: BO.id, role: 'admin', note: 'Curates the planets' }]);
+    expect(calls).toEqual([{ userId: BO.id, role: 'admin', note: 'Curates the celestial bodies' }]);
   });
 
   it('sends no reason when none is given, and Cancel closes the modal with nothing sent', async () => {

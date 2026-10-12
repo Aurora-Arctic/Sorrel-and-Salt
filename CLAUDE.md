@@ -20,7 +20,7 @@ Never write "catalog" — it was the old word for the compendium and it is gone.
 
 The schema entity is `workspaces` and the URL prefix `/coven/`, a deliberate divergence (§5). Code, schema, and prose say _workspace_. Only the URL segment says _coven_.
 
-The vocabulary people read as _Celestial Bodies_ is `planets` in code, GraphQL and the columns the code reads until MB.253 and MB.254, a recorded, temporary divergence (`claude-docs/design-decisions/mb.251-celestial-bodies.md`). Its table is `celestial_bodies` since MB.252, with a `planets` view standing in until MB.254. Do not rename the rest early.
+The vocabulary people read as _Celestial Bodies_ is `celestial_bodies` in the database and `celestialBodies` in code and GraphQL (MB.251 to MB.253). The old `planets` columns and a `planets` view stay in the database only until MB.254 drops them (`claude-docs/design-decisions/mb.251-celestial-bodies.md`).
 
 ## Commands
 

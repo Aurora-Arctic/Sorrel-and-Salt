@@ -43,7 +43,7 @@ describe('Mutation.setUserRole', () => {
     const result = await run<SetUserRoleResult>(asUser(E), SET_ROLE, {
       userId: GRANTEE,
       role: 'admin',
-      note: 'Curates the planets',
+      note: 'Curates the celestial bodies',
     });
 
     expect(result.errors).toBeUndefined();
@@ -56,8 +56,8 @@ describe('Mutation.setUserRole', () => {
       select privilege::text, note, created_by from user_privilege_changes order by privilege
     `;
     expect(rows).toEqual([
-      { privilege: 'admin', note: 'Curates the planets', created_by: E.id },
-      { privilege: 'create_workspace', note: 'Curates the planets', created_by: E.id },
+      { privilege: 'admin', note: 'Curates the celestial bodies', created_by: E.id },
+      { privilege: 'create_workspace', note: 'Curates the celestial bodies', created_by: E.id },
     ]);
   });
 

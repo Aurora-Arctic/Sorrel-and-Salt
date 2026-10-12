@@ -14,7 +14,7 @@ import {
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
-import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
+import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
@@ -89,7 +89,7 @@ export function findIngredientFormValueCount(
 
 /**
  * One page of a curated astrology vocabulary under `filter` in `(name, id)`
- * order, for `planets`, `zodiacSigns` and their admin lists (MB.95): its
+ * order, for `celestialBodies`, `zodiacSigns` and their admin lists (MB.95): its
  * live rows, since a flat vocabulary has no group to be curated under.
  * Public reference data, so no proof.
  */
@@ -337,7 +337,7 @@ export function findCompendiumFormRenameClashes(
  * ingredient row mirrors.
  */
 const IN_USE = {
-  celestial_bodies: { list: ingredients.planets },
+  celestial_bodies: { list: ingredients.celestialBodies },
   zodiac_signs: { list: ingredients.zodiacSigns },
   ingredient_forms: { child: ingredientVariants, value: ingredientVariants.form },
   deities: { child: ingredientDeities, value: ingredientDeities.name },
@@ -407,7 +407,7 @@ export function findVocabularySuggestions(
 ): Promise<PageEntry<DeitySuggestion>[]>;
 export function findVocabularySuggestions(
   memberships: readonly Membership[],
-  vocabulary: typeof planets | typeof zodiacSigns,
+  vocabulary: typeof celestialBodies | typeof zodiacSigns,
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]>;

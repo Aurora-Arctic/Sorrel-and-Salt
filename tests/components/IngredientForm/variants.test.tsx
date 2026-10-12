@@ -195,7 +195,7 @@ describe('IngredientForm’s variants', () => {
         description: '',
         safetyNotes: 'Dilute before use.',
         elements: [],
-        planets: [],
+        celestialBodies: [],
         zodiacSigns: [],
         colors: [],
         categoryIds: [],
@@ -478,7 +478,10 @@ describe('IngredientForm’s variants', () => {
     it('opens an existing variant with every section closed, each summarising what it holds', () => {
       renderForm({
         workspaceId: null,
-        values: twoForms({ safetyNotes: 'Dilute before use.', planets: [{ value: 'Venus' }] }),
+        values: twoForms({
+          safetyNotes: 'Dilute before use.',
+          celestialBodies: [{ value: 'Venus' }],
+        }),
       });
 
       const oil = openVariant('Oil');
@@ -807,7 +810,7 @@ describe('IngredientForm’s variants', () => {
     const filled = (): IngredientFormValues => {
       const base = twoForms({
         safetyNotes: 'Dilute before use.',
-        planets: [{ value: 'venus' }],
+        celestialBodies: [{ value: 'venus' }],
         colors: [{ value: 'Fixture Red' }],
         elements: ['fire'],
         categoryIds: [CATEGORY_B],
@@ -819,7 +822,7 @@ describe('IngredientForm’s variants', () => {
         description: 'A fixture herb.',
         safetyNotes: 'Keep from children.',
         elements: ['fire', 'water'],
-        planets: [{ value: 'Mercury' }, { value: 'Venus' }],
+        celestialBodies: [{ value: 'Mercury' }, { value: 'Venus' }],
         zodiacSigns: [{ value: 'Gemini' }],
         colors: [{ value: 'Fixture Red' }, { value: 'Fixture Green' }],
         categoryIds: [CATEGORY_A, CATEGORY_B],
@@ -930,7 +933,7 @@ describe('IngredientForm’s variants', () => {
       expect(calls[0].input.variants?.[0]).toEqual(
         expect.objectContaining({
           elements: ['fire', 'water'],
-          planets: ['venus', 'Mercury'],
+          celestialBodies: ['venus', 'Mercury'],
           zodiacSigns: ['Gemini'],
           colors: ['Fixture Red', 'Fixture Green'],
           categoryIds: [CATEGORY_B, CATEGORY_A],

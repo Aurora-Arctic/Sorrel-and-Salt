@@ -1229,7 +1229,7 @@ _Acceptance criteria:_
 - `PENDING_DROPS` lists the three old columns, `reference_links_planet_id_celestial_bodies_id_fk` and `reference_links_planet_unique`, and the drift test passes
 - A duplicate slug still returns the friendly error
 - Suggestions still count a value in use once however many lists hold it, scoped to the compendium and this coven, asserted with the precondition that another coven holds the value
-- No identifier, test name, comment, seed literal or raw-SQL helper under `src/` or `tests/` says planet, bar the migration history and `PENDING_DROPS`
+- No identifier, test name, comment, seed literal or raw-SQL helper under `src/` or `tests/` says planet, bar the migration history and `PENDING_DROPS`, the objects those lines still name until MB.254 (the one-row CHECK's `coalesce`, the index test's row for `reference_links_planet_unique`, and the migration data tests), and astronomy and citations that mean a planet
 - The live docs listed above name the new table, columns and GraphQL names
 
 **MB.254 — Drop the planet columns and view** · 2h
@@ -1240,7 +1240,7 @@ The contract half of rule 10, a task of its own ([`design-decisions/mb.251-plan.
 
 **One last fill for the links, none for the lists.** Between MB.253's migration and its code going live, the deploy before it can still write the old columns, and nothing copies those writes across. The two kinds of column are treated differently, each under its own precedent:
 
-- **`reference_links.planet_id` is filled one last time.** Before the drop, the migration copies `planet_id` into `celestial_body_id` on every link, live or removed, that holds the first and not the second. MB.253's code never writes `planet_id`, so such a row can only be a write from the deploy before it, and the copy only adds: it never overwrites a value MB.253's code wrote. Without it, the strict CHECK below could not be added over a link whose only key was `planet_id`. MB.141's `0039_drop-substitutes-list.sql` is the precedent, a refill that only adds before the drop.
+- **`reference_links.planet_id` is filled one last time.** Before the drop, the migration copies `planet_id` into `celestial_body_id` on every link, live or removed, that holds the first and not the second. MB.253's code never writes `planet_id`, so such a row can only be a write from the deploy before it, and the copy only adds: it never overwrites a value MB.253's code wrote. Without it, the strict CHECK below could not be added over a link whose only key was `planet_id`. MB.141's `0039_drop-substitutes-list.sql` is the precedent, a refill that only adds before the drop. The copy has one collision to handle. During MB.253's rollout the deploy before can link a body to a reference by `planet_id` while MB.253's code links the same pair by `celestial_body_id`, and copying the first over would then break `reference_links_celestial_body_unique` for two live links. Found while building MB.253 on 2026-10-12.
 - **The two list columns get no last fill**, as MB.137's `0036_drop-ingredient-singles.sql` gave its single columns none. MB.253's code edits the new lists, and a cleared list is stored as NULL (`claude-docs/validation.md`), so an old list beside a NULL new one may be a member's clear rather than a missed write, and a fill would undo it.
 
 **The strict one-row CHECK lands here.** The migration re-adds `reference_links_one_row` counting `celestial_body_id` alone, in place of MB.252's `coalesce(celestial_body_id, planet_id)`, so the schema file builds it from the `SOURCED` registry again.

@@ -1,19 +1,19 @@
 ## The member's autofill (MB.94)
 
 `findVocabularySuggestions(memberships, vocabulary, query, page)` in
-`src/db/repository/vocabularies.ts` is the read behind `planetSuggestions`,
+`src/db/repository/vocabularies.ts` is the read behind `celestialBodySuggestions`,
 `zodiacSuggestions`, `formSuggestions` and `deitySuggestions`
 ([`graphql/schema.md`](../graphql/schema.md)). Its services are
-`suggestPlanets`, `suggestZodiacSigns`, `suggestForms` and `suggestDeities` in
+`suggestCelestialBodies`, `suggestZodiacSigns`, `suggestForms` and `suggestDeities` in
 `vocabulary`, which ask `ingredient: ['read']`: the curated rows are global, and every in-use value
 is one a reader of the workspace could already list. **The proofs are a list**
 (M5.5), as `findManyOfIngredients` takes them: a coven's lookup passes its
 one, and the admin's compendium form none, which reads the compendium alone.
 A caller names a table and
 nothing else. The ingredient column each table suggests for is paired in the
-repository's `IN_USE`, keyed by table name, so a caller cannot hand `planets`
+repository's `IN_USE`, keyed by table name, so a caller cannot hand `celestial_bodies`
 the `zodiac_signs` list, and a fifth vocabulary does not compile until it
-names its column. `planets` and `zodiac_signs` are paired with the lists of
+names its column. `celestial_bodies` and `zodiac_signs` are paired with the lists of
 the same names, `ingredient_forms` with the live rows of
 `ingredient_variants` and their `form` (M4.7a; MB.220, so each of an entry's
 forms is in use and claims, not only the one its row mirrors), and `deities`
@@ -83,10 +83,10 @@ cut by cursor as a whole.
 
 **Every row carries an `id`** (MB.167): the curated row's in tiers 0 and 1,
 null in tier 2. Form and deity suggestions expose it, since it is what a pick
-sends; a planet or sign records no pick, so its suggestion does not.
+sends; a celestial body or sign records no pick, so its suggestion does not.
 
 **A form suggestion carries two things more** (M4.7a), and only a form's
-carries both — the finder is overloaded on the table, so a planet or sign
+carries both — the finder is overloaded on the table, so a celestial body or sign
 suggestion has neither, and a deity's has the first alone, below:
 
 - **Its group.** `ingredient_forms` is unique on the slug alone, so two live
@@ -169,7 +169,7 @@ the way:
   only because its `IN` is a union over two tables.
 
 **No planner assertion for the vocabularies.** At nineteen, thirteen,
-seventy-eight and 216 rows `planets_trgm`, `zodiac_signs_trgm`,
+seventy-eight and 216 rows `celestial_bodies_trgm`, `zodiac_signs_trgm`,
 `ingredient_forms_trgm` and `deities_trgm` are never chosen over a
 sequential scan, and nothing asserts the SQL text either: since MB.227 a
 statement is read only as the precondition of a plan test. The thresholds,

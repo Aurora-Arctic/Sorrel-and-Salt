@@ -261,7 +261,7 @@ describe('Story 18: As an admin, add, edit, and soft-delete compendium entries a
   });
 
   it.each([
-    ['a celestial body', 'planets', 'planets'],
+    ['a celestial body', 'celestialBodies', 'celestial_bodies'],
     ['a zodiac sign', 'zodiacSigns', 'zodiac_signs'],
   ] as const)(
     'lets the site admin add, edit and soft-delete %s, every write stamped as the admin and the deleted row kept',

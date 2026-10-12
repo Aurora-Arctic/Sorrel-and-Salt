@@ -18,7 +18,7 @@ import type { ValueGroupRow, ValuePageProps, ValueRow, ValueSearchParams } from 
 
 // The page every curated value vocabulary shares (MB.115): the categories
 // (M5.6, MB.178), forms (M5.6a) and deities (MB.132), each filed under a
-// group, and the planets and zodiac signs (MB.95), filed under nothing. Each
+// group, and the celestial bodies and zodiac signs (MB.95), filed under nothing. Each
 // route's `page.tsx` keeps its `metadata` and hands its kind and address
 // here; the heading and tabs are its route group's layout's (MB.115). The page and GraphQL's lists end at the same services, paged by the
 // same helper (CLAUDE.md rule 1, rule 8); the writes are the modal's, through

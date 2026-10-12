@@ -58,7 +58,7 @@ export const ADMIN_PAGES = {
     label: 'Astrology',
     icon: 'astrology',
     description: 'The celestial bodies and zodiac signs an ingredient can be linked with.',
-    tabs: [valueTab('planet'), valueTab('zodiacSign')],
+    tabs: [valueTab('celestialBody'), valueTab('zodiacSign')],
   },
   people: {
     label: 'People',

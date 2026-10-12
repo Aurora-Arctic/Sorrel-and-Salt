@@ -25,7 +25,7 @@ import { assertMembership } from '@/modules/coven';
 import {
   suggestDeities,
   suggestForms,
-  suggestPlanets,
+  suggestCelestialBodies,
   suggestZodiacSigns,
 } from '@/modules/vocabulary';
 import type { PageRequest } from '@/lib/types';
@@ -154,24 +154,24 @@ describe('createWorkspaceIngredient', () => {
 
   // DESIGN.md §5 (MB.134): as many of each as the practice gives it, in the
   // member's order, and never into `element`, the single its list replaced.
-  it('saves several elements, planets, signs and colours, each in the order entered', async () => {
+  it('saves several elements, celestial bodies, signs and colours, each in the order entered', async () => {
     const created = await createWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, {
       ...inputOf(local()),
       elements: ['water', 'earth'],
-      planets: ['Venus', 'Moon'],
+      celestialBodies: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', ' ', 'Silver'],
     });
 
     expect(created).toMatchObject({
       elements: ['water', 'earth'],
-      planets: ['Venus', 'Moon'],
+      celestialBodies: ['Venus', 'Moon'],
       zodiacSigns: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', 'Silver'],
     });
     expect(await rowOf(created.id)).toMatchObject({
       elements: ['water', 'earth'],
-      planets: ['Venus', 'Moon'],
+      celestial_bodies: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', 'Silver'],
     });
@@ -520,7 +520,7 @@ describe('updateWorkspaceIngredient', () => {
     const id = await seed(
       local({
         elements: ['earth', 'water'],
-        planets: ['Moon', 'Venus'],
+        celestialBodies: ['Moon', 'Venus'],
         zodiacSigns: ['Cancer'],
         colors: ['Silver', 'White'],
       }),
@@ -529,20 +529,20 @@ describe('updateWorkspaceIngredient', () => {
     const updated = await updateWorkspaceIngredient(asUser(B), WORKSPACE_W_ID, id, {
       ...inputOf(local()),
       elements: ['air', 'earth'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: [],
       colors: ['White', 'Silver'],
     });
 
     expect(updated).toMatchObject({
       elements: ['air', 'earth'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       zodiacSigns: null,
       colors: ['White', 'Silver'],
     });
     expect(await rowOf(id)).toMatchObject({
       elements: ['air', 'earth'],
-      planets: ['Mars'],
+      celestial_bodies: ['Mars'],
       zodiac_signs: null,
       colors: ['White', 'Silver'],
     });
@@ -910,9 +910,9 @@ describe('a deleted coven ingredient', () => {
         ),
     ],
     [
-      'the planet suggestions',
+      'the celestial body suggestions',
       async () =>
-        (await suggestPlanets(member, WORKSPACE_W_ID, 'fixture star', PAGE)).some(
+        (await suggestCelestialBodies(member, WORKSPACE_W_ID, 'fixture star', PAGE)).some(
           ({ node }) => node.value === 'Fixture Star',
         ),
     ],
@@ -939,7 +939,7 @@ describe('a deleted coven ingredient', () => {
         categories: ['Protection'],
         substitutes: ['Fixture Stand-in'],
         deities: ['Fixture Deity'],
-        planets: ['Fixture Star'],
+        celestialBodies: ['Fixture Star'],
         zodiacSigns: ['Fixture Sign'],
       }),
     );
@@ -1076,7 +1076,7 @@ describe('its forms', () => {
         {
           form: 'Testleaf',
           description: 'Pressed.',
-          planets: ['Venus'],
+          celestialBodies: ['Venus'],
           categoryIds: [protection],
           substitutes: [
             { ingredientId: testroot.id, substituteVariantId: testroot.form },
@@ -1090,7 +1090,7 @@ describe('its forms', () => {
 
     const [leaf, oil] = await variantRowsOf(sql, created.id);
     expect([leaf, oil]).toMatchObject([
-      { form: 'Testleaf', description: 'Pressed.', planets: ['Venus'], deleted_at: null },
+      { form: 'Testleaf', description: 'Pressed.', celestial_bodies: ['Venus'], deleted_at: null },
       { form: 'Testoil', safety_notes: 'Dilute.', deleted_at: null },
     ]);
     expect(await variantChildrenOf(sql, leaf.id)).toMatchObject({
@@ -1348,7 +1348,7 @@ describe('its forms', () => {
         {
           id: ids[0],
           form: 'Testleaf',
-          planets: ['Venus'],
+          celestialBodies: ['Venus'],
           categoryIds: [protection],
           substitutes: [{ name: 'Mock Root' }],
           references: [{ referenceId: source, locator: 'p. 3' }],

@@ -145,9 +145,9 @@ export const List: Story = () => {
 export const Sortable: Story = () => {
   const [value, setValue] = useState('');
   const [entries, setEntries] = useState(
-    ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].map((planet) => ({
-      id: planet,
-      value: planet,
+    ['Sun', 'Moon', 'Mercury', 'Venus', 'Mars', 'Jupiter', 'Saturn'].map((celestialBody) => ({
+      id: celestialBody,
+      value: celestialBody,
     })),
   );
   const add = (text: string) => {
@@ -165,7 +165,7 @@ export const Sortable: Story = () => {
     });
   return (
     <Combobox
-      id="planet"
+      id="celestialBody"
       label="Celestial Body"
       value={value}
       onChange={setValue}

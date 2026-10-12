@@ -1,7 +1,7 @@
 ## The astrology vocabularies (MB.91; tables MB.92)
 
-`planets` and `zodiac_signs` are the vocabularies behind the lists
-`ingredients.planets` and `ingredients.zodiac_signs` (MB.136; the single
+`celestial_bodies` and `zodiac_signs` are the vocabularies behind the lists
+`ingredients.celestial_bodies` and `ingredients.zodiac_signs` (MB.136; the single
 `planet` and `zodiac` before them), in
 `src/modules/vocabulary/schema/astrology.ts`, migration
 `0023_correspondence-vocabularies.sql`, seeded by `src/db/seed/astrology.ts`
@@ -14,20 +14,20 @@ rather than _correspondence_, which in §5 names every property an ingredient
 carries — element and deities too — not these two; the migration keeps the
 name it shipped under, since its tag is in the journal.
 
-**People read the `planets` vocabulary as Celestial Bodies** (MB.251), since most of its nineteen values are not planets. Since MB.252 the table is `celestial_bodies`, and a `planets` view over it serves the deploy before until MB.254 drops it, beside new `celestial_bodies` lists and a `reference_links.celestial_body_id` that nothing reads or writes yet (["Renaming a table"](expand-contract.md)). The code and GraphQL names, and the columns the code reads, keep `planets` until MB.253, and MB.254 drops the old columns. This doc's `planets` means those names, and the table where it names a table (`design-decisions/mb.251-celestial-bodies.md`).
+**People read this vocabulary as Celestial Bodies** (MB.251), since most of its nineteen values are not planets. The table is `celestial_bodies` (MB.252), and the code, GraphQL and the lists the code reads and writes say celestial bodies (MB.253). The old `planets` lists on `ingredients` and `ingredient_variants`, `reference_links.planet_id` and a `planets` view over the table stay in the database for the deploy before, until MB.254 drops them (["Renaming a table"](expand-contract.md); `design-decisions/mb.251-celestial-bodies.md`).
 
-- **`planets`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
+- **`celestial_bodies`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
   admin-curated, in the `vocabulary` module, both in one schema file as the
   form pair is. No group, no colour, no order column, no `workspace_id`.
-  The only foreign keys are the audit stamps, and `ingredients.planets` and
+  The only foreign keys are the audit stamps, and `ingredients.celestial_bodies` and
   `.zodiac_signs` point none at either table — `ingredients-schema.test.ts`
   holds `ingredients`' own keys to its workspace, and
   `tests/db/schema-drift.test.ts` holds the migrated database to the schema
   files (MB.226).
 
 **They are `form`'s pattern, and the two lists stay free text.** A member
-writes planets and zodiac signs, so by MB.35's rule each entry is text over a
+writes celestial bodies and zodiac signs, so by MB.35's rule each entry is text over a
 vocabulary rather than a foreign key: a value off the list stays writable on
 a coven's ingredient, and soft-deleting a row rewrites none of a coven's, its
 value moving into the in-use bucket instead. A compendium entry holds curated
@@ -39,7 +39,7 @@ sets, and `nomenclature` is coupled to `canonicalName` by a CHECK that names
 
 **Two tables, not one with a `kind` column**, for the reason the group tables
 are two: a suggestion query that forgot the `kind` predicate would offer a
-sign for `planets`, and two tables leave no predicate to forget.
+sign for `celestial_bodies`, and two tables leave no predicate to forget.
 
 **Uniqueness is on `slug`, partial on `deleted_at IS NULL`**, as on the four
 tables in the [categories section](categories.md), and the display name
@@ -59,11 +59,11 @@ both. `gin_trgm_ops` answers `<%` as it answers `%`.
 - **One tier.** Nothing groups a body or a sign, so the seed needs a flat
   helper over `insertMissing` rather than `seedTwoTierVocabulary`, which
   assumes a group table.
-- **The DESIGN.md table sits outside the forms table's run.** §5's planet and
+- **The DESIGN.md table sits outside the forms table's run.** §5's celestial body and
   zodiac table is placed after the forms paragraphs and before
   `categories`, where a test once parsing the forms' lines would not read it
   as one; no test parses §5 since MB.225.
-- **`standard` seeds no uncurated planet.** Its compendium's planet values are
+- **`standard` seeds no uncurated celestial body.** Its compendium's celestial body values are
   all curated names in title case, which match case-insensitively. MB.94
   decided against one: its tests write their own against an emptied
   `ingredients`, and one in the shared template would reach every
@@ -88,8 +88,8 @@ live row's `lower(name)`.
 `src/modules/vocabulary/services/astrology.ts`, in the form writes' shape
 ([`categories.md`](categories.md), "Form writes") without the group, for
 `/admin/celestial-bodies` (it was `/admin/planets` until MB.251) and `/admin/zodiac-signs`. One code path for both, keyed by
-the ingredient list each curates (`CuratedField`, `'planets' | 'zodiacSigns'`).
-A compendium entry's planets and signs are curated spellings (MB.162), and
+the ingredient list each curates (`CuratedField`, `'celestialBodies' | 'zodiacSigns'`).
+A compendium entry's celestial bodies and signs are curated spellings (MB.162), and
 these writes keep them so after the write.
 
 - **The reads.** `listAstrologyValues(field, filter, page)` pages the live
@@ -104,13 +104,13 @@ these writes keep them so after the write.
   address.
 - **A delete is refused while a live compendium entry's list holds the
   value**: `Forbidden`, naming the first three entries and how many more,
-  through the compendium's own filter (`IngredientFilter.planet` or
+  through the compendium's own filter (`IngredientFilter.celestialBody` or
   `zodiacSign`) and the shared `refuseWhileHeld`. A coven's ingredient never blocks
   it; its value moves into that coven's in-use bucket.
 - **A rename carries the new name onto every live compendium entry holding
   the old, in the same transaction**, through `write.carryAstrologyRename`:
   each entry folding to the old spelling is replaced in its place, and
-  nothing else in the row moves, since a planet or a sign is no part of an
+  nothing else in the row moves, since a celestial body or a sign is no part of an
   entry's identity or slug. A case-only rename carries too. A soft-deleted
   entry keeps the old spelling, and a coven's ingredient is never written
   (M6.6). The writer is the twenty-second, named below the module boundary

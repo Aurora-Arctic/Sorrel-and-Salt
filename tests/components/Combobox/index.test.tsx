@@ -868,14 +868,14 @@ describe('Combobox', () => {
       render(<Harness entries={<ComboboxSortableEntries entries={entries} onMove={onMove} />} />);
       return onMove;
     }
-    const planets = (onRemove = vi.fn()) =>
+    const celestialBodies = (onRemove = vi.fn()) =>
       ['Mars', 'Venus', 'Saturn'].map((value) => ({ id: value, value, onRemove }));
 
     beforeEach(layOutChips);
     afterEach(() => vi.restoreAllMocks());
 
     it('gives each entry a handle named for it, ahead of its x, that says how it moves', () => {
-      renderSortable(planets());
+      renderSortable(celestialBodies());
 
       const move = handle('Venus');
       expect(move).toHaveAttribute('aria-roledescription', 'sortable');
@@ -890,7 +890,7 @@ describe('Combobox', () => {
     });
 
     it('moves an entry by keyboard, saying each step, the focus kept on the moved entry', async () => {
-      const onMove = renderSortable(planets());
+      const onMove = renderSortable(celestialBodies());
       const mars = handle('Mars');
 
       act(() => mars.focus());
@@ -978,7 +978,7 @@ describe('Combobox', () => {
     });
 
     it('moves an entry by Enter as well as Space', async () => {
-      const onMove = renderSortable(planets());
+      const onMove = renderSortable(celestialBodies());
       const venus = handle('Venus');
 
       act(() => venus.focus());
@@ -990,7 +990,7 @@ describe('Combobox', () => {
     });
 
     it('puts an entry back where it was on Escape, moving nothing', async () => {
-      const onMove = renderSortable(planets());
+      const onMove = renderSortable(celestialBodies());
       const mars = handle('Mars');
 
       act(() => mars.focus());
@@ -1004,7 +1004,7 @@ describe('Combobox', () => {
     });
 
     it('moves an entry by pointer, dragged onto another’s place', async () => {
-      const onMove = renderSortable(planets());
+      const onMove = renderSortable(celestialBodies());
 
       // Mars from the first chip onto the third, Saturn, at 200–280px.
       await dragByPointer(handle('Mars'), 245);
@@ -1013,7 +1013,7 @@ describe('Combobox', () => {
     });
 
     it('moves nothing on a press that does not drag, or a lift put straight back down', async () => {
-      const onMove = renderSortable(planets());
+      const onMove = renderSortable(celestialBodies());
       const mars = handle('Mars');
 
       fireEvent.pointerDown(mars, { clientX: 40, clientY: 12, isPrimary: true, button: 0 });

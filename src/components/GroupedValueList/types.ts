@@ -25,7 +25,7 @@ export interface GroupedValueListKind {
   noun: string;
   /** More than one, lower-case: "categories". */
   plural: string;
-  /** The group, for a grouped kind; a flat kind (a planet, a zodiac sign) has none. */
+  /** The group, for a grouped kind; a flat kind (a celestial body, a zodiac sign) has none. */
   group?: GroupedValueListGroup;
 }
 

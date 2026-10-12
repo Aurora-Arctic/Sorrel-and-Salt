@@ -89,9 +89,9 @@ export const EditingADeity: Story = () => (
   </Modal>
 );
 
-export const AddingAPlanet: Story = () => (
+export const AddingACelestialBody: Story = () => (
   <Modal title="Add Celestial Body" onClose={done}>
-    <GroupedValueForm kind="planet" onDone={done} />
+    <GroupedValueForm kind="celestialBody" onDone={done} />
   </Modal>
 );
 
@@ -138,7 +138,7 @@ AddingAForm.meta = { iframed: true };
 EditingAForm.meta = { iframed: true };
 AddingADeity.meta = { iframed: true };
 EditingADeity.meta = { iframed: true };
-AddingAPlanet.meta = { iframed: true };
+AddingACelestialBody.meta = { iframed: true };
 EditingAZodiacSign.meta = { iframed: true };
 AskingToDelete.meta = { iframed: true };
 PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };

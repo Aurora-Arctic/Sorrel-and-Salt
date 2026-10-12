@@ -17,7 +17,7 @@ import { referenceLinks } from '../../modules/ingredients/schema/reference-links
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
-import { planets, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
+import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import type { CitationFields } from '../../lib/types';
 import type {
   SeedCitation,
@@ -85,7 +85,7 @@ export async function seedCompendiumContent(
     forms: await picksBySeedKey(tx, ingredientForms),
     categories: await picksBySeedKey(tx, categories),
     deities: await picksBySeedKey(tx, deities),
-    planets: await picksBySeedKey(tx, planets),
+    celestialBodies: await picksBySeedKey(tx, celestialBodies),
     zodiacSigns: await picksBySeedKey(tx, zodiacSigns),
   };
   const pick = (kind: keyof typeof picks, name: string) =>
@@ -94,10 +94,10 @@ export async function seedCompendiumContent(
       slugify(name),
       () => `A compendium entry names ${kind} "${name}", which no seed wrote.`,
     );
-  // A planet or sign is stored as its row's current spelling (MB.162); a
+  // A celestial body or sign is stored as its row's current spelling (MB.162); a
   // retired one is left off.
   const spelled = (
-    kind: 'planets' | 'zodiacSigns',
+    kind: 'celestialBodies' | 'zodiacSigns',
     values: readonly string[] | null | undefined,
   ) => {
     const names = (values ?? []).flatMap((value) => pick(kind, value)?.name ?? []);
@@ -115,7 +115,7 @@ export async function seedCompendiumContent(
       slug: ingredientSlug(entry.name, entry.canonicalName),
       description: entry.description ?? null,
       elements: entry.elements ?? null,
-      planets: spelled('planets', entry.planets),
+      celestialBodies: spelled('celestialBodies', entry.celestialBodies),
       zodiacSigns: spelled('zodiacSigns', entry.zodiacSigns),
       colors: entry.colors ?? null,
       safetyNotes: entry.safetyNotes ?? null,
@@ -143,7 +143,7 @@ export async function seedCompendiumContent(
       description: variant.description ?? null,
       safetyNotes: variant.safetyNotes ?? null,
       elements: variant.elements ?? null,
-      planets: spelled('planets', variant.planets),
+      celestialBodies: spelled('celestialBodies', variant.celestialBodies),
       zodiacSigns: spelled('zodiacSigns', variant.zodiacSigns),
       colors: variant.colors ?? null,
     })),
@@ -305,7 +305,7 @@ async function picksBySeedKey(
     | typeof ingredientForms
     | typeof categories
     | typeof deities
-    | typeof planets
+    | typeof celestialBodies
     | typeof zodiacSigns,
 ): Promise<Map<string, CuratedPick>> {
   const rows = await tx

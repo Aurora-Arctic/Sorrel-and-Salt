@@ -31,7 +31,7 @@ import {
   offerIngredients,
   offerNames,
   offerNothing,
-  offerPlanets,
+  offerCelestialBodies,
   offerSigns,
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
@@ -194,7 +194,7 @@ describe('IngredientForm', () => {
         description: 'A fixture herb.',
         // In the order chosen, not the vocabulary's.
         elements: ['water', 'air'],
-        planets: ['Mercury', 'Venus'],
+        celestialBodies: ['Mercury', 'Venus'],
         zodiacSigns: ['Gemini'],
         colors: ['Silver-green'],
         safetyNotes: 'None known.',
@@ -858,7 +858,7 @@ describe('IngredientForm', () => {
         },
         {
           entry: 'Celestial Body',
-          calls: offerPlanets([{ value: 'Moon', description: null, curated: true }]),
+          calls: offerCelestialBodies([{ value: 'Moon', description: null, curated: true }]),
           option: /^Moon/,
         },
         {
@@ -908,7 +908,7 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(saves[0].input).toMatchObject({
         folkNames: ['Hedge Fixture'],
-        planets: ['Moon'],
+        celestialBodies: ['Moon'],
         zodiacSigns: ['Cancer'],
         deities: [{ deityId: GREEK_HECATE_ID }],
         substitutes: [{ ingredientId: COVEN_ID }],

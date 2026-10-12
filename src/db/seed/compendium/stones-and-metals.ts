@@ -374,7 +374,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       nomenclature: 'mineral',
       description:
         'Agate is a banded form of chalcedony, the finely fibrous kind of quartz (silicon dioxide), and Wikipedia classes it as a variety of quartz. Its layers of differently coloured chalcedony usually run in rings that follow the shape of the hollow it grew in, though some lie in flat parallel lines. Most agates grow as nodules in the gas pockets of volcanic rock, others in veins or by replacing fossils, and no one has yet made one in a laboratory. Iron oxides give most bands their colour, and many dull agates on sale have been dyed or heated. Theophrastus and Pliny both say it was named after the River Achates in Sicily. People shaped agate into tools in the Stone Age, and into jewellery and seals from Sumerian times onward. Cunningham gives agate to Mercury and uses it for strength, courage, long life, love, healing and protection: worn while gardening for fruitful plants, as a truth amulet, and by children as a guard against falls. Hall calls it a slow-working grounding and balancing stone that brings strength, self-confidence, a love of truth and courage, and credits it with cleansing and healing effects.',
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       colors: [
         'colourless',
         'blue',
@@ -410,7 +410,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 66–67',
-          supports: ['planets', 'categories', 'description'],
+          supports: ['celestialBodies', 'categories', 'description'],
         },
         {
           source: 'hall-crystal-bible',
@@ -496,7 +496,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Aluminium, spelt aluminum in North American English, is the chemical element Al, atomic number 13. It is a soft, ductile, non-magnetic metal about a third as dense as steel, and it looks much like silver, both in its colour and in how well it reflects light; in air it quickly forms a thin protective skin of oxide. Cunningham notes that it is a modern metal with no history among earlier peoples, now found in everything from drinks cans to aircraft. He gives it to Mercury and air and calls it projective. He mentions that it is sometimes recommended in place of mercury, the metal traditionally given to that planet, as far less dangerous to use, though he himself distrusts aluminium cookware. Small pieces are carried to sharpen the mind, and its modern link with flight makes it useful in spells for journeys to distant lands. Foil serves for image magic: shaped on the altar into the form of what is needed, charged with visualisation, then smoothed, rinsed, dried and reused each day until the work succeeds. He even counts recycling aluminium as a kind of magic, turning rubbish into money.',
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       colors: ['silver'],
       folkNames: ['Aluminum'],
       substitutes: [
@@ -508,7 +508,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 151–152',
-          supports: ['elements', 'planets', 'folkNames', 'substitutes', 'description'],
+          supports: ['elements', 'celestialBodies', 'folkNames', 'substitutes', 'description'],
         },
         {
           source: 'wikipedia-aluminium',
@@ -588,7 +588,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Antimony is the chemical element Sb, atomic number 51, a lustrous grey metal or metalloid. In nature it is found mainly in the sulphide mineral stibnite, and its compounds have been known since ancient times, powdered for medicine and for cosmetics often called by the Arabic name kohl. China once struck coins of it, in Guizhou in 1931, but the issue was soon stopped because the metal proved too soft and too toxic. Cunningham describes it as a white metal and gives it to the Sun and fire, calling it projective. His entry for it is brief and concerned with a single power, protection. He suggests wearing a small piece of antimony to ward off negative vibrations, carrying or wearing it simply to be protected, and adding small bits of it to combinations of protective stones to strengthen what they already do. His entry gives no older lore of the metal and names no deity, herb or stone for it.',
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: ['white', 'grey'],
       safetyNotes:
         'Wikipedia states that antimony and many of its compounds are toxic, with effects resembling arsenic poisoning, although antimony is far less toxic than arsenic.',
@@ -597,7 +597,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 152',
-          supports: ['elements', 'planets', 'colors', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'colors', 'categories', 'description'],
         },
         {
           source: 'wikipedia-antimony',
@@ -628,7 +628,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Aquamarine is the pale blue to light green kind of beryl, a beryllium aluminium silicate, its sea colour coming from small amounts of iron held in the crystal. It grows as six-sided prisms, from tiny to huge, mostly in granite pegmatites and in veins laid down by hot mineral-rich water. Because it is fairly plentiful it costs less than emerald, its green relative. The name joins the Latin for water and for the sea. Wikipedia records that it is the birthstone for March, that the ancient Greeks cut it into engraved gems, and that an old tale of mermaids led sailors to carry it as a lucky charm against shipwreck; the largest cut stone, the Dom Pedro, came from Minas Gerais in Brazil. Cunningham gives it to the Moon and to water, calls it the stone of the old sea goddesses, and notes aquamarine beads found in Egyptian burials. He uses it to bring psychic impulses through, to purify the body before ritual, to bring peace and happiness between partners, and as a guard for anyone travelling over water. Hall calls it a stone of courage whose calming energy quiets the mind, says sailors once carried it against drowning, and links it with clearer communication, sharper intuition and meditation.',
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       colors: ['blue', 'green'],
       categories: [
         'Psychic Work',
@@ -658,7 +658,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'colors',
             'categories',
             'substitutes',
@@ -715,7 +715,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Aventurine is a translucent form of quartzite, a rock, in which flat, plate-like inclusions of other minerals give a glittering shimmer called aventurescence. It is most often green, thanks to chromium-bearing fuchsite mica, which can give it a sheen of silvery green or blue, but it also comes in orange and brown, tinted by hematite or goethite, and in yellow, blue and grey. Being a rock rather than a single crystal, its hardness and weight vary, and it is a little softer than ordinary quartz. Its name comes from the Italian a ventura, 'by chance', handed on from goldstone, a glass said to have been made by accident at Murano and now a common imitation of it. Most green and blue-green material comes from India, and much of it is carved into beads and figures. Hall describes it as opaque and flecked with shiny particles, easy to find, and calls it a stone of prosperity that protects against environmental pollution and encourages creativity, perception and calm. Cunningham places it under Mercury and the element of air; he uses it to sharpen perception, intelligence and creativity, in gambling and money magic, for peace and healing, and as a general stone of luck.",
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       colors: ['green', 'blue', 'red', 'brown', 'orange', 'yellow', 'grey', 'white'],
       categories: ['Gambling', 'Peace', 'Healing', 'Creativity', 'Prosperity', 'Protection'],
       substitutes: [
@@ -727,7 +727,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 76; p. 190',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -774,7 +781,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Beryl is a mineral, a silicate of beryllium and aluminium, that grows as six-sided columns; single crystals can reach several metres, though ones with finished ends are uncommon. Pure beryl has no colour of its own, but traces of other elements tint it green, blue, yellow, pink or, most rarely, red, and its best-known varieties are emerald and aquamarine. It is found mostly in granite pegmatites, and also in mica schists and in Colombian limestone, and it is mined as an ore of beryllium. The name reached English through French and Latin from a Greek word used for several blue-green stones. The first spectacles, made in thirteenth-century Italy, had lenses ground from beryl or rock crystal, which is why the German word for glasses is Brille. Cunningham gives beryl to the Moon and to water, links it with Poseidon and Neptune, and calls it the seer's stone: he says spheres and flat mirrors of it served for scrying, that John Dee's famous crystal was beryl rather than quartz, and that it is worn at sea against storms and drowning, to draw love and friendship, and to reconcile enemies. Hall describes it as a stone for coping with a stressful life and dropping needless burdens, credits it with lending courage, and recommends it for scrying and crystal balls.",
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       colors: ['pink', 'gold', 'yellow', 'green', 'white', 'blue', 'colourless', 'red'],
       safetyNotes:
         'Wikipedia notes that beryl, being a beryllium compound, is a known carcinogen and can inflame the lungs if breathed in, so it should be handled with care.',
@@ -801,7 +808,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 76–78; p. 190',
-          supports: ['elements', 'planets', 'deities', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'deities',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -849,7 +863,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Black tourmaline is schorl, the sodium- and iron-rich member of the tourmaline group and by far its commonest kind: Wikipedia puts it at up to 95 per cent of all tourmaline found in nature. It is opaque, brownish-black to black, and its iron gives it a high magnetic susceptibility. The name is older than 1400 and comes from a Saxon village, now Zschorlau, beside a tin mine where the black crystals turned up; Johannes Mathesius described it in 1562, and English writers later called it shorl, shirl or iron tourmaline. Like other iron-rich tourmalines it grows mainly in granite and granite pegmatite. Cunningham says it is usually too brittle for jewellery and seldom sold; he gives it to Saturn and to earth, uses it for grounding and to stand for the earth in spells of that element, and calls it protective, since it soaks up negativity once charged to do so. Hall presents it as a shield against psychic attack, spells, ill-wishing, electromagnetic smog and negative energy, says it grounds energy and lifts physical vitality, and links it with a calm, objective outlook, altruism and practical creativity.',
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       colors: ['black'],
       folkNames: ['Shorl', 'Common Schorl', 'Iron Tourmaline'],
       categories: ['Grounding', 'Protection', 'Creativity', 'Healing'],
@@ -857,7 +871,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 142',
-          supports: ['canonicalName', 'elements', 'planets', 'colors', 'categories', 'description'],
+          supports: [
+            'canonicalName',
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -896,7 +917,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Bloodstone, also called heliotrope, is a dark green cryptocrystalline quartz spotted with red, found mostly as opaque jasper and now and then as translucent chalcedony. In the classic stone the red flecks are jasper coloured by inclusions of hematite, and their likeness to drops of blood gives the stone its everyday name; patches of yellow, white or blue also occur. The name heliotrope, from Greek words for the sun and for turning, goes back to old beliefs about how the stone reflects light, recorded by Pliny the Elder. Wikipedia names the Deccan Traps of India as the chief source of true bloodstone, and notes it on the Isle of Rum in Scotland. Among the legends it gathers are a Christian story that the spots are the blood of Christ, Roman soldiers wearing it to slow bleeding, and Gnostics wearing it for long life, wealth and courage.\n\nCunningham assigns bloodstone to Mars and to fire. Its best-known use in his account is to stop bleeding; he also has it worn for courage, strength and victory in court, kept in a till to bring in money, and smeared with heliotrope flowers for invisibility. Hall calls it a grounding and protecting stone that sharpens intuition, feeds creativity and gives courage. The healing claims both make for it are theirs, not established medicine.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['green', 'red', 'yellow', 'white', 'blue'],
       folkNames: ['Heliotrope', 'Ematille', 'Indian Bloodstone', 'Stone of Babylon'],
       categories: [
@@ -925,7 +946,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 78–79',
-          supports: ['elements', 'planets', 'colors', 'folkNames', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'folkNames',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -1019,7 +1047,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Brass is an alloy of copper and zinc, its proportions varied to change its colour and its mechanical and other properties, though copper usually makes up the larger share, typically about two-thirds. It has been in use since prehistoric times, and it is prized for its bright, golden look, its low melting point and how easily it is worked, which have made it a favourite for door furniture, sculpture and utensils. As an alloy of variable make-up it has no formal name of its own. Cunningham calls it a yellowish gold metal and gives it to the Sun and fire as projective. He says it has long stood in for gold in magic, without all of gold's virtues, and uses it chiefly to draw money: brass bells rung over green candles at sunrise, money-drawing stones laid on a piece of brass during prosperity rituals, and a small piece inscribed with a pentagram and carried to draw wealth. He also records healing charms, a brass ring against stomach cramps and a brass key at the nape of the neck to stop a nosebleed, and calls it protective, worn to guard the body and used to turn negativity back on its sender.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: ['yellow', 'gold'],
       categories: ['Healing', 'Protection', 'Prosperity', 'Wealth'],
       substitutes: [
@@ -1031,7 +1059,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 153–154',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'wikipedia-brass',
@@ -1097,7 +1132,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Carnelian, also spelled cornelian, is a reddish form of chalcedony, the fine-grained silica (silicon dioxide) counted as a variety of quartz. Traces of iron oxide colour it, anywhere from pale orange to a red so deep it looks nearly black. Sard is the darker, harder sort, and the boundary between the two names is loose. Peru and Sri Lanka are among its important sources. People in Bulgaria were already making beads of it in the early Neolithic, and Roman gem cutters favoured it for signet rings because hot sealing wax will not cling to it. The name goes back through medieval Latin to the Latin word for the cornel cherry, whose red fruit looks much like the stone.\n\nCunningham gives carnelian projective energy, the Sun and fire, and lists protection, peace, eloquence, healing, courage and sexual energy among its powers. He says the shy wear it to bolster their nerve, speakers carry it to strengthen the voice, others carry it so no one can read their thoughts, and it is worn in bed to stop nightmares. Hall calls it a grounding, energetic stone that sparks creativity, lends courage and drive towards success in business, shields against envy and anger, and can cleanse other crystals; she says a piece by the front door brings protection and abundance to the household.',
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: ['red', 'orange', 'brown', 'pink'],
       folkNames: ['Cornelian'],
       categories: [
@@ -1133,7 +1168,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 80; p. 190',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -1199,7 +1241,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Cymophane, better known as cat's eye, is the chatoyant variety of chrysoberyl: a translucent, usually yellowish stone in which countless fine needles of rutile, or tiny tube-shaped hollows, lie parallel and throw a single bright line across a polished dome. Its formal name comes from Greek words for wave and appearance. Dealers praise the finest stones as 'milk and honey', meaning a sharp milky streak over a honey-toned body, though lemon-yellow ones are liked as well. Quartz, tourmaline, corundum and other minerals can show the same effect, but Wikipedia says the jewellery trade keeps the bare name 'cat's eye' for chrysoberyl and gives the others a qualifier. It grew fashionable late in the nineteenth century after the Duke of Connaught gave an engagement ring set with one. Cunningham writes of 'cat's-eye' in a looser sense that he says usually means quartz holding asbestos fibres; he assigns it to Venus and earth and uses it for wealth, beauty, gambling, protection and healing, keeping it with money and wearing it set in silver. Hall describes it as a grounding stone that also stirs intuition, credits it with protection and confidence, and says its cymophane form steadies the intellect.",
       elements: ['earth'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       colors: ['yellow', 'green'],
       categories: [
         'Wealth',
@@ -1220,7 +1262,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 81; p. 190',
-          supports: ['elements', 'planets', 'categories', 'substitutes', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'substitutes', 'description'],
         },
         {
           source: 'hall-crystal-bible',
@@ -1256,7 +1298,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Chalcedony is silica whose crystals are too small to see without magnification: a compact mass made mostly of quartz with a little intergrown moganite, which Wikipedia classes as a variety of quartz. It has a waxy lustre and lets some light through. It comes in many colours, but the commonest run from white and grey through greyish blue to browns that can be almost black, and stones on sale are often dyed or heated to deepen their colour. Agate, carnelian, chrysoprase and bloodstone are among its many named varieties. The name probably comes, through Latin, from Chalcedon, an ancient Greek town in Asia Minor, though that link is disputed. People were working it into tools in central Australia about 32,000 years ago, and Minoan seals cut from it at Knossos date to around 1800 BC.\n\nCunningham assigns chalcedony to the Moon and to water. He calls it a protective stone for travellers and against psychic attack, worn to bed to keep nightmares and fear of the dark away, and used for peace, strength and success. Hall calls it a nurturing stone of goodwill that brings mind, body and spirit into harmony and turns melancholy into joy, and she associates it with cleansing and healing; these are her claims, not established medicine.',
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       colors: ['white', 'pink', 'blue', 'red', 'grey', 'brown'],
       categories: [
         'Peace',
@@ -1276,7 +1318,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 82',
-          supports: ['elements', 'planets', 'colors', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'colors', 'categories', 'description'],
         },
         {
           source: 'hall-crystal-bible',
@@ -1386,7 +1428,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Chrysoprase is a gem variety of chalcedony, the cryptocrystalline form of silica, coloured green by traces of nickel held in very small inclusions; emerald, by contrast, owes its green to chromium. Its usual shade is apple green, though it ranges from a cyan close to turquoise to a deep green, and darker stones are sometimes called prase. The name joins the Greek words for gold and green. Its grains are too fine to pick out even under ordinary magnification, which separates it from crystalline quartzes such as amethyst and citrine, and it is valued for its colour rather than for any markings. It forms where nickel-bearing serpentinite and similar rocks have weathered deeply; well-known sources include Queensland and Western Australia, Tanzania, Poland and Brazil. Like other chalcedony it has a Mohs hardness of between 6 and 7.\n\nCunningham assigns chrysoprase to Venus, to earth and to the goddess Vesta, and has it worn for luck, success, friendship and protection, to drive off greed and envy, and to keep nightmares away. Hall links it with deep meditation, love of truth, creativity, fidelity and forgiveness, and with peaceful sleep and fertility. The healing claims both authors make for it are theirs, not established medicine.',
       elements: ['earth'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       colors: ['green', 'turquoise'],
       folkNames: ['Chrysophrase', 'Chrysoprasus'],
       deities: ['Vesta'],
@@ -1411,7 +1453,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 83',
-          supports: ['elements', 'planets', 'deities', 'colors', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'deities',
+            'colors',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -1463,7 +1512,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Citrine is the transparent yellow variety of quartz, the silicon dioxide mineral, and its name comes, by way of French, from the Latin for the citron tree. Natural stones are pale yellow, sometimes tinged orange, green or smoky, and mineralogists still disagree over which trace element colours them. True citrine is scarce in nature: both Wikipedia and Hall note that much of what is sold under the name is amethyst that has been heated, which turns a deeper yellow, orange or brown. Most of it comes from Brazil. It has been in use since the days of ancient Egypt, was long confused with topaz before modern mineralogy, and earned the nicknames money stone and merchant's stone from a belief that it brought prosperity. Cunningham assigns it to the Sun and to fire, and says it is worn at night to drive off fear and nightmares and to give sound sleep, and also to sharpen psychic awareness; he lists topaz as a substitute for it. Hall calls it a stone of abundance linked with wealth, success and joy, and associates it with cleansing, protection, grounding negative energy, intuition, creativity and self-confidence. She also notes that its colour fades in sunlight.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: ['yellow', 'brown', 'orange', 'green'],
       folkNames: ['Money Stone', "Merchant's Stone"],
       categories: [
@@ -1496,7 +1545,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 44; pp. 83–84; p. 190',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -1532,7 +1588,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Clear quartz is the pure, colourless kind of quartz, the hard mineral of silicon dioxide that Wikipedia ranks second in abundance in the Earth's lithosphere, behind only the feldspar group. It forms transparent or translucent crystals, often long and pointed, and has traditionally been called rock crystal. The Greeks named it krustallos, from their word for icy cold, and Pliny believed it was ice frozen solid over long ages; Cunningham likewise records that the ancients took it for solid water, and that it was used to bring rain in parts of the Pacific. Wikipedia notes that quartz turns up in European passage tombs such as Newgrange, and that it is the material most often identified as maban, a mystical substance in Aboriginal Australian mythology. Cunningham assigns it to the Sun and Moon and to fire and water, and counts protection, healing and psychic power among its virtues. He describes points worn or carried to heighten psychic awareness, a crystal under the pillow for dreams and peaceful rest, spheres and pendulums used for scrying and divination, and crystals laid out to mark the magic circle. Hall calls quartz a master healer and an amplifier of energy, and associates it with cleansing, meditation, psychic ability and memory. Both writers handle its coloured kinds, such as rose and smoky quartz, on their own.",
       elements: ['fire', 'water'],
-      planets: ['Sun', 'Moon'],
+      celestialBodies: ['Sun', 'Moon'],
       colors: ['colourless'],
       safetyNotes:
         'Wikipedia warns that cutting, grinding, drilling or polishing quartz can release very fine crystalline silica dust; breathed in, that dust is a recognised cause of cancer and can lead to lung disease such as silicosis.',
@@ -1559,7 +1615,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           locator: 'pp. 87–91; p. 190',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
             'substitutes',
@@ -1619,7 +1675,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Copper is the chemical element Cu, atomic number 29, a soft, malleable and ductile metal that carries heat and electricity very well. A freshly cut surface is pinkish orange; in air it slowly dulls to a brown-black oxide, and on roofs it weathers to a green patina called verdigris. It is one of the few metals found native, which led people to use it from about 8000 BC, and it was later the first metal smelted from sulphide ores and the first cast in a mould. Cunningham calls it a reddish orange metal and gives it to Venus and to water as a receptive metal. He records it as sacred in ancient Mesopotamia to Ishtar, Astarte and other goddesses of the planet Venus, and to the Sun in Babylon. Modern practitioners make wands of copper tube tipped with quartz crystals to direct energy, and wear the metal in ritual for the same end. He describes copper worn for healing and against sickness, rings of it set with emeralds to attract love or with mimosa seeds for protection, and old pennies kept in the kitchen to draw money to the household.',
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       colors: ['orange'],
       deities: ['Aphrodite', 'Astarte', 'Ishtar'],
       categories: ['Healing', 'Love', 'Protection', 'Attraction'],
@@ -1627,7 +1683,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 154–155',
-          supports: ['elements', 'planets', 'colors', 'deities', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'deities',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'wikipedia-copper',
@@ -1704,7 +1767,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Diamond is the element carbon in a rigid cubic crystal lattice, the hardest natural material known and the mineral that defines 10 on the Mohs scale. Pure diamond has no colour; nitrogen tints it yellow or brown and boron blue, radiation turns it green, distortion of the lattice gives some brown, pink and red stones, and 'black' diamonds owe their darkness to dense inclusions. Most natural diamonds grew between one and three and a half billion years ago, deep in the Earth's mantle, and were carried up far later by kimberlite and lamproite eruptions. The name goes back to Greek adamas, meaning untamed or unbreakable. India is thought to be where diamonds were first recognised and mined, and in 1772 Lavoisier burned one in oxygen to show that it is made of carbon. About four in five mined diamonds are unfit to be gems and go to industry for cutting and grinding, and laboratory-made diamond is now produced in enormous quantities. Cunningham ties diamond to the Sun and fire and uses it for spirituality and meditation, courage and strength, protection, peace, reconciling quarrelling lovers, fidelity and healing; worn at night, he says, it eases nightmares and brings sleep. Hall treats it as a symbol of purity, wealth and fidelity and an amplifier of energy, while warning that it magnifies negative energy as readily as positive.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: [
         'colourless',
         'white',
@@ -1757,7 +1820,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 91–93; p. 190',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -1846,7 +1916,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Emerald is the green variety of beryl, a beryllium aluminium silicate, its colour coming from traces of chromium, sometimes vanadium, with iron also playing a part. Only stones of medium to dark tone are called emerald; paler ones go by the name green beryl. Most emeralds are full of inclusions and fine cracks, sometimes called the jardin, French for garden, after their mossy look, and its toughness is rated poor. It is counted among the four great precious gems with diamond, ruby and sapphire. Egypt was mining emeralds by about 1500 BC; today Colombia is the largest producer and Zambia the second. The word comes through French and Latin from a Greek name meaning green gem. Cunningham assigns emerald to Venus and to earth and links it with Isis, Venus and Ceres. He uses it for love, advising that a charged stone be worn hidden near the heart, and in business spells, and says it was worn for memory, for awareness of psychic faculties and for protection, once being tied to the left arm of travellers. Hall calls it a stone of inspiration and patience, the stone of successful love, and credits it with fostering friendship, psychic abilities, wisdom, a clear mind and a good memory.',
       elements: ['earth'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       colors: ['green'],
       safetyNotes:
         'Hall advises against wearing emerald all the time, saying it can stir up negative emotions.',
@@ -1885,7 +1955,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 93–94; p. 190',
-          supports: ['elements', 'planets', 'deities', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'deities',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -1969,7 +2046,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Flint is a hard, sedimentary, cryptocrystalline form of quartz, the variety of chert found in chalk and marly limestone, where it occurs mainly as nodules and masses. It can be sandy brown, grey from medium to dark, black, reddish brown or an off-white grey. For most of human history it was the stone for tools and for striking fire. Cunningham, calling flint a term loosely used for opaque quartz, gives it to Mars and fire as a projective stone. He notes that it was among the first things early peoples traded, and that ancient flint blades found across Europe, their origin long forgotten, were called thunderstones and elf-shot and kept as protective amulets. The Irish set flint knives in silver against mischievous fairies, Scandinavians sometimes honoured them as household gods with offerings of beer and melted butter, and Cherokee healers invoked flint before treating the sick. In his magic, ancient flint tools are protective amulets, most potent over a door, and a flint knife or replica is held or laid on the altar in protective rites. He also records flint used in Brazil to divine for gold, water and gemstones, and an American spell that sends a headache away in the sparks struck from it.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['brown', 'grey', 'black'],
       folkNames: [
         'Thunderstone',
@@ -1984,7 +2061,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 94–95',
-          supports: ['elements', 'planets', 'folkNames', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'folkNames', 'categories', 'description'],
         },
         {
           source: 'wikipedia-flint',
@@ -2015,7 +2092,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Garnet is the name of a group of silicate minerals rather than of one species. Its members share a crystal structure but differ in make-up, falling into two main series: pyrope, almandine and spessartine, which carry aluminium, and uvarovite, grossular and andradite, which carry calcium. Reddish shades are the most common, though garnets come in nearly every colour, blue being the rarest. The word reached English as gernet, meaning dark red, through Old French from Latin granatus, from granum, a grain or seed, perhaps in reference to the pomegranate, whose red seed coats look like some garnet crystals. Garnet forms mostly in metamorphic rocks such as gneiss and schist, less often in igneous ones, and has been worked as both gem and abrasive since the Bronze Age; red garnets set in gold cells were the commonest gems of the late Roman world and of Anglo-Saxon pieces like those from Sutton Hoo. Cunningham gives it to Mars and to fire, and uses it for healing, protection and strength: worn for endurance and extra energy in ritual, as a guard against thieves, and once exchanged by parting friends so that they would meet again. Hall calls it an energising, cleansing and purifying stone that inspires love and devotion, brings courage and hope in a crisis and lends self-confidence.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['red', 'pink', 'green', 'orange', 'yellow', 'brown', 'black', 'blue'],
       categories: [
         'Healing',
@@ -2042,7 +2119,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 98–99; p. 190',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -2100,14 +2184,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Gold is the chemical element Au, atomic number 79: in its pure state a bright, metallic yellow metal, dense and soft, the most malleable of all metals and one of the least reactive of the elements. It is often found native, as nuggets or grains in rock, veins and river deposits, usually alloyed with some silver, and gold artefacts appear in Egypt and Mesopotamia from the fourth millennium BC. Cunningham gives gold to the Sun and to fire and calls it projective. He traces its long bond with divinity, above all with solar gods: it was a favoured material for sacred images and altars and the highest of offerings, legend has the Druids cutting mistletoe with golden sickles, and medieval herbalists harvested with gold tools to strengthen their plants. He counts it perhaps the most potent metal in magic, worn to raise and send power and, day to day, to build courage, confidence and will. He uses it for protection, with a gold chain around a white candle as the focus of a rite; for wisdom, by giving it away without conditions; for health and long life; and in money and success rituals, where even a scrap of gold leaf is enough.',
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: ['yellow'],
       categories: ['Protection', 'Healing', 'Wisdom', 'Success', 'Courage', 'Confidence'],
       references: [
         {
           source: 'cunningham-crystals',
           locator: 'pp. 156–158',
-          supports: ['elements', 'planets', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'description'],
         },
         {
           source: 'wikipedia-gold',
@@ -2250,14 +2334,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Lava is molten rock driven out of a planet or moon onto its surface, at a volcano or through a crack in the crust, usually at 800 to 1,200 degrees Celsius, and the rock it cools into is often called lava as well. Its formal name is unsettled because lava stone is not one rock: Wikipedia describes lavas of differing chemistry, basaltic ones among them, and Cunningham sorts his by their Hawaiian names for texture, rough, chunky a'a and smooth pahoehoe. Cunningham gives lava to Mars and fire, calls it projective, and names the Hawaiian volcano goddess Pele as its deity. He describes lava rocks built into the heiau, the old Hawaiian temples, some of them centres of healing, where people still wrap bluish lava rocks in ti leaves and lay them down to ask for healing. Pele is said to guard her stones jealously, and visitors who take them without an offering and her permission are thought to invite trouble; parcels of rocks are mailed back to the volcano park every day. In magic he uses lava for protection: a small piece carried or set on the altar, a ring of it around a white candle for the household, and a circle of nine or thirteen pieces against psychic attack.",
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       deities: ['Pele'],
       categories: ['Protection', 'Healing'],
       references: [
         {
           source: 'cunningham-crystals',
           locator: 'pp. 109–110',
-          supports: ['elements', 'planets', 'deities', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'deities', 'categories', 'description'],
         },
         {
           source: 'wikipedia-lava',
@@ -2288,7 +2372,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Lead is the chemical element Pb, atomic number 82, a heavy metal denser than most everyday materials, soft and malleable, with a low melting point. Freshly cut or melted it shines silvery with a bluish tint, then tarnishes to a dull grey in air. It is easily won from its ores, chiefly galena, which often carries silver, so prehistoric peoples of the Near East knew it, and the Romans mined it widely in their search for silver. Cunningham gives lead to Saturn and earth and calls it receptive. He notes that ancient Greeks inscribed charged lead tablets with words of power, mostly for harmful spells, because the metal was thought to make a spell last, and that in eleventh-century India charms for conception and for fruitful gardens and orchards were engraved on lead. In his own practice lead serves protection and defensive magic, set near the entrance of a house to keep negativity out. He also gives a divination recorded in nineteenth-century Italy by Charles Godfrey Leland, in which melted lead and the ashes of rose seeds, nettle, rue and cumin are poured into water and the cooled shape is read.',
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       colors: ['silver', 'grey'],
       safetyNotes:
         'Lead is poisonous. Wikipedia describes it as a neurotoxin that builds up in soft tissue and bone and can damage the nervous system, heart and blood vessels, and kidneys; Cunningham warns that it causes death once absorbed by the body, as the Romans found from their lead dishes and cooking pots.',
@@ -2297,7 +2381,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 161',
-          supports: ['elements', 'planets', 'safetyNotes', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'safetyNotes', 'categories', 'description'],
         },
         {
           source: 'wikipedia-lead',
@@ -2330,7 +2414,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Marble is a metamorphic rock of carbonate minerals, most often calcite or dolomite, recrystallised by heat and pressure; it has a crystalline texture and is usually not layered. Pure white marble comes from very clean limestone or dolomite, and the veins and swirls of coloured marbles come from impurities such as clay, sand, iron oxides or chert that were in the original rock. Cunningham describes marble as a carbonate of lime, kin to coral, calcite, limestone, chalk, shells and bone, though each has its own magical uses, and he gives it the folk name nicomar. He assigns it to the Moon and water and calls it receptive. Its chief magical use in his account is protection: an altar made wholly or partly of marble, or topped with a marble slab as some magicians prefer, makes an ideal centre for protective spells, and marble tables and fittings protect a home. A piece may be carried or worn for personal protection, as it was in India. He also uses marble in spells for personal success in a general sense. He names no deity for it.',
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       colors: ['white'],
       folkNames: ['Nicomar'],
       categories: ['Protection', 'Success'],
@@ -2338,7 +2422,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 113',
-          supports: ['elements', 'planets', 'folkNames', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'folkNames', 'categories', 'description'],
         },
         {
           source: 'wikipedia-marble',
@@ -2369,7 +2453,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Mercury is the chemical element Hg, atomic number 80, commonly called quicksilver: a heavy, silvery metal and the only metallic element known to be liquid at ordinary temperature and pressure. It is found in deposits around the world, mostly as cinnabar, mercury sulphide, which ground fine gives the red pigment vermilion. It was long used in thermometers, barometers and similar instruments, though concern over its toxicity has driven much of it out of them. Cunningham gives it to the planet Mercury and calls it both projective and receptive. He rules it by earth for its weight, by water because it is liquid and by air for its quick movement. He records pools of it once held in the hand, or sealed in clear glass spheres, for scrying; a gambling talisman of a hollowed nutmeg filled with mercury and sealed, carried for luck at cards, dice and horses; and a modern protective witch bottle printed in The Witches' Almanac in 1976 or 1977, in which a small bottle of mercury sat inside bottles of water, sand, rocks and shells. He then urges readers not to use it at all, since safer and cheaper metals serve as well.",
       elements: ['earth', 'water', 'air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       colors: ['silver'],
       safetyNotes:
         'Mercury is toxic. Wikipedia states that exposure to it harms the nervous and immune systems and the kidneys, and Cunningham warns that it is dangerous to breathe, to swallow or even to touch for long, and asks readers not to use it in magic.',
@@ -2381,7 +2465,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           locator: 'pp. 166–167',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'safetyNotes',
             'folkNames',
             'categories',
@@ -2515,7 +2599,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Onyx is a banded chalcedony, a fine intergrowth of quartz and moganite, two silica minerals, usually seen in black and white bands, though some stones alternate light and dark shades of a single colour. Its bands lie parallel, where those of most agates swirl. The name comes from the Greek for a claw or fingernail. Much of the black onyx on sale has been dyed, a craft the Romans already knew, and many carvings sold as onyx are really banded calcite, a softer stone; the word has also been loosely given to banded marble, alabaster and other materials. Onyx has long been cut into cameos, intaglios, beads and cabochons, and in Egypt bowls were made of it by the Second Dynasty.\n\nCunningham gives onyx projective energy, Mars and Saturn, fire and the god Mars, and counts protection, defensive magic and the damping of sexual desire among its powers; he says it was carved with the head of Mars or a figure of Hercules and carried for courage. Hall calls it a stone of strength and self-confidence that steadies you under stress, keeps a memory of what has happened to its wearer, helps release old grief and supports wise decisions.',
       elements: ['fire'],
-      planets: ['Mars', 'Saturn'],
+      celestialBodies: ['Mars', 'Saturn'],
       colors: ['black', 'white', 'grey', 'blue', 'brown', 'yellow', 'red'],
       safetyNotes:
         'Cunningham warns that using onyx to hold back sexual desire can do harm. He says to think carefully before trying it, and never to keep it up for longer than a month or two.',
@@ -2534,7 +2618,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 118–120',
-          supports: ['elements', 'planets', 'deities', 'categories', 'safetyNotes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'deities',
+            'categories',
+            'safetyNotes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -2670,7 +2761,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Pipestone, or catlinite, is a fine-grained argillite, a mudstone altered by heat and pressure, usually brownish red, that lies in beds within the hard Sioux Quartzite. Fresh Minnesota stone comes out of the ground pinkish and soft enough to cut with a hacksaw or a knife, and the iron compounds that colour it break down if it is left open to the weather. Being easy to carve, it has long been valued by the Plains nations for ceremonial pipes. The quarries outside Pipestone, Minnesota, are protected as Pipestone National Monument, where only enrolled Native Americans may dig it, and with hand tools alone. The name catlinite honours the painter George Catlin, who visited the quarries in 1835, though Philander Prescott had written about the rock in 1832. Wikipedia notes that other pipe-making stones are called pipestone too, among them Utah pipestone and the black stone the Ojibwe also use. Cunningham gives the Sioux name Inyan-sha, red rock, and assigns it to Mars, the Sun and fire. He retells a Sioux account in which the stone is the hardened blood of people lost in a great flood, says it stands for the Sioux themselves and for the North, and asks anyone who has a piece to treat it as sacred and respect Sioux and Omaha ways: it may go in a medicine bag or on the altar, including for peace rituals, but he would never wear it.',
       elements: ['fire'],
-      planets: ['Mars', 'Sun'],
+      celestialBodies: ['Mars', 'Sun'],
       colors: ['red', 'pink'],
       folkNames: ['Inyan-sha'],
       categories: ['Peace'],
@@ -2678,7 +2769,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 125–126',
-          supports: ['elements', 'planets', 'colors', 'folkNames', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'folkNames',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'wikipedia-catlinite',
@@ -2709,13 +2807,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Pumice is a volcanic rock made of rough, intensely bubbly volcanic glass, sometimes holding crystals, and usually pale. It forms when superheated rock under high pressure is thrown out of a volcano and cools and loses pressure at the same moment, trapping the gas as a froth; ground to powder it is called pumicite. Scoria, a related rock, is darker and denser with larger bubbles. Cunningham describes pumice as light, rough and able to float on water, and notes its use in soaps for scrubbing dirty hands. He gives it to Mercury and air and calls it projective. At one time it was pressed into the hands of women in labour, or worn, to ease the birth. His chief use is a banishing spell: holding the stone in the projective hand, one pours into it the energy behind a problem, whether a habit, a painful emotion, an ailment or an unreturned love, and then throws it into a lake, stream or the sea, where it releases the problem and, by floating, lends strength to rise above it. A basin of water poured onto bare earth will do instead. Placed on the altar or in the home, pumice also serves protective magic as a sponge for negativity.',
       elements: ['air'],
-      planets: ['Mercury'],
+      celestialBodies: ['Mercury'],
       categories: ['Banishing', 'Protection'],
       references: [
         {
           source: 'cunningham-crystals',
           locator: 'pp. 126–127',
-          supports: ['elements', 'planets', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'description'],
         },
         {
           source: 'wikipedia-pumice',
@@ -2810,7 +2908,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Ruby is corundum, an aluminium oxide mineral, in its red form: a trace of chromium supplies the colour, and the name goes back to the Latin word for red. Gem corundum in any shade of red, pink included, is called ruby, while the remaining colours are sold as sapphire. It is very hard, at 9 on the Mohs scale, and some stones carry a star of light when cut as a domed cabochon. Nearly every ruby now sold has been treated, usually by heating, and synthetic ruby, made since the nineteenth century, was the heart of the first working laser in 1960. The Mogok valley in Burma was for centuries the main source. Red spinel was long confused with it, and some famous 'rubies', the Black Prince's Ruby among them, are really spinel. Wikipedia records a Hindu astrological belief tying ruby to the Sun and the god Surya. Cunningham pairs ruby with fire and Mars, treats it as a stone for wealth and protection, and says it was worn to lift sadness, bring joy and confidence, and keep nightmares away from sleep; he notes it was thought a fitting offering to Krishna and the Buddha. Hall calls it a stone of energy and abundance and a shield against psychic attack, though she adds that it may overstimulate delicate or irritable people.",
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['red', 'pink'],
       folkNames: ['Carbuncle', 'Red Sapphire'],
       deities: ['Krishna'],
@@ -2839,7 +2937,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           locator: 'pp. 128–129; p. 190',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -2930,7 +3028,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Sapphire is gem-quality corundum, which is aluminium oxide in crystal form. Pure corundum has no colour; small amounts of other elements tint it, so that besides the familiar blue it is found yellow, green, purple, pink, orange, grey, black and colourless, and the trade calls every colour but blue a 'fancy' sapphire. Pink sapphire grades into ruby with no fixed chemical boundary, and laboratories separate the two by the colour they see. At 9 on the Mohs scale it resists scratching, which is why grown sapphire is made into watch glasses and other hard windows. Natural stones are often heated to change their colour and clarity. The word reaches English through French and Latin from Greek, and the ancient word may once have meant lapis lazuli or another blue stone. It is the customary birthstone for September. Cunningham links sapphire with the Moon, water and Apollo, saying the Greeks wore it to consult the oracle at Delphi. He uses it to widen psychic awareness, in meditation and for wisdom, as a guardian of love and fidelity, for peace, in protective and defensive magic, in legal matters, in healing work and in rites for money and wealth. Hall calls it the wisdom stone, one that steadies the mind and brings prosperity.",
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       colors: [
         'blue',
         'yellow',
@@ -2977,7 +3075,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           locator: 'pp. 132–133; p. 190',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'colors',
             'folkNames',
             'deities',
@@ -3018,7 +3116,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Sard is a variety of chalcedony, the fine-grained form of quartz, and like its close relative carnelian it owes its colour to iron oxide. Set beside carnelian it tends to be darker, ranging from deep red-brown to nearly black, and harder and tougher, with a duller, more jagged break; but the two names are often swapped and the line between them is blurred. Pliny tied the name to Sardis in Lydia, where the stone came from, while others trace it to a Persian word for a yellowish red. Sard was carved into Assyrian cylinder seals, Egyptian and Phoenician scarabs, and early Greek and Etruscan gems, and the first stone of the Hebrew high priest's breastplate was probably sard.\n\nCunningham, who calls it a reddish yellow or brown quartz related to carnelian, gives sard projective energy, Mars and fire, and lists love, protection, courage and easing childbirth among its powers. He believes it works better for women than for men. He uses it in protective rites, to defeat hexes and to build courage and self-confidence, and records that it was once given to women in labour to help the birth go smoothly.",
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['red', 'yellow', 'brown'],
       categories: ['Love', 'Protection', 'Courage', 'Confidence', 'Hex-Breaking'],
       substitutes: [
@@ -3030,7 +3128,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 133; p. 190',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'wikipedia-carnelian',
@@ -3078,7 +3183,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Sardonyx is onyx in which bands of sard, red to brown, alternate with black or white ones; like all onyx it is a banded chalcedony, a form of quartz. Since ancient times its reds and yellows have often been produced or deepened by treatment. Minoan Crete used sardonyx in its art, notably in finds at Knossos, and is named in the Bible. Roman soldiers are said to have gone into battle wearing sardonyx amulets carved with Mars, god of war, believing they gave courage, and in Renaissance Europe wearing it was thought to make a speaker eloquent.\n\nCunningham gives sardonyx projective energy, Mars, fire and the god Mars, with courage, protection, peace, eloquence, luck and happiness in marriage among its powers. He says it smooths things between lovers and married couples and helps them talk, is worn by lawyers and public speakers, and, kept near the heart, lifts low spirits towards peace and joy. Hall sees it as strengthening and protective, a stone that lends marriages steady, long-lived happiness, draws friends and good fortune, and can be set out around a house and garden to guard against crime.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       colors: ['red', 'brown', 'black', 'white', 'colourless'],
       folkNames: ['Red onyx'],
       deities: ['Mars'],
@@ -3096,7 +3201,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 133–134',
-          supports: ['elements', 'planets', 'deities', 'colors', 'categories', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'deities',
+            'colors',
+            'categories',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -3151,7 +3263,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Silver is the chemical element Ag, atomic number 47, a soft, white, lustrous metal that conducts electricity and heat and reflects light better than any other metal. One of the seven metals known in antiquity, it has long served as coinage and been worked into jewellery, tableware and ornament, usually alloyed with copper because the pure metal is soft, and it darkens with a black tarnish of silver sulphide. Cunningham makes silver the metal of the Moon, receptive and of water, and links it with Isis, Diana, Selene and the other goddesses of the Moon and night. Wiccan priestesses wear silver crescents for the Goddess, silver is laid on the altar at the full moon, and silver bells are rung to call her in. He treats it as the metal of emotion, love, healing and the psychic mind: worn to attract love, to quicken psychic awareness, or at night for psychic dreams, and held up to catch the full moon for scrying. It reflects negativity away from its wearer, is said to guard travellers, above all at sea, and its long use as money makes it a staple of money-drawing work. He adds that some people feel overwrought wearing it at the full moon.',
       elements: ['water'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       colors: ['white'],
       deities: ['Isis', 'Diana', 'Selene'],
       categories: [
@@ -3167,7 +3279,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 169–171',
-          supports: ['elements', 'planets', 'deities', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'deities', 'categories', 'description'],
         },
         {
           source: 'wikipedia-silver',
@@ -3327,7 +3439,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Spinel is a mineral species, the magnesium and aluminium oxide that lends its name to the wider spinel group. It grows as cubic crystals, most often twinned octahedra, and rates about 8 on the Mohs scale. It may lack colour altogether, though red, lavender, blue, green, brown, black and yellow stones are the usual run; chromium causes the red of Burmese stones and a little cobalt the pure blues. The name comes from a Latin word for a little spine, after its pointed crystals. Spinel forms in the same kinds of rock as corundum, so spinel and ruby commonly turn up side by side, and before ruby had a scientific definition red spinel was called ruby too: two of the great red stones among Britain's Crown Jewels, the Timur Ruby and the Black Prince's Ruby, are spinels. Old names for the red stones were spinel ruby and balas ruby, the second after Badakhshan in central Asia, whose mines in present-day Tajikistan were for centuries the chief source. Cheap synthetic spinel is cut for August birthstone jewellery and used to imitate aquamarine and emerald. Cunningham assigns spinel to Pluto and fire and uses it to lend the body energy, to add physical strength during hard exertion, and in spells for riches and wealth. Hall connects it with renewed energy, encouragement and rejuvenation, and with accepting success humbly.",
       elements: ['fire'],
-      planets: ['Pluto'],
+      celestialBodies: ['Pluto'],
       colors: [
         'black',
         'blue',
@@ -3347,7 +3459,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 136',
-          supports: ['elements', 'planets', 'colors', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'colors', 'categories', 'description'],
         },
         {
           source: 'hall-crystal-bible',
@@ -3389,13 +3501,13 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Steel is an alloy of iron and carbon, usually with other elements, holding up to about 2.14 per cent carbon, which makes it stronger and tougher than pure iron. Strong and cheap to make, it is among the most widely manufactured materials in the world, used for building frames and reinforcing rods, bridges, tools, ships, trains, cars and machines. Like other alloys it has no single formal name. Cunningham gives steel to Mars and fire and calls it projective. He notes that it is a relatively modern metal with little history in magic, though it was once thought to protect against fairies, who could be mischievous. Its uses are mostly protective: small pieces carried to guard against negativity, and a steel ring worn as a protective amulet. For a night free of nightmares, he suggests holding a dull steel knife while visualising it piercing and driving off negativity, then sleeping with it beneath the bed. He also records an American folk belief that a steel ring worn faithfully on the hand prevents rheumatism, and adds wryly that such small rituals are hard to prove.',
       elements: ['fire'],
-      planets: ['Mars'],
+      celestialBodies: ['Mars'],
       categories: ['Protection', 'Nightmare Protection', 'Healing'],
       references: [
         {
           source: 'cunningham-crystals',
           locator: 'p. 171',
-          supports: ['elements', 'planets', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'description'],
         },
         {
           source: 'wikipedia-steel',
@@ -3438,7 +3550,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Tiger's eye is a gemstone of the quartz group with a silky, shifting sheen, known as chatoyancy, and colours running from gold to reddish brown. Wikipedia explains that the sheen comes from quartz grown in parallel with altered amphibole fibres, most of them turned to limonite, and that the stone is chiefly silicon dioxide tinted by iron oxide; Cunningham, in his entry on asbestos, says that fibrous mineral, polished together with quartz, is what is called tiger's eye. Its sources include South Africa, Namibia, India, Australia, Myanmar and the United States, among others, and is generally shaped as a domed cabochon to show off its sheen. Wikipedia records a belief that it wards off the evil eye, and that Roman soldiers wore it engraved to keep them safe in battle, a story Cunningham also tells. Cunningham places it under the Sun and the element of fire and uses it in money spells, to guard against danger, and to build courage, confidence and firm conviction; he also suggests gazing into its flashes in sunlight to look into the future. Hall describes a banded, slightly shiny stone, usually small and tumbled, and associates it with grounding spiritual energy, psychic abilities, protection against ill wishing and curses, clarity of intention and manifesting the will.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: ['brown', 'yellow', 'pink', 'blue', 'red', 'gold'],
       safetyNotes:
         "Wikipedia reports a 2003 study finding that the original crocidolite fibres, an asbestos mineral, survive inside tiger's eye sealed in quartz, so grinding or cutting the stone could release small amounts of crocidolite into the air, although the stone is generally considered safe.",
@@ -3465,7 +3577,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 75; pp. 140–141; p. 190',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'hall-crystal-bible',
@@ -3525,14 +3644,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Tin is the chemical element Sn, atomic number 50, a metallic grey metal soft enough to cut with little force; a bar of it bends easily by hand and gives off a crackling sound as it does, the so-called tin cry. It is won chiefly from the mineral cassiterite, an oxide of tin. Its first large-scale use was in bronze, roughly one part tin to seven of copper, from as early as 3000 BC, and pure metallic tin was produced from about 600 BC; pewter is an alloy that is mostly tin. Cunningham gives tin to Jupiter and air and calls it projective, a metal of divination, luck and money. He recounts an old Cornish spell claiming that tin could be turned into silver by leaving it in a tank of ants on a certain night of the Moon, and remarks that the spell never says which night. His main use is a New Year's Eve divination like the one he gives for lead: a little tin is melted in an iron cup over a flame and thrown into a bucket of icy water, and the future is read from the shape and folds of the nodule. Tin is also carried for good luck.",
       elements: ['air'],
-      planets: ['Jupiter'],
+      celestialBodies: ['Jupiter'],
       colors: ['grey'],
       categories: ['Divination'],
       references: [
         {
           source: 'cunningham-crystals',
           locator: 'pp. 171–172',
-          supports: ['elements', 'planets', 'categories', 'description'],
+          supports: ['elements', 'celestialBodies', 'categories', 'description'],
         },
         {
           source: 'wikipedia-tin',
@@ -3575,7 +3694,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         'Topaz is a silicate of aluminium and fluorine, Al2SiO4(F,OH)2, and the mineral that marks 8 on the Mohs scale of hardness. Pure topaz is colourless, often with a greyish cast; traces of other elements give it a pale blue tint, or a shade between golden brown and yellowish orange, and pink and red stones owe their colour to chromium. Much of the deep blue, pink and other strongly coloured topaz on sale has been heated or irradiated. It forms in granite, granite pegmatites and the vapour cavities of rhyolite lava, and Brazil and Russia are among its best-known sources. The name came through Old French and Latin from the Greek name of a Red Sea island where a yellow stone, now thought to be olivine, was mined; in the Middle Ages any yellow gem might be called topaz, and the word settled on this mineral only in 1737. Wikipedia records old beliefs that it cured lunacy, kept Roman travellers from danger and, tied to the left arm, warded off curses and the evil eye. Cunningham gives it to the Sun, to fire and to Ra, uses it for protection, healing, love and wealth and against nightmares, and notes that it was once called lover of gold. Hall describes a soothing stone of truth, forgiveness, joy, abundance and love that supports manifestation.',
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: [
         'colourless',
         'white',
@@ -3623,7 +3742,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           locator: 'p. 141; p. 190',
           supports: [
             'elements',
-            'planets',
+            'celestialBodies',
             'deities',
             'folkNames',
             'categories',
@@ -3665,14 +3784,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       nomenclature: 'unknown',
       description:
         "Tourmalinated quartz is clear quartz with dark rods of tourmaline grown through it. Cunningham describes it as quartz pierced by crystals of black tourmaline, and Hall as clear crystal holding long, thick, dark threads, easy to obtain in any size and found the world over. Quartz itself is silicon dioxide, and tourmaline is a group of crystalline silicate minerals built around boron, according to Wikipedia. Its formal name is unsettled here because neither Hall nor Cunningham gives it a mineral name, and Wikipedia's Quartz article does not include it in its list of quartz varieties. Hall presents it as joining the qualities of both minerals: a grounding stone that shields the body's energy field from intrusion, eases tension, harmonises opposites and turns negative thought towards the positive, and she uses it to help heal the shadow side of the mind and to curb self-sabotage. Cunningham places it under Pluto. He suggests wearing it, or keeping it under the pillow, to encourage astral projection, or gazing into a sphere of it to quieten the mind before sending the astral body into the crystal.",
-      planets: ['Pluto'],
+      celestialBodies: ['Pluto'],
       colors: ['colourless', 'black'],
       categories: ['Grounding', 'Harmony', 'Healing', 'Release'],
       references: [
         {
           source: 'cunningham-crystals',
           locator: 'p. 92; pp. 142–143',
-          supports: ['colors', 'planets', 'description'],
+          supports: ['colors', 'celestialBodies', 'description'],
         },
         {
           source: 'hall-crystal-bible',
@@ -3778,7 +3897,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       description:
         "Zircon is a common silicate mineral, zirconium silicate (ZrSiO4), and the main source of the metal zirconium. It turns up as small grains in igneous, metamorphic and sedimentary rocks, usually well under a millimetre across in granite, though pegmatites and carbonatites can grow crystals several centimetres long. Fairly hard (7.5 on the Mohs scale), dense and chemically stubborn, it outlasts weathering and ends up in most sands. Natural stones run from colourless through yellow, red and brown to blue and green; heating can turn ordinary brown zircon colourless or blue, and blue is the most prized. Its high refractive index has led to its use in place of diamond, though its strong double refraction usually gives it away. Many zircons hold traces of uranium and thorium, so Wikipedia lists the mineral as radioactive; that same content lets geologists date single grains, and zircons from Western Australia's Jack Hills, about 4.4 billion years old, are the oldest minerals yet dated on Earth. Cunningham calls it a confusing stone, found in many colours, some of them artificial, and under many names. He gives it to the Sun and to fire, pairs it with gold, and counts love, protection, healing, peace, beauty, sexual energy and guarding against theft among its powers.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: [
         'brown',
         'yellow',
@@ -3803,7 +3922,14 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'pp. 144–145; p. 190',
-          supports: ['elements', 'planets', 'colors', 'categories', 'substitutes', 'description'],
+          supports: [
+            'elements',
+            'celestialBodies',
+            'colors',
+            'categories',
+            'substitutes',
+            'description',
+          ],
         },
         {
           source: 'wikipedia-zircon',

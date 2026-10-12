@@ -7,7 +7,7 @@ import {
   type VocabularySuggestion,
   suggestDeities,
   suggestForms,
-  suggestPlanets,
+  suggestCelestialBodies,
   suggestZodiacSigns,
 } from '../services/suggestions';
 
@@ -21,10 +21,13 @@ export const CorrespondenceSuggestionRef = builder
     }),
   });
 
-// One type for both fields: a planet and a sign suggestion carry the same
+// One type for both fields: a celestial body and a sign suggestion carry the same
 // three things, and neither carries a group (claude-docs/graphql/schema.md,
-// "planetSuggestions and zodiacSuggestions").
-const FIELDS = { planetSuggestions: suggestPlanets, zodiacSuggestions: suggestZodiacSigns };
+// "celestialBodySuggestions and zodiacSuggestions").
+const FIELDS = {
+  celestialBodySuggestions: suggestCelestialBodies,
+  zodiacSuggestions: suggestZodiacSigns,
+};
 
 for (const [name, suggest] of Object.entries(FIELDS)) {
   suggestionConnection(name, CorrespondenceSuggestionRef, suggest);

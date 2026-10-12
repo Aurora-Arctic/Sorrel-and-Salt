@@ -35,6 +35,18 @@ input CategoryInput {
   name: String!
 }
 
+type CelestialBody {
+  description: String!
+  id: ID!
+  name: String!
+  slug: String!
+}
+
+input CelestialBodyInput {
+  description: String!
+  name: String!
+}
+
 """
 A user as a co-member sees them: an id and a display name, never an email address.
 """
@@ -55,6 +67,7 @@ input CompendiumIngredientInput {
 
   """The categories it is filed under."""
   categoryIds: [ID!]
+  celestialBodies: [String!]
   colors: [String!]
   deities: [IngredientDeityInput!]
   description: String
@@ -62,7 +75,6 @@ input CompendiumIngredientInput {
   folkNames: [String!]
   name: String!
   nomenclature: Nomenclature!
-  planets: [String!]
   references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
@@ -82,6 +94,7 @@ input CompendiumIngredientUpdateInput {
 
   """The categories it is filed under; [] when none."""
   categoryIds: [ID!]!
+  celestialBodies: [String!]!
   colors: [String!]!
   deities: [IngredientDeityInput!]!
   description: String!
@@ -89,7 +102,6 @@ input CompendiumIngredientUpdateInput {
   folkNames: [String!]!
   name: String!
   nomenclature: Nomenclature!
-  planets: [String!]!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
@@ -167,6 +179,7 @@ type Ingredient {
   """
   canonicalName: String
   categories: [Category!]!
+  celestialBodies: [String!]
   colors: [String!]
   deities: [IngredientDeity!]!
   description: String
@@ -176,7 +189,6 @@ type Ingredient {
   isGlobal: Boolean!
   name: String!
   nomenclature: Nomenclature!
-  planets: [String!]
   references: [ReferenceLink!]!
   safetyNotes: String
   slug: String!
@@ -245,6 +257,7 @@ input IngredientInput {
 
   """The categories it is filed under."""
   categoryIds: [ID!]
+  celestialBodies: [String!]
   colors: [String!]
   deities: [IngredientDeityInput!]
   description: String
@@ -252,7 +265,6 @@ input IngredientInput {
   folkNames: [String!]
   name: String!
   nomenclature: Nomenclature
-  planets: [String!]
   references: [ReferenceLinkInput!]
   safetyNotes: String
   substitutes: [SubstituteInput!]
@@ -272,6 +284,7 @@ input IngredientUpdateInput {
 
   """The categories it is filed under; [] when none."""
   categoryIds: [ID!]!
+  celestialBodies: [String!]!
   colors: [String!]!
   deities: [IngredientDeityInput!]!
   description: String!
@@ -279,7 +292,6 @@ input IngredientUpdateInput {
   folkNames: [String!]!
   name: String!
   nomenclature: Nomenclature!
-  planets: [String!]!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
@@ -297,6 +309,7 @@ One form an ingredient comes in, and what that form adds to the ingredient: its 
 type IngredientVariant {
   audit: AuditInfo!
   categories: [Category!]!
+  celestialBodies: [String!]
   colors: [String!]
   description: String
   elements: [IngredientElement!]
@@ -307,7 +320,6 @@ type IngredientVariant {
   """
   formChoice: IngredientFormValue
   id: ID!
-  planets: [String!]
   references: [ReferenceLink!]!
   safetyNotes: String
   substitutes: [Substitute!]!
@@ -320,6 +332,7 @@ One form of the ingredient, replacing the form it names. Every field but id is s
 input IngredientVariantInput {
   """The categories this form is filed under."""
   categoryIds: [ID!]!
+  celestialBodies: [String!]!
   colors: [String!]!
   description: String!
   elements: [IngredientElement!]!
@@ -332,7 +345,6 @@ input IngredientVariantInput {
   The form this entry keeps, so its text can be respelt; without one, the form whose text folds alike is kept, or a new one added.
   """
   id: ID
-  planets: [String!]!
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
@@ -371,6 +383,7 @@ type Mutation {
   createAdminInvitation(email: String!, note: String): Invitation!
   createCategory(input: CategoryInput!): Category!
   createCategoryGroup(input: CategoryGroupInput!): CategoryGroup!
+  createCelestialBody(input: CelestialBodyInput!): CelestialBody!
   createCompendiumIngredient(
     """
     Confirms ending another entry's redirect from the address this write takes (MB.82).
@@ -382,7 +395,6 @@ type Mutation {
   createDeityTradition(input: DeityTraditionInput!): DeityTradition!
   createIngredientFormGroup(input: IngredientFormGroupInput!): IngredientFormGroup!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
-  createPlanet(input: PlanetInput!): Planet!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
@@ -403,6 +415,11 @@ type Mutation {
   A soft delete; the live categories under it move to `moveTo` first, which they need when there are any.
   """
   deleteCategoryGroup(id: ID!, moveTo: ID): ID!
+
+  """
+  A soft delete, refused while a live compendium entry lists the celestial body; a coven keeps what it wrote.
+  """
+  deleteCelestialBody(id: ID!): ID!
 
   """A soft delete; a spell holding the entry still reaches it."""
   deleteCompendiumIngredient(id: ID!): ID!
@@ -427,11 +444,6 @@ type Mutation {
   A soft delete, refused while a live compendium entry picked the form; a coven keeps its pick.
   """
   deleteIngredientFormValue(id: ID!): ID!
-
-  """
-  A soft delete, refused while a live compendium entry lists the planet; a coven keeps what it wrote.
-  """
-  deletePlanet(id: ID!): ID!
 
   """
   Deletes a coven, which no member can reach afterwards. Owners only; nothing is destroyed, so it can be restored by hand.
@@ -491,6 +503,11 @@ type Mutation {
   """
   updateCategoryGroup(id: ID!, input: CategoryGroupInput!): CategoryGroup!
 
+  """
+  Replaces the celestial body; the slug follows the name. A rename is carried onto every live compendium entry listing it.
+  """
+  updateCelestialBody(id: ID!, input: CelestialBodyInput!): CelestialBody!
+
   """Replaces the entry; the slug follows the name."""
   updateCompendiumIngredient(
     """
@@ -527,11 +544,6 @@ type Mutation {
   """
   updateMemberRole(role: WorkspaceRole!, userId: ID!, workspaceId: ID!): WorkspaceMember!
 
-  """
-  Replaces the planet; the slug follows the name. A rename is carried onto every live compendium entry listing it.
-  """
-  updatePlanet(id: ID!, input: PlanetInput!): Planet!
-
   """Reaches every row citing it; nothing deletes a reference in v1."""
   updateReference(id: ID!, input: ReferenceInput!, workspaceId: ID): Reference!
 
@@ -556,18 +568,6 @@ type PageInfo {
   hasNextPage: Boolean!
   hasPreviousPage: Boolean!
   startCursor: String
-}
-
-type Planet {
-  description: String!
-  id: ID!
-  name: String!
-  slug: String!
-}
-
-input PlanetInput {
-  description: String!
-  name: String!
 }
 
 type PrivilegeChange {
@@ -606,6 +606,12 @@ type Query {
   The live categories by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
   categories(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryCategoriesConnection!
+
+  """
+  The curated celestial bodies by name: those whose name holds `query`, case-insensitively, when given.
+  """
+  celestialBodies(after: String, before: String, first: Int, last: Int, query: String): QueryCelestialBodiesConnection!
+  celestialBodySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCelestialBodySuggestionsConnection!
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCommonNameSuggestionsConnection!
   compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, nomenclature: Nomenclature, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
 
@@ -634,12 +640,6 @@ type Query {
   ingredientSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
-  planetSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryPlanetSuggestionsConnection!
-
-  """
-  The curated planets by name: those whose name holds `query`, case-insensitively, when given.
-  """
-  planets(after: String, before: String, first: Int, last: Int, query: String): QueryPlanetsConnection!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
 
   """
@@ -686,6 +686,33 @@ type QueryCategoriesConnection {
 type QueryCategoriesConnectionEdge {
   cursor: String!
   node: Category!
+}
+
+type QueryCelestialBodiesConnection {
+  """
+  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
+  """
+  countBefore: Int
+  edges: [QueryCelestialBodiesConnectionEdge!]!
+  pageInfo: PageInfo!
+
+  """How many rows the list holds under its arguments."""
+  totalCount: Int!
+}
+
+type QueryCelestialBodiesConnectionEdge {
+  cursor: String!
+  node: CelestialBody!
+}
+
+type QueryCelestialBodySuggestionsConnection {
+  edges: [QueryCelestialBodySuggestionsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCelestialBodySuggestionsConnectionEdge {
+  cursor: String!
+  node: CorrespondenceSuggestion!
 }
 
 type QueryCommonNameSuggestionsConnection {
@@ -802,33 +829,6 @@ type QueryIngredientSuggestionsConnection {
 type QueryIngredientSuggestionsConnectionEdge {
   cursor: String!
   node: Ingredient!
-}
-
-type QueryPlanetSuggestionsConnection {
-  edges: [QueryPlanetSuggestionsConnectionEdge!]!
-  pageInfo: PageInfo!
-}
-
-type QueryPlanetSuggestionsConnectionEdge {
-  cursor: String!
-  node: CorrespondenceSuggestion!
-}
-
-type QueryPlanetsConnection {
-  """
-  How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
-  """
-  countBefore: Int
-  edges: [QueryPlanetsConnectionEdge!]!
-  pageInfo: PageInfo!
-
-  """How many rows the list holds under its arguments."""
-  totalCount: Int!
-}
-
-type QueryPlanetsConnectionEdge {
-  cursor: String!
-  node: Planet!
 }
 
 type QueryPossibleDuplicatesConnection {

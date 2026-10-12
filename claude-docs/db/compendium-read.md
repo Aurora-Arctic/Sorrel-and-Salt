@@ -179,9 +179,9 @@ precision`, and while the keyset casts its sort back to `real`, the score
 - **`nomenclature`** (M5.5) is equality on the column, so `unknown` lists the
   formal names still to look up: the admin's to-do list beside
   `withoutReferences`' (["References"](references.md)).
-- **`planet`** and **`zodiacSign`** match an entry whose list holds the value,
+- **`celestialBody`** and **`zodiacSign`** match an entry whose list holds the value,
   entry by entry under the suggestions' fold, `lower(btrim(…))` on both sides
-  through `listFolds`: how a planet's or a sign's delete and rename find the
+  through `listFolds`: how a celestial body's or a sign's delete and rename find the
   entries holding it (MB.95). The repository's filter alone, as `formId` is,
   and unindexed: only those two admin writes read it, over the compendium tier.
 

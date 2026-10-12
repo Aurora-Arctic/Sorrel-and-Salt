@@ -20,7 +20,6 @@ const OWN_COLUMNS = [
   'description',
   'safety_notes',
   'elements',
-  'planets',
   'celestial_bodies',
   'zodiac_signs',
   'colors',

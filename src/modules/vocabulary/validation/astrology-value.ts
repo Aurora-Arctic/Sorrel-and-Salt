@@ -5,9 +5,9 @@ import { curatedValueInput } from '../../../lib/validation';
 // name and description, and nothing else. One shape for both, each schema
 // saying its own noun.
 
-export const PlanetInput = curatedValueInput('celestial body');
+export const CelestialBodyInput = curatedValueInput('celestial body');
 
 export const ZodiacSignInput = curatedValueInput('sign');
 
 /** Either vocabulary's input: the two schemas parse the one shape. */
-export type AstrologyValueInput = z.output<typeof PlanetInput>;
+export type AstrologyValueInput = z.output<typeof CelestialBodyInput>;

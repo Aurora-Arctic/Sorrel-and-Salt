@@ -11,7 +11,7 @@ import type {
   CreateWorkspaceIngredientMutationVariables,
   FormSuggestionsQuery,
   FormSuggestionsQueryVariables,
-  PlanetSuggestionsQueryVariables,
+  CelestialBodySuggestionsQueryVariables,
   PossibleDuplicatesQuery,
   PossibleDuplicatesQueryVariables,
   ReferenceQuery,
@@ -89,13 +89,13 @@ export function offerDuplicates(nodes: DuplicateNode[]) {
 }
 
 /**
- * Answers one of the list boxes' lookups — `PlanetSuggestions` answering
- * `planetSuggestions`, and so on — with these rows, recording each ask. All
+ * Answers one of the list boxes' lookups — `CelestialBodySuggestions` answering
+ * `celestialBodySuggestions`, and so on — with these rows, recording each ask. All
  * of them take the same variables.
  */
 export function offerList<N>(operation: string, field: string, nodes: N[]) {
-  const calls: PlanetSuggestionsQueryVariables[] = [];
-  mockGraphQLQuery<Record<string, unknown>, PlanetSuggestionsQueryVariables>(
+  const calls: CelestialBodySuggestionsQueryVariables[] = [];
+  mockGraphQLQuery<Record<string, unknown>, CelestialBodySuggestionsQueryVariables>(
     operation,
     (variables) => {
       calls.push(variables);
@@ -105,8 +105,8 @@ export function offerList<N>(operation: string, field: string, nodes: N[]) {
   return calls;
 }
 
-export const offerPlanets = (nodes: CorrespondenceNode[]) =>
-  offerList('PlanetSuggestions', 'planetSuggestions', nodes);
+export const offerCelestialBodies = (nodes: CorrespondenceNode[]) =>
+  offerList('CelestialBodySuggestions', 'celestialBodySuggestions', nodes);
 export const offerSigns = (nodes: CorrespondenceNode[]) =>
   offerList('ZodiacSuggestions', 'zodiacSuggestions', nodes);
 export const offerDeities = (nodes: DeityNode[]) =>
@@ -227,7 +227,7 @@ export function offerNothing() {
   return {
     forms: offerForms([]),
     names: offerNames([]),
-    planets: offerPlanets([]),
+    celestialBodies: offerCelestialBodies([]),
     signs: offerSigns([]),
     deities: offerDeities([]),
     ingredients: offerIngredients([]),

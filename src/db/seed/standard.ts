@@ -115,7 +115,7 @@ const MEMBERSHIPS: SeedMembership[] = [
  * three `none` and one `unknown`, two entries worked with more than one
  * element, comfrey beside foxglove, one carrying a safety note that matters,
  * and Rosemary in two forms, its oil adding a description and a safety note
- * of its own. Every form, planet, zodiac sign and deity names a curated row in
+ * of its own. Every form, celestial body, zodiac sign and deity names a curated row in
  * that row's own spelling (MB.162); the uncurated `rhizome` is a coven's, in
  * demo.ts.
  */
@@ -127,7 +127,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Herb' }],
     description: 'Silver-backed leaves cut with the flowering stem, dried for smoke and tea.',
     elements: ['air', 'earth'],
-    planets: ['Moon'],
+    celestialBodies: ['Moon'],
     deities: ['Artemis', 'Diana'],
     categories: ['Dream Work', 'Divination', 'Psychic Work'],
     folkNames: ['Cronewort', "Sailor's Tobacco", 'Felon Herb'],
@@ -139,7 +139,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Herb' }],
     description: 'Bitter grey-green herb, the other Artemisia — and not interchangeable.',
     elements: ['fire'],
-    planets: ['Mars'],
+    celestialBodies: ['Mars'],
     safetyNotes: 'Thujone. Not for internal use in any quantity, and never in pregnancy.',
     categories: ['Banishing', 'Spirit Work'],
     folkNames: ['Green Ginger', 'Absinthium'],
@@ -151,7 +151,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Leaf' }],
     description: 'Whole leaves, written on and burned for a wish.',
     elements: ['fire'],
-    planets: ['Sun'],
+    celestialBodies: ['Sun'],
     zodiacSigns: ['Leo'],
     deities: ['Apollo'],
     categories: ['Success', 'Protection', 'Clarity'],
@@ -174,7 +174,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     ],
     description: 'Needled sprigs. Renamed out of Rosmarinus in 2017, which is why the label moves.',
     elements: ['fire'],
-    planets: ['Sun'],
+    celestialBodies: ['Sun'],
     categories: ['Protection', 'Memory', 'Cleansing'],
     folkNames: ['Dew of the Sea', 'Compass Weed'],
   },
@@ -185,7 +185,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Flower' }],
     description: 'Buds stripped from the stem.',
     elements: ['air'],
-    planets: ['Mercury'],
+    celestialBodies: ['Mercury'],
     zodiacSigns: ['Gemini', 'Virgo'],
     categories: ['Peace', 'Sleep', 'Harmony'],
     folkNames: ['English Lavender', 'Elf Leaf'],
@@ -199,7 +199,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Flower' }],
     description: 'A dark-flowered cultivar, kept separate from the species it belongs to.',
     elements: ['air'],
-    planets: ['Mercury'],
+    celestialBodies: ['Mercury'],
     categories: ['Peace', 'Sleep'],
   },
   {
@@ -209,7 +209,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Leaf' }],
     description: 'Broad hairy leaves, dried flat.',
     elements: ['water'],
-    planets: ['Saturn'],
+    celestialBodies: ['Saturn'],
     safetyNotes:
       'Confused with foxglove leaf in the field, which is fatal. Check the flower before cutting.',
     categories: ['Healing', 'Safe Travel'],
@@ -222,7 +222,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Leaf' }],
     description: 'The other broad hairy leaf, and the reason the compendium demands a formal name.',
     elements: ['water'],
-    planets: ['Venus'],
+    celestialBodies: ['Venus'],
     safetyNotes: 'Cardiac glycosides. Never ingested, never infused, and handled with gloves.',
     categories: ['Spirit Work'],
     folkNames: ["Witches' Gloves", "Dead Man's Bells"],
@@ -283,7 +283,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Wax' }],
     description: 'Comb rendered and strained, still smelling of the hive.',
     elements: ['earth'],
-    planets: ['Venus'],
+    celestialBodies: ['Venus'],
     categories: ['Abundance', 'Home Blessing'],
   },
   {
@@ -401,7 +401,7 @@ export const COMPENDIUM_INGREDIENTS: SeedIngredient[] = [
     variants: [{ form: 'Root' }],
     description: 'Knobbed root, sliced and dried.',
     elements: ['fire'],
-    planets: ['Mars'],
+    celestialBodies: ['Mars'],
     categories: ['Success', 'Lust', 'Strength'],
   },
 ];

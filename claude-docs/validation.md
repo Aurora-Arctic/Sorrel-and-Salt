@@ -125,10 +125,10 @@ Rules both variants enforce:
   per-ingredient `lower(name)` unique index, so that index isn't what a user
   sees either. A blank folk name is dropped, not refused — but only after the
   repeat check, so an issue's position still counts the rows the form sent,
-  blank ones included, and lands beside the right one. `planets`,
+  blank ones included, and lands beside the right one. `celestialBodies`,
   `zodiacSigns` and `colors` drop blank entries the same way. A list left with no entries,
   `[]` or blanks alone, is absent like a blank text field and becomes `null`,
-  so a cleared `planets` is stored as NULL rather than `{}`. Two _different_ ingredients sharing a folk name is untouched: §5
+  so a cleared `celestialBodies` is stored as NULL rather than `{}`. Two _different_ ingredients sharing a folk name is untouched: §5
   wants it, since several plants claiming "Cat's Claw" is what is being
   documented.
 - **Substitutes, each a link or a name** (DESIGN.md §5,
@@ -180,7 +180,7 @@ Rules both variants enforce:
   The list keeps the order chosen and is never reordered. Neither schema
   keeps `element`, so a caller still sending it has it stripped like any
   unknown key.
-- **`planets`, `zodiacSigns` and `colors` are lists** (DESIGN.md §5,
+- **`celestialBodies`, `zodiacSigns` and `colors` are lists** (DESIGN.md §5,
   MB.134; built by MB.136, replacing the single `planet`, `zodiac` and
   `color`): free text, each entry trimmed, blank entries dropped by
   `dropBlankEntries` after the cross-field rules, and a list left with no
@@ -189,10 +189,10 @@ Rules both variants enforce:
   a list, so a list is never silently stored doubled. An entry is never
   reordered, since each list keeps the order entered. Neither schema has a single field left,
   so a caller still sending `planet` has it stripped like any unknown key.
-- **Planets and zodiac signs are suggested rather than enforced**, like a
+- **Celestial bodies and zodiac signs are suggested rather than enforced**, like a
   variant's `form` and `deities`: anything trimmed and non-blank passes either schema.
   The project serves a wide range of practices, and any closed list refuses
-  some of them. The suggestions are the admin-curated `planets` and
+  some of them. The suggestions are the admin-curated `celestial_bodies` and
   `zodiac_signs` vocabularies
   ([`db/astrology-vocabularies.md`](db/astrology-vocabularies.md), "The
   astrology vocabularies"), and on a coven's ingredient an entry off them is
@@ -204,14 +204,14 @@ Rules both variants enforce:
 curated row — a form under a live group, a deity under a live tradition —
 held or not, so a curated value typed rather than picked is refused as an
 uncurated one is (MB.167, which moved the rule onto the pick). Each entry of
-`planets` and `zodiacSigns` is matched against the live curated rows, folded
+`celestialBodies` and `zodiacSigns` is matched against the live curated rows, folded
 as the suggestions fold, `lower(btrim(value)) = lower(name)`. Each value is
 written in its row's spelling. A value refused is a `ValidationError` beside
-it, `['variants', i, 'form']` or `['variants', i, 'formId']`, or `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]`, the index the
+it, `['variants', i, 'form']` or `['variants', i, 'formId']`, or `['celestialBodies', i]`, `['zodiacSigns', i]` or `['deities', i]`, the index the
 entry had in what was sent, blanks counted, since the parse drops blank
 entries and the form numbers its rows by what it sent. Every such value is
 refused in one error, and each message names the list to add it to: `No
-curated planet is called "Eris" — add it to the planet list first`. It is
+curated celestial body is called "Eris" — add it to the celestial body list first`. It is
 not in the schema because it reads the database, and the schemas are `zod`
 alone (above); `LocalIngredientInput`'s writes make no such check. Folk names
 and colours have no list and are not checked
@@ -309,8 +309,8 @@ places rather than rounded, so a refused 4.499 never shows as 4.50. The check
 is the schema's rather than the service's alone, so the form refuses before
 the request; it reads nothing but the hex, so it stays client-safe. The pair is then held to one hue, to within 10° (`MAX_HUE_DISTANCE`, `src/lib/group-colors.ts`), or to two greys, and refused at `colorLight` otherwise; Zod runs that object-level check even after a colour has failed its own, so it speaks only once both colours have passed.
 
-The planet and zodiac vocabularies (MB.95) share one shape:
-`vocabulary/validation/astrology-value.ts` builds `PlanetInput` and
+The celestial body and zodiac vocabularies (MB.95) share one shape:
+`vocabulary/validation/astrology-value.ts` builds `CelestialBodyInput` and
 `ZodiacSignInput` as the shape alone, each saying its own noun — "Give the
 sign a name".
 The spell (MB.8) adds its own schema when it lands.
