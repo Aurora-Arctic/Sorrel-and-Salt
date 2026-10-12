@@ -17,6 +17,7 @@ type Documents = {
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeAdminInvitationDocument,
     "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n": typeof types.CreateAdminInvitationDocument,
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceDocument,
+    "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.DeleteWorkspaceDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": typeof types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryGroupDocument,
@@ -74,6 +75,7 @@ const documents: Documents = {
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": types.RevokeAdminInvitationDocument,
     "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n": types.CreateAdminInvitationDocument,
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceDocument,
+    "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": types.DeleteWorkspaceDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryGroupDocument,
@@ -154,6 +156,10 @@ export function graphql(source: "\n  mutation CreateAdminInvitation($email: Stri
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n"): (typeof documents)["\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

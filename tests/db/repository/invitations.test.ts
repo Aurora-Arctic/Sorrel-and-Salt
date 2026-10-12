@@ -11,6 +11,9 @@ import {
   type WorkspaceInvitationValues,
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { workspaces } from '@/modules/coven/schema/workspaces';
+import { eq } from 'drizzle-orm';
+import { makeWorkspace } from '../../support/fixtures';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
 import { A, B, D, E, asUser } from '../../support/as-user';
@@ -192,6 +195,50 @@ describe('acceptInvitation', () => {
       expect(accepted[0]?.acceptedAt).toBeInstanceOf(Date);
     },
   );
+});
+
+describe('acceptInvitation into a deleted workspace (M6.14)', () => {
+  it('returns no row, though the invitation is pending and the address matches', async () => {
+    const { slug } = makeWorkspace({ name: 'Fixture Coven Invite Razed' });
+    const [workspace] = await withAudit(asUser(A), (write) =>
+      write.insert(workspaces, { name: 'Fixture Coven Invite Razed', slug }),
+    );
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${workspace.id}, ${D.id}, 'owner', ${D.id}, ${D.id})
+    `;
+    const proof = await assertMembership(asUser(D), workspace.id, { member: ['invite'] });
+    await inviteIntoW({}, () => proof);
+    // Why the refusal is the workspace check's: while the coven is live the
+    // same invitation, token and holder are accepted.
+    const [pending] =
+      await sql`select accepted_at from invitations where workspace_id = ${workspace.id}`;
+    expect(pending?.accepted_at).toBeNull();
+    await withAudit(asUser(A), (write) =>
+      write.softDelete(workspaces, eq(workspaces.id, workspace.id)),
+    );
+
+    await expect(acceptAs(A)).resolves.toEqual([]);
+
+    const [after] =
+      await sql`select accepted_at from invitations where workspace_id = ${workspace.id}`;
+    expect(after?.accepted_at).toBeNull();
+  });
+
+  it('accepts the same invitation while the workspace is live', async () => {
+    const { slug } = makeWorkspace({ name: 'Fixture Coven Invite Live' });
+    const [workspace] = await withAudit(asUser(A), (write) =>
+      write.insert(workspaces, { name: 'Fixture Coven Invite Live', slug }),
+    );
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${workspace.id}, ${D.id}, 'owner', ${D.id}, ${D.id})
+    `;
+    const proof = await assertMembership(asUser(D), workspace.id, { member: ['invite'] });
+    await inviteIntoW({}, () => proof);
+
+    await expect(acceptAs(A)).resolves.toHaveLength(1);
+  });
 });
 
 describe('revokeInvitation, by tier', () => {

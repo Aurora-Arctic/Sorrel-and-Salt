@@ -73,7 +73,7 @@ for (const role of ['owner', 'member', 'viewer'] as const) {
     // Delete is the owner's alone; the membership rows above are why a
     // member's and a viewer's absence is a refusal and not an empty page.
     const remove = main.getByRole('button', { name: 'Delete Workspace', exact: true });
-    if (role === 'owner') await expect(remove).toBeDisabled();
+    if (role === 'owner') await expect(remove).toBeEnabled();
     else await expect(remove).toHaveCount(0);
   });
 }

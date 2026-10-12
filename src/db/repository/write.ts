@@ -12,7 +12,7 @@ import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired
 import { fold, inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
 import { adminRoleWrites } from './admin-roles';
 import { invitationWrites } from './invitations';
-import { membershipWrites } from './memberships';
+import { membershipWrites, workspaceWrites } from './memberships';
 import { existsIn } from './select';
 import type { Membership } from '@/modules/coven';
 import type {
@@ -62,7 +62,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
   // What a marked table's named writes are built from, in the repository file
   // beside its finders (MB.198): spread in below, so a new marked table adds
   // its writes there rather than here.
-  const context: WriterContext = { tx, session, insert, update };
+  const context: WriterContext = { tx, session, insert, update, softDelete };
 
   const inCompendiumById = (table: PgTable & TwoTier & Identified, id: string) =>
     and(inCompendium(table), eq(table.id, id));
@@ -153,6 +153,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     ...adminRoleWrites(context),
     ...invitationWrites(context),
     ...membershipWrites(context),
+    ...workspaceWrites(context),
     delete: (table, match) => {
       const where = matching(table, match);
       return where ? (tx.delete(table).where(where).returning() as never) : Promise.resolve([]);

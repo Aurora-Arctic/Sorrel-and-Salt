@@ -64,7 +64,10 @@ two transports").
 
 `findWorkspaceRole(userId, workspaceId)` is what mints a proof, so it cannot
 demand one. It is narrow on purpose — it answers with a role, not with rows —
-so it cannot stand in for a finder.
+so it cannot stand in for a finder. It also finds no role in a deleted
+workspace, the same live-workspace check `findMembershipsOfUsers` makes, which
+is how deleting a workspace (M6.14) refuses every member at once while their
+membership rows stay as they were.
 
 `findMembershipsOfUsers(userIds)` is the second, for the same kind of reason:
 a user's own memberships span workspaces, so there is no one workspace to

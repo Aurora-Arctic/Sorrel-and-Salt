@@ -291,6 +291,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   updateMemberRole: write(
     `mutation { updateMemberRole(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id", role: member) { role } }`,
   ),
+  // A malformed id, so a caller past the scope is refused by the service
+  // before anything is deleted.
+  deleteWorkspace: write('mutation { deleteWorkspace(workspaceId: "not-an-id") }'),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort", variants: [] }) { id } }`,
   ),
@@ -443,6 +446,8 @@ const OPEN_WRITES = [
   'createWorkspace',
   // The owner's `member: update` decides, which the service checks (M9.14).
   'updateMemberRole',
+  // The owner's `workspace: delete` decides, which the service checks (M6.14).
+  'deleteWorkspace',
   'createWorkspaceIngredient',
   'updateIngredient',
   'deleteIngredient',
