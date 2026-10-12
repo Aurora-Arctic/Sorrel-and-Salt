@@ -1359,7 +1359,7 @@ _Acceptance criteria:_
 - Soft-deleted rows are not returned
 - A missing id resolves to null rather than throwing
 
-**MB.10 — `usersById` display-name DataLoader** · 1h
+**MB.10 — `usersById` display-name DataLoader** · 1.5h
 
 _Story:_ As a workspace member, I want the last-edited-by name resolved efficiently so that a long list does not issue one query per row.
 
@@ -1367,7 +1367,7 @@ M6.18 requires the display name to resolve "without an N+1" and no loader existe
 
 **It lands before M6.11 and M6.12, which consume it** (moved on the Wave 9 review, 2026-10-12): `MemberList` shows each member's display name, and the SDL's `WorkspaceMember` has no `user` field to carry one. M6.18, the first consumer it was minted for, moves to Wave 12.
 
-**It resolves display names for co-members only**, the users who share a workspace with the viewer. Any other id resolves to nothing, so the loader cannot be used to read a stranger's name.
+**It resolves display names for co-members only**, the users who hold or have held a membership in a workspace the viewer is a live member of. The removed are included on purpose: M6.18 shows a row's last editor, who may have left the coven since, and the name was visible to the viewer when the edit was made. Any other id resolves to nothing, so the loader cannot be used to read a stranger's name. The hours were re-estimated on review on 2026-10-12, from 1: the gate joins the loader and the stable value for a deleted user. They remain an estimate.
 
 **It sits beside `usersByIdForAdmin`, with a different null rule, rather than replacing it.** That loader (`src/modules/identity/loaders/users-by-id-for-admin.ts`) serves the privilege ledger: its service, `usersForAdmin`, refuses anyone but a site admin, returns the whole user row, email included, and resolves to null for an id no live user holds. This one is gated to co-members, returns the display name alone, and gives a deleted user a stable display value instead of null. One loader serving both would carry two gates and two null rules behind a switch.
 
@@ -1376,7 +1376,7 @@ _Acceptance criteria:_
 - One query per batch, asserted by query count
 - Constructed per request
 - Returns display name only, never the email address
-- Resolves a co-member's name, and nothing for a user who shares no workspace with the viewer, asserted with the precondition that the user exists and has a name
+- Resolves a co-member's name, a removed member's too, and nothing for a user who never shared a workspace with the viewer, asserted with the precondition that the user exists and has a name
 - A deleted user still resolves to a stable display value
 - `usersByIdForAdmin` is unchanged
 
