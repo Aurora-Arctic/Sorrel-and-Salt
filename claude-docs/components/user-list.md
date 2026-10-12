@@ -17,6 +17,7 @@ the hrefs of the pages either side
 | `awaitingApproval` | Whether the list is narrowed to `canCreateWorkspace = false`                       |
 | `previousHref`     | The page before this one, absent on the first                                      |
 | `nextHref`         | The page after this one, absent on the last                                        |
+| `position`         | Where this page stands, `{ page, pages }`, the pager's "Page X of Y" (MB.115)      |
 | `canImpersonate`   | Whether impersonation is registered here (MB.53); off by default                   |
 | `adminChanges`     | `{ paused, canToggle }`, the pause on admin changes (MB.63); no switch when absent |
 
@@ -101,8 +102,9 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   more.", each filter named only when it is set. With none set, it says there
   are no users yet.
 - **The pager is `Pager`** ([`pager.md`](pager.md)), with plain anchors:
-  Prev and Next, an end with no page disabled, and nothing at all on a list of
-  one page. A plain anchor is a full load, so the page's guard runs again, as with
+  Prev and Next, an end with no page disabled, "Page X of Y" between them
+  from `position`, which the page counts as every admin list does (MB.115),
+  and nothing at all on a list of one page. A plain anchor is a full load, so the page's guard runs again, as with
   `AdminNav`.
 - **A history icon leads each name** (MB.200, on the owner's call: an
   icon rather than a column), on every row, an admin's included: a link to
@@ -373,9 +375,13 @@ People page with its Users tab open:
   Grant opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused`
   shows the switch paused with the primary admin's Resume, and
   `AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63).
+  `OnePageOfSeveral` is a middle page of 25, both pager ends live and
+  "Page 2 of 3" between them (MB.115).
 - **Phone width**: `PhoneDark` and `PhoneLight`, the page's header and the
   list with Impersonate at 375px, every row a card; `FilteredPhoneDark` and
-  `FilteredPhoneLight`, `Filtered` at 375px with Clear offered.
+  `FilteredPhoneLight`, `Filtered` at 375px with Clear offered;
+  `OnePageOfSeveralPhoneDark` and `OnePageOfSeveralPhoneLight`, the middle
+  page at 375px, the pager on one line beneath the last card.
   In the workshop no confirmation reaches a server, so confirming one shows the
   refusal. Render-only, no test ids, no snapshots.
 
@@ -413,6 +419,7 @@ Revoke kept on its own reason — which of the two reasons won is told by
 which of the two strings describes it. Its colours, marks, tips and their placement, and the cards at phone width,
 are presentation; paging is Pager's. `tests/app/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
-flag included, and `awaiting` read by its presence. `tests/e2e/admin.spec.ts`
+flag included, `awaiting` read by its presence, and the count behind the
+pager's position. `tests/e2e/admin.spec.ts`
 approves and revokes a user against the built server, and grants admin with a
 reason and revokes it, with axe over each open modal.
