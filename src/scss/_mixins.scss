@@ -145,8 +145,6 @@
 // No position or width: InfoTip's and a list entry's tooltip sit differently.
 // `tip-bubble-open` is the open state alone, for a bubble opened another way.
 // claude-docs/components/info-tip.md, "Styling".
-$tip-fade: 500ms;
-
 @mixin tip-bubble {
   $fade: $tip-fade;
 
