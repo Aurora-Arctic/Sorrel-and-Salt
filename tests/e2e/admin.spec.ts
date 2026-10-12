@@ -71,19 +71,20 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
   const response = await page.goto('/admin');
 
   expect(response?.status()).toBe(200);
+  // One link per page, each at its first tab: a group list is a tab of the
+  // list it organises, and Astrology holds the planets and zodiac signs (MB.115).
   const nav = page.getByRole('navigation', { name: 'Admin' });
-  for (const [name, href] of [
+  const pages = [
     ['Compendium', '/admin/compendium'],
     ['Categories', '/admin/categories'],
-    ['Category Groups', '/admin/category-groups'],
     ['Forms', '/admin/forms'],
-    ['Form Groups', '/admin/form-groups'],
-    ['Planets', '/admin/planets'],
-    ['Zodiac Signs', '/admin/zodiac-signs'],
     ['Deities', '/admin/deities'],
-    ['Deity Traditions', '/admin/deity-traditions'],
-  ]) {
-    await expect(nav.getByRole('link', { name })).toHaveAttribute('href', href);
+    ['Astrology', '/admin/planets'],
+    ['People', '/admin/users'],
+  ];
+  await expect(nav.getByRole('link')).toHaveCount(pages.length);
+  for (const [name, href] of pages) {
+    await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
   }
 
   // Body copy keeps to the reading measure, `$measure` (66ch), however wide the
@@ -128,12 +129,19 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   const response = await page.goto('/admin/users?query=admin-users.test');
 
   expect(response?.status()).toBe(200);
-  await expect(
-    page.getByRole('navigation', { name: 'Admin' }).getByRole('link', { name: 'Users' }),
-  ).toHaveAttribute('href', '/admin/users');
+  // Users is the People page's first tab, and the one open here.
+  const tab = page.getByRole('navigation', { name: 'People' }).getByRole('link', { name: 'Users' });
+  await expect(tab).toHaveAttribute('href', '/admin/users');
+  await expect(tab).toHaveAttribute('aria-current', 'page');
   await expect(page.getByRole('search').getByLabel('Name or Email')).toHaveValue(
     'admin-users.test',
   );
+  // A filter's switch takes Space as a checkbox does, which only a browser's
+  // own keyboard handling shows (MB.115).
+  const awaiting = page.getByRole('search').getByRole('switch', { name: 'Needs Approval' });
+  await awaiting.focus();
+  await page.keyboard.press('Space');
+  await expect(awaiting).toBeChecked();
 
   // The filter's two matches, and nothing from admin-guard.test's earlier sign-ins.
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
@@ -287,10 +295,14 @@ test('the primary admin pauses admin changes, another admin is refused a grant, 
   await expect(unusable).toHaveAccessibleDescription(/\S/);
   await expect(status).toHaveCount(0);
 
-  // The primary admin pauses.
+  // The primary admin pauses, behind a modal asking first. Scoped to it:
+  // the button that opens it has the same name.
   await signInAgainAs(page, primary);
   await page.goto(list);
   await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
+  const pausing = page.getByRole('dialog', { name: 'Pause Admin Changes' });
+  await pausing.getByRole('button', { name: 'Pause Admin Changes' }).click();
+  await expect(pausing).toHaveCount(0);
   await expect(status).toBeVisible();
   await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
   await assertNoAccessibilityViolations(page);
@@ -361,7 +373,7 @@ test('an admin adds, edits and deletes a category in the modal over the list', a
   await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
   await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
   await adding.getByRole('combobox', { name: 'Group' }).click();
-  // The modal's own list: the filter's Group is a native select with options too.
+  // The modal's own list: the filter's Group box has a list of its own.
   await adding.getByRole('option').first().click();
   await adding.getByRole('button', { name: 'Save Category' }).click();
   await expect(adding).toHaveCount(0);
@@ -370,20 +382,25 @@ test('an admin adds, edits and deletes a category in the modal over the list', a
   await expect(row).toBeVisible();
 
   await row.getByRole('link', { name: 'Edit Aaa Testcraft' }).click();
-  const editing = page.getByRole('dialog', { name: 'Edit Category' });
+  // An edit dialog is named by its eyebrow and the entry's saved name (MB.115).
+  const editing = page.getByRole('dialog', { name: 'Edit Category, Aaa Testcraft', exact: true });
   await expect(page).toHaveURL(/\?edit=aaa-testcraft$/);
   await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Renamed');
   await editing.getByRole('button', { name: 'Save Category' }).click();
   await expect(editing).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Testcraft Renamed/ })).toBeVisible();
 
-  // A renamed category answers at its new address.
+  // A renamed category answers at its new address, under its new name.
   await page.goto('/admin/categories?edit=aaa-testcraft-renamed');
-  await expect(editing).toBeVisible();
+  const renamed = page.getByRole('dialog', {
+    name: 'Edit Category, Aaa Testcraft Renamed',
+    exact: true,
+  });
+  await expect(renamed).toBeVisible();
   await assertNoAccessibilityViolations(page);
-  await editing.getByRole('button', { name: 'Delete Category' }).click();
-  await editing.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(editing).toHaveCount(0);
+  await renamed.getByRole('button', { name: 'Delete Category' }).click();
+  await renamed.getByRole('button', { name: 'Delete', exact: true }).click();
+  await expect(renamed).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Testcraft/ })).toHaveCount(0);
 });
 
@@ -393,7 +410,7 @@ test('an admin is told which compendium entries hold a category before it can go
   await signInAs(page, 'held-admin@admin-categories.test', ['discord'], 'admin');
   // The standard seed files several compendium entries under Protection, Bay Laurel first.
   await page.goto('/admin/categories?edit=protection');
-  const editing = page.getByRole('dialog', { name: 'Edit Category' });
+  const editing = page.getByRole('dialog', { name: 'Edit Category, Protection', exact: true });
 
   await editing.getByRole('button', { name: 'Delete Category' }).click();
   await editing.getByRole('button', { name: 'Delete', exact: true }).click();
@@ -439,7 +456,7 @@ test('an admin adds, renames and deletes a form in the modal over the list', asy
   await expect(row.getByRole('cell', { name: 'Mineral', exact: true })).toBeVisible();
 
   await row.getByRole('link', { name: 'Edit Aaa Testwort Shard' }).click();
-  const editing = page.getByRole('dialog', { name: 'Edit Form' });
+  const editing = page.getByRole('dialog', { name: 'Edit Form, Aaa Testwort Shard', exact: true });
   await expect(editing).toBeVisible();
   await expect(page).toHaveURL(/\/admin\/forms\?edit=aaa-testwort-shard[a-z-]*$/);
   // A rename carries onto the compendium, and Save says so before it is pressed.
@@ -457,11 +474,12 @@ test('an admin adds, renames and deletes a form in the modal over the list', asy
   // A renamed form answers at its new address, which its Edit links to.
   await renamed.getByRole('link', { name: 'Edit Aaa Testwort Sliver' }).click();
   await expect(page).toHaveURL(/\/admin\/forms\?edit=aaa-testwort-sliver[a-z-]*$/);
-  await editing.getByRole('button', { name: 'Delete Form' }).click();
-  const confirm = editing.getByRole('button', { name: 'Delete', exact: true });
+  const sliver = page.getByRole('dialog', { name: 'Edit Form, Aaa Testwort Sliver', exact: true });
+  await sliver.getByRole('button', { name: 'Delete Form' }).click();
+  const confirm = sliver.getByRole('button', { name: 'Delete', exact: true });
   await expect(confirm).toBeVisible();
   await confirm.click();
-  await expect(editing).toHaveCount(0);
+  await expect(sliver).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
 });
 
@@ -503,7 +521,7 @@ test('an admin adds, renames and deletes a planet in the modal over the list', a
   await expect(row.getByRole('cell', { name: 'Made by the e2e spec' })).toBeVisible();
 
   await row.getByRole('link', { name: 'Edit Aaa Testwort Star' }).click();
-  const editing = page.getByRole('dialog', { name: 'Edit Planet' });
+  const editing = page.getByRole('dialog', { name: 'Edit Planet, Aaa Testwort Star', exact: true });
   await expect(page).toHaveURL(/\/admin\/planets\?edit=aaa-testwort-star$/);
   // A rename carries onto the compendium, and Save says so before it is pressed.
   const save = editing.getByRole('button', { name: 'Save Planet' });
@@ -517,11 +535,12 @@ test('an admin adds, renames and deletes a planet in the modal over the list', a
   await expect(renamed).toBeVisible();
 
   await renamed.getByRole('link', { name: 'Edit Aaa Testwort Comet' }).click();
-  await editing.getByRole('button', { name: 'Delete Planet' }).click();
-  const confirm = editing.getByRole('button', { name: 'Delete', exact: true });
+  const comet = page.getByRole('dialog', { name: 'Edit Planet, Aaa Testwort Comet', exact: true });
+  await comet.getByRole('button', { name: 'Delete Planet' }).click();
+  const confirm = comet.getByRole('button', { name: 'Delete', exact: true });
   await expect(confirm).toBeVisible();
   await confirm.click();
-  await expect(editing).toHaveCount(0);
+  await expect(comet).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
 });
 
@@ -550,6 +569,9 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
 
   await search.getByRole('searchbox', { name: 'Name' }).fill('no such sign');
   await filter.click();
+  // The address first: while the list is on its way its skeleton stands in,
+  // which has no table either, so the count alone would pass at once.
+  await expect(page).toHaveURL(/\/admin\/zodiac-signs\?query=no\+such\+sign$/);
   await expect(page.getByRole('table')).toHaveCount(0);
 });
 
@@ -606,9 +628,13 @@ test('an admin adds a category group, is refused a colour too dark for its groun
   await expect(category).toHaveCount(0);
 
   await page.goto('/admin/category-groups?edit=aaa-testwort-wards');
-  const editing = page.getByRole('dialog', { name: 'Edit Category Group' });
+  const editing = page.getByRole('dialog', {
+    name: 'Edit Category Group, Aaa Testwort Wards',
+    exact: true,
+  });
   await editing.getByRole('button', { name: 'Delete Group' }).click();
-  await editing.getByRole('combobox', { name: 'Move its 1 category to' }).click();
+  // The question over the form, its picker inside it.
+  await editing.getByRole('combobox', { name: 'Move Its 1 Category To' }).click();
   await editing.getByRole('option', { name: 'Cleansing & Release' }).click();
   await editing.getByRole('button', { name: 'Continue' }).click();
   const moveAndDelete = editing.getByRole('button', { name: 'Move and Delete' });
@@ -646,18 +672,25 @@ test('an admin adds, renames and deletes a form group', async ({ page }) => {
   await expect(adding).toHaveCount(0);
 
   await page.getByRole('link', { name: 'Edit Aaa Fixture Matter' }).click();
-  const editing = page.getByRole('dialog', { name: 'Edit Form Group' });
+  const editing = page.getByRole('dialog', {
+    name: 'Edit Form Group, Aaa Fixture Matter',
+    exact: true,
+  });
   await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixture Stuff');
   await editing.getByRole('button', { name: 'Save Group' }).click();
   await expect(editing).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Fixture Stuff/ })).toBeVisible();
 
   await page.goto('/admin/form-groups?edit=aaa-fixture-stuff');
-  await editing.getByRole('button', { name: 'Delete Group' }).click();
-  const confirm = editing.getByRole('button', { name: 'Delete', exact: true });
+  const renamed = page.getByRole('dialog', {
+    name: 'Edit Form Group, Aaa Fixture Stuff',
+    exact: true,
+  });
+  await renamed.getByRole('button', { name: 'Delete Group' }).click();
+  const confirm = renamed.getByRole('button', { name: 'Delete', exact: true });
   await expect(confirm).toBeVisible();
   await confirm.click();
-  await expect(editing).toHaveCount(0);
+  await expect(renamed).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Fixture/ })).toHaveCount(0);
 });
 
@@ -697,34 +730,39 @@ test('an admin adds and renames a tradition, then moves its deity before deletin
   await deity.getByRole('textbox', { name: 'Description' }).fill('Filed under the tradition');
   await deity.getByRole('combobox', { name: 'Tradition' }).click();
   await deity.getByRole('option', { name: 'Aaa Fixtural', exact: true }).click();
-  await expect(deity.getByRole('combobox', { name: 'Tradition' })).toHaveText(/Aaa Fixtural/);
+  // A type-ahead box: the pick is its text.
+  await expect(deity.getByRole('combobox', { name: 'Tradition' })).toHaveValue('Aaa Fixtural');
   await assertNoAccessibilityViolations(page);
   await deity.getByRole('button', { name: 'Save Deity' }).click();
   await expect(deity).toHaveCount(0);
 
   await page.goto('/admin/deity-traditions?edit=aaa-fixtural');
-  const editing = page.getByRole('dialog', { name: 'Edit Tradition' });
+  const editing = page.getByRole('dialog', { name: 'Edit Tradition, Aaa Fixtural', exact: true });
   await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Mockish');
   await editing.getByRole('button', { name: 'Save Tradition' }).click();
   await expect(editing).toHaveCount(0);
-  // The deity's address followed its tradition's name.
+  // The deity's address followed its tradition's name, as its dialog's
+  // qualifier does.
   await page.goto('/admin/deities?edit=aaa-testra-aaa-mockish');
   await expect(
-    page.getByRole('dialog', { name: 'Edit Deity' }).getByRole('textbox', { name: 'Name' }),
+    page
+      .getByRole('dialog', { name: 'Edit Deity, Aaa Testra, Aaa Mockish', exact: true })
+      .getByRole('textbox', { name: 'Name' }),
   ).toHaveValue('Aaa Testra');
 
   await page.goto('/admin/deity-traditions?edit=aaa-mockish');
-  await editing.getByRole('button', { name: 'Delete Tradition' }).click();
-  await editing.getByRole('combobox', { name: 'Move its 1 deity to' }).click();
-  await editing.getByRole('option', { name: 'Greek', exact: true }).click();
-  await editing.getByRole('button', { name: 'Continue' }).click();
-  await editing.getByRole('button', { name: 'Move and Delete' }).click();
-  await expect(editing).toHaveCount(0);
+  const renamed = page.getByRole('dialog', { name: 'Edit Tradition, Aaa Mockish', exact: true });
+  await renamed.getByRole('button', { name: 'Delete Tradition' }).click();
+  await renamed.getByRole('combobox', { name: 'Move Its 1 Deity To' }).click();
+  await renamed.getByRole('option', { name: 'Greek', exact: true }).click();
+  await renamed.getByRole('button', { name: 'Continue' }).click();
+  await renamed.getByRole('button', { name: 'Move and Delete' }).click();
+  await expect(renamed).toHaveCount(0);
   await expect(page.getByRole('row', { name: /Aaa Mockish/ })).toHaveCount(0);
 
   await page.goto('/admin/deities?edit=aaa-testra-greek');
-  const moved = page.getByRole('dialog', { name: 'Edit Deity' });
-  await expect(moved.getByRole('combobox', { name: 'Tradition' })).toHaveText(/Greek/);
+  const moved = page.getByRole('dialog', { name: 'Edit Deity, Aaa Testra, Greek', exact: true });
+  await expect(moved.getByRole('combobox', { name: 'Tradition' })).toHaveValue('Greek');
   await moved.getByRole('button', { name: 'Delete Deity' }).click();
   await moved.getByRole('button', { name: 'Delete', exact: true }).click();
   await expect(moved).toHaveCount(0);

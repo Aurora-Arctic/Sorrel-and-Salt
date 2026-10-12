@@ -8,8 +8,8 @@ import { signInAs } from '../session';
 // privilege ledger") against the built server: a non-admin's 403, an
 // approval made on /admin/users read back newest first, the name-or-email
 // search and the privilege dropdown narrowing it, and each user row's
-// permissions history icon opening it searched for that user's address. Axe in both
-// themes.
+// privilege changes link opening it searched for that user's address. Axe in
+// both themes.
 test.describe.configure({ mode: 'serial' });
 
 const SUBJECT_EMAIL = 'subject@privilege-ledger.test';
@@ -56,20 +56,18 @@ test('an admin reads an approval back from the ledger, then narrows it', async (
   await approving.getByRole('button', { name: 'Approve' }).click();
   await expect(approving).toHaveCount(0);
 
-  // From the admin nav, after Users.
-  await page
-    .getByRole('navigation', { name: 'Admin' })
-    .getByRole('link', {
-      name: 'Privilege Changes',
-    })
-    .click();
+  // By its tab on the People page, beside Users (MB.115).
+  const tab = page
+    .getByRole('navigation', { name: 'People' })
+    .getByRole('link', { name: 'Privilege Changes' });
+  await tab.click();
   await expect(page).toHaveURL(/\/admin\/privilege-changes$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Privilege Changes' })).toBeVisible();
+  await expect(tab).toHaveAttribute('aria-current', 'page');
 
   // Newest first: the approval heads the ledger, by the admin who made it.
   const first = page.getByRole('row').nth(1);
   await expect(first.getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
-  await expect(first.getByRole('cell').nth(2)).toHaveText('Coven creation');
+  await expect(first.getByRole('cell').nth(2)).toHaveText('Coven Creation');
   await expect(first.getByRole('cell').nth(3)).toHaveText('Granted');
   await expect(first.getByRole('cell').nth(4)).toHaveText('By an admin');
   await expect(first.getByRole('cell').nth(5)).toHaveText('Fixture Person');
@@ -86,7 +84,7 @@ test('an admin reads an approval back from the ledger, then narrows it', async (
   }
 
   // The search, by part of an address, then the privilege dropdown.
-  const filter = page.getByRole('form', { name: 'Filter privilege changes' });
+  const filter = page.getByRole('form', { name: 'Filter Privilege Changes' });
   await filter.getByLabel('Name or Email').fill('SUBJECT@privilege');
   await filter.getByLabel('Privilege').selectOption('create_workspace');
   await filter.getByRole('button', { name: 'Filter' }).click();
@@ -103,14 +101,14 @@ test('an admin reads an approval back from the ledger, then narrows it', async (
   await assertNoAccessibilityViolations(page);
 });
 
-test("a user row's permissions history icon opens the ledger searched for that user", async ({
+test("a user row's privilege changes link opens the ledger searched for that user", async ({
   page,
 }) => {
   await signInAs(page, 'reading-admin@privilege-ledger.test', ['discord'], 'admin');
 
   await page.goto(`/admin/users?query=${encodeURIComponent(SUBJECT_EMAIL)}`);
   const row = page.getByRole('row', { name: new RegExp(SUBJECT_NAME) });
-  const icon = row.getByRole('link', { name: `Permissions history for ${SUBJECT_NAME}` });
+  const icon = row.getByRole('link', { name: `Privilege changes for ${SUBJECT_NAME}` });
   await icon.hover();
   await expect(page.getByRole('tooltip')).toBeVisible();
   for (const colorScheme of ['dark', 'light'] as const) {
@@ -123,7 +121,7 @@ test("a user row's permissions history icon opens the ledger searched for that u
     /\/admin\/privilege-changes\?query=subject%40privilege-ledger\.test$/,
   );
   await expect(
-    page.getByRole('form', { name: 'Filter privilege changes' }).getByLabel('Name or Email'),
+    page.getByRole('form', { name: 'Filter Privilege Changes' }).getByLabel('Name or Email'),
   ).toHaveValue(SUBJECT_EMAIL);
   const rows = page.getByRole('row');
   await expect(rows).toHaveCount(2);

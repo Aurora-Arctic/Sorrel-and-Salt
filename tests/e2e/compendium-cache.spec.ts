@@ -75,7 +75,10 @@ test('an admin edit is visible on the next page load', async ({ page }) => {
     .getByRole('option', { name: 'None' })
     .click();
   await adding.getByRole('button', { name: 'Save Ingredient' }).click();
-  await expect(page.getByRole('dialog', { name: 'Edit Ingredient' })).toBeVisible();
+  // The edit dialog, named by the entry's saved name (MB.115), is the save landed.
+  await expect(
+    page.getByRole('dialog', { name: `Edit Ingredient, ${added}`, exact: true }),
+  ).toBeVisible();
 
   await page.goto('/admin/compendium');
   await expect(page.getByRole('cell', { name: added, exact: true })).toBeVisible();
