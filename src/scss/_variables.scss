@@ -327,6 +327,11 @@ $breakpoint-desktop: 1024px;
 // narrower than the measure, since a form's line is a field, not prose.
 $narrow-column: 28rem;
 
+// The pager's width below which Prev, "Page X of Y" and Next close up to stay
+// on one line (the owner's call at MB.115's review): at full spacing the
+// three need about 22rem, more than a 375px phone leaves.
+$pager-tight-width: 23rem;
+
 // The height every one-line control shares, so a field, a select or
 // suggesting box and a button stand level in a row: 44.5px, the owner's call
 // (MB.154), what a button measured at its own padding, and over WCAG 2.5.5's

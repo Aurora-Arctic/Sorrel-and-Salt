@@ -228,10 +228,16 @@
   // A paged list's Prev and Next, centred under its table (the owner's
   // calls, M5.6): a `nav` holding a list of full-size `.btn--quiet` anchors,
   // quiet because paging changes nothing. The ‹ and › marks are
-  // `aria-hidden` spans, leaving each link named "Prev" or "Next".
+  // `aria-hidden` spans, leaving each link named "Prev" or "Next". One
+  // line at every width (the owner's call at MB.115's review), closing up
+  // on a narrow pager below.
+  .pager {
+    container: pager / inline-size;
+  }
+
   .pager > ul {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
     gap: space(3);
     margin: 0;
@@ -276,6 +282,23 @@
     padding-inline: space(4);
     color: $text-muted;
     font-size: type-size('body');
+    white-space: nowrap;
+  }
+
+  // A phone's pager: the ends' padding and the room around "Page X of Y"
+  // given up, so the three stay on one line down to a 320px screen.
+  @container pager (max-width: #{$pager-tight-width}) {
+    .pager > ul {
+      gap: space(2);
+    }
+
+    .pager .btn {
+      padding-inline: space(3);
+    }
+
+    .pager__position {
+      padding-inline: 0;
+    }
   }
 
   // A page's heading with its one primary action on the same line, at the

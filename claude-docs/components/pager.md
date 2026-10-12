@@ -61,8 +61,12 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
 
 ## Styling
 
-Entirely the `.pager` primitive: a centred, wrapping row of two full-size
-`.btn--quiet` buttons, with chevrons at twice the label. Each chevron sits in
+Entirely the `.pager` primitive: a centred row of two full-size
+`.btn--quiet` buttons, with chevrons at twice the label. It stays on one
+line at every width (the owner's call at MB.115's review): on a pager
+narrower than `$pager-tight-width`, 23rem, the ends' padding narrows and
+"Page X of Y" loses the room either side of it, which holds Prev, the
+position and Next together down to a 320px screen. Each chevron sits in
 `.pager__mark`, a box a label's em wide, so either guillemet leaves its
 button the same size. `index.scss` holds nothing of its own.
 
