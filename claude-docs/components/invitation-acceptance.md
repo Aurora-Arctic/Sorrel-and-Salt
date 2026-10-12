@@ -1,8 +1,8 @@
 # Invitation Acceptance
 
 `src/components/InvitationAcceptance/` — the panel of `/invite/[token]`, the
-one route an invitation's mailed link opens (MB.70; M7.5 adds the workspace
-tier). Server component `src/app/invite/[token]/page.tsx` reads where the
+one route an invitation's mailed link opens (MB.70 built it with the site
+tier, M7.5 added the workspace's). Server component `src/app/invite/[token]/page.tsx` reads where the
 visitor stands and hands down one of three states; this component shows it
 and sends the accept. The rules it shows are
 [`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
@@ -20,7 +20,10 @@ and sends the accept. The rules it shows are
 - **`acceptable`** — what the invitation grants, by tier, and **Accept
   Invitation**. The click sends `acceptInvitation`, which checks everything
   again and decides; the button stays busy, with a spinner, until
-  `router.push` reaches `landing` (`/admin` for an admin invitation). A
+  `router.push` reaches `landing` (`/admin` for an admin invitation,
+  `/coven/[slug]` for a coven's, the slug coming from the standing; the
+  sentence names the coven, `covenName`, which only this state carries: the
+  standing reaches it after the address checks, so no refusal can say it). A
   refusal is said in an alert in the service's words, and Accept is offered
   again.
 
@@ -46,7 +49,7 @@ buttons and the spinner are the primitives', Accept drawn through
 ## Stories
 
 [`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
-`SignedOut`, `Acceptable`, `Unverified` and `Expired`, each inside the
+`SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified` and `Expired`, each inside the
 page's own `main.page-frame.page-frame--narrow`, so the workshop shows what
 the page shows. Render-only.
 

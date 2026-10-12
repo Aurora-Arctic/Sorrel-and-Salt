@@ -23,15 +23,17 @@ const AcceptInvitationDocument = graphql(`
   }
 `);
 
-/** What accepting grants, by tier; M7.5 adds the workspace's. */
+/** What accepting grants, by tier; a coven's own name is added when the page has it. */
 const GRANTS = {
   site: "You've been invited to be an admin of Sorrel & Salt.",
+  workspace: "You've been invited to join a coven on Sorrel & Salt.",
 } as const;
 
 const Accept = ({
   token,
   tier,
   landing,
+  covenName,
 }: Extract<InvitationAcceptanceProps, { status: 'acceptable' }>): ReactElement => {
   const router = useRouter();
   const [sending, setSending] = useState(false);
@@ -54,7 +56,11 @@ const Accept = ({
 
   return (
     <>
-      <p className="invitation-acceptance__text">{GRANTS[tier]}</p>
+      <p className="invitation-acceptance__text">
+        {tier === 'workspace' && covenName
+          ? `You've been invited to join ${covenName} on Sorrel & Salt.`
+          : GRANTS[tier]}
+      </p>
       {failure && <Notice kind="error">{failure}</Notice>}
       <p className="invitation-acceptance__actions">
         <BusyButton

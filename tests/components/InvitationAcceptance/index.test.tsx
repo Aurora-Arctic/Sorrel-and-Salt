@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import InvitationAcceptance from '@/components/InvitationAcceptance';
@@ -16,6 +17,9 @@ beforeEach(() => {
 });
 
 const accept = () => screen.getByRole('button', { name: 'Accept Invitation' });
+
+// A cast: the built routes know `/coven/[slug]`, not this literal.
+const COVEN_LANDING = '/coven/fixture-coven' as Route;
 
 describe('InvitationAcceptance', () => {
   it('asks a signed-out visitor to sign in, and back to the link', () => {
@@ -72,6 +76,27 @@ describe('InvitationAcceptance', () => {
     expect(calls).toEqual([{ token: 'abc' }]);
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('aria-busy', 'true');
+  });
+
+  it('lands a coven’s invitation in the coven', async () => {
+    mockGraphQLMutation<AcceptInvitationMutation, AcceptInvitationMutationVariables>(
+      'AcceptInvitation',
+      () => ({ acceptInvitation: { id: 'i1' } }),
+    );
+    render(
+      <InvitationAcceptance
+        status="acceptable"
+        token="abc"
+        tier="workspace"
+        landing={COVEN_LANDING}
+        covenName="Fixture Coven"
+      />,
+    );
+    expect(screen.getByText(/Fixture Coven/)).toBeVisible();
+
+    fireEvent.click(accept());
+
+    await waitFor(() => expect(router.push).toHaveBeenCalledWith('/coven/fixture-coven'));
   });
 
   it('says the service’s refusal and offers Accept again', async () => {

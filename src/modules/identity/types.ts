@@ -1,6 +1,6 @@
 import type { userPrivilegeChanges } from './schema/user-privilege-changes';
 import type { users } from './schema/users';
-import type { SiteInvitationRow } from '../../db/repository';
+import type { InvitationRow, InvitedCoven, SiteInvitationRow } from '../../db/repository';
 
 export type { PrivilegeChangeFilter, UserFilter } from '../../db/repository';
 
@@ -74,6 +74,12 @@ export interface InvitationSender {
   ): Promise<void>;
 }
 
+/** An invitation into a coven: it names the workspace and the role it seats the person at. */
+export type WorkspaceInvitationRow = InvitationRow & {
+  workspaceId: string;
+  role: NonNullable<InvitationRow['role']>;
+};
+
 /** Why an invitation link cannot be accepted by this session, one reason per link (MB.70, M7.7). */
 export type InvitationRefusal =
   'invalid' | 'accepted' | 'revoked' | 'expired' | 'different-address' | 'unverified' | 'paused';
@@ -81,9 +87,19 @@ export type InvitationRefusal =
 /** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =
   | { acceptable: true; tier: 'site' }
+  /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
+  | { acceptable: true; tier: 'workspace'; slug: string; name: string }
   | { acceptable: false; reason: InvitationRefusal; message: string };
 
 /** The accept service's checks, inside the module: a refusal, or the invitation and the account it admits. */
 export type InvitationCheck =
   | { refusal: InvitationRefusal }
-  | { refusal?: undefined; invitation: SiteInvitationRow; user: UserRow };
+  | { refusal?: undefined; tier: 'site'; invitation: SiteInvitationRow; user: UserRow }
+  | {
+      refusal?: undefined;
+      tier: 'workspace';
+      invitation: WorkspaceInvitationRow;
+      user: UserRow;
+      /** The live coven, as the invited account may be told it. */
+      coven: InvitedCoven;
+    };

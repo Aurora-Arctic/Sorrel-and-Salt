@@ -13,6 +13,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types'
 import type {
   AuditWriter,
   InvitationRow,
+  InvitedCoven,
   SiteInvitationFilter,
   SiteInvitationValues,
   SortPart,
@@ -84,6 +85,23 @@ export function findInvitationByToken(token: string): Promise<InvitationRow | un
     invitations,
     and(notSoftDeleted(invitations), eq(invitations.tokenHash, hashToken(token))),
   );
+}
+
+/**
+ * The name and slug of the live workspace an invitation names, or `undefined`
+ * once it is deleted: where an accepted invitation lands, what refuses one
+ * into a deleted coven before Accept is offered, and the name the Accept page
+ * shows. Under no proof, for the token read's reason, and narrow on purpose —
+ * two fields, never the row. The caller has checked that the session's
+ * verified address is the invited one, since only that account may be told
+ * the name.
+ */
+export async function findInvitedCoven(workspaceId: string): Promise<InvitedCoven | undefined> {
+  const row = await selectOne(
+    workspaces,
+    and(notSoftDeleted(workspaces), eq(workspaces.id, workspaceId)),
+  );
+  return row && { name: row.name, slug: row.slug };
 }
 
 /**
