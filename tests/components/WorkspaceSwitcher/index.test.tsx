@@ -11,7 +11,8 @@ vi.mock('next/navigation', () => ({
 const { default: WorkspaceSwitcher } = await import('@/components/WorkspaceSwitcher');
 
 // Story 8 (M6.9): the viewer's workspaces, the current one read off the
-// address, a choice going to the same section in the other.
+// address, a choice going to the same section in the other. Story 3 (M9.16):
+// the way to the create page, offered only to a viewer holding the right.
 
 const WORKSPACES = [
   { slug: 'fixture-coven', name: 'Fixture Coven' },
@@ -72,5 +73,46 @@ describe('WorkspaceSwitcher', () => {
     rerender(<WorkspaceSwitcher workspaces={WORKSPACES} />);
 
     expect(box()).toHaveTextContent('Testwort Circle');
+  });
+
+  describe('the create entry (M9.16)', () => {
+    it('is offered after the workspaces only to a viewer holding creation rights', () => {
+      const { unmount } = render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
+      fireEvent.click(box());
+      expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual([
+        'Fixture Coven',
+        'Testwort Circle',
+        'Create Workspace',
+      ]);
+      unmount();
+
+      render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate={false} />);
+      fireEvent.click(box());
+      expect(screen.queryByRole('option', { name: 'Create Workspace' })).not.toBeInTheDocument();
+    });
+
+    it('goes to the create page, from a click or the keyboard', () => {
+      render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
+
+      fireEvent.click(box());
+      fireEvent.click(screen.getByRole('option', { name: 'Create Workspace' }));
+      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/new');
+
+      push.mockClear();
+      box().focus();
+      fireEvent.keyDown(box(), { key: 'ArrowDown' });
+      fireEvent.keyDown(box(), { key: 'ArrowDown' });
+      fireEvent.keyDown(box(), { key: 'ArrowDown' });
+      fireEvent.keyDown(box(), { key: 'Enter' });
+      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/new');
+    });
+
+    it('shows no workspace as chosen on the create page itself', () => {
+      pathname.mockReturnValue('/coven/new');
+
+      render(<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />);
+
+      expect(box()).toHaveTextContent('Select Workspace');
+    });
   });
 });

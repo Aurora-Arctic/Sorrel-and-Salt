@@ -1324,7 +1324,7 @@ _Story:_ As a user, I want one persistent navigation frame so that every page is
 _Acceptance criteria:_
 
 - Wraps every signed-in page, inside and outside `/coven/`
-- Carries the primary nav and the `WorkspaceSwitcher`, and leaves the place the global add and edit affordances take, which M8.16 and M8.17 fill (amended 2026-10-11, when the task moved to Wave 9)
+- Carries the primary nav and the `WorkspaceSwitcher`, passing it `canCreate` from the user row so a rights holder sees its Create Workspace choice (M9.16), which an e2e spec walks to `/coven/new` (`@story-3`), and leaves the place the global add and edit affordances take, which M8.16 and M8.17 fill (amended 2026-10-11, when the task moved to Wave 9)
 - The coven layout nests inside it and adds only workspace-scoped chrome
 - The admin layout nests inside it too and adds only `AdminNav`, the admin area's section nav
 - Nav survives navigation between workspace-scoped and global pages
@@ -3614,7 +3614,7 @@ Minted during M5.4. Reviews the coven section once invitations land: creating a 
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), a page with no AppShell (`styling.md`, "The page frame"). The create-workspace form is not one of those: it is M9.16, a page inside the AppShell, which wraps every signed-in page (MB.7), so it takes no page frame, and its narrower column is the form's own choice (`styling.md`, the measure). Every notice in the section shows through `Notice` (`components/notice.md`).
+_Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), a page with no AppShell (`styling.md`, "The page frame"). The create-workspace page, `/coven/new` (M9.16), takes it too: the owner asked for it centred like the email page (2026-10-12), so its form sits on a `.panel` in `.page-frame--narrow` inside the AppShell (MB.7). Every notice in the section shows through `Notice` (`components/notice.md`).
 
 _Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/admin/(people)/invitations/`), the owner's call during MB.115.
 
