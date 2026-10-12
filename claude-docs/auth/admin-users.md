@@ -14,15 +14,15 @@ admin role already implies. The page reads nothing below `users` and
 thing an admin curates, either: CLAUDE.md's "and nothing else" governs what an admin
 may _change_.
 
-- **One service, two transports.** `listUsers(session, filter, page)` and
-  `providersOf(session, userIds)` (`src/modules/identity/services/user-list.ts`)
-  are a site admin's alone. Each asserts the role itself, by direct call, so a
+- **One service, two transports.** `listUsers(session, filter, page)`,
+  `countUsers(session, filter, start)` and `providersOf(session, userIds)`
+  (`src/modules/identity/services/user-list.ts`) are a site admin's alone. Each asserts the role itself, by direct call, so a
   non-admin is refused at the service and not merely kept off the page. The
   page calls them under `requireAdminSession()`, and GraphQL's `users` query
   and `User.providers` field end at the same two functions. The list is a read,
   so M5.7's mutation sweep does not reach it, and the query carries no Pothos
   scope of its own.
-- **Under the `SiteAdmin` proof.** `findUserPage` and `findProvidersOfUsers`
+- **Under the `SiteAdmin` proof.** `findUserPage`, `findUserCount` and `findProvidersOfUsers`
   (`src/db/repository/users.ts`) take the proof first, so the repository
   cannot be asked for the list by a caller that has not checked the role
   ([`db/site-admin-proof.md`](../db/site-admin-proof.md), "The SiteAdmin
@@ -32,10 +32,15 @@ may _change_.
   would put a database read outside the repository and a browser-initiated
   read outside `/api/graphql`: rules 2 and 1 in one call.
 - **Paged by the M3.6 helper.** The order is name then id, with a keyset
-  cursor and no offset, and a page holds 25 rows. The page reads it with
-  `resolvePage`, as `t.pagedConnection` does. `?after=` and `?before=` carry
-  the cursor. A cursor the codec cannot read gets the first page rather than an
-  error, since only a hand-edited address carries one.
+  cursor and no offset, and a page holds 25 rows. The page reads it through
+  `readNumberedPage` (`src/app/admin/list-page.ts`), which pages it with
+  `resolveNumberedPage` and counts it with `countUsers`, so the pager says
+  "Page 2 of 3" between Prev and Next as every admin list does (MB.115): the
+  count is every user the filter keeps, and how many of them come before the
+  page's first row. GraphQL's `users` connection pages with `resolvePage` and
+  is not counted. `?after=` and `?before=` carry the cursor. A cursor the codec
+  cannot read, or one it reads that names no row of this list, as a cursor
+  copied from another list does, gets the first page rather than an error.
 - **Three filters, all in SQL.** `?query=` matches a substring of the name or
   the email, case-insensitively, with `%` and `_` read literally, through
   the repository's `containsText`, which the category and form lists share (MB.178). It
@@ -71,14 +76,15 @@ may _change_.
 
 **Tests.** `tests/modules/identity/services/user-list.test.ts` covers the
 order, the cursor, both filters, the literal wildcards, the bootstrap user,
-soft-deleted rows and
-the refusal of every non-admin fixture user by direct call, after proving that
-the same call answers E. `tests/modules/identity/graphql/users.test.ts` covers
+soft-deleted rows, the count under each filter and before a page, and
+the refusal of a non-admin fixture user by direct call, list and count alike,
+after proving that the same call answers E. `tests/modules/identity/graphql/users.test.ts` covers
 the transport's half (MB.186): the default page of 25, the resumed cursor, the
 filters reaching the service, and that the nodes are the same `User` as
 `me`'s; a signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s.
 `tests/app/admin/(people)/users/page.test.tsx` covers the guard running first and the
-search parameters becoming the filter and the pager's links.
+search parameters becoming the filter, the count and the pager's links and
+position, and a foreign cursor reading the first page.
 `tests/e2e/admin.spec.ts` checks the page an admin sees against the built
 server, with axe.
 

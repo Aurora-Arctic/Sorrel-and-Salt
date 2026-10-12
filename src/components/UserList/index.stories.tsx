@@ -85,6 +85,41 @@ export const Filtered: Story = () => (
   </Frame>
 );
 
+// A middle page of a list longer than one: the page's 25, by name, and the
+// pager beneath them, both ends live and where the page stands between.
+const PAGE_TWO: readonly UserListEntry[] = Array.from({ length: 25 }, (_, index) => ({
+  id: `u-page-${index + 26}`,
+  name: `Fixturewort ${index + 26}`,
+  email: `fixturewort${index + 26}@users.test`,
+  role: 'user',
+  canCreateWorkspace: index % 4 !== 0,
+  createdAt: new Date(Date.UTC(2026, 2, 4) + index * 86_400_000),
+  providers: index % 2 === 0 ? ['google'] : ['discord'],
+  emailVerified: true,
+  primaryAdmin: false,
+}));
+const PageTwo = (): ReactElement => (
+  <Frame action={<PauseControl paused={false} canToggle />}>
+    <UserList
+      users={PAGE_TWO}
+      query=""
+      awaitingApproval={false}
+      previousHref="#previous"
+      nextHref="#next"
+      position={{ page: 2, pages: 3 }}
+    />
+  </Frame>
+);
+
+export const OnePageOfSeveral: Story = () => <PageTwo />;
+
+// A middle page at phone width: the pager beneath the last card.
+export const OnePageOfSeveralPhoneDark: Story = () => <PageTwo />;
+OnePageOfSeveralPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const OnePageOfSeveralPhoneLight: Story = () => <PageTwo />;
+OnePageOfSeveralPhoneLight.meta = { theme: 'light', width: 375 };
+
 // Every filter in use, which the sentence names. Spread, since a `role` attribute reads to the linter as an ARIA role.
 const EVERY_FILTER = { query: 'nobody', role: 'admin', awaitingApproval: true } as const;
 

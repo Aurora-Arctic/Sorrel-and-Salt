@@ -32,10 +32,10 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   muted ink, as text rather than a control. The owner reads it as DESIGN.md §7
   computes it for the compendium: page `floor(countBefore / size) + 1` of
   `max(1, ceil(totalCount / size))`, counted from the page's first row.
-  GroupedValueList, CompendiumList, GroupList, PrivilegeLedger and
-  AdminInvitations pass
+  GroupedValueList, CompendiumList, GroupList, PrivilegeLedger,
+  AdminInvitations and UserList pass
   it, each page computing it through `resolveNumberedPage`
-  (`src/lib/pagination.ts`, MB.132), and UserList does not count its rows yet.
+  (`src/lib/pagination.ts`, MB.132).
 - **Named "Prev" and "Next"**, the chevrons `aria-hidden` beside them in
   `.pager__mark` spans.
 - **`soft` is the list's choice.** GroupedValueList's pages guard themselves on
