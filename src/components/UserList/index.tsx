@@ -229,6 +229,7 @@ const UserList = ({
   role,
   previousHref,
   nextHref,
+  position,
   canImpersonate = false,
   adminChanges,
 }: UserListProps): ReactElement => (
@@ -271,7 +272,7 @@ const UserList = ({
         <p>{noMatch({ query, role, awaitingApproval })}</p>
       )}
 
-      <Pager previousHref={previousHref} nextHref={nextHref} />
+      <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
     </ListBody>
   </ListFrame>
 );

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { UserRole } from '../../lib/session';
+import type { PagePosition } from '../../lib/types';
 
 /** One listed user: the row's own facts and the providers read beside it. */
 export interface UserListEntry {
@@ -29,6 +30,8 @@ export interface UserListProps {
   previousHref?: string;
   /** The page after this one, absent on the last. */
   nextHref?: string;
+  /** Where this page stands, the pager's "Page X of Y"; none when left out. */
+  position?: PagePosition;
   /** Whether impersonation is registered here, so each non-admin row offers it (MB.53). */
   canImpersonate?: boolean;
   /**
