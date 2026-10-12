@@ -278,7 +278,8 @@ where the change is:
   draws it, each section's watching its own fields, so a keystroke redraws one
   line, not the form. A list of one is named and a longer one counted
   ("Mercury · 2 colours"); categories are always counted; the forms are
-  always named ("2 forms: Dried leaf, Whole root"); the description and the
+  always named ("2 forms: Dried leaf, Whole root", an empty Form box as
+  "Unnamed Form", as its card names it); the description and the
   safety notes are their first words; Identity reads the name, the
   classification and the formal name in italics; Relations says both its
   lists once either has an entry ("1 category · No substitutes"); an empty
@@ -730,7 +731,8 @@ as the ingredient's page shows its forms after it (MB.221).
   empty) with its curated group after it in the muted ink, "Dried leaf
   (Plant part)", as the Form box reads; beneath, what it carries,
   `variantSummary`, in its sections' order — "1 planet · 2 categories ·
-  Safety note · 1 reference" — or "No details yet"; and at the end the reference
+  Safety note · 1 reference" — or "Nothing yet", as an empty section says,
+  the two built from the same parts in `summaries.tsx`; and at the end the reference
   rows' two icon buttons, a pencil and a × (MB.115, the owner's call),
   named for the form, "Edit Oil" and "Remove Oil". The card is
   a fieldset named by the form alone, through `aria-labelledby`.

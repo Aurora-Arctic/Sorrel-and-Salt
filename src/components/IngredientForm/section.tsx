@@ -1,7 +1,36 @@
-import { type ReactElement, useId } from 'react';
+import { type ReactElement, type ReactNode, useId } from 'react';
 import { ChevronIcon } from '../Combobox/icons';
 import { SectionSummary } from './summaries';
-import type { CollapsibleSectionProps } from './types';
+import type { CollapsibleSectionProps, FoldFlagProps, FoldIds, FoldIdsOptions } from './types';
+
+/**
+ * What a folding block, a section or a variant's card, names its parts by:
+ * the ids its toggle points at, its class with `is-open` and `is-invalid`,
+ * and the toggle's description, its closed line while closed and its flag
+ * while `flagged`. One hook, so the two folds wire their parts alike.
+ */
+export function useFoldIds({ block, open, invalid, flagged }: FoldIdsOptions): FoldIds {
+  const id = useId();
+  const summaryId = `${id}-summary`;
+  const flagId = `${id}-flag`;
+  return {
+    id,
+    summaryId,
+    flagId,
+    fieldsId: `${id}-fields`,
+    className: [block, open && 'is-open', invalid && 'is-invalid'].filter(Boolean).join(' '),
+    describedBy: [!open && summaryId, flagged && flagId].filter(Boolean).join(' ') || undefined,
+  };
+}
+
+/** The flag beneath a fold's heading while it holds an error, which its toggle is described by. */
+export function FoldFlag({ id, className, shown }: FoldFlagProps): ReactNode {
+  return shown ? (
+    <span id={id} className={className}>
+      Has an error to fix
+    </span>
+  ) : null;
+}
 
 /**
  * A section of the form as a disclosure (MB.115, the owner's calls): one of
@@ -28,17 +57,16 @@ export function CollapsibleSection({
   titleId,
   children,
 }: CollapsibleSectionProps): ReactElement {
-  const id = useId();
-  const summaryId = `${id}-summary`;
-  const flagId = `${id}-flag`;
-  const fieldsId = `${id}-fields`;
+  // Flagged open or closed: the heading stays in view either way.
+  const { summaryId, flagId, fieldsId, className, describedBy } = useFoldIds({
+    block: 'ingredient-form__fold',
+    open,
+    invalid,
+    flagged: invalid,
+  });
   const Heading = level === 4 ? 'h4' : 'h3';
   return (
-    <section
-      className={['ingredient-form__fold', open && 'is-open', invalid && 'is-invalid']
-        .filter(Boolean)
-        .join(' ')}
-    >
+    <section className={className}>
       <div className="ingredient-form__fold-head">
         <div className="ingredient-form__fold-line">
           <Heading className="ingredient-form__section-title">
@@ -48,9 +76,7 @@ export function CollapsibleSection({
               className="ingredient-form__fold-toggle"
               aria-expanded={open}
               aria-controls={fieldsId}
-              aria-describedby={
-                [!open && summaryId, invalid && flagId].filter(Boolean).join(' ') || undefined
-              }
+              aria-describedby={describedBy}
               onClick={onToggle}
             >
               {title}
@@ -65,11 +91,7 @@ export function CollapsibleSection({
         <span id={summaryId} className="ingredient-form__fold-summary" hidden={open}>
           {section === undefined ? summary : <SectionSummary section={section} />}
         </span>
-        {invalid && (
-          <span id={flagId} className="ingredient-form__fold-flag">
-            Has an error to fix
-          </span>
-        )}
+        <FoldFlag id={flagId} className="ingredient-form__fold-flag" shown={invalid} />
       </div>
       <div
         id={fieldsId}

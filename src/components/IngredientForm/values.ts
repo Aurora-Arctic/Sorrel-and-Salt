@@ -15,11 +15,13 @@ import type {
   AnyListEntry,
   DeityLink,
   DraftPath,
+  FieldNoun,
   IngredientFormInput,
   IngredientFormValues,
   IngredientListName,
   ListFieldName,
   ListOption,
+  NounedField,
   ReferenceLink,
   ReferenceListEntry,
   SectionKey,
@@ -27,7 +29,6 @@ import type {
   SubstituteLink,
   SubstituteListEntry,
   VariantFormValues,
-  VariantListName,
   VariantSectionKey,
 } from './types';
 
@@ -36,22 +37,46 @@ import type {
 // issues and the server's `fieldErrors` both go through
 // (claude-docs/components/ingredient-form.md).
 
-export const LIST_FIELDS: readonly IngredientListName[] = [
+// The arrays below are `as const`, and `types.ts` derives its unions from
+// them, so a list or a section is named once rather than in an array and a
+// union kept in step by hand.
+
+/** The ingredient's own lists that take entries in a box. */
+export const LIST_FIELDS = [
   'folkNames',
   'planets',
   'zodiacSigns',
   'colors',
   'deities',
   'substitutes',
-];
+] as const;
 
 /** A variant's lists, each a box beneath its form as the ingredient's are beneath it. */
-export const VARIANT_LISTS: readonly VariantListName[] = [
-  'planets',
-  'zodiacSigns',
-  'colors',
-  'substitutes',
-];
+export const VARIANT_LISTS = ['planets', 'zodiacSigns', 'colors', 'substitutes'] as const;
+
+/**
+ * What each field is called where the form counts or names its entries: the
+ * variant's Copy From Ingredient ("Copy From Ingredient: Planets", "Copied 2
+ * planets"), a folded section's line ("2 colours") and a variant's card ("1
+ * planet"). One table, so each says a field alike.
+ */
+export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
+  folkNames: { label: 'Folk Names', one: 'folk name', many: 'folk names' },
+  description: { label: 'Description', one: 'description', many: 'description' },
+  safetyNotes: { label: 'Safety Notes', one: 'safety notes', many: 'safety notes' },
+  elements: { label: 'Element', one: 'element', many: 'elements' },
+  planets: { label: 'Planets', one: 'planet', many: 'planets' },
+  zodiacSigns: { label: 'Zodiac Signs', one: 'zodiac sign', many: 'zodiac signs' },
+  colors: { label: 'Colours', one: 'colour', many: 'colours' },
+  deities: { label: 'Deities', one: 'deity', many: 'deities' },
+  categoryIds: { label: 'Categories', one: 'category', many: 'categories' },
+  substitutes: { label: 'Substitute Ingredients', one: 'substitute', many: 'substitutes' },
+  references: { label: 'References', one: 'reference', many: 'references' },
+  variants: { label: 'Variants', one: 'form', many: 'forms' },
+};
+
+/** A variant whose Form box is empty, as its card and the Variants line name it. */
+export const UNNAMED_FORM = 'Unnamed Form';
 
 /** A form just added: its text, and nothing yet that it adds to the ingredient. */
 export const EMPTY_VARIANT: VariantFormValues = {
@@ -170,7 +195,9 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
   };
 }
 
-const texts = (rows: { value: string }[]) => rows.map(({ value }) => value);
+/** A list's entries as their text alone: what the input sends, and what a summary line names. */
+export const texts = (rows: readonly { value: string }[]): string[] =>
+  rows.map(({ value }) => value);
 
 /** A substitute's link by id — and the form of it picked, when one is — or else its text as a name. */
 const substituteInputs = (rows: SubstituteListEntry[]) =>
@@ -420,8 +447,12 @@ function placeIn(
   return index === undefined ? field : undefined;
 }
 
-/** An entry's key, as the schema folds a list's text: trimmed, its case set aside. */
-const fold = (text: string): string => text.trim().toLowerCase();
+/**
+ * An entry's key, as the schema folds a list's text: trimmed, its case set
+ * aside. `toLowerCase` rather than the type-ahead's `toLocaleLowerCase`, since
+ * this key must agree with the database's own fold, not the reader's locale.
+ */
+export const fold = (text: string): string => text.trim().toLowerCase();
 
 /**
  * Why `text` cannot be a list's next entry, or undefined when it can: a
@@ -668,49 +699,49 @@ export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
 /** A compendium entry: the classification is required, and the vocabulary boxes take picks. */
 export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
 
-/** The ingredient's sections, in page order: each folds to a summary line (MB.115). */
-export const SECTION_KEYS: readonly SectionKey[] = [
+/** A variant's sections, in page order, each folding as the ingredient's do (MB.115). */
+export const VARIANT_SECTION_KEYS = [
   'identity',
   'description',
   'correspondences',
   'relations',
   'safety',
   'sources',
-  'variants',
-];
+] as const;
+
+/** The ingredient's sections, in page order: each folds to a summary line (MB.115). */
+export const SECTION_KEYS = [...VARIANT_SECTION_KEYS, 'variants'] as const;
+
+/**
+ * The section a value an ingredient and its variants both hold sits in: the
+ * ingredient's and a variant's tables below each spread it, so the two agree.
+ */
+const SHARED_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
+  description: 'description',
+  elements: 'correspondences',
+  planets: 'correspondences',
+  zodiacSigns: 'correspondences',
+  colors: 'correspondences',
+  categoryIds: 'relations',
+  substitutes: 'relations',
+  safetyNotes: 'safety',
+  references: 'sources',
+  referencePanelOpen: 'sources',
+};
 
 /**
  * The section each top-level value sits in. A box's draft, `drafts.colors`,
  * sits in its list's section, and `drafts.variants`, the New Form box, in Variants.
  */
 const SECTION_OF: Readonly<Record<string, SectionKey>> = {
+  ...SHARED_SECTION_OF,
   name: 'identity',
   nomenclature: 'identity',
   canonicalName: 'identity',
   folkNames: 'identity',
-  description: 'description',
-  elements: 'correspondences',
-  planets: 'correspondences',
-  zodiacSigns: 'correspondences',
-  colors: 'correspondences',
   deities: 'correspondences',
-  categoryIds: 'relations',
-  substitutes: 'relations',
-  safetyNotes: 'safety',
-  references: 'sources',
-  referencePanelOpen: 'sources',
   variants: 'variants',
 };
-
-/** A variant's sections, in page order, each folding as the ingredient's do (MB.115). */
-export const VARIANT_SECTION_KEYS: readonly VariantSectionKey[] = [
-  'identity',
-  'description',
-  'correspondences',
-  'relations',
-  'safety',
-  'sources',
-];
 
 /**
  * The section each of a variant's values sits in, as the ingredient's value
@@ -718,18 +749,9 @@ export const VARIANT_SECTION_KEYS: readonly VariantSectionKey[] = [
  * variant as a whole, or on its kept id, is placed on its Form box.
  */
 const VARIANT_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
+  ...SHARED_SECTION_OF,
   form: 'identity',
   formLink: 'identity',
-  description: 'description',
-  elements: 'correspondences',
-  planets: 'correspondences',
-  zodiacSigns: 'correspondences',
-  colors: 'correspondences',
-  categoryIds: 'relations',
-  substitutes: 'relations',
-  safetyNotes: 'safety',
-  references: 'sources',
-  referencePanelOpen: 'sources',
 };
 
 /** The sections `errors` names in `sectionOf`, by the first key of each error's path, a box's draft by its list's. */

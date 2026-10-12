@@ -3,16 +3,20 @@
 import type { ReactElement, ReactNode } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
 import { shortCitationText } from '@/lib/short-citation';
-import { NOMENCLATURE_OPTIONS } from './options';
+import { capitalise, plural } from '@/lib/text';
+import { NOMENCLATURE_OPTIONS, labelOf } from './options';
 import type {
+  FieldNoun,
   IngredientElement,
   IngredientFormValues,
   ListEntry,
   ReferenceListEntry,
-  SectionKey,
+  SectionSummaryProps,
+  TextSummaryProps,
   VariantFormValues,
   VariantSectionKey,
 } from './types';
+import { FIELD_NOUNS, UNNAMED_FORM, texts } from './values';
 
 // What a folded section's line says (MB.115, the owner's call as drawn): what
 // has been entered in it, in its fields' order, parts joined by a middle dot.
@@ -24,20 +28,26 @@ import type {
 // watching its own fields, so a keystroke re-renders one line, not the form
 // (claude-docs/components/ingredient-form.md, "Sections"). A variant's
 // sections read the same way, through the same lines below, from the
-// variant's own values.
+// variant's own values. A variant's card line, what the variant carries, is
+// built from the same parts.
 
+/**
+ * What a line says of an empty section, or a variant carrying nothing: one
+ * wording for both, where the card said "No details yet" before MB.115's
+ * consolidation.
+ */
 const NOTHING = 'Nothing yet';
 
 /** A list of one by its entry, of more by its count: "Mercury", "2 colours"; none, nothing. */
-function listPart(entries: readonly string[], many: string): string | null {
+function listPart(entries: readonly string[], { many }: FieldNoun): string | null {
   if (entries.length === 0) return null;
   if (entries.length === 1) return entries[0];
   return `${entries.length} ${many}`;
 }
 
-const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-const texts = (entries: readonly ListEntry[]) => entries.map((entry) => entry.value);
-const capitalise = (word: string) => word.charAt(0).toUpperCase() + word.slice(1);
+/** `n` and the noun it counts: "1 planet", "2 planets". */
+const count = (n: number, { one, many }: Pick<FieldNoun, 'one' | 'many'>) =>
+  `${n} ${plural(n, one, many)}`;
 /** A text field's words on one line: its line breaks and runs of spaces are one space. */
 const oneLine = (text: string) => text.trim().replace(/\s+/g, ' ');
 
@@ -59,14 +69,13 @@ function IdentitySummary(): ReactNode {
     control,
     name: ['name', 'nomenclature', 'canonicalName', 'folkNames'],
   });
-  const kind = NOMENCLATURE_OPTIONS.find((option) => option.value === nomenclature)?.label;
   const formal = canonicalName.trim();
   return joined([
     name.trim(),
-    kind,
+    labelOf(NOMENCLATURE_OPTIONS, nomenclature),
     // In italics, as a formal name is printed.
     formal && <i key="formal">{formal}</i>,
-    listPart(texts(folkNames), 'folk names'),
+    listPart(texts(folkNames), FIELD_NOUNS.folkNames),
   ]);
 }
 
@@ -82,11 +91,11 @@ function correspondencesLine(
   deities: readonly ListEntry[] = [],
 ): ReactNode {
   return joined([
-    listPart(elements.map(capitalise), 'elements'),
-    listPart(texts(planets), 'planets'),
-    listPart(texts(zodiacSigns), 'zodiac signs'),
-    listPart(texts(colors), 'colours'),
-    listPart(texts(deities), 'deities'),
+    listPart(elements.map(capitalise), FIELD_NOUNS.elements),
+    listPart(texts(planets), FIELD_NOUNS.planets),
+    listPart(texts(zodiacSigns), FIELD_NOUNS.zodiacSigns),
+    listPart(texts(colors), FIELD_NOUNS.colors),
+    listPart(texts(deities), FIELD_NOUNS.deities),
   ]);
 }
 
@@ -97,8 +106,8 @@ function relationsLine(
   if (categoryIds.length === 0 && substitutes.length === 0) return NOTHING;
   // Both said once either is: the pair is the section.
   return joined([
-    categoryIds.length > 0 ? count(categoryIds.length, 'category', 'categories') : 'No categories',
-    listPart(texts(substitutes), 'substitutes') ?? 'No substitutes',
+    categoryIds.length > 0 ? count(categoryIds.length, FIELD_NOUNS.categoryIds) : 'No categories',
+    listPart(texts(substitutes), FIELD_NOUNS.substitutes) ?? 'No substitutes',
   ]);
 }
 
@@ -106,11 +115,46 @@ const sourcesLine = (references: readonly ReferenceListEntry[]): ReactNode =>
   joined([
     listPart(
       references.map((row) => shortCitationText(row.link)),
-      'references',
+      FIELD_NOUNS.references,
     ),
   ]);
 
-function TextSummary({ name }: { name: 'description' | 'safetyNotes' }): ReactNode {
+/** What a variant counts on its card line, between its description and its safety note, in its fields' order. */
+const CARD_COUNTED = [
+  'elements',
+  'planets',
+  'zodiacSigns',
+  'colors',
+  'categoryIds',
+  'substitutes',
+] as const;
+
+/** A count of `variant`'s entries in `field`, "2 planets", or null for none. */
+function countedIn(
+  variant: VariantFormValues,
+  field: (typeof CARD_COUNTED)[number] | 'references',
+): string | null {
+  const { length } = variant[field];
+  return length > 0 ? count(length, FIELD_NOUNS[field]) : null;
+}
+
+/**
+ * A variant's card line: what it carries, in its sections' order, "1 planet ·
+ * 2 categories · Safety note", or that it carries nothing. The parts are the
+ * section lines' own, joined by the same middle dot.
+ */
+export function variantSummary(variant: VariantFormValues): ReactNode {
+  const parts = [
+    variant.description.trim() !== '' && 'description',
+    ...CARD_COUNTED.map((field) => countedIn(variant, field)),
+    variant.safetyNotes.trim() !== '' && 'safety note',
+    countedIn(variant, 'references'),
+  ].filter((part): part is string => typeof part === 'string');
+  // A line of its own, so it opens on a capital: "1 planet · Safety note".
+  return joined(parts.map((part, at) => (at === 0 ? capitalise(part) : part)));
+}
+
+function TextSummary({ name }: TextSummaryProps): ReactNode {
   const { control } = useFormContext<IngredientFormValues>();
   return textLine(useWatch({ control, name }));
 }
@@ -139,12 +183,12 @@ function VariantsSummary(): ReactNode {
   const { control } = useFormContext<IngredientFormValues>();
   const variants = useWatch({ control, name: 'variants' });
   if (variants.length === 0) return NOTHING;
-  const forms = variants.map((variant) => variant.form.trim() || 'Unnamed form');
-  return `${count(forms.length, 'form', 'forms')}: ${forms.join(', ')}`;
+  const forms = variants.map((variant) => variant.form.trim() || UNNAMED_FORM);
+  return `${count(forms.length, FIELD_NOUNS.variants)}: ${forms.join(', ')}`;
 }
 
 /** The closed line of the ingredient's section `section`. */
-export function SectionSummary({ section }: { section: SectionKey }): ReactElement {
+export function SectionSummary({ section }: SectionSummaryProps): ReactElement {
   switch (section) {
     case 'identity':
       return <IdentitySummary />;
