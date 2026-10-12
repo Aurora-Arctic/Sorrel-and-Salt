@@ -20,7 +20,8 @@ import {
   providersOf,
   usersForAdmin,
 } from '@/modules/identity';
-import { pagerHrefs, readListPlace, readNumberedPage } from '../../list-page';
+import { pagerHrefs, readListPlace } from '../../list-page';
+import { readNumberedPage } from '@/lib/numbered-page';
 import MissingNotice from '../../missing-notice';
 import { readPauseState } from '../pause-state';
 import UserDialog from './user-dialog';

@@ -18,7 +18,8 @@ import {
   listedOnUserList,
   usersForAdmin,
 } from '@/modules/identity';
-import { pagerHrefs, readListPlace, readNumberedPage } from '../../list-page';
+import { pagerHrefs, readListPlace } from '../../list-page';
+import { readNumberedPage } from '@/lib/numbered-page';
 import type { AdminPrivilegeChangesPageProps, PrivilegeChangesSearchParams } from './types';
 
 export const metadata: Metadata = {

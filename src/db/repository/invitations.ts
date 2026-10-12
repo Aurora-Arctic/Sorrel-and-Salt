@@ -5,7 +5,7 @@ import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
 import { containsText, notSoftDeleted, scopedTo } from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsIn, selectOne } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
@@ -105,25 +105,29 @@ export async function findInvitedCoven(workspaceId: string): Promise<InvitedCove
 }
 
 /**
- * The proof's workspace's pending invitations, for the members page (M7.6).
- * Unordered: the page sorts the handful a workspace holds.
+ * One invitation of the proof's workspace by id, in any state — pending,
+ * accepted, revoked or expired — or `undefined` for a missing one, another
+ * workspace's or a deleted one. `revokeInvitation` matches pending rows
+ * only, so this is how a service tells an accepted invitation from a missing
+ * one (M7.6).
  */
-export async function findPendingInvitationsInWorkspace(
+export function findInvitationInWorkspace(
   membership: Membership,
-): Promise<InvitationRow[]> {
-  return selectFrom(
+  id: string,
+): Promise<InvitationRow | undefined> {
+  return selectOne(
     invitations,
-    and(notSoftDeleted(invitations), pendingInvitation(scopedTo(membership, invitations))),
+    and(notSoftDeleted(invitations), scopedTo(membership, invitations), eq(invitations.id, id)),
   );
 }
 
 /**
- * The site-tier list's order, newest first, as the ledger's is: a page's key
+ * Both tiers' pending lists' order, newest first, as the ledger's is: a page's key
  * is ascending, so the instant is written negated, and as `numeric`, which
  * keeps the microseconds a `Date` would drop from a cursor. Invitations of
  * one instant follow by id.
  */
-const SITE_INVITATION_ORDER: readonly SortPart[] = [
+const PENDING_INVITATION_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
 ];
 
@@ -152,7 +156,7 @@ export function findPendingSiteInvitationPage(
   return findPageInScope(
     invitations,
     onSiteTier(),
-    SITE_INVITATION_ORDER,
+    PENDING_INVITATION_ORDER,
     page,
     pendingOnSite(filter),
   );
@@ -171,9 +175,43 @@ export function findPendingSiteInvitationCount(
   return findPageCountInScope(
     invitations,
     onSiteTier(),
-    SITE_INVITATION_ORDER,
+    PENDING_INVITATION_ORDER,
     start,
     pendingOnSite(filter),
+  );
+}
+
+/**
+ * One page of the proof's workspace's pending invitations, newest first, for
+ * the members page (M7.6): the site tier's pager under the `Membership` proof.
+ */
+export function findPendingWorkspaceInvitationPage(
+  membership: Membership,
+  page: PageRequest,
+): Promise<PageEntry<InvitationRow>[]> {
+  return findPageInScope(
+    invitations,
+    scopedTo(membership, invitations),
+    PENDING_INVITATION_ORDER,
+    page,
+    pendingInvitation(),
+  );
+}
+
+/**
+ * How many invitations `findPendingWorkspaceInvitationPage` pages, and how
+ * many come before `start`, a page's first row, none on an empty page.
+ */
+export function findPendingWorkspaceInvitationCount(
+  membership: Membership,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(
+    invitations,
+    scopedTo(membership, invitations),
+    PENDING_INVITATION_ORDER,
+    start,
+    pendingInvitation(),
   );
 }
 

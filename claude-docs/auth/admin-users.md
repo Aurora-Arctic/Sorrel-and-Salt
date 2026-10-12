@@ -35,7 +35,7 @@ may _change_.
   read outside `/api/graphql`: rules 2 and 1 in one call.
 - **Paged by the M3.6 helper.** The order is name then id, with a keyset
   cursor and no offset, and a page holds 25 rows. The page reads it through
-  `readNumberedPage` (`src/app/(shell)/admin/list-page.tsx`), which pages it with
+  `readNumberedPage` (`src/lib/numbered-page.ts`), which pages it with
   `resolveNumberedPage` and counts it with `countUsers`, so the pager says
   "Page 2 of 3" between Prev and Next as every admin list does (MB.115): the
   count is every user the filter keeps, and how many of them come before the
