@@ -80,7 +80,7 @@ $account-menu-avatar: 2rem;
   }
 
   [aria-expanded='true'] > & {
-    transform: rotate(180deg);
+    transform: perspective(3rem) rotateY(180deg);
   }
 }
 
@@ -96,6 +96,28 @@ $account-menu-avatar: 2rem;
   background-color: $surface-card;
   box-shadow: $shadow-floating;
   @include list-reset;
+  // The fade, as the section nav's More sheet does it: `hidden` is display
+  // none, which cannot animate, so the panel stays displayed and `hidden`
+  // takes it out of sight and the accessibility tree with `visibility`, held
+  // until the opacity has faded.
+  display: block;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity $theme-transition-duration $theme-transition-easing,
+    visibility 0s linear $theme-transition-duration;
+
+  &:not([hidden]) {
+    visibility: visible;
+    opacity: 1;
+    transition:
+      opacity $theme-transition-duration $theme-transition-easing,
+      visibility 0s;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 // A link or a button: one row each, a control tall, edge to edge of the panel

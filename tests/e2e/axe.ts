@@ -42,5 +42,13 @@ export async function assertNoSidewaysScroll(page: Page) {
 // change would read a colour part-way along, so each running transition is
 // let finish first.
 export async function settleTransitions(page: Page) {
-  await page.evaluate(() => Promise.all(document.getAnimations().map((each) => each.finished)));
+  // Transitions only: a scroll-driven animation (the sorrel's) never finishes.
+  await page.evaluate(() =>
+    Promise.all(
+      document
+        .getAnimations()
+        .filter((each) => each instanceof CSSTransition)
+        .map((each) => each.finished),
+    ),
+  );
 }

@@ -80,42 +80,41 @@ const AccountMenu = ({ name, verified, links = [] }: AccountMenuProps): ReactEle
         <span className="account-menu__name">{name}</span>
         <Chevron />
       </button>
-      {open && (
-        <ul id={panelId} className="account-menu__panel">
-          {/* On a phone the bar has no room for the disc; it sits in the panel's top
+      {/* Always mounted and hidden when shut, so it can fade (the stylesheet). */}
+      <ul id={panelId} className="account-menu__panel" hidden={!open}>
+        {/* On a phone the bar has no room for the disc; it sits in the panel's top
               right corner, first in the order. */}
-          <li
-            className={
-              verified ? 'account-menu__theme' : 'account-menu__theme account-menu__theme--alone'
-            }
-          >
-            <ThemeToggle variant="inline" size="small" />
+        <li
+          className={
+            verified ? 'account-menu__theme' : 'account-menu__theme account-menu__theme--alone'
+          }
+        >
+          <ThemeToggle variant="inline" size="small" />
+        </li>
+        {verified && (
+          <li>
+            <Link href="/account" className="account-menu__item" onClick={close}>
+              Your Account
+            </Link>
           </li>
-          {verified && (
-            <li>
-              <Link href="/account" className="account-menu__item" onClick={close}>
-                Your Account
+        )}
+        {verified &&
+          links.map(({ label, href, base }) => (
+            <li key={label} className="account-menu__link">
+              <Link
+                href={href}
+                className="account-menu__item"
+                onClick={close}
+                aria-current={isAtPath(pathname, base) ? 'page' : undefined}
+              >
+                {label}
               </Link>
             </li>
-          )}
-          {verified &&
-            links.map(({ label, href, base }) => (
-              <li key={label} className="account-menu__link">
-                <Link
-                  href={href}
-                  className="account-menu__item"
-                  onClick={close}
-                  aria-current={isAtPath(pathname, base) ? 'page' : undefined}
-                >
-                  {label}
-                </Link>
-              </li>
-            ))}
-          <li className="account-menu__signout">
-            <SignOutButton />
-          </li>
-        </ul>
-      )}
+          ))}
+        <li className="account-menu__signout">
+          <SignOutButton />
+        </li>
+      </ul>
     </div>
   );
 };

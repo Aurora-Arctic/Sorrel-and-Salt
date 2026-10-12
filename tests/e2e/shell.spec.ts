@@ -140,6 +140,7 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
   await signOut.click();
   await expect(banner.getByRole('alert')).toBeVisible();
   await expect(signOut).toBeEnabled();
+  await settleTransitions(page);
   await assertNoAccessibilityViolations(page);
   await page.unroute('**/api/auth/sign-out');
 

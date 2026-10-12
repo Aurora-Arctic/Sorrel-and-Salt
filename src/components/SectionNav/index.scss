@@ -121,8 +121,14 @@
 .section-nav__chevron {
   @include disclosure-chevron('.section-nav__more-button[aria-expanded="true"]');
 
-  // The flip turns rather than snaps.
-  transition: rotate $motion-short $theme-transition-easing;
+  // Flipped about its vertical axis, not turned in the plane: the mixin's `rotate` is cleared and
+  // `transform` flips it, easing rather than snapping.
+  transition: transform $motion-short $theme-transition-easing;
+
+  #{'.section-nav__more-button[aria-expanded="true"]'} & {
+    rotate: none;
+    transform: perspective(3rem) rotateY(180deg);
+  }
 
   @include reduced-motion {
     transition: none;
@@ -327,8 +333,8 @@
     display: inline-flex;
     position: absolute;
     // Level with the icon, a little above the tab's midline. Placed by
-    // `top` alone: the mixin flips it open with `rotate`, which runs before
-    // `transform`, so a translate here would move the open one the other way.
+    // `top` alone: the open flip is a `transform`, so a translate here would
+    // move the open one the other way.
     top: calc(50% - 1rem);
     inset-inline-end: space(1);
     width: 1rem;
