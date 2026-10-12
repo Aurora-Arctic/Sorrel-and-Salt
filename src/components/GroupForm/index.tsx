@@ -21,6 +21,8 @@ import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradi
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
 import type {
   DeleteStep,
+  GroupColorField,
+  GroupDeleteVariables,
   GroupFormKind,
   GroupFormProps,
   GroupKind,
@@ -193,7 +195,7 @@ const PARTNER: Record<GroupColorColumn, GroupColorColumn> = {
   colorLight: 'colorDark',
 };
 
-const COLORS: { column: GroupColorColumn; label: string; hint: string }[] = [
+const COLORS: GroupColorField[] = [
   {
     column: 'colorDark',
     label: 'Dark Theme Colour',
@@ -270,7 +272,7 @@ const GroupForm = ({
     mutationFn: async (target: string | undefined): Promise<void> => {
       if (!group) return;
       // No `moveTo` at all for a group holding nothing, rather than a null.
-      const variables: { id: string; moveTo?: string } = target
+      const variables: GroupDeleteVariables = target
         ? { id: group.id, moveTo: target }
         : { id: group.id };
       await spec.remove(variables);
