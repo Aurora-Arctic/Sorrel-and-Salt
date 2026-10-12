@@ -1,8 +1,9 @@
-## Why the ORM stays on 0.45.2 (MB.20)
+## Why the ORM stays on the 0.45 line (MB.20)
 
-`drizzle-orm` is pinned to `0.45.2` and `drizzle-kit` to `0.31.10` — the newest
-releases on either package's stable dist-tag, and both **deliberately not
-upgraded**. The facts, as of 2026-09-17:
+`drizzle-orm` follows the `0.45` line and `drizzle-kit` the `0.31` line — the
+stable dist-tags of both — and neither moves to a `1.0` release candidate. The
+ranges in `package.json` (`^0.45`, `^0.31`) are not exact pins, and Dependabot
+moves the patch. The facts, as of 2026-09-17:
 
 - `drizzle-orm@0.45.2` last published **2026-03-27**. There is no GA `1.0.0`;
   the `rc` tag points at `1.0.0-rc.4`, with `rc.5-<hash>` CI snapshots after it.

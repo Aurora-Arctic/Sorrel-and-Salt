@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { UserRole } from './session';
 
 // Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
@@ -11,13 +12,13 @@ import type { UserRole } from './session';
  * front door, and a visitor who has just signed in has been through it already
  * (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
  */
-export const POST_SIGN_IN_LANDING = '/coven';
+export const POST_SIGN_IN_LANDING = '/coven' satisfies Route;
 
 /** An admin's landing instead: curating starts in the admin area (MB.113). */
-export const ADMIN_LANDING = '/admin';
+export const ADMIN_LANDING = '/admin' satisfies Route;
 
 /** Where a sign-in with no return path lands, by the role the account holds once it has signed in. */
-export function postSignInLanding(role: UserRole): string {
+export function postSignInLanding(role: UserRole): Route {
   return role === 'admin' ? ADMIN_LANDING : POST_SIGN_IN_LANDING;
 }
 

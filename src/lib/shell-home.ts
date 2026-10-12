@@ -1,30 +1,17 @@
-import { NEW_COVEN_PATH } from './coven-path';
-import type { ShellViewer, ShellWorkspace } from './types';
+import type { ShellViewer } from './types';
 
-// Where the brand and the Your Coven link go (MB.7). There is no `/coven`
-// landing page yet, so each picks the nearest page that exists. M2.8 adds
-// `/coven` and replaces both functions with that one address.
+// Where the brand and the Your Coven link go (MB.7): the `/coven` landing
+// (M2.8), which itself sends a member into their first coven, offers the
+// create page to someone who may make one, and explains the invitation to
+// anyone else. The choice is the page's, made where the viewer is read, so
+// these carry no workspaces and the links stay one address.
 
-type WhoAsks = Pick<ShellViewer, 'isAdmin' | 'canCreate'>;
-
-/**
- * Where the viewer's own coven is: the first they belong to; failing that the
- * create page, for someone allowed to make one; failing that the account page,
- * the one page everyone signed in has.
- */
-export function covenHome(
-  workspaces: readonly Pick<ShellWorkspace, 'slug'>[],
-  canCreate: boolean,
-): '/account' | `/coven/${string}` {
-  const [first] = workspaces;
-  if (first) return `/coven/${first.slug}`;
-  return canCreate ? NEW_COVEN_PATH : '/account';
+/** The landing for anyone who is not an admin, and an admin's Your Coven link. */
+export function covenHome(): '/coven' {
+  return '/coven';
 }
 
-/** Where the brand goes: an admin's home is `/admin`, anyone else's is their coven's. */
-export function shellHome(
-  { isAdmin, canCreate }: WhoAsks,
-  workspaces: readonly Pick<ShellWorkspace, 'slug'>[],
-): '/admin' | '/account' | `/coven/${string}` {
-  return isAdmin ? '/admin' : covenHome(workspaces, canCreate);
+/** Where the brand goes: an admin's home is `/admin`, anyone else's is the coven landing. */
+export function shellHome({ isAdmin }: Pick<ShellViewer, 'isAdmin'>): '/admin' | '/coven' {
+  return isAdmin ? '/admin' : covenHome();
 }
