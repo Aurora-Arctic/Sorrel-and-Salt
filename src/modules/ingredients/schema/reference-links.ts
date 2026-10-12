@@ -63,7 +63,7 @@ export const referenceLinks = pgTable(
       .notNull()
       .references(() => references.id),
     ...sourcedColumns(),
-    // "p. 112", "s.v. Hecate": the link's, not the reference's, since the
+    // "p. 112", `under "Hecate"`: the link's, not the reference's, since the
     // citation names the work and the page shows the locator beside it.
     locator: text('locator'),
     ...auditColumns,

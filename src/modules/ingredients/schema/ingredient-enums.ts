@@ -30,7 +30,8 @@ export const INGREDIENT_ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'] a
 
 // How Chicago renders a source (MB.151): the kind decides the punctuation and
 // the default italics, and which fields a row needs. `entry` is a
-// reference-work entry, "s.v."; there is no `other`, which would render a guess.
+// reference-work entry, cited "under" its headword; there is no `other`,
+// which would render a guess.
 export const REFERENCE_KINDS = ['book', 'chapter', 'article', 'entry', 'web_page'] as const;
 
 export type ReferenceKind = (typeof REFERENCE_KINDS)[number];

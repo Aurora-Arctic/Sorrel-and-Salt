@@ -26,6 +26,13 @@ export const QUOTE_PAIRS: Readonly<Record<string, string>> = {
   '«': '»',
 };
 
+/**
+ * The word before a reference-work entry's headword: "under", where Chicago's
+ * 18th edition (14.130) drops the Latin "s.v." its 17th used. Both renderers
+ * read it, so the full and the short form never disagree.
+ */
+export const UNDER_ENTRY = 'under';
+
 /** Any run of opening marks at the start: an opening mark is a citation's first only as typed. */
 const LEADING_QUOTES = new RegExp(`^[${Object.keys(QUOTE_PAIRS).join('')}]+`);
 
@@ -125,7 +132,7 @@ function sentencesOf(fields: CitationFields): CitationPart[][] {
         [
           ...marked(f.container ?? '', false),
           ...(f.edition ? [roman(`, ${f.edition}`)] : []),
-          roman(', s.v. '),
+          roman(`, ${UNDER_ENTRY} `),
           ...quoted(title),
         ],
         sentence(f.contributors),

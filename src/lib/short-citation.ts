@@ -1,4 +1,4 @@
-import { marked, merge } from './citation';
+import { marked, merge, UNDER_ENTRY } from './citation';
 import type { CitationKind, CitationPart, ShortCitationFields } from './types';
 
 // A source's Chicago short form, as the notes-bibliography style shortens
@@ -78,7 +78,7 @@ const SHORT_TITLE_WORDS = 4;
  * one, two joined by "and", three in a series, four or more as the first and
  * "et al." — then the short title, italic for a book and in quotation marks
  * for a part of a larger work. With no authors the title leads, but for a
- * reference-work entry, which Chicago cites by its work, "s.v.", and its
+ * reference-work entry, which Chicago cites by its work, "under", and its
  * headword. `continued`, the form takes the comma a locator follows, inside
  * the quotation marks, and none after a title ending in "?" or "!".
  */
@@ -91,7 +91,7 @@ export function renderShortCitation(
   if (!names && fields.kind === 'entry' && container) {
     return merge([
       ...marked(container, false),
-      roman(', s.v. '),
+      roman(`, ${UNDER_ENTRY} `),
       ...quoted(marked(fields.title.trim(), false), continued),
     ]);
   }

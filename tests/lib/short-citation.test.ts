@@ -123,13 +123,13 @@ describe('renderShortCitation', () => {
       expect(of('web_page')).toBe('Placeholder, "Notes on Mockleaf"');
     });
 
-    it('cites an entry with no authors by its work, "s.v.", and its headword', () => {
+    it('cites an entry with no authors by its work, "under", and its headword', () => {
       expect(
         short({ kind: 'entry', title: 'The Testwort', container: 'Fixture Encyclopedia' }),
-      ).toBe('Fixture Encyclopedia, s.v. "The Testwort"');
+      ).toBe('Fixture Encyclopedia, under "The Testwort"');
       expect(
         short({ kind: 'entry', title: 'Testwort', container: '_Encyclopedia of Fixtures_' }),
-      ).toBe('_Encyclopedia of Fixtures_, s.v. "Testwort"');
+      ).toBe('_Encyclopedia of Fixtures_, under "Testwort"');
     });
   });
 

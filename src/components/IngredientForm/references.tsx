@@ -83,7 +83,7 @@ const useReferenceSuggestions = (workspaceId: string | null, text: string, activ
 
 /** What a locator is, behind the tip beside each row's Locator. */
 const LOCATOR_HINT =
-  'Where in the source this ingredient is written about, so a reader can turn to it: a page, p. 112; pages, pp. 12–19; a chapter, chap. 13; an entry, s.v. Hecate. Cited in several places? Give them all here: pp. 12–19, 40; chap. 3. Leave it empty to cite the whole work.';
+  'Where in the source this ingredient is written about, so a reader can turn to it: a page, p. 112; pages, pp. 12–19; a chapter, chap. 13; an entry, under "Hecate". Cited in several places? Give them all here: pp. 12–19, 40; chap. 3. Leave it empty to cite the whole work.';
 
 /** Enter with nothing picked adds nothing: a search is not a source. */
 const IGNORE_ENTER = () => {};

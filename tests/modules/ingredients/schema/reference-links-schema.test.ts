@@ -95,7 +95,7 @@ describe('reference_links table', () => {
   describe('a link names exactly one row', () => {
     // A locator, or none: the part of the source the citation leaves out.
     it('takes a link to one row, with a locator or without', async () => {
-      await addLink(SIMEK, { ingredient_id: ROW.ingredient_id, locator: 's.v. Testwort' });
+      await addLink(SIMEK, { ingredient_id: ROW.ingredient_id, locator: 'under "Testwort"' });
       await addLink(SMITH, { ingredient_id: ROW.ingredient_id });
 
       const rows = await sql`
@@ -103,7 +103,7 @@ describe('reference_links table', () => {
         where ingredient_id = ${ROW.ingredient_id} order by locator nulls last
       `;
       expect(rows).toEqual([
-        { reference_id: SIMEK, locator: 's.v. Testwort' },
+        { reference_id: SIMEK, locator: 'under "Testwort"' },
         { reference_id: SMITH, locator: null },
       ]);
     });

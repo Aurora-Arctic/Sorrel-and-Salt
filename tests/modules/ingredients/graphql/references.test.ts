@@ -261,7 +261,7 @@ describe('Ingredient.references', () => {
   it('reads a compendium entry’s references signed out', async () => {
     const reference = await insertReference(sql, { title: 'Fixture Herbal' }, E.id);
     const id = await insertIngredient(sql, makeIngredient({ nomenclature: 'none' }), A.id);
-    await insertReferenceLink(sql, id, reference, A.id, 's.v. Testwort');
+    await insertReferenceLink(sql, id, reference, A.id, 'under "Testwort"');
 
     const result = await run<{ ingredient: { references: unknown[] } }>(
       null,
@@ -270,7 +270,7 @@ describe('Ingredient.references', () => {
     );
 
     expect(result.data?.ingredient.references).toEqual([
-      { locator: 's.v. Testwort', reference: { title: 'Fixture Herbal' } },
+      { locator: 'under "Testwort"', reference: { title: 'Fixture Herbal' } },
     ]);
   });
 });
