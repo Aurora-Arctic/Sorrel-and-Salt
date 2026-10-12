@@ -287,7 +287,7 @@ describe('updateIngredient', () => {
     // Cleared to NULL, not to an empty array: "none" has one representation.
     expect(await rowOf(id)).toMatchObject({
       elements: null,
-      celestialBodies: null,
+      celestial_bodies: null,
       zodiac_signs: null,
       colors: null,
     });

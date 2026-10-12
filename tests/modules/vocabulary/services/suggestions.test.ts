@@ -17,7 +17,7 @@ import type { ConnectionArgs, Page } from '@/lib/types';
 import type { Suggest } from './types';
 
 // DESIGN.md §5, "The two readers are scoped differently": a member's autofill
-// for a `planets` or `zodiacSigns` entry offers the curated vocabulary first, then the
+// for a `celestialBodies` or `zodiacSigns` entry offers the curated vocabulary first, then the
 // uncurated values in use in the compendium and the caller's own workspace.
 // The vocabularies are the seed's, revived per test since some tests retire a
 // row; `ingredients` is emptied per test, so every in-use value a result
@@ -36,7 +36,7 @@ beforeEach(async () => {
   await sql`update zodiac_signs set deleted_at = null, deleted_by = null where deleted_at is not null`;
 });
 
-/** A row of this file's: no formal name, so `none`; what matters is its planet or sign. */
+/** A row of this file's: no formal name, so `none`; what matters is its celestial body or sign. */
 function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
   return insertIngredient(sql, makeIngredient({ nomenclature: 'none', ...entry }), A.id);
 }
@@ -80,7 +80,7 @@ async function all(
 
 const valuesOf = (suggestions: VocabularySuggestion[]) => suggestions.map((s) => s.value);
 
-/** The seed's planet names in the order the list carries them: case-folded, alphabetical. */
+/** The seed's celestial body names in the order the list carries them: case-folded, alphabetical. */
 const CURATED_CELESTIAL_BODIES = CELESTIAL_BODIES.map((celestialBody) => celestialBody.name).sort(
   (a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1),
 );
@@ -279,7 +279,7 @@ describe('suggestCelestialBodies', () => {
       // Why it could have come back: X holds it, and X's own member is offered it.
       const [held] = await sql`
         select celestial_bodies from ingredients where workspace_id = ${WORKSPACE_X_ID} and deleted_at is null`;
-      expect(held.celestialBodies).toEqual(['Vulcan']);
+      expect(held.celestial_bodies).toEqual(['Vulcan']);
       expect(
         valuesOf(await all(suggestCelestialBodies, asUser(D), 'vulcan', WORKSPACE_X_ID)),
       ).toEqual(['Vulcan']);
@@ -419,7 +419,7 @@ describe('suggestCelestialBodies', () => {
 });
 
 // The same service over the other table. Two tables rather than a `kind`
-// column, so a sign cannot be offered for `planets` (claude-docs/db/astrology-vocabularies.md, "The
+// column, so a sign cannot be offered for `celestialBodies` (claude-docs/db/astrology-vocabularies.md, "The
 // astrology vocabularies") — asserted rather than assumed.
 describe('suggestZodiacSigns', () => {
   it('offers a sign by its description, and never as a celestial body', async () => {

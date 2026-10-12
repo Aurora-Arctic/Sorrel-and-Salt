@@ -63,7 +63,7 @@ import {
 const OTHER_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 const CATEGORY_ID = 'c4a8e2f1-7b3d-4c9e-a6f5-1d2e3f4a5b6c';
 
-/** Testwort as an entry the form edits: a planet listed and a category filed. */
+/** Testwort as an entry the form edits: a celestial body listed and a category filed. */
 const TESTWORT: IngredientFormValues = {
   ...EMPTY_VALUES,
   name: 'Testwort',

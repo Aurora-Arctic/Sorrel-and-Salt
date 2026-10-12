@@ -80,7 +80,7 @@ differs — the backfill `reslugItems` was a second call for until MB.208.
 `src/db/seed/flat-vocabulary.ts` exports `seedFlatVocabulary(tx, table,
 items)`, the one-tier counterpart for a vocabulary with no group — each item
 by seed key, the same rules — which `seedAstrologyVocabularies` calls once
-for `planets` and once for `zodiac_signs`, the two tables `FLAT` lists.
+for `celestial_bodies` and once for `zodiac_signs`, the two tables `FLAT` lists.
 
 **Seed keys (MB.171).** Every table the reference data writes — the eight
 vocabularies and `references` — carries `seed_key`, the identity the seed

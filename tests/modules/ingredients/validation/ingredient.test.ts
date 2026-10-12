@@ -438,8 +438,8 @@ describe('the ingredient fields, on the local variant', () => {
 
   // Suggested, not enforced: practices differ on both, so a value off the
   // autofill list is written as readily as one on it.
-  // DESIGN.md §5 (MB.134): planets, zodiac signs and colours are one list
-  // builder, so it runs once, on the planets.
+  // DESIGN.md §5 (MB.134): celestial bodies, zodiac signs and colours are one list
+  // builder, so it runs once, on the celestial bodies.
   describe('celestialBodies', () => {
     const base = { name: 'Testwort', nomenclature: 'none' };
     const field = 'celestialBodies';

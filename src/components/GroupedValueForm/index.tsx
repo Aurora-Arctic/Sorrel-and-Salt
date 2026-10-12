@@ -30,7 +30,7 @@ import './index.scss';
 
 // The admin's form for a curated value: grouped — a category (M5.6), an
 // ingredient form (M5.6a) or a deity (MB.132) — or flat where the kind has no
-// group, a planet or a zodiac sign (MB.95). One for every such vocabulary, as
+// group, a celestial body or a zodiac sign (MB.95). One for every such vocabulary, as
 // GroupForm is for their groups, so a new one is a `KINDS` entry rather than
 // another copy (MB.132; the flat kinds folded in at MB.115): a name, a
 // description and, for a grouped kind, the group it is filed under,
@@ -190,7 +190,7 @@ function defineKind<Input extends object>({
 
 /**
  * What a curated value's delete leaves behind, for every kind a compendium
- * entry uses: picked, as a form or a deity is, or listed, as a planet or a
+ * entry uses: picked, as a form or a deity is, or listed, as a celestial body or a
  * zodiac sign is. A coven's ingredient that wrote the value keeps it, as a
  * value of its own rather than a curated one.
  */

@@ -19,7 +19,7 @@ export type FormNode = FormSuggestionsQuery['formSuggestions']['edges'][number][
 /** One row of a `CommonNameSuggestions` answer. */
 export type NameNode = CommonNameSuggestionsQuery['commonNameSuggestions']['edges'][number]['node'];
 
-/** One row of a `PlanetSuggestions` or `ZodiacSuggestions` answer, which share a shape. */
+/** One row of a `CelestialBodySuggestions` or `ZodiacSuggestions` answer, which share a shape. */
 export type CorrespondenceNode =
   CelestialBodySuggestionsQuery['celestialBodySuggestions']['edges'][number]['node'];
 

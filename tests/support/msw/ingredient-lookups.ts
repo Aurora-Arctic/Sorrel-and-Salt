@@ -89,8 +89,8 @@ export function offerDuplicates(nodes: DuplicateNode[]) {
 }
 
 /**
- * Answers one of the list boxes' lookups — `PlanetSuggestions` answering
- * `planetSuggestions`, and so on — with these rows, recording each ask. All
+ * Answers one of the list boxes' lookups — `CelestialBodySuggestions` answering
+ * `celestialBodySuggestions`, and so on — with these rows, recording each ask. All
  * of them take the same variables.
  */
 export function offerList<N>(operation: string, field: string, nodes: N[]) {

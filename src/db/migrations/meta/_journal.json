@@ -477,6 +477,13 @@
       "when": 1791831091006,
       "tag": "0067_celestial-bodies-expand",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1791833022988,
+      "tag": "0068_celestial-bodies-refill",
+      "breakpoints": true
     }
   ]
 }

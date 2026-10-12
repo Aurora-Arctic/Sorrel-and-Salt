@@ -12,7 +12,7 @@ export type {
 } from '../../db/repository';
 
 /**
- * A planet or a zodiac sign: the two tables share one shape, so the planets'
+ * A celestial body or a zodiac sign: the two tables share one shape, so the celestial bodies'
  * row type stands for both (MB.95).
  */
 export type AstrologyValueRow = typeof celestialBodies.$inferSelect;
@@ -111,7 +111,7 @@ export type DeityTraditionRow = typeof deityTraditions.$inferSelect;
 
 /**
  * An ingredient field whose compendium values are held to a curated
- * vocabulary by spelling, by the input's name (MB.162): the planets and the
+ * vocabulary by spelling, by the input's name (MB.162): the celestial bodies and the
  * signs, which record no pick.
  */
 export type CuratedField = 'celestialBodies' | 'zodiacSigns';

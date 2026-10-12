@@ -283,7 +283,7 @@ export type SeedCompendiumVariant = Pick<typeof ingredientVariants.$inferInsert,
 /**
  * One compendium entry, every curated value named as its seed literal names
  * it: forms, categories and deities picked by the key their seed gave them,
- * planets and signs stored in their row's current spelling.
+ * celestial bodies and signs stored in their row's current spelling.
  */
 export type SeedCompendiumEntry = Pick<
   typeof ingredients.$inferInsert,

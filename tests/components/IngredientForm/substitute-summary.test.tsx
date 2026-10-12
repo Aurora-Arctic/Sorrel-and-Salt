@@ -49,7 +49,7 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
   celestialBodies: ['Moon'],
   zodiacSigns: null,
   colors: [],
-  // The form adds a planet of its own to the ingredient's (MB.215).
+  // The form adds a celestial body of its own to the ingredient's (MB.215).
   variants: [
     {
       id: DRIED_LEAF_ID,
@@ -134,7 +134,7 @@ describe('a substitute list’s chips', () => {
     expect(within(summary()).getByText(MOCKWORT.description ?? '')).toBeInTheDocument();
     expect(fact('Form')).toHaveTextContent('Dried leaf');
     expect(fact('Elements')).toHaveTextContent('Water');
-    // The ingredient's planet and the form's own, together.
+    // The ingredient's celestial body and the form's own, together.
     expect(fact('Celestial Bodies')).toHaveTextContent('Moon, Saturn');
     // A list with nothing in it is left out.
     expect(within(summary()).queryByText('Colours', { selector: 'dt' })).not.toBeInTheDocument();

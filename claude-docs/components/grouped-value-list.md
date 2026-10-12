@@ -5,7 +5,7 @@ pager, grouped or flat: `/admin/categories`' (M5.6, MB.178), `/admin/forms`'
 (M5.6a) and `/admin/deities`' (MB.132), each value filed under a group, and
 `/admin/celestial-bodies`' and `/admin/zodiac-signs`' (MB.95), filed under nothing.
 One component serves every such vocabulary, `kind: 'category' | 'form' |
-'deity' | 'planet' | 'zodiacSign'`, as [`GroupList`](group-list.md) serves
+'deity' | 'celestialBody' | 'zodiacSign'`, as [`GroupList`](group-list.md) serves
 the groups; the flat kinds had a copy of their own, `VocabularyValueList`,
 until MB.115 folded it in. It is render-only and a server component: the page
 ([`grouped-value-form.md`](grouped-value-form.md), "On the admin pages")
@@ -180,8 +180,8 @@ so the list adds no rule for either.
 — for each grouped kind, `…OnePageOfSeveral`, `…FirstPage`, `…Filtered`,
 `…NoMatch` and `…Empty`, as `Categories…`, `Forms…` and `Deities…`, the
 deities under invented traditions and slugged by `deitySlug`; for the flat
-kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
-`PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
+kinds, `CelestialBodiesOnePageOfSeveral`, `Signs`, `CelestialBodiesFiltered`,
+`CelestialBodiesNoMatch` and `CelestialBodiesEmpty`; and `PhoneDark` and `PhoneLight`, a
 categories page inside `.admin-layout` at 375px: the real `TabbedPage`
 with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear drawn, the
 Add as a plus and the rows as cards. `CategoriesPending`, with

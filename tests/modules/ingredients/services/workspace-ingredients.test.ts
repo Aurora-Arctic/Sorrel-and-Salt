@@ -171,7 +171,7 @@ describe('createWorkspaceIngredient', () => {
     });
     expect(await rowOf(created.id)).toMatchObject({
       elements: ['water', 'earth'],
-      celestialBodies: ['Venus', 'Moon'],
+      celestial_bodies: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Cancer', 'Libra'],
       colors: ['Green', 'Silver'],
     });
@@ -542,7 +542,7 @@ describe('updateWorkspaceIngredient', () => {
     });
     expect(await rowOf(id)).toMatchObject({
       elements: ['air', 'earth'],
-      celestialBodies: ['Mars'],
+      celestial_bodies: ['Mars'],
       zodiac_signs: null,
       colors: ['White', 'Silver'],
     });
@@ -1090,7 +1090,7 @@ describe('its forms', () => {
 
     const [leaf, oil] = await variantRowsOf(sql, created.id);
     expect([leaf, oil]).toMatchObject([
-      { form: 'Testleaf', description: 'Pressed.', celestialBodies: ['Venus'], deleted_at: null },
+      { form: 'Testleaf', description: 'Pressed.', celestial_bodies: ['Venus'], deleted_at: null },
       { form: 'Testoil', safety_notes: 'Dilute.', deleted_at: null },
     ]);
     expect(await variantChildrenOf(sql, leaf.id)).toMatchObject({

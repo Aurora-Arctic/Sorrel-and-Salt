@@ -10,7 +10,7 @@ import {
 import type { AstrologyValueRow, CuratedField } from '../types';
 import { curatedVocabularyWrites } from './curated';
 
-// `Planet` and `ZodiacSign`: the two curated astrology vocabularies (MB.95),
+// `CelestialBody` and `ZodiacSign`: the two curated astrology vocabularies (MB.95),
 // one type each though the rows share a shape, so a client never asks which
 // table a value came from. Public (MB.80), so no scope and no session in the
 // readers; tests/db/graphql-query-scopes.test.ts holds every other query to
@@ -41,7 +41,7 @@ for (const { field, type, noun, listNoun } of VOCABULARIES) {
       update: (session, id, input) => updateAstrologyValue(session, field, id, input),
       delete: (session, id) => deleteAstrologyValue(session, field, id),
     },
-    // Nothing reads a planet or a sign through a loader: an entry holds the name.
+    // Nothing reads a celestial body or a sign through a loader: an entry holds the name.
     clears: [],
     descriptions: {
       update: `Replaces the ${noun}; the slug follows the name. A rename is carried onto every live compendium entry listing it.`,

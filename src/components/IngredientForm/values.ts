@@ -125,8 +125,8 @@ export const EMPTY_VALUES: IngredientFormValues = {
 };
 
 /**
- * A box's place beside the list it adds to: `drafts.planets` for the
- * ingredient's planets, `variants.1.drafts.planets` for its second form's.
+ * A box's place beside the list it adds to: `drafts.celestialBodies` for the
+ * ingredient's celestial bodies, `variants.1.drafts.celestialBodies` for its second form's.
  * The `list` is `references` for a references search.
  */
 export function draftOf(list: ListFieldName | 'references' | `variants.${number}.references`) {
@@ -549,7 +549,7 @@ export function repeatedForm(
 /**
  * The lists whose entries a compendium entry may only pick from the curated
  * rows (MB.162): folk names and colours have no curated list, and a
- * substitute is picked from the compendium already. A variant's planets and
+ * substitute is picked from the compendium already. A variant's celestial bodies and
  * signs are picks as the ingredient's are.
  */
 export const PICK_ONLY_LISTS: readonly IngredientListName[] = [

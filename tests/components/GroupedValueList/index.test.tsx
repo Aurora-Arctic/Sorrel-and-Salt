@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 // A curated vocabulary's filter, table and pager — `/admin/categories`' (M5.6,
 // MB.178), `/admin/forms`' (M5.6a) and `/admin/deities`' (MB.132): each value
 // with its group, an Edit link opening it in the page's modal, and the filter
-// that narrows them, and the flat planets and signs (MB.95) with no group at
+// that narrows them, and the flat celestial bodies and signs (MB.95) with no group at
 // all (claude-docs/components/grouped-value-list.md). The kinds
 // share every behaviour, so it runs on the deities, whose group goes by its
 // own name; the other kinds get only what they change, their page and their

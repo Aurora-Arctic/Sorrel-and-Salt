@@ -131,7 +131,7 @@ describe('findIngredientFormValueCount', () => {
   });
 });
 
-// The planets and the signs as `planets` and `zodiacSigns` page them (MB.95):
+// The celestial bodies and the signs as `celestialBodies` and `zodiacSigns` page them (MB.95):
 // every live row, in (name, id) order — one tier, so nothing else decides
 // what is curated — narrowed by a name fragment read literally.
 describe('findAstrologyValues', () => {

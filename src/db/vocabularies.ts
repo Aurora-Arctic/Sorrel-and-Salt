@@ -45,7 +45,7 @@ export type ItemTable = (typeof TWO_TIER)[keyof typeof TWO_TIER]['items'];
 /** A group table items are filed under: form groups, category groups, traditions. */
 export type GroupTable = (typeof TWO_TIER)[keyof typeof TWO_TIER]['groups'];
 
-/** A vocabulary filed under no group: the planets and the zodiac signs. */
+/** A vocabulary filed under no group: the celestial bodies and the zodiac signs. */
 export type FlatTable = (typeof FLAT)[keyof typeof FLAT];
 
 /**

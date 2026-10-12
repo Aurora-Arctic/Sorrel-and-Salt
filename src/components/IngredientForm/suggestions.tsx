@@ -34,7 +34,7 @@ import type {
 import { draftOf, tierOf } from './values';
 
 // The lookups on the form's boxes: the form and folk names M4.7a serves, and
-// the planets, signs, deities and substitutes MB.131 adds. Each waits for the
+// the celestial bodies, signs, deities and substitutes MB.131 adds. Each waits for the
 // typing to settle, asks /api/graphql for a page, and shapes the answer into
 // the combobox's rows. None asks until its box has been focused, so opening
 // the form sends nothing (claude-docs/components/ingredient-form.md, "The
@@ -240,7 +240,7 @@ const commonNameOptions = (data: CommonNameSuggestionsQuery): ListOption[] =>
     note: usedBy(node.claimants),
   }));
 
-/** A planet's or sign's row: the value, its description, and its bucket. */
+/** A celestial body's or sign's row: the value, its description, and its bucket. */
 const correspondenceOption = (node: CorrespondenceNode): ListOption => ({
   value: node.value,
   note: node.description ?? undefined,
@@ -328,7 +328,7 @@ export const useFormSuggestions: UseSuggestions<FormOption> = (workspaceId, text
 export const useCommonNameSuggestions: UseSuggestions = (workspaceId, text, active) =>
   useLookup(CommonNameSuggestionsDocument, { workspaceId }, text, active, commonNameOptions);
 
-/** The planets, curated and in use. */
+/** The celestial bodies, curated and in use. */
 export const useCelestialBodySuggestions: UseSuggestions = (workspaceId, text, active) =>
   useLookup(CelestialBodySuggestionsDocument, { workspaceId }, text, active, celestialBodyOptions);
 

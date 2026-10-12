@@ -27,7 +27,7 @@ import type { AstrologyValueFilter, AstrologyValueRow, CuratedField } from '../t
 // The two curated astrology vocabularies: their reads, public reference data
 // like every curated vocabulary (MB.80), and their writes, the site admin's
 // alone (MB.95). One code path for both, keyed by the ingredient list each
-// curates. A compendium entry's planets and signs are spellings the
+// curates. A compendium entry's celestial bodies and signs are spellings the
 // vocabulary curates (MB.162), so a value a live entry's list holds is held:
 // its delete is refused, and its rename is carried onto the list in the same
 // write. A coven's ingredient never holds a value and is never rewritten: its
@@ -78,7 +78,7 @@ const cachedCount = cachedCompendiumRead(
 
 /**
  * One page of `field`'s vocabulary under `filter`, alphabetical by name, for
- * `planets`, `zodiacSigns` and the admin pages' lists: a public read (MB.80),
+ * `celestialBodies`, `zodiacSigns` and the admin pages' lists: a public read (MB.80),
  * so no session. A blank query is no query.
  */
 export function listAstrologyValues(
@@ -117,7 +117,7 @@ export async function getAstrologyValueBySlug(
 }
 
 /**
- * Adds a planet or a sign, its slug derived from the name.
+ * Adds a celestial body or a sign, its slug derived from the name.
  *
  * @throws {Forbidden} the caller is not a site admin — checked before the
  * input is read.
@@ -143,13 +143,13 @@ export async function createAstrologyValue(
 }
 
 /**
- * Rewrites a planet or a sign whole, its slug following the name. Its
+ * Rewrites a celestial body or a sign whole, its slug following the name. Its
  * `seedKey` is left as it was, so a renamed seeded row is still the seed's
  * (MB.171).
  *
  * A rename — a change of case included — carries the new name onto every live
  * compendium entry whose list holds the old one, in place and in the same
- * transaction; no slug moves, since a planet or a sign is no part of an
+ * transaction; no slug moves, since a celestial body or a sign is no part of an
  * entry's identity or slug. A soft-deleted entry keeps the old spelling.
  *
  * @throws {Forbidden} the caller is not a site admin.
@@ -182,7 +182,7 @@ export async function updateAstrologyValue(
 }
 
 /**
- * Soft-deletes a planet or a sign no live compendium entry's list holds. A
+ * Soft-deletes a celestial body or a sign no live compendium entry's list holds. A
  * coven's ingredient keeps what it wrote, which moves into that coven's
  * in-use values.
  *

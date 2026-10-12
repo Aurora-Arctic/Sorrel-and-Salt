@@ -11,7 +11,7 @@ export interface SeedEntry {
   tables: string[];
 }
 
-/** A `planets` or `zodiac_signs` row. */
+/** A `celestial_bodies` or `zodiac_signs` row. */
 export interface VocabularyRow {
   id: string;
   name: string;

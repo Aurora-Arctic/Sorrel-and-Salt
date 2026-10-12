@@ -38,7 +38,7 @@ async function suggest(
 }
 
 /**
- * What a `planets` entry offers as `query` is typed: the curated bodies first,
+ * What a `celestialBodies` entry offers as `query` is typed: the curated bodies first,
  * a name match before a description match, then values already written in the
  * compendium or this workspace that no body curates. A blank query offers all.
  * Without a workspace, the values written in the compendium alone.

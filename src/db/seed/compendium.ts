@@ -94,7 +94,7 @@ export async function seedCompendiumContent(
       slugify(name),
       () => `A compendium entry names ${kind} "${name}", which no seed wrote.`,
     );
-  // A planet or sign is stored as its row's current spelling (MB.162); a
+  // A celestial body or sign is stored as its row's current spelling (MB.162); a
   // retired one is left off.
   const spelled = (
     kind: 'celestialBodies' | 'zodiacSigns',

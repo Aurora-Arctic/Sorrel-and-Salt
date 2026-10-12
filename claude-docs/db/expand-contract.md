@@ -194,6 +194,14 @@ here ([`design-decisions/mb.252-table-rename.md`](../design-decisions/mb.252-tab
 
   A second scratch `generate` must then report no changes.
 
+- **The switch moves the code and refills.** MB.253 is the worked case. It
+  renamed the code and GraphQL names and stopped declaring the old columns,
+  which the drift test's `PENDING_DROPS` then holds. Its `0068` fills the new
+  columns again for whatever the deploy before wrote after `0067`. The lists
+  are rederived as `0031`'s were, so a cleared old list clears the new one. A
+  link only adds, because no code ever changes or clears a link's body. A CHECK
+  that has to count either column keeps naming the old one in the schema until
+  the contract step.
 - **The view locks the table's columns until the contract step drops it.**
   Postgres refuses `DROP COLUMN` or `ALTER COLUMN TYPE` on any column a view
   reads, so neither can happen to the table in between. The contract task drops

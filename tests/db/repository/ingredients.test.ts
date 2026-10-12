@@ -874,7 +874,7 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The lists hold spellings, not picks (MB.162): what a planet's or a sign's
+  // The lists hold spellings, not picks (MB.162): what a celestial body's or a sign's
   // delete and rename read (MB.95), matched entry by entry under the
   // suggestions' fold.
   describe('celestialBody and zodiacSign', () => {
@@ -888,7 +888,7 @@ describe('findCompendiumPage', () => {
     });
 
     it('lists the live compendium entries whose list holds the value, folded, and no other', async () => {
-      // Why the others could have been listed: each holds Mars in its planets.
+      // Why the others could have been listed: each holds Mars in its celestial bodies.
       const [{ count }] = await sql`
         select count(*)::int as count from ingredients
         where exists (select 1 from unnest(celestial_bodies) as p(v) where lower(btrim(v)) = 'mars')`;
@@ -1243,9 +1243,9 @@ describe('findWorkspaceIngredientByIdentity', () => {
   });
 });
 
-// A planet's or a sign's rename carried onto the compendium's lists (MB.95):
+// A celestial body's or a sign's rename carried onto the compendium's lists (MB.95):
 // each entry folding to the old spelling becomes the new one, in place, and
-// nothing else in the list or the row moves — a planet or sign is no part of
+// nothing else in the list or the row moves — a celestial body or sign is no part of
 // an entry's identity or slug.
 describe('write.carryAstrologyRename', () => {
   const rowOf = async (id: string) => (await sql`select * from ingredients where id = ${id}`)[0];
@@ -1263,7 +1263,7 @@ describe('write.carryAstrologyRename', () => {
 
     expect(rows.map((row) => row.id).sort()).toEqual([held, folded].sort());
     expect(await rowOf(held)).toMatchObject({
-      celestialBodies: ['Venus', 'Ares', 'Moon'],
+      celestial_bodies: ['Venus', 'Ares', 'Moon'],
       slug: before.slug,
       identity_key: before.identity_key,
       created_by: A.id,
@@ -1271,7 +1271,7 @@ describe('write.carryAstrologyRename', () => {
     });
     // The other list holds a "Mars" too, and is not the one renamed.
     expect(await rowOf(folded)).toMatchObject({
-      celestialBodies: ['Ares'],
+      celestial_bodies: ['Ares'],
       zodiac_signs: ['Mars'],
     });
   });
@@ -1283,7 +1283,7 @@ describe('write.carryAstrologyRename', () => {
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
     const kept = await add('Testleaf', { celestialBodies: ['Venus'] });
     const before = await Promise.all([coven, gone, kept].map(rowOf));
-    expect(before.map((row) => row.celestialBodies)).toEqual([['Mars'], ['Mars'], ['Venus']]);
+    expect(before.map((row) => row.celestial_bodies)).toEqual([['Mars'], ['Mars'], ['Venus']]);
 
     const rows = await rename('celestialBodies', 'Mars', 'Ares');
 
@@ -1297,7 +1297,7 @@ describe('write.carryAstrologyRename', () => {
     await rename('zodiacSigns', 'Aries', 'The Ram');
 
     expect(await rowOf(id)).toMatchObject({
-      celestialBodies: ['Aries'],
+      celestial_bodies: ['Aries'],
       zodiac_signs: ['The Ram', 'Leo'],
     });
   });

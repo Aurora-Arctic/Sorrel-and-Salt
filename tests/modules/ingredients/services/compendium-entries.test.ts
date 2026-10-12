@@ -182,7 +182,7 @@ describe('createCompendiumEntry', () => {
 
     expect(await rowOf(created.id)).toMatchObject({
       elements: ['spirit', 'air'],
-      celestialBodies: ['Venus', 'Moon'],
+      celestial_bodies: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus', 'Libra'],
       colors: ['Green', 'Pink'],
     });
@@ -284,7 +284,7 @@ describe('updateCompendiumEntry', () => {
 
     expect(await rowOf(id)).toMatchObject({
       elements: ['fire', 'water'],
-      celestialBodies: ['Mars'],
+      celestial_bodies: ['Mars'],
       zodiac_signs: null,
       colors: ['White', 'Silver'],
     });
@@ -1009,7 +1009,7 @@ describe('resolveCompendiumSlug', () => {
 });
 
 // MB.162, moved onto the links by MB.167: a compendium entry's form and
-// deities each pick a curated row, and its planets and signs name one, where a
+// deities each pick a curated row, and its celestial bodies and signs name one, where a
 // coven's ingredients keep free text (claude-docs/db/compendium-writes.md).
 // Retired vocabulary rows are put back after each test, since the clone is
 // shared by the file and the seed retires nothing.
@@ -1143,7 +1143,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
   const RETIRED: [string, string, string, Overrides<IngredientFixture>, (string | number)[]][] = [
     [
       'a retired celestial body',
-      'celestialBodies',
+      'celestial_bodies',
       'Mars',
       { celestialBodies: ['Venus', 'Mars'] },
       ['celestialBodies', 1],
@@ -1254,7 +1254,7 @@ describe('the curated vocabularies a compendium entry is held to', () => {
     });
 
     expect(await rowOf(created.id)).toMatchObject({
-      celestialBodies: ['Venus', 'Moon'],
+      celestial_bodies: ['Venus', 'Moon'],
       zodiac_signs: ['Taurus'],
     });
     expect(await variantRowsOf(sql, created.id)).toMatchObject([
@@ -1280,15 +1280,15 @@ describe('the curated vocabularies a compendium entry is held to', () => {
       entry({ variants: [makeVariant({ form: 'hERB' })], celestialBodies: ['venus'] }),
     );
 
-    expect(await rowOf(id)).toMatchObject({ celestialBodies: ['Venus'] });
+    expect(await rowOf(id)).toMatchObject({ celestial_bodies: ['Venus'] });
     expect(await liveFormsOf(sql, id)).toEqual(['Herb']);
-    expect(await rowOf(local.id)).toMatchObject({ celestialBodies: ['venus'] });
+    expect(await rowOf(local.id)).toMatchObject({ celestial_bodies: ['venus'] });
     expect(await variantRowsOf(sql, local.id)).toMatchObject([{ form: 'hERB', form_id: null }]);
   });
 });
 
 // MB.219: a compendium entry's forms are written inside its own save, each a
-// curated pick with its own curated planets and signs (DESIGN.md §5, "The
+// curated pick with its own curated celestial bodies and signs (DESIGN.md §5, "The
 // compendium is held to the vocabularies"). The write's mechanics — matching
 // and unchanged rows — are the coven's file's, on the one shared path.
 describe('its forms', () => {
@@ -1334,9 +1334,9 @@ describe('its forms', () => {
     );
 
     const [herbRow, oilRow] = await variantRowsOf(sql, created.id);
-    // Each in its curated row's spelling, the planet's too.
+    // Each in its curated row's spelling, the celestial body's too.
     expect([herbRow, oilRow]).toMatchObject([
-      { form: 'Herb', form_id: herb, celestialBodies: ['Venus'] },
+      { form: 'Herb', form_id: herb, celestial_bodies: ['Venus'] },
       { form: 'Oil', form_id: oil, safety_notes: 'Dilute.' },
     ]);
     expect((await variantChildrenOf(sql, herbRow.id)).categories).toMatchObject([

@@ -398,7 +398,7 @@ describe('LookupListField', () => {
     expect(changes('Folk Names')).toHaveTextContent('Hedge Fixture');
   });
 
-  // The planets and the signs share one shape and one split.
+  // The celestial bodies and the signs share one shape and one split.
   it.each([{ list: CELESTIAL_BODIES, offer: offerCelestialBodies, rows: [MOON, MOONFIXTURE] }])(
     'offers the curated $list.legend apart from those in use, with their descriptions',
     async ({ list, offer, rows: [curated, inUse] }) => {

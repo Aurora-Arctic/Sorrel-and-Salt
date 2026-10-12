@@ -3,7 +3,7 @@ import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/as
 import { seedFlatVocabulary } from './flat-vocabulary';
 import type { SeedAstrologyValue, SeedDatabase, SeedTransaction } from './types';
 
-// DESIGN.md §5's planet and zodiac vocabularies, a starting set an admin may
+// DESIGN.md §5's celestial body and zodiac vocabularies, a starting set an admin may
 // edit. Reference data, not a scenario — migrate.yml seeds it alone, so it
 // inserts the bootstrap user itself. §5's table is lower-case; each name here
 // is the proper noun it renders as, and no slug is written down. A description

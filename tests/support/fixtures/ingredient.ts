@@ -133,7 +133,7 @@ export function makeIngredient(overrides: Overrides<IngredientFixture> = {}): In
 /**
  * The fixture as an insert into `ingredients`, by column name. The child
  * collections are destructured off by name rather than filtered by shape:
- * `planets` and the other lists are `text[]` columns too. The slug is derived
+ * `celestialBodies` and the other lists are `text[]` columns too. The slug is derived
  * from the label and the formal name, as the seed derives it, never stated.
  * No audit stamps (rule 3).
  */

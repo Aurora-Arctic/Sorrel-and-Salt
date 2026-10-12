@@ -115,7 +115,7 @@ const MEMBERSHIPS: SeedMembership[] = [
  * three `none` and one `unknown`, two entries worked with more than one
  * element, comfrey beside foxglove, one carrying a safety note that matters,
  * and Rosemary in two forms, its oil adding a description and a safety note
- * of its own. Every form, planet, zodiac sign and deity names a curated row in
+ * of its own. Every form, celestial body, zodiac sign and deity names a curated row in
  * that row's own spelling (MB.162); the uncurated `rhizome` is a coven's, in
  * demo.ts.
  */

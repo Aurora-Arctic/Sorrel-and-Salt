@@ -89,7 +89,7 @@ export function findIngredientFormValueCount(
 
 /**
  * One page of a curated astrology vocabulary under `filter` in `(name, id)`
- * order, for `planets`, `zodiacSigns` and their admin lists (MB.95): its
+ * order, for `celestialBodies`, `zodiacSigns` and their admin lists (MB.95): its
  * live rows, since a flat vocabulary has no group to be curated under.
  * Public reference data, so no proof.
  */
