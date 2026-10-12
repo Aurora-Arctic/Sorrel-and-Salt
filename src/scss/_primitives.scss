@@ -380,8 +380,10 @@
     // The search, always first, starts at `$filter-search-basis` and takes
     // the line's spare room, so the row reaches the table's width without a
     // gap at its end, and the choices wrap beneath it before it gives way.
+    // Its grow factor dwarfs a choice's, so beside it a choice keeps its
+    // width to the pixel.
     > :first-child {
-      flex: 1 1 $filter-search-basis;
+      flex: 9999 1 $filter-search-basis;
       min-width: 0;
     }
 
@@ -393,9 +395,12 @@
     // too. `FilterSelectField` marks every form of a choice `filter-row__choice`,
     // since once hydrated it holds a Combobox box, not a select; a bare `.field`
     // holding a select counts too. A switch, a `.field` with no select in it,
-    // keeps its own width. Each gives way on a narrow row.
+    // keeps its own width. Each gives way on a narrow row, and grows, a little
+    // against the search and in earnest once wrapped onto a line without it,
+    // so a choice on its own line fills it rather than standing at a select's
+    // width in the middle of a row (the owner's call, MB.115).
     > :is(.field:has(> .select), .filter-row__choice) {
-      flex: 0 1 $filter-choice-width;
+      flex: 1 1 $filter-choice-width;
       min-width: 0;
     }
   }

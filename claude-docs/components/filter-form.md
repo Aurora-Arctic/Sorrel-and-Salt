@@ -141,7 +141,11 @@ itself by its longest option and a type-ahead by its few letters, so
 without it two selects would differ and hydration, which swaps the
 server's select for a Combobox box, would move the row. The field opts in
 by class since once hydrated it holds no select. It gives way on a
-narrower row. The clear inside the type-ahead keeps its room while hidden
+narrower row, and once wrapped onto a line without the search it grows to
+fill that line, since a choice standing at a select's width in the middle
+of a row looked wrong at 500px (the owner's call); beside the search it
+keeps its width, the search's grow factor dwarfing its own. The clear
+inside the type-ahead keeps its room while hidden
 ([`combobox.md`](combobox.md)), so typing does not change the width either.
 
 **An on-or-off filter is a switch**, `SwitchField` ([`field.md`](field.md)):
