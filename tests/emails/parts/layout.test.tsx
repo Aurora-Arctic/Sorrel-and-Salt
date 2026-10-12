@@ -112,6 +112,18 @@ describe.each(MAILS)('$name', ({ link, message }) => {
   });
 });
 
+// The layout marks where Outlook's conditional comments go with placeholder
+// elements and renderParts swaps them in: none may survive into either part.
+describe.each(MAILS)('$name, once rendered', ({ message }) => {
+  it('leaves no placeholder in the HTML or the text part', async () => {
+    const { html, text } = await message();
+
+    expect(html).toContain('<!--[if mso]><table');
+    expect(html).not.toContain('data-mso');
+    expect(text).not.toMatch(/mso|<!--/);
+  });
+});
+
 describe('the templates', () => {
   // A new template cannot ship without a row above.
   it('are all covered by a row', () => {
