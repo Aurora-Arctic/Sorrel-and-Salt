@@ -74,10 +74,16 @@ read of all a row's substitutes implies neither of its unique indexes'
 predicates. No index leads on `reference_id`: nothing reads from a reference
 back to its links, and a reference is never hard-deleted.
 
-**A link carries a locator and nothing else.** "p. 112", "chap. 13", "s.v.
-Hecate" — free text, because locators vary by the kind of work. The renderer
-leaves it out of the citation, since a bibliography entry names the work, and
-the page shows it beside the citation.
+**A link carries a locator and nothing else.** "p. 112", "chap. 13",
+`under "Hecate"` — free text, because locators vary by the kind of work. An
+entry in a work arranged by headword, a dictionary or an encyclopedia, is
+cited by its headword in quotation marks after the word "under". The 18th
+edition of the _Chicago Manual of Style_ (2024, 14.130) no longer recommends
+the Latin "s.v." the 17th used and allows "under" for clarity; the project
+always writes it, in the locator and in an `entry`'s citation alike, so the
+two never differ. The renderer leaves the locator out of the citation, since
+a bibliography entry names the work, and the page shows it beside the
+citation.
 
 **The tier rule is the service's.** A compendium entry's or a vocabulary
 row's link names a compendium reference; a coven ingredient's names the
@@ -212,7 +218,7 @@ applies as each field is left, so what is seen is what is saved.
 | `published`                | and a range between numbers dashed, "1882-88" → "1882–88", a day written as a date left alone (`dashRanges`)                        |
 | `edition`                  | and one given as a number or a word written as Chicago does, "2", "second edition" → "2nd ed."; anything else, "Rev. ed.", as typed |
 | `url`                      | trimmed, and one with no scheme but a host, "example.org/x", taken as `https://` (`withScheme`)                                     |
-| a link's `locator`         | tidied and its ranges dashed (`formatLocator`); its words, "s.v. Hecate", "chap. 3", as typed                                       |
+| a link's `locator`         | tidied and its ranges dashed (`formatLocator`); its words, `under "Hecate"`, "chap. 3", as typed                                    |
 
 Locator shorthand — "112" to "p. 112" — was offered and not chosen: a
 locator's words vary too much by the kind of work to guess.
@@ -292,11 +298,11 @@ drops each missing piece with its punctuation.
   (Note) — and without a volume, _Container_, Published, Pages.
   - Nwokocha, Eziaku Atuama. "An Equilibrist Vodou Goddess." _Harvard Divinity Bulletin_, Summer/Autumn 2013. Accessed October 6, 2026. https://bulletin.hds.harvard.edu/an-equilibrist-vodou-goddess/.
   - With a volume, from an invented source: Testwort, Fixtura. "A Note on Fixture Covens." _Journal of Invented Botany_ 51, no. 2 (1988): 399.
-- **`entry`** — Authors. Container, Edition, s.v. "Title." Contributors.
+- **`entry`** — Authors. Container, Edition, under "Title." Contributors.
   Place: Publisher, Published. Host. Last modified Modified. Accessed
   Accessed. URL. (Note)
-  - Wikipedia, s.v. "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
-  - _Visuotinė lietuvių enciklopedija_, s.v. "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
+  - Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
+  - _Visuotinė lietuvių enciklopedija_, under "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
 - **`web_page`** — Authors. "Title." Container. Publisher. Published; last
   modified Modified. Accessed Accessed. URL. (Note) — "Last modified" is
   capitalised when it stands without a published date.
@@ -339,8 +345,8 @@ that shows it selects them beside `citation` and the schema is unchanged.
   `web_page` are each part of a larger one, theirs in quotation marks. No
   kind is a website as a whole, so nothing else is italic.
 - **No authors: the title leads**, `_Testwort Herbal_`, `"Testwort"` —
-  except a reference-work `entry`, which Chicago cites by its work, "s.v."
-  and its headword whole, `Fixture Encyclopedia, s.v. "Testwort"`, since
+  except a reference-work `entry`, which Chicago cites by its work, "under"
+  and its headword whole, `Fixture Encyclopedia, under "Testwort"`, since
   its title alone would not say which work.
 - **Continued by a locator**, the form takes the comma before it, inside
   the quotation marks, `Placeholder, "Notes on Mockleaf," p. 14`, and none
@@ -407,7 +413,7 @@ as the edition in hand; a shard's per-entry pages, a Wikipedia revision or a
 web page, are its own `sources`. Each citation on an entry or a form becomes
 one `reference_links` row, `ingredient_id` for the entry and
 `ingredient_variant_id` for the form, carrying the citation's locator (`p. 71`,
-`s.v. Mugwort`). Every entry cites at least one source of its own, because the
+`under "Mugwort"`). Every entry cites at least one source of its own, because the
 admin's "unsourced" filter counts the entry's own links and its forms'.
 
 Which fields a citation backs (`supports`) is the guard's to check and is not
