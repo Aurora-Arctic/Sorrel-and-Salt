@@ -34,7 +34,8 @@ await send(await verifyEmailMessage({ to, url, providers }));
 
 - **Why React Email.** The site already writes JSX, and the package's
   components emit the table-and-inline markup mail clients need, so a
-  template reads like a component rather than a string of HTML. The cost is the dependency tree: the barrel
+  template reads like a component rather than a string of HTML. The cost is the
+  dependency tree: the barrel
   pulls every component, Tailwind and a Markdown renderer.
 - **Each part is written for its medium.** The two renders share one tree, so
   everything but the medium-specific wording stays in step, and a `part`
@@ -48,12 +49,17 @@ await send(await verifyEmailMessage({ to, url, providers }));
   that names the button takes its words from `actionVerb(part)`, "click the
   button below" or "open the link below". Every mail closes on `IgnoreNote`,
   "…, you can ignore this email.", in the template's own words for who did
-  not ask for it. Headings keep their
-  case in the text part, which the converter would otherwise capitalise.
+  not ask for it. Headings keep their case in the text part, which the converter
+  would otherwise capitalise. The wordmark's link is dropped from the text part
+  (`ignoreHref` on `a.ss-wordmark` in `renderParts`), so the first address a
+  text client shows is the action's, not the homepage (MB.118).
 - **Where things go.** A template is a top-level `src/emails/<name>.tsx` with
-  a sibling `<name>.stories.tsx`. The frame every mail shares is `src/emails/parts/layout.tsx`
-  (`EmailLayout`, `Paragraph`, `Action`, `IgnoreNote`). Their types are in `parts/types.ts`, and the
-  templates' in `src/emails/types.ts`, each extending `BaseEmailProps`: the link, the origin and the part. Not in `src/components/`: a mail is
+  a sibling `<name>.stories.tsx`. The frame every mail shares is
+  `src/emails/parts/layout.tsx`
+  (`EmailLayout`, `Paragraph`, `Action`, `IgnoreNote`). Their types are in
+  `parts/types.ts`, and the
+  templates' in `src/emails/types.ts`, each extending `BaseEmailProps`: the
+  link, the origin and the part. Not in `src/components/`: a mail is
   not a page component. Tests mirror the path, in `dom` since each is a
   `.tsx` (MB.97), and assert what a mail carries — its recipient, its link,
   the providers it names — never its wording or its look, which the stories
@@ -102,24 +108,58 @@ does it, so each piece has an email-safe stand-in.
   does the blend ahead of time with `sharp`, using each theme's page colour,
   blend and opacity from `theme.ts`, and writes an opaque PNG per corner per
   theme into `public/email/images/` at twice the display size in
-  `src/emails/ornaments.ts`. Re-run `node scripts/email-ornaments.ts` after changing a
+  `src/emails/ornaments.ts`. Re-run `node scripts/email-ornaments.ts` after
+  changing a
   photograph or the palette, and commit what it writes. Two architectures'
   output differs by a step or two of rounding per channel, because libvips
   takes a different SIMD path on x64 than on arm64.
   Node runs that script with its own type stripping, so whatever `theme.ts` or
   `ornaments.ts` takes from `./types` must come in by `import type`, which it
   erases.
-- **The text sits on the page, and the photographs run under it.** No card:
-  the text is on the page colour, as on the site. The photographs are the
-  backgrounds of two nested sections, top left and bottom right, and the
-  text's padding lets each run `OVERLAP` pixels under it. Backgrounds, not
-  images, because an overlap otherwise takes negative margins, which Gmail
-  strips. Dark is the inline `background-image`; the light pair is the media
-  query's. Desktop Outlook draws no CSS backgrounds, so there the mail has no
-  photographs, and nothing else changes.
+- **The text sits on the page; the sorrel runs under the heading and the salt
+  meets the text's edge.** No card: the text is on the page colour, as on the
+  site. The photographs are the backgrounds of two nested sections, top left and
+  bottom right. Backgrounds, not images, because an overlap otherwise takes
+  negative margins, which Gmail strips. The sorrel runs `OVERLAP` pixels under
+  the heading, which is the only text that meets it: 32px bold holds 4.78:1 over
+  the light sorrel's darkest pixel. The salt sits beneath the text block,
+  overlapping only the last paragraph's margin, because MB.118 measured the
+  light salt's darkest pixel at 2.14:1 under the muted ink and 1.66:1 under the
+  link, and no opacity fixes the link (the page itself is 4.65:1 against it).
+  The dark pair passes everywhere. Dark is the inline `background-image`; the
+  light pair is the media query's. Desktop Outlook draws no CSS backgrounds, so
+  there the mail has no photographs, and nothing else changes.
 - **The wordmark** is "Sorrel & Salt" at the top right, small, in the
   heading face, linking to the site's origin: the one place the site is named,
   in the band beside the sorrel.
+- **Desktop Outlook reads Word's CSS, so three rules hold for it** (MB.118).
+  The `@font-face` rules sit under `@media screen`: Word skips the block, so it
+  never meets an uninstalled first face, which would send it to Times New Roman
+  rather than the next font in the stack. Every text element carries its
+  `font-family` inline, because Word does not inherit it into nested tables.
+  Padding goes on a `<td>`, never a table or a section, because Word honours it
+  only on cells; and a conditional-comment ghost table of 600px wraps the
+  container, because Word ignores `max-width`. React cannot write a comment, so
+  the layout renders two sentinel spans that `renderParts` swaps for the
+  comments in the HTML part. Line heights are pixels with `mso-line-height-rule:
+exactly`, which Word applies as written.
+- **Checked at 375px, in both themes.** A mail is read on a phone more often
+  than not, so every review signs off each template at phone width as well as
+  desktop, dark and light: in the workshop story and in the review's
+  screenshots, with the 375px render scrolling nowhere sideways, every text
+  pairing at 4.5:1 (including over a photograph) and the button at least 44px
+  tall. The viewport meta is there because a browser without one lays a phone
+  out at 980px, and the button's padding is 14px for the tap target.
+- **The copy follows published guidance** for transactional mail, read during
+  MB.118: a subject of fifty characters or fewer with the important words first
+  (Postmark, Litmus); a preview line of 40 to 90 characters that adds to the
+  subject rather than repeating it; the first sentence says why the reader got
+  the mail, the next what to do and by when; the address spelled out in full
+  under the button (GOV.UK service manual); the button a verb; no negative
+  contractions, which some readers misread as their opposite (GOV.UK style
+  guide); and "email address" for the address, "email" for the message. The
+  sources are listed in
+  [`design-decisions/mb.118-plan.md`](design-decisions/mb.118-plan.md).
 - **Assets are absolute and public.** A mail has no page to be relative to, so
   images and fonts are addressed from the origin of the link the mail
   carries: production's, staging's, or `localhost:8000` in compose, which is
@@ -137,16 +177,21 @@ beneath, following the toolbar's theme control
 Mailpit at `http://localhost:8025` under compose.
 
 Neither is a rendering check. The Ladle iframe has a real `<body>`, and
-Mailpit's HTML Check scores CSS feature support from caniemail data, so
-neither can show what a client does to the document's structure; the
-npm email linters are wrappers over that same data and cannot either. Before
-merging a template change, paste the HTML into a rendered client preview
-(unspam.email, or the Mailtrap Sandbox already used for staging previews)
-from a mail whose asset origin is public, since a compose mail points at
-`localhost` and no client can fetch its fonts or photographs. Render the mail
-from the branch under test and check the pasted source carries its markup
-(`<td class="ss-page"`) before reading the screenshots: a preview of a stale
-render shows the previous fix's failure, not this one's result.
+Mailpit's HTML Check scores CSS feature support from caniemail data, so neither
+can show what a client does to the document's structure; the npm email linters
+are wrappers over that same data and cannot either. Mailpit's check is the first
+look all the same: `POST /api/v1/send` the rendered parts and read
+`/api/v1/message/<id>/html-check` for the features Gmail, Outlook and Apple Mail
+drop. Before merging a template change, paste the HTML into a rendered client
+preview (unspam.email, or the Mailtrap Sandbox already used for staging
+previews) from a mail whose asset origin is public, since a compose mail points
+at `localhost` and no client can fetch its fonts or photographs. Render the mail
+from the branch under test and check the pasted source carries its markup (`<td
+class="ss-page"`) before reading the screenshots: a preview of a stale render
+shows the previous fix's failure, not this one's result. In a design review that
+preview is the owner's part of the sign-off: the devcontainer has no browser of
+its own and no client account, so the review hands over paste-ready renders and
+the owner reads them in the clients.
 
 ## What is sent
 
