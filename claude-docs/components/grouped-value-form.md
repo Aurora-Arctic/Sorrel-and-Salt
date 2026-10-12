@@ -140,14 +140,9 @@ it. Covens' ingredients keep what they wrote, as their own value.` A refusal com
   shown in the alert notice, and the form stays open with the
   confirmation withdrawn. Per DESIGN.md §7, a refusal that names its remedy is
   not a bad value in a box, so it gets no field.
-- **Unsaved changes are asked about** (MB.115, the owner's call). While the
-  form has changes, its `formState.isDirty`, the flag that turns Save on,
-  Cancel asks "You have unsaved changes. Discard them?" over the form,
-  beside Discard Changes, which calls `onDone`, and Keep Editing, which goes
-  back to the form as it was. The modal's Close button, Escape and a click
-  outside ask the same through the form's guard (`useDiscardGuard`,
-  [`modal.md`](modal.md), "Unsaved changes"). With nothing changed, Cancel
-  calls `onDone` at once; a save or a delete never asks.
+- **Unsaved changes are asked about** (MB.115, the owner's call). The form
+  hands `formState.isDirty` to the shared guard
+  ([`modal.md`](modal.md#unsaved-changes)); Discard Changes calls `onDone`.
 - **Buttons are title case**: Save and Delete with the kind's `noun` (Save
   Category, Delete Zodiac Sign and so on), Cancel, Delete, Keep It, Discard
   Changes, Keep Editing. Save is solid; Cancel, Keep It and Keep Editing are
@@ -201,8 +196,7 @@ with its label row and the `.field__required` asterisk; Save is a
 end by `.form__aside`, the shared [`FormActions`](field.md); and the confirmation is the modal's
 [`ConfirmQuestion`](modal.md), a `ConfirmOverlay`
 card over the form, with its own `.modal__actions` row, the form's buttons
-staying beneath it. Under 28rem of the form's own width every row stacks,
-full width, the card's too. Its one rule of its own, `.grouped-value-form__note`, sets the
+staying beneath it. Narrow rows stack ([`styling.md`](../styling.md), "A narrow form stacks its buttons"). Its one rule of its own, `.grouped-value-form__note`, sets the
 rename note a step above the actions, with a closer gap between it and them.
 
 The alert above the fields is a `Notice` ([`notice.md`](notice.md)). A
