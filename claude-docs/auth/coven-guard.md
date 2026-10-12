@@ -117,7 +117,7 @@ with owners.
 Tests: `tests/app/(shell)/coven/members.test.tsx` (who gets controls, the
 404), `tests/components/CovenNav/index.test.tsx` (the link by role),
 `tests/modules/coven/services/access-control.test.ts` (the pinned matrix),
-and `tests/e2e/coven.spec.ts` (`@story-9`: a viewer's 404, a promotion, the
+and `tests/e2e/coven.spec.ts` (walks story 9, untagged: a viewer's 404, a promotion, the
 axe scan).
 
 ## The create page (M9.16)

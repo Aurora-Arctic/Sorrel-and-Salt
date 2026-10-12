@@ -10,7 +10,7 @@
 
 A tool for tracking spell ingredients and composing spell jars. The site is invite-gated: signing in earns an account, and the right to create a workspace is granted by accepting an invitation or by an admin. The compendium is the site's public face: its list and every entry are readable without an account and indexable by search engines (MB.80); the gate is on accounts and workspaces, not on what exists. Users belong to workspaces that share an inventory; a global compendium of ingredients is curated by site admins.
 
-**In scope for v1:** OAuth sign-in, invite-gated workspace creation (`canCreateWorkspace`), workspaces with roles and invitations by email (copy-link until MB.61's follow-ups bring delivery), admin-curated global compendium — public and search-indexable (MB.80) — workspace-local ingredients, stock tracking, spell builder with `private | workspace` spell visibility, full audit columns on every model, GraphQL API.
+**In scope for v1:** OAuth sign-in, invite-gated workspace creation (`canCreateWorkspace`), workspaces with roles and invitations by email (MB.61), admin-curated global compendium — public and search-indexable (MB.80) — workspace-local ingredients, stock tracking, spell builder with `private | workspace` spell visibility, full audit columns on every model, GraphQL API.
 
 **Deferred to v2:** the entire notes subsystem — private / workspace / public experience notes and their visibility model (17 tasks, 29 hours) — plus edit-history UI, user suggestions for compendium and category additions, duplicate merge tooling, bulk add from the compendium, passkeys (email/password sign-in stays out; passkeys replace it), note moderation reports, viewer spell-approval workflow, GraphQL response caching, subscription billing, try-before-sign-up through Better Auth's `anonymous` plugin, and a suggested change to an existing compendium entry (MB.80).
 
@@ -1568,7 +1568,7 @@ The highest-risk tests in the project.
 - `IngredientSearch` — filtering, chip toggle, grouped chips collapse, clear, debounce via fake timers
 - `IngredientForm` — fuzzy warning renders and names each match's formal name, a save holds on it until Create Anyway, compendium entries read-only for non-admins, the formal-name and form fields suggest in scope and accept free text outside the vocabulary
 - `AddIngredientModal` / `EditIngredientModal` — validation, submit payload, Escape, focus trap, focus restore, pre-population, dirty-discard warning
-- `InviteDialog` — link shown once, copy works, warning present, role selector offers viewer and member only (never owner)
+- `InviteDialog` — email field validated, role selector offers viewer and member only (never owner), a sent confirmation names the address, no link or token in the DOM
 - `MemberList` — role controls hidden from non-owners
 - `WorkspaceSwitcher` — lists memberships, navigates on select
 - `SpellBuilder` — add/remove/reorder, intent vs derived category comparison, visibility control defaulting to `workspace` and read-only once shared
@@ -1578,7 +1578,7 @@ MSW mocks `/api/graphql`. `tests/support/setup.ts` — since MB.97 `setup-msw.ts
 
 ### E2E — Playwright
 
-Specs: admin adds a compendium entry; A adds it to W's ingredients with a quantity; A builds a spell and checks the category comparison; A generates an invite link; B accepts, signs in, and lands in W seeing everything; C reads but cannot edit; D reaches for W's routes by URL and gets 404 throughout; A soft-deletes an item and confirms it's gone and the name can be reused.
+Specs: admin adds a compendium entry; A adds it to W's ingredients with a quantity; A builds a spell and checks the category comparison; A invites B by mail; B accepts from the link, signs in, and lands in W seeing everything; C reads but cannot edit; D reaches for W's routes by URL and gets 404 throughout; A soft-deletes an item and confirms it's gone and the name can be reused.
 
 Each spec tags the stories it walks (`@story-N`), and the stories checklist reports them beside each story's service-layer result, so the launch wave can aim its flows at the stories with no browser proof. The acceptance suite stays the definition of done (M9.17).
 
