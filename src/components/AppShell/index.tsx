@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { covenHome, shellHome } from '../../lib/shell-home';
@@ -22,7 +23,12 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
   // the first entry here, for everyone, and the nav stops being admin-only.
   const links: SiteLink[] = viewer.isAdmin
     ? [
-        { label: 'Your Coven', href: covenHome(workspaces, viewer.canCreate), base: '/coven' },
+        {
+          label: 'Your Coven', // Cast: typedRoutes lists `/coven/[slug]` as a pattern, which
+          // a string built from a slug does not match.
+          href: covenHome(workspaces, viewer.canCreate) as Route,
+          base: '/coven',
+        },
         { label: 'Admin', href: '/admin', base: '/admin' },
       ]
     : [];

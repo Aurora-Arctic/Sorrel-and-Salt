@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -102,7 +103,7 @@ describe('AccountMenu', () => {
         name="Fixture Owner"
         verified
         links={[
-          { label: 'Your Coven', href: '/coven/fixture-coven', base: '/coven' },
+          { label: 'Your Coven', href: '/coven/fixture-coven' as Route, base: '/coven' },
           { label: 'Admin', href: '/admin', base: '/admin' },
         ]}
       />,

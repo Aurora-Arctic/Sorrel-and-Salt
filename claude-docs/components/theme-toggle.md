@@ -1,7 +1,9 @@
 # ThemeToggle
 
 `src/components/ThemeToggle/` — the light/dark switch, and the only component
-that writes the theme attribute.
+that writes the theme attribute. It has two variants (MB.7): the `corner`
+disc pinned to the window, and the `inline` disc in the application shell's
+bar and, at a phone's width, in the account panel.
 
 ## Shared contract
 
@@ -115,8 +117,8 @@ of the app shares, so it is not a token.
   scale carries the hover and lands the same in both themes without forking a
   second hover colour per theme. It rides the shared `theme-transition()`
   duration/easing, and `reduced-motion` zeroes it with the rest.
-- **`z-index: 2`, above the tucked impersonation banner** (MB.53), which is
-  `z-index: 1` where a pointer can hover and runs the window's width beneath
+- **`z-index: layer('toggle')`, above the tucked impersonation banner** (MB.53),
+  which is `layer('banner')` where a pointer can hover and runs the window's width beneath
   this corner. The toggle stays reachable while the banner is open, and
   pointing at it never opens the banner
   ([`impersonation-banner.md`](impersonation-banner.md)).
@@ -129,6 +131,31 @@ of the app shares, so it is not a token.
   page's flow at the very top, the toggle starts below it
   ([`styling.md`](../styling.md), "The top inset").
 
+## Variants (MB.7)
+
+`variant?: 'corner' | 'inline'` (default `corner`, unchanged) and
+`size?: 'default' | 'small'` (inline only). The markup, the two knotwork
+facets, the swap animation and `aria-pressed` are the same in both; only the
+look differs.
+
+- **`corner`** is what the root layout mounts for every page. The root layout
+  is session-free, so it cannot know a page has the shell around it. The
+  shell has its own disc in the bar, so the toggle's stylesheet hides the
+  corner on those pages: `body:has(.app-shell) > .theme-toggle--corner`.
+- **`inline`** is a 2rem round disc of `$accent` in the page's flow: no
+  `position: fixed`, no clip-path. The button is transparent and padded out to
+  `$control-height`, so the target is a finger's; the disc (`.theme-toggle__disc`,
+  `overflow: hidden`, `border-radius: 50%`) clips the facet as it swings out. The
+  facets are 1.1875rem. The focus ring is drawn on the disc. Hover is
+  `$accent-hover`, with no scale.
+- **`small`** is the 1.75rem disc with 1.0625rem facets, beside the "Theme"
+  label in the phone account panel.
+- **Two instances are never both visible**: the bar's is hidden at or under
+  `$shell-phone-width` and the panel's row shown only there. Each reads the
+  theme when it mounts, so resizing across the width after toggling in the
+  other leaves the hidden one's facets stale until it next mounts (the panel
+  mounts on opening). The attribute on `<html>` is always right.
+
 ## Stories
 
 [`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx) —
@@ -139,6 +166,7 @@ four renders, no test ids and no snapshots; behaviour is asserted in
 - **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which the
   decorator honours over the toolbar. Light shows the solar-disc facet and
   `aria-pressed="true"`; Dark the crescent and `aria-pressed="false"`.
+- **Inline** / **InlineSmall** — the shell's disc and the panel's.
 - **ReducedMotion** — `.meta = { reducedMotion: true }`, which the workshop
   decorator (`.ladle/components.tsx`) reads to simulate
   `prefers-reduced-motion: reduce`: it patches `window.matchMedia` to match and
@@ -152,7 +180,8 @@ four renders, no test ids and no snapshots; behaviour is asserted in
 click-to-dark with storage persistence, `aria-pressed` (mounted in light mode
 too), and the light system preference that never stamps `data-theme`: the
 first click going dark, and `aria-pressed` true on mount; and, with nothing
-stored and no preference, the first click going light. The facets' animation
+stored and no preference, the first click going light; and the inline
+variant, at either size, switching the theme as the corner does. The facets' animation
 — their classes, the `transitionend` park and the reduced-motion branch — is
 presentation, and no test asserts it. All queries are by role and accessible
 name.
