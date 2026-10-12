@@ -119,9 +119,10 @@ already above them.
 
 None of its own: the form is `.filter-row` ([`styling.md`](../styling.md),
 "Form fields"), the row the five lists' `__search` rules were, and the
-fields are the primitives'. The row is inset by `$table-cell-inset`, the
-admin table's cell padding, so each label stands flush with the column
-heading beneath it. The search, its first child, starts at
+fields are the primitives'. The row runs edge to edge with the table
+beneath it, the owner's call at MB.115's review, so its boxes reach the
+bands' edges; a label stands a cell inset left of the heading text under
+it. The search, its first child, starts at
 `$filter-search-basis` (16rem) and grows into the line's spare room, so the
 row reaches the table's width. Clear, `.filter-row__clear`, is a plain link
 in the page's link style, pushed to the line's end at a control's height.

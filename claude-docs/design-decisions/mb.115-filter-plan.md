@@ -2,7 +2,7 @@
 
 # MB.115: the admin filter row applies on change
 
-**As built (2026-10-12):** the focus restore below is not how it was done. A row drawn in the browser gets fresh `useId` ids, so `useApplyFilter` only marks that the focus is wanted back; the old row reads the focused control as it unmounts (a type-ahead applies on blur, when nothing is focused), and the new row refocuses the control at the same position once the list has arrived. The live account is [`filter-form.md`](../components/filter-form.md).
+**As built (2026-10-12):** the focus restore below is not how it was done. A row drawn in the browser gets fresh `useId` ids, so `useApplyFilter` only marks that the focus is wanted back; the old row reads the focused control as it unmounts (a type-ahead applies on blur, when nothing is focused), and the new row refocuses the control at the same position once the list has arrived. The live account is [`filter-form.md`](../components/filter-form.md). Later the same day the owner had the row run edge to edge with the table rather than take its cell inset, so the labels now stand a cell inset left of the heading text.
 
 ## Context
 
