@@ -13,7 +13,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.7   | Application nav shell                                                                                                    | Wave 9  | M8.16, M8.17           |
 | MB.8   | Zod schema for spells                                                                                                    | Wave 13 | M10.10                 |
 | MB.9   | `ingredientsById` DataLoader                                                                                             | Wave 11 | M8.5, M9.4             |
-| MB.10  | `usersById` display-name DataLoader                                                                                      | Wave 9  | M6.18                  |
+| MB.10  | `usersById` display-name DataLoader                                                                                      | Wave 9  | M6.11, M6.12, M6.18    |
 | MB.11  | GraphQL field exposing the fuzzy duplicate service                                                                       | Wave 8  | M5.10                  |
 | MB.12  | Finish the secrets matrix and verify real OAuth sign-in                                                                  | Wave 6  | M2.3                   |
 | MB.13  | Stop branch skills setting the base branch as upstream                                                                   | Wave 2  | —                      |
@@ -253,7 +253,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 9  | MB.249                 |
 | MB.248 | The compendium seed: stones and metals                                                                                   | Wave 9  | MB.249                 |
 | MB.249 | Close the compendium seed                                                                                                | Wave 9  | —                      |
-| MB.251 | Call the planets Celestial Bodies wherever a person reads them                                                           | Wave 8  | —                      |
+| MB.251 | Call the planets Celestial Bodies wherever a person reads them                                                           | Wave 8  | MB.253, MB.254         |
 | MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9  | MB.253                 |
 | MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9  | MB.254                 |
 | MB.254 | Drop the planet columns and view                                                                                         | Wave 9  | —                      |
@@ -1129,21 +1129,33 @@ _Acceptance criteria:_
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
-**MB.249 — Close the compendium seed** · 1h
+**MB.249 — Close the compendium seed** · 3h
 
 _Story:_ As the owner, I want the seeded compendium counted against the candidate list and every entry shown to be sourced, so that I know what the 614 became and what was left out.
 
-Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten, after all six shards have merged. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner. The hour is an estimate, calibrated against MB.223 (1h).
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten. It starts after each shard's final part has merged, not merely after each shard's first PR: five shards, `plants-a-cn`, `plants-co-k`, `plants-l-q`, `plants-r-z` and `stones-and-metals`, merged as part 1 only, as each one's doc under `claude-docs/db/compendium-seed/` says, and only `resins-woods-and-other` is whole. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner.
+
+**Staging is brought back in line with the literal.** The seed writes an entry once and skips it, with everything beneath it, on every later run (`claude-docs/db/compendium-seed/README.md`, "Write-once, and how a correction lands"). So an edit to a shard's literal made after a deploy seeded that entry never reaches staging. Two edits made during MB.115 are of that kind: commit `2aa282b5` rewrote 1,078 seed locator lines from "s.v." to "under", and `f007a51b` relinked Almond's Nut form from Apricot as a whole to Apricot's Seed form, since a form's linked substitute now names a form ([`design-decisions/mb.115-variant-substitutes-name-a-form.md`](../design-decisions/mb.115-variant-substitutes-name-a-form.md)). Any entry staging seeded before those commits still holds the old locators and the whole-ingredient link. This task lists what differs on staging and repairs it, by one of two routes, chosen and argued in the PR body: a correction list an admin works through on staging's compendium page, which is the README's own rule for a correction, or a one-off step that re-applies those two edits to entries already present. Staging's database has not been read for this entry, so the size of the drift is unknown until the task lists it.
+
+**The deploy and the seed say what they did.** `.github/workflows/deploy.yml` re-seeds only when a file on its watch list changed, and the list omits `src/db/seed/standard.ts`, which `compendium.ts` and `compendium/guard.ts` import `identityOf` from; the task adds it. `scripts/db-seed.ts` prints one fixed line for the compendium, so a deploy log cannot tell how many entries a run added; the seed prints the entries it inserted and the entries it skipped. And a seeded entry can stay out of the public pages for up to an hour, because the compendium reads are cached under the `compendium` tag for `COMPENDIUM_REVALIDATE_SECONDS` (3600, `src/lib/compendium-cache.ts`) and only an admin write clears the tag; the tag is revalidated after a seed run, and how is part of this task's scoping.
+
+The hours were re-estimated on review on 2026-10-12, from 1: the staging repair, the deploy and seed changes and two more tests join the reconciliation. They remain an estimate.
 
 Tests are written first:
 
 - every seeded entry has at least one live `reference_links` row on its `ingredient_id`
+- the seeded entries reconcile against `claude-docs/db/compendium-seed/candidates.md`, each candidate row seeded or listed as left out, read from the doc itself (no test reads it today)
+- the "runs after the standard scenario" test in `tests/db/seed/compendium.test.ts`, which runs `seedCompendium` once, runs it twice and asserts the second run inserts nothing
 
 _Acceptance criteria:_
 
 - The seeded, left-out and candidate counts are recorded and reconcile
-- The test above is green over the full `COMPENDIUM`
+- The tests above are green over the full `COMPENDIUM`
 - On staging, the admin compendium page's unsourced filter shows no seeded entry
+- On staging, every entry seeded before MB.115's two edits carries the literal's locators and links, and the PR body names the route taken
+- `src/db/seed/standard.ts` is on the deploy's re-seed watch list
+- A compendium seed run prints how many entries it inserted and how many it skipped
+- An entry a seed run adds shows on the public compendium without waiting for the hour's revalidation
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
 **MB.251 — Call the planets Celestial Bodies wherever a person reads them** · 3h
@@ -1161,46 +1173,92 @@ _Acceptance criteria:_
 - DESIGN.md, CLAUDE.md and the docs naming the screen or URL are corrected, and the divergence is recorded with the tasks that end it
 - The touched component tests and the `admin.spec.ts` and `admin-compendium.spec.ts` e2e specs pass under the new names
 
-**MB.252 — The celestial bodies table and columns, beside the planet ones** · 2h
+**MB.252 — The celestial bodies table and columns, beside the planet ones** · 5h
 
 _Story:_ As a developer, I want the celestial-body table and columns in place before any code reads them, so that the switch from the planet names is a code change against objects that already exist.
 
-Table task, the expand half of rule 10 ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). The `planets` table is renamed `celestial_bodies`, and a view named `planets` over it keeps the code that is live during the rollout working. `ingredients` and `ingredient_variants` gain a nullable `celestial_bodies text[]`, and `reference_links` a `celestial_body_id` with its foreign key and partial unique index. `reference_links_one_row` is re-added with the new column in place of `planet_id`, and the migration fills every new column from its old one. Scoped first, because no table has been renamed here before: whether the view serves every statement the live code sends, and whether the table's index and constraint names move now or at the contract, given `planets_slug_unique` is named in the astrology service. The RENAME and the CHECK's drop carry an `.ack.md` sidecar.
+Table task, the expand half of rule 10 ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). The `planets` table is renamed `celestial_bodies`, and a view named `planets` over it keeps the code that is live during the rollout working. `ingredients` and `ingredient_variants` gain a nullable `celestial_bodies text[]`, and `reference_links` a `celestial_body_id` with its foreign key and partial unique index, `reference_links_celestial_body_unique`. The migration fills every new column from its old one. Scoped first, because no table has been renamed here before: whether the view serves every statement the live code sends.
+
+**The one-row CHECK counts either column during the expand.** `reference_links_one_row`, the CHECK that a link names exactly one sourced row, today counts `planet_id` (`src/db/migrations/0063_variant-children.sql`). It is re-added counting `coalesce(celestial_body_id, planet_id)` in that place: `num_nonnulls(ingredient_id, deity_id, deity_tradition_id, coalesce(celestial_body_id, planet_id), zodiac_sign_id, ingredient_variant_id) = 1`. Two kinds of row need it. The sources seed still writes a planet link with `planet_id` alone (`add('planetId', …)` in `src/db/seed/sources.ts`), under the code before this task and under this task's own, so a CHECK counting `celestial_body_id` alone would refuse every such row and fail the sources seed test and `db:reset` on this task's own CI. And the fill leaves both columns set on every existing link, which a CHECK counting both columns would refuse. The schema file builds this CHECK from the `SOURCED` registry in `src/modules/ingredients/schema/reference-links.ts`, so the expand form is spelled out there by hand. The strict form, counting `celestial_body_id` alone, is MB.254's.
+
+**The schema declares the renamed table, and four catalogue tests move with it.** `src/modules/vocabulary/schema/astrology.ts` declares `pgTable('celestial_bodies')` under its existing `planets` export, so this task's code reaches the table itself and only the deploy before it goes through the view. Each test below was read for this entry:
+
+- `tests/db/schema-drift.test.ts` lists only tables (`relkind in ('r', 'p')`) and compares each table's foreign-key names and target table with the schema's. A view is out of its sight, so the renamed table must be declared under its new name. Its `PENDING_DROPS` list, the objects the schema has stopped declaring and a later task drops, has the kinds `column`, `index`, `check`, `foreignKey` and `table` and none for a view; this task adds a `view` kind, checked against the catalogue as the others are, and lists `planets` for MB.254 to drop.
+- `tests/db/audit-columns.test.ts` reads `information_schema.columns`, which lists a view's columns as well as a table's, so the `planets` view would count as a stamped table beside `celestial_bodies` and the comparison with the transcribed list, held at 27 by `toHaveLength(27)`, fails. It reads base tables only, and the count stays 27.
+- `tests/support/db/table-metadata.ts`'s `AUDITED_TABLES` names `planets`, and names `celestial_bodies` instead. The `set_updated_at` trigger moves with the table, since a rename keeps a table's triggers, so `tests/db/updated-at-trigger.test.ts`, which reads that list, passes with the edit, and `claude-docs/db/updated-at.md`'s list of tables follows it.
+- `tests/db/partial-unique-indexes.test.ts` fails on any partial unique index it has not classified, so `reference_links_celestial_body_unique` gets a row beside `reference_links_planet_unique`.
+
+**Foreign keys are renamed here; the table's indexes and CHECK keep their names until MB.253.** Drizzle names a foreign key from its table and the table it points at, and the drift test compares those names, so the four that carry `planets` move now (`src/db/migrations/meta/0066_snapshot.json`): `planets_created_by_users_id_fk`, `planets_updated_by_users_id_fk` and `planets_deleted_by_users_id_fk` become `celestial_bodies_…`, and `reference_links_planet_id_planets_id_fk` becomes `reference_links_planet_id_celestial_bodies_id_fk`. No code names a foreign key. The table's indexes and CHECK, `planets_seed_key_unique`, `planets_slug_unique`, `planets_trgm` and `planets_description_not_blank`, keep their names: `vocabularyIndexes` in `src/db/schema-parts.ts` takes the name prefix as an argument, so the schema declares them as they stand. That keeps the friendly duplicate-slug error working through the rollout. The astrology service maps a unique violation on `slugIndex: 'planets_slug_unique'` to that error (`src/modules/vocabulary/services/astrology.ts`, compared in `curated-writes.ts`), and the deploy before this one goes on meeting the name it knows. This task's code maps both `planets_slug_unique` and `celestial_bodies_slug_unique`, though `slugIndex` holds one string today, so that MB.253 can rename the four while this deploy is live. The table and constraint `RENAME`s and the CHECK's drop carry an `.ack.md` sidecar, since `scripts/check-destructive-ddl.ts` flags any `rename`.
+
+The hours were re-estimated on review on 2026-10-12, from 2: the repo's first table rename, a view, a hand-written CHECK, four renamed foreign keys and four catalogue tests. They remain an estimate.
 
 _Acceptance criteria:_
 
 - `celestial_bodies` holds the rows, and the `planets` view reads and writes them, asserted from the catalogue and by a write through the view
 - The three new columns exist, and every row with a value in an old column carries it in the new one, asserted against the seeded template
-- `reference_links_one_row` counts `celestial_body_id` and no longer counts `planet_id`
+- `reference_links_one_row` counts `coalesce(celestial_body_id, planet_id)`: a link with `planet_id` alone saves, and so does a filled link holding both, asserted by insert
+- The sources seed test and `npm run db:reset` pass with the sources seed unchanged
+- The schema declares `celestial_bodies`; `AUDITED_TABLES` names it in place of `planets`; the schema-drift, audit-columns, updated-at trigger and partial-unique tests pass; and `PENDING_DROPS` holds the `planets` view under a `view` kind
+- The table's three audit foreign keys and `reference_links`' planet foreign key carry `celestial_bodies` in their names, the table's indexes and CHECK still carry `planets_`, and a duplicate slug returns the friendly error under either slug index name
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
-- Nothing reads the new names yet
+- Nothing reads or writes the new columns yet
 
-**MB.253 — Read and write celestial bodies under their own names** · 5h
+**MB.253 — Read and write celestial bodies under their own names** · 8h
 
 _Story:_ As a developer, I want the code and the API to say celestial bodies where the screens do, so that no one has to know that "planet" in the code means a celestial body.
 
-Switches every reader and writer to MB.252's table and columns, and renames the code and GraphQL names in the same PR, since every line it touches is one the rename touches too ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). GraphQL's `Planet`, `PlanetInput`, `createPlanet`, `updatePlanet`, `deletePlanet`, `planets` and `planetSuggestions` become `CelestialBody`, `CelestialBodyInput`, `createCelestialBody`, `updateCelestialBody`, `deleteCelestialBody`, `celestialBodies` and `celestialBodySuggestions`, and the `planets` field on ingredients, variants and their inputs `celestialBodies`. The TypeScript follows: `kind: 'celestialBody'`, `CuratedField`, `FLAT`, `IN_USE`, `PLANETS`, the seed shards' `planets:` entries, the MSW mocks, codegen and the SDL snapshot. The Drizzle schema stops declaring the old columns, which join `PENDING_DROPS`, and the migration fills the new ones again for any row the live deploy wrote after MB.252. The hours are an estimate, calibrated against MB.136 (3h) plus the rename's mechanical churn.
+Switches every reader and writer to MB.252's table and columns, and renames the code and GraphQL names in the same PR, since every line it touches is one the rename touches too ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). GraphQL's `Planet`, `PlanetInput`, `createPlanet`, `updatePlanet`, `deletePlanet`, `planets` and `planetSuggestions` become `CelestialBody`, `CelestialBodyInput`, `createCelestialBody`, `updateCelestialBody`, `deleteCelestialBody`, `celestialBodies` and `celestialBodySuggestions`, and the `planets` field on ingredients, variants and their inputs `celestialBodies`. The TypeScript follows: `kind: 'celestialBody'`, `CuratedField`, `FLAT`, `IN_USE`, `PLANETS`, the seed shards' `planets:` entries, the MSW mocks, codegen and the SDL snapshot. The Drizzle schema stops declaring the old columns, and the migration fills the new ones again for any row the live deploy wrote after MB.252.
+
+**What joins `PENDING_DROPS`.** The three columns, `ingredients.planets`, `ingredient_variants.planets` and `reference_links.planet_id`, and with the last its foreign key and its partial unique index: `reference_links_planet_id_celestial_bodies_id_fk`, the name MB.252 gives `reference_links_planet_id_planets_id_fk`, and `reference_links_planet_unique`. The drift test compares both kinds, so each needs its line until MB.254 drops it.
+
+**The table's indexes and CHECK are renamed here.** MB.252 left `planets_seed_key_unique`, `planets_slug_unique`, `planets_trgm` and `planets_description_not_blank` under their old names so that the deploy before it kept its friendly duplicate-slug error. This task's migration renames them to `celestial_bodies_…`, with an `.ack.md` sidecar for the `RENAME`s, which is safe because MB.252's deploy maps both slug index names. This task's `slugIndex` names the new one alone, since a rollback lands on MB.252's code, which maps both.
+
+**The seed is a larger surface than the plan counted.** A grep on 2026-10-12 finds 281 `planets:` keys and 435 `'planets'` string literals, most of the literals the field names in each reference's `supports` list. They sit in the pilot and the six compendium shards under `src/db/seed/compendium/`, and in `src/db/seed/compendium.ts`, `compendium/guard.ts`, `sources.ts`, `standard.ts` and `types.ts`. The scoping plan counted "about 260 `planets:` entries in the seed shards" and none of the literals.
+
+**Raw-SQL test helpers name the old column too.** `tests/support/db/read-variants.ts` selects `planets`, and `tests/db/seed/sources.test.ts` selects `l.planet_id` and joins `planets` on it. Neither passes through the schema, so the type checker does not find them.
+
+**The docs that name the table, its columns or the GraphQL names move in this task.** A grep on 2026-10-12 finds them in `claude-docs/graphql/schema.md`; `claude-docs/components/ingredient-form.md`; eleven `claude-docs/db/*.md` files besides `updated-at.md`, which MB.252 corrects (`astrology-vocabularies.md`, `astrology-vocabulary-seed.md`, `compendium-cache.md`, `compendium-writes.md`, `deity-vocabulary-seed.md`, `deity-vocabulary.md`, `identity-model.md`, `member-autofill.md`, `migrations-and-scripts.md`, `references.md`, `seed-module.md`); the compendium seed's README, the pilot's doc and the six shard docs under `claude-docs/db/compendium-seed/`; `db.md`, `modules.md`, `validation.md`, `commands.md` and `ci/deploy.md`; and DESIGN.md's schema and SDL names, leaving MB.251's divergence notes for MB.254. A passage recording what an earlier task did stays as written, as do the decision records.
+
+The hours were re-estimated on review on 2026-10-12, from 5: the seed's 716 occurrences, the index renames and their sidecar, the two raw-SQL helpers and 27 docs come on top of the calibration against MB.136 (3h) plus the rename's mechanical churn. They remain an estimate.
 
 _Acceptance criteria:_
 
 - The SDL names no planet, and the snapshot and `src/gql` move with it
 - Every reader and writer uses `celestial_bodies` and the new columns, and nothing declares or reads the old ones, which still exist
 - A value written to an old column after MB.252's migration is in the new column after this one's
+- `PENDING_DROPS` lists the three old columns, `reference_links_planet_id_celestial_bodies_id_fk` and `reference_links_planet_unique`, and the drift test passes
+- The table's indexes and CHECK carry `celestial_bodies_`, the migration's sidecar covers the renames, the destructive-DDL check passes, and a duplicate slug returns the friendly error
 - Suggestions still count a value in use once however many lists hold it, scoped to the compendium and this coven, asserted with the precondition that another coven holds the value
-- No identifier, test name or comment under `src/` or `tests/` says planet, bar the migration history and `PENDING_DROPS`
+- No identifier, test name, comment, seed literal or raw-SQL helper under `src/` or `tests/` says planet, bar the migration history and `PENDING_DROPS`
+- The live docs listed above name the new table, columns and GraphQL names
 
-**MB.254 — Drop the planet columns and view** · 1h
+**MB.254 — Drop the planet columns and view** · 2h
 
 _Story:_ As a developer, I want the retired planet columns and view gone, so that nothing can write a value the app no longer reads.
 
-The contract half of rule 10, a task of its own ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). Once a release carrying MB.253 has reached production, the migration drops `ingredients.planets`, `ingredient_variants.planets`, `reference_links.planet_id` and the `planets` view, with its `.ack.md` sidecar, and `PENDING_DROPS` empties. Production is the gate rather than staging because the release before MB.253 still reads the old columns. The divergence notes MB.251 added to DESIGN.md and CLAUDE.md go in the same PR.
+The contract half of rule 10, a task of its own ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). Once a release carrying MB.253 has reached production, the migration drops `ingredients.planets`, `ingredient_variants.planets`, `reference_links.planet_id` with its foreign key and unique index, and the `planets` view, with its `.ack.md` sidecar, and `PENDING_DROPS` empties, its `view` line included. Production is the gate rather than staging because the release before MB.253 still reads the old columns. The divergence notes MB.251 added to DESIGN.md and CLAUDE.md go in the same PR.
+
+**One last fill for the links, none for the lists.** Between MB.253's migration and its code going live, the deploy before it can still write the old columns, and nothing copies those writes across. The two kinds of column are treated differently, each under its own precedent:
+
+- **`reference_links.planet_id` is filled one last time.** Before the drop, the migration copies `planet_id` into `celestial_body_id` on every link, live or removed, that holds the first and not the second. MB.253's code never writes `planet_id`, so such a row can only be a write from the deploy before it, and the copy only adds: it never overwrites a value MB.253's code wrote. Without it, the strict CHECK below could not be added over a link whose only key was `planet_id`. MB.141's `0039_drop-substitutes-list.sql` is the precedent, a refill that only adds before the drop.
+- **The two list columns get no last fill**, as MB.137's `0036_drop-ingredient-singles.sql` gave its single columns none. MB.253's code edits the new lists, and a cleared list is stored as NULL (`claude-docs/validation.md`), so an old list beside a NULL new one may be a member's clear rather than a missed write, and a fill would undo it.
+
+**The strict one-row CHECK lands here.** The migration re-adds `reference_links_one_row` counting `celestial_body_id` alone, in place of MB.252's `coalesce(celestial_body_id, planet_id)`, so the schema file builds it from the `SOURCED` registry again.
+
+**The wave stays open across a production release.** This task merges into `staging` only after a release carrying MB.253 has reached production (`claude-docs/db/expand-contract.md`, "Expand/contract and the destructive-DDL check"). Under Gitflow, a merge to `staging` before then would ride the same release as MB.253 and drop the columns under the deploy that release replaces. So Wave 9 cannot close until that release has gone out and this task has merged after it.
+
+The hours were re-estimated on review on 2026-10-12, from 1: the links' last fill and the strict CHECK, each with its test, join the drop. They remain an estimate.
 
 _Acceptance criteria:_
 
 - The three columns and the view are gone, and the new columns hold every value they held
+- A link that held `planet_id` alone before the migration holds the same id in `celestial_body_id` after it, live or removed, and a link that already held a `celestial_body_id` is unchanged
+- A list whose old column held a value and whose new column was NULL is still NULL after the migration, and the PR body names MB.137's precedent
+- `reference_links_one_row` counts `celestial_body_id` alone, and a link naming no sourced row is refused
+- `PENDING_DROPS` is empty
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
 - DESIGN.md and CLAUDE.md no longer record a planet divergence
-- Lands only after a release carrying MB.253 has reached production
+- Lands only after a release carrying MB.253 has reached production, and Wave 9 stays open until it has
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -1307,12 +1365,20 @@ _Story:_ As a workspace member, I want the last-edited-by name resolved efficien
 
 M6.18 requires the display name to resolve "without an N+1" and no loader existed.
 
+**It lands before M6.11 and M6.12, which consume it** (moved on the Wave 9 review, 2026-10-12): `MemberList` shows each member's display name, and the SDL's `WorkspaceMember` has no `user` field to carry one. M6.18, the first consumer it was minted for, moves to Wave 12.
+
+**It resolves display names for co-members only**, the users who share a workspace with the viewer. Any other id resolves to nothing, so the loader cannot be used to read a stranger's name.
+
+**It sits beside `usersByIdForAdmin`, with a different null rule, rather than replacing it.** That loader (`src/modules/identity/loaders/users-by-id-for-admin.ts`) serves the privilege ledger: its service, `usersForAdmin`, refuses anyone but a site admin, returns the whole user row, email included, and resolves to null for an id no live user holds. This one is gated to co-members, returns the display name alone, and gives a deleted user a stable display value instead of null. One loader serving both would carry two gates and two null rules behind a switch.
+
 _Acceptance criteria:_
 
 - One query per batch, asserted by query count
 - Constructed per request
 - Returns display name only, never the email address
+- Resolves a co-member's name, and nothing for a user who shares no workspace with the viewer, asserted with the precondition that the user exists and has a name
 - A deleted user still resolves to a stable display value
+- `usersByIdForAdmin` is unchanged
 
 **MB.11 — GraphQL field exposing the fuzzy duplicate service** · 1h
 
@@ -3544,11 +3610,11 @@ _Acceptance criteria:_
 
 _Story:_ As a coven member, I want the coven's pages to feel like one place I belong to, so that finding members and inviting someone is obvious.
 
-Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last owner's guided exit (M6.14 to M6.16), last-edited-by on ingredient rows (M6.18), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.122's.
+Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last owner's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.122's.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), and is the frame for the coven create page too: a form page with no AppShell (`styling.md`, "The page frame"). Every notice in the section shows through `Notice` (`components/notice.md`).
+_Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), a page with no AppShell (`styling.md`, "The page frame"). The create-workspace form is not one of those: it is M9.16, a page inside the AppShell, which wraps every signed-in page (MB.7), so it takes no page frame, and its narrower column is the form's own choice (`styling.md`, the measure). Every notice in the section shows through `Notice` (`components/notice.md`).
 
 _Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/admin/(people)/invitations/`), the owner's call during MB.115.
 
@@ -3589,7 +3655,7 @@ _Acceptance criteria:_
 
 _Story:_ As a coven member, I want the ingredients page to make stock easy to scan and edit, so that keeping it current is quick.
 
-Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — inline row editing (M9.9), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
+Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — inline row editing (M9.9), last-edited-by on its rows (M6.18, moved here from MB.119 when it moved to Wave 12 on 2026-10-12), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
