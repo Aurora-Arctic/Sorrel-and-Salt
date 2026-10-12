@@ -1,52 +1,47 @@
 'use client';
 
 import { type ReactElement, useState } from 'react';
-import { SwitchField } from '../Field';
-import FilterForm from '../FilterForm';
+import { SearchField, SwitchField } from '../Field';
+import FilterForm, { useApplyFilter } from '../FilterForm';
 import { userListHref } from './href';
 import type { UserRole } from '../../lib/session';
 import type { UserListFilterProps } from './types';
 
-// The filter's fields (MB.52), in the shared `FilterForm`, which offers
-// Filter only when they differ from the filter the page shows (MB.53, on the
-// owner's word) and opens the new filter as a full load from the first page,
-// as the pager's plain anchors do, busy until the page goes. Before hydration
-// the form submits natively, its Needs Approval switch, a native checkbox, as
-// `awaiting=`, which the page reads the same as the bare flag. The role is a
-// native `<select>`, so it submits before hydration too, its "All Roles" as
-// `role=`, which the page reads as no role.
+// The user list's filter (MB.52, MB.115), in the shared `FilterForm`. Only
+// the search text is held here, until the magnifier or Enter sends it. The
+// role select and the Needs Approval switch are uncontrolled and apply the
+// moment they change, softly and from the first page, carrying the search
+// text along, so there is no Filter button to press. Before hydration the
+// form submits natively: the switch, a native checkbox, as `awaiting=`, which
+// the page reads the same as the bare flag, and the role select, whose "All
+// Roles" is `role=`, which the page reads as no role.
 const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(query);
-  const [draftAwaiting, setDraftAwaiting] = useState(awaitingApproval);
-  const [draftRole, setDraftRole] = useState<UserRole | ''>(role ?? '');
+  const apply = useApplyFilter();
+  const applying = (change: { awaitingApproval?: boolean; role?: UserRole | undefined }) =>
+    apply(
+      userListHref({
+        query: draftQuery.trim(),
+        awaitingApproval,
+        role,
+        ...change,
+      }),
+    );
 
   return (
     <FilterForm
       label="Filter Users"
       action="/admin/users"
-      searchHref={() =>
-        userListHref({
-          query: draftQuery.trim(),
-          awaitingApproval: draftAwaiting,
-          role: draftRole || undefined,
-        })
-      }
+      searchHref={() => userListHref({ query: draftQuery.trim(), awaitingApproval, role })}
       shown={[query, role, awaitingApproval]}
     >
-      <div className="field">
-        <label className="field__label" htmlFor="user-list-query">
-          Name or Email
-        </label>
-        <input
-          id="user-list-query"
-          className="input"
-          type="search"
-          name="query"
-          placeholder="Search users"
-          value={draftQuery}
-          onChange={(event) => setDraftQuery(event.target.value)}
-        />
-      </div>
+      <SearchField
+        label="Name or Email"
+        name="query"
+        placeholder="Search users"
+        value={draftQuery}
+        onChange={setDraftQuery}
+      />
       <div className="field">
         <label className="field__label" htmlFor="user-list-role">
           Role
@@ -55,8 +50,8 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
           id="user-list-role"
           className="select"
           name="role"
-          value={draftRole}
-          onChange={(event) => setDraftRole(event.target.value as UserRole | '')}
+          defaultValue={role ?? ''}
+          onChange={(event) => applying({ role: (event.target.value || undefined) as UserRole })}
         >
           <option value="">All Roles</option>
           <option value="admin">Admin</option>
@@ -67,8 +62,8 @@ const UserListFilter = ({ query, awaitingApproval, role }: UserListFilterProps):
         label="Needs Approval"
         name="awaiting"
         value=""
-        checked={draftAwaiting}
-        onChange={setDraftAwaiting}
+        defaultChecked={awaitingApproval}
+        onChange={(checked) => applying({ awaitingApproval: checked })}
       />
     </FilterForm>
   );

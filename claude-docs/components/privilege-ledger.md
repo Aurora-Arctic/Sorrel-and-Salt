@@ -31,18 +31,17 @@ id.
   ([`user-list.md`](user-list.md)): a search box labelled "Name or Email"
   (`query`), matching part of the subject's name or email, a native Privilege
   dropdown (`privilege`: All Privileges, Admin or Coven Creation, in title
-  case as every label is), both on the owner's call, and a Filter button. It is `filter.tsx`, the one client file here:
-  the fields and their state inside the shared `FilterForm`
-  ([`filter-form.md`](filter-form.md)), so from the press until the full load
-  leaves the row is greyed and off and the list beneath it is the tabs'
+  case as every label is), both on the owner's call, and no Filter button (MB.115). It is `filter.tsx`, the one client file here:
+  the search text, held in state, inside the shared `FilterForm`
+  ([`filter-form.md`](filter-form.md)), so from the change until the new list
+  arrives the row is greyed and off and the list beneath it is the tabs'
   skeleton (MB.115; [`list-frame.md`](list-frame.md)). A native
   `<select>`, so before hydration the form still submits, All Privileges as
-  `privilege=`, which the page reads as no privilege. Filter is `disabled`
-  while the trimmed query and the dropdown match the filter shown, as the
-  user list's is (MB.53), and a submit opens the new filter from the first
-  page as a full load. Clear, offered while the page shows a query
-  or a privilege, opens `/admin/privilege-changes` with neither, as the
-  same full load, and while only the fields hold one empties them in place ([`filter-form.md`](filter-form.md)). `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
+  `privilege=`, which the page reads as no privilege. The dropdown is uncontrolled and applies the moment it
+  changes, and the search from its magnifier or Enter, each carrying the other, softly from the first
+  page, since every page under `/admin` runs the guard itself. Clear, offered
+  only while the page shows a query or a privilege, opens
+  `/admin/privilege-changes` with neither ([`filter-form.md`](filter-form.md)). The list keys the filter by the one shown, so a page showing another starts it again from that one. `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
   over the shared `listHref` (`src/lib/list-href.ts`), builds every address here, the
   submit's, the pager's and each `UserList` row's history link included:
   `?query=` and `?privilege=admin|create_workspace`. A user row's
@@ -101,9 +100,9 @@ Render-only, no test ids, no snapshots.
 
 `tests/components/PrivilegeLedger/index.test.tsx` covers each row's data,
 the links to the user rows and the people without one, the `<time>`, the
-filter's form, search, dropdown values, disabled and enabled Filter and the
-address it opens, Clear offered by a query or a privilege and off
-with neither, and the fields emptied in place when neither is applied, no table when there is nothing to show, and
+filter's form, search, dropdown values, no Filter button and the
+address a change or the magnifier opens, Clear offered by a query or a privilege and absent
+with neither, the row starting again from a filter shown anew, no table when there is nothing to show, and
 `privilegeLedgerHref`. Paging is Pager's.
 `tests/app/admin/(people)/privilege-changes/page.test.tsx` covers what the page hands
 it, and `tests/e2e/admin/privilege-changes.spec.ts` the page against the built

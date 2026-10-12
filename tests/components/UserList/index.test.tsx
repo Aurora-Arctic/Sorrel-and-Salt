@@ -1,11 +1,13 @@
+import type { ReactNode } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
+import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-const router = { refresh: vi.fn() };
+const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // jsdom implements no modal dialog; stood in for as a browser behaves.
@@ -237,47 +239,41 @@ describe('UserList impersonation', () => {
   });
 });
 
-// MB.53, on the owner's word: Filter is offered only when there is a new
-// filter to apply, and the address it opens carries a bare `awaiting`.
+// MB.115: the search applies from its magnifier or Enter, a role or Needs
+// Approval the moment it changes, each softly from the first page, with a
+// bare `awaiting`.
 describe('UserList filter', () => {
   afterEach(() => {
-    assignMock.mockReset();
-    vi.unstubAllGlobals();
+    router.push.mockReset();
   });
 
-  const filterButton = () => screen.getByRole('button', { name: 'Filter' });
+  const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
 
-  it('is disabled while the form matches the filter shown', () => {
-    render(<UserList {...props({ query: 'bo', awaitingApproval: true })} />);
+  it('offers no Filter button', () => {
+    render(<UserList {...props()} />);
 
-    expect(filterButton()).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument();
   });
 
-  it('enables once the query differs, and disables again when it is put back', () => {
-    render(<UserList {...props({ query: 'bo' })} />);
-    const box = screen.getByLabelText('Name or Email');
-
-    fireEvent.change(box, { target: { value: 'bob' } });
-    expect(filterButton()).toBeEnabled();
-
-    fireEvent.change(box, { target: { value: 'bo ' } });
-    expect(filterButton()).toBeDisabled();
-  });
-
-  it('opens the filtered page from the first, with a bare awaiting', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
-    render(<UserList {...props({ previousHref: '/admin/users?before=x' })} />);
+  it('opens the search from the first page on the magnifier, carrying the filter shown', async () => {
+    inFlight(
+      <UserList
+        {...props({ role: 'admin', awaitingApproval: true, previousHref: '/admin/users?before=x' })}
+      />,
+    );
 
     fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: ' Fixture B ' } });
-    fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
-    fireEvent.click(filterButton());
+    expect(router.push).not.toHaveBeenCalled();
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    });
 
-    expect(assignMock).toHaveBeenCalledWith('/admin/users?query=Fixture+B&awaiting');
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledWith('/admin/users?query=Fixture+B&awaiting&role=admin');
   });
 
-  it('narrows by role, from a native select that starts at the role shown', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
-    render(<UserList {...props({ role: 'admin' })} />);
+  it('narrows by role the moment it changes, from a native select that starts at the role shown', async () => {
+    inFlight(<UserList {...props({ role: 'admin' })} />);
 
     const role = screen.getByLabelText('Role');
     expect(role).toHaveValue('admin');
@@ -287,29 +283,48 @@ describe('UserList filter', () => {
         .getAllByRole('option')
         .map((option) => option.getAttribute('value')),
     ).toEqual(['', 'admin', 'user']);
-    expect(filterButton()).toBeDisabled();
 
-    fireEvent.change(role, { target: { value: 'user' } });
-    expect(filterButton()).toBeEnabled();
-    fireEvent.click(filterButton());
+    await act(async () => {
+      fireEvent.change(role, { target: { value: 'user' } });
+    });
 
-    expect(assignMock).toHaveBeenCalledWith('/admin/users?role=user');
+    expect(router.push).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledWith('/admin/users?role=user');
   });
 
-  it('opens the unfiltered list when the filter is cleared', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
-    render(<UserList {...props({ query: 'bo', awaitingApproval: true })} />);
+  it('carries the search text typed so far when a role changes', async () => {
+    inFlight(<UserList {...props()} />);
 
-    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: '' } });
-    fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
-    fireEvent.click(filterButton());
+    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: ' bo ' } });
+    await act(async () => {
+      fireEvent.change(screen.getByLabelText('Role'), { target: { value: 'user' } });
+    });
 
-    expect(assignMock).toHaveBeenCalledWith('/admin/users');
+    expect(router.push).toHaveBeenCalledWith('/admin/users?query=bo&role=user');
   });
 
-  // Clear is CompendiumList's to test; this asserts which of the
-  // list's values count as a filter, and its full load.
-  it('offers Clear to the unfiltered list while the query, a role or Needs Approval is shown', () => {
+  it('applies Needs Approval as a bare flag the moment it is switched, and off again', async () => {
+    inFlight(<UserList {...props()} />);
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
+    });
+
+    expect(router.push).toHaveBeenCalledWith('/admin/users?awaiting');
+  });
+
+  it('turns Needs Approval off to the list without the flag', async () => {
+    inFlight(<UserList {...props({ awaitingApproval: true })} />);
+    expect(screen.getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
+    });
+
+    expect(router.push).toHaveBeenCalledWith('/admin/users');
+  });
+
+  it('offers Clear to the unfiltered list only while the query, a role or Needs Approval is shown', () => {
     for (const filter of [{ query: 'bo' }, { role: 'user' as const }, { awaitingApproval: true }]) {
       const { unmount } = render(<UserList {...props(filter)} />);
 
@@ -318,52 +333,40 @@ describe('UserList filter', () => {
     }
 
     render(<UserList {...props()} />);
-    expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
   });
 
-  it('empties the query, the role and Needs Approval in place when none is applied yet', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
-    render(<UserList {...props()} />);
+  // The page renders again with another filter on Back or Forward; the row
+  // starts from it rather than from what was typed.
+  it('starts again from the filter shown when the page shows another', () => {
+    const { rerender } = render(<UserList {...props({ query: 'bo' })} />);
+    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'draft' } });
 
-    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'bo' } });
-    fireEvent.change(screen.getByLabelText('Role'), { target: { value: 'user' } });
-    fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
-    fireEvent.click(screen.getByRole('link', { name: 'Clear' }));
+    rerender(<UserList {...props({ query: 'ada', role: 'user', awaitingApproval: true })} />);
 
-    expect(assignMock).not.toHaveBeenCalled();
-    expect(screen.getByLabelText('Name or Email')).toHaveValue('');
-    expect(screen.getByLabelText('Role')).toHaveValue('');
-    expect(screen.getByRole('switch', { name: 'Needs Approval' })).not.toBeChecked();
-    expect(filterButton()).toBeDisabled();
+    expect(screen.getByLabelText('Name or Email')).toHaveValue('ada');
+    expect(screen.getByLabelText('Role')).toHaveValue('user');
+    expect(screen.getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
   });
 
-  it('clears the filter as a full load, the row off until the page goes', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+  // A soft navigation keeps the page's own code running, so the list is the
+  // tabs' skeleton, its one status, and the row is off until the page arrives.
+  it('puts a status in place of the list and turns the row off until the page arrives', async () => {
+    let arrive: () => void = () => undefined;
+    const arrives = new Promise<void>((resolve) => {
+      arrive = resolve;
+    });
     render(
-      <UserList {...props({ query: 'bo', previousHref: '/admin/users?query=bo&before=x' })} />,
+      <Navigating push={router.push} arrives={arrives}>
+        <UserList {...props()} />
+      </Navigating>,
     );
-    const clear = screen.getByRole('link', { name: 'Clear' });
-
-    fireEvent.click(clear);
-
-    expect(assignMock).toHaveBeenCalledWith('/admin/users');
-    expect(clear).toHaveAttribute('aria-disabled', 'true');
-    expect(filterButton()).toBeDisabled();
-  });
-
-  // The owner's call (MB.115): a full load has no transition to wait on, so
-  // the list is the tabs' skeleton, its one status, and the row is off from
-  // the press until the browser leaves; Back restoring the page from the
-  // cache brings the list back.
-  it('puts a status in place of the list and turns the row off from Filter until the page goes', () => {
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
-    render(<UserList {...props()} />);
     const row = screen.getByRole('form', { name: 'Filter Users' });
     const controls = () => [
       screen.getByLabelText('Name or Email'),
       screen.getByLabelText('Role'),
       screen.getByRole('switch', { name: 'Needs Approval' }),
-      filterButton(),
+      screen.getByRole('button', { name: 'Search' }),
     ];
     fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'ada' } });
     // Typing reads nothing: the list stays and the row is live.
@@ -371,27 +374,25 @@ describe('UserList filter', () => {
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(row).not.toHaveAttribute('aria-busy');
 
-    fireEvent.click(filterButton());
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
+    });
 
-    expect(assignMock).toHaveBeenCalledWith('/admin/users?query=ada');
+    expect(router.push).toHaveBeenCalledWith('/admin/users?query=ada');
     expect(screen.getByRole('status')).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
     expect(row).toHaveAttribute('aria-busy', 'true');
     for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
-    // A press on a field while the page goes changes nothing.
-    fireEvent.click(screen.getByRole('switch', { name: 'Needs Approval' }));
-    expect(screen.getByRole('switch', { name: 'Needs Approval' })).not.toBeChecked();
+    // A press while the page is on its way goes nowhere.
     fireEvent.submit(row);
-    expect(assignMock).toHaveBeenCalledTimes(1);
+    expect(router.push).toHaveBeenCalledTimes(1);
 
-    act(() => {
-      window.dispatchEvent(Object.assign(new Event('pageshow'), { persisted: true }));
+    await act(async () => {
+      arrive();
     });
 
     expect(screen.getByRole('table')).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(row).not.toHaveAttribute('aria-busy');
-    expect(controls().filter((control) => control.hasAttribute('aria-disabled'))).toEqual([]);
   });
 });
 

@@ -225,7 +225,12 @@ const UserList = ({
   adminChanges,
 }: UserListProps): ReactElement => (
   <ListFrame className="user-list">
-    <UserListFilter query={query} awaitingApproval={awaitingApproval} role={role} />
+    <UserListFilter
+      key={`${query}\n${role ?? ''}\n${awaitingApproval}`}
+      query={query}
+      awaitingApproval={awaitingApproval}
+      role={role}
+    />
 
     <ListBody>
       {users.length ? (

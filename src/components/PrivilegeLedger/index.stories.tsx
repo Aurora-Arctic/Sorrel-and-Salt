@@ -130,7 +130,7 @@ export const PhoneLight: Story = () => (
 );
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// The filtered ledger at a phone's width, Clear beside Filter.
+// The filtered ledger at a phone's width, Clear beneath the fields.
 const FilteredPhone = () => (
   <Frame>
     <OneUserAdminOnly />
