@@ -34,15 +34,12 @@ id.
   Coven Creation, in title case as every label is; a `FilterSelectField`,
   [`field.md`](field.md)), both on the owner's call, and no Filter button (MB.115). It is `filter.tsx`, the one client file here:
   the search text, held in state, inside the shared `FilterForm`
-  ([`filter-form.md`](filter-form.md)), so from the change until the new list
-  arrives the row is greyed and off and the list beneath it is the tabs'
-  skeleton (MB.115; [`list-frame.md`](list-frame.md)). A native
+  ([`filter-form.md`](filter-form.md#contracts)). A native
   `<select>`, so before hydration the form still submits, All Privileges as
-  `privilege=`, which the page reads as no privilege. The dropdown is uncontrolled and applies the moment it
-  changes, and the search from its magnifier or Enter, each carrying the other, softly from the first
-  page, since every page under `/admin` runs the guard itself. Clear, offered
+  `privilege=`, which the page reads as no privilege. The dropdown applies the moment it
+  changes, and the search from its magnifier or Enter, each carrying the other. Clear, offered
   only while the page shows a query or a privilege, opens
-  `/admin/privilege-changes` with neither ([`filter-form.md`](filter-form.md)). The list keys the filter by the one shown, so a page showing another starts it again from that one. `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
+  `/admin/privilege-changes` with neither. `href.ts`'s `privilegeLedgerHref`, a thin typed wrapper
   over the shared `listHref` (`src/lib/list-href.ts`), builds every address here, the
   submit's, the pager's and each `UserList` row's history link included:
   `?query=` and `?privilege=admin|create_workspace`. A user row's

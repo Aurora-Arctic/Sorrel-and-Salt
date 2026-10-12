@@ -29,13 +29,11 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   as `?email=fern&expiring`, `expiring` a bare flag read by its presence,
   so a native submit's `expiring=` reads the same; `href.ts`'s
   `invitationsHref(filter, cursor, invite)` builds every address the tab
-  links to, and its `INVITATIONS_PATH` is the form's action and Clear's. There is no Filter button: the email applies from its magnifier or
-  Enter, the switch the moment it changes, each carrying the other, and
-  both open the first page softly, since they name no cursor and every page
-  under `/admin` runs the guard itself; the row is greyed and the list a
-  skeleton until the new list arrives. Clear, offered only while a filter is
-  shown, opens `/admin/invitations`. The list keys the filter by
-  the one shown, so a page showing another starts it again from that one.
+  links to, and its `INVITATIONS_PATH` is the form's action and Clear's. The email applies from its magnifier or
+  Enter, the switch the moment it changes, each carrying the other and
+  opening the first page, since they name no cursor
+  ([`filter-form.md`](filter-form.md#contracts)). Clear, offered only while a filter is
+  shown, opens `/admin/invitations`.
 - **25 to a page, with the shared [`Pager`](pager.md)** (MB.115, on the
   owner's call: a fixed number per page with a pager, as the Users list has;
   CLAUDE.md rule 8). Newest first, Prev and Next carrying the filter and a

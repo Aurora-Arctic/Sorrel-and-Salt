@@ -96,11 +96,9 @@ different groups, so the page offers each name once, whatever its case.
   typed but not yet searched, trimmed. Only the name and the Form box's text
   are state; Classification is uncontrolled (`defaultValue`) and No Refs
   takes `defaultChecked`. With JavaScript, each builds the address with
-  `compendiumHref`, and `useApplyFilter` pushes it as a soft navigation
-  inside the `ListFrame`'s transition: the row greyed and
-  off and the tabs' skeleton in place of the table and the pager until the
-  filtered list arrives ([`list-frame.md`](list-frame.md)). The list keys the form by
-  the filter shown, so a page showing another starts it again from that one.
+  `compendiumHref`, and `useApplyFilter` pushes it softly; the loading state,
+  the focus and the form's keying by the filter shown are the shared
+  form's ([`filter-form.md`](filter-form.md#contracts)).
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Ingredient is `?new`. `href.ts`'s `compendiumHref(place, dialog)`
   builds both, the pager's links and the filter's submit too, a typed wrapper

@@ -71,10 +71,8 @@ already above them.
   MB.115). A select or a switch changed before
   hydration applies nothing until the magnifier is pressed.
 - **Every filter navigates softly**, through the list's `ListFrame`
-  ([`list-frame.md`](list-frame.md)): the address is pushed inside the
-  frame's transition, pending until the new page has rendered. The admin
-  lists that once filtered by a full page load are soft too, since every
-  page under `/admin` runs the guard itself (`src/app/admin/layout.tsx`).
+  ([`list-frame.md`](list-frame.md#contracts)), which holds the navigation
+  and its pending state.
 - **While the new list reads, the row is off and the list is a skeleton**
   (the owner's call at MB.115's review: "Filters should trigger the same
   type of loading state as tabs"). The frame's body shows the tabs' skeleton
