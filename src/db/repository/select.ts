@@ -120,6 +120,10 @@ export async function selectFrom(
                   keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
                   sql`, `,
                 )}]`,
+                // The tiebreak, read as text beside the key rather than off
+                // the row: a table keyed on a pair breaks ties on one of its
+                // columns, not on an `id` it does not have.
+                keyId: sql<string>`cast(${keyset.id} as text)`,
               }
             : joined && {
                 row: getTableColumns(relation),
@@ -164,7 +168,7 @@ export async function selectFrom(
   if (!keyset) return build(db);
 
   const direction = keyset.request.inverted ? desc : asc;
-  type KeyedRow = { row: Record<string, unknown>; key: string[] };
+  type KeyedRow = { row: Record<string, unknown>; key: string[]; keyId: string };
   const page = (executor: Executor) =>
     build(executor)
       .orderBy(...keyset.sort.map((part) => direction(expressionOf(part))), direction(keyset.id))
@@ -178,9 +182,9 @@ export async function selectFrom(
     if (isDataException(error)) throw new InvalidCursor();
     throw error;
   }
-  return rows.map(({ row, key, ...carried }) => ({
+  return rows.map(({ row, key, keyId, ...carried }) => ({
     ...carried,
-    cursor: { key, id: String(row.id) },
+    cursor: { key, id: keyId },
     node: row,
   }));
 }

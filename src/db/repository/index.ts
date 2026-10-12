@@ -61,7 +61,7 @@ export {
 } from './vocabularies';
 export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
-export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
+export { findMemberPage, findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export {
   findCoMemberNamesIncludingSoftDeleted,
   findPrivilegeChangeCount,

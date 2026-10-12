@@ -62,7 +62,11 @@ limit $limit  -- the page plus one
   order, and a page boundary between two of them loses neither. Every table
   these finders take has an `id` (`Identified`), which rules out the two
   hard-deleted join tables; `spell_ingredients` has one, and its `spell_id`
-  is what refuses it.
+  is what refuses it. `workspace_members` has none, being keyed on the pair,
+  so its one page finder, `findMemberPage` (M6.11), builds its keyset itself
+  and breaks ties on `user_id`, which is unique inside the one coven its
+  proof names. `selectFrom` reads the tiebreak as text beside the key, from
+  whichever column the keyset names, so a cursor's `i` is that column's value.
 - **A sort column must be `NOT NULL`**, by type. A NULL makes the row
   comparison NULL, and that row would fall out of every page. An expression's
   nullness is not in its type, so a nullable one is the caller's bug.

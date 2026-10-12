@@ -708,7 +708,7 @@ No database access in a resolver, ever. Same lint rule as `db`.
 
 ### The three GraphQL costs, and how each is paid
 
-**N+1 queries.** A query for 50 ingredients each with categories fires 101 queries without batching. DataLoader instances are created per-request in the Yoga context — `categoriesByIngredient`, `membersByWorkspace`. This is a cost concern as much as a performance one.
+**N+1 queries.** A query for 50 ingredients each with categories fires 101 queries without batching. DataLoader instances are created per-request in the Yoga context — `categoriesByIngredient`, `usersById`. This is a cost concern as much as a performance one.
 
 **Authorization surface.** Handled by the service-layer choke point in §3. Pothos auth scopes provide a second check on sensitive fields (`User.email`) and on admin mutation fields, but the service layer is the real gate.
 
@@ -1076,13 +1076,20 @@ type WorkspaceMember {
   role: WorkspaceRole! # viewer | member | owner
   joinedAt: DateTime!
   workspace: Workspace!
+  user: CoMember! # the name through usersById (MB.10), one read per page of members
   audit: AuditInfo!
+}
+
+type CoMember {
+  id: ID!
+  name: String # never an email address; null for anyone the viewer has never shared a coven with
 }
 
 type Workspace {
   id: ID!
   name: String!
   slug: String! # the /coven/[slug] segment
+  members(first: Int, after: String, last: Int, before: String): WorkspaceMembersConnection! # live members in joining order, to roles holding member: read (M6.11)
   audit: AuditInfo!
 }
 

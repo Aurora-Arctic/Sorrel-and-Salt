@@ -5,6 +5,7 @@ export * from './services/access-control';
 export * from './services/last-owner';
 export * from './services/member-role';
 export * from './services/membership';
+export * from './services/members';
 export * from './services/memberships';
 export * from './services/workspace-creation';
 export * from './services/workspace-by-slug';
