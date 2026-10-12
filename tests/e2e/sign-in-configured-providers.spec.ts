@@ -28,17 +28,19 @@ test.afterEach(() => {
 // The precondition every scan below rests on: without it, a server that
 // silently fell back to the greyed state would pass them all, which is the
 // exact gap this project exists to close.
-test('every provider renders available, not greyed, with no accessibility violations', async ({
-  page,
-}) => {
-  await page.goto('/sign-in');
-  for (const name of PROVIDER_NAMES) {
-    const button = page.getByRole('button', { name: `Continue with ${name}` });
-    await expect(button).toBeVisible();
-    await expect(button).not.toHaveAttribute('aria-disabled');
-  }
-  await assertNoAccessibilityViolations(page);
-});
+test(
+  'every provider renders available, not greyed, with no accessibility violations',
+  { tag: '@story-1' },
+  async ({ page }) => {
+    await page.goto('/sign-in');
+    for (const name of PROVIDER_NAMES) {
+      const button = page.getByRole('button', { name: `Continue with ${name}` });
+      await expect(button).toBeVisible();
+      await expect(button).not.toHaveAttribute('aria-disabled');
+    }
+    await assertNoAccessibilityViolations(page);
+  },
+);
 
 for (const name of PROVIDER_NAMES) {
   test(`Continue with ${name}'s hover state has no accessibility violations`, async ({ page }) => {

@@ -1,6 +1,7 @@
 import { headers } from 'next/headers';
-import { forbidden, redirect } from 'next/navigation';
+import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
+import { type CovenMembership, membershipBySlug } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
 import { auth } from './auth';
 import { Forbidden } from './errors';
@@ -108,6 +109,26 @@ export async function requireAdminSession(): Promise<Session> {
     throw error;
   }
   return session;
+}
+
+// One lookup per slug per request, however many layouts and pages ask.
+const covenOf = cache(async (slug: string) => membershipBySlug(await requireSession(), slug));
+
+/**
+ * `requireSession()`, then the workspace the `/coven/[slug]` address names
+ * and the proof the user is a member of it (M6.10). A refusal is Next's 404,
+ * not the 403 `/admin` answers: a slug is a guess at someone's private data,
+ * so an unknown slug and a coven the user is not in must look the same
+ * (claude-docs/auth/coven-guard.md, "The coven guard"). The layout calls it,
+ * and so does every page beneath it, for the reason the admin pages do.
+ */
+export async function requireCovenMembership(slug: string): Promise<CovenMembership> {
+  try {
+    return await covenOf(slug);
+  } catch (error) {
+    if (error instanceof Forbidden) notFound();
+    throw error;
+  }
 }
 
 /**

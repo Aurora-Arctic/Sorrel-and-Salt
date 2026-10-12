@@ -2,7 +2,7 @@
 
 `src/components/NameForm/` is the account page's Name section (MB.88): the
 name the site shows for the account, and the one field that changes it.
-Server component `src/app/account/page.tsx` reads the row with `getMe` and
+Server component `src/app/(shell)/account/page.tsx` reads the row with `getMe` and
 hands down `name`. This component does the rendering and the `setName`
 mutation.
 
@@ -58,5 +58,5 @@ input ([`field.md`](field.md)). The stories (`Prefilled`, `LongName`, `PhoneDark
 which answers in the route's own error shape. It covers the prefill, nothing
 to save until a real change, the save and its new baseline, the busy button
 held from before the save, and both error surfaces. The page around it is
-`tests/app/account/page.test.tsx`, and `tests/e2e/account.spec.ts` scans
+`tests/app/(shell)/account/page.test.tsx`, and `tests/e2e/account.spec.ts` scans
 the page holding it with axe in a real browser.

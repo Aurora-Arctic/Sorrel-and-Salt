@@ -116,8 +116,8 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ deityTraditions(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
-  planets: {
-    source: '{ planets(first: 1) { edges { node { id } } } }',
+  celestialBodies: {
+    source: '{ celestialBodies(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
   zodiacSigns: {
@@ -154,7 +154,7 @@ const PROBES: Record<string, ScopeProbe> = {
   },
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
-  planetSuggestions: suggestion('planetSuggestions'),
+  celestialBodySuggestions: suggestion('celestialBodySuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),
 };
 
@@ -189,7 +189,7 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
   commonNameSuggestions: nullWorkspaceSuggestion('commonNameSuggestions'),
   deitySuggestions: nullWorkspaceSuggestion('deitySuggestions'),
   formSuggestions: nullWorkspaceSuggestion('formSuggestions'),
-  planetSuggestions: nullWorkspaceSuggestion('planetSuggestions'),
+  celestialBodySuggestions: nullWorkspaceSuggestion('celestialBodySuggestions'),
   zodiacSuggestions: nullWorkspaceSuggestion('zodiacSuggestions'),
   possibleDuplicates: {
     source: `query ($workspaceId: ID) {
@@ -250,7 +250,7 @@ const WHOLE_INGREDIENT = {
   variants: [],
   description: '',
   elements: [],
-  planets: [],
+  celestialBodies: [],
   zodiacSigns: [],
   deities: [],
   colors: [],
@@ -284,6 +284,29 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
   acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),
+  // A blank name, so a caller past the scope that may create one is refused by
+  // the service before anything is written.
+  createWorkspace: write('mutation { createWorkspace(name: "") { id } }'),
+  // A malformed person id, so a caller past the scope is refused by the service.
+  updateMemberRole: write(
+    `mutation { updateMemberRole(workspaceId: "${WORKSPACE_W_ID}", userId: "not-an-id", role: member) { role } }`,
+  ),
+  // A malformed id, so a caller past the scope is refused by the service
+  // before anything is deleted.
+  deleteWorkspace: write('mutation { deleteWorkspace(workspaceId: "not-an-id") }'),
+  // Malformed ids again, so nothing is removed whoever gets past the scope.
+  // A malformed address, so a caller past the scope is refused by the service
+  // before anything is written or mailed.
+  createInvitation: write(
+    `mutation { createInvitation(workspaceId: "${WORKSPACE_W_ID}", email: "not-an-address", role: viewer) { id } }`,
+  ),
+  // An id naming no invitation, so a caller past the scope is refused by the
+  // service before anything is stamped.
+  revokeInvitation: write(
+    `mutation { revokeInvitation(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") { id } }`,
+  ),
+  removeMember: write('mutation { removeMember(workspaceId: "not-an-id", userId: "not-an-id") }'),
+  leaveWorkspace: write('mutation { leaveWorkspace(workspaceId: "not-an-id") }'),
   createWorkspaceIngredient: write(
     `mutation { createWorkspaceIngredient(workspaceId: "${WORKSPACE_W_ID}", input: { name: "Testwort", variants: [] }) { id } }`,
   ),
@@ -342,9 +365,11 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
     `mutation { updateDeityTradition(id: "${NOWHERE}", input: ${NAMED}) { id } }`,
   ),
   deleteDeityTradition: write(`mutation { deleteDeityTradition(id: "${NOWHERE}") }`),
-  createPlanet: write(`mutation { createPlanet(input: ${NAMED}) { id } }`),
-  updatePlanet: write(`mutation { updatePlanet(id: "${NOWHERE}", input: ${NAMED}) { id } }`),
-  deletePlanet: write(`mutation { deletePlanet(id: "${NOWHERE}") }`),
+  createCelestialBody: write(`mutation { createCelestialBody(input: ${NAMED}) { id } }`),
+  updateCelestialBody: write(
+    `mutation { updateCelestialBody(id: "${NOWHERE}", input: ${NAMED}) { id } }`,
+  ),
+  deleteCelestialBody: write(`mutation { deleteCelestialBody(id: "${NOWHERE}") }`),
   createZodiacSign: write(`mutation { createZodiacSign(input: ${NAMED}) { id } }`),
   updateZodiacSign: write(
     `mutation { updateZodiacSign(id: "${NOWHERE}", input: ${NAMED}) { id } }`,
@@ -412,9 +437,9 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   createIngredientFormGroup: { governs: 'form groups' },
   updateIngredientFormGroup: { governs: 'form groups' },
   deleteIngredientFormGroup: { governs: 'form groups' },
-  createPlanet: { governs: 'planets' },
-  updatePlanet: { governs: 'planets' },
-  deletePlanet: { governs: 'planets' },
+  createCelestialBody: { governs: 'celestialBodies' },
+  updateCelestialBody: { governs: 'celestialBodies' },
+  deleteCelestialBody: { governs: 'celestialBodies' },
   createZodiacSign: { governs: 'zodiac signs' },
   updateZodiacSign: { governs: 'zodiac signs' },
   deleteZodiacSign: { governs: 'zodiac signs' },
@@ -432,6 +457,19 @@ const OPEN_WRITES = [
   // The invited address is what admits, which the service checks (MB.70).
   'acceptInvitation',
   'setName',
+  // The flag decides who may, which the service reads (M6.7).
+  'createWorkspace',
+  // The owner's `member: update` decides, which the service checks (M9.14).
+  'updateMemberRole',
+  // The owner's `workspace: delete` decides, which the service checks (M6.14).
+  'deleteWorkspace',
+  // `member: remove` decides removal, and leaving is the caller's own seat (M6.15).
+  // The owner's `member: invite` decides, which the service checks (M7.3).
+  'createInvitation',
+  // The owner's `member: invite` decides, which the service checks (M7.6).
+  'revokeInvitation',
+  'removeMember',
+  'leaveWorkspace',
   'createWorkspaceIngredient',
   'updateIngredient',
   'deleteIngredient',

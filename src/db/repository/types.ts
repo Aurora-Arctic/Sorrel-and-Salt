@@ -2,6 +2,7 @@ import type { ExtractTablesWithRelations, SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import type { invitations } from '../../modules/coven/schema/invitations';
+import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
@@ -12,7 +13,7 @@ import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import type { Membership } from '@/modules/coven';
+import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
@@ -248,6 +249,7 @@ export interface WriterContext {
   session: AuditSession;
   insert(table: PgTable, values: object): Promise<never>;
   update(table: PgTable, values: object, where: SQL | undefined): Promise<never>;
+  softDelete(table: PgTable, where: SQL | undefined): Promise<never>;
 }
 
 /** What `withAudit` hands its callback: every write, stamped from the session. */
@@ -387,10 +389,10 @@ export interface AuditWriter {
     form: string,
   ): Promise<(typeof ingredientVariants.$inferSelect)[]>;
   /**
-   * Carry a planet's or a sign's new name onto the compendium's lists (MB.95):
+   * Carry a celestial body's or a sign's new name onto the compendium's lists (MB.95):
    * in every live compendium entry whose `list` holds an entry folding to
    * `from`, under the suggestions' fold, that entry becomes `to`, in its
-   * place. Nothing else in the row moves, since a planet or a sign is no part
+   * place. Nothing else in the row moves, since a celestial body or a sign is no part
    * of an entry's identity or slug; a coven's ingredient and a deleted entry
    * are left alone and not returned. Named for its tables, as
    * `carryFormRename` is.
@@ -433,6 +435,66 @@ export interface AuditWriter {
    * only because the lock must be taken in the transaction that writes.
    */
   lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
+  /**
+   * Soft-delete the proof's own workspace (M6.14), stamped from the session.
+   * The `workspaces` row is the proof's `workspaceId` itself, since it has no
+   * `workspace_id` column for `softDeleteInWorkspace` to scope on. Membership
+   * rows are untouched. An empty result means the workspace was already deleted.
+   */
+  softDeleteWorkspace(membership: Membership): Promise<(typeof workspaces.$inferSelect)[]>;
+  /**
+   * Seat a user in a workspace at a role, under no proof: the row a proof is
+   * minted from, so a workspace's creator (M6.7) and an invitee accepting
+   * (M7.5) have none to write it under. The caller has decided the user may be
+   * seated; stamped from the session.
+   */
+  insertMembership(
+    workspaceId: string,
+    userId: string,
+    role: WorkspaceRole,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
+   * Set the role of one live member of the proof's workspace (M9.14). The
+   * workspace is the proof's, so another coven's row is out of reach; an
+   * empty result means no such live member. Touches the role and the audit
+   * stamps, never `joined_at`. The caller has run the last-owner guard.
+   */
+  updateMembershipRole(
+    membership: Membership,
+    userId: string,
+    role: WorkspaceRole,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
+   * Soft-delete one live member of the proof's workspace (M6.15), for a
+   * removal and for a leave alike, stamped from the session. An empty result
+   * means no such live member. The caller has checked the permission or that
+   * the row is the caller's own, and run the last-owner guard.
+   */
+  softDeleteMembership(
+    membership: Membership,
+    userId: string,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
+   * Bring a removed member back at `role` (M6.15; M7.5's accept calls it):
+   * clears `deleted_at` and `deleted_by`, sets the role and restarts
+   * `joined_at`. The one writer that touches a deleted row, so it reaches
+   * only a deleted one: an empty result means the pair holds no removed row
+   * (none was ever made, or it is live). Under no proof, as
+   * `insertMembership` is.
+   */
+  reviveMembership(
+    workspaceId: string,
+    userId: string,
+    role: WorkspaceRole,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
+   * The proof's workspace's live members, locked `for update` until the
+   * transaction ends (M6.8): what the last-owner guard counts before a role
+   * change or removal writes, so two owners stepping down at once cannot both
+   * leave the other the last. A read, and in the writer only because the lock
+   * must be taken in the transaction that writes.
+   */
+  lockLiveMembers(membership: Membership): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
@@ -519,12 +581,12 @@ export interface IngredientFilter {
    */
   formId?: string;
   /**
-   * A planet the entry's `planets` list holds, an entry at a time under the
-   * suggestions' fold (MB.162): how a planet's delete and rename find the
+   * A celestial body the entry's `celestialBodies` list holds, an entry at a time under the
+   * suggestions' fold (MB.162): how a celestial body's delete and rename find the
    * entries holding it (MB.95). Blank means no filter.
    */
-  planet?: string;
-  /** A sign the entry's `zodiacSigns` list holds, as `planet` reads the planets. */
+  celestialBody?: string;
+  /** A sign the entry's `zodiacSigns` list holds, as `celestialBody` reads the celestial bodies. */
   zodiacSign?: string;
   /**
    * A curated deity the entry holds a live link to, by `ingredient_deities.deity_id`
@@ -655,6 +717,12 @@ export interface SlugRedirect {
 /** An `invitations` row, either tier, as a finder or a write returns it. */
 export type InvitationRow = typeof invitations.$inferSelect;
 
+/** The live coven a workspace invitation names, as the invited account may be told it: two fields, never the row. */
+export interface InvitedCoven {
+  name: string;
+  slug: string;
+}
+
 /**
  * A site-tier invitation, which grants admin: the workspace and the role both
  * null, as the `invitations_tier` CHECK makes them together (MB.201).
@@ -717,7 +785,7 @@ export interface CategoryFilter {
 }
 
 /** An ingredient list a curated astrology vocabulary's values are written to, by its property name. */
-export type AstrologyList = 'planets' | 'zodiacSigns';
+export type AstrologyList = 'celestialBodies' | 'zodiacSigns';
 
 /** One of the two astrology vocabularies, flat and alike (MB.95). */
 export type AstrologyVocabulary = FlatTable;
@@ -755,6 +823,12 @@ export interface DeityFilter {
 export interface GroupFilter {
   /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
   query?: string;
+}
+
+/** A user's display name, without the rest of the row: what a co-member may read (MB.10). */
+export interface UserName {
+  id: string;
+  name: string;
 }
 
 /** One provider account linked to a user, without the tokens its row holds. */

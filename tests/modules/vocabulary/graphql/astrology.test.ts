@@ -7,8 +7,8 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run as send } from '../../../support/graphql/run';
 import type { AstrologyValueConnection, AstrologyValueNode } from './types';
 
-// `planets` and `zodiacSigns`: the two curated astrology vocabularies as
-// `Planet` and `ZodiacSign`, a page at a time, answered to a signed-out
+// `celestialBodies` and `zodiacSigns`: the two curated astrology vocabularies as
+// `CelestialBody` and `ZodiacSign`, a page at a time, answered to a signed-out
 // visitor (MB.80), and MB.95's six admin writes. This file holds the
 // transport's half (claude-docs/testing/layer-ownership.md): a page and its
 // count, the query reaching the read, and per write one refusal per error
@@ -25,10 +25,10 @@ beforeAll(() => {
 
 const VOCABULARIES = [
   {
-    query: 'planets',
-    type: 'Planet',
-    table: 'planets',
-    field: 'planets',
+    query: 'celestialBodies',
+    type: 'CelestialBody',
+    table: 'celestial_bodies',
+    field: 'celestialBodies',
   },
   {
     query: 'zodiacSigns',

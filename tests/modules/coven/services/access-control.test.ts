@@ -17,9 +17,10 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     spell: ['read'],
     workspace: ['read'],
   },
-  // The coven's own work. Not the membership roll: `/coven/[slug]/members` is
-  // an owner page (DESIGN.md §9), so a member holds nothing on that resource.
+  // The coven's own work, and the right to read who else is in it (M6.13).
+  // Inviting, changing a role and removing stay with owners.
   member: {
+    member: ['read'],
     ingredient: ['read', 'create', 'update', 'delete'],
     inventory: ['read', 'update'],
     spell: ['read', 'create', 'update', 'delete'],

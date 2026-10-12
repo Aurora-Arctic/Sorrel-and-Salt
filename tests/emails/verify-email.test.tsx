@@ -19,8 +19,6 @@ describe('verifyEmailMessage', () => {
     });
 
     expect(message.to).toBe('someone@verify-email.test');
-    // The inbox preview line is the subject.
-    expect(message.html).toContain(`>${message.subject.replace(/&/g, '&amp;')}<`);
     expect(message.text.split(URL_WITH_QUERY)).toHaveLength(2);
     expect(message.html.split(`href="${URL_WITH_QUERY.replace('&', '&amp;')}"`)).toHaveLength(3);
     expect(message.text).not.toMatch(/<[a-z]/i);

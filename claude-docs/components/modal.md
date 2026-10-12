@@ -6,18 +6,20 @@ surface and a heading that names it. M5.6's category page opens it from the
 address; M8.16, M8.17 and M7.4 are its next owners. `RouteModal`, beside it,
 is the wrapper every admin page opens it through (below).
 
-| File                  | What it holds                                                                          |
-| --------------------- | -------------------------------------------------------------------------------------- |
-| `modal.tsx`           | `Modal`, the default export                                                            |
-| `route-modal.tsx`     | `RouteModal`                                                                           |
-| `index.tsx`           | The exports; two files, since `RouteModal` renders `Modal`                             |
-| `close-guard.ts`      | `CloseGuardContext`, the slot a form's guard goes in                                   |
-| `discard.tsx`         | `useDiscardGuard` and `DiscardQuestion` (below)                                        |
-| `confirm-overlay.tsx` | `ConfirmOverlay`, the card a form asks a question in, over itself                      |
-| `confirm-layer.ts`    | `ConfirmLayerContext`, the layer and the hold the card is drawn with                   |
-| `fields.ts`           | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                      |
-| `header-slot.ts`      | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                        |
-| `types.ts`            | `ModalHeading`, `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's, the card's |
+| File                       | What it holds                                                                                  |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| `modal.tsx`                | `Modal`, the default export                                                                    |
+| `route-modal.tsx`          | `RouteModal`                                                                                   |
+| `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once") |
+| `loading.tsx`              | `ModalLoading`, the skeleton a modal shows while its contents are on the way                   |
+| `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                     |
+| `close-guard.ts`           | `CloseGuardContext`, the slot a form's guard goes in                                           |
+| `discard.tsx`              | `useDiscardGuard` and `DiscardQuestion` (below)                                                |
+| `confirm-overlay.tsx`      | `ConfirmOverlay`, the card a form asks a question in, over itself                              |
+| `confirm-layer.ts`         | `ConfirmLayerContext`, the layer and the hold the card is drawn with                           |
+| `fields.ts`                | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                              |
+| `header-slot.ts`           | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                                |
+| `types.ts`                 | `ModalHeading`, `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's, the card's         |
 
 ## Props
 
@@ -30,6 +32,7 @@ is the wrapper every admin page opens it through (below).
 | `qualifier` | After the title, quieter: an ingredient's formal name, a deity's tradition      |
 | `onClose`   | Asked for by the Close button, Escape and a click outside                       |
 | `size`      | `'wide'` for a long form; absent, the default width                             |
+| `loading`   | The contents are on the way: the body is marked `aria-busy` (M9.18)             |
 | `children`  | The body: a form, a confirmation, whatever the owner puts here                  |
 
 ## Contracts
@@ -313,19 +316,21 @@ over the form, the place is held and dimmed with it
 ## RouteModal
 
 A modal opened by its page's address, `?new` or `?edit=<slug>`: the shape
-every admin page's add and edit modal takes. Eight wrappers under
-`src/app/admin/` each wrote the same lines until MB.115, and the celestial bodies and
+every admin page's add and edit modal takes. A page renders it always, at one
+fixed place (M9.18). It shows its `content` when the address opens a modal, a
+skeleton under the pressed row's head while a press is on its way
+("Opening at once"), and nothing otherwise. Eight wrappers under
+`src/app/(shell)/admin/` each wrote the same lines until MB.115, and the celestial bodies and
 zodiac signs' one handed the navigation straight to its form, so a save there
 skipped the fade.
 
 `RouteModalProps` (`types.ts`):
 
-| Prop                            | What it is                                                                      |
-| ------------------------------- | ------------------------------------------------------------------------------- |
-| `title`, `eyebrow`, `qualifier` | As `Modal`'s: its head                                                          |
-| `closeHref`                     | The page it opened over, its modal parameter dropped                            |
-| `size`                          | As `Modal`'s                                                                    |
-| `children`                      | A function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
+| Prop        | What it is                                                                                                                                                                                                     |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `closeHref` | The page it opened over, its modal parameter dropped                                                                                                                                                           |
+| `size`      | As `Modal`'s                                                                                                                                                                                                   |
+| `content`   | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
 
 - **Closing is a navigation back.** Close, Escape, a click outside and
   `done` all fade the modal out, then `router.replace(closeHref)`, so Back
@@ -334,9 +339,63 @@ skipped the fade.
 - **`done` fades first.** It is `Modal`'s own close, so a form that closes
   the modal itself fades out as Close does, and the page goes back once the
   fade ends.
+- **Closing while it loads cancels the press.** The skeleton's Close
+  calls the provider's `cancel()`, then goes back as above. The navigation
+  back supersedes the one on its way, which Next discards.
 - **A caller needing more of the router keeps its own.** The compendium's
   form moves from `?new` to `?edit=` after a save without closing, through
   its own `useRouter`.
+
+## Opening at once
+
+Pressing an Edit pencil or an Add button used to follow a plain link to
+`?edit=<slug>` or `?new`, and nothing showed until the server had drawn the
+whole page again with the modal in it. Since M9.18 the press opens the dialog
+at once, with its head over a skeleton, the way a filter shows it is loading.
+The form arrives in the same dialog.
+
+- **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
+  mounted once, in `src/app/(shell)/admin/layout.tsx`. It keeps the heading of the
+  modal just pressed and runs `router.push(href)` inside `useTransition`
+  (a React call that marks a change as in progress until it finishes). It
+  offers `loading` (that heading while the push is pending, otherwise
+  nothing), `open(href, heading)` and `cancel()`. The workshop, whose
+  router goes nowhere, supplies its own value through the exported
+  `RouteModalContext`; a provider already above is kept, not shadowed.
+- **`useOpenModalClick(href, heading)`** returns the `onClick` for a link.
+  For a plain press of the main button it stops the browser following the
+  link and calls `open`. A press with Ctrl, Cmd, Shift or Alt, or any other
+  button, is the browser's (a new tab or window), and so is a press before
+  the page's script has loaded: the link still works as a link. Outside a
+  provider the hook returns nothing, and the link stays plain. `EditLink`
+  ([`icon-tip.md`](icon-tip.md)), `AddAction` (`src/app/(shell)/admin/add-action.tsx`)
+  and Invite Admin all use it, and so does each name on `/admin/users`, which
+  opens the user's modal, `?user=<id>` (M9.19, [`user-list.md`](user-list.md)).
+- **The heading is known before the form.** The page builds each row's
+  `editHeading` on the server, with the same builder the loaded modal uses,
+  and hands it to the row beside `editHref`. So the head does not change when
+  the form arrives.
+- **One dialog from the press to the form.** The skeleton and the loaded
+  modal are the same `<Modal>` at the same place in the page, so React keeps
+  the one `<dialog>` and it fades in once, not twice. The form inside is
+  keyed by the row's id, so opening another row starts a fresh form.
+- **The skeleton** (`ModalLoading`, `loading.tsx`) is a visually hidden
+  `<output>Loading</output>` (a status a screen reader announces) and
+  placeholder shapes hidden from it: four label-and-box pairs and a row of two
+  buttons. While it shows, `Modal`'s `loading` prop marks the body
+  `aria-busy`.
+- **Focus.** When `loading` turns false, the focus moves to the form's first
+  field, but only if it is still on the dialog itself. A person who has
+  already moved it, to Close say, keeps it.
+- **A direct request** to `?edit=` or `?new` (a bookmark, a new tab) still
+  renders the modal on the server, with no skeleton.
+- **A row deleted since the list was drawn.** The navigation lands with no
+  `content`, the dialog goes, and the page's `MissingNotice` says so.
+- **No GraphQL query.** The form's contents could have been fetched from
+  `/api/graphql` while the skeleton showed, but a read that comes with a
+  navigation belongs to the server component (CLAUDE.md, rule 1): it already
+  reads the row, with the same checks, to draw a direct request. A second
+  path would have to be kept in step with it.
 
 ## Styling
 
@@ -368,6 +427,12 @@ in CSS so no listener can leave the page locked, with `scrollbar-gutter:
 stable` so nothing shifts sideways as the scrollbar goes; the body's own
 scroll is `overscroll-behavior: contain`, and it keeps it, so nothing in it is
 out of reach.
+
+**The skeleton** (M9.18) draws its shapes with `.modal-skeleton*`
+(`Modal/index.scss`). Their shimmer is the shared Sass mixin `skeleton-shape`
+(`src/scss/_mixins.scss`), with its `skeleton-shimmer` keyframes in
+`src/scss/_primitives.scss`; the tab skeleton ([`tabbed-page.md`](tabbed-page.md))
+uses the same mixin, where it once kept a keyframes of its own.
 
 **On a phone it stays inset**, the same gap on every side, rather than
 becoming a full-height sheet: the owner's M5.5 call, kept at MB.115's review.
@@ -421,6 +486,14 @@ IngredientForm's
 `AskingToDeleteInModal` and `AskingToDiscardInModal` show it over the long
 form scrolled down, each with a phone pair.
 
-`RouteModal` has no file of its own (claude-docs/testing/layer-ownership.md,
-"What a test may assert", rule 6): each admin page test asserts its modal's
-close href, and the e2e specs close the modals in a real browser.
+`tests/components/Modal/route-modal.test.tsx` (M9.18) covers the opening at
+once: a plain press opens the modal with the pressed head and a status, a
+press with a modifier is left to the link, a link outside a provider stays
+plain, the contents replace the skeleton in the same dialog, and a close while
+loading cancels the press. Each admin page test still asserts its modal's
+close href, and the e2e specs open and close the modals in a real browser.
+
+Stories: `OpenedByItsAddress` shows a modal with `content`, as an address
+opens it. `Loading`, with its `LoadingPhoneDark` and `LoadingPhoneLight`
+pair, shows the pressed row's head over the skeleton, through a
+`RouteModalContext` value whose navigation never arrives.

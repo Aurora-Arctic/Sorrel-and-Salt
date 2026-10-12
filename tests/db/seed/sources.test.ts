@@ -72,7 +72,7 @@ async function namesLinkedFrom(referenceId: string): Promise<DocLink[]> {
     select case
              when l.deity_id is not null then 'deity'
              when l.deity_tradition_id is not null then 'tradition'
-             when l.planet_id is not null then 'planet'
+             when l.celestial_body_id is not null then 'celestialBody'
              else 'zodiacSign'
            end as kind,
            coalesce(d.name, t.name, p.name, z.name) as name,
@@ -80,7 +80,7 @@ async function namesLinkedFrom(referenceId: string): Promise<DocLink[]> {
     from reference_links l
     left join deities d on d.id = l.deity_id
     left join deity_traditions t on t.id = l.deity_tradition_id
-    left join planets p on p.id = l.planet_id
+    left join celestial_bodies p on p.id = l.celestial_body_id
     left join zodiac_signs z on z.id = l.zodiac_sign_id
     where l.reference_id = ${referenceId} and l.deleted_at is null
   `;
@@ -184,7 +184,7 @@ describe('seedSources', () => {
       expect(row.seed_key).toBeNull();
       expect(row.updated_at).toEqual(admins.updated_at);
       expect(await namesLinkedFrom(admins.id)).toEqual([
-        { kind: 'planet', name: 'Pluto', locator: null },
+        { kind: 'celestialBody', name: 'Pluto', locator: null },
       ]);
     });
 

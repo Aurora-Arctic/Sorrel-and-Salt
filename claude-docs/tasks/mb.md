@@ -125,7 +125,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.119 | Design review: the coven and invitations                                                                                 | Wave 10 | —                      |
 | MB.120 | Design review: the public compendium and shared ingredient components                                                    | Wave 12 | —                      |
 | MB.121 | Design review: the workspace ingredients page                                                                            | Wave 12 | —                      |
-| MB.122 | Design review: the navigation                                                                                            | Wave 9  | —                      |
+| MB.122 | ~~Design review: the navigation~~ — **folded into MB.7**                                                                 | —       | —                      |
 | MB.123 | Design review: the grimoire                                                                                              | Wave 13 | —                      |
 | MB.124 | Design review: error, loading and empty states, and the whole site                                                       | Wave 15 | —                      |
 | MB.125 | Categories on the ingredient writes                                                                                      | Wave 8  | MB.126, M5.5           |
@@ -786,7 +786,7 @@ _Story:_ As a curator, I want the compendium entry form to list an entry's forms
 
 Minted on 2026-10-11 with MB.215 ([`design-decisions/mb.215-plan.md`](../design-decisions/mb.215-plan.md)). The entry form, `IngredientForm`, gains a Variants section and sends only `variants`, never the top-level `form`, which the service has accepted since MB.219. The task is based on MB.116's branch (#824) while that pull request is open, because MB.116 trims `IngredientForm/index.tsx`, `reference-panel.tsx` and `values.ts` to read failures through `readGraphqlIssues` in `src/lib/graphql-failure.ts`; otherwise it is based on `staging`. If #824 takes a CI fix this branch rebases onto it, and its PR is retargeted to `staging` when #824 merges. MB.115 and MB.117, the other design reviews still ahead in the row, may touch `IngredientForm`'s shared pieces first, so the task re-locates them by grep before editing.
 
-`src/components/IngredientForm/variants.tsx` holds a "Variants" section: a `useFieldArray` over `values.variants`, each variant a fieldset whose legend is its form, holding Form (the existing `FormField`, pick-only on the compendium, moved here), Description, Safety Notes, Elements, Planets, Zodiac Signs, Colours, Categories, Substitutes and References. The Substitutes picker ranks a matching form first, then its form group, and offers a variant picker when the linked ingredient has variants. The field-name unions widen to `variants.${number}.…`; drafts are kept per variant; `fieldNameOf`, `resolverFor` and `toInput` are updated; `EMPTY_VALUES.variants = []`; `src/app/admin/compendium/entry-values.ts` fills the variants; and a variant's server issues are placed through `readGraphqlIssues` like the rest. The top-level Form field leaves the form. The component's story, its doc section and its Sass follow.
+`src/components/IngredientForm/variants.tsx` holds a "Variants" section: a `useFieldArray` over `values.variants`, each variant a fieldset whose legend is its form, holding Form (the existing `FormField`, pick-only on the compendium, moved here), Description, Safety Notes, Elements, Planets, Zodiac Signs, Colours, Categories, Substitutes and References. The Substitutes picker ranks a matching form first, then its form group, and offers a variant picker when the linked ingredient has variants. The field-name unions widen to `variants.${number}.…`; drafts are kept per variant; `fieldNameOf`, `resolverFor` and `toInput` are updated; `EMPTY_VALUES.variants = []`; `src/app/(shell)/admin/compendium/entry-values.ts` fills the variants; and a variant's server issues are placed through `readGraphqlIssues` like the rest. The top-level Form field leaves the form. The component's story, its doc section and its Sass follow.
 
 Tests are written first:
 
@@ -1177,7 +1177,7 @@ _Acceptance criteria:_
 
 _Story:_ As a developer, I want the celestial-body table and columns in place before any code reads them, so that the switch from the planet names is a code change against objects that already exist.
 
-Table task, the expand half of rule 10 ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). The `planets` table is renamed `celestial_bodies`, and a view named `planets` over it keeps the code that is live during the rollout working. `ingredients` and `ingredient_variants` gain a nullable `celestial_bodies text[]`, and `reference_links` a `celestial_body_id` with its foreign key and partial unique index, `reference_links_celestial_body_unique`. The migration fills every new column from its old one. Scoped first, because no table has been renamed here before: whether the view serves every statement the live code sends.
+Table task, the expand half of rule 10 ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). The `planets` table is renamed `celestial_bodies`, and a view named `planets` over it keeps the code that is live during the rollout working. `ingredients` and `ingredient_variants` gain a nullable `celestial_bodies text[]`, and `reference_links` a `celestial_body_id` with its foreign key and partial unique index, `reference_links_celestial_body_unique`. The migration fills every new column from its old one. Scoped first, because no table has been renamed here before: whether the view serves every statement the live code sends. It does, measured on 2026-10-12 against the whole `db` test project and against statements prepared before the rename ([`design-decisions/mb.252-table-rename.md`](../design-decisions/mb.252-table-rename.md)).
 
 **The one-row CHECK counts either column during the expand.** `reference_links_one_row`, the CHECK that a link names exactly one sourced row, today counts `planet_id` (`src/db/migrations/0063_variant-children.sql`). It is re-added counting `coalesce(celestial_body_id, planet_id)` in that place: `num_nonnulls(ingredient_id, deity_id, deity_tradition_id, coalesce(celestial_body_id, planet_id), zodiac_sign_id, ingredient_variant_id) = 1`. Two kinds of row need it. The sources seed still writes a planet link with `planet_id` alone (`add('planetId', …)` in `src/db/seed/sources.ts`), under the code before this task and under this task's own, so a CHECK counting `celestial_body_id` alone would refuse every such row and fail the sources seed test and `db:reset` on this task's own CI. And the fill leaves both columns set on every existing link, which a CHECK counting both columns would refuse. The schema file builds this CHECK from the `SOURCED` registry in `src/modules/ingredients/schema/reference-links.ts`, so the expand form is spelled out there by hand. The strict form, counting `celestial_body_id` alone, is MB.254's.
 
@@ -1185,10 +1185,12 @@ Table task, the expand half of rule 10 ([`design-decisions/mb.251-plan.md`](../d
 
 - `tests/db/schema-drift.test.ts` lists only tables (`relkind in ('r', 'p')`) and compares each table's foreign-key names and target table with the schema's. A view is out of its sight, so the renamed table must be declared under its new name. Its `PENDING_DROPS` list, the objects the schema has stopped declaring and a later task drops, has the kinds `column`, `index`, `check`, `foreignKey` and `table` and none for a view; this task adds a `view` kind, checked against the catalogue as the others are, and lists `planets` for MB.254 to drop.
 - `tests/db/audit-columns.test.ts` reads `information_schema.columns`, which lists a view's columns as well as a table's, so the `planets` view would count as a stamped table beside `celestial_bodies` and the comparison with the transcribed list, held at 27 by `toHaveLength(27)`, fails. It reads base tables only, and the count stays 27.
-- `tests/support/db/table-metadata.ts`'s `AUDITED_TABLES` names `planets`, and names `celestial_bodies` instead. The `set_updated_at` trigger moves with the table, since a rename keeps a table's triggers, so `tests/db/updated-at-trigger.test.ts`, which reads that list, passes with the edit, and `claude-docs/db/updated-at.md`'s list of tables follows it.
+- `tests/support/db/table-metadata.ts`'s `AUDITED_TABLES` names `planets`, and names `celestial_bodies` instead. The `set_updated_at` trigger moves with the table, since a rename keeps a table's triggers, so `tests/db/updated-at-trigger.test.ts`, which reads that list, passes with the edit.
 - `tests/db/partial-unique-indexes.test.ts` fails on any partial unique index it has not classified, so `reference_links_celestial_body_unique` gets a row beside `reference_links_planet_unique`.
 
-**Foreign keys are renamed here; the table's indexes and CHECK keep their names until MB.253.** Drizzle names a foreign key from its table and the table it points at, and the drift test compares those names, so the four that carry `planets` move now (`src/db/migrations/meta/0066_snapshot.json`): `planets_created_by_users_id_fk`, `planets_updated_by_users_id_fk` and `planets_deleted_by_users_id_fk` become `celestial_bodies_…`, and `reference_links_planet_id_planets_id_fk` becomes `reference_links_planet_id_celestial_bodies_id_fk`. No code names a foreign key. The table's indexes and CHECK, `planets_seed_key_unique`, `planets_slug_unique`, `planets_trgm` and `planets_description_not_blank`, keep their names: `vocabularyIndexes` in `src/db/schema-parts.ts` takes the name prefix as an argument, so the schema declares them as they stand. That keeps the friendly duplicate-slug error working through the rollout. The astrology service maps a unique violation on `slugIndex: 'planets_slug_unique'` to that error (`src/modules/vocabulary/services/astrology.ts`, compared in `curated-writes.ts`), and the deploy before this one goes on meeting the name it knows. This task's code maps both `planets_slug_unique` and `celestial_bodies_slug_unique`, though `slugIndex` holds one string today, so that MB.253 can rename the four while this deploy is live. The table and constraint `RENAME`s and the CHECK's drop carry an `.ack.md` sidecar, since `scripts/check-destructive-ddl.ts` flags any `rename`.
+The scoping found more that names the table: `tests/db/seed/index.test.ts`'s astrology tables, `vocabularies.test.ts`'s trigram list, `astrology.test.ts`'s table, the three module schema tests' column lists, and `IN_USE` in `src/db/repository/vocabularies.ts`, which is keyed by table name.
+
+**The table's foreign keys, indexes and CHECK are renamed here.** Drizzle names a foreign key from its table and the table it points at, and `vocabularyIndexes` names the indexes and CHECK from the table, and the drift test compares the names. So `planets_created_by_users_id_fk`, `planets_updated_by_users_id_fk` and `planets_deleted_by_users_id_fk` become `celestial_bodies_…`, `reference_links_planet_id_planets_id_fk` becomes `reference_links_planet_id_celestial_bodies_id_fk`, and `planets_seed_key_unique`, `planets_slug_unique`, `planets_trgm` and `planets_description_not_blank` become `celestial_bodies_…`. The astrology service's `slugIndex` names the new slug index. The deploy before maps a duplicate slug to the friendly error by the old name, so during the rollout and after a rollback to it a duplicate gets a generic error, still refused. The owner chose that on 2026-10-12 over keeping the old names until MB.253, which would have cost a two-name `slugIndex` and a second rename migration. The `RENAME`s and the CHECK's drop carry an `.ack.md` sidecar, since `scripts/check-destructive-ddl.ts` flags any `rename`.
 
 The hours were re-estimated on review on 2026-10-12, from 2: the repo's first table rename, a view, a hand-written CHECK, four renamed foreign keys and four catalogue tests. They remain an estimate.
 
@@ -1199,7 +1201,7 @@ _Acceptance criteria:_
 - `reference_links_one_row` counts `coalesce(celestial_body_id, planet_id)`: a link with `planet_id` alone saves, and so does a filled link holding both, asserted by insert
 - The sources seed test and `npm run db:reset` pass with the sources seed unchanged
 - The schema declares `celestial_bodies`; `AUDITED_TABLES` names it in place of `planets`; the schema-drift, audit-columns, updated-at trigger and partial-unique tests pass; and `PENDING_DROPS` holds the `planets` view under a `view` kind
-- The table's three audit foreign keys and `reference_links`' planet foreign key carry `celestial_bodies` in their names, the table's indexes and CHECK still carry `planets_`, and a duplicate slug returns the friendly error under either slug index name
+- The table's three audit foreign keys and `reference_links`' planet foreign key carry `celestial_bodies` in their names, so do the table's indexes and CHECK, and a duplicate slug returns the friendly error
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
 - Nothing reads or writes the new columns yet
 
@@ -1211,15 +1213,13 @@ Switches every reader and writer to MB.252's table and columns, and renames the 
 
 **What joins `PENDING_DROPS`.** The three columns, `ingredients.planets`, `ingredient_variants.planets` and `reference_links.planet_id`, and with the last its foreign key and its partial unique index: `reference_links_planet_id_celestial_bodies_id_fk`, the name MB.252 gives `reference_links_planet_id_planets_id_fk`, and `reference_links_planet_unique`. The drift test compares both kinds, so each needs its line until MB.254 drops it.
 
-**The table's indexes and CHECK are renamed here.** MB.252 left `planets_seed_key_unique`, `planets_slug_unique`, `planets_trgm` and `planets_description_not_blank` under their old names so that the deploy before it kept its friendly duplicate-slug error. This task's migration renames them to `celestial_bodies_…`, with an `.ack.md` sidecar for the `RENAME`s, which is safe because MB.252's deploy maps both slug index names. This task's `slugIndex` names the new one alone, since a rollback lands on MB.252's code, which maps both.
-
 **The seed is a larger surface than the plan counted.** A grep on 2026-10-12 finds 281 `planets:` keys and 435 `'planets'` string literals, most of the literals the field names in each reference's `supports` list. They sit in the pilot and the six compendium shards under `src/db/seed/compendium/`, and in `src/db/seed/compendium.ts`, `compendium/guard.ts`, `sources.ts`, `standard.ts` and `types.ts`. The scoping plan counted "about 260 `planets:` entries in the seed shards" and none of the literals.
 
 **Raw-SQL test helpers name the old column too.** `tests/support/db/read-variants.ts` selects `planets`, and `tests/db/seed/sources.test.ts` selects `l.planet_id` and joins `planets` on it. Neither passes through the schema, so the type checker does not find them.
 
-**The docs that name the table, its columns or the GraphQL names move in this task.** A grep on 2026-10-12 finds them in `claude-docs/graphql/schema.md`; `claude-docs/components/ingredient-form.md`; eleven `claude-docs/db/*.md` files besides `updated-at.md`, which MB.252 corrects (`astrology-vocabularies.md`, `astrology-vocabulary-seed.md`, `compendium-cache.md`, `compendium-writes.md`, `deity-vocabulary-seed.md`, `deity-vocabulary.md`, `identity-model.md`, `member-autofill.md`, `migrations-and-scripts.md`, `references.md`, `seed-module.md`); the compendium seed's README, the pilot's doc and the six shard docs under `claude-docs/db/compendium-seed/`; `db.md`, `modules.md`, `validation.md`, `commands.md` and `ci/deploy.md`; and DESIGN.md's schema and SDL names, leaving MB.251's divergence notes for MB.254. A passage recording what an earlier task did stays as written, as do the decision records.
+**The docs that name the table, its columns or the GraphQL names move in this task.** A grep on 2026-10-12 finds them in `claude-docs/graphql/schema.md`; `claude-docs/components/ingredient-form.md`; eleven `claude-docs/db/*.md` files (`astrology-vocabularies.md`, whose divergence note MB.252 corrected, `astrology-vocabulary-seed.md`, `compendium-cache.md`, `compendium-writes.md`, `deity-vocabulary-seed.md`, `deity-vocabulary.md`, `identity-model.md`, `member-autofill.md`, `migrations-and-scripts.md`, `references.md`, `seed-module.md`); the compendium seed's README, the pilot's doc and the six shard docs under `claude-docs/db/compendium-seed/`; `db.md`, `modules.md`, `validation.md`, `commands.md` and `ci/deploy.md`; and DESIGN.md's schema and SDL names, leaving MB.251's divergence notes for MB.254. A passage recording what an earlier task did stays as written, as do the decision records.
 
-The hours were re-estimated on review on 2026-10-12, from 5: the seed's 716 occurrences, the index renames and their sidecar, the two raw-SQL helpers and 27 docs come on top of the calibration against MB.136 (3h) plus the rename's mechanical churn. They remain an estimate.
+The hours were re-estimated on review on 2026-10-12, from 5: the seed's 716 occurrences, the index renames and their sidecar, the two raw-SQL helpers and 27 docs come on top of the calibration against MB.136 (3h) plus the rename's mechanical churn. They remain an estimate. MB.252 took the index renames on 2026-10-12, and the hours were not re-estimated for that.
 
 _Acceptance criteria:_
 
@@ -1227,9 +1227,9 @@ _Acceptance criteria:_
 - Every reader and writer uses `celestial_bodies` and the new columns, and nothing declares or reads the old ones, which still exist
 - A value written to an old column after MB.252's migration is in the new column after this one's
 - `PENDING_DROPS` lists the three old columns, `reference_links_planet_id_celestial_bodies_id_fk` and `reference_links_planet_unique`, and the drift test passes
-- The table's indexes and CHECK carry `celestial_bodies_`, the migration's sidecar covers the renames, the destructive-DDL check passes, and a duplicate slug returns the friendly error
+- A duplicate slug still returns the friendly error
 - Suggestions still count a value in use once however many lists hold it, scoped to the compendium and this coven, asserted with the precondition that another coven holds the value
-- No identifier, test name, comment, seed literal or raw-SQL helper under `src/` or `tests/` says planet, bar the migration history and `PENDING_DROPS`
+- No identifier, test name, comment, seed literal or raw-SQL helper under `src/` or `tests/` says planet, bar the migration history and `PENDING_DROPS`, the objects those lines still name until MB.254 (the one-row CHECK's `coalesce`, the index test's row for `reference_links_planet_unique`, and the migration data tests), and astronomy and citations that mean a planet
 - The live docs listed above name the new table, columns and GraphQL names
 
 **MB.254 — Drop the planet columns and view** · 2h
@@ -1240,7 +1240,7 @@ The contract half of rule 10, a task of its own ([`design-decisions/mb.251-plan.
 
 **One last fill for the links, none for the lists.** Between MB.253's migration and its code going live, the deploy before it can still write the old columns, and nothing copies those writes across. The two kinds of column are treated differently, each under its own precedent:
 
-- **`reference_links.planet_id` is filled one last time.** Before the drop, the migration copies `planet_id` into `celestial_body_id` on every link, live or removed, that holds the first and not the second. MB.253's code never writes `planet_id`, so such a row can only be a write from the deploy before it, and the copy only adds: it never overwrites a value MB.253's code wrote. Without it, the strict CHECK below could not be added over a link whose only key was `planet_id`. MB.141's `0039_drop-substitutes-list.sql` is the precedent, a refill that only adds before the drop.
+- **`reference_links.planet_id` is filled one last time.** Before the drop, the migration copies `planet_id` into `celestial_body_id` on every link, live or removed, that holds the first and not the second. MB.253's code never writes `planet_id`, so such a row can only be a write from the deploy before it, and the copy only adds: it never overwrites a value MB.253's code wrote. Without it, the strict CHECK below could not be added over a link whose only key was `planet_id`. MB.141's `0039_drop-substitutes-list.sql` is the precedent, a refill that only adds before the drop. The copy has one collision to handle. During MB.253's rollout the deploy before can link a body to a reference by `planet_id` while MB.253's code links the same pair by `celestial_body_id`, and copying the first over would then break `reference_links_celestial_body_unique` for two live links. Found while building MB.253 on 2026-10-12.
 - **The two list columns get no last fill**, as MB.137's `0036_drop-ingredient-singles.sql` gave its single columns none. MB.253's code edits the new lists, and a cleared list is stored as NULL (`claude-docs/validation.md`), so an old list beside a NULL new one may be a member's clear rather than a missed write, and a fill would undo it.
 
 **The strict one-row CHECK lands here.** The migration re-adds `reference_links_one_row` counting `celestial_body_id` alone, in place of MB.252's `coalesce(celestial_body_id, planet_id)`, so the schema file builds it from the `SOURCED` registry again.
@@ -1313,24 +1313,43 @@ _Acceptance criteria:_
 - A custom, one-off ingredient (MB.40) renders its own name and form in layer order with the rest, marked as one-off, and links to no ingredient page
 - The page is the only view M10.22 styles for print
 
-**MB.7 — Application nav shell** · 2h
+**MB.7 — Application nav shell** · 16h
 
 _Story:_ As a user, I want one persistent navigation frame so that every page is reachable from every other page.
 
 `AppShell`, added to §9's Components list by this audit. M8.16 and M8.17 require the add and edit modals to be "reachable from the main nav on any page", but no task and no route built an app-wide nav — `WorkspaceSwitcher` (M6.9) and the coven layout (M6.10) do not cover it, and both compendium and ingredient detail sit outside `/coven/` entirely. `/admin` is the other layout it wraps: M5.4's admin layout nests inside it as the coven layout does, and `AdminNav` becomes the admin area's section nav beneath the shell's own.
 
-**Pulled forward to Wave 9, straight after M6.10** (2026-10-11, the owner's call, made during MB.115): every page built before Wave 12 would otherwise have no nav. By then the switcher and the coven layout exist; the add and edit modals do not, since they need Wave 11's ingredient services. So the shell leaves a place in its nav for them, MB.122 designs that place, and M8.16 and M8.17 fill it.
+**Pulled forward to Wave 9, straight after M6.10** (2026-10-11, the owner's call, made during MB.115): every page built before Wave 12 would otherwise have no nav. By then the switcher and the coven layout exist; the add and edit modals do not, since they need Wave 11's ingredient services. So the shell carries one global Add Ingredient button, disabled until M8.16 builds the modal, and M8.17 builds Edit Ingredient where an ingredient is shown (amended 2026-10-12, see "Folded in").
+
+**Folded in: MB.122, 2026-10-12.** MB.122 was minted during M5.4 so that the nav would be designed once this task built it. The owner folded it into this task on 2026-10-12: once the design is chosen before the build, the review and the build are one piece of work. The design was chosen from a rendered mock-up the same day: **Option C, the "context header"**. It is a slim global bar (brand, Add Ingredient, account menu, theme toggle); beneath it a context row that names the coven as the switcher, or "Admin" as plain text, with the section nav as icon tabs beside it; and on a phone the section nav becomes a bottom bar. The options drawn, the research and the reasons are in [`design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md); the approved plan is [`mb.7-plan.md`](../design-decisions/mb.7-plan.md). MB.122 is retired (below).
+
+This task now also does the design review MB.122 described. It reviews and builds the primary nav, where `WorkspaceSwitcher` and the global Add Ingredient button sit, the Admin entry, the section navs beneath the shell's nav (the coven layout's and `AdminNav`) and the whole at phone width (375px). A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built, in the workshop and the running app, in both themes, at desktop and at phone width, and builds what the owner signed off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change except where this entry says so; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+_Left by MB.116:_ `/account`'s own nav is the pattern for a section nav: a `nav` holding a `ul.link-row` (`styling.md`, "Link rows and provider marks"), with `aria-current` on the entry for what is in view. The theme toggle's fixed top corner sits over a page's heading at 375px; this task moves it into the shell's bar on shell pages, and the fixed corner stays only on pages outside the shell.
+
+_Left by MB.115:_ `AdminNav` (`components/admin-nav.md`) marks the page in view with `aria-current` and with weight and an offset underline, not hue, reading the address with `usePathname` (the workshop's stand-in is `.ladle/navigation.ts`). It was a wrapping row of links wider than a phone and a `<details>` disclosure at a phone's width. This task settles where it sits under the shell's nav and replaces both shapes with the one section nav component (icon tabs in the context row; a bottom bar on a phone), so the disclosure goes. The tabbed admin pages keep their heading and tabs still while a tab's content changes (`components/tabbed-page.md`).
 
 _Acceptance criteria:_
 
 - Wraps every signed-in page, inside and outside `/coven/`
-- Carries the primary nav and the `WorkspaceSwitcher`, and leaves the place the global add and edit affordances take, which M8.16 and M8.17 fill (amended 2026-10-11, when the task moved to Wave 9)
+- Carries the primary nav and the `WorkspaceSwitcher`, passing it `canCreate` from the user row so a rights holder sees its Create Coven choice (M9.16), which an e2e spec walks to `/coven/new` (`@story-3`)
+- Carries one global Add Ingredient button, a labelled button at every width, disabled until M8.16 and absent for an unverified account. Its target follows the area: a coven page adds to that coven's ingredients, an admin page to the compendium, elsewhere the viewer's only coven or a choice. There is no Edit Ingredient in the shell: editing lives wherever an ingredient is shown, never inside a relational field, and M8.16 and M8.17 build to that (amended 2026-10-12)
+- The brand link goes to `/admin` for an admin and to the viewer's coven otherwise. The shell works that out itself (the first coven by slug, `/coven/new` for someone who holds none and may create, `/account` otherwise) until M2.8 (#270) builds the `/coven` landing, which then replaces the href with `/coven`
+- No switcher on admin pages: the context row reads "Admin", and a Your Coven link takes its place in the bar. On coven pages the context row's name is the switcher
+- On-screen copy says Coven ("Select Coven", "Create Coven", "Your Coven", the section nav labelled "Coven"); code, schema and docs keep saying workspace
 - The coven layout nests inside it and adds only workspace-scoped chrome
 - The admin layout nests inside it too and adds only `AdminNav`, the admin area's section nav
 - Nav survives navigation between workspace-scoped and global pages
 - Admin entry appears only for admins
-- An account menu on every signed-in page offers Your Account (`/account`) and Sign Out, the same sign-out `/account` carries (added 2026-10-10, on the owner's call)
-- axe clean, keyboard navigable
+- An account menu on every signed-in page offers Your Account (`/account`) and Sign Out, the same sign-out `/account` carries, and the theme toggle on a phone (added 2026-10-10, on the owner's call)
+- The owner signs off the design, in both themes and at phone width, recorded as a comment on this issue (given 2026-10-12 on the mock-up and recorded on #405)
+- No page in the shell scrolls sideways at 375px, and its body copy keeps to the reading measure
+- Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
+- axe clean with visible keyboard focus; the e2e specs and stories pass
+- Each component's doc updates its Styling section, and its stories show the reviewed design
+- Every nav marks the current page, with `aria-current` as well as visually
+- At phone width the nav is reachable and operable by keyboard and by screen reader
+- The section navs read as beneath the shell's nav, not beside it
 
 **MB.8 — Zod schema for spells** · 1h
 
@@ -1377,7 +1396,7 @@ _Acceptance criteria:_
 - Constructed per request
 - Returns display name only, never the email address
 - Resolves a co-member's name, a removed member's too, and nothing for a user who never shared a workspace with the viewer, asserted with the precondition that the user exists and has a name
-- A deleted user still resolves to a stable display value
+- A deleted user still resolves to a stable display value: the name their row last held, the owner's call while building ([`mb.10-co-member-display-names.md`](../design-decisions/mb.10-co-member-display-names.md))
 - `usersByIdForAdmin` is unchanged
 
 **MB.11 — GraphQL field exposing the fuzzy duplicate service** · 1h
@@ -3589,7 +3608,7 @@ _Acceptance criteria (retired — moved to MB.116):_
 - A failed link's error sits beside the provider it concerns
 - No component or Sass partial in the section is a copy of another; a shared piece is one component, named in the PR body
 
-**MB.118 — Design review: the site's mail** · 2h
+**MB.118 — Design review: the site's mail** · 6h
 
 _Story:_ As a new member or an invitee, I want the site's mail to look like the site and read well in my mail client, so that I trust the link in it.
 
@@ -3597,26 +3616,33 @@ Minted during M5.4. Reviews the mail the site sends, once the last of it exists:
 
 _Left by MB.116:_ The providers' brand colours are one map in `_variables.scss`, `$brand-palettes`, read through `brand-color()`: the one place their hexes are written, if a mail ever shows a provider mark. MB.116's copy register holds for mail too: second person and plain words, one sentence for what happened and one for what to do, "Please try again." only where trying again can help, and title case for every label and heading (`styling.md`, "Designing a section").
 
+_Left by the Wave 10 review (2026-10-12):_ Three of the criteria below already hold on staging, so the review asserts them and builds nothing: every mail has a plain-text part (`renderParts` in `src/emails/parts/layout.tsx` renders both the HTML and the plain text), the link is readable as text under the button (`claude-docs/email.md`, "Templates"), and `email.md` has a "Design" section recording the design rules. What `email.md` lacks is a line about the phone-width check, so the review adds the rule that each mail is checked at 375px. The coven invitation mail does not exist until M7.3, which the wave orders before this task.
+
+_Amended 2026-10-12 by the review itself, on the owner's call:_ the estimate rises from 2h to 6h because every sub-hour defect the review found lands here rather than minted, and the branch sits on M7.3's (#915) so the coven mail is in the tree. The plan and its sources are [`design-decisions/mb.118-plan.md`](../design-decisions/mb.118-plan.md). What the review measured: the mail palette equals the site's tokens to the channel; every token pairing clears 4.5:1 in both themes (light link and button 4.65:1 the lowest), pinned by `tests/emails/theme.test.ts`; in the light theme the salt photograph ran under the closing lines, where the muted ink fell to 2.14:1 and the written-out link to 1.66:1, which no opacity fixes, so the salt now sits beneath the text block; the button was 43px tall, now 47px; and a document with no viewport meta lays out at 980px on a phone. A client pass found desktop Outlook (the Word engine) falling back to Times New Roman, because the body font sat only on the outer cell and Word ignores a stack whose first face is an uninstalled `@font-face`, and dropping the side padding, which sat on tables; both fixed in `src/emails/parts/layout.tsx` with a 600px ghost table and pixel line heights. The plain-text part no longer opens with the wordmark's address. `tests/emails/parts/layout.test.tsx` asserts, once per template with a guard over `src/emails/`, that the text part says everything the HTML does and that the address is readable as text and first among the text part's links. `email.md` records the 375px rule, the overlap rule, the Outlook rules and the copy guidance. Waiting for the owner's sign-off, as copy: each subject without its full stop and with the important words first, a preview line per mail that adds to the subject, the two closing sentences without their negative contractions (GOV.UK style guide), and an expired-link sentence in the verification mail. Three things the sources want that the data does not yet carry are left to mint, not built: the reader's name in the verification mail, the inviter's name in both invitations, and transparent ornaments should Gmail on iOS prove to invert the dark mail. **Signed off 2026-10-12** from the review page: all three designs approved; subjects, preview lines, the closing sentences and the expired-link sentence accepted as drafted; and, on the owner's call over this entry's "behaviour does not change", the inviter's name built here rather than minted (`InvitationSender` takes the inviter). The reader's name was built into the verification mail the same way and taken out again on the owner's second call: that mail goes to an address the account has not proved, and a mistyped one would hand a stranger the name of whoever typed it. The client preview, Gmail on iOS and the Outlook.com button are not yet checked; transparent ornaments stay to mint only if that look finds the inversion.
+
 _Acceptance criteria:_
 
 - The owner signs off each mail's design, in a light and a dark client and in a phone-width client (375px), recorded as a comment on this issue (phone width amended during MB.53, on the owner's word)
 - Each mail reads correctly in Gmail, Outlook and Apple Mail, light and dark, and with images blocked
-- Each mail carries a plain-text part that says everything its HTML does
-- The link is the obvious action, and its address is also readable as text
+- Each mail carries a plain-text part that says everything its HTML does (already holds, asserted by the review)
+- The link is the obvious action, and its address is also readable as text (already holds, asserted by the review)
 - Text contrast holds at 4.5:1 in the mail's light and dark renderings
-- `email.md` records the design rules the mail follows
+- `email.md` records the design rules the mail follows (already holds, asserted by the review)
+- `email.md` records the 375px rule
 
 **MB.119 — Design review: the coven and invitations** · 3h
 
 _Story:_ As a coven member, I want the coven's pages to feel like one place I belong to, so that finding members and inviting someone is obvious.
 
-Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last owner's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.122's.
+Minted during M5.4. Reviews the coven section once invitations land: creating a coven (M6.7) and its form (M9.16), `WorkspaceSwitcher` (M6.9), the coven layout's chrome (M6.10), the coven's index page and section nav (M9.15), `MemberList` and the members page with its owner controls (M6.12, M6.13), deleting, leaving and the last owner's guided exit (M6.14 to M6.16), `InviteDialog` (M7.4), the acceptance page (M7.5) and the post-sign-in landing (M2.8). The switcher is reviewed here as a component; where it sits in the app's nav is MB.7's.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), a page with no AppShell (`styling.md`, "The page frame"). The create-workspace form is not one of those: it is M9.16, a page inside the AppShell, which wraps every signed-in page (MB.7), so it takes no page frame, and its narrower column is the form's own choice (`styling.md`, the measure). Every notice in the section shows through `Notice` (`components/notice.md`).
+_Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), a page with no AppShell (`styling.md`, "The page frame"). The create-workspace page, `/coven/new` (M9.16), takes it too: the owner asked for it centred like the email page (2026-10-12), so its form sits on a `.panel` in `.page-frame--narrow` inside the AppShell (MB.7). Every notice in the section shows through `Notice` (`components/notice.md`).
 
-_Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/admin/(people)/invitations/`), the owner's call during MB.115.
+_Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/(shell)/admin/(people)/invitations/`), the owner's call during MB.115.
+
+_Left by the Wave 10 review (2026-10-12):_ The scope above grows by these. M7.6's pending invitations list, its count, its revoke control and the Invite button it mounts (the review moved mounting `InviteDialog` into M7.6). The components `CovenNav` (`src/components/CovenNav/`), `CreateWorkspaceForm`, `InvitationAcceptance` (the acceptance page's component), `ContextRow`, and `ActionFailure` in `WorkspaceActions/action-failure.tsx`, which has neither a doc under `claude-docs/components/` nor a story, and gains both here. The members page (`src/app/(shell)/coven/[slug]/members/page.tsx`) uses none of MB.115's shared list pieces, so it adopts `PageHeader` and `Pager` here, not in M7.6. The docs `member-list.md`, `delete-workspace-button.md` and `leave-workspace-button.md` have no Styling section yet, so each gains one rather than updating it. The section's copy mixes two nouns: `WorkspaceSwitcher` says "Coven", "Create Coven" and "Select Coven" while the buttons say "Leave Workspace" and "Delete Workspace". The review settles one user-facing noun with the owner and makes all the copy use it. The acceptance page also has to read correctly for an invitation into a deleted coven, which M7.5 refuses at page load.
 
 _Acceptance criteria:_
 
@@ -3624,9 +3650,11 @@ _Acceptance criteria:_
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
-- Each component's doc updates its Styling section, and its stories show the reviewed design
+- Each component's doc adds or updates its Styling section, and its stories show the reviewed design
+- The section's user-facing copy uses one noun for a workspace, settled with the owner
+- `ActionFailure` has a doc and a story
 - Owner-only controls read as such, and a viewer's page shows no control it cannot use
-- The acceptance page reads correctly signed in, signed out, and for an expired or used link
+- The acceptance page reads correctly signed in, signed out, and for an expired or used link, or an invitation into a deleted coven
 
 **MB.120 — Design review: the public compendium and shared ingredient components** · 3h
 
@@ -3671,28 +3699,19 @@ _Acceptance criteria:_
 - A row being edited reads differently from one at rest, and an unsaved change shows
 - The empty state says what to do next
 
-**MB.122 — Design review: the navigation** · 2h
+**MB.122 — ~~Design review: the navigation~~** · **RETIRED 2026-10-12, folded into MB.7**
 
-_Story:_ As a user, I want the navigation to look finished and show me where I am, so that moving around the site is effortless on any screen.
+> **Retired without being done as its own task.** The ID is kept because task IDs
+> are immutable. The review and the build are one piece of work once the design is
+> chosen before the build, and the design was chosen from a rendered mock-up on
+> 2026-10-12 (the owner's call). MB.7 now carries the review's scope, its "Left by
+> MB.116" and "Left by MB.115" notes and its acceptance criteria. The design
+> chosen, its options and its reasons are in
+> [`design-decisions/mb.7-navigation.md`](../design-decisions/mb.7-navigation.md).
+> MB.7 keeps its own 2h. The two entries added up to 4h, and no new figure
+> has been invented for the merged task; the owner sets it.
 
-Minted during M5.4, on the owner's request that the nav be designed once MB.7 builds it. Reviews `AppShell`: the primary nav, where `WorkspaceSwitcher` and the global add and edit affordances sit, the Admin entry, and the section navs beneath it — the coven layout's and `AdminNav`. At phone width the nav has to fit, which may mean collapsing it behind a control. It moved to Wave 9 with MB.7 (2026-10-11), before the add and edit modals exist, so it designs the place MB.7 leaves for them, and M8.16 and M8.17 build to that design.
-
-A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
-
-_Left by MB.116:_ `/account`'s own nav is the pattern for a section nav: a `nav` holding a `ul.link-row` (`styling.md`, "Link rows and provider marks"), with `aria-current` on the entry for what is in view. The theme toggle's fixed top corner sits over a page's heading at 375px; where it goes is this review's to settle once the nav exists.
-
-_Left by MB.115:_ `AdminNav` (`components/admin-nav.md`) marks the page in view with `aria-current` and with weight and an offset underline, not hue, reading the address with `usePathname` (the workshop's stand-in is `.ladle/navigation.ts`). Wider than a phone it is a wrapping row of links; at a phone's width it is a `<details>` disclosure listing them in the `/admin` index's sections, the owner's jump menu built as real links so it works before the page's script has loaded. Where it sits under the shell's nav, and whether the disclosure stays, is this review's to settle. The tabbed admin pages keep their heading and tabs still while a tab's content changes (`components/tabbed-page.md`).
-
-_Acceptance criteria:_
-
-- The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
-- No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
-- Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
-- Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
-- Each component's doc updates its Styling section, and its stories show the reviewed design
-- Every nav marks the current page, with `aria-current` as well as visually
-- At phone width the nav is reachable and operable by keyboard and by screen reader
-- The section navs read as beneath the shell's nav, not beside it
+See **MB.7**.
 
 **MB.123 — Design review: the grimoire** · 3h
 

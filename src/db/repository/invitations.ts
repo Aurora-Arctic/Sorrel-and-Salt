@@ -1,10 +1,11 @@
-import { and, eq, gt, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
 import { containsText, notSoftDeleted, scopedTo } from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
-import { existsIn, selectFrom, selectOne } from './select';
+import { existsIn, selectOne } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
@@ -12,6 +13,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types'
 import type {
   AuditWriter,
   InvitationRow,
+  InvitedCoven,
   SiteInvitationFilter,
   SiteInvitationValues,
   SortPart,
@@ -52,6 +54,12 @@ function pendingInvitation(...which: (SQL | undefined)[]) {
   );
 }
 
+// A workspace invitation names a workspace that is still live (M6.14); a
+// site-tier one has none to check.
+function inLiveWorkspaceOrSite() {
+  return or(onSiteTier(), existsIn(workspaces, eq(workspaces.id, invitations.workspaceId)));
+}
+
 // The session's user holds the invited address, verified, on a live row.
 // Both sides lowered, though `users` holds its addresses lower-cased.
 function heldVerifiedBySession(session: AuditSession) {
@@ -80,25 +88,46 @@ export function findInvitationByToken(token: string): Promise<InvitationRow | un
 }
 
 /**
- * The proof's workspace's pending invitations, for the members page (M7.6).
- * Unordered: the page sorts the handful a workspace holds.
+ * The name and slug of the live workspace an invitation names, or `undefined`
+ * once it is deleted: where an accepted invitation lands, what refuses one
+ * into a deleted coven before Accept is offered, and the name the Accept page
+ * shows. Under no proof, for the token read's reason, and narrow on purpose —
+ * two fields, never the row. The caller has checked that the session's
+ * verified address is the invited one, since only that account may be told
+ * the name.
  */
-export async function findPendingInvitationsInWorkspace(
+export async function findInvitedCoven(workspaceId: string): Promise<InvitedCoven | undefined> {
+  const row = await selectOne(
+    workspaces,
+    and(notSoftDeleted(workspaces), eq(workspaces.id, workspaceId)),
+  );
+  return row && { name: row.name, slug: row.slug };
+}
+
+/**
+ * One invitation of the proof's workspace by id, in any state — pending,
+ * accepted, revoked or expired — or `undefined` for a missing one, another
+ * workspace's or a deleted one. `revokeInvitation` matches pending rows
+ * only, so this is how a service tells an accepted invitation from a missing
+ * one (M7.6).
+ */
+export function findInvitationInWorkspace(
   membership: Membership,
-): Promise<InvitationRow[]> {
-  return selectFrom(
+  id: string,
+): Promise<InvitationRow | undefined> {
+  return selectOne(
     invitations,
-    and(notSoftDeleted(invitations), pendingInvitation(scopedTo(membership, invitations))),
+    and(notSoftDeleted(invitations), scopedTo(membership, invitations), eq(invitations.id, id)),
   );
 }
 
 /**
- * The site-tier list's order, newest first, as the ledger's is: a page's key
+ * Both tiers' pending lists' order, newest first, as the ledger's is: a page's key
  * is ascending, so the instant is written negated, and as `numeric`, which
  * keeps the microseconds a `Date` would drop from a cursor. Invitations of
  * one instant follow by id.
  */
-const SITE_INVITATION_ORDER: readonly SortPart[] = [
+const PENDING_INVITATION_ORDER: readonly SortPart[] = [
   { expression: sql`-extract(epoch from ${invitations.createdAt})`, type: 'numeric' },
 ];
 
@@ -127,7 +156,7 @@ export function findPendingSiteInvitationPage(
   return findPageInScope(
     invitations,
     onSiteTier(),
-    SITE_INVITATION_ORDER,
+    PENDING_INVITATION_ORDER,
     page,
     pendingOnSite(filter),
   );
@@ -146,9 +175,43 @@ export function findPendingSiteInvitationCount(
   return findPageCountInScope(
     invitations,
     onSiteTier(),
-    SITE_INVITATION_ORDER,
+    PENDING_INVITATION_ORDER,
     start,
     pendingOnSite(filter),
+  );
+}
+
+/**
+ * One page of the proof's workspace's pending invitations, newest first, for
+ * the members page (M7.6): the site tier's pager under the `Membership` proof.
+ */
+export function findPendingWorkspaceInvitationPage(
+  membership: Membership,
+  page: PageRequest,
+): Promise<PageEntry<InvitationRow>[]> {
+  return findPageInScope(
+    invitations,
+    scopedTo(membership, invitations),
+    PENDING_INVITATION_ORDER,
+    page,
+    pendingInvitation(),
+  );
+}
+
+/**
+ * How many invitations `findPendingWorkspaceInvitationPage` pages, and how
+ * many come before `start`, a page's first row, none on an empty page.
+ */
+export function findPendingWorkspaceInvitationCount(
+  membership: Membership,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(
+    invitations,
+    scopedTo(membership, invitations),
+    PENDING_INVITATION_ORDER,
+    start,
+    pendingInvitation(),
   );
 }
 
@@ -193,6 +256,7 @@ export function invitationWrites({
         pendingInvitation(
           eq(invitations.tokenHash, hashToken(token)),
           heldVerifiedBySession(session),
+          inLiveWorkspaceOrSite(),
         ),
       ),
     revokeInvitation: (proof: Membership | SiteAdmin, id: string) =>

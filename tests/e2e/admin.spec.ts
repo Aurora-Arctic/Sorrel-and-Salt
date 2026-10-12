@@ -189,6 +189,69 @@ test('an admin lists the users at /admin/users, filtered, with their sign-in met
   await assertNoAccessibilityViolations(page);
 });
 
+// M9.19, story 19 as narrowed: an admin sees which covens a user holds, and
+// with what role, in a modal over the list, and reaches none of them
+// (claude-docs/design-decisions/m9.19-admin-sees-user-covens.md).
+test(
+  'an admin opens a user from the list and sees their covens, linked to none, then closes back to the list',
+  { tag: '@story-19' },
+  async ({ page }) => {
+    const email = 'coven-holder@admin-user-modal.test';
+    const coven = 'Fixture Modal Coven';
+    const { userId } = await signInAs(page, email);
+    const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+    try {
+      const [workspace] = await sql`
+        insert into workspaces (name, slug, created_by, updated_by)
+        values (${coven}, 'fixture-modal-coven', ${userId}, ${userId})
+        returning id`;
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${workspace.id}, ${userId}, 'owner', ${userId}, ${userId})`;
+    } finally {
+      await sql.end();
+    }
+    await signInAs(page, 'an-admin@admin-user-modal.test', ['google'], 'admin');
+
+    await page.goto(`/admin/users?query=${encodeURIComponent(email)}`);
+    await page.getByRole('row').getByRole('link', { name: 'Fixture Person', exact: true }).click();
+
+    // Named by its eyebrow, the user's name and their address.
+    const dialog = page.getByRole('dialog', { name: new RegExp(`Fixture Person.*${email}`) });
+    await expect(dialog).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`[?&]user=${userId}$`));
+    const row = dialog
+      .getByRole('list', { name: 'Covens' })
+      .getByRole('listitem')
+      .filter({ hasText: coven });
+    await expect(row).toContainText('Owner');
+    // An admin is no member, so the coven's own page would answer 404.
+    await expect(dialog.locator('a[href*="/coven/"]')).toHaveCount(0);
+    // Impersonation is not registered in this run, so the body offers no Impersonate.
+    await expect(dialog.getByRole('button', { name: /Impersonate/ })).toHaveCount(0);
+    await assertNoAccessibilityViolations(page);
+
+    await dialog.getByRole('button', { name: 'Close' }).click();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(page).toHaveURL(/\/admin\/users\?query=[^&]*$/);
+  },
+);
+
+// A hand-edited `?user=`: the list, with the notice over it, and no modal.
+test('an admin at an address naming no user sees the list with the notice and no modal', async ({
+  page,
+}) => {
+  await signInAs(page, 'an-admin@admin-user-missing.test', ['google'], 'admin');
+
+  const response = await page.goto('/admin/users?user=not-an-id');
+
+  expect(response?.status()).toBe(200);
+  // In the page's main: Next puts its route announcer, an empty alert, in <body>.
+  await expect(page.getByRole('main').getByRole('alert')).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.getByRole('table')).toBeVisible();
+});
+
 // M5.8: an admin approves a user with no invitation from their row, behind a
 // modal naming them, and then revokes it, the row saying so each time.
 test('an admin approves a user awaiting approval at /admin/users, then revokes it', async ({
@@ -207,7 +270,7 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
   const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
   await expect(approving).toContainText('Fixture Person');
   await expect(approving.getByRole('button', { name: 'Approve' })).toBeFocused();
-  // An optional reason, as Grant and Revoke of admin take one.
+  // An optional reason, as Promote and Revoke of admin take one.
   await approving.getByRole('textbox', { name: 'Reason' }).fill('Runs the Tuesday circle');
   await assertNoAccessibilityViolations(page);
 
@@ -237,113 +300,124 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
 
 // MB.59: an admin grants admin to a user from their row, behind a modal naming
 // them with an optional reason the ledger keeps, and then revokes it.
-test('an admin grants admin to a user at /admin/users with a reason, then revokes it', async ({
-  page,
-}) => {
-  const { userId } = await signInAs(page, 'grantee@admin-role.test');
-  await signInAs(page, 'an-admin@admin-role.test', ['discord'], 'admin');
+test(
+  'an admin grants admin to a user at /admin/users with a reason, then revokes it',
+  { tag: '@story-60' },
+  async ({ page }) => {
+    const { userId } = await signInAs(page, 'grantee@admin-role.test');
+    await signInAs(page, 'an-admin@admin-role.test', ['discord'], 'admin');
 
-  const response = await page.goto('/admin/users?query=grantee%40admin-role.test');
-  expect(response?.status()).toBe(200);
-  const row = page.getByRole('row', { name: /grantee@admin-role\.test/ });
-  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
-  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+    const response = await page.goto('/admin/users?query=grantee%40admin-role.test');
+    expect(response?.status()).toBe(200);
+    const row = page.getByRole('row', { name: /grantee@admin-role\.test/ });
+    await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+    await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-  await row.getByRole('button', { name: 'Grant admin to Fixture Person' }).click();
-  const granting = page.getByRole('dialog', { name: 'Grant Admin' });
-  await expect(granting).toContainText('Fixture Person');
-  await expect(granting.getByRole('button', { name: 'Grant' })).toBeFocused();
-  await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the planets');
-  await assertNoAccessibilityViolations(page);
+    await row.getByRole('button', { name: 'Promote Fixture Person to admin' }).click();
+    const granting = page.getByRole('dialog', { name: 'Promote to Admin' });
+    await expect(granting).toContainText('Fixture Person');
+    await expect(granting.getByRole('button', { name: 'Promote' })).toBeFocused();
+    await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
+    await assertNoAccessibilityViolations(page);
 
-  await granting.getByRole('button', { name: 'Grant' }).click();
-  await expect(granting).toHaveCount(0);
+    await granting.getByRole('button', { name: 'Promote' }).click();
+    await expect(granting).toHaveCount(0);
 
-  // An admin now, who may create a coven, so the creation cell holds the mark alone.
-  await expect(row.getByRole('cell').nth(2)).toHaveText(/^Admin/);
-  await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
-  expect(await privilegeChanges(userId)).toEqual([
-    { privilege: 'admin', change: 'grant', via: 'admin', note: 'Curates the planets' },
-    { privilege: 'create_workspace', change: 'grant', via: 'admin', note: 'Curates the planets' },
-  ]);
+    // An admin now, who may create a coven, so the creation cell holds the mark alone.
+    await expect(row.getByRole('cell').nth(2)).toHaveText(/^Admin/);
+    await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
+    expect(await privilegeChanges(userId)).toEqual([
+      { privilege: 'admin', change: 'grant', via: 'admin', note: 'Curates the celestial bodies' },
+      {
+        privilege: 'create_workspace',
+        change: 'grant',
+        via: 'admin',
+        note: 'Curates the celestial bodies',
+      },
+    ]);
 
-  // And revoked again, behind its own red modal; the flag stays.
-  await row.getByRole('button', { name: 'Revoke admin from Fixture Person' }).click();
-  const revoking = page.getByRole('dialog', { name: 'Revoke Admin' });
-  await expect(revoking).toContainText('Fixture Person');
-  await revoking.getByRole('button', { name: 'Revoke' }).click();
-  await expect(revoking).toHaveCount(0);
+    // And revoked again, behind its own red modal; the flag stays.
+    await row.getByRole('button', { name: 'Revoke admin from Fixture Person' }).click();
+    const revoking = page.getByRole('dialog', { name: 'Revoke Admin' });
+    await expect(revoking).toContainText('Fixture Person');
+    await revoking.getByRole('button', { name: 'Revoke' }).click();
+    await expect(revoking).toHaveCount(0);
 
-  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
-  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
-  await expect(row.getByRole('button', { name: 'Grant admin to Fixture Person' })).toBeVisible();
-});
+    await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+    await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
+    await expect(
+      row.getByRole('button', { name: 'Promote Fixture Person to admin' }),
+    ).toBeVisible();
+  },
+);
 
 // MB.63: the primary admin pauses admin changes, another admin is refused a
 // grant while they are paused, and the primary admin resumes them. Every
 // admin sees the state in words; only the primary admin's switch works.
-test('the primary admin pauses admin changes, another admin is refused a grant, and it resumes', async ({
-  page,
-}) => {
-  const primary = await primaryAdminId(page);
-  await signInAs(page, 'paused-grantee@admin-role.test');
-  const { userId: other } = await signInAs(
-    page,
-    'other-admin@admin-role.test',
-    ['discord'],
-    'admin',
-  );
-  const list = '/admin/users?query=paused-grantee%40admin-role.test';
-  // The page's state while paused, and none while on (the owner's call).
-  const status = page.getByRole('main').getByRole('status');
+test(
+  'the primary admin pauses admin changes, another admin is refused a grant, and it resumes',
+  { tag: '@story-60' },
+  async ({ page }) => {
+    const primary = await primaryAdminId(page);
+    await signInAs(page, 'paused-grantee@admin-role.test');
+    const { userId: other } = await signInAs(
+      page,
+      'other-admin@admin-role.test',
+      ['discord'],
+      'admin',
+    );
+    const list = '/admin/users?query=paused-grantee%40admin-role.test';
+    // The page's state while paused, and none while on (the owner's call).
+    const status = page.getByRole('main').getByRole('status');
 
-  // Another admin sees the switch, unusable, and why.
-  await page.goto(list);
-  const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
-  await expect(unusable).toHaveAttribute('aria-disabled', 'true');
-  await expect(unusable).toHaveAccessibleDescription(/\S/);
-  await expect(status).toHaveCount(0);
+    // Another admin sees the switch, unusable, and why.
+    await page.goto(list);
+    const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
+    await expect(unusable).toHaveAttribute('aria-disabled', 'true');
+    await expect(unusable).toHaveAccessibleDescription(/\S/);
+    await expect(status).toHaveCount(0);
 
-  // The primary admin pauses, behind a modal asking first. Scoped to it:
-  // the button that opens it has the same name.
-  await signInAgainAs(page, primary);
-  await page.goto(list);
-  await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
-  const pausing = page.getByRole('dialog', { name: 'Pause Admin Changes' });
-  await pausing.getByRole('button', { name: 'Pause Admin Changes' }).click();
-  await expect(pausing).toHaveCount(0);
-  await expect(status).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
-  await assertNoAccessibilityViolations(page);
+    // The primary admin pauses, behind a modal asking first. Scoped to it:
+    // the button that opens it has the same name.
+    await signInAgainAs(page, primary);
+    await page.goto(list);
+    await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
+    const pausing = page.getByRole('dialog', { name: 'Pause Admin Changes' });
+    await pausing.getByRole('button', { name: 'Pause Admin Changes' }).click();
+    await expect(pausing).toHaveCount(0);
+    await expect(status).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
+    await assertNoAccessibilityViolations(page);
 
-  // The other admin's Grant is locked; tried from the keyboard, it says why
-  // and opens nothing. The service refuses the same.
-  await signInAgainAs(page, other);
-  await page.goto(list);
-  await expect(status).toBeVisible();
-  const row = page.getByRole('row', { name: /paused-grantee@admin-role\.test/ });
-  const grant = row.getByRole('button', { name: 'Grant admin to Fixture Person' });
-  await expect(grant).toHaveAttribute('aria-disabled', 'true');
-  await expect(grant).toHaveAccessibleDescription(/\S/);
-  await grant.focus();
-  await page.keyboard.press('Enter');
-  await expect(row.getByRole('alert')).toBeVisible();
-  await assertNoAccessibilityViolations(page);
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
-  // Coven creation's Approve is locked the same way (amended on the owner's call).
-  const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
-  await expect(approve).toHaveAttribute('aria-disabled', 'true');
-  await expect(approve).toHaveAccessibleDescription(/\S/);
-  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+    // The other admin's Promote is locked; tried from the keyboard, it says why
+    // and opens nothing. The service refuses the same.
+    await signInAgainAs(page, other);
+    await page.goto(list);
+    await expect(status).toBeVisible();
+    const row = page.getByRole('row', { name: /paused-grantee@admin-role\.test/ });
+    const grant = row.getByRole('button', { name: 'Promote Fixture Person to admin' });
+    await expect(grant).toHaveAttribute('aria-disabled', 'true');
+    await expect(grant).toHaveAccessibleDescription(/\S/);
+    await grant.focus();
+    await page.keyboard.press('Enter');
+    await expect(row.getByRole('alert')).toBeVisible();
+    await assertNoAccessibilityViolations(page);
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+    // Coven creation's Approve is locked the same way (amended on the owner's call).
+    const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
+    await expect(approve).toHaveAttribute('aria-disabled', 'true');
+    await expect(approve).toHaveAccessibleDescription(/\S/);
+    await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-  // And the primary admin resumes.
-  await signInAgainAs(page, primary);
-  await page.goto(list);
-  await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
-  await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
-  await expect(status).toHaveCount(0);
-});
+    // And the primary admin resumes.
+    await signInAgainAs(page, primary);
+    await page.goto(list);
+    await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
+    await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+    await expect(status).toHaveCount(0);
+  },
+);
 
 test('a signed-in non-admin is refused at /admin/categories with the 403 page', async ({
   page,
@@ -359,59 +433,63 @@ test('a signed-in non-admin is refused at /admin/categories with the 403 page', 
 
 // M5.6: the vocabulary's list, and its modal opened by the address — added
 // to, edited and retired from, the list re-read after each.
-test('an admin adds, edits and deletes a category in the modal over the list', async ({ page }) => {
-  await signInAs(page, 'an-admin@admin-categories.test', ['discord'], 'admin');
+test(
+  'an admin adds, edits and deletes a category in the modal over the list',
+  { tag: '@story-18' },
+  async ({ page }) => {
+    await signInAs(page, 'an-admin@admin-categories.test', ['discord'], 'admin');
 
-  const response = await page.goto('/admin/categories');
-  expect(response?.status()).toBe(200);
-  // The seeded vocabulary pages 25 at a time, alphabetically.
-  await expect(page.getByRole('table').getByRole('row')).toHaveCount(26);
+    const response = await page.goto('/admin/categories');
+    expect(response?.status()).toBe(200);
+    // The seeded vocabulary pages 25 at a time, alphabetically.
+    await expect(page.getByRole('table').getByRole('row')).toHaveCount(26);
 
-  await page.getByRole('link', { name: 'Add Category' }).click();
-  const adding = page.getByRole('dialog', { name: 'Add Category' });
-  await expect(adding).toBeVisible();
-  await expect(page).toHaveURL(/\/admin\/categories\?new$/);
-  await assertNoAccessibilityViolations(page);
+    await page.getByRole('link', { name: 'Add Category' }).click();
+    const adding = page.getByRole('dialog', { name: 'Add Category' });
+    await expect(adding).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/categories\?new$/);
+    await assertNoAccessibilityViolations(page);
 
-  // Escape asks the page to close it: the address loses `?new`.
-  await page.keyboard.press('Escape');
-  await expect(adding).toHaveCount(0);
-  await expect(page).toHaveURL(/\/admin\/categories$/);
+    // Escape asks the page to close it: the address loses `?new`.
+    await page.keyboard.press('Escape');
+    await expect(adding).toHaveCount(0);
+    await expect(page).toHaveURL(/\/admin\/categories$/);
 
-  await page.getByRole('link', { name: 'Add Category' }).click();
-  await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
-  await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
-  await adding.getByRole('combobox', { name: 'Group' }).click();
-  // The modal's own list: the filter's Group box has a list of its own.
-  await adding.getByRole('option').first().click();
-  await adding.getByRole('button', { name: 'Save Category' }).click();
-  await expect(adding).toHaveCount(0);
-  // First by name, so on the first page.
-  const row = page.getByRole('row', { name: /Aaa Testcraft/ });
-  await expect(row).toBeVisible();
+    await page.getByRole('link', { name: 'Add Category' }).click();
+    await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
+    await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the e2e spec');
+    await adding.getByRole('combobox', { name: 'Group' }).click();
+    // The modal's own list: the filter's Group box has a list of its own.
+    await adding.getByRole('option').first().click();
+    await adding.getByRole('button', { name: 'Save Category' }).click();
+    await expect(adding).toHaveCount(0);
+    // First by name, so on the first page.
+    const row = page.getByRole('row', { name: /Aaa Testcraft/ });
+    await expect(row).toBeVisible();
 
-  await row.getByRole('link', { name: 'Edit Aaa Testcraft' }).click();
-  // An edit dialog is named by its eyebrow and the entry's saved name (MB.115).
-  const editing = page.getByRole('dialog', { name: 'Edit Category, Aaa Testcraft', exact: true });
-  await expect(page).toHaveURL(/\?edit=aaa-testcraft$/);
-  await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Renamed');
-  await editing.getByRole('button', { name: 'Save Category' }).click();
-  await expect(editing).toHaveCount(0);
-  await expect(page.getByRole('row', { name: /Aaa Testcraft Renamed/ })).toBeVisible();
+    await row.getByRole('link', { name: 'Edit Aaa Testcraft' }).click();
+    // An edit dialog is named by its eyebrow and the entry's saved name (MB.115).
+    const editing = page.getByRole('dialog', { name: 'Edit Category, Aaa Testcraft', exact: true });
+    await expect(page).toHaveURL(/\?edit=aaa-testcraft$/);
+    await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Renamed');
+    await editing.getByRole('button', { name: 'Save Category' }).click();
+    await expect(editing).toHaveCount(0);
+    await expect(page.getByRole('row', { name: /Aaa Testcraft Renamed/ })).toBeVisible();
 
-  // A renamed category answers at its new address, under its new name.
-  await page.goto('/admin/categories?edit=aaa-testcraft-renamed');
-  const renamed = page.getByRole('dialog', {
-    name: 'Edit Category, Aaa Testcraft Renamed',
-    exact: true,
-  });
-  await expect(renamed).toBeVisible();
-  await assertNoAccessibilityViolations(page);
-  await renamed.getByRole('button', { name: 'Delete Category' }).click();
-  await renamed.getByRole('button', { name: 'Delete', exact: true }).click();
-  await expect(renamed).toHaveCount(0);
-  await expect(page.getByRole('row', { name: /Aaa Testcraft/ })).toHaveCount(0);
-});
+    // A renamed category answers at its new address, under its new name.
+    await page.goto('/admin/categories?edit=aaa-testcraft-renamed');
+    const renamed = page.getByRole('dialog', {
+      name: 'Edit Category, Aaa Testcraft Renamed',
+      exact: true,
+    });
+    await expect(renamed).toBeVisible();
+    await assertNoAccessibilityViolations(page);
+    await renamed.getByRole('button', { name: 'Delete Category' }).click();
+    await renamed.getByRole('button', { name: 'Delete', exact: true }).click();
+    await expect(renamed).toHaveCount(0);
+    await expect(page.getByRole('row', { name: /Aaa Testcraft/ })).toHaveCount(0);
+  },
+);
 
 test('an admin is told which compendium entries hold a category before it can go', async ({
   page,
@@ -514,7 +592,7 @@ test('an admin adds, renames and deletes a celestial body in the modal over the 
   await signInAs(page, 'an-admin@admin-astrology.test', ['discord'], 'admin');
 
   // The old address is gone, with no redirect.
-  expect((await page.goto('/admin/planets'))?.status()).toBe(404);
+  expect((await page.goto('/admin/celestialBodies'))?.status()).toBe(404);
 
   const response = await page.goto('/admin/celestial-bodies');
   expect(response?.status()).toBe(200);

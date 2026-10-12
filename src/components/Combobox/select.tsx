@@ -3,7 +3,7 @@
 import { useSelect } from 'downshift';
 import { keepEscapeInList } from './escape';
 import type { ReactElement } from 'react';
-import { ChevronIcon } from './icons';
+import { ChevronIcon, PlusIcon } from './icons';
 import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
 
@@ -89,11 +89,16 @@ export function ComboboxSelect({
           choices.map((choice, index) => (
             <li
               key={choice.value}
-              className={
-                index === highlightedIndex ? 'combobox__option is-highlighted' : 'combobox__option'
-              }
+              className={[
+                'combobox__option',
+                choice.create && 'combobox__option--create',
+                index === highlightedIndex && 'is-highlighted',
+              ]
+                .filter(Boolean)
+                .join(' ')}
               {...getItemProps({ item: choice, index })}
             >
+              {choice.create && <PlusIcon />}
               <span className="combobox__label">{choice.label}</span>
             </li>
           ))}

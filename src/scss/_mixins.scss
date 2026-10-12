@@ -346,6 +346,31 @@
   }
 }
 
+// A skeleton's placeholder shape (MB.115, shared since M9.18): a rounded
+// bar of the muted ink a little way into the card surface, as the combobox's
+// quiet fills are, so both themes carry it on the page and on a card, with a
+// lighter step of the same passing across it (`skeleton-shimmer`,
+// _primitives.scss). Still, with no shimmer, where motion is reduced. The
+// tab's list skeleton and the route modal's form skeleton draw their shapes
+// with it.
+@mixin skeleton-shape {
+  display: block;
+  height: 1rem;
+  border-radius: radius('control');
+  background-image: linear-gradient(
+    90deg,
+    $fill-quiet 0%,
+    color-mix(in srgb, $text-muted 7%, $surface-card) 50%,
+    $fill-quiet 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
 // The two row tweaks a data table's owner asks for, each emitted once as a
 // modifier of the table by `_primitives.scss` (`.data-table--roomy`,
 // `.data-table--nowrap`), which a table takes by class. Roomy: taller rows,
@@ -380,6 +405,66 @@
       td {
         white-space: normal;
       }
+    }
+  }
+}
+
+// A table cell holding a value and the control that changes it: the value on
+// the left, the control on the right, centred on one line. The user list's
+// role and creation cells and the member list's role cell.
+@mixin value-and-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2) space(3);
+}
+
+// A stacking table's dangerous row action as a column of its own, Impersonate
+// or Remove (MB.115, the owner's call): a red hairline down its left, a faded
+// red tint and red text, since it acts on someone else. It stays at the
+// table's right edge while the other columns scroll beneath it, so its ground
+// is opaque: the tint mixed into the band it sits on, the page or a banded
+// row's card. `$layer` is its z-index. At phone width the cell gives up its
+// sticky place and stands at the card's top right on the card's own ground,
+// placed by the grid (`StackColumn.action: 'corner'`). Include it in the
+// class given to the column as both `className` and `headingClassName`.
+// claude-docs/styling.md, "Tables at phone width".
+@mixin row-action-column($layer: 1) {
+  position: sticky;
+  right: 0;
+  z-index: $layer;
+  // A hairline, as the headings' rule is: the red marks it, not the weight.
+  border-left: 1px solid $secondary;
+  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
+  color: $secondary;
+
+  @at-root .data-table tbody tr:nth-child(even) #{&} {
+    // 5% rather than 6%: the dark card is lighter, and at 6% the wax label
+    // falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
+    background-color: color-mix(in srgb, $secondary 5%, $surface-card);
+  }
+
+  // Its heading's hairline red too, where every other column's is the muted
+  // ink; scoped past the primitive's own `thead th` rule.
+  @at-root .data-table thead th#{&} {
+    border-bottom-color: $secondary;
+  }
+
+  @container data-table (max-width: #{$table-stack-width}) {
+    @at-root .data-table--stack > tbody > tr > #{&} {
+      position: static;
+      border-left: 0;
+      background-color: transparent;
+    }
+
+    // Spelled out past the primitive's `display: block` on a stacked cell.
+    @at-root .data-table--stack > tbody > tr > #{&}:empty {
+      display: none;
+    }
+
+    // Past the banded row's rule above, so the card's ground wins.
+    @at-root .data-table--stack tbody tr:nth-child(even) #{&} {
+      background-color: transparent;
     }
   }
 }
@@ -438,7 +523,9 @@
 // for the open state's element) matches an ancestor: a disclosure's marker.
 // Drawn only, so a press on it reaches the control beneath: turned over, it
 // paints above an overlay stretched from a button, and would take the press.
-@mixin disclosure-chevron($open) {
+// With `$flip`, it is flipped about its horizontal edge (`rotateX`) instead of
+// turned in the plane, and the caller names the transition (`transform`).
+@mixin disclosure-chevron($open, $flip: false) {
   display: inline-flex;
   flex: none;
   width: $glyph-size;
@@ -452,7 +539,11 @@
   }
 
   #{$open} & {
-    rotate: 180deg;
+    @if $flip {
+      transform: rotateX(180deg);
+    } @else {
+      rotate: 180deg;
+    }
   }
 }
 

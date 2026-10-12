@@ -43,8 +43,11 @@ describe('IconTip', () => {
     act(() => vi.advanceTimersByTime(200));
     expect(tip()).not.toBeNull();
 
+    // Closed: it stays for its fade, then goes.
     fireEvent.mouseLeave(tip()!);
     act(() => vi.advanceTimersByTime(200));
+    expect(tip()).not.toBeNull();
+    act(() => vi.advanceTimersByTime(500));
     expect(tip()).toBeNull();
   });
 
@@ -55,6 +58,7 @@ describe('IconTip', () => {
     expect(tip()).not.toBeNull();
 
     act(() => button.blur());
+    act(() => vi.advanceTimersByTime(500));
     expect(tip()).toBeNull();
   });
 
@@ -75,6 +79,7 @@ describe('IconTip', () => {
 
     // `false`: the default was prevented.
     expect(fireEvent.keyDown(button, { key: 'Escape' })).toBe(false);
+    act(() => vi.advanceTimersByTime(500));
     expect(tip()).toBeNull();
     expect(button).toHaveFocus();
 
@@ -107,6 +112,7 @@ describe('IconTip', () => {
       expect(tip()).not.toBeNull();
 
       escape(button);
+      act(() => vi.advanceTimersByTime(500));
       expect(tip()).toBeNull();
       expect(onClose).not.toHaveBeenCalled();
 
@@ -118,7 +124,13 @@ describe('IconTip', () => {
 
 describe('EditLink', () => {
   it('is a link named Edit and its row’s name, wearing the tip', () => {
-    render(<EditLink href="/admin/compendium?edit=fixture-salt" name="Fixture Salt" />);
+    render(
+      <EditLink
+        href="/admin/compendium?edit=fixture-salt"
+        name="Fixture Salt"
+        heading={{ eyebrow: 'Edit Ingredient', title: 'Fixture Salt' }}
+      />,
+    );
 
     const link = screen.getByRole('link', { name: 'Edit Fixture Salt' });
     expect(link).toHaveAttribute('href', '/admin/compendium?edit=fixture-salt');

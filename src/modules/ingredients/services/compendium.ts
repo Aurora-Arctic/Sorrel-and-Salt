@@ -121,7 +121,7 @@ export async function getIngredient(
 /**
  * Creates a compendium entry, with its folk names, substitutes, deities,
  * references, categories and forms, in one transaction. Its forms and deities are picked from their
- * curated vocabularies and its planets and signs, and its forms', named from theirs, each
+ * curated vocabularies and its celestial bodies and signs, and its forms', named from theirs, each
  * written in its curated row's spelling. The slug is set here from the label
  * and the formal name, and the compendium's lapsed retirements are
  * cleared in the same write.
@@ -130,7 +130,7 @@ export async function getIngredient(
  * input is read.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput` — a
  * missing `nomenclature` included — carries a form or deity not picked from a
- * curated row, a planet or sign no curated row holds, collides with another
+ * curated row, a celestial body or sign no curated row holds, collides with another
  * entry, would end another entry's redirect without `endRedirect`, files it
  * under no live category, or links a substitute or cites a reference outside
  * the compendium.
@@ -178,7 +178,7 @@ export async function createCompendiumEntry(
  *
  * @throws {Forbidden} the caller is not a site admin.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`,
- * carries a form or deity not picked from a curated row, a planet or sign no
+ * carries a form or deity not picked from a curated row, a celestial body or sign no
  * curated row holds, collides with another entry, would end another entry's
  * redirect without `endRedirect`, files it under no live category, or adds
  * a substitute link or a reference outside the compendium.
@@ -257,20 +257,20 @@ export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAdd
 
 /** What each field named by spelling is called in a refusal. */
 const NOUN_OF: Record<CuratedField, string> = {
-  planets: 'celestial body',
+  celestialBodies: 'celestial body',
   zodiacSigns: 'zodiac sign',
 };
 
-const SPELLED_FIELDS = ['planets', 'zodiacSigns'] as const satisfies CuratedField[];
+const SPELLED_FIELDS = ['celestialBodies', 'zodiacSigns'] as const satisfies CuratedField[];
 
 /**
  * `fields` and the checked lists holding curated values alone, as a
  * compendium entry does where a coven's ingredient keeps what was typed
  * (MB.162; DESIGN.md §5): each form and each deity a pick of a curated row
- * (MB.167), and the planets and signs of the entry and of each of its forms
+ * (MB.167), and the celestial bodies and signs of the entry and of each of its forms
  * (MB.219) each in the spelling of the live curated row it folds to. A list's
  * refusal is placed at the entry `input` sent, blanks counted, since parsing
- * drops blank planets and signs and the form numbers its rows by what it
+ * drops blank celestial bodies and signs and the form numbers its rows by what it
  * sent. Read before the write rather than inside it, so an admin retiring a
  * row while another saves an entry naming it can leave that entry holding it.
  *
@@ -292,12 +292,12 @@ async function inCuratedValues(
     ...(parsed[field] ?? []),
     ...variants.flatMap((variant) => variant[field]),
   ];
-  const [picks, planets, zodiacSigns] = await Promise.all([
+  const [picks, celestialBodies, zodiacSigns] = await Promise.all([
     resolvePicks('compendium', parsed, picked, held),
-    curatedSpellings('planets', valuesOf('planets')),
+    curatedSpellings('celestialBodies', valuesOf('celestialBodies')),
     curatedSpellings('zodiacSigns', valuesOf('zodiacSigns')),
   ]);
-  const spellingsOf = { planets, zodiacSigns };
+  const spellingsOf = { celestialBodies, zodiacSigns };
   const spellingOf = (field: CuratedField, value: string) =>
     spellingsOf[field].get(foldVocabularyValue(value));
 
@@ -343,7 +343,7 @@ async function inCuratedValues(
 const FIELD_ORDER = [
   'form',
   'formId',
-  'planets',
+  'celestialBodies',
   'zodiacSigns',
   'deities',
   'categoryIds',

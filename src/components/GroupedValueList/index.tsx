@@ -73,7 +73,9 @@ const GroupedValueList = ({
               heading: 'Edit',
               hiddenHeading: true,
               action: 'corner',
-              cell: (entry) => <EditLink href={entry.editHref} name={entry.name} />,
+              cell: (entry) => (
+                <EditLink href={entry.editHref} name={entry.name} heading={entry.editHeading} />
+              ),
             },
           ]}
           rows={values}

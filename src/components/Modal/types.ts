@@ -41,6 +41,11 @@ export interface ModalProps extends ModalHeading {
    */
   size?: 'wide';
   /**
+   * Its contents are on their way (M9.18): the body is marked busy, and when
+   * they arrive the focus moves from the dialog to their first field.
+   */
+  loading?: boolean;
+  /**
    * What it holds; or a function of the modal's own close, for contents that
    * close it themselves — a form after its save — so that fades out too.
    */
@@ -53,16 +58,43 @@ export interface ModalProps extends ModalHeading {
  */
 export type ModalPhase = 'open' | 'fading' | 'closed' | 'asked';
 
-/** A modal opened by its page's address, which closing navigates away from. */
-export interface RouteModalProps extends ModalHeading {
-  /** The page it opened over, the modal's own parameter dropped: closing goes back there. */
-  closeHref: Route;
-  size?: ModalProps['size'];
+/** What an open route modal holds, from the page its address renders. */
+export interface RouteModalContent {
+  heading: ModalHeading;
   /**
    * What it holds, given `done`: the modal's own close, for a form's save or
    * delete, so the modal fades out before the page goes back.
    */
-  children: (done: () => void) => ReactNode;
+  body: (done: () => void) => ReactNode;
+}
+
+/**
+ * A page's one modal place, opened by its address (`?new`, `?edit=<slug>`),
+ * or by a press while that address is on its way (M9.18).
+ */
+export interface RouteModalProps {
+  /** The page it opened over, the modal's own parameter dropped: closing goes back there. */
+  closeHref: Route;
+  size?: ModalProps['size'];
+  /** What the address opens; absent when it opens nothing, or while a press's is on its way. */
+  content?: RouteModalContent;
+}
+
+/**
+ * A modal pressed open and on its way (`RouteModalProvider`): the head it
+ * shows over the skeleton until its page arrives, and the way to open one.
+ */
+export interface RouteModalOpener {
+  /** The head of the modal on its way, while its navigation is pending; undefined otherwise. */
+  loading: ModalHeading | undefined;
+  /** Opens the modal at once with `heading`, and navigates to `href` for its contents. */
+  open: (href: Route, heading: ModalHeading) => void;
+  /** Forgets the modal on its way, which a close while it loads asks for. */
+  cancel: () => void;
+}
+
+export interface RouteModalProviderProps {
+  children: ReactNode;
 }
 
 /**

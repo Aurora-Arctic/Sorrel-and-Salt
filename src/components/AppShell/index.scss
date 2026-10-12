@@ -1,0 +1,192 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The application shell's frame and global bar (MB.7). Measurements are the
+// signed-off mock-up's, as tokens: a bar `$shell-bar-height` tall holding
+// controls `$control-height` tall, with a step of air above and below.
+// claude-docs/components/app-shell.md, "Styling".
+
+// First in the page, off-screen until it takes the focus; the one place a
+// keyboard user can step past the bar to the page.
+.skip-link {
+  position: absolute;
+  top: space(2);
+  left: space(2);
+  z-index: layer('floating');
+  padding: space(2) space(4);
+  border-radius: radius('control');
+  background-color: $accent;
+  color: $text-on-color;
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(-200%);
+
+  &:focus-visible {
+    transform: none;
+    @include focus-ring($text-on-color);
+  }
+}
+
+.app-shell__bar {
+  position: sticky;
+  // Below the impersonation banner where it takes room in the flow (touch).
+  top: $top-inset;
+  z-index: layer('shell');
+  box-sizing: border-box;
+  height: $shell-bar-height;
+  border-bottom: 1px solid $hairline;
+  background-color: $surface-card;
+}
+
+// The layout layer gives every `header` a bottom margin, and this bar is one.
+// Zeroed: a context row meets the bar edge to edge, and a page with none has
+// its own padding, which with the margin as well made a page that fits the
+// window (`.page-frame`'s height is the window's less the bar) scroll by it.
+.app-shell .app-shell__bar {
+  margin-bottom: 0;
+}
+
+.app-shell__bar-inner {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: space(3);
+  max-width: $wide-column;
+  height: 100%;
+  margin-inline: auto;
+  padding-inline: space(4);
+}
+
+.app-shell__brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: $control-height;
+  padding-right: space(1);
+  color: $text-primary;
+  font-family: $font-heading;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.app-shell__brand-short {
+  display: none;
+}
+
+// The links fill the bar's height, square, so the current one's rule sits
+// along the bar's foot and a hover washes a column of it, as the section
+// nav's tabs do in the context row.
+.app-shell__nav {
+  align-self: stretch;
+
+  ul {
+    @include list-reset;
+
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    // The item stretches to the bar; the link has to be told to fill it.
+    height: 100%;
+    padding: 0 space(3);
+    color: $text-primary;
+    text-decoration: none;
+    white-space: nowrap;
+    @include theme-transition(background-color, color);
+
+    &:hover {
+      background-color: $fill-quiet;
+    }
+
+    // Inside the link, where the bar's edge would clip an outside ring.
+    &:focus-visible {
+      @include focus-ring;
+
+      outline-offset: -2px;
+    }
+
+    // The page you are on: weight and the heavy rule beneath, no fill, so it
+    // is told by shape and not by colour alone and a hover still shows.
+    &[aria-current='page'] {
+      box-shadow: inset 0 (-$rule-heavy) 0 $accent;
+      font-weight: 500;
+    }
+
+    @include reduced-motion {
+      transition: none;
+    }
+  }
+}
+
+.app-shell__end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: space(2);
+  margin-left: auto;
+}
+
+.app-shell__theme {
+  display: inline-flex;
+}
+
+// The page's own frame is `min-height: 100dvh` less the top inset; inside the
+// shell the bar takes room too (_primitives.scss).
+.app-shell__main {
+  &:focus {
+    outline: none;
+  }
+}
+
+@media (max-width: $shell-phone-width) {
+  .app-shell__bar-inner {
+    gap: space(2);
+    padding-inline: space(2);
+  }
+
+  // The theme disc moves into the account panel too: this bar has room for
+  // the brand, Add Ingredient and the avatar.
+  .app-shell__theme {
+    display: none;
+  }
+}
+
+// Under the tablet width the site links move into the account panel, where
+// the name has already gone (AccountMenu/index.scss): with them in the bar
+// an admin's bar ran past the window from 642px up.
+@media (max-width: $shell-tablet-width) {
+  .app-shell__nav {
+    display: none;
+  }
+}
+
+// Narrower than the phone width: with the site links gone the bar has room
+// for the full name down to `$shell-brand-width`, so the initials stand in
+// only on a narrow phone, not in every phone-width window.
+@media (max-width: $shell-brand-width) {
+  .app-shell__brand {
+    justify-content: center;
+    min-width: $control-height;
+  }
+
+  // The name stays for a screen reader.
+  .app-shell__brand-full {
+    @include visually-hidden;
+  }
+
+  .app-shell__brand-short {
+    display: inline;
+  }
+}

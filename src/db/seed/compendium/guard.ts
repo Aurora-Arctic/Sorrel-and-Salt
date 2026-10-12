@@ -3,7 +3,7 @@ import { COLOURS } from './colours';
 import { CATEGORIES } from '../categories';
 import { DEITIES } from '../deities';
 import { FORMS } from '../forms';
-import { PLANETS, ZODIAC_SIGNS } from '../astrology';
+import { CELESTIAL_BODIES, ZODIAC_SIGNS } from '../astrology';
 import { identityOf } from '../standard';
 import { citationText } from '../../../lib/citation';
 import { ingredientSlug, slugify } from '../../../lib/slugify';
@@ -30,7 +30,7 @@ export interface CuratedNames {
   forms: ReadonlySet<string>;
   categories: ReadonlySet<string>;
   deities: ReadonlySet<string>;
-  planets: ReadonlySet<string>;
+  celestialBodies: ReadonlySet<string>;
   zodiacSigns: ReadonlySet<string>;
 }
 
@@ -42,7 +42,7 @@ export const CURATED: CuratedNames = {
   forms: slugsOf(FORMS),
   categories: slugsOf(CATEGORIES),
   deities: slugsOf(DEITIES),
-  planets: slugsOf(PLANETS),
+  celestialBodies: slugsOf(CELESTIAL_BODIES),
   zodiacSigns: slugsOf(ZODIAC_SIGNS),
 };
 
@@ -69,7 +69,7 @@ function populatedEntryFields(entry: SeedCompendiumEntry): CompendiumEntryField[
   if (entry.safetyNotes) fields.push('safetyNotes');
   for (const field of [
     'elements',
-    'planets',
+    'celestialBodies',
     'zodiacSigns',
     'colors',
     'folkNames',
@@ -88,7 +88,7 @@ function populatedVariantFields(variant: SeedCompendiumVariant): CompendiumVaria
   if (variant.safetyNotes) fields.push('safetyNotes');
   for (const field of [
     'elements',
-    'planets',
+    'celestialBodies',
     'zodiacSigns',
     'colors',
     'categories',
@@ -252,14 +252,14 @@ function checkEntry(
 function checkValues(
   row: Pick<
     SeedCompendiumVariant,
-    'elements' | 'planets' | 'zodiacSigns' | 'colors' | 'categories'
+    'elements' | 'celestialBodies' | 'zodiacSigns' | 'colors' | 'categories'
   >,
   where: string,
   curated: CuratedNames,
   issues: string[],
 ): void {
   const lists: [string, readonly string[] | null | undefined, (value: string) => boolean][] = [
-    ['planet', row.planets, (value) => curated.planets.has(slugify(value))],
+    ['celestialBody', row.celestialBodies, (value) => curated.celestialBodies.has(slugify(value))],
     ['zodiac sign', row.zodiacSigns, (value) => curated.zodiacSigns.has(slugify(value))],
     ['colour', row.colors, (value) => (COLOURS as readonly string[]).includes(value)],
     ['category', row.categories, (value) => curated.categories.has(slugify(value))],

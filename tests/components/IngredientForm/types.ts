@@ -4,7 +4,7 @@ import type {
   DeitySuggestionsQuery,
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
-  PlanetSuggestionsQuery,
+  CelestialBodySuggestionsQuery,
   PickerCategoriesQuery,
   PossibleDuplicatesQuery,
   ReferenceSuggestionsQuery,
@@ -19,9 +19,9 @@ export type FormNode = FormSuggestionsQuery['formSuggestions']['edges'][number][
 /** One row of a `CommonNameSuggestions` answer. */
 export type NameNode = CommonNameSuggestionsQuery['commonNameSuggestions']['edges'][number]['node'];
 
-/** One row of a `PlanetSuggestions` or `ZodiacSuggestions` answer, which share a shape. */
+/** One row of a `CelestialBodySuggestions` or `ZodiacSuggestions` answer, which share a shape. */
 export type CorrespondenceNode =
-  PlanetSuggestionsQuery['planetSuggestions']['edges'][number]['node'];
+  CelestialBodySuggestionsQuery['celestialBodySuggestions']['edges'][number]['node'];
 
 /** One row of a `DeitySuggestions` answer. */
 export type DeityNode = DeitySuggestionsQuery['deitySuggestions']['edges'][number]['node'];

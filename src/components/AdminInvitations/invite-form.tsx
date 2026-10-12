@@ -128,10 +128,24 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   );
 };
 
-const InviteForm = ({ onSent, closeHref }: InviteFormProps): ReactElement => (
-  <RouteModal title="Invite Admin" closeHref={closeHref}>
-    {(close) => <InviteFields onSent={onSent} close={close} />}
-  </RouteModal>
+/** The modal's head, and the tab's action that opens it. */
+export const INVITE_TITLE = 'Invite Admin';
+
+// The tab's one modal place, rendered whether or not `?invite` is open, so
+// Invite Admin's press shows it at once over a skeleton and the form
+// arrives in the same dialog (M9.18).
+const InviteForm = ({ open, onSent, closeHref }: InviteFormProps): ReactElement => (
+  <RouteModal
+    closeHref={closeHref}
+    content={
+      open
+        ? {
+            heading: { title: INVITE_TITLE },
+            body: (close) => <InviteFields onSent={onSent} close={close} />,
+          }
+        : undefined
+    }
+  />
 );
 
 export default InviteForm;

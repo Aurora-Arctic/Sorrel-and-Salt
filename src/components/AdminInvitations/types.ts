@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import type { PagerHrefs } from '../../app/admin/types';
+import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { PagePosition } from '../../lib/types';
 
 /** One pending admin invitation, as `/admin/invitations` lists it (MB.70). */
@@ -59,6 +59,8 @@ export interface AdminInvitationsFilterProps {
 }
 
 export interface InviteFormProps {
+  /** `?invite` is open and invitations are not locked: the form shows (M9.18). */
+  open: boolean;
   /** The tab under the filter it shows, which the form closes back to. */
   closeHref: Route;
   /** Told the address an invitation was sent to, before the form closes. */

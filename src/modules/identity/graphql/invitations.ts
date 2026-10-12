@@ -8,10 +8,10 @@ import { acceptInvitation } from '../services/invitation-acceptance';
 // MB.70's admin invitation and the one accept (MB.202). No field carries the
 // token or a link: the token exists only in the mail, and the row holds its
 // hash, which is not exposed either (claude-docs/auth/admin-users.md,
-// "Inviting an admin"). M7.3 adds the workspace tier's `workspace` and
-// `role`, which DESIGN.md §7 sketches; `identity` cannot name a `Workspace`.
+// "Inviting an admin"). The workspace tier's `workspace` and `role` are added
+// from `coven` (M7.3), since `identity` cannot name a `Workspace`.
 
-const InvitationRef = builder.objectRef<InvitationRow>('Invitation').implement({
+export const InvitationRef = builder.objectRef<InvitationRow>('Invitation').implement({
   description:
     'An invitation, pending or not. Its link is mailed to the address and never answered.',
   fields: (t) => ({

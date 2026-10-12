@@ -1,0 +1,117 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The ingredient modal's layout (IngredientForm, "fold" sections): sections
+// parted by a hairline, each under a small heading in the heading face, the
+// facts beneath in the body's face. Nested, to outweigh layout-base's bare
+// `body section`, whose gap and margins would otherwise set the spacing.
+.user-detail {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-detail .user-detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: space(2);
+  margin: 0;
+  padding-block: space(4);
+  border-top: 1px solid $hairline;
+
+  &:last-of-type {
+    border-bottom: 1px solid $hairline;
+  }
+}
+
+// The ingredient modal's section-title size: a step under the h3 a page
+// draws, since the dialog's own title is the heading here.
+.user-detail .user-detail__title {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+// Each fact on its own line, its term in the muted ink in one column and its
+// value beside it in the next, so the values line up down the section.
+.user-detail__facts {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: space(2) space(4);
+  align-items: baseline;
+  margin: 0;
+
+  > div {
+    display: contents;
+  }
+
+  dt {
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+// A value, and the control that changes it at the right edge (the owner's
+// call); a refusal's notice wraps beneath, across the row.
+.user-detail__value {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2) space(3);
+
+  > :first-child {
+    margin-inline-end: auto;
+  }
+
+  > .notice {
+    flex-basis: 100%;
+  }
+}
+
+.user-detail__role,
+.user-detail__answer {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}
+
+// One coven to an item: its name, then its role and the day they joined in
+// the muted ink at the caption size, as a folded section's summary reads.
+.user-detail .user-detail__covens {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+  @include list-reset;
+
+  > li {
+    display: flex;
+    flex-direction: column;
+    gap: space(1);
+  }
+}
+
+.user-detail__coven-name {
+  font-weight: 500;
+}
+
+.user-detail__coven-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 space(1);
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+.user-detail .user-detail__none {
+  margin: 0;
+  color: $text-muted;
+}
+
+// Impersonate under the last hairline, as the other modals stand their actions.
+.user-detail__actions {
+  display: flex;
+  gap: space(3);
+  margin-top: space(4);
+}

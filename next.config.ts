@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
     // reloads the server's modules from disk after an edit instead
     // (claude-docs/debugging.md).
     turbopackServerFastRefresh: false,
-    // `forbidden()` and `src/app/forbidden.tsx`: the `/admin` guard's 403
+    // `forbidden()` and `src/app/(shell)/forbidden.tsx`: the `/admin` guard's 403
     // (claude-docs/auth/admin-guard.md, "The admin guard").
     authInterrupts: true,
     // Off for the e2e servers, which share one build directory and so would

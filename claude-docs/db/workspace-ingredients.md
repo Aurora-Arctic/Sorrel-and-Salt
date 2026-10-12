@@ -40,7 +40,7 @@ past a deleted parent — stock included, whose reads go through a live ingredie
 reaches the coven's ingredients through whether it shows the ingredient,
 before the delete and after — the read by id, with and without the coven
 named; its folk names, categories, substitutes, deities and references; the
-substitute picker, the duplicate warning, and the common-name, form, planet,
+substitute picker, the duplicate warning, and the common-name, form, celestial body,
 sign and deity suggestions — so the table is where each reader's soft-delete
 filter is proved, and no reader's own test carries a one-off (MB.187). It then
 brings back its label, its formal name under another label and the whole

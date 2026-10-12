@@ -44,7 +44,7 @@ stays under `src/graphql/schema/` ([`modules.md`](../modules.md)).
   itself, and never as flat fields of its own. It carries the four stamps:
   `createdAt`, `createdBy`, `updatedAt`, `updatedBy`. `deleted_at` never
   surfaces, because no ordinary finder returns a soft-deleted row. `createdBy`/`updatedBy` are bare ids for now; MB.10's
-  loader resolves them to display names. A test walks every object type in the
+  `usersById` loader resolves them to display names once a field reads it (M6.18). A test walks every object type in the
   schema and fails on any type other than `AuditInfo` with an audit-named
   field, so a per-table audit shape fails in the PR that adds it.
 - **`ok: Boolean!` stays beside the real fields.** It mirrors Better Auth's
@@ -74,7 +74,7 @@ Forbidden()` itself, so its `src/modules/*/graphql/**` and
 groupId })`, never a connection's whole `args`, which also carry `first`
   and the cursors. A lone scalar keeps its `?? undefined` in place.
 - **`suggestionConnection(name, type, suggest)`** registers a picker's
-  suggestion field — `planetSuggestions`, `zodiacSuggestions`,
+  suggestion field — `celestialBodySuggestions`, `zodiacSuggestions`,
   `formSuggestions`, `deitySuggestions`, `commonNameSuggestions` and
   `referenceSuggestions` — as one connection taking an optional
   `workspaceId` and `query`, an absent `query` sent as a blank one.
@@ -105,11 +105,30 @@ not `identity`, because `identity` may import no module
 ([`modules.md`](../modules.md)). It resolves through the `membershipsByUser`
 loader, whose service, `membershipsOf(session, userIds)`, answers each id with
 that user's live memberships in live workspaces — or a `Forbidden` in that
-id's slot for anyone but the caller, a site admin included, since an admin
-reaches no workspace. A `WorkspaceMember` carries `role`, `joinedAt`,
-`workspace` and `audit`; `Workspace` is `id`, `name`, `slug` and `audit`,
-the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
-bounded by its parent, like every nested list (DESIGN.md §7).
+id's slot for anyone but the caller, unless the caller is a site admin, who
+may list anyone's by name and role (M9.19) and reaches none of those
+workspaces' contents. A `WorkspaceMember` carries `role`, `joinedAt`,
+`workspace`, `user` and `audit`; `Workspace` is `id`, `name`, `slug`,
+`members` and `audit`. `memberships` is a bare list, bounded by its parent:
+a user sits in the covens they joined, and no more.
+
+`Workspace.members` is a coven's live members, in the order they joined, and
+is a paged connection rather than a bare list, because a coven's roll grows
+with every invitation and nothing about its parent bounds it (CLAUDE.md rule
+8; M6.11). Its service, `listMembers(session, workspace, page)` in
+`src/modules/coven/services/members.ts`, checks `member: read`, which the
+owner holds and, from M6.13, the member too, and reads one page through the
+repository's `findMemberPage`. A coven at a time, not batched across covens by
+a loader: no page lists two covens' members at once
+([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)).
+`WorkspaceMember.user` is a `CoMember`, an `id` and a nullable `name`, and
+never the `User` type, whose email a scope would have to guard. The name
+resolves through `usersById` (MB.10;
+[`auth/display-names.md`](../auth/display-names.md)), so the names on a page
+of members are one read. Through `me`, a member's name sits eight levels
+down, one past the depth limit (["Protections"](protections.md)), and no
+query root reaches a `Workspace` more shallowly yet. The members page does not
+need one: a server component calls `listMembers` directly (M6.13).
 
 `users(query: String, awaitingApproval: Boolean, role: UserRole)` is the admin user list
 (MB.52), a paged connection of the ordinary `User`, so `email` resolves through
@@ -176,9 +195,9 @@ refusal per error code the service gives an admin; who is refused, and the
 service, one user read per page, and one non-admin's `FORBIDDEN`; the order and
 who the service refuses are `services/privilege-changes.test.ts`'s.
 
-### `planetSuggestions` and `zodiacSuggestions`
+### `celestialBodySuggestions` and `zodiacSuggestions`
 
-The autofill behind the planet and zodiac fields (MB.94), registered by
+The autofill behind the celestial body and zodiac fields (MB.94), registered by
 `vocabulary`. Each takes `workspaceId`, an optional `query` and the
 connection arguments, as DESIGN.md §7's sketch gives them, and its nodes are:
 
@@ -190,7 +209,7 @@ type CorrespondenceSuggestion {
 }
 ```
 
-- **One type for both fields.** A planet and a sign suggestion carry the same
+- **One type for both fields.** A celestial body and a sign suggestion carry the same
   three things, and neither carries a group. `form`'s suggestion, which does,
   is its own type, below.
 - **Each is a `pagedConnection`**, one list over both buckets: curated values
@@ -269,7 +288,7 @@ type SuggestionClaimant {
   two suggestions, in group order, and a client renders "Wax (Substance)".
 - **`id` is what a pick sends** (MB.167): the curated row's, as `formId`, or
   as a deity entry's `deityId`; null for a value only in use, which is sent
-  as text. A planet or sign records no pick, so its suggestion has no `id`.
+  as text. A celestial body or sign records no pick, so its suggestion has no `id`.
 - **`claimants` names who already holds the value**, in the compendium and the
   named workspace only: formal name first, and a claimant with none by its
   label, so a `none` entry is not hidden. A nested list rather than a connection
@@ -279,7 +298,7 @@ type SuggestionClaimant {
   of common names, so no `curated` and no `description`. The in-use names are
   every in-scope entry's display name and live folk names: "Cat's Claw" is the
   display name of five seeded rows, and the story's own example.
-- The refusals are `planetSuggestions`': `Forbidden` from the resolver when
+- The refusals are `celestialBodySuggestions`': `Forbidden` from the resolver when
   signed out, from `assertMembership` when signed in elsewhere, a site admin
   included. So is a null `workspaceId`, which reads the compendium alone
   (M5.5), its claimants included.
@@ -317,7 +336,7 @@ type DeitySuggestion {
 - Each live row of an ingredient's deities, in `ingredient_deities`
   (MB.167), is one value in use, folded and counted once, from the compendium
   and the named workspace only.
-- The refusals, and a null `workspaceId`, are `planetSuggestions`'.
+- The refusals, and a null `workspaceId`, are `celestialBodySuggestions`'.
 
 `tests/modules/vocabulary/graphql/deity-suggestions.test.ts` holds what
 `suggestions.test.ts` holds, with each curated row's `id` and `tradition`;
@@ -359,13 +378,13 @@ type QueryPossibleDuplicatesConnectionEdge {
   as `compendium`'s does, because it describes the match, not the entry.
   Page sizes are the usual default and maximum. A blank `name` gets an empty
   page, not every entry.
-- **The refusals are `planetSuggestions`'.** The resolver refuses a signed-out
+- **The refusals are `celestialBodySuggestions`'.** The resolver refuses a signed-out
   caller with `Forbidden`. For a signed-in caller the check is the service's
   `assertMembership` for `ingredient: ['read']`, which refuses a coven the
   caller is not in, a site admin included. A viewer is answered, because every
   row the field returns is one a reader of the coven could already list.
 - **A null `workspaceId` matches the compendium alone** (M5.5), asking no
-  membership, as `planetSuggestions` does: the admin's compendium form,
+  membership, as `celestialBodySuggestions` does: the admin's compendium form,
   which drops the entry being edited from what it shows.
 
 ### `ingredientSuggestions`
@@ -556,7 +575,7 @@ compendium-only mode reaching its service with a null workspace, with
 thresholds, the scope, what the compendium-only mode answers and who is
 refused are their services' tests' (MB.187).
 
-**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, planets, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 dropped `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, made `variants` required on all four inputs, and made the `compendium` query's `form` argument match an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, celestialBodies, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 dropped `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, made `variants` required on all four inputs, and made the `compendium` query's `form` argument match an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 ### The workspace ingredient mutations
 
@@ -596,7 +615,7 @@ signatures DESIGN.md §7's sketch gives them.
   nullable enum with no empty value to send, until MB.159 replaced it with
   `elements`, a `[IngredientElement!]!` where `[]` clears (DESIGN.md §7,
   MB.157). `Ingredient.elements` and `IngredientInput.elements` are the
-  nullable `[IngredientElement!]`, as `planets` is.
+  nullable `[IngredientElement!]`, as `celestialBodies` is.
 - **A reference is a `ReferenceLinkInput`**, `{ referenceId, locator }`
   (MB.153): an existing reference, created a moment before through
   `createReference` when it is new, and where in it, if anywhere. Optional on
@@ -794,7 +813,7 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
   one under two characters, lists both tiers by title. The refusals are
   `ingredientSuggestions`'. A null `workspaceId` reads the compendium's
   alone, asking no membership, which is all a compendium entry may cite
-  (M5.5; `planetSuggestions`' bullet says why it stays signed-in).
+  (M5.5; `celestialBodySuggestions`' bullet says why it stays signed-in).
 
 `tests/modules/ingredients/graphql/references.test.ts` holds their half: the
 tier the `workspaceId` argument names, `referencesByIngredient` cleared by a
@@ -808,7 +827,7 @@ at the compendium tier's `admin` scope is the sweep's. The tier rule, the order 
 ### Curated vocabularies: one factory for the seven
 
 Every admin-curated vocabulary — categories and their groups, forms and
-their groups, deities and their traditions, planets and signs — is the same
+their groups, deities and their traditions, celestial bodies and signs — is the same
 type, input and three writes, so `vocabulary/graphql/curated.ts`'s
 `curatedVocabularyWrites` registers them, on the precedent of the loop the
 astrology file held over its two (MB.212). Given an unimplemented
@@ -911,28 +930,28 @@ not `IngredientForm`, which is the entry-form component (DESIGN.md §7).
 half as `categories.test.ts` does, with the groups' page, `ingredientFormsById`
 cleared by an update; the rules are `services/ingredient-form-values.test.ts`'s.
 
-### Planets and signs: `planets`, `zodiacSigns` and the six writes
+### Celestial bodies and signs: `celestialBodies`, `zodiacSigns` and the six writes
 
 The two flat astrology vocabularies' reads and writes (MB.95), registered by
 `vocabulary` over `services/astrology.ts`
 ([`db/astrology-vocabularies.md`](../db/astrology-vocabularies.md), "The
 admin writes"), in the forms' shape without the group. One type per
-vocabulary, `Planet` and `ZodiacSign`, though the rows share a shape, so a
+vocabulary, `CelestialBody` and `ZodiacSign`, though the rows share a shape, so a
 client never asks which table a value came from; the module registers both
 from one table of names, so the two cannot drift.
 
-- **`planets` and `zodiacSigns` are public** (MB.80) and count their pages,
+- **`celestialBodies` and `zodiacSigns` are public** (MB.80) and count their pages,
   `totalCount` and `countBefore`, for the admin pages' "Page X of Y". An
   optional `query` narrows them to the names holding it, read literally.
-- **One input per vocabulary, `PlanetInput` and `ZodiacSignInput`**: `name`
+- **One input per vocabulary, `CelestialBodyInput` and `ZodiacSignInput`**: `name`
   and `description`, required. No slug: it follows the name.
 - **The writes carry `admin`**, and `assertSiteAdmin` refuses again in the
   service. A slug collision is `VALIDATION` on `name`, naming the row
   holding the address; an unknown, deleted or malformed id is `NOT_FOUND`.
   A rename carries onto every live compendium entry listing the value.
-- **`deletePlanet` and `deleteZodiacSign` answer the deleted id**, and are
+- **`deleteCelestialBody` and `deleteZodiacSign` answer the deleted id**, and are
   `FORBIDDEN` while a live compendium entry lists the value, naming the
-  entries and how many more. No loader holds a planet or a sign, so neither
+  entries and how many more. No loader holds a celestial body or a sign, so neither
   write clears one.
 
 `tests/modules/vocabulary/graphql/astrology.test.ts` holds both lists' half — a

@@ -1,28 +1,176 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// A page in tabs (MB.115; claude-docs/components/tabbed-page.md, "Styling"):
-// the heading and the open tab's action on one line, the `.page-header`
-// primitive's, then the tab row, then the open tab's content. The heading
-// line sits a step closer to the tabs than to a page's content.
+// The tab row, a group of pills on the heading's line (MB.7, drawn in its
+// design review; claude-docs/components/tabbed-page.md, "Styling"): one
+// rounded track in the quiet fill edged by a hairline, the open tab a pill
+// inside it, the accent thinned into the card and edged in the accent itself,
+// since the fill alone sits under WCAG 1.4.11's 3:1 against the track; the
+// others plain muted text. Smaller than a control, so each pill's hit area is
+// padded back invisibly (below). The mixes are this row's alone, so local
+// rather than tokens, as the skeleton shape's are; `tests/scss/tokens.test.ts`
+// holds the open tab's label and edge to their floors.
+$segment-pill: color-mix(in srgb, $accent 18%, $surface-card);
+$pill-height: 2.25rem;
+// What the track spends on its edge and its padding, so the pills fill it
+// exactly: the 1px edge and 0.125rem of air, each side. The air is the
+// track's own padding, so the row inside carries none.
+$track-inset: calc(1px + 0.125rem);
+
+// Between the heading and the action, on the heading's line. The primitives'
+// `.page-header` spreads its children to the two ends and nudges every
+// non-heading item down to the heading's baseline; here the heading is
+// followed by its tabs, the action alone is pushed to the end, and the tabs
+// are centred on the line. The selector is doubled to outweigh the
+// primitives' narrow-width rules, which would stretch the row across its
+// line as they do an action: a row at a phone's width drops under the heading
+// at its own size instead.
 .tabbed-page > .page-header {
-  margin-bottom: space(4);
+  justify-content: flex-start;
 }
 
-// The open tab's action, `.page-header`'s one item beside the heading. A
-// tab with none leaves it empty, and an empty item would still take a gap,
-// or a line of its own at a phone's width.
+.tabbed-page > .page-header > .tabbed-page__tabs.tabbed-page__tabs {
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
+  box-sizing: border-box;
+  // Shrinks below its pills' width rather than overflow the line; the row
+  // inside then scrolls.
+  min-width: 0;
+  max-width: 100%;
+  height: $pill-height;
+  padding: 0.125rem;
+  // Cancels the page header's nudge of its non-heading items (they sit down
+  // to the heading's baseline) and sets the track 0.125rem lower, where the
+  // owner found it level with the heading's text.
+  top: 0;
+  translate: 0 0.125rem;
+  border: 1px solid $hairline;
+  border-radius: radius('pill');
+  background-color: $fill-quiet;
+}
+
+// The open tab's action, `.page-header`'s last item. A tab with none leaves
+// it empty, and an empty item would still take a gap, or a line of its own
+// at a phone's width.
 .tabbed-page__action {
   display: flex;
+  margin-inline-start: auto;
 
   &:empty {
     display: none;
   }
 }
 
-// Under the forms' column `.page-header` puts the action on a line of its
-// own and, in the admin area, spans it, and the action inside with it (the
-// primitive's, for every action in a wrapper).
+// Under the forms' column `.page-header` puts an action on a line of its own
+// beneath the heading, at its natural width and the line's start, as any
+// action is (the owner's call at MB.7's review, 2026-10-12, reversing
+// MB.115's spanning one); the wrapper's `margin-inline-start: auto` is for
+// the wide line only. The Add is the exception, a plus beside the heading:
+// the heading's line is then the heading and the action, so the pills, which
+// come first in the markup, are ordered after them and drop beneath.
+// From `$tabbed-reflow-width-labelled` down the wide line is too short for the heading, the
+// pills and an action, so an action that is not the Add takes a line of its
+// own at the line's start rather than wrapping to the line's end (the owner
+// found it pushed right at 500px, MB.7's review, 2026-10-12). The Add keeps
+// its place at the heading's end.
+// A header whose action keeps its label (People's Pause Admin Changes): from
+// `$tabbed-reflow-width-labelled` down the heading and the action keep the
+// line and the pills drop beneath at their own size. A flex box cannot put
+// an item on a line of its own at its own width, so a line break is forced
+// by a pseudo-element the width of the line and no height, ordered between
+// the action and the pills; the line it makes would take a row gap above
+// and below (a flex line is never shorter than nothing), so the pills give
+// one back.
+@container page-header (max-width: #{$tabbed-reflow-width-labelled}) {
+  .tabbed-page > .page-header:not(:has(.add-action)) {
+    &::after {
+      content: '';
+      flex-basis: 100%;
+      order: 1;
+      height: 0;
+    }
+
+    > .tabbed-page__tabs.tabbed-page__tabs {
+      order: 2;
+      margin-top: calc(-1 * #{space(3)});
+    }
+  }
+}
+
+// Under the forms' column the primitive gives the heading the line to
+// itself; a tabbed page with a labelled action keeps the two on one line
+// (the owner's call at MB.7's review, 2026-10-12) down to
+// `$tabbed-action-below-width`, where the action goes beneath the heading at
+// the line's start, the auto margin cancelled. The Add is on the heading's
+// line throughout and is not touched.
+@container page-header (max-width: #{$narrow-column}) {
+  .tabbed-page > .page-header:not(:has(.add-action)) > h1 {
+    flex: 1 1 auto;
+  }
+}
+
+@container page-header (max-width: #{$tabbed-action-below-width}) {
+  .tabbed-page > .page-header:not(:has(.add-action)) > h1 {
+    flex-basis: 100%;
+  }
+
+  .tabbed-page__action:not(:has(.add-action)) {
+    top: 0;
+    margin-inline-start: 0;
+  }
+}
+
+// In the plus band the heading yields first: a zero basis keeps the pills
+// and the plus on its line, and a long heading wraps its own words rather
+// than sending the plus to a line of its own.
+@container page-header (min-width: calc(#{$tabbed-reflow-width} + 0.01rem)) and (max-width: #{$tabbed-plus-width}) {
+  .tabbed-page > .page-header:has(.add-action) > h1 {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
+// From `$tabbed-reflow-width` down the pills drop beneath the heading and its
+// plus: the heading takes the line less the plus, and the pills, first in
+// the markup, are ordered after the action. Apart from the plus's own
+// switch at `$tabbed-plus-width`, on purpose.
+@container page-header (max-width: #{$tabbed-reflow-width}) {
+  .tabbed-page > .page-header:has(.add-action) > h1 {
+    flex: 1 1 calc(100% - #{$control-height} - #{space(5)});
+    min-width: 0;
+  }
+
+  .tabbed-page > .page-header:has(.add-action) > .tabbed-page__tabs.tabbed-page__tabs {
+    order: 1;
+  }
+}
+
+// At `$add-below-width` and under the Add is the labelled button again and
+// goes beneath the heading, which has the line to itself (the reflow rule
+// above gave it the line less the plus); the pills follow.
+@container page-header (max-width: #{$add-below-width}) {
+  .tabbed-page > .page-header:has(.add-action) {
+    > h1 {
+      flex-basis: 100%;
+    }
+
+    // The labelled Add and the pills would share a line; the same forced
+    // break as under a labelled action (above) keeps the pills on their own,
+    // and the pills give back the row gap it takes twice.
+    &::after {
+      content: '';
+      flex-basis: 100%;
+      order: 1;
+      height: 0;
+    }
+
+    > .tabbed-page__tabs.tabbed-page__tabs {
+      order: 2;
+      margin-top: calc(-1 * #{space(3)});
+    }
+  }
+}
 
 // The action while another tab is on its way, faded with the tabs and its
 // colour taken out, so a solid button greys as they do. `inert` keeps it
@@ -33,70 +181,36 @@
   cursor: not-allowed;
 }
 
-// The tab row, a segmented control (the owner's call at MB.115's review):
-// one rounded track on the card surface, edged in the muted ink thinned into
-// it so it holds on the light page, whose ground is close to the card's; the
-// open tab a raised pill inside it, the accent thinned into the card under
-// the floating shadow and edged in the accent itself, since the fill alone
-// sits under WCAG 1.4.11's 3:1 against the track; the others plain muted
-// text. The page ground would sit darker than the track in the light theme
-// and read as a dent rather than a pill. The mixes are this row's alone, so
-// local rather than tokens, as the skeleton's are; `tests/scss/tokens.test.ts`
-// holds the open tab's label and edge to their floors. A size container, so
-// the row measures its own width rather than the screen's.
-$segment-edge: color-mix(in srgb, $text-muted 35%, $surface-card);
-$segment-pill: color-mix(in srgb, $accent 18%, $surface-card);
-// The shade at an edge the segments run on past, the muted ink thinned into
-// nothing: a grey in the light theme, a soft glow in the dark.
-$segment-shade: $hairline;
-
-// A flex box, so the track is a flex item: as wide as its segments, never
-// wider than the column, with no line box round it to add a descender's
-// space beneath.
-.tabbed-page__tabs {
-  container: tabbed-page-tabs / inline-size;
-  display: flex;
-  margin-bottom: space(5);
-}
-
 // A list, not bulleted: `typography-base`'s ◆ marker, indent and item
-// margins cleared, as `.link-row` clears them. The segments keep to one
-// line at their own widths at every width; a row wider than its column
-// scrolls inside the track rather than wrapping or squeezing, the track
-// staying put and clipping it, so the page never scrolls sideways.
+// margins cleared, as `.link-row` clears them. The pills keep to one line at
+// their own widths at every width; a row wider than its line scrolls inside
+// the track rather than wrapping or squeezing, with no scrollbar, which would
+// cross the open pill's foot inside a track this thin; the label cut off at
+// the track's edge says there is more. The row is a control tall, centred on
+// the track and overflowing it by the same amount above and below, and its
+// scrollport is what the pills' invisible hit area fills: a scrolling box
+// clips whatever sticks out of it, so the hit area has to be inside the row,
+// not outside it.
 .tabbed-page__row {
   display: flex;
   // What the pill and the links measure their place from.
   position: relative;
+  flex: 0 1 auto;
+  align-items: center;
   min-width: 0;
-  gap: space(1);
+  height: $control-height;
+  gap: 2px;
   overflow-x: auto;
   overscroll-behavior-x: contain;
-  // What a keyboard focus or the open tab scrolls into view clears the
-  // shade at the edge.
+  // What a keyboard focus or the open tab scrolls into view clears the edge.
   scroll-padding-inline: space(6);
-  border: 1px solid $segment-edge;
-  border-radius: radius('pill');
-  // No scrollbar: it would cross the open pill's foot inside a track this
-  // thin, and a phone draws none at rest anyway. What says there is more is
-  // the label cut off at the track's edge and a shade on that side. The
-  // shades are fixed to the track; a cover in the track's own fill rides
-  // with the segments at each end and hides the shade there, so a shade
-  // shows only on a side with more to scroll to (the scroll-shadow pattern,
-  // no script).
   scrollbar-width: none;
-  background:
-    linear-gradient(to right, $surface-card 40%, transparent) left / space(7) 100% no-repeat local,
-    linear-gradient(to left, $surface-card 40%, transparent) right / space(7) 100% no-repeat local,
-    linear-gradient(to right, $segment-shade, transparent) left / space(5) 100% no-repeat scroll,
-    linear-gradient(to left, $segment-shade, transparent) right / space(5) 100% no-repeat scroll,
-    $surface-card;
 
   &::-webkit-scrollbar {
     display: none;
   }
 
-  @include list-reset(space(1));
+  @include list-reset(0);
 
   > li {
     flex: none;
@@ -106,20 +220,32 @@ $segment-shade: $hairline;
   }
 }
 
-// A segment: a block target in the body's weight 500, no underline, its
-// label on one line, over the pill. Every segment carries the edge the pill
-// shows, in no colour, so the pill is no larger than a segment.
+// A pill: 2.25rem less the track's edge and air, in the caption size, its
+// label on one line, over the pill element. Its hit area is padded back to
+// `$control-height` by a transparent box above and below it, which is the
+// pill's own and so goes where it goes; the box fills the row's scrollport
+// exactly, so nothing is clipped.
 .tabbed-page__row a {
-  display: block;
+  display: flex;
   position: relative;
-  padding: space(2) space(4);
+  align-items: center;
+  box-sizing: border-box;
+  height: calc(#{$pill-height} - 2 * #{$track-inset});
+  padding-inline: space(3);
   border: 1px solid transparent;
   border-radius: radius('pill');
   color: $text-muted;
+  font-size: type-size('caption');
   font-weight: 500;
-  text-align: center;
   text-decoration: none;
   white-space: nowrap;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block: calc((#{$control-height} - 100%) / -2);
+  }
 
   &:hover {
     color: $text-primary;
@@ -136,7 +262,7 @@ $segment-shade: $hairline;
     transform: translateY(1px);
   }
 
-  // Inside the segment rather than round it, where the track would clip it.
+  // Inside the pill rather than round it, where the track would clip it.
   &:focus-visible {
     @include focus-ring($accent);
 
@@ -156,7 +282,6 @@ $segment-shade: $hairline;
   border: 1px solid $accent;
   border-radius: radius('pill');
   background-color: $segment-pill;
-  box-shadow: $shadow-floating;
 }
 
 .tabbed-page__row:not([data-sliding]) a[aria-current='page'] {
@@ -189,9 +314,8 @@ $segment-shade: $hairline;
 // Every tab while one is on its way, the muted, faded look a disabled
 // control has (claude-docs/styling.md, "Disabled is dashed and faded"),
 // without a button's edge to dash; hover changes nothing. The pill, on the
-// pressed tab by then, fades with them, its colour taken out and its shadow
-// gone, so it reads as on its way rather than arrived. `tab-links.tsx`
-// ignores a press meanwhile.
+// pressed tab by then, fades with them, its colour taken out, so it reads as
+// on its way rather than arrived. `tab-links.tsx` ignores a press meanwhile.
 .tabbed-page__row a[aria-disabled='true'] {
   &,
   &:hover {
@@ -203,22 +327,6 @@ $segment-shade: $hairline;
 
 .tabbed-page__row[aria-busy='true'] > .tabbed-page__pill {
   @include busy-faded;
-
-  box-shadow: none;
-}
-
-// At a phone's width, under the forms' column the page header stacks at,
-// the track spans the line and the segments grow to share it, each from
-// its own width and never under it, so a row that fits fills the track and
-// one that does not scrolls.
-@container tabbed-page-tabs (max-width: #{$narrow-column}) {
-  .tabbed-page__row {
-    flex-grow: 1;
-
-    > li {
-      flex: 1 0 auto;
-    }
-  }
 }
 
 // The open tab's content, or its loading state: any notice, then the list,
@@ -234,17 +342,12 @@ $segment-shade: $hairline;
   @include arrived;
 }
 
-// The skeleton a pressed tab shows while it is on its way (`panel-loading.tsx`).
-// Its fill is the muted ink a little way into the card surface, as the
-// combobox's quiet fills are, so both themes carry it on the page and on a
-// card; its shimmer a lighter step of the same. Shown at once, with a short
+// The skeleton a pressed tab shows while it is on its way (`panel-loading.tsx`),
+// its shapes the shared `skeleton-shape` (_mixins.scss). Shown at once, with a short
 // fade: the press has already taken the old content away, so holding the
 // skeleton back would leave the panel blank, which is the snap it is there
 // to avoid. A size container, so its rows turn to cards under the width the
 // real table stacks at.
-$skeleton-fill: $fill-quiet;
-$skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
-
 .tab-skeleton {
   container: tab-skeleton / inline-size;
   @include arrived($motion-short);
@@ -255,24 +358,9 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
   @include stack;
 }
 
-// Every shape: a rounded bar of the fill, the shimmer passing across it.
-// Still, with no shimmer, where motion is reduced.
+// Every shape: a rounded bar, the shimmer passing across it.
 .tab-skeleton__shapes span {
-  display: block;
-  height: 1rem;
-  border-radius: radius('control');
-  background-image: linear-gradient(
-    90deg,
-    $skeleton-fill 0%,
-    $skeleton-shine 50%,
-    $skeleton-fill 100%
-  );
-  background-size: 200% 100%;
-  animation: tab-skeleton-shimmer 1.4s ease-in-out infinite;
-
-  @include reduced-motion {
-    animation: none;
-  }
+  @include skeleton-shape;
 }
 
 // The filter row: the search box and a narrower select, a control's height
@@ -387,15 +475,5 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
 @container tab-skeleton (max-width: #{$narrow-column}) {
   .tab-skeleton__filter > span {
     flex-basis: 100%;
-  }
-}
-
-@keyframes tab-skeleton-shimmer {
-  from {
-    background-position: 100% 0;
-  }
-
-  to {
-    background-position: -100% 0;
   }
 }

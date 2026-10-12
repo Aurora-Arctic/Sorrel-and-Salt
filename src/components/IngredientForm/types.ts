@@ -4,7 +4,7 @@ import type {
   CreateReferenceMutation,
   CreateWorkspaceIngredientMutation,
   FormSuggestionsQueryVariables,
-  PlanetSuggestionsQuery,
+  CelestialBodySuggestionsQuery,
   PossibleDuplicatesQuery,
 } from '../../gql/graphql';
 import type {
@@ -201,7 +201,7 @@ export interface IngredientFormValues {
   description: string;
   /** In the order chosen; none chosen is the answer "none". */
   elements: IngredientElement[];
-  planets: ListEntry[];
+  celestialBodies: ListEntry[];
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
   deities: DeityListEntry[];
@@ -242,7 +242,7 @@ export interface VariantFormValues {
   description: string;
   safetyNotes: string;
   elements: IngredientElement[];
-  planets: ListEntry[];
+  celestialBodies: ListEntry[];
   zodiacSigns: ListEntry[];
   colors: ListEntry[];
   substitutes: SubstituteListEntry[];
@@ -252,7 +252,7 @@ export interface VariantFormValues {
   drafts: Record<VariantDraftName, string>;
 }
 
-/** A variant's lists that take entries in a box: its own planets, signs, colours and substitutes. */
+/** A variant's lists that take entries in a box: its own celestial bodies, signs, colours and substitutes. */
 export type VariantListName = (typeof VARIANT_LISTS)[number];
 
 /** A variant's boxes: its lists', and its references' search. */
@@ -295,10 +295,10 @@ export type MultiSelectFieldName = 'elements' | `${VariantPath}.elements`;
 /** The ingredient's own lists that take entries in a box. */
 export type IngredientListName = (typeof LIST_FIELDS)[number];
 
-/** A list taking entries in a box: the ingredient's, or a variant's, `variants.1.planets`. */
+/** A list taking entries in a box: the ingredient's, or a variant's, `variants.1.celestialBodies`. */
 export type ListFieldName = IngredientListName | `${VariantPath}.${VariantListName}`;
 
-/** A list's box, as `draftOf` names it: `drafts.planets`, or `variants.1.drafts.planets`. */
+/** A list's box, as `draftOf` names it: `drafts.celestialBodies`, or `variants.1.drafts.celestialBodies`. */
 export type DraftPath = `drafts.${DraftName}` | `${VariantPath}.drafts.${VariantDraftName}`;
 
 /** A closed set holding several values, chosen as chips on the select-only box. */
@@ -348,7 +348,7 @@ export interface ListFieldProps {
   /**
    * An entry is only ever a curated suggestion picked: the box offers the
    * curated rows alone, no typed row and no Add — a compendium entry's
-   * planets, signs and deities (MB.162).
+   * celestial bodies, signs and deities (MB.162).
    */
   pickOnly?: boolean;
   /** A control at the right end of the legend, handed the list's announcer: a variant's Copy From Ingredient. */
@@ -478,7 +478,7 @@ export interface FormFieldProps extends LookupFieldProps {
  * every vocabulary box inside a variant.
  */
 export interface VariantsFieldProps extends LookupFieldProps {
-  /** Its section's open state, which the form owns, as it does the other six's. */
+  /** Its section's open state, which the form owns, as it does the other five's. */
   fold: SectionFold;
   /** Which of each variant's own sections are open, which the form owns too. */
   folds: VariantFolds;
@@ -520,9 +520,9 @@ export interface SubstituteFormsProps {
   name: `${'' | `${VariantPath}.`}substitutes`;
 }
 
-/** A planet or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */
+/** A celestial body or sign suggestion, as the lookup asks for it; a deity's adds its tradition. */
 export type CorrespondenceNode =
-  PlanetSuggestionsQuery['planetSuggestions']['edges'][number]['node'];
+  CelestialBodySuggestionsQuery['celestialBodySuggestions']['edges'][number]['node'];
 
 /** The duplicate warning's state, which the form owns and the name field draws. */
 export interface DuplicateWarning {
@@ -555,7 +555,7 @@ export interface Claimant {
   canonicalName: string | null;
 }
 
-/** One of the ingredient's seven sections, each folding to a summary line (MB.115). */
+/** One of the ingredient's six sections, each folding to a summary line (MB.115). */
 export type SectionKey = (typeof SECTION_KEYS)[number];
 
 /**
@@ -601,11 +601,6 @@ export interface SectionSummaryProps {
   section: SectionKey;
 }
 
-/** The closed line of a section that is one text field, its first words. */
-export interface TextSummaryProps {
-  name: 'description' | 'safetyNotes';
-}
-
 /** A variant's own sections, the ingredient's bar Variants, each folding as the ingredient's do (MB.115). */
 export type VariantSectionKey = (typeof VARIANT_SECTION_KEYS)[number];
 
@@ -643,8 +638,6 @@ interface CollapsibleSectionBase {
   fold: SectionFold;
   /** Its heading's level: 3 for the ingredient's sections, 4 for a variant's, beneath the Variants heading. */
   level?: 3 | 4;
-  /** Its one field's label repeats the heading, so the label is hidden from the eye. */
-  labelled?: boolean;
   /** An ⓘ beside the heading, outside the toggle, since a button cannot hold one. */
   info?: ReactNode;
   /** The toggle's id, for a group inside that is named by the heading. */
@@ -667,7 +660,7 @@ export type CopiedField =
   | 'description'
   | 'safetyNotes'
   | 'elements'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiacSigns'
   | 'colors'
   | 'categoryIds'

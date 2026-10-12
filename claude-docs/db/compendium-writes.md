@@ -60,8 +60,8 @@ its `children` go to `writeChildren` whole. The next child, checked or not,
 edits neither service. `ingredient_variants_form_unique` is mapped where the
 form is written, onto that form's `form`, since only that write knows which
 entry it was writing. The compendium holds each form to the curated rules. Each form must be a pick, refused at
-`['variants', i, 'form']` or `['variants', i, 'formId']`. Each form's planets
-and signs must name curated rows, at `['variants', i, 'planets', j]`.
+`['variants', i, 'form']` or `['variants', i, 'formId']`. Each form's celestial bodies
+and signs must name curated rows, at `['variants', i, 'celestialBodies', j]`.
 
 `variants` is the only place a form is written (MB.222). The ingredient row
 has no form of its own, so nothing copies a variant onto it, and an input
@@ -77,18 +77,18 @@ null, is a `ValidationError` on `nomenclature` from the parse, before
 `withAudit` opens; the column's `NOT NULL` would have answered with a driver
 error instead.
 
-**The form, planets, signs and deities are the curated rows'** (MB.162). A
+**The form, celestial bodies, signs and deities are the curated rows'** (MB.162). A
 coven's write keeps what was typed; these two do not. After the parse,
-`inCuratedValues` checks the form and the deities by pick and the planets and
+`inCuratedValues` checks the form and the deities by pick and the celestial bodies and
 signs by spelling (MB.167, which moved the form and deities onto the pick).
 Each form and every deity must be a pick of a curated row, held or not,
 through `resolvePicks`, which `vocabulary`'s `curatedNames` answers by id: a
 curated value typed rather than picked is refused as an uncurated one is, and
 a held deity pick is refused once its deity is retired, where a coven keeps
-it. The planets and signs read the live curated rows each value folds to,
+it. The celestial bodies and signs read the live curated rows each value folds to,
 through `vocabulary`'s `curatedSpellings`. Every value refused is one issue of
 one `ValidationError`, beside its field — `['variants', i, 'form']` or
-`['variants', i, 'formId']`, or `['planets', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
+`['variants', i, 'formId']`, or `['celestialBodies', i]`, `['zodiacSigns', i]` or `['deities', i]` at the entry sent
 — naming the list to pick from or add it to. A value that passes is written in
 the row's spelling, so `moon ` is stored `Moon`. A form counts only under a live
 group and a deity only under a live tradition, as the autofill reads them
@@ -120,7 +120,7 @@ The service test's `READS` table asks every exported read an entry reaches
 anyone through — the list and its count, the read by id, its address and one
 it moved off, its folk names, categories, substitutes, deities and
 references, and a coven's substitute picker, duplicate warning, and
-common-name, form, planet, sign and deity suggestions — whether it shows the
+common-name, form, celestial body, sign and deity suggestions — whether it shows the
 entry, before the delete and after. The table is where each reader's
 soft-delete filter is proved, so no reader's own test carries a one-off
 (MB.187).

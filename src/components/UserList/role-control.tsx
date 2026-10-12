@@ -9,7 +9,8 @@ import LockedControl from './locked-control';
 import { unverifiedWarning } from './warning';
 import type { RoleControlProps } from './types';
 
-// The row's Grant or Revoke of admin (MB.59), beside the role it changes,
+// The row's Promote or Revoke of admin (MB.59; Promote was Grant until the
+// owner renamed it in M9.19), beside the role it changes,
 // each asking first in a modal naming the user, with an optional reason the
 // ledger keeps. The primary admin's Revoke stays in view but cannot be used,
 // its reason in a tip that opens as InfoTip's does and said again when it is
@@ -33,10 +34,11 @@ const RoleControl = ({
   primaryAdmin,
   paused = false,
   action,
+  inModal = false,
 }: RoleControlProps): ReactElement => {
   const grant = action === 'grant';
-  const label = grant ? 'Grant' : 'Revoke';
-  const accessibleName = grant ? `Grant admin to ${name}` : `Revoke admin from ${name}`;
+  const label = grant ? 'Promote' : 'Revoke';
+  const accessibleName = grant ? `Promote ${name} to admin` : `Revoke admin from ${name}`;
   const openClass = grant ? 'btn btn--small btn--quiet' : 'btn btn--small btn--destructive';
   // The primary admin's own reason first: it holds whether or not changes are paused.
   const reason =
@@ -60,17 +62,18 @@ const RoleControl = ({
       label={label}
       accessibleName={accessibleName}
       openClass={openClass}
-      title="Grant Admin"
+      title="Promote to Admin"
       question={
         <>
           Make <strong>{name}</strong> an admin? They will curate the compendium, grant and revoke
           admin, and create covens.
         </>
       }
-      warning={emailVerified ? undefined : unverifiedWarning('Granting')}
-      busy="Granting"
+      warning={emailVerified ? undefined : unverifiedWarning('Promoting')}
+      busy="Promoting"
       confirmClass="btn btn--solid"
       withNote
+      inModal={inModal}
       send={(note) => graphqlRequest(SetUserRoleDocument, { userId, role: 'admin', note })}
     />
   ) : (
@@ -88,6 +91,7 @@ const RoleControl = ({
       busy="Revoking"
       confirmClass="btn btn--destructive"
       withNote
+      inModal={inModal}
       send={(note) => graphqlRequest(SetUserRoleDocument, { userId, role: 'user', note })}
     />
   );

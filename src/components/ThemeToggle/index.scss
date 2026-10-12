@@ -8,14 +8,26 @@
 // The arc a facet sweeps; component geometry, not a shared token.
 $theme-toggle-icon-arc: 130deg;
 
+// The disc in the corner is the button itself, so its wrapper takes no box.
+.theme-toggle__disc {
+  display: contents;
+}
+
 .theme-toggle {
+  border: none;
+  cursor: pointer;
+  @include theme-transition(background-color, color, transform);
+}
+
+// The pinned corner (the root layout, for pages with no application shell).
+.theme-toggle--corner {
   position: fixed;
   // Beneath anything in the page's flow above it: the impersonation banner
   // on a touch screen (MB.53).
   top: $top-inset;
   right: 0;
   // Above the impersonation banner, which runs beneath this corner (MB.53).
-  z-index: 2;
+  z-index: layer('toggle');
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,7 +35,6 @@ $theme-toggle-icon-arc: 130deg;
   height: $toggle-corner;
   // Pulls the icon off the pivot corner.
   padding: 0 0 0.75rem 1rem;
-  border: none;
   // Centred on the pinned top-right corner, so only the quarter in the viewport paints.
   clip-path: circle($toggle-corner at 100% 0%);
   // The parked facet sits past the window's right edge. The clip hides it but
@@ -33,11 +44,9 @@ $theme-toggle-icon-arc: 130deg;
   // $text-on-color: the contrast-checked label for a solid fill.
   background-color: $accent;
   color: $text-on-color;
-  cursor: pointer;
   // Hover grows from the pinned corner: on dark $accent and $accent-hover are a
   // shade apart, so colour alone cannot carry it.
   transform-origin: 100% 0;
-  @include theme-transition(background-color, color, transform);
 
   &:focus-visible {
     @include focus-ring($text-on-color);
@@ -46,6 +55,80 @@ $theme-toggle-icon-arc: 130deg;
   &:hover {
     background-color: $accent-hover;
     transform: scale(1.07);
+  }
+}
+
+// The root layout is session-free, so it cannot know a page has the shell
+// around it and always mounts the corner. The shell has its own disc in the
+// bar, and two would be one too many: this hides the corner on any page that
+// holds the shell. Written here, with the toggle, rather than in the shell.
+body:has(.app-shell) > .theme-toggle--corner {
+  display: none;
+}
+
+// The disc in the flow (the shell's bar, and its phone account panel). The
+// button is transparent and padded out to a control's height, so the target
+// is a finger's; the disc inside is what is drawn, round and clipping the
+// facet that swings out of it, which a bare button's own box could not do
+// without hiding its padding too.
+$theme-toggle-disc: 2rem;
+$theme-toggle-disc-small: 1.75rem;
+$theme-toggle-facet: 1.1875rem;
+$theme-toggle-facet-small: 1.0625rem;
+
+.theme-toggle--inline {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  box-sizing: content-box;
+  width: $theme-toggle-disc;
+  height: $theme-toggle-disc;
+  padding: calc((#{$control-height} - #{$theme-toggle-disc}) / 2);
+  background: transparent;
+
+  .theme-toggle__disc {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: 50%;
+    background-color: $accent;
+    color: $text-on-color;
+    @include theme-transition(background-color);
+  }
+
+  .theme-toggle__facets {
+    flex: none;
+    width: $theme-toggle-facet;
+    height: $theme-toggle-facet;
+  }
+
+  &:hover .theme-toggle__disc {
+    background-color: $accent-hover;
+  }
+
+  &:focus-visible {
+    outline: none;
+
+    .theme-toggle__disc {
+      @include focus-ring;
+    }
+  }
+}
+
+// The phone account panel's size; padded to the same control height, so its row is no shorter.
+.theme-toggle--small {
+  width: $theme-toggle-disc-small;
+  height: $theme-toggle-disc-small;
+  padding: calc((#{$control-height} - #{$theme-toggle-disc-small}) / 2);
+
+  .theme-toggle__facets {
+    width: $theme-toggle-facet-small;
+    height: $theme-toggle-facet-small;
   }
 }
 
@@ -127,6 +210,7 @@ html[data-theme='light'] {
 
 @include reduced-motion {
   .theme-toggle,
+  .theme-toggle__disc,
   .theme-toggle__facet {
     transition: none;
   }

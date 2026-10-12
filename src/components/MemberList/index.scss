@@ -1,0 +1,68 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The member list's own rules: its cells centred on the row, the "You" mark
+// and the muted Joined date. The table, its frame and its card layout are the
+// `.data-table` primitives (claude-docs/styling.md); nothing here styles past
+// the tokens until the section's design review.
+
+// The sole-owner warning above the list, spaced from the refusal notice that can
+// follow it; compounded with `.notice`, whose primitive is `body .notice` in the
+// app, so a lone class would lose to it.
+.notice.member-list__warning {
+  margin-bottom: space(4);
+}
+
+// The name, then "You" beside it on the member's own row.
+.member-list__name {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+}
+
+.member-list__you {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+// The joined date is a fact no control changes, so muted at the caption size
+// above the stacking width; a card already leads it with its muted label.
+@container data-table (width > #{$table-stack-width}) {
+  .member-list .member-list__fact {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+}
+
+// The role and its change on one line, as the user list's role cell holds its own.
+.member-list__role {
+  @include value-and-control;
+}
+
+// The role column takes only the room its word and controls need, rather than
+// a share of the table; above the stacking width only, as a card is full width.
+@container data-table (width > #{$table-stack-width}) {
+  .member-list .member-list__role-column {
+    width: 1%;
+    white-space: nowrap;
+  }
+}
+
+// The Change Role button, at the cell's right edge, given about the same room
+// on every row so the buttons line up down the column.
+.member-list__actions {
+  display: inline-flex;
+  gap: space(2);
+  margin-inline-start: auto;
+
+  .btn {
+    min-width: 9ch;
+    justify-content: center;
+  }
+}
+
+// The Remove column, the shared dangerous-action column Impersonate is
+// (`row-action-column`).
+.member-list__remove {
+  @include row-action-column;
+}

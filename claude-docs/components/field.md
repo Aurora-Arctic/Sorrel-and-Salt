@@ -36,6 +36,7 @@ the same shell until its design review (MB.120).
 | `use-field.ts`            | `useField`, `fieldDescription` over a react-hook-form field's own error             |
 | `text-field.tsx`          | `TextField`                                                                         |
 | `select-field.tsx`        | `SelectField`                                                                       |
+| `radio-group-field.tsx`   | `RadioGroupField`                                                                   |
 | `switch-field.tsx`        | `SwitchField`                                                                       |
 | `search-field.tsx`        | `SearchField`                                                                       |
 | `filter-select-field.tsx` | `FilterSelectField`                                                                 |
@@ -53,6 +54,7 @@ the same shell until its design review (MB.120).
 | `useField`          | `fieldDescription` for a react-hook-form field, its error read by name                                        |
 | `TextField`         | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
 | `SelectField`       | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
+| `RadioGroupField`   | One choice from a few, each radio with a line saying what it means, in a `.fieldset`                          |
 | `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
 | `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
@@ -154,6 +156,18 @@ an unchosen one does ([`combobox.md`](combobox.md), "The type-ahead box"). Both 
 form's values, `TextField<IngredientFormValues>`, so `name` is checked
 against the form's own paths; left out, any string passes.
 
+`RadioGroupField` (`RadioGroupFieldProps`, M6.13) takes a `legend`, the
+radios' shared `name`, `options` (`value`, `label`, optional `description`),
+the chosen `value` held by the caller, and `onChange(value)`. A native radio
+group in a `.fieldset.radio-group`: each radio is a small ring whose centre dot, in the
+accent green, grows in with only a thin gap to the ring over the switch's `$motion-short` ease
+(none under reduced motion), the dot as well as the colour carrying the
+choice. The description is `aria-describedby`. An optional `note` (M7.4) is a line
+for the whole group, such as the invite dialog's "an owner is made afterwards", set as the
+fieldset's own `aria-describedby` so it is read with the group. The group carries
+`margin-block: 1.5rem`, the owner's call. First used by the members page's
+Promote and Demote modal.
+
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),
 `onChange(checked)`, `disabled`, and either `checked`, held by the caller,
@@ -165,7 +179,7 @@ keep ([`filter-form.md`](filter-form.md)). It draws a `.field`
 block of its own rather than `FieldShell`, since it has no hint, note or
 error and its label takes the press feedback: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
-`role="switch"`, beneath it in `.switch__control`. The label is its
+`role="switch"`, beneath it in `.switch__control`, centred under the label. The label is its
 accessible name and a click on it turns it; the label and the toggle are
 each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native

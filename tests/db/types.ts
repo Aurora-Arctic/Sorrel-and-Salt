@@ -39,7 +39,7 @@ export type Governed =
   | 'category groups'
   | 'forms'
   | 'form groups'
-  | 'planets'
+  | 'celestialBodies'
   | 'zodiac signs'
   | 'deities'
   | 'deity traditions'
@@ -63,6 +63,13 @@ export interface AdminWrite {
 export interface WorkspaceIdProbe {
   source: string;
   variables?: () => Record<string, unknown>;
+  /** Runs as W's owner, A, for a field only an owner is admitted to; B otherwise. */
+  asOwner?: boolean;
+  /**
+   * The workspace the admitted call names instead of W, for a field that
+   * destroys what it is given: a coven of its own, so W stands for the rest.
+   */
+  admittedTo?: () => string;
 }
 
 /** A GraphQL response body, as far as a probe reads it. */

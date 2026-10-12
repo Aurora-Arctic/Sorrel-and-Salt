@@ -9,8 +9,10 @@ is verified. The last two are what an admin granting admin is asked to judge
 the person by (MB.59).
 
 **It confers no workspace access.** Reading who has an account is what the
-admin role already implies. The page reads nothing below `users` and
-`accounts`, and it offers no control over any workspace. It is not one more
+admin role already implies. The page reads a user's memberships — each
+coven's name and the user's role in it — for the modal (M9.19), and nothing
+beneath them: no ingredient, spell or member list. It offers no control over
+any workspace. It is not one more
 thing an admin curates, either: CLAUDE.md's "and nothing else" governs what an admin
 may _change_.
 
@@ -33,7 +35,7 @@ may _change_.
   read outside `/api/graphql`: rules 2 and 1 in one call.
 - **Paged by the M3.6 helper.** The order is name then id, with a keyset
   cursor and no offset, and a page holds 25 rows. The page reads it through
-  `readNumberedPage` (`src/app/admin/list-page.tsx`), which pages it with
+  `readNumberedPage` (`src/lib/numbered-page.ts`), which pages it with
   `resolveNumberedPage` and counts it with `countUsers`, so the pager says
   "Page 2 of 3" between Prev and Next as every admin list does (MB.115): the
   count is every user the filter keeps, and how many of them come before the
@@ -88,6 +90,51 @@ position, and a foreign cursor reading the first page.
 `tests/e2e/admin.spec.ts` checks the page an admin sees against the built
 server, with axe.
 
+## The user modal (M9.19)
+
+Pressing a user's name on the list opens a modal over it, so an admin sees
+what a person already holds before approving, revoking, granting admin or
+impersonating them. The owner narrowed story 19 for this: "private data" is a
+workspace's contents, and which covens someone belongs to is not among them
+([`design-decisions/m9.19-admin-sees-user-covens.md`](../design-decisions/m9.19-admin-sees-user-covens.md)).
+
+- **The address is `?user=<id>`.** The press opens the modal at once, over a
+  skeleton, through M9.18's `RouteModal`; the list keeps its filter and page
+  beneath it, and Close drops `?user=`. A request that arrives with a live
+  `?user=` renders the modal on the server.
+- **The head** is the eyebrow "User", the name as the title and the email on a line beneath it as
+  the qualifier. The body is `UserDetail`
+  ([`components/user-detail.md`](../components/user-detail.md)): every fact
+  the list's row shows (the page reads them with the user, so the modal holds
+  the whole row), with the row's Promote or Revoke and Approve or Revoke
+  beside the facts they change, asking inside the modal and going through the
+  same mutations and services as the row's, then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
+  by name. Coven names are text, not links: an admin reaches no coven, and
+  `/coven/[slug]` is a 404 to a non-member.
+- **The reads come with the navigation**, from the server page, under
+  `requireAdminSession()`: `usersForAdmin` for the user, `membershipsOf` for
+  the covens, `providersOf`. No GraphQL query is added. `membershipsOf`
+  (`src/modules/coven/services/memberships.ts`) answers a key that is the caller's own, or any key
+  when the caller is a site admin; it hands over
+  a workspace's `id`, `name` and `slug` and nothing beneath. GraphQL's
+  `User.memberships` therefore resolves for an admin too, with no schema
+  change.
+- **A `?user=` that opens nothing shows the missing notice** over the list,
+  with no dialog: one that is not an id, names no user, names a soft-deleted
+  user or names the bootstrap user.
+- **Impersonate sits in the modal** for a non-admin user where impersonation
+  is registered. It asks first, inside the modal, through `ConfirmQuestion`,
+  and shares its wording and its send with the list's button
+  (`src/components/UserList/impersonation.tsx`). The modal offers no other
+  control.
+
+**Tests.** `tests/modules/coven/services/memberships.test.ts` (an admin is
+answered, with the preconditions; another member is still refused),
+`tests/db/workspace-isolation.test.ts` (E reads D's membership of X and is
+still refused X's contents by direct id), `tests/modules/identity/graphql/users.test.ts`,
+the page and component tests, and an e2e test in `tests/e2e/admin.spec.ts`
+tagged `@story-19`, which passes an axe scan with the modal open.
+
 ## Approving workspace creation (M5.8)
 
 An admin approves someone who has no invitation from that person's row on
@@ -131,7 +178,7 @@ created, and their ownership of it
   destructive and says their covens stay theirs, and an approval of an
   unverified address warns that nobody has proved who holds it and that
   approving keeps the account from lapsing (MB.204, MB.205), and still
-  approves. Each takes the same optional Reason as Grant and Revoke of admin
+  approves. Each takes the same optional Reason as Promote and Revoke of admin
   ([`components/user-list.md`](../components/user-list.md)).
 
 **Tests.** `tests/modules/identity/services/workspace-creation.test.ts` covers
@@ -277,7 +324,7 @@ the good ones while it is dealt with, and back on. The argument is
   control as the tab's action, beside the page's heading, and a warning saying changes are paused while they are. The
   control is usable by the primary admin alone, in view but `aria-disabled`
   for any other, with the reason in a tip; while paused, such an admin's
-  Grant and Revoke, and coven creation's Approve and Revoke, are locked the
+  Promote and Revoke, and coven creation's Approve and Revoke, are locked the
   same way
   ([`components/user-list.md`](../components/user-list.md)). The page reads
   the state through `adminRoleChangePauseState(session)`.
@@ -327,7 +374,9 @@ filter, page)` is one page of the pending list, newest first, and
   request by the GraphQL context as the email page's is, because the link's
   origin is Better Auth's to resolve against its allowed hosts: a forged
   `Host` cannot have a live token mailed on a link to another site. The mail
-  is `src/emails/admin-invitation.tsx` ([`email.md`](../email.md)). A failed
+  is `src/emails/admin-invitation.tsx` ([`email.md`](../email.md)); the
+  service hands the sender the inviting admin's name, read from their `users`
+  row, for the mail to open with. A failed
   send is logged by the transport and never thrown, so the invitation stays
   pending, to be withdrawn and sent again.
 - **What is refused at creation.** An address the email page would refuse,
@@ -340,9 +389,8 @@ filter, page)` is one page of the pending list, newest first, and
   shared `assertAdminChangesOpen` and in its words, naming nobody.
 - **One accept service, for both tiers.** `acceptInvitation(session, token)`
   (`src/modules/identity/services/invitation-acceptance.ts`) is the one M7.5's
-  entry describes, built here with the site tier's branch; M7.5 adds the
-  workspace's, and until then a workspace invitation is refused as an invalid
-  link. It checks, in this order:
+  entry describes, built by MB.70 with the site tier's branch, and by M7.5
+  with the workspace's. It checks, in this order:
   1. The token names a live invitation, or the link is invalid (`NotFound`).
      The token is hashed in the repository, so a hash read off a dumped row
      names nothing.
@@ -350,8 +398,17 @@ filter, page)` is one page of the pending list, newest first, and
      link in two states always reports the same one reason, an act before
      the clock. Each is a `Forbidden` in words of its own, and none names a
      workspace (M7.7, which asserts them on the workspace tier).
-  3. The tier: the site tier's branch, below; a workspace's is invalid until
-     M7.5.
+  3. The tier: the site tier's branch, below, or the workspace's (M7.5), which
+     seats the person at the invited role: a removed member's row is revived
+     (`reviveMembership`, `joinedAt` restarted), a live member's is left
+     alone and the invitation only stamped, and otherwise a row is inserted.
+     It sets `canCreateWorkspace` declared `via: 'invitation'`, which
+     re-grants it to a person an admin revoked (M5.8's recorded default; no
+     marker exists to consult). The standing carries the coven's name and slug, so the Accept page names the
+     coven to the account that matches and is verified, and to no one else. An
+     invitation into a deleted coven is
+     `invalid` at the standing, after the address checks, so no Accept is
+     offered; the repository write's live-workspace check is the backstop.
   4. The session's account holds the invited address, compared
      case-insensitively, or "This invitation was sent to a different email
      address"; and holds it **verified**, or it is pointed at `/account/email`

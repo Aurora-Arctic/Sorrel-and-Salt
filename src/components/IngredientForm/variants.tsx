@@ -28,7 +28,7 @@ import {
   curatedOnly,
   useCompendiumSubstitutes,
   useFormSuggestions,
-  usePlanetSuggestions,
+  useCelestialBodySuggestions,
   useSubstituteSuggestions,
   useZodiacSuggestions,
 } from './suggestions';
@@ -63,7 +63,7 @@ import {
 // fields stay in the page while closed, hidden, so nothing typed in them,
 // an open reference panel included, is lost by closing it. They are the
 // ingredient's own field components at its place in the values,
-// `variants.1.planets`, so they validate, err and focus as the ingredient's
+// `variants.1.celestialBodies`, so they validate, err and focus as the ingredient's
 // do (claude-docs/components/ingredient-form.md, "The variants").
 
 const BOX = 'drafts.variants';
@@ -435,21 +435,27 @@ function VariantFieldset({
             <FormField workspaceId={workspaceId} at={at} pickOnly={compendium} />
           </CollapsibleSection>
           <CollapsibleSection
-            title="Description"
+            title="Details & Care"
             level={4}
-            fold={fold('description')}
-            summary={summary('description')}
-            labelled
+            fold={fold('details')}
+            summary={summary('details')}
           >
             <TextField<IngredientFormValues>
               name={`${at}.description`}
               label="Description"
-              hint="What is particular to this form. What every form shares is the ingredient's description."
               placeholder="What sets this form apart"
               action={<CopyFromIngredient at={at} field="description" />}
               multiline
               // Seven lines, matching the ingredient's Description (MB.115).
               rows={7}
+            />
+            <TextField<IngredientFormValues>
+              name={`${at}.safetyNotes`}
+              label="Safety Notes"
+              hint="What to take care over with this form in particular: an oil diluted, a resin burned."
+              placeholder="Add safety notes"
+              action={<CopyFromIngredient at={at} field="safetyNotes" />}
+              multiline
             />
           </CollapsibleSection>
           <CollapsibleSection
@@ -467,15 +473,15 @@ function VariantFieldset({
             />
             <LookupListField
               workspaceId={workspaceId}
-              useSuggestions={usePlanetSuggestions}
-              name={`${at}.planets`}
+              useSuggestions={useCelestialBodySuggestions}
+              name={`${at}.celestialBodies`}
               ordered
               pickOnly={compendium}
               legend="Celestial Bodies"
               entry="Celestial Body"
               placeholder="Add a body"
               action={(announce) => (
-                <CopyFromIngredient at={at} field="planets" announce={announce} />
+                <CopyFromIngredient at={at} field="celestialBodies" announce={announce} />
               )}
             />
             <LookupListField
@@ -542,21 +548,6 @@ function VariantFieldset({
               after={
                 <SkippedNotice at={at} skipped={skipped} onDone={onDone} copyButton={copyButton} />
               }
-            />
-          </CollapsibleSection>
-          <CollapsibleSection
-            title="Safety"
-            level={4}
-            fold={fold('safety')}
-            summary={summary('safety')}
-          >
-            <TextField<IngredientFormValues>
-              name={`${at}.safetyNotes`}
-              label="Safety Notes"
-              hint="What to take care over with this form in particular: an oil diluted, a resin burned."
-              placeholder="Add safety notes"
-              action={<CopyFromIngredient at={at} field="safetyNotes" />}
-              multiline
             />
           </CollapsibleSection>
           <CollapsibleSection

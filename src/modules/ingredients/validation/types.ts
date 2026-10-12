@@ -7,7 +7,7 @@ import type { INGREDIENT_ELEMENTS, NomenclatureKind } from '../schema/ingredient
 /** The list fields `dropBlankEntries` clears of blank entries and takes as absent when empty, in either variant. */
 export interface Lists {
   elements?: (typeof INGREDIENT_ELEMENTS)[number][] | null;
-  planets?: string[] | null;
+  celestialBodies?: string[] | null;
   zodiacSigns?: string[] | null;
   colors?: string[] | null;
   folkNames?: string[] | null;
@@ -99,7 +99,7 @@ export interface Parsed {
   name: string;
   canonicalName?: string | null;
   nomenclature: NomenclatureKind;
-  planets?: string[] | null;
+  celestialBodies?: string[] | null;
   zodiacSigns?: string[] | null;
   colors?: string[] | null;
   folkNames?: string[] | null;

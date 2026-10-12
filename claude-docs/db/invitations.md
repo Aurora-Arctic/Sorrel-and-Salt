@@ -119,6 +119,24 @@ with an invitation's id, which the lists show. SHA-256 unsalted rather than
 a password hash, because a token is `crypto.randomBytes` output with no
 dictionary to resist.
 
+A CSPRNG is a cryptographically secure pseudorandom number generator:
+a source of random numbers that cannot be predicted from the numbers it has
+already produced. `crypto.randomBytes()` is one, drawing on the operating
+system's entropy pool (its store of unpredictable events). `Math.random()` is
+fast but predictable: anyone who collects a few outputs can work out its
+internal state and compute the next ones, so a token made with it could be
+guessed.
+
+**One generator makes every token** (M7.2): `newToken()` in
+`src/lib/invitation-token.ts`, 32 bytes of `crypto.randomBytes()` as
+base64url, 256 bits where 128 would do. Both tiers' services call it: the
+admin invitation (MB.70) and the workspace invitation (M7.3). It lives in
+`src/lib/` because a service may not import the repository's internals, so
+it cannot sit beside `hashToken`, and because two modules mint a token, so
+neither module owns it. The service hands the token to `insertInvitation`
+and then to the mail sender, and to nothing else: no response, no query, and
+no later read can recover it.
+
 The finders:
 
 - **`findInvitationByToken(token)`** returns the live row the token names,
@@ -126,11 +144,18 @@ The finders:
   is what admits. It returns expired, revoked and accepted rows alike: the
   accept service rejects each with its own message (M7.7), and can only tell
   them apart if it sees them.
-- **`findPendingInvitationsInWorkspace(membership)`**, the members page's
-  pending list (M7.6), and **`findPendingSiteInvitationPage(admin, filter, page)`**,
+- **`findPendingWorkspaceInvitationPage(membership, page)`**, the members
+  page's pending list (M7.6), and **`findPendingSiteInvitationPage(admin, filter, page)`**,
   `/admin/invitations`' (MB.70): each tier's pending rows under its own proof.
-  The workspace's is unordered, since the members page sorts the handful it
-  holds. The site tier's is a cursor page (a page of results that resumes
+  The workspace's pages newest first as the site tier's does, by the same
+  order, through `findPageInScope` under the proof's `workspace_id`, and
+  **`findPendingWorkspaceInvitationCount(membership, start)`** counts it for
+  the "Page X of Y"; neither takes a filter. **`findInvitationInWorkspace(membership, id)`**
+  reads one invitation of the proof's workspace in any state, pending,
+  accepted, revoked or expired, and `undefined` for a missing, deleted or
+  other workspace's id: `revokeInvitation` matches pending rows only, so
+  this is how the coven service tells an accepted invitation (point the
+  owner at member removal) from a missing one. The site tier's is a cursor page (a page of results that resumes
   from the last row rather than counting rows to skip; CLAUDE.md rule 8),
   newest first: keyed on `created_at` negated as `numeric`, as the privilege
   ledger is, so the microseconds survive the cursor, and by id among rows of
@@ -163,7 +188,7 @@ it reads the spelling ([`modules.md`](../modules.md), "The tier seam").
 
 Who may invite, the pause, what accepting grants and where it lands stay in
 two services, while the mechanics above exist once: `coven`'s
-`createInvitation` / `revokeInvitation`, owner only, role chosen (M7.2,
+`createInvitation` / `revokeWorkspaceInvitation`, owner only, role chosen (M7.2,
 M7.3, M7.6), and `identity`'s `createAdminInvitation` /
 `revokeAdminInvitation`, admin only and refused while admin changes are
 paused (MB.70). One accept service in `identity`, `acceptInvitation(session,
@@ -174,3 +199,90 @@ MB.62's open pause under the site-tier invitation itself, since the invitee
 holds no `SiteAdmin` proof: `findOpenAdminRoleChangePause` takes either. How
 MB.70 built the site tier's half is
 [`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
+
+### Inviting into a coven (M7.3)
+
+`createInvitation(session, workspaceId, { email, role }, sender)`, exported
+from `@/modules/coven`, is the workspace tier's half of the policy above. It
+runs in this order, and the order is the point:
+
+1. **`assertMembership(session, workspaceId, { member: ['invite'] })`**, which
+   only owners hold (`access-control.ts`). A member, a viewer, an owner of
+   another coven and a stranger all get the same `Forbidden`, before the role
+   or the address is looked at, so nothing about the input leaks to a caller
+   who may not invite.
+2. **The role** must be `viewer` or `member`. The GraphQL enum `InvitableRole`
+   has no `owner`, so a browser cannot ask for one, but the service refuses it
+   too, as a `ValidationError` on `role` that says ownership is granted
+   afterwards: a direct call is a second path, and the database's
+   `invitations_role_invitable` check is a third, which would only say "check
+   violated".
+3. **The address** is trimmed and lower-cased with `normaliseEmail` and checked
+   with `validateEmailAddress`, both from `identity`, exactly as
+   `createAdminInvitation` does.
+4. **A live member's address is refused**, in words, by the repository's
+   `findMemberByEmail(membership, email)`: one SQL `EXISTS` over `users`,
+   case-insensitive, live rows only, so a member who was removed can be invited
+   back and the roll is never fetched to be searched.
+5. **The token** comes from `newToken()`, goes to `insertInvitation(membership,
+{ email, role, token })` inside `withAudit`, and only then to
+   `sender.workspaceInvitation(email, token, { name, role, inviterName })`: after
+   the commit, so a mailed link always names a row. `inviterName` is the
+   inviting owner's name, read from their `users` row, since the session holds
+   the id alone.
+
+**A second pending invitation to an address already invited is accepted**, as
+the admin tier's is: each mail carries its own token and any one accepts. What
+the first leaves pending, the owner revokes (M7.6). **A failed send leaves the
+invitation pending**: `send` in `src/lib/mail.ts` never throws and logs with
+`console.error`, so the mutation succeeds and the owner can revoke and
+re-invite. The test for it runs the real `send` over a `fetch` that answers
+500, not a double that pretends to have failed.
+
+**The mail** is `src/emails/coven-invitation.tsx`, rendered twice by
+`renderParts` as HTML and plain text. The plain-text part carries the
+`/invite/<token>` link, because story 4's acceptance test reads the token from
+it. `InvitationSender` (`identity/types.ts`) gained
+`workspaceInvitation(to, token, { name, role, inviterName })` beside
+`siteInvitation(to, token, { name })`; the
+real one is built in `src/lib/invitation-mail.ts` and shares the admin one's
+link, whose origin Better Auth resolves from the request.
+
+**In GraphQL**, `coven` adds what `identity` cannot name to `Invitation`: an
+`InvitableRole` enum (`viewer`, `member`), `Invitation.role` and
+`Invitation.workspace`, and the `createInvitation(workspaceId, email, role)`
+mutation. `workspace` reads through the `membershipsByUser` loader, so it
+answers a coven the caller belongs to and nothing else, and a site-tier
+invitation answers none for both. No field carries the token, its hash or a
+link; the existing field-list test in
+`tests/modules/identity/graphql/admin-invitations.test.ts` pins that.
+
+Story 4's acceptance test passes `createInvitation` now and stops at
+`acceptInvitation`, whose workspace branch M7.5 added.
+
+### Listing and revoking in a coven (M7.6)
+
+Three more services in `@/modules/coven`, each opening with
+`assertMembership(session, workspaceId, { member: ['invite'] })`, which only
+owners hold. Never `member: read`: members hold that since M6.13, and the
+pending rows carry the addresses of people who have not joined.
+
+- **`listPendingWorkspaceInvitations(session, workspaceId, page)`** and
+  **`countPendingWorkspaceInvitations(session, workspaceId, start)`** read
+  `findPendingWorkspaceInvitationPage` / `findPendingWorkspaceInvitationCount`:
+  newest first, the site tier's pager under the `Membership` proof. The members
+  page calls them directly (a server component); there is no GraphQL read.
+- **`revokeWorkspaceInvitation(session, workspaceId, id)`** looks the row up
+  with `findInvitationInWorkspace` and then stamps it through
+  `revokeInvitation(membership, id)`, inside `withAudit`. A missing id, a
+  malformed one, another coven's, and a revoked or lapsed invitation are
+  `NotFound`, as the admin tier's is. An **accepted** invitation is a
+  `ValidationError` on `id` whose message points to the members list: the
+  person is a member now, and removing them is a membership action. The
+  by-id lookup exists only to tell those two apart.
+- **A pending invitation outlives its inviter.** Demoting or removing the
+  member who sent it changes nothing about the row, as for the admin tier;
+  an owner still lists and revokes it.
+
+In GraphQL, `revokeInvitation(workspaceId: ID!, id: ID!): Invitation!` goes
+through the service.

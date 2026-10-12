@@ -4,6 +4,20 @@ import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
 import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
+/**
+ * A row as the page builds it: its name opens the user's modal (M9.19), an
+ * address the workshop does not serve, under the head the page gives it.
+ */
+const listed = (user: Omit<UserListEntry, 'openHref' | 'heading'>): UserListEntry => ({
+  ...user,
+  openHref: '#user',
+  heading: {
+    eyebrow: 'User',
+    title: user.name,
+    qualifier: <span className="user-list__modal-email">{user.email}</span>,
+  },
+});
+
 // Render-only; behaviour is asserted in tests/components/UserList. The filter
 // and the pager reach `/admin/users`, and each name's privilege changes icon
 // `/admin/privilege-changes` (MB.200), neither of which the workshop serves;
@@ -13,7 +27,7 @@ export default {
 };
 
 const USERS: readonly UserListEntry[] = [
-  {
+  listed({
     id: 'u-ada',
     name: 'Ada Fixturewort',
     email: 'ada@users.test',
@@ -23,8 +37,8 @@ const USERS: readonly UserListEntry[] = [
     providers: ['discord', 'google'],
     emailVerified: true,
     primaryAdmin: false,
-  },
-  {
+  }),
+  listed({
     id: 'u-bo',
     name: 'Bo Fixturewort',
     email: 'bo@users.test',
@@ -34,9 +48,9 @@ const USERS: readonly UserListEntry[] = [
     providers: ['microsoft'],
     emailVerified: false,
     primaryAdmin: false,
-  },
+  }),
   // Approved, so the row offers Revoke rather than Approve (M5.8).
-  {
+  listed({
     id: 'u-cy',
     name: 'Cy Fixturewort',
     email: 'cy@users.test',
@@ -47,7 +61,7 @@ const USERS: readonly UserListEntry[] = [
     providers: ['facebook', 'google'],
     emailVerified: true,
     primaryAdmin: false,
-  },
+  }),
 ];
 
 // Each story sits inside the admin layout's frame and the People page, its
@@ -79,17 +93,19 @@ export const Filtered: Story = () => (
 
 // A middle page of a list longer than one: the page's 25, by name, and the
 // pager beneath them, both ends live and where the page stands between.
-const PAGE_TWO: readonly UserListEntry[] = Array.from({ length: 25 }, (_, index) => ({
-  id: `u-page-${index + 26}`,
-  name: `Fixturewort ${index + 26}`,
-  email: `fixturewort${index + 26}@users.test`,
-  role: 'user',
-  canCreateWorkspace: index % 4 !== 0,
-  createdAt: new Date(Date.UTC(2026, 2, 4) + index * 86_400_000),
-  providers: index % 2 === 0 ? ['google'] : ['discord'],
-  emailVerified: true,
-  primaryAdmin: false,
-}));
+const PAGE_TWO: readonly UserListEntry[] = Array.from({ length: 25 }, (_, index) =>
+  listed({
+    id: `u-page-${index + 26}`,
+    name: `Fixturewort ${index + 26}`,
+    email: `fixturewort${index + 26}@users.test`,
+    role: 'user',
+    canCreateWorkspace: index % 4 !== 0,
+    createdAt: new Date(Date.UTC(2026, 2, 4) + index * 86_400_000),
+    providers: index % 2 === 0 ? ['google'] : ['discord'],
+    emailVerified: true,
+    primaryAdmin: false,
+  }),
+);
 const PageTwo = (): ReactElement => (
   <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
     <UserList
@@ -136,7 +152,7 @@ export const UnverifiedApproval: Story = () => (
     <UserList
       users={[
         USERS[1] as UserListEntry,
-        {
+        listed({
           id: 'u-di',
           name: 'Di Fixturewort',
           email: 'di@users.test',
@@ -146,7 +162,7 @@ export const UnverifiedApproval: Story = () => (
           providers: ['discord'],
           emailVerified: true,
           primaryAdmin: false,
-        },
+        }),
       ]}
       query=""
       awaitingApproval
@@ -162,7 +178,7 @@ export const AdminRoles: Story = () => (
     <UserList
       users={[
         { ...(USERS[0] as UserListEntry), primaryAdmin: true },
-        {
+        listed({
           id: 'u-eve',
           name: 'Eve Fixturewort',
           email: 'eve@users.test',
@@ -172,7 +188,7 @@ export const AdminRoles: Story = () => (
           providers: ['google'],
           emailVerified: true,
           primaryAdmin: false,
-        },
+        }),
         ...USERS.slice(1),
       ]}
       query=""

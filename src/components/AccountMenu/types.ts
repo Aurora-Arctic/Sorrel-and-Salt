@@ -1,0 +1,17 @@
+import type { SiteLink } from '../AppShell/types';
+
+export interface AccountMenuProps {
+  /** The name the site shows for the viewer: the button's text, and its initials. */
+  name: string;
+  /**
+   * Their address is verified. Until it is, the panel offers Sign Out alone:
+   * the account page is not reachable yet (claude-docs/auth/admin-bootstrap.md,
+   * "The email page").
+   */
+  verified: boolean;
+  /**
+   * The bar's site links, offered here too at a phone's width, where the bar
+   * has no room for them (an admin's Your Coven and Admin). Hidden above it.
+   */
+  links?: readonly SiteLink[];
+}

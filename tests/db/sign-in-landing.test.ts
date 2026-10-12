@@ -148,7 +148,7 @@ describe('a sign-in with no return path', () => {
 
     // Not /admin, and no `next` for Continue to take there: with none, the
     // email page's Continue lands the account by its role
-    // (tests/app/account/email/page.test.tsx).
+    // (tests/app/(shell)/account/email/page.test.tsx).
     expect(landingOf(again)).toBe('/account/email');
     expect(callbackOf(mailedLink())).toBe('/account/email?verified');
   });

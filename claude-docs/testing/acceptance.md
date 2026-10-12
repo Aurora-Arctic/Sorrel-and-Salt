@@ -5,17 +5,17 @@
 the v1 user stories, one line each:
 
 ```
-[x] Story 1: Sign in with an account I already have, so I don't manage another password.
+[x] Story 1: Sign in with an account I already have, so I don't manage another password. · browser
 [ ] Story 2: As a newly signed-in user, be told plainly what I can do next, … — FAILING
 [ ] Story 3: Create a workspace once I hold creation rights, … — skipped
-[ ] Story 4: Generate an invitation link with a chosen role … — no test yet
+[ ] Story 4: Mail an invitation with a chosen role … — no test yet
 
-1 of 51 stories passing · 1 failing · 1 skipped · 48 without a test
+1 of 51 stories passing · 1 failing · 1 skipped · 48 without a test · 1 with a browser flow
 ```
 
 That is DESIGN.md §11's "live progress report against §10 rather than a
 coverage percentage", and it is the whole of what "acceptance coverage"
-means here — a count of stories, never a percentage of lines. Four decisions
+means here — a count of stories, never a percentage of lines. Five decisions
 make it hold:
 
 - **A config of its own, not a third project.** `npm run test` and
@@ -43,6 +43,18 @@ make it hold:
   one: a story with a test that names it wrongly shows as "no test yet" while
   that test fails. MB.224 retired the guard, with the rest of the harness's
   tests.
+- **A browser flow is traced, not duplicated (M9.17).** A Playwright test that
+  walks a story in the browser tags itself with Playwright's own option,
+  `test('…', { tag: '@story-6' }, …)`, or an array of tags for several. The
+  checklist scans `tests/e2e/**/*.spec.ts` for those tags and ends the line of
+  each story that has one with ` · browser`, with a tally line
+  `N with a browser flow`. The column reports that a tagged spec exists on disk, not that a
+  Playwright run passed; the Playwright job's own summary ("Stories walked")
+  carries that. A tag naming a number §10 does not list is set aside under "Not
+  a v1 story", like a stray `describe`. The scan is a text scan, so a tag in a
+  comment would count, and review holds that. The owner's reason: the suite
+  here stays the definition of done, and Wave 15's flows (M11.1 to M11.7) can
+  then be aimed at the stories with no browser proof.
 
 **A scaffold names only what typechecks.** A scaffold lands before the thing
 it tests exists, and `npm run typecheck` runs over `tests/` too, so an import
@@ -53,7 +65,8 @@ with `existsSync` and `readFileSync` instead of rendering it, and
 surface at runtime — `await import('@/modules/ingredients')` cast to an
 interface stating the signature the story expects, each name checked with
 `toBeTypeOf('function')` so the failure named the task it waited on, until
-M5.6 imported the last of them. The task
+M5.6 imported the last of them. That lookup is now `surface()` in
+`tests/support/unbuilt.ts`, shared since M6.1 put stories 3–13 on it. The task
 that builds the page or the service replaces the workaround with the import
 and drops the stated signature; the story's `describe` and its assertions
 stay.

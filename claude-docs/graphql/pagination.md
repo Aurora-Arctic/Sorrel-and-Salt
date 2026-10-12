@@ -108,8 +108,10 @@ type QueryCompendiumConnection {
 **Depth.** A connection costs two levels, `edges` and `node`, on top of its
 field. A root connection holding one nested connection therefore uses all
 seven levels: `{ a { edges { node { b { edges { node { name } } } } } } }`. A
-list nested on an object stays a bare list, as DESIGN.md §7 sketches, and is
-bounded by its parent.
+list nested on an object stays a bare list where its parent bounds it, as
+`User.memberships` is bounded by the covens a user joined (DESIGN.md §7). One
+its parent does not bound is a connection like any other: `Workspace.members`
+(M6.11), since a coven's roll grows with every invitation.
 
 **Cost** is priced at the page each connection will fetch
 (["Protections"](protections.md)).

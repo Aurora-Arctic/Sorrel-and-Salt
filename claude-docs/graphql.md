@@ -35,9 +35,9 @@ Code-first Pothos with no ORM plugin and fields non-null by default: the `DateTi
 
 In [`graphql/schema.md`](graphql/schema.md#me-user-and-the-first-module-types).
 
-### `planetSuggestions` and `zodiacSuggestions`
+### `celestialBodySuggestions` and `zodiacSuggestions`
 
-In [`graphql/schema.md`](graphql/schema.md#planetsuggestions-and-zodiacsuggestions).
+In [`graphql/schema.md`](graphql/schema.md#celestialbodysuggestions-and-zodiacsuggestions).
 
 ### `formSuggestions` and `commonNameSuggestions`
 

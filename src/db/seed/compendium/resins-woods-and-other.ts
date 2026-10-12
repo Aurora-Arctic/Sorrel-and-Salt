@@ -608,7 +608,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'Agarwood, also sold as aloeswood, eaglewood, gaharu and oud, is the dark, fragrant, resin-soaked heartwood of trees of the genus Aquilaria. Its main source is Aquilaria malaccensis, a lign-aloe tree of the family Thymelaeaceae found from India and Bangladesh through Myanmar, Thailand and Laos to Malaysia, Singapore, Indonesia and the Philippines; A. agallocha, the name Cunningham prints, is its synonym. Healthy heartwood is pale and nearly scentless. The fragrant resin forms only when the tree defends itself against infection by a mould, Phaeoacremonium parasitica, and the wood turns dense and dark as the resin fills it. First-grade agarwood is among the costliest natural raw materials in the world, and demand, overharvesting and illegal trade have left A. malaccensis critically endangered in the wild; it has been listed under CITES Appendix II since 1995. Ancient Egyptians burned it in funeral rites, the Vedas mention it, and the Bible names it in a perfume with myrrh and cassia and among the spices used at the burial of Jesus. It is revered in Hinduism, Buddhism and Chinese folk religion, and with sandalwood it is one of the two chief ingredients of Chinese and Japanese incense, savoured in the Japanese art of kōdō. Cunningham gives it to Venus and water and to love: it was used in Egypt to draw good fortune and burned in Renaissance rites of evocation, it is carried or worn to bring love, and a little is added to other mixtures to strengthen them.',
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       folkNames: [
         'Aloeswood',
         'Eaglewood',
@@ -630,7 +630,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
             'description',
@@ -687,7 +687,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Alum, in its commonest sense, is potassium alum: a double sulphate of potassium and aluminium, usually met as a hydrate holding twelve molecules of water, which forms white, octahedral crystals that dissolve readily and taste astringent. It turns up in nature as crusts of the mineral alum-(K) on weathered rock, and was long made from alunite; today it is manufactured from potassium and aluminium sulphates. It is one of the few compounds the ancients could find fairly pure, and Mesopotamian craftsmen used it in glass-making, tanning, dyeing and medicine, while Pliny knew it as alumen. For centuries it fixed dyes in wool, and the trade in it was one cause of war between Genoa and Venice. It still clears cloudy water, tans leather, fireproofs cloth and leavens some baking, and a block of it is rubbed on the skin after shaving or sold as a deodorant crystal. Cunningham gives alum to Saturn and to Earth and names protection as its one power: it has been worn as an amulet against evil in Egypt and along the north coast of Africa, a piece is kept in the home to guard it, and small amounts are sewn into children's hats to protect them.",
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       colors: ['white'],
       safetyNotes: 'Used as a deodorant, potassium alum may mildly irritate the skin.',
       folkNames: ['Potash alum', 'Tawas'],
@@ -696,7 +696,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 68',
-          supports: ['description', 'elements', 'planets', 'categories'],
+          supports: ['description', 'elements', 'celestialBodies', 'categories'],
         },
         {
           source: 'wikipedia-potassium-alum',
@@ -789,7 +789,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Asafoetida is the dried gum resin of several species of Ferula, tall perennials of the carrot family. Ferula assa-foetida, a plant found only in southern Iran, is one of them, though it is often wrongly named as the main source. The plant can reach nine feet, with a thick stem, parsley-like leaves and pale greenish-yellow flowers. Harvesters bare and slash the fleshy roots of plants about four years old, and the milky juice seeps out and hardens into reddish lumps. Afghanistan and Iran have long been the chief producers, sending most of the crop to India, where a pinch, ground with rice flour, seasons curries, pickles and lentil dishes, and stands in for onion and garlic among Jains. Babylonians, Greeks and Romans cooked with it too, and Persians called it the food of the gods. Its sulphurous stench earned it the name devil's dung. Even so it has been burned as ritual incense: Agrippa, and later the French mystic Paul Sédir, recorded medieval magicians burning it to make spirits appear, and the occultist Karl von Eckartshausen listed it among fumigations to banish spectres. In Germany and colonial Pennsylvania a lump hung round the neck kept off evil spirits, witches and ghosts. Modern practice burns small amounts in exorcism and protection incense, and Cunningham warns that the smell alone has made people vomit.",
       elements: ['fire'],
-      planets: ['Mars', 'Pluto'],
+      celestialBodies: ['Mars', 'Pluto'],
       zodiacSigns: ['Gemini'],
       colors: ['yellow', 'grey'],
       folkNames: [
@@ -810,7 +810,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Asafoetida"',
-          supports: ['description', 'elements', 'planets', 'folkNames', 'categories'],
+          supports: ['description', 'elements', 'celestialBodies', 'folkNames', 'categories'],
         },
         {
           source: 'kynes-plants',
@@ -819,7 +819,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -976,7 +976,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'Benzoin is the balsamic resin of Styrax benzoin, a tree native to Indochina and western Malesia and common in the forests of Sumatra, where it grows to between 12 and 30 metres and can live for 70 to 100 years. The tree makes no resin until it is wounded: harvesters cut into the trunk, and the white sap that seeps out hardens on the bark over four to six months before it is gathered, dried and shipped as loose tears or packed blocks. Resin from this species is sold as Sumatra benzoin, a dull reddish or greyish-brown material with a storax-like scent that holds cinnamic acid as well as benzoic acid; Siam benzoin comes from a different tree, Styrax tonkinensis. Benzoin has long been burned to perfume temples in the Middle and Far East, the ancient Egyptians used it in incense and perfume, and it still goes into Orthodox and Catholic church incense and is burned on charcoal in Arabia and in Hindu temples in India. Perfumers prize it as a fixative, and pharmacy knows it in compound tincture of benzoin. In Central and Eastern Europe it was believed to drive off evil spirits. Magical practice burns it to purify and cleanse, uses it as a base for incense blends, and calls on it for protection, banishing and love.',
       elements: ['air', 'water'],
-      planets: ['Sun', 'Mars', 'Mercury', 'Saturn', 'Venus'],
+      celestialBodies: ['Sun', 'Mars', 'Mercury', 'Saturn', 'Venus'],
       zodiacSigns: ['Capricorn'],
       folkNames: [
         'Ben',
@@ -1002,7 +1002,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
           ],
@@ -1014,7 +1014,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -1133,7 +1133,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Camphor comes from Camphora officinarum, an evergreen tree of the laurel family, Lauraceae, long known as Cinnamomum camphora and called the camphor tree, camphorwood or camphor laurel. It is native to Japan, Korea, the Ryukyu Islands and Taiwan, and has been carried to southern China, the Himalayas, eastern Australia, the south-eastern United States and elsewhere; it is now a declared weed in parts of Australia and an invasive species in Florida. The tree reaches 20 to 30 metres, with glossy leaves that smell of camphor when crushed, small white flowers and black, berry-like fruit. Camphor itself is a white crystalline substance won from the wood by steaming or sublimation, and Taiwan's camphor trade was a major industry under Japanese rule. It has served as medicine, spice, insect repellent and incense, and in making celluloid and smokeless powder, and the wood keeps moths and other insects away. Kynes records camphor in Egyptian embalming, as a medieval European fumigant against plague and an amulet against evil spirits, and burned in Hindu ritual; in Japan some old camphor trees are held sacred. Cunningham gives it to chastity, health and divination: sniffed or set beside the bed to cool desire, and burned in divinatory incense. Kynes adds cleansing and banishing, and keeping the mind in the present while awakening memories of past lives.",
       elements: ['water', 'air', 'fire', 'earth'],
-      planets: ['Moon'],
+      celestialBodies: ['Moon'],
       zodiacSigns: ['Cancer', 'Pisces'],
       safetyNotes:
         'The AHPA handbook rates camphor, the distillate of the wood, Safety Class 2b and 2d: not for use in pregnancy except under the supervision of a qualified healthcare practitioner, not for long-term use, not to be taken above the recommended dose, and not for children under two, with caution in small children. Taken internally it needs extreme caution: swallowing camphor products has caused many poisonings, with nausea, vomiting, abdominal pain and seizures, some of them fatal. Poisoning from products used on the skin is rare and has mostly affected small children, and products for the skin should hold no more than 11% camphor. The distillate can contain safrole. Safety while breastfeeding has not been established. Cunningham marks camphor as not recommended for internal use and warns against using it near the faces of small children.',
@@ -1159,7 +1159,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
             'safetyNotes',
@@ -1172,7 +1172,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -1327,7 +1327,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'The cedar of Lebanon, Cedrus libani, also called Lebanon or Lebanese cedar, is a large conifer of the pine family, Pinaceae, native to the mountains of the eastern Mediterranean in Lebanon, western Syria and south-central Turkey, with a variety on Cyprus. It can reach forty metres, with a massive trunk, needles in clusters along short shoots, and upright barrel-shaped cones that ripen from green to grey-brown. Its wood is fine-grained, yellow, fragrant and very durable, and resists insects. The tree appears in the Epic of Gilgamesh, whose heroes travel to a cedar forest to fell it, and often in the Bible: Moses ordered priests to treat leprosy with its bark, and Solomon built the Temple in Jerusalem with its timber. The Phoenicians built ships of it and traded it across the ancient world, and it is now the national emblem of Lebanon. Centuries of felling have left only remnants of the old forests, and large replanting schemes are under way in Turkey and Lebanon. Across the Middle East cedar wood was burned as a sacred offering, the Egyptians made perfume and incense from the resin and used cedar in embalming, and the Romans carved statues of gods and ancestors from the wood. Magical tradition burns it to purify and to banish bad dreams, hangs it in the house against lightning, keeps a piece in a purse to draw money, and burns it to awaken psychic powers.',
       elements: ['fire', 'air', 'earth', 'water'],
-      planets: ['Sun', 'Jupiter', 'Mercury'],
+      celestialBodies: ['Sun', 'Jupiter', 'Mercury'],
       zodiacSigns: ['Aries', 'Sagittarius', 'Taurus'],
       folkNames: ['Cedar of Lebanon', 'Lebanon Cedar', 'Lebanese Cedar'],
       deities: [
@@ -1368,7 +1368,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'categories',
             'substitutes',
             'description',
@@ -1381,7 +1381,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -1538,14 +1538,14 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Copal is a broad name for aromatic tree resins, from the Nahuatl copalli, meaning incense. Wikipedia's article on copal centres on the Mesoamerican copal tree, Protium copal, and Cunningham notes that more than three hundred copals are traded around the world. He heads his Copal entry with Bursera odorata and B. fagaroides, and Wikipedia lists B. odorata as a synonym of Bursera fagaroides, the species this entry names. Called torchwood copal or fragrant bursera in English, it is a shrub or tree of up to ten metres with a swollen trunk, peeling red-tinged bark, pinnate leaves and white flowers. It grows across much of Mexico, from Sonora to Oaxaca, in desert and subtropical scrub on shallow, rocky and often limestone ground, and reaches just into Arizona, where it may now have died out. In Mexico its gum has been put on scorpion stings and insect bites, and gardeners grow it as an ornamental and train it as bonsai. Indigenous peoples of Mexico and Central America still burn copal as incense, in sweat lodges and in sacred mushroom ceremonies. Cunningham adds it to love and purification incenses, especially in Mexico, and lets a piece of it stand for the heart of a poppet; he credits every copal with a light sweetness that suits love spells, and singles out Aztec or black copal for its pine scent.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       folkNames: ['Torchwood Copal', 'Fragrant Bursera'],
       categories: ['Love', 'Purification'],
       references: [
         {
           source: 'cunningham-herbs',
           locator: 'under "Copal"',
-          supports: ['description', 'elements', 'planets', 'categories'],
+          supports: ['description', 'elements', 'celestialBodies', 'categories'],
         },
         {
           source: 'wikipedia-bursera-fagaroides',
@@ -1627,7 +1627,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Dragon's blood is a bright red resin, and the name is given to the products of several distinct genera: rattan palms of Calamus, the Dracaena trees, Croton and Pterocarpus. This entry is the rattan source, Calamus draco, also known by its synonym Daemonorops draco, the name Cunningham, Kynes and Grieve use. It is a climbing palm whose clustered stems reach about fifteen metres, and whose leaf tips run out into long whips armed with grappling hooks. It grows from peninsular Thailand into western Malesia, and Grieve names Sumatra as the home of the best-known commercial kind. The resin coats the scaly, cherry-sized fruit and is broken off, steamed off, or shaken off in coarse canvas bags, then rolled into balls or sold as sticks, tears and lumps; in Indonesia it is called jernang. Calamus resin is now the kind most often sold as dragon's blood. It has served as a varnish and red colouring, and in China it reddened furniture and the paper of wedding and New Year banners. Grieve records that it was once given as an astringent but had come to be thought inert. In magical practice it is burned to call back a straying lover, carried or smouldered for protection, and added in a pinch to other incenses to strengthen them; in hoodoo it draws love and money and clears away negative energy.",
       elements: ['fire'],
-      planets: ['Mars', 'Pluto'],
+      celestialBodies: ['Mars', 'Pluto'],
       zodiacSigns: ['Aries', 'Sagittarius'],
       folkNames: ['Blood', 'Draconis Resina', 'Sanguis Draconis', "Dragon's Blood Palm", 'Jernang'],
       categories: [
@@ -1645,7 +1645,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Dragon\'s Blood"',
-          supports: ['description', 'elements', 'planets', 'folkNames', 'categories'],
+          supports: ['description', 'elements', 'celestialBodies', 'folkNames', 'categories'],
         },
         {
           source: 'kynes-plants',
@@ -1654,7 +1654,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'categories',
@@ -2025,7 +2025,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Gum arabic, also called gum acacia, is the hardened sap of acacia trees, above all Senegalia senegal, long known as Acacia senegal: a small, thorny, deciduous tree of 5 to 12 metres, native to the semi-desert lands of sub-Saharan Africa, Oman, Pakistan and western India. Gatherers cut or strip the bark, and the gum oozes out and dries into round tears; one tree gives some 200 to 300 grams. Sudan supplies most of the world's gum, and its hashab gum is reckoned the finest. The name does not fix a single botanical source: the Codex definition also admits the gum of Vachellia seyal, and Grieve records how Senegal gum, first a stand-in for the Sudanese gum, came to share its name. Soluble in water and edible, the gum binds and thickens foods, soft drinks, watercolour paints, inks, medicines and homemade incense cones. Cunningham places both the tree and its gum under the Sun and air. The wood fed sacred fires in India, a sprig over the bed was said to ward off evil, and the wood burned with sandalwood to stir psychic powers. The gum itself is smouldered alone on charcoal or added to incense to purify a space of negativity and evil. In the Sahel it stands for the purity of youth.",
       elements: ['air'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       colors: ['white', 'yellow'],
       folkNames: [
         'Acacia Gum',
@@ -2060,7 +2060,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -2288,7 +2288,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'Mastic is the resin of Pistacia lentiscus, the lentisk, a dioecious evergreen shrub or small tree of the family Anacardiaceae, native around the Mediterranean from Morocco and Iberia through southern France and Turkey to Iraq and Iran, and to the Canary Islands. It usually stands one to five metres high, smells strongly of resin, thrives on dry, rocky and even salty ground near the sea, and bears leathery compound leaves and small fruit that ripen from red to black. Although the tree grows across the region, it yields resin only in a few places, above all the south of Chios, where the mastic villages tap it, and around Çeşme in Turkey; Chios mastic carries an EU protected designation of origin. The name goes back to words for chewing, and mastic was among the first chewing gums. It flavours liqueurs, sweets, festival breads and Turkish delight, goes into varnish, and is an essential ingredient of the chrism of the Orthodox churches. Hippocrates used it against digestive trouble and colds and to sweeten the breath, Egyptians burned it as temple incense and used it in embalming, and in Greece it was a symbol of virginity. Cunningham burns it to draw a spirit into manifestation and to strengthen psychic powers, notes its old use in Middle Eastern lust potions, and adds it to any incense to lend it power; Kynes burns it to prepare ritual space and in meditation for clarity.',
       elements: ['air'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       folkNames: [
         'Gum Mastic',
         'Masticke',
@@ -2310,7 +2310,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
           ],
@@ -2322,7 +2322,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -2378,7 +2378,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'Mother-of-pearl is the shining, iridescent lining that some molluscs lay down on the inside of their shells, and the same material makes up pearls. No single formal name settles it: Wikipedia files it under nacre and calls it a composite of mineral and organic matter made by some bivalves, sea snails and cephalopods, while Cunningham describes it only as the interior of various sea molluscs, so no one species, mineral or chemical name covers it. It is built of thin hexagonal tablets of aragonite, a form of calcium carbonate, layered with sheets of elastic protein; the tablets are about as thick as a wavelength of light, which gives the play of colour. The mollusc keeps adding layers as long as it lives, smoothing the shell and sealing off irritants, which is how pearls form. Pearl oysters, freshwater mussels and abalone have been its main commercial sources, and its trade now falls under CITES. It is inlaid in buildings, jewellery and musical instruments and made into buttons and caviar spoons. Cunningham gives it to the Moon and Neptune and to Water, and names protection and wealth as its powers: it is laid on newborn babies to guard them, and wrapped with silver and a banknote as a charm for money.',
       elements: ['water'],
-      planets: ['Moon', 'Neptune'],
+      celestialBodies: ['Moon', 'Neptune'],
       colors: ['white', 'black', 'pink', 'green'],
       folkNames: ['Nacre'],
       categories: ['Protection', 'Wealth'],
@@ -2386,7 +2386,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         {
           source: 'cunningham-crystals',
           locator: 'p. 116',
-          supports: ['nomenclature', 'description', 'elements', 'planets', 'categories'],
+          supports: ['nomenclature', 'description', 'elements', 'celestialBodies', 'categories'],
         },
         {
           source: 'wikipedia-nacre',
@@ -2417,7 +2417,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'Myrrh is the aromatic gum resin of Commiphora myrrha, a very spiny tree of the Burseraceae family that grows to about five metres, with a papery outer bark over a green inner layer. It is native to Somalia, Djibouti, Eritrea, the Somali regions of Ethiopia and Kenya, and Yemen and Oman, where it favours arid slopes and thin limestone soils; Somalia is now the largest producer. Cuts in the bark release a pale yellow resin that sets into reddish-brown tears, bitter and aromatic to the taste, which darken further with age. Several other Commiphora species yield resin sold under the same name. Myrrh has been traded for more than three thousand years. The Egyptians embalmed with it and burned it to Ra and in the temples of Isis; the Hebrew Bible puts it in the holy anointing oil and the temple incense, the Gospel of Matthew names it among the gifts of the Magi, and Orthodox, Catholic and Anglican churches still burn it and use it in preparing chrism. Greek myth has Adonis born from a myrrh tree, and medieval Europe burned it to drive out unwanted spirits. Magical practice seldom burns it alone, pairing it with frankincense to purify a space, bring peace, consecrate tools and amulets, and lend strength to healing and protective work; it is said to add power to any incense it joins.',
       elements: ['air', 'water'],
-      planets: ['Moon', 'Sun'],
+      celestialBodies: ['Moon', 'Sun'],
       zodiacSigns: ['Aquarius', 'Cancer', 'Capricorn', 'Scorpio'],
       folkNames: [
         'Gum Myrrh Tree',
@@ -2462,7 +2462,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -2475,7 +2475,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'zodiacSigns',
             'folkNames',
             'deities',
@@ -2643,7 +2643,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Red coral, or precious coral, is Corallium, a genus of some thirty-one marine corals prized for their hard skeleton, coloured from pale pink to deep red by carotenoid pigments. The animals grow as small leafless bushes up to a metre tall on rocky, dim sea floors; the best-known species, C. rubrum, lives mainly in the Mediterranean, and others off Japan and Taiwan. The skeleton is matte until polished, soft enough to be cut as cabochons or beads, and has been made into jewellery since antiquity: it has been found in ancient Egyptian and prehistoric European burials. It was traded from the Mediterranean to India, Romans hung branches round children's necks against harm, and in Italy it was worn against the evil eye into the twentieth century. Overfishing has thinned shallow Mediterranean colonies. Cunningham gives coral to Venus, to Water, and to Isis and Venus, and lists healing, protection, peace and wisdom among its powers. Worn in plain sight it guards against the evil eye, accidents and theft, and given to a child it is said to secure their health. He also says it confers courage, brings peaceful sleep and dispels nightmares, and that coral earrings and red or pink candles ringed with coral were used for love.",
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       colors: ['red', 'pink'],
       folkNames: ['Precious coral', 'Cerasuolo'],
       deities: ['Isis', 'Venus'],
@@ -2672,7 +2672,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           supports: [
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'colors',
             'deities',
             'categories',
@@ -2727,7 +2727,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'Red sandalwood, or red saunders, is the heartwood of Pterocarpus santalinus, a small tree of the legume family, Fabaceae, endemic to the southern Eastern Ghats of South India. Despite its name, which its Indian names share, it is no relation of the fragrant white sandalwood, Santalum album. The tree grows to about eight metres, quickly when young but killed by frost, with leaves of three leaflets, short sprays of yellow flowers and pods holding one or two seeds. Its wood is heavy and dense, reddish or blackish brown outside and a deep blood-red within, banded with paler red, and has only a faint smell. Its chief traditional use was as a dye: in India it was mixed with sappan wood to colour silk, cotton and wool, and pharmacists used its red colouring principle, santalin, to tint tinctures. In China the wood, called zitan, has long been prized for fine furniture, above all under the Qing dynasty. It has a place in traditional herbal medicine too, and Grieve records it as astringent and tonic, used medicinally chiefly in India. Because its timber fetches high prices the species has been overexploited, illegal trade remains a problem, and international trade is controlled under CITES Appendix II. In magic Cunningham assigns it to Venus, to water and to love: it is burned to draw love, and sprinkled about a place to cleanse it of negativity.',
       elements: ['water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       colors: ['red'],
       safetyNotes:
         'The AHPA handbook rates red saunders heartwood Safety Class 1 and Interaction Class A: no known contraindications, precautions or drug interactions. Allergic contact dermatitis from it has been reported. An animal study found that it may change how the body regulates blood sugar, so people with diabetes are advised to watch their blood sugar closely and talk to a qualified healthcare practitioner before using it. Its safety in pregnancy and while breastfeeding has not been conclusively established.',
@@ -2746,7 +2746,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Sandalwood, Red"',
-          supports: ['canonicalName', 'elements', 'planets', 'categories', 'description'],
+          supports: ['canonicalName', 'elements', 'celestialBodies', 'categories', 'description'],
         },
         {
           source: 'grieve-saunders-red',
@@ -2847,7 +2847,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Sandarac is the resin of Tetraclinis articulata, the sandarac tree, also called arar or Barbary thuja: the sole living species of its genus, a conifer of the cypress family that older texts placed in Thuja or Callitris. It grows wild in the Atlas Mountains of Morocco, Algeria and Tunisia, with small outlying stands on Malta and near Cartagena in Spain, at low altitudes in a hot, dry climate, and it is Malta's national tree. It is a small, slow-growing tree, often with several trunks, carrying sprays of tiny scale leaves and four-scaled cones, and is one of the few conifers that can regrow from a cut stump. The resin seeps from the stems of its own accord or from cuts in the bark and hardens in the air into small translucent chips with a faint yellow tinge; Morocco is its main source. In Renaissance Italy 'varnish' usually meant sandarac, and it is still valued for coating paintings and antiques; nineteenth-century photographers varnished their negatives and prints with it. Though only faintly aromatic, it has long been burned as incense, its scent likened to balsam. The Greeks and Romans used the word for red arsenic sulfide, and the resin meaning reached Europe from Arabic only in the early sixteenth century. Cunningham calls it gum juniper and assigns it to the Sun and the element of fire.",
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       folkNames: [
         'Gum Juniper',
         'Sandarach',
@@ -2862,7 +2862,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Sandarac, Gum"',
-          supports: ['canonicalName', 'description', 'elements', 'planets', 'folkNames'],
+          supports: ['canonicalName', 'description', 'elements', 'celestialBodies', 'folkNames'],
         },
         {
           source: 'wikipedia-tetraclinis',
@@ -2973,7 +2973,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'Storax here is Liquidambar orientalis, the oriental or Turkish sweetgum, a deciduous tree of 30 to 35 metres native to the eastern Mediterranean, where it grows in pure stands mainly on the floodplains of south-western Turkey and on Rhodes. Its wounded bark gives a fragrant balsam, liquid storax: the inner bark is stripped, softened in boiling water and pressed, yielding a soft, sticky, greyish-brown mass about as thick as honey, and the spent bark was itself sold as storax bark. The name has caused centuries of confusion, since storax is also a name for benzoin from Styrax trees and for the solid resin of Styrax officinalis, and scholars still debate which of them was the storax of the ancients. Herodotus, Aristotle, Theophrastus and Strabo mention a storax tree and its balsam, Pliny knew storax as a perfume, the Greek Magical Papyri call for it in several rites, and Dioscorides describes it burned as incense much like frankincense; later it was burned in churches and mosques and in French medieval magic. The tree is now endangered, its forests lost to farmland and to dams built where it grew. In magical practice storax is burned for protection, for divination and to break hexes, and its oil purifies ritual tools and space.',
       elements: ['fire', 'earth', 'water'],
-      planets: ['Sun', 'Jupiter', 'Mercury', 'Moon'],
+      celestialBodies: ['Sun', 'Jupiter', 'Mercury', 'Moon'],
       folkNames: [
         'Styrax',
         'Levant Storax',
@@ -2999,7 +2999,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
             'substitutes',
@@ -3013,7 +3013,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'deities',
             'categories',
@@ -3159,7 +3159,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         'Sweet gum is Liquidambar styraciflua, the American sweetgum, a deciduous tree of the warm temperate east of North America and the tropical mountains of Mexico and Central America, now placed in the family Altingiaceae. It is one of the commonest hardwoods of the south-eastern United States and is widely planted for its glossy, star-shaped, five-lobed leaves, which turn yellow, orange, red and purple in autumn. Its hard, spiny, ball-shaped fruits hang on through the winter and litter the ground below, where they are known as gumballs. Wounded bark gives a fragrant gum, called liquid amber or copalm balsam, which has often been confused with the liquid storax of its Turkish relative, L. orientalis. The genus name joins Latin and Arabic words for fluid amber, and the species name means flowing with storax. Juan de Grijalva told of the Maya presenting his party, in 1517, with reeds filled with dried herbs and liquid amber that gave off a pleasant smell when lit; the Aztecs flavoured tobacco with sweet gum, and in Yucatán it was burned as temple incense. In magical practice the seed pods are set on the altar or held during rites for protection against evil forces.',
       elements: ['fire'],
-      planets: ['Sun'],
+      celestialBodies: ['Sun'],
       folkNames: [
         'American Sweetgum',
         'American Storax',
@@ -3189,7 +3189,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           supports: [
             'canonicalName',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
             'description',
@@ -3263,7 +3263,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Sweetgrass, Hierochloe odorata, is a hardy perennial grass of northern Eurasia and North America that can grow within the Arctic Circle; some botanists fold its genus into Anthoxanthum and call it Anthoxanthum nitens. Its long, narrow leaves are shiny beneath and often purplish red at the base, and they give off a vanilla-like smell as they dry, owing to coumarin, which also puts off grazing animals and, with phytol, repels mosquitoes. The genus name joins the Greek words for sacred and grass. Many Indigenous peoples of Canada and the United States hold the plant sacred: among the peoples of the Great Plains and Canadian Prairies it is one of the four sacred medicines, and it is braided, burned as a smudge or incense to carry prayers and to purify, woven into baskets, and given to elders as a mark of respect. In northern Europe it was strewn before church doors on saints' days, Sámi people kept braids of it with their clothes as a perfume, and in Poland it flavours vodka such as Żubrówka. Cunningham gives it one power, calling spirits, and has it burned to draw good spirits before spellwork. Kynes pairs it with air, water and Venus, and suggests wafting the smoke of a small braid over oneself before spiritual work or healing, and burning a little when working with spirit guides.",
       elements: ['air', 'water'],
-      planets: ['Venus'],
+      celestialBodies: ['Venus'],
       folkNames: [
         'Bison Grass',
         'Buffalo Grass',
@@ -3288,7 +3288,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             'canonicalName',
             'description',
             'elements',
-            'planets',
+            'celestialBodies',
             'folkNames',
             'categories',
           ],
@@ -3395,7 +3395,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       description:
         "Tragacanth is a natural gum taken from the dried sap of several Middle Eastern species of Astragalus, legumes that include A. adscendens, A. gummifer and A. tragacantha; some are known together as goat's thorn, and the name joins the Greek words for goat and thorn. Grieve describes A. gummifer as a small, branching, thorny shrub of Asia Minor, Persia and Kurdistan, and Iran is now the largest producer. Sap drained from the root seeps out in twisted ribbons or flakes, horny in look, nearly colourless or faintly yellow, odourless and almost tasteless. In water it swells into a gel rather than dissolving: one part, tragacanthin, forms a mucilage, while the other, bassorin, only swells. That gel makes it a thickener and stabiliser in foods and medicines, the traditional binder of artists' pastels, a size for paper marbling, a paste for sugar flowers on cakes, and a burnishing compound in leatherwork. Incense makers use it to bind powdered herbs, and it holds them so well that half as much is needed as of gum arabic. Older medicine gave it for coughs and diarrhoea and spread its mucilage on burns. Cunningham assigns it to fire and to the Earth and lists binding among its powers; he suggests blending it with symbols of the ethereal to fill a dream pillow, carrying the ethereal into the subconscious.",
       elements: ['fire'],
-      planets: ['Earth'],
+      celestialBodies: ['Earth'],
       colors: ['colourless', 'yellow'],
       folkNames: [
         'Gond Katira',
@@ -3412,7 +3412,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         {
           source: 'cunningham-herbs',
           locator: 'under "Tragacanth Gum"',
-          supports: ['description', 'elements', 'planets', 'categories'],
+          supports: ['description', 'elements', 'celestialBodies', 'categories'],
         },
         {
           source: 'wikipedia-tragacanth',

@@ -39,6 +39,7 @@ const category = (name: string, groupName: string, description: string) => {
     groupName,
     groupColors: COLORS[groupName],
     editHref: groupedValuesHref('category', {}, { edit: slug }),
+    editHeading: { eyebrow: 'Edit Category', title: name },
   };
 };
 
@@ -53,6 +54,7 @@ const form = (name: string, groupName: string, description: string) => {
     description,
     groupName,
     editHref: groupedValuesHref('form', {}, { edit: slug }),
+    editHeading: { eyebrow: 'Edit Form', title: name },
   };
 };
 
@@ -67,6 +69,7 @@ const deity = (name: string, groupName: string, description: string) => {
     description,
     groupName,
     editHref: groupedValuesHref('deity', {}, { edit: slug }),
+    editHeading: { eyebrow: 'Edit Deity', title: name, qualifier: groupName },
   };
 };
 
@@ -230,7 +233,7 @@ export const DeitiesEmpty: Story = () => (
 );
 
 // The flat kinds (MB.95): no group column and no group filter.
-const flat = (kind: 'planet' | 'zodiacSign', name: string, description: string) => {
+const flat = (kind: 'celestialBody' | 'zodiacSign', name: string, description: string) => {
   const slug = slugify(name);
   return {
     id: slug,
@@ -239,20 +242,21 @@ const flat = (kind: 'planet' | 'zodiacSign', name: string, description: string) 
     description,
     groupName: '',
     editHref: groupedValuesHref(kind, {}, { edit: slug }),
+    editHeading: { title: name },
   };
 };
 
-export const PlanetsOnePageOfSeveral: Story = () => (
+export const CelestialBodiesOnePageOfSeveral: Story = () => (
   <GroupedValueList
-    kind="planet"
+    kind="celestialBody"
     values={[
-      flat('planet', 'Testwort Star', 'An invented body, for the workshop.'),
-      flat('planet', 'Fixture Comet', 'Another, with a longer tail than the first.'),
-      flat('planet', 'Fixture Moonlet', 'Invented too.'),
+      flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.'),
+      flat('celestialBody', 'Fixture Comet', 'Another, with a longer tail than the first.'),
+      flat('celestialBody', 'Fixture Moonlet', 'Invented too.'),
     ]}
     filter={NO_FILTER}
-    previousHref={groupedValuesHref('planet', { before: 'cursor' })}
-    nextHref={groupedValuesHref('planet', { after: 'cursor' })}
+    previousHref={groupedValuesHref('celestialBody', { before: 'cursor' })}
+    nextHref={groupedValuesHref('celestialBody', { after: 'cursor' })}
     position={{ page: 2, pages: 3 }}
   />
 );
@@ -268,25 +272,25 @@ export const Signs: Story = () => (
   />
 );
 
-export const PlanetsFiltered: Story = () => (
+export const CelestialBodiesFiltered: Story = () => (
   <GroupedValueList
-    kind="planet"
-    values={[flat('planet', 'Testwort Star', 'An invented body, for the workshop.')]}
+    kind="celestialBody"
+    values={[flat('celestialBody', 'Testwort Star', 'An invented body, for the workshop.')]}
     filter={{ query: 'star', group: '' }}
   />
 );
 
-export const PlanetsNoMatch: Story = () => (
-  <GroupedValueList kind="planet" values={[]} filter={{ query: 'nothing', group: '' }} />
+export const CelestialBodiesNoMatch: Story = () => (
+  <GroupedValueList kind="celestialBody" values={[]} filter={{ query: 'nothing', group: '' }} />
 );
 
-export const PlanetsEmpty: Story = () => (
-  <GroupedValueList kind="planet" values={[]} filter={NO_FILTER} />
+export const CelestialBodiesEmpty: Story = () => (
+  <GroupedValueList kind="celestialBody" values={[]} filter={NO_FILTER} />
 );
 
 // Inside the admin layout and the Categories page with its Categories tab
 // open, as the page draws it; at a phone's width in each theme, the tab's Add
-// button full width beneath the heading, the filter stacked and each row a
+// at its own width beneath the heading, the filter stacked and each row a
 // card. The page and the filter are the real `TabbedPage` and
 // `FilterForm`, so these show what the sign-off settled.
 const CategoriesPage = () => (

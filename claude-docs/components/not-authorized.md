@@ -3,7 +3,7 @@
 `src/components/NotAuthorized/` — what a signed-in non-admin sees at `/admin`:
 a level-one "Not Authorized", two sentences saying what the area is for and
 that the account does not have admin rights, and a link back to `/`. It
-takes no props. `src/app/forbidden.tsx` wraps it in `<main className="page-frame">` and Next renders that,
+takes no props. `src/app/(shell)/forbidden.tsx` wraps it in `<main className="page-frame">` and Next renders that,
 with a 403, wherever `forbidden()` is thrown — today only by the `/admin`
 guard ([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard").
 

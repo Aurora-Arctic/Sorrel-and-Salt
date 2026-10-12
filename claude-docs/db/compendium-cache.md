@@ -35,13 +35,13 @@ Ten reads, the list and its count of each of six things, every one taking no
 session and filtering to the compendium tier or a curated vocabulary, which
 are public (MB.80):
 
-| Service file                                          | Reads                                                   |
-| ----------------------------------------------------- | ------------------------------------------------------- |
-| `ingredients/services/compendium.ts`                  | `listCompendium`, `countCompendium`                     |
-| `vocabulary/services/categories.ts`                   | `listCategories`, `countCategories`                     |
-| `vocabulary/services/ingredient-form-values.ts`       | `listIngredientFormValues`, `countIngredientFormValues` |
-| `vocabulary/services/astrology.ts`, planets and signs | `listAstrologyValues`, `countAstrologyValues`           |
-| `vocabulary/services/deities.ts`                      | `listDeities`, `countDeities`                           |
+| Service file                                                   | Reads                                                   |
+| -------------------------------------------------------------- | ------------------------------------------------------- |
+| `ingredients/services/compendium.ts`                           | `listCompendium`, `countCompendium`                     |
+| `vocabulary/services/categories.ts`                            | `listCategories`, `countCategories`                     |
+| `vocabulary/services/ingredient-form-values.ts`                | `listIngredientFormValues`, `countIngredientFormValues` |
+| `vocabulary/services/astrology.ts`, celestial bodies and signs | `listAstrologyValues`, `countAstrologyValues`           |
+| `vocabulary/services/deities.ts`                               | `listDeities`, `countDeities`                           |
 
 A `no-restricted-imports` path in `.oxlintrc.json` fails any import of
 `next/cache` outside the wrapper. This list is the review: adding a call of
@@ -80,14 +80,14 @@ a miss that reads Postgres. `{ expire: 0 }` rather than Next's recommended
 `revalidateTag` rather than `updateTag`, which throws outside a Server
 Action, as DESIGN.md §7 argues. One tag means one call expires every cached
 read, so a write need not know which lists it touched: a form group's rename
-reaches the forms list through its group, and a planet's rename the
+reaches the forms list through its group, and a celestial body's rename the
 compendium entries that list it.
 
 The writes that call it are every service in the `ingredients` and
 `vocabulary` modules gated by `assertSiteAdmin`: the compendium's create,
 update and delete; `createReference` and `updateReference` when
 `workspaceId` is null, and only then; and the create, update and delete of
-categories, category groups, forms, form groups, planets and zodiac signs,
+categories, category groups, forms, form groups, celestial bodies and zodiac signs,
 deities and deity traditions. That is 26 services, and an admin's write
 reaches only these, since the GraphQL mutations over them are its only path
 (CLAUDE.md rule 1).

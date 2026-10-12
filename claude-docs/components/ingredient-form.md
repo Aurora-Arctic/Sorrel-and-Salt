@@ -20,7 +20,7 @@ compendium page wrap it rather than containing their own form.
 | `reference-panel.tsx`    | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                                                                                             |
 | `variants.tsx`           | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, `variantSummary`, and `useVariantFolds`, which of each variant's sections are open                                     |
 | `copy.tsx`               | A variant's Copy From Ingredient (MB.115): `CopyFromIngredient`, and what each field takes from the ingredient's                                                                                                                                                     |
-| `section.tsx`            | `CollapsibleSection`, a section as a disclosure: one of the ingredient's seven at `h3`, or one of an open variant's six at `h4`                                                                                                                                      |
+| `section.tsx`            | `CollapsibleSection`, a section as a disclosure: one of the ingredient's six at `h3`, or one of an open variant's five at `h4`                                                                                                                                       |
 | `summaries.tsx`          | `SectionSummary`, the one line a closed section reads, each section's watching its own fields, and `variantSectionSummary`, a variant's section's line                                                                                                               |
 | `icons.tsx`              | The rows' icons: `EditIcon` (IconTip's pencil, re-exported), `RemoveIcon`, and Edit Source's `SourceEditIcon`                                                                                                                                                        |
 | `substitute-forms.tsx`   | `SubstituteForms`, the ingredient's own substitute list's second pickers: which form of each linked ingredient a substitute names                                                                                                                                    |
@@ -56,11 +56,12 @@ categories, substitutes and references — every field `IngredientInput`
 takes (["The variants"](#the-variants)). The ingredient has no form of its
 own: its forms are its variants (MB.222).
 
-**The fields run in seven titled sections** (MB.115, the owner's call, once
+**The fields run in six titled sections** (MB.115, the owner's call, once
 the form read as one long column): Identity (name, classification, formal
-name, folk names), Description, Correspondences (element, celestial bodies, zodiac
+name, folk names), Details & Care (description, then safety notes; the
+owner's call, 2026-10-12), Correspondences (element, celestial bodies, zodiac
 signs, colours, deities), Relations (categories, substitute ingredients),
-Safety (safety notes), Sources (references) and Variants. The sections cut
+Sources (references) and Variants. The sections cut
 the order the fields already ran in, bar one move on the owner's call:
 Categories leads Relations, ahead of the substitutes, where MB.126 had put
 it after the lists. Each is a `<section>` under a small `h3`,
@@ -68,14 +69,15 @@ the dialog's title being the `h2`; it has no accessible name, so it is no
 landmark, and a screen reader moves by the headings. Each folds to one line
 of what it holds ([Sections](#sections)). Inside the Variants section, a
 fieldset named by its heading holds the New Form box and the cards, so the
-group keeps its name. The Description section's one field would repeat its
-heading as its label, so the label is hidden from the eye alone and stays
-the textarea's name.
+group keeps its name. In Details & Care both labels are visible,
+Description's and Safety Notes', since the heading names the section, not
+either field.
 **An open variant's fields run in the same sections** (MB.115, the owner's
 call), in the same order and under the same names as far as a form's fields
-go: Identity (its form), Description, Correspondences (element, celestial bodies,
-zodiac signs, colours), Relations (categories, substitute ingredients),
-Safety (safety notes) and Sources (references). Their headings are `h4`s,
+go: Identity (its form), Details & Care (description, then safety notes),
+Correspondences (element, celestial bodies,
+zodiac signs, colours), Relations (categories, substitute ingredients)
+and Sources (references). Their headings are `h4`s,
 a level beneath the Variants `h3`, and each folds as the ingredient's do
 (["Sections"](#sections)).
 
@@ -251,7 +253,7 @@ field shows none: the browser draws its own format there.
 
 ### Sections
 
-**The ingredient's seven sections fold** (MB.115, the owner's calls on the
+**The ingredient's six sections fold** (MB.115, the owner's calls on the
 collapsible-sections proposal), so an edit reads at a glance and opens only
 where the change is:
 
@@ -272,8 +274,9 @@ where the change is:
   line, not the form. A list of one is named and a longer one counted
   ("Mercury · 2 colours"); categories are always counted; the forms are
   always named ("2 forms: Dried leaf, Whole root", an empty Form box as
-  "Unnamed Form", as its card names it); the description and the
-  safety notes are their first words; Identity reads the name, the
+  "Unnamed Form", as its card names it); Details & Care reads the
+  description's first words, then the safety notes', joined by a middle dot
+  (`detailsLine`, `summaries.tsx`), cut by the line's ellipsis; Identity reads the name, the
   classification and the formal name in italics; Relations says both its
   lists once either has an entry ("1 category · No substitutes"); an empty
   section says "Nothing yet".
@@ -304,7 +307,7 @@ where the change is:
   is closed.
 
 **A variant's sections fold too** (MB.115, the owner's ask: "The sections
-of the Variants should also collapse"). Inside an open variant card, its six
+of the Variants should also collapse"). Inside an open variant card, its five
 `h4` sections are the same `CollapsibleSection` at `level={4}`: a heading
 button with a chevron, a muted line while closed, the error flag, the fields
 kept in the page while hidden. The card keeps its own disclosure, one open
@@ -334,7 +337,7 @@ at a time, around them (["The variants"](#the-variants)).
   view, in the commit that draws it, so the focus lands. A variant's
   substitute link naming no form opens its Relations.
 - **Open All / Close All** reaches every variant's sections too: Open All
-  opens all six of each, Close All closes them. It opens and closes no card.
+  opens all five of each, Close All closes them. It opens and closes no card.
   Its label is unchanged, Close All while any section is open: a variant's
   sections are in view only while Variants is open, which already reads
   Close All, so a section open inside a card the Variants section hides
@@ -349,7 +352,7 @@ at a time, around them (["The variants"](#the-variants)).
 Six boxes suggest, through `/api/graphql` with TanStack Query
 ([`graphql/client.md`](../graphql/client.md)): the form and folk names from
 M4.7a's `formSuggestions` and `commonNameSuggestions` (M5.10a), and the
-celestial bodies, zodiac signs, deities and substitutes from `planetSuggestions`,
+celestial bodies, zodiac signs, deities and substitutes from `celestialBodySuggestions`,
 `zodiacSuggestions`, `deitySuggestions` and `ingredientSuggestions`
 (MB.131). Colours take none. `suggestions.tsx` holds them all, on one hook,
 `useLookup`, and a shape per source: each debounces the box's text through
@@ -754,10 +757,10 @@ as the ingredient's page shows its forms after it (MB.221).
   error, since the focus runs as that commit lands. Any other variant with
   an error stays closed, its card edged in the error red and its line saying
   it has an error to fix, read with its Edit.
-- **Its fields** are the variant's Form, Description, Element, Celestial Bodies,
-  Zodiac Signs, Colours, Categories, Substitute Ingredients, Safety Notes
-  and References, in the ingredient's sections (["The fields"](#the-fields)), the ingredient's own field components at the variant's
-  place in the values, `variants.1.planets`, so each validates, errs, focuses
+- **Its fields** are the variant's Form, Description, Safety Notes, Element, Celestial
+  Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
+  References, in the ingredient's sections (["The fields"](#the-fields)), the ingredient's own field components at the variant's
+  place in the values, `variants.1.celestialBodies`, so each validates, errs, focuses
   and is held by text left in its box as the ingredient's is. Deities and
   folk names are the plant's, and stay on the ingredient alone.
 - **The New Form box adds one**, a list's box for whole variants, at the
@@ -829,8 +832,8 @@ or on its kept `id`, is its Form box's.
 
 A form often says much of what its ingredient says, so each of an open
 variant's fields but its Form has a **Copy From Ingredient** button
-(`copy.tsx`, MB.115, the owner's call): Description, Element, Celestial Bodies,
-Zodiac Signs, Colours, Categories, Substitute Ingredients, Safety Notes and
+(`copy.tsx`, MB.115, the owner's call): Description, Safety Notes, Element, Celestial
+Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
 References. The ingredient's own fields have none.
 
 - **Where it sits.** A small quiet button, `.btn--small.btn--quiet`, at the
@@ -840,8 +843,7 @@ References. The ingredient's own fields have none.
   `ListField`, `ReferencesField` and `CategoryPicker`
   ([`category-picker.md`](category-picker.md)), the last three handing it
   their announcer. In a variant the label rows and legends span the card
-  and wrap, so on a phone the button drops beneath a long label. In the
-  Description section, whose label is hidden, it shares the heading's line.
+  and wrap, so on a phone the button drops beneath a long label.
 - **Its name** is the visible words first, then the field, "Copy From
   Ingredient: Celestial Bodies", so the nine are told apart and the name still
   starts with what is seen (WCAG 2.5.3). It is a `type="button"`.
@@ -1179,14 +1181,14 @@ empty form, `?edit=<slug>` the entry at that slug, through
 `resolveCompendiumSlug`. An edit's head is the eyebrow "Edit Ingredient" over the entry's saved name and its formal name, in italics for a binomial (`editHeading` in `page.tsx`; [`modal.md`](modal.md), "An edit dialog's head"), so it follows a rename once Save Ingredient re-reads the entry. An old address redirects to the entry's current
 `?edit=`, and one naming nothing opens nothing and says so in an alert above
 the list. The edit's values are built on the navigation by
-`src/app/admin/compendium/entry-values.ts`, `server-only`, from the services
+`src/app/(shell)/admin/compendium/entry-values.ts`, `server-only`, from the services
 `Ingredient`'s fields resolve through — folk names, categories, substitutes,
 deities with their traditions, references with their citations, and its
 variants, each with its pick and group and its own categories, substitutes
 and references (MB.221), a linked substitute carrying the forms its second
 picker offers — so opening the modal sends no browser read
-(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue, a wide
-`RouteModal` ([`modal.md`](modal.md), "RouteModal") that closes back to the
+(CLAUDE.md rule 1). `compendium-dialog.tsx` is the client glue, a
+`RouteModal` ([`modal.md`](modal.md), "RouteModal"), in the default width, that closes back to the
 list, with a router of its own for what RouteModal does not do: Save
 Ingredient replaces the address with the saved entry's `?edit=`, at the
 slug its name now spells; Save & Add Another stays on `?new`; a delete,
@@ -1322,9 +1324,7 @@ next hairline. A variant's sections fold the same way, flush between the
 same hairlines inside the card, a step closer for the narrower card: each
 heading block `space(2)` deep above and below, its `h4` at 1.125rem, the
 fields `space(4)` apart, `space(3)` short of the next hairline, and Done
-`space(3)` beneath the last. A variant's `labelled` Description hides its
-label alone, not its label row, so its tip and Copy From Ingredient stay in
-view above the box. The
+`space(3)` beneath the last. The
 references are one-line rows on the card surface with a 2px muted bar, the
 short form, cut with an ellipsis where the row is too narrow, and its
 locator in the muted caption, then two

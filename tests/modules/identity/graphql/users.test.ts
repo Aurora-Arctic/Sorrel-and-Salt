@@ -1,6 +1,7 @@
 import { getNamedType, isObjectType, type GraphQLObjectType } from 'graphql';
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
+import { FIXTURE_WORKSPACES, WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import type { Session } from '@/lib/session';
 import { A, E, asUser } from '../../../support/as-user';
@@ -78,6 +79,31 @@ describe('Query.users', () => {
       providers: ['google'],
       audit: { createdAt: expect.any(String) },
     });
+  });
+
+  it('resolves an admin the coven memberships of a listed user', async () => {
+    const result = await usersAs(
+      asUser(E),
+      `query ($query: String) {
+        users(query: $query) {
+          edges { node { id memberships { role workspace { name } } } }
+        }
+      }`,
+      { query: A.email },
+    );
+
+    expect(result.errors).toBeUndefined();
+    const { users } = result.data as unknown as {
+      users: {
+        edges: {
+          node: { id: string; memberships: { role: string; workspace: { name: string } }[] };
+        }[];
+      };
+    };
+    const w = FIXTURE_WORKSPACES.find((workspace) => workspace.id === WORKSPACE_W_ID);
+    expect(users.edges.find((edge) => edge.node.id === A.id)?.node.memberships).toEqual([
+      { role: 'owner', workspace: { name: w?.name } },
+    ]);
   });
 
   it('passes the filters to the service', async () => {

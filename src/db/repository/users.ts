@@ -1,4 +1,6 @@
 import { and, eq, inArray, ne, or, sql, type SQL } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/pg-core';
+import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import { accounts } from '../../modules/identity/schema/auth';
 import { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import { users } from '../../modules/identity/schema/users';
@@ -8,15 +10,21 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types'
 import { findMany, findPage, findPageCount } from './finders';
 import { containsText, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom } from './select';
-import type { LinkedProvider, PrivilegeChangeFilter, SortPart, UserFilter } from './types';
+import type {
+  LinkedProvider,
+  PrivilegeChangeFilter,
+  SortPart,
+  UserFilter,
+  UserName,
+} from './types';
 
 /**
  * The live row holding this address, or `undefined`. Compared lower-cased,
  * which `users_email_lower_case` holds every row to. The third read that takes
  * no proof, for the reason the first two do: an address is claimed site-wide,
  * so there is no workspace to hold a proof for. The service calling it decides
- * what a hit means; the index's export list is pinned, so a fourth is a
- * decision.
+ * what a hit means; the index's export list is pinned, so the fourth,
+ * `findCoMemberNamesIncludingSoftDeleted`, was a decision (MB.10).
  */
 export async function findUserByEmail(
   email: string,
@@ -80,6 +88,49 @@ export async function findProvidersOfUsers(
     and(notSoftDeleted(accounts), inArray(accounts.userId, [...userIds])),
   );
   return rows.map(({ userId, providerId }) => ({ userId, providerId }));
+}
+
+/**
+ * The name of each of these users who holds or has held a seat in a coven
+ * `viewerId` sits in now, and nothing else of the row: the display names a
+ * member may read (MB.10). The fourth read that takes no proof, for the
+ * reason `findMembershipsOfUsers` takes none: the viewer's covens are several,
+ * so there is no one workspace to hold a proof for, and the viewer's own live
+ * seat in a live coven is the scope instead. The service passes the session's
+ * id as `viewerId`; a fifth proofless read is a decision.
+ *
+ * Rule 4's third named exception, after M5.3's and MB.138's: it skips the
+ * filter on the user's row, so a deleted user reads under the name their row
+ * last held, and on the user's seat, so a removed member still counts. The
+ * viewer's seat and the coven keep theirs, through `existsIn`. Read from the
+ * seats, which a left join names, so one statement answers the batch however
+ * many covens a pair shares.
+ */
+export async function findCoMemberNamesIncludingSoftDeleted(
+  viewerId: string,
+  userIds: readonly string[],
+): Promise<UserName[]> {
+  if (userIds.length === 0) return [];
+  const viewerSeat = alias(workspaceMembers, 'viewer_seat');
+  const seats = await selectFrom(
+    workspaceMembers,
+    and(
+      inArray(workspaceMembers.userId, [...userIds]),
+      existsIn(
+        viewerSeat,
+        and(
+          eq(viewerSeat.workspaceId, workspaceMembers.workspaceId),
+          eq(viewerSeat.userId, viewerId),
+        ),
+      ),
+      existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
+    ),
+    { leftJoin: users, on: eq(users.id, workspaceMembers.userId) },
+  );
+  // `workspace_members.user_id` references `users.id`, so every seat joins a
+  // row; the guard narrows the type rather than filtering anything.
+  const names = new Map(seats.flatMap(({ joined }) => (joined ? [[joined.id, joined.name]] : [])));
+  return [...names].map(([id, name]) => ({ id, name }));
 }
 
 /**

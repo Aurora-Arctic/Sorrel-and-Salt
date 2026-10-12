@@ -35,10 +35,13 @@ const sha256 = (value: string) => createHash('sha256').update(value).digest('hex
 
 /** A sender that records what it was asked to mail, so a test holds the token the inbox would. */
 function recordingSender() {
-  const sent: { to: string; token: string }[] = [];
+  const sent: { to: string; token: string; inviterName: string }[] = [];
   const sender: InvitationSender = {
-    siteInvitation: async (to, token) => {
-      sent.push({ to, token });
+    siteInvitation: async (to, token, { name }) => {
+      sent.push({ to, token, inviterName: name });
+    },
+    workspaceInvitation: async () => {
+      throw new Error('an admin invitation mails no coven');
     },
   };
   return { sent, sender };
@@ -90,7 +93,14 @@ describe('Mutation.createAdminInvitation', () => {
       note: 'Curates the resins',
       audit: { createdBy: E.id },
     });
-    expect(sent).toEqual([{ to: INVITED, token: expect.any(String) }]);
+    expect(sent).toEqual([
+      {
+        to: INVITED,
+        token: expect.any(String),
+        // The acting admin's own name, read from their row.
+        inviterName: (await sql`select name from users where id = ${E.id}`)[0].name,
+      },
+    ]);
     const [{ token }] = sent;
     expect(JSON.stringify(result)).not.toContain(token);
     expect(JSON.stringify(result)).not.toContain(sha256(token));
@@ -110,6 +120,8 @@ describe('Mutation.createAdminInvitation', () => {
       'id',
       'note',
       'revokedAt',
+      'role',
+      'workspace',
     ]);
   });
 

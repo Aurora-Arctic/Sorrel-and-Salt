@@ -1,6 +1,8 @@
-import type { ReactNode } from 'react';
+import type { Route } from 'next';
+import type { ReactNode, RefObject } from 'react';
+import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
-import type { PagerHrefs } from '../../app/admin/types';
+import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { PagePosition } from '../../lib/types';
 
 /** One listed user: the row's own facts and the providers read beside it. */
@@ -16,6 +18,10 @@ export interface UserListEntry {
   emailVerified: boolean;
   /** Whether this is the primary admin, whom no one can revoke (MB.59). */
   primaryAdmin: boolean;
+  /** This page with the user’s modal open over it, `?user=<id>` (M9.19). */
+  openHref: Route;
+  /** The modal’s head, shown at once on a press: the one the loaded modal carries. */
+  heading: ModalHeading;
 }
 
 export interface UserListProps extends Partial<PagerHrefs> {
@@ -58,6 +64,13 @@ export interface HistoryLinkProps {
   name: string;
 }
 
+/** A row’s name, the link that opens its user’s modal (M9.19). */
+export interface UserLinkProps {
+  href: Route;
+  heading: ModalHeading;
+  name: string;
+}
+
 export interface ImpersonateButtonProps {
   userId: string;
   /** The user's name, completing the button's accessible name. */
@@ -80,6 +93,8 @@ export interface ConfirmedActionProps {
   label: string;
   /** The row's button's accessible name, opening with `label`. */
   accessibleName: string;
+  /** The modal's confirm, when it says something other than the row's button does. */
+  confirmLabel?: string;
   openClass: string;
   /** The modal's heading, in title case. */
   title: string;
@@ -98,6 +113,34 @@ export interface ConfirmedActionProps {
   onSent?: () => void;
   /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
   refusal?: string;
+  /**
+   * Takes the refusal's sentence (and `undefined` when a new attempt starts)
+   * for the caller to show elsewhere; absent, it shows beside the control.
+   */
+  /** A choice the modal asks beside the question, such as a role to move to; the caller holds its state. */
+  choices?: ReactNode | ((sending: boolean) => ReactNode);
+  /** Close the modal on success, for a control the re-read does not replace. */
+  closeOnSent?: boolean;
+  onFailure?: (message: string | undefined) => void;
+  /**
+   * Drawn inside a modal already, the user's (M9.19): asks over that modal's
+   * body through its confirm layer rather than opening a second modal on top.
+   */
+  inModal?: boolean;
+}
+
+/** `ConfirmedAction`'s confirm and Cancel, under its question. */
+export interface ConfirmAnswersProps {
+  label: string;
+  busy: string;
+  confirmClass: string;
+  /** The warning's id, which the confirm is described by; none without one. */
+  describedBy?: string;
+  sending: boolean;
+  confirmRef: RefObject<HTMLButtonElement | null>;
+  cancelRef: RefObject<HTMLButtonElement | null>;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 /** What a row's role control does: make a user an admin, or stop one being one (MB.59). */
@@ -118,6 +161,8 @@ export interface RoleControlProps {
    */
   paused?: boolean;
   action: RoleAction;
+  /** Drawn in the user's modal, so it asks over the modal's body (M9.19). */
+  inModal?: boolean;
 }
 
 export interface CreationControlProps {
@@ -133,6 +178,8 @@ export interface CreationControlProps {
    */
   paused?: boolean;
   action: CreationAction;
+  /** Drawn in the user's modal, so it asks over the modal's body (M9.19). */
+  inModal?: boolean;
 }
 
 /** The pause on admin grants and revokes, as the page read it (MB.63). */

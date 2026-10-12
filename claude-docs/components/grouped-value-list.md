@@ -5,7 +5,7 @@ pager, grouped or flat: `/admin/categories`' (M5.6, MB.178), `/admin/forms`'
 (M5.6a) and `/admin/deities`' (MB.132), each value filed under a group, and
 `/admin/celestial-bodies`' and `/admin/zodiac-signs`' (MB.95), filed under nothing.
 One component serves every such vocabulary, `kind: 'category' | 'form' |
-'deity' | 'planet' | 'zodiacSign'`, as [`GroupList`](group-list.md) serves
+'deity' | 'celestialBody' | 'zodiacSign'`, as [`GroupList`](group-list.md) serves
 the groups; the flat kinds had a copy of their own, `VocabularyValueList`,
 until MB.115 folded it in. It is render-only and a server component: the page
 ([`grouped-value-form.md`](grouped-value-form.md), "On the admin pages")
@@ -113,8 +113,9 @@ for a rule only one kind's rows need.
   ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, Add Celestial Body and the rest, the tab's action beside the
-  page's heading (`ValueAction` in `src/app/admin/value-page.tsx`, from the
-  route group's `@action` slot) and so the page's rather than this
+  page's heading (`ValueAction` in `src/app/(shell)/admin/value-page.tsx`, from the
+  route group's `@action` slot, built on `AddAction` in `src/app/(shell)/admin/add-action.tsx`,
+  which takes the dialog's `heading` apart from the button's label, M9.18) and so the page's rather than this
   component's, is `?new`.
   `href.ts`'s `groupedValuesHref(kind, place, dialog?)`, on the shared
   `listHref` (`src/lib/list-href.ts`), builds both, the
@@ -128,7 +129,7 @@ for a rule only one kind's rows need.
   the page renders again with the modal open, and the page itself calls the
   admin guard on every render. AdminNav uses `<Link>` too, now that every
   route it names is built ([`admin-nav.md`](admin-nav.md)).
-- **Each Edit is a pencil, [`EditLink`](icon-tip.md), named for its
+- **Each Edit is a pencil, [`EditLink`](icon-tip.md), opening the modal at once (M9.18) under the value's `editHeading` ([`modal.md`](modal.md), "Opening at once"), named for its
   value**: "Edit" and the name in `visually-hidden` text, so a screen
   reader hears "Edit Testcraft" rather than a column of "Edit", and a
   sighted reader sees the tooltip "Edit" on hover or focus (MB.115, the
@@ -168,7 +169,7 @@ page's Add is `.btn--solid` beside its heading, its one primary action, and
 each row's Edit is the larger green pencil, a 2rem target
 ([`icon-tip.md`](icon-tip.md), "Styling"). The pager is `Pager`
 ([`pager.md`](pager.md)), soft. At phone width the filter's fields stack
-full width and the Add spans its line, the sign-off's two phone calls,
+full width and the Add is a plus on the heading's line (it spanned its line until MB.7's review, 2026-10-12), the sign-off's two phone calls,
 which `FilterForm` and `TabbedPage` own
 ([`filter-form.md`](filter-form.md), [`tabbed-page.md`](tabbed-page.md)),
 so the list adds no rule for either.
@@ -179,11 +180,11 @@ so the list adds no rule for either.
 — for each grouped kind, `…OnePageOfSeveral`, `…FirstPage`, `…Filtered`,
 `…NoMatch` and `…Empty`, as `Categories…`, `Forms…` and `Deities…`, the
 deities under invented traditions and slugged by `deitySlug`; for the flat
-kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
-`PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
+kinds, `CelestialBodiesOnePageOfSeveral`, `Signs`, `CelestialBodiesFiltered`,
+`CelestialBodiesNoMatch` and `CelestialBodiesEmpty`; and `PhoneDark` and `PhoneLight`, a
 categories page inside `.admin-layout` at 375px: the real `TabbedPage`
 with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear drawn, the
-full-width Add and the rows as cards. `CategoriesPending`, with
+Add as a plus and the rows as cards. `CategoriesPending`, with
 `PendingPhoneDark` and `PendingPhoneLight` at 375px, is the same page with
 a filter applied and the list on its way: a `ListNavigationContext` holding
 one pending above the page, since the stub router goes nowhere, so the
@@ -211,7 +212,7 @@ filter shown run as the shared filter rows (`tests/support/filter-form.tsx`,
 [`filter-form.md`](filter-form.md), "Testing"); its loading state is
 CompendiumList's, the type-ahead's narrowing Combobox's, paging Pager's, and the category chip's colours
 presentation.
-`tests/app/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
+`tests/app/(shell)/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
 ([`layer-ownership.md`](../testing/layer-ownership.md), "The owning layer"):
 the guard refusing before any read; the first page of 25 read (26, to know of
 a next) and an unreadable cursor read as the first page; every group read on

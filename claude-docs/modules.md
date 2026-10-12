@@ -30,7 +30,7 @@ registers its types: `src/graphql/schema/index.ts` imports `@/modules/identity`,
 `Workspace`, `WorkspaceMember`, the `membershipsByUser` loader and the
 `User.memberships` field; `vocabulary` has `CorrespondenceSuggestion`,
 `FormSuggestion`, `DeitySuggestion`, `SuggestionClaimant` and the
-`planetSuggestions`, `zodiacSuggestions`, `formSuggestions` and
+`celestialBodySuggestions`, `zodiacSuggestions`, `formSuggestions` and
 `deitySuggestions` connections, and `Deity` and `DeityTradition` with the
 `deityTraditionsById` and `ingredientFormsById` loaders (MB.167); `ingredients` has
 `Ingredient`, `IngredientDeity` and `IngredientDeityInput`, the `compendium`, `ingredient`, `possibleDuplicates` and
@@ -72,7 +72,7 @@ a service lands in the module that owns the table it writes.
 | ------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `identity`    | `users`, `user_privilege_changes`, `admin_role_change_pauses`, `sessions`, `accounts`, `verifications`, `rate_limits`                                                                                                 | `admin-role.ts`, `admin-changes.ts`, `profile.ts`, `provisional-accounts.ts`, `workshop-access.ts`                                                                                                              |
 | `coven`       | `workspaces`, `workspace_members`, `invitations` (both tiers, MB.201)                                                                                                                                                 | `membership.ts`, `memberships.ts`, `access-control.ts`                                                                                                                                                          |
-| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `planets`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                                      | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts` |
+| `vocabulary`  | `category_groups`, `categories`, `ingredient_form_groups`, `ingredient_forms`, `celestial_bodies`, `zodiac_signs`, `deity_traditions`, `deities` (MB.128)                                                             | `categories.ts`, `category-groups.ts`, `ingredient-form-values.ts`, `ingredient-form-groups.ts`, `groups.ts`, `curated-values.ts`, `curated-writes.ts`, `curated-lists.ts`, `held-entries.ts`, `suggestions.ts` |
 | `ingredients` | `ingredients` (both tiers), `ingredient_folk_names`, `ingredient_substitutes`, `ingredient_deities`, `ingredient_categories`, `inventory_items`, `retired_ingredient_slugs`; `references`, `reference_links` (MB.152) | `duplicates.ts`, `common-names.ts`, `ingredient-children.ts`, `workspace-ingredients.ts`; `schema/units.ts` is the unit vocabulary                                                                              |
 | `grimoire`    | `spells`, `spell_ingredients`, `spell_categories`                                                                                                                                                                     | `spell-visibility.ts`                                                                                                                                                                                           |
 
@@ -264,7 +264,7 @@ NULL` itself; `inTiers` and `readableInTiers` beside it,
 and `findPageCountInTiers` in `finders.ts`
 (MB.206); `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
-M4.7a), the planet, zodiac and form autofill; `findCommonNameSuggestions`
+M4.7a), the celestial body, zodiac and form autofill; `findCommonNameSuggestions`
 (M4.7a), the common-name autofill; `findManyOfIngredients` (M4.8), an
 ingredient's folk names and category links; `findManyOfVariants` (MB.218), the
 rows one form of an ingredient owns; `findCompendiumPage` (M8.5), the

@@ -114,7 +114,7 @@ function whole(input: Record<string, unknown>): Record<string, unknown> {
     canonicalName: '',
     description: '',
     elements: [],
-    planets: [],
+    celestialBodies: [],
     zodiacSigns: [],
     deities: [],
     colors: [],

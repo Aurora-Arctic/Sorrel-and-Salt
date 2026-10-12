@@ -6,7 +6,7 @@ import { B } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance } from '../support/types';
 
-// The account page's Sign Out (added in MB.63's PR, on the owner's call),
+// The Sign Out button (added in MB.63's PR, on the owner's call; the shell's account menu holds it since MB.7),
 // through Better Auth's real endpoint: the session row goes, and the same
 // cookie then reads as no one. The Playwright server cannot make this call,
 // since Better Auth refuses the plain-http origin the remote browser reaches

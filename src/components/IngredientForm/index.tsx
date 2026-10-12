@@ -28,7 +28,7 @@ import {
   useCommonNameSuggestions,
   useCompendiumSubstitutes,
   useDeitySuggestions,
-  usePlanetSuggestions,
+  useCelestialBodySuggestions,
   useSubstituteSuggestions,
   useZodiacSuggestions,
 } from './suggestions';
@@ -150,7 +150,7 @@ const IngredientForm = ({
   // both saves (MB.131).
   const editing = entry !== undefined;
 
-  // Which of the seven sections are open, several at once, each by its own
+  // Which of the six sections are open, several at once, each by its own
   // heading (MB.115, the owner's calls): a new entry opens with every one
   // open, as the long form it is; an edit with every one closed, its entry
   // read at a glance from the summary lines.
@@ -418,12 +418,7 @@ const IngredientForm = ({
                   placeholder="Add a folk name"
                 />
               </CollapsibleSection>
-              <CollapsibleSection
-                title="Description"
-                section="description"
-                fold={fold('description')}
-                labelled
-              >
+              <CollapsibleSection title="Details & Care" section="details" fold={fold('details')}>
                 <TextField<IngredientFormValues>
                   name="description"
                   label="Description"
@@ -431,6 +426,13 @@ const IngredientForm = ({
                   multiline
                   // Seven lines, as each variant's Description (MB.115, the owner's call).
                   rows={7}
+                />
+                <TextField<IngredientFormValues>
+                  name="safetyNotes"
+                  label="Safety Notes"
+                  hint="Toxicity, allergies, and anything to take care over when handling or burning it."
+                  placeholder="Add safety notes"
+                  multiline
                 />
               </CollapsibleSection>
               <CollapsibleSection
@@ -446,20 +448,20 @@ const IngredientForm = ({
                   placeholder="Add an element"
                   options={ELEMENT_OPTIONS}
                 />
-                {/* Each list but the colours suggests (MB.131): planets, signs and
+                {/* Each list but the colours suggests (MB.131): celestial bodies, signs and
             deities from their curated vocabularies and the values in use, a
             pick adding the text, and a curated deity's a link to it as well
             (MB.169); substitutes from the compendium and this coven, a pick
-            adding a link to the ingredient. On the compendium the planets,
+            adding a link to the ingredient. On the compendium the celestial bodies,
             signs and deities are picks of the curated rows alone, and the
-            substitutes its other entries (MB.162, MB.138). Planets, signs,
+            substitutes its other entries (MB.162, MB.138). Celestial bodies, signs,
             colours and deities keep the order entered, so their entries move
             (MB.170); folk names and substitutes read alphabetically, so
             theirs do not. */}
                 <LookupListField
                   workspaceId={workspaceId}
-                  useSuggestions={usePlanetSuggestions}
-                  name="planets"
+                  useSuggestions={useCelestialBodySuggestions}
+                  name="celestialBodies"
                   ordered
                   pickOnly={compendium}
                   legend="Celestial Bodies"
@@ -516,15 +518,6 @@ const IngredientForm = ({
                 />
                 {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
                 <SubstituteForms name="substitutes" />
-              </CollapsibleSection>
-              <CollapsibleSection title="Safety" section="safety" fold={fold('safety')}>
-                <TextField<IngredientFormValues>
-                  name="safetyNotes"
-                  label="Safety Notes"
-                  hint="Toxicity, allergies, and anything to take care over when handling or burning it."
-                  placeholder="Add safety notes"
-                  multiline
-                />
               </CollapsibleSection>
               <CollapsibleSection title="Sources" section="sources" fold={fold('sources')}>
                 {/* Last, as a bibliography is (MB.154): the sources picked, each

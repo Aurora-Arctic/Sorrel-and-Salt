@@ -49,11 +49,18 @@ export function ComboboxTypeahead({
   // The text narrows the list once it is not the choice's own label, so a
   // box holding a choice opens on every choice rather than on that one.
   const query = selected && text === selected.label ? '' : fold(text);
+  // A qualified choice's row reads its label with the qualifier in brackets,
+  // as the ingredient form's Form rows read "Wax (Substance)"; the text a
+  // pick writes is still the label alone, and the query matches that alone.
   const suggestions = useMemo(
     () => ({
       options: choices
         .filter((choice) => choice.label.toLocaleLowerCase().includes(query))
-        .map((choice): ComboboxOption => ({ value: choice.label, key: choice.value })),
+        .map((choice): ComboboxOption => ({
+          value: choice.label,
+          label: choice.qualifier ? `${choice.label} (${choice.qualifier.text})` : undefined,
+          key: choice.value,
+        })),
       pending: false,
     }),
     [choices, query],
@@ -105,6 +112,9 @@ export function ComboboxTypeahead({
           : undefined
       }
       suggestions={suggestions}
+      // The chosen choice's qualifier, once the box reads its label as
+      // written: mid-typing in another case the box is still being typed in.
+      qualifier={selected && text === selected.label ? selected.qualifier : undefined}
       offerTyped={false}
       highlightFirst
       noun="choice"

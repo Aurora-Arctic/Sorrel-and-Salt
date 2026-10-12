@@ -26,17 +26,27 @@ vi.mock('next/navigation', () => ({
   forbidden: () => {
     throw new Error('forbidden');
   },
+  notFound: () => {
+    throw new Error('not-found');
+  },
 }));
+// The coven lookup is the service's, proved against Postgres in
+// tests/modules/coven/services/workspace-by-slug.test.ts; here only how the
+// helper answers its refusal.
+const membershipBySlugMock = vi.fn();
+vi.mock('@/modules/coven', () => ({ membershipBySlug: membershipBySlugMock }));
 
 const {
   getSession,
   linkedAccounts,
   requireAdminSession,
+  requireCovenMembership,
   requireSession,
   sessionFromHeaders,
   sessionIsFresh,
 } = await import('@/lib/request-session');
 const { auth } = await import('@/lib/auth');
+const { Forbidden } = await import('@/lib/errors');
 
 const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
@@ -264,5 +274,50 @@ describe('sessionIsFresh', () => {
     } finally {
       config.freshAge = window;
     }
+  });
+});
+
+// The `/coven/[slug]` guard (M6.10): a slug that names no coven the user is in
+// is a 404, not a 403 — a slug is a guess at someone's private data, so the
+// answer must not confirm it exists (claude-docs/auth/coven-guard.md).
+describe('requireCovenMembership', () => {
+  beforeEach(() => {
+    membershipBySlugMock.mockReset();
+  });
+
+  it('returns the workspace and proof the service admits a member with', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    const admitted = { workspace: { id: 'w' }, membership: { workspaceId: 'w' } };
+    membershipBySlugMock.mockResolvedValue(admitted);
+
+    await expect(requireCovenMembership('whitethorn-coven')).resolves.toBe(admitted);
+    expect(membershipBySlugMock).toHaveBeenCalledWith(
+      { userId: USER_ID, role: 'user' },
+      'whitethorn-coven',
+    );
+  });
+
+  it('answers the service refusing with the 404, never the forbidden page', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    membershipBySlugMock.mockRejectedValue(new Forbidden());
+
+    await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow('not-found');
+  });
+
+  it('lets any other failure through as itself', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    membershipBySlugMock.mockRejectedValue(new Error('database down'));
+
+    await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow('database down');
+  });
+
+  it('sends a signed-out visitor to /sign-in before asking after the coven', async () => {
+    getSessionMock.mockResolvedValue(null);
+    requestHeaders.set(RETURN_PATH_HEADER, '/coven/whitethorn-coven');
+
+    await expect(requireCovenMembership('whitethorn-coven')).rejects.toThrow(
+      `redirect:/sign-in?next=${encodeURIComponent('/coven/whitethorn-coven')}`,
+    );
+    expect(membershipBySlugMock).not.toHaveBeenCalled();
   });
 });

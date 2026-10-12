@@ -1,5 +1,5 @@
 import type { PgTable } from 'drizzle-orm/pg-core';
-import { planets, zodiacSigns } from '../modules/vocabulary/schema/astrology';
+import { celestialBodies, zodiacSigns } from '../modules/vocabulary/schema/astrology';
 import { categories, categoryGroups } from '../modules/vocabulary/schema/categories';
 import { deities, deityTraditions } from '../modules/vocabulary/schema/deities';
 import {
@@ -34,7 +34,7 @@ export const TWO_TIER = {
 } as const;
 
 /** The one-tier vocabularies, filed under no group. */
-export const FLAT = { planets, zodiacSigns } as const;
+export const FLAT = { celestialBodies, zodiacSigns } as const;
 
 /** One two-tier vocabulary's tables and key. */
 export type TwoTierPair = (typeof TWO_TIER)[keyof typeof TWO_TIER];
@@ -45,7 +45,7 @@ export type ItemTable = (typeof TWO_TIER)[keyof typeof TWO_TIER]['items'];
 /** A group table items are filed under: form groups, category groups, traditions. */
 export type GroupTable = (typeof TWO_TIER)[keyof typeof TWO_TIER]['groups'];
 
-/** A vocabulary filed under no group: the planets and the zodiac signs. */
+/** A vocabulary filed under no group: the celestial bodies and the zodiac signs. */
 export type FlatTable = (typeof FLAT)[keyof typeof FLAT];
 
 /**

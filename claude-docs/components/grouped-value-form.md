@@ -5,14 +5,14 @@ grouped or flat. Grouped, the value is filed under a group: a category
 (M5.6), a curated ingredient form (M5.6a) or a curated deity (MB.132). Flat,
 it is filed under nothing: a celestial body or a zodiac sign (MB.95). One component
 serves every such vocabulary, `kind: 'category' | 'form' | 'deity' |
-'planet' | 'zodiacSign'`, as [`GroupForm`](group-form.md) serves the groups,
+'celestialBody' | 'zodiacSign'`, as [`GroupForm`](group-form.md) serves the groups,
 so a new vocabulary is a kind rather than another copy. The flat kinds had a
 copy of their own, `VocabularyValueForm`, until MB.115 folded it in.
 
 It has a name and a description, and for a grouped kind the group the value
 is filed under — a deity's is its tradition. It saves through the kind's
 create or update mutation (`createCategory`, `updateIngredientFormValue`,
-`createPlanet` and so on). On an existing value it also offers a delete
+`createCelestialBody` and so on). On an existing value it also offers a delete
 behind a confirmation. It holds no modal of its own: the page puts it in one.
 
 The form kind is named for the GraphQL type, `IngredientFormValue`, because
@@ -58,9 +58,9 @@ its three mutation documents, and nothing else:
   one: `DeityInput` calls the group `traditionId`, so its schema is
   `DeityInput` with `traditionId` swapped for `groupId`, and its
   `inputKeys` is `{ groupId: 'traditionId' }`.
-- **No group, for a flat kind.** A planet or a zodiac sign has no `group`, so the
+- **No group, for a flat kind.** A celestial body or a zodiac sign has no `group`, so the
   form draws no group field. Its values still carry `groupId`, always `''`,
-  so every kind has one shape; its schema, `PlanetInput` or
+  so every kind has one shape; its schema, `CelestialBodyInput` or
   `ZodiacSignInput` (`src/modules/vocabulary/validation/astrology-value.ts`),
   parses the name and description alone, and `toInput` leaves the group out.
 - **Its mutations**: `create`, `update` and `remove`, the three typed
@@ -106,7 +106,7 @@ its three mutation documents, and nothing else:
   and renaming a deity the name on every live compendium entry's
   `ingredient_deities` row that picked it
   ([`mb.132-admin-deities.md`](../design-decisions/mb.132-admin-deities.md)).
-  A planet's or a zodiac sign's rename reaches every entry listing it the
+  A celestial body's or a zodiac sign's rename reaches every entry listing it the
   same way (MB.162). None is part of an entry's identity or address — a form
   not since MB.215 — so no address moves (MB.220). On an existing value of a
   kind with a `renameNote`, whose name, trimmed, differs from the saved one,
@@ -152,7 +152,7 @@ it. Covens' ingredients keep what they wrote, as their own value.` A refusal com
 ## On the admin pages
 
 `/admin/categories`, `/admin/forms`, `/admin/deities`, `/admin/celestial-bodies` and
-`/admin/zodiac-signs` are one page, `src/app/admin/value-page.tsx`'s
+`/admin/zodiac-signs` are one page, `src/app/(shell)/admin/value-page.tsx`'s
 `ValuePage`. Each route's `page.tsx` keeps its tab title and hands its kind
 and address over. `value-kinds.ts` holds each kind's readers from
 `@/modules/vocabulary` (its list, count, value by slug and, for a grouped
@@ -160,12 +160,15 @@ kind, its groups), each mapped onto the page's own names, so the deities'
 `traditionId` and the astrology services' leading vocabulary stop there.
 
 The page opens the form in a `RouteModal` ([`modal.md`](modal.md)) from its
-address. `?new` opens an empty form, titled "Add Category", and
+address, or at once from a press on an Edit or Add (M9.18; "Opening at once"
+in `modal.md`). `?new` opens an empty form, titled "Add Category", and
 `?edit=<slug>` opens the value at that slug, under an eyebrow, "Edit
 Category", with the value's saved name as its title and a deity's tradition
 after it (`editHeading`; [`modal.md`](modal.md), "An edit dialog's head"). `value-dialog.tsx` is the client edge between the server page and
 the form, since a server component cannot hand `RouteModal` the function its
-contents take. Closing, saving or deleting fades the modal out, then
+contents take. The page renders it always, with `opened` (`{ heading, value }`)
+only when the address opens a modal, so a press's skeleton and the form that
+replaces it are one dialog; the form is keyed by the value's id. Closing, saving or deleting fades the modal out, then
 `router.replace`s the page it opened over, filter and cursor kept
 (`closeHref`, from `groupedValuesHref`), so Back does not reopen it, and
 `router.refresh()`es so the list re-reads. The celestial bodies and signs skipped
@@ -212,7 +215,7 @@ there is none.
 
 [`index.stories.tsx`](../../src/components/GroupedValueForm/index.stories.tsx)
 — `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,
-`AddingADeity`, `EditingADeity`, `AddingAPlanet` and `EditingAZodiacSign`, each in
+`AddingADeity`, `EditingADeity`, `AddingACelestialBody` and `EditingAZodiacSign`, each in
 the modal and its own iframe, each kind's groups four invented ones, enough to narrow; and `PhoneDark` and
 `PhoneLight`, the category's edit at 375px in each theme, where the buttons
 stack and the type-ahead Group opens inside the modal; and `AskingToDelete`,
@@ -247,7 +250,7 @@ its delete refusal. The flat kinds, the celestial body and the zodiac sign, are 
 `describe.each` getting only what they change, their three mutations, the
 create sending no group and asking for none. The shared pieces the form is
 built from, `TextField`, `SelectField` and `BusyButton`, have no test file
-of their own: this one covers them as it uses them. The pages' half, `tests/app/admin/value-page.test.tsx`, is
+of their own: this one covers them as it uses them. The pages' half, `tests/app/(shell)/admin/value-page.test.tsx`, is
 described in [`grouped-value-list.md`](grouped-value-list.md#testing); what the
 modal shows once open is this file's. `tests/e2e/admin.spec.ts`
 adds, renames and deletes a category, a form and a celestial body through the real server, adds

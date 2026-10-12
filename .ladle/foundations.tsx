@@ -2,7 +2,7 @@ import { type ReactElement, type ReactNode, useId, useState } from 'react';
 import { CATEGORY_GROUPS } from '../src/db/seed/category-groups';
 import { chipColors } from '../src/lib/chip-colors';
 import { SOCIAL_PROVIDERS } from '../src/lib/social-providers';
-import { SwitchField } from '../src/components/Field';
+import { RadioGroupField, SwitchField } from '../src/components/Field';
 import InfoTip from '../src/components/InfoTip';
 import { ListNavigationContext } from '../src/components/ListFrame';
 import Pager from '../src/components/Pager';
@@ -128,6 +128,7 @@ const BRAND_STATES = [
 
 function Fields(): ReactElement {
   const id = useId();
+  const [keptAs, setKeptAs] = useState<'dried' | 'fresh'>('dried');
   return (
     <form className="form panel fd-form" noValidate onSubmit={(event) => event.preventDefault()}>
       <p className="notice notice--error" role="alert">
@@ -246,6 +247,17 @@ function Fields(): ReactElement {
           The locked cabinet (owners only)
         </label>
       </fieldset>
+
+      <RadioGroupField
+        legend="Kept As"
+        name={`${id}-kept-as`}
+        options={[
+          { value: 'dried', label: 'Dried', description: 'Hung or laid out until brittle.' },
+          { value: 'fresh', label: 'Fresh', description: 'Used within days of picking.' },
+        ]}
+        value={keptAs}
+        onChange={setKeptAs}
+      />
 
       <div className="field">
         <label className="field__label" htmlFor={`${id}-slug`}>

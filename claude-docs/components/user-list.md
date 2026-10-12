@@ -24,7 +24,11 @@ the hrefs of the pages either side
 A `UserListEntry` is the user row's name, email, role, `canCreateWorkspace`,
 `createdAt` and `emailVerified`, plus `providers`, the provider ids the service
 read beside it, and `primaryAdmin`, which the page asks of the identity
-service's `isPrimaryAdmin` for each row as it reads it (MB.59).
+service's `isPrimaryAdmin` for each row as it reads it (MB.59). Since M9.19
+it also carries `openHref`, this page with the user's modal open over it
+(`?user=<id>`, the filter and cursor kept), and `heading`, that modal's
+head, both built by the page per row, as the other admin lists carry
+`editHref` and `editHeading` ("The user modal is the page's" under [Contracts](#contracts)).
 
 ## Contracts
 
@@ -123,6 +127,34 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   the muted ink, and its hit area reaches `$control-height`, WCAG 2.5.5's
   44px, through a pseudo-element, so the row is no taller for it; its focus
   ring is the `focus-ring` mixin's.
+- **Each name opens the user's modal** (M9.19,
+  [`design-decisions/m9.19-admin-sees-user-covens.md`](../design-decisions/m9.19-admin-sees-user-covens.md)).
+  The name, after the history icon, is a link to the row's `openHref`,
+  `/admin/users?<filter>&user=<id>`, its accessible name the user's name.
+  It is `user-link.tsx`, a client file, so the list stays a server
+  component, and its press is `useOpenModalClick(openHref, heading)`: a plain
+  press opens the modal at once over a skeleton, a press with a modifier or
+  before the script loads follows the link
+  ([`modal.md`](modal.md), "Opening at once"). `userListHref` (`href.ts`)
+  takes the user's id as an optional third argument, written after the
+  cursor; the pager and the filter leave it out, so paging or filtering
+  closes the modal, as they drop `?edit=` elsewhere.
+- **The user modal is the page's, not the list's.** The page renders
+  `UserDialog` (`src/app/(shell)/admin/(people)/users/user-dialog.tsx`), a
+  `RouteModal` at one fixed place, whatever the address opens. Its head is
+  `userHeading(user)` (`user-heading.tsx` beside the page): eyebrow User,
+  the name as title and the address as qualifier, on a line beneath the name, so the dialog is named
+  "User, <name>, <email>". The page builds each row's `heading` with the
+  same helper, so the head a press shows at once is the one that stays. Its
+  body is [`UserDetail`](user-detail.md): the row's facts, shown read-only, then the user's covens and, where
+  impersonation is registered, Impersonate. On `?user=<id>` the page reads
+  the user through `usersForAdmin` and their covens through the coven
+  service's `membershipsOf`, with the navigation and never through GraphQL
+  (CLAUDE.md rule 1). An id that is not a UUID, no live user, or the seed's
+  bootstrap user (live, but `listedOnUserList` leaves it out) is _missing_:
+  `MissingNotice` over the list and no dialog, never an error or a 404, as
+  a stale `?edit=` is on the other admin lists. Closing returns to
+  `userListHref(filter, cursor)`, the list as it stood, with no `?user=`.
 - **Impersonate is a seventh column, only where impersonation is registered**
   (MB.53, [`auth/impersonation.md`](../auth/impersonation.md)). The page
   passes `canImpersonate` from `impersonationEnabled()`, so at production the
@@ -184,10 +216,10 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   closes the modal, puts the service's message in the row as an alert, and
   offers the action again. The service is the guard. The alert is a
   `Notice`, its sentence read by `readGraphqlFailure` (MB.116).
-- **Approving or granting to an unverified address warns first** (MB.205,
+- **Approving or promoting an unverified address warns first** (MB.205,
   MB.59). When the row's `emailVerified` is false, the Approve modal says,
   under its question, in a quiet warning `Notice`: "Nobody has confirmed this
-  email address yet. Approving also keeps the account from lapsing." Grant's says the same with "Granting": the
+  email address yet. Approving also keeps the account from lapsing." Promote's says the same with "Promoting": the
   one sentence is `warning.ts`'s `unverifiedWarning(verb)`, and a grant's
   ledger row keeps the account from the sweep as an approval's does. An
   approval vouches for whoever holds the address, and the vouching keeps the
@@ -199,15 +231,16 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   renders as an `<output>`, a status, with the warning's look: an alert would
   be read a second time. The `id` the Approve names is the notice's `id`
   prop, and `.user-list__warning` its layout class. A verified
-  user's Approve or Grant, and every Revoke, carries
+  user's Approve or Promote, and every Revoke, carries
   none. The control takes `emailVerified` from the row for it.
 - **The Role cell holds the role's control** (MB.59,
   [`auth/admin-users.md`](../auth/admin-users.md), "Granting and revoking
   admin"), from `role-control.tsx`, beside the role it changes: one column
   rather than a second saying the same thing, as Coven Creation holds its
-  own. A user's row has Grant, quiet, named "Grant admin to <name>"; an
+  own. A user's row has Promote, quiet, named "Promote <name> to admin" (Grant until
+  the owner renamed it, M9.19); an
   admin's has Revoke, red, named "Revoke admin from <name>". Each asks first
-  in a `Modal` titled "Grant Admin" or "Revoke Admin", the name in bold:
+  in a `Modal` titled "Promote to Admin" or "Revoke Admin", the name in bold:
   "Make <name> an admin? They will curate the compendium, grant and revoke
   admin, and create covens.", or "Stop
   <name> being an admin? They keep their covens, and everything they wrote
@@ -222,18 +255,18 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   `ConfirmedAction`, each control only its words and its write. Impersonate,
   Pause Admin Changes and the invitations' Revoke build one too; Impersonate
   passes `onSent`, its full load in place of the refresh, and `refusal`, its
-  own sentence in place of the service's. Grant warns
+  own sentence in place of the service's. Promote warns
   on an unverified address as Approve does, in its own verb (below).
 - **The switch on admin changes is the Users tab's action** (MB.63,
   [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
   from `pause-control.tsx`, exported beside the list as `PauseControl`: the
   People page draws it beside its heading while Users is open, where the
   other admin tabs put their primary action, from
-  `src/app/admin/(people)/@action/users/page.tsx`
+  `src/app/(shell)/admin/(people)/@action/users/page.tsx`
   ([`tabbed-page.md`](tabbed-page.md)), and keys it by the state so the
   refresh after a flip mounts a fresh one (all on the owner's call). That
   page and the Users page read the pause through
-  `src/app/admin/(people)/pause-state.ts`, cached per request, so it is
+  `src/app/(shell)/admin/(people)/pause-state.ts`, cached per request, so it is
   read once. It is
   one row, `.user-list__pause`, centred with a `space(3)` gap. At a phone's
   width, where the heading line spans its action, the warning and the switch
@@ -261,7 +294,7 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   `aria-disabled`, its reason in a tip, "Only the primary admin can pause or
   resume admin changes.", that describes it and that each try mounts afresh as
   an alert.
-- **While paused, an admin the pause binds cannot use Grant or Revoke, nor
+- **While paused, an admin the pause binds cannot use Promote or Revoke, nor
   coven creation's Approve or Revoke** (MB.63, on the owner's call; the
   creation controls amended 2026-10-10). The page passes the pause it already read,
   and every row's role and creation control, for a viewer who is not the primary admin
@@ -333,7 +366,8 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   from their left edge; and a locked control's reason is the button's
   description, re-announced as an alert and placed against the viewport,
   where IconTip's word is decoration hidden from a screen reader.
-- **The Impersonate column** has a 1px red rule down its left, red text and
+- **The Impersonate column** is the shared `row-action-column` mixin
+  (`src/scss/_mixins.scss`), which MemberList's Remove column includes too, and has a 1px red rule down its left, red text and
   a wax tint mixed into its opaque ground: 6% into the page, 5% into a banded
   row's `$surface-card`, since at 6% the dark card leaves the wax label at
   4.48:1, under the text floor (`tests/scss/tokens.test.ts` holds both). It
@@ -384,7 +418,7 @@ People page with its Users tab open:
   first's Approve opens the warning (MB.205) and the second's does not.
   `AdminRoles` holds the primary admin, its Revoke unusable with the reason
   beside it, a second admin whose Revoke opens its modal, and users whose
-  Grant opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused`
+  Promote opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused`
   shows the switch paused with the primary admin's Resume, and
   `AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63).
   `OnePageOfSeveral` is a middle page of 25, both pager ends live and
@@ -406,7 +440,8 @@ roster; no table when no user matches; through the shared filter rows (`tests/su
 names and kept values, Needs Approval found as a `switch`; no Filter button, the
 bare `awaiting` a change of the switch opens, the Role select's values and the `role` a change opens, the search text carried along;
 Clear offered by each filter shown and absent with none; the row starting again from a filter shown anew;
-the history link before every name and its address; the Impersonate column:
+the history link before every name and its address; each name a link to its
+`openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy
 while pending with a second press sending nothing, and the refusal; the creation cell: Approve on rows awaiting approval, Revoke on
@@ -414,23 +449,30 @@ approved ones and nothing on an admin's, each modal naming the user and its
 focus, Cancel sending nothing, each call with its reason and its busy state
 until the refresh, and the refusal in the row; the unverified warning
 describing Approve for an unverified user, who is still approved, and absent
-from Revoke; the role cell (MB.59): Grant on a user's row and Revoke on an
+from Revoke; the role cell (MB.59): Promote on a user's row and Revoke on an
 admin's, each modal, the reason sent trimmed or not at all, Cancel sending
-nothing, Grant's warning for an unverified user, the refusal in the row, and
+nothing, Promote's warning for an unverified user, the refusal in the row, and
 the primary admin's crown and its `aria-disabled` Revoke, described by the
 reason and raising an alert each time it is tried, sending nothing; the
 switch on admin changes (MB.63): no notice while on and one while paused,
 Pause asking first with Cancel sending nothing, Pause's confirm and Resume
 busy until the refresh, a refusal beside it, and another
 admin's locked switch, described by its reason and raising an alert when
-tried; and, while paused, every Grant, Revoke, Approve and coven Revoke
+tried; and, while paused, every Promote, Revoke, Approve and coven Revoke
 locked for another admin and described by the pause, the primary admin's
 Approve usable, nothing locked while changes are on, and the primary admin's
 Revoke kept on its own reason — which of the two reasons won is told by
 which of the two strings describes it. Its colours, marks, tips and their placement, and the cards at phone width,
-are presentation; paging is Pager's. `tests/app/admin/(people)/users/page.test.tsx` reads the page's
+are presentation; paging is Pager's. `tests/app/(shell)/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
 flag included, `awaiting` read by its presence, and the count behind the
-pager's position. `tests/e2e/admin.spec.ts`
-approves and revokes a user against the built server, and grants admin with a
-reason and revokes it, with axe over each open modal.
+pager's position; and the user modal (M9.19): `?user=<id>` reading the user and
+their covens as the guard's session into a dialog, each name's link keeping the
+filter, and the notice with no dialog, and no read, for an id that is not one,
+and the notice for a user the service finds none of or the list leaves out.
+`tests/e2e/admin.spec.ts` approves and revokes a user against the built
+server, and grants admin with a reason and revokes it, with axe over each open
+modal; and, tagged `@story-19`, opens a user's modal from their name, finds
+their coven and role in it, no link to the coven and no Impersonate (the run
+registers none), axe over it, and Close back to the filtered list, then
+`?user=not-an-id` showing the notice and no dialog.

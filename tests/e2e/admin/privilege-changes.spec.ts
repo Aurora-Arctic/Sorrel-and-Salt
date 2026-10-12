@@ -45,92 +45,98 @@ test('a signed-in non-admin is refused at /admin/privilege-changes with the 403 
   await expect(page.getByRole('table')).toHaveCount(0);
 });
 
-test('an admin reads an approval back from the ledger, then narrows it', async ({ page }) => {
-  await makeSubject(page);
-  await signInAs(page, 'approving-admin@privilege-ledger.test', ['discord'], 'admin');
+test(
+  'an admin reads an approval back from the ledger, then narrows it',
+  { tag: '@story-61' },
+  async ({ page }) => {
+    await makeSubject(page);
+    await signInAs(page, 'approving-admin@privilege-ledger.test', ['discord'], 'admin');
 
-  // The change the ledger is to show, made where an admin makes it.
-  await page.goto(`/admin/users?query=${encodeURIComponent(SUBJECT_EMAIL)}`);
-  await page.getByRole('button', { name: `Approve ${SUBJECT_NAME}` }).click();
-  const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
-  await approving.getByRole('button', { name: 'Approve' }).click();
-  await expect(approving).toHaveCount(0);
+    // The change the ledger is to show, made where an admin makes it.
+    await page.goto(`/admin/users?query=${encodeURIComponent(SUBJECT_EMAIL)}`);
+    await page.getByRole('button', { name: `Approve ${SUBJECT_NAME}` }).click();
+    const approving = page.getByRole('dialog', { name: 'Approve Coven Creation' });
+    await approving.getByRole('button', { name: 'Approve' }).click();
+    await expect(approving).toHaveCount(0);
 
-  // By its tab on the People page, beside Users (MB.115).
-  const tab = page
-    .getByRole('navigation', { name: 'People' })
-    .getByRole('link', { name: 'Privilege Changes' });
-  await tab.click();
-  await expect(page).toHaveURL(/\/admin\/privilege-changes$/);
-  await expect(tab).toHaveAttribute('aria-current', 'page');
-  await expect(page.getByRole('form', { name: 'Filter Privilege Changes' })).toBeVisible();
+    // By its tab on the People page, beside Users (MB.115).
+    const tab = page
+      .getByRole('navigation', { name: 'People' })
+      .getByRole('link', { name: 'Privilege Changes' });
+    await tab.click();
+    await expect(page).toHaveURL(/\/admin\/privilege-changes$/);
+    await expect(tab).toHaveAttribute('aria-current', 'page');
+    await expect(page.getByRole('form', { name: 'Filter Privilege Changes' })).toBeVisible();
 
-  // Newest first: the approval heads the ledger, by the admin who made it.
-  const first = page.getByRole('row').nth(1);
-  await expect(first.getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
-  await expect(first.getByRole('cell').nth(2)).toHaveText('Coven Creation');
-  await expect(first.getByRole('cell').nth(3)).toHaveText('Granted');
-  await expect(first.getByRole('cell').nth(4)).toHaveText('By an admin');
-  await expect(first.getByRole('cell').nth(5)).toHaveText('Fixture Person');
-  await expect(first.getByRole('link', { name: SUBJECT_NAME })).toHaveAttribute(
-    'href',
-    `/admin/users?query=${encodeURIComponent(SUBJECT_EMAIL)}`,
-  );
-  // More than this one change: the seed's and the signed-in admin's own.
-  expect(await page.getByRole('row').count()).toBeGreaterThan(2);
+    // Newest first: the approval heads the ledger, by the admin who made it.
+    const first = page.getByRole('row').nth(1);
+    await expect(first.getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
+    await expect(first.getByRole('cell').nth(2)).toHaveText('Coven Creation');
+    await expect(first.getByRole('cell').nth(3)).toHaveText('Granted');
+    await expect(first.getByRole('cell').nth(4)).toHaveText('By an admin');
+    await expect(first.getByRole('cell').nth(5)).toHaveText('Fixture Person');
+    await expect(first.getByRole('link', { name: SUBJECT_NAME })).toHaveAttribute(
+      'href',
+      `/admin/users?query=${encodeURIComponent(SUBJECT_EMAIL)}`,
+    );
+    // More than this one change: the seed's and the signed-in admin's own.
+    expect(await page.getByRole('row').count()).toBeGreaterThan(2);
 
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
+    for (const colorScheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme });
+      await assertNoAccessibilityViolations(page);
+    }
+
+    // The search, by part of an address, then the privilege dropdown, a
+    // select-only box once the page has hydrated, which applies the moment a
+    // choice is picked.
+    await page.waitForLoadState('networkidle');
+    const filter = page.getByRole('form', { name: 'Filter Privilege Changes' });
+    await filter.getByLabel('Name or Email').fill('SUBJECT@privilege');
+    const privilege = filter.getByRole('combobox', { name: 'Privilege' });
+    const choices = filter.getByRole('listbox', { name: 'Privilege choices' });
+    await privilege.click();
+    await choices.getByRole('option', { name: 'Coven Creation', exact: true }).click();
+    await expect(page).toHaveURL(
+      /\/admin\/privilege-changes\?query=SUBJECT%40privilege&privilege=create_workspace$/,
+    );
+    await expect(page.getByRole('row')).toHaveCount(2);
+    await expect(page.getByRole('row').nth(1).getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
+
+    await privilege.click();
+    await choices.getByRole('option', { name: 'Admin', exact: true }).click();
+    await expect(page).toHaveURL(/privilege=admin$/);
+    await expect(page.getByRole('table')).toHaveCount(0);
     await assertNoAccessibilityViolations(page);
-  }
+  },
+);
 
-  // The search, by part of an address, then the privilege dropdown, a
-  // select-only box once the page has hydrated, which applies the moment a
-  // choice is picked.
-  await page.waitForLoadState('networkidle');
-  const filter = page.getByRole('form', { name: 'Filter Privilege Changes' });
-  await filter.getByLabel('Name or Email').fill('SUBJECT@privilege');
-  const privilege = filter.getByRole('combobox', { name: 'Privilege' });
-  const choices = filter.getByRole('listbox', { name: 'Privilege choices' });
-  await privilege.click();
-  await choices.getByRole('option', { name: 'Coven Creation', exact: true }).click();
-  await expect(page).toHaveURL(
-    /\/admin\/privilege-changes\?query=SUBJECT%40privilege&privilege=create_workspace$/,
-  );
-  await expect(page.getByRole('row')).toHaveCount(2);
-  await expect(page.getByRole('row').nth(1).getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
+test(
+  "a user row's privilege changes link opens the ledger searched for that user",
+  { tag: '@story-61' },
+  async ({ page }) => {
+    await signInAs(page, 'reading-admin@privilege-ledger.test', ['discord'], 'admin');
 
-  await privilege.click();
-  await choices.getByRole('option', { name: 'Admin', exact: true }).click();
-  await expect(page).toHaveURL(/privilege=admin$/);
-  await expect(page.getByRole('table')).toHaveCount(0);
-  await assertNoAccessibilityViolations(page);
-});
+    await page.goto(`/admin/users?query=${encodeURIComponent(SUBJECT_EMAIL)}`);
+    const row = page.getByRole('row', { name: new RegExp(SUBJECT_NAME) });
+    const icon = row.getByRole('link', { name: `Privilege changes for ${SUBJECT_NAME}` });
+    await icon.hover();
+    await expect(page.getByRole('tooltip')).toBeVisible();
+    for (const colorScheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme });
+      await assertNoAccessibilityViolations(page);
+    }
 
-test("a user row's privilege changes link opens the ledger searched for that user", async ({
-  page,
-}) => {
-  await signInAs(page, 'reading-admin@privilege-ledger.test', ['discord'], 'admin');
-
-  await page.goto(`/admin/users?query=${encodeURIComponent(SUBJECT_EMAIL)}`);
-  const row = page.getByRole('row', { name: new RegExp(SUBJECT_NAME) });
-  const icon = row.getByRole('link', { name: `Privilege changes for ${SUBJECT_NAME}` });
-  await icon.hover();
-  await expect(page.getByRole('tooltip')).toBeVisible();
-  for (const colorScheme of ['dark', 'light'] as const) {
-    await page.emulateMedia({ colorScheme });
+    await icon.click();
+    await expect(page).toHaveURL(
+      /\/admin\/privilege-changes\?query=subject%40privilege-ledger\.test$/,
+    );
+    await expect(
+      page.getByRole('form', { name: 'Filter Privilege Changes' }).getByLabel('Name or Email'),
+    ).toHaveValue(SUBJECT_EMAIL);
+    const rows = page.getByRole('row');
+    await expect(rows).toHaveCount(2);
+    await expect(rows.nth(1).getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
     await assertNoAccessibilityViolations(page);
-  }
-
-  await icon.click();
-  await expect(page).toHaveURL(
-    /\/admin\/privilege-changes\?query=subject%40privilege-ledger\.test$/,
-  );
-  await expect(
-    page.getByRole('form', { name: 'Filter Privilege Changes' }).getByLabel('Name or Email'),
-  ).toHaveValue(SUBJECT_EMAIL);
-  const rows = page.getByRole('row');
-  await expect(rows).toHaveCount(2);
-  await expect(rows.nth(1).getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
-  await assertNoAccessibilityViolations(page);
-});
+  },
+);

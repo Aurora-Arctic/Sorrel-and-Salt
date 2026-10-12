@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { entryValues } from '@/app/admin/compendium/entry-values';
+import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import { toInput } from '@/components/IngredientForm/values';
 import { citationText } from '@/lib/citation';
 import {
@@ -16,7 +16,7 @@ import { insertReference } from '../support/db/insert-reference';
 import { makeIngredient } from '../support/fixtures';
 import type { CompendiumWrite } from './types';
 
-// src/app/admin/compendium/entry-values.ts: the values `/admin/compendium`'s
+// src/app/(shell)/admin/compendium/entry-values.ts: the values `/admin/compendium`'s
 // edit modal opens with, read from the database. What they must hold is every
 // value and link of the entry, so that saving the form untouched sends the
 // entry back as it was: an edit that changes nothing changes nothing.
@@ -79,7 +79,7 @@ const everything = (): CompendiumWrite => ({
   description: 'An invented herb.',
   folkNames: ['Test Root', 'Fixture Leaf'],
   elements: ['spirit', 'air'],
-  planets: ['Venus', 'Moon'],
+  celestialBodies: ['Venus', 'Moon'],
   zodiacSigns: ['Taurus'],
   colors: ['Green', 'Pink'],
   deities: [{ deityId: hecate.id }],
@@ -94,7 +94,7 @@ const everything = (): CompendiumWrite => ({
       description: 'The dried herb.',
       safetyNotes: 'Not for burning.',
       elements: ['earth'],
-      planets: ['Saturn'],
+      celestialBodies: ['Saturn'],
       zodiacSigns: ['Virgo'],
       colors: ['Brown'],
       categoryIds: [healing],
@@ -108,7 +108,7 @@ const everything = (): CompendiumWrite => ({
       description: '',
       safetyNotes: '',
       elements: [],
-      planets: [],
+      celestialBodies: [],
       zodiacSigns: [],
       colors: [],
       categoryIds: [],
@@ -149,7 +149,7 @@ async function childrenOf(id: string) {
       where ingredient_id = ${id} order by variant_id nulls first`,
       // `updated_at` is the trigger's, as the row's is.
       sql`
-      select id, form, form_id, description, safety_notes, elements, planets, zodiac_signs, colors
+      select id, form, form_id, description, safety_notes, elements, celestial_bodies, zodiac_signs, colors
       from ingredient_variants where ingredient_id = ${id} and deleted_at is null`,
       sql`
       select reference_id, locator from reference_links
@@ -203,7 +203,7 @@ describe('entryValues', () => {
           description: 'The dried herb.',
           safetyNotes: 'Not for burning.',
           elements: ['earth'],
-          planets: [{ value: 'Saturn' }],
+          celestialBodies: [{ value: 'Saturn' }],
           zodiacSigns: [{ value: 'Virgo' }],
           colors: [{ value: 'Brown' }],
           categoryIds: [healing],
@@ -228,7 +228,7 @@ describe('entryValues', () => {
           description: '',
           safetyNotes: '',
           elements: [],
-          planets: [],
+          celestialBodies: [],
           zodiacSigns: [],
           colors: [],
           categoryIds: [],
@@ -239,7 +239,7 @@ describe('entryValues', () => {
       description: 'An invented herb.',
       folkNames: expect.arrayContaining([{ value: 'Test Root' }, { value: 'Fixture Leaf' }]),
       elements: ['spirit', 'air'],
-      planets: [{ value: 'Venus' }, { value: 'Moon' }],
+      celestialBodies: [{ value: 'Venus' }, { value: 'Moon' }],
       zodiacSigns: [{ value: 'Taurus' }],
       colors: [{ value: 'Green' }, { value: 'Pink' }],
       deities: [{ value: 'Hecate', link: { id: hecate.id, tradition: hecate.tradition } }],
@@ -305,7 +305,7 @@ describe('entryValues', () => {
       variants: [],
       folkNames: [],
       elements: [],
-      planets: [],
+      celestialBodies: [],
       deities: [],
       substitutes: [],
       references: [],

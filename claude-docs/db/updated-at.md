@@ -59,7 +59,7 @@ An event trigger would attach one automatically on `CREATE TABLE`, but
 (["Migrations and scripts"](migrations-and-scripts.md)). So **a new audited table adds its own
 `CREATE OR REPLACE TRIGGER` line in its own migration** — one line, copied.
 `0023_correspondence-vocabularies.sql` (MB.92) is the first to do it, for
-`planets` and `zodiac_signs`.
+`celestial_bodies` and `zodiac_signs`.
 
 What makes forgetting that a failing test rather than a review note is
 `tests/db/updated-at-trigger.test.ts`, the catalogue-introspection guard the

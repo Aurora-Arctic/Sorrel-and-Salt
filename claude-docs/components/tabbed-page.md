@@ -1,9 +1,9 @@
 # TabbedPage
 
 `src/components/TabbedPage/` — a page divided into tabs, each tab at its own
-address: the page's `h1` with the open tab's action at the end of its line,
-a row of links, one per tab, drawn as a segmented control, and the open
-tab's content beneath. On the owner's call after MB.115's design review, each admin
+address: the page's `h1` with a row of links, one per tab, drawn as small
+pills beside it on the same line, the open tab's action at the line's end, and
+the open tab's content beneath. On the owner's call after MB.115's design review, each admin
 list shares a page with the group list that organises it: the Categories page
 has a Categories tab at `/admin/categories` and a Groups tab at
 `/admin/category-groups`. Every admin page but the compendium is one
@@ -17,7 +17,7 @@ has a Categories tab at `/admin/categories` and a Groups tab at
 | ---------- | ------------------------------------------------------------------------------------ |
 | `title`    | The page's `h1`, title case, which names the tabs' nav too: "Categories"             |
 | `tabs`     | Each tab's `href`, short label ("Groups", "Traditions") and `filtered`, in row order |
-| `action`   | Optional: the open tab's one action, beside the heading                              |
+| `action`   | Optional: the open tab's one action, at the end of the heading's line                |
 | `children` | The open tab's content                                                               |
 
 Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
@@ -40,20 +40,22 @@ it renders.
 - **Pressing a tab does not change the page.** On the admin pages a route
   group, a folder in parentheses that adds nothing to the address (Next's
   "Route Groups"), holds the page's tabs, and its `layout.tsx` renders this
-  component through `tabbedLayout(key)` (`src/app/admin/tabbed-layout.tsx`, over
-  `ADMIN_PAGES`): `src/app/admin/(categories)/layout.tsx` is one line around `categories/` and
+  component through `tabbedLayout(key)` (`src/app/(shell)/admin/tabbed-layout.tsx`, over
+  `ADMIN_PAGES`): `src/app/(shell)/admin/(categories)/layout.tsx` is one line around `categories/` and
   `category-groups/`. A layout stays mounted while the address moves between
   its child routes, so the heading and the tab row stay put and only the
   action and the content swap.
-- **The action belongs to the tab, beside the page's heading** (the owner's
+- **The action belongs to the tab, at the end of the page's heading line** (the owner's
   call): Add Category on Categories, Add Group on its Groups tab, Add Form,
   Add Deity, Add Tradition, Add Celestial Body, Add Zodiac Sign, Pause Admin Changes
   on Users, Invite Admin on Invitations, and nothing on Privilege Changes.
-  The heading is drawn by `PageHeader` ([`page-header.md`](page-header.md)),
-  the action at the end of its line. Each route group's layout takes the
+  The heading is drawn by `PageHeader` ([`page-header.md`](page-header.md));
+  the pills and the action are handed to it together as its trailing
+  children, a fragment, so the header needs no slot of its own and its API
+  is unchanged. They fall in the order heading, pills, action. Each route group's layout takes the
   action from an `@action` slot, a Next parallel route
   (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/parallel-routes.md`):
-  `src/app/admin/(categories)/@action/categories/page.tsx` renders Add
+  `src/app/(shell)/admin/(categories)/@action/categories/page.tsx` renders Add
   Category beside `categories/page.tsx`'s list, and so on, one slot page per
   tab. A slot page is a page, so it renders on the server with the rest of a
   direct request, and Next renders it again on every client-side navigation
@@ -61,13 +63,13 @@ it renders.
   alike, since a page segment's key carries its search parameters. Every tab
   has a slot page, Privilege Changes one that renders nothing, because on a
   client-side navigation Next keeps a slot's last page where the new address
-  has none; each slot's `default.tsx` (the shared `no-action.tsx`), what Next asks for on a full load it
+  has none; each slot's `default.tsx` (the shared `src/app/(shell)/no-action.tsx`, which the coven's People group uses too), what Next asks for on a full load it
   cannot match, renders nothing too. A slot page calls the guard as every
   admin page does. The value and group pages' actions are `ValueAction` and
   `GroupAction`, beside `ValuePage` and `GroupPage`, reading the same
   address the same way, so the Add keeps the list's filter and cursor. Pause
   Admin Changes reads the pause through a per-request cache the Users page
-  shares (`src/app/admin/(people)/pause-state.ts`), so it is read once.
+  shares (`src/app/(shell)/admin/(people)/pause-state.ts`), so it is read once.
   Invite Admin is a link to `?invite`, which opens its form over the list
   ([`admin-invitations.md`](admin-invitations.md)).
 - **A direct request renders the whole page on the server** (the owner's
@@ -103,7 +105,7 @@ it renders.
   draws only the heading and the tabs, both from `ADMIN_PAGES`
   (`src/components/AdminNav/sections.ts`). A layout does not re-run on a
   tab press, so a guard there would add nothing; the guard stays in
-  `src/app/admin/layout.tsx` and every page
+  `src/app/(shell)/admin/layout.tsx` and every page
   ([`auth/admin-guard.md`](../auth/admin-guard.md)).
 - **A filter and the pager show the same loading state, within the tab**
   (the owner's call at MB.115's review). Each list's
@@ -111,17 +113,18 @@ it renders.
   in place of the list under the filter, and greys the filter row as this
   greys the tab row, `aria-busy` on it and its controls `aria-disabled`;
   the tab row stays live. A modal's `?edit=` or `?new` link navigates
-  within the tab with neither, so the list stays in place behind it.
+  within the tab with neither, so the list stays in place behind it; the
+  modal shows its own skeleton ([`modal.md`](modal.md), "Opening at once").
 - **A nav of links, not a `role="tablist"`.** Each tab navigates to another
   address. A tablist promises arrow-key movement between panels shown in
   place, which these are not. The row is a `nav` named by the page's title,
   and the open tab's link carries `aria-current="page"`, found from the
   address by `usePathname()` with the admin nav's rule (`isAtPath` in
   `src/lib/at-path.ts`): the tab's own address or one beneath it, the
-  first such tab. It looks like a segmented control, and is still a nav: a
+  first such tab. It looks like a small group of pills, and is still a nav: a
   look does not change what pressing a tab does. So `tab-links.tsx` is the
   one client part; the rest renders on the server.
-- **Each tab names itself in its `page.tsx` `metadata.title`** ("Category Groups"); `src/app/admin/layout.tsx`
+- **Each tab names itself in its `page.tsx` `metadata.title`** ("Category Groups"); `src/app/(shell)/admin/layout.tsx`
   sets `title.template`, so the tab shows "Category Groups — Admin — Sorrel & Salt".
 
 ## Styling
@@ -129,32 +132,39 @@ it renders.
 `index.scss`, imported by `index.tsx`.
 
 - **The heading line** is the `.page-header` primitive
-  ([`styling.md`](../styling.md), "Buttons"): the action at the end of the
-  heading's line, and how it spans the line at a phone's width is
-  [`page-header.md`](page-header.md#styling). The action's wrapper, `.tabbed-page__action`, spans it with its
-  action, and is taken out of the line when a tab has none. An action that
-  wraps its button, the pause's row or a locked control, spans its button
-  too: the `.page-header` primitive makes any wrapper that is not a bare
-  button a flex box whose children grow to the line, and a locked control's
-  own button, a level deeper, does so in `UserList/controls.scss`, so
-  Pause Admin Changes and a locked Invite Admin span the line as an Add
-  link does. The line sits
-  `space(4)` above the tab row, which sits `space(5)` above the content.
-- **The tab row is a segmented control** (the owner's call at MB.115's
-  review, over an underline bar and folder tabs): one rounded track on the
-  card surface, edged in the muted ink 35% into the card so it holds on the
-  light page, whose ground is close to the card's; each tab a segment in
-  the muted ink at weight 500, `space(2)` by `space(4)` round its label,
-  turning to the body ink on hover; the open tab a raised pill, the accent
-  18% into the card under `$shadow-floating`, edged 1px in the accent, its
-  label in the body ink. The fill alone sits under WCAG 1.4.11's 3:1 against
-  the track (1.40:1 dark, 1.28:1 light); the edge measures 7.23:1 and
-  5.17:1, and the open label on the fill 9.60:1 and 11.68:1. The two mixes
-  are local to the stylesheet, since nothing else uses them; `tests/scss/tokens.test.ts` holds the open label and the edge
-  to their floors in both themes. The page ground would sit darker than the
-  track in the light theme and read as a dent rather than a pill. The row
-  is not the `.link-row` primitive, whose underline it does not draw; it
-  clears the list's marker, indent and item margins itself.
+  ([`styling.md`](../styling.md), "Buttons"): the heading, then the pills,
+  then the action pushed to the end by an auto margin. The pills are centred on
+  the line and not brought down to the heading's letters as an action is. At
+  the page header's narrow width (28rem of its own, `$narrow-column`; how the
+  action then sits is [`page-header.md`](page-header.md#styling)) the
+  pills drop under the heading at the same size, not stretched to the line as
+  an action is: the selector is doubled to outweigh the primitive's narrow
+  rules. When the header holds the Add, a plus on the heading's line from
+  `$tabbed-plus-width` down, the pills stay on the line beside it until
+  `$tabbed-reflow-width`, a separate threshold (the owner's call, so the two
+  are set apart), where the heading takes the line less the plus and the
+  pills are `order`ed after it so they drop beneath. Between `$tabbed-reflow-width` and `$tabbed-plus-width` (536px to 680px) the heading yields first: its basis is zero, so a long heading wraps its own words rather than sending the plus to a line of its own. The plus has a floor, `$add-below-width` (350px of the header's own width): at or under it the Add is a labelled button again, beneath the heading at its natural width, with the pills on a line of their own below it. The action's wrapper, `.tabbed-page__action`, is taken out of the
+  line when a tab has none. Any other action, the pause's row or a locked control, keeps the heading's line at its end, and from `$tabbed-reflow-width-labelled` (700px of the header's own width) down the pills drop beneath the two at their own size, a line break forced by a pseudo-element since a flex box cannot otherwise give an item a line of its own at its own width (the pills themselves take back one row gap with a negative top margin, because the empty line the break makes would otherwise be paid a gap above and below it, so the pills sit one gap under the heading in every band); the two keep the line through the forms' column (the heading gives up the line the primitive hands it there) until `$tabbed-action-below-width` (400px of the header's own width), where the action goes beneath the heading at its natural width and the line's start, the wrapper's auto margin cancelled. This reverses MB.115's spanning action (the owner's calls at MB.7's review, 2026-10-12). The header sits `space(5)` above the
+  content.
+- **The pills** (MB.7, drawn in its design review; they were a larger
+  segmented control until then): one rounded track, `2.25rem` tall, in the
+  quiet fill (`$fill-quiet`) edged by a `$hairline`, with `0.125rem` of padding round the pills; each pill the caption
+  size at weight 500 with `space(3)` either side of its label, in the muted
+  ink, turning to the body ink on hover; the open tab a pill, the accent 18%
+  into the card, edged 1px in the accent, its label in the body ink. The
+  fill alone sits under WCAG 1.4.11's 3:1 against the track, so the edge
+  carries it. The two mixes are local to the stylesheet;
+  `tests/scss/tokens.test.ts` holds the open label and edge, and the muted
+  labels on the track, to their floors in both themes. The pill has no shadow
+  now. The row is not the `.link-row` primitive, whose underline it does not
+  draw; it clears the list's marker, indent and item margins itself.
+- **Each pill's hit area is a control tall.** The pill is smaller than
+  `$control-height` (2.78rem), so a transparent `::before` pads each link
+  back to it, above and below. The row inside the track is itself a control
+  tall, centred on the track and overflowing it equally, and its scrollport is
+  where that padding lives: a scrolling box clips whatever sticks out of it,
+  so the padding has to sit inside the row rather than outside the track. A
+  press in the strip above or below a pill therefore counts as a press on it.
 - **The pill slides.** It is one element beneath the links, placed by
   `tab-links.tsx` under the open tab, or the pressed one while it is on
   its way, and sliding there over 250ms; under `prefers-reduced-motion:
@@ -164,41 +174,35 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   Transition: Next's (`node_modules/next/dist/docs/01-app/02-guides/view-transitions.md`)
   rides on an experimental flag and animates whole-page snapshots, and a
   tab press should move one pill.
-- **Keyboard focus** is the accent ring, drawn 2px inside the segment rather
+- **Keyboard focus** is the accent ring, drawn 2px inside the pill rather
   than round it, where the track would clip it.
-- **Pressed**, for as long as a pointer is down on a segment, the pill's
-  fill comes under its label at once and the segment sinks a pixel, so a
-  press answers before the pill slides over. A tap marks it too, through
+- **Pressed**, for as long as a pointer is down on a pill, the pill's fill
+  comes under its label at once and the pill sinks a pixel, so a press
+  answers before the pill slides over. A tap marks it too, through
   `pressFeedback` (`src/lib/press-feedback.ts`; [`styling.md`](../styling.md),
-  "Buttons"), since a phone applies `:active` late or not at all. A
-  disabled segment shows no pressed look.
-- **At a phone's width** (under 28rem, `$narrow-column`, of the nav's own
-  width, the nav being a size container, as the page header stacks under
-  28rem of its own), the track spans the line and the segments grow to share
-  it from their own widths, never under them. At every width a segment keeps
-  its label on one line, and a row longer than its column scrolls sideways
-  inside the track rather than wrapping or squeezing: the track's rounded
-  edge stays put and clips the segments, and the page never scrolls
-  sideways. People's three tabs need 403px and get 309px at 375. The
+  "Buttons"), since a phone applies `:active` late or not at all. A disabled
+  pill shows no pressed look.
+- **A row too long for its line scrolls.** A pill keeps its label on one line
+  at every width, and a row longer than its line scrolls sideways inside the
+  track rather than wrapping or squeezing: the track's rounded edge stays put
+  and clips the pills, and the page never scrolls sideways. People's three
+  tabs need about 290px and fit at 375, so this is a safeguard. The
   scrollbar is hidden, since it would cross the pill's foot inside a track
-  this thin and a phone draws none at rest; what says there is more is the
-  label cut off at the edge and a shade on that side, the muted ink 45%
-  into nothing, shown only on a side with more to scroll to (the
-  scroll-shadow pattern: covers in the track's fill ride with the segments,
-  the shades stay with the track, no script). When the page loads, and when
-  the pill moves, `tab-links.tsx` centres its tab in the track by setting
-  the track's `scrollLeft`, never `scrollIntoView()`, which would scroll
-  the page too, and again when the web font arrives or the track changes
-  width. A keyboard focus moving along the row is scrolled into view by
-  the browser, clear of the shade by the track's `scroll-padding-inline`.
+  this thin; the label cut off at the edge says there is more. (The earlier
+  design also drew a shade at an edge with more to scroll to; the shorter
+  track dropped it.) When the page loads, and when the pill moves,
+  `tab-links.tsx` centres its tab in the track by setting the track's
+  `scrollLeft`, never `scrollIntoView()`, which would scroll the page too, and
+  again when the web font arrives or the track changes width. A keyboard focus
+  moving along the row is scrolled into view by the browser, clear of the edge
+  by `scroll-padding-inline`.
 - **A tab while one is on its way** takes the muted, faded look of a
   disabled control ([`styling.md`](../styling.md), "Disabled is dashed and
   faded"): the muted ink at 55% and the not-allowed cursor, hover changing
   nothing. The pill, on the pressed tab by then, fades with them, its
-  colour taken out (`grayscale`) and its shadow gone, so it reads as on its
-  way rather than arrived; its edge then measures about 3.07:1 dark and
-  2.30:1 light against the track, under 3:1 in the light theme, while every
-  tab is disabled. The action beside the heading fades to 55% with them and
+  colour taken out (`grayscale`), so it reads as on its way rather than
+  arrived; its edge then falls under 3:1 against the track in the light
+  theme, while every tab is disabled. The action beside the heading fades to 55% with them and
   loses its colour, so a solid button greys as the tabs do.
 - **The content** is a column `space(5)` apart, as `.list-frame` spaces a
   list's.
@@ -219,8 +223,10 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 - **Its fill** is the muted ink 18% into the card surface, as the combobox's
   quiet fills are, so both themes carry it on the page and on a card; its
   shimmer, a band 7% into the card surface, passes across every shape every
-  1.4s. The fill is the `$fill-quiet` token; the shimmer is a local
-  `color-mix` of existing tokens, and no text sits on either. The filter's
+  1.4s. The fill is the `$fill-quiet` token; the shimmer is the shared
+  `skeleton-shape` mixin (`src/scss/_mixins.scss`, keyframes
+  `skeleton-shimmer` in `_primitives.scss`; M9.18 moved it there, for the
+  modal's skeleton to share), a `color-mix` of existing tokens, and no text sits on either. The filter's
   bars and the pager's stand at `$control-height`, and the filter's fields
   at `$filter-choice-width`, so the skeleton is as tall and wide as the
   controls that replace it.
@@ -241,28 +247,26 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
 `Admin / Tabbed Page`: the People page under the admin nav with its
-Invitations tab open and Invite Admin beside the heading, as
-`/admin/invitations` draws it. `Default`; `PhoneDark` and `PhoneLight` at
-375px, Invite Admin across the line beneath the heading and the three
-segments running past the track's end; `PhoneScrolled` at 375px, on
-Privilege Changes, the last tab, so the row loads scrolled to its end with
-Users cut off and shaded at the start; and `LoadingState` with
-`LoadingPhoneDark` and `LoadingPhoneLight`, Users on its way: the action
-and the row greyed out, the pill moved to Users in its pending look, over
-its skeleton with the filter row, the rows as cards at 375px; and
-`LoadingUnfiltered`, the skeleton without the filter row. Hover, focus and
-the pressed look are real input, so no story holds them. The workshop's stub
-router goes nowhere, so those stories provide `TabSwitchContext` above the
-page, holding a tab on its way; the stub `usePathname` says which address is
-open ([`workshop.md`](../workshop.md), ".ladle/"). The admin lists' own stories
-(`UserList`, `AdminInvitations`, `PrivilegeLedger`, `GroupedValueList`'s
-phone pair) sit in their tabbed page too, each with its tab's action.
+Invitations tab open and the pills beside the heading, Invite Admin at the
+end of the line, as `/admin/invitations` draws it. `Default`; `PhoneDark` and
+`PhoneLight` at 375px, the pills under the heading and Invite Admin at its own width at the line's start; `AddAsPlus` in a frame 600px wide, the Add as a plus at the heading's end with the pills on the line; `AddBeneathAtThreeFifty` in a frame 382px wide, the Add labelled again beneath the heading with the pills beneath it; `PhoneScrolled` at 375px, on Privilege Changes, the last
+tab, with no action; and `LoadingState` with `LoadingPhoneDark` and
+`LoadingPhoneLight`, Users on its way: the action and the row greyed out, the
+pill moved to Users in its pending look, over its skeleton with the filter row,
+the rows as cards at 375px; and `LoadingUnfiltered`, the skeleton without the
+filter row. Hover, focus and the pressed look are real input, so no story
+holds them. The workshop's stub router goes nowhere, so those stories provide
+`TabSwitchContext` above the page, holding a tab on its way; the stub
+`usePathname` says which address is open ([`workshop.md`](../workshop.md),
+".ladle/"). The admin lists' own stories (`UserList`, `AdminInvitations`,
+`PrivilegeLedger`, `GroupedValueList`'s phone pair) sit in their tabbed page
+too, each with its tab's action.
 
 ## Testing
 
 `tests/components/TabbedPage/index.test.tsx`, with `usePathname` mocked:
 the heading inside `main` with the action beside it, neither a tab nor the
-content, a link per tab at its own address in order, no tablist, the content
+content, the tabs on the heading's line between the two, a link per tab at its own address in order, no tablist, the content
 shown; which tab is open for a given address, its own,
 one beneath it, and none for an address in no tab; a tab marked pressed
 while a pointer, a touch included, is down on it, and not once it lifts or
@@ -277,7 +281,7 @@ press is not intercepted. Where the pill and the scroll land is layout,
 which jsdom has none of, so the workshop's screenshots and measurements
 show them. `tests/components/AdminNav/index.test.tsx` checks a page's nav entry
 is current on each of its tabs. The page tests render each tab's slot page
-beside its page, as the layout does: `tests/app/admin/value-page.test.tsx`
+beside its page, as the layout does: `tests/app/(shell)/admin/value-page.test.tsx`
 and `group-page.test.tsx` find the Add keeping the filter and cursor,
 `(people)/users/page.test.tsx` the switch, and
 `(people)/invitations/page.test.tsx` Invite Admin and its `?invite`. How

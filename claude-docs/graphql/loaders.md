@@ -17,7 +17,9 @@ merely absent:
   loads: `membershipsByUser` (`coven`, for `User.memberships`),
   `providersByUser` (`identity`, for `User.providers`, MB.52),
   `usersByIdForAdmin` (`identity`, for `PrivilegeChange.subject` and
-  `.actor`, MB.199),
+  `.actor`, MB.199), `usersById` (`identity`, a co-member's display name, MB.10,
+  landed ahead of the fields that read it, M6.11's `WorkspaceMember.user` and
+  M6.18's last editor; [`auth/display-names.md`](../auth/display-names.md)),
   `categoriesByIngredient`, `folkNamesByIngredient`,
   `substitutesByIngredient`, `deitiesByIngredient`, `referencesByIngredient`
   and `variantsByIngredient` (`ingredients`, for `Ingredient.categories`,
@@ -28,8 +30,9 @@ merely absent:
   and `categoryGroupsById`, `ingredientFormGroupsById`, `deityTraditionsById`
   and `ingredientFormsById` (`vocabulary`, for `Category.group`,
   `IngredientFormValue.group`, `Deity.tradition` and `IngredientVariant.formChoice`;
-  the last two MB.167's); M6.11
-  `membersByWorkspace`, MB.9 `ingredientsById` and MB.10 `usersById`, the members' display name, follow. A test that builds a context
+  the last two MB.167's); MB.9 `ingredientsById` follows. M6.11 adds no
+  `membersByWorkspace`: `Workspace.members` reads a coven at a time
+  ([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)). A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the
   `Loaders` type no longer admits. A factory is written in its module's `loaders/`, exported
   through the module's index, and spread into `LOADERS` here
@@ -52,10 +55,12 @@ merely absent:
   `ingredientFormsById` is keyed by id too, but answers null for a form no
   longer curated, since a retired pick reads as no pick rather than an error.
 - **A null session is not always a refusal.** `membershipsByUser`,
-  `providersByUser` and `usersByIdForAdmin` refuse every key signed out, and
-  the last two every key to a non-admin: each is `defineSignedInLoader(batch)`,
-  which answers `Forbidden` in every slot without a session and hands `batch`
-  a `Session` otherwise, so the three services never see a null (MB.212). The ingredient loaders answer a compendium entry for
+  `providersByUser`, `usersByIdForAdmin` and `usersById` refuse every key
+  signed out, and `providersByUser` and `usersByIdForAdmin` every key to a
+  non-admin: each is `defineSignedInLoader(batch)`, which answers `Forbidden`
+  in every slot without a session and hands `batch` a `Session` otherwise, so
+  the four services never see a null (MB.212). `usersById` refuses nobody
+  signed in: a stranger's id answers `null` in its own slot. The ingredient loaders answer a compendium entry for
   anyone, since the compendium is the public surface (MB.80), and refuse a
   workspace entry's key with `Forbidden` in its own slot; the group loaders
   and `ingredientFormsById` answer anyone, since a vocabulary is public

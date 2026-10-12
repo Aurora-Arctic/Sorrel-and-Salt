@@ -16,6 +16,8 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
 type Documents = {
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeAdminInvitationDocument,
     "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n": typeof types.CreateAdminInvitationDocument,
+    "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceDocument,
+    "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.DeleteWorkspaceDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": typeof types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateCategoryGroupDocument,
@@ -35,9 +37,9 @@ type Documents = {
     "\n  mutation CreateDeity($input: DeityInput!) {\n    createDeity(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateDeityDocument,
     "\n  mutation UpdateDeity($id: ID!, $input: DeityInput!) {\n    updateDeity(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.UpdateDeityDocument,
     "\n  mutation DeleteDeity($id: ID!) {\n    deleteDeity(id: $id)\n  }\n": typeof types.DeleteDeityDocument,
-    "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": typeof types.CreatePlanetDocument,
-    "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdatePlanetDocument,
-    "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": typeof types.DeletePlanetDocument,
+    "\n  mutation CreateCelestialBody($input: CelestialBodyInput!) {\n    createCelestialBody(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateCelestialBodyDocument,
+    "\n  mutation UpdateCelestialBody($id: ID!, $input: CelestialBodyInput!) {\n    updateCelestialBody(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateCelestialBodyDocument,
+    "\n  mutation DeleteCelestialBody($id: ID!) {\n    deleteCelestialBody(id: $id)\n  }\n": typeof types.DeleteCelestialBodyDocument,
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
@@ -52,16 +54,22 @@ type Documents = {
     "\n  query Reference($workspaceId: ID, $id: ID!) {\n    reference(workspaceId: $workspaceId, id: $id) {\n      id\n      kind\n      title\n      authors\n      container\n      contributors\n      edition\n      volume\n      issue\n      series\n      place\n      publisher\n      published\n      pages\n      host\n      url\n      modified\n      accessed\n      note\n    }\n  }\n": typeof types.ReferenceDocument,
     "\n  fragment ReferenceRow on Reference {\n    id\n    citation\n    isGlobal\n    kind\n    authors\n    title\n    container\n  }\n": typeof types.ReferenceRowFragmentDoc,
     "\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          ...ReferenceRow\n        }\n      }\n    }\n  }\n": typeof types.ReferenceSuggestionsDocument,
-    "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      planets\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        planets\n        zodiacSigns\n        colors\n      }\n    }\n  }\n": typeof types.IngredientSummaryDocument,
+    "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      celestialBodies\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        celestialBodies\n        zodiacSigns\n        colors\n      }\n    }\n  }\n": typeof types.IngredientSummaryDocument,
     "\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": typeof types.FormSuggestionsDocument,
     "\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": typeof types.CommonNameSuggestionsDocument,
-    "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": typeof types.PlanetSuggestionsDocument,
+    "\n  query CelestialBodySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    celestialBodySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": typeof types.CelestialBodySuggestionsDocument,
     "\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": typeof types.ZodiacSuggestionsDocument,
     "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n": typeof types.DeitySuggestionsDocument,
     "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.IngredientSuggestionsDocument,
     "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": typeof types.CompendiumSubstitutesDocument,
     "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": typeof types.AcceptInvitationDocument,
+    "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n": typeof types.CreateInvitationDocument,
+    "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.LeaveWorkspaceDocument,
+    "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": typeof types.PromoteSuccessorDocument,
+    "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": typeof types.RemoveMemberDocument,
+    "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": typeof types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": typeof types.SetNameDocument,
+    "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
@@ -71,6 +79,8 @@ type Documents = {
 const documents: Documents = {
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": types.RevokeAdminInvitationDocument,
     "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n": types.CreateAdminInvitationDocument,
+    "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceDocument,
+    "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": types.DeleteWorkspaceDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryGroupDocument,
     "\n  mutation UpdateCategoryGroup($id: ID!, $input: CategoryGroupInput!) {\n    updateCategoryGroup(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateCategoryGroupDocument,
@@ -90,9 +100,9 @@ const documents: Documents = {
     "\n  mutation CreateDeity($input: DeityInput!) {\n    createDeity(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateDeityDocument,
     "\n  mutation UpdateDeity($id: ID!, $input: DeityInput!) {\n    updateDeity(id: $id, input: $input) {\n      id\n      slug\n    }\n  }\n": types.UpdateDeityDocument,
     "\n  mutation DeleteDeity($id: ID!) {\n    deleteDeity(id: $id)\n  }\n": types.DeleteDeityDocument,
-    "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n": types.CreatePlanetDocument,
-    "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdatePlanetDocument,
-    "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n": types.DeletePlanetDocument,
+    "\n  mutation CreateCelestialBody($input: CelestialBodyInput!) {\n    createCelestialBody(input: $input) {\n      id\n    }\n  }\n": types.CreateCelestialBodyDocument,
+    "\n  mutation UpdateCelestialBody($id: ID!, $input: CelestialBodyInput!) {\n    updateCelestialBody(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateCelestialBodyDocument,
+    "\n  mutation DeleteCelestialBody($id: ID!) {\n    deleteCelestialBody(id: $id)\n  }\n": types.DeleteCelestialBodyDocument,
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
@@ -107,16 +117,22 @@ const documents: Documents = {
     "\n  query Reference($workspaceId: ID, $id: ID!) {\n    reference(workspaceId: $workspaceId, id: $id) {\n      id\n      kind\n      title\n      authors\n      container\n      contributors\n      edition\n      volume\n      issue\n      series\n      place\n      publisher\n      published\n      pages\n      host\n      url\n      modified\n      accessed\n      note\n    }\n  }\n": types.ReferenceDocument,
     "\n  fragment ReferenceRow on Reference {\n    id\n    citation\n    isGlobal\n    kind\n    authors\n    title\n    container\n  }\n": types.ReferenceRowFragmentDoc,
     "\n  query ReferenceSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    referenceSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          ...ReferenceRow\n        }\n      }\n    }\n  }\n": types.ReferenceSuggestionsDocument,
-    "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      planets\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        planets\n        zodiacSigns\n        colors\n      }\n    }\n  }\n": types.IngredientSummaryDocument,
+    "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      celestialBodies\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        celestialBodies\n        zodiacSigns\n        colors\n      }\n    }\n  }\n": types.IngredientSummaryDocument,
     "\n  query FormSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    formSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          group\n          curated\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": types.FormSuggestionsDocument,
     "\n  query CommonNameSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    commonNameSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          claimants {\n            name\n            canonicalName\n          }\n        }\n      }\n    }\n  }\n": types.CommonNameSuggestionsDocument,
-    "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": types.PlanetSuggestionsDocument,
+    "\n  query CelestialBodySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    celestialBodySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": types.CelestialBodySuggestionsDocument,
     "\n  query ZodiacSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    zodiacSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n": types.ZodiacSuggestionsDocument,
     "\n  query DeitySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    deitySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          value\n          description\n          tradition\n          curated\n        }\n      }\n    }\n  }\n": types.DeitySuggestionsDocument,
     "\n  query IngredientSuggestions($workspaceId: ID!, $query: String, $first: Int) {\n    ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": types.IngredientSuggestionsDocument,
     "\n  query CompendiumSubstitutes($query: String, $first: Int) {\n    compendium(query: $query, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          description\n          isGlobal\n          variants {\n            id\n            form\n            formChoice {\n              id\n              group {\n                id\n                name\n              }\n            }\n          }\n        }\n      }\n    }\n  }\n": types.CompendiumSubstitutesDocument,
     "\n  mutation AcceptInvitation($token: String!) {\n    acceptInvitation(token: $token) {\n      id\n    }\n  }\n": types.AcceptInvitationDocument,
+    "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n": types.CreateInvitationDocument,
+    "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n": types.LeaveWorkspaceDocument,
+    "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n": types.PromoteSuccessorDocument,
+    "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": types.RemoveMemberDocument,
+    "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": types.SetNameDocument,
+    "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.RevokeInvitationDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
@@ -146,6 +162,14 @@ export function graphql(source: "\n  mutation RevokeAdminInvitation($id: ID!) {\
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n"): (typeof documents)["\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -225,15 +249,15 @@ export function graphql(source: "\n  mutation DeleteDeity($id: ID!) {\n    delet
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreatePlanet($input: PlanetInput!) {\n    createPlanet(input: $input) {\n      id\n    }\n  }\n"];
+export function graphql(source: "\n  mutation CreateCelestialBody($input: CelestialBodyInput!) {\n    createCelestialBody(input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateCelestialBody($input: CelestialBodyInput!) {\n    createCelestialBody(input: $input) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {\n    updatePlanet(id: $id, input: $input) {\n      id\n    }\n  }\n"];
+export function graphql(source: "\n  mutation UpdateCelestialBody($id: ID!, $input: CelestialBodyInput!) {\n    updateCelestialBody(id: $id, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateCelestialBody($id: ID!, $input: CelestialBodyInput!) {\n    updateCelestialBody(id: $id, input: $input) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeletePlanet($id: ID!) {\n    deletePlanet(id: $id)\n  }\n"];
+export function graphql(source: "\n  mutation DeleteCelestialBody($id: ID!) {\n    deleteCelestialBody(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteCelestialBody($id: ID!) {\n    deleteCelestialBody(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -293,7 +317,7 @@ export function graphql(source: "\n  query ReferenceSuggestions($workspaceId: ID
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      planets\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        planets\n        zodiacSigns\n        colors\n      }\n    }\n  }\n"): (typeof documents)["\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      planets\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        planets\n        zodiacSigns\n        colors\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      celestialBodies\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        celestialBodies\n        zodiacSigns\n        colors\n      }\n    }\n  }\n"): (typeof documents)["\n  query IngredientSummary($id: ID!, $workspaceId: ID) {\n    ingredient(id: $id, workspaceId: $workspaceId) {\n      id\n      name\n      canonicalName\n      description\n      nomenclature\n      isGlobal\n      slug\n      elements\n      celestialBodies\n      zodiacSigns\n      colors\n      variants {\n        id\n        form\n        elements\n        celestialBodies\n        zodiacSigns\n        colors\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -305,7 +329,7 @@ export function graphql(source: "\n  query CommonNameSuggestions($workspaceId: I
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PlanetSuggestions($workspaceId: ID, $query: String, $first: Int) {\n    planetSuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query CelestialBodySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    celestialBodySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query CelestialBodySuggestions($workspaceId: ID, $query: String, $first: Int) {\n    celestialBodySuggestions(workspaceId: $workspaceId, query: $query, first: $first) {\n      edges {\n        node {\n          value\n          description\n          curated\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -329,7 +353,31 @@ export function graphql(source: "\n  mutation AcceptInvitation($token: String!) 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {\n    createInvitation(workspaceId: $workspaceId, email: $email, role: $role) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n"): (typeof documents)["\n  mutation LeaveWorkspace($workspaceId: ID!) {\n    leaveWorkspace(workspaceId: $workspaceId)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n"): (typeof documents)["\n  mutation PromoteSuccessor($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n"): (typeof documents)["\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n"): (typeof documents)["\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

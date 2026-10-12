@@ -1,16 +1,18 @@
 import 'server-only';
-import { randomBytes } from 'node:crypto';
 import {
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,
+  findOneById,
   findUserByEmail,
   withAudit,
 } from '../../../db/repository';
 import type { InvitationRow, SiteInvitationFilter } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
+import { newToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { normaliseEmail, validateEmailAddress } from './email';
+import { users } from '../schema/users';
 import { assertSiteAdmin } from './site-admin';
 import { adminDeclaration } from './admin-changes';
 import { assertAdminChangesOpen } from './admin-role-pause';
@@ -23,14 +25,6 @@ import type { AdminInvitationFilter, InvitationSender } from '../types';
 // (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 const REFUSAL = 'Only a site admin may invite or withdraw an admin invitation';
-
-/**
- * 32 bytes from the CSPRNG, base64url: unguessable, and safe in a path. Never
- * `Math.random()` (CLAUDE.md, "Invitation tokens").
- */
-function newToken(): string {
-  return randomBytes(32).toString('base64url');
-}
 
 /**
  * Invites `input` to become an admin: a pending site-tier invitation, stamped
@@ -66,7 +60,9 @@ export async function createAdminInvitation(
     write.insertInvitation(admin, { email, token, note: adminDeclaration(note).note ?? null }),
   );
   // After the commit, so a mailed link always names a row.
-  await sender.siteInvitation(email, token);
+  // The mail names who sent it; the session holds the id alone, so the name is read here.
+  const inviter = await findOneById(users, session.userId);
+  await sender.siteInvitation(email, token, { name: inviter?.name ?? '' });
   return row;
 }
 

@@ -10,8 +10,9 @@ import { A, B, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertReference } from '../support/db/insert-reference';
 import { noSender } from '../support/email-verification';
-import { makeIngredient } from '../support/fixtures';
+import { makeIngredient, makeWorkspace, workspaceColumns } from '../support/fixtures';
 import type { Context } from '@/graphql/types';
+import type { InvitationSender } from '@/modules/identity';
 import type { Answer, WorkspaceIdProbe } from './types';
 
 // A `workspaceId` is whatever string the client sent, and asked of the
@@ -27,6 +28,13 @@ const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
 let ingredientId: string;
 // Its own row, so the delete probe's admitted call leaves the update probe's standing.
 let deletableId: string;
+// A coven of its own for the delete probe's admitted call, which would take W down.
+let deletableWorkspaceId: string;
+// Covens of their own for the removal and leave probes, whose admitted calls take B out of one.
+let removableWorkspaceId: string;
+let leavableWorkspaceId: string;
+// W's pending invitation, which the revoke probe's admitted call revokes.
+let revocableInvitationId: string;
 // W's own reference, which the read probe reads and the update probe replaces.
 let referenceId: string;
 
@@ -43,6 +51,24 @@ beforeAll(async () => {
     A.id,
   );
   referenceId = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
+  const insertCoven = async (name: string) => {
+    const [coven] = await sql`
+      insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
+      returning id`;
+    const id = coven.id as string;
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${id}, ${A.id}, 'owner', ${A.id}, ${A.id}), (${id}, ${B.id}, 'member', ${A.id}, ${A.id})`;
+    return id;
+  };
+  deletableWorkspaceId = await insertCoven('Fixture Deletable Coven');
+  removableWorkspaceId = await insertCoven('Fixture Removable Coven');
+  leavableWorkspaceId = await insertCoven('Fixture Leavable Coven');
+  const [invitation] = await sql`
+    insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by)
+    values ('revoked@workspace-ids.test', 'workspace-ids-hash', ${WORKSPACE_W_ID}, 'viewer', ${A.id}, ${A.id})
+    returning id`;
+  revocableInvitationId = invitation.id as string;
   await sql.end();
 });
 
@@ -59,7 +85,7 @@ const WHOLE_INGREDIENT = {
   variants: [],
   description: '',
   elements: [],
-  planets: [],
+  celestialBodies: [],
   zodiacSigns: [],
   deities: [],
   colors: [],
@@ -76,7 +102,7 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
   commonNameSuggestions: suggestion('commonNameSuggestions'),
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
-  planetSuggestions: suggestion('planetSuggestions'),
+  celestialBodySuggestions: suggestion('celestialBodySuggestions'),
   zodiacSuggestions: suggestion('zodiacSuggestions'),
   ingredientSuggestions: {
     source: `query ($workspaceId: ID!) {
@@ -98,6 +124,47 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) { id }
     }`,
     variables: () => ({ input: { name: 'Fixture Created', variants: [] } }),
+  },
+  updateMemberRole: {
+    source: `mutation ($workspaceId: ID!, $userId: ID!) {
+      updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: member) { role }
+    }`,
+    variables: () => ({ userId: B.id }),
+    asOwner: true,
+  },
+  createInvitation: {
+    source: `mutation ($workspaceId: ID!) {
+      createInvitation(workspaceId: $workspaceId, email: "invited@workspace-ids.test", role: viewer) { id }
+    }`,
+    asOwner: true,
+  },
+  revokeInvitation: {
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      revokeInvitation(workspaceId: $workspaceId, id: $id) { id }
+    }`,
+    variables: () => ({ id: revocableInvitationId }),
+    asOwner: true,
+  },
+  removeMember: {
+    source: `mutation ($workspaceId: ID!, $userId: ID!) {
+      removeMember(workspaceId: $workspaceId, userId: $userId)
+    }`,
+    variables: () => ({ userId: B.id }),
+    asOwner: true,
+    admittedTo: () => removableWorkspaceId,
+  },
+  leaveWorkspace: {
+    source: `mutation ($workspaceId: ID!) {
+      leaveWorkspace(workspaceId: $workspaceId)
+    }`,
+    admittedTo: () => leavableWorkspaceId,
+  },
+  deleteWorkspace: {
+    source: `mutation ($workspaceId: ID!) {
+      deleteWorkspace(workspaceId: $workspaceId)
+    }`,
+    asOwner: true,
+    admittedTo: () => deletableWorkspaceId,
   },
   updateIngredient: {
     source: `mutation ($workspaceId: ID!, $id: ID!, $input: IngredientUpdateInput!) {
@@ -134,11 +201,17 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
   },
 };
 
+// The admitted createInvitation reaches its sender; this one mails no one.
+const mailsNothing: InvitationSender = {
+  siteInvitation: async () => {},
+  workspaceInvitation: async () => {},
+};
+
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
 
-/** The probe as B, a member of W, so the signed-in scope passes and only the id can refuse. */
+/** The probe as B, a member of W (or A, its owner, when the probe says), so only the id can refuse. */
 async function run(probe: WorkspaceIdProbe, workspaceId: string): Promise<Answer> {
-  const session = asUser(B);
+  const session = asUser(probe.asOwner ? A : B);
   const response = await yoga.fetch(
     'http://localhost/graphql',
     {
@@ -149,7 +222,12 @@ async function run(probe: WorkspaceIdProbe, workspaceId: string): Promise<Answer
         variables: { ...probe.variables?.(), workspaceId },
       }),
     },
-    { session, loaders: createLoaders(session), emailVerification: noSender },
+    {
+      session,
+      loaders: createLoaders(session),
+      emailVerification: noSender,
+      invitations: mailsNothing,
+    },
   );
   return (await response.json()) as Answer;
 }
@@ -171,7 +249,7 @@ describe('a workspaceId that is not a uuid', () => {
   it.each(Object.entries(PROBES))('is FORBIDDEN at %s', async (field, probe) => {
     // Why it could have answered: the same request naming W reaches the
     // field's service, and B is admitted to W.
-    const admitted = await run(probe, WORKSPACE_W_ID);
+    const admitted = await run(probe, probe.admittedTo?.() ?? WORKSPACE_W_ID);
     expect(admitted.errors).toBeUndefined();
     expect(admitted.data?.[field]).toBeTruthy();
 

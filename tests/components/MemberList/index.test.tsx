@@ -1,0 +1,107 @@
+import { render, screen, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import MemberList from '@/components/MemberList';
+import type { MemberListEntry } from '@/components/MemberList/types';
+
+// A coven's member list (claude-docs/components/member-list.md): one row per
+// member with their role and joining date, an action slot the page fills, and
+// the signed-in member's own row marked.
+
+const OWNER: MemberListEntry = {
+  userId: 'u-owner',
+  name: 'Testwort Owner',
+  role: 'owner',
+  joinedAt: new Date('2026-03-04T05:06:07Z'),
+  updatedBy: 'Testwort Editor',
+  updatedAt: new Date('2026-05-06T07:08:09Z'),
+};
+const MEMBER: MemberListEntry = {
+  ...OWNER,
+  userId: 'u-member',
+  name: 'Testwort Member',
+  role: 'member',
+};
+const VIEWER: MemberListEntry = {
+  ...OWNER,
+  userId: 'u-viewer',
+  name: 'Testwort Viewer',
+  role: 'viewer',
+};
+const ALL = [OWNER, MEMBER, VIEWER];
+
+const rowOf = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
+
+describe('MemberList', () => {
+  it('shows each member with their role, joining date and last change', () => {
+    render(<MemberList members={ALL} currentUserId="someone-else" />);
+    for (const [member, role] of [
+      [OWNER, 'Owner'],
+      [MEMBER, 'Member'],
+      [VIEWER, 'Viewer'],
+    ] as const) {
+      const row = rowOf(member.name);
+      expect(within(row).getByRole('cell', { name: role })).toBeTruthy();
+      expect(within(row).getByText('2026-03-04')).toBeTruthy();
+      // Who last changed the membership, and when.
+      expect(within(row).getByText('Testwort Editor')).toBeTruthy();
+      expect(within(row).getByText('2026-05-06')).toBeTruthy();
+    }
+  });
+
+  it("leaves the Updated cell empty when the editor's name is withheld", () => {
+    render(
+      <MemberList
+        members={[{ ...MEMBER, updatedBy: null, updatedAt: null }]}
+        currentUserId={OWNER.userId}
+      />,
+    );
+    const row = rowOf(MEMBER.name);
+    expect(within(row).queryByText('Testwort Editor')).toBeNull();
+    expect(within(row).queryByText('2026-05-06')).toBeNull();
+  });
+
+  it('has no Remove column when no removeAction is passed', () => {
+    render(<MemberList members={ALL} currentUserId={OWNER.userId} />);
+    expect(screen.queryByRole('columnheader', { name: 'Remove' })).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it("puts each control on its row, given that row's member", () => {
+    render(
+      <MemberList
+        members={ALL}
+        currentUserId={OWNER.userId}
+        roleAction={(member) => <button type="button">Change {member.name}</button>}
+        removeAction={(member) => <button type="button">Remove {member.name}</button>}
+      />,
+    );
+    expect(screen.getByRole('columnheader', { name: 'Remove' })).toBeTruthy();
+    for (const { name } of ALL) {
+      const row = rowOf(name);
+      expect(within(row).getByRole('button', { name: `Change ${name}` })).toBeTruthy();
+      expect(within(row).getByRole('button', { name: `Remove ${name}` })).toBeTruthy();
+    }
+  });
+
+  it('keeps the role control in the Role cell, apart from Remove', () => {
+    render(
+      <MemberList
+        members={[MEMBER]}
+        currentUserId={OWNER.userId}
+        roleAction={() => <button type="button">Demote</button>}
+        removeAction={() => <button type="button">Remove</button>}
+      />,
+    );
+    const cells = within(rowOf(MEMBER.name)).getAllByRole('cell');
+    const [role, remove] = [cells[1], cells[cells.length - 1]];
+    expect(within(role).getByRole('button', { name: 'Demote' })).toBeTruthy();
+    expect(within(remove).getByRole('button', { name: 'Remove' })).toBeTruthy();
+  });
+
+  it('marks only the signed-in member’s own row', () => {
+    render(<MemberList members={ALL} currentUserId={MEMBER.userId} />);
+    expect(within(rowOf(MEMBER.name)).getByText('You')).toBeTruthy();
+    expect(within(rowOf(OWNER.name)).queryByText('You')).toBeNull();
+    expect(within(rowOf(VIEWER.name)).queryByText('You')).toBeNull();
+  });
+});

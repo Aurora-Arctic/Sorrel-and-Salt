@@ -115,7 +115,7 @@ different groups, so the page offers each name once, whatever its case.
 - **None is an em dash.** A null formal name, or an entry with no form, shows
   "—" rather than an empty cell: the Unknown list tells an entry with an
   unconfirmed formal name from one with none by this column.
-- **Each Edit is a pencil, [`EditLink`](icon-tip.md), named for its entry
+- **Each Edit is a pencil, [`EditLink`](icon-tip.md), opening the modal at once (M9.18) under the entry's `editHeading` ([`modal.md`](modal.md), "Opening at once"), named for its entry
   and its formal name**: "Edit", the label and, when there is one, the
   formal name in `visually-hidden` text, with the tooltip "Edit" on hover
   or focus, so a screen reader hears "Edit Testwort, Fixtura
@@ -182,7 +182,7 @@ Clear (its address with each control set, not drawn while the page shows no
 filter, text typed or not, and the loading state while the unfiltered list
 loads), and `compendiumHref`. It is the one list test of the filter's
 loading state, its focus, its
-reset and Clear; paging is Pager's. `tests/app/admin/compendium/page.test.tsx`
+reset and Clear; paging is Pager's. `tests/app/(shell)/admin/compendium/page.test.tsx`
 covers the page's side: `?form=` read trimmed into the list and its count,
 blank as none, kept on every Edit, the pager, Add Ingredient and the
 redirect, and the forms read past their first page, each name once.

@@ -172,6 +172,42 @@ describe('ComboboxTypeahead', () => {
     expect(kept()).toHaveAttribute('tabindex', '-1');
   });
 
+  // A choice may say what it is besides its label (M6.16): a member's role.
+  // The row reads it, the chosen box describes it, and typing never matches it.
+  it('reads a qualified choice with its qualifier, describes the chosen one by it, and matches the label alone', () => {
+    const [plain, ...rest] = TRADITIONS;
+    function Qualified() {
+      const [value, setValue] = useState('');
+      return (
+        <ComboboxTypeahead
+          id="tradition"
+          label="Tradition"
+          value={value}
+          onChange={setValue}
+          choices={[
+            { ...plain, qualifier: { text: 'Fixture Isle', detail: 'Practised on the isle.' } },
+            ...rest,
+          ]}
+        />
+      );
+    }
+    render(<Qualified />);
+
+    fireEvent.click(box());
+    expect(options()).toEqual(['Fixtural (Fixture Isle)', 'Mockish', 'Old Testic']);
+    type('isle');
+    expect(options()).toEqual([]);
+
+    type('fix');
+    fireEvent.click(screen.getByRole('option', { name: /Fixtural/ }));
+    expect(box()).toHaveValue('Fixtural');
+    expect(box()).toHaveAccessibleDescription('(Fixture Isle) Practised on the isle.');
+
+    // Typed over in another case, the box is being typed in, not describing.
+    type('fixtural');
+    expect(box()).not.toHaveAccessibleDescription(/Fixture Isle/);
+  });
+
   // A filter applies a choice, not each letter typed (MB.115): it hears the
   // value once a pick, the clear or leaving the box settles it.
   it('settles on a pick, on its clear and on leaving the box, never while typed', () => {

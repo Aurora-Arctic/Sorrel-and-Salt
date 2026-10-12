@@ -23,7 +23,13 @@ export const CategoryGroups: Story = () => (
     kind="category"
     groups={CATEGORY_GROUPS.map((group) => {
       const slug = slugify(group.name);
-      return { ...group, id: slug, slug, editHref: groupsHref('category', {}, { edit: slug }) };
+      return {
+        ...group,
+        id: slug,
+        slug,
+        editHref: groupsHref('category', {}, { edit: slug }),
+        editHeading: { eyebrow: 'Edit Category Group', title: group.name },
+      };
     })}
   />
 );
@@ -54,6 +60,7 @@ export const FormGroups: Story = () => (
         slug,
         description: 'An invented group, for the workshop.',
         editHref: groupsHref('form', {}, { edit: slug }),
+        editHeading: { eyebrow: 'Edit Form Group', title: name },
       };
     })}
     nextHref={groupsHref('form', { after: 'cursor' })}
@@ -70,6 +77,7 @@ const traditions = (names: readonly string[], query = '') =>
       slug,
       description: 'An invented tradition, for the workshop.',
       editHref: groupsHref('tradition', { query }, { edit: slug }),
+      editHeading: { eyebrow: 'Edit Tradition', title: name },
     };
   });
 

@@ -1,13 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { PLANETS } from '@/db/seed/astrology';
+import { CELESTIAL_BODIES } from '@/db/seed/astrology';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, InvalidCursor } from '@/lib/errors';
 import { encodeCursor, resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
 import {
   type VocabularySuggestion,
-  suggestPlanets,
+  suggestCelestialBodies,
   suggestZodiacSigns,
 } from '@/modules/vocabulary';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
@@ -17,7 +17,7 @@ import type { ConnectionArgs, Page } from '@/lib/types';
 import type { Suggest } from './types';
 
 // DESIGN.md §5, "The two readers are scoped differently": a member's autofill
-// for a `planets` or `zodiacSigns` entry offers the curated vocabulary first, then the
+// for a `celestialBodies` or `zodiacSigns` entry offers the curated vocabulary first, then the
 // uncurated values in use in the compendium and the caller's own workspace.
 // The vocabularies are the seed's, revived per test since some tests retire a
 // row; `ingredients` is emptied per test, so every in-use value a result
@@ -32,11 +32,11 @@ beforeAll(() => {
 beforeEach(async () => {
   await sql`truncate ingredients cascade`;
   // The seed soft-deletes nothing, so every row live is the seeded state.
-  await sql`update planets set deleted_at = null, deleted_by = null where deleted_at is not null`;
+  await sql`update celestial_bodies set deleted_at = null, deleted_by = null where deleted_at is not null`;
   await sql`update zodiac_signs set deleted_at = null, deleted_by = null where deleted_at is not null`;
 });
 
-/** A row of this file's: no formal name, so `none`; what matters is its planet or sign. */
+/** A row of this file's: no formal name, so `none`; what matters is its celestial body or sign. */
 function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
   return insertIngredient(sql, makeIngredient({ nomenclature: 'none', ...entry }), A.id);
 }
@@ -51,8 +51,8 @@ async function wordSimilarity(query: string, text: string): Promise<number> {
   return Number(row.score);
 }
 
-async function descriptionOf(planet: string): Promise<string> {
-  const [row] = await sql`select description from planets where name = ${planet}`;
+async function descriptionOf(celestialBody: string): Promise<string> {
+  const [row] = await sql`select description from celestial_bodies where name = ${celestialBody}`;
   return row.description as string;
 }
 
@@ -80,21 +80,21 @@ async function all(
 
 const valuesOf = (suggestions: VocabularySuggestion[]) => suggestions.map((s) => s.value);
 
-/** The seed's planet names in the order the list carries them: case-folded, alphabetical. */
-const CURATED_PLANETS = PLANETS.map((planet) => planet.name).sort((a, b) =>
-  a.toLowerCase() < b.toLowerCase() ? -1 : 1,
+/** The seed's celestial body names in the order the list carries them: case-folded, alphabetical. */
+const CURATED_CELESTIAL_BODIES = CELESTIAL_BODIES.map((celestialBody) => celestialBody.name).sort(
+  (a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1),
 );
 
-describe('suggestPlanets', () => {
+describe('suggestCelestialBodies', () => {
   describe('the two buckets', () => {
     it('offers curated matches first and in-use uncurated values second, each saying which', async () => {
       await addIngredient({
         name: 'Dark Moon Salt',
         workspaceId: WORKSPACE_W_ID,
-        planets: ['Dark Moon'],
+        celestialBodies: ['Dark Moon'],
       });
 
-      const suggestions = await all(suggestPlanets, asUser(B), 'moon');
+      const suggestions = await all(suggestCelestialBodies, asUser(B), 'moon');
 
       expect(suggestions[0]).toMatchObject({ value: 'Moon', curated: true });
       expect(suggestions[suggestions.length - 1]).toEqual({
@@ -112,7 +112,7 @@ describe('suggestPlanets', () => {
       expect(await similarity('black moon', 'Lilith')).toBe(0);
       expect(await wordSimilarity('black moon', await descriptionOf('Lilith'))).toBe(1);
 
-      const suggestions = await all(suggestPlanets, asUser(B), 'black moon');
+      const suggestions = await all(suggestCelestialBodies, asUser(B), 'black moon');
 
       expect(valuesOf(suggestions)).toEqual(['Moon', 'Lilith']);
       expect(suggestions[1]).toMatchObject({
@@ -125,28 +125,40 @@ describe('suggestPlanets', () => {
       // Why `%` alone could not have offered it: three letters of seven fall below 0.4.
       expect(await similarity('mer', 'Mercury')).toBeLessThan(0.4);
 
-      expect(valuesOf(await all(suggestPlanets, asUser(B), 'mer'))).toContain('Mercury');
+      expect(valuesOf(await all(suggestCelestialBodies, asUser(B), 'mer'))).toContain('Mercury');
     });
 
     it('orders each bucket by name, case-folded', async () => {
-      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planets: ['sedna'] });
-      await addIngredient({ name: 'Eris Salt', planets: ['Eris'] });
+      await addIngredient({
+        name: 'Sedna Water',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: ['sedna'],
+      });
+      await addIngredient({ name: 'Eris Salt', celestialBodies: ['Eris'] });
 
-      const suggestions = await all(suggestPlanets, asUser(B), '');
+      const suggestions = await all(suggestCelestialBodies, asUser(B), '');
 
-      expect(valuesOf(suggestions)).toEqual([...CURATED_PLANETS, 'Eris', 'sedna']);
+      expect(valuesOf(suggestions)).toEqual([...CURATED_CELESTIAL_BODIES, 'Eris', 'sedna']);
     });
   });
 
   describe('what counts as in use', () => {
     it('folds case and surrounding whitespace, so Moon and moon are one value', async () => {
       // With the curated row gone, the in-use spellings are the uncurated bucket's.
-      await sql`update planets set deleted_at = now(), deleted_by = ${A.id} where name = 'Moon'`;
-      await addIngredient({ name: 'Mugwort', planets: ['Moon'] });
-      await addIngredient({ name: 'Moon Water', workspaceId: WORKSPACE_W_ID, planets: ['moon'] });
-      await addIngredient({ name: 'Selenite', workspaceId: WORKSPACE_W_ID, planets: [' Moon '] });
+      await sql`update celestial_bodies set deleted_at = now(), deleted_by = ${A.id} where name = 'Moon'`;
+      await addIngredient({ name: 'Mugwort', celestialBodies: ['Moon'] });
+      await addIngredient({
+        name: 'Moon Water',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: ['moon'],
+      });
+      await addIngredient({
+        name: 'Selenite',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: [' Moon '],
+      });
 
-      const suggestions = await all(suggestPlanets, asUser(B), 'moon');
+      const suggestions = await all(suggestCelestialBodies, asUser(B), 'moon');
 
       expect(suggestions.filter((s) => s.value.toLowerCase() === 'moon')).toEqual([
         // The spelling most entries use, trimmed.
@@ -160,22 +172,28 @@ describe('suggestPlanets', () => {
       await addIngredient({
         name: 'Mixed Salt',
         workspaceId: WORKSPACE_W_ID,
-        planets: ['Mars', 'Sedna'],
+        celestialBodies: ['Mars', 'Sedna'],
       });
 
-      expect(valuesOf(await all(suggestPlanets, asUser(B), 'sedna'))).toEqual(['Sedna']);
+      expect(valuesOf(await all(suggestCelestialBodies, asUser(B), 'sedna'))).toEqual(['Sedna']);
     });
 
     it('counts a value once however many lists hold it, and however often', async () => {
-      await addIngredient({ name: 'Eris Salt', planets: ['Eris', 'Sedna'] });
+      await addIngredient({ name: 'Eris Salt', celestialBodies: ['Eris', 'Sedna'] });
       await addIngredient({
         name: 'Sedna Water',
         workspaceId: WORKSPACE_W_ID,
-        planets: ['sedna', 'Sedna'],
+        celestialBodies: ['sedna', 'Sedna'],
       });
-      await addIngredient({ name: 'Sedna Oil', workspaceId: WORKSPACE_W_ID, planets: ['Sedna'] });
+      await addIngredient({
+        name: 'Sedna Oil',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: ['Sedna'],
+      });
 
-      const uncurated = (await all(suggestPlanets, asUser(B), '')).filter((s) => !s.curated);
+      const uncurated = (await all(suggestCelestialBodies, asUser(B), '')).filter(
+        (s) => !s.curated,
+      );
 
       expect(uncurated).toEqual([
         { value: 'Eris', description: null, curated: false },
@@ -185,10 +203,14 @@ describe('suggestPlanets', () => {
     });
 
     it('never offers a value twice when it is curated and in use', async () => {
-      await addIngredient({ name: 'Mugwort', planets: ['Moon'] });
-      await addIngredient({ name: 'Moon Water', workspaceId: WORKSPACE_W_ID, planets: ['moon'] });
+      await addIngredient({ name: 'Mugwort', celestialBodies: ['Moon'] });
+      await addIngredient({
+        name: 'Moon Water',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: ['moon'],
+      });
 
-      const suggestions = await all(suggestPlanets, asUser(B), 'moon');
+      const suggestions = await all(suggestCelestialBodies, asUser(B), 'moon');
 
       expect(suggestions.filter((s) => s.value.toLowerCase() === 'moon')).toEqual([
         expect.objectContaining({ value: 'Moon', curated: true }),
@@ -196,24 +218,32 @@ describe('suggestPlanets', () => {
     });
 
     it('drops a soft-deleted curated row, whose in-use spelling then reads as uncurated', async () => {
-      await addIngredient({ name: 'Mugwort', planets: ['Moon'] });
-      expect(await all(suggestPlanets, asUser(B), 'black moon')).toMatchObject([
+      await addIngredient({ name: 'Mugwort', celestialBodies: ['Moon'] });
+      expect(await all(suggestCelestialBodies, asUser(B), 'black moon')).toMatchObject([
         { value: 'Moon', curated: true },
         { value: 'Lilith', curated: true },
       ]);
 
-      await sql`update planets set deleted_at = now(), deleted_by = ${A.id} where name in ('Moon', 'Lilith')`;
+      await sql`update celestial_bodies set deleted_at = now(), deleted_by = ${A.id} where name in ('Moon', 'Lilith')`;
 
-      expect(await all(suggestPlanets, asUser(B), 'black moon')).toEqual([
+      expect(await all(suggestCelestialBodies, asUser(B), 'black moon')).toEqual([
         { value: 'Moon', description: null, curated: false },
       ]);
     });
 
-    it('reads nothing into an entry with no planet', async () => {
-      await addIngredient({ name: 'Graveyard Dirt', workspaceId: WORKSPACE_W_ID, planets: null });
-      await addIngredient({ name: 'Black Salt', workspaceId: WORKSPACE_W_ID, planets: ['  ', ''] });
+    it('reads nothing into an entry with no celestial body', async () => {
+      await addIngredient({
+        name: 'Graveyard Dirt',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: null,
+      });
+      await addIngredient({
+        name: 'Black Salt',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: ['  ', ''],
+      });
 
-      const suggestions = await all(suggestPlanets, asUser(B), '');
+      const suggestions = await all(suggestCelestialBodies, asUser(B), '');
 
       expect(suggestions.filter((s) => !s.curated)).toEqual([]);
     });
@@ -224,13 +254,23 @@ describe('suggestPlanets', () => {
   // only who holds them.
   describe('scope', () => {
     beforeEach(async () => {
-      await addIngredient({ name: 'Eris Salt', planets: ['Eris'] });
-      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planets: ['Sedna'] });
-      await addIngredient({ name: 'Vulcan Ash', workspaceId: WORKSPACE_X_ID, planets: ['Vulcan'] });
+      await addIngredient({ name: 'Eris Salt', celestialBodies: ['Eris'] });
+      await addIngredient({
+        name: 'Sedna Water',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: ['Sedna'],
+      });
+      await addIngredient({
+        name: 'Vulcan Ash',
+        workspaceId: WORKSPACE_X_ID,
+        celestialBodies: ['Vulcan'],
+      });
     });
 
     it('spans the compendium and the current workspace', async () => {
-      const uncurated = (await all(suggestPlanets, asUser(B), '')).filter((s) => !s.curated);
+      const uncurated = (await all(suggestCelestialBodies, asUser(B), '')).filter(
+        (s) => !s.curated,
+      );
 
       expect(valuesOf(uncurated)).toEqual(['Eris', 'Sedna']);
     });
@@ -238,14 +278,14 @@ describe('suggestPlanets', () => {
     it('never offers a value in use only in another workspace', async () => {
       // Why it could have come back: X holds it, and X's own member is offered it.
       const [held] = await sql`
-        select planets from ingredients where workspace_id = ${WORKSPACE_X_ID} and deleted_at is null`;
-      expect(held.planets).toEqual(['Vulcan']);
-      expect(valuesOf(await all(suggestPlanets, asUser(D), 'vulcan', WORKSPACE_X_ID))).toEqual([
-        'Vulcan',
-      ]);
+        select celestial_bodies from ingredients where workspace_id = ${WORKSPACE_X_ID} and deleted_at is null`;
+      expect(held.celestial_bodies).toEqual(['Vulcan']);
+      expect(
+        valuesOf(await all(suggestCelestialBodies, asUser(D), 'vulcan', WORKSPACE_X_ID)),
+      ).toEqual(['Vulcan']);
 
-      expect(await all(suggestPlanets, asUser(B), 'vulcan')).toEqual([]);
-      expect(valuesOf(await all(suggestPlanets, asUser(B), ''))).not.toContain('Vulcan');
+      expect(await all(suggestCelestialBodies, asUser(B), 'vulcan')).toEqual([]);
+      expect(valuesOf(await all(suggestCelestialBodies, asUser(B), ''))).not.toContain('Vulcan');
     });
   });
 
@@ -258,37 +298,48 @@ describe('suggestPlanets', () => {
       expect(await similarity('Venus', 'venis')).toBeLessThan(0.4);
       expect(await wordSimilarity('venis', 'Venus')).toBe(0.5);
 
-      expect(await all(suggestPlanets, asUser(B), 'venis')).toEqual([]);
+      expect(await all(suggestCelestialBodies, asUser(B), 'venis')).toEqual([]);
     });
   });
 
   describe('the query', () => {
     it('treats whitespace as no query, and offers the whole vocabulary', async () => {
-      expect(valuesOf(await all(suggestPlanets, asUser(B), '   '))).toEqual(CURATED_PLANETS);
+      expect(valuesOf(await all(suggestCelestialBodies, asUser(B), '   '))).toEqual(
+        CURATED_CELESTIAL_BODIES,
+      );
     });
 
     it('offers nothing for a query matching nothing', async () => {
-      expect(await all(suggestPlanets, asUser(B), 'xqzv')).toEqual([]);
+      expect(await all(suggestCelestialBodies, asUser(B), 'xqzv')).toEqual([]);
     });
   });
 
   // CLAUDE.md rule 8: one connection over both buckets, walked by cursor.
   describe('pagination', () => {
     beforeEach(async () => {
-      await addIngredient({ name: 'Eris Salt', planets: ['Eris'] });
-      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planets: ['Sedna'] });
+      await addIngredient({ name: 'Eris Salt', celestialBodies: ['Eris'] });
+      await addIngredient({
+        name: 'Sedna Water',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: ['Sedna'],
+      });
     });
 
     it('walks every suggestion once, in order, across the bucket boundary', async () => {
-      const expected = [...CURATED_PLANETS, 'Eris', 'Sedna'];
+      const expected = [...CURATED_CELESTIAL_BODIES, 'Eris', 'Sedna'];
       const seen: string[] = [];
       const sizes: number[] = [];
       let after: string | null = null;
       for (;;) {
-        const page: Page<VocabularySuggestion> = await pageOf(suggestPlanets, asUser(B), '', {
-          first: 5,
-          after,
-        });
+        const page: Page<VocabularySuggestion> = await pageOf(
+          suggestCelestialBodies,
+          asUser(B),
+          '',
+          {
+            first: 5,
+            after,
+          },
+        );
         seen.push(...valuesOf(page.edges.map((edge) => edge.node)));
         sizes.push(page.edges.length);
         if (!page.pageInfo.hasNextPage) break;
@@ -300,7 +351,7 @@ describe('suggestPlanets', () => {
     });
 
     it('walks backwards too', async () => {
-      const last = await pageOf(suggestPlanets, asUser(B), '', { last: 3 });
+      const last = await pageOf(suggestCelestialBodies, asUser(B), '', { last: 3 });
 
       expect(valuesOf(last.edges.map((edge) => edge.node))).toEqual(['Vesta', 'Eris', 'Sedna']);
       expect(last.pageInfo.hasPreviousPage).toBe(true);
@@ -308,10 +359,10 @@ describe('suggestPlanets', () => {
     });
 
     it('walks backwards from a cursor, across the bucket boundary', async () => {
-      const last = await pageOf(suggestPlanets, asUser(B), '', { last: 2 });
+      const last = await pageOf(suggestCelestialBodies, asUser(B), '', { last: 2 });
       expect(valuesOf(last.edges.map((edge) => edge.node))).toEqual(['Eris', 'Sedna']);
 
-      const before = await pageOf(suggestPlanets, asUser(B), '', {
+      const before = await pageOf(suggestCelestialBodies, asUser(B), '', {
         last: 2,
         before: last.pageInfo.startCursor,
       });
@@ -326,7 +377,7 @@ describe('suggestPlanets', () => {
         const forged = encodeCursor({ key, id: 'moon' });
 
         await expect(
-          pageOf(suggestPlanets, asUser(B), '', { after: forged }),
+          pageOf(suggestCelestialBodies, asUser(B), '', { after: forged }),
           key.join(','),
         ).rejects.toThrow(InvalidCursor);
       }
@@ -335,57 +386,63 @@ describe('suggestPlanets', () => {
 
   describe('authorization', () => {
     beforeEach(async () => {
-      await addIngredient({ name: 'Sedna Water', workspaceId: WORKSPACE_W_ID, planets: ['Sedna'] });
+      await addIngredient({
+        name: 'Sedna Water',
+        workspaceId: WORKSPACE_W_ID,
+        celestialBodies: ['Sedna'],
+      });
     });
 
     // It reveals nothing a reader of the workspace could not already list.
     it('answers anyone who may read the workspace’s ingredients, a viewer included', async () => {
-      expect(valuesOf(await all(suggestPlanets, asUser(C), 'sedna'))).toEqual(['Sedna']);
-      expect(valuesOf(await all(suggestPlanets, asUser(A), 'sedna'))).toEqual(['Sedna']);
+      expect(valuesOf(await all(suggestCelestialBodies, asUser(C), 'sedna'))).toEqual(['Sedna']);
+      expect(valuesOf(await all(suggestCelestialBodies, asUser(A), 'sedna'))).toEqual(['Sedna']);
     });
 
     it('refuses a member of another workspace asking about this one', async () => {
       // Why it could have succeeded: D is a member, just not here.
-      await expect(all(suggestPlanets, asUser(D), 'sedna', WORKSPACE_X_ID)).resolves.toEqual([]);
+      await expect(
+        all(suggestCelestialBodies, asUser(D), 'sedna', WORKSPACE_X_ID),
+      ).resolves.toEqual([]);
 
-      await expect(all(suggestPlanets, asUser(D), 'sedna')).rejects.toThrow(Forbidden);
+      await expect(all(suggestCelestialBodies, asUser(D), 'sedna')).rejects.toThrow(Forbidden);
     });
 
     it('refuses a site admin, who belongs to no workspace', async () => {
-      await expect(all(suggestPlanets, asUser(E), 'sedna')).rejects.toThrow(Forbidden);
+      await expect(all(suggestCelestialBodies, asUser(E), 'sedna')).rejects.toThrow(Forbidden);
     });
 
     it('refuses before answering a blank query', async () => {
-      await expect(all(suggestPlanets, asUser(D), '')).rejects.toThrow(Forbidden);
+      await expect(all(suggestCelestialBodies, asUser(D), '')).rejects.toThrow(Forbidden);
     });
   });
 });
 
 // The same service over the other table. Two tables rather than a `kind`
-// column, so a sign cannot be offered for `planets` (claude-docs/db/astrology-vocabularies.md, "The
+// column, so a sign cannot be offered for `celestialBodies` (claude-docs/db/astrology-vocabularies.md, "The
 // astrology vocabularies") — asserted rather than assumed.
 describe('suggestZodiacSigns', () => {
-  it('offers a sign by its description, and never as a planet', async () => {
+  it('offers a sign by its description, and never as a celestial body', async () => {
     // Why Ophiuchus could only have come from its description.
     expect(await similarity('serpent', 'Ophiuchus')).toBe(0);
 
     expect(await all(suggestZodiacSigns, asUser(B), 'serpent')).toEqual([
       expect.objectContaining({ value: 'Ophiuchus', curated: true }),
     ]);
-    expect(await all(suggestPlanets, asUser(B), 'serpent')).toEqual([]);
+    expect(await all(suggestCelestialBodies, asUser(B), 'serpent')).toEqual([]);
   });
 
-  it('reads the zodiac signs, not the planets, for what is in use', async () => {
+  it('reads the zodiac signs, not the celestial bodies, for what is in use', async () => {
     await addIngredient({
       name: 'Cetus Salt',
       workspaceId: WORKSPACE_W_ID,
-      planets: ['Cetus'],
+      celestialBodies: ['Cetus'],
       zodiacSigns: ['Eris'],
     });
 
     expect(valuesOf(await all(suggestZodiacSigns, asUser(B), 'eris'))).toEqual(['Eris']);
     expect(valuesOf(await all(suggestZodiacSigns, asUser(B), 'cetus'))).toEqual([]);
-    expect(valuesOf(await all(suggestPlanets, asUser(B), 'cetus'))).toEqual(['Cetus']);
+    expect(valuesOf(await all(suggestCelestialBodies, asUser(B), 'cetus'))).toEqual(['Cetus']);
   });
 
   it('refuses a non-member', async () => {

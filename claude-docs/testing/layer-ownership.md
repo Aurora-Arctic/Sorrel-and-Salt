@@ -106,7 +106,8 @@ cited by number in the PR table of the task that applies it.
 9. **e2e proves what only a real server can:** navigation, server render,
    cookies, mail, the cache, the production build's config, and one axe scan
    per page. A spec never re-runs a flow a component or service test proves
-   wholesale; each admin page keeps its 403 and one flow.
+   wholesale; each admin page keeps its 403 and one flow, and a spec tags the stories it
+   walks (`@story-N`) so the checklist shows which have a browser flow (M9.17).
 10. **SQL text appears only as the precondition of an EXPLAIN plan test**, and
     a plan test keeps its row counts.
 

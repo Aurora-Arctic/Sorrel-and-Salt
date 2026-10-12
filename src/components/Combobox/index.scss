@@ -179,17 +179,31 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The qualifier's detail, in InfoTip's bubble and its fade, above the control
-// from its right edge, on the qualifier's side, and no wider than 60% of the
-// control, so the field's label at the left stays in view while it shows
-// (MB.115). Positioned on `.combobox`, so its percentages are the control's
-// width. Not beneath the box: the list opens there.
+// with its left edge on the qualifier's (the owner's call at M6.16's review,
+// 2026-10-12, over MB.115's right edge), so the detail reads as the
+// qualifier's own, and never past the control's right edge. Positioned on
+// `.combobox`, so the percentages are the control's width; where the
+// qualifier starts is measured as the tip opens (`--combobox-qualifier-x`,
+// index.tsx), since CSS alone cannot place a box by one element and bound it
+// by another. On a phone it is centred over the control instead, as wide as
+// the control at most, and wraps (the owner's call): from the qualifier
+// there was too little room left to read. Not beneath the box: the list
+// opens there.
 .combobox__qualifier-tip {
-  @include tip-above(end, 1, false);
+  @include tip-above(start, 1, false);
 
+  // The fallback is a length with a unit on purpose: `calc()` refuses a bare 0.
+  left: var(--combobox-qualifier-x, 0);
   box-sizing: border-box;
-  max-width: 60%;
+  max-width: calc(100% - var(--combobox-qualifier-x, 0px));
   white-space: normal;
   overflow-wrap: anywhere;
+
+  @media (max-width: $shell-phone-width) {
+    left: 50%;
+    max-width: 100%;
+    translate: -50% 0;
+  }
 }
 
 // The clear and the separator with nothing to clear: hidden, but holding
@@ -318,6 +332,22 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     @include reduced-motion {
       transition: none;
     }
+  }
+}
+
+// A choice that makes something new: after a hairline rule, led by a plus.
+.combobox__option--create {
+  flex-direction: row;
+  align-items: center;
+  gap: space(2);
+  margin-top: space(1);
+  border-top: 1px solid $hairline;
+
+  svg {
+    flex: none;
+    width: 1rem;
+    height: 1rem;
+    color: $accent;
   }
 }
 

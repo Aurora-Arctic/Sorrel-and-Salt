@@ -63,7 +63,7 @@ In [`db/invitations.md`](db/invitations.md#policy-in-two-services).
 
 ## The ingredient identity model (MB.28, table M4.1)
 
-`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139), and `ingredient_deities`, each deity a name with the curated row picked beside it, in the order entered (MB.165): identity is the formal name alone in the generated `identity_key` (MB.220; the form and `canonical_key` until then), unique per tier by partial index, and `form_id` records a picked form beside the text, outside the key; planets, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136); elements an `ingredient_element[]` list in the order chosen, a repeat refused (MB.157, built by MB.158 and MB.159). [`db/identity-model.md`](db/identity-model.md)
+`ingredients` (both tiers in one table), `ingredient_forms`, `ingredient_folk_names` and `ingredient_substitutes`, each substitute a link or a typed name (MB.138, table MB.139), and `ingredient_deities`, each deity a name with the curated row picked beside it, in the order entered (MB.165): identity is the formal name alone in the generated `identity_key` (MB.220; the form and `canonical_key` until then), unique per tier by partial index, and `form_id` records a picked form beside the text, outside the key; celestial bodies, zodiac signs and colours are `text[]` lists stored as `deities` is, in the order entered (MB.134, MB.136); elements an `ingredient_element[]` list in the order chosen, a repeat refused (MB.157, built by MB.158 and MB.159). [`db/identity-model.md`](db/identity-model.md)
 
 ### Fuzzy matching: one index, and a rule every caller is bound by (M4.6)
 
@@ -79,7 +79,7 @@ In [`db/invitations.md`](db/invitations.md#policy-in-two-services).
 
 ## The astrology vocabularies (MB.91; tables MB.92)
 
-`planets` and `zodiac_signs`, the admin-curated vocabularies behind the lists `ingredients.planets` and `.zodiac_signs` (MB.136), whose entries stay free text as `form` does, and the member's autofill, whose finders suggest planets, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
+`celestial_bodies` and `zodiac_signs`, the admin-curated vocabularies behind the lists `ingredients.celestial_bodies` and `.zodiac_signs` (MB.136), whose entries stay free text as `form` does, and the member's autofill, whose finders suggest celestial bodies, signs, forms and common names. [`db/astrology-vocabularies.md`](db/astrology-vocabularies.md)
 
 ## The deity vocabulary (MB.127; tables MB.128)
 
@@ -91,7 +91,7 @@ In [`db/invitations.md`](db/invitations.md#policy-in-two-services).
 
 ## References (MB.151; tables MB.152)
 
-`references`, one Chicago-form source per row, two-tiered as `ingredients` is, and `reference_links`, one soft-deleted row per sourced ingredient, deity, tradition, planet or sign under `num_nonnulls`, both owned by `ingredients`: the kind decides the rendering and the CHECKs make it total, a link carries a locator and nothing else, nothing deletes a reference in v1, and `src/lib/citation.ts` renders the citation rather than any column storing it. [`db/references.md`](db/references.md)
+`references`, one Chicago-form source per row, two-tiered as `ingredients` is, and `reference_links`, one soft-deleted row per sourced ingredient, deity, tradition, celestial body or sign under `num_nonnulls`, both owned by `ingredients`: the kind decides the rendering and the CHECKs make it total, a link carries a locator and nothing else, nothing deletes a reference in v1, and `src/lib/citation.ts` renders the citation rather than any column storing it. [`db/references.md`](db/references.md)
 
 ## Stock, and the one module that owns the units (M9.2)
 
@@ -231,7 +231,7 @@ The three services that create, update and delete a compendium entry, each behin
 
 ## Soft-delete filtering and the partial-index convention (M1.20)
 
-`findMany`, `findOne` and every other exported finder filter `deleted_at` through `selectFrom` or `existsIn`, bar four `…IncludingSoftDeleted` hatches a guard test pins; every unique index is partial, so a deleted row reserves nothing. [`db/soft-delete.md`](db/soft-delete.md)
+`findMany`, `findOne` and every other exported finder filter `deleted_at` through `selectFrom` or `existsIn`, bar five `…IncludingSoftDeleted` hatches a guard test pins; every unique index is partial, so a deleted row reserves nothing. [`db/soft-delete.md`](db/soft-delete.md)
 
 ## Keyset pages (M3.6)
 
@@ -263,7 +263,7 @@ Story 48's join of a spell to its assigned categories; the derived ones are read
 
 ## The astrology vocabulary seed (MB.93)
 
-§5's nineteen `planets` and thirteen `zodiac_signs`, seeded the form seed's way through `seedFlatVocabulary`, with descriptions written as searchable glosses and the sources the lists came from. [`db/astrology-vocabulary-seed.md`](db/astrology-vocabulary-seed.md)
+§5's nineteen `celestial_bodies` and thirteen `zodiac_signs`, seeded the form seed's way through `seedFlatVocabulary`, with descriptions written as searchable glosses and the sources the lists came from. [`db/astrology-vocabulary-seed.md`](db/astrology-vocabulary-seed.md)
 
 ## The deity vocabulary seed (list MB.127; seed MB.129)
 

@@ -10,7 +10,7 @@ export default {
 };
 
 // Inside the account page's frame and section, on its panel, as
-// src/app/account/page.tsx writes them, so the workshop shows what the page
+// src/app/(shell)/account/page.tsx writes them, so the workshop shows what the page
 // shows.
 const Section = ({ name }: { name: string }) => (
   <main className="page-frame page-frame--narrow">

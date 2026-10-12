@@ -46,7 +46,7 @@ function withoutBlanks<T extends string>(list: T[] | null | undefined) {
 const dropBlankEntries = <T extends Lists>(value: T): T => ({
   ...value,
   elements: withoutBlanks(value.elements),
-  planets: withoutBlanks(value.planets),
+  celestialBodies: withoutBlanks(value.celestialBodies),
   zodiacSigns: withoutBlanks(value.zodiacSigns),
   colors: withoutBlanks(value.colors),
   folkNames: withoutBlanks(value.folkNames),
@@ -188,7 +188,7 @@ const variant = z
     description: z.string().trim(),
     safetyNotes: z.string().trim(),
     elements: elementArray,
-    planets: z.array(z.string().trim()),
+    celestialBodies: z.array(z.string().trim()),
     zodiacSigns: z.array(z.string().trim()),
     colors: z.array(z.string().trim()),
     categoryIds: z.array(z.string().trim()),
@@ -203,7 +203,7 @@ const variant = z
         ctx.addIssue({ code: 'custom', path: [key], message: 'No such form' });
       }
     }
-    for (const field of ['planets', 'zodiacSigns', 'colors'] as const) {
+    for (const field of ['celestialBodies', 'zodiacSigns', 'colors'] as const) {
       refuseRepeats(field, value[field], ctx);
     }
     substituteRules(value.substitutes, ctx);
@@ -213,7 +213,7 @@ const variant = z
   })
   .transform((value) => ({
     ...value,
-    planets: nonBlank(value.planets),
+    celestialBodies: nonBlank(value.celestialBodies),
     zodiacSigns: nonBlank(value.zodiacSigns),
     colors: nonBlank(value.colors),
     substitutes: asSubstitutes(value.substitutes),
@@ -229,7 +229,7 @@ const fields = {
   // Lists of free text like a variant's form (MB.134): the vocabularies
   // suggest, and nothing here refuses — the compendium service holds its tier
   // to them against the database (MB.162), and a coven's stay free text.
-  planets: textList,
+  celestialBodies: textList,
   zodiacSigns: textList,
   deities: z.array(deity).nullish(),
   colors: textList,
@@ -295,7 +295,7 @@ function crossFieldRules(value: Parsed, ctx: z.RefinementCtx) {
     });
   }
 
-  for (const field of ['planets', 'zodiacSigns', 'colors'] as const) {
+  for (const field of ['celestialBodies', 'zodiacSigns', 'colors'] as const) {
     refuseRepeats(field, value[field] ?? [], ctx);
   }
   substituteRules(value.substitutes ?? [], ctx);

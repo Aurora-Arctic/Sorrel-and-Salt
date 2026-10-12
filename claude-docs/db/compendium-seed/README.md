@@ -53,7 +53,7 @@ export const SOURCES = {
   nomenclature: 'botanical',
   description: '100 to 250 words, written fresh: what the plant is, where it grows, how it has been used ...',
   elements: ['earth'],
-  planets: ['Saturn'],
+  celestialBodies: ['Saturn'],
   zodiacSigns: ['Capricorn'],
   colors: ['green'],
   safetyNotes: 'Only what a safety source says, in plain words.',
@@ -70,7 +70,7 @@ export const SOURCES = {
     {
       source: 'invented-herbal', // a handle from works.ts
       locator: 'p. 112',
-      supports: ['canonicalName', 'description', 'elements', 'planets', 'deities', 'categories', 'substitutes'],
+      supports: ['canonicalName', 'description', 'elements', 'celestialBodies', 'deities', 'categories', 'substitutes'],
     },
     {
       source: 'wikipedia-testwort',
@@ -106,21 +106,21 @@ What the example shows:
 
 A citation's `supports` lists the fields it backs, using the literal's own field names:
 
-| On an entry     | On a form (variant) |
-| --------------- | ------------------- |
-| `name`          | `form`              |
-| `canonicalName` | `description`       |
-| `nomenclature`  | `safetyNotes`       |
-| `description`   | `elements`          |
-| `elements`      | `planets`           |
-| `planets`       | `zodiacSigns`       |
-| `zodiacSigns`   | `colors`            |
-| `colors`        | `categories`        |
-| `safetyNotes`   | `substitutes`       |
-| `folkNames`     |                     |
-| `deities`       |                     |
-| `categories`    |                     |
-| `substitutes`   |                     |
+| On an entry       | On a form (variant) |
+| ----------------- | ------------------- |
+| `name`            | `form`              |
+| `canonicalName`   | `description`       |
+| `nomenclature`    | `safetyNotes`       |
+| `description`     | `elements`          |
+| `elements`        | `celestialBodies`   |
+| `celestialBodies` | `zodiacSigns`       |
+| `zodiacSigns`     | `colors`            |
+| `colors`          | `categories`        |
+| `safetyNotes`     | `substitutes`       |
+| `folkNames`       |                     |
+| `deities`         |                     |
+| `categories`      |                     |
+| `substitutes`     |                     |
 
 `name` is the label, which is free to choose and needs no source unless it is the only name a source gives. `nomenclature` follows from `canonicalName`, so a source supporting the formal name supports both.
 
@@ -128,16 +128,16 @@ A citation's `supports` lists the fields it backs, using the literal's own field
 
 A compendium entry may only name values the curated vocabularies hold (MB.162, MB.167), spelt exactly as their seed files spell them. The guard (MB.242) checks every value against these files, by slug:
 
-| Field           | The list                                                                      | Where it is                                                                 |
-| --------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| a form's `form` | 78 forms in 6 groups (Botanical, Animal, Mineral, Substance, Fluid, Curio)    | `src/db/seed/forms.ts`, `FORMS`                                             |
-| `categories`    | 63 categories in 8 groups                                                     | `src/db/seed/categories.ts`, `CATEGORIES`                                   |
-| `deities`       | 216 deities in 35 traditions                                                  | `src/db/seed/deities.ts`, `DEITIES`                                         |
-| `planets`       | 19 planets and points, Sun to South Node                                      | `src/db/seed/astrology.ts`, `PLANETS`                                       |
-| `zodiacSigns`   | 13 signs, Ophiuchus included                                                  | `src/db/seed/astrology.ts`, `ZODIAC_SIGNS`                                  |
-| `elements`      | `earth`, `air`, `fire`, `water`, `spirit`                                     | `src/modules/ingredients/schema/ingredient-enums.ts`, `INGREDIENT_ELEMENTS` |
-| `nomenclature`  | `botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `unknown`, `none` | the same file, `NOMENCLATURE_KINDS`                                         |
-| `colors`        | a closed list of lower-case British colour names                              | `src/db/seed/compendium/colours.ts` (MB.242)                                |
+| Field             | The list                                                                      | Where it is                                                                 |
+| ----------------- | ----------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| a form's `form`   | 78 forms in 6 groups (Botanical, Animal, Mineral, Substance, Fluid, Curio)    | `src/db/seed/forms.ts`, `FORMS`                                             |
+| `categories`      | 63 categories in 8 groups                                                     | `src/db/seed/categories.ts`, `CATEGORIES`                                   |
+| `deities`         | 216 deities in 35 traditions                                                  | `src/db/seed/deities.ts`, `DEITIES`                                         |
+| `celestialBodies` | 19 celestial bodies, Sun to South Node                                        | `src/db/seed/astrology.ts`, `CELESTIAL_BODIES`                              |
+| `zodiacSigns`     | 13 signs, Ophiuchus included                                                  | `src/db/seed/astrology.ts`, `ZODIAC_SIGNS`                                  |
+| `elements`        | `earth`, `air`, `fire`, `water`, `spirit`                                     | `src/modules/ingredients/schema/ingredient-enums.ts`, `INGREDIENT_ELEMENTS` |
+| `nomenclature`    | `botanical`, `fungal`, `zoological`, `mineral`, `chemical`, `unknown`, `none` | the same file, `NOMENCLATURE_KINDS`                                         |
+| `colors`          | a closed list of lower-case British colour names                              | `src/db/seed/compendium/colours.ts` (MB.242)                                |
 
 A value a source gives that is not on the list is left out of the field, and the shard doc's "What is left out, and why" names it, so the owner can decide whether the list should grow. A lane never adds to a curated list itself: a list is its own task.
 

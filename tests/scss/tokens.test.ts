@@ -130,14 +130,16 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const wax = toHex(tokens['--secondary'], theme);
     row('--secondary on the Impersonate tint on the page', wax, mixed(wax, page, 0.06), 4.5);
     row('--secondary on the Impersonate tint on the card', wax, mixed(wax, card, 0.05), 4.5);
-    // The tab row's segmented control (TabbedPage/index.scss): the open
-    // tab's label on its pill, the accent 18% into the card, and the pill's
-    // accent edge against the card track, the line that marks which tab is
-    // open, since the fill alone sits under 3:1 against the track. The other
-    // labels are the muted ink on the card, above.
+    // The tab row's pills (TabbedPage/index.scss): the open tab's label on its
+    // pill, the accent 18% into the card, and the pill's accent edge against
+    // the track, the quiet fill (the muted ink 18% into the card), the line
+    // that marks which tab is open, since the fill alone sits under 3:1
+    // against the track. The other labels are the muted ink on that track.
     const accent = toHex(tokens['--accent'], theme);
     row('--text-primary on the open tab', tokens['--text-primary'], mixed(accent, card, 0.18), 4.5);
-    row("the open tab's edge on the card", accent, card, 3);
+    const track = mixed(toHex(tokens['--text-muted'], theme), card, 0.18);
+    row('--text-muted on the tab track', tokens['--text-muted'], track, 4.5);
+    row("the open tab's edge on the track", accent, track, 3);
     // Every Edit pencil (the `icon-button-edit` mixin, _mixins.scss), a
     // control, so 3:1: the accent on the grounds it sits on — a list's
     // unbanded row on the page; a banded row, a stacked card and the modal's

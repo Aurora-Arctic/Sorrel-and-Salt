@@ -68,7 +68,9 @@ const GroupList = ({
             heading: 'Edit',
             hiddenHeading: true,
             action: 'corner',
-            cell: (group) => <EditLink href={group.editHref} name={group.name} />,
+            cell: (group) => (
+              <EditLink href={group.editHref} name={group.name} heading={group.editHeading} />
+            ),
           },
         ]}
         rows={groups}

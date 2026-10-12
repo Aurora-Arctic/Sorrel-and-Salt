@@ -2,7 +2,9 @@ import { createHash } from 'node:crypto';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   findInvitationByToken,
-  findPendingInvitationsInWorkspace,
+  findInvitationInWorkspace,
+  findPendingWorkspaceInvitationCount,
+  findPendingWorkspaceInvitationPage,
   findPendingSiteInvitationPage,
   withAudit,
   type AuditWriter,
@@ -11,6 +13,9 @@ import {
   type WorkspaceInvitationValues,
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { workspaces } from '@/modules/coven/schema/workspaces';
+import { eq } from 'drizzle-orm';
+import { makeWorkspace } from '../../support/fixtures';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { assertSiteAdmin } from '@/modules/identity';
 import { A, B, D, E, asUser } from '../../support/as-user';
@@ -194,6 +199,50 @@ describe('acceptInvitation', () => {
   );
 });
 
+describe('acceptInvitation into a deleted workspace (M6.14)', () => {
+  it('returns no row, though the invitation is pending and the address matches', async () => {
+    const { slug } = makeWorkspace({ name: 'Fixture Coven Invite Razed' });
+    const [workspace] = await withAudit(asUser(A), (write) =>
+      write.insert(workspaces, { name: 'Fixture Coven Invite Razed', slug }),
+    );
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${workspace.id}, ${D.id}, 'owner', ${D.id}, ${D.id})
+    `;
+    const proof = await assertMembership(asUser(D), workspace.id, { member: ['invite'] });
+    await inviteIntoW({}, () => proof);
+    // Why the refusal is the workspace check's: while the coven is live the
+    // same invitation, token and holder are accepted.
+    const [pending] =
+      await sql`select accepted_at from invitations where workspace_id = ${workspace.id}`;
+    expect(pending?.accepted_at).toBeNull();
+    await withAudit(asUser(A), (write) =>
+      write.softDelete(workspaces, eq(workspaces.id, workspace.id)),
+    );
+
+    await expect(acceptAs(A)).resolves.toEqual([]);
+
+    const [after] =
+      await sql`select accepted_at from invitations where workspace_id = ${workspace.id}`;
+    expect(after?.accepted_at).toBeNull();
+  });
+
+  it('accepts the same invitation while the workspace is live', async () => {
+    const { slug } = makeWorkspace({ name: 'Fixture Coven Invite Live' });
+    const [workspace] = await withAudit(asUser(A), (write) =>
+      write.insert(workspaces, { name: 'Fixture Coven Invite Live', slug }),
+    );
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${workspace.id}, ${D.id}, 'owner', ${D.id}, ${D.id})
+    `;
+    const proof = await assertMembership(asUser(D), workspace.id, { member: ['invite'] });
+    await inviteIntoW({}, () => proof);
+
+    await expect(acceptAs(A)).resolves.toHaveLength(1);
+  });
+});
+
 describe('revokeInvitation, by tier', () => {
   it('revokes a pending workspace invitation under its workspace’s proof, the revoker stamped', async () => {
     const [inserted] = await inviteIntoW();
@@ -282,12 +331,72 @@ describe('the pending lists', () => {
 
   const ids = (rows: InvitationRow[]) => rows.map((row) => row.id).sort();
 
+  const workspacePage = async (proof: Membership) =>
+    ids(
+      (await findPendingWorkspaceInvitationPage(proof, { limit: 101, inverted: false })).map(
+        ({ node }) => node,
+      ),
+    );
+
   it('reads a workspace’s pending invitations and nothing else', async () => {
     const { pendingInW, pendingInX } = await everyKind();
 
     // Why X's row could have been read: it is pending, as W's is.
-    expect(ids(await findPendingInvitationsInWorkspace(inX))).toEqual([pendingInX!.id]);
-    expect(ids(await findPendingInvitationsInWorkspace(inW))).toEqual([pendingInW!.id]);
+    expect(await workspacePage(inX)).toEqual([pendingInX!.id]);
+    expect(await workspacePage(inW)).toEqual([pendingInW!.id]);
+    expect(await findPendingWorkspaceInvitationCount(inW, undefined)).toMatchObject({
+      totalCount: 1,
+    });
+    expect(await findPendingWorkspaceInvitationCount(inX, undefined)).toMatchObject({
+      totalCount: 1,
+    });
+  });
+
+  it('pages newest first, and counts the rows before a page’s first', async () => {
+    const [oldest] = await inviteIntoW({ token: 'fixture-token-w-1' });
+    const [middle] = await inviteIntoW({ token: 'fixture-token-w-2' });
+    const [newest] = await inviteIntoW({ token: 'fixture-token-w-3' });
+    // Distinct instants, set apart from insertion order.
+    await sql`update invitations set created_at = now() - interval '3 hours' where id = ${oldest!.id}`;
+    await sql`update invitations set created_at = now() - interval '2 hours' where id = ${middle!.id}`;
+    await sql`update invitations set created_at = now() - interval '1 hour' where id = ${newest!.id}`;
+
+    const all = await findPendingWorkspaceInvitationPage(inW, { limit: 101, inverted: false });
+    expect(all.map(({ node }) => node.id)).toEqual([newest!.id, middle!.id, oldest!.id]);
+
+    const second = all[1]!;
+    expect(await findPendingWorkspaceInvitationCount(inW, undefined)).toMatchObject({
+      totalCount: 3,
+    });
+    expect(await findPendingWorkspaceInvitationCount(inW, second.cursor)).toMatchObject({
+      totalCount: 3,
+      countBefore: 1,
+    });
+  });
+
+  it('finds an invitation by id in any state, in its own workspace only', async () => {
+    const { pendingInW, pendingInX } = await everyKind();
+    const [revoked] = await inviteIntoW({ token: 'fixture-token-w-revoked-2' });
+    await revokeInWorkspace(revoked!.id);
+    const [accepted] = await inviteIntoW({ token: 'fixture-token-w-accepted-2' });
+    await acceptAs(A, 'fixture-token-w-accepted-2');
+    const [deleted] = await inviteIntoW({ token: 'fixture-token-w-deleted-2' });
+    await sql`update invitations set deleted_at = now(), deleted_by = ${A.id} where id = ${deleted!.id}`;
+
+    expect((await findInvitationInWorkspace(inW, pendingInW!.id))?.id).toBe(pendingInW!.id);
+    expect(await findInvitationInWorkspace(inW, revoked!.id)).toMatchObject({
+      revokedAt: expect.any(Date),
+    });
+    expect(await findInvitationInWorkspace(inW, accepted!.id)).toMatchObject({
+      acceptedAt: expect.any(Date),
+    });
+    // Why X's row could have been found: it exists, pending, in a live workspace.
+    expect(await rowOf(pendingInX!.id)).toBeDefined();
+    expect(await findInvitationInWorkspace(inW, pendingInX!.id)).toBeUndefined();
+    expect(await findInvitationInWorkspace(inW, deleted!.id)).toBeUndefined();
+    expect(
+      await findInvitationInWorkspace(inW, '00000000-0000-4000-8000-000000000000'),
+    ).toBeUndefined();
   });
 
   it('reads the site tier’s pending invitations and nothing else', async () => {

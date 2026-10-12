@@ -9,6 +9,7 @@ export { FieldError, FieldShell, Required } from './shell';
 export { fieldDescription } from './description';
 export { TextField } from './text-field';
 export { SelectField } from './select-field';
+export { RadioGroupField } from './radio-group-field';
 export { SwitchField } from './switch-field';
 export { SearchField } from './search-field';
 export { FilterSelectField } from './filter-select-field';

@@ -8,7 +8,7 @@ import {
 } from '../../../db/repository';
 import type { Session } from '../../../lib/session';
 import { readersOf } from '@/modules/coven';
-import { planets, zodiacSigns } from '../schema/astrology';
+import { celestialBodies, zodiacSigns } from '../schema/astrology';
 import { deities } from '../schema/deities';
 import { ingredientForms } from '../schema/ingredient-forms';
 import type { PageEntry, PageRequest } from '../../../lib/types';
@@ -23,7 +23,7 @@ export type { Claimant, DeitySuggestion, FormSuggestion, VocabularySuggestion };
 const READ = { ingredient: ['read'] } as const;
 
 async function suggest(
-  vocabulary: typeof planets | typeof zodiacSigns,
+  vocabulary: typeof celestialBodies | typeof zodiacSigns,
   session: Session,
   workspaceId: string | null | undefined,
   query: string,
@@ -38,7 +38,7 @@ async function suggest(
 }
 
 /**
- * What a `planets` entry offers as `query` is typed: the curated bodies first,
+ * What a `celestialBodies` entry offers as `query` is typed: the curated bodies first,
  * a name match before a description match, then values already written in the
  * compendium or this workspace that no body curates. A blank query offers all.
  * Without a workspace, the values written in the compendium alone.
@@ -46,13 +46,13 @@ async function suggest(
  * @throws {Forbidden} a workspace is named and the caller may not read its
  * ingredients.
  */
-export function suggestPlanets(
+export function suggestCelestialBodies(
   session: Session,
   workspaceId: string | null | undefined,
   query: string,
   page: PageRequest,
 ): Promise<PageEntry<VocabularySuggestion>[]> {
-  return suggest(planets, session, workspaceId, query, page);
+  return suggest(celestialBodies, session, workspaceId, query, page);
 }
 
 /**

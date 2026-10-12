@@ -8,7 +8,7 @@ import { KINDS } from './kinds';
 import type { GroupListFilterProps } from './types';
 
 // A group list's filter (MB.115): a name search alone, as a flat value list's
-// is (GroupedValueListFilter, on the planets), applied by the magnifier at
+// is (GroupedValueListFilter, on the celestial bodies), applied by the magnifier at
 // the end of its box or Enter, with no Filter button beside it, the owner's
 // call at MB.115's review. `FilterForm` holds the form, Clear and the soft
 // navigation; this holds what the box says. A GET form to the page itself,

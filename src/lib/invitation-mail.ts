@@ -1,5 +1,6 @@
 import type { InvitationSender } from '@/modules/identity';
 import { adminInvitationMessage } from '../emails/admin-invitation';
+import { covenInvitationMessage } from '../emails/coven-invitation';
 import { requestOrigin } from './request-origin';
 
 // Where an invitation's token becomes a link and a mail (MB.70). The origin is
@@ -10,11 +11,18 @@ import { requestOrigin } from './request-origin';
 // (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 export function invitationSender(request: Request): InvitationSender {
+  const linkFor = async (token: string) =>
+    `${await requestOrigin(request, '/')}/invite/${encodeURIComponent(token)}`;
   return {
-    async siteInvitation(to, token) {
-      const url = `${await requestOrigin(request, '/')}/invite/${encodeURIComponent(token)}`;
+    async siteInvitation(to, token, { name }) {
+      const url = await linkFor(token);
       const { send } = await import('./mail');
-      await send(await adminInvitationMessage({ to, url }));
+      await send(await adminInvitationMessage({ to, url, inviterName: name }));
+    },
+    async workspaceInvitation(to, token, { name, role, inviterName }) {
+      const url = await linkFor(token);
+      const { send } = await import('./mail');
+      await send(await covenInvitationMessage({ to, url, covenName: name, role, inviterName }));
     },
   };
 }

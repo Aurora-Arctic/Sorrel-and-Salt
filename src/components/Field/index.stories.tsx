@@ -7,6 +7,7 @@ import {
   FormActions,
   ReasonField,
   SearchField,
+  RadioGroupField,
   SwitchField,
   TextField,
   fieldDescription,
@@ -138,6 +139,28 @@ export const Switch: Story = () => (
     <Toggle label="On and Shut" on disabled />
   </div>
 );
+
+export const RadioGroup: Story = () => {
+  const [role, setRole] = useState<'member' | 'viewer'>('member');
+  return (
+    <div className="form" style={{ maxWidth: '32rem' }}>
+      <RadioGroupField
+        legend="New Role"
+        name="role"
+        value={role}
+        onChange={setRole}
+        options={[
+          {
+            value: 'member',
+            label: 'Member',
+            description: 'Reads and writes the ingredients and the grimoire.',
+          },
+          { value: 'viewer', label: 'Viewer', description: 'Reads only.' },
+        ]}
+      />
+    </div>
+  );
+};
 
 // A form's row of actions: Save off until there is something to save, then
 // on, then busy; Cancel quiet; Delete apart at the far end on an edit.

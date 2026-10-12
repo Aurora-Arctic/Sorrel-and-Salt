@@ -31,6 +31,7 @@ const ENTRIES: CompendiumListEntry[] = [
     canonicalName: 'Fixtura testalis',
     forms: ['Fixture Herb', 'Fixture Oil'],
     editHref: compendiumHref({}, { edit: 'testwort' }),
+    editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
   },
   {
     id: 'i2',
@@ -40,6 +41,7 @@ const ENTRIES: CompendiumListEntry[] = [
     canonicalName: null,
     forms: [],
     editHref: compendiumHref({}, { edit: 'fixture-salt' }),
+    editHeading: { eyebrow: 'Edit Ingredient', title: 'Fixture Salt' },
   },
 ];
 

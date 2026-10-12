@@ -1,5 +1,6 @@
 import type { Route } from 'next';
-import type { PagerHrefs } from '../../app/admin/types';
+import type { PagerHrefs } from '../../app/(shell)/admin/types';
+import type { ModalHeading } from '../Modal/types';
 import type { GroupColors, PagePosition } from '../../lib/types';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 
@@ -24,7 +25,7 @@ export interface GroupedValueListKind {
   noun: string;
   /** More than one, lower-case: "categories". */
   plural: string;
-  /** The group, for a grouped kind; a flat kind (a planet, a zodiac sign) has none. */
+  /** The group, for a grouped kind; a flat kind (a celestial body, a zodiac sign) has none. */
   group?: GroupedValueListGroup;
 }
 
@@ -39,6 +40,8 @@ export interface GroupedValueListEntry {
   /** The group's chip pair, which its name is drawn in; none draws it plain. */
   groupColors?: GroupColors;
   editHref: Route;
+  /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
+  editHeading: ModalHeading;
 }
 
 export interface GroupedValueListProps extends Partial<PagerHrefs> {
