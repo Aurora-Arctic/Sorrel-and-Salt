@@ -19,10 +19,10 @@ From a clean checkout, in this order:
 
 `graphql` 17.0.2 is out. Yoga, Pothos, graphql-scalars, codegen and the typed-document-node core accept it. Two packages do not:
 
-- `graphql-request@7.4.0` (peer `14 - 16`) is the old name of Graffle, kept on a branch with occasional releases, so a 17 range is unlikely. This repo uses only its `request()` and `ClientError`, so M10.31 replaces it with a small `fetch` wrapper.
+- `graphql-request@7.4.0` (peer `14 - 16`) is the old name of Graffle, kept on a branch with occasional releases, so a 17 range is unlikely. This repo uses only its `request()` and `ClientError`, so M10.31 replaced it with a small `fetch` wrapper (`src/lib/graphql-client.ts`).
 - `@escape.tech/graphql-armor@3.2.0` (peer `^16.10.0`) has an open request for 17, issue #885 (September 2026).
 
-**Revisit when** `graphql-armor` accepts `graphql` 17 and M10.31 has merged. The pin's reasoning is [`graphql/graphql-pin.md`](graphql/graphql-pin.md).
+**Revisit when** `graphql-armor` accepts `graphql` 17; it is the only blocker left. The pin's reasoning is [`graphql/graphql-pin.md`](graphql/graphql-pin.md).
 
 ## Only prereleases ahead
 

@@ -1,6 +1,6 @@
-import { ClientError } from 'graphql-request';
 import type { UseFormSetError } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
+import { GraphQLClientError } from '@/lib/graphql-client';
 import { GENERIC_FAILURE, placeServerIssues } from '@/lib/graphql-failure';
 
 // The admin forms' reading of a refused save (MB.115): every field issue
@@ -10,15 +10,13 @@ import { GENERIC_FAILURE, placeServerIssues } from '@/lib/graphql-failure';
 type Values = { name: string; description: string };
 
 /** A VALIDATION refusal carrying these issues, as the server sends one. */
-function refusal(fieldErrors: { path: (string | number)[]; message: string }[]): ClientError {
-  return new ClientError(
-    {
-      status: 200,
-      headers: new Headers(),
-      errors: [{ message: 'Invalid input', extensions: { code: 'VALIDATION', fieldErrors } }],
-    } as never,
-    { query: 'mutation { save }' },
-  );
+function refusal(
+  fieldErrors: { path: (string | number)[]; message: string }[],
+): GraphQLClientError {
+  return new GraphQLClientError({
+    status: 200,
+    errors: [{ message: 'Invalid input', extensions: { code: 'VALIDATION', fieldErrors } }],
+  });
 }
 
 /** The flat forms' reading: a field for a one-segment path it shows. */

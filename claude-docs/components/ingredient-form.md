@@ -1382,7 +1382,7 @@ the two server refusals, a save, and the references: picking sources,
 a locator, the panel per kind and its refusals. The workshop has no API, and on staging
 its pages may not fetch at all ([`workshop.md`](../workshop.md), "On
 staging"), so the story answers the form itself: while it is mounted it
-stands in for `window.fetch`, which graphql-request looks up on every
+stands in for `window.fetch`, which the client wrapper looks up on every
 request, and answers a request to `/api/graphql` naming one of the eight
 lookups, the categories, or either save, from invented rows filtered by what was typed. Each
 answer is checked against its query's generated type with `satisfies`, so a

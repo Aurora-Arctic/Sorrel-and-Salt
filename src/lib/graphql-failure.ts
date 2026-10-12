@@ -1,5 +1,5 @@
-import { ClientError } from 'graphql-request';
 import type { ErrorOption } from 'react-hook-form';
+import { GraphQLClientError } from './graphql-client';
 import type { Failure, ValidationIssue } from './types';
 
 // One reader for a failed GraphQL request from the browser, shared by every
@@ -22,8 +22,8 @@ export const GENERIC_FAILURE = "That didn't work. Please try again.";
  * its own, a button say, passes none and always gets an `alert`.
  */
 export function readGraphqlFailure(error: unknown, fields: readonly string[] = []): Failure {
-  if (!(error instanceof ClientError)) return { alert: GENERIC_FAILURE };
-  const first = error.response.errors?.[0];
+  if (!(error instanceof GraphQLClientError)) return { alert: GENERIC_FAILURE };
+  const first = error.errors?.[0];
   const extensions = first?.extensions as
     { code?: string; fieldErrors?: { path: (string | number)[]; message: string }[] } | undefined;
   if (extensions?.code === 'VALIDATION') {
@@ -43,8 +43,8 @@ export function readGraphqlFailure(error: unknown, fields: readonly string[] = [
  * single-field reader would have put in the alert.
  */
 export function readGraphqlIssues(error: unknown): ValidationIssue[] {
-  if (error instanceof ClientError) {
-    const extensions = error.response.errors?.[0]?.extensions as
+  if (error instanceof GraphQLClientError) {
+    const extensions = error.errors?.[0]?.extensions as
       { code?: string; fieldErrors?: ValidationIssue[] } | undefined;
     if (extensions?.code === 'VALIDATION' && extensions.fieldErrors?.length) {
       return extensions.fieldErrors;

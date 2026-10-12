@@ -2,12 +2,12 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { parse } from 'graphql';
-import { ClientError } from 'graphql-request';
 import { HttpResponse } from 'msw';
 import { Component, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import {
+  GraphQLClientError,
   graphqlQuery,
   graphqlRequest,
   makeQueryClient,
@@ -61,8 +61,8 @@ function refuseOk() {
   return calls;
 }
 
-function clientError(status: number): ClientError {
-  return new ClientError({ status, headers: new Headers(), body: '' }, { query: '{ ok }' });
+function clientError(status: number): GraphQLClientError {
+  return new GraphQLClientError({ status, errors: undefined });
 }
 
 describe('a client component', () => {
@@ -104,7 +104,7 @@ describe('graphqlRequest', () => {
   it('throws the GraphQL error rather than resolving to partial data', async () => {
     refuseOk();
 
-    await expect(graphqlRequest(OkDocument)).rejects.toBeInstanceOf(ClientError);
+    await expect(graphqlRequest(OkDocument)).rejects.toBeInstanceOf(GraphQLClientError);
   });
 
   it('refuses to run outside the browser, where no session cookie rides along', async () => {
