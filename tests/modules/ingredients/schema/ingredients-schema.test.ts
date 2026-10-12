@@ -27,6 +27,7 @@ const COLUMNS = [
   'description',
   'elements',
   'planets',
+  'celestial_bodies',
   'zodiac_signs',
   'colors',
   'safety_notes',

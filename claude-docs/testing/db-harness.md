@@ -140,8 +140,11 @@ NULL`, the delete pair nullable or absent, and each `*_by` referencing
   ships no migration, so until the second lands the migrated database holds an
   object the schema no longer declares. The undeclare task adds a line to the
   file's `PENDING_DROPS` — table, kind (`column`, `index`, `check`,
-  `foreignKey` or `table`), name, and the task that drops it — and the
-  comparison leaves that object out; the drop task removes the line. A line
+  `foreignKey`, `table` or `view`), name, and the task that drops it — and the
+  comparison leaves that object out; the drop task removes the line. A `view`
+  is the old name a renamed table leaves behind (MB.252), and the schema
+  declares none, so a view the list does not hold fails too
+  (["Renaming a table"](../db/expand-contract.md)). A line
   left behind fails the file's last test, which asserts every pending drop
   still names an object the catalogue holds, so the window is declared rather
   than tolerated.
