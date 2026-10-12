@@ -37,7 +37,7 @@ export function Ok() {
   component rendered on the server should use `useQuery`, which does not fetch
   there, rather than `useSuspenseQuery`, which would.
 - **A GraphQL error rejects.** The wrapper throws a `GraphQLClientError` (defined
-  in `src/lib/graphql-client.ts`) whenever the response is not OK, carries
+  in `src/lib/graphql-client-error.ts`) whenever the response is not OK, carries
   `errors` or has no `data`, so a partial answer never reads as whole. Its
   `status` is the HTTP status and its `errors[].extensions` carries the code
   and field errors (MB.43). The wrapper posts `{ query, variables }` as JSON

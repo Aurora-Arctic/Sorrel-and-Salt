@@ -1,6 +1,6 @@
 import type { UseFormSetError } from 'react-hook-form';
 import { describe, expect, it, vi } from 'vitest';
-import { GraphQLClientError } from '@/lib/graphql-client';
+import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { GENERIC_FAILURE, placeServerIssues } from '@/lib/graphql-failure';
 
 // The admin forms' reading of a refused save (MB.115): every field issue

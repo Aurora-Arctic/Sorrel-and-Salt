@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { type Query, QueryClient, queryOptions } from '@tanstack/react-query';
 import { type GraphQLFormattedError, getOperationAST, print } from 'graphql';
+import { GraphQLClientError } from './graphql-client-error';
 import type { VariablesArg } from './types';
 
 // The browser's half of the API: a small fetch wrapper sends a codegen document and
@@ -15,30 +16,6 @@ const STALE_TIME_MS = 30_000;
 
 /** Two retries, so three attempts in all. */
 const MAX_RETRIES = 2;
-
-/**
- * A request that got an answer but not a whole one: a non-2xx status, GraphQL
- * `errors`, or no `data`. `status` is the HTTP status, which `shouldRetry`
- * reads; `errors` is the response's own list, which the form readers in
- * graphql-failure.ts open. claude-docs/graphql/client.md, "A GraphQL error rejects".
- */
-export class GraphQLClientError extends Error {
-  readonly status: number;
-  readonly errors: readonly GraphQLFormattedError[] | undefined;
-
-  constructor({
-    status,
-    errors,
-  }: {
-    status: number;
-    errors: readonly GraphQLFormattedError[] | undefined;
-  }) {
-    super(errors?.[0]?.message ?? `GraphQL request failed with status ${status}`);
-    this.name = 'GraphQLClientError';
-    this.status = status;
-    this.errors = errors;
-  }
-}
 
 /** What Yoga sends back, as far as the client reads it. */
 type GraphQLBody<TResult> = { data?: TResult | null; errors?: readonly GraphQLFormattedError[] };

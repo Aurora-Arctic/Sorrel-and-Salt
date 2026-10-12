@@ -7,13 +7,13 @@ import { Component, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
 
 import {
-  GraphQLClientError,
   graphqlQuery,
   graphqlRequest,
   makeQueryClient,
   shouldRetry,
   throwWhenEmpty,
 } from '@/lib/graphql-client';
+import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { graphqlLink, mockGraphQLQuery } from '../support/msw/graphql';
 import { server } from '../support/msw/server';
 import type { OkQuery, OkQueryVariables, EchoQuery, EchoQueryVariables } from './types';

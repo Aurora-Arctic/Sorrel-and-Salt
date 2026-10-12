@@ -1,5 +1,5 @@
 import type { ErrorOption } from 'react-hook-form';
-import { GraphQLClientError } from './graphql-client';
+import { GraphQLClientError } from './graphql-client-error';
 import type { Failure, ValidationIssue } from './types';
 
 // One reader for a failed GraphQL request from the browser, shared by every
