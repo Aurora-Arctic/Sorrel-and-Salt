@@ -13,7 +13,7 @@
   redirected exactly as on every other page, an unverified admin included —
   then the identity module's `assertSiteAdmin()`. The check is the service's;
   the helper only translates its `Forbidden` into Next's `forbidden()`, the way
-  `/coven/[slug]` will translate a refusal into a 404. It returns the
+  `/coven/[slug]` translates a refusal into a 404 ([coven-guard.md](coven-guard.md)). It returns the
   `Session`, not the `SiteAdmin` proof: a page reads, and a write mints its own
   proof in the service it calls.
 - **A 403 page, not a 404.** `/admin` is a path everyone already knows, so
