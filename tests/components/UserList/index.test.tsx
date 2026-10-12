@@ -4,8 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import UserList, { PauseControl } from '@/components/UserList';
 import type { UserListProps } from '@/components/UserList/types';
 import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
+import { FILTER_ROWS } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import type { FilterFormSubject } from '../../support/types';
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -118,24 +120,6 @@ describe('UserList', () => {
 
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
   });
-
-  it('filters by a GET search to the page itself, keeping what was asked', () => {
-    render(<UserList {...props({ query: 'fixturewort', awaitingApproval: true })} />);
-
-    // The <search> landmark around it is the e2e spec's to find: jsdom's role
-    // table predates the element, and a browser's does not. The action and
-    // method are what a submit before hydration uses.
-    const search = screen.getByRole('form', { name: 'Filter Users' });
-    expect(search).toHaveAttribute('action', '/admin/users');
-    expect(search).toHaveAttribute('method', 'get');
-    expect(within(search).getByLabelText('Name or Email')).toHaveValue('fixturewort');
-    expect(within(search).getByLabelText('Name or Email')).toHaveAttribute('name', 'query');
-    expect(within(search).getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
-    expect(within(search).getByRole('switch', { name: 'Needs Approval' })).toHaveAttribute(
-      'name',
-      'awaiting',
-    );
-  });
 });
 
 // MB.53: where impersonation is registered, each non-admin row carries the
@@ -241,28 +225,39 @@ describe('UserList filter', () => {
 
   const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
 
-  it('offers no Filter button', () => {
-    render(<UserList {...props()} />);
+  // Needs Approval is a native checkbox valued empty, so a native submit sends
+  // `awaiting=`, and All Roles `role=`: each read by the page as the filter shown.
+  const SUBJECT: FilterFormSubject = {
+    label: 'Filter Users',
+    path: '/admin/users',
+    searchLabel: 'Name or Email',
+    push: router.push,
+    none: { list: <UserList {...props()} />, sends: 'query=&role=' },
+    shown: {
+      list: (
+        <UserList
+          {...props({
+            query: 'fixturewort',
+            role: 'admin',
+            awaitingApproval: true,
+            previousHref: '/admin/users?query=fixturewort&awaiting&role=admin&before=x',
+          })}
+        />
+      ),
+      sends: 'query=fixturewort&role=admin&awaiting=',
+    },
+    alone: [
+      { list: <UserList {...props({ query: 'bo' })} />, sends: 'query=bo&role=' },
+      { list: <UserList {...props({ role: 'user' })} />, sends: 'query=&role=user' },
+      {
+        list: <UserList {...props({ awaitingApproval: true })} />,
+        sends: 'query=&role=&awaiting=',
+      },
+    ],
+    searched: '/admin/users?query=Two+words&awaiting&role=admin',
+  };
 
-    expect(screen.queryByRole('button', { name: 'Filter' })).not.toBeInTheDocument();
-  });
-
-  it('opens the search from the first page on the magnifier, carrying the filter shown', async () => {
-    inFlight(
-      <UserList
-        {...props({ role: 'admin', awaitingApproval: true, previousHref: '/admin/users?before=x' })}
-      />,
-    );
-
-    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: ' Fixture B ' } });
-    expect(router.push).not.toHaveBeenCalled();
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Search' }));
-    });
-
-    expect(router.push).toHaveBeenCalledTimes(1);
-    expect(router.push).toHaveBeenCalledWith('/admin/users?query=Fixture+B&awaiting&role=admin');
-  });
+  it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
   it('narrows by role the moment it changes, from a native select that starts at the role shown', async () => {
     inFlight(<UserList {...props({ role: 'admin' })} />);
@@ -314,31 +309,6 @@ describe('UserList filter', () => {
     });
 
     expect(router.push).toHaveBeenCalledWith('/admin/users');
-  });
-
-  it('offers Clear to the unfiltered list only while the query, a role or Needs Approval is shown', () => {
-    for (const filter of [{ query: 'bo' }, { role: 'user' as const }, { awaitingApproval: true }]) {
-      const { unmount } = render(<UserList {...props(filter)} />);
-
-      expect(screen.getByRole('link', { name: 'Clear' })).toHaveAttribute('href', '/admin/users');
-      unmount();
-    }
-
-    render(<UserList {...props()} />);
-    expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
-  });
-
-  // The page renders again with another filter on Back or Forward; the row
-  // starts from it rather than from what was typed.
-  it('starts again from the filter shown when the page shows another', () => {
-    const { rerender } = render(<UserList {...props({ query: 'bo' })} />);
-    fireEvent.change(screen.getByLabelText('Name or Email'), { target: { value: 'draft' } });
-
-    rerender(<UserList {...props({ query: 'ada', role: 'user', awaitingApproval: true })} />);
-
-    expect(screen.getByLabelText('Name or Email')).toHaveValue('ada');
-    expect(screen.getByLabelText('Role')).toHaveValue('user');
-    expect(screen.getByRole('switch', { name: 'Needs Approval' })).toBeChecked();
   });
 
   // A soft navigation keeps the page's own code running, so the list is the

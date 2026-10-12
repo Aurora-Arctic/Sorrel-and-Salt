@@ -105,8 +105,8 @@ Render-only, no test ids, no snapshots.
 ## Testing
 
 `tests/components/PrivilegeLedger/index.test.tsx` covers each row's data,
-the links to the user rows and the people without one, the `<time>`, the
-filter's form, search, dropdown values, no Filter button and the
+the links to the user rows and the people without one, the `<time>`, through
+the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filter-form.md)) the filter's form, search, dropdown values, no Filter button and the
 address a change or the magnifier opens, Clear offered by a query or a privilege and absent
 with neither, the row starting again from a filter shown anew, no table when there is nothing to show, and
 `privilegeLedgerHref`. Paging is Pager's.

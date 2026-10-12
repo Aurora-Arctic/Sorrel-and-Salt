@@ -208,16 +208,17 @@ test ids, no snapshots.
 kinds share on the deities, whose group goes by its own name: the rows and
 their group, the Edit links, no table when there are none, the filter form's
 action, method, names and kept values, the group a native select in the
-server's markup and a type-ahead once hydrated, its list narrowing as it is
-typed into applying nothing, the address each field applies (the name on
+server's markup and a type-ahead once hydrated, the address each field applies (the name on
 Search, keeping the group shown; a group picked, carrying the name typed;
 its clear, back to every group), Clear drawn by a name or a group shown and
 not drawn with neither, and `groupedValuesHref`. The category
 and the form get only what they change, their page and their group's
 parameter, as `groupedValuesHref` rows; the planet and the zodiac sign, their page
 and no group written, as rows too, and a flat kind's table and filter drawn
-with no group. The filter's loading state and its reset
-are CompendiumList's, paging Pager's, and the category chip's colours
+with no group. The filter's form, its search, Clear and the reset to the
+filter shown run as the shared filter rows (`tests/support/filter-form.tsx`,
+[`filter-form.md`](filter-form.md), "Testing"); its loading state is
+CompendiumList's, the type-ahead's narrowing Combobox's, paging Pager's, and the category chip's colours
 presentation.
 `tests/app/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
 ([`layer-ownership.md`](../testing/layer-ownership.md), "The owning layer"):
