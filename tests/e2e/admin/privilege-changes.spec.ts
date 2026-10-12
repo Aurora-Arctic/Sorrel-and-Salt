@@ -56,20 +56,20 @@ test('an admin reads an approval back from the ledger, then narrows it', async (
   await approving.getByRole('button', { name: 'Approve' }).click();
   await expect(approving).toHaveCount(0);
 
-  // From the admin nav, after Users.
+  // From the People tabs, after Users.
   await page
-    .getByRole('navigation', { name: 'Admin' })
+    .getByRole('navigation', { name: 'People' })
     .getByRole('link', {
       name: 'Privilege Changes',
     })
     .click();
   await expect(page).toHaveURL(/\/admin\/privilege-changes$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Privilege Changes' })).toBeVisible();
+  await expect(page.getByRole('form', { name: 'Filter privilege changes' })).toBeVisible();
 
   // Newest first: the approval heads the ledger, by the admin who made it.
   const first = page.getByRole('row').nth(1);
   await expect(first.getByRole('cell').nth(1)).toHaveText(SUBJECT_NAME);
-  await expect(first.getByRole('cell').nth(2)).toHaveText('Coven creation');
+  await expect(first.getByRole('cell').nth(2)).toHaveText('Coven Creation');
   await expect(first.getByRole('cell').nth(3)).toHaveText('Granted');
   await expect(first.getByRole('cell').nth(4)).toHaveText('By an admin');
   await expect(first.getByRole('cell').nth(5)).toHaveText('Fixture Person');
@@ -110,7 +110,7 @@ test("a user row's permissions history icon opens the ledger searched for that u
 
   await page.goto(`/admin/users?query=${encodeURIComponent(SUBJECT_EMAIL)}`);
   const row = page.getByRole('row', { name: new RegExp(SUBJECT_NAME) });
-  const icon = row.getByRole('link', { name: `Permissions history for ${SUBJECT_NAME}` });
+  const icon = row.getByRole('link', { name: `Privilege changes for ${SUBJECT_NAME}` });
   await icon.hover();
   await expect(page.getByRole('tooltip')).toBeVisible();
   for (const colorScheme of ['dark', 'light'] as const) {
