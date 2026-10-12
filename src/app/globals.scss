@@ -13,7 +13,7 @@
   @include theme-dark;
 }
 
-@media (prefers-color-scheme: light) {
+@include color-scheme-light {
   html:not([data-theme='dark']) {
     @include theme-light;
   }

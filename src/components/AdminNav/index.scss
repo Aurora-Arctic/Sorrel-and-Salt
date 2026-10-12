@@ -41,17 +41,12 @@
 // where you are on the left and a chevron on the right. The browser's own
 // disclosure triangle goes, since the chevron says the same.
 .admin-nav__summary {
-  box-sizing: border-box;
+  @include field-box;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: space(3);
-  min-height: $control-height;
-  padding: space(2) space(3);
-  border: 1px solid $text-muted;
-  border-radius: radius('control');
-  background-color: $surface-card;
-  color: $text-primary;
   list-style: none;
   cursor: pointer;
 
@@ -65,7 +60,7 @@
   // a tap, which `:active` alone misses on a phone (`src/lib/press-feedback.ts`).
   &:active,
   &[data-pressed] {
-    background-color: color-mix(in srgb, $text-muted 18%, $surface-card);
+    background-color: $fill-quiet;
   }
 
   &:focus-visible {
@@ -92,20 +87,7 @@
 
 // The chevron in a `$glyph-size` box, turned over while the menu is open.
 .admin-nav__chevron {
-  display: inline-flex;
-  flex: none;
-  width: $glyph-size;
-  height: $glyph-size;
-  color: $text-muted;
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  .admin-nav__menu[open] & {
-    rotate: 180deg;
-  }
+  @include disclosure-chevron('.admin-nav__menu[open]');
 }
 
 // Open: every section beneath, each a short `.link-row` under a muted
@@ -127,28 +109,20 @@
 // with its one line beneath it in the muted ink. Not bulleted: a list of
 // links, as `.link-row` is not, so typography-base's marker and indent go.
 .admin-contents {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack;
 }
 
 .admin-contents__list {
   display: flex;
   flex-direction: column;
   gap: space(3);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+
+  @include list-reset;
 
   > li {
     display: flex;
     flex-direction: column;
     gap: space(1);
-    margin: 0;
-  }
-
-  > li::before {
-    content: none;
   }
 }
 

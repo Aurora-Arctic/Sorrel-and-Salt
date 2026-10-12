@@ -21,19 +21,15 @@
 }
 
 // Under the forms' column `.page-header` puts the action on a line of its
-// own and, in the admin area, spans it; the action inside spans it too.
-@container page-header (max-width: #{$narrow-column}) {
-  .admin-layout .tabbed-page__action > * {
-    flex: 1 1 100%;
-  }
-}
+// own and, in the admin area, spans it, and the action inside with it (the
+// primitive's, for every action in a wrapper).
 
 // The action while another tab is on its way, faded with the tabs and its
 // colour taken out, so a solid button greys as they do. `inert` keeps it
 // from a press or focus meanwhile.
 .tabbed-page__action[inert] {
-  opacity: 0.55;
-  filter: grayscale(1);
+  @include busy-faded;
+
   cursor: not-allowed;
 }
 
@@ -52,7 +48,7 @@ $segment-edge: color-mix(in srgb, $text-muted 35%, $surface-card);
 $segment-pill: color-mix(in srgb, $accent 18%, $surface-card);
 // The shade at an edge the segments run on past, the muted ink thinned into
 // nothing: a grey in the light theme, a soft glow in the dark.
-$segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
+$segment-shade: $hairline;
 
 // A flex box, so the track is a flex item: as wide as its segments, never
 // wider than the column, with no line box round it to add a descender's
@@ -74,8 +70,6 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
   position: relative;
   min-width: 0;
   gap: space(1);
-  margin: 0;
-  padding: space(1);
   overflow-x: auto;
   overscroll-behavior-x: contain;
   // What a keyboard focus or the open tab scrolls into view clears the
@@ -83,7 +77,6 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
   scroll-padding-inline: space(6);
   border: 1px solid $segment-edge;
   border-radius: radius('pill');
-  list-style: none;
   // No scrollbar: it would cross the open pill's foot inside a track this
   // thin, and a phone draws none at rest anyway. What says there is more is
   // the label cut off at the track's edge and a shade on that side. The
@@ -103,16 +96,13 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
     display: none;
   }
 
+  @include list-reset(space(1));
+
   > li {
     flex: none;
     // `typography-base` positions every list item for its marker; the
     // links measure their place from the track, so the items stand clear.
     position: static;
-    margin: 0;
-  }
-
-  > li::before {
-    content: none;
   }
 }
 
@@ -206,15 +196,15 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
   &,
   &:hover {
     color: $text-muted;
-    opacity: 0.55;
+    opacity: $opacity-disabled;
     cursor: not-allowed;
   }
 }
 
 .tabbed-page__row[aria-busy='true'] > .tabbed-page__pill {
-  opacity: 0.55;
+  @include busy-faded;
+
   box-shadow: none;
-  filter: grayscale(1);
 }
 
 // At a phone's width, under the forms' column the page header stacks at,
@@ -234,20 +224,14 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 // The open tab's content, or its loading state: any notice, then the list,
 // a `space(5)` apart, as `.list-frame` spaces a list's.
 .tabbed-page__panel {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack;
 }
 
 // The new tab's content, faded in as it replaces the skeleton rather than
 // snapping in; content the server drew, before any tab was pressed, has no
 // `data-arrived` and shows at once.
 .tabbed-page__panel[data-arrived] {
-  animation: tabbed-page-fade-in 200ms ease both;
-
-  @include reduced-motion {
-    animation: none;
-  }
+  @include arrived;
 }
 
 // The skeleton a pressed tab shows while it is on its way (`panel-loading.tsx`).
@@ -258,23 +242,17 @@ $segment-shade: color-mix(in srgb, $text-muted 45%, transparent);
 // skeleton back would leave the panel blank, which is the snap it is there
 // to avoid. A size container, so its rows turn to cards under the width the
 // real table stacks at.
-$skeleton-fill: color-mix(in srgb, $text-muted 18%, $surface-card);
+$skeleton-fill: $fill-quiet;
 $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
 
 .tab-skeleton {
   container: tab-skeleton / inline-size;
-  animation: tabbed-page-fade-in 150ms ease both;
-
-  @include reduced-motion {
-    animation: none;
-  }
+  @include arrived($motion-short);
 }
 
 // The filter row, the table and the pager, spaced as the panel spaces a list.
 .tab-skeleton__shapes {
-  display: flex;
-  flex-direction: column;
-  gap: space(5);
+  @include stack;
 }
 
 // Every shape: a rounded bar of the fill, the shimmer passing across it.
@@ -306,16 +284,16 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
   gap: space(3) space(5);
 
   > span {
-    height: 2.5rem;
+    height: $control-height;
   }
 }
 
 .tab-skeleton__field {
-  flex: 1 1 14rem;
+  flex: 1 1 $filter-choice-width;
 }
 
 .tab-skeleton__field--short {
-  flex: 0 1 10rem;
+  flex: 0 1 $filter-choice-width;
 }
 
 .tab-skeleton__button {
@@ -375,7 +353,7 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
 
   > span {
     width: 5rem;
-    height: 2.5rem;
+    height: $control-height;
   }
 }
 
@@ -412,12 +390,6 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
 @container tab-skeleton (max-width: #{$narrow-column}) {
   .tab-skeleton__filter > span {
     flex-basis: 100%;
-  }
-}
-
-@keyframes tabbed-page-fade-in {
-  from {
-    opacity: 0;
   }
 }
 
