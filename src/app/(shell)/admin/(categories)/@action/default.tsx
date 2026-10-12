@@ -1,1 +1,1 @@
-export { default } from '../../no-action';
+export { default } from '../../../no-action';
