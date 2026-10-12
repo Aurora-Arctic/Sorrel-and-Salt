@@ -103,6 +103,7 @@ beforeEach(async () => {
   await sql`truncate invitations`;
   await sql`truncate admin_role_change_pauses`;
   await sql`truncate user_privilege_changes`;
+  await sql`delete from workspace_members where user_id in (${GRANTEE}, ${STRANGER})`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
   await asManualFix(sql, async (tx) => {
     await tx`update users set role = 'admin', can_create_workspace = true where id = ${E.id}`;
@@ -292,18 +293,159 @@ describe('a link that cannot be used', () => {
     expect((await invitation()).accepted_at).toBeNull();
   });
 
-  // Until M7.5 adds the workspace branch: refused as an invalid link, joining
-  // nothing and naming no coven, though the address matches and is verified.
-  it('refuses a coven’s invitation as an invalid link, naming no coven', async () => {
-    await invite({ email: A.email, workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
-    await sql`update users set email_verified = true where id = ${A.id}`;
-    const [workspace] = await sql`select name from workspaces where id = ${WORKSPACE_W_ID}`;
+  describe('a coven’s invitation (M7.5)', () => {
+    const memberRows = (userId: string) =>
+      sql`select role::text, joined_at, deleted_at from workspace_members
+        where workspace_id = ${WORKSPACE_W_ID} and user_id = ${userId}`;
 
-    const standing = await invitationStanding(asUser(A), TOKEN);
-    expect(standing).toMatchObject({ acceptable: false, reason: 'invalid' });
-    await expect(acceptInvitation(asUser(A), TOKEN)).rejects.toThrow(NotFound);
-    expect(JSON.stringify(standing)).not.toContain(workspace.name);
-    expect((await invitation()).accepted_at).toBeNull();
+    it('seats the person at the invited role, stamps the invitation and answers the coven’s slug', async () => {
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: A.id });
+      const [{ slug, name }] =
+        await sql`select slug, name from workspaces where id = ${WORKSPACE_W_ID}`;
+
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
+        acceptable: true,
+        tier: 'workspace',
+        slug,
+        name,
+      });
+      expect(await memberRows(GRANTEE)).toHaveLength(0);
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(await memberRows(GRANTEE)).toMatchObject([{ role: 'viewer', deleted_at: null }]);
+      const stamped = await invitation();
+      expect(stamped.accepted_by).toBe(GRANTEE);
+      expect(stamped.accepted_at).not.toBeNull();
+    });
+
+    it('grants the creation flag, as one invitation-declared ledger row, for a viewer too', async () => {
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: A.id });
+      expect((await roleOf(GRANTEE)).can_create_workspace).toBe(false);
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: true });
+      expect(await ledger()).toMatchObject([
+        {
+          user_id: GRANTEE,
+          privilege: 'create_workspace',
+          change: 'grant',
+          via: 'invitation',
+          created_by: GRANTEE,
+        },
+      ]);
+    });
+
+    it('records nothing when the person already holds the flag', async () => {
+      await asManualFix(sql, async (tx) => {
+        await tx`update users set can_create_workspace = true where id = ${GRANTEE}`;
+      });
+      await sql`truncate user_privilege_changes`;
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(await ledger()).toHaveLength(0);
+    });
+
+    it('re-grants the flag to a person an admin revoked', async () => {
+      // The revoke leaves it false and nothing marks it as revoked, so an
+      // invitation vouches again (M5.8's recorded default).
+      await asManualFix(sql, async (tx) => {
+        await tx`update users set can_create_workspace = true where id = ${GRANTEE}`;
+        await tx`update users set can_create_workspace = false where id = ${GRANTEE}`;
+      });
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect((await roleOf(GRANTEE)).can_create_workspace).toBe(true);
+    });
+
+    it('revives a removed member’s row at the invited role, restarting joinedAt, with no second row', async () => {
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, joined_at, deleted_at, deleted_by, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${GRANTEE}, 'owner', '2020-01-01', now(), ${A.id}, ${A.id}, ${A.id})
+      `;
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: A.id });
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      const rows = await memberRows(GRANTEE);
+      expect(rows).toHaveLength(1);
+      expect(rows[0].role).toBe('viewer');
+      expect(rows[0].deleted_at).toBeNull();
+      expect(new Date(rows[0].joined_at).getFullYear()).toBeGreaterThan(2020);
+    });
+
+    it('stamps the invitation for a live member and changes no membership row', async () => {
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${WORKSPACE_W_ID}, ${GRANTEE}, 'owner', ${A.id}, ${A.id})
+      `;
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: A.id });
+      const before = await memberRows(GRANTEE);
+
+      const stamped = await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(stamped.acceptedBy).toBe(GRANTEE);
+      expect(await memberRows(GRANTEE)).toEqual(before);
+      expect(before[0].role).toBe('owner');
+    });
+
+    it('refuses an unverified matching account and a different verified one, so the match admits', async () => {
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+      await sql`update users set email_verified = false where id = ${GRANTEE}`;
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+        reason: 'unverified',
+      });
+      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
+
+      expect(await invitationStanding(asUser(AS_STRANGER), TOKEN)).toMatchObject({
+        reason: 'different-address',
+      });
+      await expect(acceptInvitation(asUser(AS_STRANGER), TOKEN)).rejects.toThrow(Forbidden);
+      expect(await memberRows(GRANTEE)).toHaveLength(0);
+      expect((await invitation()).accepted_at).toBeNull();
+    });
+
+    it('names no coven in any refusal', async () => {
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+      const [workspace] = await sql`select name from workspaces where id = ${WORKSPACE_W_ID}`;
+
+      const standing = await invitationStanding(asUser(AS_STRANGER), TOKEN);
+      expect(standing).toMatchObject({ acceptable: false });
+      expect(JSON.stringify(standing)).not.toContain(workspace.name);
+    });
+
+    it('refuses a deleted coven’s invitation at the standing, and the write backs it up', async () => {
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+      await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
+
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+        acceptable: false,
+        reason: 'invalid',
+      });
+      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(NotFound);
+      expect((await invitation()).accepted_at).toBeNull();
+      expect(await memberRows(GRANTEE)).toHaveLength(0);
+
+      // The backstop: the repository's own write, past a standing that passed.
+      await expect(
+        withAudit(asUser(AS_GRANTEE), (write) => write.acceptInvitation(TOKEN)),
+      ).resolves.toEqual([]);
+    });
+
+    it('cannot be made to seat an owner: the table refuses the role, and a tampered token finds nothing', async () => {
+      await expect(
+        invite({ workspaceId: WORKSPACE_W_ID, role: 'owner' as never, createdBy: A.id }),
+      ).rejects.toThrow();
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+
+      await expect(acceptInvitation(asUser(AS_GRANTEE), `${TOKEN}x`)).rejects.toThrow(NotFound);
+      expect(await memberRows(GRANTEE)).toHaveLength(0);
+    });
   });
 
   // The dead-link checks come before the tier, so they hold for a coven's too.

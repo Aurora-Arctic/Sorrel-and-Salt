@@ -389,9 +389,8 @@ filter, page)` is one page of the pending list, newest first, and
   shared `assertAdminChangesOpen` and in its words, naming nobody.
 - **One accept service, for both tiers.** `acceptInvitation(session, token)`
   (`src/modules/identity/services/invitation-acceptance.ts`) is the one M7.5's
-  entry describes, built here with the site tier's branch; M7.5 adds the
-  workspace's, and until then a workspace invitation is refused as an invalid
-  link. It checks, in this order:
+  entry describes, built by MB.70 with the site tier's branch, and by M7.5
+  with the workspace's. It checks, in this order:
   1. The token names a live invitation, or the link is invalid (`NotFound`).
      The token is hashed in the repository, so a hash read off a dumped row
      names nothing.
@@ -399,8 +398,17 @@ filter, page)` is one page of the pending list, newest first, and
      link in two states always reports the same one reason, an act before
      the clock. Each is a `Forbidden` in words of its own, and none names a
      workspace (M7.7, which asserts them on the workspace tier).
-  3. The tier: the site tier's branch, below; a workspace's is invalid until
-     M7.5.
+  3. The tier: the site tier's branch, below, or the workspace's (M7.5), which
+     seats the person at the invited role: a removed member's row is revived
+     (`reviveMembership`, `joinedAt` restarted), a live member's is left
+     alone and the invitation only stamped, and otherwise a row is inserted.
+     It sets `canCreateWorkspace` declared `via: 'invitation'`, which
+     re-grants it to a person an admin revoked (M5.8's recorded default; no
+     marker exists to consult). The standing carries the coven's name and slug, so the Accept page names the
+     coven to the account that matches and is verified, and to no one else. An
+     invitation into a deleted coven is
+     `invalid` at the standing, after the address checks, so no Accept is
+     offered; the repository write's live-workspace check is the backstop.
   4. The session's account holds the invited address, compared
      case-insensitively, or "This invitation was sent to a different email
      address"; and holds it **verified**, or it is pointed at `/account/email`

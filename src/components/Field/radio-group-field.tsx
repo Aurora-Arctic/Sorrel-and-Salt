@@ -9,7 +9,8 @@ import type { RadioGroupFieldProps } from './types';
  * radio group in a `.fieldset`, its legend the group's name. Native, so the
  * arrow keys move the choice and a screen reader hears "2 of 3". The
  * explanation is the radio's description, read after its name. Controlled by
- * `value`; the caller holds the state (claude-docs/components/field.md).
+ * `value`; the caller holds the state. A `note` is the group's own line, read
+ * with it, for what holds for every choice (claude-docs/components/field.md).
  */
 export function RadioGroupField<T extends string>({
   legend,
@@ -18,10 +19,16 @@ export function RadioGroupField<T extends string>({
   value,
   onChange,
   disabled,
+  note,
 }: RadioGroupFieldProps<T>): ReactElement {
   const id = useId();
+  const noteId = `${id}-note`;
   return (
-    <fieldset className="fieldset radio-group" disabled={disabled}>
+    <fieldset
+      className="fieldset radio-group"
+      disabled={disabled}
+      aria-describedby={note ? noteId : undefined}
+    >
       <legend className="fieldset__legend">{legend}</legend>
       {options.map((option) => {
         const descriptionId = `${id}-${option.value}`;
@@ -47,6 +54,11 @@ export function RadioGroupField<T extends string>({
           </label>
         );
       })}
+      {note && (
+        <p id={noteId} className="field__hint">
+          {note}
+        </p>
+      )}
     </fieldset>
   );
 }

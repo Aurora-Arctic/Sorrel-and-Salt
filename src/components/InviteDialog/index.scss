@@ -1,0 +1,6 @@
+// The role group sits tight in this form: the primitive's 1.5rem above and
+// below it leaves a gap the form's own spacing already provides. Compounded
+// with `.form` so it outranks the primitive, which lives under `body`.
+.form.invite-dialog .fieldset.radio-group {
+  margin-block: 0;
+}

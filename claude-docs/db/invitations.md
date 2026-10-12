@@ -252,4 +252,4 @@ link; the existing field-list test in
 `tests/modules/identity/graphql/admin-invitations.test.ts` pins that.
 
 Story 4's acceptance test passes `createInvitation` now and stops at
-`acceptInvitation`, which has no workspace branch until M7.5.
+`acceptInvitation`, whose workspace branch M7.5 added.

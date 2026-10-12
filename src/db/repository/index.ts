@@ -78,6 +78,7 @@ export {
 } from './users';
 export {
   findInvitationByToken,
+  findInvitedCoven,
   findPendingInvitationsInWorkspace,
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,
@@ -105,6 +106,7 @@ export type {
   IngredientRow,
   InvitableRole,
   InvitationRow,
+  InvitedCoven,
   JoinedRow,
   LinkedProvider,
   PrivilegeChangeFilter,
