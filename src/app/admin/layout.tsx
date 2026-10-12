@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import AdminNav from '../../components/AdminNav';
-import { RouteModalProvider } from '../../components/Modal';
+// From its own client file: the Modal index re-exports modules a server
+// component cannot import.
+import { RouteModalProvider } from '../../components/Modal/route-modal-provider';
 import { requireAdminSession } from '../../lib/request-session';
 import type { AdminLayoutProps } from './types';
 

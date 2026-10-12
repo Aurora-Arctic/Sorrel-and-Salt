@@ -115,7 +115,7 @@ different groups, so the page offers each name once, whatever its case.
 - **None is an em dash.** A null formal name, or an entry with no form, shows
   "—" rather than an empty cell: the Unknown list tells an entry with an
   unconfirmed formal name from one with none by this column.
-- **Each Edit is a pencil, [`EditLink`](icon-tip.md), named for its entry
+- **Each Edit is a pencil, [`EditLink`](icon-tip.md), opening the modal at once (M9.18) under the entry's `editHeading` ([`modal.md`](modal.md), "Opening at once"), named for its entry
   and its formal name**: "Edit", the label and, when there is one, the
   formal name in `visually-hidden` text, with the tooltip "Edit" on hover
   or focus, so a screen reader hears "Edit Testwort, Fixtura

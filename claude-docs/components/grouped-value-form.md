@@ -160,12 +160,15 @@ kind, its groups), each mapped onto the page's own names, so the deities'
 `traditionId` and the astrology services' leading vocabulary stop there.
 
 The page opens the form in a `RouteModal` ([`modal.md`](modal.md)) from its
-address. `?new` opens an empty form, titled "Add Category", and
+address, or at once from a press on an Edit or Add (M9.18; "Opening at once"
+in `modal.md`). `?new` opens an empty form, titled "Add Category", and
 `?edit=<slug>` opens the value at that slug, under an eyebrow, "Edit
 Category", with the value's saved name as its title and a deity's tradition
 after it (`editHeading`; [`modal.md`](modal.md), "An edit dialog's head"). `value-dialog.tsx` is the client edge between the server page and
 the form, since a server component cannot hand `RouteModal` the function its
-contents take. Closing, saving or deleting fades the modal out, then
+contents take. The page renders it always, with `opened` (`{ heading, value }`)
+only when the address opens a modal, so a press's skeleton and the form that
+replaces it are one dialog; the form is keyed by the value's id. Closing, saving or deleting fades the modal out, then
 `router.replace`s the page it opened over, filter and cursor kept
 (`closeHref`, from `groupedValuesHref`), so Back does not reopen it, and
 `router.refresh()`es so the list re-reads. The celestial bodies and signs skipped

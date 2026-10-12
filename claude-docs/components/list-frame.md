@@ -60,7 +60,7 @@ parts, and the table passes through them from the server.
   before any press, carries no `data-arrived` and shows at once.
 - **Only the filter and the pager trigger it.** A row's Edit and the page's
   Add (`?edit=`, `?new`) are `next/link` soft navigations of their own and
-  leave the list in place; typing in a field navigates nowhere. A direct
+  leave the list in place (a plain press opens the modal at once, with a skeleton of its own, M9.18); typing in a field navigates nowhere. A direct
   request renders the whole page on the server, as before, with no skeleton.
 - **A provider above is kept.** As `TabSwitchProvider` does, a
   `ListNavigationContext` already above the frame, the workshop's, is used
@@ -72,7 +72,7 @@ In `_primitives.scss` beside `.list-frame`, under `body`, so the app's
 weights hold: `.list-frame__body` is a column `space(5)` apart, as the frame
 is, its empty-state paragraph with no margin; `[data-arrived]` runs the
 200ms fade, none under `prefers-reduced-motion: reduce`. The skeleton's
-shapes, shimmer and 150ms fade are `TabbedPage/index.scss`'s, which
+shapes and 150ms fade are `TabbedPage/index.scss`'s (the shimmer is the shared `skeleton-shape` mixin), which
 `panel-loading.tsx` imports itself, so the shapes are drawn wherever a list
 renders, in a tabbed page or not; reduced motion stills them there.
 

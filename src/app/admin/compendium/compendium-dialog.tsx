@@ -7,7 +7,7 @@ import IngredientForm from '../../../components/IngredientForm';
 import { RouteModal } from '../../../components/Modal';
 import type { CompendiumDialogProps } from './types';
 
-// The page's modal, a wide `RouteModal`, which closes it back to the list
+// The page's modal, a `RouteModal`, which closes it back to the list
 // (claude-docs/components/modal.md, "RouteModal"). What stays here is what
 // RouteModal does not do: a save that moves the open modal from `?new` to the
 // entry's `?edit=` rather than closing it, so this keeps a router of its own.

@@ -22,7 +22,7 @@ it directly.
 
 - **One `h1` per page, and this is it** on every page that renders it.
 - **The action is the caller's element**: an Add link to the page's `?new`
-  address, or a client component of its own. A page with no action leaves it
+  address (the admin lists' `AddAction`, which opens its modal at once), or a client component of its own. A page with no action leaves it
   out and keeps the same heading.
 - **Server-safe.** It has no client directive and no hook, so a server page
   renders it directly.

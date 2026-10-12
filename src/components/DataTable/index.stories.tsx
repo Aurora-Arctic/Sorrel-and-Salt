@@ -35,7 +35,9 @@ const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
     heading: 'Edit',
     hiddenHeading: true,
     action: 'corner',
-    cell: (row) => <EditLink href={'?edit' as Route} name={row.name} />,
+    cell: (row) => (
+      <EditLink href={'?edit' as Route} name={row.name} heading={{ title: row.name }} />
+    ),
   },
 ];
 

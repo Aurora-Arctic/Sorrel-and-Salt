@@ -915,7 +915,7 @@ What each section review (MB.115 to MB.124) designs to:
   is a `FilterForm`; a page's heading and its action are a `PageHeader`, and
   a page in tabs is a `TabbedPage` with each tab's action from its route
   group's `@action` slot;
-  and a modal opened by its page's address is a `RouteModal`
+  and a modal opened by its page's address, or at once by a press, is a `RouteModal`
   ([`components/modal.md`](components/modal.md)). Each is in
   `claude-docs/components/`.
 - **Lists are the list primitives.** A list page's root is a `.list-frame`,

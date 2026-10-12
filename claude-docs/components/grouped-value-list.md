@@ -114,7 +114,8 @@ for a rule only one kind's rows need.
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, Add Celestial Body and the rest, the tab's action beside the
   page's heading (`ValueAction` in `src/app/admin/value-page.tsx`, from the
-  route group's `@action` slot) and so the page's rather than this
+  route group's `@action` slot, built on `AddAction` in `src/app/admin/add-action.tsx`,
+  which takes the dialog's `heading` apart from the button's label, M9.18) and so the page's rather than this
   component's, is `?new`.
   `href.ts`'s `groupedValuesHref(kind, place, dialog?)`, on the shared
   `listHref` (`src/lib/list-href.ts`), builds both, the
@@ -128,7 +129,7 @@ for a rule only one kind's rows need.
   the page renders again with the modal open, and the page itself calls the
   admin guard on every render. AdminNav uses `<Link>` too, now that every
   route it names is built ([`admin-nav.md`](admin-nav.md)).
-- **Each Edit is a pencil, [`EditLink`](icon-tip.md), named for its
+- **Each Edit is a pencil, [`EditLink`](icon-tip.md), opening the modal at once (M9.18) under the value's `editHeading` ([`modal.md`](modal.md), "Opening at once"), named for its
   value**: "Edit" and the name in `visually-hidden` text, so a screen
   reader hears "Edit Testcraft" rather than a column of "Edit", and a
   sighted reader sees the tooltip "Edit" on hover or focus (MB.115, the

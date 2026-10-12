@@ -49,7 +49,10 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   and the list are rendered apart, so the button can no longer hold the
   form's state: Invite Admin is a link to `/admin/invitations?invite`
   (`href.ts`), and the page opens the form over the list by that address,
-  as a value page's `?new` opens its own. Both keep the filter and the page shown: the action's page reads them
+  as a value page's `?new` opens its own. A plain press opens the modal at
+  once instead (M9.18; [`modal.md`](modal.md), "Opening at once"): `InviteAdmin`
+  goes through the modal provider, and the link stays for a new tab or a press
+  before the script loads. `InviteForm` takes `open: boolean` and is rendered always. Both keep the filter and the page shown: the action's page reads them
   off the address as the tab's does, so the link is
   `?email=fern&expiring&after=…&invite`, and the form closes back to the
   tab at that page, as a value page's Add does. While locked it is the locked control instead, and `?invite`
