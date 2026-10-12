@@ -1,7 +1,9 @@
 import { UserRef } from '@/modules/identity';
 import { builder } from '../../../graphql/builder';
+import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { workspaceRole } from '../schema/workspaces';
+import { createWorkspace } from '../services/workspace-creation';
 import type { MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 const WorkspaceRoleEnum = builder.enumType('WorkspaceRole', {
@@ -33,5 +35,18 @@ builder.objectField(UserRef, 'memberships', (t) =>
   t.field({
     type: [WorkspaceMemberRef],
     resolve: (user, _args, { loaders }) => loaders.membershipsByUser.load(user.id),
+  }),
+);
+
+// The gate is the service's, so this scope only keeps a signed-out caller out
+// (claude-docs/graphql/schema.md, "Auth scopes").
+builder.mutationField('createWorkspace', (t) =>
+  t.field({
+    type: WorkspaceRef,
+    description:
+      'Creates a coven with the caller as its owner. Refused for a user who may not create one.',
+    args: { name: t.arg.string({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { name }, context) => createWorkspace(sessionOf(context), { name }),
   }),
 );

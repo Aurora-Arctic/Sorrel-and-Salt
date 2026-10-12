@@ -6,6 +6,7 @@ import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspa
 import type { WorkspaceRole } from '@/modules/coven';
 import { notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
+import type { AuditWriter, WriterContext } from './types';
 
 /**
  * The one workspace-scoped read that takes no proof, because it is what mints
@@ -53,4 +54,20 @@ export async function findMembershipsOfUsers(
       existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
     ),
   );
+}
+
+/**
+ * The membership write that takes no proof, for the reason `findWorkspaceRole`
+ * is the read that takes none: a proof is minted from a membership row, so
+ * the row that makes a creator an owner, or an invitee a member, has none to
+ * be written under. Spread into the writer beside `invitationWrites` (MB.198),
+ * so it still runs inside `withAudit` and is stamped from the session. Narrow
+ * on purpose — one row, the pair and the role named — and the caller decides
+ * whether this user may be seated.
+ */
+export function membershipWrites({ insert }: WriterContext): Pick<AuditWriter, 'insertMembership'> {
+  return {
+    insertMembership: (workspaceId, userId, role) =>
+      insert(workspaceMembers, { workspaceId, userId, role }),
+  };
 }

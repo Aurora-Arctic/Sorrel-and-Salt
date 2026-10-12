@@ -92,6 +92,18 @@ token names, on either tier and whatever its state; the accept beside it
 matches only the session's user holding the invited address, verified
 ([`invitations.md`](invitations.md), "Written and read by tier").
 
+### The write that takes no proof
+
+`insertMembership(workspaceId, userId, role)` (M6.7) is the one membership write
+with no proof, for the reason `findWorkspaceRole` is the read with none: a
+proof is minted from a membership row, so the row that makes a workspace's
+creator its owner has none to be written under. It lives in
+`src/db/repository/memberships.ts` and is spread into the writer beside
+`invitationWrites` (MB.198), so it runs inside `withAudit` and is stamped from
+the session. `createWorkspace` calls it in the same transaction as the
+workspace row, so a failure leaves neither; M7.5 reuses it to seat an invitee.
+Whether a user may be seated is the calling service's decision.
+
 The admin user list's two reads, `findUserPage` and `findProvidersOfUsers`
 (MB.52), and the privilege ledger's, `findPrivilegeChangePage` (MB.199), are
 not among them: they span no workspace either, but they take the `SiteAdmin`

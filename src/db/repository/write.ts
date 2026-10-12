@@ -12,6 +12,7 @@ import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired
 import { fold, inCompendium, listFolds, notSoftDeleted, scopedTo } from './predicates';
 import { adminRoleWrites } from './admin-roles';
 import { invitationWrites } from './invitations';
+import { membershipWrites } from './memberships';
 import { existsIn } from './select';
 import type { Membership } from '@/modules/coven';
 import type {
@@ -151,6 +152,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       ),
     ...adminRoleWrites(context),
     ...invitationWrites(context),
+    ...membershipWrites(context),
     delete: (table, match) => {
       const where = matching(table, match);
       return where ? (tx.delete(table).where(where).returning() as never) : Promise.resolve([]);

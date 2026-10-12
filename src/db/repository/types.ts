@@ -2,6 +2,7 @@ import type { ExtractTablesWithRelations, SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import type { invitations } from '../../modules/coven/schema/invitations';
+import type { workspaceMembers } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
@@ -12,7 +13,7 @@ import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
-import type { Membership } from '@/modules/coven';
+import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
@@ -433,6 +434,17 @@ export interface AuditWriter {
    * only because the lock must be taken in the transaction that writes.
    */
   lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
+  /**
+   * Seat a user in a workspace at a role, under no proof: the row a proof is
+   * minted from, so a workspace's creator (M6.7) and an invitee accepting
+   * (M7.5) have none to write it under. The caller has decided the user may be
+   * seated; stamped from the session.
+   */
+  insertMembership(
+    workspaceId: string,
+    userId: string,
+    role: WorkspaceRole,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
