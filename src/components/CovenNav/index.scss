@@ -1,0 +1,6 @@
+// The coven nav (claude-docs/components/coven-nav.md, "Styling"): one
+// `.link-row` and nothing past the primitives until the section's design
+// review. A block, so the page beneath it starts on its own line.
+.coven-nav {
+  display: block;
+}

@@ -42,7 +42,49 @@ visitors three ways, all from the server:
 
 Tests: `tests/modules/coven/services/workspace-by-slug.test.ts` (against
 Postgres, every fixture user), `tests/lib/request-session.test.ts` (the 404
-mapping) and `tests/app/coven/layout.test.tsx` (the layout calls the guard
-with its own segment). No end-to-end spec yet: until the coven index page
-(M9.15) exists, every `/coven/<slug>` address is a 404 to everyone, so a
-browser test could not tell a member from a stranger. M9.15 adds it.
+mapping), `tests/app/coven/layout.test.tsx` (the layout calls the guard
+with its own segment) and `tests/e2e/coven.spec.ts` (a member at each role
+gets the page, a stranger and an unknown slug the same 404, in a real
+browser against the built server).
+
+## The coven index page (M9.15)
+
+`/coven/[slug]` is the page a coven opens on: where the switcher (M6.9), an
+accepted invitation (M7.5) and the shell's coven link (MB.7) land. It is
+`src/app/coven/[slug]/page.tsx`, and like every page under the coven it runs
+the guard again with its own slug. It shows the coven's name as its heading,
+and the layout's title template gives its tab title the name too.
+
+**The section nav is the layout's.** `src/app/coven/[slug]/layout.tsx`
+renders `CovenNav` above the page, inside the `.coven-layout` frame, so
+every page under the coven carries it without repeating it
+([`components/coven-nav.md`](../components/coven-nav.md)). Today it links
+only the index, Overview. Each other section is linked by the task that
+builds its page, because `typedRoutes` refuses a link to a route the build
+does not contain: Members by M6.13, for the roles holding `member: read`,
+Ingredients by M9.6 and Grimoire by M10.11. Members is deferred for that
+reason too, though the task first listed it here (the owner's call,
+2026-10-12).
+
+**Leave and Delete have their places here, disabled until their services
+land.**
+
+| Control          | Shown to                                   | Filled by                 |
+| ---------------- | ------------------------------------------ | ------------------------- |
+| Leave Workspace  | Every role                                 | M6.15, and M6.16's dialog |
+| Delete Workspace | Roles holding `workspace: delete` (owners) | M6.14's confirmation      |
+
+- **Leave is on this page, not the members page,** because a viewer gets a
+  404 from the members page (M6.13) and must still be able to leave.
+- **Delete is shown by permission, never by rank.** The page asks
+  `rolePermits(role, { workspace: ['delete'] })`, the statement M6.14's
+  service checks, so the button and the service cannot disagree about who
+  may delete. Hiding it is presentation; the service is still the guard.
+- **Both are real buttons, disabled** (the owner's call, 2026-10-12), so a
+  test finds them by role and name with no test id. A disabled control is
+  what M6.16 forbids once Leave works, so the task that wires each one also
+  enables it.
+
+Tests: `tests/app/coven/page.test.tsx` (the page guards its own slug; Leave
+for every role, Delete for the owner alone) and `tests/e2e/coven.spec.ts`
+(the same in a browser, keyboard reach and an axe scan).
