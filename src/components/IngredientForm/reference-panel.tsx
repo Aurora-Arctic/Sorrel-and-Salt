@@ -39,13 +39,7 @@ import { readGraphqlIssues } from '../../lib/graphql-failure';
 export const CreateReferenceDocument = graphql(`
   mutation CreateReference($workspaceId: ID, $input: ReferenceInput!) {
     createReference(workspaceId: $workspaceId, input: $input) {
-      id
-      citation
-      isGlobal
-      kind
-      authors
-      title
-      container
+      ...ReferenceRow
     }
   }
 `);
@@ -53,13 +47,7 @@ export const CreateReferenceDocument = graphql(`
 export const UpdateReferenceDocument = graphql(`
   mutation UpdateReference($workspaceId: ID, $id: ID!, $input: ReferenceInput!) {
     updateReference(workspaceId: $workspaceId, id: $id, input: $input) {
-      id
-      citation
-      isGlobal
-      kind
-      authors
-      title
-      container
+      ...ReferenceRow
     }
   }
 `);
