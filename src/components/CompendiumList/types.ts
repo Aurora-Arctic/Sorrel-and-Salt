@@ -1,5 +1,7 @@
 import type { Route } from 'next';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+import type { PagerHrefs } from '../../app/admin/types';
+import type { PagePosition } from '../../lib/types';
 
 /**
  * One compendium entry as the list shows it: its classification, its identity
@@ -18,16 +20,14 @@ export interface CompendiumListEntry {
   editHref: Route;
 }
 
-export interface CompendiumListProps {
+export interface CompendiumListProps extends Partial<PagerHrefs> {
   entries: readonly CompendiumListEntry[];
   /** The filter the page shows, which the form starts from and compares against. */
   filter: CompendiumListFilter;
   /** The curated forms, in name order, which the Form box offers. */
   forms: readonly CompendiumFormChoice[];
-  previousHref?: Route;
-  nextHref?: Route;
   /** Where this page stands among them all, for the pager. */
-  position?: { page: number; pages: number };
+  position?: PagePosition;
 }
 
 /**

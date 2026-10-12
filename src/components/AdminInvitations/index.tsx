@@ -5,6 +5,7 @@ import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import { noMatchText } from '../../lib/text';
 import { inUtc } from '../../lib/utc';
 import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
@@ -40,25 +41,16 @@ const REVOKE = 'Revoke';
 /** No filter: the whole pending list. */
 const NO_FILTER: Filter = { email: '', expiringSoon: false };
 
-/** A list as prose, without the serial comma: "a", "a and b". */
-function and(items: readonly string[]): string {
-  return items.length < 2
-    ? items.join('')
-    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
-}
-
 /**
  * The empty list, naming the filters in use as the other admin lists do
- * (MB.115), so an admin sees what to change: "No invitation matches “fern”
+ * (MB.115), so an admin sees what to change: "No invitations match “fern”
  * and Expires in 24 Hrs. Change or clear the filter to see more."
  */
 function emptyText({ email, expiringSoon }: Filter): string {
   const filters = [email && `“${email}”`, expiringSoon && 'Expires in 24 Hrs'].filter(
     (filter): filter is string => Boolean(filter),
   );
-  return filters.length
-    ? `No invitation matches ${and(filters)}. Change or clear the filter to see more.`
-    : 'No admin invitations are waiting.';
+  return noMatchText('invitations', filters, 'No admin invitations are waiting.');
 }
 
 const RevokeAdminInvitationDocument = graphql(`

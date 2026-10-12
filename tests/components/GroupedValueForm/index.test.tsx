@@ -21,6 +21,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
+import { choose, press, typeIn } from '../../support/interact';
 import type { GroupedValueFormSubject } from '../../support/types';
 import {
   expectAnswered,
@@ -110,20 +111,7 @@ function renderForm(props: Pick<GroupedValueFormProps, 'kind'> & Partial<Grouped
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
 const group = () => screen.getByRole('combobox', { name: 'Group' });
-const chooseGroup = (label: string) => {
-  fireEvent.click(group());
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: 'Group choices' })).getByRole('option', {
-      name: label,
-    }),
-  );
-};
-const type = (field: HTMLElement, value: string) => fireEvent.change(field, { target: { value } });
-const press = (label: string) => {
-  const button = screen.getByRole('button', { name: label });
-  button.focus();
-  fireEvent.click(button);
-};
+const chooseGroup = (label: string) => choose('Group', label);
 
 describe('GroupedValueForm, what every kind shares', () => {
   describe('adding', () => {
@@ -147,7 +135,7 @@ describe('GroupedValueForm, its unsaved changes', () => {
       <GroupedValueForm kind="category" value={CATEGORY} groups={CATEGORY_GROUPS} onDone={done} />
     ));
 
-    expectGuardedWaysOut(onClose, () => type(description(), 'A change'));
+    expectGuardedWaysOut(onClose, () => typeIn(description(), 'A change'));
   });
 });
 
@@ -198,7 +186,7 @@ describe('GroupedValueForm, its delete question in a modal', () => {
     const escape = () =>
       fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
 
-    type(description(), 'A change');
+    typeIn(description(), 'A change');
     press('Delete Category');
     escape();
     expect(screen.getByRole('button', { name: 'Keep Editing' })).toHaveFocus();
@@ -207,7 +195,7 @@ describe('GroupedValueForm, its delete question in a modal', () => {
     expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
     expect(onClose).not.toHaveBeenCalled();
 
-    type(description(), CATEGORY.description);
+    typeIn(description(), CATEGORY.description);
     escape();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
@@ -229,8 +217,8 @@ describe('GroupedValueForm, a category', () => {
       );
       const onDone = renderCategory();
 
-      type(name(), 'Testcraft');
-      type(description(), 'A category the test made');
+      typeIn(name(), 'Testcraft');
+      typeIn(description(), 'A category the test made');
       chooseGroup('Fixture Healing');
       press('Save Category');
 
@@ -259,7 +247,7 @@ describe('GroupedValueForm, a category', () => {
       );
       const onDone = renderCategory({ value: CATEGORY });
 
-      type(name(), 'Testcraft Renamed');
+      typeIn(name(), 'Testcraft Renamed');
       press('Save Category');
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -328,8 +316,8 @@ describe('GroupedValueForm, a form', () => {
       });
       const onDone = renderFormKind();
 
-      type(name(), 'Testwort Shard');
-      type(description(), 'A form the test made');
+      typeIn(name(), 'Testwort Shard');
+      typeIn(description(), 'A form the test made');
       chooseGroup('Fixture Mineral');
       press('Save Form');
 
@@ -348,7 +336,7 @@ describe('GroupedValueForm, a form', () => {
     it('notes no rename on a new form', () => {
       renderFormKind();
 
-      type(name(), 'Testwort Shard');
+      typeIn(name(), 'Testwort Shard');
 
       expect(save()).toHaveAccessibleDescription('');
     });
@@ -363,8 +351,8 @@ describe('GroupedValueForm, a form', () => {
       });
       renderFormKind();
 
-      type(name(), 'Testwort Shard');
-      type(description(), 'Grouped');
+      typeIn(name(), 'Testwort Shard');
+      typeIn(description(), 'Grouped');
       chooseGroup('Fixture Mineral');
       press('Save Form');
 
@@ -386,7 +374,7 @@ describe('GroupedValueForm, a form', () => {
       });
       const onDone = renderFormKind({ value: FORM });
 
-      type(name(), 'Testwort Sliver');
+      typeIn(name(), 'Testwort Sliver');
       press('Save Form');
 
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -407,13 +395,13 @@ describe('GroupedValueForm, a form', () => {
       renderFormKind({ value: FORM });
 
       expect(save()).toHaveAccessibleDescription('');
-      type(description(), 'Described again');
+      typeIn(description(), 'Described again');
       expect(save()).toHaveAccessibleDescription('');
 
-      type(name(), 'Testwort Sliver');
+      typeIn(name(), 'Testwort Sliver');
       expect(save()).toHaveAccessibleDescription(/\S/);
 
-      type(name(), 'Testwort Shard');
+      typeIn(name(), 'Testwort Shard');
       expect(save()).toHaveAccessibleDescription('');
     });
   });
@@ -471,8 +459,8 @@ describe('GroupedValueForm, a deity', () => {
     );
     const onDone = renderDeity();
 
-    type(name(), 'Testra');
-    type(description(), 'A god the test made');
+    typeIn(name(), 'Testra');
+    typeIn(description(), 'A god the test made');
     fireEvent.click(tradition());
     fireEvent.click(
       within(screen.getByRole('listbox', { name: 'Tradition choices' })).getByRole('option', {
@@ -506,7 +494,7 @@ describe('GroupedValueForm, a deity', () => {
 
     expect(tradition()).toHaveValue('Mockish');
     expect(save()).toHaveAccessibleDescription('');
-    type(name(), 'Mockra');
+    typeIn(name(), 'Mockra');
     expect(save()).toHaveAccessibleDescription(/\S/);
     press('Save Deity');
 
@@ -530,7 +518,7 @@ describe('GroupedValueForm, a deity', () => {
     });
     renderDeity({ value: DEITY });
 
-    type(name(), 'Mockra');
+    typeIn(name(), 'Mockra');
     press('Save Deity');
 
     await waitFor(() => expect(tradition()).toHaveAttribute('aria-invalid', 'true'));
@@ -580,8 +568,8 @@ describe.each(FLAT)('GroupedValueForm, the flat kind $kind', ({ kind, type: muta
     const onDone = renderForm({ kind });
 
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
-    type(name(), ' Testwort Star ');
-    type(description(), 'A value the test made');
+    typeIn(name(), ' Testwort Star ');
+    typeIn(description(), 'A value the test made');
     press(`Save ${noun}`);
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
@@ -598,7 +586,7 @@ describe.each(FLAT)('GroupedValueForm, the flat kind $kind', ({ kind, type: muta
     });
     const onDone = renderForm({ kind, value: FLAT_VALUE });
 
-    type(name(), 'Testwort Comet');
+    typeIn(name(), 'Testwort Comet');
     press(`Save ${noun}`);
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));

@@ -10,21 +10,28 @@ import { fireEvent, screen, within } from '@testing-library/react';
 // a marker hidden from its accessible name, dropped here so the label is
 // written as the name is.
 
-const byLabel = (label: string, selector: string) =>
+/**
+ * The element labelled `label` and matching `selector`, the selector keeping
+ * the query to one kind of control where a label names several.
+ */
+export const byLabel = (label: string, selector: string) =>
   screen.getByLabelText(label, {
     selector,
     normalizer: (text) => text.replace(/\*$/, '').trim(),
   });
 
 /**
- * Presses the button named `name`: focused first, as a pointer press focuses
- * it, so a form that reads where the focus went — a guard asking before Cancel
- * closes, say — sees what a browser would show it.
+ * Presses the button named `name`, or the button given: focused first, as a
+ * pointer press focuses it, so a form that reads where the focus went — a
+ * guard asking before Cancel closes, say — sees what a browser would show it.
+ * A button is given where its name is not enough to find it: one in a row,
+ * or in a panel.
  */
-export function press(name: string): void {
-  const button = screen.getByRole('button', { name });
-  button.focus();
-  fireEvent.click(button);
+export function press(button: string | HTMLElement): void {
+  const pressed =
+    typeof button === 'string' ? screen.getByRole('button', { name: button }) : button;
+  pressed.focus();
+  fireEvent.click(pressed);
 }
 
 /** Opens the type-ahead labelled `name` and picks `label` from its `${name} choices` list. */
@@ -43,7 +50,13 @@ export function choose(name: string, label: string): void {
  * typed: a form reads the value, not each key.
  */
 export function type(label: string, text: string): void {
-  fireEvent.change(byLabel(label, 'input:not([role]), textarea, [role="combobox"]'), {
-    target: { value: text },
-  });
+  typeIn(byLabel(label, 'input:not([role]), textarea, [role="combobox"]'), text);
+}
+
+/**
+ * `type` for a field already in hand, where its label is not enough to find
+ * it: one of several of the same name, or one found by its role.
+ */
+export function typeIn(field: HTMLElement, text: string): void {
+  fireEvent.change(field, { target: { value: text } });
 }

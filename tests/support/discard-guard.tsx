@@ -40,16 +40,24 @@ const asking = () => screen.queryByRole('button', { name: 'Discard Changes' });
 
 /**
  * After `change`, the form's Cancel and the modal's Escape each ask rather
- * than close, and Discard Changes closes.
+ * than close, and Discard Changes closes. `onClose` is whatever the way out
+ * ends at: the modal's, or the router a page closes its dialog by. `cancel`
+ * finds the form's Cancel where it is not the only one — a reference panel
+ * open in it has its own — and `kept` asserts what Keep Editing kept.
  */
-export function expectGuardedWaysOut(onClose: Mock, change: () => void): void {
+export function expectGuardedWaysOut(
+  onClose: Mock,
+  change: () => void,
+  { cancel = () => button('Cancel'), kept }: { cancel?: () => HTMLElement; kept?: () => void } = {},
+): void {
   change();
 
-  fireEvent.click(button('Cancel'));
+  fireEvent.click(cancel());
   expect(asking()).toBeInTheDocument();
   expect(onClose).not.toHaveBeenCalled();
 
   fireEvent.click(button('Keep Editing'));
+  kept?.();
   fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
   expect(asking()).toBeInTheDocument();
   expect(onClose).not.toHaveBeenCalled();

@@ -6,12 +6,12 @@ import { type KeyboardEvent, type ReactElement, useEffect, useId, useMemo, useRe
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
+
 import Notice from '../Notice';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
-import { SelectField, TextField } from '../Field';
+import { FormActions, SelectField, TextField } from '../Field';
 import type { ReferenceQuery } from '../../gql/graphql';
 import type {
   ReferenceFieldName,
@@ -23,7 +23,7 @@ import type {
 } from './types';
 import { useFocusFirstInvalid } from './on-submit';
 import { useReportPanelChanges } from './panel-changes';
-import { readGraphqlIssues } from '../../lib/graphql-failure';
+import { placeServerIssues } from '../../lib/graphql-failure';
 
 // The citation sub-form (MB.154): a new source written to this coven without
 // leaving the ingredient form. Inline beneath the References field rather
@@ -447,15 +447,11 @@ function PanelForm({
       // A field error beside the field it names, if this kind shows it;
       // anything else above the fields.
       const visible = shownFor(kind);
-      const unplaced: string[] = [];
-      for (const { path, message } of readGraphqlIssues(error)) {
-        const [field, ...rest] = path;
-        if (field === 'kind' && rest.length === 0) setError('kind', { type: 'server', message });
-        else if (rest.length === 0 && visible.has(field as ReferenceFieldName)) {
-          setError(field as ReferenceFieldName, { type: 'server', message });
-        } else unplaced.push(message);
-      }
-      if (unplaced.length > 0) setError('root', { type: 'server', message: unplaced.join(' ') });
+      placeServerIssues(error, setError, ({ path: [field, ...rest] }) => {
+        if (rest.length > 0) return undefined;
+        if (field === 'kind') return 'kind';
+        return visible.has(field as ReferenceFieldName) ? (field as ReferenceFieldName) : undefined;
+      });
     }
   };
   const submit = () => void handleSubmit(save)();
@@ -510,25 +506,14 @@ function PanelForm({
             waits, so a source being written is never left half-added. Save
             is off until something is entered or changed, and Cancel is quiet,
             the owner's rules for every form (M5.6). */}
-        <div className="form__actions">
-          <BusyButton
-            className="btn btn--solid"
-            onClick={submit}
-            disabled={!isDirty || isSubmitting}
-            busy={isSubmitting}
-            busyLabel={`Saving ${noun}`}
-          >
-            {`Save ${noun}`}
-          </BusyButton>
-          <button
-            type="button"
-            className="btn btn--quiet"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-        </div>
+        <FormActions
+          noun={noun}
+          dirty={isDirty}
+          submitting={isSubmitting}
+          onSave={submit}
+          onCancel={onCancel}
+          holdCancel
+        />
       </fieldset>
     </FormProvider>
   );

@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { ReasonField } from '../Field';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import type { ConfirmedActionProps, ConfirmStep } from './types';
@@ -16,9 +16,6 @@ import './controls.scss';
 // write and stays busy until the page is read again, or left; a refusal
 // closes it and says why beside the control. The service is the guard; this
 // only puts it where an admin looks (claude-docs/components/user-list.md).
-
-/** What the Reason field is for, behind an info tip beside its label (MB.115, on the owner's call). */
-const NOTE_HINT = 'Kept with the change in the record of who changed what.';
 
 const ConfirmedAction = ({
   label,
@@ -36,7 +33,7 @@ const ConfirmedAction = ({
 }: ConfirmedActionProps): ReactElement => {
   const router = useRouter();
   const warningId = useId();
-  const { aria: noteAria, ...noteField } = fieldDescription({ id: useId(), hint: NOTE_HINT });
+
   const [step, setStep] = useState<ConfirmStep>('idle');
   const [failure, setFailure] = useState<string>();
   const [note, setNote] = useState('');
@@ -114,23 +111,12 @@ const ConfirmedAction = ({
                 </Notice>
               )}
               {withNote && (
-                // The wrapper holds the field's room above and below; the shell
-                // takes no class of its own.
-                <div className="user-list__note">
-                  <FieldShell label="Reason" hint={NOTE_HINT} {...noteField}>
-                    <input
-                      id={noteField.controlId}
-                      className="input"
-                      type="text"
-                      autoComplete="off"
-                      placeholder="Add a reason"
-                      {...noteAria}
-                      value={note}
-                      disabled={sending}
-                      onChange={(event) => setNote(event.target.value)}
-                    />
-                  </FieldShell>
-                </div>
+                <ReasonField
+                  className="user-list__note"
+                  value={note}
+                  onChange={setNote}
+                  disabled={sending}
+                />
               )}
               <div className="modal__actions">
                 {/* Described by the warning: the focus lands here as the modal

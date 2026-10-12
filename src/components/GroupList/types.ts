@@ -1,25 +1,26 @@
 import type { Route } from 'next';
+import type { PagerHrefs } from '../../app/admin/types';
+import type { GroupColors, PagePosition } from '../../lib/types';
 import type { GroupKind } from '../GroupForm/types';
 
-/** One group as the list shows it, and the address that opens it to edit. */
-export interface GroupListEntry {
+/**
+ * One group as the list shows it, and the address that opens it to edit; a
+ * category group with its chip pair, which its name is drawn in, a form
+ * group or a tradition with none.
+ */
+export interface GroupListEntry extends Partial<GroupColors> {
   id: string;
   name: string;
   slug: string;
   description: string;
-  /** A category group's chip pair, which its name is drawn in; a form group has none. */
-  colorDark?: string;
-  colorLight?: string;
   editHref: Route;
 }
 
-export interface GroupListProps {
+export interface GroupListProps extends Partial<PagerHrefs> {
   kind: GroupKind;
   groups: readonly GroupListEntry[];
-  previousHref?: Route;
-  nextHref?: Route;
   /** Where this page stands among them all, for the pager; none says nothing of it. */
-  position?: { page: number; pages: number };
+  position?: PagePosition;
   /**
    * The name search the page shows, `''` for none; absent, the list draws no
    * filter row at all, as a kind without a search (`group-page.tsx`).
