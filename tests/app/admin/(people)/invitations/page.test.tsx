@@ -6,8 +6,9 @@ import type { PageRequest } from '@/lib/types';
 
 // The `/admin/invitations` page, the People page's Invitations tab (MB.70; a
 // tab of its own since MB.115), with Invite Admin, its action beside the
-// heading: the guard, then the two identity reads, the pending invitations
-// shown with no hash, the invite form `?invite` opens, and the pause locking
+// heading: the guard, then the identity reads, a page of the pending
+// invitations and its count, shown with no hash, the cursor and the pager's
+// links, the invite form `?invite` opens, and the pause locking
 // Invite and Revoke. The guard and the services are mocked: what they decide is
 // tests/lib/request-session.test.ts's and
 // tests/modules/identity/services/admin-invitations.test.ts's.

@@ -2,12 +2,13 @@
 
 `src/components/AdminInvitations/` — the People page's Invitations tab,
 `/admin/invitations` (MB.70; a section beneath the user list until MB.115
-gave it a tab of its own): **Invite Admin**, a filter row, and the pending
+gave it a tab of its own): **Invite Admin**, a filter row, a page of the pending
 invitations it leaves, each with its address, its reason, when it expires and
-**Revoke**. Render-only: the page reads the filter off its address
-(`invitations/filter.ts`), the list through `listPendingAdminInvitations`
-under it, and whether this admin is held by the pause
-(`invitations/lock.ts`), and hands all three down. The rules are
+**Revoke**, and the pager beneath them. Render-only: the page reads the
+filter and the cursor off its address (`invitations/filter.ts`), one page of
+the list and its count through `listPendingAdminInvitations` and
+`countPendingAdminInvitations` under them, and whether this admin is held by
+the pause (`invitations/lock.ts`), and hands them down. The rules are
 [`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
 
 ## Contracts
@@ -27,32 +28,46 @@ under it, and whether this admin is held by the pause
   ([`db/invitations.md`](../db/invitations.md)). The address carries them
   as `?email=fern&expiring`, `expiring` a bare flag read by its presence,
   so a native submit's `expiring=` reads the same; `href.ts`'s
-  `invitationsHref(filter, invite)` builds every address the tab links to.
-  Filter opens the filtered list as a soft navigation, the row greyed and the
-  list a skeleton until it arrives: the tab has no pager whose plain anchors
-  it must agree with. Clear opens `/admin/invitations`, or empties
+  `invitationsHref(filter, cursor, invite)` builds every address the tab
+  links to. Filter opens the filtered list from its first page, since it
+  names no cursor, as a full load, as the user list's does: it agrees with
+  the pager's plain anchors, whose full load runs the admin layout's guard
+  again, and the row is greyed and the list a skeleton until the browser
+  leaves. Clear opens `/admin/invitations`, or empties
   the fields in place when neither is applied. The list keys the filter by
   the one shown, so a page showing another starts it again from that one.
-  There is no pager: the list is the handful still pending.
+- **25 to a page, with the shared [`Pager`](pager.md)** (MB.115, on the
+  owner's call: a fixed number per page with a pager, as the Users list has;
+  CLAUDE.md rule 8). Newest first, Prev and Next carrying the filter and a
+  cursor (`?after=` or `?before=`), with "Page X of Y" between them, as the
+  privilege ledger beside it counts its pages. Plain anchors rather than
+  soft links, for the user list's reason: a full load runs the admin
+  layout's guard again. The page builds the two hrefs through
+  `list-page.ts`'s `pagerHrefs`, and a cursor that names no row of this list
+  (one copied from another list) reads the first page, through
+  `readNumberedPage`. A list of one page shows no pager.
 - **Invite Admin is the tab's action, beside the page's heading** (MB.115,
   on the owner's call), exported as `InviteAdmin` and drawn by
   `src/app/admin/(people)/@action/invitations/page.tsx`. The heading line
   and the list are rendered apart, so the button can no longer hold the
   form's state: Invite Admin is a link to `/admin/invitations?invite`
   (`href.ts`), and the page opens the form over the list by that address,
-  as a value page's `?new` opens its own. Both keep the filter shown: the
-  action's page reads it off the address as the tab's does, so the link is
-  `?email=fern&expiring&invite`, and the form closes back to the tab
-  under it. While locked it is the locked control instead, and `?invite`
+  as a value page's `?new` opens its own. Both keep the filter and the page shown: the action's page reads them
+  off the address as the tab's does, so the link is
+  `?email=fern&expiring&after=…&invite`, and the form closes back to the
+  tab at that page, as a value page's Add does. While locked it is the locked control instead, and `?invite`
   opens nothing.
-- **Props.** `invitations`, newest first, each `{ id, email, note, expiresAt }`;
+- **Props.** `invitations`, this page, newest first, each `{ id, email, note, expiresAt }`;
   `filter`, the filter shown, `{ email, expiringSoon }`, none when left out;
+  `cursor`, the page shown, `{ after?, before? }`, the first when left out;
+  `previousHref` and `nextHref`, the pager's ends, each absent where there
+  is no page; `position`, the pager's `{ page, pages }`;
   `locked`, the pause's reason (`ADMIN_CHANGES_PAUSED_REFUSAL`) while
   admin changes are paused and this admin is not the primary one, absent
   otherwise; and `inviting`, whether the address is `?invite`. The page
   sets `locked` from `adminRoleChangePauseState`, paused and not
   `canToggle`, and `inviting` only while not locked. `InviteAdmin` takes
-  `locked` and the `filter` its link keeps.
+  `locked`, and the `filter` and `cursor` its link keeps.
 - **The user list's own parts.** Revoke asks first through
   `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
@@ -79,8 +94,8 @@ under it, and whether this admin is held by the pause
   `invite-form.tsx`'s `InviteFields`, rendered inside the modal so its
   guard reaches the modal's ways out. A `VALIDATION` refusal on `email`
   is said beside the field; anything else in an alert in the modal. A sent
-  invitation closes the modal back to the tab, refreshing it so the re-read
-  lists it, and says "Invitation sent to …" above the list. The address is
+  invitation closes the modal back to the tab at the page shown, refreshing
+  it so the re-read lists it on the first page, and says "Invitation sent to …" above the list. The address is
   this component's state, set by the form before it closes, so the notice
   outlasts `?invite` without the address riding in the URL; opening the
   form again clears it. No link is ever shown: the mutation answers none.
@@ -126,7 +141,10 @@ alert (MB.116).
 page with its Invitations tab open and Invite Admin beside the heading:
 `Pending`, `NoneWaiting`, `Filtered` (an Email and Expires in 24 Hrs
 applied, Clear offered, one invitation left), `NoMatch` (the
-empty state naming the filter), `Inviting` (the form open, its Reason's
+empty state naming the filter), `OnePageOfSeveral` (a middle page of 25,
+both pager ends live and "Page 2 of 3" between them) with its phone pair
+`OnePageOfSeveralPhoneDark`/`OnePageOfSeveralPhoneLight`, where the pager's
+row wraps Next beneath Prev and the position, `Inviting` (the form open, its Reason's
 hint in a tip), `Paused` (both controls locked with the pause's reason),
 `PhoneDark`/`PhoneLight`, Invite Admin across the line beneath the
 heading, the filter row stacked and the invitations as cards at 375px, and
@@ -142,14 +160,20 @@ and its refresh, and the notice outlasting the form; Cancel and Escape
 asking once something is typed, Discard Changes closing, and Cancel closing
 at once with nothing typed; a refused address beside its field;
 Revoke after its confirmation; both controls locked with the pause's
-reason; and the filter: the address Filter opens, the email trimmed and the
-switch a bare flag, which values offer Clear, the fields emptied in
-place, and Invite Admin and the form's close keeping the filter. The cards at phone width are presentation.
+reason; and the filter: the address Filter opens as a full load, from the first
+page whatever page is shown, the email trimmed and the switch a bare flag,
+which values offer Clear, the fields emptied in place, and Invite Admin and
+the form's close keeping the filter and the page. The cards at phone width are presentation.
 `tests/app/admin/(people)/invitations/page.test.tsx` covers the tab's page:
 the guard first, the hash never rendered, the filter read off the address
-and handed to the service, the form opened by `?invite`,
+and handed to the service, the first page of 25 and its count, `after` and
+`before` read off the address, a cursor of another list reading the first
+page, the pager's ends carrying the filter with "Page X of Y" between them,
+Invite Admin keeping the page, the form opened by `?invite`,
 and the pause locking both controls and opening nothing.
-The filters' SQL is `tests/modules/identity/services/admin-invitations.test.ts`'s:
-a fragment in any case, and the 24-hour window's edges against expired,
-accepted and revoked rows. `tests/e2e/admin-invitations.spec.ts` invites, follows the mailed link and
+The filters' SQL and the paging are `tests/modules/identity/services/admin-invitations.test.ts`'s:
+a fragment in any case, the 24-hour window's edges against expired,
+accepted and revoked rows, a page newest first with an instant's rows by id
+and the next cursor reading the rest, the filter narrowing every page, and
+the count. `tests/e2e/admin-invitations.spec.ts` invites, follows the mailed link and
 revokes against the built server, with axe.

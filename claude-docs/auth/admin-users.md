@@ -306,8 +306,10 @@ email, note, sender)` and `revokeAdminInvitation(session, id)`
   (`src/modules/identity/services/admin-invitations.ts`) assert the site role
   themselves, by direct call, and the two mutations in front of them carry the
   `admin` scope as the second check. `listPendingAdminInvitations(session,
-filter)` is the pending list, newest first, a read the page calls; no
-  GraphQL query lists invitations. Its optional filter (MB.115) is
+filter, page)` is one page of the pending list, newest first, and
+  `countPendingAdminInvitations(session, filter, start)` its count, reads
+  the page calls through `resolveNumberedPage` as every admin list does,
+  25 to a page (MB.115); no GraphQL query lists invitations. Its filter (MB.115) is
   `{ email, expiringSoon }`: a fragment of the address, trimmed, and only
   the invitations lapsing within 24 hours, each narrowed in the
   repository's SQL ([`db/invitations.md`](../db/invitations.md)).
@@ -373,8 +375,9 @@ filter)` is the pending list, newest first, a read the page calls; no
   would lose the reason; the accept refuses it all the same.
 - **On `/admin/invitations`**, the People page's Invitations tab (beneath
   the user list on `/admin/users` until MB.115), every admin sees Invite
-  Admin, and the pending invitations, each with
-  its address, its reason, when it expires and Revoke
+  Admin, and the pending invitations 25 to a page, each with
+  its address, its reason, when it expires and Revoke, and the pager
+  beneath them
   ([`components/admin-invitations.md`](../components/admin-invitations.md)).
   While changes are paused, both controls are `aria-disabled` for any admin
   but the primary one, with the pause as the reason.
@@ -386,7 +389,9 @@ list of past invitations is kept.
 
 **Tests.** `tests/modules/identity/services/admin-invitations.test.ts` covers
 creating, with the real sender over a mocked transport, so the link that
-reaches the address is the one read back; revoking and listing; each
+reaches the address is the one read back; revoking and listing; the list's
+pages, newest first and by id within an instant, the filter narrowing every
+page, and its count; each
 non-admin fixture user refused by direct call, with E proven able; and the
 pause, with the same calls succeeding once resumed.
 `tests/modules/identity/services/invitation-acceptance.test.ts` covers the
