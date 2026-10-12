@@ -498,6 +498,11 @@ type Mutation {
   updateIngredientFormValue(id: ID!, input: IngredientFormValueInput!): IngredientFormValue!
 
   """
+  Sets an existing member's role. Owners only; refused when it would leave the coven without an owner.
+  """
+  updateMemberRole(role: WorkspaceRole!, userId: ID!, workspaceId: ID!): WorkspaceMember!
+
+  """
   Replaces the planet; the slug follows the name. A rename is carried onto every live compendium entry listing it.
   """
   updatePlanet(id: ID!, input: PlanetInput!): Planet!

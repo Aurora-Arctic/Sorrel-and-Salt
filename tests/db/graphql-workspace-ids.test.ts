@@ -99,6 +99,13 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     }`,
     variables: () => ({ input: { name: 'Fixture Created', variants: [] } }),
   },
+  updateMemberRole: {
+    source: `mutation ($workspaceId: ID!, $userId: ID!) {
+      updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: member) { role }
+    }`,
+    variables: () => ({ userId: B.id }),
+    asOwner: true,
+  },
   updateIngredient: {
     source: `mutation ($workspaceId: ID!, $id: ID!, $input: IngredientUpdateInput!) {
       updateIngredient(workspaceId: $workspaceId, id: $id, input: $input) { id }
@@ -136,9 +143,9 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
 
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
 
-/** The probe as B, a member of W, so the signed-in scope passes and only the id can refuse. */
+/** The probe as B, a member of W (or A, its owner, when the probe says), so only the id can refuse. */
 async function run(probe: WorkspaceIdProbe, workspaceId: string): Promise<Answer> {
-  const session = asUser(B);
+  const session = asUser(probe.asOwner ? A : B);
   const response = await yoga.fetch(
     'http://localhost/graphql',
     {
