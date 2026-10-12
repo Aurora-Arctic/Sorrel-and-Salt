@@ -1,5 +1,7 @@
 'use client';
 
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useMutation } from '@tanstack/react-query';
 import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'react';
 import { graphql } from '../../gql';
@@ -136,11 +138,11 @@ const EmailForm = ({
         {head(VERIFIED_STATUS)}
         <p className="email-form__address">{email}</p>
         <p className="email-form__continue">
-          {/* A plain anchor rather than <Link>: typed routes refuse a route
-              that is not built yet, and `next` is whatever page sent us here. */}
-          <a className="btn btn--solid" href={next ?? landing}>
+          {/* Cast: `next` is whatever page sent us here, already run through
+              safeReturnPath, so it is a same-site path but not a known route. */}
+          <Link className="btn btn--solid" href={(next as Route | undefined) ?? landing}>
             Continue
-          </a>
+          </Link>
           {accountPath && (
             <a className="btn btn--quiet" href={accountPath}>
               Continue to Account
