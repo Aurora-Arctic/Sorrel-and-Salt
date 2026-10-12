@@ -16,3 +16,8 @@ component taking the workspace's `workspaceId` and `name`.
   deleting user has no membership of the coven any more.
 - **The page decides who sees it**, from `rolePermits(role, { workspace: ['delete'] })`, never from a
   rank. The service checks the same permission whatever the page shows.
+
+The optional `inModal` prop asks the confirmation over the dialog the button sits in rather than
+opening a second modal on top, and `onlyOwner` leaves "other owners included" out of the question,
+since there are none. The only owner's guided exit (M6.16,
+[`leave-workspace-button.md`](leave-workspace-button.md)) passes both.
