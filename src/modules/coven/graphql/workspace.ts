@@ -1,9 +1,10 @@
-import { UserRef } from '@/modules/identity';
+import { CoMemberRef, UserRef } from '@/modules/identity';
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { workspaceRole } from '../schema/workspaces';
 import { updateMemberRole } from '../services/member-role';
+import { listMembers } from '../services/members';
 import { createWorkspace } from '../services/workspace-creation';
 import type { MembershipWithWorkspace, WorkspaceRow } from '../types';
 
@@ -27,9 +28,24 @@ export const WorkspaceMemberRef = builder
       role: t.expose('role', { type: WorkspaceRoleEnum }),
       joinedAt: t.expose('joinedAt', { type: 'DateTime' }),
       workspace: t.field({ type: WorkspaceRef, resolve: (member) => member.workspace }),
+      // The name through `usersById`, one read for every member a request
+      // lists, whichever covens they sit in.
+      user: t.field({ type: CoMemberRef, resolve: (member) => ({ id: member.userId }) }),
       audit: t.field({ type: AuditInfo, resolve: (member) => member }),
     }),
   });
+
+// Here rather than in `WorkspaceRef`'s own fields, which are built before
+// `WorkspaceMemberRef` exists. A coven at a time: the service checks
+// `member: read` and reads one page (M6.11).
+builder.objectField(WorkspaceRef, 'members', (t) =>
+  t.pagedConnection({
+    type: WorkspaceMemberRef,
+    description:
+      "The coven's live members, in the order they joined, for the roles that may read them.",
+    resolve: (workspace, _args, page, context) => listMembers(sessionOf(context), workspace, page),
+  }),
+);
 
 // On `User` from here rather than in identity, which may import no module.
 // A caller reads their own; a site admin reads anyone's, by name and role only

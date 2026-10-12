@@ -35,6 +35,16 @@ input CategoryInput {
   name: String!
 }
 
+"""
+A user as a co-member sees them: an id and a display name, never an email address.
+"""
+type CoMember {
+  id: ID!
+
+  """Null for anyone the viewer has never shared a coven with."""
+  name: String
+}
+
 type CommonNameSuggestion {
   claimants: [SuggestionClaimant!]!
   value: String!
@@ -1025,6 +1035,11 @@ enum UserRole {
 type Workspace {
   audit: AuditInfo!
   id: ID!
+
+  """
+  The coven's live members, in the order they joined, for the roles that may read them.
+  """
+  members(after: String, before: String, first: Int, last: Int): WorkspaceMembersConnection!
   name: String!
   slug: String!
 }
@@ -1033,7 +1048,18 @@ type WorkspaceMember {
   audit: AuditInfo!
   joinedAt: DateTime!
   role: WorkspaceRole!
+  user: CoMember!
   workspace: Workspace!
+}
+
+type WorkspaceMembersConnection {
+  edges: [WorkspaceMembersConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type WorkspaceMembersConnectionEdge {
+  cursor: String!
+  node: WorkspaceMember!
 }
 
 enum WorkspaceRole {

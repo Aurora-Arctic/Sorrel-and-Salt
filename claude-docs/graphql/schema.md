@@ -108,9 +108,27 @@ that user's live memberships in live workspaces — or a `Forbidden` in that
 id's slot for anyone but the caller, unless the caller is a site admin, who
 may list anyone's by name and role (M9.19) and reaches none of those
 workspaces' contents. A `WorkspaceMember` carries `role`, `joinedAt`,
-`workspace` and `audit`; `Workspace` is `id`, `name`, `slug` and `audit`,
-the minimum a switcher needs, and M6 adds to it. `memberships` is a bare list,
-bounded by its parent, like every nested list (DESIGN.md §7).
+`workspace`, `user` and `audit`; `Workspace` is `id`, `name`, `slug`,
+`members` and `audit`. `memberships` is a bare list, bounded by its parent:
+a user sits in the covens they joined, and no more.
+
+`Workspace.members` is a coven's live members, in the order they joined, and
+is a paged connection rather than a bare list, because a coven's roll grows
+with every invitation and nothing about its parent bounds it (CLAUDE.md rule
+8; M6.11). Its service, `listMembers(session, workspace, page)` in
+`src/modules/coven/services/members.ts`, checks `member: read`, which the
+owner holds and, from M6.13, the member too, and reads one page through the
+repository's `findMemberPage`. A coven at a time, not batched across covens by
+a loader: no page lists two covens' members at once
+([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)).
+`WorkspaceMember.user` is a `CoMember`, an `id` and a nullable `name`, and
+never the `User` type, whose email a scope would have to guard. The name
+resolves through `usersById` (MB.10;
+[`auth/display-names.md`](../auth/display-names.md)), so the names on a page
+of members are one read. Through `me`, a member's name sits eight levels
+down, one past the depth limit (["Protections"](protections.md)), and no
+query root reaches a `Workspace` more shallowly yet. The members page does not
+need one: a server component calls `listMembers` directly (M6.13).
 
 `users(query: String, awaitingApproval: Boolean, role: UserRole)` is the admin user list
 (MB.52), a paged connection of the ordinary `User`, so `email` resolves through
