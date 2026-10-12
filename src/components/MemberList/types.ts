@@ -48,3 +48,11 @@ export interface RoleControlProps {
 export interface RoleFailureProps {
   children: ReactNode;
 }
+
+/** The removal a member's row offers an owner (M6.15). */
+export interface RemoveControlProps {
+  workspaceId: string;
+  /** The member to remove. */
+  userId: string;
+  name: string;
+}

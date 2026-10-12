@@ -25,6 +25,7 @@ through `Workspace.members`.
 - **Promote and Demote sit in the Role column**, the role on the left and the
   control on the right, as the user list holds Promote and Revoke. Promote is
   `btn btn--small btn--quiet`; Demote is `btn btn--small btn--destructive`.
+- **Remove is `RemoveControl`** (M6.15): a `ConfirmedAction` naming the member, sending `removeMember`, and reading the page again. The page passes it to owners only, on every row but their own (leaving is the coven page's), and a refusal such as the last owner is said above the table through `RoleFailure`, as Promote's is.
 - **Remove has a column of its own**, as Impersonate has, from the same
   `row-action-column` mixin: last, ruled in red,
   sticky at the right edge while the table scrolls, and at the card's top

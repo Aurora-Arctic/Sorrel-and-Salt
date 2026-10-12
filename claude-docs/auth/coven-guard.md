@@ -66,8 +66,7 @@ the index, Overview, and Members for the roles holding `member: read`
 because `typedRoutes` refuses a link to a route the build does not contain:
 Ingredients by M9.6 and Grimoire by M10.11.
 
-**Leave and Delete have their places here. Delete is live (M6.14); Leave stays
-disabled until M6.15.**
+**Leave and Delete are both live here: Delete (M6.14), and Leave (M6.15).**
 
 | Control          | Shown to                                   | Filled by                 |
 | ---------------- | ------------------------------------------ | ------------------------- |
@@ -82,9 +81,10 @@ disabled until M6.15.**
   may delete. Hiding it is presentation; the service is still the guard.
 - **Delete opens a confirmation and then deletes** (M6.14), through
   `DeleteWorkspaceButton` ([`components/delete-workspace-button.md`](../components/delete-workspace-button.md)).
-  **Leave is a real button, disabled** (the owner's call, 2026-10-12), so a
-  test finds it by role and name with no test id. A disabled control is
-  what M6.16 forbids once Leave works, so M6.15 also enables it.
+  **Leave opens a confirmation and then leaves** (M6.15), through
+  `LeaveWorkspaceButton` ([`components/leave-workspace-button.md`](../components/leave-workspace-button.md)).
+  It is enabled for every role, so a test finds it by role and name with no
+  test id, and a disabled control is what M6.16 forbids.
 
 Tests: `tests/app/coven/page.test.tsx` (the page guards its own slug; Leave
 for every role, Delete for the owner alone) and `tests/e2e/coven.spec.ts`

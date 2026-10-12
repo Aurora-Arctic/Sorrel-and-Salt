@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import MemberList from '../../../../../components/MemberList';
+import RemoveControl from '../../../../../components/MemberList/remove-control';
 import RoleFailure from '../../../../../components/MemberList/role-failure';
 import RoleControl from '../../../../../components/MemberList/role-control';
 import type { MemberListEntry } from '../../../../../components/MemberList/types';
@@ -68,6 +69,7 @@ export default async function MembersPage({
   }));
 
   const canChangeRoles = rolePermits(membership.role, { member: ['update'] });
+  const canRemove = rolePermits(membership.role, { member: ['remove'] });
   const { hasPreviousPage, hasNextPage, startCursor, endCursor } = page.pageInfo;
   const href = (cursor: string) => `/coven/${slug}/members${cursor}`;
 
@@ -102,6 +104,19 @@ export default async function MembersPage({
                     )}
                   </>
                 )
+              : undefined
+          }
+          // Another's row only: leaving is the coven page's, for every role.
+          removeAction={
+            canRemove
+              ? (member) =>
+                  member.userId !== session.userId && (
+                    <RemoveControl
+                      workspaceId={workspace.id}
+                      userId={member.userId}
+                      name={member.name}
+                    />
+                  )
               : undefined
           }
         />
