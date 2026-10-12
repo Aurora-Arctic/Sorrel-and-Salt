@@ -319,6 +319,31 @@ describe('a link that cannot be used', () => {
       expect(stamped.accepted_at).not.toBeNull();
     });
 
+    // The same checks as the site tier's, before the tier branch (MB.70): the
+    // reader is not a member, so no message may name the coven (story 7).
+    it.each([
+      ['already accepted', { accepted: true }, 'accepted'],
+      ['revoked', { revoked: true }, 'revoked'],
+      ['expired', { expired: true }, 'expired'],
+      ['expired and revoked', { expired: true, revoked: true }, 'revoked'],
+    ] as const)(
+      'rejects one %s as %s, seating no one and naming no coven',
+      async (_what, state, reason) => {
+        await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id, ...state });
+        const [{ name }] = await sql`select name from workspaces where id = ${WORKSPACE_W_ID}`;
+
+        const standing = await invitationStanding(asUser(AS_GRANTEE), TOKEN);
+
+        expect(standing).toMatchObject({ acceptable: false, reason });
+        expect(JSON.stringify(standing)).not.toContain(name as string);
+        const error = await acceptInvitation(asUser(AS_GRANTEE), TOKEN).catch((e: unknown) => e);
+        expect(error).toBeInstanceOf(Forbidden);
+        expect((error as Error).message).not.toContain(name as string);
+        expect(await memberRows(GRANTEE)).toHaveLength(0);
+        expect((await roleOf(GRANTEE)).can_create_workspace).toBe(false);
+      },
+    );
+
     it('grants the creation flag, as one invitation-declared ledger row, for a viewer too', async () => {
       await invite({ workspaceId: WORKSPACE_W_ID, role: 'viewer', createdBy: A.id });
       expect((await roleOf(GRANTEE)).can_create_workspace).toBe(false);
