@@ -76,8 +76,15 @@ function stylesheet(origin: string): string {
   );
 }
 
-// How far each photograph runs under the text, in CSS pixels.
+// How far the sorrel runs under the heading, in CSS pixels. Only the 32px bold
+// heading meets it, at 4.78:1 (measured in MB.118).
 const OVERLAP = 56;
+
+// The margin every Paragraph ends on. The salt's padding is built from it, so
+// the photograph meets the text block's edge and never a glyph: measured in
+// MB.118, the light salt's darkest pixel holds the muted ink at 2.14:1 and the
+// link at 1.66:1, and no opacity fixes the link.
+const PARAGRAPH_GAP = 16;
 
 // The wordmark's row, top right, beside the sorrel.
 const WORDMARK_TOP = 24;
@@ -163,7 +170,7 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
                       <Section
                         style={{
                           // The heading starts OVERLAP above the sorrel's lower edge.
-                          padding: `${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - OVERLAP}px`,
+                          padding: `${ORNAMENTS.sorrel.height - OVERLAP - WORDMARK_TOP - WORDMARK_LINE}px 32px ${ORNAMENTS.salt.height - PARAGRAPH_GAP}px`,
                         }}
                       >
                         <Heading
@@ -200,7 +207,7 @@ export function Paragraph({ children, muted = false }: { children: ReactNode; mu
     <Text
       className={muted ? 'ss-muted' : 'ss-text'}
       style={{
-        margin: '0 0 16px',
+        margin: `0 0 ${PARAGRAPH_GAP}px`,
         color: muted ? dark.muted : dark.text,
         fontSize: muted ? '14px' : '16px',
         lineHeight: 1.6,
