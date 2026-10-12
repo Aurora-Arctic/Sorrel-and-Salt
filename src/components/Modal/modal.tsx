@@ -205,11 +205,12 @@ const Modal = ({
             )}
           </h2>
         </div>
-        {/* Beside the title, for a control the contents put there (HeaderSlotContext). */}
-        <div ref={putHeaderSlot} className="modal-dialog__header-slot" />
         <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>
           <span aria-hidden="true">×</span>
         </button>
+        {/* Under the heading, for a control the contents put there
+            (HeaderSlotContext): after the × in Tab order, as on screen. */}
+        <div ref={putHeaderSlot} className="modal-dialog__header-slot" />
       </div>
       {/* The body scrolls beneath the header, rather than the whole dialog,
           so a question's layer can lie over exactly the part in view. */}
