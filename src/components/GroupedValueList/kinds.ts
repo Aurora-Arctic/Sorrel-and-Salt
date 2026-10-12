@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 import type { GroupedValueListKind } from './types';
 
@@ -10,7 +9,7 @@ import type { GroupedValueListKind } from './types';
 // leans on the heading to say which kind of sign.
 export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
   category: {
-    path: '/admin/categories' as Route,
+    path: '/admin/categories',
     title: 'Categories',
     label: 'Category',
     noun: 'category',
@@ -18,7 +17,7 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     group: { label: 'Group', plural: 'Groups', param: 'group' },
   },
   form: {
-    path: '/admin/forms' as Route,
+    path: '/admin/forms',
     title: 'Forms',
     label: 'Form',
     noun: 'form',
@@ -26,7 +25,7 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     group: { label: 'Group', plural: 'Groups', param: 'group' },
   },
   deity: {
-    path: '/admin/deities' as Route,
+    path: '/admin/deities',
     title: 'Deities',
     label: 'Deity',
     noun: 'deity',
@@ -34,14 +33,14 @@ export const KINDS: Record<GroupedValueKind, GroupedValueListKind> = {
     group: { label: 'Tradition', plural: 'Traditions', param: 'tradition' },
   },
   planet: {
-    path: '/admin/planets' as Route,
+    path: '/admin/planets',
     title: 'Planets',
     label: 'Planet',
     noun: 'planet',
     plural: 'planets',
   },
   zodiacSign: {
-    path: '/admin/zodiac-signs' as Route,
+    path: '/admin/zodiac-signs',
     title: 'Zodiac Signs',
     label: 'Zodiac Sign',
     noun: 'zodiac sign',
