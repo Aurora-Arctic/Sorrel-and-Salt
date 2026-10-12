@@ -14,7 +14,7 @@ import './index.scss';
 /**
  * The columns: the name, then the role with its change beside it (as the
  * admin list holds Promote and Revoke), then the facts no control changes: when they joined, and who last changed the
- * membership and when.
+ * membership and when, in one Updated column.
  * Remove is last, in a column ruled in red as Impersonate is, since it is the
  * table's one destructive row action, and only when the page passes it.
  */
@@ -59,18 +59,19 @@ const columns = (
     ),
   },
   {
-    heading: 'Updated By',
+    heading: 'Updated',
     className: 'member-list__fact',
-    cell: (member) => member.updatedBy,
-  },
-  {
-    heading: 'Updated At',
-    className: 'member-list__fact',
+    // "by Fixture A on 2026-10-12": who last changed the membership, and when.
+    // Both are withheld together: a date with no one to ask about it says little.
     cell: (member) =>
+      member.updatedBy &&
       member.updatedAt && (
-        <time dateTime={member.updatedAt.toISOString()}>
-          {member.updatedAt.toISOString().slice(0, 10)}
-        </time>
+        <span>
+          by <strong>{member.updatedBy}</strong> on{' '}
+          <time dateTime={member.updatedAt.toISOString()}>
+            {member.updatedAt.toISOString().slice(0, 10)}
+          </time>
+        </span>
       ),
   },
   Boolean(removeAction) && {
