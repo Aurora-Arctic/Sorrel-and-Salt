@@ -87,6 +87,21 @@ export function findInvitationByToken(token: string): Promise<InvitationRow | un
 }
 
 /**
+ * The slug of the live workspace an invitation names, or `undefined` once it
+ * is deleted: where an accepted invitation lands, and what refuses one into a
+ * deleted coven before Accept is offered. Under no proof, for the token read's
+ * reason, and narrow on purpose — a slug, never the row, so what it hands the
+ * accept service cannot name the coven to someone not yet in it.
+ */
+export async function findInvitedCovenSlug(workspaceId: string): Promise<string | undefined> {
+  const row = await selectOne(
+    workspaces,
+    and(notSoftDeleted(workspaces), eq(workspaces.id, workspaceId)),
+  );
+  return row?.slug;
+}
+
+/**
  * The proof's workspace's pending invitations, for the members page (M7.6).
  * Unordered: the page sorts the handful a workspace holds.
  */

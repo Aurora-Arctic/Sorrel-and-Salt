@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Route } from 'next';
 import { cache } from 'react';
 import InvitationAcceptance from '../../../components/InvitationAcceptance';
 import type { InvitationAcceptanceProps } from '../../../components/InvitationAcceptance/types';
@@ -15,8 +15,12 @@ export const metadata: Metadata = {
 // Cached so a second render in the request reads once (CLAUDE.md rule 1).
 const standingOf = cache(invitationStanding);
 
+// `Route<T>` checks the address against the built routes only when `T` is
+// inferred from it (see src/components/CovenNav/sections.ts).
+const route = <T extends string>(href: Route<T>): Route => href as Route;
+
 // The one accept route, for both tiers of `invitations` (MB.202), built by
-// MB.70 with the site tier; M7.5 adds the workspace's landing. Public in
+// MB.70 with the site tier; M7.5 added the workspace's landing. Public in
 // src/proxy.ts, so a signed-out visitor is asked to sign in and brought back.
 // `getSession()` rather than `requireSession()`: an unverified account is
 // told why it cannot accept yet and sent to confirm its address with the way
@@ -33,7 +37,12 @@ export default async function InvitePage({ params }: InvitePageProps) {
   } else {
     const standing = await standingOf(session, token);
     panel = standing.acceptable
-      ? { status: 'acceptable', token, tier: standing.tier, landing: ADMIN_LANDING }
+      ? {
+          status: 'acceptable',
+          token,
+          tier: standing.tier,
+          landing: standing.tier === 'site' ? ADMIN_LANDING : route(`/coven/${standing.slug}`),
+        }
       : {
           status: 'refused',
           message: standing.message,

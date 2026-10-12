@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import type { Story } from '@ladle/react';
 import InvitationAcceptance from '.';
 import type { InvitationAcceptanceProps } from './types';
@@ -22,6 +23,15 @@ export const SignedOut: Story = () => (
 
 export const Acceptable: Story = () => (
   <Page status="acceptable" token="workshop" tier="site" landing="/admin" />
+);
+
+export const AcceptableCoven: Story = () => (
+  <Page
+    status="acceptable"
+    token="workshop"
+    tier="workspace"
+    landing={'/coven/fixture-coven' as Route}
+  />
 );
 
 export const Unverified: Story = () => (

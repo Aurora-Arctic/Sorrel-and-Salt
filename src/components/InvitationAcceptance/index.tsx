@@ -23,9 +23,10 @@ const AcceptInvitationDocument = graphql(`
   }
 `);
 
-/** What accepting grants, by tier; M7.5 adds the workspace's. */
+/** What accepting grants, by tier. The coven's name stays unsaid until the person is in it. */
 const GRANTS = {
   site: "You've been invited to be an admin of Sorrel & Salt.",
+  workspace: "You've been invited to join a coven on Sorrel & Salt.",
 } as const;
 
 const Accept = ({
