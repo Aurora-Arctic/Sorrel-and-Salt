@@ -145,7 +145,7 @@ describe('SectionNav', () => {
 
       render(<SectionNav label="Test" sections={ITEMS} />);
 
-      expect(more()).toHaveAccessibleName('Astrology');
+      expect(more()).toHaveAccessibleName('More: Astrology');
       expect(more()).toHaveAttribute('aria-current', 'page');
     });
 
@@ -189,6 +189,84 @@ describe('SectionNav', () => {
         viewport.dispatchEvent(new Event('resize'));
       });
       expect(nav()).not.toHaveAttribute('data-keyboard');
+    });
+  });
+
+  // Wider than the phone shows as many leading tabs as fit the row, measured in
+  // the browser. jsdom draws no layout, so the widths are stood in for: every
+  // tab 100px, the chevron none, the list 450px wide.
+  describe('wider than the phone', () => {
+    beforeEach(() => {
+      vi.stubGlobal('matchMedia', (query: string) => ({
+        matches: query.includes('min-width'),
+        addEventListener: () => undefined,
+        removeEventListener: () => undefined,
+      }));
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          observe() {}
+          disconnect() {}
+        },
+      );
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
+        this: HTMLElement,
+      ) {
+        return this.classList.contains('section-nav__chevron') ? 0 : 100;
+      });
+      vi.spyOn(HTMLElement.prototype, 'clientWidth', 'get').mockReturnValue(450);
+    });
+    afterEach(() => {
+      vi.restoreAllMocks();
+      vi.unstubAllGlobals();
+    });
+
+    const hiddenHrefs = () =>
+      row()
+        .filter((link) => link.closest('li')?.classList.contains('section-nav__item--extra'))
+        .map((link) => link.getAttribute('href'));
+
+    it('hides the tabs that do not fit behind More, keeping all that do', () => {
+      render(<SectionNav label="Test" sections={ITEMS} />);
+
+      // Three tabs and More fit 450px; the other four are More's.
+      expect(hiddenHrefs()).toEqual(ITEMS.slice(3).map(({ href }) => href));
+      expect(more()).not.toHaveAttribute('aria-current');
+    });
+
+    it('lets More wear the current page when it is among the hidden', () => {
+      pathname.mockReturnValue('/admin/users');
+      render(<SectionNav label="Test" sections={ITEMS} />);
+
+      expect(more()).toHaveAttribute('aria-current', 'page');
+    });
+
+    it('fits the row afresh after a navigation', () => {
+      // The current tab is set at a heavier weight, so it measures wider: a
+      // fit kept from the last page would still show three tabs.
+      vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
+        this: HTMLElement,
+      ) {
+        if (this.classList.contains('section-nav__chevron')) return 0;
+        return this.querySelector(':scope > [aria-current="page"]') ? 200 : 100;
+      });
+      pathname.mockReturnValue('/admin');
+      const { rerender } = render(<SectionNav label="Test" sections={ITEMS} />);
+      expect(hiddenHrefs()).toEqual(ITEMS.slice(3).map(({ href }) => href));
+
+      pathname.mockReturnValue('/admin/users');
+      rerender(<SectionNav label="Test" sections={ITEMS} />);
+
+      // Two tabs and More, wearing the 200px People, fit 450px.
+      expect(hiddenHrefs()).toEqual(ITEMS.slice(2).map(({ href }) => href));
+      expect(more()).toHaveAttribute('aria-current', 'page');
+    });
+
+    it('draws no More when every tab fits', () => {
+      render(<SectionNav label="Test" sections={FEW.slice(0, 3)} />);
+
+      expect(hiddenHrefs()).toEqual([]);
+      expect(more()).toBeNull();
     });
   });
 });

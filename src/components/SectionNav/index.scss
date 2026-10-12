@@ -5,14 +5,12 @@
 // One markup in three shapes, chosen here by the window's width and not the
 // nav's own: the nav is the window's bottom bar on a phone, so it is
 // measured against the window, as the shell's other bars are. Wider than
-// `$shell-tablet-width` every section is a tab filling the context row's
-// height; at or under it the sections past the fourth go behind More; at or
-// under `$shell-phone-width` the row becomes a bar along the window's foot.
+// `$shell-phone-width` the sections that fit are tabs filling the context
+// row's height and the rest go behind More; at or under it the row becomes a bar along the window's foot.
 
 // The row's own ground and the current tab's: a quiet fill, the same one a
 // hover takes, with the heavy accent rule telling the current tab, so
 // hue is never the only sign.
-$tab-gap: space(1);
 
 .section-nav {
   // Stretches to the context row it sits in, which is a flex box.
@@ -26,7 +24,7 @@ $tab-gap: space(1);
   height: 100%;
   margin: 0;
   padding: 0;
-  gap: $tab-gap;
+  gap: 0;
   list-style: none;
 
   > li {
@@ -114,27 +112,21 @@ $tab-gap: space(1);
     content: '';
     position: absolute;
     inset-block: space(4);
-    inset-inline-start: calc(#{space(3)} / -2 - #{$tab-gap} / 2);
+    inset-inline-start: calc(#{space(3)} / -2);
     width: 1px;
     background-color: $hairline;
   }
 }
 
-// More and its list exist only where tabs are hidden; wider than that they
-// are out of the page for every reader, so a link is never read twice.
-.section-nav .section-nav__list > .section-nav__more {
-  display: none;
-}
-
 .section-nav__chevron {
   @include disclosure-chevron('.section-nav__more-button[aria-expanded="true"]');
-}
 
-.section-nav .section-nav__sheet {
-  display: none;
-  margin: 0;
-  padding: 0;
-  list-style: none;
+  // The flip turns rather than snaps.
+  transition: rotate $motion-short $theme-transition-easing;
+
+  @include reduced-motion {
+    transition: none;
+  }
 }
 
 .section-nav .section-nav__sheet > li {
@@ -146,47 +138,95 @@ $tab-gap: space(1);
 }
 
 // ---------------------------------------------------------------------------
-// Tablet: the first four tabs, the rest behind More. The list opens beneath
-// the button, over the page.
+// Wider than the phone: as many leading tabs as fit the context row, the rest behind More
+// (Priority+). Which fit is measured in the browser, since the lead and the
+// labels set the room (section-links.tsx); the client part marks the others
+// `--extra`. The owner found four labelled tabs and More overflowing the row
+// from 642px up (MB.7's review, 2026-10-12), so the count is not fixed here.
 // ---------------------------------------------------------------------------
-@media (max-width: #{$shell-tablet-width}) {
-  .section-nav .section-nav__list > .section-nav__item--extra {
-    display: none;
-  }
+// Takes the room the lead leaves, which is what the tabs are fitted to.
+.section-nav {
+  flex: 1 1 0;
+}
 
-  .section-nav .section-nav__list > .section-nav__more {
-    display: flex;
-  }
+// Before the script has fitted the row the server's four tabs and More can outrun it; clipped rather than scrolled for that moment.
+.section-nav:not([data-fit]) .section-nav__list {
+  overflow: hidden;
+}
 
-  .section-nav .section-nav__sheet:not([hidden]) {
-    @include floating-panel;
+.section-nav .section-nav__list > .section-nav__item--extra {
+  display: none;
+}
 
-    position: absolute;
-    top: 100%;
-    inset-inline-end: 0;
-    z-index: layer('floating');
-    display: block;
-    min-width: 12rem;
-    padding: space(1);
-  }
+.section-nav .section-nav__list > .section-nav__more {
+  display: flex;
+}
 
-  .section-nav__sheet .section-nav__link {
-    width: 100%;
-    border-radius: radius('control');
-  }
+// Placed whether or not it is shown: only display and opacity change with
+// `hidden`, so the sheet fades out where it was rather than dropping into
+// the row's flow for the length of the fade.
+.section-nav .section-nav__sheet {
+  @include floating-panel;
 
-  // A hairline above the group's first entry, standing in for the row's.
-  .section-nav__sheet-item.section-nav__item--apart {
-    margin-top: space(1);
-    padding-top: space(1);
-    border-top: 1px solid $hairline;
-  }
+  position: absolute;
+  // A step of air between the row and the sheet.
+  top: calc(100% + #{space(2)});
+  inset-inline-end: 0;
+  z-index: layer('floating');
+  min-width: 12rem;
+  // No padding, so each entry's wash runs edge to edge; the panel's own
+  // rounded corners clip it, so the entries need no rounding of their own.
+  padding: 0;
+  overflow: hidden;
+  // The fade, the tip bubble's pattern: `hidden` is display none, which
+  // cannot animate, so the sheet stays displayed and `hidden` takes it out
+  // of sight and out of the accessibility tree with `visibility`, held
+  // until the opacity has faded. Over the theme's duration rather than the
+  // short one, which read as a snap. Said after the panel mixin, whose own
+  // theme transition would otherwise replace it.
+  display: block;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity $theme-transition-duration $theme-transition-easing,
+    visibility 0s linear $theme-transition-duration,
+    background-color $theme-transition-duration $theme-transition-easing,
+    color $theme-transition-duration $theme-transition-easing;
 
-  // In the sheet the current entry is drawn by weight and fill, without
-  // the tab's foot rule, which is a row's.
-  .section-nav__sheet .section-nav__link[aria-current='page']::after {
-    content: none;
+  @include reduced-motion {
+    transition: none;
   }
+}
+
+// Shown: visible at once, the opacity easing in.
+.section-nav .section-nav__sheet:not([hidden]) {
+  visibility: visible;
+  opacity: 1;
+  transition:
+    opacity $theme-transition-duration $theme-transition-easing,
+    visibility 0s,
+    background-color $theme-transition-duration $theme-transition-easing,
+    color $theme-transition-duration $theme-transition-easing;
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.section-nav__sheet .section-nav__link {
+  width: 100%;
+}
+
+// A hairline above the group's first entry, standing in for the row's.
+.section-nav__sheet-item.section-nav__item--apart {
+  margin-top: space(1);
+  border-top: 1px solid $hairline;
+}
+
+// In the sheet the current entry is drawn by weight and fill, without
+// the tab's foot rule, which is a row's.
+.section-nav__sheet .section-nav__link[aria-current='page']::after {
+  content: none;
 }
 
 // ---------------------------------------------------------------------------
@@ -218,7 +258,7 @@ $tab-gap: space(1);
 
   .section-nav .section-nav__list {
     gap: 0;
-    padding: space(1) space(1) 0;
+    padding: 0;
   }
 
   .section-nav .section-nav__list > li {
@@ -240,16 +280,32 @@ $tab-gap: space(1);
     justify-content: center;
     gap: space(1);
     padding-inline: 0;
-    border-radius: radius('control');
+    border-radius: 0;
     font-size: type-size('tab');
     line-height: 1.2;
   }
 
-  // Current: the short accent rule above the icon, in the bar's own top
-  // edge, replaces the tab's foot rule.
+  // The current tab takes no fill on the phone: the rule above its icon and
+  // its weight tell it, and a filled tab in a bar of one (the coven's
+  // Overview alone) would recolour the whole bar, so the coven's and the
+  // admin's bars would not match.
+  .section-nav .section-nav__list > li > .section-nav__link[aria-current='page'] {
+    background-color: transparent;
+
+    // The wash still answers a hover and marks More open, as on any tab:
+    // the rule above outranks the tab's own hover, so it is said again here.
+    &:hover,
+    &[aria-expanded='true'] {
+      background-color: $fill-quiet;
+    }
+  }
+
+  // Current: the short accent rule above the icon, at the bar's own top
+  // edge (the list has no padding above the tabs), replaces the tab's foot
+  // rule.
   .section-nav .section-nav__list > li > .section-nav__link[aria-current='page']::after {
     inset-inline: auto;
-    top: calc(-1 * #{space(1)} - 1px);
+    top: 0;
     bottom: auto;
     left: 50%;
     width: space(6);
@@ -258,12 +314,30 @@ $tab-gap: space(1);
     border-radius: 0 0 $rule-heavy $rule-heavy;
   }
 
+  // Only on a More button standing in for a hidden page: it then wears that
+  // page's icon and label, and the small chevron is what says there is
+  // more behind it. Plain More already says so, and the bar's other tabs
+  // have none. Taken out of the flow of the column so the icon and label
+  // keep their place, the hit area and the label's size.
   .section-nav__chevron {
     display: none;
   }
 
+  .section-nav__more-button[aria-current='page'] .section-nav__chevron {
+    display: inline-flex;
+    position: absolute;
+    // Level with the icon, a little above the tab's midline. Placed by
+    // `top` alone: the mixin flips it open with `rotate`, which runs before
+    // `transform`, so a translate here would move the open one the other way.
+    top: calc(50% - 1rem);
+    inset-inline-end: space(1);
+    width: 1rem;
+    height: 1rem;
+    color: $accent;
+  }
+
   // The sheet opens above the bar, at its end.
-  .section-nav .section-nav__sheet:not([hidden]) {
+  .section-nav .section-nav__sheet {
     position: fixed;
     inset-inline: auto space(2);
     bottom: calc(#{$bottom-bar-height} + env(safe-area-inset-bottom, 0px) + #{space(2)});

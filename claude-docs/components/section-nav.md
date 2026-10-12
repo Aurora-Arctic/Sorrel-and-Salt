@@ -2,9 +2,7 @@
 
 `src/components/SectionNav/` — the one section nav the coven and the admin
 area share (MB.7, drawn and signed off in its design review). On a wide screen
-it is a row of tabs along the context row, an icon then a label each. On a
-tablet the first four tabs stay and the rest go behind a More button. On a
-phone it is a bar fixed along the foot of the window, icon above label.
+it is a row of tabs along the context row, an icon then a label each, and wider than a phone it shows as many leading tabs as fit the row, measured in the browser, with the rest behind a More button. On a phone it is a bar fixed along the foot of the window, icon above label, the first four tabs and the rest behind More.
 [`coven-nav.md`](coven-nav.md) and [`admin-nav.md`](admin-nav.md) are thin
 wrappers that hand it their sections; the old `.link-row` rows and the admin
 nav's `<details>` jump menu are gone.
@@ -13,10 +11,10 @@ nav's `<details>` jump menu are gone.
 
 `SectionNavProps` and `SectionNavItem` (`types.ts`):
 
-| Prop       | What it is                                                                                  |
-| ---------- | ------------------------------------------------------------------------------------------- |
-| `label`    | The nav's `aria-label`, distinct on a page: "Coven", "Admin"                                |
-| `sections` | The tabs, in order. The first four stay in view when room is short; the rest go behind More |
+| Prop       | What it is                                                                                                                             |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`    | The nav's `aria-label`, distinct on a page: "Coven", "Admin"                                                                           |
+| `sections` | The tabs, in order. Wider than a phone as many leading tabs as fit stay in the row, on a phone the first four; the rest go behind More |
 
 A section is `{ label, href, icon, exact?, matches?, apart? }`:
 
@@ -46,23 +44,22 @@ icon set.
   shape. The nav is an ordinary `<nav>` of links; no `role="menu"`, no
   `role="tablist"`.
 - **More is a disclosure, not a menu.** A button with `aria-expanded` and
-  `aria-controls` opens a list of links beneath it (tablet) or above the bar
+  `aria-controls` opens a list of links beneath it (wider than the phone) or above the bar
   (phone). Escape closes it and returns focus to the button; a press outside
   the nav closes it; so does navigating, since the open state is the address
   it was opened at, so a new address reads as shut with no effect resetting
-  state. It lists every section past the fourth, so a coven with four needs
-  none and draws no More.
+  state. It lists the hidden sections, so a row where every tab fits draws no More.
 - **More names the page when the page is hidden.** When the current page is
   one of the sections behind More, the button shows that page's icon and label
-  in place of "More" and carries `aria-current="page"`, so the current page is
+  in place of "More" (the label is prefixed with a visually hidden "More: ", so a screen reader hears a disclosure, not the hidden page) and carries `aria-current="page"`, so the current page is
   never invisible.
 - **Nothing is read twice.** The hidden sections' tabs are in the page at
-  every width and hidden by `display: none` where More takes over; More, and
-  its list, are `display: none` where the tabs show. A hidden element is out of
+  every width and hidden by `display: none` where More takes over. A hidden element is out of
   the accessibility tree, so a screen reader finds each link once at any
   width. The alternative, deciding which tabs to render by measuring the row
-  in script, was rejected: it needs the width on the server, flashes on first
-  paint, and the CSS already knows. The cost is that the four-tab count lives
+  in script, was rejected for the phone: it needs the width on the
+  server, and the CSS already knows. Only wider than the phone, where the room
+  depends on the lead and the fonts, does the script measure, after mount and before paint. The cost is that the phone's four-tab count lives
   in one constant (`VISIBLE`, `section-links.tsx`) and one class
   (`--extra`), which is the only link between code and stylesheet.
 - **The bar steps aside.** On a phone it hides while a dialog is open
@@ -82,36 +79,38 @@ the phone bar is the window's, so it is measured against the window, with
 the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
 `_variables.scss`).
 
-- **Wider than `$shell-tablet-width`.** The nav stretches to the context row
+- **Wider than `$shell-phone-width`.** The nav stretches to the context row
   it sits in, and each tab fills the row's height (`$context-row-height`, 56px
   in the design): icon then label, `space(4)` of padding either side, a
-  `space(1)` gap between tabs. Muted ink; on hover the `$fill-quiet` fill and
+  no gap between tabs (the owner's call, MB.7's review), so their hover fills meet. Muted ink; on hover the `$fill-quiet` fill and
   the body ink; the current tab keeps that fill, weight 500, the accent icon,
   and a `$rule-heavy` accent rule along its foot, one pixel below the row so
   it covers the row's hairline. The focus ring is the shared `focus-ring`,
   drawn 2px inside the tab so the row does not clip it. A hairline stands
   before an `apart` section, between Astrology and People in admin.
-- **At or under `$shell-tablet-width`, wider than the phone.** The sections
-  past the fourth are hidden and More shows, with a chevron that turns over
-  while it is open. The list opens beneath the button at the row's end, a
-  floating panel (`layer('floating')`, the shared `floating-panel` look), with
-  a hairline above an `apart` section.
+- **Which tabs show, wider than the phone (Priority+).** The row shows as many leading tabs as fit and the rest go behind More; More is not drawn at all when every tab fits (it renders only when something is tucked away). The count is measured, not fixed: the lead (the coven switcher, or "Admin") and the labels set the room, and four labelled tabs plus More outrun the context row at many widths: the owner's call at MB.7's review (2026-10-12), after the row overflowed the window from 642px with four tabs and, on /admin, from 882px with all six. `section-links.tsx` measures each tab's width once with every tab showing, before paint, and the width of the list (the nav takes the room the lead leaves, `flex: 1 1 0`), and keeps the most leading tabs, never fewer than one, that fit beside More (reserved at `max(More's own width, the widest hidden tab + the button's inner gap + the chevron)`, since a More wearing a hidden page's label is that tab's width plus the gap and chevron. It measures again when the list's width changes (a `ResizeObserver`), once the web fonts have loaded, and on a navigation (the current tab's weight changes its width). While measuring, More is drawn whenever there is more than one section, so its width and chevron are read even where every tab will fit; that render is never painted. Before the script has fitted the row (no `data-fit` on the nav) the list is clipped, so the server's four tabs and More cannot outrun it for that moment. The server and the first client render use the phone's count of four; the measured count applies after mount, and where nothing has a width (jsdom) the four stays. The script's band, the literal `'(min-width: 40.01rem)'` in `section-links.tsx`, is `$shell-phone-width` plus 0.01rem, kept by hand because a media query in script cannot read the Sass token. More's sheet is a floating panel (`top: calc(100% + space(2))` beneath the button, `layer('floating')`, a hairline above an `apart` section, its chevron turning while open).
 - **At or under `$shell-phone-width`.** The same `nav` is
   `position: fixed` along the foot of the window: `layer('shell')`, the card
   ground, a hairline top edge, `$bottom-bar-height` (64px) tall plus the
   device's bottom safe-area inset, which it also pads, so a home indicator does
   not cover the labels. Items take equal widths, icon above a label at `type-size('tab')`, 11px, the one role below overline, since five labels share a 375px screen and "Compendium" is wider than a fifth of it at 12px; the
   current one by weight, the accent icon and a short accent rule above the icon
-  (it hangs from the bar's top edge). The brief gave the height as
+  (it hangs from the bar's top edge), with no fill: a filled tab in a bar of
+  one, the coven's Overview alone, would recolour the whole bar. The brief gave the height as
   `$bottom-bar-height` with the inset as padding; here the inset is added to
   the height so the label area is never squeezed, which is what the page's
   clearance (`AppShell`'s bottom padding, `$bottom-bar-height` plus the same
   inset) assumes. Coven's items all fit. Admin shows Compendium, Categories,
   Forms and Deities, then More (Astrology, People), which opens a sheet above
-  the bar at its end, the same disclosure as the tablet's. There is no
-  chevron, as in the design.
-- **Motion.** The tab fills ease with the theme's transition; under
-  `prefers-reduced-motion: reduce` there is none.
+  the bar at its end, the same disclosure as the row's. There is no
+  chevron, except on a More button standing in for a hidden current page
+  (it wears that page's icon and label), where an accent one at the tab's end
+  says there is more.
+- **Motion.** The tab fills ease with the theme's transition; More's sheet
+  fades in and out over the theme's duration (it stays displayed, and
+  `hidden` takes it out of sight with `visibility`, held until the fade has
+  run, as a tip's bubble is) and its chevron turns over `$motion-short`;
+  under `prefers-reduced-motion: reduce` there is none.
 - **Icons.** `icons.tsx` draws ten small stroke-only SVGs on a 24-unit square
   (1.6 stroke, round caps, `currentColor`, `aria-hidden`): overview (four
   squares), ingredients (leaf), grimoire (open book), members (two people),

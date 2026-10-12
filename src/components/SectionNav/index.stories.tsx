@@ -47,7 +47,7 @@ export const Admin: Story = () => (
   </Row>
 );
 
-// Tablet: the first four tabs, the rest behind More.
+// Tablet: the tabs that fit, the rest behind More (measured, so a story in Ladle shows what its width allows).
 export const AdminTablet: Story = () => (
   <Row path="/admin/category-groups">
     <AdminNav />
