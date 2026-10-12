@@ -43,15 +43,11 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   since the form carries no cursor. It is `filter.tsx`, a client file: the
   search text, held in state, inside the shared `FilterForm`
   ([`filter-form.md`](filter-form.md)). The search applies from its
-  magnifier or Enter; the role select and the switch are uncontrolled and
-  apply the moment they change, carrying the search text, each softly from
-  the first page, so from the change until the new list arrives the row is
-  greyed and off and the list beneath it, table and pager, is the tabs’
-  skeleton (MB.115; [`list-frame.md`](list-frame.md)). Soft because every
-  page under `/admin` runs the guard itself. Its Clear link, offered only
-  while the page shows a query, a role or Needs Approval, opens
-  `/admin/users` with none. The list keys the filter by the one shown, so a
-  page showing another starts it again from that one.
+  magnifier or Enter; the role select and the switch apply the moment they
+  change, each carrying the search text and starting from the first page.
+  Its Clear link, offered only while the page shows a query, a role or
+  Needs Approval, opens `/admin/users` with none. How every filter navigates
+  and loads is [`filter-form.md`](filter-form.md#contracts).
 - **A new filter applies without a button** (MB.115, replacing MB.53's Filter
   button, disabled until something differed): the search’s magnifier is
   always live, and the role and the switch send on change.

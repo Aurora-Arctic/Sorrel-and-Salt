@@ -97,11 +97,8 @@ for a rule only one kind's rows need.
   `FilterSelectField` with `typeahead` ([`field.md`](field.md)): typing narrows the groups, its
   placeholder reads "All Groups" while blank, and its clear, "Clear Group"
   ("Clear Tradition"), is the way back to every group. Both stand at one
-  width, the field's `filter-row__typeahead` class
-  ([`filter-form.md`](filter-form.md), "Styling"), so the swap moves
-  nothing: left to size themselves, the select took its longest option's
-  width and the type-ahead its few letters', and the field shrank as the
-  page hydrated (MB.115). Text naming no group
+  width, so the swap moves nothing
+  ([`filter-form.md`](filter-form.md#styling), "A choice takes one width"). Text naming no group
   is no group, so it filters by none. A hidden input carries the same
   parameter, by slug, so the form's fields are what they were.
 - **Each field applies as it changes** (the owner's call at MB.115's
@@ -111,14 +108,8 @@ for a rule only one kind's rows need.
   typed but not yet searched; the name on the magnifier or Enter, keeping
   the group shown. With JavaScript, each builds the address with
   `groupedValuesHref(kind, { query, group })` and `useApplyFilter` pushes
-  it as a soft navigation, as the pager's links are, inside
-  its `ListFrame`'s transition: the row greyed and off and the tabs'
-  skeleton in place of the table and the pager until the filtered list
-  arrives, the owner's call at MB.115's review
-  ([`list-frame.md`](list-frame.md)). The list
-  keys the form by the filter shown, so a page showing another — Back to an
-  older filter, say — draws it afresh from that one rather than keeping a
-  stale draft. In the workshop, `next/navigation` is stubbed
+  it softly; the loading state and the form's keying by the filter shown
+  are the shared form's ([`filter-form.md`](filter-form.md#contracts)). In the workshop, `next/navigation` is stubbed
   ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Category, Add Planet and the rest, the tab's action beside the
