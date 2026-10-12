@@ -187,3 +187,24 @@ export interface SearchFieldProps {
   value: string;
   onChange: (value: string) => void;
 }
+
+/**
+ * A list filter's closed set (MB.115): a native select, or with `typeahead`
+ * a type-ahead once hydrated, whose blank choice is no filter.
+ */
+export interface FilterSelectFieldProps {
+  /** The name above the box, and its accessible name: "Role". */
+  label: string;
+  /** The parameter the choice submits under: `role`. */
+  name: string;
+  /** The blank first choice, no filter, and a type-ahead's placeholder: "All Roles". */
+  all: string;
+  /** Each choice, its value what the page reads and its label what the box shows. */
+  options: readonly SelectOption[];
+  /** The value the page shows, the blank for none; the field holds its own after. */
+  defaultValue: string;
+  /** Applies a new value: a select's on its change, a type-ahead's once a choice other than the one shown settles. */
+  onChange: (value: string) => void;
+  /** Typed into once hydrated, its list narrowing to the choices holding the text. */
+  typeahead?: boolean;
+}

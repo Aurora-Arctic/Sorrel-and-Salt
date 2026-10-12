@@ -3,6 +3,7 @@ import { type ReactNode, useId, useState } from 'react';
 import { type FieldErrors, FormProvider, useForm } from 'react-hook-form';
 import {
   FieldShell,
+  FilterSelectField,
   FormActions,
   ReasonField,
   SearchField,
@@ -183,3 +184,40 @@ const Search = () => {
 };
 
 export const SearchBox: Story = () => <Search />;
+
+// A list filter's closed set: a native select, its blank first choice no
+// filter, and the same set typed into, as the curated lists' group is once
+// hydrated. Each applies nowhere here: a filter's FilterForm opens the list
+// (Forms / Filter Form). The type-ahead stands at the select's width, so
+// hydration, which swaps one for the other, moves nothing.
+const GROUPS = [
+  { value: 'fixture-substance', label: 'Fixture Substance' },
+  { value: 'testwort-wards', label: 'Testwort Wards' },
+  { value: 'mockish', label: 'Mockish' },
+];
+
+export const FilterSelect: Story = () => (
+  <form
+    className="filter-row"
+    style={{ maxWidth: '48rem' }}
+    onSubmit={(event) => event.preventDefault()}
+  >
+    <FilterSelectField
+      label="Group"
+      name="group"
+      all="All Groups"
+      options={GROUPS}
+      defaultValue=""
+      onChange={noop}
+    />
+    <FilterSelectField
+      label="Tradition"
+      name="tradition"
+      all="All Traditions"
+      options={GROUPS}
+      defaultValue="testwort-wards"
+      onChange={noop}
+      typeahead
+    />
+  </form>
+);

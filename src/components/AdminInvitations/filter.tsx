@@ -3,7 +3,7 @@
 import { type ReactElement, useState } from 'react';
 import { SearchField, SwitchField } from '../Field';
 import FilterForm, { useApplyFilter } from '../FilterForm';
-import { invitationsHref } from './href';
+import { INVITATIONS_PATH, invitationsHref } from './href';
 import type { AdminInvitationsFilterProps } from './types';
 
 // The Invitations tab's filter (MB.115, on the owner's ask: "search the
@@ -19,14 +19,15 @@ import type { AdminInvitationsFilterProps } from './types';
 const AdminInvitationsFilter = ({ filter }: AdminInvitationsFilterProps): ReactElement => {
   const [draftEmail, setDraftEmail] = useState(filter.email);
   const apply = useApplyFilter();
+  /** The filter shown with Expires in 24 Hrs given, the email typed carried, from the first page. */
+  const hrefWith = (expiringSoon: boolean) =>
+    invitationsHref({ email: draftEmail.trim(), expiringSoon });
 
   return (
     <FilterForm
       label="Filter Invitations"
-      action="/admin/invitations"
-      searchHref={() =>
-        invitationsHref({ email: draftEmail.trim(), expiringSoon: filter.expiringSoon })
-      }
+      action={INVITATIONS_PATH}
+      searchHref={() => hrefWith(filter.expiringSoon)}
       shown={[filter.email, filter.expiringSoon]}
     >
       <SearchField
@@ -41,9 +42,7 @@ const AdminInvitationsFilter = ({ filter }: AdminInvitationsFilterProps): ReactE
         name="expiring"
         value=""
         defaultChecked={filter.expiringSoon}
-        onChange={(checked) =>
-          apply(invitationsHref({ email: draftEmail.trim(), expiringSoon: checked }))
-        }
+        onChange={(checked) => apply(hrefWith(checked))}
       />
     </FilterForm>
   );

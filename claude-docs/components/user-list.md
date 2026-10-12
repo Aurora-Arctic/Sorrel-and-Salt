@@ -28,9 +28,10 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 
 ## Contracts
 
-- **The filter is a GET form to `/admin/users`**, named "Filter Users" inside
+- **The filter is a GET form to `/admin/users`** (`USERS_PATH`, `href.ts`), named "Filter Users" inside
   a `<search>` landmark: a search box labelled "Name or Email" (`query`), a
-  native Role select (`role`: All Roles, Admin or User), a "Needs Approval"
+  native Role select (`role`: All Roles, then `ROLE_LABELS`, Admin or User;
+  a `FilterSelectField`, [`field.md`](field.md)), a "Needs Approval"
   switch (`awaiting`), each label in title case on the owner's call, and no
   Filter button (MB.115). The switch is `SwitchField`, a slide toggle with its label
   above as the other fields have, over a native checkbox; it was a checkbox

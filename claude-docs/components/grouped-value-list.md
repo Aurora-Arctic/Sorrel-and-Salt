@@ -93,8 +93,8 @@ for a rule only one kind's rows need.
   Traditions"), valued `""`, then each group by slug, alphabetical as read,
   and a native submit sends `query=&group=` (`query=&tradition=`), which the
   page reads as no filter. Hydration swaps it for the combobox's type-ahead
-  box ([`combobox.md`](combobox.md), "The type-ahead box"), told apart by
-  `useHydrated()` (`src/lib/hydrated.ts`): typing narrows the groups, its
+  box ([`combobox.md`](combobox.md), "The type-ahead box"), both drawn by
+  `FilterSelectField` with `typeahead` ([`field.md`](field.md)): typing narrows the groups, its
   placeholder reads "All Groups" while blank, and its clear, "Clear Group"
   ("Clear Tradition"), is the way back to every group. Both stand at one
   width, the field's `filter-row__typeahead` class

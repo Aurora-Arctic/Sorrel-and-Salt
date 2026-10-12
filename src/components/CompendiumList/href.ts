@@ -10,10 +10,11 @@ import type { CompendiumPlace } from './types';
 // text, `form=Oil`, and No Refs is `withoutReferences=1`, the
 // value its checkbox submits natively.
 
-const PATH = '/admin/compendium';
+/** The page itself, unfiltered: where the filter submits, and what Clear opens. */
+export const COMPENDIUM_PATH: Route = '/admin/compendium';
 
 export function compendiumHref(place: CompendiumPlace, dialog?: ListDialog): Route {
-  return listHref(PATH, {
+  return listHref(COMPENDIUM_PATH, {
     query: place.query,
     form: place.form,
     nomenclature: place.nomenclature,

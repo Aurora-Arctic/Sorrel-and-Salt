@@ -29,7 +29,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   as `?email=fern&expiring`, `expiring` a bare flag read by its presence,
   so a native submit's `expiring=` reads the same; `href.ts`'s
   `invitationsHref(filter, cursor, invite)` builds every address the tab
-  links to. There is no Filter button: the email applies from its magnifier or
+  links to, and its `INVITATIONS_PATH` is the form's action and Clear's. There is no Filter button: the email applies from its magnifier or
   Enter, the switch the moment it changes, each carrying the other, and
   both open the first page softly, since they name no cursor and every page
   under `/admin` runs the guard itself; the row is greyed and the list a

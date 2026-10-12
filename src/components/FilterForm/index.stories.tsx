@@ -1,8 +1,8 @@
 import type { Story } from '@ladle/react';
 import type { Route } from 'next';
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useState } from 'react';
 import { listHref } from '../../lib/list-href';
-import { FieldShell, SearchField, SwitchField, fieldDescription } from '../Field';
+import { FilterSelectField, SearchField, SwitchField } from '../Field';
 import ListFrame from '../ListFrame';
 import FilterForm, { useApplyFilter } from '.';
 
@@ -27,9 +27,13 @@ interface Shown {
 
 const NO_FILTER: Shown = { query: '', group: '', unsourced: false };
 
+const GROUPS = [
+  { value: 'fixture-substance', label: 'Fixture Substance' },
+  { value: 'testwort-wards', label: 'Testwort Wards' },
+];
+
 const ValueFilter = ({ shown }: { shown: Shown }): ReactElement => {
   const apply = useApplyFilter();
-  const group = fieldDescription({ id: `${useId()}-group` });
   const [query, setQuery] = useState(shown.query);
   // The filter shown, with the search's text typed but not yet sent, so a
   // change of group or flag carries it too.
@@ -49,19 +53,14 @@ const ValueFilter = ({ shown }: { shown: Shown }): ReactElement => {
         value={query}
         onChange={setQuery}
       />
-      <FieldShell label="Group" {...group}>
-        <select
-          id={group.controlId}
-          className="select"
-          name="group"
-          defaultValue={shown.group}
-          onChange={(event) => apply(href({ group: event.target.value }))}
-        >
-          <option value="">All Groups</option>
-          <option value="fixture-substance">Fixture Substance</option>
-          <option value="testwort-wards">Testwort Wards</option>
-        </select>
-      </FieldShell>
+      <FilterSelectField
+        label="Group"
+        name="group"
+        all="All Groups"
+        options={GROUPS}
+        defaultValue={shown.group}
+        onChange={(group) => apply(href({ group }))}
+      />
       <SwitchField
         label="No Refs"
         name="unsourced"
