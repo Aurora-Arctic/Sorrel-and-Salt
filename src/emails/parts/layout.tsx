@@ -274,8 +274,15 @@ export async function renderParts(
     html: await render(email('html')),
     text: await render(email('text'), {
       plainText: true,
-      // Headings as written: the converter capitalises them by default.
-      htmlToTextOptions: { selectors: [{ selector: 'h1', options: { uppercase: false } }] },
+      htmlToTextOptions: {
+        selectors: [
+          // Headings as written: the converter capitalises them by default.
+          { selector: 'h1', options: { uppercase: false } },
+          // The wordmark's link is decoration; with its address the first one in the
+          // text would be the site's, not the action's.
+          { selector: 'a.ss-wordmark', format: 'anchor', options: { ignoreHref: true } },
+        ],
+      },
     }),
   };
 }
