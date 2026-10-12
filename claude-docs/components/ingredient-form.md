@@ -287,7 +287,7 @@ where the change is:
   section open, the long form it is, and so does the form Save & Add Another
   clears; an edit opens with every one closed.
 - **Open All / Close All**, a small quiet button beside the modal's title,
-  "Edit Ingredient" or "Add Ingredient" (the owner's call; [`Modal`](modal.md),
+  "Add Ingredient", or an edit's eyebrow and entry name (the owner's call; [`Modal`](modal.md),
   "Beside the title"), or at the end of the line above the first section
   where the form is in no modal, reads Close All while any section is open and Open All
   once every one is closed. A press from any mix therefore folds the form to
@@ -1182,7 +1182,7 @@ site admin's, through the compendium mutations
 **On the admin page.** `/admin/compendium` opens the form in `Modal`'s wide
 size from its address, as `/admin/categories` opens GroupedValueForm: `?new` an
 empty form, `?edit=<slug>` the entry at that slug, through
-`resolveCompendiumSlug`. An old address redirects to the entry's current
+`resolveCompendiumSlug`. An edit's head is the eyebrow "Edit Ingredient" over the entry's saved name and its formal name, in italics for a binomial (`editHeading` in `page.tsx`; [`modal.md`](modal.md), "An edit dialog's head"), so it follows a rename once Save Ingredient re-reads the entry. An old address redirects to the entry's current
 `?edit=`, and one naming nothing opens nothing and says so in an alert above
 the list. The edit's values are built on the navigation by
 `src/app/admin/compendium/entry-values.ts`, `server-only`, from the services

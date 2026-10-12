@@ -67,6 +67,7 @@ export {
   findPrivilegeChangePage,
   findProvidersOfUsers,
   findUserByEmail,
+  findUserCount,
   findUserPage,
 } from './users';
 export {

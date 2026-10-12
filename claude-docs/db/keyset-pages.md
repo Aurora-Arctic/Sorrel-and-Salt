@@ -102,7 +102,8 @@ from … [join …] where …   -- no order, no limit
   `where`, `findPageCountInTiers` a `findPageInTiers` one, and
   `findPageCountInScope` a `findPageInScope` one, the Invitations tab's: the three
   group pages count through it (MB.132), and each vocabulary's own count
-  finder and the compendium's call one under their own filter (MB.206).
+  finder, the compendium's, the ledger's and the user list's
+  (`findUserCount`, MB.115) call one under their own filter (MB.206).
 
 A spell's page, the counterpart of `findManySpells` under the visibility rule,
 is added by the grimoire task that first needs it, as its own finder, like

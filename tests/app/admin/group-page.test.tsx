@@ -179,7 +179,7 @@ describe('a group page, on the category groups', () => {
 
     expect(getCategoryGroupBySlug).toHaveBeenCalledWith('fixture-wards');
     expect(countCategories).toHaveBeenCalledWith({ groupId: WARDS.id }, undefined);
-    const dialog = screen.getByRole('dialog', { name: 'Edit Category Group' });
+    const dialog = screen.getByRole('dialog', { name: 'Edit Category Group, Fixture Wards' });
     expect(within(dialog).getByRole('textbox', { name: 'Light Theme Colour' })).toHaveValue(
       '#0c5393',
     );
@@ -233,6 +233,7 @@ describe('a group page, for each other kind', () => {
       get: getIngredientFormGroupBySlug,
       members: countIngredientFormValues,
       memberFilter: { groupId: WARDS.id },
+      dialog: 'Edit Form Group, Fixture Wards',
     },
     {
       kind: 'tradition',
@@ -242,12 +243,13 @@ describe('a group page, for each other kind', () => {
       get: getDeityTraditionBySlug,
       members: countDeities,
       memberFilter: { traditionId: WARDS.id },
+      dialog: 'Edit Tradition, Fixture Wards',
     },
   ] as const;
 
   it.each(ROWS)(
     'reads the $kind groups and the edited one through its own services, on $path',
-    async ({ kind, path, list, count, get, members, memberFilter }) => {
+    async ({ kind, path, list, count, get, members, memberFilter, dialog }) => {
       list.mockResolvedValue([entry(PLAIN)]);
       count.mockResolvedValue({ totalCount: 1, countBefore: 0 });
       get.mockResolvedValue(PLAIN);
@@ -257,7 +259,7 @@ describe('a group page, for each other kind', () => {
 
       expect(get).toHaveBeenCalledWith(WARDS.slug);
       expect(members).toHaveBeenCalledWith(memberFilter, undefined);
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: dialog })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: `Edit ${WARDS.name}` })).toHaveAttribute(
         'href',
         `${path}?edit=${WARDS.slug}`,

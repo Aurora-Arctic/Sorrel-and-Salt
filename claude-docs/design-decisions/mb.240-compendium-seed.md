@@ -2,6 +2,8 @@
 
 **Status:** decided · **Date:** 2026-10-11 (settled with the owner the same day)
 
+**Note, 2026-10-12 (MB.115):** an entry heading is now cited `under "Mugwort"` rather than `s.v. Mugwort`, following the 18th edition of the _Chicago Manual of Style_ (14.130); every seed locator was converted, and [`db/references.md`](../db/references.md) holds the form in force.
+
 Staging and production will start with 614 compendium entries, researched and sourced, rather than an empty compendium an admin fills by hand. This record says why the seed is shaped as it is and what was turned down. The scoping plan is [`mb.240-plan.md`](mb.240-plan.md); the rules every entry is written to are [`db/compendium-seed/README.md`](../db/compendium-seed/README.md); MB.241 to MB.249 build it.
 
 ## The problem

@@ -418,8 +418,8 @@ CREATE UNIQUE INDEX reference_links_ingredient_unique
   Pope, Marvin H. "Anath." In _Encyclopaedia Judaica_. Encyclopedia.com. Accessed October 6, 2026. https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath.
 - **`article`** — Authors. "Title." _Container_ Volume, no. Issue (Published): Pages. Host. Last modified Modified. Accessed Accessed. URL. (Note) — and without a volume, _Container_, Published, Pages
   Nwokocha, Eziaku Atuama. "An Equilibrist Vodou Goddess." _Harvard Divinity Bulletin_, Summer/Autumn 2013. Accessed October 6, 2026. https://bulletin.hds.harvard.edu/an-equilibrist-vodou-goddess/.
-- **`entry`** — Authors. Container, Edition, s.v. "Title." Contributors. Place: Publisher, Published. Host. Last modified Modified. Accessed Accessed. URL. (Note)
-  Wikipedia, s.v. "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
+- **`entry`** — Authors. Container, Edition, under "Title." Contributors. Place: Publisher, Published. Host. Last modified Modified. Accessed Accessed. URL. (Note)
+  Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
 - **`web_page`** — Authors. "Title." Container. Publisher. Published; last modified Modified. Accessed Accessed. URL. (Note) — "Last modified" capitalised when it stands without a published date
   Cartwright, Mark. "Greek Mythology." World History Encyclopedia. July 29, 2012. Accessed October 6, 2026. https://www.worldhistory.org/Greek_Mythology/.
 

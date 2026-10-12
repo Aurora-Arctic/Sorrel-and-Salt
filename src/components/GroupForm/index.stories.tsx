@@ -34,13 +34,13 @@ export const AddingACategoryGroup: Story = () => (
 
 // Press Delete Group to see the move: a group to choose, then the confirmation.
 export const EditingACategoryGroup: Story = () => (
-  <Modal title="Edit Category Group" onClose={done}>
+  <Modal eyebrow="Edit Category Group" title={WARDS.name} onClose={done}>
     <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
   </Modal>
 );
 
 export const EditingAFormGroup: Story = () => (
-  <Modal title="Edit Form Group" onClose={done}>
+  <Modal eyebrow="Edit Form Group" title="Testwort Matter" onClose={done}>
     <GroupForm
       kind="form"
       group={{ ...WARDS, name: 'Testwort Matter', colorDark: '', colorLight: '' }}
@@ -64,7 +64,7 @@ export const AddingATradition: Story = () => (
 
 // Press Delete Tradition to see the move: its two deities to another tradition.
 export const EditingATradition: Story = () => (
-  <Modal title="Edit Tradition" onClose={done}>
+  <Modal eyebrow="Edit Tradition" title="Fixtural" onClose={done}>
     <GroupForm
       kind="tradition"
       group={{

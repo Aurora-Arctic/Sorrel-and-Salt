@@ -1,5 +1,6 @@
 import type { IngredientFormValues } from '../../../components/IngredientForm/types';
 import type { CompendiumPlace } from '../../../components/CompendiumList/types';
+import type { ModalHeading } from '../../../components/Modal/types';
 import type { ListSearchParams } from '../types';
 
 export interface AdminCompendiumPageProps {
@@ -26,7 +27,8 @@ export interface EditedEntry {
 }
 
 export interface CompendiumDialogProps {
-  title: string;
+  /** "Add Ingredient", or the edited entry's eyebrow, name and formal name (MB.115). */
+  heading: ModalHeading;
   /** The list the modal opened over, which closing it returns to and a save reopens from. */
   place: CompendiumPlace;
   entry?: EditedEntry;

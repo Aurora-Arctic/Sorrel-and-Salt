@@ -10,13 +10,13 @@ import type { ValueDialogProps } from './types';
 // modal's own close as a function, which a server component cannot pass.
 export default function ValueDialog({
   kind,
-  title,
+  heading,
   closeHref,
   value,
   groups,
 }: ValueDialogProps): ReactElement {
   return (
-    <RouteModal title={title} closeHref={closeHref}>
+    <RouteModal {...heading} closeHref={closeHref}>
       {(done) => <GroupedValueForm kind={kind} value={value} groups={groups} onDone={done} />}
     </RouteModal>
   );

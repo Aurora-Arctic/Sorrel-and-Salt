@@ -1156,14 +1156,19 @@ export const CompendiumEntrySubstituteSummary: Story = () => {
 
 // A phone's width, in each theme: the admin's edit, bare, its sections closed, as at desktop.
 /**
- * The edit in its modal, as the admin compendium opens it: Open All / Close
- * All beside the title, and the header staying at the top as the form
+ * The edit in its modal, as the admin compendium opens it: the eyebrow over
+ * the entry's saved name and formal name, Open All / Close All beside them, and the header staying at the top as the form
  * scrolls beneath it (MB.115).
  */
 export const CompendiumEntryInModal: Story = () => {
   useCannedApi();
   return (
-    <Modal title="Edit Ingredient" onClose={() => undefined}>
+    <Modal
+      eyebrow="Edit Ingredient"
+      title="Testwort"
+      qualifier={<span className="binomial">Fixtura testalis</span>}
+      onClose={() => undefined}
+    >
       <IngredientForm
         workspaceId={null}
         entry={ENTRY}
@@ -1247,6 +1252,20 @@ AskingToDiscardPhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const AskingToDiscardPhoneLight: Story = () => <AskingToDiscardInModal />;
 AskingToDiscardPhoneLight.meta = { theme: 'light', width: 375 };
+
+// The edit's head in each theme, at a desktop's width and a phone's: the
+// eyebrow, then the name and its formal name, which wrap on a phone (MB.115).
+export const InModalDark: Story = () => <CompendiumEntryInModal />;
+InModalDark.meta = { theme: 'dark' };
+
+export const InModalLight: Story = () => <CompendiumEntryInModal />;
+InModalLight.meta = { theme: 'light' };
+
+export const InModalPhoneDark: Story = () => <CompendiumEntryInModal />;
+InModalPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const InModalPhoneLight: Story = () => <CompendiumEntryInModal />;
+InModalPhoneLight.meta = { theme: 'light', width: 375 };
 
 export const PhoneDark: Story = () => <CompendiumEntry />;
 PhoneDark.meta = { theme: 'dark', width: 375 };

@@ -86,11 +86,60 @@ export const Wide: Story = () => {
 
 Wide.meta = { iframed: true };
 
+/**
+ * An edit dialog's head (MB.115): the eyebrow says what it does to what
+ * kind, the title which entry, by the name it was saved under, and a
+ * qualifier after it, here a binomial in its italics. The name wraps rather
+ * than pushing the × out, as the phone stories show.
+ */
+export const Editing: Story = () => {
+  const [open, setOpen] = useState(true);
+  return (
+    <>
+      <button type="button" className="btn btn--solid" onClick={() => setOpen(true)}>
+        Open
+      </button>
+      {open && (
+        <Modal
+          eyebrow="Edit Ingredient"
+          title="Testwort of the Long Fixture Meadow"
+          qualifier={<span className="binomial">Fixtura testalis var. longissima</span>}
+          onClose={() => setOpen(false)}
+        >
+          <form className="form" onSubmit={(event) => event.preventDefault()}>
+            <div className="field">
+              <label className="field__label" htmlFor="story-editing-name">
+                Name
+              </label>
+              <input
+                id="story-editing-name"
+                className="input"
+                defaultValue="Testwort of the Long Fixture Meadow"
+              />
+            </div>
+          </form>
+        </Modal>
+      )}
+    </>
+  );
+};
+
+export const EditingDark: Story = () => <Editing />;
+export const EditingLight: Story = () => <Editing />;
+export const EditingPhoneDark: Story = () => <Editing />;
+export const EditingPhoneLight: Story = () => <Editing />;
+
+Editing.meta = { iframed: true };
+EditingDark.meta = { iframed: true, theme: 'dark' };
+EditingLight.meta = { iframed: true, theme: 'light' };
+EditingPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+EditingPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+
 // The address-driven wrapper the admin pages open: the workshop's router goes
 // nowhere, so Close, Escape and Done fade it out and leave it gone until the
 // story is reloaded. Done stands for a form's save.
 export const OpenedByItsAddress: Story = () => (
-  <RouteModal title="Edit Category" closeHref={'/admin/categories' as Route}>
+  <RouteModal eyebrow="Edit Category" title="Testcraft" closeHref={'/admin/categories' as Route}>
     {(done) => (
       <div className="modal__actions">
         <button type="button" className="btn btn--solid" onClick={done}>
@@ -155,7 +204,7 @@ export const AskingToDiscardChanges: Story = () => {
         Open
       </button>
       {open && (
-        <Modal title="Edit Category" onClose={() => setOpen(false)}>
+        <Modal eyebrow="Edit Category" title="Testwort" onClose={() => setOpen(false)}>
           {(done) => <ChangedForm close={done} />}
         </Modal>
       )}
@@ -191,7 +240,7 @@ export const WithPickers: Story = () => {
         Open
       </button>
       {open && (
-        <Modal title="Edit Form" onClose={() => setOpen(false)}>
+        <Modal eyebrow="Edit Form" title="Fixture Oil" onClose={() => setOpen(false)}>
           <form className="form" onSubmit={(event) => event.preventDefault()}>
             <div className="field">
               <span className="field__label" id="story-group-label">
