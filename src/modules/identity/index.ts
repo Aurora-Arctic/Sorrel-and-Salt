@@ -4,6 +4,7 @@
 export * from './services/admin-invitations';
 export * from './services/admin-role';
 export * from './services/admin-role-pause';
+export * from './services/display-names';
 export * from './services/email';
 export * from './services/invitation-acceptance';
 export * from './services/name';
@@ -20,6 +21,7 @@ export * from './graphql/user';
 export * from './graphql/invitations';
 export * from './graphql/privilege-changes';
 export * from './loaders/providers-by-user';
+export * from './loaders/users-by-id';
 export * from './loaders/users-by-id-for-admin';
 export type {
   AdminInvitationFilter,

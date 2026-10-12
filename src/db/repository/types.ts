@@ -788,6 +788,12 @@ export interface GroupFilter {
   query?: string;
 }
 
+/** A user's display name, without the rest of the row: what a co-member may read (MB.10). */
+export interface UserName {
+  id: string;
+  name: string;
+}
+
 /** One provider account linked to a user, without the tokens its row holds. */
 export interface LinkedProvider {
   userId: string;

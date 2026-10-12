@@ -2,7 +2,7 @@
 // (claude-docs/db/client-imports.md, "Who may import the client"). `db` is not re-exported and
 // callers never see the transaction — `withAudit`'s `AuditWriter` is the sole
 // write mechanism, so no write can skip audit stamping. Rule 4: every exported
-// finder applies `deleted_at IS NULL` but the four named `…IncludingSoftDeleted`
+// finder applies `deleted_at IS NULL` but the five named `…IncludingSoftDeleted`
 // hatches, and the two read builders are not re-exported here — guarded by
 // tests/guards/soft-delete-finder-guard.test.ts.
 // Import this file, never a sibling: the rest of the folder is internal.
@@ -63,6 +63,7 @@ export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export { findMembershipsOfUsers, findWorkspaceRole } from './memberships';
 export {
+  findCoMemberNamesIncludingSoftDeleted,
   findPrivilegeChangeCount,
   findPrivilegeChangePage,
   findProvidersOfUsers,

@@ -19,7 +19,7 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
   filter, so a second bypass is a decision argued for in the diff, not a
   convenience appearing quietly beside an import.
 
-There are three such hatches, from two decisions. The first is what a spell
+There are four such hatches, from three decisions. The first is what a spell
 holds: `findIngredientsInSpellsIncludingSoftDeleted` and
 `findManyOfSpellIngredientsIncludingSoftDeleted` (M5.3) read an ingredient
 past its tombstone, and nothing else past one, for a member who may read a spell
@@ -45,6 +45,14 @@ itself. `findReferencesOf` (MB.153, MB.208) is the option's other user,
 and no hatch: its `on` holds the reference to `deleted_at IS NULL`, and its
 `where` takes only a row that joined one, so it reads as an inner join with
 every tombstone filtered ([`references.md`](references.md)).
+
+The third, decided by MB.10, is a co-member's name:
+`findCoMemberNamesIncludingSoftDeleted` reads the asked-about users' seats in
+the viewer's covens, a removed member's tombstoned seat included, and
+left-joins each to its user row, a deleted user's included, so that a deleted
+user reads under the name their row last held. The viewer's own seat and the
+coven are live by `existsIn`, and the finder returns an id and a name, never
+the row ([`auth/display-names.md`](../auth/display-names.md)).
 
 Neither builder is in the repository's surface — their siblings import them,
 and nothing outside the folder may (["The repository's files"](repository-files.md)) — so
@@ -83,7 +91,7 @@ each named `…IncludingSoftDeleted`, so a new one is a decision in the diff.
 The finders are read off the index itself, so a new finder is checked without
 being listed. What each hatch still filters — the spell hatches skip the
 ingredient's tombstone alone, the substitute hatch the linked ingredient's
-alone — is its service's READS table's to prove
+alone, the co-member hatch the asked-about user's seat and row alone — is its service's READS table's to prove
 ([`testing/layer-ownership.md`](../testing/layer-ownership.md), "The owning
 layer").
 

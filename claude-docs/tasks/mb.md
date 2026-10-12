@@ -1377,7 +1377,7 @@ _Acceptance criteria:_
 - Constructed per request
 - Returns display name only, never the email address
 - Resolves a co-member's name, a removed member's too, and nothing for a user who never shared a workspace with the viewer, asserted with the precondition that the user exists and has a name
-- A deleted user still resolves to a stable display value
+- A deleted user still resolves to a stable display value: the name their row last held, the owner's call while building ([`mb.10-co-member-display-names.md`](../design-decisions/mb.10-co-member-display-names.md))
 - `usersByIdForAdmin` is unchanged
 
 **MB.11 — GraphQL field exposing the fuzzy duplicate service** · 1h
