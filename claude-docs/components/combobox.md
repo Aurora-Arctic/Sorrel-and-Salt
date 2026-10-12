@@ -4,7 +4,7 @@
 Downshift's `useCombobox` (DESIGN.md §14): the hook owns the ARIA and the
 keyboard state, and the markup, the rows and the Sass are ours. M5.10a built
 it for `IngredientForm`'s form and folk-name lookups, and put it on every
-list field's box; MB.131 gave planets, signs, deities and substitutes their
+list field's box; MB.131 gave celestial bodies, signs, deities and substitutes their
 sources, and M5.10 and M8.10 adopt its debounce. MB.170 made a list's chips
 movable, on dnd-kit.
 
@@ -620,7 +620,7 @@ grip's half-glyph width, and the 1px edges.
 [`index.stories.tsx`](../../src/components/Combobox/index.stories.tsx):
 `TwoBuckets`, a form field with the vocabulary and the forms in use;
 `List`, a list's box with its entries inside, an × on each, a pick that adds and Backspace taking the last; and
-`Sortable`, seven planets wrapping onto a second row, each moved by its grip
+`Sortable`, seven celestial bodies wrapping onto a second row, each moved by its grip
 and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; `Typeahead`, the type-ahead box over five

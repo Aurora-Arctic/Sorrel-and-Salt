@@ -282,14 +282,14 @@ The eyebrow and title are a `.header` column, closer than its gap, which may
 shrink past its content: a long name wraps rather than pushing the × out, and
 a name with no break in it breaks anywhere.
 
-| Dialog                                  | Eyebrow                              | Qualifier   |
-| --------------------------------------- | ------------------------------------ | ----------- |
-| `/admin/compendium?edit=`               | Edit Ingredient                      | Formal name |
-| `/admin/categories`, `forms`            | Edit Category, Edit Form             | —           |
-| `/admin/deities`                        | Edit Deity                           | Tradition   |
-| `/admin/planets`, `zodiac-signs`        | Edit Planet, Edit Zodiac Sign        | —           |
-| `/admin/category-groups`, `form-groups` | Edit Category Group, Edit Form Group | —           |
-| `/admin/deity-traditions`               | Edit Tradition                       | —           |
+| Dialog                                    | Eyebrow                               | Qualifier   |
+| ----------------------------------------- | ------------------------------------- | ----------- |
+| `/admin/compendium?edit=`                 | Edit Ingredient                       | Formal name |
+| `/admin/categories`, `forms`              | Edit Category, Edit Form              | —           |
+| `/admin/deities`                          | Edit Deity                            | Tradition   |
+| `/admin/celestial-bodies`, `zodiac-signs` | Edit Celestial Body, Edit Zodiac Sign | —           |
+| `/admin/category-groups`, `form-groups`   | Edit Category Group, Edit Form Group  | —           |
+| `/admin/deity-traditions`                 | Edit Tradition                        | —           |
 
 ## A control in the header
 
@@ -314,7 +314,7 @@ over the form, the place is held and dimmed with it
 
 A modal opened by its page's address, `?new` or `?edit=<slug>`: the shape
 every admin page's add and edit modal takes. Eight wrappers under
-`src/app/admin/` each wrote the same lines until MB.115, and the planets and
+`src/app/admin/` each wrote the same lines until MB.115, and the celestial bodies and
 zodiac signs' one handed the navigation straight to its form, so a save there
 skipped the fade.
 

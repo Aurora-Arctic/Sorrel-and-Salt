@@ -3,7 +3,7 @@
 `src/components/GroupedValueList/` — a curated vocabulary's filter, table and
 pager, grouped or flat: `/admin/categories`' (M5.6, MB.178), `/admin/forms`'
 (M5.6a) and `/admin/deities`' (MB.132), each value filed under a group, and
-`/admin/planets`' and `/admin/zodiac-signs`' (MB.95), filed under nothing.
+`/admin/celestial-bodies`' and `/admin/zodiac-signs`' (MB.95), filed under nothing.
 One component serves every such vocabulary, `kind: 'category' | 'form' |
 'deity' | 'planet' | 'zodiacSign'`, as [`GroupList`](group-list.md) serves
 the groups; the flat kinds had a copy of their own, `VocabularyValueList`,
@@ -112,7 +112,7 @@ for a rule only one kind's rows need.
   are the shared form's ([`filter-form.md`](filter-form.md#contracts)). In the workshop, `next/navigation` is stubbed
   ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
-  page's Add Category, Add Planet and the rest, the tab's action beside the
+  page's Add Category, Add Celestial Body and the rest, the tab's action beside the
   page's heading (`ValueAction` in `src/app/admin/value-page.tsx`, from the
   route group's `@action` slot) and so the page's rather than this
   component's, is `?new`.
@@ -204,7 +204,7 @@ Search, keeping the group shown; a group picked, carrying the name typed;
 its clear, back to every group), Clear drawn by a name or a group shown and
 not drawn with neither, and `groupedValuesHref`. The category
 and the form get only what they change, their page and their group's
-parameter, as `groupedValuesHref` rows; the planet and the zodiac sign, their page
+parameter, as `groupedValuesHref` rows; the celestial body and the zodiac sign, their page
 and no group written, as rows too, and a flat kind's table and filter drawn
 with no group. The filter's form, its search, Clear and the reset to the
 filter shown run as the shared filter rows (`tests/support/filter-form.tsx`,
@@ -222,4 +222,4 @@ row, or from none when the filter leaves it empty; each group's name joined
 onto its rows; the filter and cursor kept on the
 pager, each Edit, Add and the modal's way back; and the modal the address
 opens. How the list shows what it is given is this component's test's alone. `tests/e2e/admin.spec.ts` lists the
-seeded forms' first page and the planets', and filters the signs by part of a name.
+seeded forms' first page and the celestial bodies', and filters the signs by part of a name.

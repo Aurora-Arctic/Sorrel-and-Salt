@@ -14,6 +14,8 @@ rather than _correspondence_, which in §5 names every property an ingredient
 carries — element and deities too — not these two; the migration keeps the
 name it shipped under, since its tag is in the journal.
 
+**People read the `planets` vocabulary as Celestial Bodies** (MB.251), since most of its nineteen values are not planets. The table, columns, GraphQL and code names keep `planets` until MB.253 and MB.254, and this doc's `planets` always means those names (`design-decisions/mb.251-celestial-bodies.md`).
+
 - **`planets`** and **`zodiac_signs`** — each `id`, `name`, `slug`,
   `description` (NOT NULL, with a non-blank CHECK), + audit. Global,
   admin-curated, in the `vocabulary` module, both in one schema file as the
@@ -85,7 +87,7 @@ live row's `lower(name)`.
 
 `src/modules/vocabulary/services/astrology.ts`, in the form writes' shape
 ([`categories.md`](categories.md), "Form writes") without the group, for
-`/admin/planets` and `/admin/zodiac-signs`. One code path for both, keyed by
+`/admin/celestial-bodies` (it was `/admin/planets` until MB.251) and `/admin/zodiac-signs`. One code path for both, keyed by
 the ingredient list each curates (`CuratedField`, `'planets' | 'zodiacSigns'`).
 A compendium entry's planets and signs are curated spellings (MB.162), and
 these writes keep them so after the write.

@@ -49,16 +49,16 @@ so the union cannot say one yet.
 ## The fields
 
 Name, classification, formal name, folk names, description, element,
-planets, zodiac signs, colours, deities, substitute ingredients, categories,
+celestial bodies, zodiac signs, colours, deities, substitute ingredients, categories,
 safety notes and references, then the variants, each a form with its own
-description, safety notes, elements, planets, zodiac signs, colours,
+description, safety notes, elements, celestial bodies, zodiac signs, colours,
 categories, substitutes and references — every field `IngredientInput`
 takes (["The variants"](#the-variants)). The ingredient has no form of its
 own: its forms are its variants (MB.222).
 
 **The fields run in seven titled sections** (MB.115, the owner's call, once
 the form read as one long column): Identity (name, classification, formal
-name, folk names), Description, Correspondences (element, planets, zodiac
+name, folk names), Description, Correspondences (element, celestial bodies, zodiac
 signs, colours, deities), Relations (categories, substitute ingredients),
 Safety (safety notes), Sources (references) and Variants. The sections cut
 the order the fields already ran in, bar one move on the owner's call:
@@ -73,7 +73,7 @@ heading as its label, so the label is hidden from the eye alone and stays
 the textarea's name.
 **An open variant's fields run in the same sections** (MB.115, the owner's
 call), in the same order and under the same names as far as a form's fields
-go: Identity (its form), Description, Correspondences (element, planets,
+go: Identity (its form), Description, Correspondences (element, celestial bodies,
 zodiac signs, colours), Relations (categories, substitute ingredients),
 Safety (safety notes) and Sources (references). Their headings are `h4`s,
 a level beneath the Variants `h3`, and each folds as the ingredient's do
@@ -81,7 +81,7 @@ a level beneath the Variants `h3`, and each folds as the ingredient's do
 
 **Every field shows a short action while it is empty**, and what it is for
 sits in its hint (the owner's call at MB.115's review; [`field.md`](field.md),
-"Contracts"): "Add a name", "Add formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a planet", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
+"Contracts"): "Add a name", "Add formal name", "Add a folk name", "What it is, where it comes from and how it is used" on the Description, "Add an element", "Add a body", "Add a sign", "Add a colour", "Add a deity", "Add a category", "Add a substitute", "Add safety notes", "Search references" and
 "Add a locator", a variant's Form "Add a form" and Description "What sets this form apart", and the new reference
 panel's fields "Add a title", "Name the book" and so on. `SuggestField`,
 `ListField` (and so `LookupListField`) and `CategoryPicker` take
@@ -104,7 +104,7 @@ field shows none: the browser draws its own format there.
 
 - **A field's hint is an info tip beside its label**, [`InfoTip`](info-tip.md),
   not a line beneath it, on every field whose meaning is not plain from its
-  label: name, classification, formal name, form, folk names, planets,
+  label: name, classification, formal name, form, folk names, celestial bodies,
   zodiac signs, colours, deities, substitute ingredients, categories and
   safety notes.
   The colours tip says each is a correspondence, not the colour the thing is.
@@ -146,11 +146,11 @@ field shows none: the browser draws its own format there.
   pick of a curated form links its row as well, and the box shows the row's
   group beside the text until the text is edited (MB.169). See "The form's
   pick".
-- **Planets, zodiac signs and colours are list fields** (MB.136), as DESIGN.md
-  §5 gives an ingredient several of each, labelled "Planets", "Zodiac Signs"
-  and "Colours" with boxes "Planet", "Zodiac Sign" and "Colour". Every list
+- **Celestial Bodies, zodiac signs and colours are list fields** (MB.136), as DESIGN.md
+  §5 gives an ingredient several of each, labelled "Celestial Bodies", "Zodiac Signs"
+  and "Colours" with boxes "Celestial Body", "Zodiac Sign" and "Colour". Every list
   field's box is the `Combobox` (M5.10a); folk names have their lookup, MB.131
-  gave planets, signs, deities and substitutes theirs, and colours take none,
+  gave celestial bodies, signs, deities and substitutes theirs, and colours take none,
   the owner's call.
 - **The six lists are one combobox each, with the entries inside it.** Typing
   and pressing Add, or Enter with no suggestion highlighted, adds the text as
@@ -234,7 +234,7 @@ field shows none: the browser draws its own format there.
   Hedge Fixture", "Removed Hedge Fixture" or "Cleared Folk Names". Otherwise a
   screen reader hears the box empty, or an entry go, and nothing about what
   happened (WCAG 4.1.3).
-- **Planets, zodiac signs, colours and deities move** (MB.170). Each keeps
+- **Celestial Bodies, zodiac signs, colours and deities move** (MB.170). Each keeps
   the order entered (DESIGN.md §5), so its `ListField` takes `ordered` and
   draws its chips as the combobox's sortable list
   ([`combobox.md`](combobox.md), "A sortable list"): each chip moved by its
@@ -349,7 +349,7 @@ at a time, around them (["The variants"](#the-variants)).
 Six boxes suggest, through `/api/graphql` with TanStack Query
 ([`graphql/client.md`](../graphql/client.md)): the form and folk names from
 M4.7a's `formSuggestions` and `commonNameSuggestions` (M5.10a), and the
-planets, zodiac signs, deities and substitutes from `planetSuggestions`,
+celestial bodies, zodiac signs, deities and substitutes from `planetSuggestions`,
 `zodiacSuggestions`, `deitySuggestions` and `ingredientSuggestions`
 (MB.131). Colours take none. `suggestions.tsx` holds them all, on one hook,
 `useLookup`, and a shape per source: each debounces the box's text through
@@ -378,18 +378,18 @@ row's `id` (MB.167) as its `link`, so picking it links the form as well
 links nothing, and neither does picking a common name. Free text outside the
 vocabulary saves with no warning, as M4.5's schema asks.
 
-A planet or sign row is the value, with the curated row's description as its
+A celestial body or sign row is the value, with the curated row's description as its
 second line, under "From Compendium" and "From Coven" as a form's are. The headings
 say where a value comes from, the owner's call: a curated value is the
 admin's list, which compendium entries are held to, and a value only in use
 outside it is this coven's. A deity row is
 "Hecate (Greek)", the tradition beside the value as a form's group is
 (MB.130), so two same-named deities are told apart; one in use has no
-tradition. Picking a planet or a sign adds its value as an entry. Picking a
+tradition. Picking a celestial body or a sign adds its value as an entry. Picking a
 curated deity adds its value linked to the deity through the row's `id`,
 reading "Hecate (Greek)" (MB.169). A deity only in use has no row, so it adds
 its value as typed text.
-On the compendium the form, planet, sign and deity boxes are pick-only,
+On the compendium the form, celestial body, sign and deity boxes are pick-only,
 since the compendium services refuse any other value beside its field
 (MB.162; [`validation.md`](../validation.md), "The two ingredient
 variants"); ["On the compendium"](#on-the-compendium) says how.
@@ -409,7 +409,7 @@ tooltip and the ranking read; the row shows neither. The typed row,
 Add and Enter add the text as it stands, sent as `{ name }` with no warning.
 **A lookup leaves out what its list holds** (MB.174), as the Element
 multi-select and the References search do, through the same `repeatOf`:
-a planet, sign or folk name by its text folded, a folk-name lookup leaving
+a celestial body, sign or folk name by its text folded, a folk-name lookup leaving
 out the ingredient's name too; a curated deity by its id, so Greek Hecate
 listed still offers Roman, and a deity only in use by its text against the
 typed deities; and an ingredient by its id, so the compendium's Mockwort is
@@ -453,7 +453,7 @@ links. In both substitute lists, the ingredient's and each variant's:
   ingredient's name and formal name, its description cut to three lines
   with an ellipsis on screen (`line-clamp`) and read whole by a screen
   reader, the owner's call, then its Classification, the Form the
-  entry names when it names one, its Elements, Planets, Zodiac Signs and
+  entry names when it names one, its Elements, Celestial Bodies, Zodiac Signs and
   Colours, each left out when empty, and whose entry it is, "Compendium
   entry" or "This coven’s entry". With a form named, each list is the
   ingredient's and the form's together, since a form adds to its ingredient
@@ -724,7 +724,7 @@ as the ingredient's page shows its forms after it (MB.221).
   line is a card: the form as typed ("Unnamed Form" while its Form box is
   empty) with its curated group after it in the muted ink, "Dried leaf
   (Plant part)", as the Form box reads; beneath, what it carries,
-  `variantSummary`, in its sections' order — "1 planet · 2 categories ·
+  `variantSummary`, in its sections' order — "1 celestial body · 2 categories ·
   Safety note · 1 reference" — or "Nothing yet", as an empty section says,
   the two built from the same parts in `summaries.tsx`; and at the end the reference
   rows' two icon buttons, a pencil and a × (MB.115, the owner's call),
@@ -754,7 +754,7 @@ as the ingredient's page shows its forms after it (MB.221).
   error, since the focus runs as that commit lands. Any other variant with
   an error stays closed, its card edged in the error red and its line saying
   it has an error to fix, read with its Edit.
-- **Its fields** are the variant's Form, Description, Element, Planets,
+- **Its fields** are the variant's Form, Description, Element, Celestial Bodies,
   Zodiac Signs, Colours, Categories, Substitute Ingredients, Safety Notes
   and References, in the ingredient's sections (["The fields"](#the-fields)), the ingredient's own field components at the variant's
   place in the values, `variants.1.planets`, so each validates, errs, focuses
@@ -829,7 +829,7 @@ or on its kept `id`, is its Form box's.
 
 A form often says much of what its ingredient says, so each of an open
 variant's fields but its Form has a **Copy From Ingredient** button
-(`copy.tsx`, MB.115, the owner's call): Description, Element, Planets,
+(`copy.tsx`, MB.115, the owner's call): Description, Element, Celestial Bodies,
 Zodiac Signs, Colours, Categories, Substitute Ingredients, Safety Notes and
 References. The ingredient's own fields have none.
 
@@ -843,7 +843,7 @@ References. The ingredient's own fields have none.
   and wrap, so on a phone the button drops beneath a long label. In the
   Description section, whose label is hidden, it shares the heading's line.
 - **Its name** is the visible words first, then the field, "Copy From
-  Ingredient: Planets", so the nine are told apart and the name still
+  Ingredient: Celestial Bodies", so the nine are told apart and the name still
   starts with what is seen (WCAG 2.5.3). It is a `type="button"`.
 - **Shut while there is nothing to copy**: `disabled` while the
   ingredient's field, as the form holds it now, is empty, read through
@@ -852,7 +852,7 @@ References. The ingredient's own fields have none.
   ingredient's field, so the focus is never stranded on a shut button.
 - **What it copies, adding and never taking away** (the owner did not say;
   this is the lane's reading). A list gains the ingredient's entries it
-  lacks, after its own, in the ingredient's order: planets, signs and
+  lacks, after its own, in the ingredient's order: celestial bodies, signs and
   colours by their text folded as a save folds it, elements and categories
   by value, references by source, each with its locator. A text box empty
   takes the ingredient's text; one holding text gains it after a blank
@@ -880,7 +880,7 @@ References. The ingredient's own fields have none.
   slot, beneath the box and its error.
 - **After a press** the field shows the result and the form is dirty, so
   Save opens; once a save has been tried the field is revalidated. A polite
-  announcement says what was copied, "Copied 3 planets from the
+  announcement says what was copied, "Copied 3 celestial bodies from the
   ingredient", or "Nothing new to copy from the ingredient", through the
   list's own live region where it has one, else through a hidden `output`
   beside the button. The focus stays on the button.
@@ -1117,7 +1117,7 @@ site admin's, through the compendium mutations
   `CompendiumIngredientInput`, whose `nomenclature` has no default, since
   every compendium entry declares one (DESIGN.md §5), and the select is
   marked required, where a coven's never is.
-- **The form, planet, sign and deity boxes are pick-only** (MB.162). Each
+- **The form, celestial body, sign and deity boxes are pick-only** (MB.162). Each
   offers the curated rows alone, since a value only in use is one the
   services refuse, and lists them flat, under no From Compendium heading,
   since every row is the compendium's (`curated` dropped, so the combobox
@@ -1416,7 +1416,7 @@ stand-in answers `IngredientSummary` for each invented ingredient, and
 summary open (MB.115). It also holds three sources, so its rows show each short form —
 a book with a locator, an article by two authors with one, and an
 authorless web page — and two forms,
-Dried leaf carrying a safety note, a planet, two categories, a source and
+Dried leaf carrying a safety note, a celestial body, two categories, a source and
 two substitutes of its own, Fixturewort in its Whole root form and the name
 Hedge Mockroot, and Whole root carrying nothing, so both summary lines show;
 `CompendiumEntryVariantOpen` is the same entry with Dried leaf opened by its
@@ -1595,7 +1595,7 @@ few it needs. It covers:
   Add Another; and
   each of the five list boxes asking its own lookup about this coven, none
   before it is used, a pick from each sent in its shape — text for folk
-  names, planets and signs, a deity's id, a substitute's ingredient id.
+  names, celestial bodies and signs, a deity's id, a substitute's ingredient id.
 - **An element list given its values**, as an edit would hold them: chips in
   the order held, the rest alone offered.
 
@@ -1618,9 +1618,9 @@ the id; a form only in use picked with no id; and a value in no vocabulary
 taken from its own row, with no warning and no id. The list boxes: a box
 asking its hook's query about this coven once it is used, and not before, on
 the folk names, `useLookup` being one hook under each; the common names in
-use with their claimants, in one bucket, a pick adding an entry; the planets
+use with their claimants, in one bucket, a pick adding an entry; the celestial bodies
 curated apart from those in use, with descriptions, the signs sharing their
-shape; a listed planet left out of the rows whatever its case, the typed row
+shape; a listed celestial body left out of the rows whatever its case, the typed row
 offered for other text and withheld for a repeat; a curated deity with its
 tradition, two of one name told apart; Greek and Roman Hecate picked as two
 pills, each with its tradition and its description, sent as two ids; a deity
