@@ -13,7 +13,7 @@ import type { MembershipWithWorkspace, WorkspaceRow } from '../types';
  * (claude-docs/design-decisions/m6.11-members-without-a-loader.md).
  *
  * @throws {Forbidden} the caller holds no live seat in the coven, or holds one
- * without `member: read`, which owners alone hold until M6.13.
+ * without `member: read`, which a viewer does not hold.
  */
 export async function listMembers(
   session: Session,
