@@ -34,11 +34,15 @@ export interface VerifyEmailProps extends BaseEmailProps {
 }
 
 export interface AdminInvitationProps extends BaseEmailProps {
+  /** The admin who sent the invitation. */
+  inviterName: string;
   /** The `/invite/[token]` link, carrying the token no response or row holds. */
   url: string;
 }
 
 export interface CovenInvitationProps extends BaseEmailProps {
+  /** The owner who sent the invitation. */
+  inviterName: string;
   /** The `/invite/[token]` link, carrying the token no response or row holds. */
   url: string;
   /** The coven the reader is invited into. */

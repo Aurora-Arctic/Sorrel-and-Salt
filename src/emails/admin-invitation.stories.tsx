@@ -13,7 +13,12 @@ const URL = 'https://sorrelandsalt.com/invite/workshop-preview-token';
 
 // Module-level, so each story hands the preview the same function every render.
 const message = () =>
-  adminInvitationMessage({ to: 'someone@example.com', url: URL, origin: WORKSHOP_ORIGIN });
+  adminInvitationMessage({
+    to: 'someone@example.com',
+    url: URL,
+    inviterName: 'Fixture Owner',
+    origin: WORKSHOP_ORIGIN,
+  });
 
 // Follows the toolbar's theme control, as the mail follows a reader's setting.
 export const Default: Story = () => <EmailPreview message={message} />;

@@ -10,6 +10,7 @@ const INPUT = {
   url: URL,
   covenName: 'Fixture Coven',
   role: 'viewer',
+  inviterName: 'Fixture Owner',
 } as const;
 
 describe('covenInvitationMessage', () => {
@@ -35,5 +36,18 @@ describe('covenInvitationMessage', () => {
 
     expect(text).toContain('Fixture Coven');
     expect(text).toContain('viewer');
+  });
+
+  it('names the owner who sent it', async () => {
+    const { text } = await covenInvitationMessage(INPUT);
+
+    expect(text).toContain(INPUT.inviterName);
+  });
+
+  // The inbox list shows only the subject, so it says which coven.
+  it('carries the coven name in the subject', async () => {
+    const { subject } = await covenInvitationMessage(INPUT);
+
+    expect(subject).toContain('Fixture Coven');
   });
 });

@@ -220,8 +220,10 @@ runs in this order, and the order is the point:
    back and the roll is never fetched to be searched.
 5. **The token** comes from `newToken()`, goes to `insertInvitation(membership,
 { email, role, token })` inside `withAudit`, and only then to
-   `sender.workspaceInvitation(email, token, { name, role })`: after the commit,
-   so a mailed link always names a row.
+   `sender.workspaceInvitation(email, token, { name, role, inviterName })`: after
+   the commit, so a mailed link always names a row. `inviterName` is the
+   inviting owner's name, read from their `users` row, since the session holds
+   the id alone.
 
 **A second pending invitation to an address already invited is accepted**, as
 the admin tier's is: each mail carries its own token and any one accepts. What
@@ -235,7 +237,8 @@ re-invite. The test for it runs the real `send` over a `fetch` that answers
 `renderParts` as HTML and plain text. The plain-text part carries the
 `/invite/<token>` link, because story 4's acceptance test reads the token from
 it. `InvitationSender` (`identity/types.ts`) gained
-`workspaceInvitation(to, token, { name, role })` beside `siteInvitation`; the
+`workspaceInvitation(to, token, { name, role, inviterName })` beside
+`siteInvitation(to, token, { name })`; the
 real one is built in `src/lib/invitation-mail.ts` and shares the admin one's
 link, whose origin Better Auth resolves from the request.
 

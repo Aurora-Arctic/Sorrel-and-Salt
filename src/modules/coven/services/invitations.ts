@@ -4,6 +4,7 @@ import type { InvitableRole, InvitationRow } from '../../../db/repository';
 import { ValidationError } from '../../../lib/errors';
 import { newToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
+import { users } from '../../identity/schema/users';
 import { normaliseEmail, validateEmailAddress } from '../../identity';
 import type { InvitationSender } from '../../identity';
 import { workspaces } from '../schema/workspaces';
@@ -72,6 +73,12 @@ export async function createInvitation(
     write.insertInvitation(membership, { email, role, token }),
   );
   // After the commit, so a mailed link always names a row.
-  await sender.workspaceInvitation(email, token, { name: workspace.name, role });
+  // The mail names who sent it; the session holds the id alone, so the name is read here.
+  const inviter = await findOneById(users, session.userId);
+  await sender.workspaceInvitation(email, token, {
+    name: workspace.name,
+    role,
+    inviterName: inviter?.name ?? '',
+  });
   return row;
 }
