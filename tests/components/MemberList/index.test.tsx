@@ -14,6 +14,7 @@ const OWNER: MemberListEntry = {
   joinedAt: new Date('2026-03-04T05:06:07Z'),
   updatedBy: 'Testwort Editor',
   updatedAt: new Date('2026-05-06T07:08:09Z'),
+  invitedBy: 'Testwort Inviter',
 };
 const MEMBER: MemberListEntry = {
   ...OWNER,
@@ -58,6 +59,15 @@ describe('MemberList', () => {
     const row = rowOf(MEMBER.name);
     expect(within(row).queryByText('Testwort Editor')).toBeNull();
     expect(within(row).queryByText('2026-05-06')).toBeNull();
+  });
+
+  it('shows who invited a member, and leaves the cell empty for someone nobody invited', () => {
+    render(
+      <MemberList members={[MEMBER, { ...OWNER, invitedBy: null }]} currentUserId={OWNER.userId} />,
+    );
+    expect(screen.getByRole('columnheader', { name: 'Invited By' })).toBeTruthy();
+    expect(within(rowOf(MEMBER.name)).getByText('Testwort Inviter')).toBeTruthy();
+    expect(within(rowOf(OWNER.name)).queryByText('Testwort Inviter')).toBeNull();
   });
 
   it('has no Remove column when no removeAction is passed', () => {

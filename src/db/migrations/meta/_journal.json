@@ -491,6 +491,13 @@
       "when": 1791834252712,
       "tag": "0069_drop-planet-columns",
       "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1791845657866,
+      "tag": "0070_brief_silver_centurion",
+      "breakpoints": true
     }
   ]
 }

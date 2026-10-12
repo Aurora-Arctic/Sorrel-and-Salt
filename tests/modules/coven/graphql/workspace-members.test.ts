@@ -1,8 +1,8 @@
 import { isObjectType } from 'graphql';
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
-import { A, B, C, D, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
@@ -124,6 +124,79 @@ describe('Workspace.members', () => {
     const result = await run(asUser(C), ROLLS);
 
     expect(result.errors?.map((error) => error.extensions?.code)).toEqual(['FORBIDDEN']);
+  });
+});
+
+describe('WorkspaceMember.invitedBy', () => {
+  const INVITED = /* GraphQL */ `
+    query {
+      me {
+        memberships {
+          workspace {
+            id
+            members(first: 10) {
+              edges {
+                node {
+                  user {
+                    id
+                    name
+                  }
+                  invitedBy {
+                    name
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  type Invited = {
+    me: {
+      memberships: {
+        workspace: {
+          id: string;
+          members: {
+            edges: {
+              node: { user: { id: string; name: string }; invitedBy: { name: string } | null };
+            }[];
+          };
+        };
+      }[];
+    };
+  };
+  afterEach(async () => {
+    await sql`update workspace_members set invited_by = null where workspace_id = ${WORKSPACE_W_ID}`;
+    await sql`delete from workspace_members where workspace_id = ${WORKSPACE_W_ID} and user_id = ${E.id}`;
+  });
+
+  const inviterOf = async (userId: string) => {
+    const result = await run<Invited>(asUser(A), INVITED);
+    expect(result.errors).toBeUndefined();
+    const w = result.data!.me.memberships.find(({ workspace }) => workspace.id === WORKSPACE_W_ID)!;
+    return w.workspace.members.edges.find(({ node }) => node.user.id === userId)!.node.invitedBy;
+  };
+
+  it('names the inviter, and is null for a member nobody invited', async () => {
+    await sql`update workspace_members set invited_by = ${A.id} where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}`;
+    // The precondition: A, the creator, has no inviter, so null is the column's, not the resolver's.
+    expect(await inviterOf(B.id)).toEqual({ name: A.name });
+    expect(await inviterOf(A.id)).toBeNull();
+  });
+
+  it('still names an inviter who has since been removed', async () => {
+    await sql`update workspace_members set invited_by = ${E.id} where workspace_id = ${WORKSPACE_W_ID} and user_id = ${B.id}`;
+    // E shares no live coven with A: only the removed seat in W lets the name resolve.
+    await sql`insert into workspace_members (workspace_id, user_id, role, deleted_at, deleted_by, created_by, updated_by) values (${WORKSPACE_W_ID}, ${E.id}, 'member', now(), ${A.id}, ${A.id}, ${A.id})`;
+    expect(await inviterOf(B.id)).toEqual({ name: E.name });
+  });
+
+  it('resolves the inviters with the members in one read per coven', async () => {
+    await sql`update workspace_members set invited_by = ${A.id} where workspace_id = ${WORKSPACE_W_ID} and user_id in (${B.id}, ${C.id})`;
+    repository.findCoMemberNamesIncludingSoftDeleted.mockClear();
+    await run<Invited>(asUser(A), INVITED);
+    expect(repository.findCoMemberNamesIncludingSoftDeleted).toHaveBeenCalledTimes(2);
   });
 });
 

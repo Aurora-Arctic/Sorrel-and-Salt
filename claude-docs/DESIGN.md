@@ -252,7 +252,7 @@ Code, schema, and prose use _workspace_. Only the URL segment says _coven_.
 
 There is no `kind` column and no automatically created workspace. Every workspace behaves identically: it can take members and be deleted by an owner. A newly signed-in user has no workspace until they accept an invitation or, holding creation rights, make one.
 
-**`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, + audit. PK on the pair.
+**`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, `invitedBy` (nullable), + audit. PK on the pair. `invitedBy` is the sender of the invitation that seated the person, written once at acceptance and overwritten if they are removed and invited back. It is not `created_by`, which is whoever accepted. A coven's creator keeps null (M10.26).
 
 | Role     | Can                                                                                  |
 | -------- | ------------------------------------------------------------------------------------ |

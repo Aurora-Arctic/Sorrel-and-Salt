@@ -96,7 +96,10 @@ marks"; MB.198). In their place, in the repository's `invitations.ts`, which
   compared case-insensitively. The accept service checks the address first
   so it can say why, pointing an unverified match at `/account/email`; the
   statement is what holds if a later path forgets. What accepting grants,
-  and the pause on admin grants, are the service's.
+  and the pause on admin grants, are the service's. When a coven's accept
+  inserts or revives a membership, it also writes the invitation's
+  `created_by` to `workspace_members.invited_by` (M10.26). An accept by someone
+  already seated writes no membership, so the inviter stays as it was.
 - **`revokeInvitation(membership, id)`** stamps `revoked_at` now on a row in
   the proof's workspace, and **`revokeInvitation(admin, id)`** on a
   site-tier row. By id rather than token: an owner or an admin revokes from

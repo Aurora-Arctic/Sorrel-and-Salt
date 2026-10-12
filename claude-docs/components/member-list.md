@@ -10,12 +10,12 @@ through `Workspace.members`.
 
 `MemberListProps` (`types.ts`):
 
-| Prop            | What it is                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------- |
-| `members`       | `MemberListEntry` rows: `userId`, `name`, `role`, `joinedAt`, `updatedBy`, `updatedAt`, in the page's order |
-| `currentUserId` | The signed-in user; their row's name is followed by "You"                                                   |
-| `roleAction`    | `(member) => ReactNode`, drawn beside the role (Change Role); absent, the role alone                        |
-| `removeAction`  | `(member) => ReactNode`, drawn in a Remove column at the end; absent, no column                             |
+| Prop            | What it is                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `members`       | `MemberListEntry` rows: `userId`, `name`, `role`, `joinedAt`, `updatedBy`, `updatedAt`, `invitedBy`, in the page's order |
+| `currentUserId` | The signed-in user; their row's name is followed by "You"                                                                |
+| `roleAction`    | `(member) => ReactNode`, drawn beside the role (Change Role); absent, the role alone                                     |
+| `removeAction`  | `(member) => ReactNode`, drawn in a Remove column at the end; absent, no column                                          |
 
 ## Contracts
 
@@ -34,6 +34,10 @@ through `Workspace.members`.
   also bold, as the user list sets an admin, but weight is never the only cue.
 - **The joined date** is a `<time>` holding the ISO date, muted above the
   stacking width, as the user list's Signed Up is.
+- **Invited By** is the display name of whoever sent the invitation that seated
+  the member, resolved by the page (`displayNamesOf`). It is empty for a coven's
+  creator and where the name is withheld. A muted fact like Joined, between
+  Joined and Updated.
 - **Updated** is one column holding the row's audit stamp: who last changed
   the membership, as a display name the page resolves (`displayNamesOf`), as
   "by **Fixture A** on 2026-10-12", the name in bold. Where the service withholds the editor's name the cell is

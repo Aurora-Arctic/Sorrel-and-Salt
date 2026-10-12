@@ -13,7 +13,7 @@ import './index.scss';
 
 /**
  * The columns: the name, then the role with its change beside it (as the
- * admin list holds Promote and Revoke), then the facts no control changes: when they joined, and who last changed the
+ * admin list holds Promote and Revoke), then the facts no control changes: when they joined, who invited them, and who last changed the
  * membership and when, in one Updated column.
  * Remove is last, in a column ruled in red as Impersonate is, since it is the
  * table's one destructive row action, and only when the page passes it.
@@ -57,6 +57,11 @@ const columns = (
         {member.joinedAt.toISOString().slice(0, 10)}
       </time>
     ),
+  },
+  {
+    heading: 'Invited By',
+    className: 'member-list__fact',
+    cell: (member) => member.invitedBy && <span>{member.invitedBy}</span>,
   },
   {
     heading: 'Updated',
