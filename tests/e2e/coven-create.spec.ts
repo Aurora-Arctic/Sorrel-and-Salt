@@ -86,7 +86,7 @@ test(
     await page.goto('/coven/new');
 
     await page.getByRole('textbox', { name: 'Name' }).fill('New');
-    await page.getByRole('button', { name: 'Create Workspace', exact: true }).click();
+    await page.getByRole('button', { name: 'Create Coven', exact: true }).click();
 
     await expect(page).toHaveURL(/\/coven\/new-2$/);
     await expect(page.getByRole('heading', { level: 1, name: 'New' })).toBeVisible();
@@ -107,7 +107,7 @@ test('a user without the right is offered no form', async ({ page }) => {
   expect(response?.status()).toBe(200);
   await expect(page.getByRole('main').getByRole('status')).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Name' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Create Workspace', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Create Coven', exact: true })).toHaveCount(0);
 });
 
 test('the page passes the scans in both themes, with and without the form', async ({ page }) => {
