@@ -5,6 +5,7 @@ import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
+import { useActionFailure } from '../WorkspaceActions/action-failure';
 import type { DeleteWorkspaceButtonProps } from './types';
 
 // An owner's Delete on the coven index page (M6.14). It asks first, naming the
@@ -21,6 +22,8 @@ const DeleteWorkspaceDocument = graphql(`
 
 const DeleteWorkspaceButton = ({ workspaceId, name }: DeleteWorkspaceButtonProps): ReactElement => {
   const router = useRouter();
+  // Said above the page's buttons when it gives a place for that.
+  const failure = useActionFailure();
   return (
     <ConfirmedAction
       label="Delete Workspace"
@@ -36,6 +39,7 @@ const DeleteWorkspaceButton = ({ workspaceId, name }: DeleteWorkspaceButtonProps
       warning="Nothing is destroyed, but only an administrator with database access can restore it."
       busy="Deleting"
       confirmClass="btn btn--destructive"
+      onFailure={failure?.report}
       send={() => graphqlRequest(DeleteWorkspaceDocument, { workspaceId })}
       // The coven is gone for this user too, so the page cannot be read again.
       onSent={() => router.replace('/')}

@@ -54,7 +54,7 @@ test('the fixture coven holds its three members and no one else', async ({ page 
 });
 
 for (const role of ['owner', 'member', 'viewer'] as const) {
-  test(`a ${role} opens the coven page with its nav, and Leave is the only action a non-owner has`, async ({
+  test(`a ${role} opens the coven page with its nav, and Leave is offered to every role`, async ({
     page,
   }) => {
     await signInAgainAs(page, users[role].id);
@@ -69,7 +69,7 @@ for (const role of ['owner', 'member', 'viewer'] as const) {
     await expect(overview).toHaveAttribute('aria-current', 'page');
 
     const main = page.getByRole('main');
-    await expect(main.getByRole('button', { name: 'Leave Workspace', exact: true })).toBeDisabled();
+    await expect(main.getByRole('button', { name: 'Leave Workspace', exact: true })).toBeEnabled();
     // Delete is the owner's alone; the membership rows above are why a
     // member's and a viewer's absence is a refusal and not an empty page.
     const remove = main.getByRole('button', { name: 'Delete Workspace', exact: true });
@@ -151,17 +151,19 @@ test.describe('the members page', () => {
     await page.goto(`/coven/${COVEN_SLUG}/members`);
 
     await expect(page.getByRole('table', { name: 'Members' })).toBeVisible();
-    await expect(page.getByRole('button', { name: /^(Promote|Demote)/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Change Role/ })).toHaveCount(0);
   });
 
-  test('demoting the only owner is refused above the table, naming them', async ({ page }) => {
+  test('changing the only owner to a member is refused above the table, naming them', async ({
+    page,
+  }) => {
     await signInAgainAs(page, users.owner.id);
     await page.goto(`/coven/${COVEN_SLUG}/members`);
 
     await page
       .getByRole('row')
       .filter({ hasText: 'Owner' })
-      .getByRole('button', { name: /^Demote / })
+      .getByRole('button', { name: /^Change Role / })
       .click();
     await page.getByRole('dialog').getByRole('button', { name: 'Demote', exact: true }).click();
 
@@ -185,10 +187,13 @@ test.describe('the members page', () => {
     await assertNoSidewaysScroll(page);
 
     await page
-      .getByRole('button', { name: /^Promote / })
+      .getByRole('row')
+      .filter({ hasText: 'Member' })
       .first()
+      .getByRole('button', { name: /^Change Role / })
       .click();
     const dialog = page.getByRole('dialog');
+    await dialog.getByRole('radio', { name: /^Owner/ }).check();
     await dialog.getByRole('button', { name: 'Promote', exact: true }).click();
     await expect(dialog).toHaveCount(0);
 

@@ -66,8 +66,7 @@ the index, Overview, and Members for the roles holding `member: read`
 because `typedRoutes` refuses a link to a route the build does not contain:
 Ingredients by M9.6 and Grimoire by M10.11.
 
-**Leave and Delete have their places here. Delete is live (M6.14); Leave stays
-disabled until M6.15.**
+**Leave and Delete are both live here: Delete (M6.14), and Leave (M6.15).**
 
 | Control          | Shown to                                   | Filled by                 |
 | ---------------- | ------------------------------------------ | ------------------------- |
@@ -82,9 +81,10 @@ disabled until M6.15.**
   may delete. Hiding it is presentation; the service is still the guard.
 - **Delete opens a confirmation and then deletes** (M6.14), through
   `DeleteWorkspaceButton` ([`components/delete-workspace-button.md`](../components/delete-workspace-button.md)).
-  **Leave is a real button, disabled** (the owner's call, 2026-10-12), so a
-  test finds it by role and name with no test id. A disabled control is
-  what M6.16 forbids once Leave works, so M6.15 also enables it.
+  **Leave opens a confirmation and then leaves** (M6.15), through
+  `LeaveWorkspaceButton` ([`components/leave-workspace-button.md`](../components/leave-workspace-button.md)).
+  It is enabled for every role, so a test finds it by role and name with no
+  test id, and a disabled control is what M6.16 forbids.
 
 Tests: `tests/app/coven/page.test.tsx` (the page guards its own slug; Leave
 for every role, Delete for the owner alone) and `tests/e2e/coven.spec.ts`
@@ -103,11 +103,11 @@ with owners.
   `listMembers`, which checks `member: read`; a `Forbidden` becomes
   `notFound()`. The nav link is the other half: `covenSections(slug, role)`
   shows Members when `rolePermits(role, { member: ['read'] })`, never by rank.
-- **Role controls are the owner's.** The page passes Promote and Demote to
+- **Role controls are the owner's.** The page passes Change Role to
   `MemberList` only when the caller holds `member: update`. They are client
   components that send `updateMemberRole` through `/api/graphql`; the service
-  refuses anyone else, and a demotion that would leave no owner. Each moves
-  one rung along viewer, member, owner, and only ever an existing member:
+  refuses anyone else, and a change that would leave no owner. It moves a
+  member to any other role, and only ever an existing member:
   invitations cannot grant ownership, so this is the only route to it.
 - **Not here yet.** Remove is M6.15's and the invite action and pending list
   are M7.6's; the page draws neither, and their lists will be owner-only.

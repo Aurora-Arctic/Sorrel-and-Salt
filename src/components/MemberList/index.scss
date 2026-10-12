@@ -41,8 +41,8 @@
   }
 }
 
-// Promote and Demote together, at the cell's right edge, each given about the
-// same room (not exactly) so the buttons read as a pair down the column.
+// The Change Role button, at the cell's right edge, given about the same room
+// on every row so the buttons line up down the column.
 .member-list__actions {
   display: inline-flex;
   gap: space(2);

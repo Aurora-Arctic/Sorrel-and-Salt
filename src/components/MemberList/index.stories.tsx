@@ -4,7 +4,7 @@ import type { MemberListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/MemberList. The
 // controls are plain buttons standing in for the page's own, styled as the
-// admin user table styles its own: Promote quiet, Demote and Remove destructive.
+// admin user table styles its own: Change Role quiet, Remove destructive.
 export default {
   title: 'Coven / Member List',
 };
@@ -21,16 +21,11 @@ export const WithActions: Story = () => (
   <MemberList
     members={MEMBERS}
     currentUserId="u-ada"
-    roleAction={(member) =>
-      member.role === 'owner' ? null : (
-        <button
-          type="button"
-          className={`btn btn--small ${member.role === 'viewer' ? 'btn--quiet' : 'btn--destructive'}`}
-        >
-          {member.role === 'viewer' ? 'Promote' : 'Demote'}
-        </button>
-      )
-    }
+    roleAction={() => (
+      <button type="button" className="btn btn--small btn--quiet">
+        Change Role
+      </button>
+    )}
     removeAction={(member) =>
       member.role === 'owner' ? null : (
         <button type="button" className="btn btn--small btn--destructive">
