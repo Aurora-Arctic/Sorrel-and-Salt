@@ -3616,14 +3616,17 @@ Minted during M5.4. Reviews the mail the site sends, once the last of it exists:
 
 _Left by MB.116:_ The providers' brand colours are one map in `_variables.scss`, `$brand-palettes`, read through `brand-color()`: the one place their hexes are written, if a mail ever shows a provider mark. MB.116's copy register holds for mail too: second person and plain words, one sentence for what happened and one for what to do, "Please try again." only where trying again can help, and title case for every label and heading (`styling.md`, "Designing a section").
 
+_Left by the Wave 10 review (2026-10-12):_ Three of the criteria below already hold on staging, so the review asserts them and builds nothing: every mail has a plain-text part (`renderParts` in `src/emails/parts/layout.tsx` renders both the HTML and the plain text), the link is readable as text under the button (`claude-docs/email.md`, "Templates"), and `email.md` has a "Design" section recording the design rules. What `email.md` lacks is a line about the phone-width check, so the review adds the rule that each mail is checked at 375px. The coven invitation mail does not exist until M7.3, which the wave orders before this task.
+
 _Acceptance criteria:_
 
 - The owner signs off each mail's design, in a light and a dark client and in a phone-width client (375px), recorded as a comment on this issue (phone width amended during MB.53, on the owner's word)
 - Each mail reads correctly in Gmail, Outlook and Apple Mail, light and dark, and with images blocked
-- Each mail carries a plain-text part that says everything its HTML does
-- The link is the obvious action, and its address is also readable as text
+- Each mail carries a plain-text part that says everything its HTML does (already holds, asserted by the review)
+- The link is the obvious action, and its address is also readable as text (already holds, asserted by the review)
 - Text contrast holds at 4.5:1 in the mail's light and dark renderings
-- `email.md` records the design rules the mail follows
+- `email.md` records the design rules the mail follows (already holds, asserted by the review)
+- `email.md` records the 375px rule
 
 **MB.119 — Design review: the coven and invitations** · 3h
 
@@ -3637,15 +3640,19 @@ _Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance pag
 
 _Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/(shell)/admin/(people)/invitations/`), the owner's call during MB.115.
 
+_Left by the Wave 10 review (2026-10-12):_ The scope above grows by these. M7.6's pending invitations list, its count, its revoke control and the Invite button it mounts (the review moved mounting `InviteDialog` into M7.6). The components `CovenNav` (`src/components/CovenNav/`), `CreateWorkspaceForm`, `InvitationAcceptance` (the acceptance page's component), `ContextRow`, and `ActionFailure` in `WorkspaceActions/action-failure.tsx`, which has neither a doc under `claude-docs/components/` nor a story, and gains both here. The members page (`src/app/(shell)/coven/[slug]/members/page.tsx`) uses none of MB.115's shared list pieces, so it adopts `PageHeader` and `Pager` here, not in M7.6. The docs `member-list.md`, `delete-workspace-button.md` and `leave-workspace-button.md` have no Styling section yet, so each gains one rather than updating it. The section's copy mixes two nouns: `WorkspaceSwitcher` says "Coven", "Create Coven" and "Select Coven" while the buttons say "Leave Workspace" and "Delete Workspace". The review settles one user-facing noun with the owner and makes all the copy use it. The acceptance page also has to read correctly for an invitation into a deleted coven, which M7.5 refuses at page load.
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
 - No page in the section scrolls sideways at 375px, and its body copy keeps to the reading measure
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
-- Each component's doc updates its Styling section, and its stories show the reviewed design
+- Each component's doc adds or updates its Styling section, and its stories show the reviewed design
+- The section's user-facing copy uses one noun for a workspace, settled with the owner
+- `ActionFailure` has a doc and a story
 - Owner-only controls read as such, and a viewer's page shows no control it cannot use
-- The acceptance page reads correctly signed in, signed out, and for an expired or used link
+- The acceptance page reads correctly signed in, signed out, and for an expired or used link, or an invitation into a deleted coven
 
 **MB.120 — Design review: the public compendium and shared ingredient components** · 3h
 
