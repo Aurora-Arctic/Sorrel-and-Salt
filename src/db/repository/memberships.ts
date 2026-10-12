@@ -4,8 +4,9 @@ import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspa
 // imports `findWorkspaceRole` below. The brand has to live beside the check
 // that mints it (CLAUDE.md rule 1), which is why the direction is this way up.
 import type { WorkspaceRole } from '@/modules/coven';
-import { notSoftDeleted } from './predicates';
+import { notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
+import type { AuditWriter, WriterContext } from './types';
 
 /**
  * The one workspace-scoped read that takes no proof, because it is what mints
@@ -53,4 +54,41 @@ export async function findMembershipsOfUsers(
       existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
     ),
   );
+}
+
+/**
+ * The membership write that takes no proof, for the reason `findWorkspaceRole`
+ * is the read that takes none: a proof is minted from a membership row, so
+ * the row that makes a creator an owner, or an invitee a member, has none to
+ * be written under. Spread into the writer beside `invitationWrites` (MB.198),
+ * so it still runs inside `withAudit` and is stamped from the session. Narrow
+ * on purpose — one row, the pair and the role named — and the caller decides
+ * whether this user may be seated.
+ */
+export function membershipWrites({
+  insert,
+  update,
+  tx,
+}: WriterContext): Pick<
+  AuditWriter,
+  'insertMembership' | 'lockLiveMembers' | 'updateMembershipRole'
+> {
+  return {
+    // In user-id order, so two changes at once queue on the first row rather
+    // than each holding one the other wants (the order `lockLiveAdmins` uses).
+    lockLiveMembers: (membership) =>
+      selectFrom(
+        workspaceMembers,
+        and(notSoftDeleted(workspaceMembers), scopedTo(membership, workspaceMembers)),
+        { lockIn: tx, lockOrder: workspaceMembers.userId },
+      ),
+    updateMembershipRole: (membership, userId, role) =>
+      update(
+        workspaceMembers,
+        { role },
+        and(scopedTo(membership, workspaceMembers), eq(workspaceMembers.userId, userId)),
+      ),
+    insertMembership: (workspaceId, userId, role) =>
+      insert(workspaceMembers, { workspaceId, userId, role }),
+  };
 }

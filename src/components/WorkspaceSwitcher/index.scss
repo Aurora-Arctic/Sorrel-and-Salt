@@ -1,0 +1,8 @@
+@use '../../scss/variables' as *;
+
+// Sized to its widest workspace name within bounds, so the nav it sits in
+// does not jump as the name changes.
+.workspace-switcher {
+  min-width: 12rem;
+  max-width: 100%;
+}

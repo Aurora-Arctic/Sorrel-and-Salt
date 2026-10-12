@@ -376,6 +376,11 @@ type Mutation {
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!
+
+  """
+  Creates a coven with the caller as its owner. Refused for a user who may not create one.
+  """
+  createWorkspace(name: String!): Workspace!
   createWorkspaceIngredient(input: IngredientInput!, workspaceId: ID!): Ingredient!
   createZodiacSign(input: ZodiacSignInput!): ZodiacSign!
 
@@ -491,6 +496,11 @@ type Mutation {
   Replaces the form; the slug follows the name and the group. A rename is carried onto every form of a live compendium entry that picked it, moving no entry address.
   """
   updateIngredientFormValue(id: ID!, input: IngredientFormValueInput!): IngredientFormValue!
+
+  """
+  Sets an existing member's role. Owners only; refused when it would leave the coven without an owner.
+  """
+  updateMemberRole(role: WorkspaceRole!, userId: ID!, workspaceId: ID!): WorkspaceMember!
 
   """
   Replaces the planet; the slug follows the name. A rename is carried onto every live compendium entry listing it.

@@ -92,6 +92,18 @@ token names, on either tier and whatever its state; the accept beside it
 matches only the session's user holding the invited address, verified
 ([`invitations.md`](invitations.md), "Written and read by tier").
 
+### The write that takes no proof
+
+`insertMembership(workspaceId, userId, role)` (M6.7) is the one membership write
+with no proof, for the reason `findWorkspaceRole` is the read with none: a
+proof is minted from a membership row, so the row that makes a workspace's
+creator its owner has none to be written under. It lives in
+`src/db/repository/memberships.ts` and is spread into the writer beside
+`invitationWrites` (MB.198), so it runs inside `withAudit` and is stamped from
+the session. `createWorkspace` calls it in the same transaction as the
+workspace row, so a failure leaves neither; M7.5 reuses it to seat an invitee.
+Whether a user may be seated is the calling service's decision.
+
 The admin user list's two reads, `findUserPage` and `findProvidersOfUsers`
 (MB.52), and the privilege ledger's, `findPrivilegeChangePage` (MB.199), are
 not among them: they span no workspace either, but they take the `SiteAdmin`
@@ -120,3 +132,35 @@ the type looks like it closes more than it does.
   `@ts-expect-error` lines, which fail `npm run typecheck` the moment the brand
   stops being required. A runtime assertion could not see that at all: it would
   pass just as happily against a signature that had quietly gone optional.
+
+## The last-owner guard (M6.8)
+
+`assertNotLastOwner(write, membership, userId, becomes)` in
+`src/modules/coven/services/last-owner.ts` refuses any change that would leave a
+workspace with no owner. `becomes` is the role the person ends up with, or
+`null` when they are removed or leave. Every write that can take the owner role
+calls it inside `withAudit`: the role change (M9.14), the removal and the
+voluntary leave (M6.15).
+
+It reads the workspace's live members through `write.lockLiveMembers(membership)`,
+which locks them `for update` in user-id order, as `lockLiveAdmins` does for
+admins. Two owners stepping down at once therefore queue on the first row, and
+the second counts the first's committed change instead of both seeing two owners.
+
+The refusal is a `LastOwner`, a subclass of `Forbidden` that carries what M6.16
+needs to offer a way out: `remedy` is `'promote'` when other members exist
+(`promotable` lists their user ids) and `'delete'` when the owner is the only
+member. A change that keeps an owner an owner, or touches someone who is not the
+last owner, passes.
+
+## Changing a role (M9.14)
+
+`updateMemberRole(session, workspaceId, userId, role)` in
+`src/modules/coven/services/member-role.ts` is the one way a role changes. It
+asks for `member: update`, which only owners hold, then — in the transaction
+that writes — runs `assertNotLastOwner` and calls `write.updateMembershipRole`.
+That writer sets the role on the one live row of the proof's workspace and
+`userId`, so a pending invitation, a removed member or someone from another
+workspace matches nothing and is refused as `Forbidden`; no row is ever
+inserted. `joined_at` is not written. The `updateMemberRole` mutation does
+nothing but call it.
