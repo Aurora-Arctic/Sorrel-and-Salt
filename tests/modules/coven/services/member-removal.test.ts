@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { findWorkspaceRole, withAudit } from '@/db/repository';
 import { Forbidden } from '@/lib/errors';
-import { LastOwner, leaveWorkspace, removeMember } from '@/modules/coven';
+import { LastOwner, leaveWorkspace, removeMember, updateMemberRole } from '@/modules/coven';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
@@ -216,5 +216,34 @@ describe('reviveMembership', () => {
     expect(rows).toHaveLength(0);
     expect(await seat(covenId, B.id)).toEqual(before);
     expect((await seat(other, B.id)).deleted_at).not.toBeNull();
+  });
+});
+
+describe('handing a coven over, then leaving (M6.16)', () => {
+  it('promotes first, so the leave that follows finds a second owner and the coven keeps one', async () => {
+    const covenId = await insertCoven('Fixture Handover Coven', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+    ]);
+    // Why the leave is the guard's to refuse: A is the only owner.
+    await expect(leaveWorkspace(asUser(A), covenId)).rejects.toThrow(LastOwner);
+
+    await updateMemberRole(asUser(A), covenId, B.id, 'owner');
+    await leaveWorkspace(asUser(A), covenId);
+
+    await expect(findWorkspaceRole(A.id, covenId)).resolves.toBeUndefined();
+    await expect(findWorkspaceRole(B.id, covenId)).resolves.toBe('owner');
+  });
+
+  it('keeps both owners when the leave does not happen after the promotion', async () => {
+    const covenId = await insertCoven('Fixture Handover Halfway Coven', [
+      [A.id, 'owner'],
+      [B.id, 'member'],
+    ]);
+
+    await updateMemberRole(asUser(A), covenId, B.id, 'owner');
+
+    await expect(findWorkspaceRole(A.id, covenId)).resolves.toBe('owner');
+    await expect(findWorkspaceRole(B.id, covenId)).resolves.toBe('owner');
   });
 });
