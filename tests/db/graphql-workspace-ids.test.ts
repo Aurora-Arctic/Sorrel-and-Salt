@@ -10,7 +10,7 @@ import { A, B, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertReference } from '../support/db/insert-reference';
 import { noSender } from '../support/email-verification';
-import { makeIngredient } from '../support/fixtures';
+import { makeIngredient, makeWorkspace, workspaceColumns } from '../support/fixtures';
 import type { Context } from '@/graphql/types';
 import type { Answer, WorkspaceIdProbe } from './types';
 
@@ -27,6 +27,8 @@ const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
 let ingredientId: string;
 // Its own row, so the delete probe's admitted call leaves the update probe's standing.
 let deletableId: string;
+// A coven of its own for the delete probe's admitted call, which would take W down.
+let deletableWorkspaceId: string;
 // W's own reference, which the read probe reads and the update probe replaces.
 let referenceId: string;
 
@@ -43,6 +45,13 @@ beforeAll(async () => {
     A.id,
   );
   referenceId = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
+  const [coven] = await sql`
+    insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name: 'Fixture Deletable Coven' })), created_by: A.id, updated_by: A.id })}
+    returning id`;
+  deletableWorkspaceId = coven.id as string;
+  await sql`
+    insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+    values (${deletableWorkspaceId}, ${A.id}, 'owner', ${A.id}, ${A.id})`;
   await sql.end();
 });
 
@@ -105,6 +114,13 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     }`,
     variables: () => ({ userId: B.id }),
     asOwner: true,
+  },
+  deleteWorkspace: {
+    source: `mutation ($workspaceId: ID!) {
+      deleteWorkspace(workspaceId: $workspaceId)
+    }`,
+    asOwner: true,
+    admittedTo: () => deletableWorkspaceId,
   },
   updateIngredient: {
     source: `mutation ($workspaceId: ID!, $id: ID!, $input: IngredientUpdateInput!) {
@@ -178,7 +194,7 @@ describe('a workspaceId that is not a uuid', () => {
   it.each(Object.entries(PROBES))('is FORBIDDEN at %s', async (field, probe) => {
     // Why it could have answered: the same request naming W reaches the
     // field's service, and B is admitted to W.
-    const admitted = await run(probe, WORKSPACE_W_ID);
+    const admitted = await run(probe, probe.admittedTo?.() ?? WORKSPACE_W_ID);
     expect(admitted.errors).toBeUndefined();
     expect(admitted.data?.[field]).toBeTruthy();
 

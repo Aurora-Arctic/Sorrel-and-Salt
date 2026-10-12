@@ -434,6 +434,11 @@ type Mutation {
   deletePlanet(id: ID!): ID!
 
   """
+  Deletes a coven, which no member can reach afterwards. Owners only; nothing is destroyed, so it can be restored by hand.
+  """
+  deleteWorkspace(workspaceId: ID!): Boolean!
+
+  """
   A soft delete, refused while a live compendium entry lists the sign; a coven keeps what it wrote.
   """
   deleteZodiacSign(id: ID!): ID!
