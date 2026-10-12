@@ -1,19 +1,20 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import MemberList from '../../../../../components/MemberList';
-import RemoveControl from '../../../../../components/MemberList/remove-control';
-import RoleFailure from '../../../../../components/MemberList/role-failure';
-import RoleControl from '../../../../../components/MemberList/role-control';
-import type { MemberListEntry } from '../../../../../components/MemberList/types';
-import Notice from '../../../../../components/Notice';
-import Pager from '../../../../../components/Pager';
-import { Forbidden } from '../../../../../lib/errors';
-import { resolvePage } from '../../../../../lib/pagination';
-import { requireCovenMembership, requireSession } from '../../../../../lib/request-session';
-import { readableCursor, single } from '../../../../../lib/search-params';
+import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
+import MemberList from '../../../../../../components/MemberList';
+import RemoveControl from '../../../../../../components/MemberList/remove-control';
+import RoleFailure from '../../../../../../components/MemberList/role-failure';
+import RoleControl from '../../../../../../components/MemberList/role-control';
+import type { MemberListEntry } from '../../../../../../components/MemberList/types';
+import Notice from '../../../../../../components/Notice';
+import Pager from '../../../../../../components/Pager';
+import { Forbidden } from '../../../../../../lib/errors';
+import { resolvePage } from '../../../../../../lib/pagination';
+import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
+import { readableCursor, single } from '../../../../../../lib/search-params';
 import { displayNamesOf } from '@/modules/identity';
 import { listMembers, memberRoster, rolePermits } from '@/modules/coven';
-import type { CovenLayoutParams } from '../types';
+import type { CovenLayoutParams } from '../../types';
 import type { MembersPageProps } from './types';
 
 export const metadata: Metadata = {
@@ -27,7 +28,8 @@ export const metadata: Metadata = {
 // GraphQL end at one check (CLAUDE.md rule 1). The role controls are drawn for
 // owners only and the service refuses anyone else again. The page checks
 // `member: read` through the service rather than reading the role itself
-// (claude-docs/auth/coven-guard.md, "The members page").
+// (claude-docs/auth/coven-guard.md, "The members page"). The heading, the
+// tabs and the Invite button are the `(people)` layout's.
 export default async function MembersPage({
   params,
   searchParams,
@@ -80,8 +82,7 @@ export default async function MembersPage({
   const href = (cursor: string) => `/coven/${slug}/members${cursor}`;
 
   return (
-    <main>
-      <h1>Members</h1>
+    <>
       {/* Raised before it is urgent: a quiet status, since it is on the page
           from the start and asks nothing of the reader yet. */}
       {soleOwner && (
@@ -90,48 +91,52 @@ export default async function MembersPage({
           another member an owner to be safe.
         </Notice>
       )}
-      <RoleFailure>
-        <MemberList
-          members={members}
-          currentUserId={session.userId}
-          roleAction={
-            canChangeRoles
-              ? (member) => (
-                  <RoleControl
-                    workspaceId={workspace.id}
-                    userId={member.userId}
-                    name={member.name}
-                    currentRole={member.role}
-                  />
-                )
-              : undefined
-          }
-          // Another's row only: leaving is the coven page's, for every role.
-          removeAction={
-            canRemove
-              ? (member) =>
-                  member.userId !== session.userId && (
-                    <RemoveControl
-                      workspaceId={workspace.id}
-                      userId={member.userId}
-                      name={member.name}
-                    />
-                  )
-              : undefined
-          }
-        />
-      </RoleFailure>
-      <Pager
-        previousHref={
-          hasPreviousPage && startCursor
-            ? href(`?before=${encodeURIComponent(startCursor)}`)
-            : undefined
-        }
-        nextHref={
-          hasNextPage && endCursor ? href(`?after=${encodeURIComponent(endCursor)}`) : undefined
-        }
-        soft
-      />
-    </main>
+      <ListFrame>
+        <ListBody>
+          <RoleFailure>
+            <MemberList
+              members={members}
+              currentUserId={session.userId}
+              roleAction={
+                canChangeRoles
+                  ? (member) => (
+                      <RoleControl
+                        workspaceId={workspace.id}
+                        userId={member.userId}
+                        name={member.name}
+                        currentRole={member.role}
+                      />
+                    )
+                  : undefined
+              }
+              // Another's row only: leaving is the coven page's, for every role.
+              removeAction={
+                canRemove
+                  ? (member) =>
+                      member.userId !== session.userId && (
+                        <RemoveControl
+                          workspaceId={workspace.id}
+                          userId={member.userId}
+                          name={member.name}
+                        />
+                      )
+                  : undefined
+              }
+            />
+          </RoleFailure>
+          <Pager
+            previousHref={
+              hasPreviousPage && startCursor
+                ? href(`?before=${encodeURIComponent(startCursor)}`)
+                : undefined
+            }
+            nextHref={
+              hasNextPage && endCursor ? href(`?after=${encodeURIComponent(endCursor)}`) : undefined
+            }
+            soft
+          />
+        </ListBody>
+      </ListFrame>
+    </>
   );
 }

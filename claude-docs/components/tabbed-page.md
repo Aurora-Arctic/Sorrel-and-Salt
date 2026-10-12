@@ -63,7 +63,7 @@ it renders.
   alike, since a page segment's key carries its search parameters. Every tab
   has a slot page, Privilege Changes one that renders nothing, because on a
   client-side navigation Next keeps a slot's last page where the new address
-  has none; each slot's `default.tsx` (the shared `no-action.tsx`), what Next asks for on a full load it
+  has none; each slot's `default.tsx` (the shared `src/app/(shell)/no-action.tsx`, which the coven's People group uses too), what Next asks for on a full load it
   cannot match, renders nothing too. A slot page calls the guard as every
   admin page does. The value and group pages' actions are `ValueAction` and
   `GroupAction`, beside `ValuePage` and `GroupPage`, reading the same

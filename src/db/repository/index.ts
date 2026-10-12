@@ -78,8 +78,10 @@ export {
 } from './users';
 export {
   findInvitationByToken,
+  findInvitationInWorkspace,
   findInvitedCoven,
-  findPendingInvitationsInWorkspace,
+  findPendingWorkspaceInvitationCount,
+  findPendingWorkspaceInvitationPage,
   findPendingSiteInvitationCount,
   findPendingSiteInvitationPage,
 } from './invitations';

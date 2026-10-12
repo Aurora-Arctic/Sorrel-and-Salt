@@ -144,12 +144,18 @@ The finders:
   is what admits. It returns expired, revoked and accepted rows alike: the
   accept service rejects each with its own message (M7.7), and can only tell
   them apart if it sees them.
-- **`findPendingInvitationsInWorkspace(membership)`**, the members page's
-  pending list (M7.6), and **`findPendingSiteInvitationPage(admin, filter, page)`**,
+- **`findPendingWorkspaceInvitationPage(membership, page)`**, the members
+  page's pending list (M7.6), and **`findPendingSiteInvitationPage(admin, filter, page)`**,
   `/admin/invitations`' (MB.70): each tier's pending rows under its own proof.
-  The workspace's pages newest first with a count, as the site tier does,
-  through a workspace page finder and count finder that M7.6 adds under the
-  `Membership` proof; until M7.6 lands the finder is unpaged. The site tier's is a cursor page (a page of results that resumes
+  The workspace's pages newest first as the site tier's does, by the same
+  order, through `findPageInScope` under the proof's `workspace_id`, and
+  **`findPendingWorkspaceInvitationCount(membership, start)`** counts it for
+  the "Page X of Y"; neither takes a filter. **`findInvitationInWorkspace(membership, id)`**
+  reads one invitation of the proof's workspace in any state, pending,
+  accepted, revoked or expired, and `undefined` for a missing, deleted or
+  other workspace's id: `revokeInvitation` matches pending rows only, so
+  this is how the coven service tells an accepted invitation (point the
+  owner at member removal) from a missing one. The site tier's is a cursor page (a page of results that resumes
   from the last row rather than counting rows to skip; CLAUDE.md rule 8),
   newest first: keyed on `created_at` negated as `numeric`, as the privilege
   ledger is, so the microseconds survive the cursor, and by id among rows of
@@ -182,7 +188,7 @@ it reads the spelling ([`modules.md`](../modules.md), "The tier seam").
 
 Who may invite, the pause, what accepting grants and where it lands stay in
 two services, while the mechanics above exist once: `coven`'s
-`createInvitation` / `revokeInvitation`, owner only, role chosen (M7.2,
+`createInvitation` / `revokeWorkspaceInvitation`, owner only, role chosen (M7.2,
 M7.3, M7.6), and `identity`'s `createAdminInvitation` /
 `revokeAdminInvitation`, admin only and refused while admin changes are
 paused (MB.70). One accept service in `identity`, `acceptInvitation(session,
@@ -253,3 +259,30 @@ link; the existing field-list test in
 
 Story 4's acceptance test passes `createInvitation` now and stops at
 `acceptInvitation`, whose workspace branch M7.5 added.
+
+### Listing and revoking in a coven (M7.6)
+
+Three more services in `@/modules/coven`, each opening with
+`assertMembership(session, workspaceId, { member: ['invite'] })`, which only
+owners hold. Never `member: read`: members hold that since M6.13, and the
+pending rows carry the addresses of people who have not joined.
+
+- **`listPendingWorkspaceInvitations(session, workspaceId, page)`** and
+  **`countPendingWorkspaceInvitations(session, workspaceId, start)`** read
+  `findPendingWorkspaceInvitationPage` / `findPendingWorkspaceInvitationCount`:
+  newest first, the site tier's pager under the `Membership` proof. The members
+  page calls them directly (a server component); there is no GraphQL read.
+- **`revokeWorkspaceInvitation(session, workspaceId, id)`** looks the row up
+  with `findInvitationInWorkspace` and then stamps it through
+  `revokeInvitation(membership, id)`, inside `withAudit`. A missing id, a
+  malformed one, another coven's, and a revoked or lapsed invitation are
+  `NotFound`, as the admin tier's is. An **accepted** invitation is a
+  `ValidationError` on `id` whose message points to the members list: the
+  person is a member now, and removing them is a membership action. The
+  by-id lookup exists only to tell those two apart.
+- **A pending invitation outlives its inviter.** Demoting or removing the
+  member who sent it changes nothing about the row, as for the admin tier;
+  an owner still lists and revokes it.
+
+In GraphQL, `revokeInvitation(workspaceId: ID!, id: ID!): Invitation!` goes
+through the service.

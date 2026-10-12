@@ -22,6 +22,14 @@ const route = <T extends string>(href: Route<T>): Route => href as Route;
 export const covenSections = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] => [
   { label: 'Overview', href: route(`/coven/${slug}`), icon: 'overview', exact: true },
   ...(canReadMembers
-    ? [{ label: 'Members', href: route(`/coven/${slug}/members`), icon: 'members' } as const]
+    ? [
+        {
+          label: 'Members',
+          href: route(`/coven/${slug}/members`),
+          // Its Invitations tab belongs to the same section.
+          matches: [route(`/coven/${slug}/invitations`)],
+          icon: 'members',
+        } as const,
+      ]
     : []),
 ];

@@ -1,0 +1,17 @@
+import type { Story } from '@ladle/react';
+import PendingInvitations from '.';
+import type { PendingInvitationEntry } from './types';
+
+// Render-only; behaviour is asserted in tests/components/PendingInvitations.
+export default {
+  title: 'Coven / Pending Invitations',
+};
+
+const INVITATIONS: readonly PendingInvitationEntry[] = [
+  { id: 'i-1', email: 'fern@fixture.test', role: 'member', expiresAt: new Date('2026-10-19') },
+  { id: 'i-2', email: 'moss@fixture.test', role: 'viewer', expiresAt: new Date('2026-10-18') },
+];
+
+export const Listed: Story = () => <PendingInvitations workspaceId="w" invitations={INVITATIONS} />;
+
+export const Empty: Story = () => <PendingInvitations workspaceId="w" invitations={[]} />;

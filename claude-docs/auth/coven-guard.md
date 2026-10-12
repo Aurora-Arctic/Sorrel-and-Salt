@@ -115,8 +115,9 @@ with owners.
 - **A quiet note when there is one owner** (M6.16): if that person loses
   access nobody can manage members. A status, not an alert, drawn above the
   table from the whole roll (`memberRoster`), since one page cannot count owners.
-- **Not here yet.** The invite action and pending list
-  are M7.6's; the page draws neither, and their lists will be owner-only.
+- **The heading, tabs and Invite are the `(people)` layout's** (M7.6): People
+  is a tabbed page (see "The invitations page"), so the page draws only the
+  roll.
 - **Paged by cursor** with Prev and Next, 25 to a page, through the same
   helper as GraphQL.
 
@@ -125,6 +126,37 @@ Tests: `tests/app/(shell)/coven/members.test.tsx` (who gets controls, the
 `tests/modules/coven/services/access-control.test.ts` (the pinned matrix),
 and `tests/e2e/coven.spec.ts` (walks story 9, untagged: a viewer's 404, a promotion, the
 axe scan).
+
+## The invitations page (M7.6)
+
+`/coven/[slug]/invitations` lists the invitations an owner has sent and nobody
+has answered: address, role and expiry, newest first, paged by `?after` and
+`?before` with a "Page X of Y" count, and a Revoke on each row. Members and
+Invitations are the two tabs of one page, People, in the route group
+`src/app/(shell)/coven/[slug]/(people)/`: its `layout.tsx` draws the shared
+`TabbedPage` (pill tabs, as admin's People), and its `@action` slot draws
+the Invite button, which opens `InviteDialog` (M7.4), at the end of the
+heading line on both tabs.
+
+- **Owners only, decided by the permission.** The layout leaves the
+  Invitations tab out, the `@action` slot leaves Invite out, and the page
+  answers anyone else with the `notFound()` a stranger gets, each from
+  `rolePermits(role, { member: ['invite'] })`, never by catching a
+  `Forbidden`. A member's visit therefore calls no pending service. The
+  services (`listPendingWorkspaceInvitations`, `countPendingWorkspaceInvitations`,
+  `revokeWorkspaceInvitation`) check `member: invite` again, so the list
+  is refused to a member by direct id too.
+- **Revoke** asks first, then sends `revokeInvitation` through `/api/graphql`
+  and reads the page again. An accepted invitation is refused with a pointer
+  to member removal.
+- **The Members link in the coven nav** stays current on this page (`matches`).
+
+Tests: `tests/app/(shell)/coven/invitations.test.tsx` (owner reads, member and
+viewer get the 404 and read nothing, the cursor keys),
+`tests/components/PendingInvitations/index.test.tsx` (Revoke asks, sends,
+refreshes, reports a refusal), and `tests/e2e/coven.spec.ts` (`@story-5`: the
+tab, the list, Invite on both tabs, a revoke, a member's missing tab and 404,
+the axe scans, the open dialog included).
 
 ## The create page (M9.16)
 

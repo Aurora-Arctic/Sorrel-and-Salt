@@ -2,7 +2,9 @@ import { createHash } from 'node:crypto';
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   findInvitationByToken,
-  findPendingInvitationsInWorkspace,
+  findInvitationInWorkspace,
+  findPendingWorkspaceInvitationCount,
+  findPendingWorkspaceInvitationPage,
   findPendingSiteInvitationPage,
   withAudit,
   type AuditWriter,
@@ -329,12 +331,72 @@ describe('the pending lists', () => {
 
   const ids = (rows: InvitationRow[]) => rows.map((row) => row.id).sort();
 
+  const workspacePage = async (proof: Membership) =>
+    ids(
+      (await findPendingWorkspaceInvitationPage(proof, { limit: 101, inverted: false })).map(
+        ({ node }) => node,
+      ),
+    );
+
   it('reads a workspace’s pending invitations and nothing else', async () => {
     const { pendingInW, pendingInX } = await everyKind();
 
     // Why X's row could have been read: it is pending, as W's is.
-    expect(ids(await findPendingInvitationsInWorkspace(inX))).toEqual([pendingInX!.id]);
-    expect(ids(await findPendingInvitationsInWorkspace(inW))).toEqual([pendingInW!.id]);
+    expect(await workspacePage(inX)).toEqual([pendingInX!.id]);
+    expect(await workspacePage(inW)).toEqual([pendingInW!.id]);
+    expect(await findPendingWorkspaceInvitationCount(inW, undefined)).toMatchObject({
+      totalCount: 1,
+    });
+    expect(await findPendingWorkspaceInvitationCount(inX, undefined)).toMatchObject({
+      totalCount: 1,
+    });
+  });
+
+  it('pages newest first, and counts the rows before a page’s first', async () => {
+    const [oldest] = await inviteIntoW({ token: 'fixture-token-w-1' });
+    const [middle] = await inviteIntoW({ token: 'fixture-token-w-2' });
+    const [newest] = await inviteIntoW({ token: 'fixture-token-w-3' });
+    // Distinct instants, set apart from insertion order.
+    await sql`update invitations set created_at = now() - interval '3 hours' where id = ${oldest!.id}`;
+    await sql`update invitations set created_at = now() - interval '2 hours' where id = ${middle!.id}`;
+    await sql`update invitations set created_at = now() - interval '1 hour' where id = ${newest!.id}`;
+
+    const all = await findPendingWorkspaceInvitationPage(inW, { limit: 101, inverted: false });
+    expect(all.map(({ node }) => node.id)).toEqual([newest!.id, middle!.id, oldest!.id]);
+
+    const second = all[1]!;
+    expect(await findPendingWorkspaceInvitationCount(inW, undefined)).toMatchObject({
+      totalCount: 3,
+    });
+    expect(await findPendingWorkspaceInvitationCount(inW, second.cursor)).toMatchObject({
+      totalCount: 3,
+      countBefore: 1,
+    });
+  });
+
+  it('finds an invitation by id in any state, in its own workspace only', async () => {
+    const { pendingInW, pendingInX } = await everyKind();
+    const [revoked] = await inviteIntoW({ token: 'fixture-token-w-revoked-2' });
+    await revokeInWorkspace(revoked!.id);
+    const [accepted] = await inviteIntoW({ token: 'fixture-token-w-accepted-2' });
+    await acceptAs(A, 'fixture-token-w-accepted-2');
+    const [deleted] = await inviteIntoW({ token: 'fixture-token-w-deleted-2' });
+    await sql`update invitations set deleted_at = now(), deleted_by = ${A.id} where id = ${deleted!.id}`;
+
+    expect((await findInvitationInWorkspace(inW, pendingInW!.id))?.id).toBe(pendingInW!.id);
+    expect(await findInvitationInWorkspace(inW, revoked!.id)).toMatchObject({
+      revokedAt: expect.any(Date),
+    });
+    expect(await findInvitationInWorkspace(inW, accepted!.id)).toMatchObject({
+      acceptedAt: expect.any(Date),
+    });
+    // Why X's row could have been found: it exists, pending, in a live workspace.
+    expect(await rowOf(pendingInX!.id)).toBeDefined();
+    expect(await findInvitationInWorkspace(inW, pendingInX!.id)).toBeUndefined();
+    expect(await findInvitationInWorkspace(inW, deleted!.id)).toBeUndefined();
+    expect(
+      await findInvitationInWorkspace(inW, '00000000-0000-4000-8000-000000000000'),
+    ).toBeUndefined();
   });
 
   it('reads the site tier’s pending invitations and nothing else', async () => {

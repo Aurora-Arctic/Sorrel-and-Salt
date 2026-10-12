@@ -5,7 +5,8 @@ import { invitationsHref } from '../../../../../components/AdminInvitations/href
 import { requireAdminSession } from '../../../../../lib/request-session';
 import type { Session } from '../../../../../lib/session';
 import { countPendingAdminInvitations, listPendingAdminInvitations } from '@/modules/identity';
-import { pagerHrefs, readNumberedPage } from '../../list-page';
+import { pagerHrefs } from '../../list-page';
+import { readNumberedPage } from '@/lib/numbered-page';
 import { readInvitationsPlace } from './filter';
 import { invitationsLock } from './lock';
 import type { AdminInvitationsPageProps } from './types';

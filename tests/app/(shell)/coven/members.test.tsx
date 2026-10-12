@@ -32,7 +32,7 @@ vi.mock('@/modules/identity', () => ({
   displayNamesOf: async (_session: unknown, ids: string[]) => ids.map((id) => `Name of ${id}`),
 }));
 
-const { default: MembersPage } = await import('@/app/(shell)/coven/[slug]/members/page');
+const { default: MembersPage } = await import('@/app/(shell)/coven/[slug]/(people)/members/page');
 
 const WORKSPACE = { id: 'w', name: 'Fixture Coven', slug: 'fixture-coven' };
 const SEATS = [
@@ -76,7 +76,9 @@ beforeEach(() => {
 describe('the /coven/[slug]/members page', () => {
   it('lists every member, with a single member too', async () => {
     await render_('owner');
-    expect(screen.getAllByRole('row')).toHaveLength(1 + SEATS.length);
+    expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
+      1 + SEATS.length,
+    );
 
     listMembers.mockImplementation(async () => [
       {
@@ -93,7 +95,9 @@ describe('the /coven/[slug]/members page', () => {
     ]);
     document.body.innerHTML = '';
     await render_('owner');
-    expect(screen.getAllByRole('row')).toHaveLength(2);
+    expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
+      2,
+    );
   });
 
   it('gives an owner a Change Role control on every row', async () => {
@@ -118,7 +122,9 @@ describe('the /coven/[slug]/members page', () => {
   it('shows a member the list and no role controls', async () => {
     await render_('member');
 
-    expect(screen.getAllByRole('row')).toHaveLength(1 + SEATS.length);
+    expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
+      1 + SEATS.length,
+    );
     expect(screen.queryByRole('button', { name: /^Change Role/ })).not.toBeInTheDocument();
   });
 
