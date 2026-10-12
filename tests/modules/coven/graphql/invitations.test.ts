@@ -132,3 +132,70 @@ describe('Mutation.createInvitation', () => {
     expect(await sql`select 1 from invitations`).toHaveLength(0);
   });
 });
+
+const REVOKE = /* GraphQL */ `
+  mutation ($workspaceId: ID!, $id: ID!) {
+    revokeInvitation(workspaceId: $workspaceId, id: $id) {
+      id
+      revokedAt
+      acceptedAt
+    }
+  }
+`;
+
+/** A pending (or accepted) invitation into W, through the raw client (MB.101). */
+async function insertInvitation(accepted = false): Promise<string> {
+  const [row] = await sql`
+    insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, expires_at,
+      accepted_at, accepted_by)
+    values (${INVITED}, ${`hash-${accepted}`}, ${WORKSPACE_W_ID}, 'member', ${A.id}, ${A.id},
+      now() + interval '7 days', ${accepted ? sql`now()` : null}, ${accepted ? B.id : null})
+    returning id`;
+  return row.id as string;
+}
+
+describe('Mutation.revokeInvitation', () => {
+  it('stamps an owner’s pending invitation revoked, and keeps the row', async () => {
+    const id = await insertInvitation();
+
+    const result = await run<{ revokeInvitation: { id: string; revokedAt: string | null } }>(
+      asUser(A),
+      REVOKE,
+      { workspaceId: WORKSPACE_W_ID, id },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.revokeInvitation).toMatchObject({ id, revokedAt: expect.any(String) });
+    expect(
+      await sql`select 1 from invitations where id = ${id} and revoked_at is not null`,
+    ).toHaveLength(1);
+  });
+
+  it('answers a member as FORBIDDEN and an accepted invitation as VALIDATION on id', async () => {
+    const pending = await insertInvitation();
+    const accepted = await insertInvitation(true);
+
+    const refused = await run(asUser(B), REVOKE, { workspaceId: WORKSPACE_W_ID, id: pending });
+    const joined = await run(asUser(A), REVOKE, { workspaceId: WORKSPACE_W_ID, id: accepted });
+
+    expect(refused.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    expect(joined.errors?.[0]).toMatchObject({
+      extensions: { code: 'VALIDATION', fieldErrors: [{ path: ['id'] }] },
+    });
+    expect(await sql`select 1 from invitations where revoked_at is not null`).toHaveLength(0);
+  });
+
+  it('answers a missing id as NOT_FOUND, and a signed-out caller with an error', async () => {
+    const missing = await run(asUser(A), REVOKE, {
+      workspaceId: WORKSPACE_W_ID,
+      id: '00000000-0000-4000-8000-000000000000',
+    });
+    const signedOut = await run(null, REVOKE, {
+      workspaceId: WORKSPACE_W_ID,
+      id: '00000000-0000-4000-8000-000000000000',
+    });
+
+    expect(missing.errors?.[0]).toMatchObject({ extensions: { code: 'NOT_FOUND' } });
+    expect(signedOut.errors).toHaveLength(1);
+  });
+});

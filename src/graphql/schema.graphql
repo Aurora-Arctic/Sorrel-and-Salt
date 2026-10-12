@@ -502,6 +502,11 @@ type Mutation {
   revokeAdminInvitation(id: ID!): Invitation!
 
   """
+  Withdraws a pending invitation of a coven, so its link says so; the row is kept. Refused for an invitation already accepted, which is a member to remove. Owners only.
+  """
+  revokeInvitation(id: ID!, workspaceId: ID!): Invitation!
+
+  """
   Stops a user creating covens; those they own stay theirs. Refused for an admin, and for a user who cannot.
   """
   revokeWorkspaceCreation(note: String, userId: ID!): User!

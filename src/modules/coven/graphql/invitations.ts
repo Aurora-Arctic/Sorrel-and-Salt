@@ -1,7 +1,7 @@
 import { InvitationRef } from '@/modules/identity';
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
-import { createInvitation } from '../services/invitations';
+import { createInvitation, revokeWorkspaceInvitation } from '../services/invitations';
 import { WorkspaceRef } from './workspace';
 
 // The workspace tier of `Invitation` (M7.3): the fields `identity` cannot
@@ -51,5 +51,20 @@ builder.mutationField('createInvitation', (t) =>
     authScopes: { signedIn: true },
     resolve: (_root, { workspaceId, email, role }, context) =>
       createInvitation(sessionOf(context), workspaceId, { email, role }, context.invitations),
+  }),
+);
+
+builder.mutationField('revokeInvitation', (t) =>
+  t.field({
+    type: InvitationRef,
+    description:
+      'Withdraws a pending invitation of a coven, so its link says so; the row is kept. Refused for an invitation already accepted, which is a member to remove. Owners only.',
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      id: t.arg.id({ required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: (_root, { workspaceId, id }, context) =>
+      revokeWorkspaceInvitation(sessionOf(context), workspaceId, id),
   }),
 );

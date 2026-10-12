@@ -300,6 +300,11 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   createInvitation: write(
     `mutation { createInvitation(workspaceId: "${WORKSPACE_W_ID}", email: "not-an-address", role: viewer) { id } }`,
   ),
+  // An id naming no invitation, so a caller past the scope is refused by the
+  // service before anything is stamped.
+  revokeInvitation: write(
+    `mutation { revokeInvitation(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") { id } }`,
+  ),
   removeMember: write('mutation { removeMember(workspaceId: "not-an-id", userId: "not-an-id") }'),
   leaveWorkspace: write('mutation { leaveWorkspace(workspaceId: "not-an-id") }'),
   createWorkspaceIngredient: write(
@@ -461,6 +466,8 @@ const OPEN_WRITES = [
   // `member: remove` decides removal, and leaving is the caller's own seat (M6.15).
   // The owner's `member: invite` decides, which the service checks (M7.3).
   'createInvitation',
+  // The owner's `member: invite` decides, which the service checks (M7.6).
+  'revokeInvitation',
   'removeMember',
   'leaveWorkspace',
   'createWorkspaceIngredient',

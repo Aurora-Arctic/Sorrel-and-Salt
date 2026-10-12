@@ -1,9 +1,18 @@
 import 'server-only';
-import { findMemberByEmail, findOneById, withAudit } from '../../../db/repository';
+import {
+  findInvitationInWorkspace,
+  findMemberByEmail,
+  findOneById,
+  findPendingWorkspaceInvitationCount,
+  findPendingWorkspaceInvitationPage,
+  withAudit,
+} from '../../../db/repository';
 import type { InvitableRole, InvitationRow } from '../../../db/repository';
-import { ValidationError } from '../../../lib/errors';
+import { NotFound, ValidationError } from '../../../lib/errors';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { newToken } from '../../../lib/invitation-token';
 import type { Session } from '../../../lib/session';
+import { RowId } from '../../../lib/validation';
 import { normaliseEmail, validateEmailAddress } from '../../identity';
 import type { InvitationSender } from '../../identity';
 import { workspaces } from '../schema/workspaces';
@@ -73,5 +82,79 @@ export async function createInvitation(
   );
   // After the commit, so a mailed link always names a row.
   await sender.workspaceInvitation(email, token, { name: workspace.name, role });
+  return row;
+}
+
+/**
+ * One page of the coven's pending invitations, newest first, for the members
+ * page (M7.6). Owners only: the rows carry the addresses of people who have
+ * not joined, and members now read the roll (M6.13), so the check is
+ * `member: invite`, never `member: read`. A pending invitation outlives its
+ * inviter's demotion or removal, as the admin tier's does.
+ *
+ * @throws {Forbidden} the caller is not an owner of the coven.
+ */
+export async function listPendingWorkspaceInvitations(
+  session: Session,
+  workspaceId: string,
+  page: PageRequest,
+): Promise<PageEntry<InvitationRow>[]> {
+  const membership = await assertMembership(session, workspaceId, { member: ['invite'] });
+  return findPendingWorkspaceInvitationPage(membership, page);
+}
+
+/**
+ * How many invitations `listPendingWorkspaceInvitations` pages, and how many
+ * come before `start`, a page's first row, none on an empty page: the list's
+ * "Page X of Y".
+ *
+ * @throws {Forbidden} the caller is not an owner of the coven.
+ */
+export async function countPendingWorkspaceInvitations(
+  session: Session,
+  workspaceId: string,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const membership = await assertMembership(session, workspaceId, { member: ['invite'] });
+  return findPendingWorkspaceInvitationCount(membership, start);
+}
+
+/**
+ * Withdraws a pending invitation of the coven, stamped as the owner: its link
+ * is dead from now on and the row stays for the audit. An invitation already
+ * revoked or lapsed is no longer pending, so it is answered as not found, as
+ * the admin tier's is.
+ *
+ * @throws {Forbidden} the caller is not an owner of the coven.
+ * @throws {NotFound} no invitation of this coven has this id, or it is no
+ * longer pending.
+ * @throws {ValidationError} on `id`: the invitation was accepted, so the
+ * person is a member and is removed on the members page instead.
+ */
+export async function revokeWorkspaceInvitation(
+  session: Session,
+  workspaceId: string,
+  id: string,
+): Promise<InvitationRow> {
+  const membership = await assertMembership(session, workspaceId, { member: ['invite'] });
+  const missing = () => new NotFound('No pending invitation in this coven has this id');
+  // An id that cannot name a row is one that is not there.
+  if (!RowId.safeParse(id).success) throw missing();
+
+  const invitation = await findInvitationInWorkspace(membership, id);
+  if (!invitation) throw missing();
+  if (invitation.acceptedAt) {
+    throw new ValidationError([
+      {
+        path: ['id'],
+        message:
+          'That invitation was accepted, so the person is a member of this coven. Remove them from the members list instead.',
+      },
+    ]);
+  }
+
+  // Two tabs revoking at once, or the link lapsing in between: nothing pending is left to stamp.
+  const [row] = await withAudit(session, (write) => write.revokeInvitation(membership, id));
+  if (!row) throw missing();
   return row;
 }

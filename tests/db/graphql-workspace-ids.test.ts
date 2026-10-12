@@ -33,6 +33,8 @@ let deletableWorkspaceId: string;
 // Covens of their own for the removal and leave probes, whose admitted calls take B out of one.
 let removableWorkspaceId: string;
 let leavableWorkspaceId: string;
+// W's pending invitation, which the revoke probe's admitted call revokes.
+let revocableInvitationId: string;
 // W's own reference, which the read probe reads and the update probe replaces.
 let referenceId: string;
 
@@ -62,6 +64,11 @@ beforeAll(async () => {
   deletableWorkspaceId = await insertCoven('Fixture Deletable Coven');
   removableWorkspaceId = await insertCoven('Fixture Removable Coven');
   leavableWorkspaceId = await insertCoven('Fixture Leavable Coven');
+  const [invitation] = await sql`
+    insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by)
+    values ('revoked@workspace-ids.test', 'workspace-ids-hash', ${WORKSPACE_W_ID}, 'viewer', ${A.id}, ${A.id})
+    returning id`;
+  revocableInvitationId = invitation.id as string;
   await sql.end();
 });
 
@@ -129,6 +136,13 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     source: `mutation ($workspaceId: ID!) {
       createInvitation(workspaceId: $workspaceId, email: "invited@workspace-ids.test", role: viewer) { id }
     }`,
+    asOwner: true,
+  },
+  revokeInvitation: {
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      revokeInvitation(workspaceId: $workspaceId, id: $id) { id }
+    }`,
+    variables: () => ({ id: revocableInvitationId }),
     asOwner: true,
   },
   removeMember: {
