@@ -308,7 +308,7 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 export const PhoneLight: Story = () => <CategoriesPage />;
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// The same page with Filter pressed and the filtered list on its way (MB.115,
+// The same page with a filter applied and the filtered list on its way (MB.115,
 // the owner's call): the filter row greyed and off, and the tabs' skeleton,
 // rows and pager, in place of the list. The workshop's router goes nowhere,
 // so a list navigation provided above the page holds one on its way, as the

@@ -43,10 +43,12 @@ different groups, so the page offers each name once, whatever its case.
 
 - **The filter is a GET form to `/admin/compendium`** (MB.178), as the
   category list's is: named "Filter the Compendium" inside a `<search>`
-  landmark, a search box labelled "Name" (`query`), a type-ahead labelled
+  landmark, a search box labelled "Name" (`query`) with its own submit, a
+  magnifier named Search (`SearchField`, [`field.md`](field.md)), a type-ahead labelled
   "Form" (`form`), a native `<select>` labelled "Classification"
   (`nomenclature`), a switch labelled "Without
-  References", title case as the owner asked (`withoutReferences`, valued `1`), and a Filter button. The
+  References", title case as the owner asked (`withoutReferences`, valued `1`). There is no Filter
+  button: each field applies as it changes (below). The
   switch is `SwitchField`, a slide toggle with its label above it as the
   other fields have, over a native checkbox, so it submits the same; it was a
   checkbox until the owner found it out of place in the row (MB.115;
@@ -58,11 +60,10 @@ different groups, so the page offers each name once, whatever its case.
   starts again from the first page, since the form carries no cursor. It is
   `filter.tsx`, the one client file here, its fields inside the shared
   `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form,
-  the Filter button, the Clear link and the soft navigation; Clear
-  Filters is offered while the page shows a name, a form, a classification or
-  No Refs, and opens `/admin/compendium` with none, and while
-  only the fields hold one it empties them in place, the Form type-ahead and
-  its hidden input included. M8.10 turns the Name box into its
+  the Clear link and the soft navigation; Clear is drawn while the page
+  shows a name, a form, a classification or No Refs, and opens
+  `/admin/compendium` with none, and is not drawn while it shows none,
+  whatever the fields hold. M8.10 turns the Name box into its
   typeahead, a picked row opening the entry's `?edit=` modal, with this form
   kept underneath.
 - **Form is a type-ahead over the curated forms once hydrated**, the
@@ -74,8 +75,7 @@ different groups, so the page offers each name once, whatever its case.
   Form", back to blank. A hidden input carries `form` for a native submit.
   The server draws it as a native `<select>` instead, "All Forms" valued
   `""` then one option per form, so the filter works before JavaScript;
-  `hydrated`, read through `useSyncExternalStore`, tells the two renders
-  apart. The value is the form's text, `?form=Oil`, which the compendium
+  `useHydrated()` (`src/lib/hydrated.ts`) tells the two renders apart. The value is the form's text, `?form=Oil`, which the compendium
   read matches whatever its case, so the address reads plainly and an
   uncurated form on a seeded entry is still reachable by typing the address.
 - **Classification offers "Any", valued `""`, then every kind in
@@ -85,11 +85,17 @@ different groups, so the page offers each name once, whatever its case.
   form submits as `query=&form=&nomenclature=`, plus
   `withoutReferences=1` when on. The page reads a blank value as no filter
   and ignores a kind it does not know.
-- **Filter is offered only when there is a new filter to apply**: `disabled`
-  while the trimmed query, the form, the classification and the switch all match the
-  filter the page shows, enabled once any differs. With JavaScript, a submit
-  builds the address with `compendiumHref`, and `FilterForm` pushes it as a
-  soft navigation inside its `ListFrame`'s transition: the row greyed and
+- **Each field applies as it changes** (the owner's call at MB.115's
+  review, over a Filter button pressed after them): Classification on its
+  change and No Refs on its press, each from the filter shown with that one
+  field changed; Form once a choice settles, a pick, its clear or leaving
+  the box, when the settled form differs from the one shown, never while it
+  is typed; and the name on the magnifier or Enter. Each carries the name
+  typed but not yet searched, trimmed. Only the name and the Form box's text
+  are state; Classification is uncontrolled (`defaultValue`) and No Refs
+  takes `defaultChecked`. With JavaScript, each builds the address with
+  `compendiumHref`, and `useApplyFilter` pushes it as a soft navigation
+  inside the `ListFrame`'s transition: the row greyed and
   off and the tabs' skeleton in place of the table and the pager until the
   filtered list arrives ([`list-frame.md`](list-frame.md)). The list keys the form by
   the filter shown, so a page showing another starts it again from that one.
@@ -132,8 +138,8 @@ different groups, so the page offers each name once, whatever its case.
 
 None of its own; the stylesheet went in MB.115. The list's root is
 `.list-frame`, its filter the `.filter-row` `FilterForm` draws, on the
-`.field`, `.input`, `.select`, `.switch` and `.btn` primitives, Filter
-`.btn--solid` ([`styling.md`](../styling.md), "Form fields"). The table is
+`.field`, `.input`, `.select` and `.switch` primitives and
+`SearchField`'s `.search-field` ([`styling.md`](../styling.md), "Form fields"). The table is
 [`StackTable`](data-table.md): the `.data-table` primitive with the
 `--stack` modifier, banded on `$surface-card` with a 1px `$text-muted`
 hairline under the header row at desktop width, and each row a card once
@@ -151,7 +157,7 @@ mineral's or a chemical's name is not, and the row does not carry its kind.
 `OnePageOfSeveral`, `FirstPage`, `Filtered`, `NoMatch` and `Empty`, and
 `PhoneDark` and `PhoneLight`, the middle page at 375px with every row a
 card, and `FilteredPhoneDark` and `FilteredPhoneLight`, `Filtered` at 375px
-with Clear offered, each inside the admin layout's frame. The filter reaches
+with Clear drawn, each inside the admin layout's frame. The filter reaches
 `/admin/compendium`, which the workshop does not serve.
 Render-only, no test ids, no snapshots.
 
@@ -163,17 +169,19 @@ action, method, names, kept values and classification values, the Form box
 drawn as a native select on the server and as a type-ahead once hydrated,
 No Refs found as a `switch`, sent by the server-drawn form and
 turned by a press before hydration,
-its narrowing as a name is typed, its pick and its clear, the Filter
-button's disabled and enabled states for each control, the address it opens,
-the loading state while the filtered list loads (the list's status, the
-row `aria-busy` and its controls `aria-disabled`, a second press refused,
-the list back once it arrives, and none of it for typing), the reset to the
-filter shown,
-Clear (its address with each control set, off with nothing set,
-every field emptied in place when nothing is applied, a type-ahead's text
-naming no choice too, and the loading state while the unfiltered list
+the Search submit in the server's markup,
+its narrowing as a name is typed, the address each field applies (the
+search on Search or Enter, Classification on its change, No Refs on its
+press, the Form box on a pick, its clear and leaving it, never while typed,
+each carrying the name typed), the loading state while the filtered list
+loads (the list's status, the row `aria-busy` and its controls
+`aria-disabled`, a second change and a submit refused, the list back once
+it arrives, and none of it for typing), the focus kept on the field changed
+once the list arrives, the reset to the filter shown,
+Clear (its address with each control set, not drawn while the page shows no
+filter, text typed or not, and the loading state while the unfiltered list
 loads), and `compendiumHref`. It is the one list test of the filter's
-loading state, its
+loading state, its focus, its
 reset and Clear; paging is Pager's. `tests/app/admin/compendium/page.test.tsx`
 covers the page's side: `?form=` read trimmed into the list and its count,
 blank as none, kept on every Edit, the pager, Add Ingredient and the

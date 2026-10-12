@@ -82,7 +82,7 @@ export const Traditions: Story = () => (
   />
 );
 
-// Searched by a fragment of the name, Clear offered.
+// Searched by a fragment of the name, Clear drawn at the row's end.
 export const TraditionsSearched: Story = () => (
   <GroupList
     kind="tradition"
@@ -92,7 +92,7 @@ export const TraditionsSearched: Story = () => (
 );
 
 // At a phone's width, searched, in each theme: the Name field across the
-// row, Filter and Clear beneath it, each row a card.
+// row with its magnifier, Clear beneath it, each row a card.
 export const TraditionsSearchedPhoneDark: Story = () => (
   <AdminFrame>
     <TraditionsSearched />

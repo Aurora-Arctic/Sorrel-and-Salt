@@ -66,16 +66,18 @@ for a rule only one kind's rows need.
 - **The filter is a GET form to the page itself** (MB.178), as the user
   list's is ([`user-list.md`](user-list.md)): named by the kind's title,
   "Filter Categories" or "Filter Zodiac Signs", inside a `<search>` landmark, a search
-  box labelled "Name" (`query`), for a grouped kind a native `<select>` labelled by the kind's
-  group label ("Group", named by its `param`, `group`; a deity's
-  "Tradition", `tradition`), and a Filter button. A filtered page is
+  box labelled "Name" (`query`) with its own submit, a magnifier named
+  Search (`SearchField`, [`field.md`](field.md)), and for a grouped kind a
+  group filter labelled by the kind's group label ("Group", named by its
+  `param`, `group`; a deity's "Tradition", `tradition`). There is no
+  Filter button: each field applies as it changes (below). A filtered page is
   an address, and filtering starts again from the first page, since the form
   carries no cursor. It is `filter.tsx`, the one client file here, holding
-  the fields and what counts as a change; the shared `FilterForm` holds the
-  form, the button and the navigation, and the Clear link after
-  Filter, offered while the page shows a name or a group and opening the
-  page itself with neither, and while only the fields hold one emptying
-  them in place, the type-ahead and its hidden input included ([`filter-form.md`](filter-form.md)).
+  the fields and what each applies; the shared `FilterForm` holds the
+  form, the navigation and the Clear link at the row's end, drawn while the
+  page shows a name or a group and opening the page itself with neither,
+  and not drawn while it shows neither, whatever the fields hold
+  ([`filter-form.md`](filter-form.md)).
 - **`?query=` is part of the name; `?group=` is a group's slug**, as
   `?edit=` is a value's, and the deities' `?tradition=` a tradition's. The
   page trims the query, reads a blank one as none, and resolves the slug
@@ -92,7 +94,7 @@ for a rule only one kind's rows need.
   and a native submit sends `query=&group=` (`query=&tradition=`), which the
   page reads as no filter. Hydration swaps it for the combobox's type-ahead
   box ([`combobox.md`](combobox.md), "The type-ahead box"), told apart by
-  `useSyncExternalStore`'s server snapshot: typing narrows the groups, its
+  `useHydrated()` (`src/lib/hydrated.ts`): typing narrows the groups, its
   placeholder reads "All Groups" while blank, and its clear, "Clear Group"
   ("Clear Tradition"), is the way back to every group. Both stand at one
   width, the field's `filter-row__typeahead` class
@@ -102,17 +104,20 @@ for a rule only one kind's rows need.
   page hydrated (MB.115). Text naming no group
   is no group, so it filters by none. A hidden input carries the same
   parameter, by slug, so the form's fields are what they were.
-- **Filter is offered only when there is a new filter to apply**, as the user
-  list's is: `disabled` while the trimmed query and the group match the
-  filter the page shows, enabled once either differs. With JavaScript, a
-  submit builds the address with `groupedValuesHref(kind, { query, group })`
-  and `FilterForm` pushes it as a soft navigation, as the pager's links are, inside
+- **Each field applies as it changes** (the owner's call at MB.115's
+  review, over a Filter button pressed after them): the group once a choice
+  settles, a pick, its clear or leaving the box, when the settled group
+  differs from the one shown, never while it is typed, carrying the name
+  typed but not yet searched; the name on the magnifier or Enter, keeping
+  the group shown. With JavaScript, each builds the address with
+  `groupedValuesHref(kind, { query, group })` and `useApplyFilter` pushes
+  it as a soft navigation, as the pager's links are, inside
   its `ListFrame`'s transition: the row greyed and off and the tabs'
   skeleton in place of the table and the pager until the filtered list
   arrives, the owner's call at MB.115's review
   ([`list-frame.md`](list-frame.md)). The list
   keys the form by the filter shown, so a page showing another — Back to an
-  older filter, say — starts it again from that one rather than keeping a
+  older filter, say — draws it afresh from that one rather than keeping a
   stale draft. In the workshop, `next/navigation` is stubbed
   ([`workshop.md`](../workshop.md), "`.ladle/`").
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
@@ -153,8 +158,8 @@ for a rule only one kind's rows need.
 The list is the list primitives ([`styling.md`](../styling.md), "Designing
 a section"): the root a `.list-frame`, a [`ListFrame`](list-frame.md); the filter a
 [`FilterForm`](filter-form.md), so a `.filter-row` whose fields are
-`FieldShell`s around a native input and select and whose Filter is a solid
-button; and the table [`StackTable`](data-table.md), a `.data-table` in
+a `SearchField` and a `FieldShell` around the group filter; and the table
+[`StackTable`](data-table.md), a `.data-table` in
 its `.data-table-frame`, banded at desktop width (every even row on the
 card surface, the owner's M5.6 call, kept at MB.115's sign-off over a
 hairline rule), with the `--stack` modifier, its roles written out and a
@@ -186,10 +191,10 @@ deities under invented traditions and slugged by `deitySlug`; for the flat
 kinds, `PlanetsOnePageOfSeveral`, `Signs`, `PlanetsFiltered`,
 `PlanetsNoMatch` and `PlanetsEmpty`; and `PhoneDark` and `PhoneLight`, a
 categories page inside `.admin-layout` at 375px: the real `TabbedPage`
-with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear offered, the
+with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear drawn, the
 full-width Add and the rows as cards. `CategoriesPending`, with
 `PendingPhoneDark` and `PendingPhoneLight` at 375px, is the same page with
-Filter pressed and the list on its way: a `ListNavigationContext` holding
+a filter applied and the list on its way: a `ListNavigationContext` holding
 one pending above the page, since the stub router goes nowhere, so the
 filter row greyed and the tabs' skeleton in place of the list
 ([`list-frame.md`](list-frame.md)). Each kind has four invented groups, so
@@ -204,10 +209,10 @@ kinds share on the deities, whose group goes by its own name: the rows and
 their group, the Edit links, no table when there are none, the filter form's
 action, method, names and kept values, the group a native select in the
 server's markup and a type-ahead once hydrated, its list narrowing as it is
-typed into, a group picked from it and its clear, the Filter button's disabled and
-enabled states, the address it opens, Clear offered by a name or a
-group shown, off with neither, and emptying both in place when neither is
-applied, and `groupedValuesHref`. The category
+typed into applying nothing, the address each field applies (the name on
+Search, keeping the group shown; a group picked, carrying the name typed;
+its clear, back to every group), Clear drawn by a name or a group shown and
+not drawn with neither, and `groupedValuesHref`. The category
 and the form get only what they change, their page and their group's
 parameter, as `groupedValuesHref` rows; the planet and the zodiac sign, their page
 and no group written, as rows too, and a flat kind's table and filter drawn
