@@ -193,3 +193,60 @@ MB.62's open pause under the site-tier invitation itself, since the invitee
 holds no `SiteAdmin` proof: `findOpenAdminRoleChangePause` takes either. How
 MB.70 built the site tier's half is
 [`auth/admin-users.md`](../auth/admin-users.md), "Inviting an admin".
+
+### Inviting into a coven (M7.3)
+
+`createInvitation(session, workspaceId, { email, role }, sender)`, exported
+from `@/modules/coven`, is the workspace tier's half of the policy above. It
+runs in this order, and the order is the point:
+
+1. **`assertMembership(session, workspaceId, { member: ['invite'] })`**, which
+   only owners hold (`access-control.ts`). A member, a viewer, an owner of
+   another coven and a stranger all get the same `Forbidden`, before the role
+   or the address is looked at, so nothing about the input leaks to a caller
+   who may not invite.
+2. **The role** must be `viewer` or `member`. The GraphQL enum `InvitableRole`
+   has no `owner`, so a browser cannot ask for one, but the service refuses it
+   too, as a `ValidationError` on `role` that says ownership is granted
+   afterwards: a direct call is a second path, and the database's
+   `invitations_role_invitable` check is a third, which would only say "check
+   violated".
+3. **The address** is trimmed and lower-cased with `normaliseEmail` and checked
+   with `validateEmailAddress`, both from `identity`, exactly as
+   `createAdminInvitation` does.
+4. **A live member's address is refused**, in words, by the repository's
+   `findMemberByEmail(membership, email)`: one SQL `EXISTS` over `users`,
+   case-insensitive, live rows only, so a member who was removed can be invited
+   back and the roll is never fetched to be searched.
+5. **The token** comes from `newToken()`, goes to `insertInvitation(membership,
+{ email, role, token })` inside `withAudit`, and only then to
+   `sender.workspaceInvitation(email, token, { name, role })`: after the commit,
+   so a mailed link always names a row.
+
+**A second pending invitation to an address already invited is accepted**, as
+the admin tier's is: each mail carries its own token and any one accepts. What
+the first leaves pending, the owner revokes (M7.6). **A failed send leaves the
+invitation pending**: `send` in `src/lib/mail.ts` never throws and logs with
+`console.error`, so the mutation succeeds and the owner can revoke and
+re-invite. The test for it runs the real `send` over a `fetch` that answers
+500, not a double that pretends to have failed.
+
+**The mail** is `src/emails/coven-invitation.tsx`, rendered twice by
+`renderParts` as HTML and plain text. The plain-text part carries the
+`/invite/<token>` link, because story 4's acceptance test reads the token from
+it. `InvitationSender` (`identity/types.ts`) gained
+`workspaceInvitation(to, token, { name, role })` beside `siteInvitation`; the
+real one is built in `src/lib/invitation-mail.ts` and shares the admin one's
+link, whose origin Better Auth resolves from the request.
+
+**In GraphQL**, `coven` adds what `identity` cannot name to `Invitation`: an
+`InvitableRole` enum (`viewer`, `member`), `Invitation.role` and
+`Invitation.workspace`, and the `createInvitation(workspaceId, email, role)`
+mutation. `workspace` reads through the `membershipsByUser` loader, so it
+answers a coven the caller belongs to and nothing else, and a site-tier
+invitation answers none for both. No field carries the token, its hash or a
+link; the existing field-list test in
+`tests/modules/identity/graphql/admin-invitations.test.ts` pins that.
+
+Story 4's acceptance test passes `createInvitation` now and stops at
+`acceptInvitation`, which has no workspace branch until M7.5.

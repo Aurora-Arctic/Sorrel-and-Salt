@@ -12,6 +12,7 @@ import { insertReference } from '../support/db/insert-reference';
 import { noSender } from '../support/email-verification';
 import { makeIngredient, makeWorkspace, workspaceColumns } from '../support/fixtures';
 import type { Context } from '@/graphql/types';
+import type { InvitationSender } from '@/modules/identity';
 import type { Answer, WorkspaceIdProbe } from './types';
 
 // A `workspaceId` is whatever string the client sent, and asked of the
@@ -124,6 +125,12 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     variables: () => ({ userId: B.id }),
     asOwner: true,
   },
+  createInvitation: {
+    source: `mutation ($workspaceId: ID!) {
+      createInvitation(workspaceId: $workspaceId, email: "invited@workspace-ids.test", role: viewer) { id }
+    }`,
+    asOwner: true,
+  },
   removeMember: {
     source: `mutation ($workspaceId: ID!, $userId: ID!) {
       removeMember(workspaceId: $workspaceId, userId: $userId)
@@ -180,6 +187,12 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
   },
 };
 
+// The admitted createInvitation reaches its sender; this one mails no one.
+const mailsNothing: InvitationSender = {
+  siteInvitation: async () => {},
+  workspaceInvitation: async () => {},
+};
+
 const yoga = createYoga<Context>({ schema, maskedErrors, logging: false });
 
 /** The probe as B, a member of W (or A, its owner, when the probe says), so only the id can refuse. */
@@ -195,7 +208,12 @@ async function run(probe: WorkspaceIdProbe, workspaceId: string): Promise<Answer
         variables: { ...probe.variables?.(), workspaceId },
       }),
     },
-    { session, loaders: createLoaders(session), emailVerification: noSender },
+    {
+      session,
+      loaders: createLoaders(session),
+      emailVerification: noSender,
+      invitations: mailsNothing,
+    },
   );
   return (await response.json()) as Answer;
 }

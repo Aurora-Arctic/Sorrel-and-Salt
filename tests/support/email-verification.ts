@@ -13,4 +13,5 @@ export const noSender: EmailVerificationSender = {
 
 export const noInvitationSender: InvitationSender = {
   siteInvitation: async () => unexpected('mail an invitation'),
+  workspaceInvitation: async () => unexpected('mail a coven invitation'),
 };

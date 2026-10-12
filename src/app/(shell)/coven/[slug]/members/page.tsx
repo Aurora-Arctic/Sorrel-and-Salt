@@ -85,7 +85,7 @@ export default async function MembersPage({
       {/* Raised before it is urgent: a quiet status, since it is on the page
           from the start and asks nothing of the reader yet. */}
       {soleOwner && (
-        <Notice kind="warn" quiet>
+        <Notice kind="warn" quiet className="member-list__warning">
           This coven has one owner. If that person loses access, nobody can manage its members. Make
           another member an owner to be safe.
         </Notice>

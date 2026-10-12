@@ -55,7 +55,7 @@ export interface AdminRoleChangePauseState {
 }
 
 /**
- * How an admin invitation's link reaches the invited address (MB.70). Built
+ * How an invitation's link, admin or coven, reaches the invited address (MB.70, M7.3). Built
  * per request by the GraphQL context, as `EmailVerificationSender` is: the
  * link's origin is Better Auth's to resolve against its allowed hosts, and a
  * service may not import it.
@@ -63,6 +63,15 @@ export interface AdminRoleChangePauseState {
 export interface InvitationSender {
   /** Mails `to` the link that accepts the invitation `token` names. Never throws on a failed send. */
   siteInvitation(to: string, token: string): Promise<void>;
+  /**
+   * Mails `to` the link that accepts the coven invitation `token` names,
+   * saying which coven and in what role (M7.3). Never throws on a failed send.
+   */
+  workspaceInvitation(
+    to: string,
+    token: string,
+    coven: { name: string; role: 'viewer' | 'member' },
+  ): Promise<void>;
 }
 
 /** Why an invitation link cannot be accepted by this session, one reason per link (MB.70, M7.7). */
