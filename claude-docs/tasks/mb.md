@@ -253,6 +253,10 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 8  | MB.249                 |
 | MB.248 | The compendium seed: stones and metals                                                                                   | Wave 8  | MB.249                 |
 | MB.249 | Close the compendium seed                                                                                                | Wave 8  | —                      |
+| MB.251 | Call the planets Celestial Bodies wherever a person reads them                                                           | Wave 8  | —                      |
+| MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9  | MB.253                 |
+| MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9  | MB.254                 |
+| MB.254 | Drop the planet columns and view                                                                                         | Wave 9  | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1141,6 +1145,62 @@ _Acceptance criteria:_
 - The test above is green over the full `COMPENDIUM`
 - On staging, the admin compendium page's unsourced filter shows no seeded entry
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
+
+**MB.251 — Call the planets Celestial Bodies wherever a person reads them** · 3h
+
+_Story:_ As an admin, I want the vocabulary that holds the Sun, the Moon, the asteroids and the lunar nodes called Celestial Bodies, so that its name says what it holds.
+
+Minted on 2026-10-12 on the owner's call ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)), the first of four (MB.251 to MB.254). The admin tab, page, dialogs and buttons, the ingredient form's list field and its variant summaries, and the URL change: `/admin/planets` becomes `/admin/celestial-bodies`, with no redirect. Most of the admin copy is the `planet` entry in `GroupedValueList/kinds.ts`. Code, GraphQL and database names keep `planets` until MB.253 and MB.254, and a decision record, `mb.251-celestial-bodies.md`, says so, beside DESIGN.md §5, §9 and §14, CLAUDE.md's admin sentence and a Vocabulary line, so no session "fixes" the divergence early. The hours are an estimate: a copy change across about ten test files, two e2e specs and the docs that name the screen.
+
+_Acceptance criteria:_
+
+- `/admin/celestial-bodies` serves the vocabulary and `/admin/planets` returns 404
+- The Astrology section's tab, page title, filter, empty and no-match text, and every dialog and button name the vocabulary Celestial Bodies or a Celestial Body
+- The ingredient form's list field and each variant's read Celestial Bodies, with the entry box Celestial Body
+- No user-visible string under `src/app` or `src/components` says planet
+- DESIGN.md, CLAUDE.md and the docs naming the screen or URL are corrected, and the divergence is recorded with the tasks that end it
+- The touched component tests and the `admin.spec.ts` and `admin-compendium.spec.ts` e2e specs pass under the new names
+
+**MB.252 — The celestial bodies table and columns, beside the planet ones** · 2h
+
+_Story:_ As a developer, I want the celestial-body table and columns in place before any code reads them, so that the switch from the planet names is a code change against objects that already exist.
+
+Table task, the expand half of rule 10 ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). The `planets` table is renamed `celestial_bodies`, and a view named `planets` over it keeps the code that is live during the rollout working. `ingredients` and `ingredient_variants` gain a nullable `celestial_bodies text[]`, and `reference_links` a `celestial_body_id` with its foreign key and partial unique index. `reference_links_one_row` is re-added with the new column in place of `planet_id`, and the migration fills every new column from its old one. Scoped first, because no table has been renamed here before: whether the view serves every statement the live code sends, and whether the table's index and constraint names move now or at the contract, given `planets_slug_unique` is named in the astrology service. The RENAME and the CHECK's drop carry an `.ack.md` sidecar.
+
+_Acceptance criteria:_
+
+- `celestial_bodies` holds the rows, and the `planets` view reads and writes them, asserted from the catalogue and by a write through the view
+- The three new columns exist, and every row with a value in an old column carries it in the new one, asserted against the seeded template
+- `reference_links_one_row` counts `celestial_body_id` and no longer counts `planet_id`
+- The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
+- Nothing reads the new names yet
+
+**MB.253 — Read and write celestial bodies under their own names** · 5h
+
+_Story:_ As a developer, I want the code and the API to say celestial bodies where the screens do, so that no one has to know that "planet" in the code means a celestial body.
+
+Switches every reader and writer to MB.252's table and columns, and renames the code and GraphQL names in the same PR, since every line it touches is one the rename touches too ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). GraphQL's `Planet`, `PlanetInput`, `createPlanet`, `updatePlanet`, `deletePlanet`, `planets` and `planetSuggestions` become `CelestialBody`, `CelestialBodyInput`, `createCelestialBody`, `updateCelestialBody`, `deleteCelestialBody`, `celestialBodies` and `celestialBodySuggestions`, and the `planets` field on ingredients, variants and their inputs `celestialBodies`. The TypeScript follows: `kind: 'celestialBody'`, `CuratedField`, `FLAT`, `IN_USE`, `PLANETS`, the seed shards' `planets:` entries, the MSW mocks, codegen and the SDL snapshot. The Drizzle schema stops declaring the old columns, which join `PENDING_DROPS`, and the migration fills the new ones again for any row the live deploy wrote after MB.252. The hours are an estimate, calibrated against MB.136 (3h) plus the rename's mechanical churn.
+
+_Acceptance criteria:_
+
+- The SDL names no planet, and the snapshot and `src/gql` move with it
+- Every reader and writer uses `celestial_bodies` and the new columns, and nothing declares or reads the old ones, which still exist
+- A value written to an old column after MB.252's migration is in the new column after this one's
+- Suggestions still count a value in use once however many lists hold it, scoped to the compendium and this coven, asserted with the precondition that another coven holds the value
+- No identifier, test name or comment under `src/` or `tests/` says planet, bar the migration history and `PENDING_DROPS`
+
+**MB.254 — Drop the planet columns and view** · 1h
+
+_Story:_ As a developer, I want the retired planet columns and view gone, so that nothing can write a value the app no longer reads.
+
+The contract half of rule 10, a task of its own ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). Once a release carrying MB.253 has reached production, the migration drops `ingredients.planets`, `ingredient_variants.planets`, `reference_links.planet_id` and the `planets` view, with its `.ack.md` sidecar, and `PENDING_DROPS` empties. Production is the gate rather than staging because the release before MB.253 still reads the old columns. The divergence notes MB.251 added to DESIGN.md and CLAUDE.md go in the same PR.
+
+_Acceptance criteria:_
+
+- The three columns and the view are gone, and the new columns hold every value they held
+- The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
+- DESIGN.md and CLAUDE.md no longer record a planet divergence
+- Lands only after a release carrying MB.253 has reached production
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
