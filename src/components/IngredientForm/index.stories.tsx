@@ -171,7 +171,7 @@ const DEITIES = [
 // tooltip tells (MB.164, MB.222). A row's forms are its variants.
 const INGREDIENTS = [
   {
-    id: 'testwort-c',
+    id: '00000000-0000-4000-8000-000000000201',
     name: 'Testwort',
     canonicalName: 'Fixtura testalis',
     description: 'A fixture herb, for the workshop.',
@@ -183,7 +183,7 @@ const INGREDIENTS = [
     ],
   },
   {
-    id: 'testwort-w',
+    id: '00000000-0000-4000-8000-000000000202',
     name: 'Testwort',
     canonicalName: 'Fixtura testalis',
     description: 'A fixture herb, for the workshop.',
@@ -191,7 +191,7 @@ const INGREDIENTS = [
     variants: [{ id: '00000000-0000-4000-8000-000000000403', form: 'Tincture', formChoice: null }],
   },
   {
-    id: 'fixturewort',
+    id: '00000000-0000-4000-8000-000000000203',
     name: 'Fixturewort',
     canonicalName: 'Fixtura vulgaris',
     description: null,
@@ -201,7 +201,7 @@ const INGREDIENTS = [
     ],
   },
   {
-    id: 'mockleaf',
+    id: '00000000-0000-4000-8000-000000000204',
     name: 'Mockleaf',
     canonicalName: null,
     description: null,
@@ -265,7 +265,7 @@ const summaryOf = (id: string, isGlobal: boolean, fields: CitationFields) => ({
 });
 
 const SOURCES = [
-  source('source-herbal', true, {
+  source('00000000-0000-4000-8000-000000000701', true, {
     kind: 'book',
     authors: 'Fixture, Ada',
     title: 'The Testwort Herbal',
@@ -274,7 +274,7 @@ const SOURCES = [
     publisher: 'Fixture Press',
     published: '1901',
   }),
-  source('source-notes', false, {
+  source('00000000-0000-4000-8000-000000000702', false, {
     kind: 'article',
     authors: 'Placeholder, Bram, and Cara Mockley',
     title: 'Notes on Mockleaf: A Survey of Fixture Gardens',
@@ -284,7 +284,7 @@ const SOURCES = [
     published: '1950',
     pages: '12–19',
   }),
-  source('source-wiki', true, {
+  source('00000000-0000-4000-8000-000000000703', true, {
     kind: 'web_page',
     title: 'Testwort',
     container: 'Fixture Wiki',
