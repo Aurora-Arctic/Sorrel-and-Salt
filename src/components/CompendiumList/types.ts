@@ -61,8 +61,5 @@ export interface CompendiumPlace {
   before?: string;
 }
 
-/** Which modal the address opens: the empty one, or an entry's by slug. */
-export type CompendiumDialog = 'new' | { edit: string };
-
 /** What the filter form starts from: the page's filter, and the forms it offers. */
 export type CompendiumListFilterProps = Pick<CompendiumListProps, 'filter' | 'forms'>;

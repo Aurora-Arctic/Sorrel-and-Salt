@@ -1,8 +1,9 @@
 import type { Route } from 'next';
-import { listHref } from '../../lib/list-href';
+import { dialogParams, listHref } from '../../lib/list-href';
+import type { ListDialog } from '../../lib/types';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 import { KINDS } from './kinds';
-import type { GroupedValuesDialog, GroupedValuesPlace } from './types';
+import type { GroupedValuesPlace } from './types';
 
 // The address of a curated vocabulary's admin page under a filter, at a
 // page, with a modal open over it or not: the list's links, the pager, the
@@ -14,7 +15,7 @@ import type { GroupedValuesDialog, GroupedValuesPlace } from './types';
 export function groupedValuesHref(
   kind: GroupedValueKind,
   { query, group, after, before }: GroupedValuesPlace,
-  dialog?: GroupedValuesDialog,
+  dialog?: ListDialog,
 ): Route {
   const { path, group: groupSpec } = KINDS[kind];
   return listHref(path, {
@@ -23,7 +24,6 @@ export function groupedValuesHref(
     ...(groupSpec ? { [groupSpec.param]: group } : {}),
     after,
     before,
-    new: dialog === 'new',
-    edit: dialog === 'new' ? undefined : dialog?.edit,
+    ...dialogParams(dialog),
   });
 }

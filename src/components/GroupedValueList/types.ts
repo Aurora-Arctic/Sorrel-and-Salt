@@ -75,9 +75,6 @@ export interface GroupedValuesPlace {
   before?: string;
 }
 
-/** Which modal the address opens: the empty one, or a value's by slug. */
-export type GroupedValuesDialog = 'new' | { edit: string };
-
 /** What the filter form starts from: the kind, the page's filter, and the groups it offers. */
 export interface GroupedValueListFilterProps {
   kind: GroupedValueKind;

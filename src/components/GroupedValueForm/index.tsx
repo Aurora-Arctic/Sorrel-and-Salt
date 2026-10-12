@@ -9,6 +9,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
+import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
 import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
 import { SelectField, TextField } from '../Field';
 import Notice from '../Notice';
@@ -224,7 +225,7 @@ const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, des
  */
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
-    noun: 'Category',
+    noun: LIST_KINDS.category.label,
     describe: 'What this category covers',
     descriptionHint:
       "What the category covers. It is shown with the category wherever an ingredient's categories are picked.",
@@ -245,7 +246,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     remove: DeleteCategoryDocument,
   }),
   form: defineKind({
-    noun: 'Form',
+    noun: LIST_KINDS.form.label,
     // A curated form explains itself: "the bark of the root, not the stem" (DESIGN.md §5).
     describe: 'What this form is, and what it is not',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
@@ -266,7 +267,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     remove: DeleteIngredientFormValueDocument,
   }),
   deity: defineKind({
-    noun: 'Deity',
+    noun: LIST_KINDS.deity.label,
     describe: 'Who they are and what they are honoured for',
     descriptionHint:
       "Who they are, with the other spellings a reader types, such as Hekate. The ingredient form's suggestions match it as well as the name.",
@@ -293,7 +294,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   // address, so a rename moves none; it still carries onto the entries
   // listing the value (MB.162).
   planet: defineKind({
-    noun: 'Planet',
+    noun: LIST_KINDS.planet.label,
     describe: 'What this body is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
@@ -306,7 +307,7 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   }),
   zodiacSign: defineKind({
     // The long form on every button (the MB.115 sign-off): Save Zodiac Sign.
-    noun: 'Zodiac Sign',
+    noun: LIST_KINDS.zodiacSign.label,
     describe: 'What this sign is, and the other names it goes by',
     descriptionHint: SEARCHED_DESCRIPTION_HINT,
     deleteNote: USED_DELETE_NOTE,
