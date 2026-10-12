@@ -14,7 +14,11 @@ to.
 
 - **Modern Sass modules only** — `@use '../../scss/variables' as *;`, never
   `@import`. Shared partials in `src/scss/` are `@use`'d directly by whichever
-  component needs them, never routed through a parent (§9).
+  component needs them, never routed through a parent (§9). Each component's
+  `index.scss` is a plain global stylesheet, never a `.module.scss`: the
+  primitives are addressed by class from JSX and inside component rules, and
+  BEM names do the scoping
+  ([`design-decisions/m6.14-global-sass-not-css-modules.md`](design-decisions/m6.14-global-sass-not-css-modules.md)).
 - **Reach tokens through functions, not bare variables** — `badge-token('safety', 'fill')`,
   `space(4)`, `$text-on-color`. A typo is then a compile
   error rather than a silently wrong colour.
