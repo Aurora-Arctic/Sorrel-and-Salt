@@ -23,7 +23,7 @@ import './index.scss';
 const CHANGE_LABELS = { grant: 'Granted', revoke: 'Revoked' } as const;
 
 const ROUTE_LABELS: Record<LedgerRoute, string> = {
-  bootstrap: 'Primary admin bootstrap',
+  bootstrap: 'Seeded',
   admin: 'By an admin',
   invitation: 'Invitation accepted',
   manual: 'Manual fix',

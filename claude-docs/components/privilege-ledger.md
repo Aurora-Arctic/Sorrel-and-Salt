@@ -59,7 +59,9 @@ id.
   Privilege reads Admin or Coven Creation, from `PRIVILEGE_LABELS`
   (`privileges.ts`), the one option list the privilege filter, this column
   and the page's reading of `?privilege` share. Change reads Granted or Revoked, and How
-  Primary admin bootstrap, By an admin, Invitation accepted or Manual fix.
+  Seeded, By an admin, Invitation accepted or Manual fix. Seeded covers every
+  user the seed inserts holding a privilege, the fixture users as well as the
+  bootstrap admin, so it names the seed rather than the primary admin.
 - **User and Changed By link to the person's `/admin/users` row**, the list
   filtered to their address. A person the user list leaves out, the seed's
   bootstrap user, is named without a link, and an id no live account holds
