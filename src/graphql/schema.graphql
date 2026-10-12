@@ -351,6 +351,11 @@ input IngredientVariantInput {
   zodiacSigns: [String!]!
 }
 
+enum InvitableRole {
+  member
+  viewer
+}
+
 """
 An invitation, pending or not. Its link is mailed to the address and never answered.
 """
@@ -364,6 +369,14 @@ type Invitation {
   """Why the person is invited, where the inviter gave a reason."""
   note: String
   revokedAt: DateTime
+
+  """The role acceptance grants in the coven; none for an admin invitation."""
+  role: InvitableRole
+
+  """
+  The coven invited into, where the caller is a member of it; none for an admin invitation.
+  """
+  workspace: Workspace
 }
 
 """
@@ -395,6 +408,11 @@ type Mutation {
   createDeityTradition(input: DeityTraditionInput!): DeityTradition!
   createIngredientFormGroup(input: IngredientFormGroupInput!): IngredientFormGroup!
   createIngredientFormValue(input: IngredientFormValueInput!): IngredientFormValue!
+
+  """
+  Invites an address into a coven as a viewer or member, mailing it the link; answers the invitation, never the link. Owners only.
+  """
+  createInvitation(email: String!, role: InvitableRole!, workspaceId: ID!): Invitation!
 
   """A null workspaceId writes the compendium's, under the admin proof."""
   createReference(input: ReferenceInput!, workspaceId: ID): Reference!

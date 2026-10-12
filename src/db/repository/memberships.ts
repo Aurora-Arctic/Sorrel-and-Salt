@@ -1,5 +1,6 @@
-import { and, eq, inArray, isNotNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
+import { users } from '../../modules/identity/schema/users';
 // Type-only, so it is erased and no runtime cycle forms with the service that
 // imports `findWorkspaceRole` below. The brand has to live beside the check
 // that mints it (CLAUDE.md rule 1), which is why the direction is this way up.
@@ -85,6 +86,32 @@ export function findMemberPage(
       pageBounds(keyset),
     ),
     keyset,
+  );
+}
+
+/**
+ * The live member of the proof's coven who holds this address, or `undefined`:
+ * what the invite check reads to refuse inviting someone already inside (M7.3).
+ * The address is matched lower-cased against a live user row, in SQL, so the
+ * coven's roll is never fetched to be searched.
+ */
+export function findMemberByEmail(
+  membership: Membership,
+  email: string,
+): Promise<typeof workspaceMembers.$inferSelect | undefined> {
+  return selectOne(
+    workspaceMembers,
+    and(
+      notSoftDeleted(workspaceMembers),
+      scopedTo(membership, workspaceMembers),
+      existsIn(
+        users,
+        and(
+          eq(users.id, workspaceMembers.userId),
+          eq(sql`lower(${users.email})`, email.toLowerCase()),
+        ),
+      ),
+    ),
   );
 }
 

@@ -37,3 +37,12 @@ export interface AdminInvitationProps extends BaseEmailProps {
   /** The `/invite/[token]` link, carrying the token no response or row holds. */
   url: string;
 }
+
+export interface CovenInvitationProps extends BaseEmailProps {
+  /** The `/invite/[token]` link, carrying the token no response or row holds. */
+  url: string;
+  /** The coven the reader is invited into. */
+  covenName: string;
+  /** What the reader will be able to do there once they accept. */
+  role: 'viewer' | 'member';
+}

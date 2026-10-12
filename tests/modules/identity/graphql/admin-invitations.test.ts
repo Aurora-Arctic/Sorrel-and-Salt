@@ -40,6 +40,9 @@ function recordingSender() {
     siteInvitation: async (to, token) => {
       sent.push({ to, token });
     },
+    workspaceInvitation: async () => {
+      throw new Error('an admin invitation mails no coven');
+    },
   };
   return { sent, sender };
 }
@@ -110,6 +113,8 @@ describe('Mutation.createAdminInvitation', () => {
       'id',
       'note',
       'revokedAt',
+      'role',
+      'workspace',
     ]);
   });
 

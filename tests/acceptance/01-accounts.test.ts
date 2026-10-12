@@ -8,6 +8,7 @@ import type { Session } from '@/lib/session';
 import type { Message } from '@/lib/types';
 import {
   assertMembership,
+  createInvitation,
   createWorkspace,
   listMembers,
   type WorkspaceRole,
@@ -64,19 +65,6 @@ useTestDatabase((client) => {
 });
 
 type Sender = ReturnType<typeof invitationSender>;
-
-/**
- * M7.3's write: owner only; viewer or member; mails the link to `email` and
- * answers the row without its token. The argument order is the scaffold's guess.
- */
-interface InvitationWrites {
-  createInvitation(
-    session: Session,
-    workspaceId: string,
-    input: { email: string; role: WorkspaceRole },
-    sender: Sender,
-  ): Promise<{ id: string }>;
-}
 
 /** M7.6's write: owner only, a pending invitation. The name is the scaffold's guess. */
 interface InvitationRevokes {
@@ -265,11 +253,6 @@ describe('Story 3: Create a workspace once I hold creation rights, for my coven 
 
 describe('Story 4: Invite someone to my workspace by email with a chosen role (viewer or member), so that only the verified holder of that address can accept.', () => {
   it('mails the link to that address alone, keeps only its hash, refuses owner and non-owners, and admits only the matching verified account', async () => {
-    const { createInvitation } = surface<InvitationWrites>(
-      await coven(),
-      ['createInvitation'],
-      'M7.3',
-    );
     const stranger = await insertInvitee(STRANGER);
     const invited = await insertInvitee(INVITED);
 
@@ -321,11 +304,6 @@ describe("Story 5: Revoke a pending invitation before it's accepted.", () => {
       ['revokeInvitation'],
       'M7.6',
     );
-    const { createInvitation } = surface<InvitationWrites>(
-      await coven(),
-      ['createInvitation'],
-      'M7.3',
-    );
     const invited = await insertInvitee(INVITED);
     const accepted = await insertInvitee(STRANGER);
     const pending = await createInvitation(
@@ -365,11 +343,6 @@ describe("Story 5: Revoke a pending invitation before it's accepted.", () => {
 
 describe('Story 6: Accept an invitation and land in the workspace.', () => {
   it('adds the membership at the invited role, stamps the invitation, and turns on workspace creation', async () => {
-    const { createInvitation } = surface<InvitationWrites>(
-      await coven(),
-      ['createInvitation'],
-      'M7.3',
-    );
     const invited = await insertInvitee(INVITED);
     const [before] = await sql`
       select can_create_workspace from users where id = ${invited.userId}
@@ -396,11 +369,6 @@ describe('Story 7: Be rejected if a link is expired, revoked, or already used.',
   it('refuses each with its own reason, and none names the workspace', async () => {
     // Through M7.3 and M7.6 rather than raw rows: MB.70's dead-link checks
     // already hold for a seeded row, so a raw setup would pass today.
-    const { createInvitation } = surface<InvitationWrites>(
-      await coven(),
-      ['createInvitation'],
-      'M7.3',
-    );
     const { revokeInvitation } = surface<InvitationRevokes>(
       await coven(),
       ['revokeInvitation'],
@@ -640,11 +608,6 @@ describe('Story 12: As a viewer, read everything in a workspace but change nothi
       await coven(),
       ['deleteWorkspace'],
       'M6.14',
-    );
-    const { createInvitation } = surface<InvitationWrites>(
-      await coven(),
-      ['createInvitation'],
-      'M7.3',
     );
     await expect(removeMember(viewer, covenId, B.id)).rejects.toThrow(Forbidden);
     await expect(updateMemberRole(viewer, covenId, B.id, 'viewer')).rejects.toThrow(Forbidden);
