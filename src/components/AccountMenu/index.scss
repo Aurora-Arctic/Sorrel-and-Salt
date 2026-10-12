@@ -80,7 +80,7 @@ $account-menu-avatar: 2rem;
   }
 
   [aria-expanded='true'] > & {
-    transform: perspective(3rem) rotateY(180deg);
+    transform: rotateX(180deg);
   }
 }
 

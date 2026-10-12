@@ -121,13 +121,13 @@
 .section-nav__chevron {
   @include disclosure-chevron('.section-nav__more-button[aria-expanded="true"]');
 
-  // Flipped about its vertical axis, not turned in the plane: the mixin's `rotate` is cleared and
+  // Flipped with rotateX, not turned in the plane: the mixin's `rotate` is cleared and
   // `transform` flips it, easing rather than snapping.
   transition: transform $motion-short $theme-transition-easing;
 
   #{'.section-nav__more-button[aria-expanded="true"]'} & {
     rotate: none;
-    transform: perspective(3rem) rotateY(180deg);
+    transform: rotateX(180deg);
   }
 
   @include reduced-motion {
