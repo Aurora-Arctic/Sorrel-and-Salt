@@ -266,6 +266,14 @@ folder's index and the lint refuses an import cycle.
   save, as one never chosen does (`SelectField`, [`field.md`](field.md)).
 - **A pick or a value set from outside writes the choice's label** into the
   box, unless the text already names it.
+- **A choice may carry a `qualifier`** (M6.16, a member's role): its row reads
+  the label with the qualifier in brackets, "Fixture B (Member)", as the
+  ingredient form's Form rows read "Wax (Substance)", and once chosen the box
+  shows the label with the qualifier after it, muted, its detail in the
+  tooltip ("A qualifier", below). The text a pick writes is still the label,
+  and typing matches the label alone, never the qualifier. The qualifier
+  shows while the box reads the chosen label as written; typed over in
+  another case, the box is being typed in and shows none.
 - **With `clearable`, a clear** sits on the control's right before the
   chevron, as a list's does, offered while the box holds text or a choice and
   hidden in its place while it does not, so the box keeps one width: it
@@ -279,17 +287,17 @@ folder's index and the lint refuses an import cycle.
   [`filter-form.md`](filter-form.md)). `onChange` still hears every change,
   typing included, for the caller's own state.
 
-| Prop                 | Meaning                                                                                                                   |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                         |
-| `label`              | What the box is called, and its list's name, "Tradition choices".                                                         |
-| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                                |
-| `onSettle`           | Optional: the value on a pick, the clear (`''`) or leaving the box (the choice the text names, or `''`); never on typing. |
-| `choices`            | `{ value, label }` in order; typing narrows them.                                                                         |
-| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                                  |
-| `required`           | `aria-required`, as the field marks it.                                                                                   |
-| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both.    |
-| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                        |
+| Prop                 | Meaning                                                                                                                      |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                            |
+| `label`              | What the box is called, and its list's name, "Tradition choices".                                                            |
+| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                                   |
+| `onSettle`           | Optional: the value on a pick, the clear (`''`) or leaving the box (the choice the text names, or `''`); never on typing.    |
+| `choices`            | `{ value, label, qualifier? }` in order; typing narrows them by label. A qualifier reads in the row and, chosen, in the box. |
+| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                                     |
+| `required`           | `aria-required`, as the field marks it.                                                                                      |
+| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both.       |
+| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                           |
 
 ## The multi-select box
 
@@ -530,10 +538,16 @@ call.
   tooltip, and the reference reads the detail although its tooltip is
   `aria-hidden` while closed.
 - **The detail is a tooltip**, `role="tooltip"`, in the entry tooltip's
-  bubble and fade, above the control from its right edge, on the qualifier's
-  side, and no wider than 60% of the control. Above, because the list opens
-  beneath the box; from the right, so the field's label at the left stays in
-  view while it shows (MB.115, the owner's call at the design review). It
+  bubble and fade, above the control with its left edge on the qualifier's,
+  and no wider than what is left of the control from there. Where the
+  qualifier starts is measured as the tip opens, since CSS alone cannot place
+  a box by one element and bound it by another. On a phone
+  (`$shell-phone-width`) it is centred over the control instead, as wide as
+  the control at most, and wraps: from the qualifier there was too little
+  room left to read (the owner's call). Above, because the list opens
+  beneath the box; on the qualifier's left edge, so the detail reads as the
+  qualifier's own (the owner's call at M6.16's review, 2026-10-12, which
+  replaced MB.115's right edge). It
   opens while the qualifier is hovered and while the box has focus: the
   qualifier is not a tab stop of its own, and the box is what the keyboard
   reaches. Escape closes it (WCAG 1.4.13), as do a blur and the pointer
@@ -630,7 +644,7 @@ traditions, the value shown beneath it; and
 box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
 375px; and `QualifierInForm`, the ingredient form's Form box under a Name
 field, "Wax" picked under Substance with a detail long enough to wrap, whose
-tooltip opens on focus or hover above the box from its right edge, with
+tooltip opens on focus or hover above the box from the qualifier's left edge, with
 `QualifierInFormPhone` at 375px. The suggestions are fixed, so typing
 filters nothing.
 
@@ -700,7 +714,9 @@ on every choice; and the value `''` while the text names no choice, the
 choice once it names one in any case, and its label written in as the box
 is left; and its clear, out of the accessibility tree and the tab order while
 the box is empty but still drawn, offered while it holds something, emptying
-it and keeping the focus; and `onSettle`, heard on a pick, the clear and
+it and keeping the focus; a qualified choice read with its qualifier in the
+row, describing the chosen box by it, and matched by its label alone; and
+`onSettle`, heard on a pick, the clear and
 leaving the box, with the choice the text names or `''`, and never while
 typed. The control's width, which jsdom does not lay out,
 was measured in the workshop at MB.115: one width empty, mid-typing, chosen

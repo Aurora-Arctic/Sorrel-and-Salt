@@ -240,6 +240,13 @@ export interface ComboboxChoice {
   value: string;
   label: string;
   /**
+   * What the choice is besides its label, a member's role (M6.16): its row
+   * reads "Fixture B (Member)", and once chosen the box shows the label with
+   * the qualifier after it, muted, its detail in a tooltip. Typing matches the
+   * label alone, never the qualifier.
+   */
+  qualifier?: ComboboxQualifier;
+  /**
    * The choice makes something new rather than picking one (the switcher's
    * Create Coven): its row is set off from the rest by a rule and led by a
    * plus. The caller decides what choosing it does.
