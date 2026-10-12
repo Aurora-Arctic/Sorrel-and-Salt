@@ -1313,7 +1313,7 @@ _Acceptance criteria:_
 - A custom, one-off ingredient (MB.40) renders its own name and form in layer order with the rest, marked as one-off, and links to no ingredient page
 - The page is the only view M10.22 styles for print
 
-**MB.7 — Application nav shell** · 2h
+**MB.7 — Application nav shell** · 16h
 
 _Story:_ As a user, I want one persistent navigation frame so that every page is reachable from every other page.
 
