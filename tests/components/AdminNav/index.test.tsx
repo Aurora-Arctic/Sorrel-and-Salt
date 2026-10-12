@@ -57,7 +57,7 @@ describe('AdminNav', () => {
   it('lists the last two pages behind More, which names the page you are on when it is one of them', () => {
     pathname.mockReturnValue('/admin/invitations');
     render(<AdminNav />);
-    const more = within(nav()).getByRole('button', { name: 'People' });
+    const more = within(nav()).getByRole('button', { name: 'More: People' });
 
     fireEvent.click(more);
 
