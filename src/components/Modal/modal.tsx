@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { CloseGuardContext, closeGuardSlot } from './close-guard';
 import { ConfirmLayerContext } from './confirm-layer';
+import { firstShownField } from './fields';
 import { HeaderSlotContext } from './header-slot';
 import type { ConfirmLayer, ModalPhase, ModalProps } from './types';
 import './index.scss';
@@ -53,12 +54,21 @@ const Modal = ({
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const eyebrowId = useId();
+  const body = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const dialog = ref.current;
     if (!dialog) return;
     // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
-    if (!dialog.open) dialog.showModal();
+    if (!dialog.open) {
+      dialog.showModal();
+      // showModal() puts the focus on the first thing that takes it, which is
+      // Close, in the header; the person opened the dialog to fill it in, so
+      // it goes to the body's first field, or with none to the dialog itself,
+      // whose name is read and from which Tab reaches Close. Here, after
+      // showModal(), since React's autoFocus runs before it and is overridden.
+      (firstShownField(body.current ?? dialog) ?? dialog).focus();
+    }
     return () => dialog.close();
   }, []);
 
@@ -107,7 +117,6 @@ const Modal = ({
   // a way out tried meanwhile still reaches the guard. The attribute is set
   // on the elements rather than through a render, so it is on before the
   // question takes the focus and off before the focus goes back.
-  const body = useRef<HTMLDivElement>(null);
   const [layerHost, setLayerHost] = useState<HTMLElement | null>(null);
   const holds = useRef(0);
   const slotRef = useRef<HTMLElement | null>(null);
@@ -163,6 +172,8 @@ const Modal = ({
       className={['modal modal-dialog', size && `modal-dialog--${size}`, closing && 'is-closing']
         .filter(Boolean)
         .join(' ')}
+      // Focusable by script alone, for a dialog with no field to take the focus.
+      tabIndex={-1}
       // Named by the eyebrow and the heading together: "Edit Ingredient, Mugwort".
       aria-labelledby={eyebrow ? `${eyebrowId} ${titleId}` : titleId}
       onCancel={handleCancel}

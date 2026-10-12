@@ -63,6 +63,40 @@ describe('Modal', () => {
     ).toBeInTheDocument();
   });
 
+  // showModal() alone would put the focus on Close, the first thing it can
+  // take in the dialog; the person opened the dialog to fill it in.
+  it('puts the focus on its first field as it opens, past a hidden and a disabled one', () => {
+    render(
+      <Modal title="Add Category" onClose={vi.fn()}>
+        <input type="hidden" name="id" />
+        <select aria-label="Kind" disabled />
+        <div hidden>
+          <label>
+            Folded <input />
+          </label>
+        </div>
+        <label>
+          Name <input />
+        </label>
+        <label>
+          Description <textarea />
+        </label>
+      </Modal>,
+    );
+
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+  });
+
+  it('takes the focus itself as it opens when it holds no field', () => {
+    render(
+      <Modal title="Revoke Admin" onClose={vi.fn()}>
+        <button type="button">Revoke</button>
+      </Modal>,
+    );
+
+    expect(screen.getByRole('dialog', { name: 'Revoke Admin' })).toHaveFocus();
+  });
+
   it('asks its owner to close it from the Close button', () => {
     const onClose = renderModal();
 

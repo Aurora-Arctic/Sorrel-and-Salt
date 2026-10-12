@@ -3,6 +3,7 @@
 import { type ReactElement, useContext, useEffect, useId, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { ConfirmLayerContext } from './confirm-layer';
+import { FIRST_FIELD } from './fields';
 import type { ConfirmOverlayProps } from './types';
 import './index.scss';
 
@@ -14,10 +15,6 @@ import './index.scss';
 // own markup holds no layout of the form's, so a form renders it beside its
 // buttons and the modal places it (claude-docs/components/modal.md, "Asking
 // over the form"). Outside a modal it stands in the form's flow.
-
-/** A field to go back to when what had the focus has gone: the body's first. */
-const FIRST_FIELD =
-  'input:not([type="hidden"]):not(:disabled), textarea:not(:disabled), select:not(:disabled)';
 
 /** Whether the element can take the focus back: still in the page, and not held inert. */
 const canFocus = (element: Element | null): element is HTMLElement =>
