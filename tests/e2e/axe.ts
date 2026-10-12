@@ -37,3 +37,10 @@ export async function assertNoSidewaysScroll(page: Page) {
     `wider than the window: ${wide.join('; ') || 'nothing named'}`,
   ).toBeLessThanOrEqual(clientWidth);
 }
+
+// Every colour eases over the theme's 400ms; a scan straight after a theme
+// change would read a colour part-way along, so each running transition is
+// let finish first.
+export async function settleTransitions(page: Page) {
+  await page.evaluate(() => Promise.all(document.getAnimations().map((each) => each.finished)));
+}

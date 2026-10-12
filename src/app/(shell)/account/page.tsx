@@ -2,8 +2,8 @@ import type { Metadata } from 'next';
 import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/identity';
 import EmailForm from '../../../components/EmailForm';
 import NameForm from '../../../components/NameForm';
+import PageNav from '../../../components/PageNav';
 import SignInMethods from '../../../components/SignInMethods';
-import SignOutButton from '../../../components/SignOutButton';
 import { linkedAccounts, requireSession, sessionIsFresh } from '../../../lib/request-session';
 import { linkErrorMessage, postSignInLanding } from '../../../lib/sign-in';
 import { isRosterProvider } from '../../../lib/social-providers';
@@ -19,8 +19,9 @@ export const metadata: Metadata = {
 
 // The one account page (MB.88): the name the site shows, the address it
 // writes to, and the ways in, each a section on its own panel under its own
-// heading, reached from a nav beneath the page's heading (the owner's calls,
-// MB.88 and MB.116). The page owns all three heads, so each section is a
+// heading, reached from a nav of jump links: a column to the left of the sections on a
+// wide screen, a menu above them on a phone (the owner's calls, MB.88, MB.116
+// and MB.7). Sign Out is the shell's account menu's, not this page's. The page owns all three heads, so each section is a
 // region named by its heading. The ids are prefixed so no form's own id can
 // meet them. A link to add a provider lands back here, with `?error=` and
 // `?provider=` when it failed (claude-docs/auth/admin-bootstrap.md, "The
@@ -42,26 +43,16 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       : undefined;
 
   return (
-    <main className="page-frame page-frame--narrow">
-      {/* Sign Out beside the heading, as the admin pages put their primary
-          action (on the owner's call). */}
-      <div className="page-header">
-        <h1>Your Account</h1>
-        <SignOutButton />
-      </div>
-      <nav aria-label="On this page">
-        <ul className="link-row">
-          <li>
-            <a href="#account-name">Name</a>
-          </li>
-          <li>
-            <a href="#account-email">Email</a>
-          </li>
-          <li>
-            <a href="#account-sign-in-methods">Sign-In Methods</a>
-          </li>
-        </ul>
-      </nav>
+    <main className="page-frame page-frame--narrow account-page">
+      <h1>Your Account</h1>
+      <PageNav
+        label="On this page"
+        entries={[
+          { href: '#account-name', label: 'Name' },
+          { href: '#account-email', label: 'Email' },
+          { href: '#account-sign-in-methods', label: 'Sign-In Methods' },
+        ]}
+      />
       <section
         id="account-name"
         className="page-frame__section panel"

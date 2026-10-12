@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { makeQueryClient } from '@/lib/graphql-client';
 import type { Session } from '@/lib/session';
@@ -12,14 +12,26 @@ const requireSession = vi.fn<() => Promise<Session>>();
 vi.mock('@/lib/request-session', () => ({ requireSession }));
 const getMe = vi.fn();
 vi.mock('@/modules/identity', () => ({ getMe }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }));
+const viewerOf = vi.fn();
+vi.mock('@/lib/viewer', () => ({ viewerOf }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  usePathname: () => '/coven/new',
+}));
 
 const { default: NewCovenPage } = await import('@/app/(shell)/coven/new/page');
 
 const SESSION: Session = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'user' };
 
-async function renderPage(canCreateWorkspace: boolean) {
+async function renderPage(
+  canCreateWorkspace: boolean,
+  workspaces: { slug: string; name: string }[] = [],
+) {
   requireSession.mockResolvedValue(SESSION);
+  viewerOf.mockResolvedValue({
+    viewer: { name: 'Ada Fixture', isAdmin: false, canCreate: canCreateWorkspace, verified: true },
+    workspaces,
+  });
   getMe.mockResolvedValue({ name: 'Ada Fixture', canCreateWorkspace });
   render(
     <QueryClientProvider client={makeQueryClient()}>{await NewCovenPage()}</QueryClientProvider>,
@@ -29,6 +41,7 @@ async function renderPage(canCreateWorkspace: boolean) {
 beforeEach(() => {
   requireSession.mockReset();
   getMe.mockReset();
+  viewerOf.mockReset();
 });
 
 describe('the /coven/new page', () => {
@@ -38,6 +51,19 @@ describe('the /coven/new page', () => {
     expect(requireSession).toHaveBeenCalledOnce();
     expect(getMe).toHaveBeenCalledExactlyOnceWith(SESSION);
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+  });
+
+  it('shows the context row, with the switcher, to a user who already has a coven', async () => {
+    await renderPage(true, [{ slug: 'fixture-coven', name: 'Fixture Coven' }]);
+
+    const row = screen.getByRole('region', { name: 'Context' });
+    expect(within(row).getByRole('combobox')).toBeInTheDocument();
+  });
+
+  it('shows no context row to a user with no coven to switch to', async () => {
+    await renderPage(true, []);
+
+    expect(screen.queryByRole('region', { name: 'Context' })).toBeNull();
   });
 
   it('offers the form to a user holding creation rights', async () => {

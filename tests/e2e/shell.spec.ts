@@ -1,7 +1,7 @@
 import type { Page } from '@playwright/test';
 import postgres from 'postgres';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 
@@ -85,11 +85,12 @@ async function toggleTheme(page: Page): Promise<void> {
     await expect(toggle).not.toHaveAttribute('aria-pressed', before!);
     await page.keyboard.press('Escape');
     await expect(account).toHaveAttribute('aria-expanded', 'false');
-    return;
+  } else {
+    const before = await toggle.getAttribute('aria-pressed');
+    await toggle.click();
+    await expect(toggle).not.toHaveAttribute('aria-pressed', before!);
   }
-  const before = await toggle.getAttribute('aria-pressed');
-  await toggle.click();
-  await expect(toggle).not.toHaveAttribute('aria-pressed', before!);
+  await settleTransitions(page);
 }
 
 test('a member on the coven page sees the bar, the coven nav and the account panel', async ({
@@ -127,7 +128,20 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
     'href',
     '/account',
   );
-  await expect(banner.getByRole('button', { name: 'Sign Out', exact: true })).toBeVisible();
+  // Sign Out, refused: the refusal is routed rather than awaited from Better
+  // Auth, as tests/e2e/account.spec.ts once did beside the page's heading,
+  // since whether it refuses depends on the origin the browser reaches the
+  // server on. The panel stays open and says so beside the button.
+  await page.route('**/api/auth/sign-out', (route) =>
+    route.fulfill({ status: 403, json: { code: 'INVALID_ORIGIN', message: 'Invalid origin' } }),
+  );
+  const signOut = banner.getByRole('button', { name: 'Sign Out', exact: true });
+  await expect(signOut).toBeEnabled();
+  await signOut.click();
+  await expect(banner.getByRole('alert')).toBeVisible();
+  await expect(signOut).toBeEnabled();
+  await assertNoAccessibilityViolations(page);
+  await page.unroute('**/api/auth/sign-out');
 
   await page.keyboard.press('Escape');
   await expect(account).toHaveAttribute('aria-expanded', 'false');
@@ -323,4 +337,31 @@ for (const [name, who, path, nav] of PAGES) {
       if (viewport === PHONE) await assertNoSidewaysScroll(page);
     });
   }
+}
+
+// The row wider than the phone fits the window (MB.7's review): four labelled tabs
+// and More outran it from 642px up, so the tabs that do not fit sit behind More
+// (with no gap between tabs all six fit by 882px, and More goes).
+for (const width of [642, 768, 882]) {
+  test(`the admin row fits the window at ${width}px, without overflowing`, async ({ page }) => {
+    await signInAgainAs(page, users.admin.id);
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/admin');
+
+    const nav = page.getByRole('navigation', { name: 'Admin' });
+    await expect(nav).toBeVisible();
+    // Either More holds the tabs that do not fit, or all of them fit and are
+    // in view; never a tab cut off with neither.
+    const more = nav.getByRole('button', { name: /More|Astrology|People|Deities/ });
+    if ((await more.count()) > 0) {
+      await expect(more).toBeVisible();
+    } else {
+      for (const link of await nav.getByRole('link').all()) await expect(link).toBeVisible();
+    }
+    await expect(nav.getByRole('link').first()).toBeVisible();
+    const fits = await page.evaluate(
+      () => document.documentElement.scrollWidth <= window.innerWidth,
+    );
+    expect(fits).toBe(true);
+  });
 }

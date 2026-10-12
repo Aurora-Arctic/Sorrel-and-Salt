@@ -1,5 +1,5 @@
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
@@ -117,6 +117,7 @@ test('the page passes the scans in both themes, with and without the form', asyn
     await page.goto('/coven/new');
     for (const colorScheme of ['dark', 'light'] as const) {
       await page.emulateMedia({ colorScheme });
+      await settleTransitions(page);
       await assertNoAccessibilityViolations(page);
     }
     await assertNoSidewaysScroll(page);

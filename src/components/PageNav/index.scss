@@ -1,0 +1,55 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A vertical menu of jump links. The current entry carries a bar on the edge
+// facing away from the page on a phone (left), toward the page on a wide
+// screen (right, where the text is also right-aligned).
+// claude-docs/components/page-nav.md
+.page-nav {
+  // The phone's bar rule's accent, softened toward the card.
+  --page-nav-bar: #{color-mix(in srgb, $accent 60%, $surface-card)};
+
+  ul {
+    @include list-reset;
+  }
+
+  a {
+    display: flex;
+    align-items: center;
+    // Tighter than a control: a column of short entries, read at a glance.
+    padding: space(1) space(4);
+    border-radius: 0;
+    color: $text-muted;
+    text-align: start;
+    text-decoration: none;
+    box-shadow: inset $rule-heavy 0 0 0 transparent;
+    @include theme-transition(background-color, color);
+
+    &:hover {
+      background: $fill-quiet;
+      color: $text-primary;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &[aria-current='true'] {
+      font-weight: 500;
+      box-shadow: inset $rule-heavy 0 0 0 var(--page-nav-bar);
+    }
+  }
+
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    a {
+      justify-content: flex-end;
+      text-align: end;
+      --page-nav-bar: #{$accent};
+      box-shadow: inset (-$rule-heavy) 0 0 0 transparent;
+
+      &[aria-current='true'] {
+        box-shadow: inset (-$rule-heavy) 0 0 0 var(--page-nav-bar);
+      }
+    }
+  }
+}
