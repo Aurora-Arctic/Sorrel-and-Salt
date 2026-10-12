@@ -351,8 +351,8 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   their rules with them rather than the list's whole stylesheet.
 - Each provider mark is the `.provider-mark` primitive's circle, held in its
   `.user-list__hint` as a flex box so the circle sets the hint's height. The
-  confirmation is the `Modal`'s own layout, its Reason the shared field shell
-  ([`field.md`](field.md)).
+  confirmation is the `Modal`'s own layout, its Reason the shared
+  [`ReasonField`](field.md).
 
 ## Stories
 

@@ -1,5 +1,6 @@
 import type { Story } from '@ladle/react';
-import { useEffect } from 'react';
+import { GROUP_NAMES, asOptions } from '../../../.ladle/fixtures';
+import { usePressOnMount } from '../../../.ladle/press';
 import Modal from '../Modal';
 import GroupedValueForm from '.';
 
@@ -12,26 +13,9 @@ export default {
 };
 
 // Enough of each to narrow: every group field is typed into (MB.115).
-const CATEGORY_GROUPS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Healing' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Protection' },
-  { id: '2d7d2d4c-4f6a-4b59-9c30-1e9a3b6c4f0f', name: 'Mock Divination' },
-  { id: '3e6c3c3b-5a79-4a48-8d2f-0d8b2a5b3e1e', name: 'Stub Prosperity' },
-];
-
-const FORM_GROUPS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Mineral' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Substance' },
-  { id: '2d7d2d4c-4f6a-4b59-9c30-1e9a3b6c4f0f', name: 'Mock Preparation' },
-  { id: '3e6c3c3b-5a79-4a48-8d2f-0d8b2a5b3e1e', name: 'Stub Plant Part' },
-];
-
-const TRADITIONS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixtural' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Mockish' },
-  { id: '2d7d2d4c-4f6a-4b59-9c30-1e9a3b6c4f0f', name: 'Old Testic' },
-  { id: '3e6c3c3b-5a79-4a48-8d2f-0d8b2a5b3e1e', name: 'Stubbish' },
-];
+const CATEGORY_GROUPS = asOptions(GROUP_NAMES.category);
+const FORM_GROUPS = asOptions(GROUP_NAMES.form);
+const TRADITIONS = asOptions(GROUP_NAMES.tradition);
 
 const done = () => {};
 
@@ -130,11 +114,7 @@ export const EditingAZodiacSign: Story = () => (
 // Delete pressed once drawn, as a person would: the question over the form,
 // dimmed and held beneath it until Delete or Keep It answers (MB.115).
 export const AskingToDelete: Story = () => {
-  useEffect(() => {
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent === 'Delete Category')
-      ?.click();
-  }, []);
+  usePressOnMount('Delete Category');
   return <EditingACategory />;
 };
 

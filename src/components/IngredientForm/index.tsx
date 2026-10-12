@@ -8,9 +8,9 @@ import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
+import { placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { ConfirmOverlay, DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
+import { ConfirmQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import Notice from '../Notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
@@ -238,10 +238,6 @@ const IngredientForm = ({
   const [question, setQuestion] = useState<RedirectQuestion | null>(null);
   // The delete's own confirmation, and why a delete was refused.
   const [deleting, setDeleting] = useState(false);
-  // A question (Delete's, or a redirect's) is asked over the form, centred
-  // in view however far the form is scrolled, and takes the focus on its
-  // safe answer, Keep It (MB.115, the owner's call; ConfirmOverlay).
-  const keepIt = useRef<HTMLButtonElement>(null);
   const [refusal, setRefusal] = useState<string>();
   // Cancel, and every other way out of the modal, asks first while the form
   // has changes (MB.115, the owner's call), ahead of any other question; a
@@ -329,14 +325,8 @@ const IngredientForm = ({
   const confirmDelete = async (): Promise<void> => {
     if (!entry) return;
     setRefusal(undefined);
-    try {
-      await remove.mutateAsync(entry.id);
-      onDeleted?.();
-    } catch (error) {
-      // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
-      setDeleting(false);
-      setRefusal(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
-    }
+    await remove.mutateAsync(entry.id);
+    onDeleted?.();
   };
 
   return (
@@ -583,64 +573,44 @@ const IngredientForm = ({
                 </BusyButton>
               )}
             </FormActions>
-            {discard.asking ? (
-              <DiscardQuestion guard={discard} />
-            ) : question ? (
+            {/* A question is asked over the form, centred in view however far
+              the form is scrolled, the focus on Keep It (MB.115, the owner's
+              call): the unsaved changes' first, then MB.82's, then Delete's. */}
+            {question ? (
               // MB.82: the address this save takes is another entry's redirect.
               // Asked before anything else is pressed; Keep It leaves the entry
               // as typed, unsaved.
-              <ConfirmOverlay question={question.message} safe={keepIt}>
-                <div className="modal__actions">
-                  <BusyButton
-                    className="btn btn--solid"
-                    disabled={mutation.isPending}
-                    busy={mutation.isPending}
-                    busyLabel="Saving Ingredient"
-                    onClick={() => void endRedirect()}
-                  >
-                    End Redirect & Save
-                  </BusyButton>
-                  <button
-                    ref={keepIt}
-                    type="button"
-                    className="btn btn--quiet"
-                    onClick={() => setQuestion(null)}
-                  >
-                    Keep It
-                  </button>
-                </div>
-              </ConfirmOverlay>
-            ) : deleting ? (
-              <ConfirmOverlay
+              <ConfirmQuestion
+                key="redirect"
+                guard={discard}
+                question={question.message}
+                tone="solid"
+                confirmLabel="End Redirect & Save"
+                busyLabel="Saving Ingredient"
+                busy={mutation.isPending}
+                onConfirm={endRedirect}
+                onKeep={() => setQuestion(null)}
+              />
+            ) : (
+              <ConfirmQuestion
+                key="delete"
+                guard={discard}
+                asked={deleting}
                 question={
                   <>
                     Delete &quot;{entry?.values.name}&quot;? It leaves the compendium, but any spell
                     that uses it keeps it.
                   </>
                 }
-                safe={keepIt}
-              >
-                <div className="modal__actions">
-                  <BusyButton
-                    className="btn btn--destructive"
-                    disabled={remove.isPending}
-                    busy={remove.isPending}
-                    busyLabel="Deleting"
-                    onClick={() => void confirmDelete()}
-                  >
-                    Delete
-                  </BusyButton>
-                  <button
-                    ref={keepIt}
-                    type="button"
-                    className="btn btn--quiet"
-                    onClick={() => setDeleting(false)}
-                  >
-                    Keep It
-                  </button>
-                </div>
-              </ConfirmOverlay>
-            ) : null}
+                busy={remove.isPending}
+                onConfirm={confirmDelete}
+                onKeep={() => setDeleting(false)}
+                onRefused={(message) => {
+                  setDeleting(false);
+                  setRefusal(message);
+                }}
+              />
+            )}
           </form>
         </EntryHrefContext.Provider>
       </PanelChangesContext.Provider>

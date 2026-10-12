@@ -1,5 +1,6 @@
 import type { Story } from '@ladle/react';
-import { useEffect } from 'react';
+import { GROUP_NAMES, asOptions } from '../../../.ladle/fixtures';
+import { usePressOnMount } from '../../../.ladle/press';
 import Modal from '../Modal';
 import GroupForm from '.';
 
@@ -10,9 +11,9 @@ export default {
   title: 'Admin / Group Form',
 };
 
+// Two of the shared groups, and the one edited here.
 const GROUPS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Mineral' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Substance' },
+  ...asOptions(GROUP_NAMES.form.slice(0, 2)),
   { id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a', name: 'Testwort Wards' },
 ];
 
@@ -51,10 +52,7 @@ export const EditingAFormGroup: Story = () => (
   </Modal>
 );
 
-const TRADITIONS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixtural' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Mockish' },
-];
+const TRADITIONS = asOptions(GROUP_NAMES.tradition.slice(0, 2));
 
 export const AddingATradition: Story = () => (
   <Modal title="Add Tradition" onClose={done}>
@@ -85,11 +83,7 @@ export const EditingATradition: Story = () => (
 // its categories go, asked over the form, which is dimmed and held beneath it
 // (MB.115).
 export const AskingWhereToMove: Story = () => {
-  useEffect(() => {
-    [...document.querySelectorAll('button')]
-      .find((button) => button.textContent === 'Delete Group')
-      ?.click();
-  }, []);
+  usePressOnMount('Delete Group');
   return <EditingACategoryGroup />;
 };
 

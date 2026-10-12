@@ -57,14 +57,14 @@ The form has no stylesheet of its own: it is built from the shared pieces and th
 - **Name and Description are [`TextField`](field.md)s** in a `FormProvider`, each with its label row, required mark and a short placeholder, "Add a name" and the kind's `describe`, a one-line prompt such as "What the categories in this group share" ([`field.md`](field.md), "Contracts"). The description's textarea takes the primitive's height rather than three rows of its own.
 - **Each colour is a `FieldShell` around a [`ChipColorField`](chip-color-field.md).** The shell draws the label, its mark and its hint, the info tip saying which theme the colour is for, the hex form, its 4.5:1 floor and the partner it fills, and names the hex box, whose placeholder is "Add hex"; it is handed no error, since ChipColorField draws the refusal itself, between its ratio and its warning.
 - **The move picker is a `FieldShell` around the `ComboboxSelect`**, its error beneath it as any field's is.
-- **The buttons are `.form__actions`**, which wraps, with Delete Group pushed to the far end by `.form__aside`. They stay where they are while a question is asked: the question is a `ConfirmOverlay` card over the form, with its own `.modal__actions` row ([`modal.md`](modal.md), "Asking over the form"). Under 28rem of the form's own width, every row stacks, full width, the card's too.
+- **The buttons are `.form__actions`**, which wraps, with Delete Group pushed to the far end by `.form__aside`: the shared [`FormActions`](field.md) row. They stay where they are while a question is asked: the question is a `ConfirmOverlay` card over the form, with its own `.modal__actions` row ([`modal.md`](modal.md), "Asking over the form"); the confirming step's two, Delete and Move and Delete, are the shared `ConfirmQuestion` ([`modal.md`](modal.md), "`ConfirmQuestion`"). Under 28rem of the form's own width, every row stacks, full width, the card's too.
 
 The alert above the fields is a `Notice` ([`notice.md`](notice.md)). A
 failed request is read by the shared `readGraphqlIssues`
 (`src/lib/graphql-failure.ts`, MB.116), which gives every field error of a
 `VALIDATION` refusal at once, where `readGraphqlFailure` answers only the
 first field it finds. The form places each issue under its field and joins
-the rest into the alert. Anything that is not a `VALIDATION` refusal comes
+the rest into the alert, through the shared `placeServerIssues` beside it. Anything that is not a `VALIDATION` refusal comes
 back as one issue carrying the server's sentence, or `GENERIC_FAILURE` when
 there is none.
 

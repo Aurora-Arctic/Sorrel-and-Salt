@@ -143,3 +143,28 @@ export interface ConfirmOverlayProps {
   /** What follows the question: a field, a live region, the row of answers. */
   children: ReactNode;
 }
+
+/** A form's yes-or-no question over itself: Delete and Keep It, by default. */
+export interface ConfirmQuestionProps {
+  /** The question, "Delete "Fixture Healing"? …", which names the card. */
+  question: ReactNode;
+  /** Its own question is being asked; true when the form draws it only then. */
+  asked?: boolean;
+  /** The form's discard guard, whose question shows instead while it asks. */
+  guard?: DiscardGuard;
+  /** The answer that acts, in title case: "Delete" by default, "Move and Delete". */
+  confirmLabel?: string;
+  /** What it says while busy: "Deleting" by default. */
+  busyLabel?: string;
+  /** The acting answer's weight: destructive for a delete, solid for a save. */
+  tone?: 'destructive' | 'solid';
+  /** The safe answer, which the focus lands on: "Keep It" by default, "Back" for a step back. */
+  keepLabel?: string;
+  /** The action is in flight: the acting answer is busy and shut. */
+  busy: boolean;
+  /** The action. A rejection is a refusal, handed to `onRefused` where given. */
+  onConfirm: () => Promise<void>;
+  onKeep: () => void;
+  /** Told a refused action's sentence, for the form's alert; the form closes the question. */
+  onRefused?: (message: string) => void;
+}

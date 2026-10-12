@@ -24,6 +24,7 @@ import { citationText } from '../../lib/citation';
 import type { CitationFields } from '../../lib/types';
 import Modal from '../Modal';
 import IngredientForm from '.';
+import { press } from '../../../.ladle/press';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
@@ -1178,13 +1179,6 @@ export const CompendiumEntryInModal: Story = () => {
     </Modal>
   );
 };
-
-/** Presses the button of this name, as a person would. */
-function press(name: string): void {
-  [...document.querySelectorAll<HTMLButtonElement>('button')]
-    .find((button) => button.textContent === name || button.ariaLabel === name)
-    ?.click();
-}
 
 /** Scrolls the modal's body to this share of the way down, 0 the top and 1 the foot. */
 function scrollBody(share: number): void {

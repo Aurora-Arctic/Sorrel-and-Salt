@@ -3,14 +3,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useId, useRef, useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, placeServerIssues, readGraphqlIssues } from '../../lib/graphql-failure';
-import BusyButton from '../BusyButton';
+import { placeServerIssues } from '../../lib/graphql-failure';
 import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
-import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
+import { ConfirmQuestion, useDiscardGuard } from '../Modal';
 import { FormActions, SelectField, TextField } from '../Field';
 import Notice from '../Notice';
 import { PlanetInput, ZodiacSignInput } from '@/modules/vocabulary/validation/astrology-value';
@@ -337,8 +336,6 @@ const GroupedValueForm = ({
     formState: { errors, isSubmitting, isDirty },
   } = methods;
   const [confirming, setConfirming] = useState(false);
-  // The delete question's safe answer, which takes the focus as it is asked.
-  const keepIt = useRef<HTMLButtonElement>(null);
   // Cancel, and every other way out of the modal, asks first while the form
   // has changes (MB.115, the owner's call); a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
@@ -370,57 +367,13 @@ const GroupedValueForm = ({
   const confirmDelete = async (): Promise<void> => {
     if (!value) return;
     setAlert(undefined);
-    try {
-      await remove.mutateAsync(value.id);
-      onDone();
-    } catch (error) {
-      // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
-      setConfirming(false);
-      setAlert(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
-    }
+    await remove.mutateAsync(value.id);
+    onDone();
   };
 
   const choices = groups.map((each) => ({ value: each.id, label: each.name }));
   const rootError = errors.root?.message ?? alert;
   const noteId = `${id}-rename-note`;
-
-  // A question over the form, its buttons left beneath it (MB.115, the
-  // owner's call): the unsaved changes' first, as they are what a way out
-  // would lose, then the delete's.
-  const question = (): ReactElement | null => {
-    if (discard.asking) return <DiscardQuestion guard={discard} />;
-    if (!confirming) return null;
-    return (
-      <ConfirmOverlay
-        question={
-          <>
-            Delete &quot;{value?.name}&quot;? {deleteNote}
-          </>
-        }
-        safe={keepIt}
-      >
-        <div className="modal__actions">
-          <BusyButton
-            className="btn btn--destructive"
-            disabled={remove.isPending}
-            busy={remove.isPending}
-            busyLabel="Deleting"
-            onClick={() => void confirmDelete()}
-          >
-            Delete
-          </BusyButton>
-          <button
-            ref={keepIt}
-            type="button"
-            className="btn btn--quiet"
-            onClick={() => setConfirming(false)}
-          >
-            Keep It
-          </button>
-        </div>
-      </ConfirmOverlay>
-    );
-  };
 
   const actions = (): ReactElement => (
     <>
@@ -486,7 +439,24 @@ const GroupedValueForm = ({
           />
         )}
         {actions()}
-        {question()}
+        {/* A question over the form, its buttons left beneath it (MB.115,
+            the owner's call): the unsaved changes' first, then the delete's. */}
+        <ConfirmQuestion
+          guard={discard}
+          asked={confirming}
+          question={
+            <>
+              Delete &quot;{value?.name}&quot;? {deleteNote}
+            </>
+          }
+          busy={remove.isPending}
+          onConfirm={confirmDelete}
+          onKeep={() => setConfirming(false)}
+          onRefused={(refusal) => {
+            setConfirming(false);
+            setAlert(refusal);
+          }}
+        />
       </form>
     </FormProvider>
   );
