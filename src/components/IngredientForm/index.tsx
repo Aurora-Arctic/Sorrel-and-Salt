@@ -20,7 +20,7 @@ import { ReferencesField } from './references';
 import { CollapsibleSection } from './section';
 import { SubstituteForms } from './substitute-forms';
 import { EntryHrefContext } from './substitute-summary';
-import { SelectField, TextField } from '../Field';
+import { FormActions, SelectField, TextField } from '../Field';
 import { ListField, MultiSelectField } from './fields';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
 import {
@@ -555,25 +555,28 @@ const IngredientForm = ({
                 folds={variantFolds}
               />
             </div>
-            <div className="form__actions">
-              {/* Two saves, both held down from the press to the answer, the
-                duplicate check included: Save Ingredient, first and so the
-                default Enter presses, opens what it made; Save & Add Another
-                clears the form for the next. The one pressed says so,
-                "Saving Ingredient" with a spinner and `aria-busy`, the owner's
-                call during MB.131. Both are off until something is entered or
-                changed, the owner's rule for every form (M5.6). An edit has
-                the first alone, and Delete apart at the far end. */}
-              <BusyButton
-                type="submit"
-                value="open"
-                className="btn btn--solid"
-                disabled={!isDirty || isSubmitting}
-                busy={busy('open')}
-                busyLabel="Saving Ingredient"
-              >
-                Save Ingredient
-              </BusyButton>
+            {/* Two saves, both held down from the press to the answer, the
+              duplicate check included: Save Ingredient, first and so the
+              default Enter presses, opens what it made; Save & Add Another
+              clears the form for the next. The one pressed says so, the
+              owner's call during MB.131. An edit has the first alone, and
+              Delete apart at the far end. */}
+            <FormActions
+              noun="Ingredient"
+              dirty={isDirty}
+              submitting={isSubmitting}
+              busy={busy('open')}
+              saveValue="open"
+              onCancel={onCancel && (() => discard.request(onCancel))}
+              onDelete={
+                editing
+                  ? () => {
+                      setRefusal(undefined);
+                      setDeleting(true);
+                    }
+                  : undefined
+              }
+            >
               {!editing && (
                 <BusyButton
                   type="submit"
@@ -585,28 +588,7 @@ const IngredientForm = ({
                   Save & Add Another
                 </BusyButton>
               )}
-              {onCancel && (
-                <button
-                  type="button"
-                  className="btn btn--quiet"
-                  onClick={() => discard.request(onCancel)}
-                >
-                  Cancel
-                </button>
-              )}
-              {editing && (
-                <button
-                  type="button"
-                  className="btn btn--destructive form__aside"
-                  onClick={() => {
-                    setRefusal(undefined);
-                    setDeleting(true);
-                  }}
-                >
-                  Delete Ingredient
-                </button>
-              )}
-            </div>
+            </FormActions>
             {discard.asking ? (
               <DiscardQuestion guard={discard} />
             ) : question ? (

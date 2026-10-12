@@ -128,3 +128,40 @@ export interface SwitchFieldProps {
   /** Shut: dashed, faded, its name dimmed. */
   disabled?: boolean;
 }
+
+/** A form's row of actions: Save, any further saves, Cancel and Delete. */
+export interface FormActionsProps {
+  /** What is saved, in title case: "Save Group", "Saving Group", "Delete Group". */
+  noun: string;
+  /** The form holds something to save; Save is off until it does. */
+  dirty: boolean;
+  /** A save is in flight; Save is off meanwhile. */
+  submitting: boolean;
+  /** Save shows itself busy; `submitting` unless the form has several saves and this one was not pressed. */
+  busy?: boolean;
+  /** Save's `value`, which tells a form with several saves which was pressed. */
+  saveValue?: string;
+  /** Save's description, a note above the row about what saving will do. */
+  saveDescribedBy?: string;
+  /** Save as a plain button calling this, for a panel inside another form, rather than the form's submit. */
+  onSave?: () => void;
+  /** Cancel, drawn when given: the form's way out, through its discard guard. */
+  onCancel?: () => void;
+  /** Cancel waits while a save is in flight, so a write is never left half-done. */
+  holdCancel?: boolean;
+  /** Delete, drawn when given: asks the form's question. */
+  onDelete?: () => void;
+  /** Further saves, between Save and Cancel. */
+  children?: ReactNode;
+}
+
+/** An admin change's optional Reason, held by the caller in plain state. */
+export interface ReasonFieldProps {
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  /** Where the reason is kept, behind the info tip; by default, with the change in the ledger. */
+  hint?: string;
+  /** The wrapper's class, which holds the field's room above and below. */
+  className?: string;
+}

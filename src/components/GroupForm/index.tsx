@@ -14,7 +14,7 @@ import type { GroupColorColumn } from '../../lib/types';
 import BusyButton from '../BusyButton';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
-import { FieldShell, TextField, fieldDescription } from '../Field';
+import { FieldShell, FormActions, TextField, fieldDescription } from '../Field';
 import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
@@ -442,39 +442,6 @@ const GroupForm = ({
     return null;
   };
 
-  const actions = (): ReactElement => (
-    // `.form__actions` rather than `.modal__actions`: it wraps, so a third
-    // button never squeezes the row.
-    <div className="form__actions">
-      {/* Offered only when there is something to save — the owner's rule
-            for every form. */}
-      <BusyButton
-        type="submit"
-        className="btn btn--solid"
-        busy={isSubmitting}
-        busyLabel={`Saving ${title}`}
-        disabled={!isDirty || isSubmitting}
-      >
-        {`Save ${title}`}
-      </BusyButton>
-      <button type="button" className="btn btn--quiet" onClick={() => discard.request(onDone)}>
-        Cancel
-      </button>
-      {group && (
-        <button
-          type="button"
-          className="btn btn--destructive form__aside"
-          onClick={() => {
-            setAlert(undefined);
-            setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
-          }}
-        >
-          Delete {title}
-        </button>
-      )}
-    </div>
-  );
-
   return (
     <FormProvider {...methods}>
       <form className="form" onSubmit={handleSubmit((input) => send(input))} noValidate>
@@ -545,7 +512,19 @@ const GroupForm = ({
               </FieldShell>
             );
           })}
-        {actions()}
+        <FormActions
+          noun={title}
+          dirty={isDirty}
+          submitting={isSubmitting}
+          onCancel={() => discard.request(onDone)}
+          onDelete={
+            group &&
+            (() => {
+              setAlert(undefined);
+              setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
+            })
+          }
+        />
         {question()}
       </form>
     </FormProvider>

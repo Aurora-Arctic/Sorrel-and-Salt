@@ -6,7 +6,7 @@ import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
 import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { FieldShell, ReasonField, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { InviteFieldsProps, InviteFormProps } from './types';
@@ -27,7 +27,11 @@ const CreateAdminInvitationDocument = graphql(`
   }
 `);
 
-/** What the Reason field is for, behind an info tip beside its label (MB.115, on the owner's call). */
+/**
+ * Where the Reason is kept, behind its info tip (MB.115, on the owner's
+ * call): with the invitation first, where a confirmed change's is kept with
+ * the change.
+ */
 const NOTE_HINT =
   'Kept with the invitation, and in the record of who changed what once it is accepted.';
 
@@ -38,7 +42,7 @@ const NOTE_HINT =
  */
 const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   const emailId = useId();
-  const noteId = useId();
+
   const [email, setEmail] = useState('');
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
@@ -47,7 +51,6 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
     id: emailId,
     error: failure.field?.message,
   });
-  const { aria: noteAria, ...noteField } = fieldDescription({ id: noteId, hint: NOTE_HINT });
 
   // Anything typed is a change: Cancel, and every other way out, asks first
   // (MB.115, the owner's call); a sent invitation does not.
@@ -93,23 +96,13 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
           onChange={(event) => setEmail(event.target.value)}
         />
       </FieldShell>
-      {/* The wrapper holds the field's room above and below, as the
-              confirmation's Reason has; the shell takes no class. */}
-      <div className="admin-invitations__note">
-        <FieldShell label="Reason" hint={NOTE_HINT} {...noteField}>
-          <input
-            id={noteField.controlId}
-            className="input"
-            type="text"
-            autoComplete="off"
-            placeholder="Add a reason"
-            {...noteAria}
-            value={note}
-            disabled={sending}
-            onChange={(event) => setNote(event.target.value)}
-          />
-        </FieldShell>
-      </div>
+      <ReasonField
+        className="admin-invitations__note"
+        hint={NOTE_HINT}
+        value={note}
+        onChange={setNote}
+        disabled={sending}
+      />
       <div className="modal__actions">
         <BusyButton
           className="btn btn--solid"

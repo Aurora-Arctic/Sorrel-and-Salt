@@ -6,12 +6,12 @@ import { type KeyboardEvent, type ReactElement, useEffect, useId, useMemo, useRe
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
+
 import Notice from '../Notice';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
-import { SelectField, TextField } from '../Field';
+import { FormActions, SelectField, TextField } from '../Field';
 import type { ReferenceQuery } from '../../gql/graphql';
 import type {
   ReferenceFieldName,
@@ -510,25 +510,14 @@ function PanelForm({
             waits, so a source being written is never left half-added. Save
             is off until something is entered or changed, and Cancel is quiet,
             the owner's rules for every form (M5.6). */}
-        <div className="form__actions">
-          <BusyButton
-            className="btn btn--solid"
-            onClick={submit}
-            disabled={!isDirty || isSubmitting}
-            busy={isSubmitting}
-            busyLabel={`Saving ${noun}`}
-          >
-            {`Save ${noun}`}
-          </BusyButton>
-          <button
-            type="button"
-            className="btn btn--quiet"
-            onClick={onCancel}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-        </div>
+        <FormActions
+          noun={noun}
+          dirty={isDirty}
+          submitting={isSubmitting}
+          onSave={submit}
+          onCancel={onCancel}
+          holdCancel
+        />
       </fieldset>
     </FormProvider>
   );
