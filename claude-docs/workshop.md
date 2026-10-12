@@ -140,6 +140,21 @@ without a page routed to it.
   unless a story wraps itself in `WorkshopPathname` with another address, so
   AdminNav's stories show the current-page marker on People, and a tabbed
   page's story can open any tab (MB.115).
+- **`admin-frame.tsx`** — the shared story wrapper for the admin area:
+  `AdminFrame` is the `.admin-layout` div alone, and `AdminTabbedFrame` is a
+  tabbed admin page as its route draws it (heading and tabs from
+  `ADMIN_PAGES`, an `action`, optionally the nav). Nine stories drew this by
+  hand before MB.115. It is the layout's markup only; the app's own layout
+  reads the session.
+- **`fixtures.ts`** — invented rows the admin stories share, so a form's story
+  and its list's story offer the same data: `GROUP_NAMES` (four names per kind
+  of group), fixed ids with `asOptions()` and `asSlugs()` to shape them for a
+  picker or a filter, and two pending `INVITATIONS`.
+- **`press.ts`** — `press(name)` and `usePressOnMount(name)`, for a story that
+  opens on a state a button press reaches, such as a Delete question over its
+  form.
+- **`types.ts`** — the types the workshop's helpers share, kept apart from
+  their components as the repo keeps types: `AdminTabbedFrameProps` today.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).
