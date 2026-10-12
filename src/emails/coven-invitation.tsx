@@ -17,6 +17,7 @@ const LIFETIME = 'seven days';
 
 export function CovenInvitation({
   url,
+  inviterName,
   covenName,
   role,
   origin = new URL(url).origin,
@@ -29,7 +30,7 @@ export function CovenInvitation({
       origin={origin}
     >
       <Paragraph>
-        {`You have been invited to join ${covenName} on Sorrel & Salt as a ${role}.`}
+        {`${inviterName} has invited you to join ${covenName} on Sorrel & Salt as a ${role}.`}
       </Paragraph>
       <Paragraph>
         {`To accept, ${actionVerb(part)} within ${LIFETIME}, then sign in with an account that uses this email address.`}

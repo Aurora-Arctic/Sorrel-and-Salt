@@ -29,6 +29,7 @@ function providerList(providers: readonly ProviderId[]): string {
 
 export function VerifyEmail({
   url,
+  name,
   purpose = 'sign-up',
   providers,
   origin = new URL(url).origin,
@@ -37,6 +38,7 @@ export function VerifyEmail({
   const signedUpWith = providerList(providers);
   return (
     <EmailLayout preview={PREVIEW[purpose]} heading="Confirm Your Email Address" origin={origin}>
+      {name && <Paragraph>{`Dear ${name},`}</Paragraph>}
       <Paragraph>
         {purpose === 'change'
           ? 'Someone asked to use this email address for their Sorrel & Salt account'

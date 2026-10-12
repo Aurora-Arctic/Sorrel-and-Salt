@@ -374,7 +374,9 @@ filter, page)` is one page of the pending list, newest first, and
   request by the GraphQL context as the email page's is, because the link's
   origin is Better Auth's to resolve against its allowed hosts: a forged
   `Host` cannot have a live token mailed on a link to another site. The mail
-  is `src/emails/admin-invitation.tsx` ([`email.md`](../email.md)). A failed
+  is `src/emails/admin-invitation.tsx` ([`email.md`](../email.md)); the
+  service hands the sender the inviting admin's name, read from their `users`
+  row, for the mail to open with. A failed
   send is logged by the transport and never thrown, so the invitation stays
   pending, to be withdrawn and sent again.
 - **What is refused at creation.** An address the email page would refuse,

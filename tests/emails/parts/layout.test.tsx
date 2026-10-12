@@ -28,6 +28,7 @@ const MAILS: {
       verifyEmailMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/api/auth/verify-email?token=a.b.c&callbackURL=%2Fcoven`,
+        name: 'Fixture Reader',
         providers: ['google'],
       }),
   },
@@ -40,6 +41,7 @@ const MAILS: {
         to: 'someone@layout.test',
         url: `${ORIGIN}/api/auth/verify-email?token=d.e.f&callbackURL=%2Faccount`,
         purpose: 'change',
+        name: 'Fixture Reader',
         providers: [],
       }),
   },
@@ -51,6 +53,7 @@ const MAILS: {
       adminInvitationMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/invite/fixture-admin-token`,
+        inviterName: 'Fixture Owner',
       }),
   },
   {
@@ -63,6 +66,7 @@ const MAILS: {
         url: `${ORIGIN}/invite/fixture-coven-token`,
         covenName: 'Fixture Coven',
         role: 'member',
+        inviterName: 'Fixture Owner',
       }),
   },
 ];

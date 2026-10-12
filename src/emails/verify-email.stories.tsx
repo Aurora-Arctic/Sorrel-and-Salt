@@ -17,6 +17,7 @@ const preview = (providers: readonly ProviderId[]) => () =>
   verifyEmailMessage({
     to: 'someone@example.com',
     url: URL,
+    name: 'Fixture Reader',
     providers,
     origin: WORKSHOP_ORIGIN,
   });
@@ -29,6 +30,7 @@ const change = () =>
     to: 'someone@example.com',
     url: URL,
     purpose: 'change',
+    name: 'Fixture Reader',
     providers: ['discord'],
     origin: WORKSHOP_ORIGIN,
   });

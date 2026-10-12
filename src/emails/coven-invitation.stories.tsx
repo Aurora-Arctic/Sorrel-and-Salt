@@ -18,6 +18,7 @@ const message = () =>
     url: URL,
     covenName: 'Fixture Coven',
     role: 'member',
+    inviterName: 'Fixture Owner',
     origin: WORKSHOP_ORIGIN,
   });
 
