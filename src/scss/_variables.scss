@@ -305,6 +305,10 @@ $type-sizes: (
   'caption': 0.8125rem,
   // The uppercase, letter-spaced .eyebrow.
   'overline': 0.75rem,
+  // The label under an icon in the phone's bottom bar (MB.7), where five
+  // sit across a 375px screen: the one role below overline, since Lexend's
+  // "Compendium" is wider than a fifth of that at 0.75rem.
+  'tab': 0.6875rem,
 );
 
 @function type-size($role) {

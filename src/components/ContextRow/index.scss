@@ -74,7 +74,8 @@ $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
     margin-right: 0;
     padding-right: 0;
 
-    &::after {
+    // The same selector as above, or the wider rule outranks this one.
+    &:not(:last-child)::after {
       content: none;
     }
   }

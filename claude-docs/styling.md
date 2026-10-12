@@ -436,10 +436,12 @@ and padding. It is a minimum, so a list's box still grows with its rows of
 entries. 44.5 rather than 44 is what a button measured at its own padding,
 and both clear WCAG 2.5.5's 44px.
 
-Below body copy, type takes one of four sizes by role from `type-size()`:
+Below body copy, type takes one of five sizes by role from `type-size()`:
 `small` (0.875rem) for what a person acts on — labels, buttons, notices,
-field errors; `caption` (0.8125rem) for hints, metadata, chips and badges; and
-`overline` (0.75rem) for the `.eyebrow`. The headings' scale is
+field errors; `caption` (0.8125rem) for hints, metadata, chips and badges;
+`overline` (0.75rem) for the `.eyebrow`; and `tab` (0.6875rem) for the one
+place five labels sit across a phone, under the icons of the section nav's
+bottom bar (MB.7). The headings' scale is
 `typography-base`'s, above.
 
 ### The top inset

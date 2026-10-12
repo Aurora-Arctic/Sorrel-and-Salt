@@ -100,7 +100,7 @@ the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
   `position: fixed` along the foot of the window: `layer('shell')`, the card
   ground, a hairline top edge, `$bottom-bar-height` (64px) tall plus the
   device's bottom safe-area inset, which it also pads, so a home indicator does
-  not cover the labels. Items take equal widths, icon above a 12px label; the
+  not cover the labels. Items take equal widths, icon above a label at `type-size('tab')`, 11px, the one role below overline, since five labels share a 375px screen and "Compendium" is wider than a fifth of it at 12px; the
   current one by weight, the accent icon and a short accent rule above the icon
   (it hangs from the bar's top edge). The brief gave the height as
   `$bottom-bar-height` with the inset as padding; here the inset is added to
