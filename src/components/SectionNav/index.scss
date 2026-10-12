@@ -122,7 +122,7 @@
   @include disclosure-chevron('.section-nav__more-button[aria-expanded="true"]', $flip: true);
 
   // The flip eases rather than snaps.
-  transition: transform $motion-short $theme-transition-easing;
+  transition: transform $theme-transition-duration $theme-transition-easing;
 
   @include reduced-motion {
     transition: none;

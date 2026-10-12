@@ -109,7 +109,7 @@ the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
 - **Motion.** The tab fills ease with the theme's transition; More's sheet
   fades in and out over the theme's duration (it stays displayed, and
   `hidden` takes it out of sight with `visibility`, held until the fade has
-  run, as a tip's bubble is) and its chevron flips with `rotateX(180deg)` over `$motion-short`;
+  run, as a tip's bubble is) and its chevron flips with `rotateX(180deg)` over the same duration;
   under `prefers-reduced-motion: reduce` there is none.
 - **Icons.** `icons.tsx` draws ten small stroke-only SVGs on a 24-unit square
   (1.6 stroke, round caps, `currentColor`, `aria-hidden`): overview (four
