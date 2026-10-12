@@ -3,7 +3,7 @@ import { GroupPage } from '../../group-page';
 import type { GroupRouteProps } from '../../types';
 
 export const metadata: Metadata = {
-  title: 'Form Groups — Admin — Sorrel & Salt',
+  title: 'Form Groups',
 };
 
 // The ingredient form groups (M5.6b), in the page shape every group vocabulary shares.

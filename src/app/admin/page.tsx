@@ -1,10 +1,5 @@
-import type { Metadata } from 'next';
 import { AdminContents } from '../../components/AdminNav';
 import { requireAdminSession } from '../../lib/request-session';
-
-export const metadata: Metadata = {
-  title: 'Admin — Sorrel & Salt',
-};
 
 export default async function AdminPage() {
   await requireAdminSession();

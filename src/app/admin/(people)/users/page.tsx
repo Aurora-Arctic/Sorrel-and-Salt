@@ -13,7 +13,7 @@ import { readPauseState } from '../pause-state';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
 export const metadata: Metadata = {
-  title: 'Users — Admin — Sorrel & Salt',
+  title: 'Users',
 };
 
 // The page and GraphQL's `users` end at the same service, paged by the same

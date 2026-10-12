@@ -3,7 +3,7 @@ import { ValuePage } from '../../value-page';
 import type { ValueRouteProps } from '../../types';
 
 export const metadata: Metadata = {
-  title: 'Zodiac Signs — Admin — Sorrel & Salt',
+  title: 'Zodiac Signs',
 };
 
 // The curated zodiac signs (MB.95), in the page shape every curated value shares.

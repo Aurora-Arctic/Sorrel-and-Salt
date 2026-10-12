@@ -33,7 +33,7 @@ import { entryValues } from './entry-values';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
 
 export const metadata: Metadata = {
-  title: 'Compendium — Admin — Sorrel & Salt',
+  title: 'Compendium',
 };
 
 // The page and GraphQL's `compendium` end at the same service, paged by the
