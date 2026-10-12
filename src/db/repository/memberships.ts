@@ -26,6 +26,10 @@ export async function findWorkspaceRole(
       notSoftDeleted(workspaceMembers),
       eq(workspaceMembers.userId, userId),
       eq(workspaceMembers.workspaceId, workspaceId),
+      // A deleted workspace admits no one, whatever their membership row says
+      // (M6.14): the rows stay live so a workspace restored by hand keeps its
+      // members, and this check is what refuses every role at once.
+      existsIn(workspaces, eq(workspaces.id, workspaceMembers.workspaceId)),
     ),
   );
   return row?.role;
@@ -81,6 +85,23 @@ export function findMemberPage(
     ),
     keyset,
   );
+}
+
+/**
+ * Soft-deletes the workspace the proof names (M6.14). Its own writer rather
+ * than `softDeleteInWorkspace`, which scopes on a `workspace_id` column that
+ * `workspaces` does not have: its own `id` is the workspace. The membership
+ * rows are left as they were, since `findWorkspaceRole` stops admitting
+ * anyone once the workspace is gone. The caller has checked `workspace: delete`.
+ * No row comes back for a workspace already deleted.
+ */
+export function workspaceWrites({
+  softDelete,
+}: WriterContext): Pick<AuditWriter, 'softDeleteWorkspace'> {
+  return {
+    softDeleteWorkspace: (membership) =>
+      softDelete(workspaces, eq(workspaces.id, membership.workspaceId)),
+  };
 }
 
 /**

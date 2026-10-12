@@ -1,4 +1,5 @@
-import { and, eq, gt, isNull, lte, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
@@ -50,6 +51,12 @@ function pendingInvitation(...which: (SQL | undefined)[]) {
     isNull(invitations.revokedAt),
     gt(invitations.expiresAt, sql`now()`),
   );
+}
+
+// A workspace invitation names a workspace that is still live (M6.14); a
+// site-tier one has none to check.
+function inLiveWorkspaceOrSite() {
+  return or(onSiteTier(), existsIn(workspaces, eq(workspaces.id, invitations.workspaceId)));
 }
 
 // The session's user holds the invited address, verified, on a live row.
@@ -193,6 +200,7 @@ export function invitationWrites({
         pendingInvitation(
           eq(invitations.tokenHash, hashToken(token)),
           heldVerifiedBySession(session),
+          inLiveWorkspaceOrSite(),
         ),
       ),
     revokeInvitation: (proof: Membership | SiteAdmin, id: string) =>

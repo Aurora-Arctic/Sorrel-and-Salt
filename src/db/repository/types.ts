@@ -2,7 +2,7 @@ import type { ExtractTablesWithRelations, SQL } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import type { invitations } from '../../modules/coven/schema/invitations';
-import type { workspaceMembers } from '../../modules/coven/schema/workspaces';
+import type { workspaceMembers, workspaces } from '../../modules/coven/schema/workspaces';
 import type { adminRoleChangePauses } from '../../modules/identity/schema/admin-role-change-pauses';
 import type { userPrivilegeChanges } from '../../modules/identity/schema/user-privilege-changes';
 import type { auditColumns, users } from '../../modules/identity/schema/users';
@@ -249,6 +249,7 @@ export interface WriterContext {
   session: AuditSession;
   insert(table: PgTable, values: object): Promise<never>;
   update(table: PgTable, values: object, where: SQL | undefined): Promise<never>;
+  softDelete(table: PgTable, where: SQL | undefined): Promise<never>;
 }
 
 /** What `withAudit` hands its callback: every write, stamped from the session. */
@@ -434,6 +435,13 @@ export interface AuditWriter {
    * only because the lock must be taken in the transaction that writes.
    */
   lockLiveAdmins(admin: SiteAdmin): Promise<(typeof users.$inferSelect)[]>;
+  /**
+   * Soft-delete the proof's own workspace (M6.14), stamped from the session.
+   * The `workspaces` row is the proof's `workspaceId` itself, since it has no
+   * `workspace_id` column for `softDeleteInWorkspace` to scope on. Membership
+   * rows are untouched. An empty result means the workspace was already deleted.
+   */
+  softDeleteWorkspace(membership: Membership): Promise<(typeof workspaces.$inferSelect)[]>;
   /**
    * Seat a user in a workspace at a role, under no proof: the row a proof is
    * minted from, so a workspace's creator (M6.7) and an invitee accepting

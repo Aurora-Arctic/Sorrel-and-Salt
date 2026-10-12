@@ -29,6 +29,31 @@ describe('the Membership proof (M6.3)', () => {
       // above, so the finder is reached and the table is not empty.
       await expect(findWorkspaceRole(A.id, WORKSPACE_X_ID)).resolves.toBeUndefined();
     });
+
+    it('answers undefined for a live membership of a soft-deleted workspace (M6.14)', async () => {
+      const { slug } = makeWorkspace({ name: 'Fixture Coven Role Razed' });
+      const [workspace] = await withAudit(asUser(A), (write) =>
+        write.insert(workspaces, { name: 'Fixture Coven Role Razed', slug }),
+      );
+      await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${workspace.id}, ${A.id}, 'owner', ${A.id}, ${A.id})
+      `;
+      // Why the answer below is the workspace check's: before the delete the
+      // role is found, and after it the membership row is still live.
+      await expect(findWorkspaceRole(A.id, workspace.id)).resolves.toBe('owner');
+
+      await withAudit(asUser(A), (write) =>
+        write.softDelete(workspaces, eq(workspaces.id, workspace.id)),
+      );
+
+      const [member] = await sql`
+        select deleted_at from workspace_members
+        where workspace_id = ${workspace.id} and user_id = ${A.id}
+      `;
+      expect(member?.deleted_at).toBeNull();
+      await expect(findWorkspaceRole(A.id, workspace.id)).resolves.toBeUndefined();
+    });
   });
 
   describe('findMembershipsOfUsers, the second read that takes no proof', () => {
