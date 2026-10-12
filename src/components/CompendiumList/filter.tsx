@@ -1,72 +1,59 @@
 'use client';
 
-import { type ReactElement, useId, useMemo, useState, useSyncExternalStore } from 'react';
+import { type ReactElement, useId, useMemo, useState } from 'react';
+import { useHydrated } from '@/lib/hydrated';
 import { NOMENCLATURE_KINDS } from '@/modules/ingredients/schema/ingredient-enums';
 import { ComboboxTypeahead } from '../Combobox/typeahead';
-import { FieldShell, SwitchField, fieldDescription } from '../Field';
-import FilterForm from '../FilterForm';
+import { FieldShell, SearchField, SwitchField, fieldDescription } from '../Field';
+import FilterForm, { useApplyFilter } from '../FilterForm';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import { compendiumHref } from './href';
-import type { CompendiumListFilterProps } from './types';
+import type { CompendiumListFilterProps, CompendiumPlace } from './types';
 
-// The filter, on the shared FilterForm (MB.178, MB.115): Filter is offered
-// only when the form differs from the filter the page shows, and opens the
-// new filter from the first page as a soft navigation, busy until the
-// filtered list arrives. The form is typed into once hydrated, as the curated
-// lists' group is (the owner's call, MB.115), but the server draws it as a
-// native `<select>`; Classification is a native `<select>` and Without
-// References a switch, a native checkbox valued `1`. So before hydration the
-// form still submits natively, as `query=&form=&nomenclature=` plus
-// `withoutReferences=1` when on, which the page reads as the same
-// filter, and a hidden input carries the form after. The list keys this by
-// the filter shown, so a page showing another — Back, say — starts it again
-// from that one.
-
-// Nothing to subscribe to: the snapshot differs only between the server's
-// render, and the hydration that follows it, and every render after.
-const noSubscription = () => () => {};
+// The compendium's filter, on the shared FilterForm (MB.178, MB.115): a name
+// search, a form, a classification and No Refs, each applying as it changes
+// rather than on a Filter button pressed after them, the owner's call at
+// MB.115's review. Classification applies on its change and No Refs on its
+// press, each carrying the name typed but not yet searched; the form once a
+// choice settles, a pick, its clear or leaving the box, never while it is
+// typed; the name on the magnifier or Enter. Each field but the name and the
+// form's typing is uncontrolled, drawn from the filter shown, since the list
+// keys this by that filter and the new list draws it afresh. The form is
+// typed into once hydrated, as the curated lists' group is (the owner's call,
+// MB.115), but the server draws it as a native `<select>`, Classification is
+// a native `<select>` and No Refs a switch, a native checkbox valued `1`, so
+// before hydration a press on the magnifier submits natively, as
+// `query=&form=&nomenclature=` plus `withoutReferences=1` when on, which the
+// page reads as the same filter; a hidden input carries the form after.
 
 const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): ReactElement => {
-  const query = fieldDescription({ id: `${useId()}-query` });
   const formField = fieldDescription({ id: `${useId()}-form` });
   const kind = fieldDescription({ id: `${useId()}-nomenclature` });
   const [draftQuery, setDraftQuery] = useState(filter.query);
   const [draftForm, setDraftForm] = useState(filter.form);
-  const [draftKind, setDraftKind] = useState(filter.nomenclature);
-  const [draftUnsourced, setDraftUnsourced] = useState(filter.withoutReferences);
-  const hydrated = useSyncExternalStore(
-    noSubscription,
-    () => true,
-    () => false,
-  );
+  const hydrated = useHydrated();
+  const apply = useApplyFilter();
   // A form's name is its value too: the compendium filters a form by its text.
   const choices = useMemo(() => forms.map(({ name }) => ({ value: name, label: name })), [forms]);
+
+  /** The filter shown with one field changed, the name typed carried, from the first page. */
+  const hrefWith = (change: CompendiumPlace) =>
+    compendiumHref({ ...filter, query: draftQuery.trim(), ...change });
 
   return (
     <FilterForm
       label="Filter the Compendium"
       action="/admin/compendium"
-      searchHref={() =>
-        compendiumHref({
-          query: draftQuery.trim(),
-          form: draftForm,
-          nomenclature: draftKind,
-          withoutReferences: draftUnsourced,
-        })
-      }
+      searchHref={() => hrefWith({})}
       shown={[filter.query, filter.form, filter.nomenclature, filter.withoutReferences]}
     >
-      <FieldShell label="Name" {...query}>
-        <input
-          id={query.controlId}
-          className="input"
-          type="search"
-          name="query"
-          placeholder="Search names"
-          value={draftQuery}
-          onChange={(event) => setDraftQuery(event.target.value)}
-        />
-      </FieldShell>
+      <SearchField
+        label="Name"
+        name="query"
+        placeholder="Search names"
+        value={draftQuery}
+        onChange={setDraftQuery}
+      />
       <FieldShell label="Form" className="filter-row__typeahead" {...formField}>
         {hydrated ? (
           <>
@@ -78,6 +65,9 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
               labelId={formField.labelId}
               value={draftForm}
               onChange={setDraftForm}
+              onSettle={(form) => {
+                if (form !== filter.form) apply(hrefWith({ form }));
+              }}
               choices={choices}
               placeholder="All Forms"
               clearable
@@ -89,8 +79,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
             id={formField.controlId}
             className="select"
             name="form"
-            value={draftForm}
-            onChange={(event) => setDraftForm(event.target.value)}
+            defaultValue={filter.form}
           >
             <option value="">All Forms</option>
             {forms.map(({ name }) => (
@@ -106,9 +95,13 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
           id={kind.controlId}
           className="select"
           name="nomenclature"
-          value={draftKind}
+          defaultValue={filter.nomenclature}
           onChange={(event) =>
-            setDraftKind(NOMENCLATURE_KINDS.find((each) => each === event.target.value) ?? '')
+            apply(
+              hrefWith({
+                nomenclature: NOMENCLATURE_KINDS.find((each) => each === event.target.value) ?? '',
+              }),
+            )
           }
         >
           <option value="">Any</option>
@@ -123,8 +116,8 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
         label="No Refs"
         name="withoutReferences"
         value="1"
-        checked={draftUnsourced}
-        onChange={setDraftUnsourced}
+        defaultChecked={filter.withoutReferences}
+        onChange={(withoutReferences) => apply(hrefWith({ withoutReferences }))}
       />
     </FilterForm>
   );

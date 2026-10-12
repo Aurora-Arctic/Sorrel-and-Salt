@@ -1,26 +1,27 @@
 'use client';
 
-import { type ReactElement, useId, useMemo, useState, useSyncExternalStore } from 'react';
+import { type ReactElement, useId, useMemo, useState } from 'react';
+import { useHydrated } from '@/lib/hydrated';
 import { ComboboxTypeahead } from '../Combobox/typeahead';
-import { FieldShell, fieldDescription } from '../Field';
-import FilterForm from '../FilterForm';
+import { FieldShell, SearchField, fieldDescription } from '../Field';
+import FilterForm, { useApplyFilter } from '../FilterForm';
 import { groupedValuesHref } from './href';
 import { KINDS } from './kinds';
 import type { GroupedValueListFilterProps } from './types';
 
-// The filter's fields (MB.178): a name, and for a grouped kind its group.
-// `FilterForm` holds the form, the Filter button and the soft navigation; this
-// holds what the fields say and whether they differ from the filter the page
-// shows. The group is typed into once hydrated, the owner's call (MB.115),
-// but the server draws it as a native `<select>`, so before hydration the
-// form still submits natively, as `query=&group=`, which the page reads as
-// no filter; a hidden input carries the same parameter after. The list keys
-// this by the filter shown, so a page showing another — Back, say — starts it
-// again from that one.
-
-// Nothing to subscribe to: the snapshot differs only between the server's
-// render, and the hydration that follows it, and every render after.
-const noSubscription = () => () => {};
+// A curated vocabulary's filter (MB.178, MB.115): a name search, and for a
+// grouped kind its group, each applying as it changes rather than on a
+// Filter button pressed after them, the owner's call at MB.115's review.
+// The group applies once a choice settles, a pick, its clear or leaving the
+// box, never while it is typed, carrying the name typed but not yet searched;
+// the name on the magnifier or Enter. `FilterForm` holds the form, Clear and
+// the soft navigation; this holds what the fields say and what each applies.
+// The group is typed into once hydrated, the owner's call (MB.115), but the
+// server draws it as a native `<select>`, so before hydration a press on the
+// magnifier submits natively, as `query=&group=`, which the page reads as
+// the same filter; a hidden input carries the same parameter after. The list
+// keys this by the filter shown, so a page showing another, Back say, draws
+// it afresh from that one.
 
 const GroupedValueListFilter = ({
   kind,
@@ -28,38 +29,34 @@ const GroupedValueListFilter = ({
   groups,
 }: GroupedValueListFilterProps): ReactElement => {
   const { path, title, group } = KINDS[kind];
-  const query = fieldDescription({ id: `${useId()}-query` });
   const groupField = fieldDescription({ id: `${useId()}-group` });
   const [draftQuery, setDraftQuery] = useState(filter.query);
   const [draftGroup, setDraftGroup] = useState(filter.group);
-  const hydrated = useSyncExternalStore(
-    noSubscription,
-    () => true,
-    () => false,
-  );
+  const hydrated = useHydrated();
+  const apply = useApplyFilter();
   const choices = useMemo(
     () => groups.map((each) => ({ value: each.slug, label: each.name })),
     [groups],
   );
 
+  /** The filter shown with the group given, the name typed carried, from the first page. */
+  const hrefWith = (chosen: string) =>
+    groupedValuesHref(kind, { query: draftQuery.trim(), group: chosen });
+
   return (
     <FilterForm
       label={`Filter ${title}`}
       action={path}
-      searchHref={() => groupedValuesHref(kind, { query: draftQuery.trim(), group: draftGroup })}
+      searchHref={() => hrefWith(filter.group)}
       shown={[filter.query, filter.group]}
     >
-      <FieldShell label="Name" {...query}>
-        <input
-          id={query.controlId}
-          className="input"
-          type="search"
-          name="query"
-          placeholder="Search names"
-          value={draftQuery}
-          onChange={(event) => setDraftQuery(event.target.value)}
-        />
-      </FieldShell>
+      <SearchField
+        label="Name"
+        name="query"
+        placeholder="Search names"
+        value={draftQuery}
+        onChange={setDraftQuery}
+      />
       {group && (
         // One width for the select and the type-ahead, so hydration moves nothing.
         <FieldShell label={group.label} className="filter-row__typeahead" {...groupField}>
@@ -73,6 +70,9 @@ const GroupedValueListFilter = ({
                 labelId={groupField.labelId}
                 value={draftGroup}
                 onChange={setDraftGroup}
+                onSettle={(chosen) => {
+                  if (chosen !== filter.group) apply(hrefWith(chosen));
+                }}
                 choices={choices}
                 placeholder={`All ${group.plural}`}
                 clearable
@@ -84,8 +84,7 @@ const GroupedValueListFilter = ({
               id={groupField.controlId}
               className="select"
               name={group.param}
-              value={draftGroup}
-              onChange={(event) => setDraftGroup(event.target.value)}
+              defaultValue={filter.group}
             >
               <option value="">All {group.plural}</option>
               {groups.map((each) => (
