@@ -45,8 +45,9 @@ different groups, so the page offers each name once, whatever its case.
   category list's is: named "Filter the Compendium" inside a `<search>`
   landmark, a search box labelled "Name" (`query`) with its own submit, a
   magnifier named Search (`SearchField`, [`field.md`](field.md)), a type-ahead labelled
-  "Form" (`form`), a native `<select>` labelled "Classification"
-  (`nomenclature`), a switch labelled "Without
+  "Form" (`form`), a dropdown labelled "Classification"
+  (`nomenclature`), a native `<select>` from the server and the select-only
+  box once hydrated, as every closed set in the row is, a switch labelled "Without
   References", title case as the owner asked (`withoutReferences`, valued `1`). There is no Filter
   button: each field applies as it changes (below). The
   switch is `SwitchField`, a slide toggle with its label above it as the

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { InvalidCursor } from '@/lib/errors';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
+import { sent } from '../../../../support/filter-form';
 
 // The `/admin/privilege-changes` page (MB.200): the guard, then the ledger
 // read, its count and the users it names, the search parameters turned into
@@ -140,7 +141,7 @@ describe('the /admin/privilege-changes page', () => {
     expect(listPrivilegeChanges.mock.calls[0]?.[1]).toEqual({ query: 'ada', privilege: 'admin' });
     expect(countPrivilegeChanges.mock.calls[0]?.[1]).toEqual({ query: 'ada', privilege: 'admin' });
     expect(screen.getByLabelText('Name or Email')).toHaveValue('ada');
-    expect(screen.getByLabelText('Privilege')).toHaveValue('admin');
+    expect(filterSends('privilege')).toBe('admin');
   });
 
   it('reads a blank query as none', async () => {
@@ -214,3 +215,10 @@ describe('the /admin/privilege-changes page', () => {
     expect(screen.getByRole('navigation', { name: 'Pages' })).toHaveTextContent('Page 2 of 3');
   });
 });
+
+/** What the filter form sends for `name`: once hydrated, a select-only box's hidden input. */
+function filterSends(name: string): string | null {
+  return new URLSearchParams(
+    sent(screen.getByRole('form', { name: 'Filter Privilege Changes' })),
+  ).get(name);
+}

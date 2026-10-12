@@ -30,7 +30,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 
 - **The filter is a GET form to `/admin/users`** (`USERS_PATH`, `href.ts`), named "Filter Users" inside
   a `<search>` landmark: a search box labelled "Name or Email" (`query`), a
-  native Role select (`role`: All Roles, then `ROLE_LABELS`, Admin or User;
+  Role dropdown, a native select from the server and the select-only box once
+  hydrated (`role`: All Roles, then `ROLE_LABELS`, Admin or User;
   a `FilterSelectField`, [`field.md`](field.md)), a "Needs Approval"
   switch (`awaiting`), each label in title case on the owner's call, and no
   Filter button (MB.115). The switch is `SwitchField`, a slide toggle with its label
@@ -43,8 +44,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   since the form carries no cursor. It is `filter.tsx`, a client file: the
   search text, held in state, inside the shared `FilterForm`
   ([`filter-form.md`](filter-form.md)). The search applies from its
-  magnifier or Enter; the role select and the switch apply the moment they
-  change, each carrying the search text and starting from the first page.
+  magnifier or Enter; the Role dropdown and the switch apply the moment
+  they change, each carrying the search text and starting from the first page.
   Its Clear link, offered only while the page shows a query, a role or
   Needs Approval, opens `/admin/users` with none. How every filter navigates
   and loads is [`filter-form.md`](filter-form.md#contracts).

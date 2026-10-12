@@ -21,7 +21,8 @@ It has five ways in:
 - **The search box**, `SearchField`, a list filter's text box with its own
   submit, a magnifier named Search, at its end (MB.115).
 - **The filter select**, `FilterSelectField`, a list filter's closed set: a
-  native select, or a type-ahead once hydrated (MB.115).
+  native select from the server, and Combobox's select-only box or
+  type-ahead once hydrated (MB.115).
 
 `IngredientForm`'s three fields of its own, `SuggestField`,
 `MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
@@ -56,7 +57,7 @@ the same shell until its design review (MB.120).
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
 | `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
 | `SearchField`       | A list filter's search box, its submit a magnifier at the box's end                                           |
-| `FilterSelectField` | A list filter's closed set: a native select, or with `typeahead` a type-ahead once hydrated                   |
+| `FilterSelectField` | A list filter's closed set: a native select from the server, a select-only box or type-ahead once hydrated    |
 
 ### `FormActions`
 
@@ -92,22 +93,25 @@ takes the caller's class, which holds the field's room above and below.
 A list filter's closed set, written once for the five selects the admin
 filters drew by hand (MB.115): the user list's Role, the ledger's
 Privilege, the compendium's Classification and Form, and the curated
-lists' group. A native `<select>` whose first choice, `all` ("All Roles"),
-is blank, so a native submit sends `role=` and the page reads no filter;
-the rest are `options`. It is uncontrolled from `defaultValue`, the value
-the page shows, and calls `onChange` on its change, since the list keys
-its filter by the filter shown and draws it again from the new one
-([`filter-form.md`](filter-form.md)). With `typeahead`, for a set long
-enough to want a search, the browser draws Combobox's type-ahead box once
-hydrated ([`combobox.md`](combobox.md), "The type-ahead box"), `all` its
-placeholder and its clear the way back to blank, and `onChange` runs once
-a choice other than the one shown settles; the server, and the render that
-hydrates, draw the native select, told apart by `useHydrated()`
-(`src/lib/hydrated.ts`), so a press on the search's magnifier before the
-script loads still sends it. A hidden input carries the same parameter
-after. Both stand in `filter-row__typeahead`, one width, so the swap moves
-nothing. Not `SelectField`: a filter has no form state, and its select
-must submit natively.
+lists' group. The server, and the render that hydrates, draw a native
+`<select>` whose first choice, `all` ("All Roles"), is blank, so a press on
+the search's magnifier before the script loads sends `role=` and the page
+reads no filter; the rest are `options`. Once hydrated, told apart by
+`useHydrated()` (`src/lib/hydrated.ts`), the browser draws one of
+Combobox's boxes instead, so every closed set in the row has one dropdown
+look (the owner's call at MB.115's review): the select-only box
+([`combobox.md`](combobox.md), "The select-only box"), its first choice
+`all` again, or with `typeahead`, for a set long enough to want a search,
+the type-ahead box ("The type-ahead box"), `all` its placeholder and its
+clear the way back to blank. A hidden input then carries the same
+parameter. Each starts from `defaultValue`, the value the page shows, and
+calls `onChange` once a choice other than it is picked, or for the
+type-ahead settles, since the list keys its filter by the filter shown and
+draws it again from the new one ([`filter-form.md`](filter-form.md)). A
+change to the server's select before hydration applies nothing until the
+magnifier is pressed. Every form of it stands in `filter-row__typeahead`,
+one width, so the swap moves nothing. Not `SelectField`: a filter has no
+form state, and its select must submit natively.
 
 ## Props
 
@@ -272,5 +276,6 @@ jsdom does not run it, so it was checked in the workshop's Chromium. The
 lists' tests cover `SearchField` too, found by its `searchbox` role and its
 `Search` button: the submit applying the search, and the button in the
 server's markup. They cover `FilterSelectField` by the address each
-change applies, its options and its name in the form, and the type-ahead
-drawn as a native select in the server's markup and swapped once hydrated.
+pick applies, its options and its name in the form, and the native select
+in the server's markup swapped once hydrated for the select-only box or
+the type-ahead.

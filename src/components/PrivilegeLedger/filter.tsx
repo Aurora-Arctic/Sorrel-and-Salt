@@ -10,11 +10,12 @@ import type { PrivilegeLedgerFilter, PrivilegeLedgerFilterProps } from './types'
 
 // The ledger's filter (MB.52, MB.115), in the shared `FilterForm`, as the
 // user list's is. Only the search text, part of the subject's name or email,
-// is held here, until the magnifier or Enter sends it. The privilege select
-// is uncontrolled and applies the moment it changes, softly and from the
-// first page, carrying the search text along, so there is no Filter button.
-// Before hydration the form submits natively, "All Privileges" as
-// `privilege=`, which the page reads as no privilege.
+// is held here, until the magnifier or Enter sends it. The Privilege
+// dropdown, a select-only box once hydrated (`FilterSelectField`), starts
+// from the filter shown and applies the moment a choice is picked, softly
+// and from the first page, carrying the search text along, so there is no
+// Filter button. Before hydration the server's native select submits, "All
+// Privileges" as `privilege=`, which the page reads as no privilege.
 const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactElement => {
   const query = filter.query ?? '';
   const [draftQuery, setDraftQuery] = useState(query);

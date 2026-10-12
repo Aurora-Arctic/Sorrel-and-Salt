@@ -9,6 +9,7 @@ import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { mockGraphQLQuery } from '../../../support/msw/graphql';
 import { openSections } from '../../../support/ingredient-sections';
+import { sent } from '../../../support/filter-form';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
 // under the address's filter, and the modal its address opens — `?new` empty,
@@ -209,7 +210,7 @@ describe('the /admin/compendium filter', () => {
     });
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test wort');
     expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('Fixture Oil');
-    expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('unknown');
+    expect(filterSends('nomenclature')).toBe('unknown');
     expect(screen.getByRole('switch', { name: 'No Refs' })).toBeChecked();
   });
 
@@ -227,7 +228,7 @@ describe('the /admin/compendium filter', () => {
     await renderPage({ query: 'test', nomenclature: 'herbal' });
 
     expect(lastFilter()).toEqual({ ...NO_FILTER, query: 'test' });
-    expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('');
+    expect(filterSends('nomenclature')).toBe('');
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
       '/admin/compendium?query=test&new',
@@ -402,3 +403,10 @@ describe('the /admin/compendium modal', () => {
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
   });
 });
+
+/** What the filter form sends for `name`: once hydrated, a select-only box's hidden input. */
+function filterSends(name: string): string | null {
+  return new URLSearchParams(sent(screen.getByRole('form', { name: 'Filter the Compendium' }))).get(
+    name,
+  );
+}
