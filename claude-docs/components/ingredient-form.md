@@ -1179,7 +1179,10 @@ site admin's, through the compendium mutations
   (`useDiscardGuard`, [`modal.md`](modal.md), "Unsaved changes"); with
   nothing changed every way out closes at once, and a save or a delete never
   asks. Every question's buttons stand on the card's `.modal__actions`
-  row, the form's own `.form__actions` staying beneath the card.
+  row, the form's own `.form__actions` staying beneath the card. The form's
+  row is the shared [`FormActions`](field.md), its two saves passed to it,
+  and its Delete and End Redirect & Save questions the shared
+  [`ConfirmQuestion`](modal.md), which also puts the unsaved changes' first.
 
 **On the admin page.** `/admin/compendium` opens the form in `Modal`'s wide
 size from its address, as `/admin/categories` opens GroupedValueForm: `?new` an
@@ -1245,9 +1248,8 @@ description, so it is what a failed submit focuses. **The categories'
 errors are the picker's** the same way: its box takes `aria-invalid`, and
 the pick named is edged ("The categories", above).
 
-`issuesOf`, re-exported from `values.ts` for the form and its reference
-panel, is the shared `readGraphqlIssues` (`src/lib/graphql-failure.ts`,
-MB.116). It reads the rejection:
+The form and its reference panel read a rejection through the shared
+`readGraphqlIssues` (`src/lib/graphql-failure.ts`, MB.116):
 
 | Failure                                   | Issues                                                                         |
 | ----------------------------------------- | ------------------------------------------------------------------------------ |
@@ -1258,7 +1260,8 @@ MB.116). It reads the rejection:
 The last two rows are `readGraphqlFailure`'s answer. The first is why the
 form uses `readGraphqlIssues` rather than that reader, which answers only
 the first field it finds: this form places every issue at once, a draft's
-nested path included.
+nested path included, through the shared `placeServerIssues` beside it,
+which sets aside the redirect question's issue for the form to ask.
 
 Each placeable issue goes in through `setError`, bar
 `['endRedirect']`, which is a question rather than an error
