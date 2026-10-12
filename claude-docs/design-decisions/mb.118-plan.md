@@ -107,3 +107,10 @@ After A–C: report to the owner with the artifact link and the screenshot direc
 - `/app/.reports/mb.118-review/` — screenshots, Mailpit results, paste-ready HTML (gitignored)
 - `src/emails/verify-email.tsx`, `src/emails/admin-invitation.tsx`, `src/emails/coven-invitation.tsx` — subjects, preview lines and body drafts, after sign-off only
 - Not touched: `scripts/email-ornaments.ts` (finding 8, if minted)
+
+## Decisions at sign-off (owner, 2026-10-12, from the review page)
+
+- Verification mail, admin invitation, coven invitation: approved, light and dark, 375px and 600px.
+- Client preview (Gmail, Outlook, Apple Mail): not done yet. Gmail on iPhone: not checked. Outlook.com button: not checked.
+- Subjects: accept the drafts. Preview lines: accept the drafts. Closing sentences: accept without contractions. Expired-link sentence: add it.
+- Names in the mail: build both here, not in separate tasks. Applied as the reader's name in the verification mail (a "Dear …," greeting when the account has a name) and the inviter's name opening both invitations, read from the acting user's row in the services.
