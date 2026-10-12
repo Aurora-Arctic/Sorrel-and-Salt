@@ -313,3 +313,57 @@ and WebKit and their system libraries, and pulling it was the largest fixed
 cost of every e2e job. The browsers sit in `/ms-playwright`
 (`PLAYWRIGHT_BROWSERS_PATH`) rather than under `$HOME`, because a GitHub
 container job sets `HOME` to a directory the image never saw.
+
+**The audit runs the suite in WebKit, Firefox and as a phone, on demand**
+(M10.25). CI and `npm run e2e` stay Chromium alone, and the "phone" checks
+there are a 375px window; the owner chose on 2026-10-12 that the other two
+engines and a real phone profile are an occasional local audit and never a
+CI gate, so an engine-specific bug is found before a sign-off rather than
+during it, at the cost of one image pull and no CI minutes. The pieces:
+
+- **`playwright-audit`**, a compose service on the `audit` profile
+  (`make playwright-audit-up` / `playwright-audit-down` from the host), runs
+  `playwright run-server` on Microsoft's `mcr.microsoft.com/playwright`
+  image, which carries all three engines, at the tag the lockfile holds for
+  `@playwright/test`, kept in step by hand since a runner and a server on
+  different versions refuse each other at connect. It is not
+  `Docker/Dockerfile.e2e`, which carries Chromium alone (MB.237), and that
+  image, `.github/workflows/playwright.yml` and CI's time are untouched.
+  `make docker-down` and `docker-rebuild` pass the `audit` profile, so the
+  service is not left behind ([`docker.md`](../docker.md)).
+- **`PLAYWRIGHT_AUDIT_WS_ENDPOINT`** (`ws://playwright-audit:4444/`) is set
+  by the `devcontainer` compose service alone, beside
+  `PLAYWRIGHT_WS_ENDPOINT`, and read only under `E2E_AUDIT=1`
+  (`tests/e2e/slots.ts`'s `auditWsEndpoint`), by the rule in
+  [`debugging.md`](../debugging.md): never baked into an npm script, never
+  read unconditionally. Its presence alone changes nothing.
+- **Three projects, `webkit`, `firefox` and `phone`**, exist in
+  `playwright.config.ts` only under `E2E_AUDIT=1`, which without the
+  endpoint throws naming the variable. The shared `use` names the Chromium
+  server, so each carries its own `connectOptions`; each `testIgnore`s the
+  configured-providers and compendium-cache specs, which run on their own
+  ports under their own Chromium projects; and none names a `baseURL`, so
+  `tests/e2e/fixtures.ts` gives each worker its own slot's server as it does
+  the `chromium` project, and `browserUrl` names `devcontainer` for either
+  remote server. The phone is Playwright's `iPhone 15` device, touch and
+  the mobile viewport included, the oldest in its list whose iOS is on or
+  above the browser floor's iOS Safari 17.4 (M10.24). Only `chromium`
+  collects coverage, as before.
+- **`npm run e2e:audit`** sets `E2E_AUDIT=1` and runs the three projects
+  under `flock /tmp/sorrel-e2e.lock` (below). It needs what `npm run e2e`
+  needs from the devcontainer: `BETTER_AUTH_SECRET` on the command line, and
+  the ports free. A failure it finds becomes its own task, never a fix in the
+  PR that ran it; four specs walk focus by pressing Tab until an element is
+  reached (`sign-in.spec.ts`, `coven.spec.ts`, `coven-create.spec.ts`,
+  `shell.spec.ts`) and are the WebKit failures the task expected rather than
+  knew; the first audit's PR names what it found.
+
+**Every e2e run from the devcontainer serialises on
+`flock /tmp/sorrel-e2e.lock`** (M10.25 writes down what sessions already
+did). Two runs collide on `sorrel_e2e_template`, which global setup drops and
+rebuilds, even when their ports differ, and a second session's run may be
+invisible to `ps`. So a run from a session is
+`flock /tmp/sorrel-e2e.lock env BETTER_AUTH_SECRET=… npx playwright test …`;
+`npm run e2e:audit` takes the lock itself, and the path is fixed so that
+every session takes the same one. Vitest's `db` project does the same on
+`/tmp/sorrel-vitest.lock`, for the same reason.

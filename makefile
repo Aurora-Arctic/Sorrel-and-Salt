@@ -12,7 +12,7 @@
 	db-generate db-migrate db-seed db-drop db-reset db-studio db-psql codegen \
 	workshop workshop-build \
 	docker-build docker-up docker-workshop docker-studio docker-all docker-e2e docker-down docker-rebuild docker-logs \
-	docker-update-token playwright-server-up playwright-server-down docker-codegen \
+	docker-update-token playwright-server-up playwright-server-down playwright-audit-up playwright-audit-down docker-codegen \
 	act-image act-cache-checkout act-check act-test
 
 COMPOSE := docker compose -f Docker/docker-compose.yaml
@@ -139,10 +139,12 @@ workshop-build:
 # Docker compose wrappers — claude-docs/docker.md. `docker-build`,
 # `docker-down` and `docker-rebuild` pass every profile; a new profiled
 # service missing from one of them is left orphaned by `docker-down`.
+# `audit` has nothing to build, and is listed on `docker-build` all the same
+# so the three stay one list.
 
 ## Build the local dev images (app + workshop + studio + e2e)
 docker-build:
-	$(COMPOSE) --profile workshop --profile studio --profile e2e build
+	$(COMPOSE) --profile workshop --profile studio --profile e2e --profile audit build
 
 ## Start the app (8000) and Postgres detached, migrating and seeding first
 docker-up:
@@ -165,13 +167,13 @@ docker-all:
 docker-e2e:
 	$(COMPOSE) --profile e2e run --rm e2e
 
-## Stop and remove the local stack, workshop/e2e profiles included (named volumes kept)
+## Stop and remove the local stack, workshop/e2e/audit profiles included (named volumes kept)
 docker-down:
-	$(COMPOSE) --profile workshop --profile studio --profile e2e down
+	$(COMPOSE) --profile workshop --profile studio --profile e2e --profile audit down
 
 ## Tear down including volumes, then rebuild and start the app
 docker-rebuild:
-	$(COMPOSE) --profile workshop --profile studio --profile e2e down -v && $(COMPOSE) up --build -d
+	$(COMPOSE) --profile workshop --profile studio --profile e2e --profile audit down -v && $(COMPOSE) up --build -d
 
 ## Follow the local stack logs
 docker-logs:
@@ -189,6 +191,15 @@ playwright-server-up:
 ## Stop the Playwright browser server
 playwright-server-down:
 	$(COMPOSE) --profile e2e stop playwright-server
+
+# For `npm run e2e:audit` from the devcontainer: Microsoft's image, pulled once.
+## Start the WebKit/Firefox/phone audit's browser server (compose profile: audit)
+playwright-audit-up:
+	$(COMPOSE) --profile audit up -d playwright-audit
+
+## Stop the audit's browser server
+playwright-audit-down:
+	$(COMPOSE) --profile audit stop playwright-audit
 
 # `sorrel-app`, not `app`: browsers HSTS-preload the `app` gTLD.
 ## Record a Playwright spec on the browser server's display (:7900) — pass NAME=<spec>
