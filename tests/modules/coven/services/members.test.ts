@@ -9,8 +9,8 @@ import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
 useRawClient();
 
 // A coven's members list (M6.11): its live seats, in the order they joined,
-// each carrying the coven, to the roles holding `member: read` — owners alone
-// until M6.13 grants it to members too. Every refusal names the coven
+// each carrying the coven, to the roles holding `member: read` — owners and
+// members, since M6.13. Every refusal names the coven
 // directly, so it is a `Forbidden` rather than a row missing from a list.
 
 const FIRST_PAGE = { limit: 26, inverted: false };
@@ -89,9 +89,19 @@ describe('listMembers', () => {
     expect([...first, ...rest].map(({ node }) => node.userId)).toEqual([C.id, A.id, B.id]);
   });
 
+  it('lists the members to a member, who holds `member: read`', async () => {
+    await expect(
+      assertMembership(asUser(B), coven.id, { member: ['read'] }),
+    ).resolves.toMatchObject({ role: 'member' });
+
+    const entries = await listMembers(asUser(B), coven, FIRST_PAGE);
+
+    expect(entries.map(({ node }) => node.userId)).toEqual([C.id, A.id, B.id]);
+  });
+
   it('refuses a viewer, who does sit in the coven', async () => {
     // Why the refusal is the permission's: C holds a live seat, which admits
-    // them to the coven's reads. A member is refused the same way until M6.13.
+    // them to the coven's reads.
     await expect(
       assertMembership(asUser(C), coven.id, { workspace: ['read'] }),
     ).resolves.toMatchObject({ role: 'viewer' });

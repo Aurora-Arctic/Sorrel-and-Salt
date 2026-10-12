@@ -257,7 +257,7 @@ There is no `kind` column and no automatically created workspace. Every workspac
 | Role     | Can                                                                                  |
 | -------- | ------------------------------------------------------------------------------------ |
 | `owner`  | Everything, plus manage members and delete the workspace                             |
-| `member` | Read and write ingredients and grimoire                                              |
+| `member` | Read and write ingredients and grimoire, and see who else is in the workspace        |
 | `viewer` | Read only. With notes deferred to v2 there is no exception — a viewer writes nothing |
 
 At least one `owner` per workspace, enforced on demotion and removal.

@@ -7,8 +7,8 @@ import type { CovenNavProps } from './types';
 // and, on a phone, the bottom bar. The sections are the coven's; the tabs,
 // the bar and the links that mark the page you are on are `SectionNav`'s
 // (claude-docs/components/coven-nav.md).
-const CovenNav = ({ slug }: CovenNavProps): ReactElement => (
-  <SectionNav label="Coven" sections={covenSections(slug)} />
+const CovenNav = ({ slug, canReadMembers = false }: CovenNavProps): ReactElement => (
+  <SectionNav label="Coven" sections={covenSections(slug, canReadMembers)} />
 );
 
 export default CovenNav;

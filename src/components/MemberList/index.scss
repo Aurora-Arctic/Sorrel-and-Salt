@@ -32,6 +32,28 @@
   @include value-and-control;
 }
 
+// The role column takes only the room its word and controls need, rather than
+// a share of the table; above the stacking width only, as a card is full width.
+@container data-table (width > #{$table-stack-width}) {
+  .member-list .member-list__role-column {
+    width: 1%;
+    white-space: nowrap;
+  }
+}
+
+// Promote and Demote together, at the cell's right edge, each given about the
+// same room (not exactly) so the buttons read as a pair down the column.
+.member-list__actions {
+  display: inline-flex;
+  gap: space(2);
+  margin-inline-start: auto;
+
+  .btn {
+    min-width: 9ch;
+    justify-content: center;
+  }
+}
+
 // The Remove column, the shared dangerous-action column Impersonate is
 // (`row-action-column`).
 .member-list__remove {

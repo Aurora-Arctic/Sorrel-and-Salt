@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { rolePermits } from '@/modules/coven';
 import ContextRow from '../../../../components/ContextRow';
 import CovenNav from '../../../../components/CovenNav';
 import WorkspaceSwitcher from '../../../../components/WorkspaceSwitcher';
@@ -30,13 +31,13 @@ export async function generateMetadata({ params }: CovenLayoutParams): Promise<M
 // the shell's own cached lookup, so it costs no second query.
 export default async function CovenLayout({ children, params }: CovenLayoutProps) {
   const { slug } = await params;
-  await requireCovenMembership(slug);
+  const { membership } = await requireCovenMembership(slug);
   const { viewer, workspaces } = await viewerOf();
 
   return (
     <>
       <ContextRow lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={viewer.canCreate} />}>
-        <CovenNav slug={slug} />
+        <CovenNav slug={slug} canReadMembers={rolePermits(membership.role, { member: ['read'] })} />
       </ContextRow>
       <div className="coven-layout">{children}</div>
     </>

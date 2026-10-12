@@ -6,25 +6,27 @@ coven switcher (M9.15, MB.7). It takes the workspace's `slug` and links each
 section of it. It is a thin wrapper: the tabs, the bottom bar on a phone, the
 current-page mark and the rest are [`SectionNav`](section-nav.md)'s.
 
-Today it holds one entry:
+It takes the slug and the caller's `covenRole`, and holds:
 
-| Label    | Route           | Icon     | Built by |
-| -------- | --------------- | -------- | -------- |
-| Overview | `/coven/[slug]` | overview | M9.15    |
+| Label    | Route                   | Icon     | Shown to                     | Built by |
+| -------- | ----------------------- | -------- | ---------------------------- | -------- |
+| Overview | `/coven/[slug]`         | overview | every role                   | M9.15    |
+| Members  | `/coven/[slug]/members` | members  | roles holding `member: read` | M6.13    |
 
-`sections.ts` holds the list, as `covenSections(slug)`, each entry a
+`sections.ts` holds the list, as `covenSections(slug, canReadMembers)`, each entry a
 `SectionNavItem` ([`section-nav.md`](section-nav.md)). `index.tsx` renders
 `SectionNav` with it and stays a server component.
 
 ## Contracts
 
-- **Each later task adds its own row.** Members (M6.13, shown only to roles
-  holding `member: read`), Ingredients (M9.6) and Grimoire (M10.11) each add
-  a row to `sections.ts` in their own PR, with its icon (`members`,
-  `ingredients`, `grimoire`, already drawn), and it is the task that builds the
+- **Each later task adds its own row.** Ingredients (M9.6) and Grimoire (M10.11) each add
+  a row to `sections.ts` in their own PR, with its icon (`ingredients`,
+  `grimoire`, already drawn), and it is the task that builds the
   page that adds it: `typedRoutes` refuses a link to a route the build does
-  not contain. M6.13 adds the role check with its row; the nav takes no role
-  or permission prop until then. The coven's four sections all fit a phone's
+  not contain. Members (M6.13) is shown by `canReadMembers`, which the layout takes from
+  `rolePermits(role, { member: ['read'] })`, the statement and never a rank, and
+  passes in as a boolean because `access-control` is server-only and this file
+  loads in the workshop's browser build. The coven's four sections all fit a phone's
   bottom bar, so it never needs More.
 - **Every address goes through `route()`** in `sections.ts`, never an
   `as Route` cast. Next checks a dynamic address against the built routes

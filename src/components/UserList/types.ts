@@ -112,6 +112,15 @@ export interface ConfirmedActionProps {
   /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
   refusal?: string;
   /**
+   * Takes the refusal's sentence (and `undefined` when a new attempt starts)
+   * for the caller to show elsewhere; absent, it shows beside the control.
+   */
+  /** A choice the modal asks beside the question, such as a role to move to; the caller holds its state. */
+  choices?: ReactNode | ((sending: boolean) => ReactNode);
+  /** Close the modal on success, for a control the re-read does not replace. */
+  closeOnSent?: boolean;
+  onFailure?: (message: string | undefined) => void;
+  /**
    * Drawn inside a modal already, the user's (M9.19): asks over that modal's
    * body through its confirm layer rather than opening a second modal on top.
    */

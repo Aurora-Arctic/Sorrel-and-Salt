@@ -6,7 +6,13 @@ import { Forbidden } from '@/lib/errors';
 import { invitationSender } from '@/lib/invitation-mail';
 import type { Session } from '@/lib/session';
 import type { Message } from '@/lib/types';
-import { assertMembership, createWorkspace, type WorkspaceRole } from '@/modules/coven';
+import {
+  assertMembership,
+  createWorkspace,
+  listMembers,
+  type WorkspaceRole,
+  type WorkspaceRow,
+} from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
 import { acceptInvitation, invitationStanding } from '@/modules/identity';
 import {
@@ -56,14 +62,6 @@ let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
 });
-
-/** M6.13's read, over M6.11's loader. The name is the scaffold's guess. */
-interface MemberListing {
-  listWorkspaceMembers(
-    session: Session,
-    workspaceId: string,
-  ): Promise<{ userId: string; role: WorkspaceRole }[]>;
-}
 
 type Sender = ReturnType<typeof invitationSender>;
 
@@ -463,11 +461,15 @@ describe('Story 8: Switch between workspaces without losing my place.', () => {
 
 describe("Story 9: See who's in a workspace and their roles.", () => {
   it('lists the members with their roles to an owner and a member, and refuses a viewer and a stranger', async () => {
-    const { listWorkspaceMembers } = surface<MemberListing>(
-      await coven(),
-      ['listWorkspaceMembers'],
-      'M6.13',
-    );
+    // The service behind the members page and `Workspace.members`; it reads the
+    // coven's id and carries the row through, so the id is all the test needs.
+    const listWorkspaceMembers = async (session: Session, workspaceId: string) =>
+      (
+        await listMembers(session, { id: workspaceId } as WorkspaceRow, {
+          limit: 26,
+          inverted: false,
+        })
+      ).map(({ node }) => node);
 
     const roles = (members: { userId: string; role: WorkspaceRole }[]) =>
       Object.fromEntries(members.map((member) => [member.userId, member.role]));
@@ -477,7 +479,7 @@ describe("Story 9: See who's in a workspace and their roles.", () => {
     }
 
     // A viewer is refused by direct id, though a live membership exists: the
-    // refusal is the `member: read` check, not a missing row (M6.13's 404).
+    // refusal is the `member: read` check, not a missing row (the page's 404).
     const [viewer] = await sql`
       select role from workspace_members
       where workspace_id = ${WORKSPACE_W_ID} and user_id = ${C.id} and deleted_at is null`;

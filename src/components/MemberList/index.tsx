@@ -13,7 +13,8 @@ import './index.scss';
 
 /**
  * The columns: the name, then the role with its change beside it (as the
- * admin list holds Promote and Revoke), then the fact no control changes.
+ * admin list holds Promote and Revoke), then the facts no control changes: when they joined, and who last changed the
+ * membership and when.
  * Remove is last, in a column ruled in red as Impersonate is, since it is the
  * table's one destructive row action, and only when the page passes it.
  */
@@ -32,6 +33,8 @@ const columns = (
   },
   {
     heading: 'Role',
+    className: 'member-list__role-column',
+    headingClassName: 'member-list__role-column',
     // An owner in bold, as the admin list sets an admin: the rows to notice.
     // The word differs for all three roles, so the column never relies on
     // weight alone to tell them apart.
@@ -42,7 +45,7 @@ const columns = (
         ) : (
           <span>{workspaceRoleLabel(member.role)}</span>
         )}
-        {roleAction?.(member)}
+        {roleAction && <span className="member-list__actions">{roleAction(member)}</span>}
       </div>
     ),
   },
@@ -54,6 +57,21 @@ const columns = (
         {member.joinedAt.toISOString().slice(0, 10)}
       </time>
     ),
+  },
+  {
+    heading: 'Updated By',
+    className: 'member-list__fact',
+    cell: (member) => member.updatedBy,
+  },
+  {
+    heading: 'Updated At',
+    className: 'member-list__fact',
+    cell: (member) =>
+      member.updatedAt && (
+        <time dateTime={member.updatedAt.toISOString()}>
+          {member.updatedAt.toISOString().slice(0, 10)}
+        </time>
+      ),
   },
   Boolean(removeAction) && {
     heading: 'Remove',

@@ -28,7 +28,11 @@ const statements = {
   /** Stock levels on those entries. No `create`: a jar exists because the entry does. */
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
-  /** Members and invitations, which `/coven/[slug]/members` shows owners alone (§9). */
+  /**
+   * Members and invitations. `/coven/[slug]/members` shows the roll to owners
+   * and members (`read`); inviting, changing a role and removing stay with
+   * owners (M6.13).
+   */
   member: ['read', 'invite', 'update', 'remove'],
   /** The coven itself: renaming it, and deleting it. */
   workspace: ['read', 'update', 'delete'],
@@ -44,10 +48,14 @@ const viewer = ac.newRole({
   workspace: ['read'],
 });
 
-/** The viewer's reads, plus what a coven is for: its ingredients, its stock, its grimoire. */
+/**
+ * The viewer's reads, plus what a coven is for: its ingredients, its stock, its
+ * grimoire, and who else is in the coven (`member: read`, M6.13).
+ */
 const member = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],
+  member: ['read'],
   spell: ['read', 'create', 'update', 'delete'],
   workspace: ['read'],
 });

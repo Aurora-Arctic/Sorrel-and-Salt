@@ -12,6 +12,8 @@ const OWNER: MemberListEntry = {
   name: 'Testwort Owner',
   role: 'owner',
   joinedAt: new Date('2026-03-04T05:06:07Z'),
+  updatedBy: 'Testwort Editor',
+  updatedAt: new Date('2026-05-06T07:08:09Z'),
 };
 const MEMBER: MemberListEntry = {
   ...OWNER,
@@ -30,7 +32,7 @@ const ALL = [OWNER, MEMBER, VIEWER];
 const rowOf = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
 describe('MemberList', () => {
-  it('shows each member with their role and joining date', () => {
+  it('shows each member with their role, joining date and last change', () => {
     render(<MemberList members={ALL} currentUserId="someone-else" />);
     for (const [member, role] of [
       [OWNER, 'Owner'],
@@ -40,7 +42,22 @@ describe('MemberList', () => {
       const row = rowOf(member.name);
       expect(within(row).getByRole('cell', { name: role })).toBeTruthy();
       expect(within(row).getByText('2026-03-04')).toBeTruthy();
+      // Who last changed the membership, and when.
+      expect(within(row).getByText('Testwort Editor')).toBeTruthy();
+      expect(within(row).getByText('2026-05-06')).toBeTruthy();
     }
+  });
+
+  it("leaves Updated By and Updated At empty when the editor's name is withheld", () => {
+    render(
+      <MemberList
+        members={[{ ...MEMBER, updatedBy: null, updatedAt: null }]}
+        currentUserId={OWNER.userId}
+      />,
+    );
+    const row = rowOf(MEMBER.name);
+    expect(within(row).queryByText('Testwort Editor')).toBeNull();
+    expect(within(row).queryByText('2026-05-06')).toBeNull();
   });
 
   it('has no Remove column when no removeAction is passed', () => {
@@ -75,7 +92,8 @@ describe('MemberList', () => {
         removeAction={() => <button type="button">Remove</button>}
       />,
     );
-    const [, role, , remove] = within(rowOf(MEMBER.name)).getAllByRole('cell');
+    const cells = within(rowOf(MEMBER.name)).getAllByRole('cell');
+    const [role, remove] = [cells[1], cells[cells.length - 1]];
     expect(within(role).getByRole('button', { name: 'Demote' })).toBeTruthy();
     expect(within(remove).getByRole('button', { name: 'Remove' })).toBeTruthy();
   });

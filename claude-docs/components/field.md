@@ -36,6 +36,7 @@ the same shell until its design review (MB.120).
 | `use-field.ts`            | `useField`, `fieldDescription` over a react-hook-form field's own error             |
 | `text-field.tsx`          | `TextField`                                                                         |
 | `select-field.tsx`        | `SelectField`                                                                       |
+| `radio-group-field.tsx`   | `RadioGroupField`                                                                   |
 | `switch-field.tsx`        | `SwitchField`                                                                       |
 | `search-field.tsx`        | `SearchField`                                                                       |
 | `filter-select-field.tsx` | `FilterSelectField`                                                                 |
@@ -53,6 +54,7 @@ the same shell until its design review (MB.120).
 | `useField`          | `fieldDescription` for a react-hook-form field, its error read by name                                        |
 | `TextField`         | An input, or a textarea with `multiline`, in a react-hook-form form                                           |
 | `SelectField`       | A closed set on Combobox's select-only box, or its type-ahead box, in a react-hook-form form                  |
+| `RadioGroupField`   | One choice from a few, each radio with a line saying what it means, in a `.fieldset`                          |
 | `SwitchField`       | An on-or-off choice as a slide toggle, its label above, in a plain-state form                                 |
 | `FormActions`       | A form's row of actions: Save, any further saves, Cancel and Delete                                           |
 | `ReasonField`       | An admin change's optional Reason, in a plain-state form                                                      |
@@ -153,6 +155,16 @@ naming no option is no value, so a required one shows its error on save as
 an unchosen one does ([`combobox.md`](combobox.md), "The type-ahead box"). Both are generic over the
 form's values, `TextField<IngredientFormValues>`, so `name` is checked
 against the form's own paths; left out, any string passes.
+
+`RadioGroupField` (`RadioGroupFieldProps`, M6.13) takes a `legend`, the
+radios' shared `name`, `options` (`value`, `label`, optional `description`),
+the chosen `value` held by the caller, and `onChange(value)`. A native radio
+group in a `.fieldset.radio-group`: each radio is a small ring whose centre dot, in the
+accent green, grows in with only a thin gap to the ring over the switch's `$motion-short` ease
+(none under reduced motion), the dot as well as the colour carrying the
+choice. The description is `aria-describedby`. The group carries
+`margin-block: 1.5rem`, the owner's call. First used by the members page's
+Promote and Demote modal.
 
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),

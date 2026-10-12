@@ -9,6 +9,10 @@ export interface MemberListEntry {
   name: string;
   role: WorkspaceRole;
   joinedAt: Date;
+  /** Who last changed the membership, by display name (`updatedBy` resolved); null when the name is withheld, and then `updatedAt` is null too. */
+  updatedBy: string | null;
+  /** When the membership last changed: a role change moves it, the joining date does not. */
+  updatedAt: Date | null;
 }
 
 export interface MemberListProps {
@@ -28,4 +32,19 @@ export interface MemberListProps {
    * which is how a member who cannot remove anyone sees it.
    */
   removeAction?: (member: MemberListEntry) => ReactNode;
+}
+
+/** The role change a member's row offers an owner (M6.13). */
+export interface RoleControlProps {
+  workspaceId: string;
+  /** The member the change is for. */
+  userId: string;
+  name: string;
+  direction: 'promote' | 'demote';
+  /** The roles the member may move to, nearest their own first; the first is chosen to start. */
+  options: readonly [WorkspaceRole, ...WorkspaceRole[]];
+}
+
+export interface RoleFailureProps {
+  children: ReactNode;
 }
