@@ -10,10 +10,9 @@ import type { TabSwitch } from './types';
 
 // Render-only; behaviour is asserted in tests/components/TabbedPage. The
 // People page as `/admin/invitations` draws it: the admin layout's frame and
-// nav, the page's heading with the open tab's Invite Admin at the end of its
-// line, its three tabs with Invitations open, and the tab's own content
-// beneath. The
-// workshop's stub says which address is open (.ladle/navigation.ts), and
+// nav, the page's heading with its three tabs beside it, Invitations open, and
+// the open tab's Invite Admin at the end of the line, then the tab's own content
+// beneath. The workshop's stub says which address is open (.ladle/navigation.ts), and
 // a tab switch provided above the page says a tab is on its way, since the
 // stub router goes nowhere.
 export default {
@@ -58,10 +57,9 @@ const Loading = ({ tab = ON_ITS_WAY }: { tab?: TabSwitch }) => (
 
 export const Default: Story = () => <Invitations />;
 
-// At a phone's width in each theme: the nav's disclosure, Invite Admin across
-// the line beneath the heading, the tab row's track across the column with
-// its three segments running past its end, Invitations centred in view, and
-// each invitation a card.
+// At a phone's width in each theme: the section nav is the bar along the
+// window's foot, the pills drop under the heading at their own size, Invite
+// Admin spans the line beneath them, and each invitation is a card.
 export const PhoneDark: Story = () => <Invitations />;
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
@@ -82,11 +80,10 @@ export const LoadingUnfiltered: Story = () => (
   <Loading tab={{ ...ON_ITS_WAY, target: ADMIN_PAGES.people.tabs[1] }} />
 );
 
-// The row scrolled to its far end: Privilege Changes open, its tab the last
-// of three that run past the track at 375px, so the page loads with the row
-// scrolled inside its track to centre the open tab, Users cut off at the
-// start and shaded there. The page itself does not scroll sideways. Privilege
-// Changes has no action, so the heading stands alone.
+// The last tab open, Privilege Changes, at 375px: the three pills fit under
+// the heading, and a row too wide for its line would scroll inside its track
+// to centre the open tab. Privilege Changes has no action, so the heading
+// line holds the heading and the pills alone.
 export const PhoneScrolled: Story = () => (
   <People open="/admin/privilege-changes" action={null}>
     <PrivilegeLedger
