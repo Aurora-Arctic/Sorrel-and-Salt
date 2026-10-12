@@ -143,7 +143,7 @@ describe('resolveScenario', () => {
 const SEED_ENTRIES: SeedEntry[] = [
   { name: 'the category seed', run: seedCategories, tables: ['category_groups', 'categories'] },
   { name: 'the form seed', run: seedForms, tables: ['ingredient_form_groups', 'ingredient_forms'] },
-  { name: 'the astrology seed', run: seedAstrology, tables: ['planets', 'zodiac_signs'] },
+  { name: 'the astrology seed', run: seedAstrology, tables: ['celestial_bodies', 'zodiac_signs'] },
   { name: 'the deity seed', run: seedDeities, tables: ['deity_traditions', 'deities'] },
   {
     // A source links rows the two vocabularies wrote, so alone it has nothing to link.

@@ -47,7 +47,7 @@ const DRIZZLE = Object.fromEntries(
 );
 
 /** The vocabularies the member's autofill searches by trigram. */
-const SEARCHED = ['ingredient_forms', 'deities', 'planets', 'zodiac_signs'];
+const SEARCHED = ['ingredient_forms', 'deities', 'celestial_bodies', 'zodiac_signs'];
 
 let sql: ReturnType<typeof postgres>;
 const catalogue = useTestDatabase((client) => (sql = client));

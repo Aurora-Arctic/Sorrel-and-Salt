@@ -10,8 +10,13 @@ import { vocabularyColumns, vocabularyIndexes } from '../../../db/schema-parts';
 // (claude-docs/db/astrology-vocabularies.md, "The astrology vocabularies").
 // The description is search surface, which the trigram index serves: Lilith's
 // carries "Black Moon".
-export const planets = pgTable('planets', { ...vocabularyColumns(), ...auditColumns }, (table) =>
-  vocabularyIndexes('planets', table, { trigram: true }),
+// The celestial bodies, still exported as `planets` until MB.253 renames the
+// code; a `planets` view over the table serves the deploy before MB.252
+// (claude-docs/db/expand-contract.md, "Renaming a table").
+export const planets = pgTable(
+  'celestial_bodies',
+  { ...vocabularyColumns(), ...auditColumns },
+  (table) => vocabularyIndexes('celestial_bodies', table, { trigram: true }),
 );
 
 export const zodiacSigns = pgTable(

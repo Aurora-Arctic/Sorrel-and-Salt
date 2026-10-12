@@ -63,6 +63,10 @@ export const referenceLinks = pgTable(
       .notNull()
       .references(() => references.id),
     ...sourcedColumns(),
+    // `planet_id`'s successor, outside `SOURCED` so that nothing reads or
+    // writes it until MB.253 moves the registry onto it and MB.254 drops
+    // `planet_id` (claude-docs/db/expand-contract.md, "Renaming a table").
+    celestialBodyId: uuid('celestial_body_id').references(() => planets.id),
     // "p. 112", `under "Hecate"`: the link's, not the reference's, since the
     // citation names the work and the page shows the locator beside it.
     locator: text('locator'),
@@ -79,11 +83,20 @@ export const referenceLinks = pgTable(
         .on(table[key], table.referenceId)
         .where(sql`${table[key]} is not null and ${table.deletedAt} is null`),
     ),
+    uniqueIndex('reference_links_celestial_body_unique')
+      .on(table.celestialBodyId, table.referenceId)
+      .where(sql`${table.celestialBodyId} is not null and ${table.deletedAt} is null`),
 
-    // Exactly one sourced row per link.
+    // Exactly one sourced row per link, a body counted once whichever of its
+    // two columns hold it: the deploy before MB.252 and the sources seed write
+    // `planet_id` alone, and 0067's fill sets both. MB.254 counts the new one alone.
     check(
       'reference_links_one_row',
-      sql.raw(`num_nonnulls(${SOURCED_KEYS.map((key) => SOURCED[key].column).join(', ')}) = 1`),
+      sql.raw(
+        `num_nonnulls(${SOURCED_KEYS.map((key) =>
+          key === 'planetId' ? 'coalesce(celestial_body_id, planet_id)' : SOURCED[key].column,
+        ).join(', ')}) = 1`,
+      ),
     ),
     check('reference_links_locator_not_blank', sql`locator is null or btrim(locator) <> ''`),
   ],
