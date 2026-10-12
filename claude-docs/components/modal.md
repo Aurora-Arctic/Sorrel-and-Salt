@@ -73,8 +73,9 @@ is the wrapper every admin page opens it through (below).
   `<h2>`, so `getByRole('dialog', { name })` finds it
   (["An edit dialog's head"](#an-edit-dialogs-head)). The Close button is `×`, hidden
   from assistive technology, inside a button named "Close". It is a 2rem ×
-  in a 2.5rem square (`$close-target`), the owner's call during M5.5, and the header centres it
-  on the title.
+  in a 2.5rem square (`$close-target`), the owner's call during M5.5, and it sits at the
+  head's top: level with a one-line title, which is its height, and with an
+  edit's eyebrow, rather than adrift beside a name wrapped over lines (MB.115).
 - **A click outside asks the owner to close it** (M5.5, the owner's call,
   reversing M5.6's "no close on a backdrop click"), through `onClose` as
   Close and Escape do. The backdrop is the dialog's own box to an event, so

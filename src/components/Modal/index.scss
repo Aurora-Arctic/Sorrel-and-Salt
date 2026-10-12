@@ -136,7 +136,10 @@ $modal-fade: 150ms ease-out;
   width: min(calc($dialog-column-wide + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
 }
 
-// The × centred on the title, at its larger size (M5.5). It stays at the
+// The × at the head's top, at its larger size (M5.5): level with a one-line
+// title, which is its height, and with an edit's eyebrow, as the owner's
+// mock-up drew it, rather than adrift beside a name wrapped over lines
+// (MB.115). It stays at the
 // top as a long form scrolls beneath it, the owner's call at MB.115: outside
 // the body, which is what scrolls, the gap beneath it padding rather than
 // margin so it belongs to the header.
@@ -204,6 +207,8 @@ $modal-fade: 150ms ease-out;
 // target it sits in, not a length of the layout.
 .modal-dialog__close {
   display: inline-flex;
+  flex: none;
+  align-self: flex-start;
   align-items: center;
   justify-content: center;
   width: $close-target;
