@@ -1,4 +1,6 @@
 import type { Story } from '@ladle/react';
+import { AdminFrame } from '../../../.ladle/admin-frame';
+import { GROUP_NAMES } from '../../../.ladle/fixtures';
 import GroupList from '.';
 import { slugify } from '../../lib/slugify';
 import { groupsHref } from './href';
@@ -28,23 +30,23 @@ export const CategoryGroups: Story = () => (
 
 // At a phone's width, in the admin column, in each theme: each row a card.
 export const PhoneDark: Story = () => (
-  <div className="admin-layout">
+  <AdminFrame>
     <CategoryGroups />
-  </div>
+  </AdminFrame>
 );
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => (
-  <div className="admin-layout">
+  <AdminFrame>
     <CategoryGroups />
-  </div>
+  </AdminFrame>
 );
 PhoneLight.meta = { theme: 'light', width: 375 };
 
 export const FormGroups: Story = () => (
   <GroupList
     kind="form"
-    groups={['Fixture Mineral', 'Fixture Substance'].map((name) => {
+    groups={GROUP_NAMES.form.slice(0, 2).map((name) => {
       const slug = slugify(name);
       return {
         id: slug,
@@ -92,16 +94,16 @@ export const TraditionsSearched: Story = () => (
 // At a phone's width, searched, in each theme: the Name field across the
 // row, Filter and Clear beneath it, each row a card.
 export const TraditionsSearchedPhoneDark: Story = () => (
-  <div className="admin-layout">
+  <AdminFrame>
     <TraditionsSearched />
-  </div>
+  </AdminFrame>
 );
 TraditionsSearchedPhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const TraditionsSearchedPhoneLight: Story = () => (
-  <div className="admin-layout">
+  <AdminFrame>
     <TraditionsSearched />
-  </div>
+  </AdminFrame>
 );
 TraditionsSearchedPhoneLight.meta = { theme: 'light', width: 375 };
 

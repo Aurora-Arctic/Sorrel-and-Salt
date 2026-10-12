@@ -1,8 +1,5 @@
 import type { Story } from '@ladle/react';
-import type { PropsWithChildren } from 'react';
-import { WorkshopPathname } from '../../../.ladle/navigation';
-import { ADMIN_PAGES } from '../AdminNav/sections';
-import TabbedPage from '../TabbedPage';
+import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
 import PrivilegeLedger from '.';
 import { privilegeLedgerHref } from './href';
 import type { PrivilegeLedgerEntry } from './types';
@@ -103,38 +100,28 @@ export const EmptyForASearch: Story = () => (
   />
 );
 
-// The admin layout's frame and the People page with its Privilege Changes
-// tab open, as /admin/privilege-changes draws them.
-const Frame = ({ children }: PropsWithChildren) => (
-  <WorkshopPathname.Provider value="/admin/privilege-changes">
-    <div className="admin-layout">
-      <TabbedPage title={ADMIN_PAGES.people.label} tabs={ADMIN_PAGES.people.tabs}>
-        {children}
-      </TabbedPage>
-    </div>
-  </WorkshopPathname.Provider>
-);
-
-// At phone width: each change a card, every fact led by its column's name.
+// At phone width, in the admin layout's frame and the People page with its
+// Privilege Changes tab open, as /admin/privilege-changes draws them: each
+// change a card, every fact led by its column's name.
 export const PhoneDark: Story = () => (
-  <Frame>
+  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
     <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
-  </Frame>
+  </AdminTabbedFrame>
 );
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => (
-  <Frame>
+  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
     <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
-  </Frame>
+  </AdminTabbedFrame>
 );
 PhoneLight.meta = { theme: 'light', width: 375 };
 
 // The filtered ledger at a phone's width, Clear beside Filter.
 const FilteredPhone = () => (
-  <Frame>
+  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
     <OneUserAdminOnly />
-  </Frame>
+  </AdminTabbedFrame>
 );
 
 export const FilteredPhoneDark: Story = () => <FilteredPhone />;

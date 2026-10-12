@@ -1,9 +1,8 @@
 import type { Story } from '@ladle/react';
 import type { ReactElement } from 'react';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
-import { WorkshopPathname } from '../../../.ladle/navigation';
-import { ADMIN_PAGES } from '../AdminNav/sections';
-import TabbedPage from '../TabbedPage';
+import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
+import { INVITATIONS } from '../../../.ladle/fixtures';
 import AdminInvitations, { InviteAdmin } from '.';
 import { invitationsHref } from './href';
 import type { AdminInvitationEntry, AdminInvitationsFilter, AdminInvitationsProps } from './types';
@@ -15,21 +14,6 @@ import type { AdminInvitationEntry, AdminInvitationsFilter, AdminInvitationsProp
 export default {
   title: 'Admin / Admin Invitations',
 };
-
-const INVITATIONS: AdminInvitationEntry[] = [
-  {
-    id: 'i1',
-    email: 'ada@example.test',
-    note: 'Curates the resins',
-    expiresAt: new Date('2026-10-17T20:05:00Z'),
-  },
-  {
-    id: 'i2',
-    email: 'brook.fixturewort@example.test',
-    note: null,
-    expiresAt: new Date('2026-10-16T09:00:00Z'),
-  },
-];
 
 // The filter a page shows: part of an address and Expires in 24 Hrs, which
 // leaves the one invitation lapsing tomorrow morning.
@@ -46,24 +30,20 @@ const Frame = ({
   inviting,
   ...pager
 }: AdminInvitationsProps): ReactElement => (
-  <WorkshopPathname.Provider value="/admin/invitations">
-    <div className="admin-layout">
-      <TabbedPage
-        title={ADMIN_PAGES.people.label}
-        tabs={ADMIN_PAGES.people.tabs}
-        action={<InviteAdmin locked={locked} filter={filter} cursor={cursor} />}
-      >
-        <AdminInvitations
-          invitations={invitations}
-          filter={filter}
-          cursor={cursor}
-          locked={locked}
-          inviting={inviting}
-          {...pager}
-        />
-      </TabbedPage>
-    </div>
-  </WorkshopPathname.Provider>
+  <AdminTabbedFrame
+    page="people"
+    open="/admin/invitations"
+    action={<InviteAdmin locked={locked} filter={filter} cursor={cursor} />}
+  >
+    <AdminInvitations
+      invitations={invitations}
+      filter={filter}
+      cursor={cursor}
+      locked={locked}
+      inviting={inviting}
+      {...pager}
+    />
+  </AdminTabbedFrame>
 );
 
 // A middle page of a list longer than one: the page's 25, newest first, and

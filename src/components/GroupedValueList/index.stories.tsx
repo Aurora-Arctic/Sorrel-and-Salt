@@ -3,12 +3,11 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
-import { WorkshopPathname } from '../../../.ladle/navigation';
-import { ADMIN_PAGES } from '../AdminNav/sections';
+import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
+import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
 import { ListNavigationContext } from '../ListFrame';
-import TabbedPage from '../TabbedPage';
 import { groupedValuesHref } from './href';
-import type { GroupedValueGroupOption, GroupedValueListFilter } from './types';
+import type { GroupedValueListFilter } from './types';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueList.
 // The filter reaches the admin pages (`/admin/categories` and the rest),
@@ -21,12 +20,7 @@ const NO_FILTER: GroupedValueListFilter = { query: '', group: '' };
 
 // Each kind's groups enough to narrow: the group filter is typed into once
 // hydrated (MB.115), so typing in it shows its list narrowing.
-const CATEGORY_GROUPS: readonly GroupedValueGroupOption[] = [
-  { slug: 'fixture-healing', name: 'Fixture Healing' },
-  { slug: 'fixture-protection', name: 'Fixture Protection' },
-  { slug: 'mock-divination', name: 'Mock Divination' },
-  { slug: 'stub-prosperity', name: 'Stub Prosperity' },
-];
+const CATEGORY_GROUPS = asSlugs(GROUP_NAMES.category);
 
 // Two of the seed's colour pairs, copied from src/db/seed/category-groups.ts,
 // which a component may not import, on the invented groups.
@@ -48,12 +42,7 @@ const category = (name: string, groupName: string, description: string) => {
   };
 };
 
-const FORM_GROUPS: readonly GroupedValueGroupOption[] = [
-  { slug: 'fixture-mineral', name: 'Fixture Mineral' },
-  { slug: 'fixture-substance', name: 'Fixture Substance' },
-  { slug: 'mock-preparation', name: 'Mock Preparation' },
-  { slug: 'stub-plant-part', name: 'Stub Plant Part' },
-];
+const FORM_GROUPS = asSlugs(GROUP_NAMES.form);
 
 const form = (name: string, groupName: string, description: string) => {
   const slug = formSlug(name, groupName);
@@ -67,12 +56,7 @@ const form = (name: string, groupName: string, description: string) => {
   };
 };
 
-const TRADITIONS: readonly GroupedValueGroupOption[] = [
-  { slug: 'fixtural', name: 'Fixtural' },
-  { slug: 'mockish', name: 'Mockish' },
-  { slug: 'old-testic', name: 'Old Testic' },
-  { slug: 'stubbish', name: 'Stubbish' },
-];
+const TRADITIONS = asSlugs(GROUP_NAMES.tradition);
 
 const deity = (name: string, groupName: string, description: string) => {
   const slug = deitySlug(name, groupName);
@@ -306,21 +290,16 @@ export const PlanetsEmpty: Story = () => (
 // card. The page and the filter are the real `TabbedPage` and
 // `FilterForm`, so these show what the sign-off settled.
 const CategoriesPage = () => (
-  <WorkshopPathname.Provider value="/admin/categories">
-    <div className="admin-layout">
-      <TabbedPage
-        title={ADMIN_PAGES.categories.label}
-        tabs={ADMIN_PAGES.categories.tabs}
-        action={
-          <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
-            Add Category
-          </Link>
-        }
-      >
-        <CategoriesFiltered />
-      </TabbedPage>
-    </div>
-  </WorkshopPathname.Provider>
+  <AdminTabbedFrame
+    page="categories"
+    action={
+      <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
+        Add Category
+      </Link>
+    }
+  >
+    <CategoriesFiltered />
+  </AdminTabbedFrame>
 );
 
 export const PhoneDark: Story = () => <CategoriesPage />;

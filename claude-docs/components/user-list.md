@@ -63,10 +63,12 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   the page reads the same, as it does an older link's `awaiting=1`.
 - **Six columns, in the owner's order**: Name, Email, Role, Coven Creation,
   Sign-In Methods and Signed Up, each heading in title case (DESIGN.md §9).
-  The headings and each cell's `data-label`, the name a cell carries as a
-  card at phone width, come from one `COLUMNS` list in `index.tsx`, so the
-  two cannot drift; the table writes out its roles (MB.115, "Tables at phone
-  width" in [`styling.md`](../styling.md)).
+  The table is [`StackTable`](data-table.md), so each heading is also the
+  `data-label` its cells carry as a card at phone width, and the table writes
+  out its roles (MB.115, "Tables at phone width" in
+  [`styling.md`](../styling.md)). Admin and User are `ROLE_LABELS`
+  (`roles.ts`), the one option list the role filter, the Role column and the
+  page's reading of `?role` share.
   The two columns with a control, Role and Coven Creation, sit together, and
   the two facts read rather than changed follow them (reordered during MB.59,
   on the owner's call). The Email
@@ -99,8 +101,9 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 - **No match is a sentence, not an empty table**, naming the filters in use
   and then what to do (MB.115, on the owner's call): "No users match
   “ada”, the role Admin and Needs Approval. Change or clear the filter to see
-  more.", each filter named only when it is set. With none set, it says there
-  are no users yet.
+  more.", each filter named only when it is set, through `noMatchText`
+  (`src/lib/text.ts`), the one wording every admin list uses. With none set,
+  it says there are no users yet.
 - **The pager is `Pager`** ([`pager.md`](pager.md)), with plain anchors:
   Prev and Next, an end with no page disabled, "Page X of Y" between them
   from `position`, which the page counts as every admin list does (MB.115),
@@ -264,7 +267,9 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   coven creation's Approve or Revoke** (MB.63, on the owner's call; the
   creation controls amended 2026-10-10). The page passes the pause it already read,
   and every row's role and creation control, for a viewer who is not the primary admin
-  (`canToggle`), is locked as the primary admin's Revoke is: in view,
+  (`canToggle`), is locked as the primary admin's Revoke is. That reading,
+  paused and not the primary admin, is `changesLocked` (`lock.ts`), which the
+  Invitations tab's lock reads too. Locked means in view,
   `aria-disabled`, described by the service's own refusal in a tip,
   `ADMIN_CHANGES_PAUSED_REFUSAL` (`src/lib/primary-admin.ts`, one string for
   both): "The primary admin has paused admin changes. Ask them to resume
@@ -291,8 +296,9 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
 
 The list is built from the shared list primitives ([`styling.md`](../styling.md),
 "Designing a section"): its root is a `.list-frame`, its filter
-`FilterForm`'s `.filter-row`, its table a `.data-table` with the
-`--stack` modifier inside a `.data-table-frame`, and its pager the `.pager`.
+`FilterForm`'s `.filter-row`, its table [`StackTable`](data-table.md), a
+`.data-table` with the `--stack`, `--roomy` and `--nowrap` modifiers inside
+a `.data-table-frame`, and its pager the `.pager`.
 Its own stylesheets hold only what is the list's, on the tokens. At desktop
 width the seven columns keep their order, restyled at MB.115's sign-off.
 
@@ -300,13 +306,14 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   primitive's rule, since its rows mix text with provider marks, check marks
   and buttons whose baselines sit at different heights; the signup date never
   breaks at its hyphens (the owner's review).
-- **At desktop width no cell wraps**: the table scrolls inside its frame
-  instead (the owner's call, during MB.59), with separate borders so each rule
+- **At desktop width no cell wraps** (`data-table--nowrap`): the table
+  scrolls inside its frame instead (the owner's call, during MB.59), with
+  separate borders so each rule
   belongs to its own cell. Its rows are banded and its header carries a
   hairline, as every admin list's does.
 - **Above the stacking width** (a container query on the table's frame,
   MB.115 on the owner's call) each row's cells take `space(3)` above and
-  below, a step more than the primitive's, since a row holds buttons as well
+  below (`data-table--roomy`), a step more than the primitive's, since a row holds buttons as well
   as text, and the two facts no control changes, Sign-In Methods and Signed
   Up (`.user-list__fact`), are `$text-muted` at the caption size, so the eye
   goes to what can be acted on. Every control sits at the end of its cell. A
@@ -321,6 +328,13 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   above it (`.user-list__tip`), the history link's, the crown's and a locked
   control's from its left edge, no wider than `$tip-width` capped at the
   window. Each sits one layer above the sticky column (`_layers.scss`).
+  The history link's, the crown's and a locked control's tips stay on
+  `useTip` rather than [`IconTip`](icon-tip.md) (MB.115): IconTip centres its
+  word above a row's control and puts it to the left on a card, where the
+  history icon, a card's first item, would be clipped, so these two sit above
+  from their left edge; and a locked control's reason is the button's
+  description, re-announced as an alert and placed against the viewport,
+  where IconTip's word is decoration hidden from a screen reader.
 - **The Impersonate column** has a 1px red rule down its left, red text and
   a wax tint mixed into its opaque ground: 6% into the page, 5% into a banded
   row's `$surface-card`, since at 6% the dark card leaves the wax label at
