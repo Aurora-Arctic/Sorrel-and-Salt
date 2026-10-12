@@ -1103,7 +1103,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'British Museum Press; Austin: University of Texas Press',
       published: '1992',
     },
-    traditions: ['Sumerian', 'Akkadian and Babylonian'],
+    traditions: ['Sumerian', 'Akkadian & Babylonian'],
   },
   {
     reference: {
@@ -1132,7 +1132,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2026-05-03',
       accessed: '2026-10-06',
     },
-    traditions: ['Sumerian', 'Akkadian and Babylonian'],
+    traditions: ['Sumerian', 'Akkadian & Babylonian'],
     deities: [
       {
         name: 'Tammuz',
@@ -1170,7 +1170,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.jewishvirtuallibrary.org/lilith',
       accessed: '2026-10-06',
     },
-    traditions: ['Akkadian and Babylonian'],
+    traditions: ['Akkadian & Babylonian'],
     deities: [
       {
         name: 'Lilith',
@@ -1187,7 +1187,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2026-10-06',
       accessed: '2026-10-06',
     },
-    traditions: ['Canaanite and Phoenician'],
+    traditions: ['Canaanite & Phoenician'],
     deities: [
       {
         name: 'Anat',
@@ -1204,7 +1204,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2026-10-05',
       accessed: '2026-10-06',
     },
-    traditions: ['Canaanite and Phoenician'],
+    traditions: ['Canaanite & Phoenician'],
     deities: [
       {
         name: 'Astarte',
@@ -1221,7 +1221,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2026-10-05',
       accessed: '2026-10-06',
     },
-    traditions: ['Canaanite and Phoenician'],
+    traditions: ['Canaanite & Phoenician'],
   },
   {
     reference: {
@@ -1233,7 +1233,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.encyclopedia.com/people/philosophy-and-religion/biblical-proper-names-biographies/anath',
       accessed: '2026-10-06',
     },
-    traditions: ['Canaanite and Phoenician'],
+    traditions: ['Canaanite & Phoenician'],
     deities: [
       {
         name: 'Anat',
@@ -1343,7 +1343,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'D. S. Brewer',
       published: '1993',
     },
-    traditions: ['Norse', 'Anglo-Saxon and Continental Germanic'],
+    traditions: ['Norse', 'Anglo-Saxon & Continental Germanic'],
     deities: [
       {
         name: 'Nerthus',
@@ -1440,7 +1440,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Liverpool University Press',
       published: '1999',
     },
-    traditions: ['Anglo-Saxon and Continental Germanic'],
+    traditions: ['Anglo-Saxon & Continental Germanic'],
     deities: [
       {
         name: 'Eostre',
@@ -1459,7 +1459,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'George Bell and Sons',
       published: '1882–88',
     },
-    traditions: ['Anglo-Saxon and Continental Germanic'],
+    traditions: ['Anglo-Saxon & Continental Germanic'],
     deities: [
       {
         name: 'Eostre',
@@ -1484,7 +1484,7 @@ export const SOURCES: SeedSource[] = [
       url: 'http://www.perseus.tufts.edu/hopper/text?doc=Perseus:text:1999.02.0083:chapter=40',
       accessed: '2026-10-06',
     },
-    traditions: ['Anglo-Saxon and Continental Germanic'],
+    traditions: ['Anglo-Saxon & Continental Germanic'],
     deities: [
       {
         name: 'Nerthus',
@@ -1552,7 +1552,7 @@ export const SOURCES: SeedSource[] = [
       publisher: 'Thames and Hudson',
       published: '1992',
     },
-    traditions: ['Irish', 'Gaulish and British'],
+    traditions: ['Irish', 'Gaulish & British'],
   },
   {
     reference: {
@@ -1701,7 +1701,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2026-10-06',
       accessed: '2026-10-06',
     },
-    traditions: ['Gaulish and British'],
+    traditions: ['Gaulish & British'],
     deities: [
       {
         name: 'Sulis',
@@ -1721,7 +1721,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2025-04-18',
       accessed: '2026-10-06',
     },
-    traditions: ['Gaulish and British'],
+    traditions: ['Gaulish & British'],
   },
   {
     reference: {
@@ -1731,7 +1731,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.romanbaths.co.uk/roman-curse-tablets',
       accessed: '2026-10-06',
     },
-    traditions: ['Gaulish and British'],
+    traditions: ['Gaulish & British'],
     deities: [
       {
         name: 'Sulis',
@@ -2871,7 +2871,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/fon-and-ewe-religion',
       accessed: '2026-10-06',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Legba',
@@ -2903,7 +2903,7 @@ export const SOURCES: SeedSource[] = [
       url: 'https://www.encyclopedia.com/environment/encyclopedias-almanacs-transcripts-and-maps/mawu-lisa',
       accessed: '2026-10-06',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Mawu-Lisa',
@@ -2921,7 +2921,7 @@ export const SOURCES: SeedSource[] = [
       published: '1938',
       note: "Title page read in the Internet Archive's full text, https://archive.org/details/in.ernet.dli.2015.36395; Open Library and Yale's eHRAF record the Northwestern University Press reprint, Evanston, 1967",
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Xevioso',
@@ -2939,7 +2939,7 @@ export const SOURCES: SeedSource[] = [
       published: '1995',
       note: 'Existence, place, year and ISBN 0-226-05858-1 confirmed on the Open Library record, https://openlibrary.org/books/OL1078882M/African_vodun; the text was not read',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Sagbata',
@@ -2955,7 +2955,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2025-01-19',
       accessed: '2026-10-06',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Dan',
@@ -2974,7 +2974,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2026-08-14',
       accessed: '2026-10-06',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Sagbata',
@@ -2993,7 +2993,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2026-08-08',
       accessed: '2026-10-06',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Gu',
@@ -3009,7 +3009,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2026-09-07',
       accessed: '2026-10-06',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
   },
   {
     reference: {
@@ -3020,7 +3020,7 @@ export const SOURCES: SeedSource[] = [
       modified: '2024-01-14',
       accessed: '2026-10-06',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Dan',
@@ -3037,7 +3037,7 @@ export const SOURCES: SeedSource[] = [
       accessed: '2026-10-06',
       note: 'The page https://en.wikipedia.org/wiki/Gu_(vodun) redirects here; the section on the Fon names Gu and the Ewe Egu',
     },
-    traditions: ['Fon and Ewe'],
+    traditions: ['Fon & Ewe'],
     deities: [
       {
         name: 'Gu',
@@ -4220,11 +4220,11 @@ export const SOURCES: SeedSource[] = [
     deities: [
       {
         name: 'Hina',
-        locator: 's.v. "Hina"',
+        locator: 'under "Hina"',
       },
       {
         name: 'Kane',
-        locator: 's.v. "Kāne"',
+        locator: 'under "Kāne"',
       },
     ],
   },

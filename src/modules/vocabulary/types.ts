@@ -7,6 +7,7 @@ export type {
   AstrologyValueFilter,
   CategoryFilter,
   DeityFilter,
+  GroupFilter,
   IngredientFormValueFilter,
 } from '../../db/repository';
 

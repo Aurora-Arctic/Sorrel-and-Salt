@@ -5,7 +5,9 @@ is `findPage(table, order, page, where?)`, or
 `findPageInWorkspace(membership, table, order, page, where?)` for a
 workspace-scoped table, or, inside the repository,
 `findPageInTiers(memberships, table, order, page, where?)` for a two-tier one
-(MB.206). `order` is a list of sort parts, each ascending, or a `ListOrder`:
+(MB.206), and `findPageInScope(table, scope, order, page, where?)` for a
+finder that spells its own scope because none of the others' types admit its
+table: `invitations`' site tier, two-tier but no compendium row (MB.115). `order` is a list of sort parts, each ascending, or a `ListOrder`:
 the parts with the join, threshold and carried values below. Each finder ANDs
 the same soft-delete and workspace predicates as `findMany` and
 `findManyInWorkspace` — the two-tier one `readableInTiers` — and adds a
@@ -28,7 +30,7 @@ limit $limit  -- the page plus one
   alike, so the declared type is the one compared: `length(name)::real / 3` is
   `double precision`, and ordered raw against a `real` cursor it would replay
   rows. A descending part is written negated, so one row comparison serves.
-  The compendium search's `[-score, name]` is the first computed key. The
+  The compendium search's `[-score, position, name]` is the first computed key. The
   duplicate lookup's is the same shape over trigram similarity (MB.11), and
   M8.14's `(lower(name), identity_key)` is the next.
 - **Each row comes back with its cursor.** The key is selected as an array of
@@ -97,9 +99,11 @@ from … [join …] where …   -- no order, no limit
 - **A position, not an offset.** The count labels a page and never seeks one,
   so a cursor stays a key.
 - **`findPageCount` counts a `findPage` list** under the same order and
-  `where`, and `findPageCountInTiers` a `findPageInTiers` one: the three
+  `where`, `findPageCountInTiers` a `findPageInTiers` one, and
+  `findPageCountInScope` a `findPageInScope` one, the Invitations tab's: the three
   group pages count through it (MB.132), and each vocabulary's own count
-  finder and the compendium's call one under their own filter (MB.206).
+  finder, the compendium's, the ledger's and the user list's
+  (`findUserCount`, MB.115) call one under their own filter (MB.206).
 
 A spell's page, the counterpart of `findManySpells` under the visibility rule,
 is added by the grimoire task that first needs it, as its own finder, like

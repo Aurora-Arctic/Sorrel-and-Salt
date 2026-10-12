@@ -6,10 +6,11 @@ import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { latestMessageTo } from './mailpit';
 import { signInAs } from './session';
 
-// MB.70 on /admin/users against the built server: an admin invites an
-// address, the link reaches it through the transport (Mailpit), the pending
-// invitation is listed with its reason, and Revoke withdraws it, which its
-// link then refuses (claude-docs/components/admin-invitations.md).
+// MB.70 on /admin/invitations, the People page's Invitations tab, against the
+// built server: a non-admin's 403; an admin invites an address, the link
+// reaches it through the transport (Mailpit), the pending invitation is listed
+// with its reason, and Revoke withdraws it, which its link then refuses
+// (claude-docs/components/admin-invitations.md).
 test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {
@@ -40,20 +41,37 @@ async function pendingCount(email: string): Promise<number> {
   }
 }
 
+test('a signed-in non-admin is refused at /admin/invitations with the 403 page', async ({
+  page,
+}) => {
+  await signInAs(page, address('not-an-admin'));
+
+  const response = await page.goto('/admin/invitations?invite');
+
+  expect(response?.status()).toBe(403);
+  await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
 test('an admin invites an address with a reason, mailed the link and listed as pending', async ({
   page,
 }) => {
   const invited = address('invited');
   await signInAs(page, address('admin'), ['discord'], 'admin');
-  await page.goto('/admin/users');
+  await page.goto('/admin/invitations');
 
   const section = page.getByRole('region', { name: 'Admin Invitations' });
-  await section.getByRole('button', { name: 'Invite Admin' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Invite an Admin' });
+  // Invite Admin is the tab's action, beside the page's heading (MB.115).
+  await page.getByRole('link', { name: 'Invite Admin' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Invite Admin' });
   const send = dialog.getByRole('button', { name: 'Send Invitation' });
+  const email = dialog.getByRole('textbox', { name: 'Email Address' });
+  // It opens on its first field (MB.115).
+  await expect(email).toBeFocused();
   await expect(send).toBeDisabled();
-  await dialog.getByLabel('Email Address').fill(invited);
-  await dialog.getByLabel('Reason').fill('Curates the resins');
+  await email.fill(invited);
+  // By role: "Reason" also names its info tip's button.
+  await dialog.getByRole('textbox', { name: 'Reason' }).fill('Curates the resins');
   await expect(send).toBeEnabled();
   await assertNoAccessibilityViolations(page);
   await send.click();
@@ -72,11 +90,11 @@ test('an admin revokes a pending invitation after confirming, and its link is re
 }) => {
   const invited = address('withdrawn');
   await signInAs(page, address('admin'), ['discord'], 'admin');
-  await page.goto('/admin/users');
+  await page.goto('/admin/invitations');
   const section = page.getByRole('region', { name: 'Admin Invitations' });
-  await section.getByRole('button', { name: 'Invite Admin' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Invite an Admin' });
-  await dialog.getByLabel('Email Address').fill(invited);
+  await page.getByRole('link', { name: 'Invite Admin' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Invite Admin' });
+  await dialog.getByRole('textbox', { name: 'Email Address' }).fill(invited);
   await dialog.getByRole('button', { name: 'Send Invitation' }).click();
   const path = await mailedInvitePath(invited);
 

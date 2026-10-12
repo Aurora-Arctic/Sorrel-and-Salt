@@ -10,7 +10,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.4   | Stop destructive-ddl scanning non-migration changed files                                                                | merged  | —                      |
 | MB.5   | Restore `users` FKs on `auditColumns`                                                                                    | merged  | every table            |
 | MB.6   | Spell recipe view page                                                                                                   | Wave 13 | M10.22                 |
-| MB.7   | Application nav shell                                                                                                    | Wave 12 | M8.16, M8.17           |
+| MB.7   | Application nav shell                                                                                                    | Wave 9  | M8.16, M8.17           |
 | MB.8   | Zod schema for spells                                                                                                    | Wave 13 | M10.10                 |
 | MB.9   | `ingredientsById` DataLoader                                                                                             | Wave 11 | M8.5, M9.4             |
 | MB.10  | `usersById` display-name DataLoader                                                                                      | Wave 9  | M6.18                  |
@@ -125,7 +125,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.119 | Design review: the coven and invitations                                                                                 | Wave 10 | —                      |
 | MB.120 | Design review: the public compendium and shared ingredient components                                                    | Wave 12 | —                      |
 | MB.121 | Design review: the workspace ingredients page                                                                            | Wave 12 | —                      |
-| MB.122 | Design review: the navigation                                                                                            | Wave 12 | —                      |
+| MB.122 | Design review: the navigation                                                                                            | Wave 9  | —                      |
 | MB.123 | Design review: the grimoire                                                                                              | Wave 13 | —                      |
 | MB.124 | Design review: error, loading and empty states, and the whole site                                                       | Wave 15 | —                      |
 | MB.125 | Categories on the ingredient writes                                                                                      | Wave 8  | MB.126, M5.5           |
@@ -253,6 +253,10 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 9  | MB.249                 |
 | MB.248 | The compendium seed: stones and metals                                                                                   | Wave 9  | MB.249                 |
 | MB.249 | Close the compendium seed                                                                                                | Wave 9  | —                      |
+| MB.251 | Call the planets Celestial Bodies wherever a person reads them                                                           | Wave 8  | —                      |
+| MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9  | MB.253                 |
+| MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9  | MB.254                 |
+| MB.254 | Drop the planet columns and view                                                                                         | Wave 9  | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1142,6 +1146,62 @@ _Acceptance criteria:_
 - On staging, the admin compendium page's unsourced filter shows no seeded entry
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
+**MB.251 — Call the planets Celestial Bodies wherever a person reads them** · 3h
+
+_Story:_ As an admin, I want the vocabulary that holds the Sun, the Moon, the asteroids and the lunar nodes called Celestial Bodies, so that its name says what it holds.
+
+Minted on 2026-10-12 on the owner's call ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)), the first of four (MB.251 to MB.254). The admin tab, page, dialogs and buttons, the ingredient form's list field and its variant summaries, and the URL change: `/admin/planets` becomes `/admin/celestial-bodies`, with no redirect. Most of the admin copy is the `planet` entry in `GroupedValueList/kinds.ts`. Code, GraphQL and database names keep `planets` until MB.253 and MB.254, and a decision record, `mb.251-celestial-bodies.md`, says so, beside DESIGN.md §5, §9 and §14, CLAUDE.md's admin sentence and a Vocabulary line, so no session "fixes" the divergence early. The hours are an estimate: a copy change across about ten test files, two e2e specs and the docs that name the screen.
+
+_Acceptance criteria:_
+
+- `/admin/celestial-bodies` serves the vocabulary and `/admin/planets` returns 404
+- The Astrology section's tab, page title, filter, empty and no-match text, and every dialog and button name the vocabulary Celestial Bodies or a Celestial Body
+- The ingredient form's list field and each variant's read Celestial Bodies, with the entry box Celestial Body
+- No user-visible string under `src/app` or `src/components` says planet
+- DESIGN.md, CLAUDE.md and the docs naming the screen or URL are corrected, and the divergence is recorded with the tasks that end it
+- The touched component tests and the `admin.spec.ts` and `admin-compendium.spec.ts` e2e specs pass under the new names
+
+**MB.252 — The celestial bodies table and columns, beside the planet ones** · 2h
+
+_Story:_ As a developer, I want the celestial-body table and columns in place before any code reads them, so that the switch from the planet names is a code change against objects that already exist.
+
+Table task, the expand half of rule 10 ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). The `planets` table is renamed `celestial_bodies`, and a view named `planets` over it keeps the code that is live during the rollout working. `ingredients` and `ingredient_variants` gain a nullable `celestial_bodies text[]`, and `reference_links` a `celestial_body_id` with its foreign key and partial unique index. `reference_links_one_row` is re-added with the new column in place of `planet_id`, and the migration fills every new column from its old one. Scoped first, because no table has been renamed here before: whether the view serves every statement the live code sends, and whether the table's index and constraint names move now or at the contract, given `planets_slug_unique` is named in the astrology service. The RENAME and the CHECK's drop carry an `.ack.md` sidecar.
+
+_Acceptance criteria:_
+
+- `celestial_bodies` holds the rows, and the `planets` view reads and writes them, asserted from the catalogue and by a write through the view
+- The three new columns exist, and every row with a value in an old column carries it in the new one, asserted against the seeded template
+- `reference_links_one_row` counts `celestial_body_id` and no longer counts `planet_id`
+- The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
+- Nothing reads the new names yet
+
+**MB.253 — Read and write celestial bodies under their own names** · 5h
+
+_Story:_ As a developer, I want the code and the API to say celestial bodies where the screens do, so that no one has to know that "planet" in the code means a celestial body.
+
+Switches every reader and writer to MB.252's table and columns, and renames the code and GraphQL names in the same PR, since every line it touches is one the rename touches too ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). GraphQL's `Planet`, `PlanetInput`, `createPlanet`, `updatePlanet`, `deletePlanet`, `planets` and `planetSuggestions` become `CelestialBody`, `CelestialBodyInput`, `createCelestialBody`, `updateCelestialBody`, `deleteCelestialBody`, `celestialBodies` and `celestialBodySuggestions`, and the `planets` field on ingredients, variants and their inputs `celestialBodies`. The TypeScript follows: `kind: 'celestialBody'`, `CuratedField`, `FLAT`, `IN_USE`, `PLANETS`, the seed shards' `planets:` entries, the MSW mocks, codegen and the SDL snapshot. The Drizzle schema stops declaring the old columns, which join `PENDING_DROPS`, and the migration fills the new ones again for any row the live deploy wrote after MB.252. The hours are an estimate, calibrated against MB.136 (3h) plus the rename's mechanical churn.
+
+_Acceptance criteria:_
+
+- The SDL names no planet, and the snapshot and `src/gql` move with it
+- Every reader and writer uses `celestial_bodies` and the new columns, and nothing declares or reads the old ones, which still exist
+- A value written to an old column after MB.252's migration is in the new column after this one's
+- Suggestions still count a value in use once however many lists hold it, scoped to the compendium and this coven, asserted with the precondition that another coven holds the value
+- No identifier, test name or comment under `src/` or `tests/` says planet, bar the migration history and `PENDING_DROPS`
+
+**MB.254 — Drop the planet columns and view** · 1h
+
+_Story:_ As a developer, I want the retired planet columns and view gone, so that nothing can write a value the app no longer reads.
+
+The contract half of rule 10, a task of its own ([`design-decisions/mb.251-plan.md`](../design-decisions/mb.251-plan.md)). Once a release carrying MB.253 has reached production, the migration drops `ingredients.planets`, `ingredient_variants.planets`, `reference_links.planet_id` and the `planets` view, with its `.ack.md` sidecar, and `PENDING_DROPS` empties. Production is the gate rather than staging because the release before MB.253 still reads the old columns. The divergence notes MB.251 added to DESIGN.md and CLAUDE.md go in the same PR.
+
+_Acceptance criteria:_
+
+- The three columns and the view are gone, and the new columns hold every value they held
+- The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
+- DESIGN.md and CLAUDE.md no longer record a planet divergence
+- Lands only after a release carrying MB.253 has reached production
+
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
 Merged before this file carried per-task hours; sized after the fact from the merged diff. The reduced-motion swap of the toggle's facets, and the workshop story that simulates the preference.
@@ -1201,10 +1261,12 @@ _Story:_ As a user, I want one persistent navigation frame so that every page is
 
 `AppShell`, added to §9's Components list by this audit. M8.16 and M8.17 require the add and edit modals to be "reachable from the main nav on any page", but no task and no route built an app-wide nav — `WorkspaceSwitcher` (M6.9) and the coven layout (M6.10) do not cover it, and both compendium and ingredient detail sit outside `/coven/` entirely. `/admin` is the other layout it wraps: M5.4's admin layout nests inside it as the coven layout does, and `AdminNav` becomes the admin area's section nav beneath the shell's own.
 
+**Pulled forward to Wave 9, straight after M6.10** (2026-10-11, the owner's call, made during MB.115): every page built before Wave 12 would otherwise have no nav. By then the switcher and the coven layout exist; the add and edit modals do not, since they need Wave 11's ingredient services. So the shell leaves a place in its nav for them, MB.122 designs that place, and M8.16 and M8.17 fill it.
+
 _Acceptance criteria:_
 
 - Wraps every signed-in page, inside and outside `/coven/`
-- Carries the primary nav, the `WorkspaceSwitcher` and the global add/edit affordances
+- Carries the primary nav and the `WorkspaceSwitcher`, and leaves the place the global add and edit affordances take, which M8.16 and M8.17 fill (amended 2026-10-11, when the task moved to Wave 9)
 - The coven layout nests inside it and adds only workspace-scoped chrome
 - The admin layout nests inside it too and adds only `AdminNav`, the admin area's section nav
 - Nav survives navigation between workspace-scoped and global pages
@@ -3364,7 +3426,7 @@ _Acceptance criteria:_
 - The workshop has a foundations page showing the palette, type scale, spacing and every primitive in both themes
 - Every token still clears 4.5:1 in both themes, and the existing pages' e2e specs, axe scans and stories pass
 
-**MB.115 — Design review: the admin area** · 4h
+**MB.115 — Design review: the admin area** · 30h
 
 _Story:_ As a site admin, I want the admin area to look finished and read clearly, so that curating the compendium is quick and hard to get wrong.
 
@@ -3375,6 +3437,12 @@ A section review designs what the section's building tasks left at the tokens an
 The review also reads the section's pages and components for repeated frontend code — the same modal or form shell, list or table scaffold, page-level plumbing or Sass partial written out per page — and either folds the shared piece into the review when it is sub-hour or mints it. The backend had its own pass on 2026-10-10 (MB.206 to MB.214); this is the frontend's. Known already: `CategoryForm` and `IngredientFormValueForm` are duplicated components (MB.189 kept their nine identically titled tests as one `it.each` so the next copy is a row); the hex regex is written in `GroupForm` and `ChipColorField` once more each after `lib/contrast.ts` exports it (MB.209); and the admin list pages carry their filter, cursor and "Page X of Y" plumbing per page.
 
 _Left by MB.116:_ The shared row of links and the notice component are already in the admin area: `AdminNav`'s list is a `ul.link-row`, and every admin page and form shows its notices through `Notice`. Two warnings in the user list stay hand-written, since `Notice`'s `warn` kind is an alert and they must not be read out twice. The admin forms already read a failed request through `readGraphqlFailure` and its fallback sentence, `GENERIC_FAILURE`, so this review reads their sentences for the copy, not their plumbing. The four forms that place several field errors at once (`GroupForm`, `GroupedValueForm`, `VocabularyValueForm` and `IngredientForm`) keep a small reader of their own that falls back to the shared one. `.admin-layout`'s raw `2rem 1rem` padding, `1.5rem` gap and `64rem` width are this review's to put on the scale or a token. A shared `TextField` is the candidate once `IngredientForm`'s react-hook-form `TextField` and `FieldShell` (`IngredientForm/fields.tsx`) are compared with the plain-state forms. The user list's Google and Microsoft circle edges changed in MB.116, to clear 3:1 on the light page. `scripts/review-screenshots.mjs` takes this review's phone screenshots, at 375px and 412px in both themes.
+
+**Amended during MB.115 (2026-10-11, the owner's call):** three changes to the admin compendium list. First, the compendium search ranks a match by the field it hit: each field's word similarity is multiplied by that field's weight — the label 1.0, the formal name 0.9, a folk name 0.8, a variant's form 0.6 and a variant's description 0.2 — and the best result is the entry's rank. Before, every matched field counted the same, so a search for _Storax_ brought up _Sweet Gum_ as high as Storax itself, because Sweet Gum's folk name _American Storax_ and its resin's description carry the word; weighted, Storax comes first. Second, the list gains a Form filter between Name and Classification: a type-ahead over the curated forms, on the curated lists' Group filter's pattern, over the `compendium` query's existing `form` argument, so the address carries the form's text (`?form=Oil`). Third, the Formal Name column moves before Classification, so the identity column sits beside the label it belongs to (MB.215). The approved plan is [`mb.115-search-plan.md`](../design-decisions/mb.115-search-plan.md).
+
+**Amended during MB.115 (2026-10-12, the owner's call):** the admin lists' filter rows apply on change. The owner found the rows awkward, and the workshop measured why: a Filter submit disabled until something changed, so the primary button stood dashed nearly all the time; Filter and Clear stretched to the fields' reach when they wrapped; only some fields took the full line on a phone; and a switch waiting on a submit, against the guidance that a toggle takes effect at once. Now a select, a switch or a type-ahead (on a pick, its clear or leaving the box) opens the filtered list the moment it changes, softly from the first page, with the tabs' loading state; the search box carries its own magnifier submit, named Search, so Enter and a press before hydration both work; Clear is a plain link at the row's end, drawn only while a filter is applied; the changed field gets its focus back once the list arrives; the search box grows to fill the line, choice fields share one width, every field takes the full line under 28rem, and the row runs edge to edge with the table beneath it. Four earlier calls are replaced: Filter offered only when something changed (MB.53), Clear disabled rather than hidden, Filter and Clear half each on their own line, and the user, invitation and privilege lists filtering by a full page load, safe to drop because every page under `/admin` runs the guard itself. The approved plan is [`mb.115-filter-plan.md`](../design-decisions/mb.115-filter-plan.md).
+
+**Amended during MB.115 (2026-10-11 and 2026-10-12, the owner's calls; re-estimated from 4h):** the review folded in all the frontend clean-up it found rather than minting it, and the owner redesigned the area after signing it off, so it grew to 16h, and a DRY audit of the finished branch (2026-10-12) added about 14h more, making 30h. The admin pages now share link tabs, each tab with its own address and one loading state: Categories, Forms and Deities each hold their list and its groups; Astrology holds Planets and Zodiac Signs; People holds Users, Invitations (moved to `/admin/invitations`) and Privilege Changes; the nav and the admin index fall into two sections. Users and Invitations show "Page X of Y" as the other lists do, and the pager keeps to one line at every width. Every admin form asks before throwing away unsaved changes, and a form's questions (discard, delete, move and delete) appear on a card over the form rather than in its flow. Each edit dialog says what it edits: an eyebrow ("Edit Ingredient") over the entry's saved name, with an ingredient's formal name or a deity's tradition after it, and a dialog opens with the focus on its first field. The ingredient form's sections, and an open variant's, fold, each with a one-line summary while closed and Open All / Close All in the modal's header; a new entry opens with every section open, an edit with every one closed. Substitute chips tell a linked ingredient from typed text, and a variant's substitutes link forms only ([`mb.115-variant-substitutes-name-a-form.md`](../design-decisions/mb.115-variant-substitutes-name-a-form.md)). A reference-work entry is cited `under "Headword"`, as Chicago's 18th edition writes it, in place of "s.v.". The approved plan is [`mb.115-plan.md`](../design-decisions/mb.115-plan.md), which ends with the DRY audit. The audit folded the repetition it found into this task, with no lint guard (the owner's call), and named the shared pieces that replaced it: the Sass mixins (`list-reset`, `truncate`, `visually-hidden`, `button-reset`, `busy-faded`, `tip-above`, `disclosure-chevron`, `icon-button-remove`, `arrived`, the `data-table--roomy` and `--nowrap` modifiers) and the `$opacity-disabled`, `$fill-quiet` and `$hairline` tokens; `StackTable` and `GroupChip`; `ConfirmQuestion`, `FormActions`, `ReasonField`, `SearchField` and `FilterSelectField`; `placeServerIssues`, `noMatchText`, `capitalise`, `oneOf`, `useHydrated` and `ListDialog`; `tabbedLayout` and the edit-place helper; and the test and story helpers. Raw `z-index` layers are left for MB.124.
 
 _Acceptance criteria:_
 
@@ -3482,6 +3550,8 @@ A section review designs what the section's building tasks left at the tokens an
 
 _Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance page's frame (`/invite/[token]`), and is the frame for the coven create page too: a form page with no AppShell (`styling.md`, "The page frame"). Every notice in the section shows through `Notice` (`components/notice.md`).
 
+_Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/admin/(people)/invitations/`), the owner's call during MB.115.
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3502,6 +3572,8 @@ A section review designs what the section's building tasks left at the tokens an
 
 _Left by MB.116:_ `IngredientForm`'s notices already show through `Notice`, and its failed saves fall back to `readGraphqlFailure`. The one left hand-written is the duplicate-name warning in `IngredientForm/duplicates.tsx`, a `div` that turns from warning to error in place, which is this review's to settle. A shared `TextField`, lifted from `IngredientForm/fields.tsx`, is settled with MB.115.
 
+_Left by MB.115:_ The shared field is `Field` (`components/field.md`): `TextField`, `SelectField`, `SwitchField` and `SearchField` on one shell, and `IngredientForm` uses them. `SuggestField`, `MultiSelectField` and `ListField` still live in `IngredientForm/fields.tsx`, on that shell; whether they move is this review's call. The `duplicates.tsx` warning stays as MB.116 left it. The qualifier's tooltip in `Combobox` sits above the field, aligned to its right, and closes at the first keystroke and when the list opens (the owner's call at MB.115); it holds wherever `FormField` renders. The edit dialogs' head is MB.115's: an eyebrow saying what the dialog does, the entry's name as the title, and its formal name after it, italic only for a botanical, fungal or zoological entry (`components/modal.md`).
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3521,6 +3593,8 @@ Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flo
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
+_Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight.
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
@@ -3535,11 +3609,13 @@ _Acceptance criteria:_
 
 _Story:_ As a user, I want the navigation to look finished and show me where I am, so that moving around the site is effortless on any screen.
 
-Minted during M5.4, on the owner's request that the nav be designed once MB.7 builds it. Reviews `AppShell`: the primary nav, where `WorkspaceSwitcher` and the global add and edit affordances sit, the Admin entry, and the section navs beneath it — the coven layout's and `AdminNav`. At phone width the nav has to fit, which may mean collapsing it behind a control.
+Minted during M5.4, on the owner's request that the nav be designed once MB.7 builds it. Reviews `AppShell`: the primary nav, where `WorkspaceSwitcher` and the global add and edit affordances sit, the Admin entry, and the section navs beneath it — the coven layout's and `AdminNav`. At phone width the nav has to fit, which may mean collapsing it behind a control. It moved to Wave 9 with MB.7 (2026-10-11), before the add and edit modals exist, so it designs the place MB.7 leaves for them, and M8.16 and M8.17 build to that design.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
 _Left by MB.116:_ `/account`'s own nav is the pattern for a section nav: a `nav` holding a `ul.link-row` (`styling.md`, "Link rows and provider marks"), with `aria-current` on the entry for what is in view. The theme toggle's fixed top corner sits over a page's heading at 375px; where it goes is this review's to settle once the nav exists.
+
+_Left by MB.115:_ `AdminNav` (`components/admin-nav.md`) marks the page in view with `aria-current` and with weight and an offset underline, not hue, reading the address with `usePathname` (the workshop's stand-in is `.ladle/navigation.ts`). Wider than a phone it is a wrapping row of links; at a phone's width it is a `<details>` disclosure listing them in the `/admin` index's sections, the owner's jump menu built as real links so it works before the page's script has loaded. Where it sits under the shell's nav, and whether the disclosure stays, is this review's to settle. The tabbed admin pages keep their heading and tabs still while a tab's content changes (`components/tabbed-page.md`).
 
 _Acceptance criteria:_
 
@@ -3559,6 +3635,8 @@ _Story:_ As a coven member, I want building and reading a spell to feel crafted,
 Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoire list (M10.11), `SpellBuilder` with its fields, visibility control, intent categories, layers and reordering (M10.12 to M10.16), the intent-versus-derived comparison panel (M10.17), the safety and out-of-stock warnings (M10.18, M10.19), draft and complete (M10.20), and the recipe view (MB.6) with its print layout (M10.22), the one print style on the site.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
+
+_Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
 
 _Acceptance criteria:_
 
@@ -3580,6 +3658,8 @@ Minted during M5.4, the last design review, once M11.10's error pages and M11.16
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
 _Left by MB.116:_ `Notice` is the one way to show an error, a warning or a success sentence (`components/notice.md`), and `GENERIC_FAILURE`, "That didn't work. Please try again.", is the one sentence for a request that got no usable answer. The whole-site read checks against MB.116's copy register (`styling.md`, "Designing a section") and the browser baseline (`styling.md`, "Binding rules"). The not-authorized page already sits in `.page-frame`, the frame the 404 and 500 pages can share.
+
+_Left by MB.115:_ `BusyButton` is the one busy state for a button. The `.data-table`, `.pager` and `.filter-row` primitives are on the Foundations story. Stacking order is still written as raw `z-index` values, one per component; a `$layers` map of them is this review's to make. Each admin table's first cell is still a `td`: making it a row header, `th scope="row"`, was held back from MB.115 because it changes what the tables' tests count as cells.
 
 _Acceptance criteria:_
 

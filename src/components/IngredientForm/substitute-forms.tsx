@@ -2,10 +2,10 @@
 
 import type { ReactElement } from 'react';
 import { useFormContext, useWatch } from 'react-hook-form';
-import { SelectField } from './fields';
+import { SelectField } from '../Field';
 import type { IngredientFormValues, SubstituteFormsProps, SubstituteListEntry } from './types';
 
-// A substitute list's second pickers (MB.215): a substitute may name one
+// The ingredient's own substitutes' second pickers (MB.215): a substitute may name one
 // form of the ingredient it links — its oil, not its dried leaf — so each
 // linked ingredient that comes in forms gets a box choosing which, Any Form
 // until one is chosen. Sent as the entry's `substituteVariantId`
@@ -26,7 +26,7 @@ export function SubstituteForms({ name }: SubstituteFormsProps): ReactElement | 
       {choosing.map(({ entry, link, index }) => (
         // Keyed by the ingredient, which a list holds once: its place moves
         // as entries before it are taken out.
-        <SelectField
+        <SelectField<IngredientFormValues>
           key={link.id}
           name={`${name}.${index}.variantId`}
           label={`Form of ${entry.value}`}

@@ -1,94 +1,68 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { type FormEvent, type ReactElement, useId, useState, useTransition } from 'react';
+import { type ReactElement, useMemo, useState } from 'react';
+import { FilterSelectField, SearchField } from '../Field';
+import FilterForm, { useApplyFilter } from '../FilterForm';
 import { groupedValuesHref } from './href';
 import { KINDS } from './kinds';
 import type { GroupedValueListFilterProps } from './types';
 
-// The filter, a GET form to the page itself (MB.178), as the user list's
-// (MB.52). Filter is offered only when the form differs from the filter the
-// page shows, and opens the new filter from the first page as a soft
-// navigation, as the pager's links are: inside a transition, so Filter shows
-// the spinner until the filtered list arrives, which a full load could not.
-// The group is a native `<select>`, not `ComboboxSelect`, so before hydration
-// the form still submits natively, as `query=&group=`, which the page reads
-// as no filter. The list keys this by the filter shown, so a page showing
-// another — Back, say — starts it again from that one.
+// A curated vocabulary's filter (MB.178, MB.115): a name search, and for a
+// grouped kind its group, each applying as it changes rather than on a
+// Filter button pressed after them, the owner's call at MB.115's review.
+// The group applies once a choice settles, a pick, its clear or leaving the
+// box, never while it is typed, carrying the name typed but not yet searched;
+// the name on the magnifier or Enter. `FilterForm` holds the form, Clear and
+// the soft navigation; this holds what the fields say and what each applies.
+// The group is typed into once hydrated, the owner's call (MB.115), but the
+// server draws it as a native `<select>` (`FilterSelectField`), so before
+// hydration a press on the magnifier submits natively, as `query=&group=`,
+// which the page reads as the same filter. The list keys this by the filter
+// shown, so a page showing another, Back say, draws it afresh from that one.
+
 const GroupedValueListFilter = ({
   kind,
   filter,
   groups,
 }: GroupedValueListFilterProps): ReactElement => {
-  const id = useId();
-  const { path, plural, groupLabel, groupPlural, groupParam } = KINDS[kind];
+  const { path, title, group } = KINDS[kind];
   const [draftQuery, setDraftQuery] = useState(filter.query);
-  const [draftGroup, setDraftGroup] = useState(filter.group);
-  const [filtering, startFiltering] = useTransition();
-  const router = useRouter();
-  const changed = draftQuery.trim() !== filter.query || draftGroup !== filter.group;
+  const apply = useApplyFilter();
+  const choices = useMemo(
+    () => groups.map((each) => ({ value: each.slug, label: each.name })),
+    [groups],
+  );
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!changed || filtering) return;
-    startFiltering(() => {
-      router.push(groupedValuesHref(kind, { query: draftQuery.trim(), group: draftGroup }));
-    });
-  }
+  /** The filter shown with the group given, the name typed carried, from the first page. */
+  const hrefWith = (chosen: string) =>
+    groupedValuesHref(kind, { query: draftQuery.trim(), group: chosen });
 
   return (
-    <search>
-      <form
-        className="grouped-value-list__search"
-        method="get"
-        action={path}
-        aria-label={`Filter ${plural}`}
-        onSubmit={submit}
-      >
-        <div className="field">
-          <label className="field__label" htmlFor={`${id}-query`}>
-            Name
-          </label>
-          <input
-            id={`${id}-query`}
-            className="input"
-            type="search"
-            name="query"
-            value={draftQuery}
-            onChange={(event) => setDraftQuery(event.target.value)}
-          />
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor={`${id}-group`}>
-            {groupLabel}
-          </label>
-          <select
-            id={`${id}-group`}
-            className="select"
-            name={groupParam}
-            value={draftGroup}
-            onChange={(event) => setDraftGroup(event.target.value)}
-          >
-            <option value="">All {groupPlural}</option>
-            {groups.map((group) => (
-              <option key={group.slug} value={group.slug}>
-                {group.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        {/* `disabled`, not `aria-disabled`: a submit with nothing to send. */}
-        <button
-          className="btn btn--solid"
-          type="submit"
-          disabled={!changed || filtering}
-          aria-busy={filtering || undefined}
-        >
-          {filtering && <span className="spinner" aria-hidden="true" />}
-          {filtering ? 'Filtering' : 'Filter'}
-        </button>
-      </form>
-    </search>
+    <FilterForm
+      label={`Filter ${title}`}
+      action={path}
+      searchHref={() => hrefWith(filter.group)}
+      shown={[filter.query, filter.group]}
+    >
+      <SearchField
+        label="Name"
+        name="query"
+        placeholder="Search names"
+        value={draftQuery}
+        onChange={setDraftQuery}
+      />
+      {group && (
+        <FilterSelectField
+          label={group.label}
+          name={group.param}
+          all={`All ${group.plural}`}
+          options={choices}
+          defaultValue={filter.group}
+          onChange={(chosen) => apply(hrefWith(chosen))}
+          typeahead
+        />
+      )}
+    </FilterForm>
   );
 };
 

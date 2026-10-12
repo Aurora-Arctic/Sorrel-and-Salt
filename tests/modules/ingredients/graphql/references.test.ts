@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
-import { WORKSPACE_W_ID } from '@/db/seed/standard';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { A, B, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
@@ -9,7 +9,7 @@ import { makeIngredient } from '../../../support/fixtures';
 import { run } from '../../../support/graphql/run';
 import type { ReferenceNode } from './types';
 
-// MB.153 over the wire: a reference's two writes, the picker's search,
+// MB.153 over the wire: a reference's two writes, its read by id (MB.115), the picker's search,
 // `Ingredient.references` and the compendium's to-do filter. This file holds
 // the transport's half (claude-docs/testing/layer-ownership.md): the tier the
 // `workspaceId` argument names, the loader cleared by a write, the filter
@@ -164,6 +164,44 @@ describe('updateReference', () => {
   });
 });
 
+describe('reference', () => {
+  const READ = `query ($workspaceId: ID, $id: ID!) {
+    reference(workspaceId: $workspaceId, id: $id) { ${FIELDS} }
+  }`;
+
+  it('reads a coven’s source whole, by id under its coven', async () => {
+    const id = await insertReference(sql, { ...WEB_PAGE, workspace_id: WORKSPACE_W_ID }, A.id);
+
+    const result = await run<{ reference: ReferenceNode }>(asUser(B), READ, {
+      workspaceId: WORKSPACE_W_ID,
+      id,
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.reference).toMatchObject({
+      id,
+      ...WEB_PAGE,
+      isGlobal: false,
+      audit: { createdBy: A.id, updatedBy: A.id },
+    });
+  });
+
+  // The precondition: the id names a live source, which its own coven reads.
+  it('answers another coven’s source as NOT_FOUND', async () => {
+    const id = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
+    const own = await run(asUser(B), READ, { workspaceId: WORKSPACE_W_ID, id });
+    expect(own.errors).toBeUndefined();
+
+    const result = await run(asUser(D), READ, { workspaceId: WORKSPACE_X_ID, id });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]).toMatchObject({
+      path: ['reference'],
+      extensions: { code: 'NOT_FOUND' },
+    });
+  });
+});
+
 describe('Ingredient.references', () => {
   const SAVE = `mutation ($workspaceId: ID!, $input: IngredientInput!) {
     createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {
@@ -223,7 +261,7 @@ describe('Ingredient.references', () => {
   it('reads a compendium entry’s references signed out', async () => {
     const reference = await insertReference(sql, { title: 'Fixture Herbal' }, E.id);
     const id = await insertIngredient(sql, makeIngredient({ nomenclature: 'none' }), A.id);
-    await insertReferenceLink(sql, id, reference, A.id, 's.v. Testwort');
+    await insertReferenceLink(sql, id, reference, A.id, 'under "Testwort"');
 
     const result = await run<{ ingredient: { references: unknown[] } }>(
       null,
@@ -232,7 +270,7 @@ describe('Ingredient.references', () => {
     );
 
     expect(result.data?.ingredient.references).toEqual([
-      { locator: 's.v. Testwort', reference: { title: 'Fixture Herbal' } },
+      { locator: 'under "Testwort"', reference: { title: 'Fixture Herbal' } },
     ]);
   });
 });

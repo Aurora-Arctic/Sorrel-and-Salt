@@ -1,3 +1,4 @@
+import type { PagerHrefs } from '../../app/admin/types';
 import type { PagePosition } from '../../lib/types';
 
 /** A privilege on `users`, as the ledger names it. */
@@ -43,15 +44,17 @@ export interface PrivilegeLedgerFilterProps {
   filter: PrivilegeLedgerFilter;
 }
 
-export interface PrivilegeLedgerProps {
+export interface PrivilegeLedgerProps extends Partial<PagerHrefs> {
   /** This page's rows, newest first. */
   changes: readonly PrivilegeLedgerEntry[];
   /** The filter the page shows. */
   filter: PrivilegeLedgerFilter;
-  /** The page before this one, absent on the first. */
-  previousHref?: string;
-  /** The page after this one, absent on the last. */
-  nextHref?: string;
+
   /** Where the page stands, for "Page X of Y". */
   position?: PagePosition;
+}
+
+/** A user a row names, or null for an account since deleted. */
+export interface LedgerPersonProps {
+  person: LedgerPerson | null;
 }

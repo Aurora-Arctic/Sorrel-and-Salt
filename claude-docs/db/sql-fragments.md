@@ -21,7 +21,8 @@ one of these carries a one-clause comment saying which it is:
 `fold` is `lower(btrim(…))`, the fold a suggestion, a list entry and a form
 compare under; `trigramMatch` is an autofill's `(text % query or query <%
 text)`; and `foldedWordMatch` is a search's accent-folded `<%` and
-`word_similarity`, the spelling migration 0027's expression indexes answer.
+`word_similarity`, the spelling migration 0027's expression indexes answer,
+with the `strpos` test of whether a field holds the query verbatim.
 `set_config` is written once per purpose too: the trigram thresholds in
 `select.ts`'s `readUnder`, which both a similarity read and a keyset read run
 under, and the actor's four settings in `src/db/audit.ts`'s `publishActor`,

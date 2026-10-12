@@ -47,6 +47,7 @@ const CategoryPicker = ({
   legend,
   hint,
   entry,
+  placeholder,
   categories,
   pending = false,
   value,
@@ -55,6 +56,7 @@ const CategoryPicker = ({
   errorId,
   error,
   status,
+  action,
 }: CategoryPickerProps): ReactElement => {
   const id = useId();
   const legendId = `${id}-legend`;
@@ -139,6 +141,7 @@ const CategoryPicker = ({
             {hint}
           </InfoTip>
         )}
+        {action?.(setAnnouncement)}
       </legend>
       <Combobox<CategoryOption>
         id={boxId}
@@ -155,19 +158,17 @@ const CategoryPicker = ({
         }}
         suggestions={{ options, pending }}
         offerTyped={false}
+        placeholder={placeholder}
         entries={entries}
-        clear={
-          value.length > 0
-            ? {
-                label: `Clear ${legend}`,
-                onClear: () => {
-                  onChange([]);
-                  setAnnouncement(`Cleared ${legend}`);
-                  focusBox();
-                },
-              }
-            : undefined
-        }
+        clear={{
+          label: `Clear ${legend}`,
+          empty: value.length === 0,
+          onClear: () => {
+            onChange([]);
+            setAnnouncement(`Cleared ${legend}`);
+            focusBox();
+          },
+        }}
         inputRef={box}
         aria-invalid={errorId ? true : undefined}
         aria-describedby={describedBy || undefined}

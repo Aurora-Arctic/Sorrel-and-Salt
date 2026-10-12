@@ -12,7 +12,8 @@ export const Failure: Story = () => (
 
 export const Warning: Story = () => (
   <Notice kind="warn">
-    Close to the dark theme colour of “Testwort Wards”, so their chips may be hard to tell apart.
+    This is close to &quot;Testwort Wards&quot;&apos;s dark theme colour, so their chips may be hard
+    to tell apart. You can still save it.
   </Notice>
 );
 

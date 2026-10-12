@@ -53,6 +53,8 @@ export {
   findCuratedRowsByName,
   findDeityCount,
   findDeityPage,
+  findGroupCount,
+  findGroupPage,
   findIngredientFormValueCount,
   findIngredientFormValues,
   findVocabularySuggestions,
@@ -65,12 +67,14 @@ export {
   findPrivilegeChangePage,
   findProvidersOfUsers,
   findUserByEmail,
+  findUserCount,
   findUserPage,
 } from './users';
 export {
   findInvitationByToken,
   findPendingInvitationsInWorkspace,
-  findPendingSiteInvitations,
+  findPendingSiteInvitationCount,
+  findPendingSiteInvitationPage,
 } from './invitations';
 export { findOpenAdminRoleChangePause } from './admin-roles';
 export { deleteProvisionalUsers } from './provisional-users';
@@ -88,6 +92,7 @@ export type {
   DeityFilter,
   DeitySuggestion,
   FormSuggestion,
+  GroupFilter,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,
@@ -100,6 +105,7 @@ export type {
   ReferenceLinkRow,
   ReferenceRow,
   SimilarityScore,
+  SiteInvitationFilter,
   SiteInvitationRow,
   SiteInvitationValues,
   SlugRedirect,

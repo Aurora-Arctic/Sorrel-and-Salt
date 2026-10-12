@@ -1,4 +1,4 @@
-import { and, eq, ilike, isNull, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
+import { and, eq, gt, ilike, isNull, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import type { SoftDeletable, VariantScoped, WordMatch, WorkspaceScoped } from './types';
@@ -125,16 +125,38 @@ export function trigramMatch(text: SQLWrapper, query: string): SQL {
 }
 
 /**
+ * Where a search's `position` puts a field holding the query nowhere, so a
+ * fuzzy hit follows every verbatim one at its score: the largest `integer`,
+ * past any character a text can hold, since a Postgres text holds at most
+ * 1 GB. A number rather than null: a null part in a keyset's row value makes
+ * its cursor comparison null, and the row falls out of every page.
+ */
+const NOWHERE = 2147483647;
+
+/**
  * A search for `query` — trimmed, never blank — by word similarity: `matches`
  * holds where it is word-similar (`<%`) to a text and `similarity` scores it,
  * each side folded through `unaccent_immutable`, so the expression indexes of
- * migration 0027 answer the match. The compendium search and the reference
- * picker's (claude-docs/db/compendium-read.md, "The compendium read").
+ * migration 0027 answer the match. `contains` holds where the text holds the
+ * query verbatim, folded the same way and lower-cased, since `<%` ignores
+ * case: `word_similarity` scores against whole words, so a caller ranks a
+ * fragment inside a longer word — `wood` in Sandalwood — as a full hit with
+ * it. `position` is the character that verbatim match starts at, or
+ * `NOWHERE`: what orders hits of equal score, so Wood Ash leads Sandalwood.
+ * `strpos` rather than `ilike`: it reads the query as plain text, where a
+ * pattern would need its `%`, `_` and `\` escaped as `containsText`
+ * escapes them. The compendium search and the reference picker's
+ * (claude-docs/db/compendium-read.md, "The compendium read").
  */
 export function foldedWordMatch(query: string): WordMatch {
   const folded = sql`unaccent_immutable(${query})`;
+  const at = (text: AnyPgColumn) =>
+    sql<number>`strpos(lower(unaccent_immutable(${text})), lower(${folded}))`;
   return {
     matches: (text) => sql`${folded} <% unaccent_immutable(${text})`,
     similarity: (text) => sql<number>`word_similarity(${folded}, unaccent_immutable(${text}))`,
+    contains: (text) => gt(at(text), 0),
+    // `nullif` and `coalesce` have no builder.
+    position: (text) => sql<number>`coalesce(nullif(${at(text)}, 0), ${sql.raw(String(NOWHERE))})`,
   };
 }

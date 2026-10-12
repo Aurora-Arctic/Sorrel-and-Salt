@@ -3,6 +3,7 @@
 import { type ReactElement, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { useTip } from '../InfoTip/use-tip';
 import type { LockedControlProps } from './types';
+import './controls.scss';
 
 // MB.59's locked Revoke, shared since MB.63 locks more controls the same way
 // (claude-docs/components/user-list.md).

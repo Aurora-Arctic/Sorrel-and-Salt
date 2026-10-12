@@ -29,6 +29,7 @@ const Field = ({
         id={column}
         label={label}
         column={column}
+        placeholder="Add hex"
         value={value}
         onChange={setValue}
         sample="Testwort Wards"
@@ -53,3 +54,11 @@ export const NearAnotherGroup: Story = () => (
     others={[{ name: 'Fixture Mending', hex: '#5d8ab1' }]}
   />
 );
+
+// The dark theme's field at a phone's width, in each page theme: the
+// controls close up and the captions drop to single letters.
+export const PhoneDark: Story = () => <Field column="colorDark" initial="#5d8ab1" />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <Field column="colorDark" initial="#5d8ab1" />;
+PhoneLight.meta = { theme: 'light', width: 375 };

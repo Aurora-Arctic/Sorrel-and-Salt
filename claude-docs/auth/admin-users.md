@@ -14,15 +14,15 @@ admin role already implies. The page reads nothing below `users` and
 thing an admin curates, either: CLAUDE.md's "and nothing else" governs what an admin
 may _change_.
 
-- **One service, two transports.** `listUsers(session, filter, page)` and
-  `providersOf(session, userIds)` (`src/modules/identity/services/user-list.ts`)
-  are a site admin's alone. Each asserts the role itself, by direct call, so a
+- **One service, two transports.** `listUsers(session, filter, page)`,
+  `countUsers(session, filter, start)` and `providersOf(session, userIds)`
+  (`src/modules/identity/services/user-list.ts`) are a site admin's alone. Each asserts the role itself, by direct call, so a
   non-admin is refused at the service and not merely kept off the page. The
   page calls them under `requireAdminSession()`, and GraphQL's `users` query
   and `User.providers` field end at the same two functions. The list is a read,
   so M5.7's mutation sweep does not reach it, and the query carries no Pothos
   scope of its own.
-- **Under the `SiteAdmin` proof.** `findUserPage` and `findProvidersOfUsers`
+- **Under the `SiteAdmin` proof.** `findUserPage`, `findUserCount` and `findProvidersOfUsers`
   (`src/db/repository/users.ts`) take the proof first, so the repository
   cannot be asked for the list by a caller that has not checked the role
   ([`db/site-admin-proof.md`](../db/site-admin-proof.md), "The SiteAdmin
@@ -32,10 +32,15 @@ may _change_.
   would put a database read outside the repository and a browser-initiated
   read outside `/api/graphql`: rules 2 and 1 in one call.
 - **Paged by the M3.6 helper.** The order is name then id, with a keyset
-  cursor and no offset, and a page holds 25 rows. The page reads it with
-  `resolvePage`, as `t.pagedConnection` does. `?after=` and `?before=` carry
-  the cursor. A cursor the codec cannot read gets the first page rather than an
-  error, since only a hand-edited address carries one.
+  cursor and no offset, and a page holds 25 rows. The page reads it through
+  `readNumberedPage` (`src/app/admin/list-page.tsx`), which pages it with
+  `resolveNumberedPage` and counts it with `countUsers`, so the pager says
+  "Page 2 of 3" between Prev and Next as every admin list does (MB.115): the
+  count is every user the filter keeps, and how many of them come before the
+  page's first row. GraphQL's `users` connection pages with `resolvePage` and
+  is not counted. `?after=` and `?before=` carry the cursor. A cursor the codec
+  cannot read, or one it reads that names no row of this list, as a cursor
+  copied from another list does, gets the first page rather than an error.
 - **Three filters, all in SQL.** `?query=` matches a substring of the name or
   the email, case-insensitively, with `%` and `_` read literally, through
   the repository's `containsText`, which the category and form lists share (MB.178). It
@@ -71,14 +76,15 @@ may _change_.
 
 **Tests.** `tests/modules/identity/services/user-list.test.ts` covers the
 order, the cursor, both filters, the literal wildcards, the bootstrap user,
-soft-deleted rows and
-the refusal of every non-admin fixture user by direct call, after proving that
-the same call answers E. `tests/modules/identity/graphql/users.test.ts` covers
+soft-deleted rows, the count under each filter and before a page, and
+the refusal of a non-admin fixture user by direct call, list and count alike,
+after proving that the same call answers E. `tests/modules/identity/graphql/users.test.ts` covers
 the transport's half (MB.186): the default page of 25, the resumed cursor, the
 filters reaching the service, and that the nodes are the same `User` as
 `me`'s; a signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s.
-`tests/app/admin/users/page.test.tsx` covers the guard running first and the
-search parameters becoming the filter and the pager's links.
+`tests/app/admin/(people)/users/page.test.tsx` covers the guard running first and the
+search parameters becoming the filter, the count and the pager's links and
+position, and a foreign cursor reading the first page.
 `tests/e2e/admin.spec.ts` checks the page an admin sees against the built
 server, with axe.
 
@@ -180,8 +186,8 @@ person's row on `/admin/users`, so a second admin is no longer an `UPDATE` in
   runs, read from the variable at each check by `isPrimaryAdmin` (in
   `user-role.ts`, over `src/lib/primary-admin.ts`), compared case-insensitively. The refusal is a
   `Forbidden` in plain words that name no variable, the words its row shows:
-  "This is the primary admin and can't be removed. Changing who the primary
-  admin is takes a change to the site's configuration." How to change it is
+  "You can't revoke the primary admin. The site's configuration sets who that
+  is." How to change it is
   below, and in [`admin-bootstrap.md`](admin-bootstrap.md).
 - **The count is the fallback.** A revoke locks every live admin row
   `for update`, in id order, through the writer's `lockLiveAdmins`, then
@@ -252,7 +258,8 @@ the good ones while it is dealt with, and back on. The argument is
   click is not an error. Nothing in v1 lists the rows.
 - **While paused, `setUserRole` refuses every other admin.** It reads the
   open pause first, and refuses a grant or a revoke from any admin but the
-  primary one with "Admin changes are paused by the primary admin.", naming a role and no person. Nothing
+  primary one with "The primary admin has paused admin changes. Ask them to
+  resume changes.", naming a role and no person. Nothing
   changes, so the trigger on `users` records nothing. Revokes are paused as
   well as grants, since removing the good admins is the same attack from the
   other side.
@@ -266,8 +273,8 @@ the good ones while it is dealt with, and back on. The argument is
   its grants and revokes go through and are recorded as usual. The exemption
   costs nothing, since the primary admin is the one account a rogue admin
   cannot become: the variable names it, and it cannot be revoked.
-- **On `/admin/users`** every admin sees the control beside the page's
-  heading, and a warning saying changes are paused while they are. The
+- **On `/admin/users`**, the People page's Users tab, every admin sees the
+  control as the tab's action, beside the page's heading, and a warning saying changes are paused while they are. The
   control is usable by the primary admin alone, in view but `aria-disabled`
   for any other, with the reason in a tip; while paused, such an admin's
   Grant and Revoke, and coven creation's Approve and Revoke, are locked the
@@ -304,9 +311,14 @@ one is handed a bearer token for the site's highest privilege (story 62).
 email, note, sender)` and `revokeAdminInvitation(session, id)`
   (`src/modules/identity/services/admin-invitations.ts`) assert the site role
   themselves, by direct call, and the two mutations in front of them carry the
-  `admin` scope as the second check. `listPendingAdminInvitations(session)` is
-  the pending list, newest first, a read the page calls; no GraphQL query
-  lists invitations.
+  `admin` scope as the second check. `listPendingAdminInvitations(session,
+filter, page)` is one page of the pending list, newest first, and
+  `countPendingAdminInvitations(session, filter, start)` its count, reads
+  the page calls through `resolveNumberedPage` as every admin list does,
+  25 to a page (MB.115); no GraphQL query lists invitations. Its filter (MB.115) is
+  `{ email, expiringSoon }`: a fragment of the address, trimmed, and only
+  the invitations lapsing within 24 hours, each narrowed in the
+  repository's SQL ([`db/invitations.md`](../db/invitations.md)).
 - **The token is the mail's alone.** `crypto.randomBytes(32)`, base64url,
   goes to the repository's `insertInvitation(admin, …)`, which stores its
   hash, and to the sender, which mails the link; the row the mutation answers
@@ -367,9 +379,11 @@ email, note, sender)` and `revokeAdminInvitation(session, id)`
   match, or Accept Invitation, whose mutation lands an admin on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
-- **On `/admin/users`** every admin sees, beneath the list, an Admin
-  Invitations section: Invite Admin, and the pending invitations, each with
-  its address, its reason, when it expires and Revoke
+- **On `/admin/invitations`**, the People page's Invitations tab (beneath
+  the user list on `/admin/users` until MB.115), every admin sees Invite
+  Admin, and the pending invitations 25 to a page, each with
+  its address, its reason, when it expires and Revoke, and the pager
+  beneath them
   ([`components/admin-invitations.md`](../components/admin-invitations.md)).
   While changes are paused, both controls are `aria-disabled` for any admin
   but the primary one, with the pause as the reason.
@@ -381,7 +395,9 @@ list of past invitations is kept.
 
 **Tests.** `tests/modules/identity/services/admin-invitations.test.ts` covers
 creating, with the real sender over a mocked transport, so the link that
-reaches the address is the one read back; revoking and listing; each
+reaches the address is the one read back; revoking and listing; the list's
+pages, newest first and by id within an instant, the filter narrowing every
+page, and its count; each
 non-admin fixture user refused by direct call, with E proven able; and the
 pause, with the same calls succeeding once resumed.
 `tests/modules/identity/services/invitation-acceptance.test.ts` covers the
@@ -398,7 +414,8 @@ story 62's acceptance test is in `tests/acceptance/08-email-and-admin.test.ts`.
 Every change to who is an admin and who may create a coven is a row of
 `user_privilege_changes`, which the database writes and nothing in the
 application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read
-and MB.200 its page, `/admin/privilege-changes`: the whole ledger, newest
+and MB.200 its page, `/admin/privilege-changes`, now the People page's
+Privilege Changes tab (MB.115): the whole ledger, newest
 first, for the admin who suspects misuse (story 61).
 
 - **One service, two transports.** `listPrivilegeChanges`
@@ -427,7 +444,7 @@ first, for the admin who suspects misuse (story 61).
   It is the admin's whole row, not MB.10's display-name `usersById`.
 - **One page, not one per privilege.** `/admin/privilege-changes` is one
   ledger, filtered by part of the subject's name or email (`?query=`, which
-  the permissions history icon before each name on `/admin/users` opens with
+  the privilege changes icon before each name on `/admin/users` opens with
   that user's address) and by privilege (`?privilege=admin|create_workspace`,
   a dropdown). The page takes no `?user=`: the read's `userId` is GraphQL's.
   It is not merged with the pause or the invitations, which stay where they
@@ -456,7 +473,7 @@ rows. `tests/modules/identity/graphql/privilege-changes.test.ts` holds the
 transport's half: every field, the filters reaching the service, subject and
 actor in one user read per page by query count, and the scope's own refusal.
 A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s. The page's
-half is `tests/app/admin/privilege-changes/page.test.tsx`, story 61's
+half is `tests/app/admin/(people)/privilege-changes/page.test.tsx`, story 61's
 acceptance test is `tests/acceptance/08-email-and-admin.test.ts`'s, and
 `tests/e2e/admin/privilege-changes.spec.ts` reads the page, its filters and
 the history icon link against the built server, with axe.

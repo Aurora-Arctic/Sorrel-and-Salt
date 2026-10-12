@@ -1,12 +1,12 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NameField, useDuplicateWarning } from '@/components/IngredientForm/duplicates';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithClient } from '../../support/ingredient-form';
+import { press, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { WORKSPACE_ID, offerDuplicates } from '../../support/msw/ingredient-lookups';
 import type { DuplicateNode } from './types';
@@ -37,14 +37,21 @@ const MOCKLEAF: DuplicateNode = {
   slug: 'mockleaf',
 };
 
-/** The name field and its warning; a save that the warning does not hold calls `sent` with the name. */
-function renderName() {
+/**
+ * The name field and its warning; a save that the warning does not hold calls
+ * `sent` with the name. `opened` is an edited entry's name, as the form opens with it.
+ */
+function renderName(opened?: string) {
   const sent = vi.fn();
   const Harness = () => {
-    const methods = useForm<IngredientFormValues>({ defaultValues: EMPTY_VALUES });
+    const methods = useForm<IngredientFormValues>({
+      defaultValues: { ...EMPTY_VALUES, name: opened ?? '' },
+    });
     const warning = useDuplicateWarning(
       WORKSPACE_ID,
       useWatch({ control: methods.control, name: 'name' }),
+      undefined,
+      opened,
     );
     return (
       <FormProvider {...methods}>
@@ -60,17 +67,14 @@ function renderName() {
       </FormProvider>
     );
   };
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <Harness />
-    </QueryClientProvider>,
-  );
+  renderWithClient(<Harness />);
   return sent;
 }
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
-const type = (value: string) => fireEvent.change(name(), { target: { value } });
-const save = () => fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
+/** Types into the Name box, the one field here. */
+const type = (value: string) => typeIn(name(), value);
+const save = () => press('Save Ingredient');
 const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
 const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
 /** Lets a save that may have started reach its end. */
@@ -114,7 +118,46 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(calls).toHaveLength(1);
   });
 
-  it('names each near match by its label and formal name, linked to the entry', async () => {
+  // MB.115, the owner's call: an edit that leaves the name alone asks nothing.
+  it('asks nothing about the name an edit opened with, and lets its save through', async () => {
+    // Answered before the form renders: an edit that asked on opening would ask at once.
+    const calls = offerDuplicates([TOMENTOSA]);
+    const sent = renderName("Cat's Claw");
+
+    settle();
+    save();
+    await settleSave();
+
+    expect(calls).toHaveLength(0);
+    expect(warning()).toBeEmptyDOMElement();
+    expect(sent).toHaveBeenCalledWith("Cat's Claw");
+  });
+
+  it('warns once an edit changes the name', async () => {
+    const calls = offerDuplicates([TOMENTOSA]);
+    renderName('Mockleaf');
+
+    type('Cats Claw');
+    settle();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
+  });
+
+  it('warns at the opened name again once the name has been typed in', async () => {
+    const calls = offerDuplicates([TOMENTOSA]);
+    renderName("Cat's Claw");
+
+    type("Cat's Cla");
+    type("Cat's Claw");
+    settle();
+
+    await waitFor(() => expect(calls).toHaveLength(1));
+    expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
+  });
+
+  // Each in a new tab, so the form and what is typed in it stay where they are.
+  it('names each near match by its label and formal name, linked to the entry in a new tab', async () => {
     renderName();
     offerDuplicates([TOMENTOSA, FELIS, MOCKLEAF]);
 
@@ -122,14 +165,15 @@ describe('NameField, with useDuplicateWarning', () => {
     settle();
 
     const tomentosa = await within(warning()).findByRole('link', {
-      name: "Cat's Claw (Uncaria tomentosa)",
+      name: /^Cat's Claw \(Uncaria tomentosa\)/,
     });
     expect(tomentosa).toHaveAttribute('href', '/ingredients/claw-1');
-    expect(screen.getByRole('link', { name: "Cat's Claw (Felis catus)" })).toHaveAttribute(
+    expect(tomentosa).toHaveAttribute('target', '_blank');
+    expect(screen.getByRole('link', { name: /^Cat's Claw \(Felis catus\)/ })).toHaveAttribute(
       'href',
       '/ingredients/claw-2',
     );
-    expect(screen.getByRole('link', { name: 'Mockleaf' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^Mockleaf/ })).toHaveAttribute(
       'href',
       '/ingredients/mock-1',
     );
@@ -186,7 +230,7 @@ describe('NameField, with useDuplicateWarning', () => {
     await waitFor(() => expect(name()).toBeInvalid());
     expect(calls).toEqual([{ workspaceId: WORKSPACE_ID, name: "Cat's Claw", first: 3 }]);
     expect(within(warning()).getByRole('link')).toHaveAccessibleName(
-      "Cat's Claw (Uncaria tomentosa)",
+      /^Cat's Claw \(Uncaria tomentosa\)/,
     );
     expect(sent).not.toHaveBeenCalled();
   });
@@ -203,7 +247,9 @@ describe('NameField, with useDuplicateWarning', () => {
     offerDuplicates([TOMENTOSA, FELIS]);
     type("Cat's Claws");
     settle();
-    await within(warning()).findByRole('link', { name: "Cat's Claw (Felis catus)" });
+    await within(warning()).findByRole('link', {
+      name: /^Cat's Claw \(Felis catus\)/,
+    });
 
     expect(name()).not.toBeInvalid();
     expect(sent).not.toHaveBeenCalled();
@@ -248,7 +294,7 @@ describe('NameField, with useDuplicateWarning', () => {
     type("Cat's Clawe");
     settle();
     const felis = await within(warning()).findByRole('link', {
-      name: "Cat's Claw (Felis catus)",
+      name: /^Cat's Claw \(Felis catus\)/,
     });
     expect(felis).toBeInTheDocument();
     expect(within(warning()).queryByRole('link', { name: /tomentosa/ })).not.toBeInTheDocument();

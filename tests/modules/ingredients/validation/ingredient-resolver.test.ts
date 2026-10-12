@@ -18,6 +18,8 @@ import {
 
 const OPTIONS = { fields: {}, shouldUseNativeValidation: false };
 const SOURCE_ID = '9c8b7a6d-5e4f-4a3b-8c2d-1e0f9a8b7c6d';
+/** The source a reference row links, as the form holds it. */
+const SOURCE_LINK = { id: SOURCE_ID, isGlobal: true, kind: 'book', title: 'A Herbal' } as const;
 
 /** Testwort, coming in one form, `variant`. */
 const withVariant = (variant: Partial<VariantFormValues>): IngredientFormValues => ({
@@ -73,8 +75,8 @@ describe('ingredientResolver', () => {
       issue: 'a repeated reference',
       variant: {
         references: [
-          { value: 'A Herbal', link: { id: SOURCE_ID, isGlobal: true }, locator: '' },
-          { value: 'A Herbal', link: { id: SOURCE_ID, isGlobal: true }, locator: 'p. 2' },
+          { value: 'A Herbal', link: SOURCE_LINK, locator: '' },
+          { value: 'A Herbal', link: SOURCE_LINK, locator: 'p. 2' },
         ],
       },
       path: ['variants', 0, 'references', 1, 'value'],
@@ -153,7 +155,7 @@ describe('fieldNameOf', () => {
         form: 'Wax',
         planets: [{ value: 'Mars' }],
         substitutes: [{ value: 'Mockwort' }],
-        references: [{ value: 'A Herbal', link: { id: SOURCE_ID, isGlobal: true }, locator: '' }],
+        references: [{ value: 'A Herbal', link: SOURCE_LINK, locator: '' }],
       },
       { ...EMPTY_VARIANT, form: 'Oil' },
     ],

@@ -2,8 +2,8 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { Forbidden } from '@/lib/errors';
-import { resolvePage } from '@/lib/pagination';
-import { listUsers, providersOf } from '@/modules/identity';
+import { decodeCursor, resolvePage } from '@/lib/pagination';
+import { countUsers, listUsers, providersOf } from '@/modules/identity';
 import type { UserFilter } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
@@ -187,6 +187,61 @@ describe('listUsers', () => {
     expect(A.role).toBe('user');
 
     await expect(listUsers(asUser(A), {}, PAGE)).rejects.toThrow(Forbidden);
+  });
+});
+
+describe('countUsers', () => {
+  // Each filter counts what the list pages under it: the bootstrap user and
+  // the soft-deleted one are left out of both, and every arm narrows.
+  it('counts the users the list pages under each filter', async () => {
+    const filters: UserFilter[] = [
+      {},
+      { query: '  fixturewort ' },
+      { awaitingApproval: true },
+      { role: 'admin' },
+      { role: 'user', awaitingApproval: true, query: 'pending' },
+    ];
+    const listed = await Promise.all(filters.map((filter) => names(filter)));
+    // Each filter keeps some and narrows, or a count ignoring it would pass.
+    for (const list of listed.slice(1)) {
+      expect(list.length).toBeGreaterThan(0);
+      expect(list.length).toBeLessThan(listed[0]?.length ?? 0);
+    }
+
+    const counts = await Promise.all(
+      filters.map((filter) => countUsers(asUser(E), filter, undefined)),
+    );
+
+    expect(counts).toEqual(listed.map((list) => ({ totalCount: list.length, countBefore: null })));
+  });
+
+  it('counts the users before the first row of a page, in the list’s order', async () => {
+    const first = await resolvePage({ first: 3 }, (request) => listUsers(asUser(E), {}, request));
+    const second = await resolvePage({ first: 3, after: first.pageInfo.endCursor }, (request) =>
+      listUsers(asUser(E), {}, request),
+    );
+    const start = decodeCursor(second.pageInfo.startCursor ?? '');
+
+    expect(await countUsers(asUser(E), {}, start)).toEqual({
+      totalCount: (await listableUsers()).length,
+      countBefore: 3,
+    });
+    // Under a filter, only the rows it keeps come before.
+    const onlyUsers = await listUsers(asUser(E), { role: 'user' }, PAGE);
+    const last = onlyUsers[onlyUsers.length - 1];
+    expect(onlyUsers.length).toBeGreaterThan(1);
+    expect(await countUsers(asUser(E), { role: 'user' }, last?.cursor)).toEqual({
+      totalCount: onlyUsers.length,
+      countBefore: onlyUsers.length - 1,
+    });
+  });
+
+  // Why it could have succeeded: the rows exist and the same call answers E.
+  it('refuses a user who is not an admin, by direct call', async () => {
+    expect((await countUsers(asUser(E), {}, undefined)).totalCount).toBeGreaterThan(0);
+    expect(A.role).toBe('user');
+
+    await expect(countUsers(asUser(A), {}, undefined)).rejects.toThrow(Forbidden);
   });
 });
 

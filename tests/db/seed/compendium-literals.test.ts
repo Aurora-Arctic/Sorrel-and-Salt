@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { checkCompendium } from '@/db/seed/compendium/guard';
 import { COMPENDIUM } from '@/db/seed/compendium/index';
+import { SOURCES } from '@/db/seed/sources';
 import { FIXTURE_SHARD, wordsOf } from './compendium-fixture';
 import type { SeedCompendiumEntry, SeedCompendiumShard } from '@/db/seed/types';
 
@@ -29,6 +30,26 @@ function nameless(name: string): SeedCompendiumEntry {
     variants: [{ form: 'Water', references: [{ source: 'fixture-page', supports: ['form'] }] }],
   };
 }
+
+/** Every `locator` a seed literal holds, at any depth. */
+function locatorsIn(value: unknown): string[] {
+  if (Array.isArray(value)) return value.flatMap(locatorsIn);
+  if (value === null || typeof value !== 'object') return [];
+  return Object.entries(value).flatMap(([key, inner]) =>
+    key === 'locator' && typeof inner === 'string' ? [inner] : locatorsIn(inner),
+  );
+}
+
+// Chicago's 18th edition (14.130) cites a reference-work entry "under" its
+// headword, where the 17th wrote the Latin "s.v.": a seed list written before
+// the change fails here when it merges.
+describe('the seed locators', () => {
+  it('cite an entry "under" its headword, never "s.v."', () => {
+    const locators = locatorsIn([COMPENDIUM, SOURCES]);
+    expect(locators.filter((locator) => locator.startsWith('under "'))).not.toEqual([]);
+    expect(locators.filter((locator) => /\bs\.\s*v\./i.test(locator))).toEqual([]);
+  });
+});
 
 describe('checkCompendium', () => {
   // The precondition every case below rests on.
@@ -211,6 +232,13 @@ describe('checkCompendium', () => {
     it('refuses a form the linked entry does not have', () => {
       const shards = edited((shard) => {
         samplewort(shard).substitutes = [{ identity: 'fixtura testalis', form: 'Bark' }];
+      });
+      expect(checkCompendium(shards)).toHaveLength(1);
+    });
+
+    it("refuses a form's link that names no form, as the service does", () => {
+      const shards = edited((shard) => {
+        samplewort(shard).variants[0].substitutes = [{ identity: 'fixtura testalis' }];
       });
       expect(checkCompendium(shards)).toHaveLength(1);
     });

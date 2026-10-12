@@ -386,10 +386,10 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
   substitute may link only the compendium, so the admin form reads
   `compendium(query)`, which already holds nothing else.
 - **It matches as `compendium` does**, by word similarity at 0.5 against the
-  label, the formal name and the live folk names, accents folded, so a typed
-  prefix finds its entry. `possibleDuplicates`' whole-string 0.4 does not:
+  label, the formal name, the live folk names and the live variants' forms and
+  descriptions, accents folded, so a typed prefix finds its entry. `possibleDuplicates`' whole-string 0.4 does not:
   `mu` is under 0.4 similar to Mugwort and 0.67 word-similar. Best match
-  first, with no score on the edge, since a picker ranks rather than reports.
+  first, under the compendium's weights, with no score on the edge, since a picker ranks rather than reports.
   A blank `query` lists both tiers by name, so an opened box lists something.
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
@@ -416,7 +416,7 @@ type QueryCompendiumConnection {
 type QueryCompendiumConnectionEdge {
   cursor: String!
   node: Ingredient!
-  score: Float # the search's word similarity, 0 to 1; null without a search
+  score: Float # the search's weighted rank, 0 to 1; null without a search
 }
 ```
 
@@ -440,9 +440,13 @@ type QueryCompendiumConnectionEdge {
   `withoutReferences: false`, is no filter, and `totalCount` counts under
   the same filter.
 - **A search is ranked, best match first.** It pages
-  `(score DESC, name, id)`, and each edge carries `score`: the row's word
-  similarity to the query, the best of the label, the formal name, its folk
-  names and its variants' forms and descriptions. Without a search the list pages `(name, id)` and `score` is null. A
+  `(score DESC, name, id)`, and each edge carries `score`, its rank: the
+  query's word similarity to each field it matched — the label, the formal
+  name, a folk name, a variant's form or description — times that field's
+  weight, the best kept. The weights run from 1 for the label down to 0.2 for
+  a description, so a word in an entry's own name outranks the same word in
+  another entry's prose; the five and why are
+  [`db/compendium-read.md`](../db/compendium-read.md)'s. Without a search the list pages `(name, id)` and `score` is null. A
   query shorter than two characters is no search — one letter would filter and
   rank by noise — so it lists every entry, unranked. The score lives on the
   edge rather than on `Ingredient` because it describes the match, not the
@@ -740,7 +744,7 @@ service, one `NOT_FOUND` for the update and the delete, and one `VALIDATION`
 for the create. A non-admin at the `admin` scope is the sweep's; who the
 service refuses, and every collision, are `services/compendium-entries.test.ts`'s.
 
-### References: `Reference`, `createReference`, `updateReference` and `referenceSuggestions`
+### References: `Reference`, `reference`, `createReference`, `updateReference` and `referenceSuggestions`
 
 A source, kept once and linked from every row it supports (DESIGN.md §5,
 "References"; MB.151, built by MB.153), registered by `ingredients` over
@@ -773,6 +777,15 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
   citing it, so it clears `referencesByIngredient` whole. There is no
   `deleteReference` in v1. A compendium-tier write
   expires the `compendium` tag, as every admin write does (M8.7).
+- **`reference(id, workspaceId)` reads one source whole**, for the
+  ingredient form's edit panel to open on (MB.115): a null `workspaceId`
+  the compendium's alone, a coven's its own or the compendium's, never
+  another coven's — `getReference`, under `ingredient: ['read']`, the
+  picker's tiers and permission, so it answers nothing the picker does not
+  already offer. Another coven's id is `NOT_FOUND`, as an id naming nothing
+  is; a coven the caller is not in is `FORBIDDEN`. It carries no scope and
+  refuses a signed-out caller through `sessionOf`, as the suggestion
+  fields do, whatever the tier. One row, so no connection.
 - **`referenceSuggestions` is the picker's search**, which MB.154's field
   reads: the compendium's references and the named coven's, never another's,
   matched at the compendium search's 0.5 word similarity against `authors`,
@@ -787,7 +800,8 @@ A source, kept once and linked from every row it supports (DESIGN.md §5,
 tier the `workspaceId` argument names, `referencesByIngredient` cleared by a
 write, `Ingredient.references` read signed out, `withoutReferences` reaching
 the read, the search's compendium-only mode, and one refusal per error code at
-each field — `VALIDATION` on both writes, `NOT_FOUND` on the update; a member
+each field — `VALIDATION` on both writes, `NOT_FOUND` on the update and on
+`reference`, which also reads a source whole; a member
 at the compendium tier's `admin` scope is the sweep's. The tier rule, the order and who else is refused are
 `services/references.test.ts`'s and `services/ingredient-references.test.ts`'s.
 

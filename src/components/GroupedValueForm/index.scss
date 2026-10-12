@@ -1,34 +1,16 @@
 @use '../../scss/variables' as *;
 
-// Layout only, on the form primitives; no styling past the tokens before the
-// admin section's design review (MB.115).
-.grouped-value-form__actions {
-  flex-wrap: wrap;
-}
-
-// Apart from Save and Cancel, at the far end, so it is not pressed for either.
-.grouped-value-form__delete {
-  margin-left: auto;
-}
-
-.grouped-value-form__confirm {
-  // Where the buttons it stands in for would be (M5.5).
-  margin-block: space(2);
-}
-
-// The rename note, a `.field__hint`, sits by the buttons it describes:
-// the row's own gap above it, and a closer one between it and Save. Under
-// the form's class, since the primitives are emitted under `body` and would
-// otherwise win on specificity.
+// The one rule this form has of its own: the rename note, a `.field__hint`,
+// sits by the buttons it describes, with the actions row's own gap above it
+// and a closer one between it and Save. Everything else is the form
+// primitives' (`.form__actions`, `.form__aside`, the field's
+// `.field__required`), or the modal's, whose ConfirmOverlay draws the delete
+// question. Under the form's class, since the primitives are emitted under
+// `body` and would otherwise win on specificity.
 .grouped-value-form .grouped-value-form__note {
   margin-top: space(4);
 
-  + .modal__actions {
+  + .form__actions {
     margin-top: space(2);
   }
-}
-
-// Hard against the label, in the error red: it marks what a save will ask for.
-.grouped-value-form__required {
-  color: $secondary;
 }

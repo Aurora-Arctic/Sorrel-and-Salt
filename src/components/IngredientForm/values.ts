@@ -15,17 +15,21 @@ import type {
   AnyListEntry,
   DeityLink,
   DraftPath,
+  FieldNoun,
   IngredientFormInput,
   IngredientFormValues,
   IngredientListName,
   ListFieldName,
   ListOption,
+  NounedField,
   ReferenceLink,
   ReferenceListEntry,
+  SectionKey,
+  SubstituteForm,
   SubstituteLink,
   SubstituteListEntry,
   VariantFormValues,
-  VariantListName,
+  VariantSectionKey,
 } from './types';
 
 // The form's values against the shape the schema and the mutation take, and
@@ -33,22 +37,46 @@ import type {
 // issues and the server's `fieldErrors` both go through
 // (claude-docs/components/ingredient-form.md).
 
-export const LIST_FIELDS: readonly IngredientListName[] = [
+// The arrays below are `as const`, and `types.ts` derives its unions from
+// them, so a list or a section is named once rather than in an array and a
+// union kept in step by hand.
+
+/** The ingredient's own lists that take entries in a box. */
+export const LIST_FIELDS = [
   'folkNames',
   'planets',
   'zodiacSigns',
   'colors',
   'deities',
   'substitutes',
-];
+] as const;
 
 /** A variant's lists, each a box beneath its form as the ingredient's are beneath it. */
-export const VARIANT_LISTS: readonly VariantListName[] = [
-  'planets',
-  'zodiacSigns',
-  'colors',
-  'substitutes',
-];
+export const VARIANT_LISTS = ['planets', 'zodiacSigns', 'colors', 'substitutes'] as const;
+
+/**
+ * What each field is called where the form counts or names its entries: the
+ * variant's Copy From Ingredient ("Copy From Ingredient: Planets", "Copied 2
+ * planets"), a folded section's line ("2 colours") and a variant's card ("1
+ * planet"). One table, so each says a field alike.
+ */
+export const FIELD_NOUNS: Readonly<Record<NounedField, FieldNoun>> = {
+  folkNames: { label: 'Folk Names', one: 'folk name', many: 'folk names' },
+  description: { label: 'Description', one: 'description', many: 'description' },
+  safetyNotes: { label: 'Safety Notes', one: 'safety notes', many: 'safety notes' },
+  elements: { label: 'Element', one: 'element', many: 'elements' },
+  planets: { label: 'Planets', one: 'planet', many: 'planets' },
+  zodiacSigns: { label: 'Zodiac Signs', one: 'zodiac sign', many: 'zodiac signs' },
+  colors: { label: 'Colours', one: 'colour', many: 'colours' },
+  deities: { label: 'Deities', one: 'deity', many: 'deities' },
+  categoryIds: { label: 'Categories', one: 'category', many: 'categories' },
+  substitutes: { label: 'Substitute Ingredients', one: 'substitute', many: 'substitutes' },
+  references: { label: 'References', one: 'reference', many: 'references' },
+  variants: { label: 'Variants', one: 'form', many: 'forms' },
+};
+
+/** A variant whose Form box is empty, as its card and the Variants line name it. */
+export const UNNAMED_FORM = 'Unnamed Form';
 
 /** A form just added: its text, and nothing yet that it adds to the ingredient. */
 export const EMPTY_VARIANT: VariantFormValues = {
@@ -167,7 +195,9 @@ export function toInput(values: IngredientFormValues): IngredientFormInput {
   };
 }
 
-const texts = (rows: { value: string }[]) => rows.map(({ value }) => value);
+/** A list's entries as their text alone: what the input sends, and what a summary line names. */
+export const texts = (rows: readonly { value: string }[]): string[] =>
+  rows.map(({ value }) => value);
 
 /** A substitute's link by id — and the form of it picked, when one is — or else its text as a name. */
 const substituteInputs = (rows: SubstituteListEntry[]) =>
@@ -224,13 +254,31 @@ const isDeityLink = (link: SubstituteLink | DeityLink): link is DeityLink => 'tr
  * What an entry's pill reads: its text, beside what tells it from a
  * same-named one — a linked substitute's formal name, so two ingredients
  * sharing a label are told apart, and a picked deity's tradition, "Hecate
- * (Greek)", as its lookup row reads (MB.169).
+ * (Greek)", as its lookup row reads (MB.169) — and, for a substitute naming
+ * one form of what it links, that form after a dot, "Rosemary · Dried leaf",
+ * as a variant's substitute row reads (MB.115).
  */
 export function entryText(entry: AnyListEntry): string {
   const link = linkOf(entry);
   const qualifier = link && (isDeityLink(link) ? link.tradition : link.canonicalName);
-  return qualifier ? `${entry.value} (${qualifier})` : entry.value;
+  const text = qualifier ? `${entry.value} (${qualifier})` : entry.value;
+  const form =
+    link && !isDeityLink(link) && 'variantId' in entry
+      ? formNamed(link, entry.variantId)
+      : undefined;
+  return form ? `${text} · ${form}` : text;
 }
+
+/**
+ * Whether a list is the ingredient's substitutes or a variant's: the lists
+ * whose entries may link an ingredient, and whose typed ones are told apart
+ * as names only (MB.115).
+ */
+export const holdsSubstitutes = (list: ListFieldName): boolean =>
+  list === 'substitutes' || list.endsWith('.substitutes');
+
+/** What a typed substitute's chip is read as after its text: no ingredient behind it. */
+export const NAME_ONLY = 'name only';
 
 /** Whose a linked ingredient is, as its lookup row and its pill's tooltip say. */
 export const tierOf = ({ isGlobal }: Pick<SubstituteLink, 'isGlobal'>): string =>
@@ -238,19 +286,19 @@ export const tierOf = ({ isGlobal }: Pick<SubstituteLink, 'isGlobal'>): string =
 
 /**
  * What a linked entry's pill leaves out, for its tooltip. A substitute's is
- * "Dried leaf, Oil · Compendium entry — A fixture herb.": the form of it
- * picked, or else the forms it comes in (MB.222), its tier and its
- * description (MB.164). A deity's is its description (MB.169). Undefined for
- * a typed entry, which has nothing more to tell.
+ * "Dried leaf · Compendium entry": the form of it linked, or "Any form",
+ * and its tier. Kept to that one short line, the owner's call (MB.115): the
+ * rest is the chip's summary, a press away. A deity's
+ * is its description (MB.169). Undefined for a typed entry, which has
+ * nothing more to tell.
  */
 export function entryDetail(entry: AnyListEntry): string | undefined {
   const link = linkOf(entry);
   if (!link) return undefined;
   if (isDeityLink(link)) return link.description ?? undefined;
-  // The form of it picked, when one is (MB.215), else every form it comes in.
+  // The form of it linked, when one is (MB.215).
   const picked = 'variantId' in entry ? formNamed(link, entry.variantId) : undefined;
-  const facts = [picked ?? link.forms.join(', '), tierOf(link)].filter(Boolean).join(' · ');
-  return link.description ? `${facts} — ${link.description}` : facts;
+  return `${picked ?? 'Any form'} · ${tierOf(link)}`;
 }
 
 /** The text of the linked ingredient's form `id`, when it knows one by that id. */
@@ -261,8 +309,8 @@ const formNamed = (link: SubstituteLink, id: string | undefined): string | undef
  * A variant's substitute suggestions, ranked for `form` (MB.215): the
  * ingredients that come in a form folding alike first, then those with a
  * form in its curated `group`, then the rest, each tier in the order the
- * search ranked it. Every row is kept, since any ingredient may stand in for
- * any form; this only puts the likeliest first.
+ * search ranked it. Every row is kept, since a form of any ingredient may
+ * stand in for any form; this only puts the likeliest first.
  */
 export function rankForForm(
   options: readonly ListOption[],
@@ -281,6 +329,47 @@ export function rankForForm(
     .map((option, index) => ({ option, index, tier: rankOf(option) }))
     .sort((a, b) => a.tier - b.tier || a.index - b.index)
     .map(({ option }) => option);
+}
+
+/**
+ * A variant's substitute rows (MB.115, the owner's call): each ingredient
+ * the lookup found, in its order, as one row per form it comes in, "Rosemary
+ * · Dried leaf (Plant part)", which links that form. A variant's link names a
+ * form, never the whole ingredient, so there is no row for any form of it,
+ * and an ingredient in no form at all, which only a coven's
+ * information-only entry can be, is not offered: there is nothing to link.
+ * Typed text is the box's own row, a name only, and is untouched here. Its
+ * forms run the likeliest first, as `rankForForm` ranks ingredients for
+ * `form` and `group`; `own`, the variant's saved row, is never its own
+ * substitute, as the database's `ingredient_substitutes_not_itself` holds.
+ */
+export function formRows(
+  options: readonly ListOption[],
+  form: string,
+  group: string | null,
+  own?: string,
+): ListOption[] {
+  const key = fold(form);
+  const rankOf = (variant: SubstituteForm): number => {
+    if (key !== '' && fold(variant.form) === key) return 0;
+    return group !== null && variant.group === group ? 1 : 2;
+  };
+  return options.flatMap((option) => {
+    const { link } = option;
+    if (!link || isDeityLink(link)) return [option];
+    const name = option.label ?? option.value;
+    const ranked = (link.variants ?? [])
+      .filter(({ id }) => id !== own)
+      .map((variant, index) => ({ variant, index, tier: rankOf(variant) }))
+      .sort((a, b) => a.tier - b.tier || a.index - b.index);
+    return ranked.map(({ variant }) => ({
+      value: option.value,
+      label: `${name} · ${variant.group ? `${variant.form} (${variant.group})` : variant.form}`,
+      key: `${option.key ?? link.id}/${variant.id}`,
+      link,
+      variantId: variant.id,
+    }));
+  });
 }
 
 /** An issue's path, as zod and the server's `fieldErrors` give it. */
@@ -358,8 +447,12 @@ function placeIn(
   return index === undefined ? field : undefined;
 }
 
-/** An entry's key, as the schema folds a list's text: trimmed, its case set aside. */
-const fold = (text: string): string => text.trim().toLowerCase();
+/**
+ * An entry's key, as the schema folds a list's text: trimmed, its case set
+ * aside. `toLowerCase` rather than the type-ahead's `toLocaleLowerCase`, since
+ * this key must agree with the database's own fold, not the reader's locale.
+ */
+export const fold = (text: string): string => text.trim().toLowerCase();
 
 /**
  * Why `text` cannot be a list's next entry, or undefined when it can: a
@@ -387,9 +480,27 @@ export function repeatOf(
 }
 
 /**
+ * The values an edit opens on, each linked substitute of the ingredient's own
+ * list holding a `variantId`, "" for Any Form, where the readback leaves
+ * the key out. Its Form of X box registers that key as it mounts, and
+ * react-hook-form counts a key it adds against defaults that lack it as a
+ * change: React's development double mount re-checks, and an untouched entry
+ * asked about unsaved changes (MB.115). "" sends no form (`toInput`).
+ */
+export function openingValues(values: IngredientFormValues): IngredientFormValues {
+  return {
+    ...values,
+    substitutes: values.substitutes.map((entry) =>
+      entry.link && !('variantId' in entry) ? { ...entry, variantId: '' } : entry,
+    ),
+  };
+}
+
+/**
  * Adds `text` as the list's last entry, trimmed, and empties the box: a
  * suggestion picked from it, with the ingredient or the curated deity it
- * links when it is a substitute's or a deity's. Returns what the entry reads
+ * links when it is a substitute's or a deity's, and the form of that
+ * ingredient a variant's substitute row names. Returns what the entry reads
  * as, or undefined when the text was blank.
  */
 export function addEntry(
@@ -397,10 +508,13 @@ export function addEntry(
   list: ListFieldName,
   text: string,
   link?: SubstituteLink | DeityLink,
+  variantId?: string,
 ): string | undefined {
   const value = text.trim();
   if (value === '') return undefined;
-  const entry: AnyListEntry = link ? { value, link } : { value };
+  const entry: AnyListEntry = link
+    ? { value, link, ...(variantId ? { variantId } : {}) }
+    : { value };
   // Any list's entries: the union of the lists' own entry types is more than
   // `setValue` can check against a path it does not know until now.
   const listed = getValues(list) as AnyListEntry[];
@@ -507,7 +621,7 @@ function boxIssues(
   }
   const search = drafts.references?.trim() ?? '';
   if (panelOpen) {
-    issues.references = { type: 'unsaved', message: 'Save the new reference, or cancel it' };
+    issues.references = { type: 'unsaved', message: 'Save the source, or cancel it' };
   } else if (search !== '') {
     issues.references = {
       type: 'unadded',
@@ -584,3 +698,102 @@ export const ingredientResolver = resolverFor(LocalIngredientInput, 'coven');
 
 /** A compendium entry: the classification is required, and the vocabulary boxes take picks. */
 export const compendiumResolver = resolverFor(CompendiumIngredientInput, 'compendium');
+
+/** A variant's sections, in page order, each folding as the ingredient's do (MB.115). */
+export const VARIANT_SECTION_KEYS = [
+  'identity',
+  'description',
+  'correspondences',
+  'relations',
+  'safety',
+  'sources',
+] as const;
+
+/** The ingredient's sections, in page order: each folds to a summary line (MB.115). */
+export const SECTION_KEYS = [...VARIANT_SECTION_KEYS, 'variants'] as const;
+
+/**
+ * The section a value an ingredient and its variants both hold sits in: the
+ * ingredient's and a variant's tables below each spread it, so the two agree.
+ */
+const SHARED_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
+  description: 'description',
+  elements: 'correspondences',
+  planets: 'correspondences',
+  zodiacSigns: 'correspondences',
+  colors: 'correspondences',
+  categoryIds: 'relations',
+  substitutes: 'relations',
+  safetyNotes: 'safety',
+  references: 'sources',
+  referencePanelOpen: 'sources',
+};
+
+/**
+ * The section each top-level value sits in. A box's draft, `drafts.colors`,
+ * sits in its list's section, and `drafts.variants`, the New Form box, in Variants.
+ */
+const SECTION_OF: Readonly<Record<string, SectionKey>> = {
+  ...SHARED_SECTION_OF,
+  name: 'identity',
+  nomenclature: 'identity',
+  canonicalName: 'identity',
+  folkNames: 'identity',
+  deities: 'correspondences',
+  variants: 'variants',
+};
+
+/**
+ * The section each of a variant's values sits in, as the ingredient's value
+ * of the same name does; its Form is its Identity. A server issue on the
+ * variant as a whole, or on its kept id, is placed on its Form box.
+ */
+const VARIANT_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
+  ...SHARED_SECTION_OF,
+  form: 'identity',
+  formLink: 'identity',
+};
+
+/** The sections `errors` names in `sectionOf`, by the first key of each error's path, a box's draft by its list's. */
+function sectionsIn<K extends SectionKey>(
+  errors: object,
+  sectionOf: Readonly<Record<string, K>>,
+): Set<K> {
+  const found = new Set<K>();
+  for (const [key, error] of Object.entries(errors)) {
+    const keys = key === 'drafts' && error ? Object.keys(error as object) : [key];
+    for (const named of keys) {
+      const section = sectionOf[named];
+      if (section) found.add(section);
+    }
+  }
+  return found;
+}
+
+/**
+ * The sections holding an error, the schema's or the server's, by the
+ * first key of each error's path (the list's, for a box's draft). The form's
+ * `root` error names no field, and so no section.
+ */
+export function sectionsWithErrors(errors: FieldErrors<IngredientFormValues>): Set<SectionKey> {
+  return sectionsIn(errors, SECTION_OF);
+}
+
+/** One variant's sections holding an error, read from its errors, `errors.variants[i]`. */
+export function variantSectionsWithErrors(errors: unknown): Set<VariantSectionKey> {
+  return errors && typeof errors === 'object' ? sectionsIn(errors, VARIANT_SECTION_OF) : new Set();
+}
+
+/** Each variant holding an error, by its place in the list, and the sections it holds them in. */
+export function variantsWithErrors(
+  errors: FieldErrors<IngredientFormValues>,
+): Map<number, Set<VariantSectionKey>> {
+  const found = new Map<number, Set<VariantSectionKey>>();
+  // An array's own error sits on it as `root`, beside the variants' places.
+  for (const [key, error] of Object.entries(errors.variants ?? {})) {
+    const index = Number(key);
+    const sections = variantSectionsWithErrors(error);
+    if (Number.isInteger(index) && sections.size > 0) found.set(index, sections);
+  }
+  return found;
+}

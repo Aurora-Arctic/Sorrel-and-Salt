@@ -127,9 +127,29 @@ The finders:
   accept service rejects each with its own message (M7.7), and can only tell
   them apart if it sees them.
 - **`findPendingInvitationsInWorkspace(membership)`**, the members page's
-  pending list (M7.6), and **`findPendingSiteInvitations(admin)`**,
-  `/admin/users`' (MB.70): each tier's pending rows under its own proof.
-  Unordered, since a page sorts the handful it holds. No list of past
+  pending list (M7.6), and **`findPendingSiteInvitationPage(admin, filter, page)`**,
+  `/admin/invitations`' (MB.70): each tier's pending rows under its own proof.
+  The workspace's is unordered, since the members page sorts the handful it
+  holds. The site tier's is a cursor page (a page of results that resumes
+  from the last row rather than counting rows to skip; CLAUDE.md rule 8),
+  newest first: keyed on `created_at` negated as `numeric`, as the privilege
+  ledger is, so the microseconds survive the cursor, and by id among rows of
+  one instant. It reads through `findPageInScope` under `onSiteTier()`,
+  since the exported pagers' types admit no two-tier table and
+  `findPageInTiers` would read the site tier as the compendium (MB.115).
+  **`findPendingSiteInvitationCount(admin, filter, start)`** counts the same
+  rows, and those before a page's first, for the tab's "Page X of Y". No
+  index serves the order: the pending set is small, and an index on the
+  negated expression would be its own task. Both take a
+  `SiteInvitationFilter` (MB.115), each part ANDed in SQL:
+  `email`, a fragment of the address matched case-insensitively by the
+  shared `containsText`, its `%` and `_` read literally; and
+  `expiresWithinHours`, which keeps a row only while its `expires_at` falls
+  within that many hours of the database's `now()`, the same clock the
+  pending test reads, so the app's clock never decides an expiry. For
+  example, `{ email: 'FERN', expiresWithinHours: 24 }` finds a pending
+  invitation to `fern.moss@…` that lapses in 23 hours, and not one that
+  lapses in 25. No list of past
   invitations is planned: each pending list is where an invitation is acted
   on, and the privilege ledger holds every acceptance that granted
   something.

@@ -1,4 +1,6 @@
 import type { Story } from '@ladle/react';
+import type { ReactElement } from 'react';
+import { AdminFrame } from '../../../.ladle/admin-frame';
 import CompendiumList from '.';
 import { slugify } from '../../lib/slugify';
 import { compendiumHref } from './href';
@@ -6,12 +8,23 @@ import type { CompendiumListEntry, CompendiumListFilter } from './types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
 // Render-only; behaviour is asserted in tests/components/CompendiumList. The
-// filter reaches `/admin/compendium`, which the workshop does not serve.
+// filter reaches `/admin/compendium`, which the workshop does not serve. Each
+// story sits in the admin layout's frame (`AdminFrame`), at its width.
 export default {
   title: 'Admin / Compendium List',
 };
 
-const NO_FILTER: CompendiumListFilter = { query: '', nomenclature: '', withoutReferences: false };
+const NO_FILTER: CompendiumListFilter = {
+  query: '',
+  form: '',
+  nomenclature: '',
+  withoutReferences: false,
+};
+
+// The curated forms the Form box offers, in name order.
+const FORMS = ['Dried', 'Essential Oil', 'Oil', 'Powder', 'Resin', 'Tincture'].map((name) => ({
+  name,
+}));
 
 const entry = (
   name: string,
@@ -38,38 +51,72 @@ const ENTRIES = [
   entry('Mockroot', 'none', null, ['Powder']),
 ];
 
-export const OnePageOfSeveral: Story = () => (
-  <CompendiumList
-    entries={ENTRIES}
-    filter={NO_FILTER}
-    previousHref={compendiumHref({ before: 'cursor' })}
-    nextHref={compendiumHref({ after: 'cursor' })}
-    position={{ page: 2, pages: 3 }}
-  />
+// The middle page of three, both pager ends live.
+const PageOfSeveral = (): ReactElement => (
+  <AdminFrame>
+    <CompendiumList
+      entries={ENTRIES}
+      filter={NO_FILTER}
+      forms={FORMS}
+      previousHref={compendiumHref({ before: 'cursor' })}
+      nextHref={compendiumHref({ after: 'cursor' })}
+      position={{ page: 2, pages: 3 }}
+    />
+  </AdminFrame>
 );
+
+export const OnePageOfSeveral: Story = () => <PageOfSeveral />;
 
 // Next alone still sits at the right, where it is on every other page.
 export const FirstPage: Story = () => (
-  <CompendiumList
-    entries={ENTRIES.slice(0, 2)}
-    filter={NO_FILTER}
-    nextHref={compendiumHref({ after: 'cursor' })}
-  />
+  <AdminFrame>
+    <CompendiumList
+      entries={ENTRIES.slice(0, 2)}
+      filter={NO_FILTER}
+      forms={FORMS}
+      nextHref={compendiumHref({ after: 'cursor' })}
+    />
+  </AdminFrame>
 );
 
-// The admin's two to-do lists at once: the unknown kind, and the unsourced.
+// The admin's two to-do lists at once, the unknown kind and the unsourced,
+// narrowed to one form.
 export const Filtered: Story = () => (
-  <CompendiumList
-    entries={[entry('Mockroot', null, 'powder')]}
-    filter={{ query: '', nomenclature: 'unknown', withoutReferences: true }}
-  />
+  <AdminFrame>
+    <CompendiumList
+      entries={[entry('Fixture Salt', 'unknown', null, ['Powder'])]}
+      filter={{ query: '', form: 'Powder', nomenclature: 'unknown', withoutReferences: true }}
+      forms={FORMS}
+    />
+  </AdminFrame>
 );
 
 export const NoMatch: Story = () => (
-  <CompendiumList
-    entries={[]}
-    filter={{ query: 'nothing', nomenclature: 'mineral', withoutReferences: false }}
-  />
+  <AdminFrame>
+    <CompendiumList
+      entries={[]}
+      filter={{ query: 'nothing', form: 'Oil', nomenclature: 'mineral', withoutReferences: false }}
+      forms={FORMS}
+    />
+  </AdminFrame>
 );
 
-export const Empty: Story = () => <CompendiumList entries={[]} filter={NO_FILTER} />;
+export const Empty: Story = () => (
+  <AdminFrame>
+    <CompendiumList entries={[]} filter={NO_FILTER} forms={FORMS} />
+  </AdminFrame>
+);
+
+// A phone's width, in each theme: every row a card.
+export const PhoneDark: Story = () => <PageOfSeveral />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <PageOfSeveral />;
+PhoneLight.meta = { theme: 'light', width: 375 };
+
+// The filtered list at a phone's width, the row stacked and Clear at its end.
+export const FilteredPhoneDark: Story = () => <Filtered />;
+FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const FilteredPhoneLight: Story = () => <Filtered />;
+FilteredPhoneLight.meta = { theme: 'light', width: 375 };

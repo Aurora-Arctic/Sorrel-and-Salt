@@ -1,11 +1,13 @@
 import type { Story } from '@ladle/react';
-import { useState } from 'react';
+import { type ReactElement, useId, useState } from 'react';
+import { FieldShell, fieldDescription } from '../Field';
 import Combobox, {
   ComboboxEntry,
   ComboboxMultiSelect,
   ComboboxSelect,
   ComboboxSortableEntries,
 } from '.';
+import { ComboboxTypeahead } from './typeahead';
 import type { ComboboxOption } from './types';
 
 // Render-only; behaviour is asserted in tests/components/Combobox. The
@@ -126,11 +128,11 @@ export const List: Story = () => {
           </ul>
         )
       }
-      clear={
-        entries.length > 0
-          ? { label: 'Clear Folk Names', onClear: () => setEntries([]) }
-          : undefined
-      }
+      clear={{
+        label: 'Clear Folk Names',
+        onClear: () => setEntries([]),
+        empty: entries.length === 0,
+      }}
     />
   );
 };
@@ -178,17 +180,15 @@ export const Sortable: Story = () => {
           />
         )
       }
-      clear={
-        entries.length > 0 ? { label: 'Clear Planets', onClear: () => setEntries([]) } : undefined
-      }
+      clear={{ label: 'Clear Planets', onClear: () => setEntries([]), empty: entries.length === 0 }}
     />
   );
 };
 
 /** A box with no source yet: it never opens, and Enter adds as Add does. */
 /**
- * A list whose entries can only be picked, the references' (MB.154): its first
- * row makes something new, "Add a reference", whatever is typed, in place of
+ * A list whose entries can only be picked, the references' (MB.154): its last
+ * row makes something new, "New Reference…", whatever is typed, in place of
  * the typed row. Picking it says so beneath the box.
  */
 export const CreateRow: Story = () => {
@@ -203,9 +203,9 @@ export const CreateRow: Story = () => {
         onChange={setValue}
         onPick={setValue}
         suggestions={{ options: NAMES, pending: false }}
-        create={{ label: 'Add a reference', onCreate: () => setMade((count) => count + 1) }}
+        create={{ label: 'New Reference…', onCreate: () => setMade((count) => count + 1) }}
       />
-      {made > 0 && <output className="story-note">Add a reference picked {made}×.</output>}
+      {made > 0 && <output className="story-note">New Reference… picked {made}×.</output>}
     </>
   );
 };
@@ -242,6 +242,32 @@ export const SelectOnly: Story = () => {
   );
 };
 
+const TRADITIONS = ['Fixtural', 'Mockish', 'Old Testic', 'Stubbish', 'Testwardish'].map(
+  (label) => ({ value: label.toLowerCase(), label }),
+);
+
+/** The type-ahead box: a closed set typed into, the list narrowing to the choices holding the text, the first highlighted, and only a choice the value. */
+export const Typeahead: Story = () => {
+  const [value, setValue] = useState('');
+  return (
+    <>
+      <label id="tradition-label" htmlFor="tradition">
+        Tradition
+      </label>
+      <ComboboxTypeahead
+        id="tradition"
+        label="Tradition"
+        labelId="tradition-label"
+        value={value}
+        onChange={setValue}
+        choices={TRADITIONS}
+        placeholder="Choose a tradition"
+      />
+      <p>Value: {value || '(none)'}</p>
+    </>
+  );
+};
+
 const ELEMENTS = ['Earth', 'Air', 'Fire', 'Water', 'Spirit'].map((label) => ({
   value: label.toLowerCase(),
   label,
@@ -267,3 +293,59 @@ export const MultiSelect: Story = () => {
     </>
   );
 };
+
+// A phone's width, in each theme: a list's box, its chips wrapping and the
+// long one cut off at the narrower control.
+export const PhoneDark: Story = () => <List />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <List />;
+PhoneLight.meta = { theme: 'light', width: 375 };
+
+// The qualifier as the ingredient form draws it: the Form box under the field
+// before it, "Wax" picked under Substance, with a detail long enough to wrap.
+// Focus in the box or a hover on "(Substance)" opens the tooltip above the
+// box from its right edge, so the Form label stays clear; the first printable
+// key and the list opening close it (MB.115).
+const LONG_DETAIL =
+  'A long description, as a curated form can carry: what the form is, how it is prepared, and what sets it apart from another form of the same name.';
+
+const QualifiedField = (): ReactElement => {
+  const nameField = fieldDescription({ id: useId() });
+  const formField = fieldDescription({
+    id: useId(),
+    hint: 'How it comes: dried leaf, whole root, oil.',
+  });
+  const [value, setValue] = useState('Wax');
+  return (
+    <div className="form" style={{ maxWidth: '32rem' }}>
+      <FieldShell label="Name" {...nameField}>
+        <input
+          id={nameField.controlId}
+          className="input"
+          defaultValue="Testwort"
+          {...nameField.aria}
+        />
+      </FieldShell>
+      <FieldShell label="Form" hint="How it comes: dried leaf, whole root, oil." {...formField}>
+        <Combobox
+          id={formField.controlId}
+          label="Form"
+          labelId={formField.labelId}
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          suggestions={{ options: FORMS, pending: false }}
+          qualifier={{ text: 'Substance', detail: LONG_DETAIL }}
+          {...formField.aria}
+        />
+      </FieldShell>
+    </div>
+  );
+};
+
+export const QualifierInForm: Story = () => <QualifiedField />;
+
+// At a phone's width, where the tooltip's cap at 60% of the box shows.
+export const QualifierInFormPhone: Story = () => <QualifiedField />;
+QualifierInFormPhone.meta = { width: 375 };

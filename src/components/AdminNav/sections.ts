@@ -1,0 +1,83 @@
+import { KINDS as VALUE_KINDS } from '../GroupedValueList/kinds';
+import { KINDS as GROUP_KINDS } from '../GroupList/kinds';
+import { capitalise } from '../../lib/text';
+import type { GroupKind } from '../GroupForm/types';
+import type { GroupedValueKind } from '../GroupedValueForm/types';
+import type { PageTab } from '../TabbedPage/types';
+import type { AdminPage, AdminSection } from './types';
+
+/** A curated list's tab, at its kind's address and under its title: it opens with a filter. */
+const valueTab = (kind: GroupedValueKind): PageTab => ({
+  href: VALUE_KINDS[kind].path,
+  label: VALUE_KINDS[kind].title,
+  filtered: true,
+});
+
+/** A group list's tab, "Groups" or "Traditions": it opens with no filter. */
+const groupTab = (kind: GroupKind): PageTab => ({
+  href: GROUP_KINDS[kind].path,
+  label: capitalise(GROUP_KINDS[kind].plural),
+});
+
+// Every admin page, its tabs and its section: the one list the nav, the
+// `/admin` index and each tabbed page's layout read, so the three cannot
+// drift (MB.115; claude-docs/components/admin-nav.md). A list shares its page
+// with the group list that organises it, a tab each, as Category Groups
+// organise Categories (M5.6b, MB.132), on the owner's call after the design
+// review. A vocabulary's tab is built from its kind table (`GroupList/kinds.ts`,
+// `GroupedValueList/kinds.ts`), which holds its address; the others are checked
+// against the built routes (typedRoutes). A tab marked `filtered` opens with a
+// filter, which its loading skeleton draws.
+export const ADMIN_PAGES = {
+  compendium: {
+    label: 'Compendium',
+    description: 'Every ingredient in the shared reference, with its forms and sources.',
+    tabs: [{ href: '/admin/compendium', label: 'Compendium' }],
+  },
+  categories: {
+    label: 'Categories',
+    description: 'The categories an ingredient is filed under, and the groups that colour them.',
+    tabs: [valueTab('category'), groupTab('category')],
+  },
+  forms: {
+    label: 'Forms',
+    description:
+      'The forms an ingredient comes in, and the groups that tell two forms of one name apart.',
+    tabs: [valueTab('form'), groupTab('form')],
+  },
+  deities: {
+    label: 'Deities',
+    description: 'The deities an ingredient can be linked with, and the traditions they belong to.',
+    tabs: [valueTab('deity'), groupTab('tradition')],
+  },
+  astrology: {
+    label: 'Astrology',
+    description: 'The planets and zodiac signs an ingredient can be linked with.',
+    tabs: [valueTab('planet'), valueTab('zodiacSign')],
+  },
+  people: {
+    label: 'People',
+    description:
+      'Every account and its role, the admin invitations waiting, and who changed which privilege.',
+    tabs: [
+      { href: '/admin/users', label: 'Users', filtered: true },
+      { href: '/admin/invitations', label: 'Invitations' },
+      // Who holds which privilege, and who changed it (MB.200).
+      { href: '/admin/privilege-changes', label: 'Privilege Changes', filtered: true },
+    ],
+  },
+} as const satisfies Record<string, AdminPage>;
+
+export const ADMIN_SECTIONS: readonly AdminSection[] = [
+  {
+    name: 'Compendium',
+    pages: [
+      ADMIN_PAGES.compendium,
+      ADMIN_PAGES.categories,
+      ADMIN_PAGES.forms,
+      ADMIN_PAGES.deities,
+      ADMIN_PAGES.astrology,
+    ],
+  },
+  { name: 'People', pages: [ADMIN_PAGES.people] },
+];

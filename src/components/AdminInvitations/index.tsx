@@ -1,23 +1,53 @@
 'use client';
 
-import { type ReactElement, useId } from 'react';
+import Link from 'next/link';
+import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
+import StackTable from '../DataTable';
+import { noMatchText } from '../../lib/text';
 import { inUtc } from '../../lib/utc';
 import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
+import ListFrame, { ListBody } from '../ListFrame';
+import Notice from '../Notice';
+import Pager from '../Pager';
+import AdminInvitationsFilter from './filter';
+import { invitationsHref } from './href';
 import InviteForm from './invite-form';
-import type { AdminInvitationEntry, AdminInvitationsProps } from './types';
-// The locked control's tip and the confirmation's spacing are the user list's.
-import '../UserList/index.scss';
+import type {
+  RevokeInvitationProps,
+  AdminInvitationsFilter as Filter,
+  AdminInvitationsProps,
+  InviteAdminProps,
+} from './types';
 import './index.scss';
 
-// `/admin/users`' admin invitations (MB.70): Invite Admin, and the pending
-// invitations, each with its address, reason and expiry, and Revoke. While
+// The People page's Invitations tab, `/admin/invitations` (MB.70; a tab of
+// its own since MB.115): a filter by address and by expiry within 24 hours,
+// a page of the pending invitations it leaves, each with its address, reason
+// and expiry, and Revoke, the pager beneath them, and the invite form
+// `?invite` opens over them. Invite Admin is the tab's action, beside the page's heading. While
 // admin changes are paused both are in view but locked for any admin but the
 // primary one, with the pause as the reason, as the role controls are. The
 // confirmation and the locked control are the user list's own, so the page
-// asks one way (claude-docs/components/admin-invitations.md).
+// asks one way, and each brings its own rules with it
+// (claude-docs/components/admin-invitations.md).
+
+/** No filter: the whole pending list. */
+const NO_FILTER: Filter = { email: '', expiringSoon: false };
+
+/**
+ * The empty list, naming the filters in use as the other admin lists do
+ * (MB.115), so an admin sees what to change: "No invitations match “fern”
+ * and Expires in 24 Hrs. Change or clear the filter to see more."
+ */
+function emptyText({ email, expiringSoon }: Filter): string {
+  const filters = [email && `“${email}”`, expiringSoon && 'Expires in 24 Hrs'].filter(
+    (filter): filter is string => Boolean(filter),
+  );
+  return noMatchText('invitations', filters, 'No admin invitations are waiting.');
+}
 
 const RevokeAdminInvitationDocument = graphql(`
   mutation RevokeAdminInvitation($id: ID!) {
@@ -27,13 +57,7 @@ const RevokeAdminInvitationDocument = graphql(`
   }
 `);
 
-const Revoke = ({
-  invitation,
-  locked,
-}: {
-  invitation: AdminInvitationEntry;
-  locked?: string;
-}): ReactElement => {
+const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => {
   const accessibleName = `Revoke the invitation to ${invitation.email}`;
   if (locked) {
     return (
@@ -53,8 +77,8 @@ const Revoke = ({
       title="Revoke Invitation"
       question={
         <>
-          Withdraw the invitation to <strong>{invitation.email}</strong>? Its link will say it was
-          withdrawn.
+          Revoke the invitation to <strong>{invitation.email}</strong>? Its link will say it was
+          revoked.
         </>
       }
       busy="Revoking"
@@ -64,51 +88,95 @@ const Revoke = ({
   );
 };
 
-const AdminInvitations = ({ invitations, locked }: AdminInvitationsProps): ReactElement => {
-  const headingId = useId();
+/**
+ * Invite Admin, the Invitations tab's action beside the page's heading: a
+ * link to `?invite`, which opens the form over the list, or locked with the
+ * pause as its reason. A link rather than a button holding the form, since
+ * the heading line and the list are rendered apart (MB.115). It keeps the
+ * tab's filter and page, as a value page's Add does.
+ */
+export const InviteAdmin = ({
+  locked,
+  filter = NO_FILTER,
+  cursor,
+}: InviteAdminProps): ReactElement =>
+  locked ? (
+    <LockedControl label="Invite Admin" className="btn btn--solid" reason={locked} />
+  ) : (
+    <Link className="btn btn--solid" href={invitationsHref(filter, cursor, true)}>
+      Invite Admin
+    </Link>
+  );
+
+// A region named as a heading would name it, though it shows none: the page's
+// heading and its open tab already say what it holds, and the name keeps the
+// sent notice and the rows findable as one. The sent notice is this
+// component's state, set by the form before it closes, so it outlasts the
+// form's `?invite` and names the address without carrying it in one.
+const AdminInvitations = ({
+  invitations,
+  filter = NO_FILTER,
+  cursor,
+  previousHref,
+  nextHref,
+  position,
+  locked,
+  inviting = false,
+}: AdminInvitationsProps): ReactElement => {
+  const [sent, setSent] = useState<string>();
+  // A form opened again clears the last notice, as a fresh form starts empty.
+  const [wasInviting, setWasInviting] = useState(inviting);
+  if (inviting !== wasInviting) {
+    setWasInviting(inviting);
+    if (inviting) setSent(undefined);
+  }
   return (
-    <section className="admin-invitations" aria-labelledby={headingId}>
-      <div className="admin-invitations__header">
-        <h2 id={headingId}>Admin Invitations</h2>
-        {locked ? (
-          <LockedControl label="Invite Admin" className="btn btn--solid" reason={locked} />
-        ) : (
-          <InviteForm />
-        )}
-      </div>
-      {invitations.length === 0 ? (
-        <p className="admin-invitations__empty">No invitations are waiting.</p>
-      ) : (
-        <div className="data-table-frame">
-          <table className="data-table">
-            <thead>
-              <tr>
-                <th scope="col">Email</th>
-                <th scope="col">Reason</th>
-                <th scope="col">Expires</th>
-                <th scope="col">Revoke</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invitations.map((invitation) => (
-                <tr key={invitation.id}>
-                  <td>{invitation.email}</td>
-                  <td>
-                    {invitation.note ?? <span className="admin-invitations__none">None given</span>}
-                  </td>
-                  <td>
-                    <time dateTime={invitation.expiresAt.toISOString()}>
-                      {inUtc(invitation.expiresAt)}
-                    </time>
-                  </td>
-                  <td>
-                    <Revoke invitation={invitation} locked={locked} />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+    <section className="admin-invitations" aria-label="Admin Invitations">
+      {sent && (
+        <Notice kind="success" className="admin-invitations__sent">
+          Invitation sent to {sent}.
+        </Notice>
+      )}
+      <ListFrame>
+        {/* Keyed by the filter shown, so another one starts the form again from it. */}
+        <AdminInvitationsFilter key={`${filter.email}\n${filter.expiringSoon}`} filter={filter} />
+        <ListBody>
+          {/* Each cell on one line, the table scrolling in its frame. */}
+          <StackTable
+            columns={[
+              { heading: 'Email', cell: (invitation) => invitation.email },
+              {
+                heading: 'Reason',
+                cell: (invitation) =>
+                  invitation.note ?? <span className="admin-invitations__none">None given</span>,
+              },
+              {
+                heading: 'Expires',
+                cell: (invitation) => (
+                  <time dateTime={invitation.expiresAt.toISOString()}>
+                    {inUtc(invitation.expiresAt)}
+                  </time>
+                ),
+              },
+              // An action, so a card's foot with no label of its own.
+              {
+                heading: 'Revoke',
+                action: 'foot',
+                cell: (invitation) => <Revoke invitation={invitation} locked={locked} />,
+              },
+            ]}
+            rows={invitations}
+            rowKey={(invitation) => invitation.id}
+            empty={emptyText(filter)}
+            className="data-table--nowrap"
+          />
+
+          {/* Plain anchors, as the user list's: a full load runs the admin layout's guard again. */}
+          <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
+        </ListBody>
+      </ListFrame>
+      {inviting && !locked && (
+        <InviteForm onSent={setSent} closeHref={invitationsHref(filter, cursor)} />
       )}
     </section>
   );

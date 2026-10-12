@@ -5,6 +5,8 @@ import { type FormEvent, type ReactElement, useEffect, useId, useState } from 'r
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
+import BusyButton from '../BusyButton';
+import { FieldShell, fieldDescription } from '../Field';
 import Notice from '../Notice';
 import type { EmailFormProps } from './types';
 import './index.scss';
@@ -62,8 +64,7 @@ const EmailForm = ({
   embedded = false,
   accountPath,
 }: EmailFormProps): ReactElement => {
-  const inputId = useId();
-  const fieldErrorId = useId();
+  const fieldId = useId();
   const [value, setValue] = useState(email);
   const [sentTo, setSentTo] = useState<string>();
   const [alert, setAlert] = useState(error);
@@ -153,6 +154,7 @@ const EmailForm = ({
   // Only a verified, unchanged address has nothing to send: an unverified one
   // resends its link, and any edit is a change request.
   const nothingToDo = verified && normalise(value) === email;
+  const { aria, ...field } = fieldDescription({ id: fieldId, error: fieldError });
 
   return (
     <div className="email-form">
@@ -166,42 +168,30 @@ const EmailForm = ({
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <div className="field">
-          <label className="field__label" htmlFor={inputId}>
-            Email Address
-          </label>
+        <FieldShell label="Email Address" {...field}>
           <input
-            id={inputId}
+            id={field.controlId}
             className="input"
             type="email"
             autoComplete="email"
+            placeholder="Add your email"
             value={value}
             onChange={(event) => setValue(event.target.value)}
-            aria-invalid={fieldError ? true : undefined}
-            aria-describedby={fieldError ? fieldErrorId : undefined}
+            {...aria}
           />
-          {fieldError && (
-            <p id={fieldErrorId} className="field__error">
-              {fieldError}
-            </p>
-          )}
-        </div>
+        </FieldShell>
         <div className="form__actions">
           {/* Busy, saying so, from the press to the answer, as NameForm's
               save is — the owner's rule for every form. */}
-          <button
+          <BusyButton
             type="submit"
             className="btn btn--solid"
             disabled={nothingToDo || mutation.isPending || coolingDown}
-            aria-busy={mutation.isPending || undefined}
+            busy={mutation.isPending}
+            busyLabel="Sending Confirmation"
           >
-            {mutation.isPending && <span className="spinner" aria-hidden="true" />}
-            {mutation.isPending
-              ? 'Sending Confirmation'
-              : coolingDown
-                ? `Send Again in ${secondsLeft}s`
-                : 'Send Confirmation'}
-          </button>
+            {coolingDown ? `Send Again in ${secondsLeft}s` : 'Send Confirmation'}
+          </BusyButton>
         </div>
       </form>
       {/* The way on for an account that can leave: an unverified one reaches

@@ -1,12 +1,20 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import PrivilegeLedger from '@/components/PrivilegeLedger';
 import { privilegeLedgerHref } from '@/components/PrivilegeLedger/href';
 import type { PrivilegeLedgerEntry } from '@/components/PrivilegeLedger/types';
+import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import { Navigating } from '../../support/navigating';
+import type { FilterFormSubject } from '../../support/types';
 
 // `/admin/privilege-changes`' filter, table and pager (MB.200): render-only,
 // so the page owns the read and this owns what an admin sees of it
 // (claude-docs/components/privilege-ledger.md).
+
+// The filter applies through the App Router; Vitest hoists the mock above the imports.
+const router = vi.hoisted(() => ({ push: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const GRANT: PrivilegeLedgerEntry = {
   id: 'c1',
@@ -74,78 +82,83 @@ describe('PrivilegeLedger', () => {
   });
 
   describe('the filter', () => {
-    const assign = vi.fn();
-    afterEach(() => {
-      assign.mockReset();
-      vi.unstubAllGlobals();
-    });
-    const filterButton = () => screen.getByRole('button', { name: 'Filter' });
+    afterEach(() => router.push.mockReset());
+    const inFlight = (ui: ReactNode) => render(<Navigating push={router.push}>{ui}</Navigating>);
 
-    it('is a GET form to the page: the search and the privilege select', () => {
-      render(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
+    // All Privileges is blank, so a native submit sends `privilege=`, which
+    // the page reads as no privilege.
+    const SUBJECT: FilterFormSubject = {
+      label: 'Filter Privilege Changes',
+      path: '/admin/privilege-changes',
+      searchLabel: 'Name or Email',
+      push: router.push,
+      none: { list: <PrivilegeLedger changes={[GRANT]} filter={{}} />, sends: 'query=&privilege=' },
+      shown: {
+        list: <PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />,
+        sends: 'query=ada&privilege=admin',
+      },
+      alone: [
+        {
+          list: <PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada' }} />,
+          sends: 'query=ada&privilege=',
+        },
+        {
+          list: <PrivilegeLedger changes={[GRANT]} filter={{ privilege: 'admin' }} />,
+          sends: 'query=&privilege=admin',
+        },
+      ],
+      searched: privilegeLedgerHref({ query: 'Two words', privilege: 'admin' }),
+    };
 
-      const form = screen.getByRole('form', { name: 'Filter privilege changes' });
-      expect(form).toHaveAttribute('method', 'get');
-      expect(form).toHaveAttribute('action', '/admin/privilege-changes');
-      const query = screen.getByRole('searchbox', { name: 'Name or Email' });
-      expect(query).toHaveAttribute('name', 'query');
-      expect(query).toHaveValue('ada');
-      const privilege = screen.getByRole('combobox', { name: 'Privilege' });
-      expect(privilege).toHaveAttribute('name', 'privilege');
-      expect(privilege).toHaveValue('admin');
+    it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
+
+    // The owner's call (MB.115): a select-only box once hydrated, as every
+    // closed set in the row is, over the native select the server draws.
+    it('offers every privilege, after the option for all, as a native select on the server and a select-only box once hydrated', async () => {
+      const { container, hydrate } = drawnOnServer(
+        <PrivilegeLedger changes={[GRANT]} filter={{}} />,
+      );
+
+      const served = within(container).getByRole('combobox', { name: 'Privilege' });
       expect(
-        within(privilege)
+        within(served)
           .getAllByRole('option')
           .map((option) => option.getAttribute('value')),
       ).toEqual(['', 'admin', 'create_workspace']);
+
+      await hydrate();
+      fireEvent.click(within(container).getByRole('combobox', { name: 'Privilege' }));
+      expect(
+        within(screen.getByRole('listbox', { name: 'Privilege choices' })).getAllByRole('option'),
+      ).toHaveLength(3);
     });
 
-    it('starts empty when the ledger is not filtered', () => {
-      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
+    it('opens a new privilege from the first page the moment it changes', async () => {
+      inFlight(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
 
-      expect(screen.getByRole('searchbox', { name: 'Name or Email' })).toHaveValue('');
-      expect(screen.getByRole('combobox', { name: 'Privilege' })).toHaveValue('');
+      fireEvent.click(screen.getByRole('combobox', { name: 'Privilege' }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('option', { name: 'All Privileges' }));
+      });
+
+      expect(router.push).toHaveBeenCalledTimes(1);
+      expect(router.push).toHaveBeenCalledWith(privilegeLedgerHref({ query: 'ada' }));
     });
 
-    it('offers Filter only for a new privilege, and opens it from the first page', () => {
-      vi.stubGlobal('location', { ...window.location, assign });
-      render(<PrivilegeLedger changes={[GRANT]} filter={{ query: 'ada', privilege: 'admin' }} />);
-      const privilege = screen.getByRole('combobox', { name: 'Privilege' });
-      expect(filterButton()).toBeDisabled();
+    it('carries the query typed so far when the privilege changes', async () => {
+      inFlight(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
 
-      fireEvent.change(privilege, { target: { value: 'create_workspace' } });
-      expect(filterButton()).toBeEnabled();
-      fireEvent.change(privilege, { target: { value: 'admin' } });
-      expect(filterButton()).toBeDisabled();
+      fireEvent.change(screen.getByRole('searchbox', { name: 'Name or Email' }), {
+        target: { value: ' Ada ' },
+      });
+      fireEvent.click(screen.getByRole('combobox', { name: 'Privilege' }));
+      await act(async () => {
+        fireEvent.click(screen.getByRole('option', { name: 'Coven Creation' }));
+      });
 
-      fireEvent.change(privilege, { target: { value: '' } });
-      fireEvent.click(filterButton());
-
-      expect(assign).toHaveBeenCalledWith(privilegeLedgerHref({ query: 'ada' }));
-    });
-
-    it('offers Filter for a new query, trimmed, keeping the privilege', () => {
-      vi.stubGlobal('location', { ...window.location, assign });
-      render(<PrivilegeLedger changes={[GRANT]} filter={{ privilege: 'admin' }} />);
-      const query = screen.getByRole('searchbox', { name: 'Name or Email' });
-
-      fireEvent.change(query, { target: { value: '   ' } });
-      expect(filterButton()).toBeDisabled();
-      fireEvent.change(query, { target: { value: ' Ada ' } });
-      fireEvent.click(filterButton());
-
-      expect(assign).toHaveBeenCalledWith(
-        privilegeLedgerHref({ query: 'Ada', privilege: 'admin' }),
+      expect(router.push).toHaveBeenCalledWith(
+        privilegeLedgerHref({ query: 'Ada', privilege: 'create_workspace' }),
       );
-    });
-
-    it('sends nothing when nothing changed', () => {
-      vi.stubGlobal('location', { ...window.location, assign });
-      render(<PrivilegeLedger changes={[GRANT]} filter={{}} />);
-
-      fireEvent.submit(screen.getByRole('form', { name: 'Filter privilege changes' }));
-
-      expect(assign).not.toHaveBeenCalled();
     });
   });
 

@@ -1,112 +1,82 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { type FormEvent, type ReactElement, useState, useTransition } from 'react';
+import { type ReactElement, useMemo, useState } from 'react';
+import { oneOf } from '@/lib/search-params';
 import { NOMENCLATURE_KINDS } from '@/modules/ingredients/schema/ingredient-enums';
+import { FilterSelectField, SearchField, SwitchField } from '../Field';
+import FilterForm, { useApplyFilter } from '../FilterForm';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
-import { compendiumHref } from './href';
-import type { CompendiumListFilterProps } from './types';
+import { COMPENDIUM_PATH, compendiumHref } from './href';
+import type { CompendiumListFilterProps, CompendiumPlace } from './types';
 
-// The filter, a GET form to the page itself (MB.178), as the category list's:
-// Filter is offered only when the form differs from the filter the page shows,
-// and opens the new filter from the first page as a soft navigation inside a
-// transition, so Filter shows the spinner until the filtered list arrives.
-// Classification is a native `<select>` and Without References a checkbox
-// valued `1`, so before hydration the form still submits natively, as
-// `query=&nomenclature=` plus `withoutReferences=1` when ticked, which the page
-// reads as the same filter. The list keys this by the filter shown, so a page
-// showing another — Back, say — starts it again from that one.
+// The compendium's filter, on the shared FilterForm (MB.178, MB.115): a name
+// search, a form, a classification and No Refs, each applying as it changes
+// rather than on a Filter button pressed after them, the owner's call at
+// MB.115's review. Classification applies on its pick and No Refs on its
+// press, each carrying the name typed but not yet searched; the form once a
+// choice settles, a pick, its clear or leaving the box, never while it is
+// typed; the name on the magnifier or Enter. Each field but the name is
+// drawn from the filter shown and holds its own value after, since the list
+// keys this by that filter and the new list draws it afresh. Once hydrated
+// the form is typed into, as the curated lists' group is, and Classification
+// is the select-only box, so the row has one dropdown look (the owner's
+// calls, MB.115); the server draws each as a native `<select>`
+// (`FilterSelectField`) and No Refs as a switch, a native checkbox valued
+// `1`, so before hydration a press on the magnifier submits natively, as
+// `query=&form=&nomenclature=` plus `withoutReferences=1` when on, which the
+// page reads as the same filter.
 
-const CompendiumListFilter = ({ filter }: CompendiumListFilterProps): ReactElement => {
+const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): ReactElement => {
   const [draftQuery, setDraftQuery] = useState(filter.query);
-  const [draftKind, setDraftKind] = useState(filter.nomenclature);
-  const [draftUnsourced, setDraftUnsourced] = useState(filter.withoutReferences);
-  const [filtering, startFiltering] = useTransition();
-  const router = useRouter();
-  const changed =
-    draftQuery.trim() !== filter.query ||
-    draftKind !== filter.nomenclature ||
-    draftUnsourced !== filter.withoutReferences;
+  const apply = useApplyFilter();
+  // A form's name is its value too: the compendium filters a form by its text.
+  const choices = useMemo(() => forms.map(({ name }) => ({ value: name, label: name })), [forms]);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    if (!changed || filtering) return;
-    startFiltering(() => {
-      router.push(
-        compendiumHref({
-          query: draftQuery.trim(),
-          nomenclature: draftKind,
-          withoutReferences: draftUnsourced,
-        }),
-      );
-    });
-  }
+  /** The filter shown with one field changed, the name typed carried, from the first page. */
+  const hrefWith = (change: CompendiumPlace) =>
+    compendiumHref({ ...filter, query: draftQuery.trim(), ...change });
 
   return (
-    <search>
-      <form
-        className="compendium-list__search"
-        method="get"
-        action="/admin/compendium"
-        aria-label="Filter the compendium"
-        onSubmit={submit}
-      >
-        <div className="field">
-          <label className="field__label" htmlFor="compendium-list-query">
-            Name
-          </label>
-          <input
-            id="compendium-list-query"
-            className="input"
-            type="search"
-            name="query"
-            value={draftQuery}
-            onChange={(event) => setDraftQuery(event.target.value)}
-          />
-        </div>
-        <div className="field">
-          <label className="field__label" htmlFor="compendium-list-nomenclature">
-            Classification
-          </label>
-          <select
-            id="compendium-list-nomenclature"
-            className="select"
-            name="nomenclature"
-            value={draftKind}
-            onChange={(event) =>
-              setDraftKind(NOMENCLATURE_KINDS.find((kind) => kind === event.target.value) ?? '')
-            }
-          >
-            <option value="">Any</option>
-            {NOMENCLATURE_OPTIONS.map((kind) => (
-              <option key={kind.value} value={kind.value}>
-                {kind.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <label className="checkbox">
-          <input
-            type="checkbox"
-            name="withoutReferences"
-            value="1"
-            checked={draftUnsourced}
-            onChange={(event) => setDraftUnsourced(event.target.checked)}
-          />
-          Without References
-        </label>
-        {/* `disabled`, not `aria-disabled`: a submit with nothing to send. */}
-        <button
-          className="btn btn--solid"
-          type="submit"
-          disabled={!changed || filtering}
-          aria-busy={filtering || undefined}
-        >
-          {filtering && <span className="spinner" aria-hidden="true" />}
-          {filtering ? 'Filtering' : 'Filter'}
-        </button>
-      </form>
-    </search>
+    <FilterForm
+      label="Filter the Compendium"
+      action={COMPENDIUM_PATH}
+      searchHref={() => hrefWith({})}
+      shown={[filter.query, filter.form, filter.nomenclature, filter.withoutReferences]}
+    >
+      <SearchField
+        label="Name"
+        name="query"
+        placeholder="Search names"
+        value={draftQuery}
+        onChange={setDraftQuery}
+      />
+      <FilterSelectField
+        label="Form"
+        name="form"
+        all="All Forms"
+        options={choices}
+        defaultValue={filter.form}
+        onChange={(form) => apply(hrefWith({ form }))}
+        typeahead
+      />
+      <FilterSelectField
+        label="Classification"
+        name="nomenclature"
+        all="Any"
+        options={NOMENCLATURE_OPTIONS}
+        defaultValue={filter.nomenclature}
+        onChange={(kind) =>
+          apply(hrefWith({ nomenclature: oneOf(NOMENCLATURE_KINDS, kind) ?? '' }))
+        }
+      />
+      <SwitchField
+        label="No Refs"
+        name="withoutReferences"
+        value="1"
+        defaultChecked={filter.withoutReferences}
+        onChange={(withoutReferences) => apply(hrefWith({ withoutReferences }))}
+      />
+    </FilterForm>
   );
 };
 

@@ -6,6 +6,7 @@ import GroupedValueForm from '@/components/GroupedValueForm';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from './msw/graphql';
 import { server } from './msw/server';
+import { choose, press, type } from './interact';
 import type { GroupedValueFormCase, GroupedValueFormSubject } from './types';
 
 // GroupedValueForm is one form for every grouped vocabulary: a name, a
@@ -21,22 +22,8 @@ import type { GroupedValueFormCase, GroupedValueFormSubject } from './types';
 const name = () => screen.getByRole('textbox', { name: 'Name' });
 const description = () => screen.getByRole('textbox', { name: 'Description' });
 const button = (label: string) => screen.getByRole('button', { name: label });
-const type = (field: HTMLElement, value: string) => fireEvent.change(field, { target: { value } });
-const press = (label: string) => {
-  button(label).focus();
-  fireEvent.click(button(label));
-};
 const group = (subject: GroupedValueFormSubject) =>
   screen.getByRole('combobox', { name: subject.groupLabel });
-const chooseGroup = (subject: GroupedValueFormSubject, label: string) => {
-  fireEvent.click(group(subject));
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: `${subject.groupLabel} choices` })).getByRole(
-      'option',
-      { name: label },
-    ),
-  );
-};
 
 function renderSubject(subject: GroupedValueFormSubject, editing = false) {
   const onDone = vi.fn();
@@ -63,9 +50,9 @@ export const ADDING: GroupedValueFormCase[] = [
       const save = () => button(`Save ${subject.noun}`);
 
       expect(save()).toBeDisabled();
-      type(name(), 'T');
+      type('Name', 'T');
       expect(save()).toBeEnabled();
-      type(name(), '');
+      type('Name', '');
       expect(save()).toBeDisabled();
     },
   ],
@@ -74,7 +61,7 @@ export const ADDING: GroupedValueFormCase[] = [
     async (subject) => {
       const onDone = renderSubject(subject);
 
-      type(name(), subject.value.name);
+      type('Name', subject.value.name);
       press(`Save ${subject.noun}`);
 
       await waitFor(() => expect(description()).toHaveAttribute('aria-invalid', 'true'));
@@ -98,9 +85,9 @@ export const ADDING: GroupedValueFormCase[] = [
         }),
       );
       const onDone = renderSubject(subject);
-      type(name(), subject.value.name);
-      type(description(), 'Held');
-      chooseGroup(subject, subject.groups[0].name);
+      type('Name', subject.value.name);
+      type('Description', 'Held');
+      choose(subject.groupLabel, subject.groups[0].name);
       const busy = button(`Save ${subject.noun}`);
       press(`Save ${subject.noun}`);
 
@@ -108,6 +95,33 @@ export const ADDING: GroupedValueFormCase[] = [
       expect(busy).toBeDisabled();
       release();
       await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    },
+  ],
+  // The owner's call (MB.115): the group is typed into, the list narrowing
+  // as it is, and only a listed group is ever the value.
+  [
+    'takes its group by typing, the list narrowing to the groups holding the text',
+    async (subject) => {
+      const calls: { input: object }[] = [];
+      mockGraphQLMutation(subject.create.operation, (variables: { input: object }) => {
+        calls.push(variables);
+        return subject.create.data;
+      });
+      const onDone = renderSubject(subject);
+      const [, chosen] = subject.groups;
+
+      type('Name', subject.value.name);
+      type('Description', 'Typed');
+      type(subject.groupLabel, chosen.name.slice(-4).toUpperCase());
+      const list = screen.getByRole('listbox', { name: `${subject.groupLabel} choices` });
+      expect(within(list).getAllByRole('option')).toHaveLength(1);
+      fireEvent.keyDown(group(subject), { key: 'Enter' });
+      expect(group(subject)).toHaveValue(chosen.name);
+      press(`Save ${subject.noun}`);
+
+      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+      // Under the kind's own key for its group, `groupId` or `traditionId`.
+      expect(Object.values(calls[0]?.input ?? {})).toContain(chosen.id);
     },
   ],
   [
@@ -119,9 +133,9 @@ export const ADDING: GroupedValueFormCase[] = [
       });
       const onDone = renderSubject(subject);
 
-      type(name(), subject.slugClash.name);
-      type(description(), 'A clash');
-      chooseGroup(subject, subject.groups[0].name);
+      type('Name', subject.slugClash.name);
+      type('Description', 'A clash');
+      choose(subject.groupLabel, subject.groups[0].name);
       press(`Save ${subject.noun}`);
 
       await waitFor(() => expect(name()).toHaveAttribute('aria-invalid', 'true'));
@@ -139,10 +153,25 @@ export const EDITING: GroupedValueFormCase[] = [
       const save = () => button(`Save ${subject.noun}`);
 
       expect(save()).toBeDisabled();
-      chooseGroup(subject, subject.groups[0].name);
+      choose(subject.groupLabel, subject.groups[0].name);
       expect(save()).toBeEnabled();
-      chooseGroup(subject, subject.groups[1].name);
+      choose(subject.groupLabel, subject.groups[1].name);
       expect(save()).toBeDisabled();
+    },
+  ],
+  [
+    'holds no group while the text names none, and refuses it on Save',
+    async (subject) => {
+      // No answer is set up: the form refuses it before asking the server.
+      const onDone = renderSubject(subject, true);
+
+      expect(group(subject)).not.toHaveAttribute('aria-invalid');
+      type(subject.groupLabel, subject.groups[1].name.slice(0, -1));
+      press(`Save ${subject.noun}`);
+
+      await waitFor(() => expect(group(subject)).toHaveAttribute('aria-invalid', 'true'));
+      expect(group(subject)).toHaveAccessibleDescription(/\S/);
+      expect(onDone).not.toHaveBeenCalled();
     },
   ],
   [

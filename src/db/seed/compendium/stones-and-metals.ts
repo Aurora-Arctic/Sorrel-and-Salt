@@ -414,7 +414,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Agate',
+          locator: 'under "Agate"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -430,7 +430,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Agate',
+              locator: 'under "Agate"',
               supports: ['form', 'description'],
             },
           ],
@@ -464,7 +464,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Beryl: Chrysoberyl',
+          locator: 'under "Beryl: Chrysoberyl"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -478,7 +478,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Beryl: Chrysoberyl',
+              locator: 'under "Beryl: Chrysoberyl"',
               supports: ['form'],
             },
             {
@@ -556,7 +556,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       references: [
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Ametrine',
+          locator: 'under "Ametrine"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -570,7 +570,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Ametrine',
+              locator: 'under "Ametrine"',
               supports: ['form'],
             },
             {
@@ -667,7 +667,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Aquamarine',
+          locator: 'under "Aquamarine"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -685,7 +685,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Aquamarine',
+              locator: 'under "Aquamarine"',
               supports: ['form'],
             },
             {
@@ -731,7 +731,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Aventurine',
+          locator: 'under "Aventurine"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -745,7 +745,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Aventurine',
+              locator: 'under "Aventurine"',
               supports: ['form'],
             },
             {
@@ -805,7 +805,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Beryl',
+          locator: 'under "Beryl"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -819,7 +819,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Beryl',
+              locator: 'under "Beryl"',
               supports: ['form'],
             },
             {
@@ -861,7 +861,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Tourmaline',
+          locator: 'under "Tourmaline"',
           supports: ['canonicalName', 'colors', 'categories', 'description'],
         },
         {
@@ -882,7 +882,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             },
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Tourmaline',
+              locator: 'under "Tourmaline"',
               supports: ['form', 'description'],
             },
           ],
@@ -929,7 +929,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Bloodstone',
+          locator: 'under "Bloodstone"',
           supports: ['colors', 'folkNames', 'categories', 'description'],
         },
         {
@@ -950,7 +950,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Bloodstone',
+              locator: 'under "Bloodstone"',
               supports: ['form'],
             },
             {
@@ -990,7 +990,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Agate: Blue Lace Agate',
+          locator: 'under "Agate: Blue Lace Agate"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1006,7 +1006,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Agate: Blue Lace Agate',
+              locator: 'under "Agate: Blue Lace Agate"',
               supports: ['form', 'description'],
             },
           ],
@@ -1137,7 +1137,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Carnelian',
+          locator: 'under "Carnelian"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1153,7 +1153,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Carnelian',
+              locator: 'under "Carnelian"',
               supports: ['form', 'description'],
             },
             {
@@ -1224,7 +1224,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Beryl: Chrysoberyl',
+          locator: 'under "Beryl: Chrysoberyl"',
           supports: ['categories', 'description'],
         },
         {
@@ -1238,7 +1238,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Beryl: Chrysoberyl',
+              locator: 'under "Beryl: Chrysoberyl"',
               supports: ['form'],
             },
             {
@@ -1280,7 +1280,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Chalcedony',
+          locator: 'under "Chalcedony"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1294,7 +1294,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Chalcedony',
+              locator: 'under "Chalcedony"',
               supports: ['form'],
             },
             {
@@ -1354,7 +1354,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       references: [
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Beryl: Chrysoberyl',
+          locator: 'under "Beryl: Chrysoberyl"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1368,7 +1368,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Beryl: Chrysoberyl',
+              locator: 'under "Beryl: Chrysoberyl"',
               supports: ['form'],
             },
             {
@@ -1415,7 +1415,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Chrysoprase',
+          locator: 'under "Chrysoprase"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1431,7 +1431,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Chrysoprase',
+              locator: 'under "Chrysoprase"',
               supports: ['form', 'description'],
             },
             {
@@ -1500,7 +1500,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Citrine',
+          locator: 'under "Citrine"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1514,7 +1514,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Citrine',
+              locator: 'under "Citrine"',
               supports: ['form'],
             },
             {
@@ -1568,7 +1568,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Quartz',
+          locator: 'under "Quartz"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1589,7 +1589,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Quartz',
+              locator: 'under "Quartz"',
               supports: ['form'],
             },
             {
@@ -1674,7 +1674,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       references: [
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Agate: Dendritic Agate',
+          locator: 'under "Agate: Dendritic Agate"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1690,7 +1690,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Agate: Dendritic Agate',
+              locator: 'under "Agate: Dendritic Agate"',
               supports: ['form', 'description'],
             },
           ],
@@ -1761,7 +1761,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Diamond',
+          locator: 'under "Diamond"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -1786,7 +1786,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             },
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Diamond',
+              locator: 'under "Diamond"',
               supports: ['form', 'description'],
             },
           ],
@@ -1889,7 +1889,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Emerald',
+          locator: 'under "Emerald"',
           supports: ['colors', 'safetyNotes', 'categories', 'description'],
         },
         {
@@ -1905,7 +1905,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Emerald',
+              locator: 'under "Emerald"',
               supports: ['form', 'description'],
             },
             {
@@ -1933,7 +1933,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       references: [
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Agate: Fire Agate',
+          locator: 'under "Agate: Fire Agate"',
           supports: ['elements', 'colors', 'categories', 'description'],
         },
         {
@@ -1955,7 +1955,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             },
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Agate: Fire Agate',
+              locator: 'under "Agate: Fire Agate"',
               supports: ['form'],
             },
           ],
@@ -2046,7 +2046,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Garnet',
+          locator: 'under "Garnet"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -2063,7 +2063,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Garnet',
+              locator: 'under "Garnet"',
               supports: ['form', 'description', 'categories'],
             },
           ],
@@ -2207,7 +2207,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Jasper',
+          locator: 'under "Jasper"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -2221,7 +2221,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Jasper',
+              locator: 'under "Jasper"',
               supports: ['form'],
             },
             {
@@ -2481,7 +2481,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Agate: Moss Agate',
+          locator: 'under "Agate: Moss Agate"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -2501,7 +2501,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Agate: Moss Agate',
+              locator: 'under "Agate: Moss Agate"',
               supports: ['form', 'description'],
             },
           ],
@@ -2538,7 +2538,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Onyx',
+          locator: 'under "Onyx"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -2554,7 +2554,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Onyx',
+              locator: 'under "Onyx"',
               supports: ['form', 'description'],
             },
             {
@@ -2638,7 +2638,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       references: [
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Pietersite',
+          locator: 'under "Pietersite"',
           supports: ['colors', 'folkNames', 'categories', 'description'],
         },
         {
@@ -2652,7 +2652,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Pietersite',
+              locator: 'under "Pietersite"',
               supports: ['form'],
             },
             {
@@ -2766,7 +2766,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Quartz: Rose Quartz',
+          locator: 'under "Quartz: Rose Quartz"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -2780,7 +2780,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Quartz: Rose Quartz',
+              locator: 'under "Quartz: Rose Quartz"',
               supports: ['form'],
             },
             {
@@ -2849,7 +2849,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Ruby',
+          locator: 'under "Ruby"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -2865,7 +2865,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Ruby',
+              locator: 'under "Ruby"',
               supports: ['form', 'description'],
             },
             {
@@ -2894,7 +2894,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Quartz: Rutilated Quartz',
+          locator: 'under "Quartz: Rutilated Quartz"',
           supports: ['colors', 'folkNames', 'categories', 'description'],
         },
         {
@@ -2912,7 +2912,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Quartz: Rutilated Quartz',
+              locator: 'under "Quartz: Rutilated Quartz"',
               supports: ['form'],
             },
             {
@@ -2988,7 +2988,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Sapphire',
+          locator: 'under "Sapphire"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -3004,7 +3004,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Sapphire',
+              locator: 'under "Sapphire"',
               supports: ['form', 'description'],
             },
           ],
@@ -3100,7 +3100,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Sardonyx',
+          locator: 'under "Sardonyx"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -3116,7 +3116,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Sardonyx',
+              locator: 'under "Sardonyx"',
               supports: ['form', 'description'],
             },
             {
@@ -3253,7 +3253,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Quartz: Smoky Quartz',
+          locator: 'under "Quartz: Smoky Quartz"',
           supports: ['colors', 'safetyNotes', 'categories', 'description'],
         },
         {
@@ -3267,7 +3267,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Quartz: Smoky Quartz',
+              locator: 'under "Quartz: Smoky Quartz"',
               supports: ['form'],
             },
             {
@@ -3295,7 +3295,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
       references: [
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Quartz: Snow Quartz',
+          locator: 'under "Quartz: Snow Quartz"',
           supports: ['colors', 'folkNames', 'categories', 'substitutes', 'description'],
         },
         {
@@ -3309,7 +3309,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Quartz: Snow Quartz',
+              locator: 'under "Quartz: Snow Quartz"',
               supports: ['form'],
             },
             {
@@ -3351,7 +3351,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Spinel',
+          locator: 'under "Spinel"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -3367,7 +3367,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Spinel',
+              locator: 'under "Spinel"',
               supports: ['form', 'description'],
             },
             {
@@ -3469,7 +3469,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: "s.v. Tiger's Eye",
+          locator: 'under "Tiger\'s Eye"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -3490,7 +3490,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: "s.v. Tiger's Eye",
+              locator: 'under "Tiger\'s Eye"',
               supports: ['form'],
             },
             {
@@ -3511,7 +3511,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
             },
             {
               source: 'hall-crystal-bible',
-              locator: "s.v. Tiger's Eye",
+              locator: 'under "Tiger\'s Eye"',
               supports: ['form', 'description'],
             },
           ],
@@ -3633,7 +3633,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Topaz',
+          locator: 'under "Topaz"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -3649,7 +3649,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Topaz',
+              locator: 'under "Topaz"',
               supports: ['form', 'description'],
             },
             {
@@ -3676,7 +3676,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Quartz: Tourmalinated Quartz',
+          locator: 'under "Quartz: Tourmalinated Quartz"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -3694,7 +3694,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Quartz: Tourmalinated Quartz',
+              locator: 'under "Quartz: Tourmalinated Quartz"',
               supports: ['form'],
             },
             {
@@ -3748,7 +3748,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
         },
         {
           source: 'hall-crystal-bible',
-          locator: 's.v. Tourmaline',
+          locator: 'under "Tourmaline"',
           supports: ['colors', 'categories', 'description'],
         },
         {
@@ -3764,7 +3764,7 @@ export const STONES_AND_METALS: SeedCompendiumShard = {
           references: [
             {
               source: 'hall-crystal-bible',
-              locator: 's.v. Tourmaline',
+              locator: 'under "Tourmaline"',
               supports: ['form', 'description'],
             },
           ],

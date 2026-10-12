@@ -1,5 +1,5 @@
 import type { Story } from '@ladle/react';
-import { useLayoutEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import type {
   CommonNameSuggestionsQuery,
   CompendiumSubstitutesQuery,
@@ -10,16 +10,21 @@ import type {
   DeleteCompendiumIngredientMutation,
   FormSuggestionsQuery,
   IngredientSuggestionsQuery,
+  IngredientSummaryQuery,
   PickerCategoriesQuery,
   PlanetSuggestionsQuery,
   PossibleDuplicatesQuery,
+  ReferenceQuery,
   ReferenceSuggestionsQuery,
   UpdateCompendiumIngredientMutation,
+  UpdateReferenceMutation,
   ZodiacSuggestionsQuery,
 } from '../../gql/graphql';
 import { citationText } from '../../lib/citation';
 import type { CitationFields } from '../../lib/types';
+import Modal from '../Modal';
 import IngredientForm from '.';
+import { press } from '../../../.ladle/press';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
@@ -167,19 +172,19 @@ const DEITIES = [
 // tooltip tells (MB.164, MB.222). A row's forms are its variants.
 const INGREDIENTS = [
   {
-    id: 'testwort-c',
+    id: '00000000-0000-4000-8000-000000000201',
     name: 'Testwort',
     canonicalName: 'Fixtura testalis',
     description: 'A fixture herb, for the workshop.',
     isGlobal: true,
-    // In forms, so a variant's substitutes rank it and its second picker opens (MB.221).
+    // In forms, so a variant's substitutes rank it and offer it form by form (MB.115).
     variants: [
       { id: '00000000-0000-4000-8000-000000000401', form: 'Dried leaf', formChoice: null },
       { id: '00000000-0000-4000-8000-000000000402', form: 'Oil', formChoice: null },
     ],
   },
   {
-    id: 'testwort-w',
+    id: '00000000-0000-4000-8000-000000000202',
     name: 'Testwort',
     canonicalName: 'Fixtura testalis',
     description: 'A fixture herb, for the workshop.',
@@ -187,7 +192,7 @@ const INGREDIENTS = [
     variants: [{ id: '00000000-0000-4000-8000-000000000403', form: 'Tincture', formChoice: null }],
   },
   {
-    id: 'fixturewort',
+    id: '00000000-0000-4000-8000-000000000203',
     name: 'Fixturewort',
     canonicalName: 'Fixtura vulgaris',
     description: null,
@@ -197,7 +202,7 @@ const INGREDIENTS = [
     ],
   },
   {
-    id: 'mockleaf',
+    id: '00000000-0000-4000-8000-000000000204',
     name: 'Mockleaf',
     canonicalName: null,
     description: null,
@@ -206,48 +211,88 @@ const INGREDIENTS = [
   },
 ];
 
-// Invented sources in both tiers, one long enough to wrap and one carrying
-// an address, rendered by the one renderer as the server renders them.
+/**
+ * What a linked substitute's summary reads of each ingredient above (MB.115):
+ * its classification and correspondences, and each form's own, which add to
+ * the ingredient's.
+ */
+const SUMMARIES = Object.fromEntries(
+  INGREDIENTS.map((row) => [
+    row.id,
+    {
+      id: row.id,
+      name: row.name,
+      canonicalName: row.canonicalName,
+      // Long enough to run past the panel's three lines and be cut.
+      description:
+        'An invented herb for the workshop, gathered at dusk from the hedge and hung to dry in bundles. Its leaf is used in washes, its root in sachets, and its smoke to clear a room before working.',
+      nomenclature: row.canonicalName ? 'botanical' : 'unknown',
+      isGlobal: row.isGlobal,
+      slug: row.name.toLowerCase(),
+      elements: ['water', 'earth'],
+      planets: ['Moon'],
+      zodiacSigns: ['Cancer'],
+      colors: ['Green'],
+      variants: row.variants.map(({ id, form }) => ({
+        id,
+        form,
+        elements: null,
+        planets: form === 'Oil' ? ['Venus'] : null,
+        zodiacSigns: null,
+        colors: null,
+      })),
+    },
+  ]),
+) satisfies Record<string, IngredientSummaryQuery['ingredient']>;
+
+// Invented sources in both tiers — a book, an article by two authors and a
+// web page, so the rows show each short form — one long enough to wrap and
+// one carrying an address, rendered by the one renderer as the server
+// renders them. Each one's fields are kept whole, for the edit to open on.
+const SOURCE_FIELDS = new Map<string, CitationFields>();
+const source = (id: string, isGlobal: boolean, fields: CitationFields) => {
+  SOURCE_FIELDS.set(id, fields);
+  return summaryOf(id, isGlobal, fields);
+};
+/** A source as a row carries it: its citation, and the fields its short form is made of. */
+const summaryOf = (id: string, isGlobal: boolean, fields: CitationFields) => ({
+  id,
+  isGlobal,
+  citation: citationText(fields),
+  kind: fields.kind,
+  authors: fields.authors ?? null,
+  title: fields.title,
+  container: fields.container ?? null,
+});
+
 const SOURCES = [
-  {
-    id: 'source-herbal',
-    isGlobal: true,
-    citation: citationText({
-      kind: 'book',
-      authors: 'Fixture, Ada',
-      title: 'The Testwort Herbal',
-      contributors: 'Edited by Bram Placeholder',
-      place: 'Mockford',
-      publisher: 'Fixture Press',
-      published: '1901',
-    }),
-  },
-  {
-    id: 'source-notes',
-    isGlobal: false,
-    citation: citationText({
-      kind: 'article',
-      authors: 'Placeholder, Bram',
-      title: 'Notes on Mockleaf',
-      container: 'Journal of Fixtures',
-      volume: '3',
-      issue: '2',
-      published: '1950',
-      pages: '12–19',
-    }),
-  },
-  {
-    id: 'source-wiki',
-    isGlobal: true,
-    citation: citationText({
-      kind: 'web_page',
-      title: 'Testwort',
-      container: 'Fixture Wiki',
-      url: 'https://fixture-wiki.example/wiki/Testwort_(herb)_and_its_many_fixture_relatives',
-      modified: '2026-09-27',
-      accessed: '2026-10-06',
-    }),
-  },
+  source('00000000-0000-4000-8000-000000000701', true, {
+    kind: 'book',
+    authors: 'Fixture, Ada',
+    title: 'The Testwort Herbal',
+    contributors: 'Edited by Bram Placeholder',
+    place: 'Mockford',
+    publisher: 'Fixture Press',
+    published: '1901',
+  }),
+  source('00000000-0000-4000-8000-000000000702', false, {
+    kind: 'article',
+    authors: 'Placeholder, Bram, and Cara Mockley',
+    title: 'Notes on Mockleaf: A Survey of Fixture Gardens',
+    container: 'Journal of Fixtures',
+    volume: '3',
+    issue: '2',
+    published: '1950',
+    pages: '12–19',
+  }),
+  source('00000000-0000-4000-8000-000000000703', true, {
+    kind: 'web_page',
+    title: 'Testwort',
+    container: 'Fixture Wiki',
+    url: 'https://fixture-wiki.example/wiki/Testwort_(herb)_and_its_many_fixture_relatives',
+    modified: '2026-09-27',
+    accessed: '2026-10-06',
+  }),
 ];
 
 const CATS_CLAW = [
@@ -357,6 +402,10 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           first,
         ),
       } satisfies CompendiumSubstitutesQuery;
+    case 'IngredientSummary': {
+      const ingredient = SUMMARIES[String(variables.id)];
+      return ingredient && ({ ingredient } satisfies IngredientSummaryQuery);
+    }
     case 'ReferenceSuggestions':
       return {
         referenceSuggestions: page(
@@ -364,6 +413,44 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           first,
         ),
       } satisfies ReferenceSuggestionsQuery;
+    case 'Reference': {
+      const id = String(variables.id);
+      const fields = SOURCE_FIELDS.get(id);
+      if (!fields) return undefined;
+      const blank = (value: string | null | undefined) => value ?? null;
+      return {
+        reference: {
+          id,
+          kind: fields.kind,
+          title: fields.title,
+          authors: blank(fields.authors),
+          container: blank(fields.container),
+          contributors: blank(fields.contributors),
+          edition: blank(fields.edition),
+          volume: blank(fields.volume),
+          issue: blank(fields.issue),
+          series: blank(fields.series),
+          place: blank(fields.place),
+          publisher: blank(fields.publisher),
+          published: blank(fields.published),
+          pages: blank(fields.pages),
+          host: blank(fields.host),
+          url: blank(fields.url),
+          modified: blank(fields.modified),
+          accessed: blank(fields.accessed),
+          note: blank(fields.note),
+        },
+      } satisfies ReferenceQuery;
+    }
+    case 'UpdateReference': {
+      // Kept, so the edit opened again reads what was saved.
+      const id = String(variables.id);
+      const input = variables.input as CitationFields;
+      SOURCE_FIELDS.set(id, input);
+      return {
+        updateReference: summaryOf(id, variables.workspaceId == null, input),
+      } satisfies UpdateReferenceMutation;
+    }
     case 'CreateReference': {
       const input = variables.input as CitationFields;
       return {
@@ -371,6 +458,10 @@ function answer(operation: string, variables: Record<string, unknown>): object |
           id: crypto.randomUUID(),
           citation: citationText(input),
           isGlobal: false,
+          kind: input.kind,
+          authors: input.authors ?? null,
+          title: input.title,
+          container: input.container ?? null,
         },
       } satisfies CreateReferenceMutation;
     }
@@ -423,6 +514,7 @@ const SAVES = new Set([
   'UpdateCompendiumIngredient',
   'DeleteCompendiumIngredient',
   'CreateReference',
+  'UpdateReference',
 ]);
 
 /**
@@ -430,12 +522,12 @@ const SAVES = new Set([
  * undefined for a save that lands: a name holding "taken" is refused on the
  * name, one holding "refuse" as a whole, and one holding "retired" on its first
  * category picked, so each server error can be seen.
- * A new reference is refused the same way by its title.
+ * A new or edited reference is refused the same way by its title.
  */
 function refusal(operation: string, variables: Record<string, unknown>): object | undefined {
   const input = variables.input as
     { name?: string; title?: string; categoryIds?: string[] } | undefined;
-  const field = operation === 'CreateReference' ? 'title' : 'name';
+  const field = operation.endsWith('Reference') ? 'title' : 'name';
   const name = String(input?.[field] ?? '');
   // A compendium save whose name holds "redirect" would take another entry's
   // old address (MB.82), until it is sent again confirmed.
@@ -568,9 +660,18 @@ function WhatToTry() {
         </li>
         <li>
           <strong>Variants:</strong> type Oil in New Form and press Add, then add Oil again: the
-          repeat is refused at the box. Remove takes a variant out. In a variant&rsquo;s Substitute
-          Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in oil first; pick it, and
-          Form of Testwort chooses which of its forms stands in.
+          repeat is refused at the box. The new variant opens first, just beneath the box, with
+          every one of its sections open; each heading folds its own, as the ingredient&rsquo;s do,
+          and Open All / Close All reaches them too. Done folds the variant to its summary line, and
+          Edit opens it again, closing any other. Save with a variant&rsquo;s box holding text while
+          it or its section is folded, and both open on the error. Remove takes a variant out. In a
+          variant&rsquo;s Substitute Ingredient, &ldquo;test&rdquo; lists the Testwort that comes in
+          oil first, one row for each of its forms, and never Mockleaf, which comes in none; pick a
+          form, and its pill names it. Each of a variant&rsquo;s fields has Copy From Ingredient,
+          shut while the ingredient&rsquo;s own field is empty: fill the ingredient&rsquo;s, and
+          press it to add what the variant lacks. Its Substitute Ingredients links the same form of
+          each, and names beneath the list those in no such form, with Copy Anyway to add them as
+          names.
         </li>
         <li>
           <strong>Your own text:</strong> type something nothing matches and pick &ldquo;Use what
@@ -608,18 +709,21 @@ function WhatToTry() {
         </li>
         <li>
           <strong>References:</strong> focus Reference to list three sources, or type
-          &ldquo;fixture&rdquo;; pick one and it becomes a row beneath the box, with a Locator to
-          fill in. The web page&rsquo;s long address wraps inside its row. A picked source is not
-          offered again.
+          &ldquo;fixture&rdquo;; pick one and it becomes a one-line row beneath the box. Its pencil
+          opens the row to the whole citation, wrapping the web page&rsquo;s long address, and a
+          Locator to fill in; its &times; takes it out. A picked source is not offered again. An
+          open row of this coven&rsquo;s own source has Edit Source, which opens the panel filled in
+          with the whole source; Save Source changes it for every entry citing it, and the row reads
+          the new short form. A compendium source has none here: it is the admins&rsquo; to change.
         </li>
         <li>
-          <strong>A new reference:</strong> press New Reference, or pick &ldquo;Add a
-          reference&rdquo; from the list, and choose a Kind: each shows only its own fields, the
-          required ones starred. Save Reference with a Chapter&rsquo;s Book empty, or a Web
-          Page&rsquo;s Address, to see them refused; a Title with &ldquo;taken&rdquo; in it is
-          refused by the server beside Title, and one with &ldquo;refuse&rdquo; in it above the
-          panel&rsquo;s fields. Enter in a field saves the reference, not the ingredient. Save the
-          ingredient with the panel open to see it held.
+          <strong>A new reference:</strong> pick &ldquo;New Reference&hellip;&rdquo;, the
+          list&rsquo;s last row, and choose a Kind: each shows only its own fields, the required
+          ones starred. Save Reference with a Chapter&rsquo;s Book empty, or a Web Page&rsquo;s
+          Address, to see them refused; a Title with &ldquo;taken&rdquo; in it is refused by the
+          server beside Title, and one with &ldquo;refuse&rdquo; in it above the panel&rsquo;s
+          fields. Enter in a field saves the reference, not the ingredient. Save the ingredient with
+          the panel open to see it held.
         </li>
         <li>
           <strong>Tidied as you go:</strong> in a new reference, type a Title in quotation marks, an
@@ -678,7 +782,35 @@ export const Blank: Story = () => {
   );
 };
 
-// The entry the edit story opens: a planet listed and a category picked (MB.126).
+/** One of INGREDIENTS as a substitute's link, as an edit reads it back. */
+const linkOf = ({
+  id,
+  canonicalName,
+  description,
+  isGlobal,
+  variants,
+}: (typeof INGREDIENTS)[number]) => ({
+  id,
+  canonicalName,
+  description,
+  isGlobal,
+  forms: variants.map(({ form }) => form),
+  variants: variants.map(({ id: variantId, form }) => ({ id: variantId, form, group: null })),
+});
+
+/** Where a summary links its entry on the admin's page: that entry's modal. */
+const entryHref = ({ slug }: { slug: string }) => `/admin/compendium?edit=${slug}`;
+
+/** One of SOURCES as a reference row, cited at `locator`. */
+const cited = ({ citation, ...link }: (typeof SOURCES)[number], locator = '') => ({
+  value: citation,
+  link,
+  locator,
+});
+
+// The entry the edit story opens: a planet listed, a category picked
+// (MB.126), three sources — a book, an article by two authors and a web
+// page — and two forms, one carrying details of its own.
 const ENTRY = {
   id: '00000000-0000-4000-8000-000000000301',
   values: {
@@ -686,7 +818,8 @@ const ENTRY = {
     name: 'Testwort',
     nomenclature: 'botanical',
     canonicalName: 'Fixtura testalis',
-    // Two forms, the second with a safety note of its own (MB.221).
+    // Two forms (MB.221), the first with details of its own and the second
+    // with none, so their summary lines show both (MB.115).
     variants: [
       {
         ...EMPTY_VARIANT,
@@ -698,6 +831,20 @@ const ENTRY = {
           group: 'Plant part',
           description: null,
         },
+        safetyNotes: 'Dry away from damp.',
+        planets: [{ value: 'Mercury' }],
+        categoryIds: [CATEGORIES[0].id, CATEGORIES[1].id],
+        // A form's link names one form of what it links (MB.115): Fixturewort
+        // in its one form, beside a name typed.
+        substitutes: [
+          {
+            value: 'Fixturewort',
+            link: linkOf(INGREDIENTS[2]),
+            variantId: INGREDIENTS[2].variants[0].id,
+          },
+          { value: 'Hedge Mockroot' },
+        ],
+        references: [cited(SOURCES[1], 'pp. 12–19')],
       },
       {
         ...EMPTY_VARIANT,
@@ -709,15 +856,45 @@ const ENTRY = {
           group: 'Plant part',
           description: null,
         },
-        safetyNotes: 'Wash before use.',
       },
     ],
     description: 'A fixture herb, for the workshop.',
     planets: [{ value: 'Mercury' }],
+    // Two linked compendium entries, one in a form of it, and a name typed
+    // (MB.115): the linked chips lead with a link mark and open a summary.
+    substitutes: [
+      { value: 'Fixturewort', link: linkOf(INGREDIENTS[2]) },
+      {
+        value: 'Testwort',
+        link: linkOf(INGREDIENTS[0]),
+        variantId: INGREDIENTS[0].variants[1].id,
+      },
+      { value: 'Hedge Mockroot' },
+    ],
     // Testward, one of the categories the stand-in answers the picker with.
     categoryIds: [CATEGORIES[0].id],
+    references: [cited(SOURCES[0], 'p. 112'), cited(SOURCES[1], 'p. 14'), cited(SOURCES[2])],
   } satisfies IngredientFormValues,
 };
+
+/**
+ * Opens the form's section titled `title` once the story is drawn, as a
+ * person opens it, by its heading: an edit opens with every section closed
+ * (MB.115), and which are open is the form's own state. Within `root`, an
+ * open variant's card, it opens that variant's section of the name.
+ */
+function openSection(title: string, root: ParentNode = document): void {
+  [...root.querySelectorAll<HTMLButtonElement>('.ingredient-form__fold-toggle')]
+    .find((button) => button.textContent === title && button.ariaExpanded === 'false')
+    ?.click();
+}
+
+/** Opens the entry's Dried leaf by its Edit, its sections closed as an edit's are, and returns its card. */
+function openDriedLeaf(): HTMLElement | null {
+  const edit = document.querySelector<HTMLButtonElement>('button[aria-label="Edit Dried leaf"]');
+  edit?.click();
+  return edit?.closest<HTMLElement>('.ingredient-form__variant') ?? null;
+}
 
 /** What the compendium form adds to the coven's, beside it in the workshop. */
 function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
@@ -738,6 +915,23 @@ function WhatToTryOnTheCompendium({ editing }: { editing: boolean }) {
           <strong>Another entry&rsquo;s redirect:</strong> a Name with &ldquo;redirect&rdquo; in it
           is asked about in place of the saves; End Redirect &amp; Save sends it again, Keep It
           drops the question.
+        </li>
+        {editing && (
+          <li>
+            <strong>Substitutes:</strong> Fixturewort and Testwort &middot; Oil are linked entries,
+            each led by a link mark and underlined: press one to open its summary, and press it
+            again, press Escape or press elsewhere to close it. Hedge Mockroot is a name only, plain
+            text that opens nothing.
+          </li>
+        )}
+        <li>
+          <strong>Sections:</strong> each heading opens and closes its section, several at once;
+          {editing
+            ? ' an edit opens with every one closed, '
+            : ' a new entry opens with every one open, '}
+          each closed one summarising what it holds on the line beneath. Open All / Close All above
+          them opens or closes every one. Save with an error in a closed section, a colour left in
+          its box say, and that section opens on it.
         </li>
         {editing && (
           <li>
@@ -767,7 +961,308 @@ export const CompendiumEntry: Story = () => {
   return (
     <>
       <WhatToTryOnTheCompendium editing />
-      <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />
+      <IngredientForm
+        workspaceId={null}
+        entry={ENTRY}
+        entryHref={entryHref}
+        onCancel={() => undefined}
+      />
     </>
   );
 };
+
+/** The same entry with its Correspondences open, the other sections summarised. */
+export const CompendiumEntrySectionOpen: Story = () => {
+  useCannedApi();
+  useEffect(() => openSection('Correspondences'), []);
+  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+};
+
+/**
+ * The same entry, a colour left typed in its box, saved: the save refuses the
+ * text, and Correspondences, closed, opens on the error, flagged, the box
+ * focused (MB.115). Submitted once drawn, Save being off until a change.
+ */
+export const CompendiumEntrySaveError: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    document.querySelector<HTMLFormElement>('form.ingredient-form')?.requestSubmit();
+  }, []);
+  return (
+    <IngredientForm
+      workspaceId={null}
+      entry={{
+        ...ENTRY,
+        // Without its links: the stand-in's ids are no ids the schema
+        // takes, so a save would refuse each, and the colour is the one error.
+        values: {
+          ...ENTRY.values,
+          substitutes: [],
+          references: [],
+          variants: ENTRY.values.variants.map((variant) => ({
+            ...variant,
+            substitutes: [],
+            references: [],
+          })),
+          drafts: { ...ENTRY.values.drafts, colors: 'Fixture Red' },
+        },
+      }}
+      onCancel={() => undefined}
+    />
+  );
+};
+
+/**
+ * The same entry with its first form open, as its Edit leaves it: the form's
+ * own sections closed, as an edit's are, each summarising what it holds
+ * (MB.115).
+ */
+export const CompendiumEntryVariantOpen: Story = () => {
+  useCannedApi();
+  // Pressed once it is drawn: which form is open is the form's own state.
+  useEffect(() => {
+    openSection('Variants');
+    openDriedLeaf();
+  }, []);
+  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+};
+
+// The open form at a phone's width, in each theme.
+export const VariantOpenPhoneDark: Story = () => <CompendiumEntryVariantOpen />;
+VariantOpenPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const VariantOpenPhoneLight: Story = () => <CompendiumEntryVariantOpen />;
+VariantOpenPhoneLight.meta = { theme: 'light', width: 375 };
+
+/** The same form open, with its own Correspondences opened by its heading, the rest summarised. */
+export const CompendiumEntryVariantSectionOpen: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    openSection('Variants');
+    const card = openDriedLeaf();
+    if (card) openSection('Correspondences', card);
+  }, []);
+  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+};
+
+/**
+ * A coven's new ingredient with a form just added from the New Form box: it
+ * opens first of the cards with every one of its sections open, as a new
+ * entry's are (MB.115). Typed and added once drawn, as a person would.
+ */
+export const VariantAdded: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    const box = document.querySelector<HTMLInputElement>('input[name="drafts.variants"]');
+    if (!box) return;
+    // React reads a typed value through the input's own setter, not the property.
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(box, 'Oil');
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+    // Once the typed text has reached the form, as a press after typing would.
+    const timer = setTimeout(() =>
+      document.querySelector<HTMLButtonElement>('button[aria-label="Add Variant"]')?.click(),
+    );
+    return () => clearTimeout(timer);
+  }, []);
+  return <IngredientForm workspaceId={WORKSPACE_ID} />;
+};
+
+/**
+ * The same entry, Mockleaf, in no form at all, among its substitutes, with its
+ * first form open, its Relations opened, and that form's Substitute
+ * Ingredients copied (MB.115): Testwort links its Dried leaf, and the notice
+ * beneath the list names Mockleaf, skipped, with Copy Anyway. Pressed once
+ * drawn, as a person would.
+ */
+export const CompendiumEntryCopySkipped: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    openSection('Variants');
+    const card = openDriedLeaf();
+    if (card) openSection('Relations', card);
+    const timer = setTimeout(() =>
+      document
+        .querySelector<HTMLButtonElement>(
+          'button[aria-label="Copy From Ingredient: Substitute Ingredients"]',
+        )
+        ?.click(),
+    );
+    return () => clearTimeout(timer);
+  }, []);
+  const values = {
+    ...ENTRY.values,
+    substitutes: [...ENTRY.values.substitutes, { value: 'Mockleaf', link: linkOf(INGREDIENTS[3]) }],
+  };
+  return (
+    <IngredientForm workspaceId={null} entry={{ ...ENTRY, values }} onCancel={() => undefined} />
+  );
+};
+
+// The notice at a phone's width, in each theme.
+export const CopySkippedPhoneDark: Story = () => <CompendiumEntryCopySkipped />;
+CopySkippedPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const CopySkippedPhoneLight: Story = () => <CompendiumEntryCopySkipped />;
+CopySkippedPhoneLight.meta = { theme: 'light', width: 375 };
+
+/** The same entry with its first source open and its Edit Source pressed: the panel prefilled. */
+export const CompendiumEntryEditSource: Story = () => {
+  useCannedApi();
+  // Pressed once drawn: the pencil opens the row, then Edit Source opens the panel.
+  useEffect(() => {
+    openSection('Sources');
+    document
+      .querySelector<HTMLButtonElement>('button[aria-label="Edit Fixture, Testwort Herbal"]')
+      ?.click();
+    const timer = setTimeout(() =>
+      document
+        .querySelector<HTMLButtonElement>(
+          'button[aria-label="Edit Source Fixture, Testwort Herbal"]',
+        )
+        ?.click(),
+    );
+    return () => clearTimeout(timer);
+  }, []);
+  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+};
+
+// The edit panel at a phone's width, in each theme.
+export const EditSourcePhoneDark: Story = () => <CompendiumEntryEditSource />;
+EditSourcePhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const EditSourcePhoneLight: Story = () => <CompendiumEntryEditSource />;
+EditSourcePhoneLight.meta = { theme: 'light', width: 375 };
+
+/**
+ * The same entry with its first linked substitute's summary open (MB.115):
+ * pressed once it is drawn, the summary being the chip's own state.
+ */
+export const CompendiumEntrySubstituteSummary: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    openSection('Relations');
+    document
+      .querySelector<HTMLButtonElement>('button.combobox__entry-open[aria-expanded="false"]')
+      ?.click();
+  }, []);
+  return (
+    <IngredientForm
+      workspaceId={null}
+      entry={ENTRY}
+      entryHref={entryHref}
+      onCancel={() => undefined}
+    />
+  );
+};
+
+// A phone's width, in each theme: the admin's edit, bare, its sections closed, as at desktop.
+/**
+ * The edit in its modal, as the admin compendium opens it: the eyebrow over
+ * the entry's saved name and formal name, Open All / Close All beside them, and the header staying at the top as the form
+ * scrolls beneath it (MB.115).
+ */
+export const CompendiumEntryInModal: Story = () => {
+  useCannedApi();
+  return (
+    <Modal
+      eyebrow="Edit Ingredient"
+      title="Testwort"
+      qualifier={<span className="binomial">Fixtura testalis</span>}
+      onClose={() => undefined}
+    >
+      <IngredientForm
+        workspaceId={null}
+        entry={ENTRY}
+        entryHref={entryHref}
+        onCancel={() => undefined}
+      />
+    </Modal>
+  );
+};
+
+/** Scrolls the modal's body to this share of the way down, 0 the top and 1 the foot. */
+function scrollBody(share: number): void {
+  const body = document.querySelector<HTMLElement>('.modal-dialog__body');
+  if (body) body.scrollTop = (body.scrollHeight - body.clientHeight) * share;
+}
+
+/**
+ * The edit in its modal, every section open and scrolled to the foot, where
+ * Delete Ingredient is, and pressed: the question over the long form,
+ * centred in the part in view, the form dimmed and held beneath it (MB.115).
+ */
+export const AskingToDeleteInModal: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    press('Open All');
+    // Once the opened sections are laid out, as a person scrolls after opening.
+    const later = requestAnimationFrame(() => {
+      scrollBody(1);
+      press('Delete Ingredient');
+    });
+    return () => cancelAnimationFrame(later);
+  }, []);
+  return <CompendiumEntryInModal />;
+};
+
+/**
+ * The edit in its modal, a change typed, every section open and scrolled half
+ * way, then the Close button pressed: the unsaved changes' question over the
+ * form, centred where the person had scrolled to (MB.115). Close again
+ * flashes it.
+ */
+export const AskingToDiscardInModal: Story = () => {
+  useCannedApi();
+  useEffect(() => {
+    const name = document.querySelector<HTMLInputElement>('input[name="name"]');
+    if (name) {
+      // React reads a typed value through the input's own setter, not the property.
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(
+        name,
+        `${name.value} Renamed`,
+      );
+      name.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+    press('Open All');
+    const later = requestAnimationFrame(() => {
+      scrollBody(0.5);
+      press('Close');
+    });
+    return () => cancelAnimationFrame(later);
+  }, []);
+  return <CompendiumEntryInModal />;
+};
+
+// Both at a phone's width, in each theme: the card fills the width in view,
+// its buttons stacked.
+export const AskingToDeletePhoneDark: Story = () => <AskingToDeleteInModal />;
+AskingToDeletePhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const AskingToDeletePhoneLight: Story = () => <AskingToDeleteInModal />;
+AskingToDeletePhoneLight.meta = { theme: 'light', width: 375 };
+
+export const AskingToDiscardPhoneDark: Story = () => <AskingToDiscardInModal />;
+AskingToDiscardPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const AskingToDiscardPhoneLight: Story = () => <AskingToDiscardInModal />;
+AskingToDiscardPhoneLight.meta = { theme: 'light', width: 375 };
+
+// The edit's head in each theme, at a desktop's width and a phone's: the
+// eyebrow, then the name and its formal name, which wrap on a phone (MB.115).
+export const InModalDark: Story = () => <CompendiumEntryInModal />;
+InModalDark.meta = { theme: 'dark' };
+
+export const InModalLight: Story = () => <CompendiumEntryInModal />;
+InModalLight.meta = { theme: 'light' };
+
+export const InModalPhoneDark: Story = () => <CompendiumEntryInModal />;
+InModalPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const InModalPhoneLight: Story = () => <CompendiumEntryInModal />;
+InModalPhoneLight.meta = { theme: 'light', width: 375 };
+
+export const PhoneDark: Story = () => <CompendiumEntry />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <CompendiumEntry />;
+PhoneLight.meta = { theme: 'light', width: 375 };

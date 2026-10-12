@@ -5,6 +5,7 @@ import {
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
+  useEffect,
   useId,
   useMemo,
   useState,
@@ -12,7 +13,8 @@ import {
 import { chipColors } from '../../lib/chip-colors';
 import { ChevronIcon, ClearIcon } from './icons';
 import { useListPosition } from './position';
-import { useTip } from './tip';
+import { chipsRoom } from './room';
+import { useTip } from '../InfoTip/use-tip';
 import type {
   Bucket,
   ComboboxOption,
@@ -75,8 +77,10 @@ function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
  * them, and bucketed for the headings. A source with one bucket shows no
  * headings; one whose rows carry a `heading` names its own buckets
  * (bucketByHeading). A caller that can make something new has its create row
- * first instead of the typed row, blank box or not, since what it lists can
- * only be picked (MB.154). A caller refusing what was typed has no typed row
+ * last instead of the typed row first, blank box or not, since what it lists
+ * can only be picked (MB.154): the sources found are what is looked for, and
+ * making one is the way out when none is (MB.115, the owner's call). A caller
+ * refusing what was typed has no typed row
  * (MB.174). The curated headings say where a value comes from, the owner's
  * call (MB.131): a curated value is the compendium's, since its entries hold
  * nothing else, and one only in use is this coven's own.
@@ -86,7 +90,12 @@ function arrange<O extends ComboboxOption>(
   typed: string,
   create: string | undefined,
   offerTyped: boolean,
-): { items: Item<O>[]; buckets: Bucket<O>[]; firstRow: TypedRow | CreateRow | null } {
+): {
+  items: Item<O>[];
+  buckets: Bucket<O>[];
+  firstRow: TypedRow | null;
+  lastRow: CreateRow | null;
+} {
   const headed = options.some((option) => option.heading !== undefined);
   const bucketed = options.some((option) => option.curated !== undefined);
   const buckets: Bucket<O>[] = headed
@@ -105,12 +114,13 @@ function arrange<O extends ComboboxOption>(
           },
         ].filter((bucket) => bucket.rows.length > 0)
       : [{ heading: null, key: 'all', rows: options }];
-  let firstRow: TypedRow | CreateRow | null = null;
-  if (create !== undefined) firstRow = { value: create, create: true };
-  else if (typed !== '' && offerTyped) firstRow = { value: typed, typed: true };
+  const lastRow: CreateRow | null = create === undefined ? null : { value: create, create: true };
+  const firstRow: TypedRow | null =
+    lastRow === null && typed !== '' && offerTyped ? { value: typed, typed: true } : null;
   const items: Item<O>[] = firstRow ? [firstRow] : [];
   items.push(...buckets.flatMap((bucket) => bucket.rows));
-  return { items, buckets, firstRow };
+  if (lastRow) items.push(lastRow);
+  return { items, buckets, firstRow, lastRow };
 }
 
 /**
@@ -138,11 +148,11 @@ function keepText<O extends ComboboxOption>(
   }
 }
 
-function statusOf(isOpen: boolean, suggestions: Suggestions | undefined): string {
+function statusOf(isOpen: boolean, suggestions: Suggestions | undefined, noun: string): string {
   if (!isOpen || !suggestions) return '';
   const count = suggestions.options.length;
-  if (count > 0) return `${count} suggestion${count === 1 ? '' : 's'}`;
-  return suggestions.pending ? 'Looking for suggestions' : 'No suggestions';
+  if (count > 0) return `${count} ${noun}${count === 1 ? '' : 's'}`;
+  return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
 }
 
 function Combobox<O extends ComboboxOption = ComboboxOption>({
@@ -161,6 +171,10 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   clear,
   create,
   offerTyped = true,
+  highlightFirst = false,
+  noun = 'suggestion',
+  placeholder,
+  required,
   qualifier,
   listAnchor,
   inputRef,
@@ -173,17 +187,26 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const detail = qualifier?.detail;
   // Opened on the box's focus as well as the qualifier's hover: the
   // qualifier is no stop of its own, and the box is what the keyboard reaches.
+  // It gets out of the way of typing (MB.115): the first printable key and the
+  // list opening both close it, and focus or a hover opens it again. The
+  // detail stays in the box's description, so a screen reader still hears it.
   const tip = useTip(() => Boolean(detail));
+  const hideTip = tip.hide;
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
   const createLabel = create?.label;
-  const { items, buckets, firstRow } = useMemo(
+  const { items, buckets, firstRow, lastRow } = useMemo(
     () => arrange(suggestions?.options ?? [], value.trim(), createLabel, offerTyped),
     [suggestions, value, createLabel, offerTyped],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen, listAnchor);
+
+  // The list opens where the tip would be read, and is what typing is for.
+  useEffect(() => {
+    if (isOpen) hideTip();
+  }, [isOpen, hideTip]);
 
   const {
     getInputProps,
@@ -203,6 +226,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     // adds an entry on each pick.
     selectedItem: null,
     isOpen,
+    // A closed set's first row, so Enter takes the best match of what was
+    // typed; a free-text box highlights nothing until asked.
+    defaultHighlightedIndex: highlightFirst ? 0 : undefined,
     itemToString: (item) => item?.value ?? '',
     itemToKey: (item) => (item === null ? null : keyOf(item)),
     stateReducer: keepText,
@@ -222,6 +248,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // or Delete in an empty box takes the last entry, as react-select's does.
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.nativeEvent.isComposing) return;
+    // A printable key is one character long; a shortcut is not typing.
+    if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) hideTip();
     if ((event.key === 'Backspace' || event.key === 'Delete') && value === '') {
       onRemoveLast?.();
       return;
@@ -238,10 +266,14 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // puts the caret in the text, as pressing a plain input would.
   const focusText = (event: MouseEvent<HTMLDivElement>) => {
     const target = event.target as HTMLElement;
-    // The qualifier reads as part of the text, so a press on it does too.
+    // The qualifier reads as part of the text, so a press on it does too;
+    // and so does one where the clear sits hidden, whose room the box keeps
+    // (MB.115, the owner's call): `visibility` passes the press to the
+    // indicators' strip, which is the control's own ground.
     if (
       target === event.currentTarget ||
       target.classList.contains('combobox__values') ||
+      target.classList.contains('combobox__indicators') ||
       target.closest('.combobox__qualifier')
     ) {
       event.preventDefault();
@@ -304,12 +336,17 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           <span
             className={qualifier ? 'combobox__text is-qualified' : 'combobox__text'}
             data-value={value}
+            // Beside chips, room for the placeholder, which stays to prompt
+            // for the next entry while nothing is typed.
+            style={chipsRoom(Boolean(entries), placeholder)}
           >
             <input
               className="combobox__input"
               {...getInputProps({
                 ref: inputRef,
                 name,
+                placeholder,
+                'aria-required': required || undefined,
                 // One character wide of its own, so that the slot, not the
                 // browser's default of twenty, decides how wide the text is.
                 size: 1,
@@ -369,22 +406,34 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         </div>
         {(clear || hasSource) && (
           <div className="combobox__indicators">
+            {/* Always drawn once the caller has a clear, and hidden while
+                there is nothing to clear, rather than left out: its room,
+                and the separator's, stay in the control, so typing,
+                choosing and clearing never change its width (MB.115). */}
             {clear && (
               <button
                 type="button"
-                className="combobox__indicator"
+                className={clear.empty ? 'combobox__indicator is-empty' : 'combobox__indicator'}
                 aria-label={clear.label}
+                aria-hidden={clear.empty || undefined}
+                tabIndex={clear.empty ? -1 : undefined}
+                disabled={clear.empty}
                 onClick={clear.onClear}
               >
                 <ClearIcon />
               </button>
             )}
-            {clear && hasSource && <span className="combobox__separator" aria-hidden="true" />}
+            {clear && hasSource && (
+              <span
+                className={clear.empty ? 'combobox__separator is-empty' : 'combobox__separator'}
+                aria-hidden="true"
+              />
+            )}
             {hasSource && (
               <button
                 type="button"
                 className="combobox__indicator"
-                {...getToggleButtonProps({ 'aria-label': `Show ${label} suggestions` })}
+                {...getToggleButtonProps({ 'aria-label': `Show ${label} ${noun}s` })}
               >
                 <ChevronIcon />
               </button>
@@ -398,7 +447,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         // Placed beneath or above the box, as there is room (useListPosition).
         style={listStyle}
         data-placement={placement}
-        {...getMenuProps({ ref: setList, 'aria-label': `${label} suggestions` })}
+        {...getMenuProps({ ref: setList, 'aria-label': `${label} ${noun}s` })}
       >
         {isOpen && firstRow && row(firstRow)}
         {isOpen &&
@@ -424,12 +473,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               // oxlint-enable jsx-a11y/prefer-tag-over-role
             ),
           )}
+        {isOpen && lastRow && row(lastRow)}
       </ul>
       {/* What the list holds, for a screen reader: the rows arrive after the
           typing, and nothing else says so. */}
       {hasSource && (
-        <output className="visually-hidden" aria-label={`${label} suggestions`}>
-          {statusOf(isOpen, suggestions)}
+        <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
+          {statusOf(isOpen, suggestions, noun)}
         </output>
       )}
     </div>

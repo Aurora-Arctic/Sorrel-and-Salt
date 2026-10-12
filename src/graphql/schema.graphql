@@ -621,6 +621,11 @@ type Query {
     query: String
     userId: ID
   ): QueryPrivilegeChangesConnection!
+
+  """
+  A null workspaceId reads the compendium's alone; a coven's reads its own or the compendium's, never another coven's.
+  """
+  reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
 
@@ -675,7 +680,7 @@ type QueryCompendiumConnectionEdge {
   node: Ingredient!
 
   """
-  The word similarity of the query to the entry, 0 to 1 — its best across the label, formal name, folk names and forms. Null without a query.
+  The search's rank, 0 to 1: the query's word similarity to each matched field — label, formal name, folk name, variant form or description — times that field's weight, the best kept. Null without a query.
   """
   score: Float
 }

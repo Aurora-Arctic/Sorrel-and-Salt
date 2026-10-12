@@ -40,7 +40,8 @@ holds it clear of the top inset and caps it at the forms' column,
 `Notice` ([`notice.md`](notice.md)) as errors, so each is an alert; a
 failed accept is read by `readGraphqlFailure` (`src/lib/graphql-failure.ts`),
 whose `GENERIC_FAILURE` is the sentence when the server sent none. The
-buttons and the spinner are the primitives'. Tokens used: `space()`.
+buttons and the spinner are the primitives', Accept drawn through
+`BusyButton` ([`busy-button.md`](busy-button.md)). Tokens used: `space()`.
 
 ## Stories
 

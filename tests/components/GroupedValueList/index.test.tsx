@@ -4,19 +4,21 @@ import GroupedValueList from '@/components/GroupedValueList';
 import { groupedValuesHref } from '@/components/GroupedValueList/href';
 import type {
   GroupedValueListProps,
-  GroupedValuesDialog,
   GroupedValuesPlace,
 } from '@/components/GroupedValueList/types';
-import type { GroupedValueListSubject } from '../../support/types';
+import type { ListDialog } from '@/lib/types';
+import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
+import type { FilterFormSubject, GroupedValueListSubject } from '../../support/types';
 
 // The soft pager and the filter navigate through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
-// A grouped vocabulary's filter, table and pager — `/admin/categories`' (M5.6,
+// A curated vocabulary's filter, table and pager — `/admin/categories`' (M5.6,
 // MB.178), `/admin/forms`' (M5.6a) and `/admin/deities`' (MB.132): each value
 // with its group, an Edit link opening it in the page's modal, and the filter
-// that narrows them (claude-docs/components/grouped-value-list.md). The kinds
+// that narrows them, and the flat planets and signs (MB.95) with no group at
+// all (claude-docs/components/grouped-value-list.md). The kinds
 // share every behaviour, so it runs on the deities, whose group goes by its
 // own name; the other kinds get only what they change, their page and their
 // group's parameter. Paging is Pager's, the filter's spinner and its reset to
@@ -25,7 +27,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 const DEITIES: GroupedValueListSubject = {
   kind: 'deity',
   path: '/admin/deities',
-  filterName: 'Filter deities',
+  filterName: 'Filter Deities',
   groupLabel: 'Tradition',
   groupParam: 'tradition',
   entries: [
@@ -83,6 +85,18 @@ describe('GroupedValueList', () => {
     );
   });
 
+  // MB.95's flat kinds, folded in at MB.115: filed under nothing, so
+  // neither the table nor the filter offers a group.
+  it('shows a flat kind with no group column and no group filter', () => {
+    render(<GroupedValueList {...props({ kind: 'planet', groups: undefined })} />);
+
+    const headings = within(screen.getByRole('table')).getAllByRole('columnheader');
+    expect(headings).toHaveLength(3);
+    expect(
+      within(screen.getByRole('form', { name: 'Filter Planets' })).queryByRole('combobox'),
+    ).not.toBeInTheDocument();
+  });
+
   it('draws no table when there are none, filtered or not', () => {
     const { rerender } = render(<GroupedValueList {...props({ values: [] })} />);
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
@@ -94,7 +108,7 @@ describe('GroupedValueList', () => {
   });
 
   describe('groupedValuesHref', () => {
-    const href = (place: GroupedValuesPlace, dialog?: GroupedValuesDialog) =>
+    const href = (place: GroupedValuesPlace, dialog?: ListDialog) =>
       groupedValuesHref(DEITIES.kind, place, dialog);
 
     it('keeps the page a modal opens over, the modal last', () => {
@@ -122,83 +136,103 @@ describe('GroupedValueList', () => {
     });
 
     it.each([
-      { kind: 'category', path: '/admin/categories', groupParam: 'group' },
-      { kind: 'form', path: '/admin/forms', groupParam: 'group' },
-    ] as const)('addresses the $kind page, its group as $groupParam', (other) => {
+      { kind: 'category', path: '/admin/categories', group: 'group=g&' },
+      { kind: 'form', path: '/admin/forms', group: 'group=g&' },
+      // A flat kind has no group to write.
+      { kind: 'planet', path: '/admin/planets', group: '' },
+      { kind: 'zodiacSign', path: '/admin/zodiac-signs', group: '' },
+    ] as const)('addresses the $kind page, its group as it names one', (other) => {
       expect(groupedValuesHref(other.kind, { query: 'q', group: 'g', after: 'a' }, 'new')).toBe(
-        `${other.path}?query=q&${other.groupParam}=g&after=a&new`,
+        `${other.path}?query=q&${other.group}after=a&new`,
       );
     });
   });
 
-  // MB.178: a GET form to the page itself, as the user list's (MB.52), with
-  // Filter offered only when there is a new filter to apply.
+  // MB.178: a GET form to the page itself, as the user list's (MB.52),
+  // applying as each field changes (MB.115, the owner's call): the group once
+  // a choice settles, the name on its Search submit.
   describe('the filter', () => {
     beforeEach(() => {
       router.push.mockReset();
     });
 
     const shown = { query: DEITIES.query, group: groups[0].slug };
-    const filterButton = () => screen.getByRole('button', { name: 'Filter' });
     const searchbox = () => screen.getByRole('searchbox', { name: 'Name' });
     const groupBox = () => screen.getByRole('combobox', { name: DEITIES.groupLabel });
 
-    it('filters by a GET search to the page itself, keeping what was asked', () => {
-      render(<GroupedValueList {...props({ filter: shown })} />);
+    // The group goes under its own parameter by slug, from the type-ahead's
+    // hidden input, as the server's select sends it.
+    const group = (slug: string) => `${DEITIES.groupParam}=${slug}`;
+    const SUBJECT: FilterFormSubject = {
+      label: DEITIES.filterName,
+      path,
+      searchLabel: 'Name',
+      push: router.push,
+      none: { list: <GroupedValueList {...props()} />, sends: `query=&${group('')}` },
+      shown: {
+        list: (
+          <GroupedValueList
+            {...props({
+              filter: shown,
+              previousHref: groupedValuesHref(DEITIES.kind, { ...shown, before: 'b' }),
+            })}
+          />
+        ),
+        sends: `query=${DEITIES.query}&${group(groups[0].slug)}`,
+      },
+      alone: [
+        {
+          list: <GroupedValueList {...props({ filter: { query: DEITIES.query, group: '' } })} />,
+          sends: `query=${DEITIES.query}&${group('')}`,
+        },
+        {
+          list: <GroupedValueList {...props({ filter: { query: '', group: groups[0].slug } })} />,
+          sends: `query=&${group(groups[0].slug)}`,
+        },
+      ],
+      searched: `${path}?query=Two+words&${group(groups[0].slug)}`,
+    };
 
-      // The <search> landmark around it is the e2e spec's to find, as the user
-      // list's is: jsdom's role table predates the element.
-      const search = screen.getByRole('form', { name: DEITIES.filterName });
-      expect(search).toHaveAttribute('action', path);
-      expect(search).toHaveAttribute('method', 'get');
-      const name = within(search).getByRole('searchbox', { name: 'Name' });
-      expect(name).toHaveValue(DEITIES.query);
-      expect(name).toHaveAttribute('name', 'query');
-      const group = within(search).getByRole('combobox', { name: DEITIES.groupLabel });
-      expect(group).toHaveValue(groups[0].slug);
-      expect(group).toHaveAttribute('name', DEITIES.groupParam);
-    });
+    it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
 
-    it('is disabled while the form matches the filter shown', () => {
-      render(<GroupedValueList {...props({ filter: shown })} />);
-
-      expect(filterButton()).toBeDisabled();
-    });
-
-    it('enables once the query differs, and disables again when it is put back', () => {
-      render(<GroupedValueList {...props({ filter: { query: DEITIES.query, group: '' } })} />);
-
-      fireEvent.change(searchbox(), { target: { value: `${DEITIES.query}s` } });
-      expect(filterButton()).toBeEnabled();
-
-      fireEvent.change(searchbox(), { target: { value: `${DEITIES.query} ` } });
-      expect(filterButton()).toBeDisabled();
-    });
-
-    it('opens the filtered list from its first page', () => {
-      render(
-        <GroupedValueList
-          {...props({ previousHref: groupedValuesHref(DEITIES.kind, { before: 'b' }) })}
-        />,
+    // The owner's call (MB.115): typed into once hydrated, but drawn as a
+    // native select by the server, so the filter works before JavaScript.
+    it('draws the group as a native select on the server, and as a type-ahead once hydrated', async () => {
+      const { container, hydrate } = drawnOnServer(
+        <GroupedValueList {...props({ filter: shown })} />,
       );
+
+      const served = within(container).getByRole('combobox', { name: DEITIES.groupLabel });
+      expect(served).toHaveValue(groups[0].slug);
+      expect(served).toHaveAttribute('name', DEITIES.groupParam);
+      expect(within(served).getAllByRole('option')).toHaveLength(groups.length + 1);
+      expect(served).not.toHaveAttribute('aria-autocomplete');
+
+      await hydrate();
+      const hydrated = within(container).getByRole('combobox', { name: DEITIES.groupLabel });
+      expect(hydrated).toHaveAttribute('aria-autocomplete', 'list');
+      expect(hydrated).toHaveValue(groups[0].name);
+    });
+
+    it('applies a group picked, carrying the name typed', () => {
+      render(<GroupedValueList {...props()} />);
 
       fireEvent.change(searchbox(), { target: { value: ' Two words ' } });
-      fireEvent.change(groupBox(), { target: { value: groups[1].slug } });
-      fireEvent.click(filterButton());
+      fireEvent.change(groupBox(), { target: { value: groups[1].name.slice(1, 4) } });
+      expect(router.push).not.toHaveBeenCalled();
+      fireEvent.click(screen.getByRole('option', { name: groups[1].name }));
 
-      expect(router.push).toHaveBeenCalledWith(
-        `${path}?query=Two+words&${DEITIES.groupParam}=${groups[1].slug}`,
-      );
+      expect(router.push.mock.calls).toEqual([
+        [`${path}?query=Two+words&${DEITIES.groupParam}=${groups[1].slug}`],
+      ]);
     });
 
-    it('opens the unfiltered list when the filter is cleared', () => {
+    it('opens every group from the clear, keeping the name shown', () => {
       render(<GroupedValueList {...props({ filter: shown })} />);
 
-      fireEvent.change(searchbox(), { target: { value: '' } });
-      fireEvent.change(groupBox(), { target: { value: '' } });
-      fireEvent.click(filterButton());
+      fireEvent.click(screen.getByRole('button', { name: `Clear ${DEITIES.groupLabel}` }));
 
-      expect(router.push).toHaveBeenCalledWith(path);
+      expect(router.push.mock.calls).toEqual([[`${path}?query=${DEITIES.query}`]]);
     });
   });
 });

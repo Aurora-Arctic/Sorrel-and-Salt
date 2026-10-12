@@ -10,19 +10,21 @@ filter. A client component, for the box's text.
 
 `CategoryPickerProps` (`types.ts`):
 
-| Prop         | What it is                                                               |
-| ------------ | ------------------------------------------------------------------------ |
-| `legend`     | The fieldset's name, "Categories"                                        |
-| `hint`       | The legend's `InfoTip` text, if any                                      |
-| `entry`      | The box's name, "Category": what a pick adds                             |
-| `categories` | Every `PickerCategory` on offer, in any order                            |
-| `pending`    | The categories are still being read: the box says it is looking          |
-| `value`      | The picked ids, in the order they were picked                            |
-| `onChange`   | Called with the new id list after a pick is added or taken out           |
-| `invalid`    | The ids an error names: each entry edged, its x described by the error   |
-| `errorId`    | The id of the element `error` renders, set only while an error shows     |
-| `error`      | The one error element, drawn beneath the box: the form's `FieldError`    |
-| `status`     | Said beneath the box, and read with it: the categories could not be read |
+| Prop          | What it is                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `legend`      | The fieldset's name, "Categories"                                                                                                      |
+| `hint`        | The legend's `InfoTip` text, if any                                                                                                    |
+| `entry`       | The box's name, "Category": what a pick adds                                                                                           |
+| `placeholder` | A short action shown, muted, while the box is empty: "Add a category"; the box keeps it after the chips ([`combobox.md`](combobox.md)) |
+| `categories`  | Every `PickerCategory` on offer, in any order                                                                                          |
+| `pending`     | The categories are still being read: the box says it is looking                                                                        |
+| `value`       | The picked ids, in the order they were picked                                                                                          |
+| `onChange`    | Called with the new id list after a pick is added or taken out                                                                         |
+| `invalid`     | The ids an error names: each entry edged, its x described by the error                                                                 |
+| `errorId`     | The id of the element `error` renders, set only while an error shows                                                                   |
+| `error`       | The one error element, drawn beneath the box: the form's `FieldError`                                                                  |
+| `status`      | Said beneath the box, and read with it: the categories could not be read                                                               |
+| `action`      | A control at the legend's end, handed the picker's announcer (`LegendAction`): an ingredient variant's Copy From Ingredient (MB.115)   |
 
 A `PickerCategory` is the category's id, name, optional `description` and its
 `group`, a `PickerGroup`: id, name, `colorDark` and `colorLight`.

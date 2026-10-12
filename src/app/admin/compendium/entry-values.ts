@@ -62,10 +62,20 @@ const substituteEntry =
         }
       : { value: name };
 
-/** A reference as its row: the citation, the source it links, and its locator. */
+/**
+ * A reference as its row: the citation, the source it links with the fields
+ * its short form is made of, and its locator.
+ */
 const referenceEntry = ({ reference, locator }: CitedReference): ReferenceListEntry => ({
   value: citationText(reference),
-  link: { id: reference.id, isGlobal: reference.workspaceId === null },
+  link: {
+    id: reference.id,
+    isGlobal: reference.workspaceId === null,
+    kind: reference.kind,
+    title: reference.title,
+    authors: reference.authors,
+    container: reference.container,
+  },
   locator: locator ?? '',
 });
 

@@ -16,6 +16,13 @@
 // in a file or inline. Each is shot as `<name>-<width>-<theme>.png`.
 // `--storage-state` is a Playwright storage-state file holding a signed-in
 // session's cookies, for the pages behind sign-in.
+//
+// Both widths are touch sign-offs (MB.115): each context is a touch phone,
+// `hasTouch` and `isMobile`, so the page's `(hover: none)` query holds as it
+// does on a phone. Without it a desktop browser at phone width would draw
+// what no phone shows: the impersonation banner tucked away until a pointer
+// nears the top, where a touch screen keeps it in the page's flow, shown in
+// full.
 
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -63,8 +70,11 @@ mkdirSync(values.out, { recursive: true });
 const browser = await chromium.connect(endpoint);
 try {
   for (const viewport of VIEWPORTS) {
+    // A touch phone, so `(hover: none)` holds as it does on one (header).
     const context = await browser.newContext({
       viewport,
+      hasTouch: true,
+      isMobile: true,
       ...(values['storage-state'] ? { storageState: values['storage-state'] } : {}),
     });
     const page = await context.newPage();

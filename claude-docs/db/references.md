@@ -74,10 +74,16 @@ read of all a row's substitutes implies neither of its unique indexes'
 predicates. No index leads on `reference_id`: nothing reads from a reference
 back to its links, and a reference is never hard-deleted.
 
-**A link carries a locator and nothing else.** "p. 112", "chap. 13", "s.v.
-Hecate" — free text, because locators vary by the kind of work. The renderer
-leaves it out of the citation, since a bibliography entry names the work, and
-the page shows it beside the citation.
+**A link carries a locator and nothing else.** "p. 112", "chap. 13",
+`under "Hecate"` — free text, because locators vary by the kind of work. An
+entry in a work arranged by headword, a dictionary or an encyclopedia, is
+cited by its headword in quotation marks after the word "under". The 18th
+edition of the _Chicago Manual of Style_ (2024, 14.130) no longer recommends
+the Latin "s.v." the 17th used and allows "under" for clarity; the project
+always writes it, in the locator and in an `entry`'s citation alike, so the
+two never differ. The renderer leaves the locator out of the citation, since
+a bibliography entry names the work, and the page shows it beside the
+citation.
 
 **The tier rule is the service's.** A compendium entry's or a vocabulary
 row's link names a compendium reference; a coven ingredient's names the
@@ -129,6 +135,15 @@ compendium-tier write expires the `compendium` tag once it has committed,
 and a coven's does not, since no cached read holds a coven's reference (M8.7;
 ([`compendium-cache.md`](compendium-cache.md), "Expiring the tag")).
 
+**One reference is read whole by id** for the form that edits it (MB.115):
+`getReference(session, workspaceId, id)`, through `readersOf` under
+`ingredient: ['read']` and `findManyReferences`, so its tiers are the
+picker's — without a coven the compendium's alone, with one that coven's
+own or the compendium's — and it returns no row the picker would not
+already offer. Another coven's reference, a soft-deleted one and an id
+that is not a uuid are all `NotFound`, the first because that coven's
+contents are private.
+
 **An ingredient's links are written in its own save.** Both tiers' create and
 update reach `addReferenceLinks` and `replaceReferenceLinks` in
 `services/ingredient-rows.ts` through `writeChildren`, inside the ingredient's
@@ -166,7 +181,10 @@ page)`: the live references of the compendium and a proof's coven — no
 proof, for a compendium entry, reads the compendium's alone (M5.5) — whose
 `authors`, `title` or `container` the query is word-similar to (`<%` at the
 compendium search's 0.5), each side through `unaccent_immutable`, keyed
-`[-score, title]`; a blank query pages both tiers by title. No trigram index
+`[-score, title]`. The score is the best field's word similarity, a field
+holding the query verbatim scoring 1 as the compendium search's does, so a
+title holding "brim" inside _Kettlebrim_ ranks above a near miss
+([The compendium read](compendium-read.md)); a blank query pages both tiers by title. No trigram index
 is built: the table holds the sources a few hundred entries cite, and the
 scan is the search's whole cost at that size. An index is a later task's,
 measured, if the table outgrows it.
@@ -200,7 +218,7 @@ applies as each field is left, so what is seen is what is saved.
 | `published`                | and a range between numbers dashed, "1882-88" → "1882–88", a day written as a date left alone (`dashRanges`)                        |
 | `edition`                  | and one given as a number or a word written as Chicago does, "2", "second edition" → "2nd ed."; anything else, "Rev. ed.", as typed |
 | `url`                      | trimmed, and one with no scheme but a host, "example.org/x", taken as `https://` (`withScheme`)                                     |
-| a link's `locator`         | tidied and its ranges dashed (`formatLocator`); its words, "s.v. Hecate", "chap. 3", as typed                                       |
+| a link's `locator`         | tidied and its ranges dashed (`formatLocator`); its words, `under "Hecate"`, "chap. 3", as typed                                    |
 
 Locator shorthand — "112" to "p. 112" — was offered and not chosen: a
 locator's words vary too much by the kind of work to guess.
@@ -280,16 +298,60 @@ drops each missing piece with its punctuation.
   (Note) — and without a volume, _Container_, Published, Pages.
   - Nwokocha, Eziaku Atuama. "An Equilibrist Vodou Goddess." _Harvard Divinity Bulletin_, Summer/Autumn 2013. Accessed October 6, 2026. https://bulletin.hds.harvard.edu/an-equilibrist-vodou-goddess/.
   - With a volume, from an invented source: Testwort, Fixtura. "A Note on Fixture Covens." _Journal of Invented Botany_ 51, no. 2 (1988): 399.
-- **`entry`** — Authors. Container, Edition, s.v. "Title." Contributors.
+- **`entry`** — Authors. Container, Edition, under "Title." Contributors.
   Place: Publisher, Published. Host. Last modified Modified. Accessed
   Accessed. URL. (Note)
-  - Wikipedia, s.v. "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
-  - _Visuotinė lietuvių enciklopedija_, s.v. "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
+  - Wikipedia, under "Guanyin." Last modified December 28, 2024. Accessed October 6, 2026. https://en.wikipedia.org/wiki/Guanyin.
+  - _Visuotinė lietuvių enciklopedija_, under "Perkūnas." Vilnius: Mokslo ir enciklopedijų leidybos centras. Accessed October 6, 2026. https://www.vle.lt/straipsnis/perkunas/.
 - **`web_page`** — Authors. "Title." Container. Publisher. Published; last
   modified Modified. Accessed Accessed. URL. (Note) — "Last modified" is
   capitalised when it stands without a published date.
   - Cartwright, Mark. "Greek Mythology." World History Encyclopedia. July 29, 2012. Accessed October 6, 2026. https://www.worldhistory.org/Greek_Mythology/.
   - Cartwright, Mark. "Seven Lucky Gods." World History Encyclopedia. June 24, 2013; last modified September 27, 2024. Accessed October 6, 2026. https://www.worldhistory.org/Shichifukujin/.
+
+### The short form
+
+`renderShortCitation(fields, continued?)` in `src/lib/short-citation.ts`
+(MB.115), beside the renderer and as pure, gives a source's Chicago short
+form, as the notes-bibliography style shortens a note, as the same `{ text, italic }`
+parts, and `shortCitationText` as one plain string. The ingredient form's
+reference rows show it where the whole entry would not fit on a line
+([`ingredient-form.md`](../components/ingredient-form.md), "The
+references"); nothing stores it, and the server does not render it: it
+reads four fields, `kind`, `authors`, `title` and `container`
+(`ShortCitationFields`), which `Reference` already exposes, so a read
+that shows it selects them beside `citation` and the schema is unchanged.
+
+- **The authors' surnames.** `authors` is one text field written as a
+  bibliography prints it, the first name inverted and the rest not, so the
+  first comma ends the first surname and each later name's surname is its
+  last word, with a particle before it kept ("van der Testwort") and a
+  suffix ("Jr.", "III") dropped. A role after the names, ", ed.",
+  ", eds.", ", ed. and trans.", is dropped. One name stands alone, two
+  are joined by "and", three are a series, "Fixture, Testwort, and
+  Mockley", and four or more, or a field ending "et al.", are the first
+  and "et al.". A field with no comma is one name as written, an
+  organisation's or a single name, "Wellcome Collection": the field
+  cannot tell a corporate name holding a comma from an inverted person's,
+  and reads it as the person's.
+- **The short title.** The main title, less a subtitle after a colon, or
+  after a question or exclamation the title asks, whose mark stays; less an
+  initial _A_, _An_ or _The_ unless that is the whole title; cut to four
+  words, and a cut title ends on no "and", "of" or other short
+  function word and on no comma. Its `_…_` marks are read as the renderer
+  reads them, before the cut, so a mark the cut splits is never printed.
+- **Italics or quotation marks, by the kind.** A `book` is a whole work,
+  its short title italic; a `chapter`, `article`, `entry` and
+  `web_page` are each part of a larger one, theirs in quotation marks. No
+  kind is a website as a whole, so nothing else is italic.
+- **No authors: the title leads**, `_Testwort Herbal_`, `"Testwort"` —
+  except a reference-work `entry`, which Chicago cites by its work, "under"
+  and its headword whole, `Fixture Encyclopedia, under "Testwort"`, since
+  its title alone would not say which work.
+- **Continued by a locator**, the form takes the comma before it, inside
+  the quotation marks, `Placeholder, "Notes on Mockleaf," p. 14`, and none
+  after a title ending in "?" or "!". Unlike a note, it ends in no period:
+  the row is a label.
 
 ### How the seed reads the docs (MB.156)
 
@@ -351,7 +413,7 @@ as the edition in hand; a shard's per-entry pages, a Wikipedia revision or a
 web page, are its own `sources`. Each citation on an entry or a form becomes
 one `reference_links` row, `ingredient_id` for the entry and
 `ingredient_variant_id` for the form, carrying the citation's locator (`p. 71`,
-`s.v. Mugwort`). Every entry cites at least one source of its own, because the
+`under "Mugwort"`). Every entry cites at least one source of its own, because the
 admin's "unsourced" filter counts the entry's own links and its forms'.
 
 Which fields a citation backs (`supports`) is the guard's to check and is not

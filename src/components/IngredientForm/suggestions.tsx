@@ -382,6 +382,7 @@ export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactE
       name={`${at}.form`}
       label="Form"
       hint="How it comes: dried leaf, whole root, oil."
+      placeholder="Add a form"
       suggestions={suggestions}
       onActivate={() => setActive(true)}
       onPick={(option) => setValue(`${at}.formLink`, option?.link ?? null)}
@@ -435,5 +436,12 @@ export function LookupListField({
         : found.options.filter((option) => option.link?.id !== omit);
     return { ...found, options: rank ? rank(kept) : kept };
   }, [found, omit, rank]);
-  return <ListField {...list} suggestions={suggestions} onActivate={() => setActive(true)} />;
+  return (
+    <ListField
+      {...list}
+      workspaceId={workspaceId}
+      suggestions={suggestions}
+      onActivate={() => setActive(true)}
+    />
+  );
 }

@@ -5,10 +5,13 @@ import {
   findAstrologyValues,
   findDeityCount,
   findDeityPage,
+  findGroupCount,
+  findGroupPage,
   findIngredientFormValueCount,
   findIngredientFormValues,
 } from '@/db/repository';
 import { planets, zodiacSigns } from '@/modules/vocabulary/schema/astrology';
+import { deityTraditions } from '@/modules/vocabulary/schema/deities';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { A } from '../../support/as-user';
 import type { ConnectionArgs, Page } from '@/lib/types';
@@ -322,5 +325,49 @@ describe('findDeityPage and findDeityCount', () => {
     await expect(
       findDeityCount({}, decodeCursor(second.pageInfo.startCursor as string)),
     ).resolves.toEqual({ totalCount: 216, countBefore: 25 });
+  });
+});
+
+// A group vocabulary as its admin page lists it (MB.115), run on the deity
+// traditions, the one page that searches: every live group by name, narrowed
+// by a name fragment the way the values' lists are.
+describe('findGroupPage and findGroupCount', () => {
+  afterEach(async () => {
+    await sql`delete from deity_traditions where name like 'Fixture%'`;
+  });
+
+  const names = async (query?: string) => {
+    const page = await resolvePage({ first: 100 }, (request) =>
+      findGroupPage(deityTraditions, { query }, request),
+    );
+    return page.edges.map((edge) => edge.node.name);
+  };
+
+  it('narrows by a name fragment, case-insensitively, reading % and _ literally', async () => {
+    await sql`
+      insert into deity_traditions (name, slug, description, created_by, updated_by)
+      values
+        ('Fixture Testwort Rite', 'fixture-testwort-rite', 'A test tradition', ${A.id}, ${A.id}),
+        ('Fixture 100% Mockish', 'fixture-100-mockish', 'Another', ${A.id}, ${A.id})`;
+    const [{ count: live }] = await sql`
+      select count(*)::int as count from deity_traditions where deleted_at is null`;
+    const all = await names();
+    // The precondition: unfiltered, the page holds both fixtures beside the seed's.
+    expect(all).toHaveLength(live);
+    expect(all).toEqual(expect.arrayContaining(['Fixture Testwort Rite', 'Fixture 100% Mockish']));
+
+    expect(await names('TESTWORT')).toEqual(['Fixture Testwort Rite']);
+    expect(await names('twort r')).toEqual(['Fixture Testwort Rite']);
+    expect(await names('ixture')).toEqual(['Fixture 100% Mockish', 'Fixture Testwort Rite']);
+    expect(await names('%')).toEqual(['Fixture 100% Mockish']);
+    expect(await names('_')).toEqual([]);
+    await expect(findGroupCount(deityTraditions, { query: 'ixture' }, undefined)).resolves.toEqual({
+      totalCount: 2,
+      countBefore: null,
+    });
+    await expect(findGroupCount(deityTraditions, {}, undefined)).resolves.toEqual({
+      totalCount: live,
+      countBefore: null,
+    });
   });
 });

@@ -1,11 +1,16 @@
 import type { Story } from '@ladle/react';
+import type { Route } from 'next';
+import Link from 'next/link';
 import GroupedValueList from '.';
 import { deitySlug, formSlug, slugify } from '../../lib/slugify';
+import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
+import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
+import { ListNavigationContext } from '../ListFrame';
 import { groupedValuesHref } from './href';
-import type { GroupedValueGroupOption, GroupedValueListFilter } from './types';
+import type { GroupedValueListFilter } from './types';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueList.
-// The filter reaches `/admin/categories`, `/admin/forms` or `/admin/deities`,
+// The filter reaches the admin pages (`/admin/categories` and the rest),
 // which the workshop does not serve.
 export default {
   title: 'Admin / Grouped Value List',
@@ -13,10 +18,9 @@ export default {
 
 const NO_FILTER: GroupedValueListFilter = { query: '', group: '' };
 
-const CATEGORY_GROUPS: readonly GroupedValueGroupOption[] = [
-  { slug: 'fixture-healing', name: 'Fixture Healing' },
-  { slug: 'fixture-protection', name: 'Fixture Protection' },
-];
+// Each kind's groups enough to narrow: the group filter is typed into once
+// hydrated (MB.115), so typing in it shows its list narrowing.
+const CATEGORY_GROUPS = asSlugs(GROUP_NAMES.category);
 
 // Two of the seed's colour pairs, copied from src/db/seed/category-groups.ts,
 // which a component may not import, on the invented groups.
@@ -38,10 +42,7 @@ const category = (name: string, groupName: string, description: string) => {
   };
 };
 
-const FORM_GROUPS: readonly GroupedValueGroupOption[] = [
-  { slug: 'fixture-mineral', name: 'Fixture Mineral' },
-  { slug: 'fixture-substance', name: 'Fixture Substance' },
-];
+const FORM_GROUPS = asSlugs(GROUP_NAMES.form);
 
 const form = (name: string, groupName: string, description: string) => {
   const slug = formSlug(name, groupName);
@@ -55,10 +56,7 @@ const form = (name: string, groupName: string, description: string) => {
   };
 };
 
-const TRADITIONS: readonly GroupedValueGroupOption[] = [
-  { slug: 'fixtural', name: 'Fixtural' },
-  { slug: 'mockish', name: 'Mockish' },
-];
+const TRADITIONS = asSlugs(GROUP_NAMES.tradition);
 
 const deity = (name: string, groupName: string, description: string) => {
   const slug = deitySlug(name, groupName);
@@ -230,3 +228,103 @@ export const DeitiesNoMatch: Story = () => (
 export const DeitiesEmpty: Story = () => (
   <GroupedValueList kind="deity" values={[]} filter={NO_FILTER} groups={TRADITIONS} />
 );
+
+// The flat kinds (MB.95): no group column and no group filter.
+const flat = (kind: 'planet' | 'zodiacSign', name: string, description: string) => {
+  const slug = slugify(name);
+  return {
+    id: slug,
+    name,
+    slug,
+    description,
+    groupName: '',
+    editHref: groupedValuesHref(kind, {}, { edit: slug }),
+  };
+};
+
+export const PlanetsOnePageOfSeveral: Story = () => (
+  <GroupedValueList
+    kind="planet"
+    values={[
+      flat('planet', 'Testwort Star', 'An invented body, for the workshop.'),
+      flat('planet', 'Fixture Comet', 'Another, with a longer tail than the first.'),
+      flat('planet', 'Fixture Moonlet', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+    previousHref={groupedValuesHref('planet', { before: 'cursor' })}
+    nextHref={groupedValuesHref('planet', { after: 'cursor' })}
+    position={{ page: 2, pages: 3 }}
+  />
+);
+
+export const Signs: Story = () => (
+  <GroupedValueList
+    kind="zodiacSign"
+    values={[
+      flat('zodiacSign', 'Fixture Ram', 'An invented sign, for the workshop.'),
+      flat('zodiacSign', 'Fixture Scales', 'Invented too.'),
+    ]}
+    filter={NO_FILTER}
+  />
+);
+
+export const PlanetsFiltered: Story = () => (
+  <GroupedValueList
+    kind="planet"
+    values={[flat('planet', 'Testwort Star', 'An invented body, for the workshop.')]}
+    filter={{ query: 'star', group: '' }}
+  />
+);
+
+export const PlanetsNoMatch: Story = () => (
+  <GroupedValueList kind="planet" values={[]} filter={{ query: 'nothing', group: '' }} />
+);
+
+export const PlanetsEmpty: Story = () => (
+  <GroupedValueList kind="planet" values={[]} filter={NO_FILTER} />
+);
+
+// Inside the admin layout and the Categories page with its Categories tab
+// open, as the page draws it; at a phone's width in each theme, the tab's Add
+// button full width beneath the heading, the filter stacked and each row a
+// card. The page and the filter are the real `TabbedPage` and
+// `FilterForm`, so these show what the sign-off settled.
+const CategoriesPage = () => (
+  <AdminTabbedFrame
+    page="categories"
+    action={
+      <Link className="btn btn--solid" href={'/admin/categories?new' as Route}>
+        Add Category
+      </Link>
+    }
+  >
+    <CategoriesFiltered />
+  </AdminTabbedFrame>
+);
+
+export const PhoneDark: Story = () => <CategoriesPage />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <CategoriesPage />;
+PhoneLight.meta = { theme: 'light', width: 375 };
+
+// The same page with a filter applied and the filtered list on its way (MB.115,
+// the owner's call): the filter row greyed and off, and the tabs' skeleton,
+// rows and pager, in place of the list. The workshop's router goes nowhere,
+// so a list navigation provided above the page holds one on its way, as the
+// tabbed page's own Loading stories do.
+const ON_ITS_WAY = { pending: true, go: () => undefined };
+
+const Pending = () => (
+  <ListNavigationContext.Provider value={ON_ITS_WAY}>
+    <CategoriesPage />
+  </ListNavigationContext.Provider>
+);
+
+export const CategoriesPending: Story = () => <Pending />;
+
+export const PendingPhoneDark: Story = () => <Pending />;
+PendingPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PendingPhoneLight: Story = () => <Pending />;
+PendingPhoneLight.meta = { theme: 'light', width: 375 };

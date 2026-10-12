@@ -5,11 +5,20 @@ import { describe, expect, it, vi } from 'vitest';
 import ReferencePanel from '@/components/IngredientForm/reference-panel';
 import type { CreateReferenceMutation, CreateReferenceMutationVariables } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
+import {
+  chooseKind,
+  inPanel,
+  labelled,
+  referencePanel,
+  renderWithClient,
+} from '../../support/ingredient-form';
+import { press, typeIn } from '../../support/interact';
 import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import {
   NEW_REFERENCE_ID,
   WORKSPACE_ID,
   acceptReference,
+  offerReference,
 } from '../../support/msw/ingredient-lookups';
 import { server } from '../../support/msw/server';
 
@@ -20,7 +29,11 @@ import { server } from '../../support/msw/server';
 // how each field is tidied is tests/modules/ingredients/validation/'s
 // (claude-docs/components/ingredient-form.md, "Testing").
 
-/** The panel, asked for `summons` times; `summon` asks for it again, as New Reference does. */
+/**
+ * The panel, asked for `summons` times; `summon` asks for it again, as New
+ * Reference does. Rendered here rather than by `renderWithClient`: a summons
+ * re-renders the panel under the client it opened with.
+ */
 function renderPanel() {
   const onSaved = vi.fn();
   const onCancel = vi.fn();
@@ -39,29 +52,11 @@ function renderPanel() {
   return { onSaved, onCancel, summon: (summons: number) => rerender(panelFor(summons)) };
 }
 
-const panel = () => screen.getByRole('group', { name: 'New Reference' });
-/** A label's text less a required field's asterisk, which is hidden from its name. */
-const labelled = (label: string) => (content: string) => content.replace(/\*$/, '') === label;
-const inPanel = (label: string) => within(panel()).getByLabelText(labelled(label));
+const panel = () => referencePanel();
 const notInPanel = (label: string) =>
   expect(within(panel()).queryByLabelText(labelled(label))).toBeNull();
 const kindBox = () => within(panel()).getByRole('combobox', { name: 'Kind' });
-const typeIn = (control: HTMLElement, value: string) =>
-  fireEvent.change(control, { target: { value } });
-/** Presses a button, focusing it first as a real click would: fireEvent moves no focus. */
-const press = (button: HTMLElement) => {
-  button.focus();
-  fireEvent.click(button);
-};
 const saveReference = () => press(within(panel()).getByRole('button', { name: 'Save Reference' }));
-const chooseKind = (label: string) => {
-  fireEvent.click(kindBox());
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: 'Kind choices' })).getByRole('option', {
-      name: label,
-    }),
-  );
-};
 
 /** Every label a panel field may carry, across the five kinds. */
 const ALL_LABELS = [
@@ -281,6 +276,11 @@ describe('ReferencePanel', () => {
       id: NEW_REFERENCE_ID,
       citation: 'Mock, Cyril. A Fixture Grimoire. Mockford, 1999.',
       isGlobal: false,
+      // What its row's short form is made of.
+      kind: 'book',
+      authors: 'Mock, Cyril',
+      title: 'A Fixture Grimoire',
+      container: null,
     });
     expect(calls).toHaveLength(1);
     expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
@@ -365,6 +365,10 @@ describe('ReferencePanel', () => {
                 id: NEW_REFERENCE_ID,
                 citation: 'A Fixture Grimoire. 1999.',
                 isGlobal: false,
+                kind: 'book',
+                authors: null,
+                title: 'A Fixture Grimoire',
+                container: null,
               },
             },
           });
@@ -397,5 +401,62 @@ describe('ReferencePanel', () => {
 
     expect(onCancel).toHaveBeenCalledOnce();
     expect(calls).toHaveLength(0);
+  });
+
+  // MB.115: the edit saves through the same handling, so a refusal of the
+  // edited source lands beside its field as a new one's does.
+  it('puts a server field error on an edited source beside its field', async () => {
+    offerReference({
+      id: NEW_REFERENCE_ID,
+      kind: 'book',
+      title: 'A Fixture Grimoire',
+      authors: 'Mock, Cyril',
+      container: null,
+      contributors: null,
+      edition: null,
+      volume: null,
+      issue: null,
+      series: null,
+      place: 'Mockford',
+      publisher: null,
+      published: '1999',
+      pages: null,
+      host: null,
+      url: null,
+      modified: null,
+      accessed: null,
+      note: null,
+    });
+    mockGraphQLError('UpdateReference', {
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['published'], message: 'Give the year it was published' }],
+    });
+    renderWithClient(
+      <ReferencePanel
+        workspaceId={WORKSPACE_ID}
+        editing={{
+          id: NEW_REFERENCE_ID,
+          isGlobal: false,
+          kind: 'book',
+          authors: 'Mock, Cyril',
+          title: 'A Fixture Grimoire',
+          container: null,
+        }}
+        summons={1}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+    const editPanel = () => screen.getByRole('group', { name: 'Edit Source' });
+    const published = await waitFor(() =>
+      within(editPanel()).getByLabelText(labelled('Published')),
+    );
+    expect(published).toHaveValue('1999');
+
+    typeIn(published, '2001');
+    press(within(editPanel()).getByRole('button', { name: 'Save Source' }));
+
+    await waitFor(() => expect(published).toBeInvalid());
+    expect(published).toHaveAccessibleDescription(/\S/);
   });
 });

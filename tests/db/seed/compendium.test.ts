@@ -163,7 +163,7 @@ describe('seedCompendium', () => {
       expect(rows).toEqual([
         { form: null, substitute_id: testwort, named_form: 'Herb', name: null },
         { form: null, substitute_id: null, named_form: null, name: 'Mockroot' },
-        { form: 'Root', substitute_id: testwort, named_form: null, name: null },
+        { form: 'Root', substitute_id: testwort, named_form: 'Herb', name: null },
       ]);
     });
 
@@ -208,7 +208,7 @@ describe('seedCompendium', () => {
     shard.sources['the-shared-work'] = shared;
     shard.entries[0].references.push({
       source: 'the-shared-work',
-      locator: 's.v. Testwort',
+      locator: 'under "Testwort"',
       supports: ['description'],
     });
     await seedCompendium(db, [shard]);
@@ -220,7 +220,7 @@ describe('seedCompendium', () => {
       select l.locator from reference_links l join "references" r on r.id = l.reference_id
       where r.seed_key = ${citationText(shared)} and l.ingredient_id = ${await ingredientId('fixtura testalis')}
     `;
-    expect(link.locator).toBe('s.v. Testwort');
+    expect(link.locator).toBe('under "Testwort"');
   });
 
   describe('an entry already present is left as it is, with nothing beneath it written', () => {

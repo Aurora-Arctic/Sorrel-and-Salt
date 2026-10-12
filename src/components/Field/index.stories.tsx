@@ -1,0 +1,223 @@
+import type { Story } from '@ladle/react';
+import { type ReactNode, useId, useState } from 'react';
+import { type FieldErrors, FormProvider, useForm } from 'react-hook-form';
+import {
+  FieldShell,
+  FilterSelectField,
+  FormActions,
+  ReasonField,
+  SearchField,
+  SwitchField,
+  TextField,
+  fieldDescription,
+} from '.';
+
+// Render-only; the fields are exercised by the forms that use them
+// (IngredientForm, the admin forms, NameForm, EmailForm). Each TextField sits
+// in a react-hook-form `FormProvider`, as it does in a form; the error is put
+// in the form's state rather than found by a resolver. The hint's tip opens
+// on hover, a tap, or the ⓘ's focus.
+export default {
+  title: 'Forms / Field',
+};
+
+interface Values {
+  name: string;
+}
+
+const Form = ({ errors, children }: { errors?: FieldErrors<Values>; children: ReactNode }) => {
+  const methods = useForm<Values>({ defaultValues: { name: 'Testwort' }, errors });
+  return (
+    <FormProvider {...methods}>
+      <form className="form" style={{ maxWidth: '32rem', marginTop: '5rem' }}>
+        {children}
+      </form>
+    </FormProvider>
+  );
+};
+
+export const Default: Story = () => (
+  <Form>
+    <TextField<Values> name="name" label="Name" autoComplete="off" />
+  </Form>
+);
+
+export const Required: Story = () => (
+  <Form>
+    <TextField<Values> name="name" label="Name" required autoComplete="off" />
+  </Form>
+);
+
+export const WithHint: Story = () => (
+  <Form>
+    <TextField<Values>
+      name="name"
+      label="Name"
+      hint="What the ingredient is called in this compendium. Its formal name is its identity."
+      autoComplete="off"
+    />
+  </Form>
+);
+
+export const WithNote: Story = () => (
+  <Form>
+    <TextField<Values>
+      name="name"
+      label="Name"
+      note="Shut while the formal name is being checked."
+      disabled
+    />
+  </Form>
+);
+
+export const WithError: Story = () => (
+  <Form errors={{ name: { type: 'server', message: 'Testwort is already taken.' } }}>
+    <TextField<Values> name="name" label="Name" required autoComplete="off" />
+  </Form>
+);
+
+export const Multiline: Story = () => (
+  <Form>
+    <TextField<Values> name="name" label="Description" multiline />
+  </Form>
+);
+
+export const Disabled: Story = () => (
+  <Form>
+    <TextField<Values> name="name" label="Name" disabled />
+  </Form>
+);
+
+// A plain-state form's own control in the same shell: the ids and the
+// attributes come from `fieldDescription`, the control is the caller's.
+export const PlainShell: Story = () => {
+  const { aria, ...field } = fieldDescription({
+    id: useId(),
+    error: 'Enter a name.',
+  });
+  return (
+    <div className="form" style={{ maxWidth: '32rem' }}>
+      <FieldShell label="Your Name" required {...field}>
+        <input id={field.controlId} className="input" autoComplete="name" aria-required {...aria} />
+      </FieldShell>
+    </div>
+  );
+};
+
+// An on-or-off choice as a slide toggle, held in the caller's state as a
+// list filter holds it: off, on, and shut either way, each label above its
+// toggle as a field's is. Tab to one for the focus ring; press and hold for
+// the stretched thumb.
+const Toggle = ({
+  label,
+  on = false,
+  disabled,
+}: {
+  label: string;
+  on?: boolean;
+  disabled?: boolean;
+}) => {
+  const [checked, setChecked] = useState(on);
+  return (
+    <SwitchField
+      label={label}
+      name="flag"
+      value="1"
+      checked={checked}
+      onChange={setChecked}
+      disabled={disabled}
+    />
+  );
+};
+
+export const Switch: Story = () => (
+  <div className="form" style={{ maxWidth: '32rem' }}>
+    <Toggle label="No Refs" />
+    <Toggle label="Needs Approval" on />
+    <Toggle label="Off and Shut" disabled />
+    <Toggle label="On and Shut" on disabled />
+  </div>
+);
+
+// A form's row of actions: Save off until there is something to save, then
+// on, then busy; Cancel quiet; Delete apart at the far end on an edit.
+const noop = () => {};
+
+export const Actions: Story = () => (
+  <div className="form" style={{ maxWidth: '32rem' }}>
+    <FormActions noun="Group" dirty={false} submitting={false} onCancel={noop} />
+    <FormActions noun="Group" dirty submitting={false} onCancel={noop} onDelete={noop} />
+    <FormActions noun="Group" dirty submitting onCancel={noop} onDelete={noop} />
+  </div>
+);
+
+// An admin change's optional Reason, held in plain state, its hint behind the ⓘ.
+export const Reason: Story = () => {
+  const [reason, setReason] = useState('');
+  return (
+    <div className="form" style={{ maxWidth: '32rem', marginTop: '5rem' }}>
+      <ReasonField value={reason} onChange={setReason} />
+    </div>
+  );
+};
+
+// A list filter's search box, its submit the magnifier at its end, named
+// Search. Its form goes nowhere here: a filter's FilterForm opens the list
+// (Forms / Filter Form). Tab past the text for the submit's focus ring.
+const Search = () => {
+  const [query, setQuery] = useState('');
+  return (
+    <form
+      className="form"
+      style={{ maxWidth: '32rem' }}
+      onSubmit={(event) => event.preventDefault()}
+    >
+      <SearchField
+        label="Name"
+        name="query"
+        placeholder="Search names"
+        value={query}
+        onChange={setQuery}
+      />
+    </form>
+  );
+};
+
+export const SearchBox: Story = () => <Search />;
+
+// A list filter's closed set as the browser draws it once hydrated: the
+// select-only box, its blank first choice no filter, and the same set typed
+// into, as the curated lists' group is. The server draws each as a native
+// select at the same width, so hydration moves nothing. Each applies nowhere
+// here: a filter's FilterForm opens the list (Forms / Filter Form).
+const GROUPS = [
+  { value: 'fixture-substance', label: 'Fixture Substance' },
+  { value: 'testwort-wards', label: 'Testwort Wards' },
+  { value: 'mockish', label: 'Mockish' },
+];
+
+export const FilterSelect: Story = () => (
+  <form
+    className="filter-row"
+    style={{ maxWidth: '48rem' }}
+    onSubmit={(event) => event.preventDefault()}
+  >
+    <FilterSelectField
+      label="Group"
+      name="group"
+      all="All Groups"
+      options={GROUPS}
+      defaultValue=""
+      onChange={noop}
+    />
+    <FilterSelectField
+      label="Tradition"
+      name="tradition"
+      all="All Traditions"
+      options={GROUPS}
+      defaultValue="testwort-wards"
+      onChange={noop}
+      typeahead
+    />
+  </form>
+);

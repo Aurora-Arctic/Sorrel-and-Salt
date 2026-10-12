@@ -1,4 +1,6 @@
 import type { Story } from '@ladle/react';
+import { GROUP_NAMES, asOptions } from '../../../.ladle/fixtures';
+import { usePressOnMount } from '../../../.ladle/press';
 import Modal from '../Modal';
 import GroupForm from '.';
 
@@ -9,9 +11,9 @@ export default {
   title: 'Admin / Group Form',
 };
 
+// Two of the shared groups, and the one edited here.
 const GROUPS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Mineral' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Substance' },
+  ...asOptions(GROUP_NAMES.form.slice(0, 2)),
   { id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a', name: 'Testwort Wards' },
 ];
 
@@ -33,13 +35,13 @@ export const AddingACategoryGroup: Story = () => (
 
 // Press Delete Group to see the move: a group to choose, then the confirmation.
 export const EditingACategoryGroup: Story = () => (
-  <Modal title="Edit Category Group" onClose={done}>
+  <Modal eyebrow="Edit Category Group" title={WARDS.name} onClose={done}>
     <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
   </Modal>
 );
 
 export const EditingAFormGroup: Story = () => (
-  <Modal title="Edit Form Group" onClose={done}>
+  <Modal eyebrow="Edit Form Group" title="Testwort Matter" onClose={done}>
     <GroupForm
       kind="form"
       group={{ ...WARDS, name: 'Testwort Matter', colorDark: '', colorLight: '' }}
@@ -50,10 +52,7 @@ export const EditingAFormGroup: Story = () => (
   </Modal>
 );
 
-const TRADITIONS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixtural' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Mockish' },
-];
+const TRADITIONS = asOptions(GROUP_NAMES.tradition.slice(0, 2));
 
 export const AddingATradition: Story = () => (
   <Modal title="Add Tradition" onClose={done}>
@@ -63,7 +62,7 @@ export const AddingATradition: Story = () => (
 
 // Press Delete Tradition to see the move: its two deities to another tradition.
 export const EditingATradition: Story = () => (
-  <Modal title="Edit Tradition" onClose={done}>
+  <Modal eyebrow="Edit Tradition" title="Fixtural" onClose={done}>
     <GroupForm
       kind="tradition"
       group={{
@@ -80,6 +79,20 @@ export const EditingATradition: Story = () => (
   </Modal>
 );
 
+// Delete Group pressed once drawn, as a person would: the first step, where
+// its categories go, asked over the form, which is dimmed and held beneath it
+// (MB.115).
+export const AskingWhereToMove: Story = () => {
+  usePressOnMount('Delete Group');
+  return <EditingACategoryGroup />;
+};
+
+// At a phone's width, in each theme: the fields, the two pickers and the
+// buttons, which stack under the form's 28rem.
+export const PhoneDark: Story = () => <EditingACategoryGroup />;
+
+export const PhoneLight: Story = () => <EditingACategoryGroup />;
+
 // Each in its own iframe, so the modal's top layer covers the story's frame
 // rather than Ladle's sidebar.
 AddingACategoryGroup.meta = { iframed: true };
@@ -87,3 +100,6 @@ EditingACategoryGroup.meta = { iframed: true };
 EditingAFormGroup.meta = { iframed: true };
 AddingATradition.meta = { iframed: true };
 EditingATradition.meta = { iframed: true };
+AskingWhereToMove.meta = { iframed: true };
+PhoneDark.meta = { theme: 'dark', width: 375, iframed: true };
+PhoneLight.meta = { theme: 'light', width: 375, iframed: true };

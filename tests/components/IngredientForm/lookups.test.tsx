@@ -1,5 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -18,7 +17,8 @@ import {
   ingredientResolver,
 } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { makeQueryClient } from '@/lib/graphql-client';
+import { renderWithClient } from '../../support/ingredient-form';
+import { press, type } from '../../support/interact';
 import {
   WORKSPACE_ID,
   offerDeities,
@@ -64,21 +64,16 @@ function renderInForm(field: ReactElement, values: Partial<IngredientFormValues>
       </FormProvider>
     );
   };
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <Harness />
-    </QueryClientProvider>,
-  );
+  renderWithClient(<Harness />);
   /** What the save sent, once it has. */
   return async (): Promise<IngredientFormInput> => {
-    fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
+    press('Save Ingredient');
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     return onSubmit.mock.calls[0][0];
   };
 }
 
 const box = (name: string) => screen.getByRole('combobox', { name });
-const type = (name: string, value: string) => fireEvent.change(box(name), { target: { value } });
 const removeButton = (value: string) => screen.getByRole('button', { name: `Remove ${value}` });
 const changes = (legend: string) =>
   within(screen.getByRole('group', { name: legend })).getByRole('status', {
@@ -529,10 +524,11 @@ describe('LookupListField', () => {
       }),
     );
     // The chip reads as the compendium's Mockwort would; its detail says
-    // which was picked (MB.164).
+    // which was picked (MB.164), in one short line that leaves the
+    // description to the summary (MB.115).
     const picked = removeButton('Mockwort (Fixtura vulgaris)');
-    expect(picked).toHaveAccessibleDescription(expect.stringContaining('Tincture'));
-    expect(picked).toHaveAccessibleDescription(expect.stringContaining('A fixture herb.'));
+    expect(picked).toHaveAccessibleDescription(expect.stringContaining('This coven’s entry'));
+    expect(picked).not.toHaveAccessibleDescription(expect.stringContaining('A fixture herb.'));
     expect(changes('Substitute Ingredients')).toHaveTextContent('Mockwort (Fixtura vulgaris)');
     expect((await send()).substitutes).toEqual([{ ingredientId: COVEN_ID }]);
   });

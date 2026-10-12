@@ -91,7 +91,7 @@ export const chicagoEdition: FieldFormat = (text) => {
   return `${ordinal(n)} ed.`;
 };
 
-/** A locator: tidied and its ranges dashed, its words — "s.v. Hecate", "chap. 3" — as typed. */
+/** A locator: tidied and its ranges dashed, its words — `under "Hecate"`, "chap. 3" — as typed. */
 export const formatLocator: FieldFormat = (text) => dashRanges(tidy(text));
 
 const title: FieldFormat = (text) => unquote(tidy(text));

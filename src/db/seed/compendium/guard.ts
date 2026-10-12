@@ -302,6 +302,13 @@ function checkSubstitutes(
       continue;
     }
     const form = substitute.form === undefined ? null : slugify(substitute.form);
+    // A form's linked substitute names a form, as the service holds it
+    // (MB.115); the ingredient's own list may link an ingredient whole.
+    if (ownForm !== null && form === null) {
+      issues.push(
+        `${where}: substitute "${substitute.identity}" links no form; a form's link names one.`,
+      );
+    }
     if (!seeded.has(substitute.identity)) {
       issues.push(
         `${where}: substitute "${substitute.identity}" is no identity this shard or an earlier one seeds.`,

@@ -1,12 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor as waitForDom,
-  within,
-} from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
@@ -26,26 +18,38 @@ import {
   compendiumResolver,
 } from '@/components/IngredientForm/values';
 import type {
-  CompendiumSubstitutesQuery,
-  CompendiumSubstitutesQueryVariables,
-  CreateCompendiumIngredientMutation,
-  CreateCompendiumIngredientMutationVariables,
   DeleteCompendiumIngredientMutation,
   DeleteCompendiumIngredientMutationVariables,
-  UpdateCompendiumIngredientMutation,
-  UpdateCompendiumIngredientMutationVariables,
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { makeQueryClient } from '@/lib/graphql-client';
-import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import {
-  offerDeities,
+  expectAnswered,
+  expectAskingOver,
+  expectGuardedWaysOut,
+  renderInModal,
+} from '../../support/discard-guard';
+import {
+  box,
+  chooseKind,
+  inPanel,
+  referencePanel,
+  renderWithClient,
+  textbox,
+  waitFor,
+} from '../../support/ingredient-form';
+import { openSections } from '../../support/ingredient-sections';
+import { choose, press, type, typeIn } from '../../support/interact';
+import {
+  ENTRY_ID,
+  acceptCompendiumCreate,
+  acceptUpdate,
+  offerCompendium,
   offerDuplicates,
   offerForms,
   offerNames,
-  offerPlanets,
+  offerNothing,
   offerReferences,
-  offerSigns,
 } from '../../support/msw/ingredient-lookups';
 
 // The form on the compendium (M5.5), and only what the mode changes: written
@@ -56,38 +60,8 @@ import {
 // list-field.test.tsx's, and what the form does in either mode is
 // index.test.tsx's (claude-docs/components/ingredient-form.md, "Testing").
 
-const ENTRY_ID = '3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93';
 const OTHER_ID = '9a1b2c3d-4e5f-4a6b-8c7d-0e1f2a3b4c5d';
 const CATEGORY_ID = 'c4a8e2f1-7b3d-4c9e-a6f5-1d2e3f4a5b6c';
-
-/** Answers the substitutes' `compendium(query)` with these entries, recording each ask. */
-function offerCompendium(
-  nodes: CompendiumSubstitutesQuery['compendium']['edges'][number]['node'][],
-) {
-  const calls: CompendiumSubstitutesQueryVariables[] = [];
-  mockGraphQLQuery<CompendiumSubstitutesQuery, CompendiumSubstitutesQueryVariables>(
-    'CompendiumSubstitutes',
-    (variables) => {
-      calls.push(variables);
-      return { compendium: { edges: nodes.map((node) => ({ node })) } };
-    },
-  );
-  return calls;
-}
-
-/** Every lookup answered empty, each one's asks recorded. */
-function offerNothing() {
-  return {
-    forms: offerForms([]),
-    names: offerNames([]),
-    planets: offerPlanets([]),
-    signs: offerSigns([]),
-    deities: offerDeities([]),
-    compendium: offerCompendium([]),
-    references: offerReferences([]),
-    duplicates: offerDuplicates([]),
-  };
-}
 
 /** Testwort as an entry the form edits: a planet listed and a category filed. */
 const TESTWORT: IngredientFormValues = {
@@ -103,10 +77,8 @@ function renderForm(props: Partial<Extract<IngredientFormProps, { workspaceId: n
   const onSaved = vi.fn();
   const onDeleted = vi.fn();
   const asks = offerNothing();
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <IngredientForm workspaceId={null} onSaved={onSaved} onDeleted={onDeleted} {...props} />
-    </QueryClientProvider>,
+  renderWithClient(
+    <IngredientForm workspaceId={null} onSaved={onSaved} onDeleted={onDeleted} {...props} />,
   );
   return { onSaved, onDeleted, asks };
 }
@@ -147,59 +119,17 @@ function renderPickOnly() {
     );
   };
   offerNothing();
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <Harness />
-    </QueryClientProvider>,
-  );
+  renderWithClient(<Harness />);
   return onSubmit;
 }
 
 const renderEntry = (values: IngredientFormValues = TESTWORT) =>
   renderForm({ entry: { id: ENTRY_ID, values } });
 
-/**
- * RTL's waitFor polled every 5 ms rather than its 50, as index.test.tsx's
- * is: most waits here are for a mock to have been asked (MB.181).
- */
-const waitFor: typeof waitForDom = (callback, options) =>
-  waitForDom(callback, { interval: 5, ...options });
-
-// The controls are found by their labels rather than by role and name, as
-// index.test.tsx finds them: a role query names every element of the role
-// in a 25-field form (MB.181). The required marker, hidden from the name, is
-// dropped from the label's text.
-const byLabel = (name: string, selector: string) =>
-  screen.getByLabelText(name, {
-    selector,
-    normalizer: (text) => text.replace(/\*$/, '').trim(),
-  });
-const textbox = (name: string) => byLabel(name, 'input:not([role]), textarea');
-const box = (name: string) => byLabel(name, '[role="combobox"]');
-const control = (name: string) => byLabel(name, 'input:not([role]), textarea, [role="combobox"]');
-const type = (name: string, value: string) =>
-  fireEvent.change(control(name), { target: { value } });
-/** The row of buttons at the form's foot: the saves, or a question asked in their place. */
-const actions = () =>
-  within(
-    document.querySelector('.ingredient-form__actions, .ingredient-form__confirm') as HTMLElement,
-  );
-const button = (name: string) => actions().getByRole('button', { name });
+/** A button at the form's foot, a save or a question's answer, by its role and name. */
+const button = (name: string) => screen.getByRole('button', { name });
 const noButton = (name: string) =>
-  expect(actions().queryByRole('button', { name })).not.toBeInTheDocument();
-const choose = (name: string, label: string) => {
-  fireEvent.click(box(name));
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: `${name} choices` })).getByRole('option', {
-      name: label,
-    }),
-  );
-};
-const press = (name: string) => {
-  const pressed = button(name);
-  pressed.focus();
-  fireEvent.click(pressed);
-};
+  expect(screen.queryByRole('button', { name })).not.toBeInTheDocument();
 /** Focuses a box, types into it, and lets the debounce settle so its lookup asks. */
 async function search(name: string, text: string) {
   act(() => box(name).focus());
@@ -207,42 +137,6 @@ async function search(name: string, text: string) {
   await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
 }
 const suggestions = (name: string) => screen.getByRole('listbox', { name: `${name} suggestions` });
-
-function acceptCreate() {
-  const calls: CreateCompendiumIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    CreateCompendiumIngredientMutation,
-    CreateCompendiumIngredientMutationVariables
-  >('CreateCompendiumIngredient', (variables) => {
-    calls.push(variables);
-    return {
-      createCompendiumIngredient: {
-        id: ENTRY_ID,
-        name: variables.input.name,
-        slug: 'testwort-fixtura-testalis',
-      },
-    };
-  });
-  return calls;
-}
-
-function acceptUpdate() {
-  const calls: UpdateCompendiumIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    UpdateCompendiumIngredientMutation,
-    UpdateCompendiumIngredientMutationVariables
-  >('UpdateCompendiumIngredient', (variables) => {
-    calls.push(variables);
-    return {
-      updateCompendiumIngredient: {
-        id: String(variables.id),
-        name: variables.input.name,
-        slug: 'mockwort-fixtura-testalis',
-      },
-    };
-  });
-  return calls;
-}
 
 function acceptDelete() {
   const calls: DeleteCompendiumIngredientMutationVariables[] = [];
@@ -266,7 +160,7 @@ describe('IngredientForm on the compendium', () => {
 
   describe('a new entry', () => {
     it('marks the classification required, refusing a save without one, then creates a compendium entry with no categories yet, and opens it', async () => {
-      const calls = acceptCreate();
+      const calls = acceptCompendiumCreate();
       const { onSaved } = renderForm();
       // A new entry keeps Save & Add Another, as a new coven ingredient does.
       expect(button('Save & Add Another')).toBeInTheDocument();
@@ -305,12 +199,95 @@ describe('IngredientForm on the compendium', () => {
       type('Name', 'Testwort');
       await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
 
-      expect(await screen.findByRole('link', { name: 'Testworts' })).toHaveAttribute(
+      expect(await screen.findByRole('link', { name: /^Testworts/ })).toHaveAttribute(
         'href',
         '/admin/compendium?edit=testworts',
       );
+      // A name typed is a change, which Cancel asks before discarding (MB.115).
       fireEvent.click(button('Cancel'));
+      fireEvent.click(button('Discard Changes'));
       expect(onCancel).toHaveBeenCalledOnce();
+    });
+
+    // A regression (MB.115): an entry whose substitute links an ingredient
+    // in forms, with none chosen, opened as the readback gives it, its
+    // Form of X box registering a key the values lacked. React's development
+    // double mount then counted the untouched entry changed, and Cancel asked.
+    it('closes an untouched entry at once whose substitute links an ingredient with no form chosen', () => {
+      offerNothing();
+      const values: IngredientFormValues = {
+        ...TESTWORT,
+        substitutes: [
+          {
+            value: 'Mockleaf',
+            link: {
+              id: OTHER_ID,
+              canonicalName: null,
+              forms: ['Oil'],
+              description: null,
+              isGlobal: true,
+              variants: [{ id: '5d6e7f8a-9b0c-4d1e-8f2a-3b4c5d6e7f8a', form: 'Oil', group: null }],
+            },
+          },
+        ],
+      };
+      const onClose = renderInModal(
+        (done) => (
+          <IngredientForm
+            workspaceId={null}
+            entry={{ id: ENTRY_ID, values }}
+            onSaved={vi.fn()}
+            onDeleted={done}
+            onCancel={done}
+          />
+        ),
+        { strict: true },
+      );
+
+      expect(screen.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+      expect(screen.queryByRole('button', { name: 'Discard Changes' })).not.toBeInTheDocument();
+      expect(onClose).toHaveBeenCalledOnce();
+    });
+
+    // Every way out asks first while the form has changes (MB.115): the
+    // guard's shape is tests/components/Modal's, and this its wiring.
+    it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
+      offerNothing();
+      const onClose = renderInModal((done) => (
+        <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
+      ));
+
+      expectGuardedWaysOut(onClose, () => type('Name', 'Testwort'));
+    });
+
+    // A reference panel's edits are in a form of their own, which the
+    // ingredient form's isDirty never sees; they count all the same.
+    it('asks before Escape or Cancel discards what is typed in a reference panel, keeping it on Keep Editing', () => {
+      offerNothing();
+      const onClose = renderInModal((done) => (
+        <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
+      ));
+      const title = () => inPanel('Title');
+
+      expectGuardedWaysOut(
+        onClose,
+        () => {
+          fireEvent.keyDown(box('Reference'), { key: 'ArrowDown' });
+          fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+          chooseKind('Book');
+          typeIn(title(), 'A Fixture Grimoire');
+        },
+        {
+          // The form's own Cancel, not the panel's.
+          cancel: () =>
+            screen
+              .getAllByRole('button', { name: 'Cancel' })
+              .find((cancel) => !referencePanel().contains(cancel)) as HTMLElement,
+          kept: () => expect(title()).toHaveValue('A Fixture Grimoire'),
+        },
+      );
     });
   });
 
@@ -407,6 +384,7 @@ describe('IngredientForm on the compendium', () => {
           ],
         },
       ]);
+      openSections('Relations');
 
       await search('Substitute Ingredient', 'wort');
 
@@ -461,13 +439,36 @@ describe('IngredientForm on the compendium', () => {
         },
         { id: OTHER_ID, name: 'Testworts', canonicalName: null, slug: 'testworts' },
       ]);
+      openSections('Identity');
 
       type('Name', 'Testworth');
       await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
 
       const warning = screen.getByRole('status', { name: 'Possible duplicates' });
-      await waitFor(() => within(warning).getByRole('link', { name: 'Testworts' }));
+      await waitFor(() => within(warning).getByRole('link', { name: /^Testworts/ }));
       expect(within(warning).queryByRole('link', { name: /Testwort \(/ })).not.toBeInTheDocument();
+    });
+
+    // An edit renames what exists rather than making another, so a near
+    // match warns and holds nothing (MB.115, the owner's call).
+    it('saves a rename near another entry at once, the match named and nothing to set aside', async () => {
+      const calls = acceptUpdate();
+      renderEntry();
+      offerDuplicates([
+        { id: OTHER_ID, name: 'Testworts', canonicalName: null, slug: 'testworts' },
+      ]);
+      openSections('Identity');
+
+      type('Name', 'Testworth');
+      await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
+      const warning = screen.getByRole('status', { name: 'Possible duplicates' });
+      await waitFor(() => within(warning).getByRole('link', { name: /^Testworts/ }));
+      noButton('Create Anyway');
+
+      press('Save Ingredient');
+      await waitFor(() => expect(calls).toHaveLength(1));
+      expect(calls[0]?.input).toMatchObject({ name: 'Testworth' });
+      expect(textbox('Name')).toBeValid();
     });
 
     it('asks before ending another entry’s redirect, sending nothing on Keep It, and again once confirmed', async () => {
@@ -501,7 +502,10 @@ describe('IngredientForm on the compendium', () => {
 
       fireEvent.click(button('Delete Ingredient'));
       expect(button('Delete')).toBeVisible();
-      expect(screen.getByText(/Testwort/)).toBeInTheDocument();
+      // The question names it: a paragraph, the closed Identity's summary line naming it too.
+      expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
+      // The question takes the focus on its safe answer (MB.115).
+      expect(button('Keep It')).toHaveFocus();
       fireEvent.click(button('Keep It'));
       noButton('Delete');
 
@@ -521,6 +525,61 @@ describe('IngredientForm on the compendium', () => {
 
       await waitFor(() => expect(onDeleted).toHaveBeenCalledOnce());
       expect(calls).toEqual([{ id: ENTRY_ID }]);
+    });
+  });
+
+  // Its questions are asked over the form, as the unsaved changes' is
+  // (MB.115, the owner's call): the long form inert behind each, and the
+  // focus on its safe answer, Keep It.
+  describe('an entry given to it, in a modal', () => {
+    const renderInDialog = () =>
+      renderInModal((done) => (
+        <IngredientForm
+          workspaceId={null}
+          entry={{ id: ENTRY_ID, values: TESTWORT }}
+          onSaved={vi.fn()}
+          onDeleted={done}
+          onCancel={done}
+        />
+      ));
+
+    it('holds the form while Delete asks, gives it back on Keep It, and deletes on Delete', async () => {
+      offerNothing();
+      const onClose = renderInDialog();
+      expect(textbox('Name').closest('[inert]')).toBeNull();
+
+      press('Delete Ingredient');
+      expect(expectAskingOver(textbox('Name'), button('Keep It'))).toContainElement(
+        button('Delete'),
+      );
+      press('Keep It');
+      expectAnswered(textbox('Name'), 'Keep It');
+      expect(button('Delete Ingredient')).toHaveFocus();
+
+      const calls = acceptDelete();
+      press('Delete Ingredient');
+      press('Delete');
+
+      await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+      expect(calls).toEqual([{ id: ENTRY_ID }]);
+    });
+
+    it('holds the form while a redirect asks, and gives it back on Keep It', async () => {
+      offerNothing();
+      mockGraphQLError('UpdateCompendiumIngredient', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['endRedirect'], message: 'Confirm to end that redirect' }],
+      });
+      renderInDialog();
+
+      type('Name', 'Mockwort');
+      press('Save Ingredient');
+      await waitFor(() => button('End Redirect & Save'));
+
+      expectAskingOver(textbox('Name'), button('Keep It'));
+      press('Keep It');
+      expectAnswered(textbox('Name'), 'Keep It');
+      expect(textbox('Name')).toHaveValue('Mockwort');
     });
   });
 });

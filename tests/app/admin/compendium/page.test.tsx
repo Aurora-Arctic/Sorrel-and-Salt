@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
@@ -8,6 +8,8 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { mockGraphQLQuery } from '../../../support/msw/graphql';
+import { openSections } from '../../../support/ingredient-sections';
+import { sent } from '../../../support/filter-form';
 
 // The `/admin/compendium` page (M5.5): the guard, one page of the compendium
 // under the address's filter, and the modal its address opens — `?new` empty,
@@ -30,6 +32,10 @@ vi.mock('@/modules/ingredients', () => ({
   variantsOf,
 }));
 
+// The curated forms the Form box offers, read through the vocabulary module.
+const listIngredientFormValues = vi.fn();
+vi.mock('@/modules/vocabulary', () => ({ listIngredientFormValues }));
+
 const entryValues = vi.fn();
 vi.mock('@/app/admin/compendium/entry-values', () => ({ entryValues }));
 
@@ -41,15 +47,10 @@ const redirect = vi.fn((href: string) => {
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router, redirect }));
 
-// jsdom implements no modal dialog; stood in for as a browser behaves.
-HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
-  this.setAttribute('open', '');
-};
-HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
-  this.removeAttribute('open');
-};
-
 const { default: AdminCompendiumPage } = await import('@/app/admin/compendium/page');
+
+/** The edit dialog's name: its eyebrow, then the entry and its formal name (MB.115). */
+const EDITING_TESTWORT = 'Edit Ingredient, Testwort, Fixtura testalis';
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
 
@@ -101,11 +102,26 @@ function lastFilter(): unknown {
   return listed;
 }
 
-const NO_FILTER = { query: undefined, nomenclature: undefined, withoutReferences: false };
+const NO_FILTER = {
+  query: undefined,
+  form: undefined,
+  nomenclature: undefined,
+  withoutReferences: false,
+};
 
 /** The filter every link below keeps, as the address spells it. */
-const FILTERED = { query: 'test', nomenclature: 'unknown', withoutReferences: '1' };
-const FILTERED_HREF = '/admin/compendium?query=test&nomenclature=unknown&withoutReferences=1';
+const FILTERED = {
+  query: 'test',
+  form: 'Fixture Oil',
+  nomenclature: 'unknown',
+  withoutReferences: '1',
+};
+const FILTERED_HREF =
+  '/admin/compendium?query=test&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1';
+
+/** A curated form as its service lists it, keyed by name as the finder pages it. */
+const curatedForm = (name: string, index: number) =>
+  entry({ id: `form-${index}`, name, slug: name.toLowerCase().replace(/ /g, '-') });
 
 beforeEach(() => {
   requireAdminSession.mockReset();
@@ -121,6 +137,9 @@ beforeEach(() => {
   variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
     refs.map(() => [{ form: 'Herb' }]),
   );
+  // Two curated forms, on one page.
+  listIngredientFormValues.mockReset();
+  listIngredientFormValues.mockResolvedValue(['Fixture Oil', 'Fixture Powder'].map(curatedForm));
   entryValues.mockReset();
   entryValues.mockResolvedValue(TESTWORT_VALUES);
   redirect.mockClear();
@@ -175,49 +194,100 @@ describe('the /admin/compendium page', () => {
 });
 
 describe('the /admin/compendium filter', () => {
-  it('reads ?query= trimmed, a ?nomenclature= kind and ?withoutReferences=1 into the list and its count', async () => {
-    await renderPage({ query: '  test wort ', nomenclature: 'unknown', withoutReferences: '1' });
+  it('reads ?query= and ?form= trimmed, a ?nomenclature= kind and ?withoutReferences=1 into the list and its count', async () => {
+    await renderPage({
+      query: '  test wort ',
+      form: ' Fixture Oil ',
+      nomenclature: 'unknown',
+      withoutReferences: '1',
+    });
 
     expect(lastFilter()).toEqual({
       query: 'test wort',
+      form: 'Fixture Oil',
       nomenclature: 'unknown',
       withoutReferences: true,
     });
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test wort');
-    expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('unknown');
-    expect(screen.getByRole('checkbox', { name: 'Without References' })).toBeChecked();
+    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('Fixture Oil');
+    expect(filterSends('nomenclature')).toBe('unknown');
+    expect(screen.getByRole('switch', { name: 'No Refs' })).toBeChecked();
   });
 
   // A native submit sends every field, blank or not.
-  it('reads a blank ?query= and ?nomenclature= as no filter', async () => {
-    await renderPage({ query: '   ', nomenclature: '' });
+  it('reads a blank ?query=, ?form= and ?nomenclature= as no filter', async () => {
+    await renderPage({ query: '   ', form: '  ', nomenclature: '' });
 
     expect(lastFilter()).toEqual(NO_FILTER);
     expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
   });
 
   // As a hand-edited cursor gets the first page.
   it('ignores a ?nomenclature= no kind is called, and drops it from every link', async () => {
     await renderPage({ query: 'test', nomenclature: 'herbal' });
 
-    expect(lastFilter()).toEqual({
-      query: 'test',
-      nomenclature: undefined,
-      withoutReferences: false,
-    });
-    expect(screen.getByRole('combobox', { name: 'Classification' })).toHaveValue('');
+    expect(lastFilter()).toEqual({ ...NO_FILTER, query: 'test' });
+    expect(filterSends('nomenclature')).toBe('');
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
       '/admin/compendium?query=test&new',
     );
   });
 
-  // The checkbox submits 1; any other value is every entry.
+  // The switch submits 1; any other value is every entry.
   it('reads ?withoutReferences= other than 1 as every entry', async () => {
     await renderPage({ withoutReferences: 'true' });
 
     expect(lastFilter()).toEqual(NO_FILTER);
-    expect(screen.getByRole('checkbox', { name: 'Without References' })).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: 'No Refs' })).not.toBeChecked();
+  });
+
+  it('offers every curated form in the Form box, read once for the request', async () => {
+    await renderPage();
+
+    expect(listIngredientFormValues).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('combobox', { name: 'Form' }));
+    const choices = screen.getByRole('listbox', { name: 'Form choices' });
+    expect(within(choices).getByRole('option', { name: 'Fixture Oil' })).toBeInTheDocument();
+    expect(within(choices).getByRole('option', { name: 'Fixture Powder' })).toBeInTheDocument();
+  });
+
+  // 84 forms are seeded against a page of at most 100, so one page is not a
+  // safe assumption: the read walks on while there are more.
+  it('reads the forms past their first page', async () => {
+    const forms = Array.from({ length: 101 }, (_, index) =>
+      curatedForm(`Fixture Form ${String(index).padStart(3, '0')}`, index),
+    );
+    // As the finder pages: the rows after the cursor, as many as asked for.
+    listIngredientFormValues.mockImplementation(async (_filter: unknown, request: PageRequest) => {
+      const start = request.after
+        ? forms.findIndex(({ node }) => node.id === request.after?.id) + 1
+        : 0;
+      return forms.slice(start, start + request.limit);
+    });
+
+    await renderPage();
+
+    expect(listIngredientFormValues).toHaveBeenCalledTimes(2);
+    expect(listIngredientFormValues.mock.lastCall?.[1]).toMatchObject({ after: forms[99].cursor });
+    fireEvent.click(screen.getByRole('combobox', { name: 'Form' }));
+    const choices = screen.getByRole('listbox', { name: 'Form choices' });
+    expect(within(choices).getAllByRole('option')).toHaveLength(forms.length);
+  });
+
+  // Two live forms may share a name in different groups; the filter matches
+  // the text, so one choice filters by both.
+  it('offers a form name two groups share once', async () => {
+    listIngredientFormValues.mockResolvedValue(
+      ['Fixture Oil', 'Fixture Wax', 'Fixture Wax'].map(curatedForm),
+    );
+
+    await renderPage();
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Form' }));
+    const choices = screen.getByRole('listbox', { name: 'Form choices' });
+    expect(within(choices).getAllByRole('option', { name: 'Fixture Wax' })).toHaveLength(1);
   });
 
   it('keeps the filter on each Edit, the pager and Add Ingredient', async () => {
@@ -238,10 +308,10 @@ describe('the /admin/compendium filter', () => {
     );
     const pages = screen.getByRole('navigation', { name: 'Pages' });
     expect(within(pages).getByRole('link', { name: 'Prev' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&nomenclature=unknown&withoutReferences=1&before=[^&]+$/,
+      /^\/admin\/compendium\?query=test&form=Fixture\+Oil&nomenclature=unknown&withoutReferences=1&before=[^&]+$/,
     );
     expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&nomenclature=unknown&withoutReferences=1&after=[^&]+$/,
+      /^\/admin\/compendium\?query=test&form=Fixture\+Oil&nomenclature=unknown&withoutReferences=1&after=[^&]+$/,
     );
   });
 });
@@ -273,7 +343,9 @@ describe('the /admin/compendium modal', () => {
 
     expect(resolveCompendiumSlug).toHaveBeenCalledWith(TESTWORT.slug);
     expect(entryValues).toHaveBeenCalledWith(TESTWORT);
-    const dialog = screen.getByRole('dialog', { name: 'Edit Ingredient' });
+    const dialog = screen.getByRole('dialog', { name: EDITING_TESTWORT });
+    // An edit opens with its sections closed (MB.115).
+    openSections('Identity', 'Variants');
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('Testwort');
     // Its forms too, each the variant's own fieldset (MB.221).
     expect(within(dialog).getByRole('group', { name: 'Herb' })).toBeInTheDocument();
@@ -282,6 +354,19 @@ describe('the /admin/compendium modal', () => {
       within(dialog).queryByRole('button', { name: 'Save & Add Another' }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  // The owner's call at MB.115: the head says what is being edited, by the
+  // name it was saved under, so it holds still while the Name field changes.
+  it('names the dialog by the entry as saved, however its Name field is changed', async () => {
+    await renderPage({ edit: TESTWORT.slug });
+
+    openSections('Identity');
+    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
+      target: { value: 'Renamed Testwort' },
+    });
+
+    expect(screen.getByRole('dialog', { name: EDITING_TESTWORT })).toBeInTheDocument();
   });
 
   it('sends an old slug on to the entry at its new one, keeping the filter', async () => {
@@ -318,3 +403,10 @@ describe('the /admin/compendium modal', () => {
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
   });
 });
+
+/** What the filter form sends for `name`: once hydrated, a select-only box's hidden input. */
+function filterSends(name: string): string | null {
+  return new URLSearchParams(sent(screen.getByRole('form', { name: 'Filter the Compendium' }))).get(
+    name,
+  );
+}

@@ -1,10 +1,11 @@
 import type { Story } from '@ladle/react';
-import type { PropsWithChildren } from 'react';
+import type { ReactElement } from 'react';
+import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
 import UserList, { PauseControl } from '.';
 import type { UserListEntry } from './types';
 
 // Render-only; behaviour is asserted in tests/components/UserList. The filter
-// and the pager reach `/admin/users`, and each name's permissions history icon
+// and the pager reach `/admin/users`, and each name's privilege changes icon
 // `/admin/privilege-changes` (MB.200), neither of which the workshop serves;
 // hover or focus an icon to see its tip.
 export default {
@@ -49,49 +50,89 @@ const USERS: readonly UserListEntry[] = [
   },
 ];
 
-// Inside the admin layout's frame, so the workshop shows what the page shows.
-const Frame = ({ children }: PropsWithChildren) => (
-  <div className="admin-layout">
-    <main>{children}</main>
-  </div>
-);
+// Each story sits inside the admin layout's frame and the People page, its
+// Users tab open, so the workshop shows what the page shows: the switch on
+// admin changes, where a story gives it, beside the heading as the tab's
+// action.
 
+// The page as /admin/users draws it where impersonation is registered
+// (MB.53): the seven columns as signed off at MB.115, the facts no control
+// changes muted, Impersonate ruled in red at the right. Impersonate and Pause
+// Admin Changes each ask first; in the workshop the call reaches no server,
+// so confirming shows the refusal.
 export const Default: Story = () => (
-  <Frame>
-    <UserList users={USERS} query="" awaitingApproval={false} nextHref="#next" />
-  </Frame>
+  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
+    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
+  </AdminTabbedFrame>
 );
 
 export const Filtered: Story = () => (
-  <Frame>
+  <AdminTabbedFrame page="people">
     <UserList
       users={USERS.filter((user) => !user.canCreateWorkspace)}
       query="fixturewort"
       awaitingApproval
       previousHref="#previous"
     />
-  </Frame>
+  </AdminTabbedFrame>
 );
+
+// A middle page of a list longer than one: the page's 25, by name, and the
+// pager beneath them, both ends live and where the page stands between.
+const PAGE_TWO: readonly UserListEntry[] = Array.from({ length: 25 }, (_, index) => ({
+  id: `u-page-${index + 26}`,
+  name: `Fixturewort ${index + 26}`,
+  email: `fixturewort${index + 26}@users.test`,
+  role: 'user',
+  canCreateWorkspace: index % 4 !== 0,
+  createdAt: new Date(Date.UTC(2026, 2, 4) + index * 86_400_000),
+  providers: index % 2 === 0 ? ['google'] : ['discord'],
+  emailVerified: true,
+  primaryAdmin: false,
+}));
+const PageTwo = (): ReactElement => (
+  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
+    <UserList
+      users={PAGE_TWO}
+      query=""
+      awaitingApproval={false}
+      previousHref="#previous"
+      nextHref="#next"
+      position={{ page: 2, pages: 3 }}
+    />
+  </AdminTabbedFrame>
+);
+
+export const OnePageOfSeveral: Story = () => <PageTwo />;
+
+// A middle page at phone width: the pager beneath the last card.
+export const OnePageOfSeveralPhoneDark: Story = () => <PageTwo />;
+OnePageOfSeveralPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const OnePageOfSeveralPhoneLight: Story = () => <PageTwo />;
+OnePageOfSeveralPhoneLight.meta = { theme: 'light', width: 375 };
+
+// Every filter in use, which the sentence names. Spread, since a `role` attribute reads to the linter as an ARIA role.
+const EVERY_FILTER = { query: 'nobody', role: 'admin', awaitingApproval: true } as const;
 
 export const NoMatch: Story = () => (
-  <Frame>
-    <UserList users={[]} query="nobody" awaitingApproval={false} />
-  </Frame>
+  <AdminTabbedFrame page="people">
+    <UserList users={[]} {...EVERY_FILTER} />
+  </AdminTabbedFrame>
 );
 
-// Where impersonation is registered (MB.53): an Impersonate on each non-admin
-// row. In the workshop the call reaches no server, so a click shows the refusal.
-export const WithImpersonation: Story = () => (
-  <Frame>
-    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate />
-  </Frame>
+// Where impersonation is not registered: no Impersonate column.
+export const WithoutImpersonation: Story = () => (
+  <AdminTabbedFrame page="people">
+    <UserList users={USERS} query="" awaitingApproval={false} />
+  </AdminTabbedFrame>
 );
 
 // MB.205: two users awaiting approval, one unverified and one verified. Approve
 // on the first opens a confirmation warning that nobody has proved who holds
 // the address; on the second, none.
 export const UnverifiedApproval: Story = () => (
-  <Frame>
+  <AdminTabbedFrame page="people">
     <UserList
       users={[
         USERS[1] as UserListEntry,
@@ -110,14 +151,14 @@ export const UnverifiedApproval: Story = () => (
       query=""
       awaitingApproval
     />
-  </Frame>
+  </AdminTabbedFrame>
 );
 
 // MB.59: the primary admin, labelled, its Revoke in view but unusable with the
 // reason beside it; a second admin's Revoke and each user's Grant open their
 // confirmations, Grant warning on Bo's unverified address.
 export const AdminRoles: Story = () => (
-  <Frame>
+  <AdminTabbedFrame page="people">
     <UserList
       users={[
         { ...(USERS[0] as UserListEntry), primaryAdmin: true },
@@ -137,41 +178,55 @@ export const AdminRoles: Story = () => (
       query=""
       awaitingApproval={false}
     />
-  </Frame>
+  </AdminTabbedFrame>
 );
 
-// MB.63: the page's header with the switch beside the heading, as
-// /admin/users draws it. Paused, to the primary admin: the warning and a
+// MB.63: the switch as the Users tab's action beside the heading, as /admin/users draws it. Paused, to the primary admin: the warning and a
 // usable Resume, and every row's control usable, since the pause exempts it.
 export const AdminChangesPaused: Story = () => (
-  <Frame>
-    <div className="page-header">
-      <h1>Users</h1>
-      <PauseControl paused canToggle />
-    </div>
+  <AdminTabbedFrame page="people" action={<PauseControl paused canToggle />}>
     <UserList
       users={USERS}
       query=""
       awaitingApproval={false}
       adminChanges={{ paused: true, canToggle: true }}
     />
-  </Frame>
+  </AdminTabbedFrame>
 );
 
 // Paused, to another admin: the warning, Resume locked with its reason in a
 // tip, and every Grant, Revoke, Approve and coven-creation Revoke locked with
 // the pause's reason.
 export const AdminChangesNotPrimary: Story = () => (
-  <Frame>
-    <div className="page-header">
-      <h1>Users</h1>
-      <PauseControl paused canToggle={false} />
-    </div>
+  <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>
     <UserList
       users={USERS}
       query=""
       awaitingApproval={false}
       adminChanges={{ paused: true, canToggle: false }}
     />
-  </Frame>
+  </AdminTabbedFrame>
 );
+
+// At phone width, the list as it ships: every row a card (`.data-table--stack`),
+// each fact led by its column's name, Impersonate across the card's foot.
+export const PhoneDark: Story = () => (
+  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
+    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
+  </AdminTabbedFrame>
+);
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => (
+  <AdminTabbedFrame page="people" action={<PauseControl paused={false} canToggle />}>
+    <UserList users={USERS} query="" awaitingApproval={false} canImpersonate nextHref="#next" />
+  </AdminTabbedFrame>
+);
+PhoneLight.meta = { theme: 'light', width: 375 };
+
+// The filtered list at a phone's width, Clear beneath the fields.
+export const FilteredPhoneDark: Story = () => <Filtered />;
+FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const FilteredPhoneLight: Story = () => <Filtered />;
+FilteredPhoneLight.meta = { theme: 'light', width: 375 };

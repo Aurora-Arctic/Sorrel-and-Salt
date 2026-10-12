@@ -1,13 +1,18 @@
-import { type ReactElement, type ReactNode, useId } from 'react';
+import { type ReactElement, type ReactNode, useId, useState } from 'react';
 import { CATEGORY_GROUPS } from '../src/db/seed/category-groups';
 import { chipColors } from '../src/lib/chip-colors';
 import { SOCIAL_PROVIDERS } from '../src/lib/social-providers';
+import { SwitchField } from '../src/components/Field';
+import InfoTip from '../src/components/InfoTip';
+import { ListNavigationContext } from '../src/components/ListFrame';
+import Pager from '../src/components/Pager';
 import ProviderMark from '../src/components/ProviderMark';
 import { ProviderUnavailableNote } from '../src/components/ProviderMark/unavailable-note';
 import { PROVIDER_MARKS } from '../src/components/SignInPanel/icons';
 // The brand buttons' own rules, which only SignInPanel's stylesheet carries.
 import '../src/components/SignInPanel/index.scss';
 import type { SeedCategoryGroup } from '../src/db/seed/types';
+import type { ListNavigation } from '../src/components/ListFrame/types';
 import type { ProviderId } from '../src/lib/types';
 import './foundations.scss';
 
@@ -49,6 +54,9 @@ const RUNTIME_TOKENS: readonly (readonly [token: string, purpose: string])[] = [
   ['--secondary-hover', 'the secondary under hover / active press'],
   ['--text-on-color', 'the label on a solid fill — a solid button, a loud chip'],
 ];
+
+// The Pager section's list: nothing on its way, and a press going nowhere.
+const STILL_LIST: ListNavigation = { pending: false, go: () => {} };
 
 // Keys only: each value, and the label beside it, is printed by
 // foundations.scss from the map in _variables.scss.
@@ -127,6 +135,27 @@ function Fields(): ReactElement {
       </p>
 
       <div className="field">
+        <div className="field__label-row">
+          <label className="field__label" htmlFor={`${id}-common`}>
+            Common Name
+            <span className="field__required" aria-hidden="true">
+              *
+            </span>
+          </label>
+          <InfoTip id={`${id}-common-tip`} label="Common Name">
+            What most people call it. A save asks for one.
+          </InfoTip>
+        </div>
+        <input
+          className="input"
+          id={`${id}-common`}
+          aria-required="true"
+          aria-describedby={`${id}-common-tip`}
+          defaultValue="Mugwort"
+        />
+      </div>
+
+      <div className="field">
         <label className="field__label" htmlFor={`${id}-name`}>
           Name
         </label>
@@ -143,7 +172,7 @@ function Fields(): ReactElement {
 
       <div className="field">
         <label className="field__label" htmlFor={`${id}-nomenclature`}>
-          Naming system
+          Naming System
         </label>
         <select className="select" id={`${id}-nomenclature`} defaultValue="botanical">
           <option value="">Choose one</option>
@@ -157,7 +186,7 @@ function Fields(): ReactElement {
 
       <div className="field">
         <label className="field__label" htmlFor={`${id}-canonical`}>
-          Formal name
+          Formal Name
         </label>
         <input
           className="input"
@@ -203,7 +232,7 @@ function Fields(): ReactElement {
       </div>
 
       <fieldset className="fieldset">
-        <legend className="fieldset__legend">Where it is kept</legend>
+        <legend className="fieldset__legend">Where It Is Kept</legend>
         <label className="checkbox">
           <input type="checkbox" defaultChecked />
           The apothecary shelf
@@ -237,6 +266,129 @@ function Fields(): ReactElement {
   );
 }
 
+// A list's rows, as an admin value list draws them: invented names, one
+// action at the end of each row.
+const TABLE_ROWS: readonly (readonly [name: string, group: string, entries: number])[] = [
+  ['Protection', 'Wards', 12],
+  ['Cleansing', 'Purification', 8],
+  ['Dreamwork', 'Sight', 5],
+  ['Prosperity', 'Hearth', 3],
+];
+
+// The `.data-table` primitive in its frame; with `stack`, the
+// `.data-table--stack` modifier with the explicit roles and per-cell
+// `data-label`s a stacking table needs (claude-docs/styling.md, "Tables at
+// phone width"). The roles are the elements' own, written out because WebKit
+// drops them once `display` changes on a table's parts.
+function DataTable({ label, stack = false }: { label: string; stack?: boolean }): ReactElement {
+  const role = (name: string): { role?: string } => (stack ? { role: name } : {});
+  return (
+    <div className="data-table-frame">
+      <table
+        className={stack ? 'data-table data-table--stack' : 'data-table'}
+        aria-label={label}
+        {...role('table')}
+      >
+        <thead {...role('rowgroup')}>
+          <tr {...role('row')}>
+            <th scope="col" {...role('columnheader')}>
+              Name
+            </th>
+            <th scope="col" {...role('columnheader')}>
+              Group
+            </th>
+            <th scope="col" {...role('columnheader')}>
+              Ingredients
+            </th>
+            <th scope="col" {...role('columnheader')}>
+              <span className="visually-hidden">Actions</span>
+            </th>
+          </tr>
+        </thead>
+        <tbody {...role('rowgroup')}>
+          {TABLE_ROWS.map(([name, group, entries]) => (
+            <tr key={name} {...role('row')}>
+              <td data-label="Name" {...role('cell')}>
+                {name}
+              </td>
+              <td data-label="Group" {...role('cell')}>
+                {group}
+              </td>
+              <td data-label="Ingredients" {...role('cell')}>
+                {entries}
+              </td>
+              <td data-label="" {...role('cell')}>
+                <a className="btn btn--small" href="#fd-data-table">
+                  Edit
+                </a>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// A `.switch` through `SwitchField`, holding its own state as a filter does.
+function Switch({
+  label,
+  on = false,
+  disabled,
+}: {
+  label: string;
+  on?: boolean;
+  disabled?: boolean;
+}): ReactElement {
+  const [checked, setChecked] = useState(on);
+  return (
+    <SwitchField
+      label={label}
+      name="flag"
+      value="1"
+      checked={checked}
+      onChange={setChecked}
+      disabled={disabled}
+    />
+  );
+}
+
+// A list's filter form on the `.filter-row` primitive: the query first, as
+// the row's narrow rule expects, then a select, a switch and the button.
+function FilterRow(): ReactElement {
+  const id = useId();
+  return (
+    <search>
+      <form
+        className="filter-row"
+        aria-label="Filter Categories"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <div className="field">
+          <label className="field__label" htmlFor={`${id}-query`}>
+            Name or Description
+          </label>
+          <input className="input" id={`${id}-query`} type="search" />
+        </div>
+        <div className="field">
+          <label className="field__label" htmlFor={`${id}-group`}>
+            Group
+          </label>
+          <select className="select" id={`${id}-group`} defaultValue="">
+            <option value="">Any Group</option>
+            <option value="wards">Wards</option>
+            <option value="sight">Sight</option>
+          </select>
+        </div>
+        <Switch label="Unused Only" />
+        <button type="submit" className="btn btn--solid">
+          Filter
+        </button>
+      </form>
+    </search>
+  );
+}
+
 export default function Foundations(): ReactElement {
   return (
     <div className="fd">
@@ -253,7 +405,7 @@ export default function Foundations(): ReactElement {
       </header>
 
       <section id="fd-palette">
-        <SectionHead eyebrow="_variables.scss" title="The raw palette">
+        <SectionHead eyebrow="_variables.scss" title="The Raw Palette">
           Eight hand-picked hues — “parchment and iron-gall ink”. Named for the material, not the
           role, because a role can change and a hex can’t. Every runtime token and group colour is a{' '}
           <code>color.adjust()</code> of one of these. Fixed values, so these swatches don’t move
@@ -274,7 +426,7 @@ export default function Foundations(): ReactElement {
       <section id="fd-tokens">
         <SectionHead
           eyebrow="--surface-* / --text-* / --accent-* / --secondary-*"
-          title="Runtime tokens"
+          title="Runtime Tokens"
         >
           The <code>var(--token)</code> layer every component is coloured from, resolved per theme
           by the theme mixins. Every pairing clears WCAG AA against both surfaces of its theme.
@@ -361,7 +513,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-radii">
-        <SectionHead eyebrow="_variables.scss · radius()" title="Corner radius">
+        <SectionHead eyebrow="_variables.scss · radius()" title="Corner Radius">
           Four radii by role, so a button beside a field matches it and a panel holding both reads
           as the thing that holds them.
         </SectionHead>
@@ -439,12 +591,33 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-fields">
-        <SectionHead eyebrow="_primitives.scss · .form / .field" title="Form fields">
+        <SectionHead eyebrow="_primitives.scss · .form / .field" title="Form Fields">
           Label, an optional hint, the control, and its error beneath it — the resolver’s or the
           server’s, drawn the same. The error edge is a second pixel as well as a colour, and a rule
-          that belongs to no one field is a notice above them all.
+          that belongs to no one field is a notice above them all. A label with a tip or a required
+          mark beside it sits in a <code>.field__label-row</code>; the mark is{' '}
+          <code>.field__required</code>, hidden from a screen reader, which hears the control's{' '}
+          <code>aria-required</code> instead.
         </SectionHead>
         <Fields />
+      </section>
+
+      <section id="fd-switch">
+        <SectionHead eyebrow="_primitives.scss · .switch" title="The Switch">
+          An on-or-off choice, a filter's, as a slide toggle: a native checkbox with the switch
+          role, so it submits with its form and keeps Space and its label's click. A field like any
+          other: its label above, the toggle beneath at a control's height. Off is the field's
+          ground and muted edge with the thumb at the start; on fills the track with the accent and
+          the thumb slides to the end, so where it sits says which without its colour. Tab to one
+          for the focus ring; press and hold for the stretched thumb. Disabled is dashed and faded,
+          its label dimmed, as a field is.
+        </SectionHead>
+        <div className="panel fd-switches">
+          <Switch label="Off" />
+          <Switch label="On" on />
+          <Switch label="Disabled Off" disabled />
+          <Switch label="Disabled On" on disabled />
+        </div>
       </section>
 
       <section id="fd-page-frame">
@@ -493,13 +666,15 @@ export default function Foundations(): ReactElement {
         <SectionHead eyebrow="_primitives.scss · .link-row" title="Link Rows">
           A wrapping row of links that is not a bulleted list: a page's own nav, the admin nav. The
           list's ◆ marker, indent and item margins are cleared, so the row starts at the column's
-          edge and wraps on a phone rather than overflowing it.
+          edge and wraps on a phone rather than overflowing it. The link to the page you are on
+          carries <code>aria-current="page"</code>, drawn firmer and with a heavy underline rather
+          than in another colour.
         </SectionHead>
         <div className="panel">
           <nav aria-label="Example Sections">
             <ul className="link-row">
               <li>
-                <a href="#fd-link-row" aria-current="true">
+                <a href="#fd-link-row" aria-current="page">
                   Name
                 </a>
               </li>
@@ -523,8 +698,82 @@ export default function Foundations(): ReactElement {
         </div>
       </section>
 
+      <section id="fd-data-table">
+        <SectionHead eyebrow="_primitives.scss · .data-table" title="Data Tables">
+          A list's table inside its <code>.data-table-frame</code>, banded on the card surface so a
+          wide row stays readable across. With <code>--stack</code>, a frame narrower than{' '}
+          <code>$table-stack-width</code> turns each row into a card: the header row hidden, every
+          cell led by its own <code>data-label</code>, and a cell whose label is empty, an action,
+          across the foot. A stacking table carries explicit <code>role</code> attributes, since
+          WebKit drops a table's meaning once its parts change <code>display</code>. The second
+          table sits in a phone-width box, so its frame stacks at any window size.
+        </SectionHead>
+        <div className="fd-tables">
+          <DataTable label="Categories" />
+          <div className="fd-phone">
+            <DataTable label="Categories at Phone Width" stack />
+          </div>
+        </div>
+      </section>
+
+      <section id="fd-pager">
+        <SectionHead eyebrow="_primitives.scss · .pager" title="The Pager">
+          A paged list's Prev and Next, centred under its table, with where the list stands between
+          them. An end with no page is disabled rather than hidden, so neither moves. Drawn by the{' '}
+          <code>Pager</code> component, on its first page and on a middle one.
+        </SectionHead>
+        {/* A pager reads its list's navigation, which a page's ListFrame
+            provides; here one that goes nowhere, and never pending. */}
+        <ListNavigationContext.Provider value={STILL_LIST}>
+          <div className="fd-pagers">
+            <Pager nextHref="#fd-pager" position={{ page: 1, pages: 3 }} />
+            <Pager previousHref="#fd-pager" nextHref="#fd-pager" position={{ page: 2, pages: 3 }} />
+          </div>
+        </ListNavigationContext.Provider>
+      </section>
+
+      <section id="fd-filter-row">
+        <SectionHead eyebrow="_primitives.scss · .filter-row" title="The Filter Row">
+          A list's filter form: the query, its selects and checks and the Filter button, wrapping on
+          their line's end so each stands level with the boxes beside it. Under the forms' column of
+          its own width, the query takes the whole line and the rest wrap beneath it, as in the
+          phone-width box.
+        </SectionHead>
+        <div className="fd-tables">
+          <FilterRow />
+          <div className="fd-phone">
+            <FilterRow />
+          </div>
+        </div>
+      </section>
+
+      <section id="fd-page-header">
+        <SectionHead eyebrow="_primitives.scss · .page-header" title="The Page Header">
+          A page's heading with its one primary action at the line's end, brought down to the
+          heading's letters. Under the forms' column of its own width, the action goes beneath the
+          heading, and inside <code>.admin-layout</code> it spans the line, as in the phone-width
+          box, which carries that class.
+        </SectionHead>
+        <div className="fd-tables">
+          <div className="page-header">
+            <h1>Category Groups</h1>
+            <a className="btn btn--solid" href="#fd-page-header">
+              Add Category Group
+            </a>
+          </div>
+          <div className="fd-phone admin-layout">
+            <div className="page-header">
+              <h1>Category Groups</h1>
+              <a className="btn btn--solid" href="#fd-page-header">
+                Add Category Group
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="fd-groups">
-        <SectionHead eyebrow="seed defaults · chipColors()" title="Category-group colours">
+        <SectionHead eyebrow="seed defaults · chipColors()" title="Category-Group Colours">
           Not a foundation to sign off: each group’s colour pair lives on its{' '}
           <code>category_groups</code> row, which an admin edits, contrast-checked on write. These
           are the eight the seed writes — one rotation of <code>$sorrel</code> offset by half a
@@ -634,7 +883,7 @@ export default function Foundations(): ReactElement {
       </section>
 
       <section id="fd-specimen">
-        <SectionHead eyebrow="everything at once" title="An ingredient card">
+        <SectionHead eyebrow="everything at once" title="An Ingredient Card">
           Chips and badges competing for the same eye at shipping size. Foxglove is genuinely deadly
           — which is what the safety badge is for.
         </SectionHead>

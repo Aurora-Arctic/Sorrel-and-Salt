@@ -132,20 +132,28 @@ describe('compendium', () => {
     expect(nodes.map((node) => node.name)).not.toContain('Fixture Wroot');
   });
 
-  // `sal` is a whole word of four seeded labels and half of two more: two
-  // scores, each tied, so the order shows the score first and the name second.
+  // `sal` matches three seeded labels and Rosemary's formal name, Salvia
+  // rosmarinus, each holding it verbatim, so each scores a full 1 however
+  // short of a word it falls; and a folk name each of Mugwort and Selenite,
+  // Sailor's Tobacco and Satin Spar, at a word similarity of 0.5, neither
+  // holding it. Each field's weight then sets the rank — the label at 1, the
+  // formal name at 0.9, a folk name at 0.8 — so the order shows the weighted
+  // rank first and the name second.
   it('ranks a search best match first, with the score on each edge', async () => {
     const result = await run(null, { query: 'sal', first: 50 });
     expect(result.errors).toBeUndefined();
     const edges = (result.data as { compendium: CompendiumConnection }).compendium.edges;
 
     expect(edges.map((edge) => [edge.node.name, edge.score])).toEqual([
-      ['Black Salt', 0.75],
-      ['Rosemary', 0.75],
-      ['Saltpetre', 0.75],
-      ['Sea Salt', 0.75],
-      ['Mugwort', 0.5],
-      ['Selenite', 0.5],
+      // Each label holds `sal` verbatim, so all three score a full hit and
+      // rank by where: Saltpetre at 1, Sea Salt at 5, Black Salt at 7.
+      ['Saltpetre', 1],
+      ['Sea Salt', 1],
+      ['Black Salt', 1],
+      // 1 × 0.9, which `real` holds only approximately.
+      ['Rosemary', expect.closeTo(0.9, 5)],
+      ['Mugwort', 0.4],
+      ['Selenite', 0.4],
     ]);
   });
 

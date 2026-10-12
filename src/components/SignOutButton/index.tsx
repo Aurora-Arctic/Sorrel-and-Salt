@@ -3,6 +3,7 @@
 import { type ReactElement, useState } from 'react';
 import { signOut } from '../../lib/auth-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
+import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import './index.scss';
 
@@ -34,16 +35,15 @@ const SignOutButton = (): ReactElement => {
 
   return (
     <div className="sign-out-button">
-      <button
+      <BusyButton
         className="btn"
-        type="button"
         disabled={pending}
-        aria-busy={pending || undefined}
+        busy={pending}
+        busyLabel="Signing Out"
         onClick={() => void signOutNow()}
       >
-        {pending && <span className="spinner" aria-hidden="true" />}
-        {pending ? 'Signing Out' : 'Sign Out'}
-      </button>
+        Sign Out
+      </BusyButton>
       {/* The shared fallback sentence, though this call is Better Auth's and
           not GraphQL's: it has no more to say about why than a lost request. */}
       {failed && <Notice kind="error">{GENERIC_FAILURE}</Notice>}

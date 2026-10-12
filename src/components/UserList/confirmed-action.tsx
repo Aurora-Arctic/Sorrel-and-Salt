@@ -3,14 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
+import BusyButton from '../BusyButton';
+import { ReasonField } from '../Field';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import type { ConfirmedActionProps, ConfirmStep } from './types';
+import './controls.scss';
 
-// A row's action that asks first, in a modal naming the user, shared by the
-// creation control (M5.8) and the role control (MB.59): the modal's confirm
-// sends the write and stays busy until the re-read page replaces the row; a
-// refusal closes it and says why in the row. The service is the guard; this
+// An action that asks first, in a modal, shared by the creation control
+// (M5.8), the role control (MB.59), Impersonate (MB.53), the pause switch
+// (MB.63) and the invitations' Revoke (MB.70): the modal's confirm sends the
+// write and stays busy until the page is read again, or left; a refusal
+// closes it and says why beside the control. The service is the guard; this
 // only puts it where an admin looks (claude-docs/components/user-list.md).
 
 const ConfirmedAction = ({
@@ -24,11 +28,12 @@ const ConfirmedAction = ({
   confirmClass,
   withNote = false,
   send,
+  onSent,
+  refusal,
 }: ConfirmedActionProps): ReactElement => {
   const router = useRouter();
   const warningId = useId();
-  const noteId = useId();
-  const noteHintId = useId();
+
   const [step, setStep] = useState<ConfirmStep>('idle');
   const [failure, setFailure] = useState<string>();
   const [note, setNote] = useState('');
@@ -52,13 +57,16 @@ const ConfirmedAction = ({
     setFailure(undefined);
     try {
       await send(note.trim() || undefined);
-      // Busy until the re-read replaces this row with one offering the other action.
-      router.refresh();
+      // Busy until the re-read replaces this control with one offering the
+      // other action, or until the page is left.
+      if (onSent) onSent();
+      else router.refresh();
     } catch (error) {
       setStep('idle');
       // No fields of its own, so the shared reader always answers an alert:
-      // the service's refusal verbatim, or the one generic sentence.
-      setFailure(readGraphqlFailure(error).alert);
+      // the service's refusal verbatim, or the one generic sentence, unless
+      // the caller says the refusal itself.
+      setFailure(refusal ?? readGraphqlFailure(error).alert);
     }
   }
 
@@ -103,40 +111,27 @@ const ConfirmedAction = ({
                 </Notice>
               )}
               {withNote && (
-                <div className="field user-list__note">
-                  <label className="field__label" htmlFor={noteId}>
-                    Reason
-                  </label>
-                  <p id={noteHintId} className="field__hint">
-                    Kept with the change in the record of who changed what.
-                  </p>
-                  <input
-                    id={noteId}
-                    className="input"
-                    type="text"
-                    autoComplete="off"
-                    aria-describedby={noteHintId}
-                    value={note}
-                    disabled={sending}
-                    onChange={(event) => setNote(event.target.value)}
-                  />
-                </div>
+                <ReasonField
+                  className="user-list__note"
+                  value={note}
+                  onChange={setNote}
+                  disabled={sending}
+                />
               )}
               <div className="modal__actions">
                 {/* Described by the warning: the focus lands here as the modal
                     opens, so the warning is read with what it confirms. */}
-                <button
+                <BusyButton
                   ref={confirmRef}
                   className={confirmClass}
-                  type="button"
                   aria-describedby={warning ? warningId : undefined}
                   disabled={sending}
-                  aria-busy={sending || undefined}
+                  busy={sending}
+                  busyLabel={busy}
                   onClick={() => void confirm()}
                 >
-                  {sending && <span className="spinner" aria-hidden="true" />}
-                  {sending ? busy : label}
-                </button>
+                  {label}
+                </BusyButton>
                 <button className="btn btn--quiet" type="button" disabled={sending} onClick={close}>
                   Cancel
                 </button>

@@ -5,11 +5,23 @@ import CreationControl from './creation-control';
 import { CheckIcon, CrossIcon } from './icons';
 import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
+import { changesLocked } from './lock';
 import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
+import { roleLabel } from './roles';
+import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import ProviderMark from '../ProviderMark';
-import type { UserListEntry, UserListProps } from './types';
+import StackTable from '../DataTable';
+import type { StackColumn } from '../DataTable/types';
+import { noMatchText } from '../../lib/text';
+import type {
+  MarkProps,
+  ProviderLogoProps,
+  UserListEntry,
+  UserListFilterProps,
+  UserListProps,
+} from './types';
 import './index.scss';
 
 // `/admin/users`' filter, table and pager (MB.52). Render-only: the page reads
@@ -17,7 +29,19 @@ import './index.scss';
 // filter is a GET form to the page itself, so a filtered page is an address
 // (claude-docs/components/user-list.md).
 
-const ROLE_LABELS = { admin: 'Admin', user: 'User' } as const;
+/**
+ * The empty list, naming the filters in use (MB.115, on the owner's call), so
+ * an admin sees what to change: "No users match “ada” and the role Admin.
+ * Change or clear the filter to see more."
+ */
+function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string {
+  const filters = [
+    query && `“${query}”`,
+    role && `the role ${roleLabel(role)}`,
+    awaitingApproval && 'Needs Approval',
+  ].filter((filter): filter is string => Boolean(filter));
+  return noMatchText('users', filters, 'There are no users yet.');
+}
 
 /** A provider by its roster label, or by its id when the roster has none. */
 function providerLabel(id: string): string {
@@ -30,7 +54,7 @@ function providerLabel(id: string): string {
  * provider with no logo, one since dropped from the roster, keeps its id as
  * text, so the account still says it is linked.
  */
-const ProviderLogo = ({ id }: { id: string }): ReactElement => {
+const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
   if (!isRosterProvider(id)) return <span className="user-list__provider-text">{label}</span>;
   return (
@@ -50,15 +74,7 @@ const ProviderLogo = ({ id }: { id: string }): ReactElement => {
  * where `hint` asks, in a tip bubble on hover too, since the column's heading
  * does not say it. The bubble is the eye's copy, hidden from the reader.
  */
-const Mark = ({
-  value,
-  label,
-  hint = false,
-}: {
-  value: boolean;
-  label: string;
-  hint?: boolean;
-}): ReactElement => (
+const Mark = ({ value, label, hint = false }: MarkProps): ReactElement => (
   <span
     className={[
       'user-list__mark',
@@ -78,27 +94,31 @@ const Mark = ({
   </span>
 );
 
-const UserRow = ({
-  user,
-  canImpersonate,
-  changesPaused,
-}: {
-  user: UserListEntry;
-  canImpersonate: boolean;
-  /** Admin changes are paused and the viewer is not the primary admin (MB.63). */
-  changesPaused: boolean;
-}): ReactElement => (
-  <tr>
-    {/* The way into their privilege history (MB.200), then the name, on
-        every row: an admin's changes are the ones most worth reading. */}
-    <td>
+/**
+ * The columns, in the owner's order (MB.59). Impersonate is last, and only
+ * where impersonation is registered: an action, its cell unlabelled as a
+ * card, at the card's top right beside the name. `changesPaused`: admin
+ * changes are paused and the viewer is not the primary admin (MB.63).
+ */
+const columns = (
+  canImpersonate: boolean,
+  changesPaused: boolean,
+): readonly (StackColumn<UserListEntry> | false)[] => [
+  {
+    heading: 'Name',
+    // The way into their privilege history (MB.200), then the name, on every
+    // row: an admin's changes are the ones most worth reading.
+    cell: (user) => (
       <span className="user-list__name">
         <HistoryLink email={user.email} name={user.name} />
         {user.name}
       </span>
-    </td>
-    {/* Whether the address is verified, then the address, in one cell (the owner's call). */}
-    <td>
+    ),
+  },
+  {
+    heading: 'Email',
+    // Whether the address is verified, then the address, in one cell (the owner's call).
+    cell: (user) => (
       <span className="user-list__email">
         <Mark
           value={user.emailVerified}
@@ -107,19 +127,22 @@ const UserRow = ({
         />
         {user.email}
       </span>
-    </td>
-    {/* An admin's role in bold, on the owner's call: the rows to notice. On
-        the right, the control that changes it (MB.59), as Coven Creation holds
-        its own: one column rather than a second saying the same thing. The
-        primary admin is marked by a crown with a tip, and its Revoke's tip
-        says why it cannot be used. */}
-    <td>
+    ),
+  },
+  {
+    heading: 'Role',
+    // An admin's role in bold, on the owner's call: the rows to notice. On
+    // the right, the control that changes it (MB.59), as Coven Creation holds
+    // its own: one column rather than a second saying the same thing. The
+    // primary admin is marked by a crown with a tip, and its Revoke's tip
+    // says why it cannot be used.
+    cell: (user) => (
       <div className="user-list__role">
         <span className="user-list__role-name">
           {user.role === 'admin' ? (
-            <strong>{ROLE_LABELS.admin}</strong>
+            <strong>{roleLabel(user.role)}</strong>
           ) : (
-            <span>{ROLE_LABELS[user.role]}</span>
+            <span>{roleLabel(user.role)}</span>
           )}
           {user.primaryAdmin && <PrimaryAdminMark />}
         </span>
@@ -135,10 +158,13 @@ const UserRow = ({
           action={user.role === 'admin' ? 'revoke' : 'grant'}
         />
       </div>
-    </td>
-    {/* Whether they may, and beside it the control that changes it (M5.8);
-        none on an admin's row, whom the users CHECK holds to the flag (MB.177). */}
-    <td>
+    ),
+  },
+  {
+    heading: 'Coven Creation',
+    // Whether they may, and beside it the control that changes it (M5.8);
+    // none on an admin's row, whom the users CHECK holds to the flag (MB.177).
+    cell: (user) => (
       <div className="user-list__creation">
         <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
         {user.role === 'admin' ? null : (
@@ -154,29 +180,41 @@ const UserRow = ({
           />
         )}
       </div>
-    </td>
-    {/* Logos, empty when none, on the owner's call: a blank reads as none. */}
-    <td>
+    ),
+  },
+  {
+    heading: 'Sign-In Methods',
+    // Logos, empty when none, on the owner's call: a blank reads as none.
+    // This and Signed Up are facts no control changes, so muted (index.scss).
+    className: 'user-list__fact',
+    cell: (user) => (
       <span className="user-list__providers">
         {user.providers.map((id) => (
           <ProviderLogo key={id} id={id} />
         ))}
       </span>
-    </td>
-    <td>
+    ),
+  },
+  {
+    heading: 'Signed Up',
+    className: 'user-list__fact',
+    cell: (user) => (
       <time dateTime={user.createdAt.toISOString()}>
         {user.createdAt.toISOString().slice(0, 10)}
       </time>
-    </td>
-    {/* Not on an admin's row: the endpoint refuses one (MB.53). Tinted red,
-        as acting as someone else is the table's one dangerous control. */}
-    {canImpersonate && (
-      <td className="user-list__impersonate">
-        {user.role === 'admin' ? null : <ImpersonateButton userId={user.id} name={user.name} />}
-      </td>
-    )}
-  </tr>
-);
+    ),
+  },
+  // Not on an admin's row: the endpoint refuses one (MB.53). Ruled in red,
+  // as acting as someone else is the table's one dangerous control.
+  canImpersonate && {
+    heading: 'Impersonate',
+    action: 'corner',
+    headingClassName: 'user-list__impersonate',
+    className: 'user-list__impersonate',
+    cell: (user) =>
+      user.role === 'admin' ? null : <ImpersonateButton userId={user.id} name={user.name} />,
+  },
+];
 
 const UserList = ({
   users,
@@ -185,50 +223,31 @@ const UserList = ({
   role,
   previousHref,
   nextHref,
+  position,
   canImpersonate = false,
   adminChanges,
 }: UserListProps): ReactElement => (
-  <div className="user-list">
-    <UserListFilter query={query} awaitingApproval={awaitingApproval} role={role} />
+  <ListFrame className="user-list">
+    <UserListFilter
+      key={`${query}\n${role ?? ''}\n${awaitingApproval}`}
+      query={query}
+      awaitingApproval={awaitingApproval}
+      role={role}
+    />
 
-    {users.length ? (
-      <div className="data-table-frame">
-        <table className="data-table">
-          <thead>
-            <tr>
-              <th scope="col">Name</th>
-              <th scope="col">Email</th>
-              <th scope="col">Role</th>
-              <th scope="col">Coven Creation</th>
-              <th scope="col">Sign-In Methods</th>
-              <th scope="col">Signed Up</th>
-              {canImpersonate && (
-                <th scope="col" className="user-list__impersonate">
-                  Impersonate
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <UserRow
-                key={user.id}
-                user={user}
-                canImpersonate={canImpersonate}
-                // The page's own read of the pause, not a second query: the
-                // primary admin (`canToggle`) is exempt. The service still refuses.
-                changesPaused={Boolean(adminChanges?.paused && !adminChanges.canToggle)}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-    ) : (
-      <p>No users match.</p>
-    )}
+    <ListBody>
+      {/* Roomy, and each cell on one line, the table scrolling in its frame. */}
+      <StackTable
+        columns={columns(canImpersonate, Boolean(adminChanges && changesLocked(adminChanges)))}
+        rows={users}
+        rowKey={(user) => user.id}
+        empty={noMatch({ query, role, awaitingApproval })}
+        className="data-table--roomy data-table--nowrap"
+      />
 
-    <Pager previousHref={previousHref} nextHref={nextHref} />
-  </div>
+      <Pager previousHref={previousHref} nextHref={nextHref} position={position} />
+    </ListBody>
+  </ListFrame>
 );
 
 export default UserList;

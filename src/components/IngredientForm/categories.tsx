@@ -7,7 +7,7 @@ import { graphql } from '../../gql';
 import { graphqlQuery } from '../../lib/graphql-client';
 import CategoryPicker from '../CategoryPicker';
 import type { PickerCategory } from '../CategoryPicker/types';
-import { FieldError } from './fields';
+import { FieldError } from '../Field';
 import type { IngredientFormValues, SharedFieldProps } from './types';
 
 // The categories an ingredient is filed under (MB.126): every live category,
@@ -43,7 +43,7 @@ const CategoriesDocument = graphql(`
  * The Categories field: the picker, on the form's `categoryIds`, or at
  * `at`, a variant's own, which file that form alone (MB.215).
  */
-export function CategoryField({ at }: SharedFieldProps): ReactElement {
+export function CategoryField({ at, action }: SharedFieldProps): ReactElement {
   const FIELD = at ? (`${at}.categoryIds` as const) : 'categoryIds';
   const { control } = useFormContext<IngredientFormValues>();
   const { field } = useController({ control, name: FIELD });
@@ -83,6 +83,7 @@ export function CategoryField({ at }: SharedFieldProps): ReactElement {
       legend="Categories"
       entry="Category"
       hint="What it is used for. Pick as many as apply."
+      placeholder="Add a category"
       categories={categories}
       pending={isPending}
       value={picked}
@@ -91,6 +92,7 @@ export function CategoryField({ at }: SharedFieldProps): ReactElement {
       errorId={message ? errorId : undefined}
       error={<FieldError id={errorId} message={message} />}
       status={isError ? 'The categories could not be loaded.' : undefined}
+      action={action}
     />
   );
 }

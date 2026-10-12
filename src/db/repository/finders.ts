@@ -177,6 +177,35 @@ export function findPageCountInTiers<
   return readCount(table, readableInTiers(memberships, table), order, start, where);
 }
 
+/**
+ * A page of live rows under a scope the calling finder spells itself, for a
+ * table none of the pagers above admits: `invitations`' site tier (MB.115),
+ * two-tier yet no compendium row, so neither `findPage` nor
+ * `findPageInTiers`. Inside the folder only, as `selectFrom` is, and no
+ * looser: the scope is the finder's own, and the tombstone filter is ANDed
+ * here so the scope cannot forget it.
+ */
+export function findPageInScope<TTable extends PgTable & Identified, Carried extends object>(
+  table: TTable,
+  scope: SQL,
+  order: PageOrder<Carried>,
+  page: PageRequest,
+  where?: SQL,
+): Promise<PageEntry<TTable['$inferSelect'], Carried>[]> {
+  return readPage(table, and(scope, notSoftDeleted(table)), order, page, where);
+}
+
+/** `findPageCount` for `findPageInScope`: the same rows, counted. */
+export function findPageCountInScope(
+  table: PgTable & Identified,
+  scope: SQL,
+  order: PageOrder,
+  start: Cursor | undefined,
+  where?: SQL,
+): Promise<PageCount> {
+  return readCount(table, and(scope, notSoftDeleted(table)), order, start, where);
+}
+
 /** A page of `table` under its finder's `scope` and the caller's `where`, cut at the page's bounds. */
 function readPage<TTable extends PgTable & Identified, Carried extends object>(
   table: TTable,

@@ -3,7 +3,13 @@
 import { ColorPicker, Tooltip, parseColor } from '@ark-ui/react';
 import { type ReactElement, useMemo, useState } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { CHIP_GROUNDS, MIN_CHIP_CONTRAST, chipContrast, formatRatio } from '../../lib/contrast';
+import {
+  CHIP_GROUNDS,
+  HEX_COLOR,
+  MIN_CHIP_CONTRAST,
+  chipContrast,
+  formatRatio,
+} from '../../lib/contrast';
 import {
   contrastBoundary,
   failingLabelPoint,
@@ -11,6 +17,7 @@ import {
   pairedColor,
 } from '../../lib/group-colors';
 import { nearColor } from '../../lib/near-color';
+import Notice from '../Notice';
 import type { ChipColorFieldProps, FormatOption, PickerColor, PickerFormat } from './types';
 import './index.scss';
 
@@ -26,8 +33,6 @@ import './index.scss';
 // the schema's; this shows them while the admin chooses rather than after a
 // save (claude-docs/components/chip-color-field.md).
 
-const WHOLE = /^#[0-9a-f]{6}$/i;
-
 const GROUND = { colorDark: 'the dark card', colorLight: 'the light page' } as const;
 
 /**
@@ -36,10 +41,6 @@ const GROUND = { colorDark: 'the dark card', colorLight: 'the light page' } as c
  */
 const PARTNER_NAME = { colorDark: 'Light', colorLight: 'Dark' } as const;
 
-/**
- * The contrast glyph in the veil's label: a circle half filled, which reads
- * as light against dark.
- */
 /** Chrome's format toggle: a chevron up over a chevron down. */
 const FormatIcon = (): ReactElement => (
   <svg
@@ -59,6 +60,10 @@ const FormatIcon = (): ReactElement => (
   </svg>
 );
 
+/**
+ * The contrast glyph in the veil's label: a circle half filled, which reads
+ * as light against dark.
+ */
 const ContrastIcon = (): ReactElement => (
   <svg className="chip-color-field__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
     <circle cx="8" cy="8" r="6.25" fill="none" stroke="currentColor" strokeWidth="1.5" />
@@ -103,6 +108,7 @@ const ChipColorField = ({
   id,
   label,
   column,
+  placeholder,
   value,
   onChange,
   onBlur,
@@ -116,7 +122,7 @@ const ChipColorField = ({
   'aria-invalid': invalid,
   'aria-required': required,
 }: ChipColorFieldProps): ReactElement => {
-  const hex = WHOLE.test(value) ? value.toLowerCase() : undefined;
+  const hex = HEX_COLOR.test(value) ? value.toLowerCase() : undefined;
   // The picker keeps its own colour rather than re-reading the hex each
   // time: a hex forgets the hue of a grey, so a drag through the grey edge of
   // the area would otherwise snap the hue to red. A hex from outside — typed,
@@ -142,7 +148,7 @@ const ChipColorField = ({
     const region = failingRegion(hue, column, space);
     return `polygon(${region.map(([x, y]) => `${x}% ${y}%`).join(', ')})`;
   }, [hue, column, space]);
-  const partnerHex = partner && WHOLE.test(partner) ? partner.toLowerCase() : undefined;
+  const partnerHex = partner && HEX_COLOR.test(partner) ? partner.toLowerCase() : undefined;
 
   const near = hex ? nearColor(hex, others) : undefined;
   // A ratio at the floor or over it reads in the accent green (the owner's call).
@@ -159,7 +165,7 @@ const ChipColorField = ({
       {/* Under the field's label, saying what the veil below means (the owner's call). */}
       {labelPoint && (
         <p id={lineId} className="field__hint chip-color-field__veil-hint">
-          Colours in the {theme} veil fall short of 4.5:1 on {GROUND[column]}.
+          Colours under the veil are too faint on {GROUND[column]} (under 4.5:1).
         </p>
       )}
       <ColorPicker.Root
@@ -255,7 +261,7 @@ const ChipColorField = ({
                 value={value}
                 spellCheck={false}
                 autoComplete="off"
-                placeholder="#rrggbb"
+                placeholder={placeholder}
                 onChange={(event) => onChange(event.currentTarget.value)}
                 aria-invalid={invalid}
                 aria-required={required}
@@ -282,7 +288,7 @@ const ChipColorField = ({
                 <button
                   type="button"
                   className="btn btn--small btn--quiet chip-color-field__format"
-                  aria-label={`${label} format: ${current.name}. Switch to ${next.name}`}
+                  aria-label={`${label} Format: ${current.name}. Switch to ${next.name}`}
                   onClick={() => setFormat(next.format)}
                 >
                   {current.name}
@@ -334,9 +340,12 @@ const ChipColorField = ({
           {`${formatRatio(chipContrast(column, hex))}:1 on ${GROUND[column]}`}
         </p>
       )}
-      {/* Always present, so a warning that appears is announced. */}
       {/* A refusal of this colour, in the error notice: the contrast floor
-          missed, or the pair's hues too far apart (the owner's call). */}
+          missed, or the pair's hues too far apart (the owner's call). The
+          `.notice` markup by hand rather than `Notice`: this is the field's
+          described error, read with the hex box through its
+          `aria-describedby`, and `Notice`'s error would add `role="alert"`,
+          so a screen reader would read it twice. */}
       {error && (
         <p id={errorId} className="notice notice--error chip-color-field__notice">
           {error}
@@ -344,14 +353,18 @@ const ChipColorField = ({
       )}
       {/* The site's warning notice: the plain box with the red triangle, seen
           but short of an error, since the save still goes through (the
-          owner's call). */}
-      <output
+          owner's call). Quiet, so an `<output>`: always present, empty and
+          hidden when there is nothing to say, so a warning that appears is
+          announced without interrupting. */}
+      <Notice
+        kind="warn"
+        quiet
         id={nearId}
-        className="notice notice--warn chip-color-field__notice chip-color-field__near"
+        className="chip-color-field__notice chip-color-field__near"
       >
         {near &&
-          `Close to the ${theme} theme colour of "${near.name}", so their chips may be hard to tell apart.`}
-      </output>
+          `This is close to "${near.name}"'s ${theme} theme colour, so their chips may be hard to tell apart. You can still save it.`}
+      </Notice>
     </div>
   );
 };

@@ -1,9 +1,10 @@
 import type { ReactElement } from 'react';
 
 // The control's two indicators, drawn by every box: a typed one, the
-// select-only one and the multi-select; and a sortable entry's grip. Hidden
-// from assistive technology — what names them is the button around them, or
-// nothing, where the whole control is the one target.
+// select-only one and the multi-select; a sortable entry's grip; and a
+// linked entry's link mark (MB.115). Hidden from assistive technology —
+// what names them is the button around them, or nothing, where the whole
+// control is the one target.
 
 export function ChevronIcon(): ReactElement {
   return (
@@ -37,6 +38,22 @@ export function GripIcon(): ReactElement {
           <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="1.25" fill="currentColor" />
         )),
       )}
+    </svg>
+  );
+}
+
+/** Two links of a chain ahead of a linked entry's text: the sign it names a real row and opens it. */
+export function LinkIcon(): ReactElement {
+  return (
+    <svg className="combobox__entry-mark" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M6.75 9.25a3 3 0 0 0 4.24 0l2.12-2.12a3 3 0 0 0-4.24-4.24l-.7.7M9.25 6.75a3 3 0 0 0-4.24 0L2.89 8.87a3 3 0 0 0 4.24 4.24l.7-.7"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }

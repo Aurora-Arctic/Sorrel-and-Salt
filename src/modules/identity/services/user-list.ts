@@ -1,13 +1,13 @@
 import 'server-only';
-import { findProvidersOfUsers, findUserPage } from '../../../db/repository';
+import { findProvidersOfUsers, findUserCount, findUserPage } from '../../../db/repository';
 import { Forbidden } from '../../../lib/errors';
 import { isSiteAdmin, refuseBatch } from './admin-changes';
 import { assertSiteAdmin } from './site-admin';
 import type { Session } from '../../../lib/session';
-import type { PageEntry, PageRequest } from '../../../lib/types';
+import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import type { UserFilter, UserRow } from '../types';
 
-// The admin user list's two reads (MB.52). A read, so M5.7's mutation sweep
+// The admin user list's reads (MB.52), and its count (MB.115). A read, so M5.7's mutation sweep
 // does not reach it: the check is here, by direct call, and the page confers
 // no workspace access (claude-docs/auth/admin-users.md, "The user list").
 
@@ -21,12 +21,32 @@ const REFUSAL = 'Only a site admin may list users';
  */
 export async function listUsers(
   session: Session,
-  { query, awaitingApproval, role }: UserFilter,
+  filter: UserFilter,
   page: PageRequest,
 ): Promise<PageEntry<UserRow>[]> {
   const admin = assertSiteAdmin(session, REFUSAL);
-  const trimmed = query?.trim();
-  return findUserPage(admin, { query: trimmed || undefined, awaitingApproval, role }, page);
+  return findUserPage(admin, trimmedFilter(filter), page);
+}
+
+/**
+ * How many users `listUsers` pages under `filter`, and how many come before
+ * `start`, a page's first row, none on an empty page: the user list's
+ * "Page X of Y" (MB.115).
+ *
+ * @throws {Forbidden} the session's role is not `admin`.
+ */
+export async function countUsers(
+  session: Session,
+  filter: UserFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const admin = assertSiteAdmin(session, REFUSAL);
+  return findUserCount(admin, trimmedFilter(filter), start);
+}
+
+/** The filter as the repository takes it, a blank query no query. */
+function trimmedFilter({ query, awaitingApproval, role }: UserFilter): UserFilter {
+  return { query: query?.trim() || undefined, awaitingApproval, role };
 }
 
 /**

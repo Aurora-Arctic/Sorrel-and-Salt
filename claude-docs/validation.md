@@ -230,7 +230,13 @@ forms folding alike are refused at the repeat's `form`, and one id sent twice
 at the repeat's `id`. A substitute anywhere may carry `substituteVariantId`,
 one form of the ingredient it links: an id, and only beside a link, refused at
 `['substitutes', j, 'substituteVariantId']`. Whether it is that ingredient's
-form reads the database, so it is the service's. With no `variants` sent the
+form reads the database, so it is the service's. **A form's link names a
+form** (MB.115, the owner's call): a form stands in for a form, so a
+variant's substitute with `ingredientId` and no `substituteVariantId` is
+refused at `['variants', i, 'substitutes', j, 'substituteVariantId']`
+(`formLinkRules`). The ingredient's own list may still link an
+ingredient whole, and a name needs no form. Seeds write raw, not through the
+schema, so a seeded link is not held to it. With no `variants` sent the
 list is left absent, and the service reads it as no form, as an absent child
 list always reads. The GraphQL input types require it (MB.222), so through the
 API a client sends `[]` for none.

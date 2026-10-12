@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 import type { UserRole } from '../../lib/session';
+import type { PagerHrefs } from '../../app/admin/types';
+import type { PagePosition } from '../../lib/types';
 
 /** One listed user: the row's own facts and the providers read beside it. */
 export interface UserListEntry {
@@ -16,7 +18,7 @@ export interface UserListEntry {
   primaryAdmin: boolean;
 }
 
-export interface UserListProps {
+export interface UserListProps extends Partial<PagerHrefs> {
   /** This page's users, in the list's order. */
   users: readonly UserListEntry[];
   /** The name-or-email filter as asked, blank for none. */
@@ -25,10 +27,9 @@ export interface UserListProps {
   awaitingApproval: boolean;
   /** The role the list is narrowed to, absent for every role. */
   role?: UserRole;
-  /** The page before this one, absent on the first. */
-  previousHref?: string;
-  /** The page after this one, absent on the last. */
-  nextHref?: string;
+
+  /** Where this page stands, the pager's "Page X of Y"; none when left out. */
+  position?: PagePosition;
   /** Whether impersonation is registered here, so each non-admin row offers it (MB.53). */
   canImpersonate?: boolean;
   /**
@@ -70,9 +71,9 @@ export type CreationAction = 'approve' | 'revoke';
 export type ConfirmStep = 'idle' | 'confirming' | 'sending';
 
 /**
- * A row's action that asks first, in a modal: what its button and the modal
- * say, and the write it sends. The creation control and the role control
- * each build one.
+ * An action that asks first, in a modal: what its button and the modal say,
+ * and the write it sends. The creation and role controls, Impersonate, the
+ * pause switch and the invitations' Revoke each build one.
  */
 export interface ConfirmedActionProps {
   /** The row's button and the modal's confirm, one word or two. */
@@ -91,8 +92,12 @@ export interface ConfirmedActionProps {
   confirmClass: string;
   /** Whether the modal offers an optional reason, sent with the write. */
   withNote?: boolean;
-  /** The write; `note` is the reason as typed, trimmed, or absent. */
+  /** The write; `note` is the reason as typed, trimmed, or absent. A refusal rejects. */
   send: (note?: string) => Promise<unknown>;
+  /** What follows a success, the confirm still busy; absent, the page is read again. */
+  onSent?: () => void;
+  /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
+  refusal?: string;
 }
 
 /** What a row's role control does: make a user an admin, or stop one being one (MB.59). */
@@ -144,4 +149,18 @@ export interface LockedControlProps {
   accessibleName?: string;
   className: string;
   reason: string;
+}
+
+/** A linked sign-in provider in the Sign-In Methods cell, by its roster id. */
+export interface ProviderLogoProps {
+  id: string;
+}
+
+/** A yes-or-no drawn as a check or a cross, with its word for a screen reader. */
+export interface MarkProps {
+  value: boolean;
+  /** The word the mark stands for: "Verified", "Yes". */
+  label: string;
+  /** Whether a tip bubble shows the word on hover too, where the heading does not say it. */
+  hint?: boolean;
 }

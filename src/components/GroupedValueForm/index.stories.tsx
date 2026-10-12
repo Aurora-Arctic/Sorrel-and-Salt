@@ -1,28 +1,21 @@
 import type { Story } from '@ladle/react';
+import { GROUP_NAMES, asOptions } from '../../../.ladle/fixtures';
+import { usePressOnMount } from '../../../.ladle/press';
 import Modal from '../Modal';
 import GroupedValueForm from '.';
 
 // Render-only; behaviour is asserted in tests/components/GroupedValueForm.
+// Every kind, the flat planets and signs among them (MB.115).
 // The workshop has no API, so a save answers with the form's generic error.
 // Shown in the modal the admin pages open it in.
 export default {
   title: 'Admin / Grouped Value Form',
 };
 
-const CATEGORY_GROUPS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Healing' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Protection' },
-];
-
-const FORM_GROUPS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixture Mineral' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Fixture Substance' },
-];
-
-const TRADITIONS = [
-  { id: '0b9f0f6e-2f4c-4d7a-9a52-3c1c5b8e6d21', name: 'Fixtural' },
-  { id: '1c8e1e5d-3e5b-4c6a-8b41-2d0b4a7d5c10', name: 'Mockish' },
-];
+// Enough of each to narrow: every group field is typed into (MB.115).
+const CATEGORY_GROUPS = asOptions(GROUP_NAMES.category);
+const FORM_GROUPS = asOptions(GROUP_NAMES.form);
+const TRADITIONS = asOptions(GROUP_NAMES.tradition);
 
 const done = () => {};
 
@@ -33,7 +26,7 @@ export const AddingACategory: Story = () => (
 );
 
 export const EditingACategory: Story = () => (
-  <Modal title="Edit Category" onClose={done}>
+  <Modal eyebrow="Edit Category" title="Testcraft" onClose={done}>
     <GroupedValueForm
       kind="category"
       value={{
@@ -56,7 +49,7 @@ export const AddingAForm: Story = () => (
 
 // Rename it to see the note by Save that the rename carries onto the compendium.
 export const EditingAForm: Story = () => (
-  <Modal title="Edit Form" onClose={done}>
+  <Modal eyebrow="Edit Form" title="Testwort Shard" onClose={done}>
     <GroupedValueForm
       kind="form"
       value={{
@@ -77,9 +70,11 @@ export const AddingADeity: Story = () => (
   </Modal>
 );
 
-// Rename it to see the note by Save that the rename carries onto the compendium.
+// Rename it to see the note by Save that the rename carries onto the
+// compendium, and the head keep the name it was saved under, its tradition
+// after it, as a deity's pills name it (MB.115).
 export const EditingADeity: Story = () => (
-  <Modal title="Edit Deity" onClose={done}>
+  <Modal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural" onClose={done}>
     <GroupedValueForm
       kind="deity"
       value={{
@@ -94,6 +89,47 @@ export const EditingADeity: Story = () => (
   </Modal>
 );
 
+export const AddingAPlanet: Story = () => (
+  <Modal title="Add Planet" onClose={done}>
+    <GroupedValueForm kind="planet" onDone={done} />
+  </Modal>
+);
+
+// A flat kind has no group field. Rename it to see the note by Save that the
+// rename carries onto the compendium.
+export const EditingAZodiacSign: Story = () => (
+  <Modal eyebrow="Edit Zodiac Sign" title="Fixture Ram" onClose={done}>
+    <GroupedValueForm
+      kind="zodiacSign"
+      value={{
+        id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
+        name: 'Fixture Ram',
+        description: 'An invented sign, for the workshop.',
+      }}
+      onDone={done}
+    />
+  </Modal>
+);
+
+// Delete pressed once drawn, as a person would: the question over the form,
+// dimmed and held beneath it until Delete or Keep It answers (MB.115).
+export const AskingToDelete: Story = () => {
+  usePressOnMount('Delete Category');
+  return <EditingACategory />;
+};
+
+// At a phone's width in each theme: the modal inset from the screen's edge,
+// and the form under 28rem of its own width, so its buttons stack. Type into
+// Group to see its list narrow beneath it, inside the modal.
+export const PhoneDark: Story = () => <EditingACategory />;
+export const PhoneLight: Story = () => <EditingACategory />;
+
+// An edit's head in each theme, at a desktop's width and a phone's (MB.115).
+export const EditingADeityDark: Story = () => <EditingADeity />;
+export const EditingADeityLight: Story = () => <EditingADeity />;
+export const EditingADeityPhoneDark: Story = () => <EditingADeity />;
+export const EditingADeityPhoneLight: Story = () => <EditingADeity />;
+
 // Each in its own iframe, so the modal's top layer covers the story's frame
 // rather than Ladle's sidebar.
 AddingACategory.meta = { iframed: true };
@@ -102,3 +138,12 @@ AddingAForm.meta = { iframed: true };
 EditingAForm.meta = { iframed: true };
 AddingADeity.meta = { iframed: true };
 EditingADeity.meta = { iframed: true };
+AddingAPlanet.meta = { iframed: true };
+EditingAZodiacSign.meta = { iframed: true };
+AskingToDelete.meta = { iframed: true };
+PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+EditingADeityDark.meta = { iframed: true, theme: 'dark' };
+EditingADeityLight.meta = { iframed: true, theme: 'light' };
+EditingADeityPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
+EditingADeityPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };

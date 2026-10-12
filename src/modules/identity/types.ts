@@ -6,6 +6,14 @@ export type { PrivilegeChangeFilter, UserFilter } from '../../db/repository';
 
 export type UserRow = typeof users.$inferSelect;
 
+/** What `/admin/invitations` is narrowed by (MB.115). Each part is optional, and absent means no filter. */
+export interface AdminInvitationFilter {
+  /** A fragment of the invited address, case-insensitive. */
+  email?: string;
+  /** Only the invitations lapsing within the next 24 hours. */
+  expiringSoon?: boolean;
+}
+
 /** One row of the privilege ledger (MB.194). */
 export type PrivilegeChangeRow = typeof userPrivilegeChanges.$inferSelect;
 

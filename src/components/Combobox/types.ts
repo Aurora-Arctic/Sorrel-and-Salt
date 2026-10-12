@@ -57,12 +57,17 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   suggestions?: Suggestions<O>;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
-  /** A control that empties the list, shown while it holds entries. */
-  clear?: { label: string; onClear: () => void };
   /**
-   * A first row that makes something new rather than picking a suggestion,
-   * "Add a reference", there whatever is typed and in place of the typed row:
-   * for a list whose entries can only be picked (MB.154).
+   * A control that empties the box, on the control's right. `empty` while
+   * there is nothing to clear: the clear, and the separator beside it, keep
+   * their room but are hidden, out of the accessibility tree and the tab
+   * order, so the control's width never changes as it fills or empties.
+   */
+  clear?: { label: string; onClear: () => void; empty: boolean };
+  /**
+   * A last row that makes something new rather than picking a suggestion,
+   * "New Reference…", there whatever is typed and in place of the typed row:
+   * for a list whose entries can only be picked (MB.154; last since MB.115).
    */
   create?: { label: string; onCreate: () => void };
   /**
@@ -71,6 +76,20 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    * says why. Offered unless said otherwise.
    */
   offerTyped?: boolean;
+  /**
+   * Whether the list opens and narrows with its first row highlighted, so
+   * Enter takes it: a closed set's type-ahead. Free text highlights nothing.
+   */
+  highlightFirst?: boolean;
+  /**
+   * What a row is called, singular: the list's name, its chevron's and its
+   * status's count. "suggestion" unless said; a closed set's are "choice"s.
+   */
+  noun?: string;
+  /** Shown, muted, while the box is empty. */
+  placeholder?: string;
+  /** `aria-required`, as the field marks it. */
+  required?: boolean;
   /** What a pick leaves out of the text, drawn muted in brackets after it: a picked form's group. */
   qualifier?: ComboboxQualifier;
   /**
@@ -120,6 +139,19 @@ export interface ComboboxEntryProps {
    * with it, its text and x inverted, as the solid-fill rule asks.
    */
   colors?: GroupColors;
+  /**
+   * What the entry opens beside its chip, a linked substitute's summary
+   * (MB.115): its text becomes a button, led by a link mark and underlined,
+   * that opens and shuts a small panel anchored to the chip. Left out of a
+   * sortable entry, whose text is already its handle.
+   */
+  summary?: EntrySummary;
+  /**
+   * What kind of entry it is, read after its text by a screen reader and
+   * never shown: "name only" on a substitute typed rather than linked, which
+   * the eye tells by its want of a link mark.
+   */
+  note?: string;
   onRemove: () => void;
   /**
    * The chip's place in a sortable list, from dnd-kit's `useSortable`: it
@@ -127,6 +159,14 @@ export interface ComboboxEntryProps {
    * never by a list itself.
    */
   sortable?: ReturnType<typeof useSortable>;
+}
+
+/** The panel a linked entry opens: what names it, and what it holds. */
+export interface EntrySummary {
+  /** Names the panel as a dialog: "About Mockwort (Fixtura vulgaris)". */
+  label: string;
+  /** The panel's content, drawn only while it is open, so it may ask the server then. */
+  content: () => ReactNode;
 }
 
 /** A sortable list's wrapping row, measured as a move starts. */
@@ -219,6 +259,47 @@ export interface ComboboxSelectProps {
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;
+  'aria-describedby'?: string;
+  'aria-invalid'?: boolean;
+}
+
+/**
+ * The type-ahead box: a closed set, chosen by typing to narrow the list. The
+ * text is its own; only a choice is ever the value.
+ */
+export interface ComboboxTypeaheadProps {
+  /** The box's id, which a label element's `htmlFor` names. */
+  id: string;
+  /** What the box is called, and its list's name, "Tradition choices". */
+  label: string;
+  /** The id of a label element naming the box. */
+  labelId?: string;
+  /** The chosen value, `''` while the text names no choice. */
+  value: string;
+  /** Every change of value, typing included: text naming a choice in full chooses it. */
+  onChange: (value: string) => void;
+  /**
+   * The value once the person is done with the box, never mid-typing: a pick
+   * from the list, the clear (`''`), or leaving the box (the choice its text
+   * names in full, or `''`). Called whether or not the value changed; a
+   * filter, which applies a choice rather than each letter typed, compares it
+   * with the one it shows.
+   */
+  onSettle?: (value: string) => void;
+  onBlur?: () => void;
+  /** Every choice, in order; typing narrows them to those whose label holds the text. */
+  choices: readonly ComboboxChoice[];
+  /** Shown, muted, while the box is empty, and not itself a choice. */
+  placeholder?: string;
+  required?: boolean;
+  /**
+   * A clear on the control's right, "Clear Tradition", offered while the box
+   * holds text or a choice, and its room kept while it does not: a filter's
+   * way back to every group.
+   */
+  clearable?: boolean;
+  /** The text box, which takes the focus. */
+  inputRef?: Ref<HTMLInputElement>;
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
 }

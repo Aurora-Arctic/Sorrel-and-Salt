@@ -626,7 +626,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Aloes, Wood',
+          locator: 'under "Aloes, Wood"',
           supports: [
             'canonicalName',
             'elements',
@@ -662,7 +662,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Aloes, Wood',
+              locator: 'under "Aloes, Wood"',
               supports: ['form', 'description'],
             },
           ],
@@ -809,12 +809,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Asafoetida',
+          locator: 'under "Asafoetida"',
           supports: ['description', 'elements', 'planets', 'folkNames', 'categories'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Asafoetida',
+          locator: 'under "Asafoetida"',
           supports: [
             'canonicalName',
             'description',
@@ -857,12 +857,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Asafoetida; p. 266',
+              locator: 'under "Asafoetida"; p. 266',
               supports: ['form', 'safetyNotes'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Asafoetida',
+              locator: 'under "Asafoetida"',
               supports: ['form'],
             },
             {
@@ -882,7 +882,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Asafoetida',
+              locator: 'under "Asafoetida"',
               supports: ['form'],
             },
           ],
@@ -997,7 +997,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Benzoin',
+          locator: 'under "Benzoin"',
           supports: [
             'canonicalName',
             'description',
@@ -1009,7 +1009,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Benzoin',
+          locator: 'under "Benzoin"',
           supports: [
             'canonicalName',
             'description',
@@ -1057,7 +1057,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Benzoin',
+              locator: 'under "Benzoin"',
               supports: ['form'],
             },
             {
@@ -1154,7 +1154,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Camphor; p. 266',
+          locator: 'under "Camphor"; p. 266',
           supports: [
             'canonicalName',
             'description',
@@ -1167,7 +1167,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Camphor',
+          locator: 'under "Camphor"',
           supports: [
             'canonicalName',
             'description',
@@ -1223,7 +1223,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Camphor',
+              locator: 'under "Camphor"',
               supports: ['form'],
             },
           ],
@@ -1235,7 +1235,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Camphor',
+              locator: 'under "Camphor"',
               supports: ['form', 'description'],
             },
           ],
@@ -1364,7 +1364,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Cedar; p. 266',
+          locator: 'under "Cedar"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -1376,7 +1376,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Cedar',
+          locator: 'under "Cedar"',
           supports: [
             'canonicalName',
             'description',
@@ -1402,12 +1402,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Cedar',
+              locator: 'under "Cedar"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Cedar',
+              locator: 'under "Cedar"',
               supports: ['form', 'description'],
             },
             {
@@ -1427,7 +1427,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Cedar',
+              locator: 'under "Cedar"',
               supports: ['form', 'description'],
             },
           ],
@@ -1443,7 +1443,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Cedar',
+              locator: 'under "Cedar"',
               supports: ['form', 'description'],
             },
           ],
@@ -1456,12 +1456,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Cedar',
+              locator: 'under "Cedar"',
               supports: ['form', 'description'],
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Cedar; p. 266',
+              locator: 'under "Cedar"; p. 266',
               supports: ['form', 'safetyNotes'],
             },
           ],
@@ -1486,7 +1486,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         },
         {
           source: 'cunningham-herbs',
-          locator: 'ch. 3, s.v. Oils; s.v. Incense',
+          locator: 'ch. 3, under "Oils"; under "Incense"',
           supports: ['description'],
         },
         {
@@ -1509,7 +1509,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 'ch. 3, s.v. Incense',
+              locator: 'ch. 3, under "Incense"',
               supports: ['form'],
             },
           ],
@@ -1544,7 +1544,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Copal',
+          locator: 'under "Copal"',
           supports: ['description', 'elements', 'planets', 'categories'],
         },
         {
@@ -1562,7 +1562,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Copal',
+              locator: 'under "Copal"',
               supports: ['form'],
             },
             {
@@ -1644,12 +1644,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: "s.v. Dragon's Blood",
+          locator: 'under "Dragon\'s Blood"',
           supports: ['description', 'elements', 'planets', 'folkNames', 'categories'],
         },
         {
           source: 'kynes-plants',
-          locator: "s.v. Dragon's Blood",
+          locator: 'under "Dragon\'s Blood"',
           supports: [
             'canonicalName',
             'description',
@@ -1687,7 +1687,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: "s.v. Dragon's Blood",
+              locator: 'under "Dragon\'s Blood"',
               supports: ['form', 'colors'],
             },
             {
@@ -1704,12 +1704,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: "s.v. Dragon's Blood",
+              locator: 'under "Dragon\'s Blood"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: "s.v. Dragon's Blood",
+              locator: 'under "Dragon\'s Blood"',
               supports: ['form'],
             },
             {
@@ -2055,7 +2055,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Acacia; s.v. Arabic, Gum',
+          locator: 'under "Acacia"; under "Arabic, Gum"',
           supports: [
             'canonicalName',
             'description',
@@ -2099,7 +2099,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Arabic, Gum; p. 266',
+              locator: 'under "Arabic, Gum"; p. 266',
               supports: ['form', 'safetyNotes'],
             },
             {
@@ -2115,7 +2115,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Acacia',
+              locator: 'under "Acacia"',
               supports: ['form', 'description'],
             },
             {
@@ -2305,7 +2305,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Mastic',
+          locator: 'under "Mastic"',
           supports: [
             'canonicalName',
             'description',
@@ -2317,7 +2317,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Mastic and Pistachio',
+          locator: 'under "Mastic and Pistachio"',
           supports: [
             'canonicalName',
             'description',
@@ -2360,12 +2360,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Mastic',
+              locator: 'under "Mastic"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Mastic and Pistachio',
+              locator: 'under "Mastic and Pistachio"',
               supports: ['form'],
             },
           ],
@@ -2458,7 +2458,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Myrrh',
+          locator: 'under "Myrrh"',
           supports: [
             'canonicalName',
             'elements',
@@ -2471,7 +2471,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Myrrh',
+          locator: 'under "Myrrh"',
           supports: [
             'canonicalName',
             'elements',
@@ -2518,12 +2518,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Myrrh',
+              locator: 'under "Myrrh"',
               supports: ['form', 'safetyNotes'],
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Myrrh; p. 266',
+              locator: 'under "Myrrh"; p. 266',
               supports: ['safetyNotes'],
             },
             {
@@ -2543,7 +2543,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Myrrh',
+              locator: 'under "Myrrh"',
               supports: ['form', 'description'],
             },
             {
@@ -2587,7 +2587,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Myrrh',
+          locator: 'under "Myrrh"',
           supports: ['description'],
         },
         {
@@ -2745,7 +2745,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Sandalwood, Red',
+          locator: 'under "Sandalwood, Red"',
           supports: ['canonicalName', 'elements', 'planets', 'categories', 'description'],
         },
         {
@@ -2777,7 +2777,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Sandalwood, Red',
+              locator: 'under "Sandalwood, Red"',
               supports: ['form'],
             },
           ],
@@ -2861,7 +2861,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Sandarac, Gum',
+          locator: 'under "Sandarac, Gum"',
           supports: ['canonicalName', 'description', 'elements', 'planets', 'folkNames'],
         },
         {
@@ -2880,7 +2880,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Sandarac, Gum',
+              locator: 'under "Sandarac, Gum"',
               supports: ['form'],
             },
             {
@@ -2995,7 +2995,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Liquidamber; s.v. Benzoin',
+          locator: 'under "Liquidamber"; under "Benzoin"',
           supports: [
             'canonicalName',
             'elements',
@@ -3008,7 +3008,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Storax',
+          locator: 'under "Storax"',
           supports: [
             'canonicalName',
             'description',
@@ -3050,7 +3050,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Storax',
+              locator: 'under "Storax"',
               supports: ['form'],
             },
           ],
@@ -3067,7 +3067,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Storax',
+              locator: 'under "Storax"',
               supports: ['form', 'description', 'categories'],
             },
           ],
@@ -3083,7 +3083,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Liquidamber',
+              locator: 'under "Liquidamber"',
               supports: ['form', 'description'],
             },
           ],
@@ -3180,12 +3180,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Storax',
+          locator: 'under "Storax"',
           supports: ['canonicalName', 'description', 'folkNames'],
         },
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Liquidamber',
+          locator: 'under "Liquidamber"',
           supports: [
             'canonicalName',
             'elements',
@@ -3229,7 +3229,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Liquidamber',
+              locator: 'under "Liquidamber"',
               supports: ['form', 'description', 'categories'],
             },
             {
@@ -3238,7 +3238,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Storax',
+              locator: 'under "Storax"',
               supports: ['form', 'description'],
             },
           ],
@@ -3278,12 +3278,12 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Sweetgrass',
+          locator: 'under "Sweetgrass"',
           supports: ['canonicalName', 'description'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Sweetgrass',
+          locator: 'under "Sweetgrass"',
           supports: [
             'canonicalName',
             'description',
@@ -3304,7 +3304,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Sweetgrass',
+              locator: 'under "Sweetgrass"',
               supports: ['form'],
             },
             {
@@ -3320,7 +3320,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Sweetgrass',
+              locator: 'under "Sweetgrass"',
               supports: ['form', 'description'],
             },
           ],
@@ -3411,7 +3411,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Tragacanth Gum',
+          locator: 'under "Tragacanth Gum"',
           supports: ['description', 'elements', 'planets', 'categories'],
         },
         {
@@ -3441,7 +3441,7 @@ export const RESINS_WOODS_AND_OTHER: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Tragacanth Gum',
+              locator: 'under "Tragacanth Gum"',
               supports: ['form'],
             },
           ],

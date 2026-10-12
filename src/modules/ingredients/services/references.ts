@@ -2,6 +2,7 @@ import 'server-only';
 import {
   type CompendiumScore,
   type ReferenceRow,
+  findManyReferences,
   findReferenceSuggestions,
   withAudit,
 } from '../../../db/repository';
@@ -118,6 +119,31 @@ export async function updateReference(
   // A coven's reference is in no cached read.
   if ('admin' in proof) expireCompendium();
   return written;
+}
+
+/**
+ * One reference by id, whole, for the form that edits it: the compendium's
+ * without a coven, and with one, that coven's own or the compendium's —
+ * never another coven's, whose existence is private. The tiers are the
+ * picker's, read under the same `ingredient: ['read']`, so it returns no
+ * row the picker would not already offer.
+ *
+ * @throws {Forbidden} a coven is named and the caller may not read its
+ * ingredients.
+ * @throws {NotFound} no live reference with this id in those tiers — another
+ * coven's, a soft-deleted one, and an id that is not one included.
+ */
+export async function getReference(
+  session: Session,
+  workspaceId: string | null | undefined,
+  id: string,
+): Promise<ReferenceRow> {
+  const memberships = await readersOf(session, workspaceId, { ingredient: ['read'] });
+  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
+  if (!RowId.safeParse(id).success) throw new NotFound('No such source');
+  const [row] = await findManyReferences(memberships, [id]);
+  if (!row) throw new NotFound('No such source');
+  return row;
 }
 
 /**

@@ -1,15 +1,18 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
+
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useId, useState } from 'react';
-import { Controller, useForm, useWatch } from 'react-hook-form';
+import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
-import { graphqlRequest } from '../../lib/graphql-client';
-import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
-import { ComboboxSelect } from '../Combobox';
+import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
+import { placeServerIssues } from '../../lib/graphql-failure';
+import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
+import { ConfirmQuestion, useDiscardGuard } from '../Modal';
+import { FormActions, SelectField, TextField } from '../Field';
 import Notice from '../Notice';
+import { PlanetInput, ZodiacSignInput } from '@/modules/vocabulary/validation/astrology-value';
 import { CategoryInput } from '@/modules/vocabulary/validation/category';
 import { DeityInput } from '@/modules/vocabulary/validation/deity';
 import { IngredientFormValueInput } from '@/modules/vocabulary/validation/ingredient-form-value';
@@ -22,15 +25,17 @@ import type {
 } from './types';
 import './index.scss';
 
-// The admin's form for a grouped curated value — a category (M5.6), an
-// ingredient form (M5.6a) or a deity (MB.132) — one for every such vocabulary, as GroupForm is
-// for their groups, so a new one is a `KINDS` entry rather than a third copy
-// (MB.132): a name, a description and the group it is filed under, validated
-// by the shared schema before the mutation and again by the service, and on
-// an existing value a delete behind a confirmation. A kind whose rename
-// reaches further than its row says so (MB.162). No rename here moves a
-// compendium entry's address since MB.220, so none asks to end a redirect.
-// It holds no modal of its own; the page puts it in one
+// The admin's form for a curated value: grouped — a category (M5.6), an
+// ingredient form (M5.6a) or a deity (MB.132) — or flat where the kind has no
+// group, a planet or a zodiac sign (MB.95). One for every such vocabulary, as
+// GroupForm is for their groups, so a new one is a `KINDS` entry rather than
+// another copy (MB.132; the flat kinds folded in at MB.115): a name, a
+// description and, for a grouped kind, the group it is filed under,
+// validated by the shared schema before the mutation and again by the
+// service, and on an existing value a delete behind a confirmation. A kind
+// whose rename reaches further than its row says so (MB.162). No rename here
+// moves a compendium entry's address since MB.220, so none asks to end a
+// redirect. It holds no modal of its own; the page puts it in one
 // (claude-docs/components/grouped-value-form.md).
 
 const CreateCategoryDocument = graphql(`
@@ -105,6 +110,50 @@ const DeleteDeityDocument = graphql(`
   }
 `);
 
+const CreatePlanetDocument = graphql(`
+  mutation CreatePlanet($input: PlanetInput!) {
+    createPlanet(input: $input) {
+      id
+    }
+  }
+`);
+
+const UpdatePlanetDocument = graphql(`
+  mutation UpdatePlanet($id: ID!, $input: PlanetInput!) {
+    updatePlanet(id: $id, input: $input) {
+      id
+    }
+  }
+`);
+
+const DeletePlanetDocument = graphql(`
+  mutation DeletePlanet($id: ID!) {
+    deletePlanet(id: $id)
+  }
+`);
+
+const CreateZodiacSignDocument = graphql(`
+  mutation CreateZodiacSign($input: ZodiacSignInput!) {
+    createZodiacSign(input: $input) {
+      id
+    }
+  }
+`);
+
+const UpdateZodiacSignDocument = graphql(`
+  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {
+    updateZodiacSign(id: $id, input: $input) {
+      id
+    }
+  }
+`);
+
+const DeleteZodiacSignDocument = graphql(`
+  mutation DeleteZodiacSign($id: ID!) {
+    deleteZodiacSign(id: $id)
+  }
+`);
+
 const FIELDS = ['name', 'description', 'groupId'] as const;
 type FieldName = (typeof FIELDS)[number];
 
@@ -113,7 +162,7 @@ const EMPTY: GroupedValueValues = { name: '', description: '', groupId: '' };
 /**
  * A kind as the form uses it, from its declaration: the input type stays
  * inside, so `KINDS` can hold kinds whose inputs differ — one that calls the
- * group `traditionId`, say — without a cast at each request.
+ * group `traditionId`, or one with no group — without a cast at each request.
  */
 function defineKind<Input extends object>({
   schema,
@@ -123,20 +172,13 @@ function defineKind<Input extends object>({
   remove,
   ...copy
 }: GroupedValueKindSpec<Input>): GroupedValueFormKind {
+  const send = saveRequest(create, update);
   return {
     ...copy,
-    resolver: zodResolver(schema),
-    save: async (values, id) => {
-      const input = toInput(values);
-      if (id) {
-        await graphqlRequest(update, { id, input });
-        return;
-      }
-      // Widened, since `VariablesArg` cannot decide `{ input: Input }` while
-      // `Input` is generic; the spec has already held the document to it.
-      const widened = create as TypedDocumentNode<unknown, { input: object }>;
-      await graphqlRequest<unknown, { input: object }>(widened, { input });
-    },
+    // The form's values always carry `groupId`, `''` for a flat kind, whose
+    // schema parses them without it; the resolver is typed for the values.
+    resolver: zodResolver(schema) as unknown as Resolver<GroupedValueValues>,
+    save: (values, id) => send(toInput(values), id),
     remove: async (id) => {
       await graphqlRequest(remove, { id });
     },
@@ -144,17 +186,49 @@ function defineKind<Input extends object>({
 }
 
 /**
+ * What a curated value's delete leaves behind, for every kind a compendium
+ * entry uses: picked, as a form or a deity is, or listed, as a planet or a
+ * zodiac sign is. A coven's ingredient that wrote the value keeps it, as a
+ * value of its own rather than a curated one.
+ */
+const USED_DELETE_NOTE =
+  "You can't delete it while a compendium entry uses it. Covens' ingredients keep what they wrote, as their own value.";
+
+/** What saving a renamed value does, for every kind a compendium entry uses (MB.162). */
+const USED_RENAME_NOTE = 'Saving renames it on every compendium entry that uses it.';
+
+/**
+ * What a description is for, on the kinds whose suggestions match it as well
+ * as the name (src/modules/vocabulary/services/suggestions.ts).
+ */
+const SEARCHED_DESCRIPTION_HINT =
+  "What it is, in the words a reader reaches for. The ingredient form's suggestions match it as well as the name.";
+
+/** A flat kind's input is its name and description: the group field it never shows is left out. */
+const withoutGroup = ({ name, description }: GroupedValueValues) => ({ name, description });
+
+/**
  * What differs between the vocabularies: their copy, their schema and input,
  * and their mutations. A kind whose input names the group otherwise maps it
  * back with `inputKeys` and `toInput`; the category and form inputs are the
- * values themselves.
+ * values themselves, and a flat kind has no group at all.
  */
 const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
   category: defineKind({
-    noun: 'Category',
-    groupLabel: 'Group',
-    groupPlaceholder: 'Choose a group',
-    deleteNote: "Covens' ingredients and spells filed under it lose it too.",
+    noun: LIST_KINDS.category.label,
+    describe: 'What this category covers',
+    descriptionHint:
+      "What the category covers. It is shown with the category wherever an ingredient's categories are picked.",
+    group: {
+      label: 'Group',
+      placeholder: 'Choose a group',
+      hint: "The family it is filed under. Its chip wears the group's colours.",
+    },
+    // Deleting a category removes nothing of a coven's: an entry filed under
+    // it keeps its link and stops reading the category, so the entry stays in
+    // its list and only the filter loses the category (the MB.115 sign-off).
+    deleteNote:
+      "Covens' ingredients and spells filed under it stay in their lists, but can no longer be filtered by it.",
     schema: CategoryInput,
     toInput: (values) => values,
     create: CreateCategoryDocument,
@@ -162,15 +236,20 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     remove: DeleteCategoryDocument,
   }),
   form: defineKind({
-    noun: 'Form',
-    groupLabel: 'Group',
-    groupPlaceholder: 'Choose a group',
-    deleteNote:
-      "It can't be deleted while a compendium entry picks it. Covens' ingredients keep what they wrote, which then counts as their own value rather than a curated one; nothing of theirs changes.",
+    noun: LIST_KINDS.form.label,
+    // A curated form explains itself: "the bark of the root, not the stem" (DESIGN.md §5).
+    describe: 'What this form is, and what it is not',
+    descriptionHint: SEARCHED_DESCRIPTION_HINT,
+    group: {
+      label: 'Group',
+      placeholder: 'Choose a group',
+      hint: "What kind of thing it is. The ingredient form's suggestions list the forms under their groups.",
+    },
+    deleteNote: USED_DELETE_NOTE,
     // A rename carries onto every compendium entry that picked the form
     // (MB.162), though no entry's address moves: a form is no part of one
     // since MB.220.
-    renameNote: 'Saving renames it on every compendium entry that picked it.',
+    renameNote: USED_RENAME_NOTE,
     schema: IngredientFormValueInput,
     toInput: (values) => values,
     create: CreateIngredientFormValueDocument,
@@ -178,14 +257,19 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     remove: DeleteIngredientFormValueDocument,
   }),
   deity: defineKind({
-    noun: 'Deity',
-    groupLabel: 'Tradition',
-    groupPlaceholder: 'Choose a tradition',
-    deleteNote:
-      "It can't be deleted while a compendium entry picks it. Covens' ingredients keep what they wrote, which then counts as their own value rather than a curated one; nothing of theirs changes.",
+    noun: LIST_KINDS.deity.label,
+    describe: 'Who they are and what they are honoured for',
+    descriptionHint:
+      "Who they are, with the other spellings a reader types, such as Hekate. The ingredient form's suggestions match it as well as the name.",
+    group: {
+      label: 'Tradition',
+      placeholder: 'Choose a tradition',
+      hint: 'The people or religion that honours them. A god several honour is filed under one, and the description names the others.',
+    },
+    deleteNote: USED_DELETE_NOTE,
     // A rename carries onto every compendium entry that picked the deity
     // (MB.162), though no entry's address moves: a deity is no part of one.
-    renameNote: 'Saving renames it on every compendium entry that picked it.',
+    renameNote: USED_RENAME_NOTE,
     // The input calls the group its tradition; the form's field stays `groupId`.
     inputKeys: { groupId: 'traditionId' },
     schema: DeityInput.omit({ traditionId: true }).extend({
@@ -196,46 +280,70 @@ const KINDS: Record<GroupedValueKind, GroupedValueFormKind> = {
     update: UpdateDeityDocument,
     remove: DeleteDeityDocument,
   }),
+  // The flat kinds (MB.95): filed under nothing, and no part of an entry's
+  // address, so a rename moves none; it still carries onto the entries
+  // listing the value (MB.162).
+  planet: defineKind({
+    noun: LIST_KINDS.planet.label,
+    describe: 'What this body is, and the other names it goes by',
+    descriptionHint: SEARCHED_DESCRIPTION_HINT,
+    deleteNote: USED_DELETE_NOTE,
+    renameNote: USED_RENAME_NOTE,
+    schema: PlanetInput,
+    toInput: withoutGroup,
+    create: CreatePlanetDocument,
+    update: UpdatePlanetDocument,
+    remove: DeletePlanetDocument,
+  }),
+  zodiacSign: defineKind({
+    // The long form on every button (the MB.115 sign-off): Save Zodiac Sign.
+    noun: LIST_KINDS.zodiacSign.label,
+    describe: 'What this sign is, and the other names it goes by',
+    descriptionHint: SEARCHED_DESCRIPTION_HINT,
+    deleteNote: USED_DELETE_NOTE,
+    renameNote: USED_RENAME_NOTE,
+    schema: ZodiacSignInput,
+    toInput: withoutGroup,
+    create: CreateZodiacSignDocument,
+    update: UpdateZodiacSignDocument,
+    remove: DeleteZodiacSignDocument,
+  }),
 };
 
 /** The field an input key names, under the kind's own name for it where it has one. */
 const fieldOf = ({ inputKeys }: GroupedValueFormKind, key: unknown): FieldName | undefined =>
   FIELDS.find((field) => (inputKeys?.[field] ?? field) === key);
 
-/**
- * The asterisk beside a required field's label, for the eye: hidden from the
- * field's name, so a screen reader hears the label and the control's
- * `aria-required` rather than "star", as IngredientForm's is.
- */
-const Required = (): ReactElement => (
-  <span className="grouped-value-form__required" aria-hidden="true">
-    *
-  </span>
-);
-
-const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps): ReactElement => {
+const GroupedValueForm = ({
+  kind,
+  value,
+  groups = [],
+  onDone,
+}: GroupedValueFormProps): ReactElement => {
   const id = useId();
-  const ids = (field: string) => ({ control: `${id}-${field}`, error: `${id}-${field}-error` });
   const spec = KINDS[kind];
-  const { noun, groupLabel, groupPlaceholder, deleteNote, renameNote } = spec;
+  const { noun, group, deleteNote, renameNote } = spec;
+  const methods = useForm<GroupedValueValues>({
+    defaultValues: value
+      ? { name: value.name, description: value.description, groupId: value.groupId ?? '' }
+      : EMPTY,
+    resolver: spec.resolver,
+  });
   const {
-    register,
     control,
     handleSubmit,
     setError,
     formState: { errors, isSubmitting, isDirty },
-  } = useForm<GroupedValueValues>({
-    defaultValues: value
-      ? { name: value.name, description: value.description, groupId: value.groupId }
-      : EMPTY,
-    resolver: spec.resolver,
-  });
+  } = methods;
   const [confirming, setConfirming] = useState(false);
+  // Cancel, and every other way out of the modal, asks first while the form
+  // has changes (MB.115, the owner's call); a save or a delete does not.
+  const discard = useDiscardGuard(isDirty);
   const [alert, setAlert] = useState<string>();
-  const values = useWatch({ control });
+  const name = useWatch({ control, name: 'name' });
   // Trimmed, as the schema trims: a space added to the end renames nothing.
   const renamed =
-    renameNote !== undefined && value !== undefined && (values.name ?? '').trim() !== value.name;
+    renameNote !== undefined && value !== undefined && (name ?? '').trim() !== value.name;
 
   const save = useMutation({
     mutationFn: (input: GroupedValueValues) => spec.save(input, value?.id),
@@ -250,179 +358,107 @@ const GroupedValueForm = ({ kind, value, groups, onDone }: GroupedValueFormProps
       await save.mutateAsync(input);
       onDone();
     } catch (error) {
-      const unplaced: string[] = [];
-      for (const { path, message } of readGraphqlIssues(error)) {
-        const [key, ...rest] = path;
-        const field = rest.length === 0 ? fieldOf(spec, key) : undefined;
-        if (field) setError(field, { type: 'server', message });
-        else unplaced.push(message);
-      }
-      if (unplaced.length > 0) setError('root', { type: 'server', message: unplaced.join(' ') });
+      placeServerIssues(error, setError, ({ path: [key, ...rest] }) =>
+        rest.length === 0 ? fieldOf(spec, key) : undefined,
+      );
     }
   };
 
   const confirmDelete = async (): Promise<void> => {
     if (!value) return;
     setAlert(undefined);
-    try {
-      await remove.mutateAsync(value.id);
-      onDone();
-    } catch (error) {
-      // Not a bad value in a box: a refusal naming its remedy (DESIGN.md §7).
-      setConfirming(false);
-      setAlert(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
-    }
+    await remove.mutateAsync(value.id);
+    onDone();
   };
 
-  const fieldAria = (field: FieldName) => ({
-    'aria-invalid': errors[field] ? true : undefined,
-    'aria-describedby': errors[field] ? ids(field).error : undefined,
-  });
-  const fieldError = (field: FieldName) =>
-    errors[field]?.message && (
-      <p id={ids(field).error} className="field__error">
-        {errors[field]?.message}
-      </p>
-    );
-  const choices = groups.map((group) => ({ value: group.id, label: group.name }));
+  const choices = groups.map((each) => ({ value: each.id, label: each.name }));
   const rootError = errors.root?.message ?? alert;
   const noteId = `${id}-rename-note`;
 
-  const actions = (): ReactElement => {
-    if (confirming) {
-      return (
-        <div className="grouped-value-form__confirm">
-          <p>
-            Delete &quot;{value?.name}&quot;? {deleteNote}
-          </p>
-          <div className="modal__actions">
-            <button
-              type="button"
-              className="btn btn--destructive"
-              disabled={remove.isPending}
-              aria-busy={remove.isPending || undefined}
-              onClick={() => void confirmDelete()}
-            >
-              {remove.isPending && <span className="spinner" aria-hidden="true" />}
-              {remove.isPending ? 'Deleting' : 'Delete'}
-            </button>
-            <button type="button" className="btn btn--quiet" onClick={() => setConfirming(false)}>
-              Keep It
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <>
-        {/* Before Save is pressed rather than after: a kind whose rename
+  const actions = (): ReactElement => (
+    <>
+      {/* Before Save is pressed rather than after: a kind whose rename
             reaches past its row says so while the name differs. */}
-        {renamed && (
-          <p id={noteId} className="field__hint grouped-value-form__note">
-            {renameNote}
-          </p>
-        )}
-        <div className="modal__actions grouped-value-form__actions">
-          {/* Offered only when there is something to save — nothing typed on a
-              new value, nothing changed on an existing one — the owner's rule
-              for every form; and busy, saying so, from the press to the
-              answer. */}
-          <button
-            type="submit"
-            className="btn btn--solid"
-            disabled={!isDirty || isSubmitting}
-            aria-busy={isSubmitting || undefined}
-            aria-describedby={renamed ? noteId : undefined}
-          >
-            {isSubmitting && <span className="spinner" aria-hidden="true" />}
-            {isSubmitting ? `Saving ${noun}` : `Save ${noun}`}
-          </button>
-          <button type="button" className="btn btn--quiet" onClick={onDone}>
-            Cancel
-          </button>
-          {value && (
-            <button
-              type="button"
-              className="btn btn--destructive grouped-value-form__delete"
-              onClick={() => {
-                setAlert(undefined);
-                setConfirming(true);
-              }}
-            >
-              Delete {noun}
-            </button>
-          )}
-        </div>
-      </>
-    );
-  };
+      {renamed && (
+        <p id={noteId} className="field__hint grouped-value-form__note">
+          {renameNote}
+        </p>
+      )}
+      <FormActions
+        noun={noun}
+        dirty={isDirty}
+        submitting={isSubmitting}
+        saveDescribedBy={renamed ? noteId : undefined}
+        onCancel={() => discard.request(onDone)}
+        onDelete={
+          value &&
+          (() => {
+            setAlert(undefined);
+            setConfirming(true);
+          })
+        }
+      />
+    </>
+  );
 
   return (
-    <form
-      className="form grouped-value-form"
-      onSubmit={handleSubmit((input) => send(input))}
-      noValidate
-    >
-      {rootError && <Notice kind="error">{rootError}</Notice>}
-      <div className="field">
-        <label className="field__label" htmlFor={ids('name').control}>
-          Name
-          <Required />
-        </label>
-        <input
-          id={ids('name').control}
-          className="input"
-          // Off: Chrome takes a field named "name" for a person's and offers the user's own.
+    <FormProvider {...methods}>
+      <form
+        className="form grouped-value-form"
+        onSubmit={handleSubmit((input) => send(input))}
+        noValidate
+      >
+        {rootError && <Notice kind="error">{rootError}</Notice>}
+        {/* Autofill off: Chrome takes a field named "name" for a person's and
+            offers the user's own. */}
+        <TextField<GroupedValueValues>
+          name="name"
+          label="Name"
+          placeholder="Add a name"
           autoComplete="off"
-          aria-required
-          {...fieldAria('name')}
-          {...register('name')}
+          required
         />
-        {fieldError('name')}
-      </div>
-      <div className="field">
-        <label className="field__label" htmlFor={ids('description').control}>
-          Description
-          <Required />
-        </label>
-        <textarea
-          id={ids('description').control}
-          className="textarea"
-          rows={3}
-          aria-required
-          {...fieldAria('description')}
-          {...register('description')}
+        <TextField<GroupedValueValues>
+          name="description"
+          label="Description"
+          hint={spec.descriptionHint}
+          placeholder={spec.describe}
+          multiline
+          required
         />
-        {fieldError('description')}
-      </div>
-      <div className="field">
-        <label className="field__label" id={`${id}-group-label`} htmlFor={ids('groupId').control}>
-          {groupLabel}
-          <Required />
-        </label>
-        <Controller
-          control={control}
-          name="groupId"
-          render={({ field }) => (
-            <ComboboxSelect
-              id={ids('groupId').control}
-              label={groupLabel}
-              labelId={`${id}-group-label`}
-              value={field.value}
-              onChange={field.onChange}
-              onBlur={field.onBlur}
-              choices={choices}
-              placeholder={groupPlaceholder}
-              required
-              inputRef={field.ref}
-              {...fieldAria('groupId')}
-            />
-          )}
+        {group && (
+          <SelectField<GroupedValueValues>
+            name="groupId"
+            label={group.label}
+            hint={group.hint}
+            placeholder={group.placeholder}
+            options={choices}
+            // Typed into to narrow the groups, the owner's call (MB.115).
+            typeahead
+            required
+          />
+        )}
+        {actions()}
+        {/* A question over the form, its buttons left beneath it (MB.115,
+            the owner's call): the unsaved changes' first, then the delete's. */}
+        <ConfirmQuestion
+          guard={discard}
+          asked={confirming}
+          question={
+            <>
+              Delete &quot;{value?.name}&quot;? {deleteNote}
+            </>
+          }
+          busy={remove.isPending}
+          onConfirm={confirmDelete}
+          onKeep={() => setConfirming(false)}
+          onRefused={(refusal) => {
+            setConfirming(false);
+            setAlert(refusal);
+          }}
         />
-        {fieldError('groupId')}
-      </div>
-      {actions()}
-    </form>
+      </form>
+    </FormProvider>
   );
 };
 

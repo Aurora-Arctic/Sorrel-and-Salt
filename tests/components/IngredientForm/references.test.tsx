@@ -1,38 +1,35 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor as waitForDom,
-  within,
-} from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import { ReferencesField } from '@/components/IngredientForm/references';
 import type { IngredientFormInput, IngredientFormValues } from '@/components/IngredientForm/types';
-import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
-import type {
-  CreateWorkspaceIngredientMutation,
-  CreateWorkspaceIngredientMutationVariables,
-} from '@/gql/graphql';
+import {
+  EMPTY_VALUES,
+  EMPTY_VARIANT,
+  ingredientResolver,
+} from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
+import {
+  chooseKind,
+  inPanel,
+  labelled,
+  referencePanel,
+  renderWithClient,
+  waitFor,
+} from '../../support/ingredient-form';
+import { press, typeIn } from '../../support/interact';
+import { mockGraphQLError } from '../../support/msw/graphql';
 import {
   NEW_REFERENCE_ID,
   WORKSPACE_ID,
+  acceptCreate,
   acceptReference,
-  offerDeities,
-  offerDuplicates,
-  offerForms,
-  offerIngredients,
-  offerNames,
-  offerPlanets,
+  acceptReferenceUpdate,
+  offerNothing,
+  offerReference,
   offerReferences,
-  offerSigns,
 } from '../../support/msw/ingredient-lookups';
 import type { ReferenceNode } from './types';
 
@@ -54,12 +51,23 @@ const HERBAL: ReferenceNode = {
   id: COMPENDIUM_ID,
   citation: 'Fixture, Ada. The Testwort Herbal. Mockford: Fixture Press, 1901.',
   isGlobal: true,
+  kind: 'book',
+  authors: 'Fixture, Ada',
+  title: 'The Testwort Herbal',
+  container: null,
 };
 const NOTES: ReferenceNode = {
   id: COVEN_ID,
   citation: 'Placeholder, Bram. "Notes on Mockleaf." Journal of Fixtures 3 (1950): 12–19.',
   isGlobal: false,
+  kind: 'article',
+  authors: 'Placeholder, Bram',
+  title: 'Notes on Mockleaf',
+  container: 'Journal of Fixtures',
 };
+// Each one's Chicago short form, which its row shows and its buttons are named by.
+const HERBAL_SHORT = 'Fixture, Testwort Herbal';
+const NOTES_SHORT = 'Placeholder, "Notes on Mockleaf"';
 
 /** The field in a form of its own, its name given; the submit receives what the form would send. */
 function renderField() {
@@ -78,98 +86,63 @@ function renderField() {
       </FormProvider>
     );
   };
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <Harness />
-    </QueryClientProvider>,
-  );
+  renderWithClient(<Harness />);
   return onSubmit;
 }
 
 /** The whole form, every lookup answered empty, as index.test.tsx renders it. */
 function renderForm() {
   const onSaved = vi.fn();
-  mockGraphQLQuery<Record<string, unknown>>('PickerCategories', () => ({
-    categories: { edges: [] },
-  }));
-  offerForms([]);
-  offerNames([]);
-  offerPlanets([]);
-  offerSigns([]);
-  offerDeities([]);
-  offerIngredients([]);
-  offerReferences([]);
-  offerDuplicates([]);
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      <IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />
-    </QueryClientProvider>,
-  );
+  offerNothing();
+  renderWithClient(<IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />);
   return onSaved;
 }
-
-/** Answers `CreateWorkspaceIngredient` with a saved row, recording each ask. */
-function acceptCreate() {
-  const calls: CreateWorkspaceIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    CreateWorkspaceIngredientMutation,
-    CreateWorkspaceIngredientMutationVariables
-  >('CreateWorkspaceIngredient', (variables) => {
-    calls.push(variables);
-    return {
-      createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name, slug: 'saved' },
-    };
-  });
-  return calls;
-}
-
-/**
- * RTL's waitFor polled every 5 ms rather than its 50, as index.test.tsx's
- * is: most waits here are for a mock to have been asked (MB.181).
- */
-const waitFor: typeof waitForDom = (callback, options) =>
-  waitForDom(callback, { interval: 5, ...options });
 
 // Found by label rather than by role and name, so the whole form's tests
 // below do not name every element of a role in a 25-field form (MB.181).
 const box = () => screen.getByLabelText('Reference', { selector: '[role="combobox"]' });
 const references = () => box().closest('fieldset') as HTMLElement;
 const rows = () => within(references()).queryAllByRole('listitem');
+/** A row by its citation, whole or short: an open row shows it whole, and its Edit is named by the short form. */
 const row = (citation: string) =>
-  rows().find((item) => item.textContent?.includes(citation)) ??
+  rows().find(
+    (item) =>
+      item.textContent?.includes(citation) ||
+      within(item).queryByRole('button', { name: `Edit ${citation}` }) !== null,
+  ) ??
   (() => {
     throw new Error(`No row for ${citation}`);
   })();
+/**
+ * What a row's line shows a sighted reader: its text less every hidden
+ * element's, and less a pencil's tip, which the press that opens or shuts
+ * the row leaves showing over it.
+ */
+const shownIn = (item: HTMLElement) => {
+  const copy = item.cloneNode(true) as HTMLElement;
+  copy.querySelectorAll('[hidden], [role="tooltip"]').forEach((node) => node.remove());
+  return copy.textContent;
+};
 const changes = () => within(references()).getByRole('status', { name: 'References changes' });
-const panel = () => within(references()).getByRole('group', { name: 'New Reference' });
+const panel = () => referencePanel(references());
 const noPanel = () =>
   expect(within(references()).queryByRole('group', { name: 'New Reference' })).toBeNull();
 const kindBox = () => within(panel()).getByRole('combobox', { name: 'Kind' });
-/** A label's text less a required field's asterisk, which is hidden from its name. */
-const labelled = (label: string) => (content: string) => content.replace(/\*$/, '') === label;
-const inPanel = (label: string) => within(panel()).getByLabelText(labelled(label));
 const nameBox = () => screen.getByLabelText(labelled('Name'), { selector: 'input' });
-const typeIn = (control: HTMLElement, value: string) =>
-  fireEvent.change(control, { target: { value } });
-/** Presses a button, focusing it first as a real click would: fireEvent moves no focus. */
-const press = (button: HTMLElement) => {
-  button.focus();
-  fireEvent.click(button);
-};
 /** The harness's save, or the form's, by name. */
-const saveButton = (name = 'Save Ingredient') => {
-  const actions = document.querySelector<HTMLElement>('.ingredient-form__actions');
-  return (actions ? within(actions) : screen).getByRole('button', { name });
-};
+const saveButton = (name = 'Save Ingredient') => screen.getByRole('button', { name });
 const save = () => press(saveButton());
-const newReference = () => within(references()).getByRole('button', { name: 'New Reference' });
-const chooseKind = (label: string) => {
-  fireEvent.click(kindBox());
-  fireEvent.click(
-    within(screen.getByRole('listbox', { name: 'Kind choices' })).getByRole('option', {
-      name: label,
-    }),
-  );
+/** Opens the box's list and picks its last row, New Reference…, which opens the panel. */
+const newReference = () => {
+  fireEvent.keyDown(box(), { key: 'ArrowDown' });
+  fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+};
+/** The row's Locator, once its edit has opened the row; `short` names the row's source. */
+const locatorOf = (short: string) => {
+  const inRow = within(row(short));
+  const edit = inRow.getByRole('button', { name: `Edit ${short}` });
+  if (edit.getAttribute('aria-expanded') !== 'true') press(edit);
+  return inRow.getByRole('textbox', { name: 'Locator' });
 };
 
 const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
@@ -217,7 +190,7 @@ describe('ReferencesField', () => {
       expect(calls[1]).toMatchObject({ workspaceId: WORKSPACE_ID, query: 'testwort' });
     });
 
-    it('offers "Add a reference" first, then each source by its citation and whose it is, in the order found', async () => {
+    it('offers each source by its citation and whose it is, in the order found, then "New Reference…" last', async () => {
       renderField();
       const calls = offerReferences([NOTES, HERBAL]);
 
@@ -225,9 +198,9 @@ describe('ReferencesField', () => {
 
       await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3));
       expect(screen.getAllByRole('option').map((item) => item.textContent)).toEqual([
-        'Add a reference',
         `${NOTES.citation}This coven’s source`,
         `${HERBAL.citation}Compendium source`,
+        'New Reference…',
       ]);
       expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
     });
@@ -247,18 +220,61 @@ describe('ReferencesField', () => {
   });
 
   describe('the list', () => {
-    it('adds a picked source as a row beneath the box reading its citation, and announces it', async () => {
+    it('adds a picked source as a row beneath the box reading its short form, and announces it', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
 
       await pick(calls, 'testwort', HERBAL.citation);
 
       expect(rows()).toHaveLength(1);
-      expect(row(HERBAL.citation)).toBeInTheDocument();
-      expect(changes()).toHaveTextContent(HERBAL.citation);
-      // The box empties and keeps the focus, for the next one.
+      expect(changes()).toHaveTextContent(HERBAL_SHORT);
       expect(box()).toHaveValue('');
-      expect(box()).toHaveFocus();
+      // The new row opens on its Locator, a page being what it most often needs next (MB.115).
+      const inRow = within(row(HERBAL_SHORT));
+      expect(inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` })).toHaveAttribute(
+        'aria-expanded',
+        'true',
+      );
+      expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
+    });
+
+    it('shows a row as its short form, its title in real italics, then its locator, described by its whole citation', async () => {
+      renderField();
+      const calls = offerReferences([HERBAL]);
+
+      await pick(calls, 'testwort', HERBAL.citation);
+      const item = row(HERBAL_SHORT);
+      const inRow = within(item);
+      const edit = inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` });
+      expect(edit).toHaveAccessibleDescription(HERBAL.citation);
+      expect(
+        inRow.getByRole('button', { name: `Remove ${HERBAL_SHORT}` }),
+      ).toHaveAccessibleDescription(HERBAL.citation);
+
+      // Open, as it is added, the row reads the citation whole; closed, its locator follows.
+      typeIn(locatorOf(HERBAL_SHORT), 'p. 112');
+      expect(shownIn(item)).toContain(HERBAL.citation);
+      press(edit);
+      expect(shownIn(item)).toBe(`${HERBAL_SHORT}, p. 112`);
+      expect(inRow.getByText('Testwort Herbal').tagName).toBe('I');
+    });
+
+    it('opens a row as it is added, then keeps it to one line until its edit opens it on its Locator again', async () => {
+      renderField();
+      const calls = offerReferences([HERBAL]);
+
+      await pick(calls, 'testwort', HERBAL.citation);
+      const inRow = within(row(HERBAL_SHORT));
+      const edit = inRow.getByRole('button', { name: `Edit ${HERBAL_SHORT}` });
+      expect(edit).toHaveAttribute('aria-expanded', 'true');
+
+      press(edit);
+      expect(edit).toHaveAttribute('aria-expanded', 'false');
+      expect(inRow.queryByRole('textbox', { name: 'Locator' })).toBeNull();
+
+      press(edit);
+      expect(edit).toHaveAttribute('aria-expanded', 'true');
+      expect(inRow.getByRole('textbox', { name: 'Locator' })).toHaveFocus();
     });
 
     it("gives each row a locator, labelled and read with its source's citation and the tip beside it", async () => {
@@ -268,7 +284,7 @@ describe('ReferencesField', () => {
       await pick(calls, 'testwort', HERBAL.citation);
 
       const inRow = within(row(HERBAL.citation));
-      const locator = inRow.getByRole('textbox', { name: 'Locator' });
+      const locator = locatorOf(HERBAL_SHORT);
       expect(locator).toHaveAccessibleDescription(expect.stringContaining(HERBAL.citation));
       expect(inRow.getByRole('button', { name: 'About Locator' })).toBeInTheDocument();
     });
@@ -278,11 +294,11 @@ describe('ReferencesField', () => {
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
-      press(within(references()).getByRole('button', { name: `Remove ${HERBAL.citation}` }));
+      press(within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }));
 
       expect(rows()).toHaveLength(1);
       expect(row(NOTES.citation)).toBeInTheDocument();
-      expect(changes()).toHaveTextContent(HERBAL.citation);
+      expect(changes()).toHaveTextContent(HERBAL_SHORT);
       expect(box()).toHaveFocus();
     });
 
@@ -296,7 +312,7 @@ describe('ReferencesField', () => {
 
       expect(rows()).toHaveLength(0);
       expect(changes()).not.toHaveTextContent(added);
-      expect(changes()).toHaveTextContent(HERBAL.citation);
+      expect(changes()).toHaveTextContent(HERBAL_SHORT);
     });
 
     it('never submits the ingredient on Enter in the box with nothing picked', async () => {
@@ -319,7 +335,7 @@ describe('ReferencesField', () => {
       const calls = offerReferences([HERBAL]);
 
       await pick(calls, 'testwort', HERBAL.citation);
-      const locator = within(row(HERBAL.citation)).getByRole('textbox', { name: 'Locator' });
+      const locator = locatorOf(HERBAL_SHORT);
       typeIn(locator, ' pp. 12-19,   40; chap. 3 ');
       fireEvent.blur(locator);
 
@@ -347,37 +363,37 @@ describe('ReferencesField', () => {
     // The owner's call: asking again for a panel already open takes you
     // back to it, rather than doing nothing; that the panel then focuses
     // Kind and keeps what was typed is reference-panel.test.tsx's.
-    it('opens from New Reference and from the list’s "Add a reference" row, each taking you to Kind', async () => {
+    it('opens from the list’s last row, "New Reference…", taking you to Kind, and again while open', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
-      expect(newReference()).toHaveAttribute('aria-expanded', 'false');
+      noPanel();
 
-      press(newReference());
-      expect(newReference()).toHaveAttribute('aria-expanded', 'true');
+      newReference();
+      expect(panel()).toBeInTheDocument();
       expect(kindBox()).toHaveFocus();
 
       await lookUp(calls, 'testwort');
-      fireEvent.click(await screen.findByRole('option', { name: 'Add a reference' }));
+      fireEvent.click(await screen.findByRole('option', { name: 'New Reference…' }));
       expect(kindBox()).toHaveFocus();
     });
 
-    it('lists a new source saved to this coven by its id, closing, the box focused', async () => {
+    it('lists a new source saved to this coven by its id, closing, the new row open on its Locator', async () => {
       const calls = acceptReference();
       const onSubmit = renderField();
-      press(newReference());
+      newReference();
 
-      chooseKind('Book');
-      typeIn(inPanel('Title'), 'A Fixture Grimoire');
-      typeIn(inPanel('Published'), '1999');
+      chooseKind('Book', references());
+      typeIn(inPanel('Title', references()), 'A Fixture Grimoire');
+      typeIn(inPanel('Published', references()), '1999');
       press(within(panel()).getByRole('button', { name: 'Save Reference' }));
 
       await waitFor(noPanel);
       expect(calls).toHaveLength(1);
       expect(calls[0].workspaceId).toBe(WORKSPACE_ID);
-      const citation = 'Mock, Cyril. A Fixture Grimoire. Mockford, 1999.';
-      expect(row(citation)).toBeInTheDocument();
-      expect(changes()).toHaveTextContent(citation);
-      expect(box()).toHaveFocus();
+      // Shown by its short form, as a source picked is.
+      const short = 'Mock, Fixture Grimoire';
+      expect(changes()).toHaveTextContent(short);
+      expect(within(row(short)).getByRole('textbox', { name: 'Locator' })).toHaveFocus();
 
       save();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
@@ -389,9 +405,9 @@ describe('ReferencesField', () => {
     it('closes on Cancel, adding nothing, the focus back in the box', () => {
       const calls = acceptReference();
       renderField();
-      press(newReference());
+      newReference();
 
-      chooseKind('Book');
+      chooseKind('Book', references());
       press(within(panel()).getByRole('button', { name: 'Cancel' }));
 
       noPanel();
@@ -402,7 +418,7 @@ describe('ReferencesField', () => {
 
     it('stops the ingredient save while it is open, until it is saved or cancelled', async () => {
       const onSubmit = renderField();
-      press(newReference());
+      newReference();
 
       save();
 
@@ -412,6 +428,205 @@ describe('ReferencesField', () => {
       press(within(panel()).getByRole('button', { name: 'Cancel' }));
       save();
       await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    });
+  });
+
+  // MB.115: an open row's Edit Source opens the panel on that source whole,
+  // and its save rewrites every row citing it. The rows start listed, the
+  // ingredient's and a variant's citing the same source, as an edit opens them.
+  describe('editing a source', () => {
+    /** NOTES whole, as `reference` answers it. */
+    const NOTES_WHOLE = {
+      id: COVEN_ID,
+      kind: 'article',
+      title: 'Notes on Mockleaf',
+      authors: 'Placeholder, Bram',
+      container: 'Journal of Fixtures',
+      contributors: null,
+      edition: null,
+      volume: '3',
+      issue: null,
+      series: null,
+      place: null,
+      publisher: null,
+      published: '1950',
+      pages: '12–19',
+      host: null,
+      url: null,
+      modified: null,
+      accessed: null,
+      note: null,
+    } as const;
+    const RENAMED_CITATION =
+      'Placeholder, Bram. "Notes on Fixtureleaf." Journal of Fixtures 3 (1950): 12–19.';
+    const RENAMED_SHORT = 'Placeholder, "Notes on Fixtureleaf"';
+
+    const entryOf = ({ citation, ...link }: ReferenceNode) => ({
+      value: citation,
+      link,
+      locator: '',
+    });
+
+    /** The ingredient's references and its one variant's, each citing `sources`, in a form of their own. */
+    function renderListed(sources: ReferenceNode[], workspaceId: string | null = WORKSPACE_ID) {
+      const onSubmit = vi.fn();
+      const Harness = () => {
+        const methods = useForm<IngredientFormValues, unknown, IngredientFormInput>({
+          defaultValues: {
+            ...EMPTY_VALUES,
+            name: 'Testwort',
+            references: sources.map(entryOf),
+            variants: [{ ...EMPTY_VARIANT, form: 'Oil', references: sources.map(entryOf) }],
+          },
+          resolver: ingredientResolver,
+        });
+        return (
+          <FormProvider {...methods}>
+            <form onSubmit={methods.handleSubmit(onSubmit)}>
+              <ReferencesField workspaceId={workspaceId} />
+              <ReferencesField workspaceId={workspaceId} at="variants.0" />
+              <button type="submit">Save Ingredient</button>
+            </form>
+          </FormProvider>
+        );
+      };
+      renderWithClient(<Harness />);
+      return onSubmit;
+    }
+
+    const [ingredient, variant] = [0, 1].map(
+      (at) => () => screen.getAllByRole('group', { name: 'References' })[at],
+    );
+    const editPanel = () => within(ingredient()).getByRole('group', { name: 'Edit Source' });
+    const noEditPanel = () =>
+      expect(within(ingredient()).queryByRole('group', { name: 'Edit Source' })).toBeNull();
+    const inEditPanel = (label: string) => within(editPanel()).getByLabelText(labelled(label));
+    /** Opens the ingredient's row for `short` by its pencil, if it is not open. */
+    const openRow = (short: string) => {
+      const pencil = within(ingredient()).getByRole('button', { name: `Edit ${short}` });
+      if (pencil.getAttribute('aria-expanded') !== 'true') press(pencil);
+    };
+    const editSource = (short: string) =>
+      within(ingredient()).queryByRole('button', { name: `Edit Source ${short}` });
+    /** Opens the row and its Edit Source, and waits for the panel to read the source. */
+    async function openEdit(short: string) {
+      openRow(short);
+      press(editSource(short) as HTMLElement);
+      await waitFor(() => expect(inEditPanel('Article Title')).toBeInTheDocument());
+    }
+
+    it('opens the panel on an own source, prefilled with every field it has, read in its coven', async () => {
+      const reads = offerReference(NOTES_WHOLE);
+      renderListed([NOTES]);
+
+      await openEdit(NOTES_SHORT);
+
+      expect(reads).toEqual([{ workspaceId: WORKSPACE_ID, id: COVEN_ID }]);
+      expect(inEditPanel('Article Title')).toHaveValue('Notes on Mockleaf');
+      expect(inEditPanel('Journal')).toHaveValue('Journal of Fixtures');
+      expect(inEditPanel('Authors')).toHaveValue('Placeholder, Bram');
+      expect(inEditPanel('Volume')).toHaveValue('3');
+      expect(inEditPanel('Issue')).toHaveValue('');
+      expect(inEditPanel('Published')).toHaveValue('1950');
+      expect(inEditPanel('Pages')).toHaveValue('12–19');
+      // Nothing to save until something changes.
+      expect(within(editPanel()).getByRole('button', { name: 'Save Source' })).toBeDisabled();
+    });
+
+    it('saves through updateReference by id in its tier, rewriting every row citing it, the focus back on the row', async () => {
+      offerReference(NOTES_WHOLE);
+      const updates = acceptReferenceUpdate(RENAMED_CITATION);
+      const onSubmit = renderListed([NOTES]);
+      await openEdit(NOTES_SHORT);
+
+      typeIn(inEditPanel('Article Title'), 'Notes on Fixtureleaf');
+      press(within(editPanel()).getByRole('button', { name: 'Save Source' }));
+
+      await waitFor(noEditPanel);
+      expect(updates).toEqual([
+        expect.objectContaining({
+          workspaceId: WORKSPACE_ID,
+          id: COVEN_ID,
+          input: expect.objectContaining({ kind: 'article', title: 'Notes on Fixtureleaf' }),
+        }),
+      ]);
+      // The ingredient's row and the variant's both read the new short form.
+      for (const list of [ingredient(), variant()]) {
+        expect(within(list).getByRole('button', { name: `Edit ${RENAMED_SHORT}` })).toBeVisible();
+        expect(within(list).queryByRole('button', { name: `Edit ${NOTES_SHORT}` })).toBeNull();
+      }
+      expect(
+        within(ingredient()).getByRole('status', { name: 'References changes' }),
+      ).not.toBeEmptyDOMElement();
+      expect(editSource(RENAMED_SHORT)).toHaveFocus();
+
+      // The links sent are as they were: the source was saved already.
+      save();
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      expect(onSubmit.mock.calls[0][0].references).toEqual([
+        { referenceId: COVEN_ID, locator: '' },
+      ]);
+    });
+
+    it('closes on Cancel, saving nothing, the focus back on the row', async () => {
+      offerReference(NOTES_WHOLE);
+      const updates = acceptReferenceUpdate(RENAMED_CITATION);
+      renderListed([NOTES]);
+      await openEdit(NOTES_SHORT);
+
+      typeIn(inEditPanel('Article Title'), 'Notes on Fixtureleaf');
+      press(within(editPanel()).getByRole('button', { name: 'Cancel' }));
+
+      noEditPanel();
+      expect(updates).toHaveLength(0);
+      expect(editSource(NOTES_SHORT)).toHaveFocus();
+    });
+
+    // Why it could have been offered: the coven's own source, beside it, is.
+    it('offers no edit of a compendium source in a coven’s form', () => {
+      renderListed([HERBAL, NOTES]);
+
+      openRow(NOTES_SHORT);
+      expect(editSource(NOTES_SHORT)).toBeVisible();
+      openRow(HERBAL_SHORT);
+
+      expect(editSource(HERBAL_SHORT)).toBeNull();
+    });
+
+    it('edits a compendium source in the compendium’s form, in the compendium’s tier', async () => {
+      const reads = offerReference({
+        ...NOTES_WHOLE,
+        id: COMPENDIUM_ID,
+        kind: 'book',
+        title: 'The Testwort Herbal',
+        authors: 'Fixture, Ada',
+        container: null,
+        volume: null,
+        pages: null,
+        place: 'Mockford',
+        publisher: 'Fixture Press',
+        published: '1901',
+      });
+      const updates = acceptReferenceUpdate(
+        'Fixture, Ada. The Testwort Herbal. 2nd ed. Mockford: Fixture Press, 1901.',
+      );
+      renderListed([HERBAL], null);
+      openRow(HERBAL_SHORT);
+      press(editSource(HERBAL_SHORT) as HTMLElement);
+      await waitFor(() => expect(inEditPanel('Title')).toHaveValue('The Testwort Herbal'));
+
+      typeIn(inEditPanel('Edition'), '2nd ed.');
+      press(within(editPanel()).getByRole('button', { name: 'Save Source' }));
+
+      await waitFor(noEditPanel);
+      expect(reads).toEqual([{ workspaceId: null, id: COMPENDIUM_ID }]);
+      expect(updates).toEqual([
+        expect.objectContaining({
+          workspaceId: null,
+          id: COMPENDIUM_ID,
+          input: expect.objectContaining({ edition: '2nd ed.', place: 'Mockford' }),
+        }),
+      ]);
     });
   });
 
@@ -425,7 +640,7 @@ describe('ReferencesField', () => {
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
-      typeIn(within(row(HERBAL.citation)).getByRole('textbox', { name: 'Locator' }), 'p. 112');
+      typeIn(locatorOf(HERBAL_SHORT), 'p. 112');
       typeIn(nameBox(), 'Testwort');
       press(saveButton('Save & Add Another'));
 
@@ -440,7 +655,7 @@ describe('ReferencesField', () => {
         { referenceId: COVEN_ID, locator: null },
       ]);
       await waitFor(() => expect(rows()).toHaveLength(0));
-      expect(newReference()).toHaveAttribute('aria-expanded', 'false');
+      noPanel();
     });
 
     it('puts a server error naming a source on its row, through the field’s one error element', async () => {
@@ -457,13 +672,14 @@ describe('ReferencesField', () => {
 
       // The error names the source it is about, and that row's × reads it.
       await waitFor(() => expect(box()).toBeInvalid());
-      expect(box()).toHaveAccessibleDescription(expect.stringContaining(NOTES.citation));
+      expect(box()).toHaveAccessibleDescription(expect.stringContaining(NOTES_SHORT));
+      // Each × is described by its citation, the one in error by the error too.
       expect(
-        within(references()).getByRole('button', { name: `Remove ${NOTES.citation}` }),
-      ).toHaveAccessibleDescription(/\S/);
+        within(references()).getByRole('button', { name: `Remove ${NOTES_SHORT}` }),
+      ).toHaveAccessibleDescription(new RegExp(`^${escapeRegExp(NOTES.citation)} \\S`));
       expect(
-        within(references()).getByRole('button', { name: `Remove ${HERBAL.citation}` }),
-      ).not.toHaveAccessibleDescription();
+        within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }),
+      ).toHaveAccessibleDescription(HERBAL.citation);
       expect(box()).toHaveFocus();
     });
   });

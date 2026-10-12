@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The `/admin` layout and its index page each run the guard themselves: a
@@ -9,6 +9,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+// AdminNav marks the page you are on from the address, which Next reads from
+// the App Router's state; a test mounts no router, so the address is given.
+vi.mock('next/navigation', () => ({ usePathname: () => '/admin' }));
 
 const { default: AdminLayout } = await import('@/app/admin/layout');
 const { default: AdminPage } = await import('@/app/admin/page');
@@ -45,6 +48,20 @@ describe('the /admin page', () => {
 
     expect(requireAdminSession).toHaveBeenCalledOnce();
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+  });
+
+  // MB.115: the index is a table of contents read from the nav's own list,
+  // so the two name the same pages in the same order.
+  it('links every page the admin nav does, in its order', async () => {
+    requireAdminSession.mockResolvedValue(ADMIN);
+    const hrefs = (links: HTMLElement[]) => links.map((link) => link.getAttribute('href'));
+
+    render(await AdminLayout({ children: await AdminPage() }));
+
+    const navLinks = within(screen.getByRole('navigation', { name: 'Admin' })).getAllByRole('link');
+    const row = navLinks.filter((link) => !link.closest('details'));
+    expect(row).toHaveLength(6);
+    expect(hrefs(within(screen.getByRole('main')).getAllByRole('link'))).toEqual(hrefs(row));
   });
 
   it('renders nothing when the guard refuses, without the layout having run', async () => {

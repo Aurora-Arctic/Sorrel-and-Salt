@@ -180,8 +180,34 @@ export interface CitationFields {
   note?: string | null;
 }
 
+/**
+ * What `renderShortCitation` reads: the four fields a Chicago short form is
+ * made of, so a surface holding a source's citation need carry no more.
+ */
+export type ShortCitationFields = Pick<CitationFields, 'kind' | 'title' | 'authors' | 'container'>;
+
 /** One run of a rendered citation, set in italic or roman. */
 export interface CitationPart {
   text: string;
   italic: boolean;
 }
+
+/**
+ * A list address's query, for `listHref`: a string is a pair, `true` a bare
+ * flag (`new`, `awaiting`), and `undefined`, `false` or `''` is left out.
+ */
+export type ListHrefParams = Readonly<Record<string, string | boolean | undefined>>;
+
+/**
+ * The modal a list page has open over it, by its address: `'new'` for the
+ * add form, `{ edit }` for the row whose slug or id it edits, none for no
+ * modal (src/lib/list-href.ts).
+ */
+export type ListDialog = 'new' | { edit: string };
+
+/**
+ * A `ListDialog` as the address writes it: `new` a bare flag, `edit` the
+ * row's slug or id. A type alias rather than an interface, so it passes as
+ * `ListHrefParams` on its own: an interface carries no index signature.
+ */
+export type ListDialogParams = { new: boolean; edit: string | undefined };

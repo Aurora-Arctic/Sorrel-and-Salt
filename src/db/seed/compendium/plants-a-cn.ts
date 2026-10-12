@@ -770,7 +770,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Orchid',
+          locator: 'under "Orchid"',
           supports: [
             'canonicalName',
             'elements',
@@ -794,7 +794,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Orchid',
+              locator: 'under "Orchid"',
               supports: ['form'],
             },
           ],
@@ -826,7 +826,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: "s.v. Adder's Tongue",
+          locator: 'under "Adder\'s Tongue"',
           supports: [
             'canonicalName',
             'elements',
@@ -838,7 +838,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: "s.v. Adder's Tongue",
+          locator: 'under "Adder\'s Tongue"',
           supports: [
             'canonicalName',
             'elements',
@@ -865,7 +865,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: "s.v. Adder's Tongue",
+              locator: 'under "Adder\'s Tongue"',
               supports: ['form'],
             },
             {
@@ -899,7 +899,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: "s.v. Adder's Tongue",
+              locator: 'under "Adder\'s Tongue"',
               supports: ['form', 'description', 'categories'],
             },
           ],
@@ -920,12 +920,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. African Violet; p. 266',
+          locator: 'under "African Violet"; p. 266',
           supports: ['elements', 'planets', 'colors', 'categories', 'description', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. African Violet',
+          locator: 'under "African Violet"',
           supports: ['elements', 'planets', 'colors', 'categories', 'description'],
         },
         {
@@ -939,12 +939,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. African Violet',
+              locator: 'under "African Violet"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. African Violet',
+              locator: 'under "African Violet"',
               supports: ['form'],
             },
           ],
@@ -991,7 +991,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Agrimony; p. 266',
+          locator: 'under "Agrimony"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -1004,7 +1004,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Agrimony',
+          locator: 'under "Agrimony"',
           supports: [
             'canonicalName',
             'elements',
@@ -1022,7 +1022,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Agrimony',
+          locator: 'under "Agrimony"',
           supports: ['planets', 'zodiacSigns'],
         },
         {
@@ -1061,7 +1061,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Agrimony',
+              locator: 'under "Agrimony"',
               supports: ['form', 'description'],
             },
           ],
@@ -1074,7 +1074,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Agrimony',
+              locator: 'under "Agrimony"',
               supports: ['form', 'description', 'categories'],
             },
           ],
@@ -1117,12 +1117,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Ague Root; p. 266',
+          locator: 'under "Ague Root"; p. 266',
           supports: ['canonicalName', 'folkNames', 'categories', 'description', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Unicorn Root',
+          locator: 'under "Unicorn Root"',
           supports: [
             'canonicalName',
             'description',
@@ -1162,7 +1162,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Unicorn Root',
+              locator: 'under "Unicorn Root"',
               supports: ['form'],
             },
           ],
@@ -1174,7 +1174,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Unicorn Root',
+              locator: 'under "Unicorn Root"',
               supports: ['form', 'description'],
             },
           ],
@@ -1215,7 +1215,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Alder',
+          locator: 'under "Alder"',
           supports: [
             'canonicalName',
             'description',
@@ -1229,7 +1229,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. The Common Alder-Tree',
+          locator: 'under "The Common Alder-Tree"',
           supports: ['planets', 'zodiacSigns', 'description'],
         },
         {
@@ -1262,12 +1262,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Common Alder-Tree',
+              locator: 'under "The Common Alder-Tree"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Alder',
+              locator: 'under "Alder"',
               supports: ['description'],
             },
           ],
@@ -1279,7 +1279,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Common Alder-Tree',
+              locator: 'under "The Common Alder-Tree"',
               supports: ['form', 'description'],
             },
             {
@@ -1295,7 +1295,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Alder',
+              locator: 'under "Alder"',
               supports: ['form', 'description'],
             },
             {
@@ -1325,7 +1325,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Alfalfa; p. 266',
+          locator: 'under "Alfalfa"; p. 266',
           supports: [
             'elements',
             'planets',
@@ -1389,7 +1389,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Alfalfa',
+              locator: 'under "Alfalfa"',
               supports: ['form', 'description'],
             },
           ],
@@ -1426,7 +1426,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Alkanet; p. 266',
+          locator: 'under "Alkanet"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -1438,7 +1438,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Alkanet',
+          locator: 'under "Alkanet"',
           supports: [
             'canonicalName',
             'description',
@@ -1480,7 +1480,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Alkanet',
+              locator: 'under "Alkanet"',
               supports: ['form'],
             },
             {
@@ -1496,7 +1496,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Alkanet',
+              locator: 'under "Alkanet"',
               supports: ['form', 'description'],
             },
             {
@@ -1543,7 +1543,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Allspice; p. 266',
+          locator: 'under "Allspice"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -1556,7 +1556,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Allspice',
+          locator: 'under "Allspice"',
           supports: [
             'canonicalName',
             'elements',
@@ -1598,7 +1598,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Allspice',
+              locator: 'under "Allspice"',
               supports: ['form'],
             },
             {
@@ -1622,7 +1622,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Allspice',
+              locator: 'under "Allspice"',
               supports: ['form'],
             },
           ],
@@ -1638,7 +1638,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Allspice',
+              locator: 'under "Allspice"',
               supports: ['form', 'description'],
             },
           ],
@@ -1683,7 +1683,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Almond',
+          locator: 'under "Almond"',
           supports: [
             'elements',
             'planets',
@@ -1696,7 +1696,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Almond',
+          locator: 'under "Almond"',
           supports: [
             'canonicalName',
             'elements',
@@ -1728,6 +1728,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           substitutes: [
             {
               identity: 'prunus armeniaca',
+              form: 'Seed',
             },
             {
               name: 'Peach',
@@ -1740,7 +1741,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Almond',
+              locator: 'under "Almond"',
               supports: ['form'],
             },
             {
@@ -1764,7 +1765,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Almond',
+              locator: 'under "Almond"',
               supports: ['form', 'description'],
             },
           ],
@@ -1776,7 +1777,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Almond',
+              locator: 'under "Almond"',
               supports: ['form', 'description'],
             },
           ],
@@ -1817,7 +1818,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Aloe; p. 266',
+          locator: 'under "Aloe"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -1830,7 +1831,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Aloe',
+          locator: 'under "Aloe"',
           supports: [
             'canonicalName',
             'elements',
@@ -1869,7 +1870,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Aloe',
+              locator: 'under "Aloe"',
               supports: ['form', 'description'],
             },
             {
@@ -1892,7 +1893,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Aloe',
+              locator: 'under "Aloe"',
               supports: ['form', 'safetyNotes'],
             },
             {
@@ -1940,7 +1941,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Amaranth',
+          locator: 'under "Amaranth"',
           supports: [
             'canonicalName',
             'elements',
@@ -1953,7 +1954,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Amaranth',
+          locator: 'under "Amaranth"',
           supports: ['elements', 'planets', 'zodiacSigns', 'deities', 'categories', 'description'],
         },
         {
@@ -1962,7 +1963,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Amaranthus',
+          locator: 'under "Amaranthus"',
           supports: ['planets', 'folkNames', 'description'],
         },
         {
@@ -1976,17 +1977,17 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Amaranth',
+              locator: 'under "Amaranth"',
               supports: ['form'],
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. Amaranthus',
+              locator: 'under "Amaranthus"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Amaranth',
+              locator: 'under "Amaranth"',
               supports: ['form'],
             },
           ],
@@ -2002,7 +2003,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Amaranth',
+              locator: 'under "Amaranth"',
               supports: ['form', 'description'],
             },
           ],
@@ -2034,7 +2035,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Bittersweet',
+          locator: 'under "Bittersweet"',
           supports: [
             'canonicalName',
             'elements',
@@ -2047,7 +2048,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Bittersweet',
+          locator: 'under "Bittersweet"',
           supports: [
             'canonicalName',
             'elements',
@@ -2071,7 +2072,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bittersweet',
+              locator: 'under "Bittersweet"',
               supports: ['form'],
             },
             {
@@ -2106,7 +2107,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Ginseng, American',
+          locator: 'under "Ginseng, American"',
           supports: [
             'canonicalName',
             'elements',
@@ -2118,7 +2119,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Ginseng',
+          locator: 'under "Ginseng"',
           supports: [
             'canonicalName',
             'elements',
@@ -2154,12 +2155,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Ginseng, American',
+              locator: 'under "Ginseng, American"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Ginseng',
+              locator: 'under "Ginseng"',
               supports: ['form'],
             },
             {
@@ -2214,7 +2215,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Angelica; p. 266',
+          locator: 'under "Angelica"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -2228,7 +2229,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Angelica',
+          locator: 'under "Angelica"',
           supports: [
             'canonicalName',
             'elements',
@@ -2247,7 +2248,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Angelica',
+          locator: 'under "Angelica"',
           supports: ['planets', 'zodiacSigns', 'description'],
         },
         {
@@ -2275,7 +2276,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Angelica',
+              locator: 'under "Angelica"',
               supports: ['form'],
             },
             {
@@ -2291,7 +2292,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Angelica',
+              locator: 'under "Angelica"',
               supports: ['form', 'description'],
             },
             {
@@ -2328,7 +2329,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Anise; p. 266',
+          locator: 'under "Anise"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -2341,7 +2342,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Anise',
+          locator: 'under "Anise"',
           supports: [
             'canonicalName',
             'elements',
@@ -2392,12 +2393,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Anise',
+              locator: 'under "Anise"',
               supports: ['form'],
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Anise',
+              locator: 'under "Anise"',
               supports: ['form'],
             },
           ],
@@ -2409,12 +2410,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Anise',
+              locator: 'under "Anise"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Anise',
+              locator: 'under "Anise"',
               supports: ['form', 'description'],
             },
             {
@@ -2436,7 +2437,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Anise',
+              locator: 'under "Anise"',
               supports: ['form', 'description'],
             },
             {
@@ -2503,7 +2504,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Apple',
+          locator: 'under "Apple"',
           supports: [
             'elements',
             'planets',
@@ -2516,7 +2517,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Apple',
+          locator: 'under "Apple"',
           supports: [
             'canonicalName',
             'elements',
@@ -2547,7 +2548,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Apple',
+              locator: 'under "Apple"',
               supports: ['form', 'description', 'colors'],
             },
             {
@@ -2568,12 +2569,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Apple',
+              locator: 'under "Apple"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Apple',
+              locator: 'under "Apple"',
               supports: ['colors'],
             },
             {
@@ -2589,12 +2590,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Apple',
+              locator: 'under "Apple"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Apple',
+              locator: 'under "Apple"',
               supports: ['form', 'description'],
             },
           ],
@@ -2635,7 +2636,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Apricot; p. 266',
+          locator: 'under "Apricot"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -2649,7 +2650,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Apricot',
+          locator: 'under "Apricot"',
           supports: [
             'canonicalName',
             'elements',
@@ -2683,12 +2684,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Apricot',
+              locator: 'under "Apricot"',
               supports: ['form'],
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Apricot',
+              locator: 'under "Apricot"',
               supports: ['form'],
             },
             {
@@ -2705,12 +2706,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Apricot',
+              locator: 'under "Apricot"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Apricot',
+              locator: 'under "Apricot"',
               supports: ['form', 'description', 'colors'],
             },
             {
@@ -2728,7 +2729,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Apricot; p. 266',
+              locator: 'under "Apricot"; p. 266',
               supports: ['form', 'description', 'safetyNotes'],
             },
             {
@@ -2754,7 +2755,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Apricot',
+              locator: 'under "Apricot"',
               supports: ['form', 'description'],
             },
             {
@@ -2803,7 +2804,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Arnica',
+          locator: 'under "Arnica"',
           supports: [
             'canonicalName',
             'elements',
@@ -2841,7 +2842,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Arnica',
+              locator: 'under "Arnica"',
               supports: ['form'],
             },
             {
@@ -2880,7 +2881,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Arnica',
+              locator: 'under "Arnica"',
               supports: ['form', 'description'],
             },
           ],
@@ -2892,7 +2893,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Arnica',
+              locator: 'under "Arnica"',
               supports: ['form', 'description'],
             },
           ],
@@ -2952,7 +2953,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Ash',
+          locator: 'under "Ash"',
           supports: [
             'canonicalName',
             'elements',
@@ -2965,7 +2966,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Ash',
+          locator: 'under "Ash"',
           supports: [
             'canonicalName',
             'elements',
@@ -2979,7 +2980,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Ash Tree',
+          locator: 'under "Ash Tree"',
           supports: ['planets', 'description'],
         },
         {
@@ -3000,7 +3001,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Ash; p. 266',
+              locator: 'under "Ash"; p. 266',
               supports: ['form', 'description', 'safetyNotes'],
             },
             {
@@ -3020,12 +3021,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Ash',
+              locator: 'under "Ash"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Ash',
+              locator: 'under "Ash"',
               supports: ['description'],
             },
             {
@@ -3045,12 +3046,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Ash',
+              locator: 'under "Ash"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Ash',
+              locator: 'under "Ash"',
               supports: ['form', 'description'],
             },
             {
@@ -3066,7 +3067,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Ash',
+              locator: 'under "Ash"',
               supports: ['form', 'description'],
             },
             {
@@ -3092,7 +3093,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Ginseng',
+          locator: 'under "Ginseng"',
           supports: [
             'canonicalName',
             'description',
@@ -3124,7 +3125,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Ginseng',
+              locator: 'under "Ginseng"',
               supports: ['form'],
             },
             {
@@ -3140,7 +3141,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Ginseng',
+              locator: 'under "Ginseng"',
               supports: ['form', 'description'],
             },
           ],
@@ -3196,7 +3197,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Aspen; p. 266',
+          locator: 'under "Aspen"; p. 266',
           supports: [
             'canonicalName',
             'description',
@@ -3208,7 +3209,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Aspen',
+          locator: 'under "Aspen"',
           supports: [
             'canonicalName',
             'description',
@@ -3235,12 +3236,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Aspen',
+              locator: 'under "Aspen"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Aspen',
+              locator: 'under "Aspen"',
               supports: ['form'],
             },
           ],
@@ -3294,7 +3295,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Aster; p. 266',
+          locator: 'under "Aster"; p. 266',
           supports: [
             'canonicalName',
             'description',
@@ -3308,7 +3309,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Aster',
+          locator: 'under "Aster"',
           supports: [
             'canonicalName',
             'description',
@@ -3332,12 +3333,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Aster',
+              locator: 'under "Aster"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Aster',
+              locator: 'under "Aster"',
               supports: ['form'],
             },
             {
@@ -3384,7 +3385,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Avens; p. 266',
+          locator: 'under "Avens"; p. 266',
           supports: [
             'canonicalName',
             'description',
@@ -3397,7 +3398,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Avens',
+          locator: 'under "Avens"',
           supports: [
             'canonicalName',
             'description',
@@ -3414,7 +3415,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Avens',
+          locator: 'under "Avens"',
           supports: ['description', 'planets', 'folkNames'],
         },
         {
@@ -3428,7 +3429,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Avens',
+              locator: 'under "Avens"',
               supports: ['form'],
             },
             {
@@ -3448,7 +3449,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Avens',
+              locator: 'under "Avens"',
               supports: ['form', 'description', 'colors'],
             },
             {
@@ -3464,7 +3465,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Avens',
+              locator: 'under "Avens"',
               supports: ['form', 'description'],
             },
             {
@@ -3507,7 +3508,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Avocado; p. 266',
+          locator: 'under "Avocado"; p. 266',
           supports: [
             'elements',
             'planets',
@@ -3519,7 +3520,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Avocado',
+          locator: 'under "Avocado"',
           supports: [
             'canonicalName',
             'elements',
@@ -3541,12 +3542,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Avocado',
+              locator: 'under "Avocado"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Avocado',
+              locator: 'under "Avocado"',
               supports: ['form'],
             },
             {
@@ -3564,7 +3565,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Avocado; p. 266',
+              locator: 'under "Avocado"; p. 266',
               supports: ['form', 'description', 'safetyNotes'],
             },
             {
@@ -3581,7 +3582,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Avocado; p. 266',
+              locator: 'under "Avocado"; p. 266',
               supports: ['form', 'description', 'safetyNotes'],
             },
           ],
@@ -3593,7 +3594,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Avocado',
+              locator: 'under "Avocado"',
               supports: ['form', 'description'],
             },
             {
@@ -3631,12 +3632,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Bamboo; p. 266',
+          locator: 'under "Bamboo"; p. 266',
           supports: ['canonicalName', 'categories', 'folkNames', 'description', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Bamboo',
+          locator: 'under "Bamboo"',
           supports: [
             'canonicalName',
             'elements',
@@ -3658,12 +3659,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Bamboo',
+              locator: 'under "Bamboo"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Bamboo',
+              locator: 'under "Bamboo"',
               supports: ['form'],
             },
           ],
@@ -3692,7 +3693,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Banyan; p. 266',
+          locator: 'under "Banyan"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -3713,7 +3714,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Banyan',
+              locator: 'under "Banyan"',
               supports: ['form'],
             },
             {
@@ -3749,7 +3750,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Barberry and Oregon Grape',
+          locator: 'under "Barberry and Oregon Grape"',
           supports: [
             'canonicalName',
             'elements',
@@ -3772,7 +3773,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Barberry',
+          locator: 'under "Barberry"',
           supports: ['planets', 'description'],
         },
         {
@@ -3791,7 +3792,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Barberry and Oregon Grape',
+              locator: 'under "Barberry and Oregon Grape"',
               supports: ['form'],
             },
           ],
@@ -3809,7 +3810,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. Barberry',
+              locator: 'under "Barberry"',
               supports: ['form', 'description'],
             },
             {
@@ -3834,7 +3835,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Barberry and Oregon Grape',
+              locator: 'under "Barberry and Oregon Grape"',
               supports: ['form', 'description'],
             },
           ],
@@ -3878,7 +3879,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Barley; p. 266',
+          locator: 'under "Barley"; p. 266',
           supports: [
             'elements',
             'planets',
@@ -3890,7 +3891,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Grain',
+          locator: 'under "Grain"',
           supports: [
             'canonicalName',
             'elements',
@@ -3904,7 +3905,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Barley',
+          locator: 'under "Barley"',
           supports: ['planets'],
         },
         {
@@ -3928,12 +3929,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Grain',
+              locator: 'under "Grain"',
               supports: ['form'],
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Barley',
+              locator: 'under "Barley"',
               supports: ['form'],
             },
             {
@@ -3949,12 +3950,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Barley',
+              locator: 'under "Barley"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Grain',
+              locator: 'under "Grain"',
               supports: ['form', 'description'],
             },
           ],
@@ -3966,12 +3967,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Barley',
+              locator: 'under "Barley"',
               supports: ['form', 'description'],
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. Barley',
+              locator: 'under "Barley"',
               supports: ['description'],
             },
             {
@@ -4024,7 +4025,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Basil; p. 266',
+          locator: 'under "Basil"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -4038,7 +4039,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Basil',
+          locator: 'under "Basil"',
           supports: [
             'canonicalName',
             'elements',
@@ -4052,7 +4053,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Garden Bazil, or Sweet Bazil',
+          locator: 'under "Garden Bazil, or Sweet Bazil"',
           supports: ['planets', 'zodiacSigns', 'description'],
         },
         {
@@ -4095,12 +4096,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Basil',
+              locator: 'under "Basil"',
               supports: ['form'],
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Basil',
+              locator: 'under "Basil"',
               supports: ['form'],
             },
           ],
@@ -4114,7 +4115,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Basil',
+              locator: 'under "Basil"',
               supports: ['form', 'description'],
             },
             {
@@ -4135,7 +4136,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Basil',
+              locator: 'under "Basil"',
               supports: ['form', 'description'],
             },
             {
@@ -4153,7 +4154,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Basil',
+              locator: 'under "Basil"',
               supports: ['form', 'description', 'categories'],
             },
           ],
@@ -4232,7 +4233,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Bay; p. 266',
+          locator: 'under "Bay"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -4246,7 +4247,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Bay',
+          locator: 'under "Bay"',
           supports: [
             'canonicalName',
             'elements',
@@ -4260,7 +4261,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. The Bay Tree',
+          locator: 'under "The Bay Tree"',
           supports: ['planets', 'zodiacSigns', 'description'],
         },
         {
@@ -4298,7 +4299,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Bay',
+              locator: 'under "Bay"',
               supports: ['form'],
             },
             {
@@ -4321,7 +4322,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Bay',
+              locator: 'under "Bay"',
               supports: ['form', 'description'],
             },
             {
@@ -4352,7 +4353,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Be-Still',
+          locator: 'under "Be-Still"',
           supports: ['folkNames', 'description', 'safetyNotes'],
         },
         {
@@ -4366,7 +4367,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Be-Still',
+              locator: 'under "Be-Still"',
               supports: ['form'],
             },
             {
@@ -4412,7 +4413,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Bean',
+          locator: 'under "Bean"',
           supports: [
             'elements',
             'planets',
@@ -4425,7 +4426,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Bean',
+          locator: 'under "Bean"',
           supports: [
             'canonicalName',
             'elements',
@@ -4439,7 +4440,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. French Beans',
+          locator: 'under "French Beans"',
           supports: ['planets', 'folkNames', 'description'],
         },
         {
@@ -4461,12 +4462,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Bean',
+              locator: 'under "Bean"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Bean',
+              locator: 'under "Bean"',
               supports: ['form'],
             },
             {
@@ -4511,12 +4512,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Uva Ursa; p. 266',
+          locator: 'under "Uva Ursa"; p. 266',
           supports: ['canonicalName', 'categories', 'folkNames', 'description', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Uva Ursi',
+          locator: 'under "Uva Ursi"',
           supports: [
             'canonicalName',
             'elements',
@@ -4557,7 +4558,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Uva Ursi',
+              locator: 'under "Uva Ursi"',
               supports: ['form'],
             },
             {
@@ -4573,7 +4574,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Uva Ursi',
+              locator: 'under "Uva Ursi"',
               supports: ['form', 'description'],
             },
             {
@@ -4617,7 +4618,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Bee Balm',
+          locator: 'under "Bee Balm"',
           supports: [
             'canonicalName',
             'elements',
@@ -4664,7 +4665,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Bee Balm',
+              locator: 'under "Bee Balm"',
               supports: ['form', 'description'],
             },
             {
@@ -4681,7 +4682,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bee Balm',
+              locator: 'under "Bee Balm"',
               supports: ['form', 'description', 'colors'],
             },
             {
@@ -4701,7 +4702,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bee Balm',
+              locator: 'under "Bee Balm"',
               supports: ['form', 'description'],
             },
             {
@@ -4768,12 +4769,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Beech',
+          locator: 'under "Beech"',
           supports: ['canonicalName', 'planets', 'folkNames', 'description'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Beech',
+          locator: 'under "Beech"',
           supports: [
             'canonicalName',
             'elements',
@@ -4787,7 +4788,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. The Beech Tree',
+          locator: 'under "The Beech Tree"',
           supports: ['planets', 'description'],
         },
         {
@@ -4807,12 +4808,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Beech',
+              locator: 'under "Beech"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Beech',
+              locator: 'under "Beech"',
               supports: ['form', 'description'],
             },
             {
@@ -4832,17 +4833,17 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Beech Tree',
+              locator: 'under "The Beech Tree"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Beech',
+              locator: 'under "Beech"',
               supports: ['form', 'description'],
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Beech',
+              locator: 'under "Beech"',
               supports: ['form', 'description'],
             },
           ],
@@ -4856,7 +4857,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Beech',
+              locator: 'under "Beech"',
               supports: ['form', 'description'],
             },
             {
@@ -4865,7 +4866,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Beech; p. 266',
+              locator: 'under "Beech"; p. 266',
               supports: ['form', 'safetyNotes'],
             },
             {
@@ -4889,7 +4890,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Beech',
+              locator: 'under "Beech"',
               supports: ['form', 'description'],
             },
           ],
@@ -4909,7 +4910,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Beet',
+          locator: 'under "Beet"',
           supports: [
             'canonicalName',
             'elements',
@@ -4921,7 +4922,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Beets',
+          locator: 'under "Beets"',
           supports: ['planets', 'description'],
         },
         {
@@ -4944,7 +4945,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. Beets',
+              locator: 'under "Beets"',
               supports: ['form', 'colors'],
             },
             {
@@ -4962,7 +4963,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Beet; p. 266',
+              locator: 'under "Beet"; p. 266',
               supports: ['form', 'safetyNotes'],
             },
             {
@@ -5014,12 +5015,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Belladonna; "How to Read the Entries"',
+          locator: 'under "Belladonna"; "How to Read the Entries"',
           supports: ['elements', 'planets', 'deities', 'folkNames', 'description', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Nightshade',
+          locator: 'under "Nightshade"',
           supports: [
             'elements',
             'planets',
@@ -5093,7 +5094,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Bergamot',
+          locator: 'under "Bergamot"',
           supports: ['canonicalName', 'elements', 'planets', 'categories', 'description'],
         },
         {
@@ -5113,7 +5114,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bergamot',
+              locator: 'under "Bergamot"',
               supports: ['form', 'colors'],
             },
             {
@@ -5131,7 +5132,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bergamot',
+              locator: 'under "Bergamot"',
               supports: ['form', 'description'],
             },
             {
@@ -5211,7 +5212,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Huckleberry',
+          locator: 'under "Huckleberry"',
           supports: [
             'canonicalName',
             'elements',
@@ -5223,7 +5224,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Bilberry',
+          locator: 'under "Bilberry"',
           supports: [
             'canonicalName',
             'elements',
@@ -5237,7 +5238,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Bilberries, Called by Some Whorts, and Whortle-Berries',
+          locator: 'under "Bilberries, Called by Some Whorts, and Whortle-Berries"',
           supports: ['planets', 'folkNames', 'description'],
         },
         {
@@ -5268,7 +5269,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Bilberry',
+              locator: 'under "Bilberry"',
               supports: ['form'],
             },
             {
@@ -5290,12 +5291,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Huckleberry',
+              locator: 'under "Huckleberry"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Bilberry',
+              locator: 'under "Bilberry"',
               supports: ['form', 'description'],
             },
             {
@@ -5341,7 +5342,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Bindweed',
+          locator: 'under "Bindweed"',
           supports: [
             'canonicalName',
             'description',
@@ -5368,7 +5369,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bindweed',
+              locator: 'under "Bindweed"',
               supports: ['form'],
             },
             {
@@ -5385,7 +5386,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bindweed',
+              locator: 'under "Bindweed"',
               supports: ['form', 'description', 'colors'],
             },
             {
@@ -5439,7 +5440,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Birch; p. 266',
+          locator: 'under "Birch"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -5453,7 +5454,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Birch',
+          locator: 'under "Birch"',
           supports: [
             'canonicalName',
             'elements',
@@ -5472,7 +5473,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. The Birch Tree',
+          locator: 'under "The Birch Tree"',
           supports: ['planets'],
         },
         {
@@ -5498,7 +5499,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Birch',
+              locator: 'under "Birch"',
               supports: ['form', 'description', 'colors'],
             },
             {
@@ -5527,7 +5528,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Birch Tree',
+              locator: 'under "The Birch Tree"',
               supports: ['form', 'description'],
             },
           ],
@@ -5547,7 +5548,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Birch Tree',
+              locator: 'under "The Birch Tree"',
               supports: ['description'],
             },
           ],
@@ -5559,7 +5560,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Birch',
+              locator: 'under "Birch"',
               supports: ['form', 'description'],
             },
             {
@@ -5614,12 +5615,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Bistort',
+          locator: 'under "Bistort"',
           supports: ['elements', 'planets', 'categories', 'folkNames', 'description'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Bistort',
+          locator: 'under "Bistort"',
           supports: [
             'canonicalName',
             'elements',
@@ -5638,7 +5639,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Bistort, or Snakeweed',
+          locator: 'under "Bistort, or Snakeweed"',
           supports: ['planets', 'folkNames'],
         },
         {
@@ -5664,7 +5665,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Bistort',
+              locator: 'under "Bistort"',
               supports: ['form', 'description'],
             },
             {
@@ -5673,7 +5674,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. Bistort, or Snakeweed',
+              locator: 'under "Bistort, or Snakeweed"',
               supports: ['colors'],
             },
           ],
@@ -5685,7 +5686,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bistort',
+              locator: 'under "Bistort"',
               supports: ['form', 'description'],
             },
             {
@@ -5705,7 +5706,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bistort',
+              locator: 'under "Bistort"',
               supports: ['form', 'description'],
             },
           ],
@@ -5731,7 +5732,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Orange',
+          locator: 'under "Orange"',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -5777,7 +5778,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Orange',
+              locator: 'under "Orange"',
               supports: ['form', 'description'],
             },
             {
@@ -5865,7 +5866,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Bittersweet',
+          locator: 'under "Bittersweet"',
           supports: [
             'canonicalName',
             'elements',
@@ -5877,7 +5878,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Bittersweet',
+          locator: 'under "Bittersweet"',
           supports: [
             'canonicalName',
             'elements',
@@ -5892,7 +5893,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Amara Dulcis',
+          locator: 'under "Amara Dulcis"',
           supports: ['planets', 'folkNames', 'description'],
         },
         {
@@ -5927,12 +5928,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Bittersweet',
+              locator: 'under "Bittersweet"',
               supports: ['form', 'description'],
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. Amara Dulcis',
+              locator: 'under "Amara Dulcis"',
               supports: ['form', 'description'],
             },
             {
@@ -5973,12 +5974,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Cohosh, Black; p. 266',
+          locator: 'under "Cohosh, Black"; p. 266',
           supports: ['categories', 'folkNames', 'description', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Black Cohosh',
+          locator: 'under "Black Cohosh"',
           supports: [
             'canonicalName',
             'elements',
@@ -6017,7 +6018,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Black Cohosh',
+              locator: 'under "Black Cohosh"',
               supports: ['form', 'description'],
             },
             {
@@ -6037,7 +6038,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Black Cohosh',
+              locator: 'under "Black Cohosh"',
               supports: ['form', 'description'],
             },
             {
@@ -6075,7 +6076,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Hellebore, Black',
+          locator: 'under "Hellebore, Black"',
           supports: [
             'canonicalName',
             'elements',
@@ -6087,7 +6088,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Hellebore',
+          locator: 'under "Hellebore"',
           supports: [
             'canonicalName',
             'elements',
@@ -6102,7 +6103,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Black Hellebore',
+          locator: 'under "Black Hellebore"',
           supports: ['planets', 'folkNames', 'description'],
         },
         {
@@ -6125,7 +6126,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Hellebore',
+              locator: 'under "Hellebore"',
               supports: ['form'],
             },
             {
@@ -6146,12 +6147,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Hellebore',
+              locator: 'under "Hellebore"',
               supports: ['form', 'description'],
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Hellebore, Black',
+              locator: 'under "Hellebore, Black"',
               supports: ['form', 'description'],
             },
           ],
@@ -6174,7 +6175,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Locust',
+          locator: 'under "Locust"',
           supports: [
             'canonicalName',
             'elements',
@@ -6218,7 +6219,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Locust',
+              locator: 'under "Locust"',
               supports: ['form', 'description'],
             },
             {
@@ -6234,7 +6235,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Locust',
+              locator: 'under "Locust"',
               supports: ['form', 'description'],
             },
             {
@@ -6261,12 +6262,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Mustard, Black; p. 266',
+          locator: 'under "Mustard, Black"; p. 266',
           supports: ['elements', 'planets', 'categories', 'description', 'safetyNotes'],
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Mustard',
+          locator: 'under "Mustard"',
           supports: ['elements', 'planets', 'zodiacSigns', 'deities', 'categories', 'description'],
         },
         {
@@ -6276,7 +6277,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Mustard',
+          locator: 'under "Mustard"',
           supports: ['planets', 'zodiacSigns', 'description'],
         },
         {
@@ -6300,12 +6301,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Mustard, Black',
+              locator: 'under "Mustard, Black"',
               supports: ['form'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Mustard',
+              locator: 'under "Mustard"',
               supports: ['form', 'colors'],
             },
             {
@@ -6329,7 +6330,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Mustard',
+              locator: 'under "Mustard"',
               supports: ['form', 'description'],
             },
           ],
@@ -6359,7 +6360,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Nightshade',
+          locator: 'under "Nightshade"',
           supports: [
             'canonicalName',
             'elements',
@@ -6374,7 +6375,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Nightshade',
+          locator: 'under "Nightshade"',
           supports: ['planets', 'folkNames', 'description'],
         },
         {
@@ -6427,7 +6428,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Nightshade',
+              locator: 'under "Nightshade"',
               supports: ['form', 'colors', 'safetyNotes'],
             },
             {
@@ -6465,7 +6466,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Pepper; p. 266',
+          locator: 'under "Pepper"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -6477,7 +6478,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Pepper',
+          locator: 'under "Pepper"',
           supports: [
             'canonicalName',
             'elements',
@@ -6529,7 +6530,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Pepper',
+              locator: 'under "Pepper"',
               supports: ['form', 'description'],
             },
             {
@@ -6557,7 +6558,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Snakeroot, Black',
+          locator: 'under "Snakeroot, Black"',
           supports: ['canonicalName', 'elements', 'planets', 'categories', 'description'],
         },
         {
@@ -6593,7 +6594,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'kynes-plants',
-          locator: 's.v. Walnut',
+          locator: 'under "Walnut"',
           supports: ['canonicalName', 'folkNames', 'description'],
         },
         {
@@ -6614,7 +6615,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Walnut',
+              locator: 'under "Walnut"',
               supports: ['form'],
             },
             {
@@ -6685,7 +6686,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Blackberry; p. 266',
+          locator: 'under "Blackberry"; p. 266',
           supports: [
             'elements',
             'planets',
@@ -6697,7 +6698,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Blackberry',
+          locator: 'under "Blackberry"',
           supports: [
             'elements',
             'planets',
@@ -6710,7 +6711,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. The Bramble, or Black-Berry Bush',
+          locator: 'under "The Bramble, or Black-Berry Bush"',
           supports: ['planets', 'zodiacSigns', 'description'],
         },
         {
@@ -6736,12 +6737,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Blackberry',
+              locator: 'under "Blackberry"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Blackberry',
+              locator: 'under "Blackberry"',
               supports: ['form', 'colors', 'description'],
             },
             {
@@ -6768,17 +6769,17 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Blackberry',
+              locator: 'under "Blackberry"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Blackberry',
+              locator: 'under "Blackberry"',
               supports: ['form'],
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Bramble, or Black-Berry Bush',
+              locator: 'under "The Bramble, or Black-Berry Bush"',
               supports: ['description'],
             },
             {
@@ -6794,12 +6795,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Blackberry',
+              locator: 'under "Blackberry"',
               supports: ['form', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Blackberry',
+              locator: 'under "Blackberry"',
               supports: ['form', 'description'],
             },
             {
@@ -6828,7 +6829,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Bramble, or Black-Berry Bush',
+              locator: 'under "The Bramble, or Black-Berry Bush"',
               supports: ['form', 'description'],
             },
           ],
@@ -6870,7 +6871,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Sloe; p. 266',
+          locator: 'under "Sloe"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -6883,7 +6884,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Blackthorn',
+          locator: 'under "Blackthorn"',
           supports: [
             'canonicalName',
             'elements',
@@ -6898,7 +6899,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. The Black Thorn, or Sloe-Bush',
+          locator: 'under "The Black Thorn, or Sloe-Bush"',
           supports: ['folkNames'],
         },
         {
@@ -6925,12 +6926,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Blackthorn',
+              locator: 'under "Blackthorn"',
               supports: ['form', 'colors', 'description'],
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Black Thorn, or Sloe-Bush',
+              locator: 'under "The Black Thorn, or Sloe-Bush"',
               supports: ['form', 'description'],
             },
             {
@@ -6947,12 +6948,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Sloe',
+              locator: 'under "Sloe"',
               supports: ['form', 'categories', 'description'],
             },
             {
               source: 'kynes-plants',
-              locator: 's.v. Blackthorn',
+              locator: 'under "Blackthorn"',
               supports: ['form', 'description'],
             },
             {
@@ -6968,7 +6969,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
           references: [
             {
               source: 'kynes-plants',
-              locator: 's.v. Blackthorn',
+              locator: 'under "Blackthorn"',
               supports: ['form', 'description'],
             },
           ],
@@ -6987,12 +6988,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
             },
             {
               source: 'cunningham-herbs',
-              locator: 's.v. Sloe; p. 266',
+              locator: 'under "Sloe"; p. 266',
               supports: ['safetyNotes'],
             },
             {
               source: 'culpeper-herbal',
-              locator: 's.v. The Black Thorn, or Sloe-Bush',
+              locator: 'under "The Black Thorn, or Sloe-Bush"',
               supports: ['form', 'description'],
             },
           ],
@@ -7027,7 +7028,7 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
       references: [
         {
           source: 'cunningham-herbs',
-          locator: 's.v. Thistle, Holy; p. 266',
+          locator: 'under "Thistle, Holy"; p. 266',
           supports: [
             'canonicalName',
             'elements',
@@ -7040,12 +7041,12 @@ export const PLANTS_A_CN: SeedCompendiumShard = {
         },
         {
           source: 'kynes-plants',
-          locator: 's.v. Thistle',
+          locator: 'under "Thistle"',
           supports: ['zodiacSigns', 'deities', 'folkNames', 'description'],
         },
         {
           source: 'culpeper-herbal',
-          locator: 's.v. Carduus Benedictus',
+          locator: 'under "Carduus Benedictus"',
           supports: ['planets', 'zodiacSigns', 'folkNames', 'description'],
         },
         {

@@ -160,6 +160,15 @@ export interface WordMatch {
   matches: (text: AnyPgColumn) => SQL;
   /** How word-similar, for a best-match order. */
   similarity: (text: AnyPgColumn) => SQL<number>;
+  /** `text` holds the query verbatim, case and accents aside: a full hit, wherever it falls in a word. */
+  contains: (text: AnyPgColumn) => SQL;
+  /**
+   * The character `text` holds the query verbatim from, folded as `contains`
+   * reads it, or the largest `integer` where it holds none: what orders
+   * hits of equal score, earliest first, a fuzzy hit last. Never null, since
+   * a keyset part may not be.
+   */
+  position: (text: AnyPgColumn) => SQL<number>;
 }
 
 /**
@@ -529,7 +538,12 @@ export interface IngredientFilter {
   nomenclature?: NomenclatureKind;
 }
 
-/** What a compendium entry carries onto its edge: its word similarity to the query, on a search. */
+/**
+ * What a compendium entry carries onto its edge: on a search, its rank — the
+ * best of its matched fields' word similarity to the query, each times that
+ * field's weight (`searchMatch`). Null on a browse. The position that orders
+ * equal ranks is the key's alone, and never carried.
+ */
 export interface CompendiumScore {
   score: number | null;
 }
@@ -662,6 +676,14 @@ export type SiteInvitationValues = Pick<
 /** What a workspace invitation starts with: the same, and the role it grants. */
 export type WorkspaceInvitationValues = SiteInvitationValues & { role: InvitableRole };
 
+/** What the admin invitation list is narrowed by (MB.115). Each part is optional, and absent means no filter. */
+export interface SiteInvitationFilter {
+  /** A substring of the invited address, case-insensitive, its `%` and `_` read literally. */
+  email?: string;
+  /** Only the invitations that lapse within this many hours of the database's `now()`. */
+  expiresWithinHours?: number;
+}
+
 /** What the admin user list is narrowed by (MB.52). Each part is optional, and absent means no filter. */
 export interface UserFilter {
   /** A substring of the name or the email, case-insensitive, its `%` and `_` read literally. */
@@ -723,6 +745,16 @@ export interface DeityFilter {
   query?: string;
   /** Only the deities filed under this tradition. */
   traditionId?: string;
+}
+
+/**
+ * What an admin group list is narrowed by (MB.115): the deity traditions
+ * today, and the category and form groups if their pages take the search too.
+ * Absent means no filter.
+ */
+export interface GroupFilter {
+  /** A substring of the name, case-insensitive, its `%` and `_` read literally. */
+  query?: string;
 }
 
 /** One provider account linked to a user, without the tokens its row holds. */

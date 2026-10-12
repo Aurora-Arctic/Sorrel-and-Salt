@@ -26,6 +26,84 @@
   }
 }
 
+// The two other media preferences the sheets key off, wrapped as
+// `reduced-motion` is so a query is spelled once. Light is the system's
+// preference, which a stored choice of theme may still override.
+@mixin color-scheme-light {
+  @media (prefers-color-scheme: light) {
+    @content;
+  }
+}
+
+// Windows high-contrast mode: the system repaints colours, so a rule here
+// keeps a shape or an edge that colour alone would have carried.
+@mixin forced-colors {
+  @media (forced-colors: active) {
+    @content;
+  }
+}
+
+// A list that is not a bulleted list: no margin, indent or marker, and with
+// `$items` its items lose typography-base's margin and ◆ too. Pass
+// `$items: false` where each item already clears them itself.
+@mixin list-reset($padding: 0, $items: true) {
+  margin: 0;
+  padding: $padding;
+  list-style: none;
+
+  @if $items {
+    > li {
+      margin: 0;
+
+      &::before {
+        content: none;
+      }
+    }
+  }
+}
+
+// One line of text cut off with an ellipsis where its box ends. The box must
+// have a width of its own to cut at: a flex item needs `min-width: 0`.
+@mixin truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Hidden from the eye, read by a screen reader: a 1px clipped box. Not
+// `display: none` or `visibility: hidden`, which would hide it from both.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+// A button with its box taken away, for one that sits inside a chip or a line
+// of text and must read as part of it. Its ink and font are the surroundings'.
+@mixin button-reset($cursor: pointer) {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  line-height: inherit;
+  cursor: $cursor;
+}
+
+// The grey, faded look of something that is busy or cannot be used: its
+// colour taken out and `$opacity-disabled` of it left. The caller adds the cursor.
+@mixin busy-faded {
+  opacity: $opacity-disabled;
+  filter: grayscale(1);
+}
+
 // Defaults to the body ink, so the ring re-colours with the theme.
 @mixin focus-ring($color: $text-primary) {
   outline: 2px solid $color;
@@ -145,8 +223,6 @@
 // No position or width: InfoTip's and a list entry's tooltip sit differently.
 // `tip-bubble-open` is the open state alone, for a bubble opened another way.
 // claude-docs/components/info-tip.md, "Styling".
-$tip-fade: 500ms;
-
 @mixin tip-bubble {
   $fade: $tip-fade;
 
@@ -188,6 +264,209 @@ $tip-fade: 500ms;
 
   @include reduced-motion {
     transition: none;
+  }
+}
+
+// What a tip's bubble is placed against: positioned, and a flex box so the
+// control inside it sizes the anchor rather than a line box round it.
+@mixin tip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+// A column whose children are a `$step` of space apart, the page's rhythm
+// for a list's pieces: its notice, filter, table and pager.
+@mixin stack($step: 5) {
+  display: flex;
+  flex-direction: column;
+  gap: space($step);
+}
+
+// The look of a box that floats over the page, the combobox's list and a
+// linked entry's summary: the card surface and the floating shadow, edged in
+// the muted ink.
+@mixin floating-panel {
+  border: 1px solid $text-muted;
+
+  @include modal-surface($shadow-floating);
+}
+
+// A field's box: the edge, ground, ink, padding and height a text field, a
+// select and the admin menu's closed summary share, so the menu reads as a
+// select does. Width, margin and font are the caller's.
+@mixin field-box {
+  box-sizing: border-box;
+  min-height: $control-height;
+  padding: space(2) space(3);
+  border: 1px solid $text-muted;
+  border-radius: radius('control');
+  background-color: $surface-card;
+  color: $text-primary;
+}
+
+// A tip's bubble above its anchor, from the anchor's `start` or `end` edge or
+// its `center` (any other `$align` is taken as the left offset). `$layer` is
+// its z-index. `$capped` keeps it to `$tip-width` and the window, so it never
+// runs off a phone. The caller's anchor is the nearest positioned ancestor.
+@mixin tip-above($align: start, $layer: 1, $capped: true) {
+  position: absolute;
+  bottom: 100%;
+
+  @if $align == start {
+    left: 0;
+  } @else if $align == end {
+    right: 0;
+  } @else if $align == center {
+    left: 50%;
+    translate: -50% 0;
+  } @else {
+    left: $align;
+  }
+
+  z-index: $layer;
+  width: max-content;
+
+  @if $capped {
+    max-width: min($tip-width, calc(100vw - #{space(6)}));
+  }
+
+  margin-bottom: space(1);
+
+  @include tip-bubble;
+}
+
+// The new content of a list or tab, faded in as it replaces the skeleton
+// that stood in for it (`list-frame-fade-in`, _primitives.scss, the one
+// keyframe); under reduced motion it shows at once.
+@mixin arrived($duration: 200ms) {
+  animation: list-frame-fade-in $duration ease both;
+
+  @include reduced-motion {
+    animation: none;
+  }
+}
+
+// The two row tweaks a data table's owner asks for, each emitted once as a
+// modifier of the table by `_primitives.scss` (`.data-table--roomy`,
+// `.data-table--nowrap`), which a table takes by class. Roomy: taller rows,
+// centred on their cells, for a chip or a button taller than the text. Only
+// while it is a table: a card's cells already carry its padding. Nest inside
+// the table's selector.
+@mixin data-table-roomy {
+  @container data-table not (max-width: #{$table-stack-width}) {
+    td {
+      padding-block: space(3);
+      vertical-align: middle;
+    }
+  }
+}
+
+// No cell wraps, so a row stays one line and the table scrolls in its frame;
+// a confirmation opened from a cell wraps as prose again, and a card, which
+// does not scroll, wraps too. Nest inside the table's selector.
+@mixin data-table-nowrap {
+  th,
+  td {
+    white-space: nowrap;
+  }
+
+  .modal-dialog {
+    white-space: normal;
+  }
+
+  @container data-table (max-width: #{$table-stack-width}) {
+    &.data-table--stack {
+      th,
+      td {
+        white-space: normal;
+      }
+    }
+  }
+}
+
+// A square icon control, a pencil or a ×: no text, a WCAG 2.2 target around
+// its mark, in the muted ink until pointed at or focused. `$icon-size`
+// around `$glyph-size` by default; a list row's pencil takes the large pair
+// (claude-docs/components/icon-tip.md, "Styling"). A mark that explains
+// rather than presses takes a round `$radius` and the help `$cursor`.
+@mixin icon-button(
+  $target: $icon-size,
+  $glyph: $glyph-size,
+  $radius: radius('sharp'),
+  $cursor: pointer
+) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: $target;
+  height: $target;
+  padding: 0;
+  border: 0;
+  border-radius: $radius;
+  background-color: transparent;
+  color: $text-muted;
+  cursor: $cursor;
+  @include theme-transition(background-color, color);
+
+  svg {
+    width: $glyph;
+    height: $glyph;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $text-primary;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// A remove control's answer, the wax: a × or a bin, pointed at or focused,
+// goes red on a tint of its own red, since removing destroys. Beside
+// `icon-button-edit`, which is the same for a pencil in the accent.
+@mixin icon-button-remove {
+  &:hover,
+  &:focus-visible {
+    background-color: color-mix(in srgb, $secondary 20%, $surface-card);
+    color: $secondary;
+  }
+}
+
+// A chevron in a `$glyph-size` box, turned over while `$open` (a selector
+// for the open state's element) matches an ancestor: a disclosure's marker.
+// Drawn only, so a press on it reaches the control beneath: turned over, it
+// paints above an overlay stretched from a button, and would take the press.
+@mixin disclosure-chevron($open) {
+  display: inline-flex;
+  flex: none;
+  width: $glyph-size;
+  height: $glyph-size;
+  color: $text-muted;
+  pointer-events: none;
+
+  svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  #{$open} & {
+    rotate: 180deg;
+  }
+}
+
+// An Edit pencil's ink, the owner's call (MB.115): the accent green, set apart
+// from a ×, and pointed at, focused or open, on a tint of its own green, as a
+// × sits on the wax's. Every Edit control wears it, in a form or a list.
+@mixin icon-button-edit {
+  color: $accent;
+
+  &:hover,
+  &:focus-visible,
+  &[aria-expanded='true'] {
+    background-color: color-mix(in srgb, $accent 20%, $surface-card);
+    color: $accent;
   }
 }
 

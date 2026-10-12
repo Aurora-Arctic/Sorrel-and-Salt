@@ -1,4 +1,5 @@
 import type { Story } from '@ladle/react';
+import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
 import PrivilegeLedger from '.';
 import { privilegeLedgerHref } from './href';
 import type { PrivilegeLedgerEntry } from './types';
@@ -98,3 +99,33 @@ export const EmptyForASearch: Story = () => (
     filter={{ query: 'cora@users.test', privilege: 'create_workspace' }}
   />
 );
+
+// At phone width, in the admin layout's frame and the People page with its
+// Privilege Changes tab open, as /admin/privilege-changes draws them: each
+// change a card, every fact led by its column's name.
+export const PhoneDark: Story = () => (
+  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
+    <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
+  </AdminTabbedFrame>
+);
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => (
+  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
+    <PrivilegeLedger changes={CHANGES} filter={{}} position={{ page: 1, pages: 3 }} />
+  </AdminTabbedFrame>
+);
+PhoneLight.meta = { theme: 'light', width: 375 };
+
+// The filtered ledger at a phone's width, Clear beneath the fields.
+const FilteredPhone = () => (
+  <AdminTabbedFrame page="people" open="/admin/privilege-changes">
+    <OneUserAdminOnly />
+  </AdminTabbedFrame>
+);
+
+export const FilteredPhoneDark: Story = () => <FilteredPhone />;
+FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const FilteredPhoneLight: Story = () => <FilteredPhone />;
+FilteredPhoneLight.meta = { theme: 'light', width: 375 };

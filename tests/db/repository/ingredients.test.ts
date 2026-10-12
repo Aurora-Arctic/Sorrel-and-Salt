@@ -268,8 +268,9 @@ describe('findCompendiumPage', () => {
 
         const page = await pageOf({ query: 'testoil' }, { first: 100 });
 
+        // The form's weight, 0.6, beats the description's, 0.2.
         expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
-          ['Fixture Mugwort', 1],
+          ['Fixture Mugwort', 0.6],
         ]);
       });
 
@@ -292,22 +293,52 @@ describe('findCompendiumPage', () => {
 
     /**
      * The answer key, written independently of the finder: every live
-     * compendium row's best word similarity across the label, the formal name
-     * and its live folk names, at 0.5 or better, best first, then by name and id.
+     * compendium row's best weighted field — the label at 1, the formal name
+     * at 0.9, a live folk name at 0.8, a live variant's form at 0.6 and its
+     * description at 0.2 — counting a field only where its word similarity is
+     * 0.5 or better, best first, then by where that field holds the query,
+     * then by name and id. A field scores its word similarity, or 1 where it
+     * holds the query verbatim, case and accents folded. Its position is the
+     * character the verbatim query starts at, or 2147483647 where it holds
+     * none, so a fuzzy hit follows every verbatim one at its score; an entry
+     * takes the position of its best-scoring field, the earliest among equal
+     * ones. The weights, the containment rule and the position rule are
+     * restated here on purpose rather than imported, and each number is cast
+     * to `real` as the finder's are, so a product rounds as the finder's does.
      */
-    async function rankedOrder(query: string): Promise<{ id: string; score: number }[]> {
-      return sql<{ id: string; score: number }[]>`
-        select id, score from (
-          select i.id, i.name, greatest(
-            word_similarity(unaccent_immutable(${query}), unaccent_immutable(i.name)),
-            word_similarity(unaccent_immutable(${query}), unaccent_immutable(i.canonical_name)),
-            (select max(word_similarity(unaccent_immutable(${query}), unaccent_immutable(f.name)))
-             from ingredient_folk_names f where f.ingredient_id = i.id and f.deleted_at is null)
-          ) as score
-          from ingredients i where i.workspace_id is null and i.deleted_at is null
-        ) scored
-        where score >= 0.5
-        order by score desc, name, id`;
+    async function rankedOrder(
+      query: string,
+    ): Promise<{ id: string; score: number; position: number }[]> {
+      const q = sql`unaccent_immutable(${query})`;
+      const ws = (text: postgres.Fragment) =>
+        sql`word_similarity(${q}, unaccent_immutable(${text}))`;
+      const at = (text: postgres.Fragment) =>
+        sql`position(lower(${q}) in lower(unaccent_immutable(${text})))`;
+      const field = (text: postgres.Fragment, weight: number) =>
+        sql`select case when ${ws(text)} >= 0.5
+                     then greatest(${ws(text)}, case when ${at(text)} > 0 then 1::real end) * ${weight}::real
+                   end as score,
+                   case when ${at(text)} > 0 then ${at(text)} else 2147483647 end as position`;
+      return sql<{ id: string; score: number; position: number }[]>`
+        select i.id, best.score, best.position
+        from ingredients i
+        cross join lateral (
+          select score, position from (
+            ${field(sql`i.name`, 1)}
+            union all ${field(sql`i.canonical_name`, 0.9)}
+            union all ${field(sql`f.name`, 0.8)}
+              from ingredient_folk_names f where f.ingredient_id = i.id and f.deleted_at is null
+            union all ${field(sql`v.form`, 0.6)}
+              from ingredient_variants v where v.ingredient_id = i.id and v.deleted_at is null
+            union all ${field(sql`v.description`, 0.2)}
+              from ingredient_variants v where v.ingredient_id = i.id and v.deleted_at is null
+          ) fields
+          where score is not null
+          order by score desc, position
+          limit 1
+        ) best
+        where i.workspace_id is null and i.deleted_at is null
+        order by best.score desc, best.position, i.name, i.id`;
     }
 
     beforeEach(async () => {
@@ -315,19 +346,25 @@ describe('findCompendiumPage', () => {
       for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
         await add('Fixture Mugwort', { nomenclature: 'botanical', canonicalName });
       }
+      // Two longer labels holding the word whole, so the perfect-score tie is
+      // five rows, wider than a page of four.
       await add('Fixture Mugwort Leaf');
+      await add('Fixture Mugwort Root');
       await add('Fixture Mugwart');
       await add('Fixture Wormwood', { folkNames: ['Mugwort'] });
       await add('Fixture Mugroot');
       await add('Fixture Nettle');
     });
 
-    it('pages best match first, ties by name then id', async () => {
+    it('pages best match first, ties by position, then name, then id', async () => {
       const expected = await rankedOrder(QUERY);
-      // The preconditions: a tie on score across names, a tie on score and
-      // name, and a weaker match below them — else the order proves nothing.
+      // The preconditions: a tie on score and position across names — every
+      // perfect label holds the word at 9, after `Fixture ` — a tie on all
+      // three, and a weaker match below them, else the order proves nothing.
       const scores = expected.map((row) => row.score);
-      expect(scores.filter((score) => score === 1).length).toBeGreaterThanOrEqual(5);
+      const perfect = expected.filter((row) => row.score === 1);
+      expect(perfect.length).toBeGreaterThanOrEqual(5);
+      expect(new Set(perfect.map((row) => row.position))).toEqual(new Set([9]));
       expect(new Set(scores).size).toBeGreaterThan(1);
 
       const page = await pageOf({ query: QUERY }, { first: 100 });
@@ -340,8 +377,9 @@ describe('findCompendiumPage', () => {
     it('scores a folk-name match by the folk name', async () => {
       const page = await pageOf({ query: QUERY }, { first: 100 });
 
+      // The folk name is the word whole, similarity 1, at the folk name's weight.
       const wormwood = page.edges.find((edge) => edge.node.name === 'Fixture Wormwood');
-      expect(wormwood?.score).toBe(1);
+      expect(wormwood?.score).toBe(0.8);
     });
 
     it('walks across the ties forwards, neither losing nor repeating a row', async () => {
@@ -408,7 +446,7 @@ describe('findCompendiumPage', () => {
       expect(page.edges.every((edge) => edge.score === null)).toBe(true);
     });
 
-    // A browse is keyed by one part and a search by two, so neither's cursor
+    // A browse is keyed by one part and a search by three, so neither's cursor
     // names a position in the other.
     it("refuses a browse's cursor on a search, and a search's on a browse", async () => {
       const browse = await pageOf({}, { first: 1 });
@@ -418,6 +456,200 @@ describe('findCompendiumPage', () => {
         InvalidCursor,
       );
       await expect(pageOf({}, { after: search.pageInfo.endCursor })).rejects.toThrow(InvalidCursor);
+    });
+  });
+
+  // Each field a search matches carries a weight (claude-docs/db/compendium-read.md,
+  // "The compendium read"), so a word found in a label outranks the same word
+  // found in a folk name, a form or a description.
+  describe('weighted ranking', () => {
+    const QUERY = 'quandle';
+
+    beforeEach(async () => {
+      await add('Fixture Quandle');
+      await add('Fixture Kettlebrim', {
+        nomenclature: 'botanical',
+        canonicalName: 'Fixtura quandle',
+      });
+      await add('Fixture Wimble', { folkNames: ['Quandle'] });
+      await add('Fixture Quandly');
+      await add('Fixture Thrum', { variants: [makeVariant({ form: 'Quandle' })] });
+      await add('Fixture Sprocket', {
+        variants: [makeVariant({ description: 'Steeped with quandle' })],
+      });
+    });
+
+    it('ranks the label above the formal name, the folk name, the form and the description', async () => {
+      // The preconditions: the near-miss label matches, but neither as a whole
+      // word nor holding the query, so its rank sits between the folk name's
+      // and the form's; and the entry with the formal name does not match by
+      // its label, so it is found by the formal name alone.
+      const [similarity] = await sql<{ nearMiss: number; label: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Quandly') as "nearMiss",
+               word_similarity(${QUERY}, 'Fixture Kettlebrim') as label`;
+      expect(similarity.nearMiss).toBeGreaterThan(0.6);
+      expect(similarity.nearMiss).toBeLessThan(0.8);
+      expect(similarity.label).toBeLessThan(0.5);
+
+      expect(await namesOf({ query: QUERY })).toEqual([
+        'Fixture Quandle',
+        'Fixture Kettlebrim',
+        'Fixture Wimble',
+        'Fixture Quandly',
+        'Fixture Thrum',
+        'Fixture Sprocket',
+      ]);
+    });
+
+    it('carries the weighted rank on each edge', async () => {
+      const [{ nearMiss }] = await sql<{ nearMiss: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Quandly') as "nearMiss"`;
+
+      const page = await pageOf({ query: QUERY }, { first: 100 });
+
+      expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+        ['Fixture Quandle', 1],
+        ['Fixture Kettlebrim', 0.9],
+        ['Fixture Wimble', 0.8],
+        ['Fixture Quandly', expect.closeTo(nearMiss, 5)],
+        ['Fixture Thrum', 0.6],
+        ['Fixture Sprocket', 0.2],
+      ]);
+    });
+
+    // `word_similarity` scores the query against whole words, so a fragment
+    // inside a longer word scores by the trigrams it shares, under the same
+    // fragment standing as a word of its own in a lighter field.
+    it('scores a field holding the query verbatim, case and accents folded, as a full hit', async () => {
+      await add('Fixture Mockleaf', { folkNames: ['Sweet Brim'] });
+      // The precondition: by word similarity alone, the label holding `brim`
+      // mid-word scores under the folk name's whole word at its weight, so
+      // without the containment rule the folk name would rank first.
+      const [{ label }] = await sql<{ label: number }[]>`
+        select word_similarity('brim', 'Fixture Kettlebrim') as label`;
+      expect(label).toBeGreaterThanOrEqual(0.5);
+      expect(label).toBeLessThan(0.8);
+
+      for (const query of ['brim', 'BRÍM']) {
+        const page = await pageOf({ query }, { first: 100 });
+
+        expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+          ['Fixture Kettlebrim', 1],
+          ['Fixture Mockleaf', 0.8],
+        ]);
+      }
+    });
+
+    it('walks the weighted order across a cursor, neither losing nor repeating a row', async () => {
+      const whole = (await pageOf({ query: QUERY }, { first: 100 })).edges.map(
+        (edge) => edge.node.id,
+      );
+      // The precondition: the walk takes more than one step.
+      expect(whole.length).toBeGreaterThan(2);
+
+      const ids: string[] = [];
+      let after: string | null = null;
+      for (;;) {
+        const page: Page<IngredientRow, CompendiumScore> = await pageOf(
+          { query: QUERY },
+          { first: 2, after },
+        );
+        ids.push(...page.edges.map((edge) => edge.node.id));
+        if (!page.pageInfo.hasNextPage) break;
+        after = page.pageInfo.endCursor;
+      }
+
+      expect(ids).toEqual(whole);
+    });
+  });
+
+  // At equal score, the entry whose field holds the query earliest ranks
+  // first (claude-docs/db/compendium-read.md, "The compendium read"): for
+  // `wood`, Wood Ash before Sandalwood, rather than alphabetically.
+  describe('position among equals', () => {
+    const QUERY = 'brim';
+
+    beforeEach(async () => {
+      await add('Brimstone Fixture');
+      await add('Zebrim Fixture');
+      // A folk name holding the query at 1, under the label's 9: the entry
+      // ranks by the label, the field that set its score.
+      await add('Fixture Brim Tonic', { folkNames: ['Brim'] });
+      await add('Fixture Kettlebrim');
+    });
+
+    it('ranks the field holding the query earliest first, by the field that set the score', async () => {
+      // The preconditions: every label holds the query, so all four score a
+      // full hit, at positions out of alphabetical order; and the folk name
+      // holds it earlier than its own entry's label does.
+      const positions = await sql<{ name: string; position: number }[]>`
+        select name, strpos(lower(name), ${QUERY}) as position
+        from unnest(array['Brimstone Fixture', 'Zebrim Fixture', 'Fixture Brim Tonic',
+                          'Fixture Kettlebrim', 'Brim']) as name`;
+      expect(positions.map((row) => row.position)).toEqual([1, 3, 9, 15, 1]);
+
+      const page = await pageOf({ query: QUERY }, { first: 100 });
+
+      expect(page.edges.map((edge) => [edge.node.name, edge.score])).toEqual([
+        ['Brimstone Fixture', 1],
+        ['Zebrim Fixture', 1],
+        ['Fixture Brim Tonic', 1],
+        ['Fixture Kettlebrim', 1],
+      ]);
+    });
+
+    it('walks the position order across a cursor, neither losing nor repeating a row', async () => {
+      const ids: string[] = [];
+      const names: string[] = [];
+      let after: string | null = null;
+      let pages = 0;
+      for (;;) {
+        const page: Page<IngredientRow, CompendiumScore> = await pageOf(
+          { query: QUERY },
+          { first: 2, after },
+        );
+        pages += 1;
+        ids.push(...page.edges.map((edge) => edge.node.id));
+        names.push(...page.edges.map((edge) => edge.node.name));
+        if (!page.pageInfo.hasNextPage) break;
+        after = page.pageInfo.endCursor;
+      }
+
+      // The precondition: a page boundary falls inside the tie.
+      expect(pages).toBeGreaterThan(1);
+      expect(new Set(ids).size).toBe(ids.length);
+      expect(names).toEqual([
+        'Brimstone Fixture',
+        'Zebrim Fixture',
+        'Fixture Brim Tonic',
+        'Fixture Kettlebrim',
+      ]);
+    });
+
+    it('counts the rows before a page that starts inside the tie', async () => {
+      const first = await pageOf({ query: QUERY }, { first: 2 });
+      const second = await pageOf({ query: QUERY }, { first: 2, after: first.pageInfo.endCursor });
+
+      expect(await countFor({ query: QUERY }, second)).toEqual({ totalCount: 4, countBefore: 2 });
+    });
+
+    // A fuzzy hit holds the query nowhere, so it follows every verbatim hit
+    // at its score.
+    it('ranks a fuzzy hit after a verbatim one of equal score', async () => {
+      await add('Fixture Brin');
+      await add('Fixture Thrum', { variants: [makeVariant({ form: 'Brim' })] });
+      // The preconditions: the label is word-similar to the query without
+      // holding it, at exactly the form's weight, so the two tie on score and
+      // only the position can put the form first, against the alphabet.
+      const [label] = await sql<{ similarity: number; position: number }[]>`
+        select word_similarity(${QUERY}, 'Fixture Brin') as similarity,
+               strpos(lower('Fixture Brin'), ${QUERY}) as position`;
+      expect(label).toEqual({ similarity: 0.6, position: 0 });
+
+      const page = await pageOf({ query: QUERY }, { first: 100 });
+      const tied = page.edges.filter((edge) => edge.score === 0.6);
+
+      expect(tied.map((edge) => edge.node.name)).toEqual(['Fixture Thrum', 'Fixture Brin']);
     });
   });
 
