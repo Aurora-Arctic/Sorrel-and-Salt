@@ -465,6 +465,29 @@ export interface AuditWriter {
     role: WorkspaceRole,
   ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
+   * Soft-delete one live member of the proof's workspace (M6.15), for a
+   * removal and for a leave alike, stamped from the session. An empty result
+   * means no such live member. The caller has checked the permission or that
+   * the row is the caller's own, and run the last-owner guard.
+   */
+  softDeleteMembership(
+    membership: Membership,
+    userId: string,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
+   * Bring a removed member back at `role` (M6.15; M7.5's accept calls it):
+   * clears `deleted_at` and `deleted_by`, sets the role and restarts
+   * `joined_at`. The one writer that touches a deleted row, so it reaches
+   * only a deleted one: an empty result means the pair holds no removed row
+   * (none was ever made, or it is live). Under no proof, as
+   * `insertMembership` is.
+   */
+  reviveMembership(
+    workspaceId: string,
+    userId: string,
+    role: WorkspaceRole,
+  ): Promise<(typeof workspaceMembers.$inferSelect)[]>;
+  /**
    * The proof's workspace's live members, locked `for update` until the
    * transaction ends (M6.8): what the last-owner guard counts before a role
    * change or removal writes, so two owners stepping down at once cannot both

@@ -3,6 +3,7 @@ import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { workspaceRole } from '../schema/workspaces';
+import { leaveWorkspace, removeMember } from '../services/member-removal';
 import { updateMemberRole } from '../services/member-role';
 import { listMembers } from '../services/members';
 import { createWorkspace } from '../services/workspace-creation';
@@ -95,6 +96,35 @@ builder.mutationField('deleteWorkspace', (t) =>
     authScopes: { signedIn: true },
     resolve: async (_root, { workspaceId }, context) => {
       await deleteWorkspace(sessionOf(context), workspaceId);
+      return true;
+    },
+  }),
+);
+
+builder.mutationField('removeMember', (t) =>
+  t.boolean({
+    description:
+      'Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.',
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      userId: t.arg.id({ required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, userId }, context) => {
+      await removeMember(sessionOf(context), workspaceId, userId);
+      return true;
+    },
+  }),
+);
+
+builder.mutationField('leaveWorkspace', (t) =>
+  t.boolean({
+    description:
+      "Takes the caller out of a coven, whatever their role. Only the caller's own membership; refused when they are its only owner.",
+    args: { workspaceId: t.arg.id({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId }, context) => {
+      await leaveWorkspace(sessionOf(context), workspaceId);
       return true;
     },
   }),
