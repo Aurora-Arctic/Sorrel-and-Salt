@@ -9,12 +9,12 @@ import './index.scss';
 // window, so there the row shows the lead alone.
 // See claude-docs/components/context-row.md.
 const ContextRow = ({ lead, children }: ContextRowProps): ReactElement => (
-  <div className="context-row">
+  <section className="context-row" aria-label="Context">
     <div className="context-row__inner">
       <div className="context-row__lead">{lead}</div>
       {children}
     </div>
-  </div>
+  </section>
 );
 
 export default ContextRow;
