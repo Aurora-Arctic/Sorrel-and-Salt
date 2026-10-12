@@ -194,9 +194,11 @@ $modal-fade: 150ms ease-out;
 // A 2rem × in a `$close-target` square, 2.5rem, the owner's call during M5.5,
 // in the proportion it began at: well past WCAG 2.2's 24px minimum target.
 // The glyph's 2rem is on no scale: it is the × drawn at the size of the
-// target it sits in, not a length of the layout.
+// target it sits in, not a length of the layout. It keeps its square beside
+// a heading that wraps, since a shrunk round target draws as an oval.
 .modal-dialog__close {
   display: inline-flex;
+  flex: none;
   align-items: center;
   justify-content: center;
   width: $close-target;
