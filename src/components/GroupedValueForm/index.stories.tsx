@@ -1,4 +1,5 @@
 import type { Story } from '@ladle/react';
+import { useEffect } from 'react';
 import Modal from '../Modal';
 import GroupedValueForm from '.';
 
@@ -124,6 +125,17 @@ export const EditingAZodiacSign: Story = () => (
   </Modal>
 );
 
+// Delete pressed once drawn, as a person would: the question over the form,
+// dimmed and held beneath it until Delete or Keep It answers (MB.115).
+export const AskingToDelete: Story = () => {
+  useEffect(() => {
+    [...document.querySelectorAll('button')]
+      .find((button) => button.textContent === 'Delete Category')
+      ?.click();
+  }, []);
+  return <EditingACategory />;
+};
+
 // At a phone's width in each theme: the modal inset from the screen's edge,
 // and the form under 28rem of its own width, so its buttons stack. Type into
 // Group to see its list narrow beneath it, inside the modal.
@@ -140,5 +152,6 @@ AddingADeity.meta = { iframed: true };
 EditingADeity.meta = { iframed: true };
 AddingAPlanet.meta = { iframed: true };
 EditingAZodiacSign.meta = { iframed: true };
+AskingToDelete.meta = { iframed: true };
 PhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 PhoneLight.meta = { iframed: true, theme: 'light', width: 375 };

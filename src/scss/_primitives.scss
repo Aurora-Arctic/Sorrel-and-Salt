@@ -867,15 +867,6 @@
     margin-block: space(2);
   }
 
-  // A question standing where a form's buttons were (MB.115): "Delete this?"
-  // with its own row of buttons, held as far from the fields as the buttons
-  // it replaces (M5.5). Its row is a `.modal__actions`, which the
-  // narrow-form rule above stacks with the rest. Written as each admin form's
-  // own `__confirm` rule until it was one.
-  .form__confirm {
-    margin-block: space(2);
-  }
-
   // The button apart from the rest at the row's far end, an edit's Delete,
   // so it is not pressed for Save or Cancel. A margin rather than a spacer
   // element, so a narrow form's stacking rule can take it back: under 28rem

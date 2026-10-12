@@ -63,3 +63,30 @@ export function expectGuardedWaysOut(onClose: Mock, change: () => void): void {
   fireEvent.click(button('Discard Changes'));
   expect(onClose).toHaveBeenCalledTimes(1);
 }
+
+/**
+ * A question over a form (MB.115): the form behind it inert, the question —
+ * a named group holding the safe answer — and the modal's Close live, and
+ * the focus on the safe answer. `field` is one of the form's own fields.
+ * Returns the question, for what else it holds.
+ */
+export function expectAskingOver(field: HTMLElement, safe: HTMLElement): HTMLElement {
+  // The innermost group holding it: the question's own.
+  const question = screen
+    .getAllByRole('group')
+    .filter((group) => group.contains(safe))
+    .pop();
+  expect(question).toHaveAccessibleName();
+  expect(question).not.toContainElement(field);
+  expect(field.closest('[inert]')).not.toBeNull();
+  expect(safe.closest('[inert]')).toBeNull();
+  expect(screen.getByRole('button', { name: 'Close' }).closest('[inert]')).toBeNull();
+  expect(safe).toHaveFocus();
+  return question as HTMLElement;
+}
+
+/** The question answered: its safe answer gone, and the form live again. */
+export function expectAnswered(field: HTMLElement, safe: string): void {
+  expect(screen.queryByRole('button', { name: safe })).not.toBeInTheDocument();
+  expect(field.closest('[inert]')).toBeNull();
+}

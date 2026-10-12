@@ -38,7 +38,12 @@ import type {
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation, mockGraphQLQuery } from '../../support/msw/graphql';
-import { expectGuardedWaysOut, renderInModal } from '../../support/discard-guard';
+import {
+  expectAnswered,
+  expectAskingOver,
+  expectGuardedWaysOut,
+  renderInModal,
+} from '../../support/discard-guard';
 import { openSections } from '../../support/ingredient-sections';
 import {
   offerDeities,
@@ -594,7 +599,7 @@ describe('IngredientForm on the compendium', () => {
       expect(button('Delete')).toBeVisible();
       // The question names it: a paragraph, the closed Identity's summary line naming it too.
       expect(screen.getByText(/Testwort/, { selector: 'p' })).toBeInTheDocument();
-      // The question takes the focus on its safe answer, the pressed button gone (MB.115).
+      // The question takes the focus on its safe answer (MB.115).
       expect(button('Keep It')).toHaveFocus();
       fireEvent.click(button('Keep It'));
       noButton('Delete');
@@ -615,6 +620,61 @@ describe('IngredientForm on the compendium', () => {
 
       await waitFor(() => expect(onDeleted).toHaveBeenCalledOnce());
       expect(calls).toEqual([{ id: ENTRY_ID }]);
+    });
+  });
+
+  // Its questions are asked over the form, as the unsaved changes' is
+  // (MB.115, the owner's call): the long form inert behind each, and the
+  // focus on its safe answer, Keep It.
+  describe('an entry given to it, in a modal', () => {
+    const renderInDialog = () =>
+      renderInModal((done) => (
+        <IngredientForm
+          workspaceId={null}
+          entry={{ id: ENTRY_ID, values: TESTWORT }}
+          onSaved={vi.fn()}
+          onDeleted={done}
+          onCancel={done}
+        />
+      ));
+
+    it('holds the form while Delete asks, gives it back on Keep It, and deletes on Delete', async () => {
+      offerNothing();
+      const onClose = renderInDialog();
+      expect(textbox('Name').closest('[inert]')).toBeNull();
+
+      press('Delete Ingredient');
+      expect(expectAskingOver(textbox('Name'), button('Keep It'))).toContainElement(
+        button('Delete'),
+      );
+      press('Keep It');
+      expectAnswered(textbox('Name'), 'Keep It');
+      expect(button('Delete Ingredient')).toHaveFocus();
+
+      const calls = acceptDelete();
+      press('Delete Ingredient');
+      press('Delete');
+
+      await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
+      expect(calls).toEqual([{ id: ENTRY_ID }]);
+    });
+
+    it('holds the form while a redirect asks, and gives it back on Keep It', async () => {
+      offerNothing();
+      mockGraphQLError('UpdateCompendiumIngredient', {
+        code: 'VALIDATION',
+        fieldErrors: [{ path: ['endRedirect'], message: 'Confirm to end that redirect' }],
+      });
+      renderInDialog();
+
+      type('Name', 'Mockwort');
+      press('Save Ingredient');
+      await waitFor(() => button('End Redirect & Save'));
+
+      expectAskingOver(textbox('Name'), button('Keep It'));
+      press('Keep It');
+      expectAnswered(textbox('Name'), 'Keep It');
+      expect(textbox('Name')).toHaveValue('Mockwort');
     });
   });
 });

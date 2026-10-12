@@ -3,13 +3,13 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useId, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { GENERIC_FAILURE, readGraphqlIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
 import { SelectField, TextField } from '../Field';
 import Notice from '../Notice';
 import { PlanetInput, ZodiacSignInput } from '@/modules/vocabulary/validation/astrology-value';
@@ -345,6 +345,8 @@ const GroupedValueForm = ({
     formState: { errors, isSubmitting, isDirty },
   } = methods;
   const [confirming, setConfirming] = useState(false);
+  // The delete question's safe answer, which takes the focus as it is asked.
+  const keepIt = useRef<HTMLButtonElement>(null);
   // Cancel, and every other way out of the modal, asks first while the form
   // has changes (MB.115, the owner's call); a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
@@ -395,74 +397,86 @@ const GroupedValueForm = ({
   const rootError = errors.root?.message ?? alert;
   const noteId = `${id}-rename-note`;
 
-  const actions = (): ReactElement => {
+  // A question over the form, its buttons left beneath it (MB.115, the
+  // owner's call): the unsaved changes' first, as they are what a way out
+  // would lose, then the delete's.
+  const question = (): ReactElement | null => {
     if (discard.asking) return <DiscardQuestion guard={discard} />;
-    if (confirming) {
-      return (
-        <div className="form__confirm">
-          <p>
-            Delete &quot;{value?.name}&quot;? {deleteNote}
-          </p>
-          <div className="modal__actions">
-            <BusyButton
-              className="btn btn--destructive"
-              disabled={remove.isPending}
-              busy={remove.isPending}
-              busyLabel="Deleting"
-              onClick={() => void confirmDelete()}
-            >
-              Delete
-            </BusyButton>
-            <button type="button" className="btn btn--quiet" onClick={() => setConfirming(false)}>
-              Keep It
-            </button>
-          </div>
-        </div>
-      );
-    }
+    if (!confirming) return null;
     return (
-      <>
-        {/* Before Save is pressed rather than after: a kind whose rename
+      <ConfirmOverlay
+        question={
+          <>
+            Delete &quot;{value?.name}&quot;? {deleteNote}
+          </>
+        }
+        safe={keepIt}
+      >
+        <div className="modal__actions">
+          <BusyButton
+            className="btn btn--destructive"
+            disabled={remove.isPending}
+            busy={remove.isPending}
+            busyLabel="Deleting"
+            onClick={() => void confirmDelete()}
+          >
+            Delete
+          </BusyButton>
+          <button
+            ref={keepIt}
+            type="button"
+            className="btn btn--quiet"
+            onClick={() => setConfirming(false)}
+          >
+            Keep It
+          </button>
+        </div>
+      </ConfirmOverlay>
+    );
+  };
+
+  const actions = (): ReactElement => (
+    <>
+      {/* Before Save is pressed rather than after: a kind whose rename
             reaches past its row says so while the name differs. */}
-        {renamed && (
-          <p id={noteId} className="field__hint grouped-value-form__note">
-            {renameNote}
-          </p>
-        )}
-        <div className="form__actions">
-          {/* Offered only when there is something to save — nothing typed on a
+      {renamed && (
+        <p id={noteId} className="field__hint grouped-value-form__note">
+          {renameNote}
+        </p>
+      )}
+      <div className="form__actions">
+        {/* Offered only when there is something to save — nothing typed on a
               new value, nothing changed on an existing one — the owner's rule
               for every form; and busy, saying so, from the press to the
               answer. */}
-          <BusyButton
-            type="submit"
-            className="btn btn--solid"
-            disabled={!isDirty || isSubmitting}
-            busy={isSubmitting}
-            busyLabel={`Saving ${noun}`}
-            aria-describedby={renamed ? noteId : undefined}
+        <BusyButton
+          type="submit"
+          className="btn btn--solid"
+          disabled={!isDirty || isSubmitting}
+          busy={isSubmitting}
+          busyLabel={`Saving ${noun}`}
+          aria-describedby={renamed ? noteId : undefined}
+        >
+          Save {noun}
+        </BusyButton>
+        <button type="button" className="btn btn--quiet" onClick={() => discard.request(onDone)}>
+          Cancel
+        </button>
+        {value && (
+          <button
+            type="button"
+            className="btn btn--destructive form__aside"
+            onClick={() => {
+              setAlert(undefined);
+              setConfirming(true);
+            }}
           >
-            Save {noun}
-          </BusyButton>
-          <button type="button" className="btn btn--quiet" onClick={() => discard.request(onDone)}>
-            Cancel
+            Delete {noun}
           </button>
-          {value && (
-            <button
-              type="button"
-              className="btn btn--destructive form__aside"
-              onClick={() => {
-                setAlert(undefined);
-                setConfirming(true);
-              }}
-            >
-              Delete {noun}
-            </button>
-          )}
-        </div>
-      </>
-    );
-  };
+        )}
+      </div>
+    </>
+  );
 
   return (
     <FormProvider {...methods}>
@@ -502,6 +516,7 @@ const GroupedValueForm = ({
           />
         )}
         {actions()}
+        {question()}
       </form>
     </FormProvider>
   );

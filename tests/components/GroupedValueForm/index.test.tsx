@@ -22,7 +22,12 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
 import type { GroupedValueFormSubject } from '../../support/types';
-import { expectGuardedWaysOut, renderInModal } from '../../support/discard-guard';
+import {
+  expectAnswered,
+  expectAskingOver,
+  expectGuardedWaysOut,
+  renderInModal,
+} from '../../support/discard-guard';
 
 // The admin's form for a grouped curated value, one per kind: a category
 // (M5.6), an ingredient form (M5.6a) or a deity (MB.132) — a name, a description and a group,
@@ -146,6 +151,68 @@ describe('GroupedValueForm, its unsaved changes', () => {
   });
 });
 
+// The delete's question is asked over the form, as the unsaved changes' is
+// (MB.115, the owner's call): the form inert behind it until it is answered.
+describe('GroupedValueForm, its delete question in a modal', () => {
+  const renderEdit = () =>
+    renderInModal((done) => (
+      <GroupedValueForm kind="category" value={CATEGORY} groups={CATEGORY_GROUPS} onDone={done} />
+    ));
+
+  it('holds the form while asking, the focus on Keep It, and gives both back on Keep It', () => {
+    const onClose = renderEdit();
+    expect(name().closest('[inert]')).toBeNull();
+
+    press('Delete Category');
+
+    expect(
+      expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' })),
+    ).toContainElement(screen.getByRole('button', { name: 'Delete' }));
+    press('Keep It');
+    expectAnswered(name(), 'Keep It');
+    expect(screen.getByRole('button', { name: 'Delete Category' })).toHaveFocus();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('deletes on Delete, from over the form', async () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation(SUBJECT.remove.operation, (variables) => {
+      calls.push(variables);
+      return SUBJECT.remove.data;
+    });
+    const onClose = renderEdit();
+
+    press('Delete Category');
+    press('Delete');
+
+    await waitFor(() => expect(onClose).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ id: CATEGORY.id }]);
+  });
+
+  // Escape keeps what it did when the question stood in place of the
+  // buttons: with nothing changed it closes the modal; with a change the
+  // unsaved changes' question takes the delete's place, and Keep Editing
+  // brings the delete's back.
+  it('closes on Escape with nothing changed, and asks about a change first', () => {
+    const onClose = renderEdit();
+    const escape = () =>
+      fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+
+    type(description(), 'A change');
+    press('Delete Category');
+    escape();
+    expect(screen.getByRole('button', { name: 'Keep Editing' })).toHaveFocus();
+    expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
+    press('Keep Editing');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    expect(onClose).not.toHaveBeenCalled();
+
+    type(description(), CATEGORY.description);
+    escape();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('GroupedValueForm, a category', () => {
   const renderCategory = (props: Partial<GroupedValueFormProps> = {}) =>
     renderForm({ kind: 'category', groups: CATEGORY_GROUPS, ...props });
@@ -218,6 +285,8 @@ describe('GroupedValueForm, a category', () => {
       expect(screen.getByRole('button', { name: 'Delete' })).toBeVisible();
       expect(screen.getByText(/Testcraft/)).toBeInTheDocument();
       press('Keep It');
+      // The question gone, not merely the form's own button there beneath it.
+      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Category' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });
@@ -233,6 +302,7 @@ describe('GroupedValueForm, a category', () => {
       press('Delete');
 
       expect(await screen.findByRole('alert')).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Category' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });
@@ -357,6 +427,8 @@ describe('GroupedValueForm, a form', () => {
       expect(screen.getByRole('button', { name: 'Delete' })).toBeVisible();
       expect(screen.getByText(/Testwort Shard/)).toBeInTheDocument();
       press('Keep It');
+      // The question gone, not merely the form's own button there beneath it.
+      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Form' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });
@@ -373,6 +445,7 @@ describe('GroupedValueForm, a form', () => {
       press('Delete');
 
       expect(await screen.findByRole('alert')).toBeVisible();
+      expect(screen.queryByRole('button', { name: 'Keep It' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Delete Form' })).toBeInTheDocument();
       expect(onDone).not.toHaveBeenCalled();
     });

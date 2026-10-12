@@ -1141,34 +1141,35 @@ site admin's, through the compendium mutations
   whole entry, sends them all, so categories left alone stay
   ([`design-decisions/m5.5-admin-compendium.md`](../design-decisions/m5.5-admin-compendium.md)).
 - **Delete Ingredient** stands apart at the far end of an edit's actions,
-  `.btn--destructive`. Pressed, it asks in place of the actions, `Delete
+  `.btn--destructive`. Pressed, it asks `Delete
 "Testwort"? It leaves the compendium, but any spell that uses it keeps it.`, with
   Delete, destructive, and Keep It, quiet, as
-  [`GroupedValueForm`](grouped-value-form.md) asks. The question, as the redirect's does, scrolls
-  into view and takes the focus on Keep It, its safe answer, since the
-  pressed button has gone and a long form would leave it below the fold
-  (MB.115, the owner's call); smooth unless motion is reduced. Delete sends
+  [`GroupedValueForm`](grouped-value-form.md) asks: on a card over the form,
+  centred in the part in view however far the long form is scrolled, the
+  form dimmed and held until it is answered, the focus on Keep It, its safe
+  answer, and back on Delete Ingredient once Keep It puts it away (MB.115,
+  the owner's call; [`modal.md`](modal.md), "Asking over the form"). Delete sends
   `deleteCompendiumIngredient`, busy until the answer, and calls
   `onDeleted`; a refusal drops the question and shows the server's message
   as an alert above the fields.
 - **MB.82's question.** A save taking an address another entry still
   redirects from is refused at `['endRedirect']`
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md), "Ingredient
-  slugs"). That issue is no field's, so the form asks in place of the
-  actions: the server's message, then **End Redirect & Save**, which sends
+  slugs"). That issue is no field's, so the form asks over itself, as the
+  delete does: the server's message, then **End Redirect & Save**, which sends
   the same input again with `endRedirect: true`, and **Keep It**, which
   drops the question and sends nothing, the entry left as typed.
 - **Unsaved changes** (MB.115, the owner's call). While the form has
   changes, its `formState.isDirty`, the flag that turns the saves on,
-  Cancel asks "You have unsaved changes. Discard them?" in place of the
-  actions, before any other question, with **Discard Changes**,
+  Cancel asks "You have unsaved changes. Discard them?" over the form,
+  before any other question and in its place until answered, with **Discard Changes**,
   destructive, which closes as Cancel did, and **Keep Editing**, quiet,
   which goes back to the form as it was. The modal's Close button, Escape
   and a click outside ask the same, since the form's guard is the modal's
   (`useDiscardGuard`, [`modal.md`](modal.md), "Unsaved changes"); with
   nothing changed every way out closes at once, and a save or a delete never
-  asks. The question's buttons stand on `.form__actions`, as the form's
-  other questions' do.
+  asks. Every question's buttons stand on the card's `.modal__actions`
+  row, the form's own `.form__actions` staying beneath the card.
 
 **On the admin page.** `/admin/compendium` opens the form in `Modal`'s wide
 size from its address, as `/admin/categories` opens GroupedValueForm: `?new` an
@@ -1287,10 +1288,11 @@ around them are primitives too, where this form had kept its own copies:
 `.field__label-row` puts each label and its info tip, or a legend and its
 tip, on one positioned row, so an open tip lies above the label from the
 column's edge rather than hanging off the icon; `.field__required` is the
-asterisk; `.form__confirm` is a question asked in the saves' place, a step
-below the fields; and `.form__aside` pushes an edit's Delete Ingredient to
+asterisk; and `.form__aside` pushes an edit's Delete Ingredient to
 the row's far end, away from the saves, as GroupedValueForm's Delete
-Category is. A narrow form stacks its buttons. The alert is a `Notice` of
+Category is. A narrow form stacks its buttons. A question is the modal's
+`ConfirmOverlay`, a card over the form ([`modal.md`](modal.md), "Asking over
+the form"). The alert is a `Notice` of
 the `error` kind ([`notice.md`](notice.md)), the reference panel's too,
 Save Ingredient is the view's one `.btn--solid`, and every button that
 waits on a request (the two saves, End Redirect & Save, Delete and Save
@@ -1433,8 +1435,14 @@ it at 375px. `Compendium` and `Blank` show a new entry's sections all open,
 `CompendiumEntrySectionOpen` the edit with Correspondences open, and
 `CompendiumEntrySaveError` the edit, a colour left in its box, submitted
 once drawn: Correspondences opens on the error, flagged, the box focused
-(MB.115). The stories that open something inside an edit open its section
-first, as a person would. `PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. On a phone the
+(MB.115). `CompendiumEntryInModal` is the edit in its modal.
+`AskingToDeleteInModal` opens every section, scrolls to the foot and presses
+Delete Ingredient, and `AskingToDiscardInModal` types a change, opens every
+section, scrolls half way and presses Close: each question over the long
+form, centred where it was scrolled to (MB.115). `AskingToDeletePhoneDark`,
+`AskingToDeletePhoneLight`, `AskingToDiscardPhoneDark` and
+`AskingToDiscardPhoneLight` are them at 375px. The stories that open
+something inside an edit open its section first, as a person would. `PhoneDark` and `PhoneLight` are `CompendiumEntry` at 375px. On a phone the
 compendium's modal stays inset, the page in view on every side, rather than
 a full-height sheet: the owner's call in M5.5, kept at MB.115's design
 review. Its shape is `Modal`'s, the wide dialog less the modal gap
@@ -1734,6 +1742,9 @@ update sent whole, its categories carried through; the duplicate warning
 leaving the entry out; MB.82's question, Keep It sending nothing and End
 Redirect & Save sending again with `endRedirect: true`; and a delete kept by
 Keep It, a refused delete's alert, and a confirmed delete calling `onDeleted`.
+In a modal, the delete's and MB.82's questions are asked over the form: the
+form inert while each asks, the focus on Keep It, both given back on Keep It,
+and Delete deleting from over the form.
 An entry's categories shown picked, and a pick beside them sent, are
 CategoryPicker's and `index.test.tsx`'s.
 

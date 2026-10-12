@@ -14,7 +14,7 @@ import BusyButton from '../BusyButton';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
 import { FieldShell, TextField, fieldDescription } from '../Field';
-import { DiscardQuestion, useDiscardGuard } from '../Modal';
+import { ConfirmOverlay, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
@@ -316,8 +316,12 @@ const GroupForm = ({
       {label}
     </BusyButton>
   );
+  // Each step's safe answer, which takes the focus as the step is asked.
+  const keepItRef = useRef<HTMLButtonElement>(null);
+  const backRef = useRef<HTMLButtonElement>(null);
   const keepIt = (
     <button
+      ref={keepItRef}
       type="button"
       className="btn btn--quiet"
       onClick={() => {
@@ -329,23 +333,31 @@ const GroupForm = ({
     </button>
   );
 
+  // Each step a question over the form (MB.115, the owner's call), keyed by
+  // the step, so each takes the focus on its own safe answer as it comes.
   const choosing = (): ReactElement => {
     if (others.length === 0) {
       return (
-        <div className="form__confirm">
-          <p>
-            &quot;{group?.name}&quot; holds {rows}, and there&apos;s no other {noun} to move them
-            to. Add another {noun} first, then delete this one.
-          </p>
+        <ConfirmOverlay
+          key="nowhere"
+          question={
+            <>
+              &quot;{group?.name}&quot; holds {rows}, and there&apos;s no other {noun} to move them
+              to. Add another {noun} first, then delete this one.
+            </>
+          }
+          safe={keepItRef}
+        >
           <div className="modal__actions">{keepIt}</div>
-        </div>
+        </ConfirmOverlay>
       );
     }
     // A label, so title case (the MB.115 sign-off): "Move Its 3 Categories To".
     const label = `Move Its ${memberCount} ${titled(rowNoun)} To`;
     const { aria, ...move } = fieldDescription({ id: `${id}-move`, error: moveError });
+    // Named by the picker's label, the question this step asks.
     return (
-      <div className="form__confirm">
+      <ConfirmOverlay key="choosing" labelledBy={move.labelId} safe={keepItRef}>
         <FieldShell label={label} {...move}>
           <ComboboxSelect
             id={move.controlId}
@@ -373,7 +385,7 @@ const GroupForm = ({
           </button>
           {keepIt}
         </div>
-      </div>
+      </ConfirmOverlay>
     );
   };
 
@@ -381,26 +393,37 @@ const GroupForm = ({
     const destination = others.find((each) => each.id === target);
     if (!destination) {
       return (
-        <div className="form__confirm">
-          <p>
-            Delete &quot;{group?.name}&quot;? No {many} are filed under it.
-          </p>
+        <ConfirmOverlay
+          key="confirming"
+          question={
+            <>
+              Delete &quot;{group?.name}&quot;? No {many} are filed under it.
+            </>
+          }
+          safe={keepItRef}
+        >
           <div className="modal__actions">
             {deleteButton('Delete', undefined)}
             {keepIt}
           </div>
-        </div>
+        </ConfirmOverlay>
       );
     }
     return (
-      <div className="form__confirm">
-        <p>
-          Move {rows} to &quot;{destination.name}&quot; and delete &quot;{group?.name}&quot;?{' '}
-          {moved}
-        </p>
+      <ConfirmOverlay
+        key="moving"
+        question={
+          <>
+            Move {rows} to &quot;{destination.name}&quot; and delete &quot;{group?.name}&quot;?{' '}
+            {moved}
+          </>
+        }
+        safe={backRef}
+      >
         <div className="modal__actions">
           {deleteButton('Move and Delete', destination.id)}
           <button
+            ref={backRef}
             type="button"
             className="btn btn--quiet"
             onClick={() => setStep({ at: 'choosing' })}
@@ -408,47 +431,51 @@ const GroupForm = ({
             Back
           </button>
         </div>
-      </div>
+      </ConfirmOverlay>
     );
   };
 
-  const actions = (): ReactElement => {
+  // The question over the form, if one is asked: the unsaved changes'
+  // first, as they are what a way out would lose, then the delete's step.
+  const question = (): ReactElement | null => {
     if (discard.asking) return <DiscardQuestion guard={discard} />;
     if (step.at === 'choosing') return choosing();
     if (step.at === 'confirming') return confirming(step.moveTo);
-    return (
-      // `.form__actions` rather than `.modal__actions`: it wraps, so a third
-      // button never squeezes the row.
-      <div className="form__actions">
-        {/* Offered only when there is something to save — the owner's rule
-            for every form. */}
-        <BusyButton
-          type="submit"
-          className="btn btn--solid"
-          busy={isSubmitting}
-          busyLabel={`Saving ${title}`}
-          disabled={!isDirty || isSubmitting}
-        >
-          {`Save ${title}`}
-        </BusyButton>
-        <button type="button" className="btn btn--quiet" onClick={() => discard.request(onDone)}>
-          Cancel
-        </button>
-        {group && (
-          <button
-            type="button"
-            className="btn btn--destructive form__aside"
-            onClick={() => {
-              setAlert(undefined);
-              setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
-            }}
-          >
-            Delete {title}
-          </button>
-        )}
-      </div>
-    );
+    return null;
   };
+
+  const actions = (): ReactElement => (
+    // `.form__actions` rather than `.modal__actions`: it wraps, so a third
+    // button never squeezes the row.
+    <div className="form__actions">
+      {/* Offered only when there is something to save — the owner's rule
+            for every form. */}
+      <BusyButton
+        type="submit"
+        className="btn btn--solid"
+        busy={isSubmitting}
+        busyLabel={`Saving ${title}`}
+        disabled={!isDirty || isSubmitting}
+      >
+        {`Save ${title}`}
+      </BusyButton>
+      <button type="button" className="btn btn--quiet" onClick={() => discard.request(onDone)}>
+        Cancel
+      </button>
+      {group && (
+        <button
+          type="button"
+          className="btn btn--destructive form__aside"
+          onClick={() => {
+            setAlert(undefined);
+            setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
+          }}
+        >
+          Delete {title}
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <FormProvider {...methods}>
@@ -521,6 +548,7 @@ const GroupForm = ({
             );
           })}
         {actions()}
+        {question()}
       </form>
     </FormProvider>
   );
