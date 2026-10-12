@@ -9,27 +9,7 @@
 // `$icon-size`: WCAG 2.2's 24px minimum target, around a `$glyph-size`
 // glyph that sits beside a label without raising its line much.
 .info-tip__button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: $icon-size;
-  height: $icon-size;
-  padding: 0;
-  border: 0;
-  border-radius: radius('pill');
-  background-color: transparent;
-  color: $text-muted;
-  cursor: help;
-
-  svg {
-    width: $glyph-size;
-    height: $glyph-size;
-  }
-
-  &:hover,
-  &:focus-visible {
-    color: $text-primary;
-  }
+  @include icon-button($icon-size, $glyph-size, radius('pill'), help);
 
   &:focus-visible {
     @include focus-ring;
@@ -46,13 +26,5 @@
 // at the end of a long label would. Above the row, not below it: the tip
 // opens while its field has focus, and below it would cover what is typed.
 .info-tip__bubble {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  z-index: 1;
-  width: max-content;
-  max-width: min($tip-width, calc(100vw - #{space(6)}));
-  margin-bottom: space(1);
-
-  @include tip-bubble;
+  @include tip-above;
 }

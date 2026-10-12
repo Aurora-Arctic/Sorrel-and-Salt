@@ -267,6 +267,43 @@
   }
 }
 
+// What a tip's bubble is placed against: positioned, and a flex box so the
+// control inside it sizes the anchor rather than a line box round it.
+@mixin tip-anchor {
+  position: relative;
+  display: inline-flex;
+}
+
+// A column whose children are a `$step` of space apart, the page's rhythm
+// for a list's pieces: its notice, filter, table and pager.
+@mixin stack($step: 5) {
+  display: flex;
+  flex-direction: column;
+  gap: space($step);
+}
+
+// The look of a box that floats over the page, the combobox's list and a
+// linked entry's summary: the card surface and the floating shadow, edged in
+// the muted ink.
+@mixin floating-panel {
+  border: 1px solid $text-muted;
+
+  @include modal-surface($shadow-floating);
+}
+
+// A field's box: the edge, ground, ink, padding and height a text field, a
+// select and the admin menu's closed summary share, so the menu reads as a
+// select does. Width, margin and font are the caller's.
+@mixin field-box {
+  box-sizing: border-box;
+  min-height: $control-height;
+  padding: space(2) space(3);
+  border: 1px solid $text-muted;
+  border-radius: radius('control');
+  background-color: $surface-card;
+  color: $text-primary;
+}
+
 // A tip's bubble above its anchor, from the anchor's `start` or `end` edge or
 // its `center` (any other `$align` is taken as the left offset). `$layer` is
 // its z-index. `$capped` keeps it to `$tip-width` and the window, so it never
@@ -399,12 +436,15 @@
 
 // A chevron in a `$glyph-size` box, turned over while `$open` (a selector
 // for the open state's element) matches an ancestor: a disclosure's marker.
+// Drawn only, so a press on it reaches the control beneath: turned over, it
+// paints above an overlay stretched from a button, and would take the press.
 @mixin disclosure-chevron($open) {
   display: inline-flex;
   flex: none;
   width: $glyph-size;
   height: $glyph-size;
   color: $text-muted;
+  pointer-events: none;
 
   svg {
     width: 100%;

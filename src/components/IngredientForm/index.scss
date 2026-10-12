@@ -56,10 +56,10 @@
   gap: 0;
   min-width: 0;
   margin: 0;
-  border-top: 1px solid color-mix(in srgb, $text-muted 45%, transparent);
+  border-top: 1px solid $hairline;
 
   &:last-child {
-    border-bottom: 1px solid color-mix(in srgb, $text-muted 45%, transparent);
+    border-bottom: 1px solid $hairline;
   }
 
   // A section holding an error takes the field's error edge along its top.
@@ -93,13 +93,9 @@
 }
 
 .ingredient-form__fold-toggle {
-  padding: 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
+  @include button-reset;
+
   text-align: start;
-  cursor: pointer;
 
   &::after {
     content: '';
@@ -119,22 +115,10 @@
 // The chevron at the line's end, down while closed and turned over while
 // open, as the admin menu's is: at once, so there is no motion to reduce.
 .ingredient-form__fold-chevron {
-  display: inline-flex;
-  flex: none;
-  width: $glyph-size;
-  height: $glyph-size;
+  @include disclosure-chevron('.is-open > .ingredient-form__fold-head');
+
   margin-inline-start: auto;
-  color: $text-muted;
   @include theme-transition(color);
-
-  svg {
-    width: 100%;
-    height: 100%;
-  }
-
-  .is-open > .ingredient-form__fold-head & {
-    rotate: 180deg;
-  }
 
   .ingredient-form__fold-head:hover & {
     color: $text-primary;
@@ -145,12 +129,11 @@
 // with an ellipsis when it runs past the column.
 .ingredient-form__fold-summary {
   display: block;
-  overflow: hidden;
   color: $text-muted;
   font-size: type-size('caption');
   font-weight: 300;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+
+  @include truncate;
 
   &[hidden] {
     display: none;
@@ -180,15 +163,7 @@
   // The one field's label repeats the heading, so it is the heading the eye
   // reads, and the label stays the field's name for a screen reader.
   &.is-labelled .field__label-row {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    margin: -1px;
-    padding: 0;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
+    @include visually-hidden;
   }
 }
 
@@ -253,9 +228,8 @@
   display: flex;
   flex-direction: column;
   gap: space(1);
-  margin: 0;
-  padding: 0;
-  list-style: none;
+
+  @include list-reset(0, false);
 }
 
 .ingredient-form__reference {
@@ -297,9 +271,8 @@
 
 .ingredient-form__citation {
   min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+
+  @include truncate;
 
   // Whole, wrapping anywhere: a citation carries an address, which has no
   // break of its own.
@@ -321,8 +294,6 @@
 .ingredient-form__icon-button {
   @include icon-button;
 
-  &:hover,
-  &:focus-visible,
   &[aria-expanded='true'] {
     color: $text-primary;
   }
@@ -334,10 +305,8 @@
   }
 
   // Remove destroys, so it answers in the wax as a chip's × does.
-  &.ingredient-form__remove:hover,
-  &.ingredient-form__remove:focus-visible {
-    background-color: color-mix(in srgb, $secondary 20%, $surface-card);
-    color: $secondary;
+  &.ingredient-form__remove {
+    @include icon-button-remove;
   }
 }
 
@@ -529,15 +498,7 @@
     }
 
     .field__label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      margin: -1px;
-      padding: 0;
-      overflow: hidden;
-      clip-path: inset(50%);
-      white-space: nowrap;
-      border: 0;
+      @include visually-hidden;
     }
   }
 }

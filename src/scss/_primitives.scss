@@ -451,9 +451,7 @@
   // skeleton stands in for all of it while another page is on its way.
   .list-frame,
   .list-frame__body {
-    display: flex;
-    flex-direction: column;
-    gap: space(5);
+    @include stack;
 
     > p {
       margin: 0;
@@ -939,17 +937,12 @@
   .input,
   .textarea,
   .select {
-    box-sizing: border-box;
-    width: 100%;
     // Level with a button and a suggesting box, whatever the platform's line
     // height ($control-height).
-    min-height: $control-height;
+    @include field-box;
+
+    width: 100%;
     margin: 0;
-    padding: space(2) space(3);
-    border: 1px solid $text-muted;
-    border-radius: radius('control');
-    background-color: $surface-card;
-    color: $text-primary;
     font-family: $font-body;
     font-size: type-size('body');
     font-weight: 400;

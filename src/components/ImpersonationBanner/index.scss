@@ -10,9 +10,6 @@
 $impersonation-banner-peek: space(2);
 // How far below the sliver a pointer still counts as near the top.
 $impersonation-banner-reach: space(4);
-// ThemeToggle's corner, which the tucked banner runs beneath and keeps its
-// own content clear of: the one token both read.
-$impersonation-banner-corner: $toggle-corner;
 
 // A wrapping row of the sentence and Stop. On a touch screen, where nothing
 // can hover to bring it back, it stays in the page's flow at the very top,
@@ -56,7 +53,7 @@ $impersonation-banner-corner: $toggle-corner;
     // toggle and never opens the banner. Raw, as ThemeToggle's is: a site-wide
     // map of layers is MB.124's.
     z-index: 1;
-    padding-right: calc(#{$impersonation-banner-corner} + #{space(3)});
+    padding-right: calc(#{$toggle-corner} + #{space(3)});
     padding-bottom: space(2);
     transform: translateY(calc(-100% + #{$impersonation-banner-peek}));
     @include theme-transition(transform, background-color, border-color);
