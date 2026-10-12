@@ -150,7 +150,7 @@ const IngredientForm = ({
   // both saves (MB.131).
   const editing = entry !== undefined;
 
-  // Which of the seven sections are open, several at once, each by its own
+  // Which of the six sections are open, several at once, each by its own
   // heading (MB.115, the owner's calls): a new entry opens with every one
   // open, as the long form it is; an edit with every one closed, its entry
   // read at a glance from the summary lines.
@@ -418,12 +418,7 @@ const IngredientForm = ({
                   placeholder="Add a folk name"
                 />
               </CollapsibleSection>
-              <CollapsibleSection
-                title="Description"
-                section="description"
-                fold={fold('description')}
-                labelled
-              >
+              <CollapsibleSection title="Details & Care" section="details" fold={fold('details')}>
                 <TextField<IngredientFormValues>
                   name="description"
                   label="Description"
@@ -431,6 +426,13 @@ const IngredientForm = ({
                   multiline
                   // Seven lines, as each variant's Description (MB.115, the owner's call).
                   rows={7}
+                />
+                <TextField<IngredientFormValues>
+                  name="safetyNotes"
+                  label="Safety Notes"
+                  hint="Toxicity, allergies, and anything to take care over when handling or burning it."
+                  placeholder="Add safety notes"
+                  multiline
                 />
               </CollapsibleSection>
               <CollapsibleSection
@@ -516,15 +518,6 @@ const IngredientForm = ({
                 />
                 {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
                 <SubstituteForms name="substitutes" />
-              </CollapsibleSection>
-              <CollapsibleSection title="Safety" section="safety" fold={fold('safety')}>
-                <TextField<IngredientFormValues>
-                  name="safetyNotes"
-                  label="Safety Notes"
-                  hint="Toxicity, allergies, and anything to take care over when handling or burning it."
-                  placeholder="Add safety notes"
-                  multiline
-                />
               </CollapsibleSection>
               <CollapsibleSection title="Sources" section="sources" fold={fold('sources')}>
                 {/* Last, as a bibliography is (MB.154): the sources picked, each

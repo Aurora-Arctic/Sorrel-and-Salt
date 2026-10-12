@@ -370,7 +370,7 @@ describe('IngredientForm’s variants', () => {
       // The focus goes into the opened fields, to the first: Identity's
       // heading, its section closed as an edit's are (MB.115).
       expect(sectionOf(variant('Oil'), 'Identity')).toHaveFocus();
-      openSectionsIn(variant('Oil'), 'Safety');
+      openSectionsIn(variant('Oil'), 'Details & Care');
       expect(within(variant('Oil')).getByRole('textbox', { name: 'Safety Notes' })).toBeVisible();
     });
 
@@ -378,7 +378,7 @@ describe('IngredientForm’s variants', () => {
       renderForm({ workspaceId: null, values: twoForms() });
 
       const oil = openVariant('Oil');
-      openSectionsIn(oil, 'Safety');
+      openSectionsIn(oil, 'Details & Care');
       type(oil, 'Safety Notes', 'Dilute before use.');
       fireEvent.click(within(oil).getByRole('button', { name: 'Done with Oil' }));
 
@@ -399,10 +399,9 @@ describe('IngredientForm’s variants', () => {
       const headings = within(oil).getAllByRole('heading', { level: 4 });
       expect(headings.map((heading) => heading.textContent)).toEqual([
         'Identity',
-        'Description',
+        'Details & Care',
         'Correspondences',
         'Relations',
-        'Safety',
         'Sources',
       ]);
       expect(within(oil).queryByRole('heading', { level: 3 })).toBeNull();
@@ -410,9 +409,9 @@ describe('IngredientForm’s variants', () => {
       const sectionOf = (element: HTMLElement) => element.closest('section');
       expect(sectionOf(control(oil, 'Form'))).toBe(sectionOf(headings[0]));
       expect(sectionOf(control(oil, 'Description'))).toBe(sectionOf(headings[1]));
+      expect(sectionOf(control(oil, 'Safety Notes'))).toBe(sectionOf(headings[1]));
       expect(sectionOf(control(oil, 'Celestial Body'))).toBe(sectionOf(headings[2]));
       expect(sectionOf(control(oil, 'Substitute Ingredient'))).toBe(sectionOf(headings[3]));
-      expect(sectionOf(control(oil, 'Safety Notes'))).toBe(sectionOf(headings[4]));
     });
 
     it('keeps one variant open at a time', () => {
@@ -489,7 +488,7 @@ describe('IngredientForm’s variants', () => {
       expect(openIn(oil)).toEqual([]);
       for (const title of VARIANT_SECTIONS)
         expect(sectionOf(oil, title)).toHaveAccessibleDescription(/\S/);
-      expect(sectionOf(oil, 'Safety')).toHaveAccessibleDescription(/Dilute before use\./);
+      expect(sectionOf(oil, 'Details & Care')).toHaveAccessibleDescription(/Dilute before use\./);
       expect(sectionOf(oil, 'Correspondences')).toHaveAccessibleDescription(/Venus/);
       expect(within(oil).queryByRole('textbox', { name: 'Safety Notes' })).toBeNull();
     });
@@ -529,7 +528,7 @@ describe('IngredientForm’s variants', () => {
         values: twoForms({ drafts: { ...EMPTY_VARIANT.drafts, colors: 'Fixture Red' } }),
       });
       const herb = openVariant('Herb');
-      openSectionsIn(herb, 'Description');
+      openSectionsIn(herb, 'Details & Care');
       type(herb, 'Description', 'Dug in autumn.');
 
       save();
@@ -550,14 +549,14 @@ describe('IngredientForm’s variants', () => {
       });
       renderForm({ workspaceId: null, values: twoForms() });
       const herb = openVariant('Herb');
-      openSectionsIn(herb, 'Description');
+      openSectionsIn(herb, 'Details & Care');
       type(herb, 'Description', 'Dug in autumn.');
 
       save();
 
       await waitFor(() => expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true'));
       const oil = variant('Oil');
-      expect(openIn(oil)).toEqual(['Safety']);
+      expect(openIn(oil)).toEqual(['Details & Care']);
       const notes = within(oil).getByRole('textbox', { name: 'Safety Notes' });
       expect(notes).toBeInvalid();
       expect(notes).toHaveFocus();
@@ -794,13 +793,13 @@ describe('IngredientForm’s variants', () => {
     });
     const COPIED = [
       'Description',
+      'Safety Notes',
       'Element',
       'Celestial Bodies',
       'Zodiac Signs',
       'Colours',
       'Categories',
       'Substitute Ingredients',
-      'Safety Notes',
       'References',
     ];
     const copyOf = (scope: HTMLElement, field: string) =>
@@ -893,7 +892,7 @@ describe('IngredientForm’s variants', () => {
       for (const field of COPIED) expect(copyOf(oil, field)).toBeDisabled();
 
       // The ingredient's own Description, the first in the page, once its section is open.
-      openSections('Description');
+      openSections('Details & Care');
       fireEvent.change(screen.getAllByRole('textbox', { name: 'Description' })[0], {
         target: { value: 'A fixture herb.' },
       });

@@ -208,3 +208,69 @@ test.describe('the members page', () => {
     }
   });
 });
+
+// The only owner's guided exit (story 10; M6.16): Leave stays enabled, opens a
+// dialog asking what happens to the coven, a hand-over or the deletion, and
+// Promote and Leave hands the coven to the member picked by name before
+// leaving, so the coven is never left ownerless.
+test.describe('the only owner leaving', () => {
+  const HANDOVER_NAME = 'Fixture Handover Coven';
+  const HANDOVER_SLUG = slugify(HANDOVER_NAME);
+  let covenId = '';
+
+  test('is offered both ways out, passes the scans, and hands the coven over by keyboard', async ({
+    page,
+  }) => {
+    const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+    try {
+      await sql`
+        insert into workspaces (name, slug, created_by, updated_by)
+        values (${HANDOVER_NAME}, ${HANDOVER_SLUG}, ${users.owner.id}, ${users.owner.id})
+        returning id`.then(([coven]) => (covenId = coven.id));
+      // Two others, so the new owner is searched for rather than offered alone.
+      for (const [role, user] of [
+        ['owner', users.owner],
+        ['member', users.member],
+        ['viewer', users.viewer],
+      ] as const) {
+        await sql`
+          insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+          values (${covenId}, ${user.id}, ${role}, ${users.owner.id}, ${users.owner.id})`;
+      }
+
+      await signInAgainAs(page, users.owner.id);
+      await page.goto(`/coven/${HANDOVER_SLUG}`);
+      const leave = page.getByRole('main').getByRole('button', { name: 'Leave Workspace' });
+      await expect(leave).toBeEnabled();
+
+      await leave.click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog.getByRole('radio', { name: /^Hand it/ })).toBeChecked();
+      // The deletion is the other choice, its confirm taking the row once chosen.
+      await dialog.getByRole('radio', { name: /^Delete it/ }).check();
+      await expect(dialog.getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
+      await dialog.getByRole('radio', { name: /^Hand it/ }).check();
+
+      const search = dialog.getByRole('combobox', { name: 'New Owner' });
+      await search.click();
+      await expect(dialog.getByRole('option')).toHaveCount(2);
+      await dialog.getByRole('option', { name: /Member/ }).click();
+      await assertNoAccessibilityViolations(page);
+
+      // By keyboard: focus the action and press Enter.
+      await dialog.getByRole('button', { name: 'Promote and Leave' }).focus();
+      await page.keyboard.press('Enter');
+      await page.waitForURL('/');
+
+      const seats = await sql`
+        select user_id, role::text, deleted_at is not null as gone from workspace_members
+        where workspace_id = ${covenId}`;
+      const byUser = Object.fromEntries(seats.map((s) => [s.user_id, s]));
+      expect(byUser[users.owner.id].gone).toBe(true);
+      expect(byUser[users.member.id]).toMatchObject({ role: 'owner', gone: false });
+      expect(byUser[users.viewer.id]).toMatchObject({ role: 'viewer', gone: false });
+    } finally {
+      await sql.end();
+    }
+  });
+});

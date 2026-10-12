@@ -1,8 +1,10 @@
-import { rolePermits } from '@/modules/coven';
+import { displayNamesOf } from '@/modules/identity';
+import { memberRoster, rolePermits } from '@/modules/coven';
 import DeleteWorkspaceButton from '../../../../components/DeleteWorkspaceButton';
 import ActionFailure from '../../../../components/WorkspaceActions/action-failure';
 import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
-import { requireCovenMembership } from '../../../../lib/request-session';
+import type { Successor } from '../../../../components/LeaveWorkspaceButton/types';
+import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
 import type { CovenLayoutParams } from './types';
 
 // The page a coven opens on (M9.15), where the switcher, an accepted
@@ -14,6 +16,29 @@ import type { CovenLayoutParams } from './types';
 export default async function CovenPage({ params }: CovenLayoutParams) {
   const { slug } = await params;
   const { workspace, membership } = await requireCovenMembership(slug);
+  const canDelete = rolePermits(membership.role, { workspace: ['delete'] });
+
+  // The last-owner guard stops only an owner, and only when they are the sole
+  // one, so only then is the roll read: the others become the hand-over's
+  // choices (M6.16). Anyone else leaves by the plain confirmation, and a
+  // change in the owners since this render is still the service's to refuse.
+  let successors: Successor[] | undefined;
+  if (canDelete) {
+    const session = await requireSession();
+    const roster = await memberRoster(session, workspace);
+    if (roster.filter(({ role }) => role === 'owner').length === 1) {
+      const others = roster.filter(({ userId }) => userId !== session.userId);
+      const names = await displayNamesOf(
+        session,
+        others.map(({ userId }) => userId),
+      );
+      successors = others.map(({ userId, role }, index) => ({
+        userId,
+        role,
+        name: names[index] ?? 'Unknown',
+      }));
+    }
+  }
 
   return (
     <main>
@@ -26,8 +51,12 @@ export default async function CovenPage({ params }: CovenLayoutParams) {
         <h2 id="coven-membership">Your Membership</h2>
         <ActionFailure>
           <div className="form__actions">
-            <LeaveWorkspaceButton workspaceId={workspace.id} name={workspace.name} />
-            {rolePermits(membership.role, { workspace: ['delete'] }) && (
+            <LeaveWorkspaceButton
+              workspaceId={workspace.id}
+              name={workspace.name}
+              successors={successors}
+            />
+            {canDelete && (
               <DeleteWorkspaceButton workspaceId={workspace.id} name={workspace.name} />
             )}
           </div>

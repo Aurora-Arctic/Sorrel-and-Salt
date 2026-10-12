@@ -20,7 +20,12 @@ const DeleteWorkspaceDocument = graphql(`
   }
 `);
 
-const DeleteWorkspaceButton = ({ workspaceId, name }: DeleteWorkspaceButtonProps): ReactElement => {
+const DeleteWorkspaceButton = ({
+  workspaceId,
+  name,
+  inModal,
+  onlyOwner = false,
+}: DeleteWorkspaceButtonProps): ReactElement => {
   const router = useRouter();
   // Said above the page's buttons when it gives a place for that.
   const failure = useActionFailure();
@@ -33,13 +38,14 @@ const DeleteWorkspaceButton = ({ workspaceId, name }: DeleteWorkspaceButtonProps
       question={
         <>
           Delete <strong>{name}</strong>? Its ingredients and its grimoire become inaccessible to
-          every member, other owners included.
+          every member{onlyOwner ? '' : ', other owners included'}.
         </>
       }
       warning="Nothing is destroyed, but only an administrator with database access can restore it."
       busy="Deleting"
       confirmClass="btn btn--destructive"
       onFailure={failure?.report}
+      inModal={inModal}
       send={() => graphqlRequest(DeleteWorkspaceDocument, { workspaceId })}
       // The coven is gone for this user too, so the page cannot be read again.
       onSent={() => router.replace('/')}
