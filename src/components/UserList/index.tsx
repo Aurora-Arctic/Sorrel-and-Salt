@@ -7,10 +7,12 @@ import HistoryLink from './history-link';
 import ImpersonateButton from './impersonate-button';
 import PrimaryAdminMark from './primary-admin-mark';
 import RoleControl from './role-control';
+import { roleLabel } from './roles';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import ProviderMark from '../ProviderMark';
 import { stackCell, tableRole } from '../../lib/table-roles';
+import { noMatchText } from '../../lib/text';
 import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
 import './index.scss';
 
@@ -18,8 +20,6 @@ import './index.scss';
 // the list through the identity service and hands this one page of it. The
 // filter is a GET form to the page itself, so a filtered page is an address
 // (claude-docs/components/user-list.md).
-
-const ROLE_LABELS = { admin: 'Admin', user: 'User' } as const;
 
 /**
  * The columns, in the owner's order (MB.59): each heading, and the label its
@@ -39,13 +39,6 @@ const COLUMNS = {
 
 const IMPERSONATE = 'Impersonate';
 
-/** A list as prose, without the serial comma: "a", "a and b", "a, b and c". */
-function and(items: readonly string[]): string {
-  return items.length < 2
-    ? items.join('')
-    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
-}
-
 /**
  * The empty list, naming the filters in use (MB.115, on the owner's call), so
  * an admin sees what to change: "No users match “ada” and the role Admin.
@@ -54,12 +47,10 @@ function and(items: readonly string[]): string {
 function noMatch({ query, role, awaitingApproval }: UserListFilterProps): string {
   const filters = [
     query && `“${query}”`,
-    role && `the role ${ROLE_LABELS[role]}`,
+    role && `the role ${roleLabel(role)}`,
     awaitingApproval && 'Needs Approval',
   ].filter((filter): filter is string => Boolean(filter));
-  return filters.length
-    ? `No users match ${and(filters)}. Change or clear the filter to see more.`
-    : 'There are no users yet.';
+  return noMatchText('users', filters, 'There are no users yet.');
 }
 
 /** A provider by its roster label, or by its id when the roster has none. */
@@ -160,9 +151,9 @@ const UserRow = ({
       <div className="user-list__role">
         <span className="user-list__role-name">
           {user.role === 'admin' ? (
-            <strong>{ROLE_LABELS.admin}</strong>
+            <strong>{roleLabel(user.role)}</strong>
           ) : (
-            <span>{ROLE_LABELS[user.role]}</span>
+            <span>{roleLabel(user.role)}</span>
           )}
           {user.primaryAdmin && <PrimaryAdminMark />}
         </span>

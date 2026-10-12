@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 import { cache } from 'react';
 import UserList from '../../../../components/UserList';
 import { userListHref } from '../../../../components/UserList/href';
+import { ROLES } from '../../../../components/UserList/roles';
 import type { UserListEntry } from '../../../../components/UserList/types';
 import { impersonationEnabled } from '../../../../lib/impersonation';
 import { requireAdminSession } from '../../../../lib/request-session';
-import { single } from '../../../../lib/search-params';
+import { oneOf, single } from '../../../../lib/search-params';
 import type { Session, UserRole } from '../../../../lib/session';
 import { countUsers, isPrimaryAdmin, listUsers, providersOf } from '@/modules/identity';
 import { pagerHrefs, readListPlace, readNumberedPage } from '../../list-page';
@@ -13,7 +14,7 @@ import { readPauseState } from '../pause-state';
 import type { AdminUsersPageProps, UsersSearchParams } from './types';
 
 export const metadata: Metadata = {
-  title: 'Users — Admin — Sorrel & Salt',
+  title: 'Users',
 };
 
 // The page and GraphQL's `users` end at the same service, paged by the same
@@ -63,8 +64,7 @@ export default async function AdminUsersPage({ searchParams }: AdminUsersPagePro
   // older link's `awaiting=1`.
   const awaitingApproval = params.awaiting !== undefined;
   // Either role, or none: a hand-edited value is no filter rather than an error.
-  const roleParam = single(params.role);
-  const role = roleParam === 'admin' || roleParam === 'user' ? roleParam : undefined;
+  const role = oneOf(ROLES, single(params.role));
 
   const [{ users, pageInfo, position }, adminChanges] = await Promise.all([
     readUsers(session, query, awaitingApproval, role, after, before),

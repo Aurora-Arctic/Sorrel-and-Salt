@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import CompendiumList from '../../../components/CompendiumList';
@@ -12,7 +11,7 @@ import type {
 import PageHeader from '../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../lib/pagination';
 import { requireAdminSession } from '../../../lib/request-session';
-import { single } from '../../../lib/search-params';
+import { oneOf, single, trimmed } from '../../../lib/search-params';
 import {
   countCompendium,
   listCompendium,
@@ -24,7 +23,7 @@ import {
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { listIngredientFormValues } from '@/modules/vocabulary';
-import { pagerHrefs, readListPlace, readOrMissing } from '../list-page';
+import { AddAction, pagerHrefs, readEditPlace, readListPlace } from '../list-page';
 import type { ModalHeading } from '../../../components/Modal/types';
 import type { IngredientFormValues } from '../../../components/IngredientForm/types';
 import MissingNotice from '../missing-notice';
@@ -33,7 +32,7 @@ import { entryValues } from './entry-values';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
 
 export const metadata: Metadata = {
-  title: 'Compendium — Admin — Sorrel & Salt',
+  title: 'Compendium',
 };
 
 // The page and GraphQL's `compendium` end at the same service, paged by the
@@ -102,16 +101,15 @@ const readForms = cache(async (): Promise<CompendiumFormChoice[]> => {
  * What `?edit=` names: the entry there, its values read for the form, or the
  * address it moved to while its old one still redirects, or nothing.
  */
-const readEdited = (slug: string) =>
-  readOrMissing(async () => {
-    const address = await resolveCompendiumSlug(slug);
-    if (address.kind === 'moved') return address;
-    return {
-      kind: 'entry' as const,
-      id: address.entry.id,
-      values: await entryValues(address.entry),
-    };
-  });
+const readEntry = async (slug: string) => {
+  const address = await resolveCompendiumSlug(slug);
+  if (address.kind === 'moved') return address;
+  return {
+    kind: 'entry' as const,
+    id: address.entry.id,
+    values: await entryValues(address.entry),
+  };
+};
 
 /**
  * The nomenclatures whose formal name is a binomial, set in italics; a
@@ -137,9 +135,6 @@ function editHeading({ name, canonicalName, nomenclature }: IngredientFormValues
   return { eyebrow: 'Edit Ingredient', title: name, qualifier: formal ? set : undefined };
 }
 
-const isKind = (value: string | undefined): value is NomenclatureKind =>
-  (NOMENCLATURE_KINDS as readonly string[]).includes(value ?? '');
-
 // The global compendium, for an admin to add to, edit and retire (M5.5). A
 // wide modal over the list does the writing, opened by the address — `?new`,
 // or `?edit=<slug>` — so it can be linked to and Back closes it, as on the
@@ -149,20 +144,20 @@ const isKind = (value: string | undefined): value is NomenclatureKind =>
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
   await requireAdminSession();
   const params: CompendiumSearchParams = await searchParams;
-  const { query, after, before, editSlug, adding } = readListPlace(params);
+  const place = readListPlace(params);
+  const { query, after, before, adding } = place;
   // Blank is no filter: a native submit sends `nomenclature=`; a kind no
   // classification holds is ignored, as a hand-edited cursor gets the first
   // page.
-  const kind = single(params.nomenclature);
-  const nomenclature = isKind(kind) ? kind : undefined;
+  const nomenclature = oneOf(NOMENCLATURE_KINDS, single(params.nomenclature));
   const withoutReferences = single(params.withoutReferences) === '1';
   // A form by its text, `?form=Oil`, which the compendium read folds.
-  const form = single(params.form)?.trim() ?? '';
+  const form = trimmed(params.form);
 
-  const [page, forms, edited] = await Promise.all([
+  const [page, forms, { edited, missing }] = await Promise.all([
     readCompendium(query, form, nomenclature, withoutReferences, after, before),
     readForms(),
-    !adding && editSlug ? readEdited(editSlug) : undefined,
+    readEditPlace(place, readEntry),
   ]);
   const filter: CompendiumListFilter = {
     query,
@@ -190,13 +185,9 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     <main>
       <PageHeader
         title="Compendium"
-        action={
-          <Link className="btn btn--solid" href={compendiumHref(here, 'new')}>
-            Add Ingredient
-          </Link>
-        }
+        action={<AddAction href={compendiumHref(here, 'new')}>Add Ingredient</AddAction>}
       />
-      {!adding && editSlug && !edited && <MissingNotice noun="compendium entry" />}
+      {missing && <MissingNotice noun="compendium entry" />}
       <CompendiumList
         entries={entries}
         filter={filter}

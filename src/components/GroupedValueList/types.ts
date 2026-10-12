@@ -1,5 +1,6 @@
 import type { Route } from 'next';
-import type { GroupColors } from '../../lib/types';
+import type { PagerHrefs } from '../../app/admin/types';
+import type { GroupColors, PagePosition } from '../../lib/types';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 
 /** A grouped kind's group as the list names it: its column, its filter, and its address parameter. */
@@ -40,7 +41,7 @@ export interface GroupedValueListEntry {
   editHref: Route;
 }
 
-export interface GroupedValueListProps {
+export interface GroupedValueListProps extends Partial<PagerHrefs> {
   kind: GroupedValueKind;
   /** This page's rows, in the service's order. */
   values: readonly GroupedValueListEntry[];
@@ -48,10 +49,8 @@ export interface GroupedValueListProps {
   filter: GroupedValueListFilter;
   /** Every live group of the kind, alphabetical (MB.35): the group filter's choices; none for a flat kind. */
   groups?: readonly GroupedValueGroupOption[];
-  previousHref?: Route;
-  nextHref?: Route;
   /** Where this page stands among them all, for the pager. */
-  position?: { page: number; pages: number };
+  position?: PagePosition;
 }
 
 /** The list's filter as asked: the name query, and a group by slug, each blank for none. */
@@ -74,9 +73,6 @@ export interface GroupedValuesPlace {
   after?: string;
   before?: string;
 }
-
-/** Which modal the address opens: the empty one, or a value's by slug. */
-export type GroupedValuesDialog = 'new' | { edit: string };
 
 /** What the filter form starts from: the kind, the page's filter, and the groups it offers. */
 export interface GroupedValueListFilterProps {

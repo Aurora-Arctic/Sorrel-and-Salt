@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { UserRole } from '../../lib/session';
+import type { PagerHrefs } from '../../app/admin/types';
 import type { PagePosition } from '../../lib/types';
 
 /** One listed user: the row's own facts and the providers read beside it. */
@@ -17,7 +18,7 @@ export interface UserListEntry {
   primaryAdmin: boolean;
 }
 
-export interface UserListProps {
+export interface UserListProps extends Partial<PagerHrefs> {
   /** This page's users, in the list's order. */
   users: readonly UserListEntry[];
   /** The name-or-email filter as asked, blank for none. */
@@ -26,10 +27,7 @@ export interface UserListProps {
   awaitingApproval: boolean;
   /** The role the list is narrowed to, absent for every role. */
   role?: UserRole;
-  /** The page before this one, absent on the first. */
-  previousHref?: string;
-  /** The page after this one, absent on the last. */
-  nextHref?: string;
+
   /** Where this page stands, the pager's "Page X of Y"; none when left out. */
   position?: PagePosition;
   /** Whether impersonation is registered here, so each non-admin row offers it (MB.53). */

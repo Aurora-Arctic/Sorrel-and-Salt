@@ -1,12 +1,12 @@
 import 'server-only';
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { cache } from 'react';
 import type { GroupKind } from '../../components/GroupForm/types';
 import GroupList from '../../components/GroupList';
 import { groupsHref } from '../../components/GroupList/href';
+import { KINDS } from '../../components/GroupList/kinds';
 import type { GroupListEntry } from '../../components/GroupList/types';
-import { MAX_PAGE_SIZE, resolvePage, resolveNumberedPage } from '../../lib/pagination';
+import { resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
 import {
   countCategories,
@@ -23,7 +23,8 @@ import {
   listIngredientFormGroups,
 } from '@/modules/vocabulary';
 import GroupDialog from './group-dialog';
-import { pagerHrefs, readListPlace, readOrMissing } from './list-page';
+import { GROUP_READERS } from './group-readers';
+import { AddAction, pagerHrefs, readEditPlace, readListPlace } from './list-page';
 import MissingNotice from './missing-notice';
 import type { GroupKindPage, GroupPageProps, GroupSearchParams } from './types';
 
@@ -44,10 +45,6 @@ import type { GroupKindPage, GroupPageProps, GroupSearchParams } from './types';
  */
 const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
   category: {
-    noun: 'group',
-    add: 'Add Group',
-    addTitle: 'Add Category Group',
-    editEyebrow: 'Edit Category Group',
     search: false,
     list: (page) => listCategoryGroups(page),
     count: (start) => countCategoryGroups(start),
@@ -55,10 +52,6 @@ const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
     countMembers: async (groupId) => (await countCategories({ groupId }, undefined)).totalCount,
   },
   form: {
-    noun: 'group',
-    add: 'Add Group',
-    addTitle: 'Add Form Group',
-    editEyebrow: 'Edit Form Group',
     search: false,
     list: (page) => listIngredientFormGroups(page),
     count: (start) => countIngredientFormGroups(start),
@@ -67,10 +60,6 @@ const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
       (await countIngredientFormValues({ groupId }, undefined)).totalCount,
   },
   tradition: {
-    noun: 'tradition',
-    add: 'Add Tradition',
-    addTitle: 'Add Tradition',
-    editEyebrow: 'Edit Tradition',
     search: true,
     list: listDeityTraditions,
     count: countDeityTraditions,
@@ -111,18 +100,11 @@ function readPlace(kind: GroupKind, params: GroupSearchParams) {
 // Every group on one page of the maximum, for the delete's move picker and,
 // for a category group, the colour pickers' near-colour warning: an admin
 // adds a group rarely (MB.35).
-const readChoices = cache(async (kind: GroupKind) => {
-  const page = await resolvePage({ first: MAX_PAGE_SIZE }, GROUP_KINDS[kind].list);
-  return page.edges.map(({ node }) => ({
-    id: node.id,
-    name: node.name,
-    colorDark: node.colorDark,
-    colorLight: node.colorLight,
-  }));
-});
+// The curated kind's own read of its groups, which its page shares (`group-readers.ts`).
+const readChoices = (kind: GroupKind) => GROUP_READERS[KINDS[kind].holds]();
 
 /** The group `?edit=` names, and how many live rows it holds, which its delete must move. */
-async function readEdited(kind: GroupKind, slug: string) {
+async function readGroup(kind: GroupKind, slug: string) {
   const group = await GROUP_KINDS[kind].getBySlug(slug);
   return { group, memberCount: await GROUP_KINDS[kind].countMembers(group.id) };
 }
@@ -136,11 +118,7 @@ async function readEdited(kind: GroupKind, slug: string) {
 export async function GroupAction({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   await requireAdminSession();
   const { here } = readPlace(kind, await searchParams);
-  return (
-    <Link className="btn btn--solid" href={groupsHref(kind, here, 'new')}>
-      {GROUP_KINDS[kind].add}
-    </Link>
-  );
+  return <AddAction href={groupsHref(kind, here, 'new')}>{KINDS[kind].add}</AddAction>;
 }
 
 /**
@@ -151,13 +129,15 @@ export async function GroupAction({ kind, searchParams }: GroupPageProps): Promi
  */
 export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   await requireAdminSession();
-  const { query, here, editSlug, adding } = readPlace(kind, await searchParams);
-  const { noun, addTitle, editEyebrow, search } = GROUP_KINDS[kind];
+  const place = readPlace(kind, await searchParams);
+  const { query, here, adding } = place;
+  const { noun, label } = KINDS[kind];
+  const { search } = GROUP_KINDS[kind];
 
-  const [page, choices, edited] = await Promise.all([
+  const [page, choices, { edited, missing }] = await Promise.all([
     readPage(kind, query, here.after, here.before),
     readChoices(kind),
-    !adding && editSlug ? readOrMissing(() => readEdited(kind, editSlug)) : undefined,
+    readEditPlace(place, (slug) => readGroup(kind, slug)),
   ]);
   const groups = page.edges.map(({ node }): GroupListEntry => ({
     id: node.id,
@@ -172,7 +152,7 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
 
   return (
     <>
-      {!adding && editSlug && !edited && <MissingNotice noun={noun} />}
+      {missing && <MissingNotice noun={noun} />}
       <GroupList
         kind={kind}
         groups={groups}
@@ -183,7 +163,7 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
       {adding && (
         <GroupDialog
           kind={kind}
-          heading={{ title: addTitle }}
+          heading={{ title: `Add ${label}` }}
           closeHref={closeHref}
           groups={choices}
         />
@@ -194,7 +174,7 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
           key={edited.group.id}
           kind={kind}
           // Named by the name it was saved under, which a rename leaves until it saves (MB.115).
-          heading={{ eyebrow: editEyebrow, title: edited.group.name }}
+          heading={{ eyebrow: `Edit ${label}`, title: edited.group.name }}
           closeHref={closeHref}
           group={{
             id: edited.group.id,

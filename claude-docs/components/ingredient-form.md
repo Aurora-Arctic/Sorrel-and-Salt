@@ -287,9 +287,10 @@ where the change is:
 - **Several open at once, each on its own.** A new entry opens with every
   section open, the long form it is, and so does the form Save & Add Another
   clears; an edit opens with every one closed.
-- **Open All / Close All**, a small quiet button beside the modal's title,
-  "Add Ingredient", or an edit's eyebrow and entry name (the owner's call; [`Modal`](modal.md),
-  "Beside the title"), or at the end of the line above the first section
+- **Open All / Close All**, a small quiet button under the modal's ×,
+  level with the foot of its heading, or under the heading on a phone (the
+  owner's call; [`Modal`](modal.md),
+  "A control in the header"), or at the end of the line above the first section
   where the form is in no modal, reads Close All while any section is open and Open All
   once every one is closed. A press from any mix therefore folds the form to
   its summary lines, the view the sections are for, and a new entry, all

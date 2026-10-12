@@ -22,6 +22,7 @@ $modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
 // (MB.115): open only, since the closed element's `display: none` is the
 // browser's.
 .modal-dialog {
+  container: modal / inline-size;
   box-sizing: border-box;
   width: min(calc($dialog-column + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
   max-height: calc(100dvh - #{$modal-gap} * 2);
@@ -143,12 +144,18 @@ $modal-fade: 150ms ease-out;
 // top as a long form scrolls beneath it, the owner's call at MB.115: outside
 // the body, which is what scrolls, the gap beneath it padding rather than
 // margin so it belongs to the header.
+//
+// A control the contents put in the header sits under the ×, its foot level
+// with the heading's, or on a phone on a line of its own under the heading,
+// at its start (the owner's calls at MB.115): between the title and the ×
+// it squeezed a phone's heading until a name broke mid-word. A heading
+// shorter than the two sinks to meet it.
 .modal-dialog__header {
-  display: flex;
+  display: grid;
   flex: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: space(3);
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto 1fr;
+  gap: 0 space(3);
   padding-bottom: space(4);
 }
 
@@ -157,8 +164,15 @@ $modal-fade: 150ms ease-out;
 // than pushing the × out, and a name with no break in it breaks anywhere
 // rather than overflow.
 .modal-dialog__heading {
+  grid-row: 1 / -1;
+  align-self: end;
   gap: space(1);
   min-width: 0;
+
+  @container modal (max-width: #{$narrow-column + $modal-padding}) {
+    grid-row: 1;
+    align-self: start;
+  }
 }
 
 .modal-dialog__title {
@@ -177,15 +191,24 @@ $modal-fade: 150ms ease-out;
   color: $text-muted;
 }
 
-// Beside the title, a control the contents put there, and then the space
-// that pushes the × to the end; empty, it is that space alone.
+// Under the ×, a control the contents put there, its foot on the heading's.
 .modal-dialog__header-slot {
   display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  margin-inline-end: auto;
-  // The title wraps on a phone; the control keeps to one line beside it.
+  grid-column: 2;
+  place-self: end end;
   white-space: nowrap;
+
+  // At the width a form stacks its own row, under the heading at its start,
+  // where the column beside the name stays the ×'s alone.
+  @container modal (max-width: #{$narrow-column + $modal-padding}) {
+    grid-column: 1 / -1;
+    justify-self: start;
+    margin-top: space(2);
+
+    &:empty {
+      display: none;
+    }
+  }
 
   // Held while a question is asked, as the form is, and greyed by the same
   // scrim, so it does not look pressable while it is not.
@@ -204,12 +227,11 @@ $modal-fade: 150ms ease-out;
 // A 2rem × in a `$close-target` square, 2.5rem, the owner's call during M5.5,
 // in the proportion it began at: well past WCAG 2.2's 24px minimum target.
 // The glyph's 2rem is on no scale: it is the × drawn at the size of the
-// target it sits in, not a length of the layout. It keeps its square beside
-// a heading that wraps, since a shrunk round target draws as an oval.
+// target it sits in, not a length of the layout. Its column is its own
+// width, so a heading that wraps cannot squeeze the round target to an oval.
 .modal-dialog__close {
   display: inline-flex;
-  flex: none;
-  align-self: flex-start;
+  place-self: start end;
   align-items: center;
   justify-content: center;
   width: $close-target;

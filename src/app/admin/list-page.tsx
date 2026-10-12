@@ -1,8 +1,9 @@
 import 'server-only';
 import type { Route } from 'next';
+import Link from 'next/link';
 import { InvalidCursor, NotFound } from '../../lib/errors';
 import { resolveNumberedPage } from '../../lib/pagination';
-import { readableCursor, single } from '../../lib/search-params';
+import { readableCursor, single, trimmed } from '../../lib/search-params';
 import type {
   Cursor,
   Page,
@@ -11,7 +12,7 @@ import type {
   PagePosition,
   PageRequest,
 } from '../../lib/types';
-import type { ListPlace, ListSearchParams, PagerCursor, PagerHrefs } from './types';
+import type { AddActionProps, ListPlace, ListSearchParams, PagerCursor, PagerHrefs } from './types';
 
 // What every admin list page reads off its address and builds back into one,
 // written once (MB.115) after ten pages had each carried the cursor read, the
@@ -24,7 +25,7 @@ export function readListPlace(params: ListSearchParams): ListPlace {
   const after = readableCursor(single(params.after));
   return {
     // Blank is no filter: a native submit sends `query=`.
-    query: single(params.query)?.trim() ?? '',
+    query: trimmed(params.query),
     after,
     // One cursor at a time: an address carrying both reads as `after`'s page.
     before: after ? undefined : readableCursor(single(params.before)),
@@ -84,4 +85,28 @@ export async function readOrMissing<T>(read: () => Promise<T>): Promise<T | unde
     if (error instanceof NotFound) return undefined;
     throw error;
   }
+}
+
+/**
+ * The row `?edit=` names, read by `read`, and whether the address names one
+ * that is gone: `missing` is what a page answers with `MissingNotice` over the
+ * list. An add wins over an `?edit=`, so it reads nothing, and a blank
+ * `?edit=` names none.
+ */
+export async function readEditPlace<T>(
+  { adding, editSlug }: Pick<ListPlace, 'adding' | 'editSlug'>,
+  read: (slug: string) => Promise<T>,
+): Promise<{ edited: T | undefined; missing: boolean }> {
+  if (adding || !editSlug) return { edited: undefined, missing: false };
+  const edited = await readOrMissing(() => read(editSlug));
+  return { edited, missing: edited === undefined };
+}
+
+/** A list page's Add, the open tab's action beside the page's heading, at `href` so it keeps the list's place. */
+export function AddAction({ href, children }: AddActionProps) {
+  return (
+    <Link className="btn btn--solid" href={href}>
+      {children}
+    </Link>
+  );
 }

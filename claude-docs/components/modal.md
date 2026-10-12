@@ -16,7 +16,7 @@ is the wrapper every admin page opens it through (below).
 | `confirm-overlay.tsx` | `ConfirmOverlay`, the card a form asks a question in, over itself                      |
 | `confirm-layer.ts`    | `ConfirmLayerContext`, the layer and the hold the card is drawn with                   |
 | `fields.ts`           | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                      |
-| `header-slot.ts`      | `HeaderSlotContext` and `useModalHeaderSlot`, beside the title                         |
+| `header-slot.ts`      | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                        |
 | `types.ts`            | `ModalHeading`, `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's, the card's |
 
 ## Props
@@ -288,17 +288,22 @@ a name with no break in it breaks anywhere.
 | `/admin/category-groups`, `form-groups` | Edit Category Group, Edit Form Group | —           |
 | `/admin/deity-traditions`               | Edit Tradition                       | —           |
 
-## Beside the title
+## A control in the header
 
-The header holds the title, with its eyebrow over it on an edit, then an empty place beside it, then the ×. The
+The header holds the title, with its eyebrow over it on an edit, then the ×,
+and under the × a place whose foot is level with the heading's. In a dialog
+narrower than a form's stacking width (`$narrow-column` and the padding, the
+width ConfirmOverlay's row stacks at) the place moves to a line of its own
+under the heading, at its start, and empty it takes no line. The
 modal hands that place down as an element (`HeaderSlotContext`), and its
 contents may portal one control of their own into it through
 `useModalHeaderSlot()`: the ingredient form's Open All / Close All, the
 owner's call at MB.115. A slot, as the guard is, since the form sits inside
 the modal's render prop, out of its owner's reach. Outside a modal the hook
-answers null and the form keeps the control in its own flow. Empty, the place
-is only the space that pushes the × to the end. Tab order follows the page:
-the title's control, then the ×, then the form. While a question is asked
+answers null and the form keeps the control in its own flow. The place sat
+between the title and the × until the owner moved it, at MB.115: there it
+squeezed a phone's heading until a name broke mid-word. Tab order follows
+the page: the ×, then the control, then the form. While a question is asked
 over the form, the place is held and dimmed with it
 (["Asking over the form"](#asking-over-the-form)).
 

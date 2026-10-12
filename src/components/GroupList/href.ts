@@ -1,7 +1,9 @@
 import type { Route } from 'next';
-import { listHref } from '../../lib/list-href';
+import { dialogParams, listHref } from '../../lib/list-href';
+import type { ListDialog } from '../../lib/types';
 import type { GroupKind } from '../GroupForm/types';
-import type { GroupsDialog, GroupsPlace } from './types';
+import { KINDS } from './kinds';
+import type { GroupsPlace } from './types';
 
 // The address of a group page under a name search, at a page, with a modal
 // open over it or not: the list's links, the pager, the filter's submit and
@@ -10,23 +12,16 @@ import type { GroupsDialog, GroupsPlace } from './types';
 // as none. `new` is a bare flag, read by its presence, as the categories
 // page's is.
 
-const PATHS: Record<GroupKind, string> = {
-  category: '/admin/category-groups',
-  form: '/admin/form-groups',
-  tradition: '/admin/deity-traditions',
-};
-
 /** The page itself, unfiltered: where the filter submits, and what Clear opens. */
 export function groupsPath(kind: GroupKind): Route {
-  return PATHS[kind] as Route;
+  return KINDS[kind].path;
 }
 
-export function groupsHref(kind: GroupKind, place: GroupsPlace, dialog?: GroupsDialog): Route {
-  return listHref(PATHS[kind], {
+export function groupsHref(kind: GroupKind, place: GroupsPlace, dialog?: ListDialog): Route {
+  return listHref(KINDS[kind].path, {
     query: place.query,
     after: place.after,
     before: place.before,
-    new: dialog === 'new',
-    edit: dialog === 'new' ? undefined : dialog?.edit,
+    ...dialogParams(dialog),
   });
 }

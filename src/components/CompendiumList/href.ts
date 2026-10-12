@@ -1,6 +1,7 @@
 import type { Route } from 'next';
-import { listHref } from '../../lib/list-href';
-import type { CompendiumDialog, CompendiumPlace } from './types';
+import { dialogParams, listHref } from '../../lib/list-href';
+import type { ListDialog } from '../../lib/types';
+import type { CompendiumPlace } from './types';
 
 // The address of `/admin/compendium` under a filter, at a page, with a modal
 // open over it or not: the list's links, the pager, the filter's submit and
@@ -11,7 +12,7 @@ import type { CompendiumDialog, CompendiumPlace } from './types';
 
 const PATH = '/admin/compendium';
 
-export function compendiumHref(place: CompendiumPlace, dialog?: CompendiumDialog): Route {
+export function compendiumHref(place: CompendiumPlace, dialog?: ListDialog): Route {
   return listHref(PATH, {
     query: place.query,
     form: place.form,
@@ -19,7 +20,6 @@ export function compendiumHref(place: CompendiumPlace, dialog?: CompendiumDialog
     withoutReferences: place.withoutReferences ? '1' : undefined,
     after: place.after,
     before: place.before,
-    new: dialog === 'new',
-    edit: dialog === 'new' ? undefined : dialog?.edit,
+    ...dialogParams(dialog),
   });
 }

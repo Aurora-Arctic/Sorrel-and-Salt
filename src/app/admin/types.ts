@@ -1,3 +1,4 @@
+import type { ADMIN_PAGES } from '../../components/AdminNav/sections';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type {
@@ -151,15 +152,8 @@ export interface GroupRow {
   colorLight?: string;
 }
 
-/** One group vocabulary's page: its copy and its readers, from `@/modules/vocabulary`. */
+/** One group vocabulary's page readers, from `@/modules/vocabulary`; its copy is the kind table's (`GroupList/kinds.ts`). */
 export interface GroupKindPage {
-  /** One group, lower-case, as the missing notice says it: "group". */
-  noun: string;
-  /** The Add link's label: "Add Group". */
-  add: string;
-  /** The add modal's title, "Add Category Group"; the edit modal's eyebrow, "Edit Category Group". */
-  addTitle: string;
-  editEyebrow: string;
   /**
    * Whether the list takes a name search (MB.115): the traditions' alone. A
    * kind without one reads no `query` from its address, so its readers are
@@ -183,4 +177,12 @@ export interface GroupDialogProps {
   groups: readonly GroupChoice[];
   /** How many live rows the edited group holds. */
   memberCount?: number;
+}
+
+/** The admin pages that are tabbed pages, by their key in `ADMIN_PAGES`: every one but the single-tab compendium. */
+export type TabbedPageKey = Exclude<keyof typeof ADMIN_PAGES, 'compendium'>;
+
+export interface AddActionProps {
+  href: Route;
+  children: ReactNode;
 }

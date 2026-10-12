@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { cache } from 'react';
 import type { GroupedValueKind } from '../../components/GroupedValueForm/types';
@@ -9,7 +8,7 @@ import type { GroupedValueListEntry } from '../../components/GroupedValueList/ty
 import { resolveNumberedPage } from '../../lib/pagination';
 import { requireAdminSession } from '../../lib/request-session';
 import { single } from '../../lib/search-params';
-import { pagerHrefs, readListPlace, readOrMissing } from './list-page';
+import { AddAction, pagerHrefs, readEditPlace, readListPlace } from './list-page';
 import MissingNotice from './missing-notice';
 import ValueDialog from './value-dialog';
 import { VALUE_KINDS } from './value-kinds';
@@ -98,11 +97,7 @@ function editHeading(
 export async function ValueAction({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
   await requireAdminSession();
   const { here } = await readPlace(kind, await searchParams);
-  return (
-    <Link className="btn btn--solid" href={groupedValuesHref(kind, here, 'new')}>
-      Add {KINDS[kind].label}
-    </Link>
-  );
+  return <AddAction href={groupedValuesHref(kind, here, 'new')}>Add {KINDS[kind].label}</AddAction>;
 }
 
 /**
@@ -114,15 +109,13 @@ export async function ValueAction({ kind, searchParams }: ValuePageProps): Promi
  */
 export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
   await requireAdminSession();
-  const { filter, here, after, before, editSlug, adding, groups, group } = await readPlace(
-    kind,
-    await searchParams,
-  );
+  const place = await readPlace(kind, await searchParams);
+  const { filter, here, after, before, adding, groups, group } = place;
   const { label, noun } = KINDS[kind];
 
-  const [page, edited] = await Promise.all([
+  const [page, { edited, missing }] = await Promise.all([
     readValues(kind, filter.query, group?.id, after, before),
-    !adding && editSlug ? readOrMissing(() => VALUE_KINDS[kind].getBySlug(editSlug)) : undefined,
+    readEditPlace(place, VALUE_KINDS[kind].getBySlug),
   ]);
   const groupsById = new Map(groups.map((each) => [each.id, each]));
   const values = page.edges.map(({ node }): GroupedValueListEntry => {
@@ -146,7 +139,7 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
 
   return (
     <>
-      {!adding && editSlug && !edited && <MissingNotice noun={noun} />}
+      {missing && <MissingNotice noun={noun} />}
       <GroupedValueList
         kind={kind}
         values={values}

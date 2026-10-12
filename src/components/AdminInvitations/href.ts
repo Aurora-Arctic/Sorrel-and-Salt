@@ -10,12 +10,13 @@ import type { AdminInvitationsCursor, AdminInvitationsFilter } from './types';
 // build one: the pager and the form keep the filter, the form keeps the page
 // too, and the filter's submit names no cursor, so it opens the first page.
 
-const PATH = '/admin/invitations';
+/** The page itself, unfiltered: where the filter submits. */
+export const INVITATIONS_PATH: Route = '/admin/invitations';
 
 export function invitationsHref(
   { email, expiringSoon }: Partial<AdminInvitationsFilter> = {},
   { after, before }: AdminInvitationsCursor = {},
   invite = false,
 ): Route {
-  return listHref(PATH, { email, expiring: expiringSoon, after, before, invite });
+  return listHref(INVITATIONS_PATH, { email, expiring: expiringSoon, after, before, invite });
 }
