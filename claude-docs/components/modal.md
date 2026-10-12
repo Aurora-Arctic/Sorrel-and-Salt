@@ -200,7 +200,7 @@ form's Delete question are drawn through it.
   unsaved changes' — hands the focus over in one commit. A form keys a
   question by its step, so each step takes the focus on its own safe answer.
 - **Motion.** The scrim and the card fade in over `$motion-short`, from
-  `@starting-style`, and appear at once under reduced motion. It opens with the focus on its first shown field, past a hidden input, a disabled select and a field under `hidden`, or on itself when it holds none; and is named by its eyebrow, title and qualifier together. They go at
+  `@starting-style`, and appear at once under reduced motion. They go at
   once, with the question.
 - **Its row stacks** at the width a form's own does: under 28rem of the
   form's width, which is the main area's less the body's padding
@@ -272,8 +272,11 @@ eyebrow naming the action and the kind, then the entry as the heading.
 
 **A screen reader hears both**: the dialog is labelled by the eyebrow, then
 the heading, "Edit Ingredient, Mugwort, Artemisia vulgaris". The commas are
-visually hidden text, there for the name alone, since `aria-labelledby`
-joins its parts with a space and a reader would otherwise run them together.
+there for the name alone, since `aria-labelledby` joins its parts with a
+space and a reader would otherwise run them together. Each is a
+`.spoken-separator`, a comma drawn at no size, rather than `.visually-hidden`
+text: that is taken out of the flow, and Chrome then puts a space either
+side of it in the name, "Edit Ingredient , Mugwort" (`styling.md`).
 
 The eyebrow and title are a `.header` column, closer than its gap, which may
 shrink past its content: a long name wraps rather than pushing the × out, and
