@@ -25,6 +25,14 @@ export async function findUserByEmail(
   return row;
 }
 
+/** The user list's order, by name and then id. */
+const USER_ORDER: readonly SortPart[] = [users.name];
+
+/** The users the list holds under `filter`: all but the bootstrap user, narrowed by its arms. */
+function listedUsers(filter: UserFilter): SQL | undefined {
+  return and(ne(users.id, BOOTSTRAP_USER_ID), ...userArms(filter));
+}
+
 /**
  * One page of the live users under `filter`, by name and then id: the admin
  * user list (MB.52). It takes the `SiteAdmin` proof, so no caller that has not
@@ -38,12 +46,20 @@ export function findUserPage(
   filter: UserFilter,
   page: PageRequest,
 ): Promise<PageEntry<typeof users.$inferSelect>[]> {
-  return findPage(
-    users,
-    [users.name],
-    page,
-    and(ne(users.id, BOOTSTRAP_USER_ID), ...userArms(filter)),
-  );
+  return findPage(users, USER_ORDER, page, listedUsers(filter));
+}
+
+/**
+ * How many users `findUserPage` pages under `filter`, and how many come
+ * before `start`, a page's first row, none on an empty page: the user list's
+ * "Page X of Y" (MB.115).
+ */
+export function findUserCount(
+  _admin: SiteAdmin,
+  filter: UserFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCount(users, USER_ORDER, start, listedUsers(filter));
 }
 
 /**
