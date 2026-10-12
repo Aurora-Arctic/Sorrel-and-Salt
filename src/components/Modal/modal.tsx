@@ -192,14 +192,14 @@ const Modal = ({
           {eyebrow && (
             <p id={eyebrowId} className="eyebrow">
               {eyebrow}
-              <span className="visually-hidden">,</span>
+              <span className="spoken-separator">,</span>
             </p>
           )}
           <h2 id={titleId} className="modal-dialog__title">
             {title}
             {qualifier && (
               <>
-                <span className="visually-hidden">,</span>{' '}
+                <span className="spoken-separator">,</span>{' '}
                 <span className="modal-dialog__qualifier">{qualifier}</span>
               </>
             )}

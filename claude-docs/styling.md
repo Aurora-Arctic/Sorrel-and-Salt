@@ -1016,8 +1016,8 @@ heavier than the reverse; light reverts to the browser default.
     `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
-    `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, and `.visually-hidden`, for text a
-    screen reader reads and nothing draws, such as a live region's news.
+    `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, `.visually-hidden`, for text a
+    screen reader reads and nothing draws, such as a live region's news, and `.spoken-separator`, a comma heard but not seen between two parts of one name, drawn at no size so Chrome adds no space around it in the name (MB.115).
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,
   self-hosted at build time via `next/font/google`. The CSS variables it defines
   on `<html>` are what `$font-heading` / `$font-body` reference.

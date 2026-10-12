@@ -69,7 +69,7 @@ const NavLinks = ({ sections }: NavLinksProps): ReactElement => {
                 {here.section.name !== here.page.label && (
                   <span className="admin-nav__section">
                     {here.section.name}
-                    <span className="visually-hidden">, </span>
+                    <span className="spoken-separator">, </span>
                   </span>
                 )}
                 <span className="admin-nav__page">{here.page.label}</span>

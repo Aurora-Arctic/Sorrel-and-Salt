@@ -1319,6 +1319,14 @@
     @include visually-hidden;
   }
 
+  // A comma heard but not seen, between two parts of a name read as one, as a
+  // dialog's "Edit Deity, Testra, Greek" (MB.115). Drawn at no size rather than
+  // `.visually-hidden`, whose box is taken out of the flow: Chrome then puts a
+  // space either side of it in the name, "Edit Deity , Testra".
+  .spoken-separator {
+    font-size: 0;
+  }
+
   // Chips and badges laid out as an IngredientCard will need; composes with `.modal`.
   .specimen {
     display: flex;
