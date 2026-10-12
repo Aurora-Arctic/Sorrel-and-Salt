@@ -144,7 +144,7 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   red tint and red text (kept at MB.115 on the owner's call). It is sticky at the table's right edge, so on a narrow
   frame the other columns scroll beneath it (on the owner's call, during
   MB.59), until the table stacks into cards at phone width, where it sits at the
-  card's top right instead (Styling, below). Its ground is therefore opaque: the
+  card's top right instead (Styling, below), placed by the table primitive's `data-table__card-action` grid. Its ground is therefore opaque: the
   tint mixed into the band it sits on, the page or a banded row's card. Every tip
   in the table sits one layer above it (`$tip-layer`, the column's
   `$sticky-column-layer` plus one): a tip reaches into its own row, whose
@@ -236,8 +236,8 @@ service's `isPrimaryAdmin` for each row as it reads it (MB.59).
   read once. It is
   one row, `.user-list__pause`, centred with a `space(3)` gap. At a phone's
   width, where the heading line spans its action, the warning and the switch
-  take a line each, the switch across it, locked or not (`index.scss`, and
-  `controls.scss` for a locked control as a page's action). While
+  take a line each, the switch across it, locked or not (the `.page-header`
+  primitive, and `controls.scss` for a locked control as a page's action). While
   changes are on it shows the button alone; while paused it first says so in
   a quiet warning `Notice`: "Admin changes are paused.", on the owner's
   call. Quiet makes it an `<output>`, a status rather than an alert, because

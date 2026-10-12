@@ -133,7 +133,9 @@ it renders.
   width. The action's wrapper, `.tabbed-page__action`, spans it with its
   action, and is taken out of the line when a tab has none. An action that
   wraps its button, the pause's row or a locked control, spans its button
-  in its own stylesheet (`UserList/index.scss`, `controls.scss`), so
+  too: the `.page-header` primitive makes any wrapper that is not a bare
+  button a flex box whose children grow to the line, and a locked control's
+  own button, a level deeper, does so in `UserList/controls.scss`, so
   Pause Admin Changes and a locked Invite Admin span the line as an Add
   link does. The line sits
   `space(4)` above the tab row, which sits `space(5)` above the content.
@@ -147,8 +149,7 @@ it renders.
   label in the body ink. The fill alone sits under WCAG 1.4.11's 3:1 against
   the track (1.40:1 dark, 1.28:1 light); the edge measures 7.23:1 and
   5.17:1, and the open label on the fill 9.60:1 and 11.68:1. The two mixes
-  are local to the stylesheet, as the skeleton's are, since nothing else
-  uses them; `tests/scss/tokens.test.ts` holds the open label and the edge
+  are local to the stylesheet, since nothing else uses them; `tests/scss/tokens.test.ts` holds the open label and the edge
   to their floors in both themes. The page ground would sit darker than the
   track in the light theme and read as a dent rather than a pill. The row
   is not the `.link-row` primitive, whose underline it does not draw; it
@@ -216,8 +217,11 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 - **Its fill** is the muted ink 18% into the card surface, as the combobox's
   quiet fills are, so both themes carry it on the page and on a card; its
   shimmer, a band 7% into the card surface, passes across every shape every
-  1.4s. No token was added: both are `color-mix`es of existing tokens, and
-  no text sits on them.
+  1.4s. The fill is the `$fill-quiet` token; the shimmer is a local
+  `color-mix` of existing tokens, and no text sits on either. The filter's
+  bars and the pager's stand at `$control-height`, and the filter's fields
+  at `$filter-choice-width`, so the skeleton is as tall and wide as the
+  controls that replace it.
 - **Motion.** The skeleton fades in over 150ms as the press takes the old
   content away, and the new content fades in over 200ms as it replaces the
   skeleton (`data-arrived` on the content area, set only after a tab

@@ -86,11 +86,16 @@ off.
 
 ## Styling
 
-Tokens and two mixins in `_mixins.scss`, so every Edit matches:
+Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 
-- **`icon-button($target, $glyph)`**: a square box with no text and a
-  transparent ground, the mark at `$glyph`. `$icon-size` around
-  `$glyph-size` (1.5rem around 1rem, WCAG 2.2's 24px target) by default.
+- **`icon-button($target, $glyph, $radius, $cursor)`**: a square box with no
+  text and a transparent ground, the mark at `$glyph`, in the muted ink and
+  `$text-primary` when pointed at or focused. `$icon-size` around
+  `$glyph-size` (1.5rem around 1rem, WCAG 2.2's 24px target) by default; a
+  round `$radius` and a help `$cursor` make InfoTip's ⓘ and the crown.
+- **`icon-button-remove`**: the × and the bin's answer, the wax and a tint
+  of it 20% into the card, as the combobox's chip-remove and the form's
+  remove icons wear.
 - **`icon-button-edit`**: the pencil's ink, `$accent`, and, pointed at,
   focused or open (`aria-expanded`), a tint of it 20% into the card.
 - **Sizes**: the ingredient form keeps the 24px box and 1rem glyph beside
