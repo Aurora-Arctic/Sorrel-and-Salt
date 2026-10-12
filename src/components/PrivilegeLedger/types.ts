@@ -53,3 +53,8 @@ export interface PrivilegeLedgerProps extends Partial<PagerHrefs> {
   /** Where the page stands, for "Page X of Y". */
   position?: PagePosition;
 }
+
+/** A user a row names, or null for an account since deleted. */
+export interface LedgerPersonProps {
+  person: LedgerPerson | null;
+}

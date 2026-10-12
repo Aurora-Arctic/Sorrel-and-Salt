@@ -15,7 +15,13 @@ import ProviderMark from '../ProviderMark';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
-import type { UserListEntry, UserListFilterProps, UserListProps } from './types';
+import type {
+  MarkProps,
+  ProviderLogoProps,
+  UserListEntry,
+  UserListFilterProps,
+  UserListProps,
+} from './types';
 import './index.scss';
 
 // `/admin/users`' filter, table and pager (MB.52). Render-only: the page reads
@@ -48,7 +54,7 @@ function providerLabel(id: string): string {
  * provider with no logo, one since dropped from the roster, keeps its id as
  * text, so the account still says it is linked.
  */
-const ProviderLogo = ({ id }: { id: string }): ReactElement => {
+const ProviderLogo = ({ id }: ProviderLogoProps): ReactElement => {
   const label = providerLabel(id);
   if (!isRosterProvider(id)) return <span className="user-list__provider-text">{label}</span>;
   return (
@@ -68,15 +74,7 @@ const ProviderLogo = ({ id }: { id: string }): ReactElement => {
  * where `hint` asks, in a tip bubble on hover too, since the column's heading
  * does not say it. The bubble is the eye's copy, hidden from the reader.
  */
-const Mark = ({
-  value,
-  label,
-  hint = false,
-}: {
-  value: boolean;
-  label: string;
-  hint?: boolean;
-}): ReactElement => (
+const Mark = ({ value, label, hint = false }: MarkProps): ReactElement => (
   <span
     className={[
       'user-list__mark',

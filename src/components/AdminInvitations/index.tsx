@@ -16,7 +16,7 @@ import AdminInvitationsFilter from './filter';
 import { invitationsHref } from './href';
 import InviteForm from './invite-form';
 import type {
-  AdminInvitationEntry,
+  RevokeInvitationProps,
   AdminInvitationsFilter as Filter,
   AdminInvitationsProps,
   InviteAdminProps,
@@ -57,13 +57,7 @@ const RevokeAdminInvitationDocument = graphql(`
   }
 `);
 
-const Revoke = ({
-  invitation,
-  locked,
-}: {
-  invitation: AdminInvitationEntry;
-  locked?: string;
-}): ReactElement => {
+const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => {
   const accessibleName = `Revoke the invitation to ${invitation.email}`;
   if (locked) {
     return (

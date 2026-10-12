@@ -7,7 +7,7 @@ import { noMatchText } from '../../lib/text';
 import LedgerFilterForm from './filter';
 import { privilegeLabel } from './privileges';
 import type {
-  LedgerPerson,
+  LedgerPersonProps,
   LedgerRoute,
   PrivilegeLedgerEntry,
   PrivilegeLedgerFilter,
@@ -48,7 +48,7 @@ function when(at: Date): string {
 }
 
 /** A named user, linked to their `/admin/users` row where the list has one. */
-const Person = ({ person }: { person: LedgerPerson | null }): ReactElement => {
+const Person = ({ person }: LedgerPersonProps): ReactElement => {
   if (!person) return <em>Deleted account</em>;
   return person.href ? <a href={person.href}>{person.name}</a> : <span>{person.name}</span>;
 };
