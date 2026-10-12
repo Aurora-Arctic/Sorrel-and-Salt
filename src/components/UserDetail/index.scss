@@ -1,0 +1,18 @@
+@use '../../scss/variables' as *;
+
+.user-detail {
+  display: flex;
+  flex-direction: column;
+  gap: space(5);
+}
+
+.user-detail__section {
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}
+
+.user-detail__actions {
+  display: flex;
+  gap: space(3);
+}
