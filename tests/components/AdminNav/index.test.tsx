@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentHrefs, hrefs } from '../../support/links';
 
@@ -10,33 +10,22 @@ vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
 const { default: AdminNav } = await import('@/components/AdminNav');
 
 // The nav the `/admin` layout carries (M5.4): every admin page, and nothing
-// else, with the page you are on marked, as a row and, for a phone, as a
-// disclosure of the same links in their sections
-// (claude-docs/components/admin-nav.md). Which of the two shows is the
-// stylesheet's, so both are in the page here.
+// else, each linked at its first tab, with the page you are on marked
+// (claude-docs/components/admin-nav.md). Which pages show in the row and
+// which behind More is the stylesheet's, so every page is in the row here.
 
 const nav = () => screen.getByRole('navigation', { name: 'Admin' });
-// The disclosure: a `<details>`, whose role is group.
-const menu = () => within(nav()).getByRole('group');
-const row = () =>
-  within(nav())
-    .getAllByRole('link')
-    .filter((link) => !menu().contains(link));
+const row = () => within(nav()).getAllByRole('link');
 
-// Each page linked at its first tab (MB.115).
-const SECTIONS = [
-  [
-    'Compendium',
-    [
-      '/admin/compendium',
-      '/admin/categories',
-      '/admin/forms',
-      '/admin/deities',
-      '/admin/celestial-bodies',
-    ],
-  ],
-  ['People', ['/admin/users']],
-] as const;
+// Each page linked at its first tab (MB.115), in the sections' order.
+const PAGES = [
+  '/admin/compendium',
+  '/admin/categories',
+  '/admin/forms',
+  '/admin/deities',
+  '/admin/celestial-bodies',
+  '/admin/users',
+];
 
 beforeEach(() => {
   pathname.mockReturnValue('/admin');
@@ -46,17 +35,7 @@ describe('AdminNav', () => {
   it('links every admin page in a row, in its sections’ order', () => {
     render(<AdminNav />);
 
-    expect(hrefs(row())).toEqual(SECTIONS.flatMap(([, pages]) => pages));
-  });
-
-  it('holds every link again in the disclosure, a list named for each section', () => {
-    render(<AdminNav />);
-
-    expect(within(menu()).getAllByRole('list')).toHaveLength(SECTIONS.length);
-    for (const [name, pages] of SECTIONS) {
-      const list = within(menu()).getByRole('list', { name });
-      expect(hrefs(within(list).getAllByRole('link'))).toEqual(pages);
-    }
+    expect(hrefs(row())).toEqual(PAGES);
   });
 
   it.each([
@@ -67,30 +46,26 @@ describe('AdminNav', () => {
     ['/admin/category-groups', ['/admin/categories']],
     ['/admin/invitations', ['/admin/users']],
     ['/admin/users/some-user', ['/admin/users']],
-  ])(
-    'marks only the page you are on at %s as current, in the row and the disclosure',
-    (path, expected) => {
-      pathname.mockReturnValue(path);
+  ])('marks only the page you are on at %s as current', (path, expected) => {
+    pathname.mockReturnValue(path);
 
-      render(<AdminNav />);
+    render(<AdminNav />);
 
-      expect(currentHrefs(row())).toEqual(expected);
-      expect(currentHrefs(within(menu()).getAllByRole('link'))).toEqual(expected);
-    },
-  );
+    expect(currentHrefs(row())).toEqual(expected);
+  });
 
-  it('shuts the disclosure after a client-side navigation', () => {
-    pathname.mockReturnValue('/admin/users');
-    const { rerender } = render(<AdminNav />);
-    // As a press on its summary would; the layout, and so the nav, stays
-    // mounted across a soft navigation.
-    (menu() as HTMLDetailsElement).open = true;
-    expect(menu()).toHaveAttribute('open');
+  it('lists the last two pages behind More, which names the page you are on when it is one of them', () => {
+    pathname.mockReturnValue('/admin/invitations');
+    render(<AdminNav />);
+    const more = within(nav()).getByRole('button', { name: 'People' });
 
-    pathname.mockReturnValue('/admin/categories');
-    rerender(<AdminNav />);
+    fireEvent.click(more);
 
-    expect(menu()).not.toHaveAttribute('open');
-    expect(currentHrefs(within(menu()).getAllByRole('link'))).toEqual(['/admin/categories']);
+    const list = document.getElementById(more.getAttribute('aria-controls')!)!;
+    expect(hrefs(within(list).getAllByRole('link'))).toEqual([
+      '/admin/celestial-bodies',
+      '/admin/users',
+    ]);
+    expect(more).toHaveAttribute('aria-current', 'page');
   });
 });

@@ -1,3 +1,4 @@
+import type { SectionIconName } from '../SectionNav/types';
 import type { PageTab } from '../TabbedPage/types';
 
 // One admin page: what it is called, the one line the `/admin` index says
@@ -6,17 +7,15 @@ import type { PageTab } from '../TabbedPage/types';
 // first tab.
 export interface AdminPage {
   label: string;
+  /** The icon the nav draws beside the label (`SectionNav/icons.tsx`). */
+  icon: SectionIconName;
   description: string;
   tabs: readonly [PageTab, ...PageTab[]];
 }
 
-// A titled group of admin pages, as the nav's phone disclosure and the
-// `/admin` index both show them.
+// A titled group of admin pages, as the nav's row (a hairline between
+// groups) and the `/admin` index both show them.
 export interface AdminSection {
   name: string;
   pages: readonly AdminPage[];
-}
-
-export interface NavLinksProps {
-  sections: readonly AdminSection[];
 }
