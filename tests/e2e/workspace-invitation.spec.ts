@@ -1,0 +1,157 @@
+import { randomUUID } from 'node:crypto';
+import postgres from 'postgres';
+import { test, expect } from './fixtures';
+import { assertNoAccessibilityViolations } from './axe';
+import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
+import { latestMessageTo } from './mailpit';
+import { signInAgainAs, signInAs } from './session';
+import type { Page } from '@playwright/test';
+
+// A coven's invitation from send to dead link, against the built server
+// (M7.7, stories 4 to 7): the owner invites B by mail, B signs in from the
+// link and lands in the coven, and a used link and a revoked one are each
+// refused with a reason of their own, neither naming the coven. The accept
+// service's checks are the unit tests'; this walks them in a browser.
+test.describe.configure({ mode: 'serial' });
+
+const COVEN_NAME = 'Fixture Invite Coven';
+const DOMAIN = '@workspace-invitation.test';
+const run = randomUUID().slice(0, 8);
+const COVEN_SLUG = `fixture-invite-coven-${run}`;
+const address = (local: string) => `${local}-${run}${DOMAIN}`;
+
+let ownerId = '';
+let covenId = '';
+/** The first link, used by B in the first test. */
+let usedPath = '';
+let usedMessage = '';
+
+async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    return await work(sql);
+  } finally {
+    await sql.end();
+  }
+}
+
+test.beforeAll(async () => {
+  await recreateE2eDatabase();
+});
+
+/** The invitation's path from the mailed link: the build's origin is its fallback, not this server. */
+async function mailedInvitePath(to: string): Promise<string> {
+  const message = await latestMessageTo(to);
+  const link = message.text.match(/https?:\/\/\S+\/invite\/[A-Za-z0-9_-]+/)?.[0];
+  if (!link) throw new Error(`no invitation link in: ${message.text}`);
+  return new URL(link).pathname;
+}
+
+/** The owner invites `email` as a member from the coven's People page. */
+async function ownerInvites(page: Page, email: string): Promise<void> {
+  await signInAgainAs(page, ownerId);
+  await page.goto(`/coven/${COVEN_SLUG}/members`);
+  await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
+  await dialog.getByRole('radio', { name: 'Member' }).check();
+  await dialog.getByRole('button', { name: 'Send Invitation' }).click();
+  await expect(dialog.getByRole('button', { name: 'Done' })).toBeVisible();
+  await dialog.getByRole('button', { name: 'Done' }).click();
+  await expect(dialog).toHaveCount(0);
+}
+
+/** What the invite page says to a signed-in reader whose link is dead. */
+async function refusalAt(page: Page, path: string): Promise<string> {
+  await page.goto(path);
+  await expect(page.getByRole('heading', { level: 1, name: 'Your Invitation' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
+  const refusal = page.getByRole('main').getByRole('alert');
+  await expect(refusal).toBeVisible();
+  const message = (await refusal.textContent()) ?? '';
+  expect(message).not.toContain(COVEN_NAME);
+  return message;
+}
+
+test.describe(
+  'a coven’s invitation',
+  { tag: ['@story-4', '@story-5', '@story-6', '@story-7'] },
+  () => {
+    test('the owner invites B by mail, and B signs in from the link and lands in the coven', async ({
+      page,
+    }) => {
+      ownerId = (await signInAs(page, address('owner'))).userId;
+      await withSql(async (sql) => {
+        const [coven] = await sql`
+        insert into workspaces (name, slug, created_by, updated_by)
+        values (${COVEN_NAME}, ${COVEN_SLUG}, ${ownerId}, ${ownerId}) returning id`;
+        covenId = coven.id as string;
+        await sql`
+        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+        values (${covenId}, ${ownerId}, 'owner', ${ownerId}, ${ownerId})`;
+      });
+      const invited = address('b');
+      await ownerInvites(page, invited);
+      usedPath = await mailedInvitePath(invited);
+      expect(await page.content()).not.toContain(usedPath);
+
+      // B holds the invited address, verified; the link alone is what brings B here.
+      const { userId } = await signInAs(page, invited);
+      await page.goto(usedPath);
+      const accept = page.getByRole('button', { name: 'Accept Invitation' });
+      await expect(accept).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      await accept.click();
+
+      await expect(page).toHaveURL(new RegExp(`/coven/${COVEN_SLUG}$`));
+      await expect(page.getByRole('heading', { level: 1, name: COVEN_NAME })).toBeVisible();
+      const [seat] = await withSql(
+        (sql) => sql`
+        select role::text from workspace_members
+        where workspace_id = ${covenId} and user_id = ${userId} and deleted_at is null`,
+      );
+      expect(seat.role).toBe('member');
+    });
+
+    test('a used link is refused, with no Accept and no coven named', async ({ page }) => {
+      // B again: the address the link was sent to, with the seat the link made.
+      const [{ id }] = await withSql(
+        (sql) => sql`select id from users where email = ${address('b')}`,
+      );
+      await signInAgainAs(page, id as string);
+
+      usedMessage = await refusalAt(page, usedPath);
+      await assertNoAccessibilityViolations(page);
+    });
+
+    test('a revoked link is refused for a reason of its own, with no coven named', async ({
+      page,
+    }) => {
+      const invited = address('c');
+      await ownerInvites(page, invited);
+      const path = await mailedInvitePath(invited);
+      await page.goto(`/coven/${COVEN_SLUG}/invitations`);
+      await page.getByRole('button', { name: `Revoke the invitation to ${invited}` }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Revoke', exact: true }).click();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      const [{ revoked }] = await withSql(
+        (sql) => sql`
+        select revoked_at is not null as revoked from invitations where email = ${invited}`,
+      );
+      expect(revoked).toBe(true);
+
+      // C holds the invited address, so only the link is at fault.
+      await signInAs(page, invited);
+      const revokedMessage = await refusalAt(page, path);
+
+      expect(revokedMessage).not.toBe(usedMessage);
+      await assertNoAccessibilityViolations(page);
+      const seats = await withSql(
+        (sql) => sql`
+        select count(*)::int as count from workspace_members m join users u on u.id = m.user_id
+        where m.workspace_id = ${covenId} and u.email = ${invited}`,
+      );
+      expect(seats[0].count).toBe(0);
+    });
+  },
+);
