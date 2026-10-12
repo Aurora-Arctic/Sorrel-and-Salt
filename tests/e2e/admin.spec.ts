@@ -220,7 +220,10 @@ test(
     const dialog = page.getByRole('dialog', { name: new RegExp(`Fixture Person.*${email}`) });
     await expect(dialog).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`[?&]user=${userId}$`));
-    const row = dialog.getByRole('row', { name: new RegExp(coven) });
+    const row = dialog
+      .getByRole('list', { name: 'Covens' })
+      .getByRole('listitem')
+      .filter({ hasText: coven });
     await expect(row).toContainText('Owner');
     // An admin is no member, so the coven's own page would answer 404.
     await expect(dialog.locator('a[href*="/coven/"]')).toHaveCount(0);

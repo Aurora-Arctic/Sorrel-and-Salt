@@ -131,16 +131,20 @@ describe('UserDetail', () => {
   it('lists the covens, owners first, then members, then viewers, each by name', () => {
     renderDetail();
 
-    const rows = screen.getAllByRole('row').slice(1);
-    expect(rows.map((row) => within(row).getAllByRole('cell')[0]?.textContent)).toEqual([
+    const items = within(screen.getByRole('list', { name: 'Covens' })).getAllByRole('listitem');
+    expect(items.map((item) => item.firstChild?.textContent)).toEqual([
       'Omega Coven',
       'Alpha Coven',
       'Beta Coven',
       'Zeta Coven',
     ]);
-    expect(within(rows[0]!).getByRole('cell', { name: 'Owner' })).toBeInTheDocument();
-    expect(within(rows[1]!).getByRole('cell', { name: 'Member' })).toBeInTheDocument();
-    expect(within(rows[3]!).getByRole('cell', { name: 'Viewer' })).toBeInTheDocument();
+    expect(within(items[0]!).getByText('Owner')).toBeInTheDocument();
+    expect(within(items[1]!).getByText('Member')).toBeInTheDocument();
+    expect(within(items[3]!).getByText('Viewer')).toBeInTheDocument();
+    expect(within(items[0]!).getByText('2026-03-04')).toHaveAttribute(
+      'datetime',
+      COVENS[0]!.joinedAt.toISOString(),
+    );
   });
 
   it('names a coven in text, never a link: an admin is no member of it', () => {
@@ -149,10 +153,10 @@ describe('UserDetail', () => {
     expect(screen.queryByRole('link')).not.toBeInTheDocument();
   });
 
-  it('draws no table when the user belongs to no coven', () => {
+  it('draws no coven list when the user belongs to no coven', () => {
     renderDetail({ memberships: [] });
 
-    expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Covens' })).not.toBeInTheDocument();
   });
 
   it('offers Impersonate on a user’s modal where impersonation is registered', () => {

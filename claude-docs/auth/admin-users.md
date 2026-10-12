@@ -106,7 +106,7 @@ workspace's contents, and which covens someone belongs to is not among them
   the qualifier. The body is `UserDetail`
   ([`components/user-detail.md`](../components/user-detail.md)): every fact
   the list's row shows, read-only (the page reads them with the user, so the
-  modal holds the whole row, and it has no control but Impersonate), then a Covens table (Coven, Role, Joined), owners first, then members, then viewers, each
+  modal holds the whole row, and it has no control but Impersonate), then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
   by name. Coven names are text, not links: an admin reaches no coven, and
   `/coven/[slug]` is a 404 to a non-member.
 - **The reads come with the navigation**, from the server page, under

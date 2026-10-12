@@ -1,7 +1,6 @@
-import type { ReactElement } from 'react';
-import StackTable from '../DataTable';
-import type { StackColumn } from '../DataTable/types';
-import { Mark, ProviderLogo } from '../UserList/marks';
+import type { ReactElement, ReactNode } from 'react';
+import { CheckIcon, CrossIcon } from '../UserList/icons';
+import { ProviderLogo } from '../UserList/marks';
 import PrimaryAdminMark from '../UserList/primary-admin-mark';
 import { roleLabel } from '../UserList/roles';
 import ImpersonateAction from './impersonate-action';
@@ -9,26 +8,13 @@ import { workspaceRoleLabel, workspaceRoleRank } from './roles';
 import type { UserCoven, UserDetailProps } from './types';
 import './index.scss';
 
-// The body of the modal that opens over `/admin/users` on a user (M9.19):
-// the facts the users table holds about them, read-only, then the covens they
-// belong to and, where impersonation is registered, the
-// action to act as them (claude-docs/components/user-detail.md). Render-only:
+// The body of the modal that opens over `/admin/users` on a user (M9.19): the
+// facts the users table holds about them, read-only, then the covens they
+// belong to and, where impersonation is registered, the action to act as them
+// (claude-docs/components/user-detail.md). Laid out as the ingredient modal
+// is, sections parted by hairlines under a small heading, rather than as a
+// table: a table's labels repeat on every card at a modal's width. Render-only:
 // the page reads the memberships through the coven service.
-
-const columns: readonly StackColumn<UserCoven>[] = [
-  // Text, never a link: an admin is no member of these covens, so
-  // `/coven/[slug]` would answer them 404.
-  { heading: 'Name', cell: (coven) => coven.name },
-  { heading: 'Role', cell: (coven) => workspaceRoleLabel(coven.role) },
-  {
-    heading: 'Joined',
-    cell: (coven) => (
-      <time dateTime={coven.joinedAt.toISOString()}>
-        {coven.joinedAt.toISOString().slice(0, 10)}
-      </time>
-    ),
-  },
-];
 
 /**
  * Owners, then members, then viewers, each by coven name. Sorted here because
@@ -40,66 +26,103 @@ const ordered = (memberships: readonly UserCoven[]): UserCoven[] =>
     (a, b) => workspaceRoleRank(a.role) - workspaceRoleRank(b.role) || a.name.localeCompare(b.name),
   );
 
+/** A UTC date, as the table's Signed Up column writes one. */
+const Day = ({ at }: { at: Date }): ReactElement => (
+  <time dateTime={at.toISOString()}>{at.toISOString().slice(0, 10)}</time>
+);
+
+/**
+ * A yes-or-no as its word, then the table's mark after it, a green check or a
+ * red cross (the owner's call): the table's column heading says what the mark
+ * means, and here nothing else would.
+ */
+const Answer = ({ value, children }: { value: boolean; children: ReactNode }): ReactElement => (
+  <span className="user-detail__answer">
+    {children}
+    <span className={`user-list__mark user-list__mark--${value ? 'yes' : 'no'}`}>
+      {value ? <CheckIcon /> : <CrossIcon />}
+    </span>
+  </span>
+);
+
 const UserDetail = ({
   user,
   memberships,
   canImpersonate = false,
 }: UserDetailProps): ReactElement => (
   <div className="user-detail">
-    <dl className="user-detail__facts">
-      <div>
-        <dt>Email</dt>
-        <dd>
-          <Mark
-            value={user.emailVerified}
-            label={user.emailVerified ? 'Verified' : 'Unverified'}
-            hint
-          />
-        </dd>
-      </div>
-      <div>
-        <dt>Role</dt>
-        <dd className="user-detail__role">
-          {user.role === 'admin' ? <strong>{roleLabel(user.role)}</strong> : roleLabel(user.role)}
-          {user.primaryAdmin && <PrimaryAdminMark />}
-        </dd>
-      </div>
-      <div>
-        <dt>Coven Creation</dt>
-        <dd>
-          <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
-        </dd>
-      </div>
-      <div>
-        <dt>Sign-In Methods</dt>
-        <dd className="user-list__providers">
-          {user.providers.map((id) => (
-            <ProviderLogo key={id} id={id} />
-          ))}
-        </dd>
-      </div>
-      <div>
-        <dt>Signed Up</dt>
-        <dd>
-          <time dateTime={user.createdAt.toISOString()}>
-            {user.createdAt.toISOString().slice(0, 10)}
-          </time>
-        </dd>
-      </div>
-    </dl>
     {/* One level below the modal's own title, an h2. */}
-    <section aria-labelledby="user-detail-covens" className="user-detail__section">
-      <h3 id="user-detail-covens">Covens</h3>
-      <StackTable
-        columns={columns}
-        rows={ordered(memberships)}
-        rowKey={(coven) => coven.workspaceId}
-        empty="This user does not belong to any coven yet."
-        aria-label="Covens"
-        className="user-detail__covens"
-      />
+    <section aria-labelledby="user-detail-account" className="user-detail__section">
+      <h3 id="user-detail-account" className="user-detail__title">
+        Account
+      </h3>
+      {/* The address is the heading's, under the name, so it is not repeated. */}
+      <dl className="user-detail__facts">
+        <div>
+          <dt>Email</dt>
+          <dd>
+            <Answer value={user.emailVerified}>
+              {user.emailVerified ? 'Verified' : 'Unverified'}
+            </Answer>
+          </dd>
+        </div>
+        <div>
+          <dt>Role</dt>
+          <dd className="user-detail__role">
+            {user.role === 'admin' ? <strong>{roleLabel(user.role)}</strong> : roleLabel(user.role)}
+            {user.primaryAdmin && <PrimaryAdminMark />}
+          </dd>
+        </div>
+        <div>
+          <dt>Coven Creation</dt>
+          <dd>
+            <Answer value={user.canCreateWorkspace}>
+              {user.canCreateWorkspace ? 'Yes' : 'No'}
+            </Answer>
+          </dd>
+        </div>
+        <div>
+          <dt>Sign-In Methods</dt>
+          <dd className="user-list__providers">
+            {user.providers.length === 0
+              ? 'None'
+              : user.providers.map((id) => <ProviderLogo key={id} id={id} />)}
+          </dd>
+        </div>
+        <div>
+          <dt>Signed Up</dt>
+          <dd>
+            <Day at={user.createdAt} />
+          </dd>
+        </div>
+      </dl>
     </section>
-    {/* Not on an admin's row: the endpoint refuses one (MB.53). */}
+    <section aria-labelledby="user-detail-covens" className="user-detail__section">
+      <h3 id="user-detail-covens" className="user-detail__title">
+        Covens
+      </h3>
+      {memberships.length === 0 ? (
+        <p className="user-detail__none">This user does not belong to any coven yet.</p>
+      ) : (
+        <ul className="user-detail__covens" aria-labelledby="user-detail-covens">
+          {ordered(memberships).map((coven) => (
+            <li key={coven.workspaceId}>
+              {/* Text, never a link: an admin is no member of these covens,
+                  so `/coven/[slug]` would answer them 404. */}
+              <span className="user-detail__coven-name">{coven.name}</span>
+              <span className="user-detail__coven-meta">
+                <span>{workspaceRoleLabel(coven.role)}</span>
+                <span aria-hidden="true">·</span>
+                <span>
+                  Joined <Day at={coven.joinedAt} />
+                </span>
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+    {/* Not on an admin: the endpoint refuses one (MB.53). */}
     {canImpersonate && user.role !== 'admin' && <ImpersonateAction user={user} />}
   </div>
 );

@@ -286,7 +286,9 @@ describe('the /admin/users page, the user modal', () => {
     // The row's facts reach the body: the sign-up date as a time element.
     const stamps = Array.from(dialog.querySelectorAll('time'), (el) => el.getAttribute('datetime'));
     expect(stamps).toContain(user(1).createdAt.toISOString());
-    expect(within(dialog).getByRole('row', { name: /Fixture Coven/ })).toBeInTheDocument();
+    expect(
+      within(within(dialog).getByRole('list', { name: 'Covens' })).getByRole('listitem'),
+    ).toHaveTextContent('Fixture Coven');
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 

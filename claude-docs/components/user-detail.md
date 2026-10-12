@@ -2,8 +2,8 @@
 
 `src/components/UserDetail/` is the body of the modal that opens over
 `/admin/users` when an admin presses a user's name (M9.19): the covens the user
-belongs to, preceded by the facts the users table holds about them, and, where impersonation is registered, Impersonate. It is
-render-only and a server component. The page reads the memberships through the
+belongs to, preceded by the facts the users table holds about them, and, where
+impersonation is registered, Impersonate. It is render-only and a server component. The page reads the memberships through the
 coven service and builds the modal around it; this draws only the body.
 
 ## Props
@@ -21,28 +21,32 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 
 ## Contracts
 
-- **The table's facts come first, read-only** (the owner's call): a `<dl>`
-  of Email (verified or not), Role (bold for an admin, with the primary-admin
-  crown), Coven Creation, Sign-In Methods and Signed Up, two columns where they
-  fit and one on a phone. The address itself is not repeated: the modal's
-  heading carries it. Name is the heading's. No Grant, Revoke or Approve
-  here; those stay on the row, and Impersonate is the modal's only action.
-- **The marks are the list's own.** `Mark` and `ProviderLogo` live in
-  `UserList/marks.tsx`, which imports the list's stylesheet, so both draw the
-  same; `PrimaryAdminMark` is `UserList/primary-admin-mark.tsx`.
+- **Laid out as the ingredient modal is, not as a table** (the owner's call,
+  2026-10-12): two sections, Account and Covens, each under a small title in
+  the heading face and parted by hairlines, with Impersonate under the last
+  one, where the other modals stand their actions. A table at a modal's width
+  stacks into cards that repeat every label on every coven.
+- **The table's facts come first, read-only**: a `<dl>` of Email (verified
+  or not, the word with the check or cross to its right), Role (bold for an admin, with the
+  primary-admin crown), Coven Creation (Yes or No, the mark to its right),
+  Sign-In Methods and Signed Up, the terms in one column and their values in
+  the next. The address itself is not repeated: the heading carries it, under
+  the name. No Grant, Revoke or Approve here; those stay on the row, and
+  Impersonate is the modal's only action.
+- **The marks are the list's own.** `ProviderLogo` lives in
+  `UserList/marks.tsx` beside the table's `Mark`, and imports the list's
+  stylesheet, so both draw the same; the check and cross are the list's icons
+  in its `user-list__mark` colours; `PrimaryAdminMark` is `UserList/primary-admin-mark.tsx`.
 - **A coven's name is text, never a link.** An admin is no member of the
   covens they read about, and `/coven/[slug]` answers a non-member 404.
-- **The table is ordered here**: owners, then members, then viewers, each by
-  coven name. The service's order is unspecified, and the list is bounded by
-  the user's own memberships. Columns are Name, Role and Joined (a `<time>`
-  with the UTC date, as the list's Signed Up is). Role labels live in
-  `roles.ts`; M6.13's members page may move them somewhere shared.
-- **Each coven is a card in the narrow modal** (the owner's call,
-  2026-10-12): the name a step larger under its Name label, Role and Joined
-  side by side beneath. `index.scss` does it under the primitive's own
-  container query, on the `user-detail__covens` class doubled to outrank the
-  primitive's row rule.
-- **No memberships** draws a sentence in place of the table.
+- **The covens are a list, ordered here**: owners, then members, then
+  viewers, each by coven name. The service's order is unspecified, and the list
+  is bounded by the user's own memberships. Each item is the coven's name, then
+  its role and the day they joined (a `<time>` with the UTC date, as the list's
+  Signed Up is) in the muted ink at the caption size, as a folded ingredient
+  section's summary reads. Role labels live in `roles.ts`; M6.13's members page
+  may move them somewhere shared.
+- **No memberships** draws a sentence in place of the list.
 - **Impersonate shows only for a non-admin, where `canImpersonate`**, the
   list's own rule: Better Auth refuses an admin target whatever this shows.
 - **It asks first inside the modal**, through `ConfirmQuestion`
@@ -59,8 +63,8 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
 ## Tests
 
 `tests/components/UserDetail/index.test.tsx`, with the component inside a
-`Modal` (the question draws into its layer): the facts (a term and definition each, the sign-up `<time>`, the providers, the primary-admin mark only on the primary admin, no Grant/Revoke/Approve), the order and role of each row, no
-links, no table when empty, Impersonate present for a user and absent for an
+`Modal` (the question draws into its layer): the facts (a term and definition each, the sign-up `<time>`, the providers, the primary-admin mark only on the primary admin, no Grant/Revoke/Approve), the order, role and joining date of each coven,
+no links, no coven list when empty, Impersonate present for a user and absent for an
 admin or when off, the question before any send, Cancel, a confirm sending
 `{ userId }` then landing on `/`, and a refusal showing an alert and not
 navigating.
