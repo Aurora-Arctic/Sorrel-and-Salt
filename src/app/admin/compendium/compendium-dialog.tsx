@@ -15,13 +15,13 @@ import type { CompendiumDialogProps } from './types';
 // server page cannot hand to a client component
 // (claude-docs/design-decisions/m5.5-admin-compendium.md).
 export default function CompendiumDialog({
-  title,
+  heading,
   place,
   entry,
 }: CompendiumDialogProps): ReactElement {
   const router = useRouter();
   return (
-    <RouteModal title={title} closeHref={compendiumHref(place)}>
+    <RouteModal {...heading} closeHref={compendiumHref(place)}>
       {(done) => (
         <IngredientForm
           // A fresh form per entry, inside the one modal: Save Ingredient's move

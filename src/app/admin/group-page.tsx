@@ -47,7 +47,7 @@ const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
     noun: 'group',
     add: 'Add Group',
     addTitle: 'Add Category Group',
-    editTitle: 'Edit Category Group',
+    editEyebrow: 'Edit Category Group',
     search: false,
     list: (page) => listCategoryGroups(page),
     count: (start) => countCategoryGroups(start),
@@ -58,7 +58,7 @@ const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
     noun: 'group',
     add: 'Add Group',
     addTitle: 'Add Form Group',
-    editTitle: 'Edit Form Group',
+    editEyebrow: 'Edit Form Group',
     search: false,
     list: (page) => listIngredientFormGroups(page),
     count: (start) => countIngredientFormGroups(start),
@@ -70,7 +70,7 @@ const GROUP_KINDS: Record<GroupKind, GroupKindPage> = {
     noun: 'tradition',
     add: 'Add Tradition',
     addTitle: 'Add Tradition',
-    editTitle: 'Edit Tradition',
+    editEyebrow: 'Edit Tradition',
     search: true,
     list: listDeityTraditions,
     count: countDeityTraditions,
@@ -152,7 +152,7 @@ export async function GroupAction({ kind, searchParams }: GroupPageProps): Promi
 export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
   await requireAdminSession();
   const { query, here, editSlug, adding } = readPlace(kind, await searchParams);
-  const { noun, addTitle, editTitle, search } = GROUP_KINDS[kind];
+  const { noun, addTitle, editEyebrow, search } = GROUP_KINDS[kind];
 
   const [page, choices, edited] = await Promise.all([
     readPage(kind, query, here.after, here.before),
@@ -181,14 +181,20 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
         {...pagerHrefs(page.pageInfo, (cursor) => groupsHref(kind, { query, ...cursor }))}
       />
       {adding && (
-        <GroupDialog kind={kind} title={addTitle} closeHref={closeHref} groups={choices} />
+        <GroupDialog
+          kind={kind}
+          heading={{ title: addTitle }}
+          closeHref={closeHref}
+          groups={choices}
+        />
       )}
       {edited && (
         <GroupDialog
           // A fresh form per group: one opened after another starts from its own values.
           key={edited.group.id}
           kind={kind}
-          title={editTitle}
+          // Named by the name it was saved under, which a rename leaves until it saves (MB.115).
+          heading={{ eyebrow: editEyebrow, title: edited.group.name }}
           closeHref={closeHref}
           group={{
             id: edited.group.id,

@@ -1,9 +1,33 @@
 import type { Route } from 'next';
 import type { ReactNode, RefObject } from 'react';
 
-export interface ModalProps {
-  /** The dialog's heading, and so its accessible name. */
+/**
+ * What a modal's head says. An add dialog's is its title alone, "Add
+ * Ingredient". An edit dialog's (MB.115, the owner's call) is an eyebrow
+ * naming the action and the kind, "Edit Ingredient", over a title naming the
+ * entry by the name it was saved under, so the head holds still while the
+ * Name field is changed, and a qualifier where the entry's list names it by a
+ * second thing too.
+ */
+export interface ModalHeading {
+  /** The dialog's heading: what it is for, or the entry it edits. */
   title: string;
+  /**
+   * The small line over the title, "Edit Ingredient": absent on an add
+   * dialog, whose title says it. The dialog's accessible name is the two
+   * together, "Edit Ingredient, Mugwort".
+   */
+  eyebrow?: string;
+  /**
+   * After the title, quieter, and in its accessible name: a second identifier
+   * the entry's list shows, an ingredient's formal name or a deity's
+   * tradition. The caller sets a binomial's italics, since only it knows the
+   * nomenclature.
+   */
+  qualifier?: ReactNode;
+}
+
+export interface ModalProps extends ModalHeading {
   /**
    * Asked for by the Close button, Escape and a click outside, once the modal
    * has faded out (M5.5), unless a form inside asks about its unsaved changes
@@ -30,9 +54,7 @@ export interface ModalProps {
 export type ModalPhase = 'open' | 'fading' | 'closed' | 'asked';
 
 /** A modal opened by its page's address, which closing navigates away from. */
-export interface RouteModalProps {
-  /** The heading, and so the dialog's accessible name. */
-  title: string;
+export interface RouteModalProps extends ModalHeading {
   /** The page it opened over, the modal's own parameter dropped: closing goes back there. */
   closeHref: Route;
   size?: ModalProps['size'];

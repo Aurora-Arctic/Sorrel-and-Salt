@@ -44,6 +44,25 @@ describe('Modal', () => {
     expect(screen.getByRole('textbox', { name: 'Name' })).toBeInTheDocument();
   });
 
+  // An edit dialog (MB.115): the eyebrow says what it does to what kind, the
+  // title which entry, and a screen reader hears both, the qualifier too.
+  it('is named by its eyebrow, then its title and qualifier', () => {
+    render(
+      <Modal
+        eyebrow="Edit Ingredient"
+        title="Testwort"
+        qualifier="Fixtura testalis"
+        onClose={vi.fn()}
+      >
+        <p>Body</p>
+      </Modal>,
+    );
+
+    expect(
+      screen.getByRole('dialog', { name: 'Edit Ingredient, Testwort, Fixtura testalis' }),
+    ).toBeInTheDocument();
+  });
+
   it('asks its owner to close it from the Close button', () => {
     const onClose = renderModal();
 

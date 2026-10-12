@@ -193,7 +193,7 @@ describe('a curated value page, on the categories', () => {
     await renderPage({ edit: 'testcraft' });
 
     expect(getCategoryBySlug).toHaveBeenCalledWith('testcraft');
-    const dialog = screen.getByRole('dialog', { name: 'Edit Category' });
+    const dialog = screen.getByRole('dialog', { name: 'Edit Category, Testcraft' });
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('Testcraft');
     expect(within(dialog).getByRole('combobox', { name: 'Group' })).toHaveValue(
       'Fixture Protection',
@@ -323,6 +323,7 @@ describe('a curated value page, for each other kind', () => {
       filter: { query: 'te', groupId: GROUPS[1].id },
       getArgs: ['testwort-shard'],
       row: { ...TESTCRAFT, ...VALUE },
+      dialog: 'Edit Form, Testwort Shard',
     },
     {
       kind: 'deity',
@@ -336,6 +337,8 @@ describe('a curated value page, for each other kind', () => {
       filter: { query: 'te', traditionId: GROUPS[1].id },
       getArgs: ['testwort-shard'],
       row: { ...VALUE, description: 'A deity', traditionId: GROUPS[1].id },
+      // Named with its tradition, as two traditions may share a deity's name.
+      dialog: 'Edit Deity, Testwort Shard, Fixture Protection',
     },
     {
       kind: 'planet',
@@ -348,6 +351,7 @@ describe('a curated value page, for each other kind', () => {
       filter: { query: 'te' },
       getArgs: ['planets', 'testwort-shard'],
       row: { ...VALUE, description: 'A planet' },
+      dialog: 'Edit Planet, Testwort Shard',
     },
     {
       kind: 'zodiacSign',
@@ -360,12 +364,13 @@ describe('a curated value page, for each other kind', () => {
       filter: { query: 'te' },
       getArgs: ['zodiacSigns', 'testwort-shard'],
       row: { ...VALUE, description: 'A sign' },
+      dialog: 'Edit Zodiac Sign, Testwort Shard',
     },
   ] as const;
 
   it.each(ROWS)(
     'reads the $kind list and value through its own services, on $path',
-    async ({ kind, path, address, list, count, groups, get, filter, getArgs, row }) => {
+    async ({ kind, path, address, list, count, groups, get, filter, getArgs, row, dialog }) => {
       list.mockReset();
       list.mockResolvedValue([entry(row)]);
       count.mockReset();
@@ -386,7 +391,7 @@ describe('a curated value page, for each other kind', () => {
         flat ? [getArgs[0], filter] : [filter],
       );
       expect(get).toHaveBeenCalledWith(...getArgs);
-      expect(screen.getByRole('dialog')).toBeInTheDocument();
+      expect(screen.getByRole('dialog', { name: dialog })).toBeInTheDocument();
       expect(screen.getByRole('link', { name: `Edit ${VALUE.name}` })).toHaveAttribute(
         'href',
         `${path}?${new URLSearchParams({ query: 'te', ...address }).toString()}&edit=${VALUE.slug}`,

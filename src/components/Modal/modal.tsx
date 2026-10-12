@@ -42,9 +42,17 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
   return clientX < box.left || clientX > box.right || clientY < box.top || clientY > box.bottom;
 }
 
-const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => {
+const Modal = ({
+  title,
+  eyebrow,
+  qualifier,
+  onClose,
+  size,
+  children,
+}: ModalProps): ReactElement => {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const eyebrowId = useId();
 
   useEffect(() => {
     const dialog = ref.current;
@@ -155,7 +163,8 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
       className={['modal modal-dialog', size && `modal-dialog--${size}`, closing && 'is-closing']
         .filter(Boolean)
         .join(' ')}
-      aria-labelledby={titleId}
+      // Named by the eyebrow and the heading together: "Edit Ingredient, Mugwort".
+      aria-labelledby={eyebrow ? `${eyebrowId} ${titleId}` : titleId}
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -165,9 +174,26 @@ const Modal = ({ title, onClose, size, children }: ModalProps): ReactElement => 
       }}
     >
       <div className="modal-dialog__header">
-        <h2 id={titleId} className="modal-dialog__title">
-          {title}
-        </h2>
+        {/* An edit dialog's head (MB.115): what it does to what kind, then
+            which entry. The hidden commas are for the dialog's name alone,
+            which a screen reader would otherwise run together. */}
+        <div className="header modal-dialog__heading">
+          {eyebrow && (
+            <p id={eyebrowId} className="eyebrow">
+              {eyebrow}
+              <span className="visually-hidden">,</span>
+            </p>
+          )}
+          <h2 id={titleId} className="modal-dialog__title">
+            {title}
+            {qualifier && (
+              <>
+                <span className="visually-hidden">,</span>{' '}
+                <span className="modal-dialog__qualifier">{qualifier}</span>
+              </>
+            )}
+          </h2>
+        </div>
         {/* Beside the title, for a control the contents put there (HeaderSlotContext). */}
         <div ref={putHeaderSlot} className="modal-dialog__header-slot" />
         <button type="button" className="modal-dialog__close" aria-label="Close" onClick={request}>

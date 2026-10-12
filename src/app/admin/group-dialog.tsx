@@ -12,14 +12,14 @@ import type { GroupDialogProps } from './types';
 // form group's or a tradition's moves its rows' too.
 export default function GroupDialog({
   kind,
-  title,
+  heading,
   closeHref,
   group,
   groups,
   memberCount,
 }: GroupDialogProps): ReactElement {
   return (
-    <RouteModal title={title} closeHref={closeHref}>
+    <RouteModal {...heading} closeHref={closeHref}>
       {(done) => (
         <GroupForm
           kind={kind}

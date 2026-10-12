@@ -25,6 +25,8 @@ import {
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { listIngredientFormValues } from '@/modules/vocabulary';
 import { pagerHrefs, readListPlace, readOrMissing } from '../list-page';
+import type { ModalHeading } from '../../../components/Modal/types';
+import type { IngredientFormValues } from '../../../components/IngredientForm/types';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { entryValues } from './entry-values';
@@ -111,6 +113,30 @@ const readEdited = (slug: string) =>
     };
   });
 
+/**
+ * The nomenclatures whose formal name is a binomial, set in italics; a
+ * mineral's or a chemical's is set upright (claude-docs/styling.md, "Type").
+ */
+const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
+  'botanical',
+  'fungal',
+  'zoological',
+]);
+
+/**
+ * An entry's edit dialog head (MB.115): the name it was saved under, not the
+ * Name field's, and its formal name after it, as the list's rows name it.
+ */
+function editHeading({ name, canonicalName, nomenclature }: IngredientFormValues): ModalHeading {
+  const formal = canonicalName.trim();
+  const set = BINOMIAL_KINDS.has(nomenclature) ? (
+    <span className="binomial">{formal}</span>
+  ) : (
+    formal
+  );
+  return { eyebrow: 'Edit Ingredient', title: name, qualifier: formal ? set : undefined };
+}
+
 const isKind = (value: string | undefined): value is NomenclatureKind =>
   (NOMENCLATURE_KINDS as readonly string[]).includes(value ?? '');
 
@@ -148,6 +174,8 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // An old address opens the entry at its new one, as the public route's
   // redirect does (MB.82).
   if (edited?.kind === 'moved') redirect(compendiumHref(here, { edit: edited.slug }));
+  // The entry the modal edits; none on an add, which wins over an `?edit=`.
+  const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
   const entries = page.edges.map(({ node }, i): CompendiumListEntry => ({
     id: node.id,
     slug: node.slug,
@@ -179,15 +207,11 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       {/* One dialog in one place for both, so Save Ingredient's move from ?new
           to ?edit= keeps the modal open rather than fading it out and in; the
           form inside is keyed by the entry, so each opens on its own values. */}
-      {(adding || edited?.kind === 'entry') && (
+      {(adding || editing) && (
         <CompendiumDialog
-          title={adding ? 'Add Ingredient' : 'Edit Ingredient'}
+          heading={editing ? editHeading(editing.values) : { title: 'Add Ingredient' }}
           place={here}
-          entry={
-            !adding && edited?.kind === 'entry'
-              ? { id: edited.id, values: edited.values }
-              : undefined
-          }
+          entry={editing && { id: editing.id, values: editing.values }}
         />
       )}
     </main>

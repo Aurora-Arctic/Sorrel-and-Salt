@@ -6,28 +6,30 @@ surface and a heading that names it. M5.6's category page opens it from the
 address; M8.16, M8.17 and M7.4 are its next owners. `RouteModal`, beside it,
 is the wrapper every admin page opens it through (below).
 
-| File                  | What it holds                                                          |
-| --------------------- | ---------------------------------------------------------------------- |
-| `modal.tsx`           | `Modal`, the default export                                            |
-| `route-modal.tsx`     | `RouteModal`                                                           |
-| `index.tsx`           | The exports; two files, since `RouteModal` renders `Modal`             |
-| `close-guard.ts`      | `CloseGuardContext`, the slot a form's guard goes in                   |
-| `discard.tsx`         | `useDiscardGuard` and `DiscardQuestion` (below)                        |
-| `confirm-overlay.tsx` | `ConfirmOverlay`, the card a form asks a question in, over itself      |
-| `confirm-layer.ts`    | `ConfirmLayerContext`, the layer and the hold the card is drawn with   |
-| `header-slot.ts`      | `HeaderSlotContext` and `useModalHeaderSlot`, beside the title         |
-| `types.ts`            | `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's, the card's |
+| File                  | What it holds                                                                          |
+| --------------------- | -------------------------------------------------------------------------------------- |
+| `modal.tsx`           | `Modal`, the default export                                                            |
+| `route-modal.tsx`     | `RouteModal`                                                                           |
+| `index.tsx`           | The exports; two files, since `RouteModal` renders `Modal`                             |
+| `close-guard.ts`      | `CloseGuardContext`, the slot a form's guard goes in                                   |
+| `discard.tsx`         | `useDiscardGuard` and `DiscardQuestion` (below)                                        |
+| `confirm-overlay.tsx` | `ConfirmOverlay`, the card a form asks a question in, over itself                      |
+| `confirm-layer.ts`    | `ConfirmLayerContext`, the layer and the hold the card is drawn with                   |
+| `header-slot.ts`      | `HeaderSlotContext` and `useModalHeaderSlot`, beside the title                         |
+| `types.ts`            | `ModalHeading`, `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's, the card's |
 
 ## Props
 
 `ModalProps` (`types.ts`):
 
-| Prop       | What it is                                                     |
-| ---------- | -------------------------------------------------------------- |
-| `title`    | The heading, and so the dialog's accessible name               |
-| `onClose`  | Asked for by the Close button, Escape and a click outside      |
-| `size`     | `'wide'` for a long form; absent, the default width            |
-| `children` | The body: a form, a confirmation, whatever the owner puts here |
+| Prop        | What it is                                                                      |
+| ----------- | ------------------------------------------------------------------------------- |
+| `title`     | The heading: what the dialog is for, or the entry an edit dialog edits          |
+| `eyebrow`   | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add |
+| `qualifier` | After the title, quieter: an ingredient's formal name, a deity's tradition      |
+| `onClose`   | Asked for by the Close button, Escape and a click outside                       |
+| `size`      | `'wide'` for a long form; absent, the default width                             |
+| `children`  | The body: a form, a confirmation, whatever the owner puts here                  |
 
 ## Contracts
 
@@ -52,8 +54,10 @@ is the wrapper every admin page opens it through (below).
 - **The focus trap, Escape and the inert page are the platform's.**
   `showModal()` puts the dialog in the top layer and makes the rest of the
   document inert. Nothing in the component traps focus by hand.
-- **Named by its heading.** `aria-labelledby` points at the `<h2>`, so
-  `getByRole('dialog', { name })` finds it. The Close button is `×`, hidden
+- **Named by its heading**, and its eyebrow when it has one.
+  `aria-labelledby` points at the `<h2>`, or at the eyebrow then the
+  `<h2>`, so `getByRole('dialog', { name })` finds it
+  (["An edit dialog's head"](#an-edit-dialogs-head)). The Close button is `×`, hidden
   from assistive technology, inside a button named "Close". It is a 2rem ×
   in a 2.5rem square (`$close-target`), the owner's call during M5.5, and the header centres it
   on the title.
@@ -187,9 +191,56 @@ form's Delete question are drawn through it.
   form's width, which is the main area's less the body's padding
   (`$narrow-column + $modal-padding`, a container query on `modal-main`).
 
+## An edit dialog's head
+
+It is not apparent from an edit form alone what is being edited, so every
+admin edit dialog says, the owner's call at MB.115: a small, muted, uppercase
+eyebrow naming the action and the kind, then the entry as the heading.
+
+```
+| EDIT INGREDIENT                     × |
+| Mugwort  Artemisia vulgaris           |
+```
+
+`ModalHeading` (`types.ts`) is the three props that say it, which
+`RouteModal` and the admin dialog wrappers pass on whole:
+
+- **`eyebrow`**, "Edit Ingredient", "Edit Deity", "Edit Category Group": the
+  `.eyebrow` primitive, written in title case and uppercased by its CSS.
+  An add dialog has none; its title, "Add Ingredient", already says it.
+- **`title`**, the entry's name **as it was saved**, from what the page read
+  to open the dialog, never the Name field's live value: the head holds still
+  while the admin renames the entry, and changes once the save re-reads it.
+- **`qualifier`**, after the name in the body's face and muted ink, where the
+  entry's list names it by a second thing too: an ingredient's formal name
+  (its list's Formal Name column and edit link), and a deity's tradition (its
+  pills, "Hecate (Greek)", since two traditions may share a deity's name).
+  The caller sets a binomial's italics, `.binomial`, since only it knows
+  the nomenclature: a mineral's or a chemical's formal name stays upright.
+  A category's or a form's group is where it is filed, not part of its name,
+  so they have none.
+
+**A screen reader hears both**: the dialog is labelled by the eyebrow, then
+the heading, "Edit Ingredient, Mugwort, Artemisia vulgaris". The commas are
+visually hidden text, there for the name alone, since `aria-labelledby`
+joins its parts with a space and a reader would otherwise run them together.
+
+The eyebrow and title are a `.header` column, closer than its gap, which may
+shrink past its content: a long name wraps rather than pushing the × out, and
+a name with no break in it breaks anywhere.
+
+| Dialog                                  | Eyebrow                              | Qualifier   |
+| --------------------------------------- | ------------------------------------ | ----------- |
+| `/admin/compendium?edit=`               | Edit Ingredient                      | Formal name |
+| `/admin/categories`, `forms`            | Edit Category, Edit Form             | —           |
+| `/admin/deities`                        | Edit Deity                           | Tradition   |
+| `/admin/planets`, `zodiac-signs`        | Edit Planet, Edit Zodiac Sign        | —           |
+| `/admin/category-groups`, `form-groups` | Edit Category Group, Edit Form Group | —           |
+| `/admin/deity-traditions`               | Edit Tradition                       | —           |
+
 ## Beside the title
 
-The header holds the title, then an empty place beside it, then the ×. The
+The header holds the title, with its eyebrow over it on an edit, then an empty place beside it, then the ×. The
 modal hands that place down as an element (`HeaderSlotContext`), and its
 contents may portal one control of their own into it through
 `useModalHeaderSlot()`: the ingredient form's Open All / Close All, the
@@ -211,12 +262,12 @@ skipped the fade.
 
 `RouteModalProps` (`types.ts`):
 
-| Prop        | What it is                                                                      |
-| ----------- | ------------------------------------------------------------------------------- |
-| `title`     | The heading, and so the dialog's accessible name                                |
-| `closeHref` | The page it opened over, its modal parameter dropped                            |
-| `size`      | As `Modal`'s                                                                    |
-| `children`  | A function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
+| Prop                            | What it is                                                                      |
+| ------------------------------- | ------------------------------------------------------------------------------- |
+| `title`, `eyebrow`, `qualifier` | As `Modal`'s: its head                                                          |
+| `closeHref`                     | The page it opened over, its modal parameter dropped                            |
+| `size`                          | As `Modal`'s                                                                    |
+| `children`                      | A function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
 
 - **Closing is a navigation back.** Close, Escape, a click outside and
   `done` all fade the modal out, then `router.replace(closeHref)`, so Back
