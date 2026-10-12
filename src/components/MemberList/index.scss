@@ -1,0 +1,39 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The member list's own rules: its cells centred on the row, the "You" mark
+// and the muted Joined date. The table, its frame and its card layout are the
+// `.data-table` primitives (claude-docs/styling.md); nothing here styles past
+// the tokens until the section's design review.
+
+// The name, then "You" beside it on the member's own row.
+.member-list__name {
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+}
+
+.member-list__you {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+// The joined date is a fact no control changes, so muted at the caption size
+// above the stacking width; a card already leads it with its muted label.
+@container data-table (width > #{$table-stack-width}) {
+  .member-list .member-list__fact {
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+}
+
+// The role and its change on one line, as the user list's role cell holds its own.
+.member-list__role {
+  @include value-and-control;
+}
+
+// The Remove column, the shared dangerous-action column Impersonate is
+// (`row-action-column`).
+.member-list__remove {
+  @include row-action-column;
+}
