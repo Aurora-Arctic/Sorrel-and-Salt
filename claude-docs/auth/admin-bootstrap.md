@@ -452,7 +452,7 @@ the tests [`tests.md`](tests.md).
   over its own and appends cookies. A verified sign-in lands where it
   asked, or with no return path on its role's landing
   (["Route protection"](route-protection.md)).
-- **The page.** `src/app/account/email/page.tsx` calls `requireSession()`
+- **The page.** `src/app/(shell)/account/email/page.tsx` calls `requireSession()`
   and `getMe`, and passes the form `''` for a placeholder, `next` through
   `safeReturnPath`, the seconds left on the mail clock, `?error=` through
   `src/lib/account-email.ts`'s `verifyErrorMessage` (one sentence per code
@@ -486,7 +486,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 [`components/email-form.md`](../components/email-form.md) and
 [`components/sign-in-methods.md`](../components/sign-in-methods.md).
 
-- **The page.** `src/app/account/page.tsx` calls `requireSession()`, so an
+- **The page.** `src/app/(shell)/account/page.tsx` calls `requireSession()`, so an
   unverified account is sent to the email page instead, and reads `getMe`,
   `linkedAccounts()` and `sessionIsFresh()`. Under its `<h1>` "Your
   Account" are three sections, each a region named by its own `<h2>`, which

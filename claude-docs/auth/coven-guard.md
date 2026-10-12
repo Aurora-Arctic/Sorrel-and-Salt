@@ -10,7 +10,7 @@ visitors three ways, all from the server:
 | -------------------------------------------------- | --------------------------------------- | ----------------------------------------- |
 | Signed out                                         | 307 to `/sign-in?next=<path and query>` | The proxy, then `requireSession()`        |
 | Signed in, and the slug names no coven they are in | **404**, the same for both cases        | `requireCovenMembership()`'s `notFound()` |
-| A member, at any role                              | The layout, around the page             | `src/app/coven/[slug]/layout.tsx`         |
+| A member, at any role                              | The layout, around the page             | `src/app/(shell)/coven/[slug]/layout.tsx` |
 
 - **A 404, not a 403.** This is the opposite of `/admin`, on purpose. A slug
   is a guess at someone's private data, so answering "you may not" would
@@ -51,11 +51,13 @@ browser against the built server).
 
 `/coven/[slug]` is the page a coven opens on: where the switcher (M6.9), an
 accepted invitation (M7.5) and the shell's coven link (MB.7) land. It is
-`src/app/coven/[slug]/page.tsx`, and like every page under the coven it runs
+`src/app/(shell)/coven/[slug]/page.tsx`, and like every page under the coven it runs
 the guard again with its own slug. It shows the coven's name as its heading,
-and the layout's title template gives its tab title the name too.
+and the layout's title template gives its tab title the name too. The
+navigation shell (`src/app/(shell)/layout.tsx`, MB.7) wraps it, as it wraps
+every page under `/coven`, `/account` and `/admin`.
 
-**The section nav is the layout's.** `src/app/coven/[slug]/layout.tsx`
+**The section nav is the layout's.** `src/app/(shell)/coven/[slug]/layout.tsx`
 renders `CovenNav` above the page, inside the `.coven-layout` frame, so
 every page under the coven carries it without repeating it
 ([`components/coven-nav.md`](../components/coven-nav.md)). Today it links
@@ -92,7 +94,7 @@ for every role, Delete for the owner alone) and `tests/e2e/coven.spec.ts`
 ## The create page (M9.16)
 
 `/coven/new` is where someone holding `canCreateWorkspace` names a new
-coven. It is `src/app/coven/new/page.tsx`, and it is reached two ways: from
+coven. It is `src/app/(shell)/coven/new/page.tsx`, and it is reached two ways: from
 `/coven`, which offers it to a rights holder with no coven yet (M2.8), and
 from the switcher's Create Workspace choice, offered to anyone holding the
 right (M6.9). A successful create lands on the new coven's index page as its
