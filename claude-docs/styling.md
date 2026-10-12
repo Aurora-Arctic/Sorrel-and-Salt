@@ -61,7 +61,7 @@ to.
   outside a form on the owner's call), `$tip-width` (a tip's widest
   line, 18rem, capped at the window), `$close-target` (the dialog's close
   button, 2.5rem), `$table-stack-width` (the frame width under which a table
-  stacks, 40rem), `$filter-choice-width` (a filter's select or type-ahead field, 14rem), `$filter-search-basis` (where a filter's search box starts before it grows, 16rem), `$table-cell-inset` (the admin table's inline cell padding, `space(3)`, which the filter row above it shares), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
+  stacks, 40rem), `$filter-choice-width` (a filter's select or type-ahead field, 14rem), `$filter-search-basis` (where a filter's search box starts before it grows, 16rem), `$table-cell-inset` (the admin table's inline cell padding, `space(3)`), `$switch-width` (the switch's track, 2.75rem, `$icon-size` high), `$rule-medium` and `$rule-heavy` (the 2px and 3px rules
   that mark something by weight as well as colour), and `$toggle-corner` (the
   theme toggle's 3.9rem corner, which the impersonation banner keeps clear
   of). A duration with a role of its own is one too: `$motion-short`
@@ -575,8 +575,8 @@ it, so the same rule holds there
 phone.** Wide, every even body row sits on `$surface-card`, the surface a
 modal wears, so a wide row stays readable across. Each cell is inset
 `$table-cell-inset`, `space(3)`, on both sides so no text meets a band's edge,
-and the filter row above the table takes the same inset, so each filter
-label stands flush with the column heading beneath it (MB.115); and aligned on the
+and the filter row above the table runs edge to edge with it, the owner's
+call at MB.115's review; and aligned on the
 baseline so a row's small button reads on its text's line. A heading sits on
 its cell's bottom instead, on the owner's call, so one that wraps keeps its
 last line level with its neighbours', on the 1px `$text-muted` hairline under

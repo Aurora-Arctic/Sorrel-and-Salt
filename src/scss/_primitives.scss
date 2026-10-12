@@ -363,9 +363,10 @@
   // (claude-docs/components/filter-form.md): the search box first, then any
   // selects, type-aheads and switches, then Clear while a filter is shown,
   // wrapping, all on the line's end so a switch stands level with the boxes
-  // beside it. Inset by the table's own cell padding, `$table-cell-inset`, so
-  // each label stands flush with the column heading beneath it rather than a
-  // step to its left. Written five times as each list's own `__search` rule
+  // beside it. Edge to edge with the table beneath it, the owner's call at
+  // MB.115's review, so its boxes reach the bands' edges; a label stands a
+  // cell inset left of the heading text under it, which the owner preferred
+  // to boxes narrower than the table. Written five times as each list's own `__search` rule
   // until it was one. A size container for the same reason `.page-header` is:
   // under 28rem of its own width every child takes the whole line, rather
   // than a phone squeezing the search box to the width of a select.
@@ -374,7 +375,6 @@
     flex-wrap: wrap;
     align-items: end;
     gap: space(3) space(5);
-    padding-inline: $table-cell-inset;
     container: filter-row / inline-size;
 
     // The search, always first, starts at `$filter-search-basis` and takes
@@ -637,7 +637,7 @@
     th,
     td {
       // Inset on both sides, as the rows are banded, so no text meets a band's
-      // edge; `$table-cell-inset` across, which the filter row above shares.
+      // edge; `$table-cell-inset` across.
       padding: space(2) $table-cell-inset;
       text-align: start;
       // The baseline, so a row's small button reads on its text's line.

@@ -276,14 +276,13 @@ $skeleton-shine: color-mix(in srgb, $text-muted 7%, $surface-card);
 }
 
 // The filter row: the search box and a narrower select, a control's height
-// each, wrapping and inset as `.filter-row` is. No button: the real row has
+// each, wrapping as `.filter-row` does, edge to edge. No button: the real row has
 // none, its search submitting from the magnifier inside its box (MB.115).
 .tab-skeleton__filter {
   display: flex;
   flex-wrap: wrap;
   align-items: end;
   gap: space(3) space(5);
-  padding-inline: $table-cell-inset;
 
   > span {
     height: $control-height;
