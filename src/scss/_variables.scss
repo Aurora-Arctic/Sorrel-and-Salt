@@ -337,9 +337,6 @@ $theme-transition-easing: ease-in-out;
 // (claude-docs/components/info-tip.md, "Styling").
 $tip-fade: 500ms;
 
-// The only width-based breakpoint; everything else keys off media preferences.
-$breakpoint-desktop: 1024px;
-
 // The forms' column: the sign-in panel, the account page's sections, the
 // email form and the invitation. One number where each page restated 28rem;
 // narrower than the measure, since a form's line is a field, not prose.

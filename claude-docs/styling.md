@@ -956,7 +956,8 @@ heavier than the reverse; light reverts to the browser default.
 ## The files
 
 - `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
-  colours and `brand-color()`, `$narrow-column`, the `$font-body` / `$font-heading` / `$font-mono` stacks, the
+  colours and `brand-color()`, `$narrow-column`, `$pager-tight-width` (the
+  width under which the pager closes up to stay on one line), the `$font-body` / `$font-heading` / `$font-mono` stacks, the
   `$measure`, and the three scales with their accessors — `type-size()`,
   `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
@@ -975,7 +976,8 @@ heavier than the reverse; light reverts to the browser default.
   apart); `busy-faded` (colour out and `$opacity-disabled` left);
   `tip-anchor` and `tip-above($align, $layer, $capped)` (what a tip is
   placed against, and a bubble above it, capped to `$tip-width` and the
-  window); `icon-button` (which takes a `$radius` and a `$cursor`, and
+  window); `tip-bubble-open` (a bubble's open state alone, for one opened
+  by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
   turns `$text-primary` when pointed at or focused), `icon-button-edit`
   and `icon-button-remove` (the accent and the wax); `disclosure-chevron`
   (a chevron that turns over while its section is open); `floating-panel`
