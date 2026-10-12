@@ -1570,6 +1570,8 @@ MSW mocks `/api/graphql`. `tests/support/setup.ts` — since MB.97 `setup-msw.ts
 
 Specs: admin adds a compendium entry; A adds it to W's ingredients with a quantity; A builds a spell and checks the category comparison; A generates an invite link; B accepts, signs in, and lands in W seeing everything; C reads but cannot edit; D reaches for W's routes by URL and gets 404 throughout; A soft-deletes an item and confirms it's gone and the name can be reused.
 
+Each spec tags the stories it walks (`@story-N`), and the stories checklist reports them beside each story's service-layer result, so the launch wave can aim its flows at the stories with no browser proof. The acceptance suite stays the definition of done (M9.17).
+
 `@axe-core/playwright` scans each page and each open modal. Accessibility is asserted here, matching the `resume-2026` pattern — no `vitest-axe`.
 
 `webServer` runs `npm run build && npm run start` on **8001**, preserving the deliberate separation from the dev server's 8000, and one more `npm run start` over the same build for each further worker slot, on `8001 + slot` — each worker has its own server and database. One last `npm run start` on **8100** has every OAuth provider configured: the sign-in page's two availability states need a server each. Coverage via `monocart-coverage-reports`.

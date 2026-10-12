@@ -22,6 +22,14 @@ action used, and never a page title, a heading on a plain load or a
 sentence. A level-1 heading stays where it identifies the destination a
 navigation reached, or the 403 page.
 
+**A test tags the stories it walks** (M9.17), with Playwright's tag option:
+`test('…', { tag: '@story-6' }, …)`, or an array for several. Tag a test only
+when its own steps are the story's flow; visiting a story's page is not
+walking it. `npx playwright test --grep @story-6` runs one story's tests. The
+stories checklist (`npm run test:stories`) and the Playwright CI summary's
+"Stories walked" both read the tags
+([`acceptance.md`](acceptance.md)).
+
 **`assertNoAccessibilityViolations(page)` does not wait** (`tests/e2e/axe.ts`):
 it scans whatever the page holds at that instant. So the last web-first
 assertion before each scan must be one that waits for the state being
