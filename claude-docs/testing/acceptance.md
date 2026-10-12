@@ -53,7 +53,8 @@ with `existsSync` and `readFileSync` instead of rendering it, and
 surface at runtime — `await import('@/modules/ingredients')` cast to an
 interface stating the signature the story expects, each name checked with
 `toBeTypeOf('function')` so the failure named the task it waited on, until
-M5.6 imported the last of them. The task
+M5.6 imported the last of them. That lookup is now `surface()` in
+`tests/support/unbuilt.ts`, shared since M6.1 put stories 3–13 on it. The task
 that builds the page or the service replaces the workaround with the import
 and drops the stated signature; the story's `describe` and its assertions
 stay.
