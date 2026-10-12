@@ -13,6 +13,7 @@ import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types'
 import type {
   AuditWriter,
   InvitationRow,
+  InvitedCoven,
   SiteInvitationFilter,
   SiteInvitationValues,
   SortPart,
@@ -95,9 +96,7 @@ export function findInvitationByToken(token: string): Promise<InvitationRow | un
  * verified address is the invited one, since only that account may be told
  * the name.
  */
-export async function findInvitedCoven(
-  workspaceId: string,
-): Promise<{ name: string; slug: string } | undefined> {
+export async function findInvitedCoven(workspaceId: string): Promise<InvitedCoven | undefined> {
   const row = await selectOne(
     workspaces,
     and(notSoftDeleted(workspaces), eq(workspaces.id, workspaceId)),

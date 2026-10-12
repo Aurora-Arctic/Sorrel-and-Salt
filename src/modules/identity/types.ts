@@ -1,6 +1,6 @@
 import type { userPrivilegeChanges } from './schema/user-privilege-changes';
 import type { users } from './schema/users';
-import type { InvitationRow, SiteInvitationRow } from '../../db/repository';
+import type { InvitationRow, InvitedCoven, SiteInvitationRow } from '../../db/repository';
 
 export type { PrivilegeChangeFilter, UserFilter } from '../../db/repository';
 
@@ -101,5 +101,5 @@ export type InvitationCheck =
       invitation: WorkspaceInvitationRow;
       user: UserRow;
       /** The live coven, as the invited account may be told it. */
-      coven: { name: string; slug: string };
+      coven: InvitedCoven;
     };

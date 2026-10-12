@@ -717,6 +717,12 @@ export interface SlugRedirect {
 /** An `invitations` row, either tier, as a finder or a write returns it. */
 export type InvitationRow = typeof invitations.$inferSelect;
 
+/** The live coven a workspace invitation names, as the invited account may be told it: two fields, never the row. */
+export interface InvitedCoven {
+  name: string;
+  slug: string;
+}
+
 /**
  * A site-tier invitation, which grants admin: the workspace and the role both
  * null, as the `invitations_tier` CHECK makes them together (MB.201).

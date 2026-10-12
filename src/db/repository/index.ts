@@ -106,6 +106,7 @@ export type {
   IngredientRow,
   InvitableRole,
   InvitationRow,
+  InvitedCoven,
   JoinedRow,
   LinkedProvider,
   PrivilegeChangeFilter,
