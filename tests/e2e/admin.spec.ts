@@ -532,14 +532,14 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
   const response = await page.goto('/admin/zodiac-signs');
   expect(response?.status()).toBe(200);
   const search = page.getByRole('search');
-  const filter = search.getByRole('button', { name: 'Filter' });
+  const searchButton = search.getByRole('button', { name: 'Search' });
   const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
   await expect(rows).toHaveCount(13);
   await expect(search.getByRole('combobox')).toHaveCount(0);
 
   // Aries, Sagittarius and Aquarius hold "ar".
   await search.getByRole('searchbox', { name: 'Name' }).fill('AR');
-  await filter.click();
+  await searchButton.click();
   await expect(page).toHaveURL(/\/admin\/zodiac-signs\?query=AR$/);
   await expect(rows).toHaveCount(3);
   await expect(page.getByRole('link', { name: 'Edit Aries' })).toHaveAttribute(
@@ -549,7 +549,7 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
   await assertNoAccessibilityViolations(page);
 
   await search.getByRole('searchbox', { name: 'Name' }).fill('no such sign');
-  await filter.click();
+  await searchButton.click();
   await expect(page.getByRole('table')).toHaveCount(0);
 });
 
