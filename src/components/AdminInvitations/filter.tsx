@@ -20,21 +20,13 @@ const AdminInvitationsFilter = ({ filter }: AdminInvitationsFilterProps): ReactE
   const email = fieldDescription({ id: `${useId()}-email` });
   const [draftEmail, setDraftEmail] = useState(filter.email);
   const [draftSoon, setDraftSoon] = useState(filter.expiringSoon);
-  const changed = draftEmail.trim() !== filter.email || draftSoon !== filter.expiringSoon;
 
   return (
     <FilterForm
       label="Filter Invitations"
       action="/admin/invitations"
-      href={() => invitationsHref({ email: draftEmail.trim(), expiringSoon: draftSoon })}
-      disabled={!changed}
+      searchHref={() => invitationsHref({ email: draftEmail.trim(), expiringSoon: draftSoon })}
       shown={[filter.email, filter.expiringSoon]}
-      draft={[draftEmail, draftSoon]}
-      onClear={() => {
-        setDraftEmail('');
-        setDraftSoon(false);
-      }}
-      navigation="full"
     >
       <FieldShell label="Email" {...email}>
         <input

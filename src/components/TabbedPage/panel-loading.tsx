@@ -25,7 +25,6 @@ const TabPanelLoading = ({ filter = false }: TabPanelLoadingProps): ReactElement
         <div className="tab-skeleton__filter">
           <span className="tab-skeleton__field" />
           <span className="tab-skeleton__field tab-skeleton__field--short" />
-          <span className="tab-skeleton__button" />
         </div>
       )}
       <div className="tab-skeleton__table">

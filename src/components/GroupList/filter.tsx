@@ -24,12 +24,8 @@ const GroupListFilter = ({ kind, filter }: GroupListFilterProps): ReactElement =
     <FilterForm
       label={`Filter ${KINDS[kind].title}`}
       action={groupsPath(kind)}
-      href={() => groupsHref(kind, { query: draftQuery.trim() })}
-      disabled={draftQuery.trim() === filter.query}
+      searchHref={() => groupsHref(kind, { query: draftQuery.trim() })}
       shown={[filter.query]}
-      draft={[draftQuery]}
-      onClear={() => setDraftQuery('')}
-      navigation="soft"
     >
       <FieldShell label="Name" {...query}>
         <input

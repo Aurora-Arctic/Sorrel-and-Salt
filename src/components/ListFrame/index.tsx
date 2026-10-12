@@ -15,11 +15,11 @@ import type { ListBodyProps, ListFrameProps, ListNavigation } from './types';
 
 // A list page's root, `.list-frame`, and the one record of whether another
 // of its pages is on its way (MB.115, the owner's call: "Filters should
-// trigger the same type of loading state as tabs"). Filter, Clear and
-// the pager's ends each navigate through it, so while the new page reads the
-// filter row greys out and the list beneath it, table and pager, is the
-// tabs' own skeleton; the new list fades in as a tab's content does. A
-// direct request renders on the server as before, with no skeleton
+// trigger the same type of loading state as tabs"). The filter, as it
+// applies, and the pager's ends each navigate through it, so while the new
+// page reads the filter row greys out and the list beneath it, table and
+// pager, is the tabs' own skeleton; the new list fades in as a tab's content
+// does. A direct request renders on the server as before, with no skeleton
 // (claude-docs/components/list-frame.md).
 
 /**
@@ -32,12 +32,13 @@ export const ListNavigationContext = createContext<ListNavigation | null>(null);
 /**
  * Holds the navigation the filter, the pager and the body share. A soft
  * navigation runs inside this transition, so `pending` stays true until Next
- * has rendered the new page. A full load has no transition to wait on: a
- * flag holds `pending` from the press until the browser unloads the page,
- * the old page staying on screen until the new one's first paint, and a
- * `pageshow` from the back-forward cache drops it, so Back does not land on
- * a skeleton. A provider already above, the workshop's, is kept rather than
- * shadowed.
+ * has rendered the new page; the filter's are always soft. A full load, a
+ * pager's plain anchor on the lists that keep one, has no transition to
+ * wait on: a flag holds `pending` from the press until the browser unloads
+ * the page, the old page staying on screen until the new one's first paint,
+ * and a `pageshow` from the back-forward cache drops it, so Back does not
+ * land on a skeleton. A provider already above, the workshop's, is kept
+ * rather than shadowed.
  */
 const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const outer = useContext(ListNavigationContext);

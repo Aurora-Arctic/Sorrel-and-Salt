@@ -16,21 +16,15 @@ const PrivilegeLedgerFilter = ({ filter }: PrivilegeLedgerFilterProps): ReactEle
   const query = filter.query ?? '';
   const [draftQuery, setDraftQuery] = useState(query);
   const [draft, setDraft] = useState<LedgerPrivilege | ''>(filter.privilege ?? '');
-  const changed = draftQuery.trim() !== query || draft !== (filter.privilege ?? '');
 
   return (
     <FilterForm
       label="Filter Privilege Changes"
       action="/admin/privilege-changes"
-      href={() => privilegeLedgerHref({ query: draftQuery.trim(), privilege: draft || undefined })}
-      disabled={!changed}
+      searchHref={() =>
+        privilegeLedgerHref({ query: draftQuery.trim(), privilege: draft || undefined })
+      }
       shown={[filter.query, filter.privilege]}
-      draft={[draftQuery, draft]}
-      onClear={() => {
-        setDraftQuery('');
-        setDraft('');
-      }}
-      navigation="full"
     >
       <div className="field">
         <label className="field__label" htmlFor="privilege-ledger-query">

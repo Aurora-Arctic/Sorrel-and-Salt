@@ -204,8 +204,9 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   list's.
 - **The loading state is a skeleton** of the list it stands in for, on the
   owner's call, so the page does not snap from one tab to the next: where
-  the pressed tab has a filter, a filter row of the query field, a narrower
-  select and the Filter button, with no Add, which sits beside the heading;
+  the pressed tab has a filter, a filter row of the search box and a narrower
+  select, inset as the real row is and with no button, since the real row
+  has none (MB.115), and no Add, which sits beside the heading;
   then a table's heading over the muted hairline and six rows, every second
   one banded on the card surface as the admin tables are, their bars of
   uneven lengths; then the pager's two ends, centred. One skeleton serves

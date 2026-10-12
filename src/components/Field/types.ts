@@ -112,9 +112,11 @@ export interface SelectFieldProps<V extends FieldValues = FieldValues> extends F
 }
 
 /**
- * An on-or-off choice in a plain-state form, held by the caller: a list
- * filter's No Refs or Needs Approval. Not a react-hook-form field,
- * since no such form has one yet.
+ * An on-or-off choice in a plain-state form: a list filter's No Refs or
+ * Needs Approval. Held by the caller through `checked`, or left to the
+ * native checkbox from `defaultChecked`, as a filter that applies on the
+ * change leaves it. Not a react-hook-form field, since no such form has one
+ * yet.
  */
 export interface SwitchFieldProps {
   /** The name beside the switch, and its accessible name. */
@@ -123,7 +125,10 @@ export interface SwitchFieldProps {
   name: string;
   /** What it submits while on: `1`, or empty for a bare flag. */
   value: string;
-  checked: boolean;
+  /** On or off, held by the caller; leave it out for `defaultChecked`. */
+  checked?: boolean;
+  /** On or off as first drawn, the checkbox holding it after: a filter switch, which applies on its change. */
+  defaultChecked?: boolean;
   onChange: (checked: boolean) => void;
   /** Shut: dashed, faded, its name dimmed. */
   disabled?: boolean;
@@ -164,4 +169,21 @@ export interface ReasonFieldProps {
   hint?: string;
   /** The wrapper's class, which holds the field's room above and below. */
   className?: string;
+}
+
+/**
+ * A list filter's search box (MB.115): its text held by the caller, and a
+ * submit of its own, a magnifier named Search, at the box's end.
+ */
+export interface SearchFieldProps {
+  /** The base the field's ids grow from, as `fieldDescription` takes it; its own `useId()` when left out. */
+  id?: string;
+  /** The name above the box, and its accessible name: "Name or Email". */
+  label: string;
+  /** The parameter the text submits under: `query`. */
+  name: string;
+  /** A short action shown, muted, while the box is empty: "Search names". */
+  placeholder?: string;
+  value: string;
+  onChange: (value: string) => void;
 }

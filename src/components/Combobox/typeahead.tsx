@@ -25,6 +25,7 @@ export function ComboboxTypeahead({
   labelId,
   value,
   onChange,
+  onSettle,
   onBlur,
   choices,
   placeholder,
@@ -77,11 +78,13 @@ export function ComboboxTypeahead({
         if (!option?.key) return;
         setText(picked);
         if (option.key !== value) onChange(option.key);
+        onSettle?.(option.key);
       }}
       onBlur={() => {
         // Left naming a choice in another case, the box reads its label.
         const named = choiceNamed(choices, text);
         if (named && named.label !== text) setText(named.label);
+        onSettle?.(named?.value ?? '');
         onBlur?.();
       }}
       // From the first render, empty or not, so its room is kept while it
@@ -94,6 +97,7 @@ export function ComboboxTypeahead({
               onClear: () => {
                 setText('');
                 if (value !== '') onChange('');
+                onSettle?.('');
                 // The pressed clear hides; the box keeps the focus.
                 document.getElementById(id)?.focus();
               },
