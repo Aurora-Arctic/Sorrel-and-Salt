@@ -67,3 +67,29 @@ member, a viewer) gets the plain one, and the page reads nothing for them.
 Why the page and not the refusal: the guard's `LastOwner` carries `remedy` and `promotable`, but
 GraphQL does not pass them to the browser, and the explanation is meant to come before an attempt.
 The roll read on the page is the same fact, read by the same `member: read` check.
+
+## Styling
+
+None of its own: the directory has no `index.scss`. The plain Leave is the `.btn` primitive
+opening `ConfirmedAction`'s modal ([`user-list.md`](user-list.md)); the guided exit is a
+`ModalButton` ([`modal.md`](modal.md)) holding a `RadioGroupField`, a `FieldShell` around the
+type-ahead, and the dialog's `.modal__actions` row. Promote and Leave is `.btn--solid`; Delete
+is `.btn--destructive`; Cancel is `.btn--quiet`.
+
+## Stories
+
+`index.stories.tsx` (`Coven / Leave Workspace Button`): `Default` (the plain Leave),
+`OnlyOwner` (several members to hand over to, so the type-ahead), `OnlyOwnerOneOther` (one member,
+offered by name) and `OnlyMember` (deletion alone). In the workshop the calls reach no server, so
+confirming shows the failure. The buttons in their page are drawn by the review's proposals in
+`.ladle/coven-pages.stories.tsx` (`Coven / Pages`, `ProposalIndex…`), each with a `PhoneDark` and
+a `PhoneLight` sibling.
+
+## Testing
+
+`tests/components/LeaveWorkspaceButton/index.test.tsx`: nothing sent until confirmed, then the
+named coven's id and a move home; a refusal stays on the page; a refusal inside an `ActionFailure`
+is said above the buttons, not beside the one pressed. `owner-exit.test.tsx`: the dialog opens
+with both ways out, the type-ahead and the one-member and no-member shapes, the two requests in
+their order and what each failure leaves, the Delete confirmation, and that the focus returns to
+Leave Coven when the dialog closes by Cancel or Escape.
