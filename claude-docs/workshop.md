@@ -153,6 +153,17 @@ without a page routed to it.
   unless a story wraps itself in `WorkshopPathname` with another address, so
   AdminNav's stories show the current-page marker on People, and a tabbed
   page's story can open any tab (MB.115).
+  Its `useRouter` reports a `push` or `replace` to a story that wraps itself in
+  `WorkshopNavigation` and goes nowhere otherwise: a `RouteModal` closes by
+  navigating, so without it a story's modal stays mounted as a native modal
+  dialog, invisible once faded and holding the whole page inert (M10.33).
+- **`reopenable.tsx`** — `Reopenable`, what stands in for a modal's owner in a
+  story. The app's owners close a modal by unmounting it, and a story has no
+  owner. It renders its children while open, hands them a `close`, answers a
+  `RouteModal`'s navigation through `WorkshopNavigation` by closing too, and
+  leaves an Open Again button in place of the modal, so a review can look
+  again without a reload (M10.33). A story that draws a `Modal` whose
+  `onClose` would do nothing wraps it in this.
 - **`admin-frame.tsx`** — the shared story wrapper for the admin area.
   `AdminFrame` is the admin layout as it is: the context row holding
   "Admin" and `AdminNav`, then the `.admin-layout` column around the story,

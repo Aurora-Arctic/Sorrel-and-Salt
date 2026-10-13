@@ -25,6 +25,7 @@ import type { CitationFields } from '../../lib/types';
 import Modal from '../Modal';
 import IngredientForm from '.';
 import { press } from '../../../.ladle/press';
+import { Reopenable } from '../../../.ladle/reopenable';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
@@ -1165,19 +1166,23 @@ export const CompendiumEntrySubstituteSummary: Story = () => {
 export const CompendiumEntryInModal: Story = () => {
   useCannedApi();
   return (
-    <Modal
-      eyebrow="Edit Ingredient"
-      title="Testwort"
-      qualifier={<span className="binomial">Fixtura testalis</span>}
-      onClose={() => undefined}
-    >
-      <IngredientForm
-        workspaceId={null}
-        entry={ENTRY}
-        entryHref={entryHref}
-        onCancel={() => undefined}
-      />
-    </Modal>
+    <Reopenable>
+      {(close) => (
+        <Modal
+          eyebrow="Edit Ingredient"
+          title="Testwort"
+          qualifier={<span className="binomial">Fixtura testalis</span>}
+          onClose={close}
+        >
+          <IngredientForm
+            workspaceId={null}
+            entry={ENTRY}
+            entryHref={entryHref}
+            onCancel={() => undefined}
+          />
+        </Modal>
+      )}
+    </Reopenable>
   );
 };
 
