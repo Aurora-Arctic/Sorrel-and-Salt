@@ -27,10 +27,11 @@ inside that segment's layout. It keeps `NotAuthorized` in a `main.page-frame`.
 - `viewer`: `{ name, isAdmin, canCreate, verified }` (`ShellViewer`,
   `src/lib/types.ts`). `isAdmin` is the session's role; `canCreate` and
   `verified` come from the user row.
-- `workspaces`: `{ slug, name }[]`, the viewer's covens.
 - `children`: the page, with any context row its own layout renders.
 
-`src/lib/viewer.ts` exports `viewerOf()`, which builds both from `getMe` and
+The shell takes no list of covens: the coven layout and the create page read
+them for their switchers. `src/lib/viewer.ts` exports `viewerOf()`, which builds
+the viewer and that list from `getMe` and
 `membershipsOf(session, [session.userId])`, wrapped in React `cache()` so the
 shell layout and the coven layout's switcher cost one pair of lookups. The
 covens are listed alphabetically by name. A refused lookup (impossible for
@@ -93,9 +94,15 @@ link.
 
 ## Stories
 
-`index.stories.tsx`: `CovenPage`, `AdminPage`, `AccountPage`, `Unverified`,
-`Phone` and `PhoneAdmin`, each inside `ShellFrame` (`.ladle/shell-frame.tsx`),
-which draws the layouts' markup with fixture props.
+[`index.stories.tsx`](../../src/components/AppShell/index.stories.tsx), titled
+"Shell / App Shell", each inside `ShellFrame` (`.ladle/shell-frame.tsx`), which
+draws the layouts' markup with fixture props around a stub page. Each area's
+stub wraps and heads itself as that area's real page does: a coven's name in
+the coven layout's column, "Admin" in the admin layout's, "Your Account" or
+"Your Email" in the narrow page frame, and "Create Coven" on its panel.
+`CovenPage`, `AdminPage`, `CreatePage` (`/coven/new`: the switcher alone in the
+context row, with no section nav), `AccountPage`, `Unverified` (the email page's
+bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`.
 
 ## Testing
 
