@@ -8,7 +8,8 @@ export default {
 };
 
 // Follows the toolbar's theme control. The first four stories draw the
-// `corner` variant, as the root layout mounts it on a page with no shell: a
+// `corner` variant, as the root layout mounts it on the pages with no shell
+// (Welcome, Sign In and the invitation page): a
 // quarter disc pinned to the story frame's top-right corner and clipped by its
 // edge, which is the design.
 export const Default: Story = () => <ThemeToggle />;
@@ -28,8 +29,6 @@ Dark.meta = { theme: 'dark' };
 export const ReducedMotion: Story = () => <ThemeToggle />;
 ReducedMotion.meta = { reducedMotion: true };
 
-// The disc in the flow, as the shell's bar draws it, and its small size, as
-// the phone account panel does. No clip, no fixed position.
+// The disc in the flow, as the shell's bar draws it (AppShell's stories show it
+// there, in the bar). No clip, no fixed position.
 export const Inline: Story = () => <ThemeToggle variant="inline" />;
-
-export const InlineSmall: Story = () => <ThemeToggle variant="inline" size="small" />;

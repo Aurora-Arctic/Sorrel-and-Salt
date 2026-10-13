@@ -57,7 +57,7 @@ const handleFacetTransitionEnd = (event: TransitionEvent): void => {
   }
 };
 
-const ThemeToggle = ({ variant = 'corner', size = 'default' }: ThemeToggleProps): ReactElement => {
+const ThemeToggle = ({ variant = 'corner' }: ThemeToggleProps): ReactElement => {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const darkFacetRef = useRef<SVGSVGElement>(null);
   const lightFacetRef = useRef<SVGSVGElement>(null);
@@ -102,19 +102,11 @@ const ThemeToggle = ({ variant = 'corner', size = 'default' }: ThemeToggleProps)
     buttonRef.current?.setAttribute('aria-pressed', String(!isLight));
   };
 
-  const classes = [
-    'theme-toggle',
-    `theme-toggle--${variant}`,
-    size === 'small' && 'theme-toggle--small',
-  ]
-    .filter(Boolean)
-    .join(' ');
-
   return (
     <button
       ref={buttonRef}
       type="button"
-      className={classes}
+      className={`theme-toggle theme-toggle--${variant}`}
       aria-label="Toggle light and dark mode"
       aria-pressed={false}
       onClick={handleToggle}
