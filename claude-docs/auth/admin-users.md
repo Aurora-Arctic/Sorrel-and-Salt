@@ -390,7 +390,9 @@ filter, page)` is one page of the pending list, newest first, and
 - **One accept service, for both tiers.** `acceptInvitation(session, token)`
   (`src/modules/identity/services/invitation-acceptance.ts`) is the one M7.5's
   entry describes, built by MB.70 with the site tier's branch, and by M7.5
-  with the workspace's. It checks, in this order:
+  with the workspace's; M10.32 added `acceptInvitationById`, the workspace
+  tier alone, which runs the same checks over the row the session's verified
+  address holds rather than the one a token names. It checks, in this order:
   1. The token names a live invitation, or the link is invalid (`NotFound`).
      The token is hashed in the repository, so a hash read off a dumped row
      names nothing.

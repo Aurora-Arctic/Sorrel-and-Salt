@@ -4,11 +4,13 @@ import {
   findInvitedCoven,
   findOneById,
   findOpenAdminRoleChangePause,
+  findReceivedInvitation,
   findWorkspaceRole,
   withAudit,
 } from '../../../db/repository';
-import type { InvitationRow, SiteInvitationRow } from '../../../db/repository';
+import type { AuditWriter, InvitationRow, SiteInvitationRow } from '../../../db/repository';
 import { Forbidden, NotFound } from '../../../lib/errors';
+import { RowId } from '../../../lib/validation';
 import { sameAddress } from '../../../lib/primary-admin';
 import type { Session } from '../../../lib/session';
 import { users } from '../schema/users';
@@ -80,8 +82,15 @@ async function heldByPause(invitation: SiteInvitationRow): Promise<boolean> {
   return inviter === undefined || !isPrimaryAdmin(inviter);
 }
 
-async function standingOf(session: Session, token: string): Promise<InvitationCheck> {
-  const invitation = await findInvitationByToken(token);
+/**
+ * What the checks make of a found invitation, or of none: the dead-link
+ * checks, then the address, then the tier's own. One body for both ways in,
+ * the link's token and the landing's id, so they cannot drift.
+ */
+async function checkInvitation(
+  session: Session,
+  invitation: InvitationRow | undefined,
+): Promise<InvitationCheck> {
   if (!invitation) return { refusal: 'invalid' };
   const dead = deadLink(invitation);
   if (dead) return { refusal: dead };
@@ -103,6 +112,20 @@ async function standingOf(session: Session, token: string): Promise<InvitationCh
   return { tier: 'workspace', invitation, user, coven };
 }
 
+async function standingOf(session: Session, token: string): Promise<InvitationCheck> {
+  return checkInvitation(session, await findInvitationByToken(token));
+}
+
+/**
+ * The same checks over an id the landing listed. The read is the session's own
+ * (a coven invitation to its verified address, in SQL), so another address's
+ * id, a site-tier id, a deleted row and a malformed id all read as none.
+ */
+async function standingById(session: Session, id: string): Promise<InvitationCheck> {
+  if (!RowId.safeParse(id).success) return { refusal: 'invalid' };
+  return checkInvitation(session, await findReceivedInvitation(session, id));
+}
+
 /**
  * Whether the signed-in session may accept the invitation `token` names, and
  * if not, why: what `/invite/[token]` shows before offering Accept. The same
@@ -119,8 +142,12 @@ export async function invitationStanding(
     : { acceptable: true, tier: 'workspace', slug: standing.coven.slug, name: standing.coven.name };
 }
 
-function refusalError(reason: InvitationRefusal): Error {
-  return reason === 'invalid' ? new NotFound(MESSAGES.invalid) : new Forbidden(MESSAGES[reason]);
+// An id is not a link, so "open the whole link" would mislead.
+const INVALID_BY_ID = 'No invitation sent to you has this id.';
+
+function refusalError(reason: InvitationRefusal, byId = false): Error {
+  if (reason === 'invalid') return new NotFound(byId ? INVALID_BY_ID : MESSAGES.invalid);
+  return new Forbidden(MESSAGES[reason]);
 }
 
 /**
@@ -146,8 +173,50 @@ function refusalError(reason: InvitationRefusal): Error {
  * or admin changes are paused and another admin than the primary one sent it.
  */
 export async function acceptInvitation(session: Session, token: string): Promise<InvitationRow> {
-  const standing = await standingOf(session, token);
-  if (standing.refusal) throw refusalError(standing.refusal);
+  return acceptChecked(
+    session,
+    await standingOf(session, token),
+    (write) => write.acceptInvitation(token),
+    () => standingOf(session, token),
+    false,
+  );
+}
+
+/**
+ * Accepts the coven invitation `id` names, as `/coven` lists it, as the
+ * session's user: `acceptInvitation` for a person who never opened the mailed
+ * link. The same checks and the same acceptance, and the address match is the
+ * session's own, in SQL, so an id sent to another account is as good as none.
+ * Coven invitations only: an admin invitation is accepted by its link alone.
+ *
+ * @throws {NotFound} the id names no coven invitation to this account: a
+ * malformed one, another address's, an unverified account's, an admin
+ * invitation's, a deleted row's or one into a deleted coven.
+ * @throws {Forbidden} the invitation is already accepted, withdrawn or expired.
+ */
+export async function acceptInvitationById(session: Session, id: string): Promise<InvitationRow> {
+  return acceptChecked(
+    session,
+    await standingById(session, id),
+    (write) => write.acceptReceivedInvitation(id),
+    () => standingById(session, id),
+    true,
+  );
+}
+
+/**
+ * The acceptance both ways in share, given the checks' answer: seat or revive,
+ * stamp `invited_by`, grant the creation flag, all in one transaction, then
+ * re-check if the writer's own match found the row gone since.
+ */
+async function acceptChecked(
+  session: Session,
+  standing: InvitationCheck,
+  stamp: (write: AuditWriter) => Promise<InvitationRow[]>,
+  recheck: () => Promise<InvitationCheck>,
+  byId: boolean,
+): Promise<InvitationRow> {
+  if (standing.refusal) throw refusalError(standing.refusal, byId);
   const { invitation, user } = standing;
   // Read before the transaction: a live seat is left as it is.
   const seated =
@@ -159,7 +228,7 @@ export async function acceptInvitation(session: Session, token: string): Promise
     async (write) => {
       // The writer's own match is the last word: a revoke or a second accept
       // that committed since the checks above leaves nothing to stamp.
-      const [stamped] = await write.acceptInvitation(token);
+      const [stamped] = await stamp(write);
       if (!stamped) return undefined;
       if (standing.tier === 'site') {
         if (user.role !== 'admin') {
@@ -188,8 +257,8 @@ export async function acceptInvitation(session: Session, token: string): Promise
     { via: 'invitation', note: invitation.note ?? undefined },
   );
   if (!accepted) {
-    const again = await standingOf(session, token);
-    throw refusalError(again.refusal ?? 'invalid');
+    const again = await recheck();
+    throw refusalError(again.refusal ?? 'invalid', byId);
   }
   return accepted;
 }

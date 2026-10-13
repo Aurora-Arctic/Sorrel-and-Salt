@@ -72,3 +72,8 @@ redirected into the first coven the switcher lists; someone with none who may
 create one is offered the create page; anyone else reads that the site is
 invite-only and how to get in. "Continue" on the front door and on the email
 page are `<Link>`s, typed by `postSignInLanding` returning Next's `Route`.
+
+Since M10.32, both non-member states open with the pending coven invitations
+addressed to the account's verified email, each with an Accept, when there
+are any; a member is still redirected and reads no list
+([`m10.32-accept-from-the-landing.md`](m10.32-accept-from-the-landing.md)).

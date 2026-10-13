@@ -100,6 +100,11 @@ marks"; MB.198). In their place, in the repository's `invitations.ts`, which
   inserts or revives a membership, it also writes the invitation's
   `created_by` to `workspace_members.invited_by` (M10.26). An accept by someone
   already seated writes no membership, so the inviter stays as it was.
+- **`acceptReceivedInvitation(id)`** (M10.32) stamps the same two columns on
+  a workspace-tier row by id, under no proof, matching only while the
+  session's user holds the invited address, verified, and the coven is live:
+  the token write with the address in the token's place, for the `/coven`
+  landing's list ("Accepting from the landing", below).
 - **`revokeInvitation(membership, id)`** stamps `revoked_at` now on a row in
   the proof's workspace, and **`revokeInvitation(admin, id)`** on a
   site-tier row. By id rather than token: an owner or an admin revokes from
@@ -117,8 +122,10 @@ resume does.
 **The token goes in, never the hash.** `hashToken` in the repository's
 `tokens.ts`, hex SHA-256, is the only place a hash is made, so a caller
 never holds one: a hash read out of a dumped row and passed where a token
-goes is hashed again and matches nothing, and the accept cannot be reached
-with an invitation's id, which the lists show. SHA-256 unsalted rather than
+goes is hashed again and matches nothing, and the accept by token cannot be
+reached with an invitation's id, which the lists show. The accept by id
+(M10.32) matches only while the session's user holds the invited address,
+verified, so an id read off a list admits no one else. SHA-256 unsalted rather than
 a password hash, because a token is `crypto.randomBytes` output with no
 dictionary to resist.
 
@@ -289,3 +296,60 @@ pending rows carry the addresses of people who have not joined.
 
 In GraphQL, `revokeInvitation(workspaceId: ID!, id: ID!): Invitation!` goes
 through the service.
+
+### Accepting from the landing (M10.32)
+
+An invitation reached its person one way, the mailed link, so a mail lost to
+a spam filter left them on `/coven` reading that someone must invite them,
+when someone had. Since M10.32 the landing lists the pending coven
+invitations addressed to the signed-in account's verified email, each with
+an Accept, and the accept runs by id as well as by token. The site tier is
+not listed and cannot be accepted by id: an admin invitation's link is a
+bearer token for the site's highest privilege, and the worst case of a coven
+invitation is one coven's seat
+([`m10.32-accept-from-the-landing.md`](../design-decisions/m10.32-accept-from-the-landing.md)).
+
+**The reads.** Five finders in the repository's `invitations.ts` take no
+proof, for the token read's reason, with the session row in the token's
+place: each ANDs `heldVerifiedBySession(session)`, the predicate the accept
+write already holds, and the workspace tier.
+`findReceivedInvitationPage(session, page)` and
+`findReceivedInvitationCount(session, start)` page the pending ones into a
+live coven, newest first, as the other two pending lists are ordered.
+`findReceivedInvitation(session, id)` answers one row in any state, so the
+service can say accepted, revoked or expired, and nothing for an id the
+address does not hold. `findReceivedInvitationCovens(session, ids)` and
+`findReceivedInvitationInviters(session, ids)` answer the name and slug of
+each coven and the name of each inviter, for the page's ids alone and
+nothing else of either row, so a page costs three statements whatever its
+size ([`membership-proof.md`](membership-proof.md), "The reads that take no
+proof").
+
+**The write.** `acceptReceivedInvitation(id)` is the token write with the
+address in the token's place: it stamps `accepted_at` and `accepted_by` on a
+pending workspace-tier row by id, only while the session's user holds the
+invited address, verified, and the coven is live. The token write is
+unchanged.
+
+**The service.** `acceptInvitationById(session, id)` in `identity`'s
+`invitation-acceptance.ts` shares every check and every effect of
+`acceptInvitation(session, token)`, the row read by id instead of by token:
+the seat or the revived seat, `invited_by`, the `canCreateWorkspace` grant
+declared `via: 'invitation'`, and the recheck after a race. An id the
+address does not hold, an unverified match, a site-tier id, a deleted row or
+coven and a malformed id are `NotFound` alike, so an id read off an owner's
+list tells a stranger nothing; an accepted, revoked or expired row is
+`Forbidden` in the link's own words. `listReceivedInvitations(session, page)`
+and `countReceivedInvitations(session, start)`, in `received-invitations.ts`,
+shape the rows for the landing, which calls them directly as a server
+component; there is no GraphQL read, as for the other two lists. The one
+mutation is `acceptInvitationById(id: ID!): Invitation!`
+([`components/received-invitations.md`](../components/received-invitations.md)).
+
+**What the link still proves that the list does not.** A verified address
+proves the mailbox was the person's when it was verified; the link proves it
+still is at invitation time. An address passed on since could accept a coven
+invitation meant for its new holder, which the site-tier exclusion bounds to
+one coven. A member who already has a coven is redirected from `/coven` as
+before and gains nothing here; listing for them needs a Decline write, and is
+a follow-up.

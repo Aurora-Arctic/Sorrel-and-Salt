@@ -391,6 +391,11 @@ type Mutation {
   acceptInvitation(token: String!): Invitation!
 
   """
+  Accepts a pending coven invitation sent to the signed-in account's verified address, by its id, as the landing lists it; an admin invitation is accepted by its link alone.
+  """
+  acceptInvitationById(id: ID!): Invitation!
+
+  """
   Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.
   """
   createAdminInvitation(email: String!, note: String): Invitation!

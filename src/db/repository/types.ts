@@ -526,6 +526,15 @@ export interface AuditWriter {
    */
   acceptInvitation(token: string): Promise<InvitationRow[]>;
   /**
+   * Accept the pending coven invitation `id` names, as the session's user:
+   * `acceptInvitation` found by id, for the `/coven` landing (M10.32). Under
+   * no proof, for the same reason. No row comes back for an id on the site
+   * tier, whose grant a link alone accepts, for one sent to another address or
+   * to this one unverified, for one into a deleted coven, or for one that is
+   * not pending.
+   */
+  acceptReceivedInvitation(id: string): Promise<InvitationRow[]>;
+  /**
    * Revoke a pending invitation in the proof's workspace, stamping
    * `revoked_at` now; `updated_by` is who revoked. No row comes back for one
    * already accepted, revoked or expired, or for an id in another workspace or
@@ -724,6 +733,19 @@ export type InvitationRow = typeof invitations.$inferSelect;
 export interface InvitedCoven {
   name: string;
   slug: string;
+}
+
+/** A live coven as the account it invited may be told it, for the `/coven` landing: three fields, never the row. */
+export interface ReceivedInvitationCoven {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+/** The sender of an invitation, as its invitee may read them: an id and a name. */
+export interface ReceivedInvitationInviter {
+  id: string;
+  name: string;
 }
 
 /**

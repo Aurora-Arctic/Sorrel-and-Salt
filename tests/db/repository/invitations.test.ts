@@ -3,6 +3,11 @@ import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   findInvitationByToken,
   findInvitationInWorkspace,
+  findReceivedInvitation,
+  findReceivedInvitationCount,
+  findReceivedInvitationCovens,
+  findReceivedInvitationInviters,
+  findReceivedInvitationPage,
   findPendingWorkspaceInvitationCount,
   findPendingWorkspaceInvitationPage,
   findPendingSiteInvitationPage,
@@ -408,6 +413,310 @@ describe('the pending lists', () => {
   });
 });
 
+// M10.32: the session's own received invitations. Every finder keeps the
+// workspace tier, the session's verified address, and a live coven in SQL; the
+// token-less accept by id says the same in the statement. Each exclusion is
+// shown to be the cause: remove that one fact and the same row appears.
+describe('the received invitations (M10.32)', () => {
+  const FULL = { limit: 101, inverted: false };
+  const sorted = (list: string[]) => [...list].sort();
+  const pageIds = async (user: SessionUser = A) =>
+    sorted((await findReceivedInvitationPage(asUser(user), FULL)).map(({ node }) => node.id));
+  const countOf = async (user: SessionUser = A) =>
+    (await findReceivedInvitationCount(asUser(user), undefined)).totalCount;
+  const acceptById = (user: SessionUser, id: string) =>
+    withAudit(asUser(user), (write) => write.acceptReceivedInvitation(id));
+
+  let control: InvitationRow;
+  beforeEach(async () => {
+    [control] = (await inviteIntoW({ token: 'fixture-token-control' })) as [InvitationRow];
+  });
+
+  // Each row is pending, in W, for A's address but for one fact; `restore`
+  // puts that fact right in SQL, bypassing the writers on purpose.
+  const exclusions: [string, () => Promise<string>, (id: string) => Promise<unknown>][] = [
+    [
+      'another address',
+      async () => (await inviteIntoW({ email: B.email, token: 'fixture-token-b' }))[0]!.id,
+      (id) => sql`update invitations set email = ${A.email} where id = ${id}`,
+    ],
+    [
+      'revoked',
+      async () => {
+        const [row] = await inviteIntoW({ token: 'fixture-token-revoked' });
+        await revokeInWorkspace(row!.id);
+        return row!.id;
+      },
+      (id) => sql`update invitations set revoked_at = null where id = ${id}`,
+    ],
+    [
+      'expired',
+      async () => (await inviteIntoW({ token: 'fixture-token-expired', expiresAt: PAST() }))[0]!.id,
+      (id) => sql`update invitations set expires_at = now() + interval '1 day' where id = ${id}`,
+    ],
+    [
+      'accepted',
+      async () => {
+        const [row] = await inviteIntoW({ token: 'fixture-token-accepted' });
+        await acceptAs(A, 'fixture-token-accepted');
+        return row!.id;
+      },
+      (id) => sql`update invitations set accepted_at = null, accepted_by = null where id = ${id}`,
+    ],
+    [
+      'a deleted row',
+      async () => {
+        const [row] = await inviteIntoW({ token: 'fixture-token-deleted' });
+        await sql`update invitations set deleted_at = now(), deleted_by = ${A.id} where id = ${row!.id}`;
+        return row!.id;
+      },
+      (id) => sql`update invitations set deleted_at = null, deleted_by = null where id = ${id}`,
+    ],
+  ];
+
+  it.each(exclusions)(
+    'pages and counts no invitation that is %s, and the same row appears once that is undone',
+    async (_kind, setup, restore) => {
+      const id = await setup();
+
+      // Why the row could have been read: it exists, and the control shows the session sees W.
+      expect(await rowOf(id)).toBeDefined();
+      expect(await pageIds()).toEqual([control.id]);
+      expect(await countOf()).toBe(1);
+
+      await restore(id);
+
+      expect(await pageIds()).toEqual(sorted([control.id, id]));
+      expect(await countOf()).toBe(2);
+    },
+  );
+
+  it('pages the site tier’s invitation for the same address never, though it is pending and matches', async () => {
+    const [site] = await inviteToSite({ token: 'fixture-token-site' });
+
+    // Why it could have been read: pending, live, A's verified address; the
+    // token read finds it and the token accept takes it, so only the tier excludes it.
+    expect(site?.workspaceId).toBeNull();
+    expect(await findInvitationByToken('fixture-token-site')).toMatchObject({ id: site?.id });
+    expect(await pageIds()).toEqual([control.id]);
+    expect(await countOf()).toBe(1);
+    expect(await findReceivedInvitation(asUser(A), site!.id)).toBeUndefined();
+  });
+
+  it('pages nothing for an unverified account, and the rows come back once it is verified', async () => {
+    await sql`update users set email_verified = false where id = ${A.id}`;
+
+    expect(await rowOf(control.id)).toBeDefined();
+    expect(await pageIds()).toEqual([]);
+    expect(await countOf()).toBe(0);
+    expect(await findReceivedInvitation(asUser(A), control.id)).toBeUndefined();
+
+    await sql`update users set email_verified = true where id = ${A.id}`;
+
+    expect(await pageIds()).toEqual([control.id]);
+    expect(await findReceivedInvitation(asUser(A), control.id)).toMatchObject({ id: control.id });
+  });
+
+  it('matches the address whatever its case', async () => {
+    // The control was written with A's address upper-cased; the account holds it lower-cased.
+    expect(control.email).toBe(INVITED);
+    expect(INVITED).not.toBe(A.email);
+    expect(await pageIds()).toEqual([control.id]);
+  });
+
+  it('pages nothing once the coven is deleted, and the row returns when it is not', async () => {
+    await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
+    try {
+      expect(await rowOf(control.id)).toBeDefined();
+      expect(await pageIds()).toEqual([]);
+      expect(await countOf()).toBe(0);
+    } finally {
+      await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
+    }
+
+    expect(await pageIds()).toEqual([control.id]);
+  });
+
+  it('lets another account see none of the session’s invitations, and each sees its own', async () => {
+    const [forB] = await inviteIntoW({ email: B.email, token: 'fixture-token-for-b' });
+
+    expect(await pageIds(B)).toEqual([forB!.id]);
+    expect(await pageIds(A)).toEqual([control.id]);
+    expect(await pageIds(D)).toEqual([]);
+  });
+
+  it('pages newest first and counts the rows before a page’s first', async () => {
+    const [middle] = await inviteIntoW({ token: 'fixture-token-r-2' });
+    const [newest] = await inviteIntoW({ token: 'fixture-token-r-3' });
+    await sql`update invitations set created_at = now() - interval '3 hours' where id = ${control.id}`;
+    await sql`update invitations set created_at = now() - interval '2 hours' where id = ${middle!.id}`;
+    await sql`update invitations set created_at = now() - interval '1 hour' where id = ${newest!.id}`;
+
+    const all = await findReceivedInvitationPage(asUser(A), FULL);
+    expect(all.map(({ node }) => node.id)).toEqual([newest!.id, middle!.id, control.id]);
+
+    expect(await findReceivedInvitationCount(asUser(A), all[1]!.cursor)).toMatchObject({
+      totalCount: 3,
+      countBefore: 1,
+    });
+  });
+
+  it('finds an invitation by id in any state for its address, and nothing for another’s', async () => {
+    const [revoked] = await inviteIntoW({ token: 'fixture-token-r-revoked' });
+    await revokeInWorkspace(revoked!.id);
+    const [expired] = await inviteIntoW({ token: 'fixture-token-r-expired', expiresAt: PAST() });
+    const [forB] = await inviteIntoW({ email: B.email, token: 'fixture-token-r-b' });
+    const [deleted] = await inviteIntoW({ token: 'fixture-token-r-deleted' });
+    await sql`update invitations set deleted_at = now(), deleted_by = ${A.id} where id = ${deleted!.id}`;
+
+    expect(await findReceivedInvitation(asUser(A), control.id)).toMatchObject({ id: control.id });
+    expect(await findReceivedInvitation(asUser(A), revoked!.id)).toMatchObject({
+      revokedAt: expect.any(Date),
+    });
+    expect(await findReceivedInvitation(asUser(A), expired!.id)).toMatchObject({
+      id: expired!.id,
+    });
+    // Why B's row could have been found: it exists, pending, in a live coven, and B finds it.
+    expect(await findReceivedInvitation(asUser(B), forB!.id)).toMatchObject({ id: forB!.id });
+    expect(await findReceivedInvitation(asUser(A), forB!.id)).toBeUndefined();
+    expect(await findReceivedInvitation(asUser(A), deleted!.id)).toBeUndefined();
+    expect(
+      await findReceivedInvitation(asUser(A), '00000000-0000-4000-8000-000000000000'),
+    ).toBeUndefined();
+  });
+
+  describe('the coven and the inviter of a page', () => {
+    it('names the live covens and the inviters of the received invitations only, two fields each', async () => {
+      const [forB] = await inviteIntoW({ email: B.email, token: 'fixture-token-n-b' });
+      const [fromX] = await withAudit(asUser(D), (write) =>
+        write.insertInvitation(inX, { email: INVITED, role: 'viewer', token: 'fixture-token-n-x' }),
+      );
+
+      const covens = await findReceivedInvitationCovens(asUser(A), [
+        control.workspaceId!,
+        fromX!.workspaceId!,
+        forB!.workspaceId!,
+      ]);
+      const inviters = await findReceivedInvitationInviters(asUser(A), [A.id, D.id]);
+
+      expect(covens.map(({ id }) => id).sort()).toEqual(sorted([WORKSPACE_W_ID, WORKSPACE_X_ID]));
+      expect(Object.keys(covens[0]!).sort()).toEqual(['id', 'name', 'slug']);
+      expect(inviters.map(({ id }) => id).sort()).toEqual(sorted([A.id, D.id]));
+      expect(Object.keys(inviters[0]!).sort()).toEqual(['id', 'name']);
+    });
+
+    it('names nothing to an account the invitation was not sent to, though the ids are right', async () => {
+      // Why they could have been named: A's invitation is pending in W, from A.
+      expect(await pageIds()).toEqual([control.id]);
+      expect(await findReceivedInvitationCovens(asUser(A), [WORKSPACE_W_ID])).toHaveLength(1);
+      expect(await findReceivedInvitationInviters(asUser(A), [A.id])).toHaveLength(1);
+
+      expect(await findReceivedInvitationCovens(asUser(D), [WORKSPACE_W_ID])).toEqual([]);
+      expect(await findReceivedInvitationInviters(asUser(D), [A.id])).toEqual([]);
+    });
+
+    it('names no inviter for a site invitation, though it is pending and the address matches', async () => {
+      await sql`truncate invitations`;
+      const [site] = await inviteToSite({ token: 'fixture-token-n-site' });
+
+      expect(site?.createdBy).toBe(E.id);
+      expect(await findInvitationByToken('fixture-token-n-site')).toMatchObject({ id: site?.id });
+      expect(await findReceivedInvitationInviters(asUser(A), [E.id])).toEqual([]);
+    });
+
+    it('names no inviter once their row is deleted, and names them again when it is not', async () => {
+      const [fromD] = await withAudit(asUser(D), (write) =>
+        write.insertInvitation(inX, { email: INVITED, role: 'viewer', token: 'fixture-token-n-d' }),
+      );
+      expect(fromD?.createdBy).toBe(D.id);
+      expect(await findReceivedInvitationInviters(asUser(A), [D.id])).toHaveLength(1);
+
+      await sql`update users set deleted_at = now(), deleted_by = ${E.id} where id = ${D.id}`;
+      try {
+        expect(await findReceivedInvitationInviters(asUser(A), [D.id])).toEqual([]);
+      } finally {
+        await sql`update users set deleted_at = null, deleted_by = null where id = ${D.id}`;
+      }
+
+      expect(await findReceivedInvitationInviters(asUser(A), [D.id])).toHaveLength(1);
+    });
+
+    it('names no coven or inviter once the invitation is revoked, nor a deleted coven', async () => {
+      expect(await findReceivedInvitationCovens(asUser(A), [WORKSPACE_W_ID])).toHaveLength(1);
+      await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
+      try {
+        expect(await findReceivedInvitationCovens(asUser(A), [WORKSPACE_W_ID])).toEqual([]);
+      } finally {
+        await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
+      }
+
+      await revokeInWorkspace(control.id);
+
+      expect(await findReceivedInvitationCovens(asUser(A), [WORKSPACE_W_ID])).toEqual([]);
+      expect(await findReceivedInvitationInviters(asUser(A), [A.id])).toEqual([]);
+    });
+  });
+
+  describe('acceptReceivedInvitation', () => {
+    it('accepts a pending invitation by id for the verified holder, stamped from the session', async () => {
+      const accepted = await acceptById(A, control.id);
+
+      expect(accepted).toHaveLength(1);
+      expect(accepted[0]).toMatchObject({ id: control.id, acceptedBy: A.id, updatedBy: A.id });
+      expect(accepted[0]?.acceptedAt).toBeInstanceOf(Date);
+    });
+
+    it('returns no row for another account’s id, and the owner accepts the same id', async () => {
+      expect(await acceptById(B, control.id)).toEqual([]);
+      expect(await rowOf(control.id)).toMatchObject({ accepted_at: null });
+
+      expect(await acceptById(A, control.id)).toHaveLength(1);
+    });
+
+    it('returns no row for a site-tier id, though pending and the address matches; its token accepts it', async () => {
+      const [site] = await inviteToSite({ token: 'fixture-token-a-site' });
+
+      expect(await rowOf(site!.id)).toMatchObject({ accepted_at: null, workspace_id: null });
+      expect(await acceptById(A, site!.id)).toEqual([]);
+      expect(await rowOf(site!.id)).toMatchObject({ accepted_at: null });
+
+      expect(await acceptAs(A, 'fixture-token-a-site')).toHaveLength(1);
+    });
+
+    it('returns no row for an unverified holder, and accepts once verified', async () => {
+      await sql`update users set email_verified = false where id = ${A.id}`;
+
+      expect(await acceptById(A, control.id)).toEqual([]);
+
+      await sql`update users set email_verified = true where id = ${A.id}`;
+      expect(await acceptById(A, control.id)).toHaveLength(1);
+    });
+
+    it('returns no row for a deleted coven, and accepts while it is live', async () => {
+      await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
+      try {
+        expect(await acceptById(A, control.id)).toEqual([]);
+      } finally {
+        await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
+      }
+
+      expect(await acceptById(A, control.id)).toHaveLength(1);
+    });
+
+    it.each(exclusions.slice(1))(
+      'returns no row for an invitation that is %s, and accepts once that is undone',
+      async (_kind, setup, restore) => {
+        const id = await setup();
+
+        expect(await acceptById(A, id)).toEqual([]);
+
+        await restore(id);
+        expect(await acceptById(A, id)).toHaveLength(1);
+      },
+    );
+  });
+});
+
 // No body runs: each `@ts-expect-error` fails `npm run typecheck` the
 // moment its constraint is loosened, which a runtime assertion cannot see.
 describe('the named writes’ signatures', () => {
@@ -446,8 +755,14 @@ describe('the named writes’ signatures', () => {
       (write: AuditWriter) =>
         // @ts-expect-error — a SiteAdmin is assertSiteAdmin's alone; an object literal is not one.
         write.revokeInvitation({ userId: E.id }, A.id),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the accept by id takes the id alone: the session is the writer's own.
+        write.acceptReceivedInvitation(inW, A.id),
+      (write: AuditWriter) =>
+        // @ts-expect-error — and an id, not the token whose hash the other accept matches.
+        write.acceptReceivedInvitation(),
     ];
 
-    expect(writes).toHaveLength(8);
+    expect(writes).toHaveLength(10);
   });
 });

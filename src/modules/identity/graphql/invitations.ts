@@ -3,7 +3,7 @@ import { AuditInfo } from '../../../graphql/schema/audit';
 import { sessionOf } from '../../../graphql/context-helpers';
 import type { InvitationRow } from '../../../db/repository';
 import { createAdminInvitation, revokeAdminInvitation } from '../services/admin-invitations';
-import { acceptInvitation } from '../services/invitation-acceptance';
+import { acceptInvitation, acceptInvitationById } from '../services/invitation-acceptance';
 
 // MB.70's admin invitation and the one accept (MB.202). No field carries the
 // token or a link: the token exists only in the mail, and the row holds its
@@ -64,5 +64,19 @@ builder.mutationField('acceptInvitation', (t) =>
     args: { token: t.arg.string({ required: true }) },
     authScopes: { signedIn: true },
     resolve: (_root, { token }, context) => acceptInvitation(sessionOf(context), token),
+  }),
+);
+
+// The landing's accept (M10.32): a coven invitation by the id the `/coven` page
+// lists, for a person whose mail never arrived. The same service checks, the
+// session's verified address matched in SQL, and the site tier out of reach.
+builder.mutationField('acceptInvitationById', (t) =>
+  t.field({
+    type: InvitationRef,
+    description:
+      "Accepts a pending coven invitation sent to the signed-in account's verified address, by its id, as the landing lists it; an admin invitation is accepted by its link alone.",
+    args: { id: t.arg.id({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { id }, context) => acceptInvitationById(sessionOf(context), String(id)),
   }),
 );

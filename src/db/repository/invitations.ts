@@ -1,11 +1,11 @@
-import { and, eq, gt, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNotNull, isNull, lte, or, sql, type SQL } from 'drizzle-orm';
 import { workspaces } from '../../modules/coven/schema/workspaces';
 import { invitations } from '../../modules/coven/schema/invitations';
 import { users } from '../../modules/identity/schema/users';
 import type { AuditSession } from '../types';
 import { containsText, notSoftDeleted, scopedTo } from './predicates';
 import { findPageCountInScope, findPageInScope } from './finders';
-import { existsIn, selectOne } from './select';
+import { existsIn, selectFrom, selectOne } from './select';
 import { hashToken } from './tokens';
 import type { Membership } from '@/modules/coven';
 import type { SiteAdmin } from '@/modules/identity';
@@ -14,6 +14,8 @@ import type {
   AuditWriter,
   InvitationRow,
   InvitedCoven,
+  ReceivedInvitationCoven,
+  ReceivedInvitationInviter,
   SiteInvitationFilter,
   SiteInvitationValues,
   SortPart,
@@ -34,6 +36,11 @@ import type {
  */
 function onSiteTier(): SQL {
   return isNull(invitations.workspaceId);
+}
+
+/** The workspace tier, `workspace_id IS NOT NULL`: a coven invitation, which the site tier's admin grant is not. */
+function onWorkspaceTier(): SQL {
+  return isNotNull(invitations.workspaceId);
 }
 
 /** The proof's tier: its workspace for a `Membership`, the site tier for a `SiteAdmin`. */
@@ -60,6 +67,12 @@ function inLiveWorkspaceOrSite() {
   return or(onSiteTier(), existsIn(workspaces, eq(workspaces.id, invitations.workspaceId)));
 }
 
+// The invitation's workspace is live: the check M6.14 puts on an accept, without
+// the site-tier arm, since the received invitations never reach that tier.
+function inLiveWorkspace() {
+  return existsIn(workspaces, eq(workspaces.id, invitations.workspaceId));
+}
+
 // The session's user holds the invited address, verified, on a live row.
 // Both sides lowered, though `users` holds its addresses lower-cased.
 function heldVerifiedBySession(session: AuditSession) {
@@ -71,6 +84,13 @@ function heldVerifiedBySession(session: AuditSession) {
       eq(sql`lower(${users.email})`, sql`lower(${invitations.email})`),
     ),
   );
+}
+
+// What the finders by id and the accept by id share: a coven invitation, never
+// the site tier's, addressed to the session's verified address. The two pagers
+// spell the same two terms as scope and filter, since a scope is not optional.
+function receivedBy(session: AuditSession) {
+  return and(onWorkspaceTier(), heldVerifiedBySession(session));
 }
 
 /**
@@ -216,7 +236,114 @@ export function findPendingWorkspaceInvitationCount(
 }
 
 /**
- * The invitation's three named writes, beside its finders rather than in
+ * One page of the coven invitations addressed to the session's account,
+ * pending, in a live coven, newest first, for the `/coven` landing (M10.32).
+ * Under no proof: the invitee holds no membership yet, and the session row is
+ * the scope, matched in SQL on the verified address, as `findInvitationByToken`
+ * takes no proof and is admitted by its token. The site tier is never listed:
+ * an admin invitation is accepted by its mailed link alone.
+ */
+export function findReceivedInvitationPage(
+  session: AuditSession,
+  page: PageRequest,
+): Promise<PageEntry<InvitationRow>[]> {
+  return findPageInScope(
+    invitations,
+    onWorkspaceTier(),
+    PENDING_INVITATION_ORDER,
+    page,
+    pendingInvitation(inLiveWorkspace(), heldVerifiedBySession(session)),
+  );
+}
+
+/**
+ * How many invitations `findReceivedInvitationPage` pages, and how many come
+ * before `start`, a page's first row, none on an empty page. No proof, for the
+ * page's reason.
+ */
+export function findReceivedInvitationCount(
+  session: AuditSession,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  return findPageCountInScope(
+    invitations,
+    onWorkspaceTier(),
+    PENDING_INVITATION_ORDER,
+    start,
+    pendingInvitation(inLiveWorkspace(), heldVerifiedBySession(session)),
+  );
+}
+
+/**
+ * One coven invitation by id, in any state, or `undefined` when it is not the
+ * session's: another address, the site tier, a deleted row. What the accept by
+ * id reads, so the service can tell an accepted, withdrawn or lapsed invitation
+ * from a missing one. Under no proof, for the page's reason; a deleted coven is
+ * the service's check, as it is on the token's path.
+ */
+export function findReceivedInvitation(
+  session: AuditSession,
+  id: string,
+): Promise<InvitationRow | undefined> {
+  return selectOne(
+    invitations,
+    and(notSoftDeleted(invitations), eq(invitations.id, id), receivedBy(session)),
+  );
+}
+
+/**
+ * The id, name and slug of each live coven in `ids` that holds a pending
+ * invitation to the session's account: the names a page of received
+ * invitations shows. Under no proof, for the page's reason, and narrow on
+ * purpose: three fields, never the row, and only for a coven that invited this
+ * account.
+ */
+export async function findReceivedInvitationCovens(
+  session: AuditSession,
+  ids: string[],
+): Promise<ReceivedInvitationCoven[]> {
+  if (ids.length === 0) return [];
+  const rows = await selectFrom(
+    workspaces,
+    and(
+      notSoftDeleted(workspaces),
+      inArray(workspaces.id, ids),
+      existsIn(
+        invitations,
+        and(eq(invitations.workspaceId, workspaces.id), receivedBy(session), pendingInvitation()),
+      ),
+    ),
+  );
+  return rows.map(({ id, name, slug }) => ({ id, name, slug }));
+}
+
+/**
+ * The id and name of each live user in `ids` who sent the session's account a
+ * pending coven invitation: the "from" of a received invitation. Under no
+ * proof, for the page's reason. The invitee reads a name they share no coven
+ * with, which the invitation's mail already carries; two fields, never the row.
+ */
+export async function findReceivedInvitationInviters(
+  session: AuditSession,
+  ids: string[],
+): Promise<ReceivedInvitationInviter[]> {
+  if (ids.length === 0) return [];
+  const rows = await selectFrom(
+    users,
+    and(
+      notSoftDeleted(users),
+      inArray(users.id, ids),
+      existsIn(
+        invitations,
+        and(eq(invitations.createdBy, users.id), receivedBy(session), pendingInvitation()),
+      ),
+    ),
+  );
+  return rows.map(({ id, name }) => ({ id, name }));
+}
+
+/**
+ * The invitation's named writes, beside its finders rather than in
  * `write.ts`: the table is marked `namedWrites`, so these are the only
  * writes it takes, and `writerFor` spreads them into the writer (MB.198).
  * Each decides the tier from the proof it is handed, never from `values`.
@@ -225,7 +352,10 @@ export function invitationWrites({
   session,
   insert,
   update,
-}: WriterContext): Pick<AuditWriter, 'insertInvitation' | 'acceptInvitation' | 'revokeInvitation'> {
+}: WriterContext): Pick<
+  AuditWriter,
+  'insertInvitation' | 'acceptInvitation' | 'acceptReceivedInvitation' | 'revokeInvitation'
+> {
   return {
     // The columns named rather than spread, as `workspaceId` is placed last
     // in `insertInWorkspace`: an invitation starts pending, in the proof's
@@ -258,6 +388,14 @@ export function invitationWrites({
           heldVerifiedBySession(session),
           inLiveWorkspaceOrSite(),
         ),
+      ),
+    // The same stamp, found by id, for a coven invitation only: the site tier's
+    // grant is accepted by its link alone, so the statement leaves it out.
+    acceptReceivedInvitation: (id: string) =>
+      update(
+        invitations,
+        { acceptedAt: sql`now()`, acceptedBy: session.userId },
+        pendingInvitation(eq(invitations.id, id), receivedBy(session), inLiveWorkspace()),
       ),
     revokeInvitation: (proof: Membership | SiteAdmin, id: string) =>
       update(

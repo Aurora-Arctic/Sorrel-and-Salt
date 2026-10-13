@@ -4,10 +4,15 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import postgres from 'postgres';
 import { schema } from '@/graphql/schema';
 import type { InvitationSender } from '@/modules/identity';
-import { E, asUser } from '../../../support/as-user';
+import { A, E, asUser } from '../../../support/as-user';
 import { asManualFix } from '../../../support/db/privileges';
 import { run } from '../../../support/graphql/run';
-import type { AcceptInvitationResult, CreateAdminInvitationResult } from './types';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
+import type {
+  AcceptInvitationByIdResult,
+  AcceptInvitationResult,
+  CreateAdminInvitationResult,
+} from './types';
 
 // MB.70's three mutations, the transport's half
 // (claude-docs/testing/layer-ownership.md): an admin's answer, which carries
@@ -51,6 +56,7 @@ beforeEach(async () => {
   await sql`truncate invitations`;
   await sql`truncate admin_role_change_pauses`;
   await sql`truncate user_privilege_changes`;
+  await sql`delete from workspace_members where user_id = ${GRANTEE}`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
   await asManualFix(sql, async (tx) => {
     await tx`
@@ -176,5 +182,69 @@ describe('Mutation.acceptInvitation', () => {
     const result = await run(asUser(E), ACCEPT, { token: 'no-such-token' });
 
     expect(result.errors?.[0]).toMatchObject({ extensions: { code: 'NOT_FOUND' } });
+  });
+});
+
+const ACCEPT_BY_ID = `mutation ($id: ID!) { acceptInvitationById(id: $id) { id acceptedAt } }`;
+
+// M10.32, the transport's half: the answer, and one error code per refusal. Whose
+// address admits, and every dead state, are
+// services/invitation-acceptance.test.ts's.
+describe('Mutation.acceptInvitationById', () => {
+  const grantee = { id: GRANTEE, role: 'user' as const };
+  const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };
+
+  /** A coven invitation into W for the grantee's address, from A. */
+  async function inviteGrantee(expired = false) {
+    const [{ id }] = await sql`
+      insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, expires_at)
+      values (${INVITED}, ${sha256(expired ? 'expired-token' : 'pending-token')}, ${WORKSPACE_W_ID}, 'viewer',
+        ${A.id}, ${A.id}, ${expired ? sql`now() - interval '1 second'` : sql`now() + interval '7 days'`})
+      returning id
+    `;
+    return id as string;
+  }
+
+  beforeEach(async () => {
+    await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
+    await asManualFix(sql, async (tx) => {
+      await tx`
+        insert into users (id, name, email, email_verified, created_by, updated_by)
+        values (${stranger.id}, 'Stranger Fixturewort', ${`stranger${DOMAIN}`}, true, ${stranger.id}, ${stranger.id})
+      `;
+    });
+  });
+
+  it('answers the invited account the invitation accepted, seating it', async () => {
+    const id = await inviteGrantee();
+
+    const accepted = await run<AcceptInvitationByIdResult>(asUser(grantee), ACCEPT_BY_ID, { id });
+
+    expect(accepted.errors).toBeUndefined();
+    expect(accepted.data?.acceptInvitationById).toEqual({ id, acceptedAt: expect.any(String) });
+    expect(
+      await sql`select role::text from workspace_members where workspace_id = ${WORKSPACE_W_ID} and user_id = ${GRANTEE}`,
+    ).toMatchObject([{ role: 'viewer' }]);
+  });
+
+  it('answers NOT_FOUND for another account’s id, which its owner then accepts', async () => {
+    const id = await inviteGrantee();
+
+    const refused = await run(asUser(stranger), ACCEPT_BY_ID, { id });
+
+    expect(refused.errors?.[0]).toMatchObject({ extensions: { code: 'NOT_FOUND' } });
+    expect(
+      (await sql`select accepted_at from invitations where id = ${id}`)[0]!.accepted_at,
+    ).toBeNull();
+    const accepted = await run(asUser(grantee), ACCEPT_BY_ID, { id });
+    expect(accepted.errors).toBeUndefined();
+  });
+
+  it('answers FORBIDDEN for the account’s own expired invitation', async () => {
+    const id = await inviteGrantee(true);
+
+    const refused = await run(asUser(grantee), ACCEPT_BY_ID, { id });
+
+    expect(refused.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
   });
 });
