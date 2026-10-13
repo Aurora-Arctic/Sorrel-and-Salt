@@ -74,7 +74,7 @@ test(
     await expect(page).toHaveURL(/\/coven\/fixture-coven$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Fixture Coven' })).toBeVisible();
     // Delete is shown by the owner's permission: the page agrees with the row.
-    await expect(page.getByRole('button', { name: 'Delete Workspace', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete Coven', exact: true })).toBeVisible();
     expect(await ownersOf('fixture-coven')).toEqual([{ user_id: users.holder.id, role: 'owner' }]);
   },
 );

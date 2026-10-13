@@ -69,10 +69,10 @@ for (const role of ['owner', 'member', 'viewer'] as const) {
     await expect(overview).toHaveAttribute('aria-current', 'page');
 
     const main = page.getByRole('main');
-    await expect(main.getByRole('button', { name: 'Leave Workspace', exact: true })).toBeEnabled();
+    await expect(main.getByRole('button', { name: 'Leave Coven', exact: true })).toBeEnabled();
     // Delete is the owner's alone; the membership rows above are why a
     // member's and a viewer's absence is a refusal and not an empty page.
-    const remove = main.getByRole('button', { name: 'Delete Workspace', exact: true });
+    const remove = main.getByRole('button', { name: 'Delete Coven', exact: true });
     if (role === 'owner') await expect(remove).toBeEnabled();
     else await expect(remove).toHaveCount(0);
   });
@@ -340,16 +340,16 @@ test.describe('the only owner leaving', () => {
 
       await signInAgainAs(page, users.owner.id);
       await page.goto(`/coven/${HANDOVER_SLUG}`);
-      const leave = page.getByRole('main').getByRole('button', { name: 'Leave Workspace' });
+      const leave = page.getByRole('main').getByRole('button', { name: 'Leave Coven' });
       await expect(leave).toBeEnabled();
 
       await leave.click();
       const dialog = page.getByRole('dialog');
-      await expect(dialog.getByRole('radio', { name: /^Hand it/ })).toBeChecked();
+      await expect(dialog.getByRole('radio', { name: /^Hand It/ })).toBeChecked();
       // The deletion is the other choice, its confirm taking the row once chosen.
-      await dialog.getByRole('radio', { name: /^Delete it/ }).check();
-      await expect(dialog.getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
-      await dialog.getByRole('radio', { name: /^Hand it/ }).check();
+      await dialog.getByRole('radio', { name: /^Delete It/ }).check();
+      await expect(dialog.getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
+      await dialog.getByRole('radio', { name: /^Hand It/ }).check();
 
       const search = dialog.getByRole('combobox', { name: 'New Owner' });
       await search.click();
