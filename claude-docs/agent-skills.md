@@ -23,6 +23,26 @@ All but `start-task` and `project-progress` implement the Gitflow lane in
 source may PR into which target, and is the source of truth the skills defer
 to.
 
+**Model and effort.** A skill's frontmatter can pick the model and how hard it
+thinks for as long as the skill runs; both revert on your next prompt and
+neither is saved to settings. The session runs Sonnet at high effort, so the
+settings below only lower cost:
+
+| Skill                                             | Model    | Effort   | Why                                                                                                           |
+| ------------------------------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `project-progress`                                | `haiku`  | `low`    | Runs one script and prints what it returns.                                                                   |
+| `create-feature`, `create-hotfix`                 | `haiku`  | `low`    | Follow the fixed steps of `create-feature/reference-branch.md`.                                               |
+| `create-pr`, `create-release`, `create-main-sync` | `sonnet` | `medium` | Write a summary and, for `create-pr`, choose a target. Pinning `sonnet` stops a session on Opus costing more. |
+| `prune-branches`                                  | `sonnet` | `medium` | Deletes branches, so it keeps a mid-tier model.                                                               |
+| `start-task`                                      | none     | none     | Step 6 implements the task, so it uses whatever the session is set to.                                        |
+
+`project-progress` also pre-approves its three read-only commands with
+`allowed-tools`. No skill pre-approves a push or a PR: the `permissions.ask`
+entries below still win over `allowed-tools`, on purpose. `start-task` follows
+`create-feature/reference-branch.md` itself rather than calling the two branch
+skills, so their `haiku` setting only applies to a direct `/create-feature` or
+`/create-hotfix`.
+
 - **`.claude/settings.json` is shared, committed config** — it carries the
   `permissions.ask` entries (`git push origin *`, `git push -u origin *`,
   `gh pr create/view/comment/list`) the skills tell the reader to expect a

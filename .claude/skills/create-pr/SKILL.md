@@ -1,6 +1,8 @@
 ---
 name: create-pr
-description: Use when the user asks to open a PR, create a pull request, or wrap up the current branch for review (e.g. "create a PR", "open a PR for this", "let's get this reviewed"). Commits (after asking) and automatically pushes the current branch's work, then opens a PR with a generated summary of the work done — proposes a target branch based on the repo's Gitflow rules for the current branch's prefix (feature/release/hotfix/staging); `hotfix/*` branches automatically get PRs into both `main` and `staging`, plus a third into an in-flight `release/*` branch if the user opts in. On creating a PR it also opens the body with `Closes #<issue>` and ends it with the `/project-progress` tally, moves the linked task to `In Review` on the GitHub board and comments the PR link on its issue.
+model: sonnet
+effort: medium
+description: Use when the user asks to open a PR, create a pull request, or wrap up the current branch for review (e.g. "create a PR", "open a PR for this", "let's get this reviewed"). Commits (after asking), pushes, and opens a Gitflow-valid PR for the current branch, linked to its board task.
 ---
 
 # create-pr

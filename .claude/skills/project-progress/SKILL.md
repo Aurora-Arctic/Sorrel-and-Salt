@@ -1,5 +1,8 @@
 ---
 name: project-progress
+model: haiku
+effort: low
+allowed-tools: Bash(git fetch -q origin staging) Bash(node .claude/skills/project-progress/tally.mjs *) Bash(node scripts/task-board.mjs list)
 description: Use when the user asks how far along the project is (e.g. "project progress", "task progress", "how many hours are left", "how much is done", "/project-progress"). Prints tasks and hours completed, remaining and total, from local data — the breakdown's task-heading estimates and git merge history — with no board calls unless the user asks to verify against the GitHub issues.
 ---
 
