@@ -101,6 +101,19 @@ describe('graphqlRequest', () => {
     expect(data).toEqual({ echo: 'salt' });
   });
 
+  it('names its operation in the body, as graphql-request did, for anything that answers by name', async () => {
+    const fetchSpy = vi.fn(async () => Response.json({ data: { echo: 'salt' } }));
+    vi.stubGlobal('fetch', fetchSpy);
+
+    await graphqlRequest(EchoDocument, { word: 'salt' });
+
+    const [, init] = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      operationName: 'Echo',
+      variables: { word: 'salt' },
+    });
+  });
+
   it('throws the GraphQL error rather than resolving to partial data', async () => {
     refuseOk();
 
