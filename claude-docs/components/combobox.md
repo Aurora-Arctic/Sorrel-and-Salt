@@ -632,21 +632,23 @@ grip's half-glyph width, and the 1px edges.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Combobox/index.stories.tsx):
-`TwoBuckets`, a form field with the vocabulary and the forms in use;
-`List`, a list's box with its entries inside, an × on each, a pick that adds and Backspace taking the last; and
+`TwoBuckets`, a form field with the vocabulary and the forms in use, its list open;
+`List`, a list's box with its entries inside, an × on each, its suggestions open, a pick that adds and Backspace taking the last; and
 `Sortable`, seven celestial bodies wrapping onto a second row, each moved by its grip
 and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; `Typeahead`, the type-ahead box over five
 traditions, the value shown beneath it; and
 `MultiSelect`, the multi-select box with two elements chosen;
-`CreateRow`, "New Reference…" last whatever is typed, saying beneath the
+`CreateRow`, its list open on "New Reference…" last whatever is typed, saying beneath the
 box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
 375px; and `QualifierInForm`, the ingredient form's Form box under a Name
 field, "Wax" picked under Substance with a detail long enough to wrap, whose
 tooltip opens on focus or hover above the box from the qualifier's left edge, with
 `QualifierInFormPhone` at 375px. The suggestions are fixed, so typing
-filters nothing.
+filters nothing. Each story's box sits in a field of its own, its label above it as
+a form draws one, and the stories that open a list do it by pressing the
+chevron on mount, as a person would (`.ladle/press.ts`).
 
 ## Testing
 
