@@ -217,3 +217,82 @@ test.describe('a coven’s invitation from the account page', () => {
     },
   );
 });
+
+test.describe('a declined coven invitation', () => {
+  test(
+    'E declines it on the account page, the link says so, and the owner sees it declined and removes it',
+    { tag: ['@story-4', '@story-7'] },
+    async ({ page }) => {
+      const invited = address('e');
+      await ownerInvites(page, invited);
+      const linkPath = await mailedInvitePath(invited);
+      const banner = page.getByRole('banner');
+
+      // E holds the invited address, verified, and answers from the account page.
+      await signInAs(page, invited);
+      await page.goto('/account#account-invitations');
+      await expect(
+        banner.getByRole('button', { name: 'Fixture Person, 1 coven invitation' }),
+      ).toBeVisible();
+      await page.getByRole('button', { name: `Decline the invitation to ${COVEN_NAME}` }).click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog).toBeVisible();
+      await dialog.getByRole('button', { name: 'Decline', exact: true }).click();
+
+      // The page read again: the row is gone and the shell no longer counts it.
+      await expect(dialog).toHaveCount(0);
+      await expect(
+        page.getByRole('button', { name: `Decline the invitation to ${COVEN_NAME}` }),
+      ).toHaveCount(0);
+      await expect(
+        banner.getByRole('button', { name: 'Fixture Person', exact: true }),
+      ).toBeVisible();
+      const [declined] = await withSql(
+        (sql) => sql`
+        select declined_at is not null as declined, revoked_at is not null as revoked
+        from invitations where email = ${invited}`,
+      );
+      expect(declined).toEqual({ declined: true, revoked: false });
+
+      // The mailed link is the same invitation, refused for a reason of its own.
+      const declinedMessage = await refusalAt(page, linkPath);
+      expect(declinedMessage).not.toBe(usedMessage);
+
+      // The owner still lists it, marked declined, with Remove in place of Revoke.
+      await signInAgainAs(page, ownerId);
+      await page.goto(`/coven/${COVEN_SLUG}/invitations`);
+      const row = page.getByRole('row').filter({ hasText: invited });
+      await expect(row.locator('time')).toHaveCount(1);
+      await expect(
+        row.getByRole('button', { name: `Revoke the invitation to ${invited}` }),
+      ).toHaveCount(0);
+      const remove = row.getByRole('button', {
+        name: `Remove the declined invitation to ${invited}`,
+      });
+      await expect(remove).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+
+      await remove.click();
+      const confirm = page.getByRole('dialog');
+      await expect(confirm).toBeVisible();
+      await confirm.getByRole('button', { name: 'Remove', exact: true }).click();
+      await expect(confirm).toHaveCount(0);
+      await expect(page.getByRole('row').filter({ hasText: invited })).toHaveCount(0);
+      const [removed] = await withSql(
+        (sql) => sql`
+        select declined_at is not null as declined, revoked_at is not null as revoked
+        from invitations where email = ${invited}`,
+      );
+      expect(removed).toEqual({ declined: true, revoked: true });
+
+      // Removing it from the list leaves the link saying what the invitee answered.
+      await signInAgainAs(page, (await userIdOf(invited)) as string);
+      expect(await refusalAt(page, linkPath)).toBe(declinedMessage);
+    },
+  );
+});
+
+async function userIdOf(email: string): Promise<string> {
+  const [{ id }] = await withSql((sql) => sql`select id from users where email = ${email}`);
+  return id as string;
+}
