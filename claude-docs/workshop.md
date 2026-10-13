@@ -101,7 +101,10 @@ without a page routed to it.
     running and firing its own `transitionend`. The patch is undone on
     cleanup so it can't leak into the next story.
 - **`story-frame.scss`** — the app-surface frame: `$surface-page` /
-  `$text-primary` so a story needs no per-story setup; `transform`, making the
+  `$text-primary` so a story needs no per-story setup; `min-height: 100vh`, so the
+  ground fills the window under a short story (Ladle paints its own darker
+  background over the page's `body`, and a frame that stops short shows it);
+  `transform`, making the
   frame the containing block so a `position: fixed` child pins to the story
   rather than Ladle's chrome; `overflow: hidden` so it clips like a viewport;
   `.ladle-main` gutter zeroed and re-added on the frame, 3rem a side, and

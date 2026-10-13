@@ -11,7 +11,11 @@
 
 .ladle-story-frame {
   box-sizing: border-box;
-  min-height: 100%;
+  // At least the window's height, so the ground fills it under a short story.
+  // Ladle paints its own darker .ladle-background over the page's body, which
+  // shows through wherever the frame stops; a percentage cannot reach past a
+  // parent with no height of its own.
+  min-height: 100vh;
   // The gutter .ladle-main gave up; a phone's own at phone width, where 3rem
   // a side would leave a 375px story 279px to render in.
   padding: 3rem;
