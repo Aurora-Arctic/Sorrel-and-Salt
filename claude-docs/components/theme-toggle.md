@@ -158,11 +158,14 @@ look differs.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx) —
-four renders, no test ids and no snapshots; behaviour is asserted in
+[`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx),
+titled "Shell / Theme Toggle" — six renders, no test ids and no snapshots; behaviour is asserted in
 `tests/components/ThemeToggle/index.test.tsx`, not here.
 
-- **Default** — follows the toolbar theme control.
+- **Default** — follows the toolbar theme control. Default, Light, Dark and
+  ReducedMotion draw the `corner` variant as a page with no shell has it: a
+  quarter disc pinned to the story frame's top-right corner and clipped by its
+  edge, which is the design, not a clipped story.
 - **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which the
   decorator honours over the toolbar. Light shows the solar-disc facet and
   `aria-pressed="true"`; Dark the crescent and `aria-pressed="false"`.
