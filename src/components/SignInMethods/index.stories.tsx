@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { GENERIC_LINK_ERROR, linkErrorMessage } from '../../lib/sign-in';
 import EmailForm from '../EmailForm';
 import NameForm from '../NameForm';
-import SignOutButton from '../SignOutButton';
+import PageNav from '../PageNav';
 import SignInMethods from '.';
 import type { LinkedAccount, ProviderId } from '../../lib/types';
 import type { SignInMethodsProps } from './types';
@@ -12,7 +12,7 @@ import type { SignInMethodsProps } from './types';
 // or removing here reaches for /api/auth, which the workshop does not serve,
 // so a click fails into the alert region — a state worth seeing in itself.
 export default {
-  title: 'Sign In / Methods',
+  title: 'Account / Sign-In Methods',
 };
 
 const ALL_PROVIDERS: readonly ProviderId[] = ['discord', 'google', 'facebook', 'microsoft'];
@@ -75,54 +75,48 @@ export const WithError: Story = () => (
 export const SomeUnavailable: Story = () => <Page linked={[DISCORD]} configured={['discord']} />;
 
 // The whole /account page, which is a server component and has no story of
-// its own: its three sections composed as page.tsx composes them, with
-// fixture props in place of the session and the row. Each section is on its
-// own panel, which parts it from the next, so no rule is drawn between them.
+// its own: composed as page.tsx composes it, a bare heading, the jump links
+// (PageNav), then the three sections, each on its own panel. The
+// `account-page` class on the main is what lays the sections out in two
+// columns on a wide screen. Fixture props stand in for the session and the
+// row. Sign Out is not here: since MB.7 it sits only in the account menu.
 const WholeAccountPage = ({
   methods = { linked: [DISCORD], configured: ALL_PROVIDERS },
 }: {
   methods?: SignInMethodsProps;
 }) => (
-  <main className="page-frame page-frame--narrow">
-    <div className="page-header">
-      <h1>Your Account</h1>
-      <SignOutButton />
-    </div>
-    <nav aria-label="On this page">
-      <ul className="link-row">
-        <li>
-          <a href="#story-account-name">Name</a>
-        </li>
-        <li>
-          <a href="#story-account-email">Email</a>
-        </li>
-        <li>
-          <a href="#story-account-sign-in-methods">Sign-In Methods</a>
-        </li>
-      </ul>
-    </nav>
+  <main className="page-frame page-frame--narrow account-page">
+    <h1>Your Account</h1>
+    <PageNav
+      label="On this page"
+      entries={[
+        { href: '#account-name', label: 'Name' },
+        { href: '#account-email', label: 'Email' },
+        { href: '#account-sign-in-methods', label: 'Sign-In Methods' },
+      ]}
+    />
     <section
-      id="story-account-name"
+      id="account-name"
       className="page-frame__section panel"
-      aria-labelledby="story-account-name-heading"
+      aria-labelledby="account-name-heading"
     >
       <div className="header">
-        <h2 id="story-account-name-heading">Name</h2>
+        <h2 id="account-name-heading">Name</h2>
         <p className="lede">The name Sorrel &amp; Salt shows for you.</p>
       </div>
       <NameForm name="Ada Fixture" />
     </section>
     <section
-      id="story-account-email"
+      id="account-email"
       className="page-frame__section panel"
-      aria-labelledby="story-account-email-heading"
+      aria-labelledby="account-email-heading"
     >
       <div className="header">
-        <h2 id="story-account-email-heading">Email</h2>
+        <h2 id="account-email-heading">Email</h2>
       </div>
       <EmailForm embedded email="ada@example.test" verified landing="/coven" />
     </section>
-    <Section id="story-account-sign-in-methods">
+    <Section id="account-sign-in-methods">
       <SignInMethods {...methods} />
     </Section>
   </main>

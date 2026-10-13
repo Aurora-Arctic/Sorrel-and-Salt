@@ -182,8 +182,12 @@ each inside the page's real frame, section, panel and head: `OneLinked`,
 (a failed link in Microsoft's row, reading `linkErrorMessage` rather than a
 copied sentence), `SomeUnavailable`, and `WholePage`, the whole `/account`
 page composed with fixture props, since the page is a server component.
-`PhoneDark` and `PhoneLight` show the whole page at 375px in each theme,
-with every row state.
+It is composed as `src/app/(shell)/account/page.tsx` composes it: a bare
+heading, `PageNav` with the same three entries, the `account-page` class on
+the `main` so the wide two-column layout shows, and no Sign Out, which since
+MB.7 sits only in the account menu. `PhoneDark` and `PhoneLight` show the
+whole page at 375px in each theme, with every row state. The stories are
+titled "Account / Sign-In Methods".
 
 ## Tests
 
