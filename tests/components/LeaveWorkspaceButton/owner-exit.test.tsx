@@ -7,11 +7,12 @@ import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
 // hand-over or a deletion, never only one. The requests are mocked; what the
 // service decides is its own tests'.
 
-const { replace, graphqlRequest } = vi.hoisted(() => ({
+const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
   replace: vi.fn(),
+  refresh: vi.fn(),
   graphqlRequest: vi.fn(),
 }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh: vi.fn() }) }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh }) }));
 vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 
 const ID = '00000000-0000-0000-0000-000000000001';
@@ -42,6 +43,7 @@ async function openDialog(successors = SUCCESSORS) {
 describe('LeaveWorkspaceButton for the only owner', () => {
   beforeEach(() => {
     replace.mockReset();
+    refresh.mockReset();
     graphqlRequest.mockReset();
   });
 
@@ -82,14 +84,16 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(box).toHaveAccessibleDescription(/Viewer/);
   });
 
-  it('promotes the chosen member first, then leaves, then goes home', async () => {
+  it('promotes the chosen member first, then leaves, then lands on the coven landing', async () => {
     graphqlRequest.mockResolvedValue({});
     const dialog = await openDialog();
     choose(dialog, 'Fixture C');
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Promote and Leave' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    // The switcher lists covens from a layout the replace does not re-run.
+    expect(refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest).toHaveBeenCalledTimes(2);
     expect(graphqlRequest.mock.calls[0][1]).toEqual({
       workspaceId: ID,
@@ -110,7 +114,9 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     fireEvent.click(promote);
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    // The switcher lists covens from a layout the replace does not re-run.
+    expect(refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest.mock.calls[0][1]).toEqual({
       workspaceId: ID,
       userId: OTHER,
@@ -157,7 +163,9 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     fireEvent.click(within(confirmation).getByRole('button', { name: 'Delete Coven' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    // The switcher lists covens from a layout the replace does not re-run.
+    expect(refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest.mock.calls[0][1]).toEqual({ workspaceId: ID });
   });
 
