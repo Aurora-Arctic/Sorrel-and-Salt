@@ -25,6 +25,7 @@ import { requiredInProduction } from './env';
 import { send } from './mail';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
 import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH, postSignInLanding } from './sign-in';
+import { plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
 import { primaryAdminEmail } from './primary-admin';
 import { verifyEmailMessage } from '../emails/verify-email';
@@ -316,6 +317,11 @@ export const auth = betterAuth({
     ...(impersonationEnabled() ? [impersonation()] : []),
   ],
   advanced: {
+    // Absent leaves Better Auth's own rule: `__Secure-` names wherever the base
+    // URL is https, which a production build forces. The audit's e2e servers alone
+    // set it false, so a WebKit page on a plain-http origin sends the cookie it holds
+    // (MB.255; claude-docs/testing/e2e.md, "A signed-in browser without a provider").
+    ...(plainSessionCookie() && { useSecureCookies: false }),
     // Matches users.id's uuid type so every FK lines up without a cast.
     database: {
       generateId: 'uuid',

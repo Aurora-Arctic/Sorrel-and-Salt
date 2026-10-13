@@ -12,6 +12,7 @@ import {
   E2E_SLOTS,
   auditWsEndpoint,
   browserUrl,
+  plainSessionCookie,
   serverUrl,
   slotPort,
   wsEndpoint,
@@ -53,6 +54,15 @@ const serverEnv = (
   // Every server serves that one build directory, so a data cache flushed to
   // it would hand one slot's cached reads to another slot's server.
   NEXT_ISR_FLUSH_TO_DISK: 'false',
+  // Under the audit alone, plain cookie names, so WebKit sends the session
+  // cookie `signInAs` puts in its jar over the plain-http origin a remote
+  // browser uses (src/lib/e2e-session-cookie.ts, MB.255).
+  ...(plainSessionCookie && { E2E_PLAIN_SESSION_COOKIE: 'true' }),
+  // Off, set rather than left absent: Next never lets `.env.local` override a
+  // variable that is already set, and a developer's `ENABLE_IMPERSONATION=true`
+  // would add an Impersonate button and a table column the specs do not expect
+  // (tests/e2e/admin.spec.ts; claude-docs/auth/impersonation.md).
+  ENABLE_IMPERSONATION: 'false',
   // CI's placeholder, here too, so a developer's own address in `.env.local`
   // never names the primary admin a spec signs in as (MB.59).
   ADMIN_BOOTSTRAP_EMAIL: PRIMARY_ADMIN_EMAIL,

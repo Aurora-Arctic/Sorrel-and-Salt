@@ -473,10 +473,15 @@ the tests [`tests.md`](tests.md).
   `/account/email?next=<its own path>` from every page but that one
   (`isEmailPage`, exact on the pathname), so the after-hook's landing is
   not the only way there: a bookmark, a back button or a typed URL all end
-  on the email page until the address is proved. `/api/graphql` is not
-  gated the same way — the context reads the session and the services
-  refuse what a provisional account may not do, which is everything but
-  `me` and `setEmail`.
+  on the email page until the address is proved. A link followed inside the
+  app does too. The page throws that redirect, not the shell layout, which
+  draws round the email page as well, and asks only that someone is signed
+  in. When the shell layout threw it, a link into the shell left the browser
+  refetching the email page without end (MB.256;
+  ["Route protection"](route-protection.md), "Where the email redirect is
+  thrown"). `/api/graphql` is not gated the same way — the context reads
+  the session and the services refuse what a provisional account may not
+  do, which is everything but `me` and `setEmail`.
 
 ### The account page (MB.88)
 

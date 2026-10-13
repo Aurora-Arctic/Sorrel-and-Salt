@@ -66,6 +66,9 @@ test('a signed-in non-admin is refused at /admin with a 403 page and no admin ma
 });
 
 test('an admin sees the admin layout and its nav', async ({ page }) => {
+  // A desktop window: a phone folds the later tabs behind More (shell.spec.ts),
+  // and this test counts every link.
+  await page.setViewportSize({ width: 1280, height: 800 });
   await signInAs(page, 'an-admin@admin-guard.test', ['discord'], 'admin');
 
   const response = await page.goto('/admin');

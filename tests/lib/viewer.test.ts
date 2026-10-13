@@ -5,13 +5,13 @@ import { Forbidden } from '@/lib/errors';
 // viewer's memberships. The services are mocked: what they decide is theirs
 // to test (tests/modules/); here, only how the answers are put together.
 
-const requireSession = vi.fn();
+const requireSignedIn = vi.fn();
 const getMe = vi.fn();
 const countReceivedInvitations = vi.fn();
 const membershipsOf = vi.fn();
 // What a role may do is the coven module's to say; here a viewer reads no members.
 const rolePermits = vi.fn((role: string) => role !== 'viewer');
-vi.mock('@/lib/request-session', () => ({ requireSession }));
+vi.mock('@/lib/request-session', () => ({ requireSignedIn }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits }));
 
@@ -25,7 +25,7 @@ const membership = (slug: string, name: string, role = 'member') => ({
 });
 
 beforeEach(() => {
-  requireSession.mockResolvedValue(SESSION);
+  requireSignedIn.mockResolvedValue(SESSION);
   getMe.mockResolvedValue(ME);
   membershipsOf.mockResolvedValue([[]]);
   countReceivedInvitations.mockReset().mockResolvedValue({ totalCount: 0, countBefore: null });
@@ -33,7 +33,7 @@ beforeEach(() => {
 
 describe('viewerOf', () => {
   it('reads the creation right and the verification from the user row, and the role from the session', async () => {
-    requireSession.mockResolvedValue({ ...SESSION, role: 'admin' });
+    requireSignedIn.mockResolvedValue({ ...SESSION, role: 'admin' });
     getMe.mockResolvedValue({ ...ME, canCreateWorkspace: false, emailVerified: false });
 
     const { viewer } = await viewerOf();

@@ -43,15 +43,16 @@ export async function assertNoSidewaysScroll(page: Page) {
 
 // Every colour eases over the theme's 400ms; a scan straight after a theme
 // change would read a colour part-way along, so each running transition is
-// let finish first.
+// let finish first. A transition that is cancelled has stopped easing, which
+// is as settled as one that finished, but its `finished` promise rejects with
+// an AbortError (WebKit cancels one a later style change replaces), so the
+// rejection is read as done. Replaced transitions are waited for in turn.
 export async function settleTransitions(page: Page) {
-  // Transitions only: a scroll-driven animation (the sorrel's) never finishes.
-  await page.evaluate(() =>
-    Promise.all(
-      document
-        .getAnimations()
-        .filter((each) => each instanceof CSSTransition)
-        .map((each) => each.finished),
-    ),
-  );
+  await page.evaluate(async () => {
+    // Transitions only: a scroll-driven animation (the sorrel's) never finishes.
+    const running = () => document.getAnimations().filter((each) => each instanceof CSSTransition);
+    while (running().length > 0) {
+      await Promise.all(running().map((each) => each.finished.catch(() => undefined)));
+    }
+  });
 }
