@@ -492,15 +492,22 @@ describe('a link that cannot be used', () => {
       expect(JSON.stringify(standing)).not.toContain(workspace.name);
     });
 
-    it('refuses a deleted coven’s invitation at the standing, and the write backs it up', async () => {
+    it('refuses a deleted coven’s invitation as closed at the standing, and the write backs it up', async () => {
       await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+      // Why it could have succeeded: the link is unexpired, unrevoked,
+      // unaccepted and for the signed-in address, so it is acceptable until
+      // the coven is deleted, and only that accounts for the refusal below.
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+        acceptable: true,
+        tier: 'workspace',
+      });
       await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
 
       expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
         acceptable: false,
-        reason: 'invalid',
+        reason: 'closed',
       });
-      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(NotFound);
+      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
       expect((await invitation()).accepted_at).toBeNull();
       expect(await memberRows(GRANTEE)).toHaveLength(0);
 
@@ -508,6 +515,29 @@ describe('a link that cannot be used', () => {
       await expect(
         withAudit(asUser(AS_GRANTEE), (write) => write.acceptInvitation(TOKEN)),
       ).resolves.toEqual([]);
+    });
+
+    it('reports a link in two states as the earlier one: accepted before closed', async () => {
+      await invite({
+        workspaceId: WORKSPACE_W_ID,
+        role: 'member',
+        createdBy: A.id,
+        accepted: true,
+      });
+      await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
+
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+        reason: 'accepted',
+      });
+    });
+
+    it('tells another address nothing of the deleted coven', async () => {
+      await invite({ workspaceId: WORKSPACE_W_ID, role: 'member', createdBy: A.id });
+      await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
+
+      expect(await invitationStanding(asUser(AS_STRANGER), TOKEN)).toMatchObject({
+        reason: 'different-address',
+      });
     });
 
     it('cannot be made to seat an owner: the table refuses the role, and a tampered token finds nothing', async () => {

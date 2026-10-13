@@ -105,6 +105,7 @@ export type InvitationRefusal =
   | 'declined'
   | 'revoked'
   | 'expired'
+  | 'closed'
   | 'different-address'
   | 'unverified'
   | 'paused';
