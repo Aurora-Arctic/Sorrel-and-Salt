@@ -257,6 +257,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9  | MB.253                 |
 | MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9  | MB.254                 |
 | MB.254 | Drop the planet columns and view                                                                                         | Wave 9  | —                      |
+| MB.255 | The e2e session cookie never reaches a WebKit page                                                                       | Wave 10 | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1259,6 +1260,18 @@ _Acceptance criteria:_
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
 - DESIGN.md and CLAUDE.md no longer record a planet divergence
 - Lands only after a release carrying MB.253 has reached production, and Wave 9 stays open until it has
+
+**MB.255 — The e2e session cookie never reaches a WebKit page** · 3h
+
+_Story:_ As a developer, I want the e2e sign-in helper to sign a WebKit browser in as it does Chromium and Firefox, so that the WebKit and phone audit (M10.25) exercises the signed-in pages rather than the sign-in page.
+
+Found by M10.25's first audit on 2026-10-13. `tests/e2e/session.ts`'s `signInAs` and `signInAgainAs` hand the browser the session cookie as an extra request header (`page.setExtraHTTPHeaders`), since a browser never sends a `Secure` cookie to the plain-http `devcontainer:<port>` a remote browser uses, and the production build's https base URL names the cookie `__Secure-better-auth.session_token`. WebKit sends no such header. Against an echo server on the audit service, Chromium and Firefox delivered the extra `cookie` header and WebKit delivered none; a `page.route` re-adding the header on every request reached WebKit no better; and from the cookie jar (`context.addCookies`) WebKit sends a plain-named cookie over http but never a `__Secure-` one, with or without `secure`. So in the `webkit` and `phone` projects every signed-in page is the sign-in page: 24 of the audit's 276 tests failed, every one behind a session, and 132 later tests in those files never ran under `serial`; the 14 signed-out tests in each project passed, and Firefox passed all 92. The fix must make the cookie reach the server from WebKit over the plain-http origin the remote browser uses. Two shapes, for the task to choose: a plain cookie name for the e2e servers, `advanced.useSecureCookies: false` in `src/lib/auth.ts` under an e2e-only switch, so the helper sets the cookie in the jar and every engine sends it; or https in front of the slot servers, so the `__Secure-` cookie in the jar is sent as it is in production. The first is a test-only branch in the auth config, the second is more to run. Whichever lands, the helper's comment and `claude-docs/testing/e2e.md` ("A signed-in browser without a provider") change with it, and the audit runs again at the end of this task: the four Tab-walking specs M10.25 expected to fail in WebKit (`sign-in.spec.ts`, `coven.spec.ts`, `coven-create.spec.ts`, `shell.spec.ts`) could not be judged, since each sits behind the session, and each real bug the rerun finds becomes its own task. The hours are an estimate.
+
+_Acceptance criteria:_
+
+- `signInAs` and `signInAgainAs` sign a WebKit page in, proven by the audit's `webkit` and `phone` projects reaching a signed-in page, and `npm run e2e` is unchanged in what it proves
+- The helper's comment and `claude-docs/testing/e2e.md` say how the cookie travels and why
+- The audit runs again at the end, its failures are named in the PR body, and each real bug becomes its own task
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
