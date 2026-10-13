@@ -2,6 +2,7 @@ import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import postgres from 'postgres';
 import { e2eDatabaseUrl } from './database';
+import { browserUrl, plainSessionCookie } from './slots';
 
 // A signed-in browser without a provider round trip, which CI cannot make:
 // the rows a Discord sign-in would leave, written straight to this worker's
@@ -9,9 +10,13 @@ import { e2eDatabaseUrl } from './database';
 // Auth would have set, signed with the secret the served build shares with
 // this runner (claude-docs/testing/e2e.md, "E2E").
 
-// A production build's base URL forces https (src/lib/auth.ts, "baseURL"),
-// so Better Auth names the cookie with the `__Secure-` prefix.
-const SESSION_COOKIE = '__Secure-better-auth.session_token';
+// A production build's base URL forces https (src/lib/auth.ts, "baseURL"), so
+// Better Auth names the cookie with the `__Secure-` prefix. Under the audit the
+// servers are started without it (E2E_PLAIN_SESSION_COOKIE, set by
+// playwright.config.ts; src/lib/e2e-session-cookie.ts).
+const SESSION_COOKIE = plainSessionCookie
+  ? 'better-auth.session_token'
+  : '__Secure-better-auth.session_token';
 
 /**
  * The address every e2e server is given as ADMIN_BOOTSTRAP_EMAIL, CI's own
@@ -28,15 +33,39 @@ function signed(value: string, secret: string): string {
 }
 
 /**
+ * Gives `page` the session cookie. A browser never sends a `Secure` cookie to
+ * the plain-http origin a remote browser reaches the server on, so Chromium
+ * gets it as an extra request header. WebKit sends no such header either, so
+ * under the audit the cookie goes in the context's jar instead, plain-named and
+ * not `Secure`. A cookie is shared across ports, so the host alone is enough
+ * for whichever slot's server the page reaches, and a second call replaces the
+ * first, as a second sign-in does.
+ */
+async function holdSession(page: Page, value: string): Promise<void> {
+  if (!plainSessionCookie) {
+    await page.setExtraHTTPHeaders({ cookie: `${SESSION_COOKIE}=${value}` });
+    return;
+  }
+  await page.context().addCookies([
+    {
+      name: SESSION_COOKIE,
+      value,
+      domain: new URL(browserUrl(0)).hostname,
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+    },
+  ]);
+}
+
+/**
  * Makes `page` a browser signed in to a new user holding one account per
  * provider named, with the site role given. The user is verified unless
  * `emailVerified` says otherwise, as for an account an admin approves
  * unverified (MB.205); signed in as itself, such a user reaches only
  * `/account/email`. The rows go to this worker's slot database unless
  * `database` names the server's own, as the compendium-cache server's is.
- * The cookie rides as a request header rather than in the
- * cookie jar: a `Secure` cookie is never sent to the plain-http origin the
- * remote browser reaches the server on.
+ * How the cookie reaches the browser is `holdSession`'s.
  */
 export async function signInAs(
   page: Page,
@@ -78,7 +107,7 @@ export async function signInAs(
     await sql.end();
   }
 
-  await page.setExtraHTTPHeaders({ cookie: `${SESSION_COOKIE}=${signed(token, secret)}` });
+  await holdSession(page, signed(token, secret));
   return { userId };
 }
 
@@ -107,5 +136,5 @@ export async function signInAgainAs(
     await sql.end();
   }
 
-  await page.setExtraHTTPHeaders({ cookie: `${SESSION_COOKIE}=${signed(token, secret)}` });
+  await holdSession(page, signed(token, secret));
 }

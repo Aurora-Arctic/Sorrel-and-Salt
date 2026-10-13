@@ -77,6 +77,16 @@ export const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
 export const auditWsEndpoint =
   process.env.E2E_AUDIT === '1' ? process.env.PLAYWRIGHT_AUDIT_WS_ENDPOINT : undefined;
 
+/**
+ * Whether the e2e servers drop `__Secure-` from Better Auth's cookie names, and
+ * `signInAs` puts the session cookie in the browser's jar rather than in a
+ * header. On under the audit alone: WebKit sends neither a `__Secure-` cookie
+ * nor a hand-added header to a plain-http origin (MB.255;
+ * claude-docs/testing/e2e.md, "A signed-in browser without a provider").
+ * `npm run e2e` and CI keep the production names.
+ */
+export const plainSessionCookie = process.env.E2E_AUDIT === '1';
+
 export const serverUrl = (port: number) => `http://localhost:${port}`;
 
 /**
