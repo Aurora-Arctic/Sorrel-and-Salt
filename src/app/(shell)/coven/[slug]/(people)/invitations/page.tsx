@@ -43,12 +43,13 @@ export default async function InvitationsPage({
   return (
     <PendingInvitations
       workspaceId={workspace.id}
-      invitations={page.edges.map(({ node: { id, email, role, expiresAt } }) => ({
+      invitations={page.edges.map(({ node: { id, email, role, expiresAt, declinedAt } }) => ({
         id,
         email,
         // A coven's invitation always names a role: the tier CHECK.
         role: role ?? 'viewer',
         expiresAt,
+        declinedAt,
       }))}
       position={page.position}
       previousHref={hasPreviousPage && startCursor ? href({ before: startCursor }) : undefined}
