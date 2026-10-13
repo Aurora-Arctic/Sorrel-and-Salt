@@ -140,7 +140,7 @@ alert (MB.116).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
-`Admin / Admin Invitations`, inside the admin layout's frame and the People
+`Admin / Admin Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People
 page with its Invitations tab open and Invite Admin beside the heading:
 `Pending`, `NoneWaiting`, `Filtered` (an Email and Expires in 24 Hrs
 applied, Clear offered, one invitation left), `NoMatch` (the
