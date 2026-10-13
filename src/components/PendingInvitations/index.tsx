@@ -13,7 +13,9 @@ import './index.scss';
 // members roll (M7.6): address, role and status, newest first, with its own
 // pager. A pending one shows when it expires and offers Revoke; one the
 // invitee declined shows when, and offers Remove, until the owner clears it
-// (M10.34). The page draws it for owners only and reads it
+// (M10.34). The table carries the name "Pending Invitations" and there is no
+// region around it to repeat it: the page's heading and its open tab already
+// say what the page is (MB.119). The page draws it for owners only and reads it
 // through the services that check `member: invite`; nothing here decides who
 // may see it (claude-docs/components/pending-invitations.md).
 
@@ -24,48 +26,46 @@ const PendingInvitations = ({
   nextHref,
   position,
 }: PendingInvitationsProps): ReactElement => (
-  <section className="pending-invitations" aria-label="Pending Invitations">
-    <ListFrame>
-      <ListBody>
-        <StackTable
-          aria-label="Pending Invitations"
-          columns={[
-            { heading: 'Email', cell: (invitation) => invitation.email },
-            { heading: 'Role', cell: (invitation) => workspaceRoleLabel(invitation.role) },
-            {
-              heading: 'Status',
-              cell: ({ declinedAt, expiresAt }) =>
-                declinedAt ? (
-                  <>
-                    <span className="pending-invitations__declined">Declined</span>
-                    <time dateTime={declinedAt.toISOString()}>{inUtc(declinedAt)}</time>
-                  </>
-                ) : (
-                  <>
-                    Expires <time dateTime={expiresAt.toISOString()}>{inUtc(expiresAt)}</time>
-                  </>
-                ),
-            },
-            {
-              heading: 'Action',
-              action: 'foot',
-              cell: (invitation) =>
-                invitation.declinedAt ? (
-                  <RemoveControl workspaceId={workspaceId} invitation={invitation} />
-                ) : (
-                  <RevokeControl workspaceId={workspaceId} invitation={invitation} />
-                ),
-            },
-          ]}
-          rows={invitations}
-          rowKey={(invitation) => invitation.id}
-          empty="No invitations are waiting."
-          className="data-table--nowrap"
-        />
-        <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
-      </ListBody>
-    </ListFrame>
-  </section>
+  <ListFrame>
+    <ListBody>
+      <StackTable
+        aria-label="Pending Invitations"
+        columns={[
+          { heading: 'Email', cell: (invitation) => invitation.email },
+          { heading: 'Role', cell: (invitation) => workspaceRoleLabel(invitation.role) },
+          {
+            heading: 'Status',
+            cell: ({ declinedAt, expiresAt }) =>
+              declinedAt ? (
+                <>
+                  <span className="pending-invitations__declined">Declined</span>
+                  <time dateTime={declinedAt.toISOString()}>{inUtc(declinedAt)}</time>
+                </>
+              ) : (
+                <>
+                  Expires <time dateTime={expiresAt.toISOString()}>{inUtc(expiresAt)}</time>
+                </>
+              ),
+          },
+          {
+            heading: 'Action',
+            action: 'foot',
+            cell: (invitation) =>
+              invitation.declinedAt ? (
+                <RemoveControl workspaceId={workspaceId} invitation={invitation} />
+              ) : (
+                <RevokeControl workspaceId={workspaceId} invitation={invitation} />
+              ),
+          },
+        ]}
+        rows={invitations}
+        rowKey={(invitation) => invitation.id}
+        empty="No invitations are waiting."
+        className="data-table--nowrap"
+      />
+      <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
+    </ListBody>
+  </ListFrame>
 );
 
 export default PendingInvitations;
