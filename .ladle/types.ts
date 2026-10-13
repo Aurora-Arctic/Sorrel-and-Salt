@@ -10,8 +10,6 @@ export interface AdminTabbedFrameProps {
   open?: string;
   /** What the page header draws at the end of its line: the open tab's Add, say. */
   action?: ReactNode;
-  /** Draws the admin nav beside the page, as the layout does at a desktop's width. */
-  nav?: boolean;
   children: ReactNode;
 }
 

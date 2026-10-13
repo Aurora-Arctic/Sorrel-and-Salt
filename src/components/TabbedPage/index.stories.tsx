@@ -32,7 +32,7 @@ const People = ({
   action?: ReactNode;
   children: ReactNode;
 }): ReactElement => (
-  <AdminTabbedFrame page="people" open={open} action={action} nav>
+  <AdminTabbedFrame page="people" open={open} action={action}>
     {children}
   </AdminTabbedFrame>
 );
