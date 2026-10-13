@@ -71,7 +71,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
 - **The user list's own parts.** Revoke asks first through
   `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
-  it was revoked." A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
+  it was withdrawn." A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).

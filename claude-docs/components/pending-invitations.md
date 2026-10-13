@@ -3,7 +3,7 @@
 `src/components/PendingInvitations/` — a coven's open invitations, one row each (M7.6, story 5):
 address, role and status, with a Revoke or a Remove on each and the pager beneath. Open (M10.34) is
 pending, or declined by the invitee and not yet removed by the owner. The Invitations tab of the
-coven's People page renders it (`claude-docs/auth/coven-guard.md`, "The invitations page").
+coven's Members page renders it (`claude-docs/auth/coven-guard.md`, "The invitations page").
 
 ## Props
 
