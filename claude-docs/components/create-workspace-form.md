@@ -19,9 +19,10 @@ the creation service still refuses a user without the right
 
 - **Create Coven stays disabled until there is a name.** A name of
   spaces only counts as empty, because the service would refuse it.
-- **Busy from the press until the next page.** The button is a `BusyButton`
-  ([`busy-button.md`](busy-button.md)) that reads "Creating Coven" and
-  carries `aria-busy` and the spinner. It stays busy after the answer too,
+- **Busy from the press until the next page.** The row is `FormActions`
+  ([`field.md`](field.md)) with `label="Create Coven"` and
+  `busyLabel="Creating Coven"`: a `BusyButton` ([`busy-button.md`](busy-button.md))
+  that carries `aria-busy` and the spinner. It stays busy after the answer too,
   while the browser goes to the new coven, so a second press cannot make a
   second coven.
 - **The typed name goes to the server as typed.** Trimming, the 80-character
@@ -45,7 +46,9 @@ none. The reading is the shared `readGraphqlFailure(error, ['name'])`.
 
 Labelled "Name", marked required, with the placeholder "Add a name". The
 hint behind the ⓘ says the address is made from the name and that everyone
-invited sees it. `autoComplete="off"`, since a browser has nothing useful to
+invited sees it; the same text is given to `FieldShell` to draw and to
+`fieldDescription` to point the input at, because giving it to one alone
+leaves a pointer to nothing (MB.119 found the tip had never been drawn). `autoComplete="off"`, since a browser has nothing useful to
 offer for a new coven's name.
 
 ## Styling
