@@ -524,7 +524,8 @@ own close, and finds each time no dialog and the focus on the button. A
 click outside reaches the same `onClose` as Escape, so it is not repeated.
 
 Stories: `OpenedByAButton` shows `ModalButton`: tab to the button, open it,
-close it any way, and the focus ring is back on the button. `OpenedByItsAddress` shows a modal with `content`, as an address
+close it any way, and the focus ring is back on the button. `OpenedByAButtonOpen` is
+the same, pressed open as it mounts, so the dialog itself can be looked at. `OpenedByItsAddress` shows a modal with `content`, as an address
 opens it. `Loading`, with its `LoadingPhoneDark` and `LoadingPhoneLight`
 pair, shows the pressed row's head over the skeleton, through a
 `RouteModalContext` value whose navigation never arrives.

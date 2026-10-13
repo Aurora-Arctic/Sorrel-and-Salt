@@ -11,6 +11,7 @@ import Modal, {
   useDiscardGuard,
 } from '.';
 import { RouteModalContext } from './route-modal-provider';
+import { usePressOnMount } from '../../../.ladle/press';
 
 // Render-only; behaviour is asserted in tests/components/Modal. The owner
 // closes it by unmounting it, so the story keeps an Open button to bring it
@@ -145,7 +146,7 @@ EditingPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
 
 // A modal a button opens (MB.119): however it closes, Close, Escape, a click
 // outside or Done, the focus ring is back on the button.
-export const OpenedByAButton: Story = () => (
+const ButtonModal = () => (
   <ModalButton label="Open" className="btn btn--solid" title="Add Category">
     {(close) => (
       <div className="modal__actions">
@@ -157,7 +158,17 @@ export const OpenedByAButton: Story = () => (
   </ModalButton>
 );
 
+export const OpenedByAButton: Story = () => <ButtonModal />;
+
 OpenedByAButton.meta = { iframed: true };
+
+// The same, pressed open as the story mounts, so the dialog itself shows.
+export const OpenedByAButtonOpen: Story = () => {
+  usePressOnMount('Open');
+  return <ButtonModal />;
+};
+
+OpenedByAButtonOpen.meta = { iframed: true };
 
 // The address-driven wrapper the admin pages open: the workshop's router goes
 // nowhere, so Close, Escape and Done fade it out and leave it gone until the

@@ -11,10 +11,16 @@ export default {
 
 const REFUSAL = 'Only an owner can delete this coven.';
 
-const Action = ({ label }: { label: string }): ReactElement => {
+const Action = ({
+  label,
+  className = 'btn',
+}: {
+  label: string;
+  className?: string;
+}): ReactElement => {
   const failure = useActionFailure();
   return (
-    <button type="button" className="btn" onClick={() => failure?.report(REFUSAL)}>
+    <button type="button" className={className} onClick={() => failure?.report(REFUSAL)}>
       {label}
     </button>
   );
@@ -32,7 +38,7 @@ const Actions = ({ refused }: { refused?: boolean }) => (
     {refused && <Refusing />}
     <div className="modal__actions">
       <Action label="Leave Coven" />
-      <Action label="Delete Coven" />
+      <Action label="Delete Coven" className="btn btn--destructive" />
     </div>
   </ActionFailure>
 );
