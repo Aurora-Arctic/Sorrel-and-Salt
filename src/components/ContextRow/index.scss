@@ -3,6 +3,11 @@
 
 // The card colour mixed 45% into the page: a step off the page, a step short
 // of the bar's own card, so the row reads as part of the shell and below it.
+// Local rather than a token, since this row is its only user, as TabbedPage's
+// `$segment-pill` is. It needs no row in `tests/scss/tokens.test.ts`: in both
+// themes the card is lighter than the page in every channel, so the mix's
+// luminance lies between theirs, and a text colour that test holds to 4.5:1
+// on the page and on the card clears it here too.
 $context-row-ground: color-mix(in srgb, $surface-card 45%, $surface-page);
 
 // Full width, so its ground and its edge run the window; the inner column
