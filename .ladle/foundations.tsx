@@ -6,6 +6,7 @@ import { RadioGroupField, SwitchField } from '../src/components/Field';
 import InfoTip from '../src/components/InfoTip';
 import { ListNavigationContext } from '../src/components/ListFrame';
 import Pager from '../src/components/Pager';
+import PageNav from '../src/components/PageNav';
 import ProviderMark from '../src/components/ProviderMark';
 import { ProviderUnavailableNote } from '../src/components/ProviderMark/unavailable-note';
 import { PROVIDER_MARKS } from '../src/components/SignInPanel/icons';
@@ -634,12 +635,13 @@ export default function Foundations(): ReactElement {
 
       <section id="fd-page-frame">
         <SectionHead eyebrow="_primitives.scss · .page-frame" title="The Page Frame">
-          The centred, full-height column of a page with no AppShell: Welcome, sign-in, the account
-          pages, the not-authorized page and the invitation. Its children stand a{' '}
-          <code>space(6)</code> apart, the gap alone spacing them, and stop at the measure;{' '}
-          <code>--narrow</code> stops them at <code>$narrow-column</code>, the forms' column. A
-          section of a framed page is <code>__section</code>, and the hairline between two is{' '}
-          <code>__rule</code>. Drawn here at a fixed height rather than the window's.
+          The centred, full-height column of a page: Welcome, sign-in and the invitation, which have
+          no AppShell, and the pages inside the shell that carry a column of their own, the account
+          pages and the not-authorized page among them. Its children stand a <code>space(6)</code>{' '}
+          apart, the gap alone spacing them, and stop at the measure; <code>--narrow</code> stops
+          them at <code>$narrow-column</code>, the forms' column. A section of a framed page is{' '}
+          <code>__section</code>, and the hairline between two is <code>__rule</code>. Drawn here at
+          a fixed height rather than the window's.
         </SectionHead>
         <div className="fd-frames">
           <div className="fd-frame-stage">
@@ -657,12 +659,20 @@ export default function Foundations(): ReactElement {
           </div>
           <div className="fd-frame-stage">
             <div className="page-frame page-frame--narrow">
-              <div className="page-header">
-                <h2>A Form Page</h2>
-              </div>
+              <h1>A Form Page</h1>
+              <PageNav
+                label="On this page"
+                entries={[
+                  { href: '#fd-frame-first', label: 'First Section' },
+                  { href: '#fd-frame-second', label: 'Second Section' },
+                ]}
+              />
               <section className="page-frame__section" aria-labelledby="fd-frame-first">
                 <h2 id="fd-frame-first">First Section</h2>
-                <p className="lede">The narrow frame, as the account page uses it.</p>
+                <p className="lede">
+                  The narrow frame, as the account page uses it: a bare heading, then the page’s own
+                  nav.
+                </p>
               </section>
               <hr className="page-frame__rule" />
               <section className="page-frame__section" aria-labelledby="fd-frame-second">
@@ -671,42 +681,6 @@ export default function Foundations(): ReactElement {
               </section>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section id="fd-link-row">
-        <SectionHead eyebrow="_primitives.scss · .link-row" title="Link Rows">
-          A wrapping row of links that is not a bulleted list: a page's own nav, the admin nav. The
-          list's ◆ marker, indent and item margins are cleared, so the row starts at the column's
-          edge and wraps on a phone rather than overflowing it. The link to the page you are on
-          carries <code>aria-current="page"</code>, drawn firmer and with a heavy underline rather
-          than in another colour.
-        </SectionHead>
-        <div className="panel">
-          <nav aria-label="Example Sections">
-            <ul className="link-row">
-              <li>
-                <a href="#fd-link-row" aria-current="page">
-                  Name
-                </a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Email Address</a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Sign-In Methods</a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Categories</a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Ingredient Forms</a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Invitations</a>
-              </li>
-            </ul>
-          </nav>
         </div>
       </section>
 
@@ -817,7 +791,7 @@ export default function Foundations(): ReactElement {
         </SectionHead>
         <div className="panel badges">
           <span className="badge badge--safety">Toxic</span>
-          <span className="badge badge--low-stock">Low stock</span>
+          <span className="badge badge--low-stock">Low Stock</span>
           <span className="badge badge--last-used">Last Used</span>
         </div>
       </section>
@@ -863,7 +837,7 @@ export default function Foundations(): ReactElement {
           rather than a button: the account page's rows and the admin user list. Decorative, since
           the provider's name always sits beside it.
         </SectionHead>
-        <ul className="panel link-row fd-marks">
+        <ul className="panel fd-marks">
           {SOCIAL_PROVIDERS.map((provider) => (
             <li key={provider.id}>
               <ProviderMark id={provider.id} />
@@ -908,7 +882,7 @@ export default function Foundations(): ReactElement {
               </div>
               <div className="specimen__badges">
                 <span className="badge badge--safety">Toxic</span>
-                <span className="badge badge--low-stock">Low stock</span>
+                <span className="badge badge--low-stock">Low Stock</span>
               </div>
             </div>
             <div className="specimen__chips">
@@ -916,13 +890,13 @@ export default function Foundations(): ReactElement {
                 className="chip is-selected"
                 style={chipColors(seededGroup('Protection & Defense'))}
               >
-                Protection &amp; defense
+                Protection &amp; Defense
               </span>
               <span className="chip" style={chipColors(seededGroup('Mind & Spirit'))}>
-                Mind &amp; spirit
+                Mind &amp; Spirit
               </span>
               <span className="chip" style={chipColors(seededGroup('Craft & Change'))}>
-                Craft &amp; change
+                Craft &amp; Change
               </span>
             </div>
             <p className="specimen__stock">

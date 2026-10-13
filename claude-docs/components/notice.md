@@ -49,6 +49,14 @@ None of its own: the primitive draws all four kinds, so the directory has no
 `index.scss`. A caller's `className` is for its layout only, such as a row's
 full-width line, never a colour.
 
+## Stories
+
+[`index.stories.tsx`](../../src/components/Notice/index.stories.tsx), under
+`Surfaces / Notice`: `Failure` (an error), `Warning`, `QuietWarning` (a
+warning as a status), `Success` and `Plain`, one for each look and role in
+the table above. `PhoneDark` and `PhoneLight` stack the four kinds at 375px
+in each theme.
+
 ## Testing
 
 `tests/components/Notice/index.test.tsx` asserts the role each kind takes, one

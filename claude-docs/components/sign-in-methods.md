@@ -162,9 +162,8 @@ next, so no rule is drawn between them (the owner's call, MB.116).
   apart.
 - `.sign-in-methods__item` is a wrapping row, `space(2)` by `space(3)`: the
   mark, the name taking the free width, then the control at the end.
-- The rows clear `_typography.scss`'s ◆ marker with a local reset rather than
-  `.link-row`, which clears it too: that is a row of links, and this is a
-  column of rows.
+- The rows clear `_typography.scss`'s ◆ marker with a local reset: this is a
+  column of rows, not a bulleted list.
 - The unavailable note and the only-method line are `.meta` lines, a full
   row wide and set to the right, beneath where the control is or would be. A
   row's error `Notice` is a full row wide.
@@ -182,8 +181,13 @@ each inside the page's real frame, section, panel and head: `OneLinked`,
 (a failed link in Microsoft's row, reading `linkErrorMessage` rather than a
 copied sentence), `SomeUnavailable`, and `WholePage`, the whole `/account`
 page composed with fixture props, since the page is a server component.
-`PhoneDark` and `PhoneLight` show the whole page at 375px in each theme,
-with every row state.
+It is composed as `src/app/(shell)/account/page.tsx` composes it: a bare
+heading, `PageNav` with the same four entries, the Invitations section with
+none waiting, the `page-with-nav` class on the `main` so the wide two-column
+layout shows, and no Sign Out, which since
+MB.7 sits only in the account menu. `PhoneDark` and `PhoneLight` show the
+whole page at 375px in each theme, with every row state. The stories are
+titled "Account / Sign-In Methods".
 
 ## Tests
 

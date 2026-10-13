@@ -10,15 +10,13 @@ export interface AdminTabbedFrameProps {
   open?: string;
   /** What the page header draws at the end of its line: the open tab's Add, say. */
   action?: ReactNode;
-  /** Draws the admin nav beside the page, as the layout does at a desktop's width. */
-  nav?: boolean;
   children: ReactNode;
 }
 
 /** What `ShellFrame` draws a story inside (./shell-frame.tsx). */
 export interface ShellFrameProps {
-  /** Which area's context row to draw: a coven's (switcher and nav), the admin area's, or none (the account pages). */
-  area?: 'coven' | 'admin' | 'none';
+  /** Which area's context row to draw: a coven's (switcher and nav), the admin area's, the create page's (the switcher alone), or none (the account pages). */
+  area?: 'coven' | 'admin' | 'new' | 'none';
   /** The viewer, by what differs from a verified member who may not create covens. */
   viewer?: Partial<ShellViewer>;
   /** The viewer's covens; three fixture ones by default. */

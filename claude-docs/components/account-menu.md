@@ -87,9 +87,14 @@ rows beneath it.
 
 ## Stories
 
-`Closed`, `Open`, `OpenUnverified`, `OpenPhone` (the links), `OpenAtSevenHundred` (the links in the panel at 700px),
-`ClosedWithInvitations` (the dot), `OpenWithInvitations` and
-`OpenWithInvitationsPhone` (the count beside Your Account, at a phone's width as well).
+[`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx),
+titled "Shell / Account Menu": `Closed`, `Open`, `OpenUnverified` (Sign Out
+alone), `OpenPhone` (the links, at 375px), `OpenAtSevenHundred` (the links in
+the panel at 700px), `ClosedWithInvitations` (the dot), `OpenWithInvitations`
+and `OpenWithInvitationsPhone` (the count beside Your Account, at a phone's
+width as well). Each sits at the right, since the panel hangs from the
+button's right edge. The wrapper holds the menu at its top and is tall enough
+for the open panel, because the workshop's frame clips what overflows it.
 
 ## Testing
 

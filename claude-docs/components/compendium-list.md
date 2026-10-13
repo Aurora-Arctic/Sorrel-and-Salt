@@ -154,13 +154,15 @@ mineral's or a chemical's name is not, and the row does not carry its kind.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx) —
-`OnePageOfSeveral`, `FirstPage`, `Filtered`, `NoMatch` and `Empty`, and
-`PhoneDark` and `PhoneLight`, the middle page at 375px with every row a
-card, and `FilteredPhoneDark` and `FilteredPhoneLight`, `Filtered` at 375px
-with Clear drawn, each inside the admin layout's frame. The filter reaches
-`/admin/compendium`, which the workshop does not serve.
-Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/CompendiumList/index.stories.tsx),
+`Admin / Compendium List`: `OnePageOfSeveral`, `FirstPage`, `Filtered`,
+`NoMatch` and `Empty`, and `PhoneDark` and `PhoneLight`, the middle page at
+375px with every row a card, and `FilteredPhoneDark` and `FilteredPhoneLight`,
+`Filtered` at 375px with Clear drawn. Every story is the page as
+`/admin/compendium` draws it: the admin layout's frame with the Compendium
+page current in its nav, then a `main` holding the page header with Add
+Ingredient, then the list. The filter reaches `/admin/compendium`, which the
+workshop does not serve. Render-only, no test ids, no snapshots.
 
 ## Testing
 

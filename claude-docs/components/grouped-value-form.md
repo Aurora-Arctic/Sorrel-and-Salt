@@ -213,15 +213,26 @@ there is none.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/GroupedValueForm/index.stories.tsx)
-— `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,
-`AddingADeity`, `EditingADeity`, `AddingACelestialBody` and `EditingAZodiacSign`, each in
-the modal and its own iframe, each kind's groups four invented ones, enough to narrow; and `PhoneDark` and
-`PhoneLight`, the category's edit at 375px in each theme, where the buttons
-stack and the type-ahead Group opens inside the modal; and `AskingToDelete`,
-the category's edit with Delete pressed, the question over the form. Renaming in `EditingAForm`, `EditingADeity` or
-`EditingAZodiacSign` shows the note. The workshop has no API, so a save answers
-with the generic error.
+[`index.stories.tsx`](../../src/components/GroupedValueForm/index.stories.tsx),
+`Admin / Grouped Value Form`, each in the modal and its own iframe, each kind's
+groups four invented ones, enough to narrow. The workshop has no API, so a
+save answers with the generic error.
+
+- `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,
+  `AddingADeity`, `EditingADeity`, `AddingACelestialBody` and
+  `EditingAZodiacSign`: an add and an edit for each kind, the celestial body
+  and the sign being flat, with no group field. Renaming in `EditingAForm`,
+  `EditingADeity` or `EditingAZodiacSign` shows the note by Save; in
+  `EditingADeity` the head keeps the name it was saved under, with the
+  tradition after it.
+- `AskingToDelete`: the category's edit with Delete pressed once drawn, the
+  question over the form, which is dimmed and held beneath it until Delete or
+  Keep It answers.
+- `PhoneDark` and `PhoneLight`: the category's edit at 375px in each theme,
+  where the buttons stack and the type-ahead Group opens inside the modal.
+- `EditingADeityDark`, `EditingADeityLight`, `EditingADeityPhoneDark` and
+  `EditingADeityPhoneLight`: a deity's edit head in each theme, at the
+  workshop's width and at 375px.
 
 ## Testing
 

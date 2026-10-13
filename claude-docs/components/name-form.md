@@ -49,8 +49,17 @@ Designed in the sign-in and account pages' review (MB.116). `.name-form` is
 a column; its width is the account page's `.page-frame--narrow`, its ground
 the section's `.panel`, and the field, notices and button are the form
 primitives', the field drawn by the shared `FieldShell` around the form's own
-input ([`field.md`](field.md)). The stories (`Prefilled`, `LongName`, `PhoneDark`,
-`PhoneLight`) render inside the page's real frame, section and panel.
+input ([`field.md`](field.md)).
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/NameForm/index.stories.tsx), titled
+"Account / Name Form": `Prefilled` (the name the provider gave, nothing to save
+until edited), `LongName`, and `PhoneDark` and `PhoneLight` at 375px in each
+theme. Each renders inside the account page's real frame, section and panel, as
+`src/app/(shell)/account/page.tsx` writes them. Nothing is mocked: a submit in
+the workshop fails into the alert region. Render-only, no test ids, no
+snapshots.
 
 ## Testing
 

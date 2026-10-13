@@ -2,7 +2,7 @@
 
 `src/components/ProviderMark/` — a sign-in provider's mark on a small circle
 of its brand's own ground, on the `.provider-mark` primitive
-([`styling.md`](../styling.md), "Link rows and provider marks"), for a list of
+([`styling.md`](../styling.md), "Provider marks"), for a list of
 sign-in methods: the account page's rows and the admin user list's provider
 column. Added by MB.116; the circle was UserList's own until then.
 
@@ -43,6 +43,14 @@ button stays in the tab order with `aria-disabled` and names the note in its
 `aria-describedby`, so the reason is read with it, and the state is told
 apart by the button's dashed edge and these words, never by hue alone.
 SignInPanel and the account page's sign-in methods both render it.
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/ProviderMark/index.stories.tsx), `Sign In /
+Provider Mark`: `Default` and `Light`, the four providers' marks with their names
+in each theme; `FacebookChip`, Facebook's mark as a brand button draws it, on
+its blue chip; and `UnavailableNote`, the note a button for an unavailable
+provider carries.
 
 ## Testing
 

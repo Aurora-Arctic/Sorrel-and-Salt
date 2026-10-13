@@ -6,7 +6,7 @@ import { adminInvitationMessage } from './admin-invitation';
 // The link is invented and goes nowhere; the images and fonts come from the
 // workshop, which serves public/.
 export default {
-  title: 'Emails / Admin invitation',
+  title: 'Emails / Admin Invitation',
 };
 
 const URL = 'https://sorrelandsalt.com/invite/workshop-preview-token';

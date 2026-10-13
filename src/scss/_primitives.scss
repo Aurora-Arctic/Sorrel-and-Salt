@@ -698,24 +698,12 @@
     max-width: $wide-column;
   }
 
-  // A wrapping row of links that is not a bulleted list: a page's own nav,
-  // the admin nav. typography-base's ◆ marker would sit against the link
-  // before and hang outside the first, and its list indent and item margins
-  // would offset the row, so all three are cleared.
-  .link-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: space(2) space(5);
-
-    @include list-reset;
-  }
-
   // A table of contents: titled sections of links, each link with its one
   // line beneath it in the muted ink. The `/admin` index's (AdminNav's
-  // `contents.tsx`) and the coven index's. Not bulleted: a list of links, as
-  // `.link-row` is not, so typography-base's marker and indent go. Here among
-  // the primitives rather than in a component's stylesheet, since a route
-  // loads a component's stylesheet only when it draws the component.
+  // `contents.tsx`) and the coven index's. Not bulleted: a list of links, so
+  // typography-base's marker and indent go. Here among the primitives rather
+  // than in a component's stylesheet, since a route loads a component's
+  // stylesheet only when it draws the component.
   .admin-contents {
     @include stack;
   }
@@ -786,24 +774,12 @@
     }
   }
 
-  // The link to the page you are on (MB.115), marked by `aria-current`,
-  // which is what tells a screen reader too. Told apart by shape rather than
-  // hue: a firmer weight and the heavy rule as its underline, set clear of
-  // the letters, where every other link has the browser's hairline. A
-  // different colour alone would fail WCAG 1.4.1. The admin nav is the first.
-  .link-row a[aria-current='page'] {
-    font-weight: 500;
-    text-decoration-line: underline;
-    text-decoration-thickness: $rule-heavy;
-    text-underline-offset: space(1);
-  }
-
   // A provider's mark on a small circle of its brand's own ground, as its
   // sign-in button gives it one: the marks are drawn for those grounds,
   // Discord's white for its blurple. A white ground takes the brand's edge so
   // it holds 3:1 against the page. Facebook's mark is its own blue circle
   // with a white "f", so it fills the whole box.
-  // claude-docs/styling.md, "Link rows and provider marks".
+  // claude-docs/styling.md, "Provider marks".
   .provider-mark {
     display: inline-flex;
     flex-shrink: 0;

@@ -1,5 +1,8 @@
 import type { Story } from '@ladle/react';
 import type { ReactElement } from 'react';
+import StackTable from '../DataTable';
+import type { StackColumn } from '../DataTable/types';
+import ListFrame, { ListBody } from '../ListFrame';
 import { EditLink } from '.';
 
 // Render-only; behaviour is asserted in tests/components/IconTip. Hover or
@@ -7,34 +10,41 @@ import { EditLink } from '.';
 // banded table, so the pencil shows on both of its grounds, the page and the
 // card. The ingredient form's smaller pencils are drawn in its own stories.
 export default {
-  title: 'Admin / Icon Tip',
+  title: 'Layout / Icon Tip',
 };
 
-const ROWS = ['Fixture Salt', 'Testwort', 'Fixture Ash'];
+const ROWS = ['Fixture Salt', 'Testwort', 'Fixture Ash'].map((name) => ({
+  name,
+  description: 'An invented entry, for the workshop.',
+}));
+
+// The columns an admin list has: the labels, then the pencil in its own,
+// unlabelled, at the row's end (a card's top right at a phone's width).
+const COLUMNS: StackColumn<(typeof ROWS)[number]>[] = [
+  { heading: 'Name', cell: (row) => row.name },
+  { heading: 'Description', cell: (row) => row.description },
+  {
+    heading: 'Edit',
+    hiddenHeading: true,
+    action: 'corner',
+    cell: (row) => (
+      <EditLink href={`#edit-${row.name}`} name={row.name} heading={{ title: row.name }} />
+    ),
+  },
+];
 
 const Rows = (): ReactElement => (
-  <div className="data-table-frame" style={{ marginTop: '2rem' }}>
-    <table className="data-table data-table--stack" aria-label="Invented entries">
-      <thead>
-        <tr>
-          <th scope="col">Name</th>
-          <th scope="col">
-            <span className="visually-hidden">Edit</span>
-          </th>
-        </tr>
-      </thead>
-      <tbody>
-        {ROWS.map((name) => (
-          <tr key={name}>
-            <td data-label="Name">{name}</td>
-            <td className="data-table__card-action" data-label="">
-              <EditLink href={`#edit-${name}`} name={name} heading={{ title: name }} />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
+  <ListFrame>
+    <ListBody>
+      <StackTable
+        columns={COLUMNS}
+        rows={ROWS}
+        rowKey={(row) => row.name}
+        empty=""
+        aria-label="Invented entries"
+      />
+    </ListBody>
+  </ListFrame>
 );
 
 export const InAListRow: Story = () => <Rows />;

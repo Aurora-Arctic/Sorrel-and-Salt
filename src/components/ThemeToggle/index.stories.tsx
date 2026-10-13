@@ -4,10 +4,13 @@ import ThemeToggle from '.';
 // Render-only; behaviour is asserted in tests/components/ThemeToggle. A story
 // pins a theme with `.meta = { theme }`, which the decorator honours over the toolbar.
 export default {
-  title: 'Layout / Theme Toggle',
+  title: 'Shell / Theme Toggle',
 };
 
-// Follows the toolbar's theme control.
+// Follows the toolbar's theme control. The first four stories draw the
+// `corner` variant, as the root layout mounts it on a page with no shell: a
+// quarter disc pinned to the story frame's top-right corner and clipped by its
+// edge, which is the design.
 export const Default: Story = () => <ThemeToggle />;
 
 // Solar disc showing, `aria-pressed="true"`. Also the manual check for the sun

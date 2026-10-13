@@ -39,8 +39,9 @@ already sets no margin.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/SignOutButton/index.stories.tsx) —
-`Default`, inside a `.page-header` beside "Your Account". In the workshop the
-call reaches no auth server, so a click shows the failure.
+`Default`, the button alone, as it sits at the foot of the account menu (the
+menu's own stories, under "Shell / Account Menu", show it there). In the
+workshop the call reaches no auth server, so a click shows the failure.
 
 ## Testing
 
@@ -48,7 +49,8 @@ call reaches no auth server, so a click shows the failure.
 full load of `/`, and the failure said beside it for a refusal and for a
 dropped connection. `tests/db/sign-out.test.ts` signs out through Better
 Auth's real endpoint: the session row goes, and the same cookie then reads as
-no one. `tests/e2e/account.spec.ts` finds the button beside the heading, with
-axe, and its refusal said beside it: the served build cannot complete a sign-out,
-since Better Auth refuses the plain-http origin the remote browser reaches it
-on, as it would any `/api/auth` POST there.
+no one. `tests/e2e/shell.spec.ts` opens the account menu, routes a refusal of the
+sign-out call, and finds it said beside the button, with axe. The refusal is
+routed rather than waited for from Better Auth, since whether the served build
+refuses it depends on the origin the browser reaches it on (Better Auth refuses
+a plain-http origin, as it would any `/api/auth` POST there).

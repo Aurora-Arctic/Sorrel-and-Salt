@@ -12,7 +12,8 @@ import type { ShellFrameProps } from './types';
 // the area layouts draw it: the bar, the context row, then the page. Not the
 // layouts themselves, which are server components that read the session; this
 // is their markup with fixture props, as ./admin-frame.tsx is for the admin
-// layout.
+// layout. The create page's row is the page's own, not a layout's, and the page
+// draws it only for someone with a coven to switch to, as `new` does here.
 
 export const FIXTURE_VIEWER: ShellViewer = {
   name: 'Fixture Member',
@@ -37,7 +38,12 @@ export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
 
 const OPEN_COVEN = 'fixture-coven';
 
-const DEFAULT_OPEN = { coven: '/coven/fixture-coven', admin: '/admin/users', none: '/account' };
+const DEFAULT_OPEN = {
+  coven: '/coven/fixture-coven',
+  admin: '/admin/users',
+  new: '/coven/new',
+  none: '/account',
+};
 
 export const ShellFrame = ({
   area = 'coven',
@@ -70,6 +76,18 @@ export const ShellFrame = ({
               <AdminNav />
             </ContextRow>
             <div className="admin-layout">{children}</div>
+          </>
+        )}
+        {/* /coven/new: the switcher alone, no section nav, and no wrapper div
+            (src/app/(shell)/coven/new/page.tsx). */}
+        {area === 'new' && (
+          <>
+            {workspaces.length > 0 && (
+              <ContextRow
+                lead={<WorkspaceSwitcher workspaces={workspaces} canCreate={who.canCreate} />}
+              />
+            )}
+            {children}
           </>
         )}
         {area === 'none' && children}

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
 import { ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
 import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
+import { Reopenable } from '../../../.ladle/reopenable';
 import Modal, {
   ConfirmQuestion,
   DiscardQuestion,
@@ -15,7 +16,8 @@ import { usePressOnMount } from '../../../.ladle/press';
 
 // Render-only; behaviour is asserted in tests/components/Modal. The owner
 // closes it by unmounting it, so the story keeps an Open button to bring it
-// back after Close or Escape.
+// back after Close or Escape; a story with no state of its own stands on
+// `Reopenable` (.ladle/reopenable.tsx), which does the same.
 export default {
   title: 'Surfaces / Modal',
 };
@@ -171,39 +173,50 @@ export const OpenedByAButtonOpen: Story = () => {
 OpenedByAButtonOpen.meta = { iframed: true };
 
 // The address-driven wrapper the admin pages open: the workshop's router goes
-// nowhere, so Close, Escape and Done fade it out and leave it gone until the
-// story is reloaded. Done stands for a form's save.
+// nowhere, but reports where it was sent (.ladle/navigation.ts), which
+// `Reopenable` answers by unmounting it, as the changed address does in the
+// app. Close, Escape and Done fade it out and leave Open Again. Done stands
+// for a form's save.
 export const OpenedByItsAddress: Story = () => (
-  <RouteModal
-    closeHref={'/admin/categories' as Route}
-    content={{
-      heading: { eyebrow: 'Edit Category', title: 'Testcraft' },
-      body: (done) => (
-        <div className="modal__actions">
-          <button type="button" className="btn btn--solid" onClick={done}>
-            Done
-          </button>
-        </div>
-      ),
-    }}
-  />
+  <Reopenable>
+    {() => (
+      <RouteModal
+        closeHref={'/admin/categories' as Route}
+        content={{
+          heading: { eyebrow: 'Edit Category', title: 'Testcraft' },
+          body: (done) => (
+            <div className="modal__actions">
+              <button type="button" className="btn btn--solid" onClick={done}>
+                Done
+              </button>
+            </div>
+          ),
+        }}
+      />
+    )}
+  </Reopenable>
 );
 
 OpenedByItsAddress.meta = { iframed: true };
 
 // A route modal pressed open while its page is on its way (M9.18): the
 // pressed row's head over the form's skeleton, through a provider whose
-// navigation never arrives, since the workshop's router goes nowhere.
+// navigation never arrives, since the workshop's router goes nowhere. Close
+// still leaves it, as the press being forgotten would in the app.
 export const Loading: Story = () => (
-  <RouteModalContext.Provider
-    value={{
-      loading: { eyebrow: 'Edit Category', title: 'Testcraft' },
-      open: () => undefined,
-      cancel: () => undefined,
-    }}
-  >
-    <RouteModal closeHref={'/admin/categories' as Route} />
-  </RouteModalContext.Provider>
+  <Reopenable>
+    {() => (
+      <RouteModalContext.Provider
+        value={{
+          loading: { eyebrow: 'Edit Category', title: 'Testcraft' },
+          open: () => undefined,
+          cancel: () => undefined,
+        }}
+      >
+        <RouteModal closeHref={'/admin/categories' as Route} />
+      </RouteModalContext.Provider>
+    )}
+  </Reopenable>
 );
 export const LoadingPhoneDark: Story = () => <Loading />;
 export const LoadingPhoneLight: Story = () => <Loading />;
@@ -323,9 +336,13 @@ function DeletingForm() {
 }
 
 export const AskingToConfirm: Story = () => (
-  <Modal eyebrow="Edit Group" title="Fixture Healing" onClose={() => {}}>
-    <DeletingForm />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Group" title="Fixture Healing" onClose={close}>
+        <DeletingForm />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 AskingToConfirm.meta = { iframed: true };

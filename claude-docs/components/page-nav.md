@@ -64,6 +64,10 @@ cannot drift, and the account page's layout was checked unchanged at four widths
 `tests/components/PageNav/index.test.tsx`: the navigation landmark, the entries
 as links with their hrefs, and that the observer's callback moves
 `aria-current`. The scroll itself is real-browser behaviour, walked in
-`tests/e2e/account.spec.ts`. The coven index's entries are asserted in
-`tests/app/(shell)/coven/page.test.tsx`: one per section drawn, each landing on a
-section that exists.
+`tests/e2e/account.spec.ts`, which also checks that the current entry is drawn
+differently from the others. The marker's rules match the attribute's value,
+`location`, so a value the component stopped setting would leave the bar
+undrawn with every test of the attribute still green (it was, from MB.7 until
+M10.33). The coven index's entries are asserted in
+`tests/app/(shell)/coven/page.test.tsx`: one per section drawn, each landing on
+a section that exists.
