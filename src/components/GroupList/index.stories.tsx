@@ -1,13 +1,19 @@
 import type { Story } from '@ladle/react';
-import { AdminFrame } from '../../../.ladle/admin-frame';
+import type { ReactElement, ReactNode } from 'react';
+import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
 import { GROUP_NAMES } from '../../../.ladle/fixtures';
+import AddAction from '../../app/(shell)/admin/add-action';
 import GroupList from '.';
 import { slugify } from '../../lib/slugify';
 import { groupsHref } from './href';
+import { KINDS } from './kinds';
 
 // Render-only; behaviour is asserted in tests/components/GroupList. Three of
 // the seed's colour pairs, copied from src/db/seed/category-groups.ts, which a
-// component may not import (CLAUDE.md rule 1), on invented groups.
+// component may not import (CLAUDE.md rule 1), on invented groups. The stories
+// of the bare list are the list alone; the phone stories stand for the page, which
+// draws the list only inside its tabbed page (`GroupPage`, `tabbed-layout.tsx`):
+// the admin layout's frame, the heading and tabs, and the tab's Add.
 export default {
   title: 'Admin / Group List',
 };
@@ -17,6 +23,31 @@ const CATEGORY_GROUPS = [
   { name: 'Testcraft', colorDark: '#c371c6', colorLight: '#a13ba5' },
   { name: 'Testward', colorDark: '#5d8ab1', colorLight: '#286ba6' },
 ].map((group) => ({ ...group, description: 'An invented group, for the workshop.' }));
+
+// The group list as its route draws it: the Categories page with the Groups
+// tab open, or the Deities page with the Deity Traditions tab open.
+const OnItsPage = ({
+  kind,
+  children,
+}: {
+  kind: 'category' | 'tradition';
+  children: ReactNode;
+}): ReactElement => {
+  const { path, label, add } = KINDS[kind];
+  return (
+    <AdminTabbedFrame
+      page={kind === 'category' ? 'categories' : 'deities'}
+      open={path}
+      action={
+        <AddAction href={groupsHref(kind, {}, 'new')} heading={{ title: `Add ${label}` }}>
+          {add}
+        </AddAction>
+      }
+    >
+      {children}
+    </AdminTabbedFrame>
+  );
+};
 
 export const CategoryGroups: Story = () => (
   <GroupList
@@ -34,18 +65,18 @@ export const CategoryGroups: Story = () => (
   />
 );
 
-// At a phone's width, in the admin column, in each theme: each row a card.
+// At a phone's width, on its page, in each theme: each row a card.
 export const PhoneDark: Story = () => (
-  <AdminFrame>
+  <OnItsPage kind="category">
     <CategoryGroups />
-  </AdminFrame>
+  </OnItsPage>
 );
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => (
-  <AdminFrame>
+  <OnItsPage kind="category">
     <CategoryGroups />
-  </AdminFrame>
+  </OnItsPage>
 );
 PhoneLight.meta = { theme: 'light', width: 375 };
 
@@ -64,6 +95,7 @@ export const FormGroups: Story = () => (
       };
     })}
     nextHref={groupsHref('form', { after: 'cursor' })}
+    position={{ page: 1, pages: 2 }}
   />
 );
 
@@ -102,16 +134,16 @@ export const TraditionsSearched: Story = () => (
 // At a phone's width, searched, in each theme: the Name field across the
 // row with its magnifier, Clear beneath it, each row a card.
 export const TraditionsSearchedPhoneDark: Story = () => (
-  <AdminFrame>
+  <OnItsPage kind="tradition">
     <TraditionsSearched />
-  </AdminFrame>
+  </OnItsPage>
 );
 TraditionsSearchedPhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const TraditionsSearchedPhoneLight: Story = () => (
-  <AdminFrame>
+  <OnItsPage kind="tradition">
     <TraditionsSearched />
-  </AdminFrame>
+  </OnItsPage>
 );
 TraditionsSearchedPhoneLight.meta = { theme: 'light', width: 375 };
 
