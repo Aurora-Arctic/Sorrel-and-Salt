@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer } from '@/lib/types';
 
@@ -16,6 +16,7 @@ const MEMBER: ShellViewer = {
   isAdmin: false,
   canCreate: false,
   verified: true,
+  pendingInvitations: 0,
 };
 const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', isAdmin: true };
 const UNVERIFIED: ShellViewer = { ...MEMBER, verified: false };
@@ -32,6 +33,17 @@ beforeEach(() => {
 });
 
 describe('AppShell', () => {
+  it('hands the viewer’s pending invitations to the account menu, which links to them', () => {
+    shell({ ...MEMBER, pendingInvitations: 2 });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Fixture Member/ }));
+
+    expect(screen.getByRole('link', { name: '2 Coven Invitations' })).toHaveAttribute(
+      'href',
+      '/account#account-invitations',
+    );
+  });
+
   it('offers an admin the Your Coven and Admin links', () => {
     shell(ADMIN);
 

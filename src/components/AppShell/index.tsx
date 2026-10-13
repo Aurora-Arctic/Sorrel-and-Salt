@@ -68,8 +68,13 @@ const AppShell = ({ viewer, children }: AppShellProps): ReactElement => {
                 Add Ingredient
               </button>
             )}
-            <AccountMenu name={viewer.name} verified={viewer.verified} links={links} />
-            {/* Hidden at a phone's width, where the account panel holds it. */}
+            <AccountMenu
+              name={viewer.name}
+              verified={viewer.verified}
+              links={links}
+              pendingInvitations={viewer.pendingInvitations}
+            />
+            {/* In the bar at every width (the owner's call, M10.32). */}
             <span className="app-shell__theme">
               <ThemeToggle variant="inline" />
             </span>

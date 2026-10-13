@@ -19,7 +19,7 @@ import './index.scss';
 // `$tip-fade` (_variables.scss): how long the closed tip stays for its fade.
 const TIP_FADE_MS = 500;
 
-const IconTip = ({ tip, children }: IconTipProps): ReactElement => {
+const IconTip = ({ tip, children, placement = 'side' }: IconTipProps): ReactElement => {
   const { open, show, hide, hideSoon } = useTip();
   // Closing: no longer open, still in the page for the fade. Set as `open`
   // is seen to drop, during the render that sees it, and cleared by the
@@ -52,7 +52,7 @@ const IconTip = ({ tip, children }: IconTipProps): ReactElement => {
         <span
           role="tooltip"
           aria-hidden="true"
-          className={`icon-tip__bubble${open ? '' : ' icon-tip__bubble--closing'}`}
+          className={`icon-tip__bubble${placement === 'below' ? ' icon-tip__bubble--below' : ''}${open ? '' : ' icon-tip__bubble--closing'}`}
         >
           {tip}
         </span>
