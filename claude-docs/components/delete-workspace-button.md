@@ -27,17 +27,16 @@ since there are none. The only owner's guided exit (M6.16,
 
 None of its own: the directory has no `index.scss`. The button is the `.btn.btn--destructive`
 primitive, and the confirmation is `ConfirmedAction`'s modal ([`user-list.md`](user-list.md)).
-Where it sits is the page's: beside Leave in the coven index's "Your Membership" row today, and
-the MB.119 review proposes a section of its own for owners
-(`Coven / Pages`, below).
+Where it sits is the page's: the coven index gives it a section of its own, "Delete This Coven",
+shown to owners only, with a sentence saying what it does (MB.119's review), so it is never beside
+Leave Coven.
 
 ## Stories
 
-`index.stories.tsx` (`Coven / Delete Workspace Button`) has `Default`. In the workshop the call
-reaches no server, so confirming shows the failure. The button in its page is drawn by the
-review's proposals in `.ladle/coven-pages.stories.tsx` (`Coven / Pages`, `ProposalIndex…`), each
-with a `PhoneDark` and a `PhoneLight` sibling; the winner's sections are kept as component
-stories and the file goes once the running page carries it.
+`index.stories.tsx` (`Coven / Delete Workspace Button`) has `Default`, with `PhoneDark` and
+`PhoneLight` at 375px. In the workshop the call reaches no server, so confirming shows the
+failure. The button in its page is the coven index's, which reads the session and so has no
+story.
 
 ## Testing
 

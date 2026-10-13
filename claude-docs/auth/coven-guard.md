@@ -52,8 +52,10 @@ browser against the built server).
 `/coven/[slug]` is the page a coven opens on: where the switcher (M6.9), an
 accepted invitation (M7.5) and the shell's coven link (MB.7) land. It is
 `src/app/(shell)/coven/[slug]/page.tsx`, and like every page under the coven it runs
-the guard again with its own slug. It shows the coven's name as its heading,
-and the layout's title template gives its tab title the name too. The
+the guard again with its own slug. Its head is an eyebrow ("Coven"), the coven's
+name as the heading, and a lede saying which role the caller holds and what that
+role lets them do (`WORKSPACE_ROLE_ACCESS`); the layout's title template gives
+its tab title the name too. The
 navigation shell (`src/app/(shell)/layout.tsx`, MB.7) wraps it, as it wraps
 every page under `/coven`, `/account` and `/admin`.
 
@@ -66,12 +68,21 @@ the index, Overview, and Members for the roles holding `member: read`
 because `typedRoutes` refuses a link to a route the build does not contain:
 Ingredients by M9.6 and Grimoire by M10.11.
 
-**Leave and Delete are both live here: Delete (M6.14), and Leave (M6.15).**
+**The page is up to three sections, reached from a jump menu** (`PageNav`, laid out as the account page's is, `.page-with-nav`; MB.119):
 
-| Control          | Shown to                                   | Filled by                                     |
-| ---------------- | ------------------------------------------ | --------------------------------------------- |
-| Leave Workspace  | Every role                                 | M6.15; M6.16's guided exit for the only owner |
-| Delete Workspace | Roles holding `workspace: delete` (owners) | M6.14's confirmation                          |
+| Section           | Shown to                                   | Holds                                                       |
+| ----------------- | ------------------------------------------ | ----------------------------------------------------------- |
+| Contents          | Roles that can reach a page it lists       | A link to each such page, with a line saying what it is for |
+| Your Membership   | Every role                                 | Leave Coven (M6.15; M6.16's guided exit for the only owner) |
+| Delete This Coven | Roles holding `workspace: delete` (owners) | Delete Coven (M6.14's confirmation), under one sentence     |
+
+Contents lists a page only if the caller can open it, so a link is never a
+404: today that is Members, for roles holding `member: read`. A viewer has none
+and so no Contents section and no menu entry for it, until the ingredients and
+grimoire pages (MB.121) give every role something to open. One `ActionFailure`
+wraps the two buttons' sections, so a refusal is said once above them. Leave
+and Delete are in sections of their own so the button that ends a seat is never
+beside the one that ends a coven.
 
 - **Leave is on this page, not the members page,** because a viewer gets a
   404 from the members page (M6.13) and must still be able to leave.
@@ -89,8 +100,9 @@ Ingredients by M9.6 and Grimoire by M10.11.
   [`components/leave-workspace-button.md`](../components/leave-workspace-button.md),
   "The only owner's guided exit").
 
-Tests: `tests/app/coven/page.test.tsx` (the page guards its own slug; Leave
-for every role, Delete for the owner alone) and `tests/e2e/coven.spec.ts`
+Tests: `tests/app/(shell)/coven/page.test.tsx` (the page guards its own slug; Leave
+for every role, Delete in its own section for the owner alone, Contents and the jump
+menu by role) and `tests/e2e/coven.spec.ts`
 (the same in a browser, keyboard reach and an axe scan).
 
 ## The members page (M6.13)
