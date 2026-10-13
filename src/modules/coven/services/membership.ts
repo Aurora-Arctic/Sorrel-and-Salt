@@ -77,8 +77,13 @@ export async function assertMembership(
   // workspace exists is itself private (claude-docs/auth/service-session.md).
   if (!role) throw new Forbidden();
 
+  // Unlike the bare refusals above, this one is said to a member who is
+  // really there, and reaches the page as the alert beside the button they
+  // pressed (a stale page after a demotion, say). It is a coven's own
+  // wording, since only a workspace-scoped call gets this far, and it names
+  // neither the role nor the permission: both are the service's to decide.
   if (!rolePermits(role, permission)) {
-    throw new Forbidden(`A ${role} may not ${describe(permission)}`);
+    throw new Forbidden("Your role in this coven doesn't allow that. Ask an owner if you need it.");
   }
 
   // The one cast to the brand in the codebase, and the reason the type is
@@ -106,14 +111,4 @@ export async function readersOf(
   // A signed-out caller is refused as a stranger is: whether the coven exists is private.
   if (!session) throw new Forbidden();
   return [await assertMembership(session, workspaceId, permission)];
-}
-
-/** `{ spell: ['create'] }` as `spell: create` — for the log line, never for a test to match on. */
-function describe(permission: WorkspacePermission): string {
-  return Object.entries(permission)
-    .map(([resource, actions]) => {
-      const list = 'actions' in actions ? actions.actions : actions;
-      return `${resource}: ${list.join(', ')}`;
-    })
-    .join('; ');
 }
