@@ -25,7 +25,8 @@ import {
 import GroupDialog from './group-dialog';
 import { GROUP_READERS } from './group-readers';
 import AddAction from './add-action';
-import { pagerHrefs, readEditPlace, readListPlace } from './list-page';
+import { pagerHrefs } from '../../../lib/list-href';
+import { readEditPlace, readListPlace } from './list-page';
 import MissingNotice from './missing-notice';
 import type { ModalHeading } from '../../../components/Modal/types';
 import type { GroupKindPage, GroupPageProps, GroupSearchParams } from './types';

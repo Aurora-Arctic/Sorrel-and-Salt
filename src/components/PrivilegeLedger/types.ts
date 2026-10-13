@@ -1,5 +1,5 @@
-import type { PagerHrefs } from '../../app/(shell)/admin/types';
-import type { PagePosition } from '../../lib/types';
+import type { Route } from 'next';
+import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /** A privilege on `users`, as the ledger names it. */
 export type LedgerPrivilege = 'admin' | 'create_workspace';
@@ -44,7 +44,7 @@ export interface PrivilegeLedgerFilterProps {
   filter: PrivilegeLedgerFilter;
 }
 
-export interface PrivilegeLedgerProps extends Partial<PagerHrefs> {
+export interface PrivilegeLedgerProps extends Partial<PagerHrefs<Route>> {
   /** This page's rows, newest first. */
   changes: readonly PrivilegeLedgerEntry[];
   /** The filter the page shows. */

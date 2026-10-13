@@ -2,8 +2,7 @@ import type { Route } from 'next';
 import type { ReactNode, RefObject } from 'react';
 import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
-import type { PagerHrefs } from '../../app/(shell)/admin/types';
-import type { PagePosition } from '../../lib/types';
+import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /** One listed user: the row's own facts and the providers read beside it. */
 export interface UserListEntry {
@@ -24,7 +23,7 @@ export interface UserListEntry {
   heading: ModalHeading;
 }
 
-export interface UserListProps extends Partial<PagerHrefs> {
+export interface UserListProps extends Partial<PagerHrefs<Route>> {
   /** This page's users, in the list's order. */
   users: readonly UserListEntry[];
   /** The name-or-email filter as asked, blank for none. */

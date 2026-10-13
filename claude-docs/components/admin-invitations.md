@@ -40,7 +40,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   cursor (`?after=` or `?before=`), with "Page X of Y" between them, as the
   privilege ledger beside it counts its pages. Plain anchors rather than
   soft links, for the reason [`pager.md`](pager.md) gives. The page builds the two hrefs through
-  `list-page.tsx`'s `pagerHrefs`, and a cursor that names no row of this list
+  `src/lib/list-href.ts`'s `pagerHrefs`, and a cursor that names no row of this list
   (one copied from another list) reads the first page, through
   `readNumberedPage`. A list of one page shows no pager.
 - **Invite Admin is the tab's action, beside the page's heading** (MB.115,

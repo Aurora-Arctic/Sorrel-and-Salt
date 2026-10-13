@@ -24,7 +24,8 @@ import {
 } from '@/modules/ingredients/schema/ingredient-enums';
 import { listIngredientFormValues } from '@/modules/vocabulary';
 import AddAction from '../add-action';
-import { pagerHrefs, readEditPlace, readListPlace } from '../list-page';
+import { pagerHrefs } from '../../../../lib/list-href';
+import { readEditPlace, readListPlace } from '../list-page';
 import type { ModalHeading } from '../../../../components/Modal/types';
 import type { IngredientFormValues } from '../../../../components/IngredientForm/types';
 import MissingNotice from '../missing-notice';
