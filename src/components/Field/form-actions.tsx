@@ -11,9 +11,13 @@ import type { FormActionsProps } from './types';
  * apart at the far end. `.form__actions` rather than `.modal__actions`: it
  * wraps, so a third button never squeezes the row. What Cancel and Delete do
  * is the form's: Cancel calls its discard guard, Delete asks its question.
+ * Save is renamed where the form does something other than save: the admin
+ * invitation form's Send Invitation (MB.119).
  */
 export function FormActions({
   noun,
+  label = `Save ${noun}`,
+  busyLabel = `Saving ${noun}`,
   dirty,
   submitting,
   busy = submitting,
@@ -35,11 +39,11 @@ export function FormActions({
         className="btn btn--solid"
         disabled={!dirty || submitting}
         busy={busy}
-        busyLabel={`Saving ${noun}`}
+        busyLabel={busyLabel}
         aria-describedby={saveDescribedBy}
         onClick={onSave}
       >
-        {`Save ${noun}`}
+        {label}
       </BusyButton>
       {children}
       {onCancel && (

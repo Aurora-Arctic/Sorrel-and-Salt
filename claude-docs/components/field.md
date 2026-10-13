@@ -78,7 +78,10 @@ passes its discard guard's `request` (claude-docs/components/modal.md,
 as the panel's does. Delete, `.btn--destructive` and `.form__aside` at the far
 end, is drawn when `onDelete` is given, "Delete Group", and asks the form's
 own question. The row is `.form__actions`, which wraps, so a third button
-never squeezes it.
+never squeezes it. A form that does something other than save renames its
+submit with `label` and `busyLabel`, in title case: the admin invitation form
+passes "Send Invitation" and "Sending" (MB.119), so it draws this row rather
+than its own. `noun` still names Delete, on a form that has one.
 
 ### `ReasonField`
 
@@ -270,19 +273,21 @@ Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
 `WithError`, `Multiline` and `Disabled`, each in a `FormProvider`;
 `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
-nothing to save, with something to save and Delete, and saving; `Reason`,
+nothing to save, with something to save and Delete, saving, and renamed to
+Send Invitation; `Reason`,
 `ReasonField`; `SearchBox`, `SearchField` in a form that goes nowhere; and
 `FilterSelect`, `FilterSelectField` as a select and as a type-ahead in a
 filter row.
 
 ## Testing
 
-No file of its own: the forms that use it cover it (claude-docs/testing/layer-ownership.md,
+Almost no file of its own: the forms that use it cover it (claude-docs/testing/layer-ownership.md,
 "What a test may assert", rule 5). `tests/components/IngredientForm/` covers
 `TextField` and `SelectField`, and `tests/components/GroupedValueForm/` (with
 `tests/support/grouped-value-form.tsx`) its `typeahead`; the NameForm and EmailForm tests cover the
 shell around a plain control. `FormActions` is covered by the forms that use
-it, `ReasonField` by the UserList and AdminInvitations tests. The CompendiumList and UserList tests cover
+it, bar its renamed submit, which `tests/components/Field/form-actions.test.tsx`
+checks by the button's accessible name; `ReasonField` by the UserList and AdminInvitations tests. The CompendiumList and UserList tests cover
 `SwitchField`, found by its `switch` role: turned by a click, sent with the
 form, the server's before hydration included, applying the filter on its change, and
 `aria-disabled` while a list is on its way. Space is the platform's and

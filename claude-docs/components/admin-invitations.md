@@ -85,8 +85,9 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   as the user list's confirmation spaces its own; both are the shared field shell around their
   input ([`field.md`](field.md)). **Send Invitation** stays disabled until
   there is an address, and is a `BusyButton` ([`busy-button.md`](busy-button.md)),
-  a spinner and "Sending" while the request is out; Cancel is quiet and
-  closes back to the tab. With anything typed in either field, Cancel asks
+  a spinner and "Sending" while the request is out; Cancel is quiet, waits
+  while the request is out, and closes back to the tab. The row is the
+  shared `FormActions`, its submit renamed ([`field.md`](field.md#formactions); MB.119). With anything typed in either field, Cancel asks
   first (MB.115, the owner's call; [`modal.md`](modal.md#unsaved-changes));
   Discard Changes closes. The form is
   `invite-form.tsx`'s `InviteFields`, rendered inside the modal so its

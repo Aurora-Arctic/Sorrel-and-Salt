@@ -5,8 +5,7 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
-import BusyButton from '../BusyButton';
-import { FieldShell, ReasonField, fieldDescription } from '../Field';
+import { FieldShell, FormActions, ReasonField, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import type { InviteFieldsProps, InviteFormProps } from './types';
@@ -103,25 +102,15 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
         onChange={setNote}
         disabled={sending}
       />
-      <div className="modal__actions">
-        <BusyButton
-          className="btn btn--solid"
-          type="submit"
-          disabled={sending || email.trim() === ''}
-          busy={sending}
-          busyLabel="Sending"
-        >
-          Send Invitation
-        </BusyButton>
-        <button
-          className="btn btn--quiet"
-          type="button"
-          disabled={sending}
-          onClick={() => discard.request(close)}
-        >
-          Cancel
-        </button>
-      </div>
+      <FormActions
+        noun="Invitation"
+        label="Send Invitation"
+        busyLabel="Sending"
+        dirty={email.trim() !== ''}
+        submitting={sending}
+        holdCancel
+        onCancel={() => discard.request(close)}
+      />
       {/* Over the form, its buttons beneath (MB.115). */}
       {discard.asking && <DiscardQuestion guard={discard} />}
     </form>
