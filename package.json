@@ -22,6 +22,7 @@
     "test:debug": "vitest run --inspectBrk=0.0.0.0:9230 --no-file-parallelism --maxWorkers=1",
     "test:ui": "vitest --ui",
     "e2e": "playwright test",
+    "e2e:audit": "E2E_AUDIT=1 flock /tmp/sorrel-e2e.lock playwright test --project webkit --project firefox --project phone",
     "e2e:ui": "playwright test --ui --ui-host 0.0.0.0 --ui-port 9324",
     "e2e:debug": "playwright test --debug",
     "e2e:trace": "playwright show-trace --host 0.0.0.0 --port 9323",

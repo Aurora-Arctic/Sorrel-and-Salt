@@ -67,11 +67,21 @@ export function currentSlot(env: SlotEnv = process.env, slots = E2E_SLOTS): numb
 // "E2E".
 export const wsEndpoint = process.env.PLAYWRIGHT_WS_ENDPOINT;
 
+/**
+ * The audit's own server (M10.25), WebKit, Firefox and Chromium from
+ * Microsoft's image on the `playwright-audit` compose service, read only
+ * when the audit is asked for: `E2E_AUDIT=1` is the one switch, so the
+ * variable sitting in the devcontainer's environment changes nothing for
+ * `npm run e2e` (claude-docs/testing/e2e.md, "The audit").
+ */
+export const auditWsEndpoint =
+  process.env.E2E_AUDIT === '1' ? process.env.PLAYWRIGHT_AUDIT_WS_ENDPOINT : undefined;
+
 export const serverUrl = (port: number) => `http://localhost:${port}`;
 
 /**
  * A remote browser cannot resolve the runner's `localhost`; `start` binds
- * 0.0.0.0, so the compose service name reaches it.
+ * 0.0.0.0, so the compose service name reaches it. Either server is remote.
  */
 export const browserUrl = (port: number) =>
-  wsEndpoint ? `http://devcontainer:${port}` : serverUrl(port);
+  wsEndpoint || auditWsEndpoint ? `http://devcontainer:${port}` : serverUrl(port);
