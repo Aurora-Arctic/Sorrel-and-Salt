@@ -130,8 +130,10 @@ axe scan).
 ## The invitations page (M7.6)
 
 `/coven/[slug]/invitations` lists the invitations an owner has sent and nobody
-has answered: address, role and expiry, newest first, paged by `?after` and
-`?before` with a "Page X of Y" count, and a Revoke on each row. Members and
+has accepted: address, role and status (when a pending one expires, or when the
+invitee declined it, M10.34), newest first, paged by `?after` and
+`?before` with a "Page X of Y" count, and a Revoke on each pending row or a
+Remove on each declined one. Members and
 Invitations are the two tabs of one page, People, in the route group
 `src/app/(shell)/coven/[slug]/(people)/`: its `layout.tsx` draws the shared
 `TabbedPage` (pill tabs, as admin's People), and its `@action` slot draws
@@ -149,6 +151,9 @@ heading line on both tabs.
 - **Revoke** asks first, then sends `revokeInvitation` through `/api/graphql`
   and reads the page again. An accepted invitation is refused with a pointer
   to member removal.
+- **Remove** (M10.34) is the same for a declined invitation: it asks first, then
+  sends the same `revokeInvitation`, and the row leaves the list. A declined
+  row stays listed until then, past its expiry.
 - **The Members link in the coven nav** stays current on this page (`matches`).
 
 Tests: `tests/app/(shell)/coven/invitations.test.tsx` (owner reads, member and

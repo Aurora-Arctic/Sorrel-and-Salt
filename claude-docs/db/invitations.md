@@ -13,7 +13,8 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
 
 - **`invitations`** — `id`, `workspaceId` (nullable), `email`, `role`
   (nullable), `tokenHash`, `expiresAt`, `acceptedAt`, `acceptedBy`,
-  `revokedAt`, `note` (nullable), + the full six-column audit spread.
+  `declinedAt` (nullable), `revokedAt`, `note` (nullable), + the full six-column
+  audit spread.
   `email` is text and **not** a foreign key: an invitee may have no account
   yet, which is the point of inviting them. `note` says why the person is
   being invited, optional as a privilege change's `note` is in
@@ -21,6 +22,17 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   not offer it.
 - **`invitations_tier`**, `(workspace_id is null) = (role is null)`: a row is
   in one tier, a workspace and the role it is invited to, or neither.
+- **`invitations_declined_coven`** (M10.34),
+  `declined_at is null or workspace_id is not null`: only a coven invitation is
+  declined. An admin invitation is never listed to its invitee, so it is
+  accepted by its link or not at all, and the database says so rather than
+  leaving it to the service.
+- **`invitations_answered_once`** (M10.34),
+  `num_nonnulls(accepted_at, declined_at) <= 1`: an invitation is accepted or
+  declined, never both. The writers already match a pending row only, so two
+  racing answers cannot both land; the CHECK is what holds if a later path
+  forgets. `revoked_at` is outside it on purpose: the owner's Remove stamps a
+  declined row revoked, so a row may carry a decline and a revoke together.
 - **Only the hash is stored.** There is no plaintext column and there must
   never be one: story 4's requirement is that a leaked database row cannot be
   redeemed. The token is generated with `crypto.randomBytes`, mailed in the
@@ -49,17 +61,21 @@ undeclared the two and MB.203 dropped them (`0059`). Why one table, why it is
   [partial-index convention](soft-delete.md); the usual argument for that
   predicate is weak here, since nothing re-proposes a random hash, but the
   rule is absolute and the predicate is free.
-- **Four lifecycle columns, not one `status` enum.** `expiresAt` is a clock
-  comparison, `revokedAt` is an owner's or an admin's act, and
-  `acceptedAt`/`acceptedBy` are the redeemer's. Story 7 wants all three told
+- **Five lifecycle columns, not one `status` enum.** `expiresAt` is a clock
+  comparison, `revokedAt` is an owner's or an admin's act,
+  `acceptedAt`/`acceptedBy` are the redeemer's, and `declinedAt` (M10.34) is
+  the invitee's no. Story 7 wants the dead states told
   apart with a deterministic answer when two apply at once, and collapsing
   them is exactly the shape MB.30 rejected in Better Auth's plugin, which
   answers every dead link with one `INVITATION_NOT_FOUND`
   ([`mb.30-organization-plugin.md`](../design-decisions/mb.30-organization-plugin.md)).
   M7.7 owns the classification; the table owns keeping the evidence apart.
   There is no `revokedBy`: revoking is the last write a row takes, so
-  `updated_by` is who revoked. No constraint pairs `acceptedAt` with
-  `acceptedBy`, since one named write sets both.
+  `updated_by` is who revoked. There is no `declinedBy` either: who declined
+  is the address the invitation was sent to, which the decline write matched
+  against the session's verified address, so a column would only repeat
+  `email`. No constraint pairs `acceptedAt` with `acceptedBy`, since one named
+  write sets both.
 
 ### Admin invitations (MB.69), now the site tier
 
@@ -103,21 +119,33 @@ marks"; MB.198). In their place, in the repository's `invitations.ts`, which
 - **`acceptReceivedInvitation(id)`** (M10.32) stamps the same two columns on
   a workspace-tier row by id, under no proof, matching only while the
   session's user holds the invited address, verified, and the coven is live:
-  the token write with the address in the token's place, for the `/coven`
-  account page's list ("Accepting from the account page", below).
-- **`revokeInvitation(membership, id)`** stamps `revoked_at` now on a row in
-  the proof's workspace, and **`revokeInvitation(admin, id)`** on a
-  site-tier row. By id rather than token: an owner or an admin revokes from
+  the token write with the address in the token's place, for the account
+  page's list ("Accepting from the account page", below).
+- **`declineReceivedInvitation(id)`** (M10.34) stamps `declined_at` now on a
+  workspace-tier row by id, under no proof, with the same match as the accept
+  by id: the session's user holds the invited address, verified, the coven is
+  live and the row is pending. Nothing else is written: no `declined_by`, and
+  no membership or grant ("Declining from the account page", below).
+- **`revokeInvitation(membership, id)`** stamps `revoked_at` now on an open row
+  in the proof's workspace, and **`revokeInvitation(admin, id)`** on a
+  site-tier row. Open (M10.34) is pending, or declined and not yet removed:
+  Revoke is this write on a pending row, and Remove is the same write on a
+  declined one, so it leaves the owner's list and stays in the table for the
+  audit. By id rather than token: an owner or an admin revokes from
   a list, and neither holds the token. Each reaches only its own tier: a
   workspace proof cannot revoke a site invitation by id, nor the site proof
   a workspace's, nor one workspace's proof another's, each asserted by
   direct id against a row the right proof then revokes.
 
-Both stamps match a **pending** row only: live, neither accepted nor revoked,
-and unexpired. So no invitation is accepted twice, a revoked or expired link
-cannot be redeemed even by a service that forgot to check, and neither stamp
-overwrites the other; a call that matches nothing returns no row, as MB.62's
-resume does.
+The accept and decline stamps match a **pending** row only: live, none of
+accepted, declined and revoked, and unexpired. So no invitation is answered
+twice, a declined, revoked or expired link cannot be redeemed even by a service
+that forgot to check, and no stamp overwrites another; a call that matches
+nothing returns no row, as MB.62's resume does. The revoke stamp matches an
+**open** row instead: not accepted, not revoked, and either declined or
+unexpired. A declined invitation is an answer for the owner to read, not a link
+that lapses, so it stays open past its expiry until the owner removes it; a
+pending one that has lapsed is not open, as before.
 
 **The token goes in, never the hash.** `hashToken` in the repository's
 `tokens.ts`, hex SHA-256, is the only place a hash is made, so a caller
@@ -151,19 +179,20 @@ The finders:
 
 - **`findInvitationByToken(token)`** returns the live row the token names,
   on either tier, under no proof for the accept's reason: holding the token
-  is what admits. It returns expired, revoked and accepted rows alike: the
+  is what admits. It returns expired, revoked, accepted and declined rows alike: the
   accept service rejects each with its own message (M7.7), and can only tell
   them apart if it sees them.
 - **`findPendingWorkspaceInvitationPage(membership, page)`**, the members
-  page's pending list (M7.6), and **`findPendingSiteInvitationPage(admin, filter, page)`**,
+  page's pending list (M7.6), which since M10.34 also holds the declined
+  invitations not yet removed, and **`findPendingSiteInvitationPage(admin, filter, page)`**,
   `/admin/invitations`' (MB.70): each tier's pending rows under its own proof.
   The workspace's pages newest first as the site tier's does, by the same
   order, through `findPageInScope` under the proof's `workspace_id`, and
   **`findPendingWorkspaceInvitationCount(membership, start)`** counts it for
   the "Page X of Y"; neither takes a filter. **`findInvitationInWorkspace(membership, id)`**
   reads one invitation of the proof's workspace in any state, pending,
-  accepted, revoked or expired, and `undefined` for a missing, deleted or
-  other workspace's id: `revokeInvitation` matches pending rows only, so
+  accepted, declined, revoked or expired, and `undefined` for a missing, deleted or
+  other workspace's id: `revokeInvitation` matches open rows only, so
   this is how the coven service tells an accepted invitation (point the
   owner at member removal) from a missing one. The site tier's is a cursor page (a page of results that resumes
   from the last row rather than counting rows to skip; CLAUDE.md rule 8),
@@ -280,13 +309,17 @@ pending rows carry the addresses of people who have not joined.
 - **`listPendingWorkspaceInvitations(session, workspaceId, page)`** and
   **`countPendingWorkspaceInvitations(session, workspaceId, start)`** read
   `findPendingWorkspaceInvitationPage` / `findPendingWorkspaceInvitationCount`:
-  newest first, the site tier's pager under the `Membership` proof. The members
+  newest first, the site tier's pager under the `Membership` proof. Since
+  M10.34 the rows are the coven's open invitations, pending or declined (the
+  names kept, so no caller changes). The members
   page calls them directly (a server component); there is no GraphQL read.
 - **`revokeWorkspaceInvitation(session, workspaceId, id)`** looks the row up
   with `findInvitationInWorkspace` and then stamps it through
   `revokeInvitation(membership, id)`, inside `withAudit`. A missing id, a
   malformed one, another coven's, and a revoked or lapsed invitation are
-  `NotFound`, as the admin tier's is. An **accepted** invitation is a
+  `NotFound`, as the admin tier's is. A **declined** invitation is revoked like
+  a pending one, even past its expiry (M10.34): that is the owner's Remove, and
+  the service needed no change, since the writer decides what is open. An **accepted** invitation is a
   `ValidationError` on `id` whose message points to the members list: the
   person is a member now, and removing them is a membership action. The
   by-id lookup exists only to tell those two apart.
@@ -319,7 +352,7 @@ write already holds, and the workspace tier.
 `findReceivedInvitationCount(session, start)` page the pending ones into a
 live coven, newest first, as the other two pending lists are ordered.
 `findReceivedInvitation(session, id)` answers one row in any state, so the
-service can say accepted, revoked or expired, and nothing for an id the
+service can say accepted, declined, revoked or expired, and nothing for an id the
 address does not hold. `findReceivedInvitationCovens(session, ids)` and
 `findReceivedInvitationInviters(session, ids)` answer the name and slug of
 each coven and the name of each inviter, for the page's ids alone and
@@ -340,7 +373,7 @@ the seat or the revived seat, `invited_by`, the `canCreateWorkspace` grant
 declared `via: 'invitation'`, and the recheck after a race. An id the
 address does not hold, an unverified match, a site-tier id, a deleted row or
 coven and a malformed id are `NotFound` alike, so an id read off an owner's
-list tells a stranger nothing; an accepted, revoked or expired row is
+list tells a stranger nothing; an accepted, declined, revoked or expired row is
 `Forbidden` in the link's own words. `listReceivedInvitations(session, page)`
 and `countReceivedInvitations(session, start)`, in `received-invitations.ts`,
 shape the rows for the account page, which calls them directly as a server
@@ -354,5 +387,47 @@ proves the mailbox was the person's when it was verified; the link proves it
 still is at invitation time. An address passed on since could accept a coven
 invitation meant for its new holder, which the site-tier exclusion bounds to
 one coven. A member who already has a coven is redirected from `/coven` as
-before and gains nothing here; listing for them needs a Decline write, and is
-a follow-up.
+before, and can read the list on the account page; they can decline an
+invitation they do not want since M10.34.
+
+### Declining from the account page (M10.34)
+
+An invitation could only be accepted, revoked by the coven or left to lapse,
+so someone who did not want a seat had no answer to give, and the coven's
+owner read the invitation as pending until the clock ran out. Since M10.34 the
+account page's Invitations section has a Decline beside each Accept, and the
+owner sees the answer ([`components/received-invitations.md`](../components/received-invitations.md),
+[`components/pending-invitations.md`](../components/pending-invitations.md)).
+The owner made it one task rather than a column task and a behaviour task: the
+column is nullable and nothing would read it until the behaviour landed with it.
+
+- **The write.** `declineReceivedInvitation(id)` above. Migration
+  `0071_sudden_namorita.sql` adds the nullable column and the two CHECKs, and
+  drops nothing.
+- **The service.** `declineInvitationById(session, id)` in `identity`'s
+  `invitation-acceptance.ts` runs the accept by id's checks over the same
+  read, so an id the address does not hold, an unverified match, a site-tier
+  id, a deleted row or coven and a malformed id are `NotFound` alike, and an
+  accepted, declined, revoked or expired row is `Forbidden` in the link's own
+  words. Then it stamps the row inside `withAudit` and grants and seats
+  nothing: no membership, no `canCreateWorkspace`. If the stamp matches no row,
+  because an accept or a revoke committed since the checks, it reads the row
+  again and reports why.
+- **A declined link says so.** `InvitationRefusal` gained `declined`, and the
+  dead-link order is now **accepted, declined, revoked, expired**. The
+  invitee's answer outranks the owner's Remove that may follow it, so a
+  declined link keeps saying "This invitation was declined. If you change your
+  mind, ask whoever sent it for a new one." after the owner clears the row,
+  instead of turning into "withdrawn". The by-token accept refuses it with that
+  reason too.
+- **Gone from the invitee, kept for the owner.** The pending filter now
+  excludes declined rows, so the account page's list and the shell's count
+  drop it at once. The owner's list uses the new open filter instead, so it
+  keeps the row, marked declined, past its expiry until they remove it.
+- **In GraphQL**, `Invitation.declinedAt` and the mutation
+  `declineInvitationById(id: ID!): Invitation!`, open to any signed-in account
+  with the service deciding, as `acceptInvitationById` is. There is still no
+  GraphQL list.
+- **Asked for again.** A declined invitation is final: to join, the person asks
+  the owner to invite them again, which writes a new row with its own token.
+  Nothing un-declines one.
