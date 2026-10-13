@@ -32,10 +32,11 @@ const Row = ({ path, children }: { path: string; children: ReactNode }): ReactEl
   </WorkshopPathname.Provider>
 );
 
-// Wide: Grimoire-style tabs, with Overview current.
+// Wide: Grimoire-style tabs, as a member sees them (Overview and Members),
+// with Overview current.
 export const Coven: Story = () => (
   <Row path="/coven/fixture-coven">
-    <CovenNav slug="fixture-coven" />
+    <CovenNav slug="fixture-coven" canReadMembers />
   </Row>
 );
 
@@ -87,7 +88,7 @@ AdminPhoneOnAHiddenPage.meta = { width: 375 };
 
 export const CovenPhone: Story = () => (
   <Row path="/coven/fixture-coven">
-    <CovenNav slug="fixture-coven" />
+    <CovenNav slug="fixture-coven" canReadMembers />
   </Row>
 );
 CovenPhone.meta = { width: 375 };
