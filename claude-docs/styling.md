@@ -798,7 +798,9 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
   [`components/page-nav.md`](components/page-nav.md)): the account page's, and
   the coven index's. Its children are the head, the menu, then the sections.
   From a tablet up it is a grid, the menu a sticky column of three rows to the
-  left of the sections, which stop at `$narrow-column`; at a phone's width it
+  left of the sections, which stop at `$narrow-column`, and from 58rem an
+  empty column the menu's width to their right, which centres the sections in
+  the window; at a phone's width it
   is the `space(6)` column the frame is, the menu above the sections. It
   stands on its own, so it also serves a page that is not a `.page-frame`,
   such as the coven index inside `.coven-layout`, and clears the children's

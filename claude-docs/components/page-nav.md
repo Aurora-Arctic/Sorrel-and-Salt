@@ -48,7 +48,10 @@ The account page's sections are panels; the coven index's are plain
 `.page-with-nav` goes on the page's root. Its children are the head, the menu,
 then the sections. From a tablet up it is a grid: the menu is a sticky column
 under the shell's bar, spanning the three rows after the head, with the
-sections (at `$narrow-column`) beside it. At a phone's width it is the plain
+sections (at `$narrow-column`) beside it. Where the window has room for a
+third column, from 58rem, an empty one the menu's width stands to the right,
+so the sections sit at the window's centre and the menu hangs to their left;
+below that the menu and sections are centred as a pair. At a phone's width it is the plain
 column the page frame is, the menu above the sections. The class does not need
 `.page-frame`, so the coven index uses it inside `.coven-layout`. A page has at
 most three sections beside the menu for it to stick against; the account's

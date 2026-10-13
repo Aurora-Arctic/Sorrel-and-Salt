@@ -774,6 +774,19 @@
     }
   }
 
+  // On a wide screen the sections sit at the window's centre, the menu
+  // hanging to their left: an empty third column the menu's width balances
+  // the first. Not from a tablet up, since the three columns and the frame's
+  // padding need more room than a tablet has, and below this the pair is
+  // centred instead (the owner's call, MB.119).
+  @media (min-width: calc(#{space(8)} * 6 + #{$narrow-column} + #{space(6)} * 2 + #{space(4)} * 2)) {
+    .page-with-nav {
+      grid-template-columns:
+        calc(#{space(8)} * 3) minmax(0, $narrow-column)
+        calc(#{space(8)} * 3);
+    }
+  }
+
   // A provider's mark on a small circle of its brand's own ground, as its
   // sign-in button gives it one: the marks are drawn for those grounds,
   // Discord's white for its blurple. A white ground takes the brand's edge so
