@@ -412,8 +412,14 @@ filter, page)` is one page of the pending list, newest first, and
      marker exists to consult). The standing carries the coven's name and slug, so the Accept page names the
      coven to the account that matches and is verified, and to no one else. An
      invitation into a deleted coven is
-     `invalid` at the standing, after the address checks, so no Accept is
-     offered; the repository write's live-workspace check is the backstop.
+     `closed` (MB.119) at the standing, a `Forbidden` in words of its own
+     ("The coven this invitation was for has been deleted, so it can't be
+     accepted."), after the dead-link and address checks: an accepted link
+     into a since-deleted coven still says accepted, and another address
+     learns nothing of the coven. No Accept is offered; the repository
+     write's live-workspace check is the backstop. The account page's accept
+     by id keeps reading such an id as none (`NotFound`), since that page lists
+     live covens only.
   4. The session's account holds the invited address, compared
      case-insensitively, or "This invitation was sent to a different email
      address"; and holds it **verified**, or it is pointed at `/account/email`
