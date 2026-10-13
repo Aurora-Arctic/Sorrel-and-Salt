@@ -31,9 +31,24 @@ The page uses `getSession()`, not `requireSession()`: an unverified account
 would otherwise be redirected to the email page without being told why, and
 the signed-out state is the page's to show.
 
+## What a refused link says
+
+Each reason has one sentence, from `MESSAGES` in
+`src/modules/identity/services/invitation-acceptance.ts`, and no sentence names a coven. Two are
+worth knowing:
+
+- **A declined link** (M10.34) says "This invitation was declined. If you change your mind, ask
+  whoever sent it for a new one." The invitee's answer outranks the owner's Remove that may follow.
+- **A link into a deleted coven** has no reason of its own today: the service refuses it as
+  `invalid`, so the page says "This invitation link isn't valid. Check that you opened the whole
+  link from the email.", which is wrong advice for this case. MB.119's decision (f) proposes a
+  `closed` reason reading "The coven this invitation was for has been deleted, so it can't be
+  accepted." The `DeletedCoven` story shows it, and `DeletedCovenAsBuilt` the sentence today. The
+  service is not changed until the owner signs it off.
+
 ## Styling
 
-Layout only. The page has no AppShell, the signed-in pages' shared frame, so
+Layout only, as built. The page has no AppShell, the signed-in pages' shared frame, so
 its `main` is the page frame, `.page-frame.page-frame--narrow`
 ([`styling.md`](../styling.md), "The page frame"): it centres the panel,
 holds it clear of the top inset and caps it at the forms' column,
@@ -49,9 +64,20 @@ buttons and the spinner are the primitives', Accept drawn through
 ## Stories
 
 [`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
-`SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified` and `Expired`, each inside the
-page's own `main.page-frame.page-frame--narrow`, so the workshop shows what
-the page shows. Render-only.
+`Coven / Invitation Acceptance`, each inside the page's own
+`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only.
+
+- **The states:** `SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified`, `Expired`,
+  `Declined`, `DeletedCovenAsBuilt` and `DeletedCoven` (the proposed sentence), the last with
+  `DeletedCovenPhoneDark` and `DeletedCovenPhoneLight`.
+- **The proposal (MB.119, decision c):** today the page is bare in `.page-frame--narrow`, where
+  sign-in, the email page, the landing and the create page are each a `.panel`.
+  `ProposalBare{SignedOut,Acceptable,Refused}` draw the page as built;
+  `ProposalPanel{SignedOut,Acceptable,Refused}` draw it on a `panel invitation-acceptance` with a
+  `.header` holding the heading and the grant sentence as a `.lede`, as sign-in's panel does
+  (recommended). The Panel stories are a stand-in made in the stories file, so the component is
+  unchanged until the owner chooses; their buttons do nothing. Phone and theme variants of the
+  refused and acceptable pair follow them.
 
 ## Tests
 

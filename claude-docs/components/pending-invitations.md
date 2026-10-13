@@ -32,11 +32,24 @@ for the pager's "Page X of Y".
   row, which stays in the table for the audit. The coven's revoke accepts a declined row, expired
   or not. The declined link keeps saying it was declined, not withdrawn.
 - **It lives in a `ListFrame`**, since the soft pager ends navigate through it.
+- **No region of its own.** The table is named "Pending Invitations" and nothing wraps it in a
+  `<section>` repeating that name, so a screen reader hears it once; the page's heading and open
+  tab already say what the page is (MB.119). The e2e spec finds the table by that name.
 - **No token or hash** is a prop: the page passes only the five fields.
 
 ## Styling
 
-Tokens and the `.data-table` primitives only; the section's design review settles the rest.
+Tokens and the `.data-table` primitives only. `index.scss` holds one rule, the "Declined" badge in
+a declined row's Status (`@include badge('attention')`, with a `space(2)` gap before the date). It
+styles a span inside the table, so it does not depend on any wrapper.
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/PendingInvitations/index.stories.tsx),
+`Coven / Pending Invitations`: `Listed`, two pending rows; `WithDeclined`, a declined row among
+them with Remove in place of Revoke; `Empty`; and `WithDeclinedPhoneDark` and
+`WithDeclinedPhoneLight` at 375px. The Revoke and Remove questions open from their buttons and are
+`ConfirmedAction`'s ([`user-list.md`](user-list.md)).
 
 ## Tests
 

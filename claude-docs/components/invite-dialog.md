@@ -1,10 +1,16 @@
 # InviteDialog
 
 `src/components/InviteDialog/` — an owner's Invite button and the dialog it opens (M7.4, story 4). A
-client component taking the `workspaceId` of the coven invited into. It draws the button and the
-dialog together, so the button can take the focus back when the dialog closes. M7.6 mounts it for owners only, as the
+client component taking the `workspaceId` of the coven invited into. It is a [`ModalButton`](modal.md)
+around the form, so the button takes the focus back when the dialog closes. M7.6 mounts it for owners only, as the
 `@action` of the coven's People page, so it sits beside the heading on both the Members and
 Invitations tabs (`src/app/(shell)/coven/[slug]/(people)/@action`).
+
+## Props
+
+`InviteDialogProps` (`types.ts`): `workspaceId`, the coven invited into. The page shows the
+dialog to an owner only; the service is the guard. The form inside the modal takes the same plus
+`close`, the modal's own close (`InviteFieldsProps`).
 
 ## Contracts
 
@@ -32,17 +38,31 @@ Invitations tabs (`src/app/(shell)/coven/[slug]/(people)/@action`).
   `router.refresh()` as it sends, so the pending list M7.6 draws behind the dialog reads again.
 - **Closing asks first while an address is typed**, through `useDiscardGuard`, as the admin
   invitation form does ([`modal.md`](modal.md), "Unsaved changes"). A sent invitation closes at once.
-- **Focus is the component's.** Opening puts the focus on the address field (the modal's rule).
+- **Focus is `ModalButton`'s.** Opening puts the focus on the address field (the modal's rule).
   Whichever way it closes — Done, Cancel, Close, Escape, a click outside — the focus returns to
-  Invite, set by the component, since the modal is unmounted rather than closed in place.
+  Invite, since the modal is unmounted rather than closed in place. The dialog used to carry this
+  itself; MB.119 lifted it into `ModalButton` ([`modal.md`](modal.md), "ModalButton").
+- **The actions row is `FormActions`** ([`field.md`](field.md)): Send Invitation, off until an
+  address is typed and busy as it sends ("Sending"), and Cancel, held while the send is out
+  (`holdCancel`) and asking first through the discard guard.
 - **It opens blank every time.** Closing unmounts the form, so a second opening starts empty, on
   Viewer.
 
 ## Styling
 
-Tokens and the form primitives only: `.form`, `.field`, `.fieldset.radio-group`, `.notice`, and the
-modal's `.modal__actions`. Its one rule of its own sets the role group's margin to 0 (the owner's call). Wave 10's design review (MB.119) settles
-anything past that.
+None of its own: the directory has no `index.scss`. It uses the form primitives only (`.form`,
+`.field`, `.fieldset.radio-group`, `.notice`), `FormActions`' `.form__actions`, and the modal's
+`.modal__actions` for the sent state's Done. The role group stands in the form's gap like any
+field, because a radio group directly inside a `.form` takes no margin of its own
+(`_primitives.scss`, `.form > .fieldset.radio-group`); the rule this component once carried to say so
+went when the primitive learned it (MB.119).
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/InviteDialog/index.stories.tsx), `Coven / Invite Dialog`:
+`Default`, the button; `Open`, the dialog pressed open; and `OpenPhoneDark` and `OpenPhoneLight`
+at 375px. The open stories are `iframed`, as every story that opens a modal is. In the workshop
+sending reaches no server, so it shows the failure.
 
 ## Tests
 
