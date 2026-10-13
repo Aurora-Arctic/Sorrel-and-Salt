@@ -3,7 +3,13 @@ import { useEffect, useRef, useState } from 'react';
 import type { Route } from 'next';
 import { ComboboxMultiSelect, ComboboxSelect } from '../Combobox';
 import { GROUP_NAMES, asSlugs } from '../../../.ladle/fixtures';
-import Modal, { ConfirmQuestion, DiscardQuestion, RouteModal, useDiscardGuard } from '.';
+import Modal, {
+  ConfirmQuestion,
+  DiscardQuestion,
+  ModalButton,
+  RouteModal,
+  useDiscardGuard,
+} from '.';
 import { RouteModalContext } from './route-modal-provider';
 
 // Render-only; behaviour is asserted in tests/components/Modal. The owner
@@ -136,6 +142,22 @@ EditingDark.meta = { iframed: true, theme: 'dark' };
 EditingLight.meta = { iframed: true, theme: 'light' };
 EditingPhoneDark.meta = { iframed: true, theme: 'dark', width: 375 };
 EditingPhoneLight.meta = { iframed: true, theme: 'light', width: 375 };
+
+// A modal a button opens (MB.119): however it closes, Close, Escape, a click
+// outside or Done, the focus ring is back on the button.
+export const OpenedByAButton: Story = () => (
+  <ModalButton label="Open" className="btn btn--solid" title="Add Category">
+    {(close) => (
+      <div className="modal__actions">
+        <button type="button" className="btn btn--solid" onClick={close}>
+          Done
+        </button>
+      </div>
+    )}
+  </ModalButton>
+);
+
+OpenedByAButton.meta = { iframed: true };
 
 // The address-driven wrapper the admin pages open: the workshop's router goes
 // nowhere, so Close, Escape and Done fade it out and leave it gone until the

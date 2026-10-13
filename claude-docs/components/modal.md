@@ -10,6 +10,7 @@ is the wrapper every admin page opens it through (below).
 | -------------------------- | ---------------------------------------------------------------------------------------------- |
 | `modal.tsx`                | `Modal`, the default export                                                                    |
 | `route-modal.tsx`          | `RouteModal`                                                                                   |
+| `modal-button.tsx`         | `ModalButton`: a button that opens a modal and takes the focus back when it closes             |
 | `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once") |
 | `loading.tsx`              | `ModalLoading`, the skeleton a modal shows while its contents are on the way                   |
 | `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                     |
@@ -19,7 +20,7 @@ is the wrapper every admin page opens it through (below).
 | `confirm-layer.ts`         | `ConfirmLayerContext`, the layer and the hold the card is drawn with                           |
 | `fields.ts`                | `FIRST_FIELD` and `firstShownField`, where the focus goes on open                              |
 | `header-slot.ts`           | `HeaderSlotContext` and `useModalHeaderSlot`, beneath the title                                |
-| `types.ts`                 | `ModalHeading`, `ModalProps`, `RouteModalProps`, `ModalPhase`, the guard's, the card's         |
+| `types.ts`                 | `ModalHeading`, `ModalPhase`, and each prop type: `ModalProps`, `ModalButtonProps`, the rest   |
 
 ## Props
 
@@ -87,9 +88,13 @@ is the wrapper every admin page opens it through (below).
   and let go over the backdrop keeps the form. A stray click outside a
   half-filled form, the cost M5.6 weighed, now asks before throwing it away
   (["Unsaved changes"](#unsaved-changes)).
-- **Focus goes back to the trigger only if the owner sends it there.** A
-  URL-driven modal's trigger is a link that the navigation re-renders. M8.16,
-  whose criteria ask for focus restored, adds that to the modal it builds.
+- **Modal does not give the focus back itself.** Its owner closes it by
+  unmounting it, so the `<dialog>` is never closed in place and the
+  browser's own return to the opener never runs. A modal a button opens is
+  drawn with `ModalButton` ([below](#modalbutton)), which sends the focus
+  back to that button however the modal closes (MB.119). A modal opened by
+  its address is `RouteModal`'s: its trigger is a link the navigation
+  re-renders.
 
 ## Unsaved changes
 
@@ -313,6 +318,26 @@ the page: the ×, then the control, then the form. While a question is asked
 over the form, the place is held and dimmed with it
 (["Asking over the form"](#asking-over-the-form)).
 
+## ModalButton
+
+A button that opens a modal, and the focus back on the button however the
+modal closes: Close, Escape, a click outside, or the contents' own close
+(MB.119). It holds the open state and renders `Modal` while open, so its
+owner writes neither. It was lifted from `InviteDialog`, which carried the
+first copy, and is for every modal a page's button opens: an Invite, a Leave
+Coven. `ModalButtonProps` (`types.ts`):
+
+| Prop        | What it is                                                               |
+| ----------- | ------------------------------------------------------------------------ |
+| `label`     | The button's text and accessible name, in title case                     |
+| `className` | The button's classes, `btn btn--solid`                                   |
+| `title`     | The dialog's heading and accessible name                                 |
+| `size`      | As `Modal`'s                                                             |
+| `children`  | A function of the modal's close, so a form can close it once it has sent |
+
+The focus moves only after a close, never on the first render, so the page
+loads with the focus where the browser puts it.
+
 ## RouteModal
 
 A modal opened by its page's address, `?new` or `?edit=<slug>`: the shape
@@ -493,7 +518,13 @@ plain, the contents replace the skeleton in the same dialog, and a close while
 loading cancels the press. Each admin page test still asserts its modal's
 close href, and the e2e specs open and close the modals in a real browser.
 
-Stories: `OpenedByItsAddress` shows a modal with `content`, as an address
+`tests/components/Modal/modal-button.test.tsx` (MB.119) opens the modal
+from its button, then closes it by Close, by Escape and by the contents'
+own close, and finds each time no dialog and the focus on the button. A
+click outside reaches the same `onClose` as Escape, so it is not repeated.
+
+Stories: `OpenedByAButton` shows `ModalButton`: tab to the button, open it,
+close it any way, and the focus ring is back on the button. `OpenedByItsAddress` shows a modal with `content`, as an address
 opens it. `Loading`, with its `LoadingPhoneDark` and `LoadingPhoneLight`
 pair, shows the pressed row's head over the skeleton, through a
 `RouteModalContext` value whose navigation never arrives.
