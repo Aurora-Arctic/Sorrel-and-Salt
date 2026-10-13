@@ -48,4 +48,8 @@ menu: plain anchors to the sections' ids, so it works before any script loads.
 `tests/components/PageNav/index.test.tsx`: the navigation landmark, the entries
 as links with their hrefs, and that the observer's callback moves
 `aria-current`. The scroll itself is real-browser behaviour, walked in
-`tests/e2e/account.spec.ts`.
+`tests/e2e/account.spec.ts`, which also checks that the current entry is drawn
+differently from the others. The marker's rules match the attribute's value,
+`location`, so a value the component stopped setting would leave the bar
+undrawn with every test of the attribute still green (it was, from MB.7 until
+M10.33).
