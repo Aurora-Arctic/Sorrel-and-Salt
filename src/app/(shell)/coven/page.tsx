@@ -26,7 +26,8 @@ export const metadata: Metadata = {
 // are listed and accepted (M10.32), so a lost or filtered mail does not block
 // them. The count is the one the shell's account menu shows, read once per
 // request by `viewerOf`. Nothing on the page sits on a card (the owner's
-// call, M10.32).
+// call, M10.32). An eyebrow says "Welcome" and the heading says the next step,
+// which differs by state (the owner's call, MB.119).
 export default async function CovenLandingPage() {
   await requireSession();
   const { viewer, workspaces } = await viewerOf();
@@ -40,7 +41,8 @@ export default async function CovenLandingPage() {
     <main className="page-frame page-frame--narrow">
       <section className="page-frame__section" aria-labelledby="coven-landing-heading">
         <div className="header">
-          <h1 id="coven-landing-heading">Welcome</h1>
+          <p className="eyebrow">Welcome</p>
+          <h1 id="coven-landing-heading">{viewer.canCreate ? 'Start a Coven' : 'Join a Coven'}</h1>
           <p className="lede">
             {viewer.canCreate
               ? 'You are not in a coven yet, but you can start one of your own and invite others to it.'
