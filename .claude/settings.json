@@ -16,5 +16,12 @@
       "Bash(gh pr comment *)",
       "Bash(gh pr list *)"
     ]
+  },
+  "autoCompactWindow": 500000,
+  "modelSettings": {
+    "claude-opus-5-5": { "effortLevel": "high", "autoCompactWindow": 200000 },
+    "claude-fable-5-1": { "effortLevel": "high" },
+    "claude-sonnet-5-5": { "effortLevel": "medium", "autoCompactWindow": 125000 },
+    "claude-haiku-5-5": { "effortLevel": "low", "autoCompactWindow": 100000 }
   }
 }
