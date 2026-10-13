@@ -2,7 +2,7 @@
 
 `src/components/ProviderMark/` — a sign-in provider's mark on a small circle
 of its brand's own ground, on the `.provider-mark` primitive
-([`styling.md`](../styling.md), "Link rows and provider marks"), for a list of
+([`styling.md`](../styling.md), "Provider marks"), for a list of
 sign-in methods: the account page's rows and the admin user list's provider
 column. Added by MB.116; the circle was UserList's own until then.
 

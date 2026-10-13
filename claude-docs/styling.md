@@ -874,24 +874,7 @@ column's cell names its column in a `data-label` attribute:
   primitive leaves `position` alone, since a cell may be `relative` to anchor
   a tip.
 
-## Link rows and provider marks
-
-**`.link-row` is a wrapping row of links that is not a bulleted list**: a
-page's own nav, the admin nav. A `space(2)` by `space(5)` gap, and the
-list's indent, item margins and `typography-base`'s ◆ marker cleared, since
-the marker would sit against the link before and hang outside the first.
-
-**The link to the page you are on carries `aria-current="page"`**, which
-tells a screen reader, and `.link-row` draws it by shape rather than hue
-(MB.115): weight 500 and a `$rule-heavy` underline set `space(1)` below the
-letters, where every other link has the browser's hairline. A colour alone
-would fail WCAG 1.4.1, which asks that no meaning rest on colour. The admin
-nav is the first to mark its current page.
-
-**A tabbed page's tab row is not a `.link-row`** but a small pill track on
-the page's heading line, the open tab a raised pill, its hit areas padded
-invisibly to `$control-height` ([`components/tabbed-page.md`](components/tabbed-page.md),
-"Styling"). Its links are still a `nav` of links marked by `aria-current`.
+## Provider marks
 
 **`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's
 ground**, as its sign-in button gives it one: the marks are drawn for those
@@ -936,8 +919,7 @@ What each section review (MB.115 to MB.124) designs to:
   outline, quiet, or the wax for what destroys something.
 - **A centred page sits in `.page-frame`**, or
   `.page-frame--narrow` when its content is a form ("The page frame",
-  above). A page's own row of links is a `ul.link-row`, and each titled
-  section a `.page-frame__section` named by its `h2` through
+  above). Each titled section of it is a `.page-frame__section` named by its `h2` through
   `aria-labelledby`, so a screen reader lists it as a region.
 - **Forms are the field primitives.** An error is a `.field__error` beneath
   its control from either source, and a rule that belongs to no field is a
@@ -1054,8 +1036,7 @@ heavier than the reverse; light reverts to the browser default.
     `.header` / `.footer`.
   - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
     `.btn` and its `--solid` / `--quiet` / `--destructive` variants and
-    `--small` size, `.notice`, `.page-frame` and its parts, `.link-row`,
-    `.provider-mark`,
+    `--small` size, `.notice`, `.page-frame` and its parts, `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, `.visually-hidden`, for text a
