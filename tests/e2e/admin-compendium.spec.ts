@@ -23,7 +23,9 @@ async function expectMarginAround(page: Page, dialog: Locator) {
   }
 }
 
-test('the page behind an open modal does not scroll', async ({ page }) => {
+test('the page behind an open modal does not scroll', async ({ page, isMobile }) => {
+  // A wheel is what this test turns; mobile WebKit has none to turn.
+  test.skip(isMobile, 'Mouse wheel is not supported in mobile WebKit');
   await page.setViewportSize({ width: 1280, height: 600 });
   await signInAs(page, 'scroll-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/admin/compendium');

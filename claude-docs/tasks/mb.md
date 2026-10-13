@@ -257,6 +257,8 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9  | MB.253                 |
 | MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9  | MB.254                 |
 | MB.254 | Drop the planet columns and view                                                                                         | Wave 9  | —                      |
+| MB.255 | The e2e session cookie never reaches a WebKit page                                                                       | Wave 10 | —                      |
+| MB.256 | An unverified account loops on the email page after a link into the shell                                                | Wave 10 | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1259,6 +1261,30 @@ _Acceptance criteria:_
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
 - DESIGN.md and CLAUDE.md no longer record a planet divergence
 - Lands only after a release carrying MB.253 has reached production, and Wave 9 stays open until it has
+
+**MB.255 — The e2e session cookie never reaches a WebKit page** · 3h
+
+_Story:_ As a developer, I want the e2e sign-in helper to sign a WebKit browser in as it does Chromium and Firefox, so that the WebKit and phone audit (M10.25) exercises the signed-in pages rather than the sign-in page.
+
+Found by M10.25's first audit on 2026-10-13. `tests/e2e/session.ts`'s `signInAs` and `signInAgainAs` hand the browser the session cookie as an extra request header (`page.setExtraHTTPHeaders`), since a browser never sends a `Secure` cookie to the plain-http `devcontainer:<port>` a remote browser uses, and the production build's https base URL names the cookie `__Secure-better-auth.session_token`. WebKit sends no such header. Against an echo server on the audit service, Chromium and Firefox delivered the extra `cookie` header and WebKit delivered none; a `page.route` re-adding the header on every request reached WebKit no better; and from the cookie jar (`context.addCookies`) WebKit sends a plain-named cookie over http but never a `__Secure-` one, with or without `secure`. So in the `webkit` and `phone` projects every signed-in page is the sign-in page: 24 of the audit's 276 tests failed, every one behind a session, and 132 later tests in those files never ran under `serial`; the 14 signed-out tests in each project passed, and Firefox passed all 92. The fix must make the cookie reach the server from WebKit over the plain-http origin the remote browser uses. Two shapes, for the task to choose: a plain cookie name for the e2e servers, `advanced.useSecureCookies: false` in `src/lib/auth.ts` under an e2e-only switch, so the helper sets the cookie in the jar and every engine sends it; or https in front of the slot servers, so the `__Secure-` cookie in the jar is sent as it is in production. The first is a test-only branch in the auth config, the second is more to run. Whichever lands, the helper's comment and `claude-docs/testing/e2e.md` ("A signed-in browser without a provider") change with it, and the audit runs again at the end of this task: the four Tab-walking specs M10.25 expected to fail in WebKit (`sign-in.spec.ts`, `coven.spec.ts`, `coven-create.spec.ts`, `shell.spec.ts`) could not be judged, since each sits behind the session, and each real bug the rerun finds becomes its own task. The hours are an estimate.
+
+_Acceptance criteria:_
+
+- `signInAs` and `signInAgainAs` sign a WebKit page in, proven by the audit's `webkit` and `phone` projects reaching a signed-in page, and `npm run e2e` is unchanged in what it proves
+- The helper's comment and `claude-docs/testing/e2e.md` say how the cookie travels and why
+- The audit runs again at the end, its failures are named in the PR body, and each real bug becomes its own task
+
+**MB.256 — An unverified account loops on the email page after a link into the shell** · 3h
+
+_Story:_ As someone whose email address is not yet confirmed, I want a link into a signed-in page to take me to the email page and stop there, so that I can confirm my address instead of watching the page reload without end.
+
+Found on 2026-10-13 while checking M10.32 by hand, impersonating the seeded unverified user. The shell layout, `src/app/(shell)/layout.tsx`, calls `requireSession()`, which redirects an unverified account to `/account/email`. When that redirect is thrown during a client-side navigation into the shell, the browser refetches the email page about every 80 milliseconds and never settles. Reproduced in a browser driven through Playwright, by following the Continue link from `/` to `/coven`, and by a router push from `/` to `/account`: about 400 refetches in 15 seconds on `next dev`, and about 120 in 6 seconds on a production build. It happens to a plain unverified session as well as an impersonated one. A full page load of `/coven` or `/account/email` settles normally, so the existing e2e test, which loads the page directly, stays green. Each refetch is answered by the email page itself, with no redirect, and the router state header the browser sends already holds the shell from the redirected fetch. So the router appears never to recover from a `redirect()` thrown by a layout it is entering, and unverified accounts are the only case the shell layout redirects. The bug is on `main` as well as `staging`; `src/app/(shell)/layout.tsx` and `src/lib/request-session.ts` are the same in both. Two shapes, for the task to choose between: leave the unverified redirect to each page's own `requireSession()`, so the layout never throws one, or keep it and find what lets the router settle. Pointing the Continue link at the email page alone is not a fix, because every other link into the shell would still loop.
+
+_Acceptance criteria:_
+
+- An e2e regression test signs in an unverified account, follows a link from `/` into the shell, and asserts the page settles on `/account/email`. It fails before the fix
+- An unverified account still reaches no page but `/account/email`, by full load and by client-side navigation alike, and a signed-out visitor is still sent to sign in
+- `claude-docs/auth/route-protection.md` and `claude-docs/auth/admin-bootstrap.md` ("The email page") say where the unverified redirect is thrown, and why
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -3630,7 +3656,7 @@ _Acceptance criteria:_
 - `email.md` records the design rules the mail follows (already holds, asserted by the review)
 - `email.md` records the 375px rule
 
-**MB.119 — Design review: the coven and invitations** · 3h
+**MB.119 — Design review: the coven and invitations** · 10h
 
 _Story:_ As a coven member, I want the coven's pages to feel like one place I belong to, so that finding members and inviting someone is obvious.
 
@@ -3643,6 +3669,8 @@ _Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance pag
 _Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/(shell)/admin/(people)/invitations/`), the owner's call during MB.115.
 
 _Left by the Wave 10 review (2026-10-12):_ The scope above grows by these. M7.6's pending invitations list, its count, its revoke control and the Invite button it mounts (the review moved mounting `InviteDialog` into M7.6). The components `CovenNav` (`src/components/CovenNav/`), `CreateWorkspaceForm`, `InvitationAcceptance` (the acceptance page's component), `ContextRow`, and `ActionFailure` in `WorkspaceActions/action-failure.tsx`, which has neither a doc under `claude-docs/components/` nor a story, and gains both here. The members page (`src/app/(shell)/coven/[slug]/members/page.tsx`) uses none of MB.115's shared list pieces, so it adopts `PageHeader` and `Pager` here, not in M7.6. The docs `member-list.md`, `delete-workspace-button.md` and `leave-workspace-button.md` have no Styling section yet, so each gains one rather than updating it. The section's copy mixes two nouns: `WorkspaceSwitcher` says "Coven", "Create Coven" and "Select Coven" while the buttons say "Leave Workspace" and "Delete Workspace". The review settles one user-facing noun with the owner and makes all the copy use it. The acceptance page also has to read correctly for an invitation into a deleted coven, which M7.5 refuses at page load.
+
+_Scoped 2026-10-13, build not yet started:_ The plan is [`design-decisions/mb.119-plan.md`](../design-decisions/mb.119-plan.md), with the audit of the section as built (nineteen findings across consistency, accessibility and repeated code, and three from M10.32's branch) and the four-lane build it proposes. The owner decided three things at planning: the word a person reads for a workspace is **coven** everywhere on screen, so the Leave and Delete buttons change and `DESIGN.md` §5's vocabulary line gains the screens; every sub-hour fix and every adoption of a shared piece lands in this task, which is why the estimate rises from 3h to 10h; and the review takes in M10.32's `ReceivedInvitations` list on the landing, so the review's second wave starts once M10.32's PR is open and its branch sits on that head. The first wave, the foundations and the shared pieces, has no file in common with M10.32 and can start off staging at any time. The entry's earlier line that the members page adopts `PageHeader` and `Pager` is out of date: both are already there, through `TabbedPage` and M7.6; what remains is the hand-written cursor reading and pager links, which the plan converges on `readPageCursors` and `pagerHrefs`.
 
 _Acceptance criteria:_
 
@@ -3745,6 +3773,8 @@ A section review designs what the section's building tasks left at the tokens an
 _Left by MB.116:_ `Notice` is the one way to show an error, a warning or a success sentence (`components/notice.md`), and `GENERIC_FAILURE`, "That didn't work. Please try again.", is the one sentence for a request that got no usable answer. The whole-site read checks against MB.116's copy register (`styling.md`, "Designing a section") and the browser baseline (`styling.md`, "Binding rules"). The not-authorized page already sits in `.page-frame`, the frame the 404 and 500 pages can share.
 
 _Left by MB.115:_ `BusyButton` is the one busy state for a button. The `.data-table`, `.pager` and `.filter-row` primitives are on the Foundations story. Stacking order is still written as raw `z-index` values, one per component; a `$layers` map of them is this review's to make. Each admin table's first cell is still a `td`: making it a row header, `th scope="row"`, was held back from MB.115 because it changes what the tables' tests count as cells.
+
+_Left by MB.119:_ Floating panels open at three widths: the coven switcher at 12rem with its list at 15rem (`$switcher-min-width` and `$switcher-list-min-width` in `WorkspaceSwitcher/index.scss`), and the account menu at 13rem. Settling on one width for a floating panel is this review’s to decide. `ConfirmedAction` still lives inside `UserList/`. Moving it into its own directory, with its CSS split out and its own story and doc, is this review’s too. So is one shared row of confirm and safe buttons for `ConfirmedAction`'s inner `Answers`, the modal's `ConfirmQuestion` and its `DiscardQuestion`, which each draw their own today.
 
 _Acceptance criteria:_
 

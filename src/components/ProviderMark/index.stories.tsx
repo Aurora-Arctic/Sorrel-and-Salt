@@ -6,18 +6,18 @@ import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 // Render-only, and presentation alone: the marks are checked by eye here and
 // by axe on the pages that show them.
 export default {
-  title: 'Sign In / Provider Mark',
+  title: 'Surfaces / Provider Mark',
 };
 
 const Marks = () => (
-  <ul className="link-row">
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1.5rem' }}>
     {SOCIAL_PROVIDERS.map((provider) => (
-      <li key={provider.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <span key={provider.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <ProviderMark id={provider.id} />
         {provider.label}
-      </li>
+      </span>
     ))}
-  </ul>
+  </div>
 );
 
 export const Default: Story = () => <Marks />;

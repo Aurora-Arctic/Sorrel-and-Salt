@@ -212,6 +212,19 @@ export type ListDialog = 'new' | { edit: string };
  */
 export type ListDialogParams = { new: boolean; edit: string | undefined };
 
+/** One cursor, for the page before or the page after (`pagerHrefs`, src/lib/list-href.ts). */
+export type PagerCursor = { after: string } | { before: string };
+
+/**
+ * The pager's two ends; an end with no page is left out. Generic over the
+ * href's type, so a page's builder keeps Next's typed `Route` while this file
+ * imports nothing: `Pager` takes any string.
+ */
+export interface PagerHrefs<Href extends string = string> {
+  previousHref: Href | undefined;
+  nextHref: Href | undefined;
+}
+
 /** The signed-in person as the application shell draws them (MB.7). */
 export interface ShellViewer {
   /** The name the site shows for them; the account button's text and its initials. */
@@ -222,10 +235,17 @@ export interface ShellViewer {
   canCreate: boolean;
   /** Their address is verified. Until it is, the shell offers an account menu with Sign Out and nothing else. */
   verified: boolean;
+  /**
+   * How many coven invitations wait for their verified address (M10.32): the
+   * account menu's count and the landing's notice. Never read for an
+   * unverified account, which reads 0.
+   */
+  pendingInvitations: number;
 }
 
 /** One coven the viewer belongs to, as the shell's switcher and brand link need it. */
 export interface ShellWorkspace {
   slug: string;
   name: string;
+  canReadMembers: boolean;
 }

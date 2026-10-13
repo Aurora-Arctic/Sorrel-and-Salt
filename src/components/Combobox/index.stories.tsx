@@ -1,5 +1,6 @@
 import type { Story } from '@ladle/react';
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, type ReactNode, useId, useState } from 'react';
+import { usePressOnMount } from '../../../.ladle/press';
 import { FieldShell, fieldDescription } from '../Field';
 import Combobox, {
   ComboboxEntry,
@@ -16,6 +17,28 @@ import type { ComboboxOption } from './types';
 export default {
   title: 'Forms / Combobox',
 };
+
+/**
+ * A box in a field of its own, its label above it as a form draws it: a bare
+ * label sat a couple of pixels off the control, where the field's label row
+ * stands a step clear.
+ */
+function Labelled({
+  label,
+  children,
+}: {
+  label: string;
+  children: (ids: { id: string; labelId: string }) => ReactNode;
+}): ReactElement {
+  const field = fieldDescription({ id: useId() });
+  return (
+    <div className="form" style={{ maxWidth: '32rem' }}>
+      <FieldShell label={label} {...field}>
+        {children({ id: field.controlId, labelId: field.labelId })}
+      </FieldShell>
+    </div>
+  );
+}
 
 const FORMS: ComboboxOption[] = [
   {
@@ -37,21 +60,22 @@ const NAMES: ComboboxOption[] = [
 /** A field whose suggestions come in two buckets: the vocabulary, then values in use outside it. */
 export const TwoBuckets: Story = () => {
   const [value, setValue] = useState('');
+  // Opened as a person's press of the chevron would, so both buckets show.
+  usePressOnMount('Show Form suggestions');
   return (
-    <>
-      <label id="form-label" htmlFor="form">
-        Form
-      </label>
-      <Combobox
-        id="form"
-        label="Form"
-        labelId="form-label"
-        value={value}
-        onChange={setValue}
-        onPick={setValue}
-        suggestions={{ options: FORMS, pending: false }}
-      />
-    </>
+    <Labelled label="Form">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Form"
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          suggestions={{ options: FORMS, pending: false }}
+          placeholder="Add a form"
+        />
+      )}
+    </Labelled>
   );
 };
 
@@ -68,28 +92,26 @@ export const Qualifier: Story = () => {
     detail: 'Candle and poppet wax.',
   });
   return (
-    <>
-      <label id="picked-label" htmlFor="picked">
-        Form
-      </label>
-      <Combobox
-        id="picked"
-        label="Form"
-        labelId="picked-label"
-        value={value}
-        onChange={(text) => {
-          setValue(text);
-          if (text !== picked?.value) setPicked(null);
-        }}
-        onPick={(text, option) => {
-          setValue(text);
-          const group = option?.label?.match(/\((.+)\)$/)?.[1];
-          setPicked(group ? { value: text, text: group, detail: option?.note } : null);
-        }}
-        suggestions={{ options: FORMS, pending: false }}
-        qualifier={picked ? { text: picked.text, detail: picked.detail } : undefined}
-      />
-    </>
+    <Labelled label="Form">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Form"
+          value={value}
+          onChange={(text) => {
+            setValue(text);
+            if (text !== picked?.value) setPicked(null);
+          }}
+          onPick={(text, option) => {
+            setValue(text);
+            const group = option?.label?.match(/\((.+)\)$/)?.[1];
+            setPicked(group ? { value: text, text: group, detail: option?.note } : null);
+          }}
+          suggestions={{ options: FORMS, pending: false }}
+          qualifier={picked ? { text: picked.text, detail: picked.detail } : undefined}
+        />
+      )}
+    </Labelled>
   );
 };
 
@@ -102,6 +124,8 @@ export const List: Story = () => {
     'Fixture Bane',
     'Fixturawortiamtestalisfixturawortiamtestalisfixturawortiamtestalisfixturawortiam',
   ]);
+  // Opened as a person's press of the chevron would, so the suggestions show.
+  usePressOnMount('Show Folk Name suggestions');
   const add = (text: string) => {
     const trimmed = text.trim();
     if (trimmed) setEntries((current) => [...current, trimmed]);
@@ -110,30 +134,35 @@ export const List: Story = () => {
   const removeAt = (index: number) =>
     setEntries((current) => current.filter((_, at) => at !== index));
   return (
-    <Combobox
-      id="folk-name"
-      label="Folk Name"
-      value={value}
-      onChange={setValue}
-      onPick={add}
-      onCommit={add}
-      onRemoveLast={() => removeAt(entries.length - 1)}
-      suggestions={{ options: NAMES, pending: false }}
-      entries={
-        entries.length > 0 && (
-          <ul className="combobox__entries">
-            {entries.map((entry, index) => (
-              <ComboboxEntry key={entry} value={entry} onRemove={() => removeAt(index)} />
-            ))}
-          </ul>
-        )
-      }
-      clear={{
-        label: 'Clear Folk Names',
-        onClear: () => setEntries([]),
-        empty: entries.length === 0,
-      }}
-    />
+    <Labelled label="Folk Name">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Folk Name"
+          placeholder="Add a folk name"
+          value={value}
+          onChange={setValue}
+          onPick={add}
+          onCommit={add}
+          onRemoveLast={() => removeAt(entries.length - 1)}
+          suggestions={{ options: NAMES, pending: false }}
+          entries={
+            entries.length > 0 && (
+              <ul className="combobox__entries">
+                {entries.map((entry, index) => (
+                  <ComboboxEntry key={entry} value={entry} onRemove={() => removeAt(index)} />
+                ))}
+              </ul>
+            )
+          }
+          clear={{
+            label: 'Clear Folk Names',
+            onClear: () => setEntries([]),
+            empty: entries.length === 0,
+          }}
+        />
+      )}
+    </Labelled>
   );
 };
 
@@ -164,32 +193,39 @@ export const Sortable: Story = () => {
       return next;
     });
   return (
-    <Combobox
-      id="celestialBody"
-      label="Celestial Body"
-      value={value}
-      onChange={setValue}
-      onPick={add}
-      onCommit={add}
-      onRemoveLast={() => removeAt(entries.length - 1)}
-      entries={
-        entries.length > 0 && (
-          <ComboboxSortableEntries
-            entries={entries.map((entry, index) => ({ ...entry, onRemove: () => removeAt(index) }))}
-            onMove={move}
-          />
-        )
-      }
-      clear={{
-        label: 'Clear Celestial Bodies',
-        onClear: () => setEntries([]),
-        empty: entries.length === 0,
-      }}
-    />
+    <Labelled label="Celestial Body">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Celestial Body"
+          placeholder="Add a celestial body"
+          value={value}
+          onChange={setValue}
+          onPick={add}
+          onCommit={add}
+          onRemoveLast={() => removeAt(entries.length - 1)}
+          entries={
+            entries.length > 0 && (
+              <ComboboxSortableEntries
+                entries={entries.map((entry, index) => ({
+                  ...entry,
+                  onRemove: () => removeAt(index),
+                }))}
+                onMove={move}
+              />
+            )
+          }
+          clear={{
+            label: 'Clear Celestial Bodies',
+            onClear: () => setEntries([]),
+            empty: entries.length === 0,
+          }}
+        />
+      )}
+    </Labelled>
   );
 };
 
-/** A box with no source yet: it never opens, and Enter adds as Add does. */
 /**
  * A list whose entries can only be picked, the references' (MB.154): its last
  * row makes something new, "New Reference…", whatever is typed, in place of
@@ -198,26 +234,45 @@ export const Sortable: Story = () => {
 export const CreateRow: Story = () => {
   const [value, setValue] = useState('');
   const [made, setMade] = useState(0);
+  // Opened as a person's press of the chevron would, so the last row shows.
+  usePressOnMount('Show Reference suggestions');
   return (
-    <>
-      <Combobox
-        id="source"
-        label="Reference"
-        value={value}
-        onChange={setValue}
-        onPick={setValue}
-        suggestions={{ options: NAMES, pending: false }}
-        create={{ label: 'New Reference…', onCreate: () => setMade((count) => count + 1) }}
-      />
-      {made > 0 && <output className="story-note">New Reference… picked {made}×.</output>}
-    </>
+    <Labelled label="Reference">
+      {(ids) => (
+        <>
+          <Combobox
+            {...ids}
+            label="Reference"
+            value={value}
+            onChange={setValue}
+            onPick={setValue}
+            suggestions={{ options: NAMES, pending: false }}
+            create={{ label: 'New Reference…', onCreate: () => setMade((count) => count + 1) }}
+            placeholder="Search references"
+          />
+          {made > 0 && <output className="story-note">New Reference… picked {made}×.</output>}
+        </>
+      )}
+    </Labelled>
   );
 };
 
+/** A box with no source yet: it never opens, and Enter adds as Add does. */
 export const NoSource: Story = () => {
   const [value, setValue] = useState('');
   return (
-    <Combobox id="colour" label="Colour" value={value} onChange={setValue} onPick={setValue} />
+    <Labelled label="Colour">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Colour"
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          placeholder="Type a colour"
+        />
+      )}
+    </Labelled>
   );
 };
 
@@ -229,20 +284,18 @@ const KINDS = ['Botanical', 'Fungal', 'Zoological', 'Mineral', 'Chemical', 'Unkn
 export const SelectOnly: Story = () => {
   const [value, setValue] = useState('');
   return (
-    <>
-      <label id="classification-label" htmlFor="classification">
-        Classification
-      </label>
-      <ComboboxSelect
-        id="classification"
-        label="Classification"
-        labelId="classification-label"
-        value={value}
-        onChange={setValue}
-        choices={KINDS}
-        placeholder="Choose a classification"
-      />
-    </>
+    <Labelled label="Classification">
+      {(ids) => (
+        <ComboboxSelect
+          {...ids}
+          label="Classification"
+          value={value}
+          onChange={setValue}
+          choices={KINDS}
+          placeholder="Choose a classification"
+        />
+      )}
+    </Labelled>
   );
 };
 
@@ -254,21 +307,21 @@ const TRADITIONS = ['Fixtural', 'Mockish', 'Old Testic', 'Stubbish', 'Testwardis
 export const Typeahead: Story = () => {
   const [value, setValue] = useState('');
   return (
-    <>
-      <label id="tradition-label" htmlFor="tradition">
-        Tradition
-      </label>
-      <ComboboxTypeahead
-        id="tradition"
-        label="Tradition"
-        labelId="tradition-label"
-        value={value}
-        onChange={setValue}
-        choices={TRADITIONS}
-        placeholder="Choose a tradition"
-      />
-      <p>Value: {value || '(none)'}</p>
-    </>
+    <Labelled label="Tradition">
+      {(ids) => (
+        <>
+          <ComboboxTypeahead
+            {...ids}
+            label="Tradition"
+            value={value}
+            onChange={setValue}
+            choices={TRADITIONS}
+            placeholder="Choose a tradition"
+          />
+          <p>Value: {value || '(none)'}</p>
+        </>
+      )}
+    </Labelled>
   );
 };
 
@@ -281,20 +334,18 @@ const ELEMENTS = ['Earth', 'Air', 'Fire', 'Water', 'Spirit'].map((label) => ({
 export const MultiSelect: Story = () => {
   const [values, setValues] = useState(['fire', 'air']);
   return (
-    <>
-      <label id="element-label" htmlFor="element">
-        Element
-      </label>
-      <ComboboxMultiSelect
-        id="element"
-        label="Element"
-        labelId="element-label"
-        values={values}
-        onChange={setValues}
-        choices={ELEMENTS}
-        placeholder="Choose elements"
-      />
-    </>
+    <Labelled label="Element">
+      {(ids) => (
+        <ComboboxMultiSelect
+          {...ids}
+          label="Element"
+          values={values}
+          onChange={setValues}
+          choices={ELEMENTS}
+          placeholder="Choose elements"
+        />
+      )}
+    </Labelled>
   );
 };
 

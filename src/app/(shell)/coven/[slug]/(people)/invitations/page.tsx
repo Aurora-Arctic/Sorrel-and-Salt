@@ -1,6 +1,7 @@
-import type { Metadata, Route } from 'next';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import PendingInvitations from '../../../../../../components/PendingInvitations';
+import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
 import {
@@ -36,23 +37,20 @@ export default async function InvitationsPage({
     (request) => listPendingWorkspaceInvitations(session, workspace.id, request),
     (start) => countPendingWorkspaceInvitations(session, workspace.id, start),
   );
-  const href = (cursor: Record<string, string>) =>
-    `/coven/${slug}/invitations?${new URLSearchParams(cursor).toString()}` as Route;
-  const { hasPreviousPage, hasNextPage, startCursor, endCursor } = page.pageInfo;
 
   return (
     <PendingInvitations
       workspaceId={workspace.id}
-      invitations={page.edges.map(({ node: { id, email, role, expiresAt } }) => ({
+      invitations={page.edges.map(({ node: { id, email, role, expiresAt, declinedAt } }) => ({
         id,
         email,
         // A coven's invitation always names a role: the tier CHECK.
         role: role ?? 'viewer',
         expiresAt,
+        declinedAt,
       }))}
       position={page.position}
-      previousHref={hasPreviousPage && startCursor ? href({ before: startCursor }) : undefined}
-      nextHref={hasNextPage && endCursor ? href({ after: endCursor }) : undefined}
+      {...pagerHrefs(page.pageInfo, (cursor) => listHref(`/coven/${slug}/invitations`, cursor))}
     />
   );
 }

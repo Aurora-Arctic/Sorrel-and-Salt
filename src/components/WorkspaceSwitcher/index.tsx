@@ -33,9 +33,14 @@ export default function WorkspaceSwitcher({
         id={id}
         label="Coven"
         value={covenSlugOf(pathname) ?? ''}
-        onChange={(value) =>
-          router.push((value === CREATE.value ? value : pathInCoven(pathname, value)) as Route)
-        }
+        onChange={(value) => {
+          const target = workspaces.find((workspace) => workspace.slug === value);
+          router.push(
+            (value === CREATE.value
+              ? value
+              : pathInCoven(pathname, value, target?.canReadMembers)) as Route,
+          );
+        }}
         choices={canCreate ? [...choices, CREATE] : choices}
         placeholder="Select Coven"
       />

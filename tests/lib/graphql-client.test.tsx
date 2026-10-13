@@ -2,7 +2,6 @@ import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { parse } from 'graphql';
-import { ClientError } from 'graphql-request';
 import { HttpResponse } from 'msw';
 import { Component, type ReactNode } from 'react';
 import { afterEach, describe, expect, expectTypeOf, it, vi } from 'vitest';
@@ -14,6 +13,7 @@ import {
   shouldRetry,
   throwWhenEmpty,
 } from '@/lib/graphql-client';
+import { GraphQLClientError } from '@/lib/graphql-client-error';
 import { graphqlLink, mockGraphQLQuery } from '../support/msw/graphql';
 import { server } from '../support/msw/server';
 import type { OkQuery, OkQueryVariables, EchoQuery, EchoQueryVariables } from './types';
@@ -61,8 +61,8 @@ function refuseOk() {
   return calls;
 }
 
-function clientError(status: number): ClientError {
-  return new ClientError({ status, headers: new Headers(), body: '' }, { query: '{ ok }' });
+function clientError(status: number): GraphQLClientError {
+  return new GraphQLClientError({ status, errors: undefined });
 }
 
 describe('a client component', () => {
@@ -101,10 +101,23 @@ describe('graphqlRequest', () => {
     expect(data).toEqual({ echo: 'salt' });
   });
 
+  it('names its operation in the body, as graphql-request did, for anything that answers by name', async () => {
+    const fetchSpy = vi.fn(async () => Response.json({ data: { echo: 'salt' } }));
+    vi.stubGlobal('fetch', fetchSpy);
+
+    await graphqlRequest(EchoDocument, { word: 'salt' });
+
+    const [, init] = fetchSpy.mock.calls[0] as unknown as [string, RequestInit];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      operationName: 'Echo',
+      variables: { word: 'salt' },
+    });
+  });
+
   it('throws the GraphQL error rather than resolving to partial data', async () => {
     refuseOk();
 
-    await expect(graphqlRequest(OkDocument)).rejects.toBeInstanceOf(ClientError);
+    await expect(graphqlRequest(OkDocument)).rejects.toBeInstanceOf(GraphQLClientError);
   });
 
   it('refuses to run outside the browser, where no session cookie rides along', async () => {

@@ -14,13 +14,13 @@ test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
 
-test('shows all three sections, with no accessibility violations', async ({ page }) => {
+test('shows all four sections, with no accessibility violations', async ({ page }) => {
   await signInAs(page, 'one-method@account-page.test');
 
   await page.goto('/account');
 
   const main = page.getByRole('main');
-  await expect(main.getByRole('heading', { level: 2 })).toHaveCount(3);
+  await expect(main.getByRole('heading', { level: 2 })).toHaveCount(4);
   await expect(main.getByRole('textbox', { name: 'Name' })).toHaveValue('Fixture Person');
   await expect(main.getByRole('textbox', { name: 'Email Address' })).toHaveValue(
     'one-method@account-page.test',
@@ -51,6 +51,32 @@ test('shows all three sections, with no accessibility violations', async ({ page
     await assertNoAccessibilityViolations(page);
   }
   await assertNoSidewaysScroll(page);
+});
+
+// The on-page nav marks its current entry with `aria-current`; the marker is
+// drawn by a rule keyed to that attribute's value, so only a real browser
+// can say whether the rule still matches the attribute the component sets.
+// A jsdom test of the attribute alone stayed green while the bar never drew.
+test('the on-page nav draws a marker on the current entry only', async ({ page }) => {
+  await signInAs(page, 'nav-marker@account-page.test');
+
+  await page.goto('/account');
+
+  const nav = page.getByRole('main').getByRole('navigation', { name: 'On this page' });
+  const current = nav.locator('a[aria-current]');
+  const others = nav.locator('a:not([aria-current])');
+  await expect(current).toHaveCount(1);
+  expect(await others.count()).toBeGreaterThan(0);
+
+  const style = (link: typeof current) =>
+    link.evaluate((el) => {
+      const { fontWeight, boxShadow } = getComputedStyle(el);
+      return { fontWeight, boxShadow };
+    });
+  const marked = await style(current);
+  const unmarked = await style(others.first());
+  expect(marked.fontWeight).not.toBe(unmarked.fontWeight);
+  expect(marked.boxShadow).not.toBe(unmarked.boxShadow);
 });
 
 // Two linked, so Remove shows, and a failed link's alert in its provider's
@@ -89,4 +115,43 @@ test('sends an unverified account to the email page instead', async ({ page }) =
   await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
+});
+
+// MB.256: a link followed into the shell is a client-side navigation, which
+// once refetched the email page about every 80 ms without end. Settled means
+// two quiet seconds with no further fetch of it.
+test('settles an unverified account on the email page after a link into the shell', async ({
+  page,
+}) => {
+  await signInAs(page, 'unverified-link@account-page.test', ['discord'], 'user', {
+    emailVerified: false,
+  });
+  await page.goto('/');
+
+  await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page).toHaveURL('/account/email?next=%2Fcoven');
+  await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
+
+  const refetch = page.waitForRequest((request) => request.url().includes('/account/email'), {
+    timeout: 2000,
+  });
+  await expect(refetch).rejects.toThrow();
+});
+
+// The same by the admin landing, whose own layout under the shell also sends
+// an unverified account to the email page.
+test('settles an unverified admin on the email page after a link into /admin', async ({ page }) => {
+  await signInAs(page, 'unverified-admin-link@account-page.test', ['discord'], 'admin', {
+    emailVerified: false,
+  });
+  await page.goto('/');
+
+  await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page).toHaveURL('/account/email?next=%2Fadmin');
+  await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
+
+  const refetch = page.waitForRequest((request) => request.url().includes('/account/email'), {
+    timeout: 2000,
+  });
+  await expect(refetch).rejects.toThrow();
 });

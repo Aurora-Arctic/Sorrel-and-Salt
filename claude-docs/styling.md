@@ -51,9 +51,9 @@ to.
   component restating a mixin's colour is a bug.
 - **`adjustFontFallback` stays `true`** in `src/app/fonts.ts`; setting it false
   reintroduces layout shift.
-- **Lengths, radii and small type come from their scales**: `space()`,
-  `radius()` and `type-size()`. A length off the scale is a chip's or a
-  badge's inner geometry, a control's target size, or a heading's size — and
+- **Lengths, radii and type sizes come from their scales**: `space()`,
+  `radius()`, `type-size()` and `heading-size()`. A length off the scale
+  is a chip's or a badge's inner geometry or a control's target size — and
   says so in a comment.
 - **A length with a role of its own is a token**, under "Motion and layout"
   in `_variables.scss`, so the components that share the role share the
@@ -89,13 +89,23 @@ to.
   column from `.page-frame`, which stops at the measure, or at the forms' narrower
   column with `--narrow` ("The page frame", below). `tests/e2e/admin.spec.ts` asserts it on a layout wider than
   the measure, with 66ch measured in the paragraph's own font.
-- **Browser baseline: Next's default modern targets** — Chrome, Edge and
-  Firefox 111, Safari 16.4, "baseline widely available" as of 2025-10-01
-  (`node_modules/next/dist/shared/lib/modern-browserslist-target.js`).
-  Turbopack's Lightning CSS lowers newer syntax to them, as it does
-  `light-dark()` (below). Each review checks the CSS it adds against this
-  baseline. Playwright's projects are Chromium only, so the owner's own look at
-  the dev server in Safari and Firefox is part of every sign-off.
+- **Browser floor: Baseline Widely Available, and below it the app degrades,
+  never breaks** (M10.24). A feature may be used freely once Chrome, Edge,
+  Firefox and Safari have all shipped it for 30 months. `package.json`'s
+  `browserslist` holds the one statement, `["baseline widely available"]`, and
+  it rolls forward each month with the data the lockfile pins, so a check that
+  passes today still passes tomorrow. On 2026-10-12 it resolved to Chrome and
+  Edge 123, Firefox 124, and Safari and iOS Safari 17.4. Turbopack's Lightning
+  CSS reads the same entry and lowers newer syntax to it, as it does
+  `light-dark()` (below), and `npm run lint:css` refuses CSS past it
+  (`stylelint-plugin-use-baseline`). A date was not pinned, because a pinned date
+  is the hand-kept version list this replaces under another name. A feature past
+  the floor is allowed only in the three shapes
+  [`.claude/rules/components.md`](../.claude/rules/components.md) lists.
+  JavaScript past it is held by `tests/guards/browser-floor.test.ts`.
+  Playwright's projects are Chromium only, so the owner's own look at the dev
+  server in Safari and Firefox is part of every sign-off. The decision:
+  [`design-decisions/m10.24-browser-floor.md`](design-decisions/m10.24-browser-floor.md).
 
 ## The palette
 
@@ -219,7 +229,7 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Three palettes, deliberately not equals. Two appear on an IngredientCard.
+Four palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
@@ -229,6 +239,14 @@ the sign-in button this browser last signed in with (MB.77). It is a pointer,
 not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`
 dark, `$sorrel-vivid` light), a hue already reserved, and spends none of the groups'.
 Its label on the fill is 7.95:1 dark and 4.68:1 light.
+
+**Attention** (M10.32) marks something waiting on the reader: the account
+menu's count of pending coven invitations and the dot on the avatar. It is
+solid and wears safety's fill exactly, because that fill is already
+contrast-checked for its label and a second red would spend a hue. Both
+palettes read the same two tokens, `$wax-badge-dark` and `$wax-badge-light`
+in `_variables.scss`, so they cannot drift apart. They stay separate palettes
+so that a count is not named after a hazard in the code.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
@@ -266,7 +284,7 @@ clear 3:1 against both surfaces (WCAG 1.4.11).
 ### `$text-on-color`
 
 The label colour for anything drawn as a _solid_ fill — the selected chip, the
-safety and last-used badges. It is an alias for the page surface rather than a token of its own
+safety, attention and last-used badges. It is an alias for the page surface rather than a token of its own
 because the answer is the same whatever the fill: on dark the fill is the light
 thing and the label goes dark, on light the reverse.
 
@@ -315,8 +333,8 @@ per key of M0.7's `$category-groups` map (since retired), which a group created
 at runtime cannot have.
 `chip()` refuses a slug at compile time.
 
-`light-dark()` is newer than Next's default browser targets (Safari 16.4), so
-Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
+`light-dark()` is newer than the browser floor (it needs Safari 17.5, the floor
+is 17.4), so Turbopack's Lightning CSS lowers it: every `color-scheme` declaration also sets
 a pair of `--lightningcss-*` switches, and the chip reads those. Nothing in this
 project writes either.
 
@@ -350,7 +368,7 @@ worded as `badge-token()`'s. It is a compile-time map rather than custom
 properties because the hues do not follow the theme and nothing reads them at
 runtime; a part that ever does differ by theme is written
 `(dark: …, light: …)`, and the accessor returns `light-dark()`, which
-Lightning CSS lowers to the baseline. SignInPanel's buttons and the
+Lightning CSS lowers to the browser floor. SignInPanel's buttons and the
 `.provider-mark` circle are its consumers; an SVG fill inside a mark is
 artwork, and stays in `icons.tsx`.
 
@@ -399,6 +417,13 @@ the three the scale uses (500/600/700) are requested.
 - **The scale is anchored at `h4` = 1.5rem and stepped up by roughly 1.2**
   (`h3` 1.8rem, `h2` 2.15rem, `h1` `clamp(2.5rem, 5vw, 3.75rem)`). An earlier
   scale anchored at 1.125rem set the smallest headings too close to body copy.
+  The sizes are the `$heading-sizes` map in `_variables.scss`, read by level
+  through `heading-size(1)` to `heading-size(4)`, and the face — the display
+  family, 700, letter-spaced 0.01em — is the `heading-face` mixin.
+  `typography-base` sets h1 to h4 from the two. A name set in the heading face
+  outside a heading, as the context row's "Admin" and the coven switcher are,
+  takes `@include heading-face; font-size: heading-size(4);` rather than
+  restating the numbers, and keeps its own line height.
 - **Monospace is a platform stack, no webfont** — this is for incidental inline
   `code`, not typeset code blocks, and it is nudged to `0.9em` because platform
   monospace runs large next to Lexend.
@@ -446,7 +471,7 @@ field errors; `caption` (0.8125rem) for hints, metadata, chips and badges;
 `overline` (0.75rem) for the `.eyebrow`; and `tab` (0.6875rem) for the one
 place five labels sit across a phone, under the icons of the section nav's
 bottom bar (MB.7). The headings' scale is
-`typography-base`'s, above.
+`heading-size()`'s, above.
 
 ### The top inset
 
@@ -625,6 +650,13 @@ The class layer every form is built from, in `_primitives.scss`:
   this way, and the Reason fields of the user list's confirmations and the
   admin invite form took it at MB.115's review; any other form adopts it at
   its own design review.
+- **A radio group takes the form's gap, not a margin of its own.**
+  `.fieldset.radio-group` (`RadioGroupField`) has a `space(5)` block margin
+  that sets it apart from the text around it where nothing else spaces it, as
+  in a confirm's modal (a member's Change Role, the only owner's Leave Coven).
+  Inside a `.form`, whose `space(5)` gap already spaces every field,
+  `.form > .fieldset.radio-group` clears it, so the margin would not add to the
+  gap.
 - **Every text, textarea, select and type-ahead field shows a placeholder**,
   a short action, and what the field is for goes in its hint's info tip
   ([`components/field.md`](components/field.md#contracts) holds the rule).
@@ -731,7 +763,10 @@ draws `.filter-row` ([`components/filter-form.md`](components/filter-form.md)):
 
 `.page-frame` is the centred, full-height column of a page: Welcome, sign-in,
 the invitation (outside the shell), and the account pages, the not-authorized
-page and the create-coven page (inside it). Its children stand `space(6)` apart and stop at `$measure`;
+page, the coven landing and the create-coven page (inside it). The sign-in
+page and the invitation each sit on a `.panel` inside the frame (the
+invitation's by MB.119's review, so a reader who follows a link from an email
+sees the card the sign-in page draws). Its children stand `space(6)` apart and stop at `$measure`;
 `.page-frame--narrow` stops them at `$narrow-column` (28rem), the forms'
 column. It is `min-height: calc(100dvh - $top-inset)` with `space(6)` above
 and below and `space(4)` at the sides, `border-box`, so a page a screen high
@@ -759,6 +794,23 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
   `space(3)` column whose `h2` takes no margin, held `$top-inset` plus
   `space(4)` clear of the top when the page's own nav jumps to it.
   **`.page-frame__rule`** is the 1px `$text-muted` hairline between two.
+- **`.page-with-nav`** is a page with a jump menu (`PageNav`,
+  [`components/page-nav.md`](components/page-nav.md)): the account page's, and
+  the coven index's. Its children are the head, the menu, then the sections.
+  From a tablet up it is a grid, the menu a sticky column of three rows to the
+  left of the sections, which stop at `$narrow-column`, and from 58rem an
+  empty column the menu's width to their right, which centres the sections in
+  the window; at a phone's width it
+  is the `space(6)` column the frame is, the menu above the sections. It
+  stands on its own, so it also serves a page that is not a `.page-frame`,
+  such as the coven index inside `.coven-layout`, and clears the children's
+  block margins as the frame does. Both pages use the one class, so the two
+  cannot drift (MB.119).
+- **`.notice.page-frame__notice`** is a notice standing between a section's head
+  and its body, such as the `/coven` landing's word of waiting invitations
+  (M10.32): `space(3)` above and below it, on top of the section's gap, so it
+  reads apart from both (the owner's call). It names both classes to outrank
+  `.notice`'s zero margin, which comes later in the file.
 
 ## The admin layout
 
@@ -785,11 +837,17 @@ heading ("Buttons", above). MB.115's review had the action span the line;
 the owner reversed that at MB.7's review, 2026-10-12.
 
 `.coven-layout` is the same frame around every `/coven/[slug]` page, its
-page's children inside it; the section nav (`CovenNav`) is in the context row above (M9.15, MB.7). It shares the rule
-rather than copying it until the workspace section's design review decides
-its own; its pages will hold the ingredient and grimoire tables, so the wide
-column suits it in the meantime. The admin area's page-header rules stay
-scoped to `.admin-layout`.
+page's children inside it; the section nav (`CovenNav`) is in the context row
+above (M9.15, MB.7). MB.119's design review signed it off as it stands: the
+coven asked for no frame of its own, so the two share the rule. The wide
+column suits its pages, which hold the member and invitation tables now and
+the ingredient and grimoire tables later. What a page does inside the frame
+is the page's: the coven index sits in the narrow column with a jump menu at
+its side (`.page-with-nav`, "The page frame", above), and its sections are
+plain `.page-frame__section`s rather than panels, the shape the admin
+index uses. The index's table of contents is the `.admin-contents` list the
+admin index draws, in `_primitives.scss` for both. The admin area's
+page-header rules stay scoped to `.admin-layout`.
 
 ## Tables at phone width
 
@@ -855,9 +913,8 @@ column's cell names its column in a `data-label` attribute:
 - **The label is written twice.** `content: attr(data-label)` and then
   `content: attr(data-label) / ''`: the second gives the label an empty
   alternative text, so a screen reader, which has the header, does not hear
-  the column name twice. Safari 16.4, the oldest browser supported ("Binding
-  rules"), drops the second declaration and keeps the first, so there the
-  name is read twice, which is acceptable.
+  the column name twice. A browser that drops the slash form (Firefox before 128) keeps the first declaration, so there the name is read twice, which is
+  acceptable: it is an enhancement past the floor ("Binding rules").
 - **A sticky cell is reset in its component.** A cell made
   `position: sticky`, as UserList's Impersonate column is, only works while
   the frame scrolls, and in a card it would sit over its neighbours, so the
@@ -865,24 +922,7 @@ column's cell names its column in a `data-label` attribute:
   primitive leaves `position` alone, since a cell may be `relative` to anchor
   a tip.
 
-## Link rows and provider marks
-
-**`.link-row` is a wrapping row of links that is not a bulleted list**: a
-page's own nav, the admin nav. A `space(2)` by `space(5)` gap, and the
-list's indent, item margins and `typography-base`'s ◆ marker cleared, since
-the marker would sit against the link before and hang outside the first.
-
-**The link to the page you are on carries `aria-current="page"`**, which
-tells a screen reader, and `.link-row` draws it by shape rather than hue
-(MB.115): weight 500 and a `$rule-heavy` underline set `space(1)` below the
-letters, where every other link has the browser's hairline. A colour alone
-would fail WCAG 1.4.1, which asks that no meaning rest on colour. The admin
-nav is the first to mark its current page.
-
-**A tabbed page's tab row is not a `.link-row`** but a small pill track on
-the page's heading line, the open tab a raised pill, its hit areas padded
-invisibly to `$control-height` ([`components/tabbed-page.md`](components/tabbed-page.md),
-"Styling"). Its links are still a `nav` of links marked by `aria-current`.
+## Provider marks
 
 **`.provider-mark` is a provider's mark on a 1.5rem circle of its brand's
 ground**, as its sign-in button gives it one: the marks are drawn for those
@@ -916,15 +956,18 @@ What each section review (MB.115 to MB.124) designs to:
 
 - **Build from this layer, and grow it rather than going round it.** A page
   takes its colours from the tokens, its lengths from `space()`, its radii from
-  `radius()` and its small type from `type-size()`. A shape two sections
+  `radius()` and its type sizes from `type-size()` and `heading-size()`. A shape two sections
   need is a primitive in `_primitives.scss`, drawn on the `Foundations` page,
   not two component rules.
+- **Each review checks the CSS it adds against `npm run lint:css`**, and looks
+  at the section in Safari and Firefox, in the audit profiles when a layout
+  changed. A feature past the floor needs one of the three shapes in
+  [`.claude/rules/components.md`](../.claude/rules/components.md).
 - **One solid button per view**, on its primary action. Everything else is an
   outline, quiet, or the wax for what destroys something.
 - **A centred page sits in `.page-frame`**, or
   `.page-frame--narrow` when its content is a form ("The page frame",
-  above). A page's own row of links is a `ul.link-row`, and each titled
-  section a `.page-frame__section` named by its `h2` through
+  above). Each titled section of it is a `.page-frame__section` named by its `h2` through
   `aria-labelledby`, so a screen reader lists it as a region.
 - **Forms are the field primitives.** An error is a `.field__error` beneath
   its control from either source, and a rule that belongs to no field is a
@@ -956,8 +999,16 @@ What each section review (MB.115 to MB.124) designs to:
   a page in tabs is a `TabbedPage` with each tab's action from its route
   group's `@action` slot;
   and a modal opened by its page's address, or at once by a press, is a `RouteModal`
-  ([`components/modal.md`](components/modal.md)). Each is in
-  `claude-docs/components/`.
+  ([`components/modal.md`](components/modal.md)). A button that opens a
+  dialog from its own page is a `ModalButton`, which takes the focus back to
+  it however the dialog closes, since `Modal` restores nothing itself. A
+  refusal from an action on the page is said once, above the controls, by an
+  `ActionFailure` wrapped around them
+  ([`components/action-failure.md`](components/action-failure.md)), not
+  beside the button pressed, where a narrow cell or a phone's card would wrap
+  it. A page's own menu of jump links is a `PageNav`
+  ([`components/page-nav.md`](components/page-nav.md)), laid out by
+  `.page-with-nav`. Each is in `claude-docs/components/`.
 - **Lists are the list primitives.** A list page's root is a `.list-frame`,
   its filter form a `.filter-row`, and its table a `.data-table` in a
   `.data-table-frame` with the `--stack` modifier, its explicit roles and a
@@ -998,14 +1049,15 @@ heavier than the reverse; light reverts to the browser default.
 - `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
   colours and `brand-color()`, `$narrow-column`, `$pager-tight-width` (the
   width under which the pager closes up to stay on one line), the `$font-body` / `$font-heading` / `$font-mono` stacks, the
-  `$measure`, and the three scales with their accessors — `type-size()`,
-  `space()` and `radius()` — a component `@use`s directly.
+  `$measure`, and the four scales with their accessors — `type-size()`,
+  `heading-size()`, `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `icon-button` and `icon-button-edit` (an icon control's square box, and
   the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
-  `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`.
+  `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`,
+  `heading-face` (the headings' family, weight and letter spacing).
   The shapes that repeated by hand are mixins too, one line each:
   `color-scheme-light` and `forced-colors` (the two media queries, as
   `reduced-motion` wraps its own); `list-reset` (a list with no margin,
@@ -1041,8 +1093,7 @@ heavier than the reverse; light reverts to the browser default.
     `.header` / `.footer`.
   - `_primitives.scss` → `primitives-base` — the class layer: `.panel`,
     `.btn` and its `--solid` / `--quiet` / `--destructive` variants and
-    `--small` size, `.notice`, `.page-frame` and its parts, `.link-row`,
-    `.provider-mark`,
+    `--small` size, `.notice`, `.page-frame` and its parts, `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
     `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, `.visually-hidden`, for text a

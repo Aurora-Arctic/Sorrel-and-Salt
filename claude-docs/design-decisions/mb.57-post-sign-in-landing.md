@@ -65,10 +65,18 @@ the page is the same for both. `/` stays in `PUBLIC_ROUTES`.
   shape.
 - Reading `/` in an acceptance test for anything about a signed-in user.
 
-## Until M2.8 lands
+## Since M2.8
 
-`/coven` has no page: a signed-in visitor who follows "Continue" reaches a
-404 behind the proxy, and a signed-out one is redirected to `/sign-in` as for
-any protected route. That is the state of the product rather than of this
-task — there is no signed-in page of any kind before Wave 8 — and story 2's
-test stays red on the route's absence until M2.8 builds it.
+`/coven` has its page (`src/app/(shell)/coven/page.tsx`). A member is
+redirected into the first coven the switcher lists; someone with none who may
+create one is offered the create page; anyone else reads that the site is
+invite-only and how to get in. "Continue" on the front door and on the email
+page are `<Link>`s, typed by `postSignInLanding` returning Next's `Route`.
+
+Since M10.32, both non-member states tell the account, in a notice, how many
+pending coven invitations wait for its verified email and link to the account
+page's Invitations section, where they are listed and accepted; a member is
+still redirected. The first build listed them on the landing itself, and the
+owner moved the list to the account page on 2026-10-13
+([`m10.32-accept-from-the-landing.md`](m10.32-accept-from-the-landing.md),
+"Where the list lives").

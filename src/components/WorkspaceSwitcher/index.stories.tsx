@@ -5,13 +5,13 @@ import WorkspaceSwitcher from '.';
 // Render-only; behaviour is asserted in tests/components/WorkspaceSwitcher.
 // The workshop's router goes nowhere, so a choice only closes the list.
 export default {
-  title: 'WorkspaceSwitcher',
+  title: 'Coven / Coven Switcher',
 };
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven' },
-  { slug: 'testwort-circle', name: 'Testwort Circle' },
-  { slug: 'my-own-grimoire', name: 'My Own Grimoire' },
+  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
+  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
+  { slug: 'my-own-grimoire', name: 'My Own Grimoire', canReadMembers: true },
 ];
 
 // In a workspace: its name is the value.

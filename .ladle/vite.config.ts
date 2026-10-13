@@ -1,9 +1,13 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
-// Sass must resolve `@use` here the way `next dev` does; both land on the modern
-// compiler with empty load paths, so `api` is pinned only against a future Vite
-// default flip. The seam if Next ever gains a `sassOptions`.
+// Sass must resolve `@use` here the way `next dev` does: relative paths, empty load
+// paths. This file is the seam if Next ever gains a `sassOptions`.
+//
+// `api` is read by Ladle's own Vite, 6.4 (node_modules/@ladle/react/node_modules/vite),
+// not the app's Vite 8, whose types no longer list the option. Vite 6.4's default
+// is `modern-compiler` only when `sass-embedded` is installed, and the app has plain
+// `sass`, so without the option Vite 6.4 would use `modern`; the option asks for `modern-compiler` instead.
 //
 // `next/link` is aliased to a plain anchor, as Ladle's Next.js guide prescribes:
 // Next's client modules expect the router and `process.env` that `next dev`

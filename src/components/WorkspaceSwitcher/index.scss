@@ -1,6 +1,16 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
+// The closed box's narrowest width, so a short coven name still reads as a
+// control with room before its chevron rather than shrinking to the word. A
+// width, not a gap, so off the space scale; MB.124 weighs it, and the list's
+// below, against AccountMenu's 13rem for one floating-panel width.
+$switcher-min-width: 12rem;
+// The open list's narrowest width: wider than the closed box, so under a
+// short chosen name the list still has room for a longer one and for the
+// Create Coven row with its plus.
+$switcher-list-min-width: 15rem;
+
 // The coven's name set as the context row's lead (MB.7): the chosen name in
 // the display face with a chevron inside a hairline border, so the row reads
 // "Whitethorn Coven" and the name is also the control. The Combobox's select
@@ -9,7 +19,7 @@
 // outweighed by one more class. It looks the same on a phone as on a
 // desktop; a long name wraps to two lines rather than being cut.
 .workspace-switcher {
-  min-width: 12rem;
+  min-width: $switcher-min-width;
   max-width: 100%;
 
   // On a phone the control fills the row, as the context row gives it the
@@ -49,10 +59,12 @@
     min-height: 0;
     padding-block: space(1);
     overflow: visible;
-    font-family: $font-heading;
-    font-size: 1.5rem;
-    font-weight: 700;
-    letter-spacing: 0.01em;
+    // The h4's face and size, so the name reads as the row's heading. The
+    // line height is its own, closer than the h4's 1.25: the name sits in a
+    // control's box, and a long one wraps to two lines that the h4's leading
+    // would set further apart.
+    @include heading-face;
+    font-size: heading-size(4);
     line-height: 1.1;
     text-overflow: clip;
     white-space: normal;
@@ -61,6 +73,6 @@
 
   .combobox__list {
     z-index: layer('floating');
-    min-width: 15rem;
+    min-width: $switcher-list-min-width;
   }
 }

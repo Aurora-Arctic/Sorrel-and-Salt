@@ -1,6 +1,5 @@
 import type { Route } from 'next';
-import type { PagerHrefs } from '../../app/(shell)/admin/types';
-import type { PagePosition } from '../../lib/types';
+import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /** One pending admin invitation, as `/admin/invitations` lists it (MB.70). */
 export interface AdminInvitationEntry {
@@ -25,7 +24,7 @@ export interface AdminInvitationsCursor {
   before?: string;
 }
 
-export interface AdminInvitationsProps extends Partial<PagerHrefs> {
+export interface AdminInvitationsProps extends Partial<PagerHrefs<Route>> {
   /** This page of the pending invitations the filter leaves, newest first. */
   invitations: AdminInvitationEntry[];
   /** The filter the page shows; none when left out. */

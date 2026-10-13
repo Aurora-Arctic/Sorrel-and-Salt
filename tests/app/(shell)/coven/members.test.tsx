@@ -67,6 +67,7 @@ beforeEach(() => {
         joinedAt: new Date('2026-03-04T05:06:07Z'),
         updatedBy: 'u-owner',
         updatedAt: new Date('2026-03-04T05:06:07Z'),
+        invitedBy: userId === 'u-member' ? 'u-inviter' : null,
         workspace: WORKSPACE,
       },
     })),
@@ -89,6 +90,7 @@ describe('the /coven/[slug]/members page', () => {
           joinedAt: new Date(),
           updatedBy: 'u-owner',
           updatedAt: new Date(),
+          invitedBy: null,
           workspace: WORKSPACE,
         },
       },
@@ -98,6 +100,17 @@ describe('the /coven/[slug]/members page', () => {
     expect(within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row')).toHaveLength(
       2,
     );
+  });
+
+  it('names who invited a member, and leaves the cell empty for someone nobody invited', async () => {
+    await render_('owner');
+    const rows = within(screen.getByRole('table', { name: 'Members' })).getAllByRole('row');
+    const rowOf = (id: string) =>
+      rows.find((row) =>
+        within(row).queryByText(`Name of ${id}`, { selector: '.member-list__name' }),
+      );
+    expect(within(rowOf('u-member')!).getByText('Name of u-inviter')).toBeInTheDocument();
+    expect(within(rowOf('u-viewer')!).queryByText('Name of u-inviter')).not.toBeInTheDocument();
   });
 
   it('gives an owner a Change Role control on every row', async () => {

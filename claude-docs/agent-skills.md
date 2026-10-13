@@ -23,6 +23,26 @@ All but `start-task` and `project-progress` implement the Gitflow lane in
 source may PR into which target, and is the source of truth the skills defer
 to.
 
+**Model and effort.** A skill's frontmatter can pick the model and how hard it
+thinks for as long as the skill runs; both revert on your next prompt and
+neither is saved to settings. The session runs Sonnet at high effort, so the
+settings below only lower cost:
+
+| Skill                                             | Model    | Effort   | Why                                                                                                           |
+| ------------------------------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------------- |
+| `project-progress`                                | `haiku`  | `low`    | Runs one script and prints what it returns.                                                                   |
+| `create-feature`, `create-hotfix`                 | `haiku`  | `low`    | Follow the fixed steps of `create-feature/reference-branch.md`.                                               |
+| `create-pr`, `create-release`, `create-main-sync` | `sonnet` | `medium` | Write a summary and, for `create-pr`, choose a target. Pinning `sonnet` stops a session on Opus costing more. |
+| `prune-branches`                                  | `sonnet` | `medium` | Deletes branches, so it keeps a mid-tier model.                                                               |
+| `start-task`                                      | none     | none     | Step 6 implements the task, so it uses whatever the session is set to.                                        |
+
+`project-progress` also pre-approves its three read-only commands with
+`allowed-tools`. No skill pre-approves a push or a PR: the `permissions.ask`
+entries below still win over `allowed-tools`, on purpose. `start-task` follows
+`create-feature/reference-branch.md` itself rather than calling the two branch
+skills, so their `haiku` setting only applies to a direct `/create-feature` or
+`/create-hotfix`.
+
 - **`.claude/settings.json` is shared, committed config** — it carries the
   `permissions.ask` entries (`git push origin *`, `git push -u origin *`,
   `gh pr create/view/comment/list`) the skills tell the reader to expect a
@@ -54,14 +74,14 @@ sentences, the domain invariants, the testing and convention rules, and a
 summary of task tracking. It stays within 20 KB. The long forms are
 `.claude/rules/<area>.md`, one per area:
 
-| Rule file       | Loads for                                                                                  | Carries                                                                                    |
-| --------------- | ------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
-| `database`      | `src/db/`, the modules' `schema/` and `services/`, `tests/db/`, `tests/modules/`, the seed | Rules 2–5 and 10 in full: the exemptions, audit columns, `updated_at`, hard deletes, `sql` |
-| `graphql`       | `src/graphql/`, the modules' `graphql/` and `loaders/`, `src/gql/`, `tests/graphql/`       | Rules 8 and 9 in full, the SDL snapshot, codegen, error mapping                            |
-| `components`    | `src/components/`, `src/scss/`, the pages, `src/emails/`, `.ladle/`, `tests/components/`   | Component layout, stories and docs, Sass, the measure, design-review scope, button case    |
-| `testing`       | `tests/`, the Vitest and Playwright configs                                                | The Testing section in full, the harness, fixtures, the coverage `jq` line                 |
-| `task-tracking` | `TASKS.md`, `tasks/`, `waves/`, `task-tracking.md`, the board scripts, `.claude/skills/`   | Board layout, the status table, the lookup rule, PR bodies, comments, minting              |
-| `writing`       | every markdown file: `claude-docs/`, `.claude/`, `CLAUDE.md`, `README.md`, the `.ack.md`s  | Plain language for readers of every experience level: who reads, how, where precision wins |
+| Rule file       | Loads for                                                                                  | Carries                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------- |
+| `database`      | `src/db/`, the modules' `schema/` and `services/`, `tests/db/`, `tests/modules/`, the seed | Rules 2–5 and 10 in full: the exemptions, audit columns, `updated_at`, hard deletes, `sql`                 |
+| `graphql`       | `src/graphql/`, the modules' `graphql/` and `loaders/`, `src/gql/`, `tests/graphql/`       | Rules 8 and 9 in full, the SDL snapshot, codegen, error mapping                                            |
+| `components`    | `src/components/`, `src/scss/`, the pages, `src/emails/`, `.ladle/`, `tests/components/`   | Component layout, stories and docs, Sass, the measure, design-review scope, the browser floor, button case |
+| `testing`       | `tests/`, the Vitest and Playwright configs                                                | The Testing section in full, the harness, fixtures, the coverage `jq` line                                 |
+| `task-tracking` | `TASKS.md`, `tasks/`, `waves/`, `task-tracking.md`, the board scripts, `.claude/skills/`   | Board layout, the status table, the lookup rule, PR bodies, comments, minting                              |
+| `writing`       | every markdown file: `claude-docs/`, `.claude/`, `CLAUDE.md`, `README.md`, the `.ack.md`s  | Plain language for readers of every experience level: who reads, how, where precision wins                 |
 
 **How one loads.** Claude Code reads a rule file's `paths:` frontmatter, a list
 of globs from the repo root, and adds the file to the session once the **Read

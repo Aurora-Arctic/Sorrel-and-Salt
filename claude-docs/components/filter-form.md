@@ -165,7 +165,7 @@ its hover and press look.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/FilterForm/index.stories.tsx),
-`Forms / Filter Form`: a name search, a group select and a No Refs switch,
+`Admin / Filter Form`: a name search, a group select and a No Refs switch,
 as a value list's filter has them, the select a `FilterSelectField`, the
 select and the switch applying through `useApplyFilter`. `Default`, with `PhoneDark` and `PhoneLight`, a
 page showing no filter, so no Clear; `Filtered`, with `FilteredPhoneDark`

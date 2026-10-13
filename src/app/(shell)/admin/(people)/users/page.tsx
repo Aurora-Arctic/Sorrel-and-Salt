@@ -5,7 +5,7 @@ import { userListHref } from '../../../../../components/UserList/href';
 import { changesLocked } from '../../../../../components/UserList/lock';
 import { ROLES } from '../../../../../components/UserList/roles';
 import type { UserListEntry } from '../../../../../components/UserList/types';
-import type { PagerCursor } from '../../types';
+import type { PagerCursor } from '../../../../../lib/types';
 import { impersonationEnabled } from '../../../../../lib/impersonation';
 import { requireAdminSession } from '../../../../../lib/request-session';
 import { oneOf, single } from '../../../../../lib/search-params';
@@ -20,7 +20,8 @@ import {
   providersOf,
   usersForAdmin,
 } from '@/modules/identity';
-import { pagerHrefs, readListPlace } from '../../list-page';
+import { pagerHrefs } from '../../../../../lib/list-href';
+import { readListPlace } from '../../list-page';
 import { readNumberedPage } from '@/lib/numbered-page';
 import MissingNotice from '../../missing-notice';
 import { readPauseState } from '../pause-state';

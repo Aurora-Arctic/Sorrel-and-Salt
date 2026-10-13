@@ -116,6 +116,17 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+// The headings' face: the display family at its heaviest, opened a hair.
+// 700, Cormorant Unicase's heaviest, because its hairlines thin out at small
+// sizes on a dark ground (claude-docs/styling.md, "Type"). Size, line height
+// and margin are the caller's: typography-base pairs it with heading-size()
+// for h1 to h4, and a name set in the face outside a heading does the same.
+@mixin heading-face {
+  font-family: $font-heading;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
 // ---------------------------------------------------------------------------
 // UI primitives
 // ---------------------------------------------------------------------------

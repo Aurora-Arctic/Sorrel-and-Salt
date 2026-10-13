@@ -170,8 +170,8 @@ export function membershipWrites({
         { role },
         and(scopedTo(membership, workspaceMembers), eq(workspaceMembers.userId, userId)),
       ),
-    insertMembership: (workspaceId, userId, role) =>
-      insert(workspaceMembers, { workspaceId, userId, role }),
+    insertMembership: (workspaceId, userId, role, invitedBy) =>
+      insert(workspaceMembers, { workspaceId, userId, role, invitedBy }),
     // Removal and leave alike (M6.15): the proof's workspace scopes it, so
     // another coven's row is out of reach, and a row already deleted is
     // skipped, so a second removal never overwrites who made the first.
@@ -188,12 +188,12 @@ export function membershipWrites({
     // Takes no proof for `insertMembership`'s reason: the seat a proof is
     // minted from is the one being restored. `joinedAt` restarts, because the
     // members list shows when this membership began.
-    reviveMembership: (workspaceId, userId, role) => {
+    reviveMembership: (workspaceId, userId, role, invitedBy) => {
       const now = new Date();
       return tx
         .update(workspaceMembers)
         .set({
-          ...applyAudit('update', { role, joinedAt: now }, session),
+          ...applyAudit('update', { role, joinedAt: now, invitedBy }, session),
           deletedAt: null,
           deletedBy: null,
         })

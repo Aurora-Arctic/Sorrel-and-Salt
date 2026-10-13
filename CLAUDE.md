@@ -18,7 +18,7 @@ Three domain nouns, each meaning exactly one thing. Use them consistently in rou
 
 Never write "catalog" — it was the old word for the compendium and it is gone.
 
-The schema entity is `workspaces` and the URL prefix `/coven/`, a deliberate divergence (§5). Code, schema, and prose say _workspace_. Only the URL segment says _coven_.
+The schema entity is `workspaces` and the URL prefix `/coven/`, a deliberate divergence (§5). Code, schema, and prose say _workspace_. The URL segment and the screens say _coven_ (MB.119).
 
 ## Commands
 
@@ -76,7 +76,7 @@ The long forms of rules 2–5 and 10 are `.claude/rules/database.md`, of 8 and 9
 - **An address changes only at verification.** `setEmail` writes nothing to `users.email`: it mails the new address Better Auth's change link, and `/verify-email` swaps the address and verifies it in one write, from a session holding the row. Marking the row unverified instead would put an established account under MB.67's sweep. An unverified account reaches no page but `/account/email`: `requireSession()` sends it there from every other (`claude-docs/auth/admin-bootstrap.md`, "The email page").
 - **Unit conversion is within one dimension only.** weight↔weight and volume↔volume; anything crossing dimensions, and anything involving `count`, is refused as an explicit result the caller must handle — never null, NaN, or a guess. **No density table exists anywhere in the codebase.**
 - **Two kinds of spell category.** Assigned categories are what the spell _intends_; derived categories are the union of its ingredients'. Conflating them is a bug.
-- **Invitation tokens** use `crypto.randomBytes()`, never `Math.random()`. Only the hash is stored, and the link is mailed to the invited address (M7.3, on MB.65's transport) and accepted only by a signed-in account whose verified email matches it; it appears in no response and is never copied. Email verification itself uses Better Auth's signed, unstored token, which is the one token here that is neither hashed nor single-use (claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
+- **Invitation tokens** use `crypto.randomBytes()`, never `Math.random()`. Only the hash is stored, and the link is mailed to the invited address (M7.3, on MB.65's transport) and accepted only by a signed-in account whose verified email matches it; it appears in no response and is never copied. A coven invitation is also listed on the account page (`/account`, its Invitations section) to that same verified account and accepted there by id, under the same address match in SQL, with `/coven` and the account menu linking to it; an admin invitation is accepted by its link alone (M10.32). Email verification itself uses Better Auth's signed, unstored token, which is the one token here that is neither hashed nor single-use (claude-docs/design-decisions/mb.61-email-verification-and-delivery.md).
 - **`/admin` returns a styled "not authorized" page** to a signed-in non-admin. `/coven/[slug]` returns **404** to a non-member — workspace existence is private to anyone but its members, and a site admin reading a user's covens, `/admin` is a path everyone already knows.
 
 ## Testing
@@ -99,6 +99,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 ## Conventions
 
 - **One task per PR.** Do not combine tasks, even small adjacent ones. A sub-hour fix noticed along the way rides in that task's PR and is named in its body, without an `MB` id (MB.31).
+- **The browser floor is Baseline Widely Available, and below it the app degrades, never breaks.** `package.json`'s `browserslist` is the one statement of it; the build lowers CSS to it and `npm run lint:css` refuses CSS past it. A feature past the floor is allowed only as a pure enhancement, inside `@supports` with a fallback, or in JavaScript behind a `typeof` or `in` check, and says so in a comment. `tests/guards/browser-floor.test.ts` holds client-reachable JavaScript. Playwright gates on Chromium alone. Long form: `.claude/rules/components.md` (M10.24).
 - **A table task, then a behaviour task.** Never bundle `CREATE TABLE` with the policy or service that governs it.
 - **The sweep-task rule.** A sweep over **database objects** lands once, right after the last object it covers, under a catalogue-introspection test. A sweep over **code** lands as a mechanism plus a mechanical guard, as early as it can be written, and each later task adopts it in its own PR. The tell: can the thing be made _impossible_, or only _absent_?
 - A task is done when every acceptance criterion is demonstrably met — not when the code appears to work.

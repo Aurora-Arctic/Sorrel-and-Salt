@@ -167,6 +167,19 @@ no Neon connection and no host Node-version juggling.
     tag — takes its own image, `sorrel-e2e-headed`. It publishes **7900**
     (noVNC) alongside its existing 4444 (the runner's WebSocket); see
     `claude-docs/debugging.md` for what runs behind it.
+  - **`playwright-audit`** (M10.25) — behind the **`audit` compose profile**,
+    raised by `make playwright-audit-up` and stopped by
+    `playwright-audit-down`: `playwright run-server` on Microsoft's
+    `mcr.microsoft.com/playwright` image, which carries WebKit and Firefox
+    as well as Chromium, for the devcontainer's `npm run e2e:audit`
+    (`claude-docs/testing/e2e.md`, "The audit"). The tag and the
+    `npx -y playwright@<version>` it runs are the lockfile's
+    `@playwright/test` version, kept in step by hand. No port is published:
+    only the devcontainer dials it, at `ws://playwright-audit:4444/`, which
+    `.devcontainer/docker-compose.yml` alone names
+    (`PLAYWRIGHT_AUDIT_WS_ENDPOINT`). `ipc: host` is Playwright's own Docker
+    advice for Chromium. It is not built from `Docker/Dockerfile.e2e`, which
+    stays Chromium alone.
 
 - **`makefile`** — each target wraps
   `docker compose -f Docker/docker-compose.yaml` (via the `COMPOSE` variable):
@@ -181,9 +194,13 @@ no Neon connection and no host Node-version juggling.
   `docker-build`, `docker-down` (keeps named volumes), `docker-rebuild`
   (`down -v`, then rebuild and start), `docker-logs`, and **`docker-build` /
   `docker-down` / `docker-rebuild` all pass
-  `--profile workshop --profile studio --profile e2e`** so they still reach
-  every profiled service; a new profiled service that forgets one of these
-  three targets is left orphaned by `docker-down`. Plus `docker-update-token`
+  `--profile workshop --profile studio --profile e2e --profile audit`** so
+  they still reach every profiled service; a new profiled service that
+  forgets one of these three targets is left orphaned by `docker-down`
+  (`audit` has nothing to build, and rides on `docker-build` so the three
+  stay one list). `playwright-server-up` / `-down` and
+  `playwright-audit-up` / `-down` (M10.25) raise and stop the two browser
+  servers on their own. Plus `docker-update-token`
   (refreshes the devcontainer's `CLAUDE_CODE_OAUTH_TOKEN` in `Docker/.env` —
   standalone, not a prerequisite of `docker-up`), and `docker-codegen
 NAME=<spec>` (MB.23) — starts `playwright-server` if needed, then `exec`s

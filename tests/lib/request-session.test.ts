@@ -42,6 +42,7 @@ const {
   requireAdminSession,
   requireCovenMembership,
   requireSession,
+  requireSignedIn,
   sessionFromHeaders,
   sessionIsFresh,
 } = await import('@/lib/request-session');
@@ -103,6 +104,28 @@ describe('sessionFromHeaders', () => {
   it('is null when there is no session', async () => {
     getSessionMock.mockResolvedValue(null);
     await expect(sessionFromHeaders(new Headers())).resolves.toBeNull();
+  });
+});
+
+// The shell's half of `requireSession()` (MB.256): a layout that throws the
+// email redirect while the browser navigates into it never settles, so this
+// one sends only a signed-out visitor away.
+describe('requireSignedIn', () => {
+  it('redirects to /sign-in with the return path the proxy forwarded', async () => {
+    getSessionMock.mockResolvedValue(null);
+    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
+
+    await expect(requireSignedIn()).rejects.toThrow('redirect:/sign-in?next=%2Fcoven');
+  });
+
+  it('returns an unverified account’s session on a page that is not the email page', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user', false));
+    requestHeaders.set(RETURN_PATH_HEADER, '/coven');
+
+    await expect(requireSignedIn()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+    // The same request is one `requireSession()` sends away, so it is the
+    // missing email check, not the path, that let it through.
+    await expect(requireSession()).rejects.toThrow('redirect:/account/email?next=%2Fcoven');
   });
 });
 

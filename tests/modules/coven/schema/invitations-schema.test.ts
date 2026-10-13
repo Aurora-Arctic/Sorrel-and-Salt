@@ -27,12 +27,15 @@ const OWN_COLUMNS = [
   'accepted_at',
   'accepted_by',
   'revoked_at',
+  'declined_at',
   'note',
 ];
 
 const TOKEN_HASH_INDEX = 'invitations_token_hash_unique';
 const TIER_CHECK = 'invitations_tier';
 const ROLE_CHECK = 'invitations_role_invitable';
+const DECLINED_CHECK = 'invitations_declined_coven';
+const ANSWERED_CHECK = 'invitations_answered_once';
 
 describe('invitations schema', () => {
   const { byName } = tableFacts(invitations);
@@ -194,6 +197,48 @@ describe('invitations table', () => {
 
       const rows = await sql`select role::text from invitations order by role`;
       expect(rows.map((row) => row.role)).toEqual(['member', 'viewer']);
+    });
+  });
+
+  // M10.34: a decline is the invitee's answer to a coven invitation. An admin
+  // invitation is accepted by its link alone and never listed to its invitee,
+  // and one invitation is answered once.
+  describe('the answer', () => {
+    it('refuses a declined site-tier invitation, and accepts a declined coven one', async () => {
+      const site = await inviteToSite();
+      const coven = await invite('member', { tokenHash: HASH_B });
+
+      const error = await failureOf(
+        sql`update invitations set declined_at = now() where id = ${site}`,
+      );
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe(DECLINED_CHECK);
+
+      // Why it could have been refused: the same update on a coven invitation holds.
+      await sql`update invitations set declined_at = now() where id = ${coven}`;
+      const [row] = await sql`select declined_at from invitations where id = ${coven}`;
+      expect(row?.declined_at).toBeInstanceOf(Date);
+    });
+
+    it('refuses a row that is both accepted and declined, from either side', async () => {
+      const accepted = await invite('member');
+      await sql`update invitations set accepted_at = now(), accepted_by = ${OWNER} where id = ${accepted}`;
+      const declined = await invite('member', { tokenHash: HASH_B });
+      await sql`update invitations set declined_at = now() where id = ${declined}`;
+
+      const declineAccepted = await failureOf(
+        sql`update invitations set declined_at = now() where id = ${accepted}`,
+      );
+      const acceptDeclined = await failureOf(
+        sql`update invitations set accepted_at = now(), accepted_by = ${OWNER} where id = ${declined}`,
+      );
+
+      expect(declineAccepted.constraint_name).toBe(ANSWERED_CHECK);
+      expect(acceptDeclined.constraint_name).toBe(ANSWERED_CHECK);
+      // Why they could have succeeded: each stamp alone is accepted.
+      const rows =
+        await sql`select id from invitations where accepted_at is not null or declined_at is not null`;
+      expect(rows).toHaveLength(2);
     });
   });
 

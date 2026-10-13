@@ -11,7 +11,7 @@ import {
   Section,
   Text,
   render,
-} from '@react-email/components';
+} from 'react-email';
 import { EMAIL_THEMES } from '../theme';
 import { ORNAMENTS, ornamentPath, type Corner } from '../ornaments';
 import type { Message } from '../../lib/types';

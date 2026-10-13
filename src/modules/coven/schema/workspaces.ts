@@ -39,6 +39,10 @@ export const workspaceMembers = pgTable(
     // Distinct from `created_at`: a role change rewrites the row without
     // changing when the person joined.
     joinedAt: timestamp('joined_at').notNull().defaultNow(),
+    // Written once, when an accepted invitation seats the person: the
+    // invitation's sender, not `created_by` (that is whoever accepted). Null
+    // for a coven's creator.
+    invitedBy: uuid('invited_by').references(() => users.id),
     ...auditColumns,
   },
   (table) => [primaryKey({ columns: [table.workspaceId, table.userId] })],

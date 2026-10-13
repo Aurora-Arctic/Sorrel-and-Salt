@@ -2,7 +2,7 @@ import type { Story } from '@ladle/react';
 import BusyButton from '.';
 
 // Render-only; the busy state is asserted by the forms that use it (NameForm,
-// EmailForm, SignOutButton and the rest). Each variant idle and busy, side by
+// EmailForm, the account menu's Sign Out and the rest). Each variant idle and busy, side by
 // side, since the spinner and the label swap are the whole of the component.
 export default {
   title: 'Forms / Busy Button',

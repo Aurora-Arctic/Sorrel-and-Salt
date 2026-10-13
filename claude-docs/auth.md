@@ -86,7 +86,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The coven index page (M9.15)
 
-`/coven/[slug]` is the page a coven opens on. The layout carries `CovenNav`, the section nav, above every page beneath it, and the page holds the places for Leave Workspace, shown to every role, and Delete Workspace, shown to roles holding `workspace: delete`; both stay disabled until M6.15 and M6.14 wire them. [`auth/coven-guard.md`](auth/coven-guard.md)
+`/coven/[slug]` is the page a coven opens on. The layout carries `CovenNav`, the section nav, above every page beneath it, and the page holds a Contents section listing the coven's pages the caller can open, Your Membership with Leave Coven, shown to every role, and for roles holding `workspace: delete` a Delete This Coven section, all reached from a jump menu. [`auth/coven-guard.md`](auth/coven-guard.md)
 
 ## The create page (M9.16)
 
@@ -118,7 +118,7 @@ The primary admin alone can pause and resume admin grants and revokes for every 
 
 ### Inviting an admin (MB.70)
 
-An admin invites an address to become an admin through `createAdminInvitation`, which mails a `crypto.randomBytes` token's link and stores only its hash, and withdraws one through `revokeAdminInvitation`, both paused for every admin but the primary one. The one accept service, `acceptInvitation`, rejects an accepted, revoked or expired link in that order, admits only the session holding the invited address verified, and grants admin declared `{ via: 'invitation', note }` so the trigger records it; `/invite/[token]` is its page. In [`auth/admin-users.md`](auth/admin-users.md#inviting-an-admin-mb70).
+An admin invites an address to become an admin through `createAdminInvitation`, which mails a `crypto.randomBytes` token's link and stores only its hash, and withdraws one through `revokeAdminInvitation`, both paused for every admin but the primary one. The one accept service, `acceptInvitation`, rejects an accepted, revoked or expired link in that order, admits only the session holding the invited address verified, and grants admin declared `{ via: 'invitation', note }` so the trigger records it; `/invite/[token]` is its page, and a coven invitation also accepts by id from the account page, where the invitee's pending ones are listed (M10.32); an admin invitation accepts by its link alone. In [`auth/admin-users.md`](auth/admin-users.md#inviting-an-admin-mb70).
 
 ## Plugins (MB.74)
 

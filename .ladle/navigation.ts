@@ -7,8 +7,18 @@ import { createContext, useContext } from 'react';
 
 const stay = (): void => undefined;
 
+// Told where `push` and `replace` were asked to go, by a story that wraps
+// itself in this provider. A `RouteModal` closes by navigating back to its
+// page; with nowhere to go it would stay mounted as a native modal dialog,
+// invisible once faded and holding the rest of the page inert. A story that
+// draws one answers here by unmounting it, as the changed address does in the
+// app. Left unprovided, the router still goes nowhere.
+export const WorkshopNavigation = createContext<((href: string) => void) | undefined>(undefined);
+
 export function useRouter() {
-  return { push: stay, replace: stay, refresh: stay, back: stay, forward: stay, prefetch: stay };
+  const navigated = useContext(WorkshopNavigation);
+  const go = (href: string): void => navigated?.(href);
+  return { push: go, replace: go, refresh: stay, back: stay, forward: stay, prefetch: stay };
 }
 
 // The page the workshop pretends to be on: `/admin/users` unless a story

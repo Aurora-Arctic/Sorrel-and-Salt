@@ -64,3 +64,11 @@ export interface CreateAdminInvitationResult {
 export interface AcceptInvitationResult {
   acceptInvitation: { id: string; acceptedAt: string };
 }
+
+export interface AcceptInvitationByIdResult {
+  acceptInvitationById: { id: string; acceptedAt: string };
+}
+
+export interface DeclineInvitationByIdResult {
+  declineInvitationById: { id: string; declinedAt: string; acceptedAt: string | null };
+}

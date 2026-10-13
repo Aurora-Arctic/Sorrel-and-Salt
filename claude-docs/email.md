@@ -20,8 +20,8 @@ Mailpit container is in [`docker.md`](docker.md).
 ## Templates: React Email (MB.66)
 
 A message is a React component in `src/emails/`, rendered twice by `render`
-from `@react-email/components` (which re-exports `@react-email/render` at the
-version it pins, so there is one copy): once to HTML and once with
+from `react-email` (which depends on `@react-email/render`, so there is still
+one copy): once to HTML and once with
 `{ plainText: true }` to the text part, by `renderParts` in
 `src/emails/parts/layout.tsx`. Each template module exports the
 component and a function returning a finished `Message`, built by

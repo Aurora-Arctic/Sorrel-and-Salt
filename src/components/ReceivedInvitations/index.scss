@@ -1,0 +1,79 @@
+@use '../../scss/variables' as *;
+
+// The list sits on the account page's Invitations card (M10.32), and at that
+// card's width its rows always stack. A stacked row is a card of its own on
+// `$surface-card`, the colour the panel already wears, so its padding read as
+// an inset with nothing to explain it. Here the rows run the card's full
+// width instead, each set apart by a hairline with room either side of it,
+// so two invitations never read as one (the owner's calls, M10.32).
+@container data-table (max-width: #{$table-stack-width}) {
+  .received-invitations .data-table--stack {
+    > tbody {
+      gap: 0;
+    }
+
+    > tbody > tr {
+      padding: space(5) 0;
+      border-radius: 0;
+      background-color: transparent;
+    }
+
+    > tbody > tr:first-child {
+      padding-top: 0;
+    }
+
+    > tbody > tr + tr {
+      border-top: 1px solid $hairline;
+    }
+
+    // Three tracks rather than the corner action's two: the coven and its
+    // Accept on the first line, then Role and Expires side by side beneath
+    // (the owner's call, M10.32), Role at least 5rem, so every card's Expires
+    // starts at the same place whatever its role, and Expires running
+    // on under Accept, so a date keeps to one line at a phone's width. Each
+    // cell placed by its column's class, and qualified as the primitive's
+    // corner rule is, so these outrank it.
+    > tbody > tr:has(> .data-table__card-action) {
+      grid-template-columns: minmax(5rem, auto) minmax(0, 1fr) auto;
+      column-gap: space(4);
+
+      > .received-invitations__coven {
+        grid-column: 1 / 3;
+      }
+
+      > .received-invitations__role {
+        grid-column: 1;
+      }
+
+      > .received-invitations__expires {
+        grid-column: 2 / 4;
+      }
+
+      > .data-table__card-action {
+        grid-row: 1;
+        grid-column: 3;
+      }
+    }
+  }
+}
+
+// The sender's note on a line of its own under the coven and who sent it,
+// which it otherwise ran straight on from ("from Fixture OwnerJoin us…").
+.received-invitations__note {
+  display: block;
+  margin-top: space(1);
+}
+
+// Accept and Decline side by side (M10.34), at the end of the row's line and
+// at a card's top right; a refusal's notice takes a line of its own above.
+.received-invitations__answer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  align-items: center;
+  justify-content: flex-end;
+
+  > .notice {
+    flex-basis: 100%;
+  }
+}

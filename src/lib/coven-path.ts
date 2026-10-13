@@ -11,6 +11,13 @@ const COVEN = 'coven';
  */
 const NEW = 'new';
 
+/**
+ * The landing everyone who leaves a coven is sent to: where someone in no
+ * coven lands, and which opens the first coven of someone who has another
+ * (M2.8).
+ */
+export const COVEN_LANDING_PATH = `/${COVEN}`;
+
 /** The create-workspace page's address. */
 export const NEW_COVEN_PATH = `/${COVEN}/${NEW}`;
 
@@ -29,14 +36,20 @@ export function covenSlugOf(pathname: string): string | null {
   return first === COVEN && slug && !isReservedCovenSlug(slug) ? slug : null;
 }
 
+/** The sections only a role that can read members may open. */
+const PEOPLE_SECTIONS = new Set(['members', 'invitations']);
+
 /**
  * Where the same section is in another workspace: `/coven/a/ingredients/x`
  * becomes `/coven/b/ingredients`. Only the section carries over, since what
  * lies beneath it (an ingredient, a spell) belongs to the workspace it was
  * opened in and would be a 404 in the next. Outside a workspace, or at its
- * index, the answer is the new workspace's index.
+ * index, the answer is the new workspace's index. So it is for a people
+ * section (members, invitations) when the viewer cannot read members there.
  */
-export function pathInCoven(pathname: string, slug: string): string {
+export function pathInCoven(pathname: string, slug: string, canReadMembers = true): string {
   const section = covenSlugOf(pathname) ? pathname.split('/')[3] : undefined;
+  // The people pages answer a viewer with a 404, so a viewer lands on the index instead.
+  if (section && PEOPLE_SECTIONS.has(section) && !canReadMembers) return `/${COVEN}/${slug}`;
   return section ? `/${COVEN}/${slug}/${section}` : `/${COVEN}/${slug}`;
 }

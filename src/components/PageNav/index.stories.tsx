@@ -21,3 +21,9 @@ export const Default: Story = () => (
 // A phone's width: the bar on the left, the text left-aligned.
 export const Phone: Story = () => <Default />;
 Phone.meta = { width: 375 };
+
+export const PhoneDark: Story = () => <Default />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <Default />;
+PhoneLight.meta = { theme: 'light', width: 375 };

@@ -1,31 +1,24 @@
 import type { Story } from '@ladle/react';
 import type { ReactElement } from 'react';
 import { AdminFrame as Frame } from '../../../.ladle/admin-frame';
-import AdminNav, { AdminContents } from '.';
+import { AdminContents } from '.';
 
 // Render-only; behaviour is asserted in tests/components/AdminNav. It takes
 // no props: every admin sees the same pages. The workshop's `usePathname`
 // stub answers `/admin/users` (.ladle/navigation.ts), the People page's
 // Users tab, so People is the current page in every story. Each sits in the
-// layout's real frame, `.admin-layout`.
+// admin layout as it is (`AdminFrame`): the nav in the context row led by
+// "Admin", above the `.admin-layout` column that holds the page.
 export default {
-  title: 'AdminNav',
+  title: 'Admin / Admin Nav',
 };
 
 // Wider than a tablet: six tabs along the row, People set apart by a hairline
 // and marked by weight and the heavy rule. The narrower shapes are
 // SectionNav's stories.
-export const Default: Story = () => (
-  <Frame>
-    <AdminNav />
-  </Frame>
-);
+export const Default: Story = () => <Frame />;
 
-export const Phone: Story = () => (
-  <Frame>
-    <AdminNav />
-  </Frame>
-);
+export const Phone: Story = () => <Frame />;
 Phone.meta = { width: 375 };
 
 // The `/admin` index under the nav: a lede, then the table of contents in
@@ -33,7 +26,6 @@ Phone.meta = { width: 375 };
 // its heading and lede are copied here; the contents are the real part.
 const Index = (): ReactElement => (
   <Frame>
-    <AdminNav />
     <main>
       <h1>Admin</h1>
       <p className="lede">

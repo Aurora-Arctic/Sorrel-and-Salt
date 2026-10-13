@@ -161,6 +161,10 @@ export interface RadioGroupFieldProps<T extends string> {
 export interface FormActionsProps {
   /** What is saved, in title case: "Save Group", "Saving Group", "Delete Group". */
   noun: string;
+  /** The submit's name, where the form sends rather than saves: "Send Invitation". `Save ${noun}` when left out. */
+  label?: string;
+  /** The submit's name while busy: "Sending". `Saving ${noun}` when left out. */
+  busyLabel?: string;
   /** The form holds something to save; Save is off until it does. */
   dirty: boolean;
   /** A save is in flight; Save is off meanwhile. */

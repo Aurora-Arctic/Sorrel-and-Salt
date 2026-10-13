@@ -43,7 +43,11 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 `category_groups` row, set inline from data, so the linter never sees it; a
 hex in a comment is not a colour to it either. It extends
 `stylelint-config-standard-scss`, adjusted where that set fights Prettier or
-the repo's Sass:
+the repo's Sass. It also runs `stylelint-plugin-use-baseline` with
+`available: "widely"` (M10.24), which refuses CSS past the browser floor
+([`styling.md`](styling.md), "Binding rules"); a feature that is an
+enhancement carries a disable comment saying what is lost and when it becomes
+widely available.
 
 - **Configured rather than off**: `selector-class-pattern` takes the repo's
   BEM names (`block__element--modifier`, each part kebab-case) where the
@@ -66,7 +70,7 @@ the repo's Sass:
   and `alpha-value-notation` (the two shadows are Sass's `rgba()` with an
   alpha fraction), `scss/at-if-no-null` (the accessors test `== null`, which
   says what they mean), and `media-feature-range-notation` (both notations
-  sit inside the browser baseline; the repo writes `max-width:`).
+  sit inside the browser floor; the repo writes `max-width:`).
 
 ## Tests
 
@@ -77,6 +81,7 @@ the repo's Sass:
 | `npm run test:debug` (`make test-debug`)           | Vitest under `--inspect-brk` on **9230**, one worker, halted until a debugger attaches                                                                                                                                                               |
 | `npm run test:ui` (`make test-ui`)                 | The Vitest UI on its default port                                                                                                                                                                                                                    |
 | `npm run e2e`                                      | Playwright against the production build, one database and one server per worker (`E2E_WORKERS`)                                                                                                                                                      |
+| `npm run e2e:audit`                                | The suite in WebKit, Firefox and as an iPhone, from the devcontainer against `playwright-audit` (`make playwright-audit-up` on the host), serialised on `flock /tmp/sorrel-e2e.lock`; never CI (M10.25)                                              |
 | `npm run e2e:ui` / `e2e:debug` (`make e2e-ui`)     | Playwright UI mode on **9324**, or the inspector                                                                                                                                                                                                     |
 | `npm run e2e:trace` (`make e2e-trace TRACE=<zip>`) | Serves a written trace on **9323**                                                                                                                                                                                                                   |
 
@@ -106,12 +111,13 @@ the repo's Sass:
 
 ## The local stack (host only)
 
-| `make`                 | Purpose                                                                                                                                            |
-| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `make docker-up`       | App + Postgres 18 locally, no Neon connection needed; the one-shot `db-init` container migrates and seeds before the app starts (M1.24)            |
-| `make docker-workshop` | Also brings up the Ladle workshop, on **61000**                                                                                                    |
-| `make docker-studio`   | Also brings up Drizzle Studio, on **4983**                                                                                                         |
-| `make docker-all`      | App + Postgres + workshop + studio + the Playwright browser server (`:7900`, MB.23), all at once — `e2e` itself stays opt-in via `make docker-e2e` |
-| `make docker-e2e`      | The Playwright suite once, against the dedicated e2e image                                                                                         |
-| `make docker-down`     | Stops and removes the stack, named volumes kept; `make docker-rebuild` tears down with the volumes and starts again                                |
-| `make act-check`       | Runs a check locally via `act`; `act-check CHECK=<leg>` picks a `checks.yml` leg, and `make act-test` chains every locally runnable one            |
+| `make`                     | Purpose                                                                                                                                              |
+| -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `make docker-up`           | App + Postgres 18 locally, no Neon connection needed; the one-shot `db-init` container migrates and seeds before the app starts (M1.24)              |
+| `make docker-workshop`     | Also brings up the Ladle workshop, on **61000**                                                                                                      |
+| `make docker-studio`       | Also brings up Drizzle Studio, on **4983**                                                                                                           |
+| `make docker-all`          | App + Postgres + workshop + studio + the Playwright browser server (`:7900`, MB.23), all at once — `e2e` itself stays opt-in via `make docker-e2e`   |
+| `make docker-e2e`          | The Playwright suite once, against the dedicated e2e image                                                                                           |
+| `make playwright-audit-up` | The WebKit/Firefox/phone browser server for `npm run e2e:audit`, Microsoft's image on the `audit` profile (M10.25); `playwright-audit-down` stops it |
+| `make docker-down`         | Stops and removes the stack, named volumes kept; `make docker-rebuild` tears down with the volumes and starts again                                  |
+| `make act-check`           | Runs a check locally via `act`; `act-check CHECK=<leg>` picks a `checks.yml` leg, and `make act-test` chains every locally runnable one              |

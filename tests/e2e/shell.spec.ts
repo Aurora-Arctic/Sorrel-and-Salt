@@ -73,23 +73,12 @@ test('the fixture users and their covens are in place', async ({ page }) => {
   }
 });
 
-/** The theme button wherever the width keeps it: in the bar, or in the account panel. */
+/** The theme button, in the bar at every width (M10.32). */
 async function toggleTheme(page: Page): Promise<void> {
   const toggle = page.getByRole('button', { name: 'Toggle light and dark mode' });
-  if ((await toggle.count()) === 0) {
-    const account = page.getByRole('banner').getByRole('button', { name: 'Fixture Person' });
-    await account.click();
-    await expect(account).toHaveAttribute('aria-expanded', 'true');
-    const before = await toggle.getAttribute('aria-pressed');
-    await toggle.click();
-    await expect(toggle).not.toHaveAttribute('aria-pressed', before!);
-    await page.keyboard.press('Escape');
-    await expect(account).toHaveAttribute('aria-expanded', 'false');
-  } else {
-    const before = await toggle.getAttribute('aria-pressed');
-    await toggle.click();
-    await expect(toggle).not.toHaveAttribute('aria-pressed', before!);
-  }
+  const before = await toggle.getAttribute('aria-pressed');
+  await toggle.click();
+  await expect(toggle).not.toHaveAttribute('aria-pressed', before!);
   await settleTransitions(page);
 }
 
@@ -102,10 +91,10 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
 
   const banner = page.getByRole('banner');
   await expect(banner).toBeVisible();
-  // The brand leads to the viewer's coven (shellHome); a member has only one.
+  // The brand leads to the /coven landing (shellHome), which sends a member in.
   await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute(
     'href',
-    `/coven/${ALPHA.slug}`,
+    '/coven',
   );
   // A non-admin has no site links yet, so the Site nav is not drawn at all.
   await expect(page.getByRole('navigation', { name: 'Site' })).toHaveCount(0);
@@ -255,16 +244,12 @@ test('at a phone the coven nav is the bottom bar and the keyboard reaches the wh
   expect(box!.y + box!.height).toBeGreaterThanOrEqual(PHONE.height - 2);
   expect(box!.y + box!.height).toBeLessThanOrEqual(PHONE.height + 0.5);
 
-  // The account panel holds the theme switch here, the bar having no room.
+  // The theme switch stays in the bar at a phone's width too (the owner's
+  // call, M10.32), and the account panel no longer carries one.
   const account = page.getByRole('banner').getByRole('button', { name: 'Fixture Person' });
-  await account.click();
-  await expect(account).toHaveAttribute('aria-expanded', 'true');
-  await expect(page.getByRole('button', { name: 'Toggle light and dark mode' })).toHaveAttribute(
-    'aria-pressed',
-    /true|false/,
-  );
-  await page.keyboard.press('Escape');
-  await expect(account).toHaveAttribute('aria-expanded', 'false');
+  await expect(
+    page.getByRole('banner').getByRole('button', { name: 'Toggle light and dark mode' }),
+  ).toBeVisible();
 
   // From the top: the skip link, then the brand, then the rest. Bounded.
   await page.reload();

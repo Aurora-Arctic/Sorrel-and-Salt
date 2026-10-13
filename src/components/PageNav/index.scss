@@ -34,7 +34,7 @@
       @include focus-ring;
     }
 
-    &[aria-current='true'] {
+    &[aria-current='location'] {
       font-weight: 500;
       box-shadow: inset $rule-heavy 0 0 0 var(--page-nav-bar);
     }
@@ -47,7 +47,7 @@
       --page-nav-bar: #{$accent};
       box-shadow: inset (-$rule-heavy) 0 0 0 transparent;
 
-      &[aria-current='true'] {
+      &[aria-current='location'] {
         box-shadow: inset (-$rule-heavy) 0 0 0 var(--page-nav-bar);
       }
     }

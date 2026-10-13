@@ -10,12 +10,12 @@ through `Workspace.members`.
 
 `MemberListProps` (`types.ts`):
 
-| Prop            | What it is                                                                                                  |
-| --------------- | ----------------------------------------------------------------------------------------------------------- |
-| `members`       | `MemberListEntry` rows: `userId`, `name`, `role`, `joinedAt`, `updatedBy`, `updatedAt`, in the page's order |
-| `currentUserId` | The signed-in user; their row's name is followed by "You"                                                   |
-| `roleAction`    | `(member) => ReactNode`, drawn beside the role (Change Role); absent, the role alone                        |
-| `removeAction`  | `(member) => ReactNode`, drawn in a Remove column at the end; absent, no column                             |
+| Prop            | What it is                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| `members`       | `MemberListEntry` rows: `userId`, `name`, `role`, `joinedAt`, `updatedBy`, `updatedAt`, `invitedBy`, in the page's order |
+| `currentUserId` | The signed-in user; their row's name is followed by "You"                                                                |
+| `roleAction`    | `(member) => ReactNode`, drawn beside the role (Change Role); absent, the role alone                                     |
+| `removeAction`  | `(member) => ReactNode`, drawn in a Remove column at the end; absent, no column                                          |
 
 ## Contracts
 
@@ -24,7 +24,7 @@ through `Workspace.members`.
   Remove column, not an empty one.
 - **Change Role sits in the Role column**, the role on the left and the
   control on the right. It is `btn btn--small btn--quiet`.
-- **Remove is `RemoveControl`** (M6.15): a `ConfirmedAction` naming the member, sending `removeMember`, and reading the page again. The page passes it to owners only, on every row but their own (leaving is the coven page's), and a refusal such as the last owner is said above the table through `RoleFailure`, as Promote's is.
+- **Remove is `RemoveControl`** (M6.15): a `ConfirmedAction` naming the member, sending `removeMember`, and reading the page again. The page passes it to owners only, on every row but their own (leaving is the coven page's), and a refusal such as the last owner is said above the table through [`ActionFailure`](action-failure.md), as Change Role's is.
 - **Remove has a column of its own**, as Impersonate has, from the same
   `row-action-column` mixin: last, ruled in red,
   sticky at the right edge while the table scrolls, and at the card's top
@@ -34,14 +34,19 @@ through `Workspace.members`.
   also bold, as the user list sets an admin, but weight is never the only cue.
 - **The joined date** is a `<time>` holding the ISO date, muted above the
   stacking width, as the user list's Signed Up is.
+- **Invited By** is the display name of whoever sent the invitation that seated
+  the member, resolved by the page (`displayNamesOf`). It is empty for a coven's
+  creator and where the name is withheld. A muted fact like Joined, between
+  Joined and Updated.
 - **Updated** is one column holding the row's audit stamp: who last changed
   the membership, as a display name the page resolves (`displayNamesOf`), as
   "by **Fixture A** on 2026-10-12", the name in bold. Where the service withholds the editor's name the cell is
   empty, date included. A role change moves it; the joined date stays. A muted
   fact like Joined.
 - **The own row is marked in text** ("You"), not by colour or a test id.
-- **Styling stops at the tokens** until the section's design review
-  ([`../styling.md`](../styling.md), "Designing a section").
+- **The sole-owner note is the page's**, not this component's: a quiet warning
+  drawn inside the page's `ListFrame`, ahead of the list, so the frame's gap
+  spaces it (M6.16).
 
 ## The role control
 
@@ -56,15 +61,42 @@ viewer, member, owner order is chosen to start. The confirm button follows the
 choice: **Promote**, green (`btn--solid`), for a role above their own, and
 **Demote**, red (`btn--destructive`), for one below.
 
-A refusal is shown by `role-failure.tsx`, which wraps the list: an error
-notice above the table naming the member ("<name>'s role was not changed. This is the
-last owner, and a coven needs one. Make another member an owner first."),
-cleared when the next attempt starts. `ConfirmedAction` takes it through
-`onFailure` instead of drawing it beside the row.
+A refusal is shown by [`ActionFailure`](action-failure.md), which the page wraps
+the list in: an error notice above the table naming the member ("<name>'s role
+was not changed. This is the last owner, and a coven needs one. Make another
+member an owner first."), cleared when the next attempt starts. Both controls
+read it with `useActionFailure()` and hand `ConfirmedAction` an `onFailure`
+that reports to it, instead of the refusal being drawn beside the row. Outside
+an `ActionFailure` the hook gives `null`, the controls pass no `onFailure`,
+and `ConfirmedAction` says the refusal beside the button itself, so a refusal
+is never dropped (MB.119 deleted the list's own `role-failure.tsx`, whose
+default was a report that did nothing).
+
+## Styling
+
+`index.scss` holds the list's own rules only: the name with its "You" mark, the
+Joined, Invited By and Updated facts muted at the caption size above the
+stacking width, the Role column shrunk to its content, the role beside its
+button, and the Remove column from `row-action-column`. The table, its frame
+and its card layout are the `.data-table` primitives
+([`../styling.md`](../styling.md)). The Change Role button has no minimum
+width: every row holds the same one button, so they line up without it. Tokens
+used: `space()`, `type-size('caption')`, `$text-muted`, `$table-stack-width`.
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/MemberList/index.stories.tsx),
+`Coven / Member List`: `ReadOnly`, a member's view with no controls;
+`WithActions`, an owner's, with plain buttons standing in for the page's
+controls; and `SoleOwner`, the page's composition with the sole-owner note
+inside a `ListFrame` ahead of the list, with `SoleOwnerPhoneDark` and
+`SoleOwnerPhoneLight` at 375px.
 
 ## Tests
 
 `tests/components/MemberList/index.test.tsx`, by role and label queries: all
 three roles with their dates, the role controls beside each role, no Remove
 column without `removeAction`, each control given its row's member, and "You"
-on the own row only.
+on the own row only. `tests/components/MemberList/remove-control.test.tsx`
+and `role-control.test.tsx` hold each control's refusal: said above through an
+`ActionFailure`, and beside the control when it stands outside one.

@@ -22,6 +22,7 @@
     "test:debug": "vitest run --inspectBrk=0.0.0.0:9230 --no-file-parallelism --maxWorkers=1",
     "test:ui": "vitest --ui",
     "e2e": "playwright test",
+    "e2e:audit": "E2E_AUDIT=1 flock /tmp/sorrel-e2e.lock playwright test --project webkit --project firefox --project phone",
     "e2e:ui": "playwright test --ui --ui-host 0.0.0.0 --ui-port 9324",
     "e2e:debug": "playwright test --debug",
     "e2e:trace": "playwright show-trace --host 0.0.0.0 --port 9323",
@@ -63,7 +64,6 @@
     "@pothos/plugin-complexity": "^4.2.3",
     "@pothos/plugin-relay": "^4.8.1",
     "@pothos/plugin-scope-auth": "^4.2.1",
-    "@react-email/components": "^1.0.12",
     "@tanstack/react-query": "^5.104.0",
     "altair-static": "^8.5.9",
     "better-auth": "^1.7.7",
@@ -71,13 +71,13 @@
     "downshift": "^9.4.0",
     "drizzle-orm": "^0.45.3",
     "graphql": "^16.14.2",
-    "graphql-request": "^7.4.0",
     "graphql-scalars": "^2.0.0",
     "graphql-yoga": "^5.24.1",
     "next": "^16.3.5",
     "postgres": "^3.4.9",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
+    "react-email": "^6.11.1",
     "react-hook-form": "^7.89.0",
     "slugify": "^1.6.9",
     "superjson": "^2.2.6",
@@ -113,13 +113,18 @@
     "sharp": "^0.35.4",
     "stylelint": "^17.16.0",
     "stylelint-config-standard-scss": "^17.0.0",
+    "stylelint-plugin-use-baseline": "^1.4.7",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
     "vite": "^8.3.2",
     "vitest": "^5.0.2",
+    "web-features": "^3.42.0",
     "yaml": "^2.9.1"
   },
   "allowScripts": {
     "pre-commit@2.0.0": true
-  }
+  },
+  "browserslist": [
+    "baseline widely available"
+  ]
 }

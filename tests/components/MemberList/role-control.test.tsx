@@ -20,6 +20,18 @@ beforeEach(() => {
 });
 
 describe('RoleControl', () => {
+  it('shows a refusal beside the control when nothing above it says one', async () => {
+    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
+    renderControl();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Change Role for Testwort' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
+
+    // Outside an ActionFailure the control says the refusal itself.
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
   it('sends the chosen role and closes the modal when the answer comes back', async () => {
     graphqlRequest.mockResolvedValue({});
     renderControl();

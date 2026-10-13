@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer } from '@/lib/types';
 
@@ -16,14 +16,14 @@ const MEMBER: ShellViewer = {
   isAdmin: false,
   canCreate: false,
   verified: true,
+  pendingInvitations: 0,
 };
 const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', isAdmin: true };
 const UNVERIFIED: ShellViewer = { ...MEMBER, verified: false };
-const COVENS = [{ slug: 'fixture-coven', name: 'Fixture Coven' }];
 
-const shell = (viewer: ShellViewer, workspaces = COVENS) =>
+const shell = (viewer: ShellViewer) =>
   render(
-    <AppShell viewer={viewer} workspaces={workspaces}>
+    <AppShell viewer={viewer}>
       <main>The page</main>
     </AppShell>,
   );
@@ -33,16 +33,24 @@ beforeEach(() => {
 });
 
 describe('AppShell', () => {
+  it('hands the viewer’s pending invitations to the account menu, which links to them', () => {
+    shell({ ...MEMBER, pendingInvitations: 2 });
+
+    fireEvent.click(screen.getByRole('button', { name: /^Fixture Member/ }));
+
+    expect(screen.getByRole('link', { name: '2 Coven Invitations' })).toHaveAttribute(
+      'href',
+      '/account#account-invitations',
+    );
+  });
+
   it('offers an admin the Your Coven and Admin links', () => {
     shell(ADMIN);
 
     const nav = screen.getByRole('navigation', { name: 'Site' });
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Your Coven' }));
     expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
-    expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute(
-      'href',
-      '/coven/fixture-coven',
-    );
+    expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute('href', '/coven');
   });
 
   it('offers anyone else neither, though they are signed in and verified', () => {
@@ -63,25 +71,13 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Your Coven' })).not.toHaveAttribute('aria-current');
   });
 
-  it('sends the brand to the admin area for an admin, and to their coven for anyone else', () => {
+  it('sends the brand to the admin area for an admin, and to the /coven landing for anyone else', () => {
     const { unmount } = shell(ADMIN);
     expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/admin');
     unmount();
 
     shell(MEMBER);
-    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute(
-      'href',
-      '/coven/fixture-coven',
-    );
-  });
-
-  it('sends the brand to the create page for someone with no coven who may make one', () => {
-    shell({ ...MEMBER, canCreate: true }, []);
-
-    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute(
-      'href',
-      '/coven/new',
-    );
+    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/coven');
   });
 
   it('keeps Add Ingredient a real button, disabled until its form exists', () => {

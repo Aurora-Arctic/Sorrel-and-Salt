@@ -163,7 +163,8 @@ export const RadioGroup: Story = () => {
 };
 
 // A form's row of actions: Save off until there is something to save, then
-// on, then busy; Cancel quiet; Delete apart at the far end on an edit.
+// on, then busy; Cancel quiet; Delete apart at the far end on an edit; and a
+// form that sends rather than saves, its submit renamed.
 const noop = () => {};
 
 export const Actions: Story = () => (
@@ -171,6 +172,14 @@ export const Actions: Story = () => (
     <FormActions noun="Group" dirty={false} submitting={false} onCancel={noop} />
     <FormActions noun="Group" dirty submitting={false} onCancel={noop} onDelete={noop} />
     <FormActions noun="Group" dirty submitting onCancel={noop} onDelete={noop} />
+    <FormActions
+      noun="Invitation"
+      label="Send Invitation"
+      busyLabel="Sending"
+      dirty
+      submitting={false}
+      onCancel={noop}
+    />
   </div>
 );
 

@@ -33,6 +33,13 @@ export const WorkspaceMemberRef = builder
       // The name through `usersById`, one read for every member a request
       // lists, whichever covens they sit in.
       user: t.field({ type: CoMemberRef, resolve: (member) => ({ id: member.userId }) }),
+      // Who sent the invitation that seated them; null for a coven's creator.
+      // Named through `usersById` with `user`, so one read covers both.
+      invitedBy: t.field({
+        type: CoMemberRef,
+        nullable: true,
+        resolve: (member) => (member.invitedBy ? { id: member.invitedBy } : null),
+      }),
       audit: t.field({ type: AuditInfo, resolve: (member) => member }),
     }),
   });

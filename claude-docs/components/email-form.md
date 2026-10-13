@@ -72,17 +72,17 @@ followed.
 
 ## Two error surfaces
 
-A failed mutation rejects with graphql-request's `ClientError`, whose
-`response.errors[0].extensions` carries the code and, for `VALIDATION`, the
+A failed mutation rejects with the client wrapper's `GraphQLClientError`, whose
+`errors[0].extensions` carries the code and, for `VALIDATION`, the
 field errors ([`graphql/errors.md`](../graphql/errors.md), "Errors"). The
 component reads that one shape through the shared reader,
 `readGraphqlFailure(error, ['email'])` in `src/lib/graphql-failure.ts`, and
 routes what it answers to one of two places:
 
-| Error                                                                | Where it lands                                                                                                                                        |
-| -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `VALIDATION` with a `fieldErrors` entry whose path starts at `email` | Inline beneath the input (`.field__error`), which the input references through `aria-describedby`; `aria-invalid` is set.                             |
-| Any other `VALIDATION` issue, `FORBIDDEN`, `NOT_FOUND`, masked       | The `role="alert"` region, showing the error's own message — or `GENERIC_FAILURE` when there is none, or the rejection is not a `ClientError` at all. |
+| Error                                                                | Where it lands                                                                                                                                               |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VALIDATION` with a `fieldErrors` entry whose path starts at `email` | Inline beneath the input (`.field__error`), which the input references through `aria-describedby`; `aria-invalid` is set.                                    |
+| Any other `VALIDATION` issue, `FORBIDDEN`, `NOT_FOUND`, masked       | The `role="alert"` region, showing the error's own message — or `GENERIC_FAILURE` when there is none, or the rejection is not a `GraphQLClientError` at all. |
 
 Both are cleared, along with the last success, when a new submit starts, so
 the page never shows two outcomes at once. The alert element does not exist in
@@ -154,8 +154,8 @@ column's gap and the address's weight.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/EmailForm/index.stories.tsx) —
-`Prefilled` (unverified, the sign-up mail just sent, so counting down),
+[`index.stories.tsx`](../../src/components/EmailForm/index.stories.tsx),
+titled "Account / Email Form": `Prefilled` (unverified, the sign-up mail just sent, so counting down),
 `ReadyToResend`, `NoEmail`, `Confirmed`, `ChangeLater` (verified, back to
 change it) and `WithError` (reading `verifyErrorMessage` rather than a copied
 sentence), and `Embedded`, inside the account page's frame and section.

@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { covenHome, shellHome } from '../../lib/shell-home';
@@ -18,15 +17,14 @@ import './index.scss';
 
 const BRAND = 'Sorrel & Salt';
 
-const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
+const AppShell = ({ viewer, children }: AppShellProps): ReactElement => {
   // No Compendium link yet: its public route is MB.80's. When it lands it is
   // the first entry here, for everyone, and the nav stops being admin-only.
   const links: SiteLink[] = viewer.isAdmin
     ? [
         {
-          label: 'Your Coven', // Cast: typedRoutes lists `/coven/[slug]` as a pattern, which
-          // a string built from a slug does not match.
-          href: covenHome(workspaces, viewer.canCreate) as Route,
+          label: 'Your Coven',
+          href: covenHome(),
           base: '/coven',
         },
         { label: 'Admin', href: '/admin', base: '/admin' },
@@ -53,7 +51,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           {/* Plain text while the address is unverified: every page the
               brand could lead to would send the viewer back to the email page. */}
           {viewer.verified ? (
-            <Link href={shellHome(viewer, workspaces)} className="app-shell__brand">
+            <Link href={shellHome(viewer)} className="app-shell__brand">
               {brand}
             </Link>
           ) : (
@@ -70,8 +68,13 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
                 Add Ingredient
               </button>
             )}
-            <AccountMenu name={viewer.name} verified={viewer.verified} links={links} />
-            {/* Hidden at a phone's width, where the account panel holds it. */}
+            <AccountMenu
+              name={viewer.name}
+              verified={viewer.verified}
+              links={links}
+              pendingInvitations={viewer.pendingInvitations}
+            />
+            {/* In the bar at every width (the owner's call, M10.32). */}
             <span className="app-shell__theme">
               <ThemeToggle variant="inline" />
             </span>

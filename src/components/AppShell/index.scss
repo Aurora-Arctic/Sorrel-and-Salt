@@ -155,12 +155,6 @@
     gap: space(2);
     padding-inline: space(2);
   }
-
-  // The theme disc moves into the account panel too: this bar has room for
-  // the brand, Add Ingredient and the avatar.
-  .app-shell__theme {
-    display: none;
-  }
 }
 
 // Under the tablet width the site links move into the account panel, where

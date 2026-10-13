@@ -31,6 +31,37 @@ without a page routed to it.
   `PhoneLight` stories, `meta = { theme, width: 375 }` as the
   Foundations page has, so a review sees the page at phone width in both
   themes without touching the toolbar.
+- **A story's title is a group, then the piece, both in title case** (M10.33,
+  reorganised under MB.119). One rule picks the group, and the sidebar lists the
+  groups in this order (`storyOrder` in `.ladle/config.mjs`):
+  1. **Foundations** stands alone at the top: the tokens and primitives every
+     piece is drawn from.
+  2. **A piece the app draws in one area goes under that area's group**, in the
+     order a person meets them: **Pages** (a whole page with no area of its own:
+     Welcome, Not Authorized, the invitation page), **Sign In**, **Shell** (the
+     bar and what sits in it: the account menu, the context row),
+     **Account**, **Coven**, **Admin**
+     and **Emails**. `Coven / Member List`, `Admin / Group List`,
+     `Account / Name Form`.
+  3. **A piece the app draws in more than one area goes under its kind**:
+     **Forms** (fields and the controls inside them), **Layout** (frames,
+     lists, tables, pagers and what every page carries, inside the shell or
+     not: the theme switch and the impersonation banner, which the root
+     layout draws on pages without the bar too), **Navigation** and
+     **Surfaces** (what says or holds something on the page: a notice, a
+     modal, a provider's mark). `Forms / Field`, `Layout / Pager`.
+  4. **Titles name the piece as the screens do**, so `Coven`, never
+     `Workspace` (`Coven / Leave Coven Button`); the file and component names
+     stay as they are.
+
+  "Draws" is read from the imports under `src/app` and `src/components`
+  today, not from a plan: a piece moves to its kind in the PR that makes a
+  second area draw it (the ingredient form, the category picker and the filter
+  form, drawn only by the admin pages so far, will move when the coven's
+  ingredients page does). Nothing sits loose at the top level. Ladle builds a
+  story's id from its title, so a title change moves the id, and with it any
+  `?story=` link to it.
+
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
@@ -41,8 +72,8 @@ without a page routed to it.
 - **`config.mjs`** — `stories` glob, `port` 61000, `previewPort` 61001
   (`ladle preview`), `outDir` `.reports/workshop`, pinned `hmrPort` 61002,
   empty `hmrHost`. `storyOrder`
-  forces each component's `Default` story first and leaves the rest in Ladle's
-  own order; it is a global-config hook only (no per-story-file equivalent) and
+  lists the top-level groups in the order above, forces each component's
+  `Default` story first and leaves the rest in Ladle's own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
   `.toString()`. `hmrPort` is pinned so the HMR socket lands on a known port
   that compose can publish, rather than a random free one, and it does not
@@ -61,7 +92,10 @@ without a page routed to it.
     M0.31 briefly set it to `'auto'` (the control's unset position, letting
     `prefers-color-scheme` decide) and M0.32 moved it back; `'dark'` is the
     confirmed intent.
-- **`vite.config.ts`** — Sass API pinned to `modern-compiler`. Resolution is
+- **`vite.config.ts`** — Sass API pinned to `modern-compiler`, read by Ladle's own
+  Vite 6.4 rather than the app's Vite 8 (which no longer types the option): 6.4
+  defaults to `modern-compiler` only with `sass-embedded`, and the app has plain
+  `sass`. Resolution is
   left at Vite/Sass defaults **because** that is what `next dev` does: relative
   `@use`, empty load paths. This file is the seam for keeping the two aligned
   if Next ever gains `sassOptions`.
@@ -101,7 +135,10 @@ without a page routed to it.
     running and firing its own `transitionend`. The patch is undone on
     cleanup so it can't leak into the next story.
 - **`story-frame.scss`** — the app-surface frame: `$surface-page` /
-  `$text-primary` so a story needs no per-story setup; `transform`, making the
+  `$text-primary` so a story needs no per-story setup; `min-height: 100vh`, so the
+  ground fills the window under a short story (Ladle paints its own darker
+  background over the page's `body`, and a frame that stops short shows it);
+  `transform`, making the
   frame the containing block so a `position: fixed` child pins to the story
   rather than Ladle's chrome; `overflow: hidden` so it clips like a viewport;
   `.ladle-main` gutter zeroed and re-added on the frame, 3rem a side, and
@@ -140,12 +177,38 @@ without a page routed to it.
   unless a story wraps itself in `WorkshopPathname` with another address, so
   AdminNav's stories show the current-page marker on People, and a tabbed
   page's story can open any tab (MB.115).
-- **`admin-frame.tsx`** — the shared story wrapper for the admin area:
-  `AdminFrame` is the `.admin-layout` div alone, and `AdminTabbedFrame` is a
-  tabbed admin page as its route draws it (heading and tabs from
-  `ADMIN_PAGES`, an `action`, optionally the nav). Nine stories drew this by
-  hand before MB.115. It is the layout's markup only; the app's own layout
-  reads the session.
+  Its `useRouter` reports a `push` or `replace` to a story that wraps itself in
+  `WorkshopNavigation` and goes nowhere otherwise: a `RouteModal` closes by
+  navigating, so without it a story's modal stays mounted as a native modal
+  dialog, invisible once faded and holding the whole page inert (M10.33).
+- **`reopenable.tsx`** — `Reopenable`, what stands in for a modal's owner in a
+  story. The app's owners close a modal by unmounting it, and a story has no
+  owner. It renders its children while open, hands them a `close`, answers a
+  `RouteModal`'s navigation through `WorkshopNavigation` by closing too, and
+  leaves an Open Again button in place of the modal, so a review can look
+  again without a reload (M10.33). A story that draws a `Modal` whose
+  `onClose` would do nothing wraps it in this.
+- **`admin-frame.tsx`** — the shared story wrapper for the admin area.
+  `AdminFrame` is the admin layout as it is: the context row holding
+  "Admin" and `AdminNav`, then the `.admin-layout` column around the story,
+  all inside the shell's `.app-shell__main`, which keeps the last row clear
+  of the phone's bottom nav. Its optional `open` is the address the workshop
+  pretends to be on, which decides the nav's current page.
+  `AdminTabbedFrame` is a tabbed admin page inside it, as its route draws
+  it: heading and tabs from `ADMIN_PAGES`, and an `action`. Nine stories
+  drew this by hand before MB.115. It is the layout's markup only; the app's
+  own layout reads the session.
+- **`shell-frame.tsx`** — the application shell around a story, as
+  `src/app/(shell)/layout.tsx` and the area layouts draw it: the bar, the
+  context row, then the page, with fixture props (`FIXTURE_VIEWER`,
+  `FIXTURE_WORKSPACES`). `ShellFrame`'s `area` picks the context row: a
+  coven's (switcher and nav), the admin area's, the create page's (the
+  switcher alone, and no row when there is no coven to switch to), or
+  none, as on the account pages. Its `FIXTURE_WORKSPACES` carry each coven's
+  `canReadMembers` as the layout works it out from the role (a member of the
+  first two, a viewer of the third), so the coven nav offers Members as it
+  would in the app. Like `admin-frame.tsx`, it is markup only;
+  the layouts it copies are server components that read the session.
 - **`fixtures.ts`** — invented rows the admin stories share, so a form's story
   and its list's story offer the same data: `GROUP_NAMES` (four names per kind
   of group), fixed ids with `asOptions()` and `asSlugs()` to shape them for a
@@ -154,17 +217,18 @@ without a page routed to it.
   opens on a state a button press reaches, such as a Delete question over its
   form.
 - **`types.ts`** — the types the workshop's helpers share, kept apart from
-  their components as the repo keeps types: `AdminTabbedFrameProps` today.
+  their components as the repo keeps types: `AdminTabbedFrameProps` and
+  `ShellFrameProps`.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).
 - **`foundations.{tsx,scss,stories.tsx}`** — one reference page under
   `Foundations`: the raw palette and the runtime tokens, the type scale and
-  `type-size()`'s four roles, `space()`'s steps, `radius()`'s roles, every
+  `type-size()`'s five roles, `space()`'s steps, `radius()`'s roles, every
   button, notices, a form built from the field primitives (a label row with
   its required mark and `InfoTip` among them), the switch off, on and
   disabled either way, through `SwitchField`, the page frame
-  and its narrow form, the link row with its current-page link, the data
+  and its narrow form (with the account page's heading and `PageNav`), the data
   table, the pager (in a list navigation that goes nowhere, since `Pager`
   reads its `ListFrame`'s), the filter row with a switch, the page header, the four providers' sign-in buttons in
   each state with their brand parts printed from `$brand-palettes`, the

@@ -25,6 +25,7 @@ import type { CitationFields } from '../../lib/types';
 import Modal from '../Modal';
 import IngredientForm from '.';
 import { press } from '../../../.ladle/press';
+import { Reopenable } from '../../../.ladle/reopenable';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 
@@ -38,7 +39,7 @@ import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 // for each state. The TanStack Query client comes from the workshop's global provider
 // (.ladle/components.tsx), as it does from the app's root layout.
 export default {
-  title: 'Forms / Ingredient',
+  title: 'Admin / Ingredient Form',
 };
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';
@@ -604,7 +605,7 @@ function refusal(operation: string, variables: Record<string, unknown>): object 
 
 /**
  * Answers the form from the rows above while the story is mounted, in place
- * of `window.fetch`, which graphql-request looks up on every request; a save
+ * of `window.fetch`, which the GraphQL client looks up on every request; a save
  * after `SAVE_DELAY_MS`, refused or accepted. The original is put back on
  * unmount, so no other story sees the stub.
  */
@@ -1165,19 +1166,23 @@ export const CompendiumEntrySubstituteSummary: Story = () => {
 export const CompendiumEntryInModal: Story = () => {
   useCannedApi();
   return (
-    <Modal
-      eyebrow="Edit Ingredient"
-      title="Testwort"
-      qualifier={<span className="binomial">Fixtura testalis</span>}
-      onClose={() => undefined}
-    >
-      <IngredientForm
-        workspaceId={null}
-        entry={ENTRY}
-        entryHref={entryHref}
-        onCancel={() => undefined}
-      />
-    </Modal>
+    <Reopenable>
+      {(close) => (
+        <Modal
+          eyebrow="Edit Ingredient"
+          title="Testwort"
+          qualifier={<span className="binomial">Fixtura testalis</span>}
+          onClose={close}
+        >
+          <IngredientForm
+            workspaceId={null}
+            entry={ENTRY}
+            entryHref={entryHref}
+            onCancel={() => undefined}
+          />
+        </Modal>
+      )}
+    </Reopenable>
   );
 };
 

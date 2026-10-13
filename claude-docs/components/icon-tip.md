@@ -17,10 +17,11 @@ Edit link.
 
 `IconTip`:
 
-| Prop       | Meaning                                                                                      |
-| ---------- | -------------------------------------------------------------------------------------------- |
-| `tip`      | The word or two shown: "Edit", "Edit Source". Shown only, never read (see "Accessibility").  |
-| `children` | The one icon control, a `<button>` or a link, which keeps its own name, role and attributes. |
+| Prop        | Meaning                                                                                      |
+| ----------- | -------------------------------------------------------------------------------------------- |
+| `tip`       | The word or two shown: "Edit", "Edit Source". Shown only, never read (see "Accessibility").  |
+| `children`  | The one icon control, a `<button>` or a link, which keeps its own name, role and attributes. |
+| `placement` | `'side'` (the default) or `'below'`: where the tip stands (see "Placement").                 |
 
 `EditLink`:
 
@@ -77,6 +78,9 @@ it in `aria-describedby`: as a description it would read "Edit" a second
 time. A link stays a link and a button a button, with the names they had as
 words, so the tests and the e2e specs find them as before.
 
+- **The account menu's invitation count** (M10.32), a red circle at the right
+  end of the Your Account row, wearing "You have N Coven Invitations" with
+  `placement="below"` ([`account-menu.md`](account-menu.md)).
 - **The admin pages' shared Add** (`add-action.tsx`): the tip is its label,
   "Add Category", and draws only at the page header's narrow width, where the
   label is hidden and the link is a plus alone, and, on a tabbed page, at or under
@@ -99,6 +103,15 @@ inside the frame, so nothing is clipped. A phone card (a `.data-table--stack`
 table under `$table-stack-width`) keeps the tip to the left: above the first
 card's top-right Edit is only the card's padding, and the frame would cut it
 off.
+
+**Below the control, its right edge on the control's** (`placement="below"`,
+`.icon-tip__bubble--below`), for a mark at the right end of a row with rows
+beneath it, such as the account menu's invitation count (M10.32, the owner's
+call). A tip to its left would cover the row's own words, and one centred under
+it would run past the edge of the menu panel. The panel no longer clips, so the
+tip can hang past the panel's edge. It fades in from, and out to, two pixels above
+its place. It is the one placement chosen by a prop; the others follow from
+where the control sits.
 
 **Over the Add's plus, above it and right-aligned** to the plus's right edge, so it stays inside the window at the line's end, at `layer('floating')`. The action's wrapper carries no `translate` (it is brought down to the heading's letters with `position: relative; top` instead): a `translate` makes the wrapper a stacking context, which would rank the tip's layer only inside it and hold the tip under the shell's bar once the page is scrolled.
 
@@ -129,11 +142,14 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 
 ## Stories
 
-`Admin / Icon Tip`: `InAListRow`, three banded rows, so the pencil shows on
-the page and on the card, and the `PhoneDark` / `PhoneLight` pair, the rows
-as cards with the pencil at each card's top right. Hover or focus a pencil to
-see its tip. The form's pencils are in the ingredient form's stories, and
-every list's in its own.
+[`index.stories.tsx`](../../src/components/IconTip/index.stories.tsx),
+`Layout / Icon Tip`, filed by kind rather than place, as the pencil is used in
+the admin lists and the ingredient form alike: `InAListRow`, three banded rows
+of a list's own table, with the pencil in an unlabelled last column at the
+row's end, so it shows on the page and on the card, and the `PhoneDark` /
+`PhoneLight` pair, the rows as cards with the pencil at each card's top
+right. Hover or focus a pencil to see its tip. The form's pencils are in the
+ingredient form's stories, and every list's in its own.
 
 ## Testing
 

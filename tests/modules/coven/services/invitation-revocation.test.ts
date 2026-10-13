@@ -44,7 +44,7 @@ async function insertCoven(name: string): Promise<string> {
   return row.id as string;
 }
 
-type State = 'pending' | 'accepted' | 'revoked' | 'expired';
+type State = 'pending' | 'accepted' | 'revoked' | 'expired' | 'declined';
 
 /** An invitation into `workspaceId` in the given state, created by `by`. */
 async function insertInvitation(
@@ -56,12 +56,12 @@ async function insertInvitation(
 ): Promise<string> {
   const [row] = await sql`
     insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, created_at,
-      expires_at, accepted_at, accepted_by, revoked_at)
+      expires_at, accepted_at, accepted_by, revoked_at, declined_at)
     values (${`${label}${DOMAIN}`}, ${`hash-${label}-${workspaceId}`}, ${workspaceId}, 'member', ${by}, ${by},
       now() - ${ageHours} * interval '1 hour',
       ${state === 'expired' ? sql`now() - interval '1 second'` : sql`now() + interval '7 days'`},
       ${state === 'accepted' ? sql`now()` : null}, ${state === 'accepted' ? D.id : null},
-      ${state === 'revoked' ? sql`now()` : null})
+      ${state === 'revoked' ? sql`now()` : null}, ${state === 'declined' ? sql`now()` : null})
     returning id`;
   return row.id as string;
 }
@@ -71,6 +71,9 @@ const stateOf = async (id: string) =>
     await sql<CovenInvitationStateRow[]>`
       select id, accepted_at, revoked_at, updated_by from invitations where id = ${id}`
   )[0];
+
+const declinedAtOf = async (id: string) =>
+  (await sql`select declined_at from invitations where id = ${id}`)[0]?.declined_at as Date | null;
 
 let coven: string;
 beforeEach(async () => {
@@ -129,6 +132,89 @@ describe('revokeWorkspaceInvitation', () => {
 
     await expect(revokeWorkspaceInvitation(asUser(A), coven, id)).rejects.toThrow(NotFound);
     expect((await stateOf(id))?.revoked_at).toBeNull();
+  });
+});
+
+// M10.34: a declined invitation is the invitee's answer, not a lapse. It stays on
+// the owner's list, whatever its expiry, until the owner removes it, and Remove
+// is the revoke.
+describe('a declined invitation (M10.34)', () => {
+  it('is listed and counted for the owner beside a pending one, and carries when it was declined', async () => {
+    const pending = await insertInvitation(coven, 'pending', 'pending', A.id, 2);
+    const declined = await insertInvitation(coven, 'declined', 'declined', A.id, 1);
+    // Why it is the decline that keeps a row listed: a lapsed one is not.
+    await insertInvitation(coven, 'lapsed', 'expired');
+
+    const page = await listPendingWorkspaceInvitations(asUser(A), coven, FIRST_PAGE);
+
+    expect(page.map(({ node }) => node.id)).toEqual([declined, pending]);
+    expect(page[0]!.node.declinedAt).toBeInstanceOf(Date);
+    expect(page[1]!.node.declinedAt).toBeNull();
+    expect(await countPendingWorkspaceInvitations(asUser(A), coven, undefined)).toMatchObject({
+      totalCount: 2,
+    });
+  });
+
+  it('stays listed past its expiry, until the owner revokes it', async () => {
+    const id = await insertInvitation(coven, 'declined', 'declined');
+    await sql`update invitations set expires_at = now() - interval '1 day' where id = ${id}`;
+
+    const before = await listPendingWorkspaceInvitations(asUser(A), coven, FIRST_PAGE);
+    expect(before.map(({ node }) => node.id)).toEqual([id]);
+
+    await revokeWorkspaceInvitation(asUser(A), coven, id);
+
+    expect(await listPendingWorkspaceInvitations(asUser(A), coven, FIRST_PAGE)).toEqual([]);
+    expect(await countPendingWorkspaceInvitations(asUser(A), coven, undefined)).toMatchObject({
+      totalCount: 0,
+    });
+  });
+
+  it('is removed by the owner’s revoke, which stamps revoked and keeps the decline', async () => {
+    const id = await insertInvitation(coven, 'declined', 'declined');
+    expect((await stateOf(id))?.revoked_at).toBeNull();
+
+    const row = await revokeWorkspaceInvitation(asUser(A), coven, id);
+
+    expect(row.id).toBe(id);
+    expect(await stateOf(id)).toMatchObject({
+      revoked_at: expect.any(Date),
+      accepted_at: null,
+      updated_by: A.id,
+    });
+    expect(await declinedAtOf(id)).toBeInstanceOf(Date);
+    expect(await listPendingWorkspaceInvitations(asUser(A), coven, FIRST_PAGE)).toEqual([]);
+  });
+
+  it('refuses everyone but an owner the removal and the list, by direct id, while it is there and declined', async () => {
+    const id = await insertInvitation(coven, 'declined', 'declined');
+    // Why each could have removed it: it exists, declined, in this coven, and the owner takes it.
+    expect(await declinedAtOf(id)).toBeInstanceOf(Date);
+
+    for (const who of [B, C, D, E]) {
+      await expect(revokeWorkspaceInvitation(asUser(who), coven, id)).rejects.toThrow(Forbidden);
+      await expect(listPendingWorkspaceInvitations(asUser(who), coven, FIRST_PAGE)).rejects.toThrow(
+        Forbidden,
+      );
+    }
+    expect((await stateOf(id))?.revoked_at).toBeNull();
+    await expect(revokeWorkspaceInvitation(asUser(A), coven, id)).resolves.toMatchObject({ id });
+  });
+
+  it('is not reached through another coven', async () => {
+    const other = await insertCoven(`Fixture Coven Other ${Math.random().toString(36).slice(2)}`);
+    const id = await insertInvitation(other, 'declined', 'declined');
+
+    await expect(revokeWorkspaceInvitation(asUser(A), coven, id)).rejects.toThrow(NotFound);
+    expect((await stateOf(id))?.revoked_at).toBeNull();
+    expect(await listPendingWorkspaceInvitations(asUser(A), coven, FIRST_PAGE)).toEqual([]);
+  });
+
+  it('answers a second removal as not found', async () => {
+    const id = await insertInvitation(coven, 'declined', 'declined');
+    await revokeWorkspaceInvitation(asUser(A), coven, id);
+
+    await expect(revokeWorkspaceInvitation(asUser(A), coven, id)).rejects.toThrow(NotFound);
   });
 });
 

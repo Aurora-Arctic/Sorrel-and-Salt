@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { Forbidden } from '@/lib/errors';
+import { Forbidden, NotFound } from '@/lib/errors';
 import { invitationSender } from '@/lib/invitation-mail';
 import type { Session } from '@/lib/session';
 import type { Message } from '@/lib/types';
@@ -15,7 +15,7 @@ import {
   type WorkspaceRow,
 } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
-import { acceptInvitation, invitationStanding } from '@/modules/identity';
+import { acceptInvitation, acceptInvitationById, invitationStanding } from '@/modules/identity';
 import {
   createWorkspaceIngredient,
   deleteWorkspaceIngredient,
@@ -66,9 +66,9 @@ useTestDatabase((client) => {
 
 type Sender = ReturnType<typeof invitationSender>;
 
-/** M7.6's write: owner only, a pending invitation. The name is the scaffold's guess. */
+/** M7.6's write: owner only, a pending invitation.  */
 interface InvitationRevokes {
-  revokeInvitation(session: Session, id: string): Promise<unknown>;
+  revokeWorkspaceInvitation(session: Session, workspaceId: string, id: string): Promise<unknown>;
 }
 
 /** M6.15's writes: an owner removes; anyone leaves, so `leaveWorkspace` takes no user id. */
@@ -87,12 +87,12 @@ interface MemberRoles {
   ): Promise<unknown>;
 }
 
-/** M6.14's write, an owner's soft delete. The name is the scaffold's guess. */
+/** M6.14's write, an owner's soft delete.  */
 interface WorkspaceDeletion {
   deleteWorkspace(session: Session, workspaceId: string): Promise<void>;
 }
 
-/** M10.5's read. The name is the scaffold's guess. */
+/** M10.5's read.  */
 interface SpellReads {
   getSpell(session: Session, workspaceId: string, spellId: string): Promise<{ id: string }>;
 }
@@ -194,6 +194,8 @@ beforeEach(async () => {
   const invitees = sql`select id from users where email like ${`%${INVITE_DOMAIN}`}`;
   await sql`truncate invitations`;
   await sql`delete from workspace_members where user_id in (${invitees})`;
+  // Accepting a coven’s invitation grants workspace creation, which the append-only ledger records (M7.5), so it is truncated, not deleted from.
+  await sql`truncate user_privilege_changes`;
   await sql`delete from users where email like ${`%${INVITE_DOMAIN}`}`;
 });
 
@@ -295,13 +297,44 @@ describe('Story 4: Invite someone to my workspace by email with a chosen role (v
     await acceptInvitation(invited, token);
     expect((await invitationFor(INVITED)).accepted_by).toBe(invited.userId);
   });
+
+  it("refuses another verified account the same invitation by its id, and admits the address's holder", async () => {
+    const stranger = await insertInvitee(STRANGER);
+    const invited = await insertInvitee(INVITED);
+    const row = await createInvitation(
+      asUser(A),
+      WORKSPACE_W_ID,
+      { email: INVITED, role: 'member' },
+      sender(),
+    );
+
+    // Why it could have succeeded: the row is pending, the stranger is a
+    // verified signed-in account, and the id is the one the holder will use.
+    expect(await invitationFor(INVITED)).toMatchObject({
+      id: row.id,
+      accepted_at: null,
+      revoked_at: null,
+    });
+    const [verified] = await sql`select email_verified from users where id = ${stranger.userId}`;
+    expect(verified.email_verified).toBe(true);
+
+    await expect(acceptInvitationById(stranger, row.id)).rejects.toThrow(NotFound);
+    expect((await invitationFor(INVITED)).accepted_at).toBeNull();
+    await expect(assertMembership(stranger, WORKSPACE_W_ID, { spell: ['read'] })).rejects.toThrow(
+      Forbidden,
+    );
+
+    // The same id, from the address's holder, is accepted.
+    await acceptInvitationById(invited, row.id);
+    expect((await invitationFor(INVITED)).accepted_by).toBe(invited.userId);
+  });
 });
 
 describe("Story 5: Revoke a pending invitation before it's accepted.", () => {
   it('stamps revoked_at and keeps the row for the owner alone, and refuses an accepted one', async () => {
-    const { revokeInvitation } = surface<InvitationRevokes>(
+    const { revokeWorkspaceInvitation } = surface<InvitationRevokes>(
       await coven(),
-      ['revokeInvitation'],
+      ['revokeWorkspaceInvitation'],
       'M7.6',
     );
     const invited = await insertInvitee(INVITED);
@@ -322,13 +355,19 @@ describe("Story 5: Revoke a pending invitation before it's accepted.", () => {
 
     // A direct id, from a member and from a viewer, with the pending row there to hit.
     expect(await invitationFor(INVITED)).toMatchObject({ id: pending.id, revoked_at: null });
-    await expect(revokeInvitation(asUser(B), pending.id)).rejects.toThrow(Forbidden);
-    await expect(revokeInvitation(asUser(C), pending.id)).rejects.toThrow(Forbidden);
+    await expect(revokeWorkspaceInvitation(asUser(B), WORKSPACE_W_ID, pending.id)).rejects.toThrow(
+      Forbidden,
+    );
+    await expect(revokeWorkspaceInvitation(asUser(C), WORKSPACE_W_ID, pending.id)).rejects.toThrow(
+      Forbidden,
+    );
     // An owner of another workspace is no owner of this one.
-    await expect(revokeInvitation(asUser(D), pending.id)).rejects.toThrow();
+    await expect(
+      revokeWorkspaceInvitation(asUser(D), WORKSPACE_W_ID, pending.id),
+    ).rejects.toThrow();
     expect((await invitationFor(INVITED)).revoked_at).toBeNull();
 
-    await revokeInvitation(asUser(A), pending.id);
+    await revokeWorkspaceInvitation(asUser(A), WORKSPACE_W_ID, pending.id);
     expect((await invitationFor(INVITED)).revoked_at).not.toBeNull();
     // The link is dead: the invited account cannot use it.
     await expect(acceptInvitation(invited, mailedToken(INVITED))).rejects.toThrow(Forbidden);
@@ -336,7 +375,7 @@ describe("Story 5: Revoke a pending invitation before it's accepted.", () => {
     // Accepted is not pending: removing that person is a membership action.
     const used = await invitationFor(STRANGER);
     expect(used.accepted_at).not.toBeNull();
-    await expect(revokeInvitation(asUser(A), used.id)).rejects.toThrow();
+    await expect(revokeWorkspaceInvitation(asUser(A), WORKSPACE_W_ID, used.id)).rejects.toThrow();
     expect((await invitationFor(STRANGER)).revoked_at).toBeNull();
   });
 });
@@ -363,15 +402,44 @@ describe('Story 6: Accept an invitation and land in the workspace.', () => {
     const [after] = await sql`select can_create_workspace from users where id = ${invited.userId}`;
     expect(after.can_create_workspace).toBe(true);
   });
+
+  it("accepts from the landing by the invitation's id, with the same seat, stamp and grant", async () => {
+    const invited = await insertInvitee(INVITED);
+    const [before] = await sql`
+      select can_create_workspace from users where id = ${invited.userId}
+    `;
+    expect(before.can_create_workspace).toBe(false);
+    const row = await createInvitation(
+      asUser(A),
+      WORKSPACE_W_ID,
+      { email: INVITED, role: 'viewer' },
+      sender(),
+    );
+    await expect(assertMembership(invited, WORKSPACE_W_ID, { spell: ['read'] })).rejects.toThrow(
+      Forbidden,
+    );
+
+    const accepted = await acceptInvitationById(invited, row.id);
+
+    expect(accepted).toMatchObject({ acceptedBy: invited.userId, workspaceId: WORKSPACE_W_ID });
+    expect(accepted.acceptedAt).toBeInstanceOf(Date);
+    expect((await assertMembership(invited, WORKSPACE_W_ID, { spell: ['read'] })).role).toBe(
+      'viewer',
+    );
+    const [after] = await sql`select can_create_workspace from users where id = ${invited.userId}`;
+    expect(after.can_create_workspace).toBe(true);
+    // The mailed link is spent with it.
+    await expect(acceptInvitation(invited, mailedToken(INVITED))).rejects.toThrow(Forbidden);
+  });
 });
 
 describe('Story 7: Be rejected if a link is expired, revoked, or already used.', () => {
   it('refuses each with its own reason, and none names the workspace', async () => {
     // Through M7.3 and M7.6 rather than raw rows: MB.70's dead-link checks
     // already hold for a seeded row, so a raw setup would pass today.
-    const { revokeInvitation } = surface<InvitationRevokes>(
+    const { revokeWorkspaceInvitation } = surface<InvitationRevokes>(
       await coven(),
-      ['revokeInvitation'],
+      ['revokeWorkspaceInvitation'],
       'M7.6',
     );
     const LATE = `late${INVITE_DOMAIN}`;
@@ -388,7 +456,7 @@ describe('Story 7: Be rejected if a link is expired, revoked, or already used.',
 
     await acceptInvitation(invited, used);
     await sql`update invitations set expires_at = now() - interval '1 hour' where email = ${LATE}`;
-    await revokeInvitation(asUser(A), (await invitationFor(GONE)).id);
+    await revokeWorkspaceInvitation(asUser(A), WORKSPACE_W_ID, (await invitationFor(GONE)).id);
 
     // Each account holds the matching verified address, so only the link is at fault.
     const expiredStanding = await invitationStanding(lateUser, expired);
