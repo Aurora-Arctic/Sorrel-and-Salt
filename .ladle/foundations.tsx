@@ -61,7 +61,7 @@ const STILL_LIST: ListNavigation = { pending: false, go: () => {} };
 // Keys only: each value, and the label beside it, is printed by
 // foundations.scss from the map in _variables.scss.
 const SPACE_STEPS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
-const TYPE_SIZES = ['body', 'small', 'caption', 'overline'] as const;
+const TYPE_SIZES = ['body', 'small', 'caption', 'overline', 'tab'] as const;
 const RADII = ['sharp', 'control', 'surface', 'pill'] as const;
 
 function SectionHead({

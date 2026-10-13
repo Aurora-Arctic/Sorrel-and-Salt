@@ -170,7 +170,7 @@ without a page routed to it.
   self-hosts them via `next/font`, which the workshop has no equivalent of).
 - **`foundations.{tsx,scss,stories.tsx}`** — one reference page under
   `Foundations`: the raw palette and the runtime tokens, the type scale and
-  `type-size()`'s four roles, `space()`'s steps, `radius()`'s roles, every
+  `type-size()`'s five roles, `space()`'s steps, `radius()`'s roles, every
   button, notices, a form built from the field primitives (a label row with
   its required mark and `InfoTip` among them), the switch off, on and
   disabled either way, through `SwitchField`, the page frame
