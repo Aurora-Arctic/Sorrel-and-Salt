@@ -156,33 +156,54 @@ test.describe(
   },
 );
 
-test.describe('a coven’s invitation from the landing', () => {
+test.describe('a coven’s invitation from the account page', () => {
   test(
-    'D finds it on /coven and accepts it there, and the mailed link is then spent',
+    'D is told on /coven, accepts it on the account page, and the mailed link is then spent',
     { tag: ['@story-2', '@story-6'] },
     async ({ page }) => {
       const invited = address('d');
       await ownerInvites(page, invited);
       const linkPath = await mailedInvitePath(invited);
+      const banner = page.getByRole('banner');
 
-      // Another signed-in account, with no seat anywhere, sees none of it.
+      // Another signed-in account, with no seat anywhere, is told of none.
       await signInAs(page, address('other'));
       await page.goto('/coven');
       await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-      await expect(page.getByRole('table', { name: 'Your Invitations' })).toHaveCount(0);
-      await expect(page.getByRole('button', { name: /^Accept the invitation to / })).toHaveCount(0);
+      await expect(page.getByRole('link', { name: 'See your invitations' })).toHaveCount(0);
+      await expect(
+        banner.getByRole('button', { name: 'Fixture Person', exact: true }),
+      ).toBeVisible();
 
       // D holds the invited address, verified, and never opens the mail.
       const { userId } = await signInAs(page, invited);
       await page.goto('/coven');
-      const table = page.getByRole('table', { name: 'Your Invitations' });
-      await expect(table).toBeVisible();
+      const see = page.getByRole('link', { name: 'See your invitations' });
+      await expect(see).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+
+      // The account menu says so too, its count a link to the same section.
+      const account = banner.getByRole('button', { name: 'Fixture Person, 1 coven invitation' });
+      await account.click();
+      await expect(banner.getByRole('link', { name: '1 Coven Invitation' })).toHaveAttribute(
+        'href',
+        '/account#account-invitations',
+      );
+      await page.keyboard.press('Escape');
+
+      await see.click();
+      await expect(page).toHaveURL(/\/account#account-invitations$/);
+      await expect(page.getByRole('table', { name: 'Your Invitations' })).toBeVisible();
       await assertNoAccessibilityViolations(page);
       expect(await page.content()).not.toContain(linkPath);
       await page.getByRole('button', { name: `Accept the invitation to ${COVEN_NAME}` }).click();
 
       await expect(page).toHaveURL(new RegExp(`/coven/${COVEN_SLUG}$`));
       await expect(page.getByRole('heading', { level: 1, name: COVEN_NAME })).toBeVisible();
+      // The shell redrew: nothing is waiting any more.
+      await expect(
+        banner.getByRole('button', { name: 'Fixture Person', exact: true }),
+      ).toBeVisible();
       const [seat] = await withSql(
         (sql) => sql`
         select role::text from workspace_members
