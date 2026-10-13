@@ -1,13 +1,15 @@
 import type { PagePosition } from '../../lib/types';
 import type { WorkspaceRole } from '@/modules/coven';
 
-/** One pending invitation of a coven, as the members page lists it (M7.6). */
+/** One open invitation of a coven, as the members page lists it (M7.6): pending, or declined and not yet removed (M10.34). */
 export interface PendingInvitationEntry {
   id: string;
   email: string;
   /** The role the invitation grants; never an owner. */
   role: WorkspaceRole;
   expiresAt: Date;
+  /** When the invitee declined it, from their account page; `null` while it is pending. */
+  declinedAt: Date | null;
 }
 
 export interface PendingInvitationsProps {
@@ -22,7 +24,7 @@ export interface PendingInvitationsProps {
   position?: PagePosition;
 }
 
-/** A row's Revoke: the invitation it withdraws. */
+/** A row's Revoke, or a declined row's Remove: the invitation it stamps. */
 export interface RevokeControlProps {
   workspaceId: string;
   invitation: Pick<PendingInvitationEntry, 'id' | 'email'>;

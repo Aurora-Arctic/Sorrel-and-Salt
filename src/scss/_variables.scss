@@ -74,8 +74,9 @@ $shadow-light: rgba(35, 32, 26, 0.18);
 // Badge palettes
 // ---------------------------------------------------------------------------
 // Safety is a warning and low stock an inventory state, so one is a solid
-// sealing-wax fill and the other a muted tint. Last used is a pointer, not a
-// warning, so it is solid in the accent, which spends no new hue. A palette
+// sealing-wax fill and the other a muted tint. Attention, something waiting on
+// the reader, wears safety's fill. Last used is a pointer, not a warning, so
+// it is solid in the accent, which spends no new hue. A palette
 // emits only its own treatment's parts: safety's ink fails AA as a tint, so
 // asking for its `bg` is a compile error. claude-docs/styling.md, "Badge palettes".
 $badge-treatments: (
@@ -87,13 +88,25 @@ $badge-treatments: (
   ),
 );
 
+// The solid wax fill two palettes share, so they cannot drift apart.
+$wax-badge-dark: color.adjust($wax, $saturation: 22%, $lightness: 18%);
+$wax-badge-light: color.adjust($wax, $saturation: 22%);
+
 $badge-palettes: (
   // Both inks carry +22% saturation, holding the two halves the same red. The
   // dark lift is +18%, sized for the label ($soot) on the fill, not for text on soot.
   'safety': (
       treatment: solid,
-      dark: color.adjust($wax, $saturation: 22%, $lightness: 18%),
-      light: color.adjust($wax, $saturation: 22%),
+      dark: $wax-badge-dark,
+      light: $wax-badge-light,
+    ),
+  // Something waiting on the reader, such as the account menu's count of
+  // pending invitations (M10.32): safety's inks, already contrast-checked for
+  // the label, under a name that does not call the count a hazard.
+  'attention': (
+      treatment: solid,
+      dark: $wax-badge-dark,
+      light: $wax-badge-light,
     ),
   'low-stock': (
     treatment: tinted,

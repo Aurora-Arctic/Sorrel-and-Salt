@@ -72,3 +72,11 @@ redirected into the first coven the switcher lists; someone with none who may
 create one is offered the create page; anyone else reads that the site is
 invite-only and how to get in. "Continue" on the front door and on the email
 page are `<Link>`s, typed by `postSignInLanding` returning Next's `Route`.
+
+Since M10.32, both non-member states tell the account, in a notice, how many
+pending coven invitations wait for its verified email and link to the account
+page's Invitations section, where they are listed and accepted; a member is
+still redirected. The first build listed them on the landing itself, and the
+owner moved the list to the account page on 2026-10-13
+([`m10.32-accept-from-the-landing.md`](m10.32-accept-from-the-landing.md),
+"Where the list lives").

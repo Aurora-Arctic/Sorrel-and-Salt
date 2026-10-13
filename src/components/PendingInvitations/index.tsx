@@ -4,12 +4,16 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import { inUtc } from '../../lib/utc';
+import RemoveControl from './remove-control';
 import RevokeControl from './revoke-control';
 import type { PendingInvitationsProps } from './types';
+import './index.scss';
 
-// The invitations an owner has sent and nobody has answered, under the
-// members roll (M7.6): address, role and expiry, newest first, with Revoke on
-// each and its own pager. The page draws it for owners only and reads it
+// The invitations an owner has sent and nobody has accepted, under the
+// members roll (M7.6): address, role and status, newest first, with its own
+// pager. A pending one shows when it expires and offers Revoke; one the
+// invitee declined shows when, and offers Remove, until the owner clears it
+// (M10.34). The page draws it for owners only and reads it
 // through the services that check `member: invite`; nothing here decides who
 // may see it (claude-docs/components/pending-invitations.md).
 
@@ -29,19 +33,28 @@ const PendingInvitations = ({
             { heading: 'Email', cell: (invitation) => invitation.email },
             { heading: 'Role', cell: (invitation) => workspaceRoleLabel(invitation.role) },
             {
-              heading: 'Expires',
-              cell: (invitation) => (
-                <time dateTime={invitation.expiresAt.toISOString()}>
-                  {inUtc(invitation.expiresAt)}
-                </time>
-              ),
+              heading: 'Status',
+              cell: ({ declinedAt, expiresAt }) =>
+                declinedAt ? (
+                  <>
+                    <span className="pending-invitations__declined">Declined</span>
+                    <time dateTime={declinedAt.toISOString()}>{inUtc(declinedAt)}</time>
+                  </>
+                ) : (
+                  <>
+                    Expires <time dateTime={expiresAt.toISOString()}>{inUtc(expiresAt)}</time>
+                  </>
+                ),
             },
             {
-              heading: 'Revoke',
+              heading: 'Action',
               action: 'foot',
-              cell: (invitation) => (
-                <RevokeControl workspaceId={workspaceId} invitation={invitation} />
-              ),
+              cell: (invitation) =>
+                invitation.declinedAt ? (
+                  <RemoveControl workspaceId={workspaceId} invitation={invitation} />
+                ) : (
+                  <RevokeControl workspaceId={workspaceId} invitation={invitation} />
+                ),
             },
           ]}
           rows={invitations}

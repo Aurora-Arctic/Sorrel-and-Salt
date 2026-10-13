@@ -222,6 +222,12 @@ export interface ShellViewer {
   canCreate: boolean;
   /** Their address is verified. Until it is, the shell offers an account menu with Sign Out and nothing else. */
   verified: boolean;
+  /**
+   * How many coven invitations wait for their verified address (M10.32): the
+   * account menu's count and the landing's notice. Never read for an
+   * unverified account, which reads 0.
+   */
+  pendingInvitations: number;
 }
 
 /** One coven the viewer belongs to, as the shell's switcher and brand link need it. */

@@ -118,7 +118,7 @@ The primary admin alone can pause and resume admin grants and revokes for every 
 
 ### Inviting an admin (MB.70)
 
-An admin invites an address to become an admin through `createAdminInvitation`, which mails a `crypto.randomBytes` token's link and stores only its hash, and withdraws one through `revokeAdminInvitation`, both paused for every admin but the primary one. The one accept service, `acceptInvitation`, rejects an accepted, revoked or expired link in that order, admits only the session holding the invited address verified, and grants admin declared `{ via: 'invitation', note }` so the trigger records it; `/invite/[token]` is its page. In [`auth/admin-users.md`](auth/admin-users.md#inviting-an-admin-mb70).
+An admin invites an address to become an admin through `createAdminInvitation`, which mails a `crypto.randomBytes` token's link and stores only its hash, and withdraws one through `revokeAdminInvitation`, both paused for every admin but the primary one. The one accept service, `acceptInvitation`, rejects an accepted, revoked or expired link in that order, admits only the session holding the invited address verified, and grants admin declared `{ via: 'invitation', note }` so the trigger records it; `/invite/[token]` is its page, and a coven invitation also accepts by id from the account page, where the invitee's pending ones are listed (M10.32); an admin invitation accepts by its link alone. In [`auth/admin-users.md`](auth/admin-users.md#inviting-an-admin-mb70).
 
 ## Plugins (MB.74)
 

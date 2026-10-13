@@ -61,6 +61,27 @@
   }
 }
 
+// Below the control, its right edge on the control's: for a mark at a row's
+// right end with rows beneath it, where a tip to its left would cover the
+// row's own words and one centred under it would run past the edge a menu
+// panel clips at (the account menu's count, M10.32, the owner's call).
+.icon-tip__bubble.icon-tip__bubble--below {
+  inset: 100% 0 auto auto;
+  margin: space(1) 0 0;
+  translate: none;
+
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
+  @starting-style {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+
+  &.icon-tip__bubble--closing {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+}
+
 @container data-table (max-width: #{$table-stack-width}) {
   .data-table--stack .icon-tip__bubble {
     inset: 50% 100% auto auto;

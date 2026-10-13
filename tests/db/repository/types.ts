@@ -6,8 +6,9 @@ export interface Walk {
   counts: PageCount[];
 }
 
-/** What an invitation test varies beside the address, the role and the default token. */
+/** What an invitation test varies beside the role and the default address and token. */
 export interface InvitationOverrides {
+  email?: string;
   token?: string;
   expiresAt?: Date;
   note?: string;

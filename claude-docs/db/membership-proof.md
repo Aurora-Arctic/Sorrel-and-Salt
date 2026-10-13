@@ -60,7 +60,7 @@ two transports").
 
 **The finder convention** has a file of its own: [`finder-convention.md`](finder-convention.md).
 
-### The four reads that take no proof
+### The reads that take no proof
 
 `findWorkspaceRole(userId, workspaceId)` is what mints a proof, so it cannot
 demand one. It is narrow on purpose — it answers with a role, not with rows —
@@ -94,6 +94,22 @@ hash out of a dumped row finds nothing. It answers the live invitation the
 token names, on either tier and whatever its state; the accept beside it
 matches only the session's user holding the invited address, verified
 ([`invitations.md`](invitations.md), "Written and read by tier").
+
+`findInvitedCoven(workspaceId)` is the fifth (M7.5), beside it: the name and
+slug of the live coven an invitation names, for the Accept page's heading and
+where acceptance lands, and nothing else of the row. The service calls it only
+after the address check, so only the account the invitation names reads the
+name.
+
+**The received reads (M10.32)** take no proof for the token read's reason,
+with the session row in the token's place: `findReceivedInvitationPage`,
+`findReceivedInvitationCount`, `findReceivedInvitation`,
+`findReceivedInvitationCovens` and `findReceivedInvitationInviters` each AND
+`heldVerifiedBySession(session)`, the predicate the accept write already
+holds, and the workspace tier, so a signed-in account reads only the coven
+invitations addressed to its own verified email, and the coven's name and
+slug and the inviter's name for those alone ([`invitations.md`](invitations.md),
+"Accepting from the account page").
 
 ### The write that takes no proof
 

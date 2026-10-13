@@ -69,7 +69,10 @@ type Documents = {
     "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": typeof types.RemoveMemberDocument,
     "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": typeof types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": typeof types.SetNameDocument,
+    "\n  mutation RemoveDeclinedInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.RemoveDeclinedInvitationDocument,
     "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeInvitationDocument,
+    "\n  mutation AcceptInvitationById($id: ID!) {\n    acceptInvitationById(id: $id) {\n      id\n      acceptedAt\n    }\n  }\n": typeof types.AcceptInvitationByIdDocument,
+    "\n  mutation DeclineInvitationById($id: ID!) {\n    declineInvitationById(id: $id) {\n      id\n      declinedAt\n    }\n  }\n": typeof types.DeclineInvitationByIdDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": typeof types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": typeof types.PauseAdminRoleChangesDocument,
@@ -132,7 +135,10 @@ const documents: Documents = {
     "\n  mutation RemoveMember($workspaceId: ID!, $userId: ID!) {\n    removeMember(workspaceId: $workspaceId, userId: $userId)\n  }\n": types.RemoveMemberDocument,
     "\n  mutation UpdateMemberRole($workspaceId: ID!, $userId: ID!, $role: WorkspaceRole!) {\n    updateMemberRole(workspaceId: $workspaceId, userId: $userId, role: $role) {\n      role\n      user {\n        id\n      }\n    }\n  }\n": types.UpdateMemberRoleDocument,
     "\n  mutation SetName($name: String!) {\n    setName(name: $name) {\n      id\n      name\n    }\n  }\n": types.SetNameDocument,
+    "\n  mutation RemoveDeclinedInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.RemoveDeclinedInvitationDocument,
     "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n": types.RevokeInvitationDocument,
+    "\n  mutation AcceptInvitationById($id: ID!) {\n    acceptInvitationById(id: $id) {\n      id\n      acceptedAt\n    }\n  }\n": types.AcceptInvitationByIdDocument,
+    "\n  mutation DeclineInvitationById($id: ID!) {\n    declineInvitationById(id: $id) {\n      id\n      declinedAt\n    }\n  }\n": types.DeclineInvitationByIdDocument,
     "\n  mutation GrantWorkspaceCreation($userId: ID!, $note: String) {\n    grantWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.GrantWorkspaceCreationDocument,
     "\n  mutation RevokeWorkspaceCreation($userId: ID!, $note: String) {\n    revokeWorkspaceCreation(userId: $userId, note: $note) {\n      id\n      canCreateWorkspace\n    }\n  }\n": types.RevokeWorkspaceCreationDocument,
     "\n  mutation PauseAdminRoleChanges {\n    pauseAdminRoleChanges\n  }\n": types.PauseAdminRoleChangesDocument,
@@ -377,7 +383,19 @@ export function graphql(source: "\n  mutation SetName($name: String!) {\n    set
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation RemoveDeclinedInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation RemoveDeclinedInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation RevokeInvitation($workspaceId: ID!, $id: ID!) {\n    revokeInvitation(workspaceId: $workspaceId, id: $id) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AcceptInvitationById($id: ID!) {\n    acceptInvitationById(id: $id) {\n      id\n      acceptedAt\n    }\n  }\n"): (typeof documents)["\n  mutation AcceptInvitationById($id: ID!) {\n    acceptInvitationById(id: $id) {\n      id\n      acceptedAt\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation DeclineInvitationById($id: ID!) {\n    declineInvitationById(id: $id) {\n      id\n      declinedAt\n    }\n  }\n"): (typeof documents)["\n  mutation DeclineInvitationById($id: ID!) {\n    declineInvitationById(id: $id) {\n      id\n      declinedAt\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

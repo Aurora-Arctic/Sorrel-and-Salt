@@ -162,6 +162,10 @@ export const signInErrorMessage = messageLookup(ERROR_MESSAGES, GENERIC_SIGN_IN_
 /** The account page, where a link starts and lands again, with `?error=` when it failed. */
 export const ACCOUNT_PATH = '/account';
 
+/** The account page's Invitations section, by its id; the landing and the account menu link to it (M10.32). */
+export const ACCOUNT_INVITATIONS_ID = 'account-invitations';
+export const ACCOUNT_INVITATIONS_PATH = `${ACCOUNT_PATH}#${ACCOUNT_INVITATIONS_ID}` as const;
+
 // The codes a link from /account lands back there with. With every provider
 // vouching inside a link and different addresses allowed, the rest are a
 // failed write or a misconfiguration, and share the generic sentence.

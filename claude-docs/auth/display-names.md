@@ -17,6 +17,7 @@ stranger's name by guessing an id.
 | Was removed from one of them, or left     | Their name                        |
 | Is a deleted user who sat in one          | The name their row last held      |
 | Never shared a coven with the viewer      | `null`                            |
+| Invited the viewer into a coven, pending  | Their name, on `/coven` alone     |
 | Shared only a coven that is now deleted   | `null`                            |
 | Shared a coven the viewer has since left  | `null`                            |
 | Is anyone, and the viewer is a site admin | As for any viewer: no wider reach |
@@ -27,6 +28,11 @@ stranger's name by guessing an id.
   edit was made. A deleted user keeps the name their row held when it was
   deleted, a value nothing rewrites, so the answer is stable (the owner's
   call, [`mb.10-co-member-display-names.md`](../design-decisions/mb.10-co-member-display-names.md)).
+- **An inviter's name reaches the invitee** (M10.32). The account page's
+  Invitations section lists the pending coven invitations addressed to the viewer's verified
+  email with who sent each, read by `findReceivedInvitationInviters` and not
+  by the loader: the invitee shares no coven with the inviter yet, and the
+  mail already names them (M7.3), so the list says no more than the mail.
 - **The viewer's own seat must be live.** The scope is the covens the viewer
   is in now, so leaving a coven ends the viewer's view of its members.
 - **A site admin gets nothing extra.** Admins curate the compendium and reach

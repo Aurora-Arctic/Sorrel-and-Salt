@@ -10,6 +10,13 @@ export interface IconTipProps {
   tip: string;
   /** The one icon control the tip is for, a button or a link, named by its own label. */
   children: ReactNode;
+  /**
+   * Where the tip stands: `side`, the default, to the left of the control and
+   * level with it; `below`, under it, its right edge on the control's, for a
+   * mark at the right end of a row with rows beneath it, such as the account
+   * menu's count of invitations (M10.32).
+   */
+  placement?: 'side' | 'below';
 }
 
 export interface EditLinkProps {

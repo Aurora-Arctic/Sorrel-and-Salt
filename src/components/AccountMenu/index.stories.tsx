@@ -19,7 +19,13 @@ export const Closed: Story = () => (
 );
 
 // Opened once on mount, as a press on it would.
-const Opened = ({ verified }: { verified: boolean }): ReactElement => {
+const Opened = ({
+  verified,
+  pendingInvitations,
+}: {
+  verified: boolean;
+  pendingInvitations?: number;
+}): ReactElement => {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
     ref.current?.querySelector('button')?.click();
@@ -30,6 +36,7 @@ const Opened = ({ verified }: { verified: boolean }): ReactElement => {
         <AccountMenu
           name="Fixture Member"
           verified={verified}
+          pendingInvitations={pendingInvitations}
           links={[
             { label: 'Your Coven', href: '/coven/fixture-coven', base: '/coven' },
             { label: 'Admin', href: '/admin', base: '/admin' },
@@ -41,6 +48,19 @@ const Opened = ({ verified }: { verified: boolean }): ReactElement => {
 };
 
 export const Open: Story = () => <Opened verified />;
+
+// Two coven invitations waiting (M10.32): the dot on the disc, the count beside Your Account.
+export const ClosedWithInvitations: Story = () => (
+  <Right>
+    <AccountMenu name="Fixture Member" verified pendingInvitations={2} />
+  </Right>
+);
+
+export const OpenWithInvitations: Story = () => <Opened verified pendingInvitations={2} />;
+
+// The same at a phone's width, the avatar alone in the bar.
+export const OpenWithInvitationsPhone: Story = () => <Opened verified pendingInvitations={2} />;
+OpenWithInvitationsPhone.meta = { width: 375 };
 
 // Sign Out alone, the account page not yet being reachable.
 export const OpenUnverified: Story = () => <Opened verified={false} />;

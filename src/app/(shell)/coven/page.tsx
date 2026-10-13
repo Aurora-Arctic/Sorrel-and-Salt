@@ -1,8 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import Notice from '../../../components/Notice';
 import { NEW_COVEN_PATH } from '../../../lib/coven-path';
 import { requireSession } from '../../../lib/request-session';
+import { ACCOUNT_INVITATIONS_PATH } from '../../../lib/sign-in';
 import { viewerOf } from '../../../lib/viewer';
 
 export const metadata: Metadata = {
@@ -18,6 +20,13 @@ export const metadata: Metadata = {
 // a workspace; signing in never does. The right is read from the row through
 // `viewerOf`, not the session, since accepting an invitation sets it
 // mid-session.
+//
+// A non-member with coven invitations waiting for their verified address is
+// told so, with a link to the account page's Invitations section, where they
+// are listed and accepted (M10.32), so a lost or filtered mail does not block
+// them. The count is the one the shell's account menu shows, read once per
+// request by `viewerOf`. Nothing on the page sits on a card (the owner's
+// call, M10.32).
 export default async function CovenLandingPage() {
   await requireSession();
   const { viewer, workspaces } = await viewerOf();
@@ -25,41 +34,48 @@ export default async function CovenLandingPage() {
   const [first] = workspaces;
   if (first) redirect(`/coven/${first.slug}`);
 
+  const pending = viewer.pendingInvitations;
+
   return (
     <main className="page-frame page-frame--narrow">
-      <div className="page-frame__section panel">
-        {viewer.canCreate ? (
-          <>
-            <div className="header">
-              <h1>Welcome</h1>
-              <p className="lede">
-                You are not in a coven yet, but you can start one of your own and invite others to
-                it.
-              </p>
-            </div>
-            <p>
-              <Link className="btn btn--solid" href={NEW_COVEN_PATH}>
-                Create Coven
-              </Link>
-            </p>
-          </>
-        ) : (
-          <>
-            <div className="header">
-              <h1>Welcome</h1>
-              <p className="lede">
-                Your account is ready. Sorrel &amp; Salt is invite-only, so the next step is to join
-                a coven.
-              </p>
-            </div>
-            <p>
-              Ask someone who already uses Sorrel &amp; Salt to invite you, and open the link they
-              send to the address on this account. Once you accept, your coven opens here. If you
-              would rather start a coven of your own, an admin can approve that.
-            </p>
-          </>
+      <section className="page-frame__section" aria-labelledby="coven-landing-heading">
+        <div className="header">
+          <h1 id="coven-landing-heading">Welcome</h1>
+          <p className="lede">
+            {viewer.canCreate
+              ? 'You are not in a coven yet, but you can start one of your own and invite others to it.'
+              : 'Your account is ready. Sorrel & Salt is invite-only, so the next step is to join a coven.'}
+          </p>
+        </div>
+        {pending > 0 && (
+          <Notice kind="success" className="page-frame__notice">
+            {pending === 1
+              ? 'You have an invitation waiting. '
+              : `You have ${pending} invitations waiting. `}
+            <Link href={ACCOUNT_INVITATIONS_PATH}>See your invitations</Link>
+          </Notice>
         )}
-      </div>
+        {viewer.canCreate ? (
+          <p>
+            <Link className="btn btn--solid" href={NEW_COVEN_PATH}>
+              Create Coven
+            </Link>
+          </p>
+        ) : pending > 0 ? (
+          <p>
+            Accept an invitation on your account page, or through the link in the email that came
+            with it, then you go straight into that coven. Accepting one also lets you start a coven
+            of your own.
+          </p>
+        ) : (
+          <p>
+            Ask someone who already uses Sorrel &amp; Salt to invite you. An invitation sent to the
+            address on this account shows up on your account page, or you can open the link they
+            email you instead. Once you accept, your coven opens here. If you would rather start a
+            coven of your own, an admin must approve that.
+          </p>
+        )}
+      </section>
     </main>
   );
 }

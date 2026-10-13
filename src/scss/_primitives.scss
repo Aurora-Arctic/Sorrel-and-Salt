@@ -653,6 +653,14 @@
     }
   }
 
+  // A notice standing between a section's head and its body, such as the
+  // /coven landing's word of waiting invitations (M10.32): room above and below
+  // it on top of the section's gap, so it reads apart from both (the owner's
+  // call). Both classes, to outrank `.notice`'s zero margin, later in the file.
+  .notice.page-frame__notice {
+    margin-block: space(3);
+  }
+
   // The hairline between two sections, in the muted ink a table's header
   // rule wears; not `hr`'s inset, bevelled default.
   .page-frame__rule {

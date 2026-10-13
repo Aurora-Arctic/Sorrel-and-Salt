@@ -40,6 +40,7 @@ const rows = (count: number) =>
       email: `n${index}@fixture.test`,
       role: 'member',
       expiresAt: new Date('2026-10-19T00:00:00Z'),
+      declinedAt: null,
     },
   }));
 
@@ -76,6 +77,21 @@ describe('the /coven/[slug]/invitations page', () => {
       'w',
       expect.anything(),
     );
+  });
+
+  it('reaches the list with a declined invitation as declined, offering Remove', async () => {
+    listPendingWorkspaceInvitations.mockImplementation(async () => [
+      {
+        ...rows(1)[0],
+        node: { ...rows(1)[0].node, declinedAt: new Date('2026-10-14T09:30:00Z') },
+      },
+    ]);
+    await visit('owner');
+
+    expect(
+      screen.getByRole('button', { name: /^Remove the declined invitation to n0@/ }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^Revoke the invitation to/ })).toBeNull();
   });
 
   it.each(['member', 'viewer'] as const)(

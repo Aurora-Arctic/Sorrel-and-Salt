@@ -115,12 +115,42 @@ describe('AccountMenu', () => {
     expect(screen.getByRole('link', { name: 'Your Coven' })).not.toHaveAttribute('aria-current');
   });
 
-  it('carries a theme switch, named for its function, for the phone', () => {
-    render(<AccountMenu name="Fixture Owner" verified />);
-
+  it('has no count while no invitation waits', () => {
+    render(<AccountMenu name="Fixture Owner" verified pendingInvitations={0} />);
     fireEvent.click(button());
 
-    expect(screen.getByRole('button', { name: 'Toggle light and dark mode' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Your Account' })).toHaveAttribute('href', '/account');
+    expect(screen.queryByRole('link', { name: /Coven Invitation/ })).not.toBeInTheDocument();
+  });
+});
+
+// Coven invitations waiting for the viewer's address (M10.32): the count is a
+// link of its own to the account page's Invitations section, beside Your
+// Account, which still opens the page itself; the button says how many.
+describe('AccountMenu with pending invitations', () => {
+  it('links the count to the Invitations section and leaves Your Account on the page', () => {
+    render(<AccountMenu name="Fixture Owner" verified pendingInvitations={2} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fixture Owner, 2 coven invitations' }));
+
+    expect(screen.getByRole('link', { name: '2 Coven Invitations' })).toHaveAttribute(
+      'href',
+      '/account#account-invitations',
+    );
+    expect(screen.getByRole('link', { name: 'Your Account' })).toHaveAttribute('href', '/account');
+  });
+
+  it('counts one invitation in the singular', () => {
+    render(<AccountMenu name="Fixture Owner" verified pendingInvitations={1} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Fixture Owner, 1 coven invitation' }));
+
+    expect(screen.getByRole('link', { name: '1 Coven Invitation' })).toBeInTheDocument();
+  });
+
+  it('shows no count to an unverified account, which cannot reach the page', () => {
+    render(<AccountMenu name="Fixture Owner" verified={false} pendingInvitations={2} />);
+    fireEvent.click(button());
+
+    expect(screen.queryByRole('link', { name: /Coven Invitation/ })).not.toBeInTheDocument();
   });
 });
 
