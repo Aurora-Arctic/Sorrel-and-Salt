@@ -64,3 +64,21 @@
   display: block;
   margin-top: space(4);
 }
+
+// A mail's To and Subject lines above it, as a mail client lists them: the
+// label and its value on one line, the labels aligned in a column. A bare
+// <dl> would stack each label over an indented value.
+.email-preview__headers {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: space(1) space(3);
+  margin: 0;
+
+  dt {
+    color: $text-muted;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
