@@ -604,7 +604,7 @@ function refusal(operation: string, variables: Record<string, unknown>): object 
 
 /**
  * Answers the form from the rows above while the story is mounted, in place
- * of `window.fetch`, which graphql-request looks up on every request; a save
+ * of `window.fetch`, which the GraphQL client looks up on every request; a save
  * after `SAVE_DELAY_MS`, refused or accepted. The original is put back on
  * unmount, so no other story sees the stub.
  */

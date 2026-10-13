@@ -101,7 +101,7 @@ In [`graphql/schema.md`](graphql/schema.md#the-sdl-snapshot).
 
 ## The client
 
-A client component reads through `graphql-request` and TanStack Query, not Apollo, using `src/lib/graphql-client.ts`'s browser-only `graphqlQuery` and `graphqlRequest` under one `QueryClientProvider`, whose cache is not keyed by viewer, so sign-out must clear it. [`graphql/client.md`](graphql/client.md)
+A client component reads through a small `fetch` wrapper and TanStack Query, not Apollo, using `src/lib/graphql-client.ts`'s browser-only `graphqlQuery` and `graphqlRequest` under one `QueryClientProvider`, whose cache is not keyed by viewer, so sign-out must clear it. [`graphql/client.md`](graphql/client.md)
 
 ### Defaults
 
@@ -137,4 +137,4 @@ A schema from one of `graphql`'s CommonJS and ESM builds fails the other's `inst
 
 ## `graphql` is pinned to 16
 
-`graphql@^16` is a direct dependency although Yoga, Pothos and codegen accept 17, because `graphql-request` (accepts only `14 - 16`, being removed by M10.31) and `@escape.tech/graphql-armor` (`^16.10.0`, issue #885) both stop at 16 and one copy in the tree avoids the two-realm failure, and it moves to 17 once armor accepts it, which is then the only blocker. [`graphql/graphql-pin.md`](graphql/graphql-pin.md)
+`graphql@^16` is a direct dependency although Yoga, Pothos and codegen accept 17, because `@escape.tech/graphql-armor` (`^16.10.0`, issue #885) stops at 16 (`graphql-request`, the other, was dropped by M10.31) and one copy in the tree avoids the two-realm failure, and it moves to 17 once armor accepts it, the only blocker left. [`graphql/graphql-pin.md`](graphql/graphql-pin.md)
