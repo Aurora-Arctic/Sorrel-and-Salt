@@ -309,7 +309,7 @@ $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Rom
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
-// The sizes below body copy, by role. The headings' scale is typography-base's.
+// The sizes below body copy, by role. The headings' scale is $heading-sizes.
 $type-sizes: (
   'body': 1rem,
   // Labels, buttons, notices and field errors: text a person acts on.
@@ -330,6 +330,27 @@ $type-sizes: (
   }
 
   @return map.get($type-sizes, $role);
+}
+
+// The heading scale, h1 to h4, anchored at h4 = 1.5rem and stepped up by
+// roughly 1.2. Kept apart from $type-sizes, which runs below body copy by
+// role; this runs above it by level. h1 is fluid between its two ends, so a
+// phone's title does not take the whole screen. typography-base sets each
+// heading from it, and a component that sets a name in the heading face (the
+// context row's "Admin", the coven switcher) takes its size from here too.
+$heading-sizes: (
+  1: clamp(2.5rem, 5vw, 3.75rem),
+  2: 2.15rem,
+  3: 1.8rem,
+  4: 1.5rem,
+);
+
+@function heading-size($level) {
+  @if not map.has-key($heading-sizes, $level) {
+    @error 'Unknown heading size "#{$level}". The sizes are: #{map.keys($heading-sizes)}.';
+  }
+
+  @return map.get($heading-sizes, $level);
 }
 
 // The reading measure: the longest comfortable line of body copy. `ch` is the

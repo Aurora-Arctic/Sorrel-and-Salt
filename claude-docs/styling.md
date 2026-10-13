@@ -51,9 +51,9 @@ to.
   component restating a mixin's colour is a bug.
 - **`adjustFontFallback` stays `true`** in `src/app/fonts.ts`; setting it false
   reintroduces layout shift.
-- **Lengths, radii and small type come from their scales**: `space()`,
-  `radius()` and `type-size()`. A length off the scale is a chip's or a
-  badge's inner geometry, a control's target size, or a heading's size — and
+- **Lengths, radii and type sizes come from their scales**: `space()`,
+  `radius()`, `type-size()` and `heading-size()`. A length off the scale
+  is a chip's or a badge's inner geometry or a control's target size — and
   says so in a comment.
 - **A length with a role of its own is a token**, under "Motion and layout"
   in `_variables.scss`, so the components that share the role share the
@@ -417,6 +417,13 @@ the three the scale uses (500/600/700) are requested.
 - **The scale is anchored at `h4` = 1.5rem and stepped up by roughly 1.2**
   (`h3` 1.8rem, `h2` 2.15rem, `h1` `clamp(2.5rem, 5vw, 3.75rem)`). An earlier
   scale anchored at 1.125rem set the smallest headings too close to body copy.
+  The sizes are the `$heading-sizes` map in `_variables.scss`, read by level
+  through `heading-size(1)` to `heading-size(4)`, and the face — the display
+  family, 700, letter-spaced 0.01em — is the `heading-face` mixin.
+  `typography-base` sets h1 to h4 from the two. A name set in the heading face
+  outside a heading, as the context row's "Admin" and the coven switcher are,
+  takes `@include heading-face; font-size: heading-size(4);` rather than
+  restating the numbers, and keeps its own line height.
 - **Monospace is a platform stack, no webfont** — this is for incidental inline
   `code`, not typeset code blocks, and it is nudged to `0.9em` because platform
   monospace runs large next to Lexend.
@@ -464,7 +471,7 @@ field errors; `caption` (0.8125rem) for hints, metadata, chips and badges;
 `overline` (0.75rem) for the `.eyebrow`; and `tab` (0.6875rem) for the one
 place five labels sit across a phone, under the icons of the section nav's
 bottom bar (MB.7). The headings' scale is
-`typography-base`'s, above.
+`heading-size()`'s, above.
 
 ### The top inset
 
@@ -938,7 +945,7 @@ What each section review (MB.115 to MB.124) designs to:
 
 - **Build from this layer, and grow it rather than going round it.** A page
   takes its colours from the tokens, its lengths from `space()`, its radii from
-  `radius()` and its small type from `type-size()`. A shape two sections
+  `radius()` and its type sizes from `type-size()` and `heading-size()`. A shape two sections
   need is a primitive in `_primitives.scss`, drawn on the `Foundations` page,
   not two component rules.
 - **Each review checks the CSS it adds against `npm run lint:css`**, and looks
@@ -1024,14 +1031,15 @@ heavier than the reverse; light reverts to the browser default.
 - `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
   colours and `brand-color()`, `$narrow-column`, `$pager-tight-width` (the
   width under which the pager closes up to stay on one line), the `$font-body` / `$font-heading` / `$font-mono` stacks, the
-  `$measure`, and the three scales with their accessors — `type-size()`,
-  `space()` and `radius()` — a component `@use`s directly.
+  `$measure`, and the four scales with their accessors — `type-size()`,
+  `heading-size()`, `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `icon-button` and `icon-button-edit` (an icon control's square box, and
   the green every Edit pencil wears, [`components/icon-tip.md`](components/icon-tip.md)),
   `theme-dark` / `theme-light`, `semantic-tokens` (the per-theme
   badge custom properties), `focus-ring`,
-  `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`.
+  `theme-transition`, `reduced-motion`, `font-smoothing-antialiased`,
+  `heading-face` (the headings' family, weight and letter spacing).
   The shapes that repeated by hand are mixins too, one line each:
   `color-scheme-light` and `forced-colors` (the two media queries, as
   `reduced-motion` wraps its own); `list-reset` (a list with no margin,
