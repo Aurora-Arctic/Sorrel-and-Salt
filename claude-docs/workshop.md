@@ -153,12 +153,24 @@ without a page routed to it.
   unless a story wraps itself in `WorkshopPathname` with another address, so
   AdminNav's stories show the current-page marker on People, and a tabbed
   page's story can open any tab (MB.115).
-- **`admin-frame.tsx`** — the shared story wrapper for the admin area:
-  `AdminFrame` is the `.admin-layout` div alone, and `AdminTabbedFrame` is a
-  tabbed admin page as its route draws it (heading and tabs from
-  `ADMIN_PAGES`, an `action`, optionally the nav). Nine stories drew this by
-  hand before MB.115. It is the layout's markup only; the app's own layout
-  reads the session.
+- **`admin-frame.tsx`** — the shared story wrapper for the admin area.
+  `AdminFrame` is the admin layout as it is: the context row holding
+  "Admin" and `AdminNav`, then the `.admin-layout` column around the story,
+  all inside the shell's `.app-shell__main`, which keeps the last row clear
+  of the phone's bottom nav. Its optional `open` is the address the workshop
+  pretends to be on, which decides the nav's current page.
+  `AdminTabbedFrame` is a tabbed admin page inside it, as its route draws
+  it: heading and tabs from `ADMIN_PAGES`, and an `action`. Nine stories
+  drew this by hand before MB.115. It is the layout's markup only; the app's
+  own layout reads the session.
+- **`shell-frame.tsx`** — the application shell around a story, as
+  `src/app/(shell)/layout.tsx` and the area layouts draw it: the bar, the
+  context row, then the page, with fixture props (`FIXTURE_VIEWER`,
+  `FIXTURE_WORKSPACES`). `ShellFrame`'s `area` picks the context row: a
+  coven's (switcher and nav), the admin area's, the create page's (the
+  switcher alone, and no row when there is no coven to switch to), or
+  none, as on the account pages. Like `admin-frame.tsx`, it is markup only;
+  the layouts it copies are server components that read the session.
 - **`fixtures.ts`** — invented rows the admin stories share, so a form's story
   and its list's story offer the same data: `GROUP_NAMES` (four names per kind
   of group), fixed ids with `asOptions()` and `asSlugs()` to shape them for a
@@ -167,7 +179,8 @@ without a page routed to it.
   opens on a state a button press reaches, such as a Delete question over its
   form.
 - **`types.ts`** — the types the workshop's helpers share, kept apart from
-  their components as the repo keeps types: `AdminTabbedFrameProps` today.
+  their components as the repo keeps types: `AdminTabbedFrameProps` and
+  `ShellFrameProps`.
 - **`head.html`** — injected into `<head>`; loads Cormorant Unicase + Lexend by
   name from Google Fonts so the workshop's type matches the app's (the app
   self-hosts them via `next/font`, which the workshop has no equivalent of).

@@ -3,7 +3,7 @@
 
 // The `/admin` index's table of contents: a section per group, each link
 // with its one line beneath it in the muted ink. Not bulleted: a list of
-// links, as `.link-row` is not, so typography-base's marker and indent go.
+// links, so typography-base's marker and indent go.
 .admin-contents {
   @include stack;
 }

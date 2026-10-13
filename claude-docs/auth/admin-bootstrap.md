@@ -506,10 +506,9 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   own `.panel`, which parts it from the next, so no rule is drawn between
   them (the owner's call, MB.116; MB.88 ruled them apart with a hairline). A
   section a link lands on stops clear of the top inset. The frame, the
-  sections, the panels and the nav's row are primitives
-  (`.page-frame--narrow`, `.page-frame__section`, `.panel`, `.link-row`;
-  [`styling.md`](../styling.md), "The page frame" and "Link rows and
-  provider marks"), so the page has no stylesheet of its own beyond `.account-page` in `_primitives.scss`: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
+  sections and the panels are primitives
+  (`.page-frame--narrow`, `.page-frame__section`, `.panel`;
+  [`styling.md`](../styling.md), "The page frame"), so the page has no stylesheet of its own beyond `.account-page` in `_primitives.scss`: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
   lands back with `?error=` and `?provider=`: the page turns the code into
   a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
   the provider, when it is one on the roster, so the sentence shows in that

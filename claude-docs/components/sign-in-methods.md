@@ -162,9 +162,8 @@ next, so no rule is drawn between them (the owner's call, MB.116).
   apart.
 - `.sign-in-methods__item` is a wrapping row, `space(2)` by `space(3)`: the
   mark, the name taking the free width, then the control at the end.
-- The rows clear `_typography.scss`'s ◆ marker with a local reset rather than
-  `.link-row`, which clears it too: that is a row of links, and this is a
-  column of rows.
+- The rows clear `_typography.scss`'s ◆ marker with a local reset: this is a
+  column of rows, not a bulleted list.
 - The unavailable note and the only-method line are `.meta` lines, a full
   row wide and set to the right, beneath where the control is or would be. A
   row's error `Notice` is a full row wide.

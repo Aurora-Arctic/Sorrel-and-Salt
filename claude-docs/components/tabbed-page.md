@@ -156,8 +156,7 @@ it renders.
   carries it. The two mixes are local to the stylesheet;
   `tests/scss/tokens.test.ts` holds the open label and edge, and the muted
   labels on the track, to their floors in both themes. The pill has no shadow
-  now. The row is not the `.link-row` primitive, whose underline it does not
-  draw; it clears the list's marker, indent and item margins itself.
+  now. The row clears the list's marker, indent and item margins itself.
 - **Each pill's hit area is a control tall.** The pill is smaller than
   `$control-height` (2.78rem), so a transparent `::before` pads each link
   back to it, above and below. The row inside the track is itself a control
