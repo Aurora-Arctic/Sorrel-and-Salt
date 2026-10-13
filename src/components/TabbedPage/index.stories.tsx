@@ -17,7 +17,7 @@ import type { TabSwitch } from './types';
 // a tab switch provided above the page says a tab is on its way, since the
 // stub router goes nowhere.
 export default {
-  title: 'Admin / Tabbed Page',
+  title: 'Layout / Tabbed Page',
 };
 
 // Users pressed and on its way, a tab whose list opens with a filter.
