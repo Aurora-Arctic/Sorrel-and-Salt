@@ -1,8 +1,12 @@
 import type { Story } from '@ladle/react';
+import ActionFailure from '../ActionFailure';
 import ReceivedInvitations from '.';
-import type { ReceivedInvitationEntry } from './types';
+import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types';
 
 // Render-only; behaviour is asserted in tests/components/ReceivedInvitations.
+// Each story sits in the account page's Invitations section as the page writes
+// it, a panel in the narrow frame under its head, with the ActionFailure the
+// page wraps the list in: the list's stacked rows depend on the panel's width.
 export default {
   title: 'Coven / Received Invitations',
 };
@@ -39,14 +43,40 @@ const SEVERAL: readonly ReceivedInvitationEntry[] = [
   },
 ];
 
-export const OneInvitation: Story = () => <ReceivedInvitations invitations={[ONE]} />;
+const Page = ({ invitations, ...rest }: ReceivedInvitationsProps) => (
+  <main className="page-frame page-frame--narrow">
+    <section className="page-frame__section panel" aria-labelledby="invitations-heading">
+      <div className="header">
+        <h2 id="invitations-heading">Invitations</h2>
+        <p className="lede">Covens that have invited this email address to join them.</p>
+      </div>
+      <ActionFailure>
+        <ReceivedInvitations invitations={invitations} {...rest} />
+      </ActionFailure>
+    </section>
+  </main>
+);
 
-export const SeveralInvitations: Story = () => <ReceivedInvitations invitations={SEVERAL} />;
+export const OneInvitation: Story = () => <Page invitations={[ONE]} />;
+
+export const SeveralInvitations: Story = () => <Page invitations={SEVERAL} />;
+
+// The section is always on the account page, so an empty list is drawn too.
+export const NoInvitations: Story = () => <Page invitations={[]} />;
 
 export const SecondPage: Story = () => (
-  <ReceivedInvitations
-    invitations={SEVERAL}
-    previousHref="/coven?before=a"
-    position={{ page: 2, pages: 2 }}
-  />
+  <Page invitations={SEVERAL} previousHref="/account?before=a" position={{ page: 2, pages: 2 }} />
 );
+
+// At a phone's width, in each theme, where the rows stack.
+export const OnePhoneDark: Story = () => <Page invitations={[ONE]} />;
+OnePhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const OnePhoneLight: Story = () => <Page invitations={[ONE]} />;
+OnePhoneLight.meta = { theme: 'light', width: 375 };
+
+export const SeveralPhoneDark: Story = () => <Page invitations={SEVERAL} />;
+SeveralPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const SeveralPhoneLight: Story = () => <Page invitations={SEVERAL} />;
+SeveralPhoneLight.meta = { theme: 'light', width: 375 };
