@@ -61,7 +61,10 @@ without a page routed to it.
     M0.31 briefly set it to `'auto'` (the control's unset position, letting
     `prefers-color-scheme` decide) and M0.32 moved it back; `'dark'` is the
     confirmed intent.
-- **`vite.config.ts`** — Sass API pinned to `modern-compiler`. Resolution is
+- **`vite.config.ts`** — Sass API pinned to `modern-compiler`, read by Ladle's own
+  Vite 6.4 rather than the app's Vite 8 (which no longer types the option): 6.4
+  defaults to `modern-compiler` only with `sass-embedded`, and the app has plain
+  `sass`. Resolution is
   left at Vite/Sass defaults **because** that is what `next dev` does: relative
   `@use`, empty load paths. This file is the seam for keeping the two aligned
   if Next ever gains `sassOptions`.
