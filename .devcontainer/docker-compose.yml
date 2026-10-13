@@ -52,6 +52,10 @@ services:
       # playwright-server-up`) instead of a Chromium Alpine cannot run.
       # `make docker-e2e` and CI never set it.
       PLAYWRIGHT_WS_ENDPOINT: ws://playwright-server:4444/
+      # Likewise here only, and read only under E2E_AUDIT=1 (`npm run
+      # e2e:audit`): the WebKit, Firefox and phone audit's browsers on
+      # `playwright-audit` (`make playwright-audit-up`, M10.25).
+      PLAYWRIGHT_AUDIT_WS_ENDPOINT: ws://playwright-audit:4444/
       # As `app`, so `npm run dev` and `npm run e2e` here mail into Mailpit.
       MAIL_TRANSPORT: mailpit
       MAILPIT_URL: http://mailpit:8025

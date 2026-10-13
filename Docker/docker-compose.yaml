@@ -4,6 +4,7 @@
 #   make docker-workshop  also the Ladle workshop (profile: workshop)
 #   make docker-studio    also Drizzle Studio (profile: studio)
 #   make docker-e2e       run the Playwright suite once (profile: e2e)
+#   make playwright-audit-up  the WebKit/Firefox/phone audit's browsers (profile: audit)
 #   make docker-down      stop and remove everything, profiles included
 #
 # Mailpit comes up with the app: every message the app sends locally lands in
@@ -249,3 +250,22 @@ services:
       # noVNC: a page you open in a host browser tab.
       - '7900:7900'
     command: ['npx', 'playwright', 'run-server', '--host', '0.0.0.0', '--port', '4444']
+
+  playwright-audit:
+    # The audit's browsers (M10.25): WebKit, Firefox and Chromium, from
+    # Microsoft's image rather than Dockerfile.e2e, which carries Chromium
+    # alone (MB.237). Opt-in on its own profile, `make playwright-audit-up`,
+    # and never a CI gate: the owner's call, 2026-10-12. Only the devcontainer
+    # dials it, over `ws://playwright-audit:4444/` inside the compose network
+    # (.devcontainer/docker-compose.yml sets PLAYWRIGHT_AUDIT_WS_ENDPOINT, read
+    # under E2E_AUDIT=1 alone), so no port is published. The tag and the
+    # package version are the lockfile's `@playwright/test`, kept in step by
+    # hand: a runner and a server on different versions refuse each other.
+    # `npx -y`, since inside the image npx would otherwise stop to ask before
+    # fetching the package; `ipc: host` is Playwright's own Docker advice for
+    # Chromium, which can run out of shared memory without it.
+    profiles: ['audit']
+    image: mcr.microsoft.com/playwright:v1.64.0-noble
+    init: true
+    ipc: host
+    command: ['npx', '-y', 'playwright@1.64.0', 'run-server', '--host', '0.0.0.0', '--port', '4444']

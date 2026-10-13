@@ -257,6 +257,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9  | MB.253                 |
 | MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9  | MB.254                 |
 | MB.254 | Drop the planet columns and view                                                                                         | Wave 9  | —                      |
+| MB.255 | The e2e session cookie never reaches a WebKit page                                                                       | Wave 10 | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1259,6 +1260,18 @@ _Acceptance criteria:_
 - The migration carries its acknowledgement sidecar, and the destructive-DDL check passes with it
 - DESIGN.md and CLAUDE.md no longer record a planet divergence
 - Lands only after a release carrying MB.253 has reached production, and Wave 9 stays open until it has
+
+**MB.255 — The e2e session cookie never reaches a WebKit page** · 3h
+
+_Story:_ As a developer, I want the e2e sign-in helper to sign a WebKit browser in as it does Chromium and Firefox, so that the WebKit and phone audit (M10.25) exercises the signed-in pages rather than the sign-in page.
+
+Found by M10.25's first audit on 2026-10-13. `tests/e2e/session.ts`'s `signInAs` and `signInAgainAs` hand the browser the session cookie as an extra request header (`page.setExtraHTTPHeaders`), since a browser never sends a `Secure` cookie to the plain-http `devcontainer:<port>` a remote browser uses, and the production build's https base URL names the cookie `__Secure-better-auth.session_token`. WebKit sends no such header. Against an echo server on the audit service, Chromium and Firefox delivered the extra `cookie` header and WebKit delivered none; a `page.route` re-adding the header on every request reached WebKit no better; and from the cookie jar (`context.addCookies`) WebKit sends a plain-named cookie over http but never a `__Secure-` one, with or without `secure`. So in the `webkit` and `phone` projects every signed-in page is the sign-in page: 24 of the audit's 276 tests failed, every one behind a session, and 132 later tests in those files never ran under `serial`; the 14 signed-out tests in each project passed, and Firefox passed all 92. The fix must make the cookie reach the server from WebKit over the plain-http origin the remote browser uses. Two shapes, for the task to choose: a plain cookie name for the e2e servers, `advanced.useSecureCookies: false` in `src/lib/auth.ts` under an e2e-only switch, so the helper sets the cookie in the jar and every engine sends it; or https in front of the slot servers, so the `__Secure-` cookie in the jar is sent as it is in production. The first is a test-only branch in the auth config, the second is more to run. Whichever lands, the helper's comment and `claude-docs/testing/e2e.md` ("A signed-in browser without a provider") change with it, and the audit runs again at the end of this task: the four Tab-walking specs M10.25 expected to fail in WebKit (`sign-in.spec.ts`, `coven.spec.ts`, `coven-create.spec.ts`, `shell.spec.ts`) could not be judged, since each sits behind the session, and each real bug the rerun finds becomes its own task. The hours are an estimate.
+
+_Acceptance criteria:_
+
+- `signInAs` and `signInAgainAs` sign a WebKit page in, proven by the audit's `webkit` and `phone` projects reaching a signed-in page, and `npm run e2e` is unchanged in what it proves
+- The helper's comment and `claude-docs/testing/e2e.md` say how the cookie travels and why
+- The audit runs again at the end, its failures are named in the PR body, and each real bug becomes its own task
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -3630,7 +3643,7 @@ _Acceptance criteria:_
 - `email.md` records the design rules the mail follows (already holds, asserted by the review)
 - `email.md` records the 375px rule
 
-**MB.119 — Design review: the coven and invitations** · 3h
+**MB.119 — Design review: the coven and invitations** · 10h
 
 _Story:_ As a coven member, I want the coven's pages to feel like one place I belong to, so that finding members and inviting someone is obvious.
 
@@ -3643,6 +3656,8 @@ _Left by MB.116:_ `.page-frame--narrow` is already the invitation acceptance pag
 _Left by MB.115:_ The coven's lists and forms build on what the admin section shares rather than drawing their own: `Field` for every field and `FormActions` for a form's buttons (`components/field.md`), `BusyButton` for a button whose request is in flight, `PageHeader` and `FilterForm` for a list page's head, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), and `Pager` with `listHref` for its pages. A question asked before a step that cannot be undone is `ConfirmQuestion`, drawn over the form (`components/modal.md`). M7.6's pending invitations page and count as the admin Invitations tab does (`src/app/(shell)/admin/(people)/invitations/`), the owner's call during MB.115.
 
 _Left by the Wave 10 review (2026-10-12):_ The scope above grows by these. M7.6's pending invitations list, its count, its revoke control and the Invite button it mounts (the review moved mounting `InviteDialog` into M7.6). The components `CovenNav` (`src/components/CovenNav/`), `CreateWorkspaceForm`, `InvitationAcceptance` (the acceptance page's component), `ContextRow`, and `ActionFailure` in `WorkspaceActions/action-failure.tsx`, which has neither a doc under `claude-docs/components/` nor a story, and gains both here. The members page (`src/app/(shell)/coven/[slug]/members/page.tsx`) uses none of MB.115's shared list pieces, so it adopts `PageHeader` and `Pager` here, not in M7.6. The docs `member-list.md`, `delete-workspace-button.md` and `leave-workspace-button.md` have no Styling section yet, so each gains one rather than updating it. The section's copy mixes two nouns: `WorkspaceSwitcher` says "Coven", "Create Coven" and "Select Coven" while the buttons say "Leave Workspace" and "Delete Workspace". The review settles one user-facing noun with the owner and makes all the copy use it. The acceptance page also has to read correctly for an invitation into a deleted coven, which M7.5 refuses at page load.
+
+_Scoped 2026-10-13, build not yet started:_ The plan is [`design-decisions/mb.119-plan.md`](../design-decisions/mb.119-plan.md), with the audit of the section as built (nineteen findings across consistency, accessibility and repeated code, and three from M10.32's branch) and the four-lane build it proposes. The owner decided three things at planning: the word a person reads for a workspace is **coven** everywhere on screen, so the Leave and Delete buttons change and `DESIGN.md` §5's vocabulary line gains the screens; every sub-hour fix and every adoption of a shared piece lands in this task, which is why the estimate rises from 3h to 10h; and the review takes in M10.32's `ReceivedInvitations` list on the landing, so the review's second wave starts once M10.32's PR is open and its branch sits on that head. The first wave, the foundations and the shared pieces, has no file in common with M10.32 and can start off staging at any time. The entry's earlier line that the members page adopts `PageHeader` and `Pager` is out of date: both are already there, through `TabbedPage` and M7.6; what remains is the hand-written cursor reading and pager links, which the plan converges on `readPageCursors` and `pagerHrefs`.
 
 _Acceptance criteria:_
 

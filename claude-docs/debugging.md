@@ -207,7 +207,12 @@ baked into an npm script or set unconditionally in `playwright.config.ts`:
 `make docker-e2e` and CI's `playwright` job both launch Chromium locally
 inside the one-shot `e2e` container, and setting the variable anywhere
 broader would silently make both depend on `playwright-server` being up,
-which it never is in either context.
+which it never is in either context. **`PLAYWRIGHT_AUDIT_WS_ENDPOINT` is
+under the same rule** (M10.25): set in the same place, `ws://playwright-audit:4444/`,
+for the WebKit, Firefox and phone audit's browsers (`make playwright-audit-up`,
+Microsoft's image on the `audit` profile), and read only when `E2E_AUDIT=1`
+asks for the audit (`npm run e2e:audit`), so its presence alone changes
+nothing for `npm run e2e` ([`testing/e2e.md`](testing/e2e.md), "The audit").
 
 **The remote branch also moves `baseURL`, and deliberately not the readiness
 check.** When `PLAYWRIGHT_WS_ENDPOINT` is set, every `baseURL` becomes
