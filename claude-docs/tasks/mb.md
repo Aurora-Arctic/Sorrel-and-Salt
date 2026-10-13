@@ -258,6 +258,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9  | MB.254                 |
 | MB.254 | Drop the planet columns and view                                                                                         | Wave 9  | —                      |
 | MB.255 | The e2e session cookie never reaches a WebKit page                                                                       | Wave 10 | —                      |
+| MB.256 | An unverified account loops on the email page after a link into the shell                                                | Wave 10 | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1272,6 +1273,18 @@ _Acceptance criteria:_
 - `signInAs` and `signInAgainAs` sign a WebKit page in, proven by the audit's `webkit` and `phone` projects reaching a signed-in page, and `npm run e2e` is unchanged in what it proves
 - The helper's comment and `claude-docs/testing/e2e.md` say how the cookie travels and why
 - The audit runs again at the end, its failures are named in the PR body, and each real bug becomes its own task
+
+**MB.256 — An unverified account loops on the email page after a link into the shell** · 3h
+
+_Story:_ As someone whose email address is not yet confirmed, I want a link into a signed-in page to take me to the email page and stop there, so that I can confirm my address instead of watching the page reload without end.
+
+Found on 2026-10-13 while checking M10.32 by hand, impersonating the seeded unverified user. The shell layout, `src/app/(shell)/layout.tsx`, calls `requireSession()`, which redirects an unverified account to `/account/email`. When that redirect is thrown during a client-side navigation into the shell, the browser refetches the email page about every 80 milliseconds and never settles. Reproduced in a browser driven through Playwright, by following the Continue link from `/` to `/coven`, and by a router push from `/` to `/account`: about 400 refetches in 15 seconds on `next dev`, and about 120 in 6 seconds on a production build. It happens to a plain unverified session as well as an impersonated one. A full page load of `/coven` or `/account/email` settles normally, so the existing e2e test, which loads the page directly, stays green. Each refetch is answered by the email page itself, with no redirect, and the router state header the browser sends already holds the shell from the redirected fetch. So the router appears never to recover from a `redirect()` thrown by a layout it is entering, and unverified accounts are the only case the shell layout redirects. The bug is on `main` as well as `staging`; `src/app/(shell)/layout.tsx` and `src/lib/request-session.ts` are the same in both. Two shapes, for the task to choose between: leave the unverified redirect to each page's own `requireSession()`, so the layout never throws one, or keep it and find what lets the router settle. Pointing the Continue link at the email page alone is not a fix, because every other link into the shell would still loop.
+
+_Acceptance criteria:_
+
+- An e2e regression test signs in an unverified account, follows a link from `/` into the shell, and asserts the page settles on `/account/email`. It fails before the fix
+- An unverified account still reaches no page but `/account/email`, by full load and by client-side navigation alike, and a signed-out visitor is still sent to sign in
+- `claude-docs/auth/route-protection.md` and `claude-docs/auth/admin-bootstrap.md` ("The email page") say where the unverified redirect is thrown, and why
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
