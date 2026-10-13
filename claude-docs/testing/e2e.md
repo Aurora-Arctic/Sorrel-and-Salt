@@ -205,7 +205,21 @@ providers, role, { emailVerified })` writes what a Discord sign-in would leave i
   `__Secure-better-auth.session_token` because a production build's base URL
   forces https. It rides as an extra request header, not in the cookie jar,
   since a browser never sends a `Secure` cookie to the plain-http
-  `devcontainer:<port>` a remote browser uses. Give each call a fresh address:
+  `devcontainer:<port>` a remote browser uses. WebKit sends that header
+  no better (MB.255, found by the first audit; Chromium and Firefox send it),
+  nor a `__Secure-` cookie from the jar, so under the audit
+  (`E2E_AUDIT=1`) the servers are started with
+  `E2E_PLAIN_SESSION_COOKIE=true` (`playwright.config.ts`'s `serverEnv`),
+  which `src/lib/auth.ts` reads through `plainSessionCookie()`
+  (`src/lib/e2e-session-cookie.ts`) as `advanced.useSecureCookies: false`,
+  and the helper puts a plain-named, non-`Secure` cookie in the context's jar
+  with the host alone (a cookie ignores the port, so any slot's server gets
+  it). The flag is off for `npm run e2e` and CI, which keep the production
+  names, and does nothing wherever `VERCEL_ENV` is set, so no deploy can lose
+  the prefix. A `next start` left running from an ordinary run keeps its
+  names, so stop it before an audit. The other shape, https in front of each
+  slot server, was left: a certificate and a proxy per
+  port, to test one cookie name. Give each call a fresh address:
   the email index is unique. To switch back to a user already made,
   `signInAgainAs(page, userId)` gives the browser a new session for it
   (MB.63).
@@ -357,6 +371,12 @@ during it, at the cost of one image pull and no CI minutes. The pieces:
   reached (`sign-in.spec.ts`, `coven.spec.ts`, `coven-create.spec.ts`,
   `shell.spec.ts`) and are the WebKit failures the task expected rather than
   knew; the first audit's PR names what it found.
+  The first audit (MB.255) found the session cookie never reaching a WebKit
+  page, fixed under "A signed-in browser without a provider", and then three
+  test-side gaps, fixed in the same task: `settleTransitions` read WebKit's
+  cancelled transition as a failure, `mouse.wheel` does not exist in mobile
+  WebKit (the modal-scroll spec skips on the phone profile), and the admin nav
+  count assumed a desktop window. It then passed 275 and skipped one.
 
 **Every e2e run from the devcontainer serialises on
 `flock /tmp/sorrel-e2e.lock`** (M10.25 writes down what sessions already
