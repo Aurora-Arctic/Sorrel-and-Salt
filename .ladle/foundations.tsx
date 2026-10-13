@@ -791,7 +791,7 @@ export default function Foundations(): ReactElement {
         </SectionHead>
         <div className="panel badges">
           <span className="badge badge--safety">Toxic</span>
-          <span className="badge badge--low-stock">Low stock</span>
+          <span className="badge badge--low-stock">Low Stock</span>
           <span className="badge badge--last-used">Last Used</span>
         </div>
       </section>
@@ -882,7 +882,7 @@ export default function Foundations(): ReactElement {
               </div>
               <div className="specimen__badges">
                 <span className="badge badge--safety">Toxic</span>
-                <span className="badge badge--low-stock">Low stock</span>
+                <span className="badge badge--low-stock">Low Stock</span>
               </div>
             </div>
             <div className="specimen__chips">
@@ -890,13 +890,13 @@ export default function Foundations(): ReactElement {
                 className="chip is-selected"
                 style={chipColors(seededGroup('Protection & Defense'))}
               >
-                Protection &amp; defense
+                Protection &amp; Defense
               </span>
               <span className="chip" style={chipColors(seededGroup('Mind & Spirit'))}>
-                Mind &amp; spirit
+                Mind &amp; Spirit
               </span>
               <span className="chip" style={chipColors(seededGroup('Craft & Change'))}>
-                Craft &amp; change
+                Craft &amp; Change
               </span>
             </div>
             <p className="specimen__stock">
