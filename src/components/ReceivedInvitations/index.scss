@@ -63,3 +63,17 @@
   display: block;
   margin-top: space(1);
 }
+
+// Accept and Decline side by side (M10.34), at the end of the row's line and
+// at a card's top right; a refusal's notice takes a line of its own above.
+.received-invitations__answer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  align-items: center;
+  justify-content: flex-end;
+
+  > .notice {
+    flex-basis: 100%;
+  }
+}

@@ -5,11 +5,13 @@ import type { ReceivedInvitationEntry } from '@/components/ReceivedInvitations/t
 import type {
   AcceptInvitationByIdMutation,
   AcceptInvitationByIdMutationVariables,
+  DeclineInvitationByIdMutation,
+  DeclineInvitationByIdMutationVariables,
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
 // The invitations addressed to the signed-in account, on the /coven landing
-// (M10.32): one row each, with its own Accept
+// (M10.32): one row each, with its own Accept and Decline (M10.34)
 // (claude-docs/components/received-invitations.md).
 
 const router = { push: vi.fn(), refresh: vi.fn() };
@@ -40,18 +42,24 @@ const show = () => render(<ReceivedInvitations invitations={INVITATIONS} />);
 const acceptFor = (covenName: string) =>
   screen.getByRole('button', { name: `Accept the invitation to ${covenName}` });
 
+const declineFor = (covenName: string) =>
+  screen.getByRole('button', { name: `Decline the invitation to ${covenName}` });
+
 beforeEach(() => {
   router.push.mockClear();
   router.refresh.mockClear();
 });
 
 describe('ReceivedInvitations', () => {
-  it('lists one row per invitation, each with its own Accept told apart by coven', () => {
+  it('lists one row per invitation, each with its own Accept and Decline told apart by coven', () => {
     show();
 
     const table = screen.getByRole('table', { name: 'Your Invitations' });
     expect(within(table).getAllByRole('row')).toHaveLength(1 + INVITATIONS.length);
-    for (const { covenName } of INVITATIONS) expect(acceptFor(covenName)).toBeEnabled();
+    for (const { covenName } of INVITATIONS) {
+      expect(acceptFor(covenName)).toBeEnabled();
+      expect(declineFor(covenName)).toBeEnabled();
+    }
   });
 
   it('draws each expiry as a time element', () => {
@@ -100,5 +108,48 @@ describe('ReceivedInvitations', () => {
     expect(await screen.findByRole('alert')).toBeVisible();
     expect(acceptFor('Fixture Coven')).toBeEnabled();
     expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it('asks before declining, then sends only that invitation’s id and reads the page again', async () => {
+    const calls: DeclineInvitationByIdMutationVariables[] = [];
+    mockGraphQLMutation<DeclineInvitationByIdMutation, DeclineInvitationByIdMutationVariables>(
+      'DeclineInvitationById',
+      (variables) => {
+        calls.push(variables);
+        return {
+          declineInvitationById: {
+            id: String(variables.id),
+            declinedAt: '2026-10-13T00:00:00Z',
+          },
+        };
+      },
+    );
+    show();
+    fireEvent.click(declineFor('Testwort Circle'));
+    const dialog = await screen.findByRole('dialog');
+    expect(calls).toEqual([]);
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Decline' }));
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
+    expect(calls).toEqual([{ id: 'i-2' }]);
+    // Declining leaves the page where it is: no coven is opened.
+    expect(router.push).not.toHaveBeenCalled();
+  });
+
+  it('says the service’s refusal beside the row and offers Decline again', async () => {
+    mockGraphQLError('DeclineInvitationById', {
+      code: 'FORBIDDEN',
+      message: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
+    });
+    show();
+    fireEvent.click(declineFor('Fixture Coven'));
+    const dialog = await screen.findByRole('dialog');
+
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Decline' }));
+
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(declineFor('Fixture Coven')).toBeEnabled();
+    expect(router.refresh).not.toHaveBeenCalled();
   });
 });
