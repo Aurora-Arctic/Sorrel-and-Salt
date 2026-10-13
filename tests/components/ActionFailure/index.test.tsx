@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, renderHook, screen } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { describe, expect, it } from 'vitest';
 import ActionFailure, { useActionFailure } from '@/components/ActionFailure';
@@ -36,13 +36,8 @@ describe('ActionFailure', () => {
   });
 
   it('gives no context outside one, so a control knows to say its refusal itself', () => {
-    let failure: ReturnType<typeof useActionFailure> | undefined;
-    const Probe = (): null => {
-      failure = useActionFailure();
-      return null;
-    };
-    render(<Probe />);
+    const { result } = renderHook(() => useActionFailure());
 
-    expect(failure).toBeNull();
+    expect(result.current).toBeNull();
   });
 });

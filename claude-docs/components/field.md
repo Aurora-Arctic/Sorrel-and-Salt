@@ -168,7 +168,9 @@ accent green, grows in with only a thin gap to the ring over the switch's `$moti
 choice. The description is `aria-describedby`. An optional `note` (M7.4) is a line
 for the whole group, such as the invite dialog's "an owner is made afterwards", set as the
 fieldset's own `aria-describedby` so it is read with the group. The group carries
-`margin-block: 1.5rem`, the owner's call. First used by the members page's
+`margin-block: space(5)`, which is 1.5rem, where nothing else spaces it, as in
+a confirm's modal. As a direct child of a `.form` it carries none, because the
+form's gap spaces it like any field (MB.119). First used by the members page's
 Promote and Demote modal.
 
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
