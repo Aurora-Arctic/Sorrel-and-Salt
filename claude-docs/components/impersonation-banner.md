@@ -78,11 +78,12 @@ screenshots. The button is
 ## Stories
 
 [`index.stories.tsx`](../../src/components/ImpersonationBanner/index.stories.tsx),
-`Impersonation Banner`: `Default`, and `PhoneDark` and `PhoneLight`, the
-banner above a page at 375px. A desktop browser can hover, so it shows the
+`Shell / Impersonation Banner`: `Default`, and `PhoneDark` and `PhoneLight`,
+the banner over the shell (`ShellFrame`, `.ladle/shell-frame.tsx`) at 375px,
+where the app puts it: first in the body, above the shell's bar. A desktop browser can hover, so it shows the
 banner tucked; the review screenshots emulate a touch screen
 (`scripts/review-screenshots.mjs`), where `(hover: none)` holds and the
-banner sits in the flow with the page starting below it. In the workshop Stop
+banner sits in the flow with the shell starting below it. In the workshop Stop
 reaches no server, so a click shows the failure. Render-only, no test ids, no
 snapshots.
 
