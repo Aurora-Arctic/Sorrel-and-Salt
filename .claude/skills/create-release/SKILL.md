@@ -1,5 +1,7 @@
 ---
 name: create-release
+model: sonnet
+effort: medium
 description: Use when the user asks to cut/start a new release (e.g. "create a release branch", "cut a release", "/create-release"). Diffs staging against main and summarizes what's shipping, asks major/minor/patch (default patch), computes the next version from the latest git tag, creates `release/<version>` off staging plus a `v<version>` tag carrying that summary, and opens a PR into `main` summarizing every merged-to-staging PR (and its author) included in the release.
 ---
 
