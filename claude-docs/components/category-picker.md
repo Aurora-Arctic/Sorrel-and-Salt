@@ -81,6 +81,16 @@ entries and its list are the [`Combobox`](combobox.md)'s; an entry's colour
 is the `is-coloured` entry's. The chips wrap inside the control, so a 375px
 screen scrolls nothing sideways.
 
+## Stories
+
+[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Forms /
+Category Picker`, over four of the seed's groups with their colour pairs and
+invented categories: `NothingPicked`, an empty box to focus and type in;
+`SomePicked`, three entries as chips in their groups' colours;
+`AnInvalidEntry`, one entry edged and named by an error beneath the box;
+`Loading`, with no categories yet and the pending state; and `CouldNotLoad`,
+with the status line that says the list failed.
+
 ## Testing
 
 `tests/components/CategoryPicker/index.test.tsx`: the group and its box;

@@ -44,6 +44,14 @@ button stays in the tab order with `aria-disabled` and names the note in its
 apart by the button's dashed edge and these words, never by hue alone.
 SignInPanel and the account page's sign-in methods both render it.
 
+## Stories
+
+[`index.stories.tsx`](../../src/components/ProviderMark/index.stories.tsx), `Sign In /
+Provider Mark`: `Default` and `Light`, the four providers' marks with their names
+in each theme; `FacebookChip`, Facebook's mark as a brand button draws it, on
+its blue chip; and `UnavailableNote`, the note a button for an unavailable
+provider carries.
+
 ## Testing
 
 None of its own: it is presentation, which the story (`Sign In / Provider
