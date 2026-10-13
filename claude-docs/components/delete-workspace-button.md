@@ -1,6 +1,6 @@
 # DeleteWorkspaceButton
 
-`src/components/DeleteWorkspaceButton/` — Delete Workspace, on the coven index page (M6.14). A client
+`src/components/DeleteWorkspaceButton/` — Delete Coven, on the coven index page (M6.14). A client
 component taking the workspace's `workspaceId` and `name`.
 
 ## Contracts

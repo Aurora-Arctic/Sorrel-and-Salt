@@ -63,15 +63,15 @@ describe('the /coven/[slug] page', () => {
   it.each<WorkspaceRole>(['viewer', 'member'])('offers a %s Leave and no Delete', async (role) => {
     await renderAs(role);
 
-    expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Delete Workspace' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Delete Coven' })).not.toBeInTheDocument();
   });
 
   it('offers an owner Leave and Delete', async () => {
     await renderAs('owner');
 
-    expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
   });
 
   // The guided exit (M6.16): the only owner is shown both ways out on click;
@@ -85,10 +85,10 @@ describe('the /coven/[slug] page', () => {
       ]);
       await renderAs('owner');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Workspace' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
       const dialog = await screen.findByRole('dialog');
 
-      expect(within(dialog).getByRole('radio', { name: /^Hand it/ })).toBeChecked();
+      expect(within(dialog).getByRole('radio', { name: /^Hand It/ })).toBeChecked();
       const box = await within(dialog).findByRole('combobox', { name: 'New Owner' });
       fireEvent.focus(box);
       fireEvent.change(box, { target: { value: 'Name of' } });
@@ -98,8 +98,8 @@ describe('the /coven/[slug] page', () => {
       expect(within(dialog).getByRole('option', { name: /Name of v.*Viewer/ })).toBeInTheDocument();
       expect(within(dialog).getByRole('button', { name: 'Promote and Leave' })).toBeDisabled();
 
-      fireEvent.click(within(dialog).getByRole('radio', { name: /^Delete it/ }));
-      expect(within(dialog).getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
+      fireEvent.click(within(dialog).getByRole('radio', { name: /^Delete It/ }));
+      expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
 
     it('offers the one other member by name, with nothing to search', async () => {
@@ -109,7 +109,7 @@ describe('the /coven/[slug] page', () => {
       ]);
       await renderAs('owner');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Workspace' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
       const dialog = await screen.findByRole('dialog');
 
       expect(within(dialog).getByRole('radio', { name: /Name of m/ })).toBeChecked();
@@ -120,11 +120,11 @@ describe('the /coven/[slug] page', () => {
     it('is offered only the deletion when no one else is in the coven', async () => {
       await renderAs('owner');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Workspace' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
       const dialog = await screen.findByRole('dialog');
 
       expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
-      expect(within(dialog).getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
+      expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
   });
 
@@ -135,11 +135,11 @@ describe('the /coven/[slug] page', () => {
     ]);
     await renderAs('owner');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Leave Workspace' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
     const dialog = await screen.findByRole('dialog');
 
     expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
-    expect(within(dialog).getByRole('button', { name: 'Leave Workspace' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
   });
 
   it.each<WorkspaceRole>(['member', 'viewer'])('never reads the roll for a %s', async (role) => {

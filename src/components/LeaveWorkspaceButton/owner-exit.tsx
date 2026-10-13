@@ -13,7 +13,7 @@ import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
 import Modal from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import ActionFailure, { useActionFailure } from '../WorkspaceActions/action-failure';
+import ActionFailure, { useActionFailure } from '../ActionFailure';
 import { LeaveWorkspaceDocument } from './documents';
 import type { OwnerExitProps, WayOut } from './types';
 
@@ -38,16 +38,11 @@ const OwnerExit = ({ workspaceId, name, successors }: OwnerExitProps): ReactElem
   const [open, setOpen] = useState(false);
   return (
     <>
-      <button
-        className="btn"
-        type="button"
-        aria-label="Leave Workspace"
-        onClick={() => setOpen(true)}
-      >
-        Leave Workspace
+      <button className="btn" type="button" aria-label="Leave Coven" onClick={() => setOpen(true)}>
+        Leave Coven
       </button>
       {open && (
-        <Modal title="Leave Workspace" onClose={() => setOpen(false)}>
+        <Modal title="Leave Coven" onClose={() => setOpen(false)}>
           {(close) => (
             // Its own failure place, so a refusal shows in the dialog rather
             // than on the page behind it.
@@ -150,14 +145,14 @@ const Options = ({
         options={[
           {
             value: 'hand',
-            label: only ? `Hand it to ${only.name}` : 'Hand it to another member',
+            label: only ? `Hand It to ${only.name}` : 'Hand It to Another Member',
             description: 'They become an owner first, then you leave.',
           },
           {
             value: 'delete',
-            label: 'Delete it',
+            label: 'Delete It',
             description:
-              'Closes it for every other member as well. Only an administrator can restore it.',
+              'Closes it for every other member as well. Only an administrator with database access can restore it.',
           },
         ]}
         value={way}

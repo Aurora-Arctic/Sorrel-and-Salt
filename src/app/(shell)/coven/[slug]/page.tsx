@@ -1,7 +1,7 @@
 import { displayNamesOf } from '@/modules/identity';
 import { memberRoster, rolePermits } from '@/modules/coven';
 import DeleteWorkspaceButton from '../../../../components/DeleteWorkspaceButton';
-import ActionFailure from '../../../../components/WorkspaceActions/action-failure';
+import ActionFailure from '../../../../components/ActionFailure';
 import LeaveWorkspaceButton from '../../../../components/LeaveWorkspaceButton';
 import type { Successor } from '../../../../components/LeaveWorkspaceButton/types';
 import { requireCovenMembership, requireSession } from '../../../../lib/request-session';
