@@ -3,11 +3,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ActionFailure from '@/components/ActionFailure';
 import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
 
-const { replace, graphqlRequest } = vi.hoisted(() => ({
+const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
   replace: vi.fn(),
+  refresh: vi.fn(),
   graphqlRequest: vi.fn(),
 }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh: vi.fn() }) }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh }) }));
 vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 
 const ID = '00000000-0000-0000-0000-000000000001';
@@ -15,10 +16,11 @@ const ID = '00000000-0000-0000-0000-000000000001';
 describe('LeaveWorkspaceButton', () => {
   beforeEach(() => {
     replace.mockReset();
+    refresh.mockReset();
     graphqlRequest.mockReset();
   });
 
-  it('sends nothing until confirmed, then leaves the named workspace and goes home', async () => {
+  it('sends nothing until confirmed, then leaves the named workspace and lands on the coven landing', async () => {
     graphqlRequest.mockResolvedValue({ leaveWorkspace: true });
     render(<LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" />);
     fireEvent.click(screen.getByRole('button', { name: /^Leave Coven/ }));
@@ -27,7 +29,9 @@ describe('LeaveWorkspaceButton', () => {
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Leave Coven' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    // The switcher lists covens from a layout the replace does not re-run.
+    expect(refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest).toHaveBeenCalledWith(expect.anything(), { workspaceId: ID });
   });
 

@@ -16,8 +16,11 @@ component taking the workspace's `workspaceId` and `name`, and, for the coven's 
 - **The last owner is refused by the service** (M6.8's guard) whatever the page shows; a refusal
   that still reaches the button, such as when the owners changed after the page was drawn, is said
   as it stands. The control stays visible and enabled for every role.
-- **A success goes to the home page** with `router.replace('/')`: a re-read of the coven would be a
-  404, since the leaver has no seat in it any more.
+- **A success goes to the coven landing** (`/coven`, `COVEN_LANDING_PATH`) with `router.replace`,
+  then `router.refresh()`, as `CreateWorkspaceForm` does after creating: a re-read of the coven
+  would be a 404, since the leaver has no seat in it any more, and the refresh brings the shell's
+  switcher a list without it. The landing opens the leaver's next coven if they have one, and tells
+  them how to get into one if not. The only owner's hand-over lands the same way.
 - **Every role sees it.** The page shows it unconditionally, so a viewer, who cannot open the members
   page, can still go.
 
@@ -88,7 +91,7 @@ a `PhoneLight` sibling.
 ## Testing
 
 `tests/components/LeaveWorkspaceButton/index.test.tsx`: nothing sent until confirmed, then the
-named coven's id and a move home; a refusal stays on the page; a refusal inside an `ActionFailure`
+named coven's id, a replace to the landing and a refresh; a refusal stays on the page; a refusal inside an `ActionFailure`
 is said above the buttons, not beside the one pressed. `owner-exit.test.tsx`: the dialog opens
 with both ways out, the type-ahead and the one-member and no-member shapes, the two requests in
 their order and what each failure leaves, the Delete confirmation, and that the focus returns to

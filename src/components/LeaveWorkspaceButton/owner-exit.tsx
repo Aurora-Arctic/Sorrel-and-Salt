@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
+import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
@@ -118,8 +119,10 @@ const Options = ({
       );
       return;
     }
-    // The coven is closed to this user now, so the page cannot be read again.
-    router.replace('/');
+    // The coven is closed to this user now, so the page cannot be read again;
+    // the refresh brings the switcher's new list in, as Leave's does.
+    router.replace(COVEN_LANDING_PATH);
+    router.refresh();
   }
 
   return (

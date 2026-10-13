@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
+import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { useActionFailure } from '../ActionFailure';
@@ -47,8 +48,13 @@ const DeleteWorkspaceButton = ({
       onFailure={failure?.report}
       inModal={inModal}
       send={() => graphqlRequest(DeleteWorkspaceDocument, { workspaceId })}
-      // The coven is gone for this user too, so the page cannot be read again.
-      onSent={() => router.replace('/')}
+      // The coven is gone for this user too, so the page cannot be read again:
+      // replace it with the landing, and refresh so the shell's switcher stops
+      // listing it (a client-side replace does not re-run the layout).
+      onSent={() => {
+        router.replace(COVEN_LANDING_PATH);
+        router.refresh();
+      }}
     />
   );
 };

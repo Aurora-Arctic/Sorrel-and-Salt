@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import type { ReactElement } from 'react';
+import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
 import { useActionFailure } from '../ActionFailure';
@@ -10,7 +11,7 @@ import OwnerExit from './owner-exit';
 import type { LeaveWorkspaceButtonProps } from './types';
 
 // Leave on the coven index page (M6.15), shown to every role. It asks first,
-// naming the coven, then sends the leave and goes to the home page, which the
+// naming the coven, then sends the leave and goes to the coven landing, which the
 // member can no longer read this coven from. The service is the guard: the
 // last owner is refused there and the refusal is said above the page's buttons
 // (`ActionFailure`), or beside this one when the page gives no place for it
@@ -45,8 +46,13 @@ const LeaveWorkspaceButton = ({
       confirmClass="btn btn--destructive"
       onFailure={failure?.report}
       send={() => graphqlRequest(LeaveWorkspaceDocument, { workspaceId })}
-      // The coven is closed to this user now, so the page cannot be read again.
-      onSent={() => router.replace('/')}
+      // The coven is closed to this user now, so the page cannot be read again:
+      // replace it with the landing, and refresh so the shell's switcher stops
+      // listing it (a client-side replace does not re-run the layout).
+      onSent={() => {
+        router.replace(COVEN_LANDING_PATH);
+        router.refresh();
+      }}
     />
   );
 };
