@@ -12,7 +12,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 // (M10.32): one row each, with its own Accept
 // (claude-docs/components/received-invitations.md).
 
-const router = { push: vi.fn() };
+const router = { push: vi.fn(), refresh: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const INVITATIONS: readonly ReceivedInvitationEntry[] = [
@@ -42,6 +42,7 @@ const acceptFor = (covenName: string) =>
 
 beforeEach(() => {
   router.push.mockClear();
+  router.refresh.mockClear();
 });
 
 describe('ReceivedInvitations', () => {
@@ -61,7 +62,7 @@ describe('ReceivedInvitations', () => {
     expect(times[0]).toHaveAttribute('datetime', INVITATIONS[0]?.expiresAt.toISOString());
   });
 
-  it('sends the invitation’s id and opens that coven, busy until it lands', async () => {
+  it('sends the invitation’s id and opens that coven, busy until it lands, redrawing the shell', async () => {
     const calls: AcceptInvitationByIdMutationVariables[] = [];
     mockGraphQLMutation<AcceptInvitationByIdMutation, AcceptInvitationByIdMutationVariables>(
       'AcceptInvitationById',
@@ -78,6 +79,8 @@ describe('ReceivedInvitations', () => {
     fireEvent.click(button);
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/coven/testwort-circle'));
+    // The shell's layout outlives a navigation; the refresh redraws its count.
+    expect(router.refresh).toHaveBeenCalledOnce();
     expect(calls).toEqual([{ id: 'i-2' }]);
     expect(button).toBeDisabled();
     expect(button).toHaveAttribute('aria-busy', 'true');

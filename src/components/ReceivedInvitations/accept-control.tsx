@@ -10,7 +10,7 @@ import BusyButton from '../BusyButton';
 import Notice from '../Notice';
 import type { AcceptControlProps } from './types';
 
-// A received invitation's Accept on the /coven landing (M10.32). It sends
+// A received invitation's Accept on the account page (M10.32). It sends
 // `acceptInvitationById`, which checks that the invitation is addressed to
 // this verified account and decides; the landing is the coven itself, or the
 // refusal is said beside the button. It is the by-id twin of
@@ -38,8 +38,10 @@ const AcceptControl = ({
     try {
       await graphqlRequest(AcceptInvitationByIdDocument, { id });
       // Busy until the coven replaces this page. A cast: the built routes
-      // know `/coven/[slug]`, not this literal.
+      // know `/coven/[slug]`, not this literal. The refresh redraws the shell
+      // too, whose layout a navigation keeps, so the menu's count drops.
       router.push(`/coven/${covenSlug}` as Route);
+      router.refresh();
     } catch (error) {
       setSending(false);
       // No fields of its own, so the reader always answers with an alert;
