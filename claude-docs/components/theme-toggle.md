@@ -3,7 +3,8 @@
 `src/components/ThemeToggle/` — the light/dark switch, and the only component
 that writes the theme attribute. It has two variants (MB.7): the `corner`
 disc pinned to the window, and the `inline` disc in the application shell's
-bar and, at a phone's width, in the account panel.
+bar, at every width. (Until M10.32 a phone's account panel held a second one;
+the owner moved it back to the bar for good.)
 
 ## Shared contract
 
@@ -148,13 +149,13 @@ look differs.
   `overflow: hidden`, `border-radius: 50%`) clips the facet as it swings out. The
   facets are 1.1875rem. The focus ring is drawn on the disc. Hover is
   `$accent-hover`, with no scale.
-- **`small`** is the 1.75rem disc with 1.0625rem facets, beside the "Theme"
-  label in the phone account panel.
-- **Two instances are never both visible**: the bar's is hidden at or under
-  `$shell-phone-width` and the panel's row shown only there. Each reads the
-  theme when it mounts, so resizing across the width after toggling in the
-  other leaves the hidden one's facets stale until it next mounts (the panel
-  mounts on opening). The attribute on `<html>` is always right.
+- **`small`** is the 1.75rem disc with 1.0625rem facets, built for the phone
+  account panel's theme row. That row is gone (M10.32), so nothing in the app
+  draws this size now; the size, its `InlineSmall` story and its test are still
+  in the component, and removing them is a change for the owner to ask for.
+- **One instance is visible at a time**, the bar's, at every width, so there is
+  no second copy whose facets could go stale. The attribute on `<html>` is
+  always right.
 
 ## Stories
 
@@ -166,7 +167,7 @@ four renders, no test ids and no snapshots; behaviour is asserted in
 - **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which the
   decorator honours over the toolbar. Light shows the solar-disc facet and
   `aria-pressed="true"`; Dark the crescent and `aria-pressed="false"`.
-- **Inline** / **InlineSmall** — the shell's disc and the panel's.
+- **Inline** / **InlineSmall** — the shell's disc and its small size.
 - **ReducedMotion** — `.meta = { reducedMotion: true }`, which the workshop
   decorator (`.ladle/components.tsx`) reads to simulate
   `prefers-reduced-motion: reduce`: it patches `window.matchMedia` to match and

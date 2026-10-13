@@ -109,7 +109,7 @@ with the session row in the token's place: `findReceivedInvitationPage`,
 holds, and the workspace tier, so a signed-in account reads only the coven
 invitations addressed to its own verified email, and the coven's name and
 slug and the inviter's name for those alone ([`invitations.md`](invitations.md),
-"Accepting from the landing").
+"Accepting from the account page").
 
 ### The write that takes no proof
 

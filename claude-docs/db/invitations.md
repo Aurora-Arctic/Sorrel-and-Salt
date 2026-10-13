@@ -104,7 +104,7 @@ marks"; MB.198). In their place, in the repository's `invitations.ts`, which
   a workspace-tier row by id, under no proof, matching only while the
   session's user holds the invited address, verified, and the coven is live:
   the token write with the address in the token's place, for the `/coven`
-  landing's list ("Accepting from the landing", below).
+  account page's list ("Accepting from the account page", below).
 - **`revokeInvitation(membership, id)`** stamps `revoked_at` now on a row in
   the proof's workspace, and **`revokeInvitation(admin, id)`** on a
   site-tier row. By id rather than token: an owner or an admin revokes from
@@ -297,13 +297,15 @@ pending rows carry the addresses of people who have not joined.
 In GraphQL, `revokeInvitation(workspaceId: ID!, id: ID!): Invitation!` goes
 through the service.
 
-### Accepting from the landing (M10.32)
+### Accepting from the account page (M10.32)
 
 An invitation reached its person one way, the mailed link, so a mail lost to
 a spam filter left them on `/coven` reading that someone must invite them,
-when someone had. Since M10.32 the landing lists the pending coven
-invitations addressed to the signed-in account's verified email, each with
-an Accept, and the accept runs by id as well as by token. The site tier is
+when someone had. Since M10.32 the account page's Invitations section lists the
+pending coven invitations addressed to the signed-in account's verified email,
+each with an Accept, and the accept runs by id as well as by token. The `/coven`
+landing and the account menu say how many wait and link to that section; the
+first build listed them on the landing, and the owner moved them on 2026-10-13. The site tier is
 not listed and cannot be accepted by id: an admin invitation's link is a
 bearer token for the site's highest privilege, and the worst case of a coven
 invitation is one coven's seat
@@ -341,8 +343,9 @@ coven and a malformed id are `NotFound` alike, so an id read off an owner's
 list tells a stranger nothing; an accepted, revoked or expired row is
 `Forbidden` in the link's own words. `listReceivedInvitations(session, page)`
 and `countReceivedInvitations(session, start)`, in `received-invitations.ts`,
-shape the rows for the landing, which calls them directly as a server
-component; there is no GraphQL read, as for the other two lists. The one
+shape the rows for the account page, which calls them directly as a server
+component (the count also goes to `viewerOf`, once per shell page, for the menu and
+the landing's notice); there is no GraphQL read, as for the other two lists. The one
 mutation is `acceptInvitationById(id: ID!): Invitation!`
 ([`components/received-invitations.md`](../components/received-invitations.md)).
 

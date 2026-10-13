@@ -229,7 +229,7 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Three palettes, deliberately not equals. Two appear on an IngredientCard.
+Four palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
@@ -239,6 +239,14 @@ the sign-in button this browser last signed in with (MB.77). It is a pointer,
 not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`
 dark, `$sorrel-vivid` light), a hue already reserved, and spends none of the groups'.
 Its label on the fill is 7.95:1 dark and 4.68:1 light.
+
+**Attention** (M10.32) marks something waiting on the reader: the account
+menu's count of pending coven invitations and the dot on the avatar. It is
+solid and wears safety's fill exactly, because that fill is already
+contrast-checked for its label and a second red would spend a hue. Both
+palettes read the same two tokens, `$wax-badge-dark` and `$wax-badge-light`
+in `_variables.scss`, so they cannot drift apart. They stay separate palettes
+so that a count is not named after a hazard in the code.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
@@ -276,7 +284,7 @@ clear 3:1 against both surfaces (WCAG 1.4.11).
 ### `$text-on-color`
 
 The label colour for anything drawn as a _solid_ fill — the selected chip, the
-safety and last-used badges. It is an alias for the page surface rather than a token of its own
+safety, attention and last-used badges. It is an alias for the page surface rather than a token of its own
 because the answer is the same whatever the fill: on dark the fill is the light
 thing and the label goes dark, on light the reverse.
 
@@ -769,6 +777,11 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
   `space(3)` column whose `h2` takes no margin, held `$top-inset` plus
   `space(4)` clear of the top when the page's own nav jumps to it.
   **`.page-frame__rule`** is the 1px `$text-muted` hairline between two.
+- **`.notice.page-frame__notice`** is a notice standing between a section's head
+  and its body, such as the `/coven` landing's word of waiting invitations
+  (M10.32): `space(3)` above and below it, on top of the section's gap, so it
+  reads apart from both (the owner's call). It names both classes to outrank
+  `.notice`'s zero margin, which comes later in the file.
 
 ## The admin layout
 
