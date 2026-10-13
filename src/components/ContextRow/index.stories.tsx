@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import { WorkshopPathname } from '../../../.ladle/navigation';
 import AdminNav from '../AdminNav';
+import CovenNav from '../CovenNav';
 import WorkspaceSwitcher from '../WorkspaceSwitcher';
 import ContextRow from '.';
 
@@ -10,8 +11,8 @@ export default {
 };
 
 const WORKSPACES = [
-  { slug: 'fixture-coven', name: 'Fixture Coven' },
-  { slug: 'testwort-circle', name: 'Testwort Circle' },
+  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
+  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
 ];
 
 // The admin area's row: the word "Admin" in the display face, the nav beside it.
@@ -21,11 +22,12 @@ export const Admin: Story = () => (
   </ContextRow>
 );
 
-// A coven's row: the switcher is the lead.
+// A coven's row: the switcher is the lead, the coven's nav beside it, as a
+// member sees it (Overview and Members).
 export const Coven: Story = () => (
   <WorkshopPathname.Provider value="/coven/fixture-coven">
     <ContextRow lead={<WorkspaceSwitcher workspaces={WORKSPACES} canCreate />}>
-      <nav aria-label="Coven">Section links</nav>
+      <CovenNav slug="fixture-coven" canReadMembers />
     </ContextRow>
   </WorkshopPathname.Provider>
 );
@@ -39,7 +41,13 @@ export const PhoneLongName: Story = () => (
     <ContextRow
       lead={
         <WorkspaceSwitcher
-          workspaces={[{ slug: 'long', name: 'A Long Named Circle of Fixture Herbalists' }]}
+          workspaces={[
+            {
+              slug: 'long',
+              name: 'A Long Named Circle of Fixture Herbalists',
+              canReadMembers: true,
+            },
+          ]}
         />
       }
     />
