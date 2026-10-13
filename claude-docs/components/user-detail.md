@@ -68,6 +68,21 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
   `btn btn--destructive`. No styling past the tokens before the section's
   design review.
 
+## Stories
+
+[`index.stories.tsx`](../../src/components/UserDetail/index.stories.tsx),
+`Admin / User Detail`, on invented people. Impersonate reaches Better Auth,
+which the workshop does not serve: the question can be seen, its answer cannot.
+
+- `WithCovens`: a user with three covens, each role once, and Impersonate.
+- `NoCovens`: the same user holding none.
+- `SeveralProviders`: four sign-in methods and an unverified address.
+- `Admin`: the primary admin, marked, with no Impersonate, as the endpoint
+  refuses an admin.
+- `WithoutImpersonation`: the user where impersonation is not registered.
+- `InAModal`: the detail inside a `Modal`, in its own iframe, so Impersonate's
+  question draws over it.
+
 ## Tests
 
 `tests/components/UserDetail/index.test.tsx`, with the component inside a

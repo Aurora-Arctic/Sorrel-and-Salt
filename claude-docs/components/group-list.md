@@ -38,7 +38,29 @@ The table takes the `data-table--roomy` modifier: while it is a table, its cells
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/GroupList/index.stories.tsx) has eleven stories: `CategoryGroups` (three invented groups in seeded pairs), `PhoneDark` and `PhoneLight` (the same in the admin column at 375px, each row a card), `FormGroups` with a next page and no search, `Traditions` (three invented traditions under an empty search), `TraditionsSearched` (searched by a fragment, Clear drawn), `TraditionsSearchedPhoneDark` and `TraditionsSearchedPhoneLight` (the same at 375px, the field across the row with its magnifier and Clear beneath it), `TraditionsNoMatch` with the no-match message, `Empty`, and `TraditionsEmpty` with the traditions' own message.
+[`index.stories.tsx`](../../src/components/GroupList/index.stories.tsx),
+`Admin / Group List`, has eleven stories. The bare list, at the workshop's own
+width:
+
+- `CategoryGroups`: three invented groups in seeded pairs.
+- `FormGroups`: two groups with a next page and no search.
+- `Traditions`: three invented traditions under an empty search.
+- `TraditionsSearched`: searched by a fragment, Clear drawn.
+- `TraditionsNoMatch`: the no-match message.
+- `Empty` and `TraditionsEmpty`: the empty messages, the traditions' naming
+  them.
+
+The phone stories stand for the page, which draws a group list only inside its
+tabbed page ([`tabbed-page.md`](tabbed-page.md)): the admin layout's frame, the
+page's heading, tabs and Add, with the Groups or Deity Traditions tab open.
+
+- `PhoneDark` and `PhoneLight`: the category groups on the Categories page at
+  375px, each row a card.
+- `TraditionsSearchedPhoneDark` and `TraditionsSearchedPhoneLight`: the
+  searched traditions on the Deities page at 375px, the field across the row
+  with its magnifier and Clear beneath it.
+
+Render-only, no test ids, no snapshots.
 
 ## Testing
 

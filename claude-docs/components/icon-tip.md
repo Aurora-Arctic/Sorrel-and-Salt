@@ -129,11 +129,14 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
 
 ## Stories
 
-`Admin / Icon Tip`: `InAListRow`, three banded rows, so the pencil shows on
-the page and on the card, and the `PhoneDark` / `PhoneLight` pair, the rows
-as cards with the pencil at each card's top right. Hover or focus a pencil to
-see its tip. The form's pencils are in the ingredient form's stories, and
-every list's in its own.
+[`index.stories.tsx`](../../src/components/IconTip/index.stories.tsx),
+`Layout / Icon Tip`, filed by kind rather than place, as the pencil is used in
+the admin lists and the ingredient form alike: `InAListRow`, three banded rows
+of a list's own table, with the pencil in an unlabelled last column at the
+row's end, so it shows on the page and on the card, and the `PhoneDark` /
+`PhoneLight` pair, the rows as cards with the pencil at each card's top
+right. Hover or focus a pencil to see its tip. The form's pencils are in the
+ingredient form's stories, and every list's in its own.
 
 ## Testing
 

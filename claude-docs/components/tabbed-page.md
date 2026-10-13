@@ -246,8 +246,8 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 ## Stories
 
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
-`Admin / Tabbed Page`: the People page under the admin nav with its
-Invitations tab open and the pills beside the heading, Invite Admin at the
+`Layout / Tabbed Page`: the People page in the admin layout's frame, the nav in
+its context row above, with its Invitations tab open and the pills beside the heading, Invite Admin at the
 end of the line, as `/admin/invitations` draws it. `Default`; `PhoneDark` and
 `PhoneLight` at 375px, the pills under the heading and Invite Admin at its own width at the line's start; `AddAsPlus` in a frame 600px wide, the Add as a plus at the heading's end with the pills on the line; `AddBeneathAtThreeFifty` in a frame 382px wide, the Add labelled again beneath the heading with the pills beneath it; `PhoneScrolled` at 375px, on Privilege Changes, the last
 tab, with no action; and `LoadingState` with `LoadingPhoneDark` and

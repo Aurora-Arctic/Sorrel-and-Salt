@@ -91,19 +91,22 @@ measure, so the lede stays a `<p>` in `main`.
   link over its line in the muted ink, the line capped at `$measure`, since
   it is not a `<p>`.
 
-The frame around the nav and the page is the `.admin-layout` primitive
-(`styling.md`, "The admin layout").
+The nav sits in the layout's context row, led by "Admin", above the page's
+frame, the `.admin-layout` primitive (`styling.md`, "The admin layout").
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/AdminNav/index.stories.tsx) —
-`Default`, the row; `Phone` at 375px, the bottom bar; and `IndexPage` with
-`IndexPagePhone`, the `/admin` index under the nav, its heading and lede
-copied from the page and `AdminContents` real. Each sits inside the layout
-frame. The tablet and More shapes are [`SectionNav`](section-nav.md)'s
-stories. The workshop's `usePathname` stub answers `/admin/users`
-([`workshop.md`](../workshop.md)), the People page's Users tab, so People
-is current in every story. Render-only, no test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/AdminNav/index.stories.tsx),
+`Admin / Admin Nav`: `Default`, the row; `Phone` at 375px, the bottom bar; and
+`IndexPage` with `IndexPagePhone`, the `/admin` index under the nav, its
+heading and lede copied from the page and `AdminContents` real. Each sits in
+the admin layout as it is, through the workshop's `AdminFrame`
+([`workshop.md`](../workshop.md), ".ladle/"): the context row led by "Admin"
+with the nav in it, above the `.admin-layout` column that holds the page. The
+tablet and More shapes are [`SectionNav`](section-nav.md)'s stories. The
+workshop's `usePathname` stub answers `/admin/users`, the People page's Users
+tab, so People is current in every story. Render-only, no test ids, no
+snapshots.
 
 ## Testing
 

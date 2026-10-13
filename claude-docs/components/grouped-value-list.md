@@ -176,23 +176,36 @@ so the list adds no rule for either.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/GroupedValueList/index.stories.tsx)
-— for each grouped kind, `…OnePageOfSeveral`, `…FirstPage`, `…Filtered`,
-`…NoMatch` and `…Empty`, as `Categories…`, `Forms…` and `Deities…`, the
-deities under invented traditions and slugged by `deitySlug`; for the flat
-kinds, `CelestialBodiesOnePageOfSeveral`, `Signs`, `CelestialBodiesFiltered`,
-`CelestialBodiesNoMatch` and `CelestialBodiesEmpty`; and `PhoneDark` and `PhoneLight`, a
-categories page inside `.admin-layout` at 375px: the real `TabbedPage`
-with its Categories tab open and its Add over the filtered list, so they show the stacked filter with Clear drawn, the
-Add as a plus and the rows as cards. `CategoriesPending`, with
-`PendingPhoneDark` and `PendingPhoneLight` at 375px, is the same page with
-a filter applied and the list on its way: a `ListNavigationContext` holding
-one pending above the page, since the stub router goes nowhere, so the
-filter row greyed and the tabs' skeleton in place of the list
-([`list-frame.md`](list-frame.md)). Each kind has four invented groups, so
-typing in a story's group filter shows its list narrowing. The filter
-reaches the admin pages, which the workshop does not serve. Render-only, no
-test ids, no snapshots.
+[`index.stories.tsx`](../../src/components/GroupedValueList/index.stories.tsx),
+`Admin / Grouped Value List`. Each kind has the bare list in five states, and
+the filter reaches the admin pages, which the workshop does not serve. Each
+grouped kind has four invented groups, so typing in a story's group filter
+shows its list narrowing.
+
+| Kind                                                                             | Stories                                                                                                                 |
+| -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Categories                                                                       | `CategoriesOnePageOfSeveral`, `CategoriesFirstPage`, `CategoriesFiltered`, `CategoriesNoMatch`, `CategoriesEmpty`       |
+| Forms                                                                            | `FormsOnePageOfSeveral`, `FormsFirstPage`, `FormsFiltered`, `FormsNoMatch`, `FormsEmpty`                                |
+| Deities, under invented traditions and slugged by `deitySlug`                    | `DeitiesOnePageOfSeveral`, `DeitiesFirstPage`, `DeitiesFiltered`, `DeitiesNoMatch`, `DeitiesEmpty`                      |
+| Celestial bodies and zodiac signs, the flat kinds with no group column or filter | `CelestialBodiesOnePageOfSeveral`, `Signs`, `CelestialBodiesFiltered`, `CelestialBodiesNoMatch`, `CelestialBodiesEmpty` |
+
+A `…OnePageOfSeveral` story is a middle page, both pager ends live and "Page 2
+of 3" between them; a `…FirstPage` has Next alone, "Page 1 of 2" beside it.
+
+These stories stand for the page, in the admin layout's frame with the
+Categories page's heading and tabs, its Categories tab open, as
+`TabbedPage` draws them:
+
+- `PhoneDark` and `PhoneLight` at 375px: the tab's Add over the filtered list,
+  showing the stacked filter with Clear drawn, the Add as a plus and the rows
+  as cards.
+- `CategoriesPending`, with `PendingPhoneDark` and `PendingPhoneLight` at
+  375px: the same page with a filter applied and the list on its way. A
+  `ListNavigationContext` holding one pending sits above the page, since the
+  stub router goes nowhere, so the filter row is greyed and the tabs' skeleton
+  is in place of the list ([`list-frame.md`](list-frame.md)).
+
+Render-only, no test ids, no snapshots.
 
 ## Testing
 
