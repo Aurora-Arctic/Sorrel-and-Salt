@@ -39,21 +39,22 @@ worth knowing:
 
 - **A declined link** (M10.34) says "This invitation was declined. If you change your mind, ask
   whoever sent it for a new one." The invitee's answer outranks the owner's Remove that may follow.
-- **A link into a deleted coven** has no reason of its own today: the service refuses it as
-  `invalid`, so the page says "This invitation link isn't valid. Check that you opened the whole
-  link from the email.", which is wrong advice for this case. MB.119's decision (f) proposes a
-  `closed` reason reading "The coven this invitation was for has been deleted, so it can't be
-  accepted." The `DeletedCoven` story shows it, and `DeletedCovenAsBuilt` the sentence today. The
-  service is not changed until the owner signs it off.
+- **A link into a deleted coven** (MB.119, decision f) has a reason of its own, `closed`: "The coven
+  this invitation was for has been deleted, so it can't be accepted." It sits after the dead-link
+  and address checks, so a link in two states reports the earlier (an accepted one still says
+  accepted) and another address learns nothing of the coven.
 
 ## Styling
 
-Layout only, as built. The page has no AppShell, the signed-in pages' shared frame, so
+A `.panel` (MB.119, decision c), as sign-in's panel, the email page's and the create page's are:
+the root is `panel invitation-acceptance`, and its `.header` (the layout primitive's) holds the
+`h1` and the grant sentence as a `.lede`. A refusal has no grant, so its header is the heading
+alone and the alert says the rest. The page has no AppShell, the signed-in pages' shared frame, so
 its `main` is the page frame, `.page-frame.page-frame--narrow`
 ([`styling.md`](../styling.md), "The page frame"): it centres the panel,
 holds it clear of the top inset and caps it at the forms' column,
 `$narrow-column` (28rem), so the panel sets no width of its own.
-`.invitation-acceptance` only stacks its heading, sentences and button a
+`.invitation-acceptance` only stacks the header, the alert and the button a
 `space(3)` apart. Both notices, the refusal and a failed accept, are
 `Notice` ([`notice.md`](notice.md)) as errors, so each is an alert; a
 failed accept is read by `readGraphqlFailure` (`src/lib/graphql-failure.ts`),
@@ -67,17 +68,13 @@ buttons and the spinner are the primitives', Accept drawn through
 `Coven / Invitation Acceptance`, each inside the page's own
 `main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only.
 
-- **The states:** `SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified`, `Expired`,
-  `Declined`, `DeletedCovenAsBuilt` and `DeletedCoven` (the proposed sentence), the last with
-  `DeletedCovenPhoneDark` and `DeletedCovenPhoneLight`.
-- **The proposal (MB.119, decision c):** today the page is bare in `.page-frame--narrow`, where
-  sign-in, the email page, the landing and the create page are each a `.panel`.
-  `ProposalBare{SignedOut,Acceptable,Refused}` draw the page as built;
-  `ProposalPanel{SignedOut,Acceptable,Refused}` draw it on a `panel invitation-acceptance` with a
-  `.header` holding the heading and the grant sentence as a `.lede`, as sign-in's panel does
-  (recommended). The Panel stories are a stand-in made in the stories file, so the component is
-  unchanged until the owner chooses; their buttons do nothing. Phone and theme variants of the
-  refused and acceptable pair follow them.
+- **The states:** `SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified`, and one for each other
+  refusal: `Invalid`, `Accepted`, `Revoked`, `Expired`, `Declined`, `DeletedCoven`,
+  `DifferentAddress` and `Paused`. The refusal sentences are copied from the service's `MESSAGES`,
+  as a story cannot import a server-only module.
+- **Phone and both themes:** `SignedOut`, `AcceptableCoven`, `Unverified` and `DeletedCoven` each
+  have `PhoneDark` and `PhoneLight` (375px), covering a sentence and a button, an alert and a
+  button, and an alert alone.
 
 ## Tests
 
