@@ -75,6 +75,26 @@ export async function sessionIsFresh(): Promise<boolean> {
   return (await getSessionState()).sessionFresh;
 }
 
+/** The page's own path, which the proxy forwarded, since a page cannot read its URL. */
+async function forwardedReturnPath(): Promise<string | undefined> {
+  return (await headers()).get(RETURN_PATH_HEADER) ?? undefined;
+}
+
+/**
+ * The signed-in user, or a redirect to `/sign-in` carrying the page's own path
+ * back as `?next=`: `requireSession()` without its email check. For the shell
+ * layout and what it draws, never a page. The shell is drawn round the email
+ * page too, and a layout that throws the email redirect while the browser is
+ * navigating into it leaves the router refetching that page without end
+ * (MB.256; claude-docs/auth/route-protection.md, "Where the email redirect is
+ * thrown").
+ */
+export async function requireSignedIn(): Promise<Session> {
+  const { session } = await getSessionState();
+  if (!session) redirect(signInPath(await forwardedReturnPath()));
+  return session;
+}
+
 /**
  * The signed-in user, or a redirect: to `/sign-in` carrying the page's own
  * path back as `?next=` when there is none, and to the email page, carrying
@@ -84,9 +104,9 @@ export async function sessionIsFresh(): Promise<boolean> {
  * makes before it reads anything; the email page is the one it lets through.
  */
 export async function requireSession(): Promise<Session> {
-  const { session, emailVerified } = await getSessionState();
-  const returnPath = (await headers()).get(RETURN_PATH_HEADER) ?? undefined;
-  if (!session) redirect(signInPath(returnPath));
+  const session = await requireSignedIn();
+  const { emailVerified } = await getSessionState();
+  const returnPath = await forwardedReturnPath();
   if (!emailVerified && !isEmailPage(returnPath)) {
     redirect(emailPagePath(safeReturnPath(returnPath)));
   }
