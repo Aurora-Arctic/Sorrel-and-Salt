@@ -154,8 +154,8 @@ column's gap and the address's weight.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/EmailForm/index.stories.tsx) —
-`Prefilled` (unverified, the sign-up mail just sent, so counting down),
+[`index.stories.tsx`](../../src/components/EmailForm/index.stories.tsx),
+titled "Account / Email Form": `Prefilled` (unverified, the sign-up mail just sent, so counting down),
 `ReadyToResend`, `NoEmail`, `Confirmed`, `ChangeLater` (verified, back to
 change it) and `WithError` (reading `verifyErrorMessage` rather than a copied
 sentence), and `Embedded`, inside the account page's frame and section.
