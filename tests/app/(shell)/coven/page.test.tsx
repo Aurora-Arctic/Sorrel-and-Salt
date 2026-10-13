@@ -147,4 +147,68 @@ describe('the /coven/[slug] page', () => {
 
     expect(memberRoster).not.toHaveBeenCalled();
   });
+
+  // The sections (MB.119): Contents lists the pages the caller can reach,
+  // Your Membership holds Leave alone, and Delete has a section of its own
+  // that only an owner is shown, so the two buttons that end a seat and end a
+  // coven are never side by side.
+  describe('the sections', () => {
+    it.each<WorkspaceRole>(['owner', 'member'])(
+      'lists the members page in Contents for a %s, who may read members',
+      async (role) => {
+        await renderAs(role);
+
+        const contents = screen.getByRole('region', { name: 'Contents' });
+        expect(within(contents).getByRole('link', { name: 'Members' })).toHaveAttribute(
+          'href',
+          '/coven/fixture-coven/members',
+        );
+      },
+    );
+
+    it('draws no Contents for a viewer, who can reach none of its pages', async () => {
+      await renderAs('viewer');
+
+      expect(screen.queryByRole('region', { name: 'Contents' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Members' })).not.toBeInTheDocument();
+    });
+
+    it('keeps Leave in Your Membership and Delete in a section of its own for an owner', async () => {
+      await renderAs('owner');
+
+      const membership = screen.getByRole('region', { name: 'Your Membership' });
+      expect(within(membership).getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
+      expect(within(membership).queryByRole('button', { name: 'Delete Coven' })).toBeNull();
+      const owners = screen.getByRole('region', { name: 'Delete This Coven' });
+      expect(within(owners).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
+    });
+
+    it.each<WorkspaceRole>(['member', 'viewer'])('shows a %s no Delete section', async (role) => {
+      await renderAs(role);
+
+      expect(screen.queryByRole('region', { name: 'Delete This Coven' })).not.toBeInTheDocument();
+    });
+  });
+
+  // The jump menu (PageNav): an entry per section shown, each landing on a
+  // section that exists. A viewer has Your Membership alone.
+  describe('the jump menu', () => {
+    const menu = () => screen.queryByRole('navigation', { name: 'On this page' });
+
+    it.each<[WorkspaceRole, number]>([
+      ['owner', 3],
+      ['member', 2],
+      ['viewer', 1],
+    ])('has an entry for each of a %s’s sections', async (role, count) => {
+      await renderAs(role);
+
+      const links = within(menu() as HTMLElement).getAllByRole('link');
+      expect(links).toHaveLength(count);
+      for (const link of links) {
+        const target = document.getElementById(link.getAttribute('href')?.slice(1) ?? '');
+        expect(target).toBeInstanceOf(HTMLElement);
+        expect(target?.tagName).toBe('SECTION');
+      }
+    });
+  });
 });

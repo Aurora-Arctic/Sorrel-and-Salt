@@ -84,8 +84,11 @@ measure, so the lede stays a `<p>` in `main`.
 
 ## Styling
 
-`index.scss` styles only the index's table of contents; the nav's own is
-[`section-nav.md`](section-nav.md), "Styling".
+The directory has no stylesheet of its own: the nav's styling is
+[`section-nav.md`](section-nav.md), "Styling", and the index's table of
+contents is the `.admin-contents` primitive in `_primitives.scss`, moved there
+when the coven index became its second user (MB.119), since a route loads a
+component's stylesheet only when it draws the component.
 
 - **The index** lists each section's pages in a column without bullets, a
   link over its line in the muted ink, the line capped at `$measure`, since

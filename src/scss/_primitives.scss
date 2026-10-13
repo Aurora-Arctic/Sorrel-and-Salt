@@ -675,9 +675,12 @@
   // page runs as long as its rows.
   // A primitive rather than AdminNav's own rule, since the admin layout and
   // three stories use the class as their frame. The coven layout (M9.15)
-  // shares the frame, until its section's
-  // design review says otherwise; its pages will hold the ingredient and
-  // grimoire tables, so the wide column suits it too.
+  // shares the frame, and MB.119's design review kept it so: it asked for no
+  // frame of the coven's own, and its pages hold the member and invitation
+  // tables and will hold the ingredient and grimoire tables, so the wide
+  // column suits them. What a page does inside the frame is the page's: the
+  // coven index sits in the narrow column with a jump menu beside it
+  // (`.page-with-nav`, below), the people pages run the frame's width.
   .admin-layout,
   .coven-layout {
     box-sizing: border-box;
@@ -707,25 +710,73 @@
     @include list-reset;
   }
 
-  // The account page: its on-page nav stands in a column to the left of the
-  // sections from a tablet up, held under the shell bar as the page scrolls,
-  // and stacks above them as a plain column at a phone's width
-  // (PageNav). `.page-frame.account-page` outranks
-  // `.page-frame`'s flex column only where the grid applies.
+  // A table of contents: titled sections of links, each link with its one
+  // line beneath it in the muted ink. The `/admin` index's (AdminNav's
+  // `contents.tsx`) and the coven index's. Not bulleted: a list of links, as
+  // `.link-row` is not, so typography-base's marker and indent go. Here among
+  // the primitives rather than in a component's stylesheet, since a route
+  // loads a component's stylesheet only when it draws the component.
+  .admin-contents {
+    @include stack;
+  }
+
+  .admin-contents__list {
+    display: flex;
+    flex-direction: column;
+    gap: space(3);
+
+    @include list-reset;
+
+    > li {
+      display: flex;
+      flex-direction: column;
+      gap: space(1);
+    }
+  }
+
+  // Not a `<p>`, so it takes the measure itself (claude-docs/styling.md,
+  // "Binding rules").
+  .admin-contents__description {
+    max-width: $measure;
+    color: $text-muted;
+  }
+
+  // A page with a jump menu (PageNav), the account page's and the coven
+  // index's: the menu stands in a column to the left of the sections from a
+  // tablet up, held under the shell bar as the page scrolls, and stacks above
+  // them as a plain column at a phone's width. The page's children are, in
+  // order, its head, the menu, then its sections; the menu spans the three
+  // rows after the head, so a page has at most three sections for it to
+  // stand beside while it sticks (the account's fourth runs on below it).
+  // The column is the one the `.page-frame` gives, spelled out so the class
+  // also serves a page that is not a frame, such as the coven index inside
+  // `.coven-layout`. It follows `.page-frame` in this file and has the same
+  // weight, so the grid wins over its flex column only where it applies.
+  // claude-docs/components/page-nav.md, "Where it stands";
   // claude-docs/auth/admin-bootstrap.md, "The account page".
+  .page-with-nav {
+    display: flex;
+    flex-direction: column;
+    gap: space(6);
+  }
+
+  .page-with-nav > * {
+    box-sizing: border-box;
+    margin-block: 0;
+  }
+
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-    .page-frame.account-page {
+    .page-with-nav {
       display: grid;
       grid-template-columns: calc(#{space(8)} * 3) minmax(0, $narrow-column);
       place-content: start center;
-      column-gap: space(6);
     }
 
-    .account-page > :not(.page-nav) {
+    .page-with-nav > :not(.page-nav) {
       grid-column: 2;
     }
 
-    .account-page > .page-nav {
+    .page-with-nav > .page-nav {
       position: sticky;
       top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
       grid-column: 1;

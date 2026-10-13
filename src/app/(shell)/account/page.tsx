@@ -68,7 +68,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       : undefined;
 
   return (
-    <main className="page-frame page-frame--narrow account-page">
+    <main className="page-frame page-frame--narrow page-with-nav">
       <h1>Your Account</h1>
       <PageNav
         label="On this page"

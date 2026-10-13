@@ -43,3 +43,17 @@ export const OnlyMember: Story = () => (
     successors={[]}
   />
 );
+
+// The plain Leave and the only owner's guided exit at a phone's width, in
+// each theme. The dialog opens on press, so these show the buttons that open it.
+export const PhoneDark: Story = () => <Default />;
+PhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PhoneLight: Story = () => <Default />;
+PhoneLight.meta = { theme: 'light', width: 375 };
+
+export const OnlyOwnerPhoneDark: Story = () => <OnlyOwner />;
+OnlyOwnerPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const OnlyOwnerPhoneLight: Story = () => <OnlyOwner />;
+OnlyOwnerPhoneLight.meta = { theme: 'light', width: 375 };

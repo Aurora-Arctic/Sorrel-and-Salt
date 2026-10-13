@@ -519,7 +519,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   sections, the panels and the nav's row are primitives
   (`.page-frame--narrow`, `.page-frame__section`, `.panel`, `.link-row`;
   [`styling.md`](../styling.md), "The page frame" and "Link rows and
-  provider marks"), so the page has no stylesheet of its own beyond `.account-page` in `_primitives.scss`: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
+  provider marks"), so the page has no stylesheet of its own beyond `.page-with-nav` in `_primitives.scss`, shared with the coven index: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
   lands back with `?error=` and `?provider=`: the page turns the code into
   a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
   the provider, when it is one on the roster, so the sentence shows in that

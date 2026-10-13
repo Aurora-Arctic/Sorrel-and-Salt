@@ -650,6 +650,13 @@ The class layer every form is built from, in `_primitives.scss`:
   this way, and the Reason fields of the user list's confirmations and the
   admin invite form took it at MB.115's review; any other form adopts it at
   its own design review.
+- **A radio group takes the form's gap, not a margin of its own.**
+  `.fieldset.radio-group` (`RadioGroupField`) has a `space(5)` block margin
+  that sets it apart from the text around it where nothing else spaces it, as
+  in a confirm's modal (a member's Change Role, the only owner's Leave Coven).
+  Inside a `.form`, whose `space(5)` gap already spaces every field,
+  `.form > .fieldset.radio-group` clears it, so the margin would not add to the
+  gap.
 - **Every text, textarea, select and type-ahead field shows a placeholder**,
   a short action, and what the field is for goes in its hint's info tip
   ([`components/field.md`](components/field.md#contracts) holds the rule).
@@ -756,7 +763,10 @@ draws `.filter-row` ([`components/filter-form.md`](components/filter-form.md)):
 
 `.page-frame` is the centred, full-height column of a page: Welcome, sign-in,
 the invitation (outside the shell), and the account pages, the not-authorized
-page and the create-coven page (inside it). Its children stand `space(6)` apart and stop at `$measure`;
+page, the coven landing and the create-coven page (inside it). The sign-in
+page and the invitation each sit on a `.panel` inside the frame (the
+invitation's by MB.119's review, so a reader who follows a link from an email
+sees the card the sign-in page draws). Its children stand `space(6)` apart and stop at `$measure`;
 `.page-frame--narrow` stops them at `$narrow-column` (28rem), the forms'
 column. It is `min-height: calc(100dvh - $top-inset)` with `space(6)` above
 and below and `space(4)` at the sides, `border-box`, so a page a screen high
@@ -784,6 +794,16 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
   `space(3)` column whose `h2` takes no margin, held `$top-inset` plus
   `space(4)` clear of the top when the page's own nav jumps to it.
   **`.page-frame__rule`** is the 1px `$text-muted` hairline between two.
+- **`.page-with-nav`** is a page with a jump menu (`PageNav`,
+  [`components/page-nav.md`](components/page-nav.md)): the account page's, and
+  the coven index's. Its children are the head, the menu, then the sections.
+  From a tablet up it is a grid, the menu a sticky column of three rows to the
+  left of the sections, which stop at `$narrow-column`; at a phone's width it
+  is the `space(6)` column the frame is, the menu above the sections. It
+  stands on its own, so it also serves a page that is not a `.page-frame`,
+  such as the coven index inside `.coven-layout`, and clears the children's
+  block margins as the frame does. Both pages use the one class, so the two
+  cannot drift (MB.119).
 - **`.notice.page-frame__notice`** is a notice standing between a section's head
   and its body, such as the `/coven` landing's word of waiting invitations
   (M10.32): `space(3)` above and below it, on top of the section's gap, so it
@@ -815,11 +835,17 @@ heading ("Buttons", above). MB.115's review had the action span the line;
 the owner reversed that at MB.7's review, 2026-10-12.
 
 `.coven-layout` is the same frame around every `/coven/[slug]` page, its
-page's children inside it; the section nav (`CovenNav`) is in the context row above (M9.15, MB.7). It shares the rule
-rather than copying it until the workspace section's design review decides
-its own; its pages will hold the ingredient and grimoire tables, so the wide
-column suits it in the meantime. The admin area's page-header rules stay
-scoped to `.admin-layout`.
+page's children inside it; the section nav (`CovenNav`) is in the context row
+above (M9.15, MB.7). MB.119's design review signed it off as it stands: the
+coven asked for no frame of its own, so the two share the rule. The wide
+column suits its pages, which hold the member and invitation tables now and
+the ingredient and grimoire tables later. What a page does inside the frame
+is the page's: the coven index sits in the narrow column with a jump menu at
+its side (`.page-with-nav`, "The page frame", above), and its sections are
+plain `.page-frame__section`s rather than panels, the shape the admin
+index uses. The index's table of contents is the `.admin-contents` list the
+admin index draws, in `_primitives.scss` for both. The admin area's
+page-header rules stay scoped to `.admin-layout`.
 
 ## Tables at phone width
 
@@ -989,8 +1015,16 @@ What each section review (MB.115 to MB.124) designs to:
   a page in tabs is a `TabbedPage` with each tab's action from its route
   group's `@action` slot;
   and a modal opened by its page's address, or at once by a press, is a `RouteModal`
-  ([`components/modal.md`](components/modal.md)). Each is in
-  `claude-docs/components/`.
+  ([`components/modal.md`](components/modal.md)). A button that opens a
+  dialog from its own page is a `ModalButton`, which takes the focus back to
+  it however the dialog closes, since `Modal` restores nothing itself. A
+  refusal from an action on the page is said once, above the controls, by an
+  `ActionFailure` wrapped around them
+  ([`components/action-failure.md`](components/action-failure.md)), not
+  beside the button pressed, where a narrow cell or a phone's card would wrap
+  it. A page's own menu of jump links is a `PageNav`
+  ([`components/page-nav.md`](components/page-nav.md)), laid out by
+  `.page-with-nav`. Each is in `claude-docs/components/`.
 - **Lists are the list primitives.** A list page's root is a `.list-frame`,
   its filter form a `.filter-row`, and its table a `.data-table` in a
   `.data-table-frame` with the `--stack` modifier, its explicit roles and a

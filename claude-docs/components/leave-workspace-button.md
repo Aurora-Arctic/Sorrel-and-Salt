@@ -1,6 +1,6 @@
 # LeaveWorkspaceButton
 
-`src/components/LeaveWorkspaceButton/` — Leave Coven, on the coven index page (M6.15). A client
+`src/components/LeaveWorkspaceButton/` — Leave Coven, in the coven index's Your Membership section (M6.15). A client
 component taking the workspace's `workspaceId` and `name`, and, for the coven's only owner,
 `successors` (M6.16, below).
 
@@ -10,9 +10,9 @@ component taking the workspace's `workspaceId` and `name`, and, for the coven's 
   question names the coven in bold and says the member loses access until an owner invites them back.
 - **One GraphQL mutation, `leaveWorkspace(workspaceId)`**, through the same path as every write from
   the browser (CLAUDE.md rule 1). It names no user: the service leaves the caller's own seat and has
-  no argument to name another's. A refusal is said above the page's buttons, under the "Your
-  Membership" heading, through `ActionFailure` (`src/components/ActionFailure/`), which the page
-  wraps both Leave and Delete in. Rendered outside it, the button says its refusal beside itself.
+  no argument to name another's. A refusal is said above the page's buttons, once, through
+  `ActionFailure` (`src/components/ActionFailure/`), which the page wraps around the Your Membership
+  and Delete This Coven sections together. Rendered outside it, the button says its refusal beside itself.
 - **The last owner is refused by the service** (M6.8's guard) whatever the page shows; a refusal
   that still reaches the button, such as when the owners changed after the page was drawn, is said
   as it stands. The control stays visible and enabled for every role.
@@ -83,10 +83,11 @@ is `.btn--destructive`; Cancel is `.btn--quiet`.
 
 `index.stories.tsx` (`Coven / Leave Workspace Button`): `Default` (the plain Leave),
 `OnlyOwner` (several members to hand over to, so the type-ahead), `OnlyOwnerOneOther` (one member,
-offered by name) and `OnlyMember` (deletion alone). In the workshop the calls reach no server, so
-confirming shows the failure. The buttons in their page are drawn by the review's proposals in
-`.ladle/coven-pages.stories.tsx` (`Coven / Pages`, `ProposalIndex…`), each with a `PhoneDark` and
-a `PhoneLight` sibling.
+offered by name) and `OnlyMember` (deletion alone), with `PhoneDark` and `PhoneLight` for the plain
+Leave and `OnlyOwnerPhoneDark` and `OnlyOwnerPhoneLight` for the guided exit, at 375px. In the
+workshop the calls reach no server, so confirming shows the failure. The button in its page is the
+coven index's, which reads the session and so has no story: it is walked in
+`tests/e2e/coven.spec.ts`.
 
 ## Testing
 
