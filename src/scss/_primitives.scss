@@ -1480,9 +1480,18 @@
   // radio drawn as a small ring, its centre dot in the accent green growing
   // in as it is chosen, over the same short ease the switch uses. The ring
   // carries the state by its dot as well as its colour (WCAG 1.4.1).
-  // Both classes, so it outranks `.fieldset`'s own `margin: 0` below.
+  // Both classes, so it outranks `.fieldset`'s own `margin: 0` below. The
+  // margin sets the group apart from the text around it where nothing else
+  // spaces it, as in a confirm's modal (a member's Change Role, the last
+  // owner's Leave).
   .fieldset.radio-group {
-    margin-block: 1.5rem;
+    margin-block: space(5);
+  }
+
+  // Inside a form the form's gap already spaces every field, so the group
+  // stands like any other and its own margin would add to the gap.
+  .form > .fieldset.radio-group {
+    margin-block: 0;
   }
 
   .radio {
