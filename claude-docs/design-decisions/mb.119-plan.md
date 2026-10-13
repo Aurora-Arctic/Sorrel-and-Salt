@@ -125,3 +125,15 @@ Decisions recorded as a comment on #576 and in the plan copy. Lanes 3 and 4 appl
 ## Out of scope
 
 What a service decides (no new refusal rules; (f) and (h) are wording of refusals that already fire); mail (MB.118); the shell bar and account menu (MB.7); the ingredients and grimoire pages under the coven (MB.121, MB.123); `ConfirmedAction`'s move and the shared confirm row (minted to MB.124).
+
+## Where the build departed from the plan
+
+Recorded as the lanes reported it. The plan above stays as approved.
+
+- **The task runs in a worktree.** The build started on 2026-10-13 in `/home/node/worktrees/mb119`, at the owner's word. The plan had Lane 1 in `/app`. Lanes 1 and 2 each worked in their own worktree instead, and their commits were merged into the task branch as they landed.
+- **The pager move touched more than three callers.** Six pages call `pagerHrefs`: the value, group and privilege-changes pages the plan names, plus the admin compendium, users and invitations pages. Eight component files imported `PagerCursor` and `PagerHrefs` from `admin/types.ts`. Every one now imports from `src/lib/`, with nothing re-exported, so each name has one import path.
+- **`PagerHrefs` is generic.** `src/lib/types.ts` imports nothing (`claude-docs/modules.md`, "Where types live"), so it cannot name Next's `Route` type. It is `PagerHrefs<Href extends string = string>`, and each list component asks for `PagerHrefs<Route>`, so its links are still checked as routes.
+- **Finding 12 missed two fixtures.** `SectionNav/index.stories.tsx` also drew the coven nav without `canReadMembers`. `.ladle/shell-frame.tsx` also passed a `workspaces` prop that `AppShell` no longer takes. Both are fixed. Stories sit outside the type check, which is why nothing caught either.
+- **The context row's ground got its comment measured.** The plan pointed at a comment saying why no tokens-test row is needed, and none existed. In both themes the ground sits between the page and the card in every colour channel. Every text colour's contrast on it therefore lies between two contrasts the tokens test already holds to 4.5:1, and the comment now says so.
+- **`FormActions` has a test file of its own.** `field.md`'s Testing section now says almost no shared piece has one, because the plan asked for this test.
+- **Sub-hour fixes found on the way:** the Foundations page now shows the `tab` type size, and `workshop.md` counts five type roles. MB.124's entry names the floating-panel widths and the `ConfirmedAction` move, and M8.16's focus criterion notes `ModalButton`.
