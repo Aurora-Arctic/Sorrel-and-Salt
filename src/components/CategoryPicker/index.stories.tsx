@@ -44,6 +44,7 @@ function Stateful({
         legend="Categories"
         hint="What this ingredient is used for. Pick as many as apply."
         entry="Category"
+        placeholder="Add a category"
         categories={CATEGORIES}
         value={value}
         onChange={setValue}
