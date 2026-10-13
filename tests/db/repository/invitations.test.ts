@@ -81,6 +81,9 @@ const acceptAs = (user: SessionUser, token = TOKEN) =>
 const revokeInWorkspace = (id: string, proof = () => inW) =>
   withAudit(asUser(A), (write) => write.revokeInvitation(proof(), id));
 
+const declineAs = (user: SessionUser, id: string) =>
+  withAudit(asUser(user), (write) => write.declineReceivedInvitation(id));
+
 const revokeOnSite = (id: string) =>
   withAudit(asUser(E), (write) => write.revokeInvitation(admin, id));
 
@@ -311,6 +314,81 @@ describe('revokeInvitation, by tier', () => {
   });
 });
 
+describe('the owner’s list and a declined invitation (M10.34)', () => {
+  const FULL = { limit: 101, inverted: false };
+  const listed = async (proof: Membership = inW) =>
+    (await findPendingWorkspaceInvitationPage(proof, FULL)).map(({ node }) => node.id);
+  const counted = async (proof: Membership = inW) =>
+    (await findPendingWorkspaceInvitationCount(proof, undefined)).totalCount;
+
+  it.each([
+    ['a declined one', ''],
+    ['a declined one past its expiry', 'past'],
+  ])('lists and counts %s until it is revoked', async (_kind, when) => {
+    const [row] = await inviteIntoW({ token: 'fixture-token-o-declined' });
+    await declineAs(A, row!.id);
+    if (when)
+      await sql`update invitations set expires_at = now() - interval '1 day' where id = ${row!.id}`;
+
+    expect(await rowOf(row!.id)).toMatchObject({ declined_at: expect.any(Date), revoked_at: null });
+    expect(await listed()).toEqual([row!.id]);
+    expect(await counted()).toBe(1);
+    // Why it is the open filter that keeps it: another coven sees nothing, and
+    // an expired invitation that was never declined is gone from the same list.
+    expect(await listed(inX)).toEqual([]);
+    const [lapsed] = await inviteIntoW({ token: 'fixture-token-o-lapsed', expiresAt: PAST() });
+    expect(await listed()).not.toContain(lapsed!.id);
+
+    await revokeInWorkspace(row!.id);
+
+    expect(await listed()).toEqual([]);
+    expect(await counted()).toBe(0);
+  });
+
+  it('revokes a declined invitation, the row keeping its decline and gaining the revoke', async () => {
+    const [row] = await inviteIntoW();
+    await declineAs(A, row!.id);
+
+    const revoked = await revokeInWorkspace(row!.id);
+
+    expect(revoked).toHaveLength(1);
+    expect(revoked[0]).toMatchObject({
+      id: row!.id,
+      declinedAt: expect.any(Date),
+      revokedAt: expect.any(Date),
+      updatedBy: A.id,
+    });
+  });
+
+  it('revokes no accepted invitation, though it too is no longer pending', async () => {
+    const [accepted] = await inviteIntoW();
+    await acceptAs(A);
+
+    expect(await rowOf(accepted!.id)).toMatchObject({ declined_at: null });
+    expect(await revokeInWorkspace(accepted!.id)).toEqual([]);
+    expect(await listed()).toEqual([]);
+  });
+
+  it('cannot be revoked through another coven’s proof, and the owner’s revoke takes it', async () => {
+    const [row] = await inviteIntoW();
+    await declineAs(A, row!.id);
+
+    expect(await revokeInWorkspace(row!.id, () => inX)).toEqual([]);
+    expect(await rowOf(row!.id)).toMatchObject({ revoked_at: null });
+    expect(await revokeInWorkspace(row!.id)).toHaveLength(1);
+  });
+
+  it('leaves the site tier on the pending filter: an expired admin invitation is neither revoked nor listed', async () => {
+    const [site] = await inviteToSite({ token: 'fixture-token-o-site' });
+    await sql`update invitations set expires_at = now() - interval '1 day' where id = ${site!.id}`;
+
+    expect(await revokeOnSite(site!.id)).toEqual([]);
+    expect(await findPendingSiteInvitationPage(admin, {}, { limit: 101, inverted: false })).toEqual(
+      [],
+    );
+  });
+});
+
 describe('the pending lists', () => {
   /** One pending row on each tier and in each workspace, and each way a row stops pending. */
   async function everyKind() {
@@ -453,6 +531,15 @@ describe('the received invitations (M10.32)', () => {
       'expired',
       async () => (await inviteIntoW({ token: 'fixture-token-expired', expiresAt: PAST() }))[0]!.id,
       (id) => sql`update invitations set expires_at = now() + interval '1 day' where id = ${id}`,
+    ],
+    [
+      'declined',
+      async () => {
+        const [row] = await inviteIntoW({ token: 'fixture-token-declined' });
+        await declineAs(A, row!.id);
+        return row!.id;
+      },
+      (id) => sql`update invitations set declined_at = null where id = ${id}`,
     ],
     [
       'accepted',
@@ -715,6 +802,82 @@ describe('the received invitations (M10.32)', () => {
       },
     );
   });
+
+  describe('declineReceivedInvitation (M10.34)', () => {
+    it('declines a pending invitation by id for the verified holder, stamped from the session', async () => {
+      const declined = await declineAs(A, control.id);
+
+      expect(declined).toHaveLength(1);
+      expect(declined[0]).toMatchObject({
+        id: control.id,
+        declinedAt: expect.any(Date),
+        acceptedAt: null,
+        acceptedBy: null,
+        revokedAt: null,
+        updatedBy: A.id,
+      });
+    });
+
+    it('returns no row for another account’s id, and the owner of the address declines the same id', async () => {
+      expect(await declineAs(B, control.id)).toEqual([]);
+      expect(await rowOf(control.id)).toMatchObject({ declined_at: null });
+
+      expect(await declineAs(A, control.id)).toHaveLength(1);
+    });
+
+    it('returns no row for a site-tier id, though pending and the address matches; its token accepts it', async () => {
+      const [site] = await inviteToSite({ token: 'fixture-token-d-site' });
+
+      expect(await rowOf(site!.id)).toMatchObject({ declined_at: null, workspace_id: null });
+      expect(await declineAs(A, site!.id)).toEqual([]);
+      expect(await rowOf(site!.id)).toMatchObject({ declined_at: null });
+
+      expect(await acceptAs(A, 'fixture-token-d-site')).toHaveLength(1);
+    });
+
+    it('returns no row for an unverified holder, and declines once verified', async () => {
+      await sql`update users set email_verified = false where id = ${A.id}`;
+
+      expect(await declineAs(A, control.id)).toEqual([]);
+
+      await sql`update users set email_verified = true where id = ${A.id}`;
+      expect(await declineAs(A, control.id)).toHaveLength(1);
+    });
+
+    it('returns no row for a deleted coven, and declines while it is live', async () => {
+      await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
+      try {
+        expect(await declineAs(A, control.id)).toEqual([]);
+      } finally {
+        await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
+      }
+
+      expect(await declineAs(A, control.id)).toHaveLength(1);
+    });
+
+    // The first exclusion, another address, has its own test above.
+    it.each(exclusions.slice(1))(
+      'returns no row for an invitation that is %s, and declines once that is undone',
+      async (_kind, setup, restore) => {
+        const id = await setup();
+
+        expect(await declineAs(A, id)).toEqual([]);
+
+        await restore(id);
+        expect(await declineAs(A, id)).toHaveLength(1);
+      },
+    );
+
+    it('leaves the declined row findable by id, and out of the page and count', async () => {
+      await declineAs(A, control.id);
+
+      expect(await findReceivedInvitation(asUser(A), control.id)).toMatchObject({
+        declinedAt: expect.any(Date),
+      });
+      expect(await pageIds()).toEqual([]);
+      expect(await countOf()).toBe(0);
+    });
+  });
 });
 
 // No body runs: each `@ts-expect-error` fails `npm run typecheck` the
@@ -761,8 +924,14 @@ describe('the named writes’ signatures', () => {
       (write: AuditWriter) =>
         // @ts-expect-error — and an id, not the token whose hash the other accept matches.
         write.acceptReceivedInvitation(),
+      (write: AuditWriter) =>
+        // @ts-expect-error — the decline takes the id alone, as the accept by id does.
+        write.declineReceivedInvitation(inW, A.id),
+      (write: AuditWriter) =>
+        // @ts-expect-error — and an id, which it has to be given.
+        write.declineReceivedInvitation(),
     ];
 
-    expect(writes).toHaveLength(10);
+    expect(writes).toHaveLength(12);
   });
 });

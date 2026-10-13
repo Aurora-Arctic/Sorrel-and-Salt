@@ -3,7 +3,11 @@ import { AuditInfo } from '../../../graphql/schema/audit';
 import { sessionOf } from '../../../graphql/context-helpers';
 import type { InvitationRow } from '../../../db/repository';
 import { createAdminInvitation, revokeAdminInvitation } from '../services/admin-invitations';
-import { acceptInvitation, acceptInvitationById } from '../services/invitation-acceptance';
+import {
+  acceptInvitation,
+  acceptInvitationById,
+  declineInvitationById,
+} from '../services/invitation-acceptance';
 
 // MB.70's admin invitation and the one accept (MB.202). No field carries the
 // token or a link: the token exists only in the mail, and the row holds its
@@ -24,6 +28,11 @@ export const InvitationRef = builder.objectRef<InvitationRow>('Invitation').impl
     expiresAt: t.expose('expiresAt', { type: 'DateTime' }),
     acceptedAt: t.expose('acceptedAt', { type: 'DateTime', nullable: true }),
     revokedAt: t.expose('revokedAt', { type: 'DateTime', nullable: true }),
+    declinedAt: t.expose('declinedAt', {
+      type: 'DateTime',
+      nullable: true,
+      description: 'When the invitee declined it, from the account page; a coven invitation only.',
+    }),
     audit: t.field({ type: AuditInfo, resolve: (row) => row }),
   }),
 });
@@ -67,16 +76,29 @@ builder.mutationField('acceptInvitation', (t) =>
   }),
 );
 
-// The landing's accept (M10.32): a coven invitation by the id the `/coven` page
+// The account page's accept (M10.32): a coven invitation by the id the page
 // lists, for a person whose mail never arrived. The same service checks, the
 // session's verified address matched in SQL, and the site tier out of reach.
 builder.mutationField('acceptInvitationById', (t) =>
   t.field({
     type: InvitationRef,
     description:
-      "Accepts a pending coven invitation sent to the signed-in account's verified address, by its id, as the landing lists it; an admin invitation is accepted by its link alone.",
+      "Accepts a pending coven invitation sent to the signed-in account's verified address, by its id, as the account page lists it; an admin invitation is accepted by its link alone.",
     args: { id: t.arg.id({ required: true }) },
     authScopes: { signedIn: true },
     resolve: (_root, { id }, context) => acceptInvitationById(sessionOf(context), String(id)),
+  }),
+);
+
+// The account page's Decline (M10.34): the accept by id's checks, and the
+// invitation stamped declined rather than accepted; nothing is granted.
+builder.mutationField('declineInvitationById', (t) =>
+  t.field({
+    type: InvitationRef,
+    description:
+      "Declines a pending coven invitation sent to the signed-in account's verified address, by its id, as the account page lists it; its link then says it was declined, and the coven's owner sees it declined until they remove it.",
+    args: { id: t.arg.id({ required: true }) },
+    authScopes: { signedIn: true },
+    resolve: (_root, { id }, context) => declineInvitationById(sessionOf(context), String(id)),
   }),
 );

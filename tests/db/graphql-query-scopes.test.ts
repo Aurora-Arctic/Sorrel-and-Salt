@@ -285,6 +285,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
   acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),
   acceptInvitationById: write(`mutation { acceptInvitationById(id: "${NOWHERE}") { id } }`),
+  declineInvitationById: write(`mutation { declineInvitationById(id: "${NOWHERE}") { id } }`),
   // A blank name, so a caller past the scope that may create one is refused by
   // the service before anything is written.
   createWorkspace: write('mutation { createWorkspace(name: "") { id } }'),
@@ -459,6 +460,8 @@ const OPEN_WRITES = [
   'acceptInvitation',
   // The session's own verified address is what admits, matched in SQL (M10.32).
   'acceptInvitationById',
+  // The same address match decides a decline (M10.34).
+  'declineInvitationById',
   'setName',
   // The flag decides who may, which the service reads (M6.7).
   'createWorkspace',

@@ -527,7 +527,7 @@ export interface AuditWriter {
   acceptInvitation(token: string): Promise<InvitationRow[]>;
   /**
    * Accept the pending coven invitation `id` names, as the session's user:
-   * `acceptInvitation` found by id, for the `/coven` landing (M10.32). Under
+   * `acceptInvitation` found by id, for the account page (M10.32). Under
    * no proof, for the same reason. No row comes back for an id on the site
    * tier, whose grant a link alone accepts, for one sent to another address or
    * to this one unverified, for one into a deleted coven, or for one that is
@@ -535,10 +535,20 @@ export interface AuditWriter {
    */
   acceptReceivedInvitation(id: string): Promise<InvitationRow[]>;
   /**
-   * Revoke a pending invitation in the proof's workspace, stamping
-   * `revoked_at` now; `updated_by` is who revoked. No row comes back for one
-   * already accepted, revoked or expired, or for an id in another workspace or
-   * on the site tier.
+   * Decline the pending coven invitation `id` names, as the session's user,
+   * stamping `declined_at` now (M10.34). Under no proof, for the accept's
+   * reason, and matched as `acceptReceivedInvitation` is: no row comes back
+   * for an id on the site tier, sent to another address or to this one
+   * unverified, into a deleted coven, or not pending.
+   */
+  declineReceivedInvitation(id: string): Promise<InvitationRow[]>;
+  /**
+   * Revoke an open invitation in the proof's workspace, stamping
+   * `revoked_at` now; `updated_by` is who revoked. Open is pending, or
+   * declined and not yet removed, whatever its expiry (M10.34): Revoke on the
+   * one, Remove on the other. No row comes back for one already accepted or
+   * revoked, a pending one expired, or an id in another workspace or on the
+   * site tier.
    */
   revokeInvitation(membership: Membership, id: string): Promise<InvitationRow[]>;
   /** The same on the site tier: a workspace's invitation is not reached. */

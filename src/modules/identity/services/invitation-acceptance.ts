@@ -34,6 +34,8 @@ import type {
 const MESSAGES: Record<InvitationRefusal, string> = {
   invalid: "This invitation link isn't valid. Check that you opened the whole link from the email.",
   accepted: 'This invitation has already been accepted.',
+  declined:
+    'This invitation was declined. If you change your mind, ask whoever sent it for a new one.',
   revoked: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
   expired: 'This invitation has expired. Ask whoever sent it for a new one.',
   'different-address':
@@ -50,12 +52,15 @@ function refused(reason: InvitationRefusal): InvitationStanding {
 
 /**
  * Why a link is dead, or `undefined` while it is live: accepted before
- * revoked before expired, so a link in two states reports one reason, and
- * always the same one. An act beats the clock, and the two stamps cannot
- * coexist, the writer matching a pending row only.
+ * declined before revoked before expired, so a link in two states reports one
+ * reason, and always the same one. An act beats the clock, and the invitee's
+ * answer beats the owner's Remove that may follow a decline (M10.34);
+ * accepted and declined cannot coexist, the writers matching a pending row
+ * only and a CHECK holding it.
  */
 function deadLink(invitation: InvitationRow): InvitationRefusal | undefined {
   if (invitation.acceptedAt) return 'accepted';
+  if (invitation.declinedAt) return 'declined';
   if (invitation.revokedAt) return 'revoked';
   if (invitation.expiresAt.getTime() <= Date.now()) return 'expired';
   return undefined;
@@ -85,7 +90,7 @@ async function heldByPause(invitation: SiteInvitationRow): Promise<boolean> {
 /**
  * What the checks make of a found invitation, or of none: the dead-link
  * checks, then the address, then the tier's own. One body for both ways in,
- * the link's token and the landing's id, so they cannot drift.
+ * the link's token and the account page's id, so they cannot drift.
  */
 async function checkInvitation(
   session: Session,
@@ -117,7 +122,7 @@ async function standingOf(session: Session, token: string): Promise<InvitationCh
 }
 
 /**
- * The same checks over an id the landing listed. The read is the session's own
+ * The same checks over an id the account page listed. The read is the session's own
  * (a coven invitation to its verified address, in SQL), so another address's
  * id, a site-tier id, a deleted row and a malformed id all read as none.
  */
@@ -202,6 +207,35 @@ export async function acceptInvitationById(session: Session, id: string): Promis
     () => standingById(session, id),
     true,
   );
+}
+
+/**
+ * Declines the coven invitation `id` names, as the account page lists it, as
+ * the session's user (M10.34): the invitation is dead from now on, its link
+ * reports it declined, and the coven's owner sees it marked declined until
+ * they remove it. The same checks as `acceptInvitationById`, the address
+ * match the session's own, in SQL, and nothing is granted or seated.
+ *
+ * @throws {NotFound} the id names no coven invitation to this account: a
+ * malformed one, another address's, an unverified account's, an admin
+ * invitation's, a deleted row's or one into a deleted coven.
+ * @throws {Forbidden} the invitation is already accepted, declined, withdrawn
+ * or expired.
+ */
+export async function declineInvitationById(session: Session, id: string): Promise<InvitationRow> {
+  const standing = await standingById(session, id);
+  if (standing.refusal) throw refusalError(standing.refusal, true);
+  // The received read never reaches the site tier; this only narrows the type.
+  if (standing.tier !== 'workspace') throw refusalError('invalid', true);
+
+  // The writer's own match is the last word: an accept, a revoke or a second
+  // decline that committed since the checks leaves nothing to stamp.
+  const [declined] = await withAudit(session, (write) => write.declineReceivedInvitation(id));
+  if (!declined) {
+    const again = await standingById(session, id);
+    throw refusalError(again.refusal ?? 'invalid', true);
+  }
+  return declined;
 }
 
 /**

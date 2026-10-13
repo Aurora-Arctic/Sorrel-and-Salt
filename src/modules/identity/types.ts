@@ -100,7 +100,14 @@ export interface ReceivedInvitation {
 
 /** Why an invitation link cannot be accepted by this session, one reason per link (MB.70, M7.7). */
 export type InvitationRefusal =
-  'invalid' | 'accepted' | 'revoked' | 'expired' | 'different-address' | 'unverified' | 'paused';
+  | 'invalid'
+  | 'accepted'
+  | 'declined'
+  | 'revoked'
+  | 'expired'
+  | 'different-address'
+  | 'unverified'
+  | 'paused';
 
 /** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =

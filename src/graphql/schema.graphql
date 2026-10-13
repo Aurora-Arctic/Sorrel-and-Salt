@@ -362,6 +362,11 @@ An invitation, pending or not. Its link is mailed to the address and never answe
 type Invitation {
   acceptedAt: DateTime
   audit: AuditInfo!
+
+  """
+  When the invitee declined it, from the account page; a coven invitation only.
+  """
+  declinedAt: DateTime
   email: String!
   expiresAt: DateTime!
   id: ID!
@@ -391,7 +396,7 @@ type Mutation {
   acceptInvitation(token: String!): Invitation!
 
   """
-  Accepts a pending coven invitation sent to the signed-in account's verified address, by its id, as the landing lists it; an admin invitation is accepted by its link alone.
+  Accepts a pending coven invitation sent to the signed-in account's verified address, by its id, as the account page lists it; an admin invitation is accepted by its link alone.
   """
   acceptInvitationById(id: ID!): Invitation!
 
@@ -428,6 +433,11 @@ type Mutation {
   createWorkspace(name: String!): Workspace!
   createWorkspaceIngredient(input: IngredientInput!, workspaceId: ID!): Ingredient!
   createZodiacSign(input: ZodiacSignInput!): ZodiacSign!
+
+  """
+  Declines a pending coven invitation sent to the signed-in account's verified address, by its id, as the account page lists it; its link then says it was declined, and the coven's owner sees it declined until they remove it.
+  """
+  declineInvitationById(id: ID!): Invitation!
 
   """
   A soft delete, refused while a live compendium entry is filed under it; a coven keeps its links.

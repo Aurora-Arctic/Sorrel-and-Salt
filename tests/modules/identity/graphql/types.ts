@@ -68,3 +68,7 @@ export interface AcceptInvitationResult {
 export interface AcceptInvitationByIdResult {
   acceptInvitationById: { id: string; acceptedAt: string };
 }
+
+export interface DeclineInvitationByIdResult {
+  declineInvitationById: { id: string; declinedAt: string; acceptedAt: string | null };
+}

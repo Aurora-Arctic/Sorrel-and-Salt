@@ -48,16 +48,32 @@ function inTierOf(proof: Membership | SiteAdmin): SQL {
   return 'workspaceId' in proof ? scopedTo(proof, invitations) : onSiteTier();
 }
 
-// A pending invitation: neither accepted nor revoked, and not yet expired.
-// Both stamps match only one, so neither overwrites the other or itself. Not
-// the live filter, which the writer ANDs onto every write and each finder
+// A pending invitation: neither accepted, declined nor revoked, and not yet
+// expired. Every stamp matches only one, so none overwrites another or itself.
+// Not the live filter, which the writer ANDs onto every write and each finder
 // below ANDs itself.
 function pendingInvitation(...which: (SQL | undefined)[]) {
   return and(
     ...which,
     isNull(invitations.acceptedAt),
+    isNull(invitations.declinedAt),
     isNull(invitations.revokedAt),
     gt(invitations.expiresAt, sql`now()`),
+  );
+}
+
+// What the inviter still has to deal with (M10.34): a pending invitation, or
+// one the invitee declined and the inviter has not removed, whatever its
+// expiry, since a declined invitation is an answer to read rather than a link
+// that lapses. What the coven's list shows and what its Revoke, or Remove on
+// a declined one, may stamp. A site-tier row is never declined (a CHECK), so
+// on that tier it is the pending filter.
+function openInvitation(...which: (SQL | undefined)[]) {
+  return and(
+    ...which,
+    isNull(invitations.acceptedAt),
+    isNull(invitations.revokedAt),
+    or(isNotNull(invitations.declinedAt), gt(invitations.expiresAt, sql`now()`)),
   );
 }
 
@@ -202,8 +218,9 @@ export function findPendingSiteInvitationCount(
 }
 
 /**
- * One page of the proof's workspace's pending invitations, newest first, for
+ * One page of the proof's workspace's open invitations, newest first, for
  * the members page (M7.6): the site tier's pager under the `Membership` proof.
+ * Open: pending, or declined and not yet removed (M10.34).
  */
 export function findPendingWorkspaceInvitationPage(
   membership: Membership,
@@ -214,7 +231,7 @@ export function findPendingWorkspaceInvitationPage(
     scopedTo(membership, invitations),
     PENDING_INVITATION_ORDER,
     page,
-    pendingInvitation(),
+    openInvitation(),
   );
 }
 
@@ -231,13 +248,13 @@ export function findPendingWorkspaceInvitationCount(
     scopedTo(membership, invitations),
     PENDING_INVITATION_ORDER,
     start,
-    pendingInvitation(),
+    openInvitation(),
   );
 }
 
 /**
  * One page of the coven invitations addressed to the session's account,
- * pending, in a live coven, newest first, for the `/coven` landing (M10.32).
+ * pending, in a live coven, newest first, for the account page (M10.32).
  * Under no proof: the invitee holds no membership yet, and the session row is
  * the scope, matched in SQL on the verified address, as `findInvitationByToken`
  * takes no proof and is admitted by its token. The site tier is never listed:
@@ -354,7 +371,11 @@ export function invitationWrites({
   update,
 }: WriterContext): Pick<
   AuditWriter,
-  'insertInvitation' | 'acceptInvitation' | 'acceptReceivedInvitation' | 'revokeInvitation'
+  | 'insertInvitation'
+  | 'acceptInvitation'
+  | 'acceptReceivedInvitation'
+  | 'declineReceivedInvitation'
+  | 'revokeInvitation'
 > {
   return {
     // The columns named rather than spread, as `workspaceId` is placed last
@@ -397,11 +418,22 @@ export function invitationWrites({
         { acceptedAt: sql`now()`, acceptedBy: session.userId },
         pendingInvitation(eq(invitations.id, id), receivedBy(session), inLiveWorkspace()),
       ),
+    // The invitee's no, found by id and matched to the session's verified
+    // address in the statement, as the accept by id is: a pending coven
+    // invitation only (M10.34).
+    declineReceivedInvitation: (id: string) =>
+      update(
+        invitations,
+        { declinedAt: sql`now()` },
+        pendingInvitation(eq(invitations.id, id), receivedBy(session), inLiveWorkspace()),
+      ),
+    // Revoke on a pending invitation, and Remove on a declined one (M10.34):
+    // either way the row leaves the inviter's list and stays for the audit.
     revokeInvitation: (proof: Membership | SiteAdmin, id: string) =>
       update(
         invitations,
         { revokedAt: sql`now()` },
-        pendingInvitation(inTierOf(proof), eq(invitations.id, id)),
+        openInvitation(inTierOf(proof), eq(invitations.id, id)),
       ),
   };
 }

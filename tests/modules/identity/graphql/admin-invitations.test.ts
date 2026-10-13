@@ -12,6 +12,7 @@ import type {
   AcceptInvitationByIdResult,
   AcceptInvitationResult,
   CreateAdminInvitationResult,
+  DeclineInvitationByIdResult,
 } from './types';
 
 // MB.70's three mutations, the transport's half
@@ -121,6 +122,7 @@ describe('Mutation.createAdminInvitation', () => {
     expect(fields.sort()).toEqual([
       'acceptedAt',
       'audit',
+      'declinedAt',
       'email',
       'expiresAt',
       'id',
@@ -246,5 +248,81 @@ describe('Mutation.acceptInvitationById', () => {
     const refused = await run(asUser(grantee), ACCEPT_BY_ID, { id });
 
     expect(refused.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+  });
+});
+
+const DECLINE_BY_ID = `mutation ($id: ID!) { declineInvitationById(id: $id) { id declinedAt acceptedAt } }`;
+
+// M10.34, the transport's half: the answer, `Invitation.declinedAt`, and one
+// error code per refusal. Whose address admits, and every dead state, are
+// services/invitation-acceptance.test.ts's.
+describe('Mutation.declineInvitationById', () => {
+  const grantee = { id: GRANTEE, role: 'user' as const };
+  const stranger = { id: '00000000-0000-0000-0000-0000000000f2', role: 'user' as const };
+
+  /** A pending coven invitation into W for the grantee's address, from A. */
+  async function inviteGrantee(token = 'pending-token') {
+    const [{ id }] = await sql`
+      insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by)
+      values (${INVITED}, ${sha256(token)}, ${WORKSPACE_W_ID}, 'viewer', ${A.id}, ${A.id})
+      returning id
+    `;
+    return id as string;
+  }
+  const declinedAtOf = async (id: string) =>
+    (await sql`select declined_at from invitations where id = ${id}`)[0]!
+      .declined_at as Date | null;
+
+  beforeEach(async () => {
+    await sql`update workspaces set deleted_at = null, deleted_by = null where id = ${WORKSPACE_W_ID}`;
+    await asManualFix(sql, async (tx) => {
+      await tx`
+        insert into users (id, name, email, email_verified, created_by, updated_by)
+        values (${stranger.id}, 'Stranger Fixturewort', ${`stranger${DOMAIN}`}, true, ${stranger.id}, ${stranger.id})
+      `;
+    });
+  });
+
+  it('answers the invited account the invitation declined, with when, seating no one', async () => {
+    const id = await inviteGrantee();
+    expect(await declinedAtOf(id)).toBeNull();
+
+    const declined = await run<DeclineInvitationByIdResult>(asUser(grantee), DECLINE_BY_ID, {
+      id,
+    });
+
+    expect(declined.errors).toBeUndefined();
+    expect(declined.data?.declineInvitationById).toEqual({
+      id,
+      declinedAt: expect.any(String),
+      acceptedAt: null,
+    });
+    expect(await declinedAtOf(id)).toBeInstanceOf(Date);
+    expect(
+      await sql`select 1 from workspace_members where workspace_id = ${WORKSPACE_W_ID} and user_id = ${GRANTEE}`,
+    ).toHaveLength(0);
+  });
+
+  it('answers NOT_FOUND for another account’s id, which its owner then declines', async () => {
+    const id = await inviteGrantee();
+
+    const refused = await run(asUser(stranger), DECLINE_BY_ID, { id });
+
+    expect(refused.errors?.[0]).toMatchObject({ extensions: { code: 'NOT_FOUND' } });
+    expect(await declinedAtOf(id)).toBeNull();
+    const declined = await run(asUser(grantee), DECLINE_BY_ID, { id });
+    expect(declined.errors).toBeUndefined();
+  });
+
+  it('answers FORBIDDEN for an invitation already declined, which a pending one is not', async () => {
+    const id = await inviteGrantee();
+    const pending = await inviteGrantee('second-token');
+    await run(asUser(grantee), DECLINE_BY_ID, { id });
+
+    const refused = await run(asUser(grantee), DECLINE_BY_ID, { id });
+
+    expect(refused.errors?.[0]).toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+    const declined = await run(asUser(grantee), DECLINE_BY_ID, { id: pending });
+    expect(declined.errors).toBeUndefined();
   });
 });
