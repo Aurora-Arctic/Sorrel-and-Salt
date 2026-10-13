@@ -145,3 +145,20 @@ Recorded as the lanes reported it. The plan above stays as approved.
 - **The invitations page already read its cursors with `readPageCursors`**; only its pager links moved to `pagerHrefs`. `PendingInvitations` keeps its stylesheet, which now styles M10.34's Declined mark, and its Revoke and Remove stay on `ConfirmedAction` for MB.124.
 - **The acceptance page refuses a deleted coven as an invalid link today**, telling the reader to check they opened the whole link, which is wrong advice; `DeletedCovenAsBuilt` shows it beside the proposed sentence of decision (f). A declined invitation has its own sentence already, shown by `Declined`.
 - **`AdminInvitations` is unchanged.** The only change the plan gave it there is the Revoke wording, decision (g), which waits for sign-off.
+
+## Decisions taken at sign-off (2026-10-13)
+
+The owner reviewed the proposals and the screenshots, and chose:
+
+- **(a) The coven index:** the owner section, with Delete in a section only an owner sees. It also gains the Contents section, a list of the coven's pages, and a jump menu (`PageNav`) laid out as the account page lays its own: a sticky column to the left of the content on a wide screen, and the list above the sections on a phone.
+- **(b) The landing:** named headings. "Welcome" becomes the eyebrow, and the heading says "Start a Coven" or "Join a Coven".
+- **(c) The invitation page:** on a panel, as the sign-in page is.
+- **(d) People or Members:** the page heading says "Members", matching the nav item. This is not the recommended option; the tabs stay Members and Invitations.
+- **(e) Where Leave and Delete land:** the coven landing, `/coven`, followed by a refresh.
+- **(f) A deleted coven's invitation:** its own refusal reason, `closed`, reading "The coven this invitation was for has been deleted, so it can't be accepted."
+- **(g) Revoked or withdrawn:** the Revoke dialogs say "Its link will say it was withdrawn." The button stays Revoke.
+- **(h) The role refusal:** "Your role in this coven doesn't allow that. Ask an owner if you need it."
+- **(i):** void, as recorded above.
+- **The Wave B fixes** were accepted as built.
+
+Two Phase 2 lanes build these: an index lane (a, b, e, h, `styling.md`) and a people lane (c, d, f, g). The screen-noun lines in `DESIGN.md`, `CLAUDE.md` and the components rule now say the screens say _coven_.
