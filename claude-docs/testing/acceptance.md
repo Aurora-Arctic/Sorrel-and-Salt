@@ -74,7 +74,7 @@ stay.
 The suite runs on the same harness as `tests/db/` — node, one seeded
 `sorrel_test_<slot>` clone per worker, re-cloned before every file — because
 an acceptance test calls a service against the seeded world. A file that
-needs a DOM (`04-modals.test.tsx`, M9.1) declares
+needs a DOM (`04-modals.test.tsx`, M8.9) declares
 `// @vitest-environment jsdom` in its own docblock. `passWithNoTests` is on:
 the directory holds only its README until M2.1, and 51 stories with no test
 is a true report rather than an error.
