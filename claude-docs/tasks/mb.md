@@ -3774,6 +3774,8 @@ _Left by MB.116:_ `Notice` is the one way to show an error, a warning or a succe
 
 _Left by MB.115:_ `BusyButton` is the one busy state for a button. The `.data-table`, `.pager` and `.filter-row` primitives are on the Foundations story. Stacking order is still written as raw `z-index` values, one per component; a `$layers` map of them is this review's to make. Each admin table's first cell is still a `td`: making it a row header, `th scope="row"`, was held back from MB.115 because it changes what the tables' tests count as cells.
 
+_Left by MB.119:_ Floating panels open at three widths: the coven switcher at 12rem with its list at 15rem (`$switcher-min-width` and `$switcher-list-min-width` in `WorkspaceSwitcher/index.scss`), and the account menu at 13rem. Settling on one width for a floating panel is this review’s to decide. `ConfirmedAction` still lives inside `UserList/`. Moving it into its own directory, with its CSS split out and its own story and doc, is this review’s too. So is one shared row of confirm and safe buttons for `Answers`, `ConfirmQuestion` and `DiscardQuestion`, which each draw their own today.
+
 _Acceptance criteria:_
 
 - The owner signs off the section's design, in both themes and at phone width, recorded as a comment on this issue
