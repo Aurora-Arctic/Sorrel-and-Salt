@@ -75,7 +75,7 @@ is outweighed by one more class, so no Combobox variant was needed.
 
 ## Stories
 
-`index.stories.tsx`: `InWorkspace`, `OutsideWorkspace`, `CanCreate`, `Phone`. The workshop's
+`index.stories.tsx`, titled "Coven / Coven Switcher": `InWorkspace`, `OutsideWorkspace`, `CanCreate`, `Phone`. The workshop's
 router goes nowhere, so a choice only closes the list.
 
 ## Testing

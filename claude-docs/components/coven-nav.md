@@ -63,7 +63,7 @@ All of it is `SectionNav`'s ([`section-nav.md`](section-nav.md), "Styling").
 
 ## Stories
 
-`index.stories.tsx`, render-only, on the coven index:
+`index.stories.tsx`, titled "Coven / Coven Nav", render-only, on the coven index:
 
 - `Default`: as a member sees it, Overview current and Members beside it.
 - `Viewer`: as a viewer sees it, Overview alone.

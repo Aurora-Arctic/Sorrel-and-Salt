@@ -33,7 +33,7 @@ Leave Coven.
 
 ## Stories
 
-`index.stories.tsx` (`Coven / Delete Workspace Button`) has `Default`, with `PhoneDark` and
+`index.stories.tsx` (`Coven / Delete Coven Button`) has `Default`, with `PhoneDark` and
 `PhoneLight` at 375px. In the workshop the call reaches no server, so confirming shows the
 failure. The button in its page is the coven index's, which reads the session and so has no
 story.

@@ -5,7 +5,7 @@ import CovenNav from '.';
 // Render-only; behaviour is asserted in tests/components/CovenNav. The
 // workshop's `usePathname` stub answers whatever the wrapping provider says.
 export default {
-  title: 'CovenNav',
+  title: 'Coven / Coven Nav',
 };
 
 // On the coven index, as a member sees it: Overview is the current section,

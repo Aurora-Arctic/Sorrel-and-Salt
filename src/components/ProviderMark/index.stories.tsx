@@ -6,7 +6,7 @@ import { SOCIAL_PROVIDERS } from '../../lib/social-providers';
 // Render-only, and presentation alone: the marks are checked by eye here and
 // by axe on the pages that show them.
 export default {
-  title: 'Sign In / Provider Mark',
+  title: 'Surfaces / Provider Mark',
 };
 
 const Marks = () => (

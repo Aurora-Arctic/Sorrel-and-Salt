@@ -83,7 +83,7 @@ screen scrolls nothing sideways.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Forms /
+[`index.stories.tsx`](../../src/components/CategoryPicker/index.stories.tsx), `Admin /
 Category Picker`, over four of the seed's groups with their colour pairs and
 invented categories: `NothingPicked`, an empty box to focus and type in;
 `SomePicked`, three entries as chips in their groups' colours;

@@ -39,7 +39,7 @@ import { EMPTY_VALUES, EMPTY_VARIANT } from './values';
 // for each state. The TanStack Query client comes from the workshop's global provider
 // (.ladle/components.tsx), as it does from the app's root layout.
 export default {
-  title: 'Forms / Ingredient',
+  title: 'Admin / Ingredient Form',
 };
 
 const WORKSPACE_ID = '00000000-0000-4000-8000-000000000000';

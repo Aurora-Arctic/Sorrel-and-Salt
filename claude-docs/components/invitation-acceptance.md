@@ -65,7 +65,7 @@ buttons and the spinner are the primitives', Accept drawn through
 ## Stories
 
 [`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
-`Coven / Invitation Acceptance`, each inside the page's own
+`Pages / Invitation Acceptance`, each inside the page's own
 `main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only.
 
 - **The states:** `SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified`, and one for each other

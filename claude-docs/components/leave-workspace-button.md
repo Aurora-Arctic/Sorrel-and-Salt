@@ -81,7 +81,7 @@ is `.btn--destructive`; Cancel is `.btn--quiet`.
 
 ## Stories
 
-`index.stories.tsx` (`Coven / Leave Workspace Button`): `Default` (the plain Leave),
+`index.stories.tsx` (`Coven / Leave Coven Button`): `Default` (the plain Leave),
 `OnlyOwner` (several members to hand over to, so the type-ahead), `OnlyOwnerOneOther` (one member,
 offered by name) and `OnlyMember` (deletion alone), with `PhoneDark` and `PhoneLight` for the plain
 Leave and `OnlyOwnerPhoneDark` and `OnlyOwnerPhoneLight` for the guided exit, at 375px. In the

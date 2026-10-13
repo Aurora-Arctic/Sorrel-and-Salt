@@ -31,13 +31,36 @@ without a page routed to it.
   `PhoneLight` stories, `meta = { theme, width: 375 }` as the
   Foundations page has, so a review sees the page at phone width in both
   themes without touching the toolbar.
-- **A story's title is a group, then the piece, both in title case** (M10.33).
-  A piece that lives in one place is grouped by that place: `Pages / Welcome`,
-  `Emails / Verify Email`, `Admin / Group List`, `Coven / Member List`. A piece
-  several places share is grouped by its kind: `Forms / Field`,
-  `Layout / Pager`. The sidebar then reads as the app does, and no component
-  sits loose at the top level. Ladle builds a story's id from its title, so a
-  title change moves the id, and with it any `?story=` link to it.
+- **A story's title is a group, then the piece, both in title case** (M10.33,
+  reorganised under MB.119). One rule picks the group, and the sidebar lists the
+  groups in this order (`storyOrder` in `.ladle/config.mjs`):
+  1. **Foundations** stands alone at the top: the tokens and primitives every
+     piece is drawn from.
+  2. **A piece the app draws in one area goes under that area's group**, in the
+     order a person meets them: **Pages** (a whole page with no area of its own:
+     Welcome, Not Authorized, the invitation page), **Sign In**, **Shell** (the
+     chrome around a page: the bar, the account menu, the context row, the
+     impersonation banner and the theme switch, even where the root layout
+     draws one on a page without the bar), **Account**, **Coven**, **Admin**
+     and **Emails**. `Coven / Member List`, `Admin / Group List`,
+     `Account / Name Form`.
+  3. **A piece the app draws in more than one area goes under its kind**:
+     **Forms** (fields and the controls inside them), **Layout** (frames,
+     lists, tables, pagers and what every page carries), **Navigation** and
+     **Surfaces** (what says or holds something on the page: a notice, a
+     modal, a provider's mark). `Forms / Field`, `Layout / Pager`.
+  4. **Titles name the piece as the screens do**, so `Coven`, never
+     `Workspace` (`Coven / Leave Coven Button`); the file and component names
+     stay as they are.
+
+  "Draws" is read from the imports under `src/app` and `src/components`
+  today, not from a plan: a piece moves to its kind in the PR that makes a
+  second area draw it (the ingredient form, the category picker and the filter
+  form, drawn only by the admin pages so far, will move when the coven's
+  ingredients page does). Nothing sits loose at the top level. Ladle builds a
+  story's id from its title, so a title change moves the id, and with it any
+  `?story=` link to it.
+
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
@@ -48,8 +71,8 @@ without a page routed to it.
 - **`config.mjs`** — `stories` glob, `port` 61000, `previewPort` 61001
   (`ladle preview`), `outDir` `.reports/workshop`, pinned `hmrPort` 61002,
   empty `hmrHost`. `storyOrder`
-  forces each component's `Default` story first and leaves the rest in Ladle's
-  own order; it is a global-config hook only (no per-story-file equivalent) and
+  lists the top-level groups in the order above, forces each component's
+  `Default` story first and leaves the rest in Ladle's own order; it is a global-config hook only (no per-story-file equivalent) and
   must stay a self-contained function, since Ladle serializes it with
   `.toString()`. `hmrPort` is pinned so the HMR socket lands on a known port
   that compose can publish, rather than a random free one, and it does not

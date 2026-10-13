@@ -9,7 +9,7 @@ import CovenNav from '../CovenNav';
 // The shape is chosen by the window's width, so the narrow stories set the
 // workshop's own width (`meta.width`) rather than a frame's.
 export default {
-  title: 'SectionNav',
+  title: 'Navigation / Section Nav',
 };
 
 // A stand-in for the context row the layouts put the nav in: a hairline-edged

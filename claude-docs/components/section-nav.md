@@ -121,7 +121,8 @@ the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/SectionNav/index.stories.tsx):
+[`index.stories.tsx`](../../src/components/SectionNav/index.stories.tsx),
+titled "Navigation / Section Nav":
 `Coven` and `Admin` at the workshop's width; `AdminTablet` and
 `AdminOnAHiddenPage` at 700px (More, and More carrying People);
 `AdminPhoneDark`, `AdminPhoneLight` and `AdminPhoneOnAHiddenPage` at 375px;

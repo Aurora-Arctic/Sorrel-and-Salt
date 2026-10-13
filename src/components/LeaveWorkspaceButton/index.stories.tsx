@@ -4,7 +4,7 @@ import LeaveWorkspaceButton from '.';
 // Render-only; behaviour is asserted in tests/components/LeaveWorkspaceButton.
 // In the workshop the call reaches no server, so confirming shows the failure.
 export default {
-  title: 'Coven / Leave Workspace Button',
+  title: 'Coven / Leave Coven Button',
 };
 
 export const Default: Story = () => (

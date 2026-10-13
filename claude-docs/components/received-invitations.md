@@ -82,7 +82,7 @@ refusal's alert is `ActionFailure`'s, which has no styling of its own.
 
 ## Stories
 
-`Coven / Received Invitations` (`index.stories.tsx`), each inside the account page's section as the
+`Account / Received Invitations` (`index.stories.tsx`), each inside the account page's section as the
 page draws it (a panel in the narrow frame, under its head and an `ActionFailure`), since the
 stacked rows depend on the panel's width: `OneInvitation`, `SeveralInvitations`,
 `NoInvitations` (the empty line), `SecondPage` (the pager), and `OnePhoneDark`, `OnePhoneLight`,

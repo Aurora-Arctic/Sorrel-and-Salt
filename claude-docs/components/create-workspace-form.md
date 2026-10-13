@@ -64,7 +64,7 @@ the tokens is MB.119's, the coven section's design review.
 
 ## Stories
 
-`index.stories.tsx`: `Empty`, `PhoneDark` and `PhoneLight`, each inside the
+`index.stories.tsx`, titled "Coven / Create Coven Form": `Empty`, `PhoneDark` and `PhoneLight`, each inside the
 page's real frame, panel and heading.
 
 ## Testing

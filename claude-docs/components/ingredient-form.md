@@ -1372,7 +1372,8 @@ length, and no other text field has one either.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/IngredientForm/index.stories.tsx):
+[`index.stories.tsx`](../../src/components/IngredientForm/index.stories.tsx),
+titled "Admin / Ingredient Form":
 `Blank`, unframed, with every lookup answered and the save faked (MB.131),
 under a "What to try" panel saying what to type for each state: the
 suggestions, free text, the duplicate warning, the missing name, the

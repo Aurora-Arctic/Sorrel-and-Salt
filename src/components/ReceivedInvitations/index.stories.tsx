@@ -8,7 +8,7 @@ import type { ReceivedInvitationEntry, ReceivedInvitationsProps } from './types'
 // it, a panel in the narrow frame under its head, with the ActionFailure the
 // page wraps the list in: the list's stacked rows depend on the panel's width.
 export default {
-  title: 'Coven / Received Invitations',
+  title: 'Account / Received Invitations',
 };
 
 const ONE: ReceivedInvitationEntry = {

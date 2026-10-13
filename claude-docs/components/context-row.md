@@ -54,7 +54,7 @@ The row is a named region (`section`, labelled "Context"), so its lead sits insi
 
 ## Stories
 
-`index.stories.tsx`, render-only:
+`index.stories.tsx`, titled "Shell / Context Row", render-only:
 
 - `Admin`: "Admin" as the lead, with `AdminNav` beside it.
 - `Coven`: the coven switcher as the lead, with `CovenNav` beside it as a

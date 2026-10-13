@@ -14,7 +14,7 @@ import FilterForm, { useApplyFilter } from '.';
 // applies from its magnifier or Enter, the group and the flag on their
 // change, and Clear is drawn only while the page shows a filter.
 export default {
-  title: 'Forms / Filter Form',
+  title: 'Admin / Filter Form',
 };
 
 const PATH = '/admin/categories' as Route;

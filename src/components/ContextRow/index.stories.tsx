@@ -7,7 +7,7 @@ import ContextRow from '.';
 
 // Render-only; behaviour is asserted in tests/components/ContextRow.
 export default {
-  title: 'ContextRow',
+  title: 'Shell / Context Row',
 };
 
 const WORKSPACES = [

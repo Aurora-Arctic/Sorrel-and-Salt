@@ -8,7 +8,7 @@ import type { CategoryPickerProps, PickerCategory } from './types';
 // src/db/seed/category-groups.ts, which a component may not import (CLAUDE.md
 // rule 1); the categories under them are invented, two or three to a group.
 export default {
-  title: 'Forms / Category Picker',
+  title: 'Admin / Category Picker',
 };
 
 const INVENTED = ['Testward', 'Fixture Mending', 'Testcraft'];

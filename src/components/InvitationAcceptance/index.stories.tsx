@@ -7,7 +7,7 @@ import type { InvitationAcceptanceProps } from './types';
 // Accept talks to the network only on a click, so nothing is mocked: a click
 // in the workshop fails into the alert, which is itself a state worth seeing.
 export default {
-  title: 'Coven / Invitation Acceptance',
+  title: 'Pages / Invitation Acceptance',
 };
 
 // Inside the page's own frame, so the workshop shows what the page shows.
