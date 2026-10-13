@@ -79,7 +79,7 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
       question={
         <>
           Revoke the invitation to <strong>{invitation.email}</strong>? Its link will say it was
-          revoked.
+          withdrawn.
         </>
       }
       busy="Revoking"

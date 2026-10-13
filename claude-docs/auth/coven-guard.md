@@ -115,8 +115,8 @@ with owners.
 - **A quiet note when there is one owner** (M6.16): if that person loses
   access nobody can manage members. A status, not an alert, drawn above the
   table from the whole roll (`memberRoster`), since one page cannot count owners.
-- **The heading, tabs and Invite are the `(people)` layout's** (M7.6): People
-  is a tabbed page (see "The invitations page"), so the page draws only the
+- **The heading, tabs and Invite are the `(people)` layout's** (M7.6): the Members
+  page is a tabbed page (see "The invitations page"), so the page draws only the
   roll.
 - **Paged by cursor** with Prev and Next, 25 to a page, through the same
   helper as GraphQL.
@@ -134,7 +134,7 @@ has accepted: address, role and status (when a pending one expires, or when the
 invitee declined it, M10.34), newest first, paged by `?after` and
 `?before` with a "Page X of Y" count, and a Revoke on each pending row or a
 Remove on each declined one. Members and
-Invitations are the two tabs of one page, People, in the route group
+Invitations are the two tabs of one page, headed Members like the nav item (MB.119), in the route group
 `src/app/(shell)/coven/[slug]/(people)/`: its `layout.tsx` draws the shared
 `TabbedPage` (pill tabs, as admin's People), and its `@action` slot draws
 the Invite button, which opens `InviteDialog` (M7.4), at the end of the
