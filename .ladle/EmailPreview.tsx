@@ -43,7 +43,7 @@ export default function EmailPreview({ message }: { message: () => Promise<Messa
 
   return (
     <div style={{ display: 'grid', gap: '1rem', maxWidth: '720px' }}>
-      <dl style={{ margin: 0 }}>
+      <dl className="email-preview__headers">
         <dt>To:</dt>
         <dd>{rendered.to}</dd>
         <dt>Subject:</dt>
