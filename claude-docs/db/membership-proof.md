@@ -45,6 +45,8 @@ without a guard of its own. `tests/db/graphql-workspace-ids.test.ts` sends a
 malformed id to every GraphQL field that takes a `workspaceId`, and fails on a
 field it does not name.
 
+**A role that lacks the permission is told so.** A stranger and an unknown id get the bare `Forbidden`, since whether a coven exists is private; a member who is really there and lacks the permission is told, in the one sentence every such refusal carries: "Your role in this coven doesn't allow that. Ask an owner if you need it." (the owner's call at MB.119's review). It names neither the role nor the permission, and it is the alert a button on a stale page shows. Only a workspace-scoped call reaches it, so "coven" is always right. A test asserts the `Forbidden` kind, never the sentence.
+
 ### One lookup per render
 
 `assertMembership` reads the role through `cache(findWorkspaceRole)`, so a

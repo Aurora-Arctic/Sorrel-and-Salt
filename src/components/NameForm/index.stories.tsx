@@ -6,7 +6,7 @@ import NameForm from '.';
 // submit in the workshop fails into the alert region. The TanStack Query
 // client comes from the workshop's global provider (.ladle/components.tsx).
 export default {
-  title: 'Forms / Name',
+  title: 'Account / Name Form',
 };
 
 // Inside the account page's frame and section, on its panel, as

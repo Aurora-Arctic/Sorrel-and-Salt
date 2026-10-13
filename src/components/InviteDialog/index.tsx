@@ -1,27 +1,25 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { type FormEvent, type ReactElement, useEffect, useId, useRef, useState } from 'react';
+import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { normaliseEmail, validateEmailAddress } from '../../lib/email-address';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
-import BusyButton from '../BusyButton';
-import { FieldShell, RadioGroupField, fieldDescription } from '../Field';
+import { FieldShell, FormActions, RadioGroupField, fieldDescription } from '../Field';
 import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
-import Modal, { DiscardQuestion, useDiscardGuard } from '../Modal';
+import { DiscardQuestion, ModalButton, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import './index.scss';
 import type { InviteFieldsProps, InviteDialogProps, InviteRole } from './types';
 
-// An owner's Invite, on the members page: a button that opens a dialog taking
-// an address and a role, sent as `createInvitation`, which mails the link and
-// answers no link (M7.3). The dialog then says where the mail went. No copy
-// control and no link is ever drawn, since the browser never holds one: the
-// token exists only in the mail. The service is the guard; a refused address
-// is said beside the field (claude-docs/components/invite-dialog.md).
+// An owner's Invite, on the members page: a `ModalButton` that opens a dialog
+// taking an address and a role, sent as `createInvitation`, which mails the
+// link and answers no link (M7.3). The dialog then says where the mail went. No
+// copy control and no link is ever drawn, since the browser never holds one:
+// the token exists only in the mail. The service is the guard; a refused
+// address is said beside the field (claude-docs/components/invite-dialog.md).
 
 const CreateInvitationDocument = graphql(`
   mutation CreateInvitation($workspaceId: ID!, $email: String!, $role: InvitableRole!) {
@@ -105,7 +103,7 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
   }
 
   return (
-    <form className="form invite-dialog" noValidate onSubmit={(event) => void submit(event)}>
+    <form className="form" noValidate onSubmit={(event) => void submit(event)}>
       {failure.alert && <Notice kind="error">{failure.alert}</Notice>}
       <FieldShell label="Email Address" required {...emailField}>
         <input
@@ -138,65 +136,25 @@ const InviteFields = ({ workspaceId, close }: InviteFieldsProps): ReactElement =
         disabled={sending}
         note={OWNERSHIP_NOTE}
       />
-      <div className="modal__actions">
-        <BusyButton
-          className="btn btn--solid"
-          type="submit"
-          disabled={sending || email.trim() === ''}
-          busy={sending}
-          busyLabel="Sending"
-        >
-          Send Invitation
-        </BusyButton>
-        <button
-          className="btn btn--quiet"
-          type="button"
-          disabled={sending}
-          onClick={() => discard.request(close)}
-        >
-          Cancel
-        </button>
-      </div>
+      <FormActions
+        noun="Invitation"
+        label="Send Invitation"
+        busyLabel="Sending"
+        dirty={email.trim() !== ''}
+        submitting={sending}
+        holdCancel
+        onCancel={() => discard.request(close)}
+      />
       {/* Over the form, its buttons beneath. */}
       {discard.asking && <DiscardQuestion guard={discard} />}
     </form>
   );
 };
 
-const InviteDialog = ({ workspaceId }: InviteDialogProps): ReactElement => {
-  const [open, setOpen] = useState(false);
-  const openRef = useRef<HTMLButtonElement>(null);
-  // Set by a close only, so the first render takes no focus.
-  const returning = useRef(false);
-
-  // The focus goes back to the button that opened the dialog, whichever way
-  // it closed: the browser's own restore is not relied on, since the dialog
-  // is unmounted rather than closed in place.
-  useEffect(() => {
-    if (!open && returning.current) {
-      returning.current = false;
-      openRef.current?.focus();
-    }
-  }, [open]);
-
-  return (
-    <>
-      <button ref={openRef} className="btn btn--solid" type="button" onClick={() => setOpen(true)}>
-        {INVITE_LABEL}
-      </button>
-      {open && (
-        <Modal
-          title={INVITE_TITLE}
-          onClose={() => {
-            returning.current = true;
-            setOpen(false);
-          }}
-        >
-          {(close) => <InviteFields workspaceId={workspaceId} close={close} />}
-        </Modal>
-      )}
-    </>
-  );
-};
+const InviteDialog = ({ workspaceId }: InviteDialogProps): ReactElement => (
+  <ModalButton label={INVITE_LABEL} className="btn btn--solid" title={INVITE_TITLE}>
+    {(close) => <InviteFields workspaceId={workspaceId} close={close} />}
+  </ModalButton>
+);
 
 export default InviteDialog;

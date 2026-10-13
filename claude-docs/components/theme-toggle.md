@@ -3,8 +3,9 @@
 `src/components/ThemeToggle/` — the light/dark switch, and the only component
 that writes the theme attribute. It has two variants (MB.7): the `corner`
 disc pinned to the window, and the `inline` disc in the application shell's
-bar, at every width. (Until M10.32 a phone's account panel held a second one;
-the owner moved it back to the bar for good.)
+bar, at every width. (Until M10.32 a phone's account panel held a second one,
+in a smaller size; the owner moved it back to the bar for good, and the size
+went with it.)
 
 ## Shared contract
 
@@ -134,40 +135,40 @@ of the app shares, so it is not a token.
 
 ## Variants (MB.7)
 
-`variant?: 'corner' | 'inline'` (default `corner`, unchanged) and
-`size?: 'default' | 'small'` (inline only). The markup, the two knotwork
-facets, the swap animation and `aria-pressed` are the same in both; only the
+`variant?: 'corner' | 'inline'` (default `corner`, unchanged). The markup,
+the two knotwork facets, the swap animation and `aria-pressed` are the same in both; only the
 look differs.
 
 - **`corner`** is what the root layout mounts for every page. The root layout
   is session-free, so it cannot know a page has the shell around it. The
   shell has its own disc in the bar, so the toggle's stylesheet hides the
-  corner on those pages: `body:has(.app-shell) > .theme-toggle--corner`.
+  corner on those pages: `body:has(.app-shell) > .theme-toggle--corner`. It
+  still shows on the three routes outside the `(shell)` group: `/` (Welcome),
+  `/sign-in` and `/invite/[token]`.
 - **`inline`** is a 2rem round disc of `$accent` in the page's flow: no
   `position: fixed`, no clip-path. The button is transparent and padded out to
   `$control-height`, so the target is a finger's; the disc (`.theme-toggle__disc`,
   `overflow: hidden`, `border-radius: 50%`) clips the facet as it swings out. The
   facets are 1.1875rem. The focus ring is drawn on the disc. Hover is
   `$accent-hover`, with no scale.
-- **`small`** is the 1.75rem disc with 1.0625rem facets, built for the phone
-  account panel's theme row. That row is gone (M10.32), so nothing in the app
-  draws this size now; the size, its `InlineSmall` story and its test are still
-  in the component, and removing them is a change for the owner to ask for.
 - **One instance is visible at a time**, the bar's, at every width, so there is
   no second copy whose facets could go stale. The attribute on `<html>` is
   always right.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx) —
-four renders, no test ids and no snapshots; behaviour is asserted in
+[`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx),
+titled "Layout / Theme Toggle" — five renders, no test ids and no snapshots; behaviour is asserted in
 `tests/components/ThemeToggle/index.test.tsx`, not here.
 
-- **Default** — follows the toolbar theme control.
+- **Default** — follows the toolbar theme control. Default, Light, Dark and
+  ReducedMotion draw the `corner` variant as a page with no shell has it: a
+  quarter disc pinned to the story frame's top-right corner and clipped by its
+  edge, which is the design, not a clipped story.
 - **Light** / **Dark** — pin their theme with `.meta = { theme: '…' }`, which the
   decorator honours over the toolbar. Light shows the solar-disc facet and
   `aria-pressed="true"`; Dark the crescent and `aria-pressed="false"`.
-- **Inline** / **InlineSmall** — the shell's disc and its small size.
+- **Inline** — the shell's disc, bare. AppShell's stories show it in the bar.
 - **ReducedMotion** — `.meta = { reducedMotion: true }`, which the workshop
   decorator (`.ladle/components.tsx`) reads to simulate
   `prefers-reduced-motion: reduce`: it patches `window.matchMedia` to match and
@@ -182,7 +183,7 @@ click-to-dark with storage persistence, `aria-pressed` (mounted in light mode
 too), and the light system preference that never stamps `data-theme`: the
 first click going dark, and `aria-pressed` true on mount; and, with nothing
 stored and no preference, the first click going light; and the inline
-variant, at either size, switching the theme as the corner does. The facets' animation
+variant switching the theme as the corner does. The facets' animation
 — their classes, the `transitionend` park and the reduced-motion branch — is
 presentation, and no test asserts it. All queries are by role and accessible
 name.

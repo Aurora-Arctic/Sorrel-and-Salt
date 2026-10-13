@@ -70,7 +70,19 @@ there is none.
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/GroupForm/index.stories.tsx) has seven stories: `AddingACategoryGroup`, `EditingACategoryGroup` (three categories held, so Delete Group shows the move), `EditingAFormGroup` (none held), `AddingATradition`, `EditingATradition` (two deities held, so Delete Tradition shows the move to the other invented tradition), and `PhoneDark` and `PhoneLight`, the category group's edit at 375px in each theme. Each sits in the modal and its own iframe.
+[`index.stories.tsx`](../../src/components/GroupForm/index.stories.tsx),
+`Admin / Group Form`, has eight stories, each in the modal and its own iframe:
+
+- `AddingACategoryGroup` and `EditingACategoryGroup` (three categories held,
+  so Delete Group shows the move).
+- `EditingAFormGroup` (none held).
+- `AddingATradition` and `EditingATradition` (two deities held, so Delete
+  Tradition shows the move to the other invented tradition).
+- `AskingWhereToMove`: the category group's edit with Delete Group pressed
+  once drawn, the first step of the delete over the form, which is dimmed and
+  held beneath it.
+- `PhoneDark` and `PhoneLight`: the category group's edit at 375px in each
+  theme.
 
 ## Testing
 

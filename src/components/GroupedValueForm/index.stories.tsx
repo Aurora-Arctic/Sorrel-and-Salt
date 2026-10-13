@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import { GROUP_NAMES, asOptions } from '../../../.ladle/fixtures';
 import { usePressOnMount } from '../../../.ladle/press';
+import { Reopenable } from '../../../.ladle/reopenable';
 import Modal from '../Modal';
 import GroupedValueForm from '.';
 
@@ -20,95 +21,127 @@ const TRADITIONS = asOptions(GROUP_NAMES.tradition);
 const done = () => {};
 
 export const AddingACategory: Story = () => (
-  <Modal title="Add Category" onClose={done}>
-    <GroupedValueForm kind="category" groups={CATEGORY_GROUPS} onDone={done} />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal title="Add Category" onClose={close}>
+        <GroupedValueForm kind="category" groups={CATEGORY_GROUPS} onDone={done} />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 export const EditingACategory: Story = () => (
-  <Modal eyebrow="Edit Category" title="Testcraft" onClose={done}>
-    <GroupedValueForm
-      kind="category"
-      value={{
-        id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
-        name: 'Testcraft',
-        description: 'An invented category, for the workshop.',
-        groupId: CATEGORY_GROUPS[1].id,
-      }}
-      groups={CATEGORY_GROUPS}
-      onDone={done}
-    />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Category" title="Testcraft" onClose={close}>
+        <GroupedValueForm
+          kind="category"
+          value={{
+            id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
+            name: 'Testcraft',
+            description: 'An invented category, for the workshop.',
+            groupId: CATEGORY_GROUPS[1].id,
+          }}
+          groups={CATEGORY_GROUPS}
+          onDone={done}
+        />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 export const AddingAForm: Story = () => (
-  <Modal title="Add Form" onClose={done}>
-    <GroupedValueForm kind="form" groups={FORM_GROUPS} onDone={done} />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal title="Add Form" onClose={close}>
+        <GroupedValueForm kind="form" groups={FORM_GROUPS} onDone={done} />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 // Rename it to see the note by Save that the rename carries onto the compendium.
 export const EditingAForm: Story = () => (
-  <Modal eyebrow="Edit Form" title="Testwort Shard" onClose={done}>
-    <GroupedValueForm
-      kind="form"
-      value={{
-        id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
-        name: 'Testwort Shard',
-        description: 'An invented form, for the workshop.',
-        groupId: FORM_GROUPS[0].id,
-      }}
-      groups={FORM_GROUPS}
-      onDone={done}
-    />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Form" title="Testwort Shard" onClose={close}>
+        <GroupedValueForm
+          kind="form"
+          value={{
+            id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
+            name: 'Testwort Shard',
+            description: 'An invented form, for the workshop.',
+            groupId: FORM_GROUPS[0].id,
+          }}
+          groups={FORM_GROUPS}
+          onDone={done}
+        />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 export const AddingADeity: Story = () => (
-  <Modal title="Add Deity" onClose={done}>
-    <GroupedValueForm kind="deity" groups={TRADITIONS} onDone={done} />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal title="Add Deity" onClose={close}>
+        <GroupedValueForm kind="deity" groups={TRADITIONS} onDone={done} />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 // Rename it to see the note by Save that the rename carries onto the
 // compendium, and the head keep the name it was saved under, its tradition
 // after it, as a deity's pills name it (MB.115).
 export const EditingADeity: Story = () => (
-  <Modal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural" onClose={done}>
-    <GroupedValueForm
-      kind="deity"
-      value={{
-        id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
-        name: 'Testra',
-        description: 'An invented deity, for the workshop.',
-        groupId: TRADITIONS[0].id,
-      }}
-      groups={TRADITIONS}
-      onDone={done}
-    />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Deity" title="Testra" qualifier="Fixtural" onClose={close}>
+        <GroupedValueForm
+          kind="deity"
+          value={{
+            id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
+            name: 'Testra',
+            description: 'An invented deity, for the workshop.',
+            groupId: TRADITIONS[0].id,
+          }}
+          groups={TRADITIONS}
+          onDone={done}
+        />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 export const AddingACelestialBody: Story = () => (
-  <Modal title="Add Celestial Body" onClose={done}>
-    <GroupedValueForm kind="celestialBody" onDone={done} />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal title="Add Celestial Body" onClose={close}>
+        <GroupedValueForm kind="celestialBody" onDone={done} />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 // A flat kind has no group field. Rename it to see the note by Save that the
 // rename carries onto the compendium.
 export const EditingAZodiacSign: Story = () => (
-  <Modal eyebrow="Edit Zodiac Sign" title="Fixture Ram" onClose={done}>
-    <GroupedValueForm
-      kind="zodiacSign"
-      value={{
-        id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
-        name: 'Fixture Ram',
-        description: 'An invented sign, for the workshop.',
-      }}
-      onDone={done}
-    />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Zodiac Sign" title="Fixture Ram" onClose={close}>
+        <GroupedValueForm
+          kind="zodiacSign"
+          value={{
+            id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a',
+            name: 'Fixture Ram',
+            description: 'An invented sign, for the workshop.',
+          }}
+          onDone={done}
+        />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 // Delete pressed once drawn, as a person would: the question over the form,

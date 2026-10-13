@@ -137,7 +137,7 @@ $account-menu-avatar: 2rem;
 
 // A link or a button: one row each, a control tall, edge to edge of the panel
 // (no padding or gap around the rows, so the wash on hover and the current
-// mark run to the panel's edges). The pointer's wash on hover. SignOutButton
+// mark run to the panel's edges). The pointer's wash on hover. Sign Out
 // brings its own `.btn`, left as the outlined button it is, so the one action
 // that ends the session reads as a button and not as another link (below).
 .account-menu__item {
@@ -234,13 +234,10 @@ $account-menu-avatar: 2rem;
   border-radius: calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px) 0 0;
 }
 
-// The button keeps the shared `.btn` edge, height, radius and colours (and
-// so its contrast); only the width is set, to the panel row's.
-.account-menu__panel .sign-out-button {
-  display: block;
-}
-
-.account-menu__panel .sign-out-button .btn {
+// Sign Out's button keeps the shared `.btn` edge, height, radius and colours
+// (and so its contrast); only the width is set, to the panel row's. A failure
+// stacks beneath it.
+.account-menu__signout-action .btn {
   width: 100%;
 }
 

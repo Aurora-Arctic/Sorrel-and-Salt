@@ -43,7 +43,12 @@ async function send<TResult, TVariables extends object>(
         // Yoga's status codes as they were under graphql-request.
         accept: 'application/graphql-response+json, application/json',
       },
-      body: JSON.stringify({ query: print(document), variables }),
+      body: JSON.stringify({
+        query: print(document),
+        // graphql-request sent the name, and the workshop's stories answer by it.
+        operationName: getOperationAST(document)?.name?.value,
+        variables,
+      }),
       signal,
     },
   );

@@ -1,5 +1,12 @@
 import type { Route } from 'next';
-import type { ListDialog, ListDialogParams, ListHrefParams } from './types';
+import type {
+  ListDialog,
+  ListDialogParams,
+  ListHrefParams,
+  Page,
+  PagerCursor,
+  PagerHrefs,
+} from './types';
 
 // The address of a list page under its filter, at a cursor, with a modal open
 // over it or not: `/admin/users?query=wort&awaiting`. Every list's links,
@@ -35,4 +42,22 @@ export function listHref(path: string, params: ListHrefParams = {}): Route {
  */
 export function dialogParams(dialog?: ListDialog): ListDialogParams {
   return { new: dialog === 'new', edit: dialog === 'new' ? undefined : dialog?.edit };
+}
+
+/**
+ * The pager's Prev and Next for a page, each built by `build` from the cursor
+ * it turns on, so the caller keeps its filter and drops any modal. An end
+ * with no page beyond it is left out, and `Pager` disables it. Pure, so a
+ * client list and a server page can both call it; it moved here from the
+ * admin pages' `list-page.tsx`, which is server-only (MB.119).
+ */
+export function pagerHrefs<Href extends string>(
+  pageInfo: Page<unknown>['pageInfo'],
+  build: (cursor: PagerCursor) => Href,
+): PagerHrefs<Href> {
+  const { hasPreviousPage, hasNextPage, startCursor, endCursor } = pageInfo;
+  return {
+    previousHref: hasPreviousPage && startCursor ? build({ before: startCursor }) : undefined,
+    nextHref: hasNextPage && endCursor ? build({ after: endCursor }) : undefined,
+  };
 }

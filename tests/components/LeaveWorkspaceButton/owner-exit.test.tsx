@@ -7,11 +7,12 @@ import LeaveWorkspaceButton from '@/components/LeaveWorkspaceButton';
 // hand-over or a deletion, never only one. The requests are mocked; what the
 // service decides is its own tests'.
 
-const { replace, graphqlRequest } = vi.hoisted(() => ({
+const { replace, refresh, graphqlRequest } = vi.hoisted(() => ({
   replace: vi.fn(),
+  refresh: vi.fn(),
   graphqlRequest: vi.fn(),
 }));
-vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh: vi.fn() }) }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace, refresh }) }));
 vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 
 const ID = '00000000-0000-0000-0000-000000000001';
@@ -22,8 +23,8 @@ const SUCCESSORS = [
   { userId: THIRD, name: 'Fixture C', role: 'viewer' as const },
 ];
 
-const handOver = (dialog: HTMLElement) => within(dialog).getByRole('radio', { name: /^Hand it/ });
-const deleteIt = (dialog: HTMLElement) => within(dialog).getByRole('radio', { name: /^Delete it/ });
+const handOver = (dialog: HTMLElement) => within(dialog).getByRole('radio', { name: /^Hand It/ });
+const deleteIt = (dialog: HTMLElement) => within(dialog).getByRole('radio', { name: /^Delete It/ });
 
 /** Types into the New Owner box and picks the named member from its list. */
 function choose(dialog: HTMLElement, name: string) {
@@ -35,19 +36,20 @@ function choose(dialog: HTMLElement, name: string) {
 
 async function openDialog(successors = SUCCESSORS) {
   render(<LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" successors={successors} />);
-  fireEvent.click(screen.getByRole('button', { name: /^Leave Workspace/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Leave Coven/ }));
   return screen.findByRole('dialog');
 }
 
 describe('LeaveWorkspaceButton for the only owner', () => {
   beforeEach(() => {
     replace.mockReset();
+    refresh.mockReset();
     graphqlRequest.mockReset();
   });
 
   it('stays enabled, and opens a dialog offering both a hand-over and a deletion', async () => {
     render(<LeaveWorkspaceButton workspaceId={ID} name="Fixture Coven" successors={SUCCESSORS} />);
-    const leave = screen.getByRole('button', { name: /^Leave Workspace/ });
+    const leave = screen.getByRole('button', { name: /^Leave Coven/ });
     expect(leave).toBeEnabled();
 
     fireEvent.click(leave);
@@ -82,14 +84,16 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(box).toHaveAccessibleDescription(/Viewer/);
   });
 
-  it('promotes the chosen member first, then leaves, then goes home', async () => {
+  it('promotes the chosen member first, then leaves, then lands on the coven landing', async () => {
     graphqlRequest.mockResolvedValue({});
     const dialog = await openDialog();
     choose(dialog, 'Fixture C');
 
     fireEvent.click(within(dialog).getByRole('button', { name: 'Promote and Leave' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    // The switcher lists covens from a layout the replace does not re-run.
+    expect(refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest).toHaveBeenCalledTimes(2);
     expect(graphqlRequest.mock.calls[0][1]).toEqual({
       workspaceId: ID,
@@ -110,7 +114,9 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     fireEvent.click(promote);
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    // The switcher lists covens from a layout the replace does not re-run.
+    expect(refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest.mock.calls[0][1]).toEqual({
       workspaceId: ID,
       userId: OTHER,
@@ -145,19 +151,21 @@ describe('LeaveWorkspaceButton for the only owner', () => {
   it('swaps the confirm for Delete once chosen, routing it into its own confirmation and deleting nothing from the dialog', async () => {
     graphqlRequest.mockResolvedValue({ deleteWorkspace: true });
     const dialog = await openDialog();
-    expect(within(dialog).queryByRole('button', { name: 'Delete Workspace' })).toBeNull();
+    expect(within(dialog).queryByRole('button', { name: 'Delete Coven' })).toBeNull();
 
     fireEvent.click(deleteIt(dialog));
     expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
     expect(within(dialog).queryByRole('combobox')).toBeNull();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete Workspace' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete Coven' }));
 
     const confirmation = await screen.findByRole('group', { name: /Delete Fixture Coven/ });
     expect(graphqlRequest).not.toHaveBeenCalled();
 
-    fireEvent.click(within(confirmation).getByRole('button', { name: 'Delete Workspace' }));
+    fireEvent.click(within(confirmation).getByRole('button', { name: 'Delete Coven' }));
 
-    await waitFor(() => expect(replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(replace).toHaveBeenCalledWith('/coven'));
+    // The switcher lists covens from a layout the replace does not re-run.
+    expect(refresh).toHaveBeenCalledOnce();
     expect(graphqlRequest.mock.calls[0][1]).toEqual({ workspaceId: ID });
   });
 
@@ -167,7 +175,7 @@ describe('LeaveWorkspaceButton for the only owner', () => {
     expect(within(dialog).queryByRole('radio')).toBeNull();
     expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
     expect(within(dialog).queryByRole('combobox')).toBeNull();
-    expect(within(dialog).getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
   });
 
   it('closes on Cancel with nothing sent', async () => {
@@ -177,5 +185,26 @@ describe('LeaveWorkspaceButton for the only owner', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(graphqlRequest).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [
+      'Cancel',
+      (dialog: HTMLElement) =>
+        fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' })),
+    ],
+    [
+      'Escape',
+      (dialog: HTMLElement) => fireEvent(dialog, new Event('cancel', { cancelable: true })),
+    ],
+  ])('gives focus back to Leave Coven when the dialog closes by %s', async (_way, closeIt) => {
+    const dialog = await openDialog();
+    const leave = screen.getByRole('button', { name: 'Leave Coven' });
+    expect(leave).not.toHaveFocus();
+
+    closeIt(dialog);
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(leave).toHaveFocus();
   });
 });

@@ -7,6 +7,7 @@ import {
   listReceivedInvitations,
   verificationWaitSeconds,
 } from '@/modules/identity';
+import ActionFailure from '../../../components/ActionFailure';
 import EmailForm from '../../../components/EmailForm';
 import NameForm from '../../../components/NameForm';
 import PageNav from '../../../components/PageNav';
@@ -67,7 +68,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       : undefined;
 
   return (
-    <main className="page-frame page-frame--narrow account-page">
+    <main className="page-frame page-frame--narrow page-with-nav">
       <h1>Your Account</h1>
       <PageNav
         label="On this page"
@@ -136,14 +137,20 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <h2 id="account-invitations-heading">Invitations</h2>
           <p className="lede">Covens that have invited this email address to join them.</p>
         </div>
-        <ReceivedInvitations
-          invitations={invitations.edges.map(({ node }) => node)}
-          position={invitations.position}
-          previousHref={
-            hasPreviousPage && startCursor ? invitationsHref({ before: startCursor }) : undefined
-          }
-          nextHref={hasNextPage && endCursor ? invitationsHref({ after: endCursor }) : undefined}
-        />
+        {/* A refused Accept is said once, above the list, rather than inside
+            a row, where a phone's card would wrap it under the button. The
+            list is drawn even with no rows, so its own empty line is live:
+            the section is always on the page (M10.32). */}
+        <ActionFailure>
+          <ReceivedInvitations
+            invitations={invitations.edges.map(({ node }) => node)}
+            position={invitations.position}
+            previousHref={
+              hasPreviousPage && startCursor ? invitationsHref({ before: startCursor }) : undefined
+            }
+            nextHref={hasNextPage && endCursor ? invitationsHref({ after: endCursor }) : undefined}
+          />
+        </ActionFailure>
       </section>
     </main>
   );

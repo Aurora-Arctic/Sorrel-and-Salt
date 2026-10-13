@@ -66,15 +66,13 @@ body:has(.app-shell) > .theme-toggle--corner {
   display: none;
 }
 
-// The disc in the flow (the shell's bar, and its phone account panel). The
+// The disc in the flow (the shell's bar). The
 // button is transparent and padded out to a control's height, so the target
 // is a finger's; the disc inside is what is drawn, round and clipping the
 // facet that swings out of it, which a bare button's own box could not do
 // without hiding its padding too.
 $theme-toggle-disc: 2rem;
-$theme-toggle-disc-small: 1.75rem;
 $theme-toggle-facet: 1.1875rem;
-$theme-toggle-facet-small: 1.0625rem;
 
 .theme-toggle--inline {
   display: inline-flex;
@@ -117,18 +115,6 @@ $theme-toggle-facet-small: 1.0625rem;
     .theme-toggle__disc {
       @include focus-ring;
     }
-  }
-}
-
-// The phone account panel's size; padded to the same control height, so its row is no shorter.
-.theme-toggle--small {
-  width: $theme-toggle-disc-small;
-  height: $theme-toggle-disc-small;
-  padding: calc((#{$control-height} - #{$theme-toggle-disc-small}) / 2);
-
-  .theme-toggle__facets {
-    width: $theme-toggle-facet-small;
-    height: $theme-toggle-facet-small;
   }
 }
 

@@ -40,9 +40,10 @@ export function Ok() {
   in `src/lib/graphql-client-error.ts`) whenever the response is not OK, carries
   `errors` or has no `data`, so a partial answer never reads as whole. Its
   `status` is the HTTP status and its `errors[].extensions` carries the code
-  and field errors (MB.43). The wrapper posts `{ query, variables }` as JSON
-  with the `Accept` header `application/graphql-response+json, application/json`,
-  and looks `fetch` up on every request.
+  and field errors (MB.43). The wrapper posts `{ query, operationName, variables }`
+  as JSON, the name read from the document, since the workshop's canned answers
+  match a request by it (M10.33). It sends the `Accept` header
+  `application/graphql-response+json, application/json`, and looks `fetch` up on every request.
 
 ### Defaults
 

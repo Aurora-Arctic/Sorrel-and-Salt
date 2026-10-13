@@ -63,15 +63,15 @@ describe('the /coven/[slug] page', () => {
   it.each<WorkspaceRole>(['viewer', 'member'])('offers a %s Leave and no Delete', async (role) => {
     await renderAs(role);
 
-    expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Delete Workspace' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Delete Coven' })).not.toBeInTheDocument();
   });
 
   it('offers an owner Leave and Delete', async () => {
     await renderAs('owner');
 
-    expect(screen.getByRole('button', { name: 'Leave Workspace' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
   });
 
   // The guided exit (M6.16): the only owner is shown both ways out on click;
@@ -85,10 +85,10 @@ describe('the /coven/[slug] page', () => {
       ]);
       await renderAs('owner');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Workspace' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
       const dialog = await screen.findByRole('dialog');
 
-      expect(within(dialog).getByRole('radio', { name: /^Hand it/ })).toBeChecked();
+      expect(within(dialog).getByRole('radio', { name: /^Hand It/ })).toBeChecked();
       const box = await within(dialog).findByRole('combobox', { name: 'New Owner' });
       fireEvent.focus(box);
       fireEvent.change(box, { target: { value: 'Name of' } });
@@ -98,8 +98,8 @@ describe('the /coven/[slug] page', () => {
       expect(within(dialog).getByRole('option', { name: /Name of v.*Viewer/ })).toBeInTheDocument();
       expect(within(dialog).getByRole('button', { name: 'Promote and Leave' })).toBeDisabled();
 
-      fireEvent.click(within(dialog).getByRole('radio', { name: /^Delete it/ }));
-      expect(within(dialog).getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
+      fireEvent.click(within(dialog).getByRole('radio', { name: /^Delete It/ }));
+      expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
 
     it('offers the one other member by name, with nothing to search', async () => {
@@ -109,7 +109,7 @@ describe('the /coven/[slug] page', () => {
       ]);
       await renderAs('owner');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Workspace' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
       const dialog = await screen.findByRole('dialog');
 
       expect(within(dialog).getByRole('radio', { name: /Name of m/ })).toBeChecked();
@@ -120,11 +120,11 @@ describe('the /coven/[slug] page', () => {
     it('is offered only the deletion when no one else is in the coven', async () => {
       await renderAs('owner');
 
-      fireEvent.click(screen.getByRole('button', { name: 'Leave Workspace' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
       const dialog = await screen.findByRole('dialog');
 
       expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
-      expect(within(dialog).getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
+      expect(within(dialog).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
     });
   });
 
@@ -135,16 +135,80 @@ describe('the /coven/[slug] page', () => {
     ]);
     await renderAs('owner');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Leave Workspace' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Leave Coven' }));
     const dialog = await screen.findByRole('dialog');
 
     expect(within(dialog).queryByRole('button', { name: 'Promote and Leave' })).toBeNull();
-    expect(within(dialog).getByRole('button', { name: 'Leave Workspace' })).toBeEnabled();
+    expect(within(dialog).getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
   });
 
   it.each<WorkspaceRole>(['member', 'viewer'])('never reads the roll for a %s', async (role) => {
     await renderAs(role);
 
     expect(memberRoster).not.toHaveBeenCalled();
+  });
+
+  // The sections (MB.119): Contents lists the pages the caller can reach,
+  // Your Membership holds Leave alone, and Delete has a section of its own
+  // that only an owner is shown, so the two buttons that end a seat and end a
+  // coven are never side by side.
+  describe('the sections', () => {
+    it.each<WorkspaceRole>(['owner', 'member'])(
+      'lists the members page in Contents for a %s, who may read members',
+      async (role) => {
+        await renderAs(role);
+
+        const contents = screen.getByRole('region', { name: 'Contents' });
+        expect(within(contents).getByRole('link', { name: 'Members' })).toHaveAttribute(
+          'href',
+          '/coven/fixture-coven/members',
+        );
+      },
+    );
+
+    it('draws no Contents for a viewer, who can reach none of its pages', async () => {
+      await renderAs('viewer');
+
+      expect(screen.queryByRole('region', { name: 'Contents' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Members' })).not.toBeInTheDocument();
+    });
+
+    it('keeps Leave in Your Membership and Delete in a section of its own for an owner', async () => {
+      await renderAs('owner');
+
+      const membership = screen.getByRole('region', { name: 'Your Membership' });
+      expect(within(membership).getByRole('button', { name: 'Leave Coven' })).toBeEnabled();
+      expect(within(membership).queryByRole('button', { name: 'Delete Coven' })).toBeNull();
+      const owners = screen.getByRole('region', { name: 'Delete This Coven' });
+      expect(within(owners).getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
+    });
+
+    it.each<WorkspaceRole>(['member', 'viewer'])('shows a %s no Delete section', async (role) => {
+      await renderAs(role);
+
+      expect(screen.queryByRole('region', { name: 'Delete This Coven' })).not.toBeInTheDocument();
+    });
+  });
+
+  // The jump menu (PageNav): an entry per section shown, each landing on a
+  // section that exists. A viewer has Your Membership alone.
+  describe('the jump menu', () => {
+    const menu = () => screen.queryByRole('navigation', { name: 'On this page' });
+
+    it.each<[WorkspaceRole, number]>([
+      ['owner', 3],
+      ['member', 2],
+      ['viewer', 1],
+    ])('has an entry for each of a %s’s sections', async (role, count) => {
+      await renderAs(role);
+
+      const links = within(menu() as HTMLElement).getAllByRole('link');
+      expect(links).toHaveLength(count);
+      for (const link of links) {
+        const target = document.getElementById(link.getAttribute('href')?.slice(1) ?? '');
+        expect(target).toBeInstanceOf(HTMLElement);
+        expect(target?.tagName).toBe('SECTION');
+      }
+    });
   });
 });

@@ -7,7 +7,7 @@ import Welcome from '.';
 // sits in the page's real frame, `main.page-frame.welcome-page`, so the
 // column it shows is the one `/` draws (claude-docs/workshop.md).
 export default {
-  title: 'Welcome',
+  title: 'Pages / Welcome',
 };
 
 const Page = ({ children }: { children: ReactNode }) => (

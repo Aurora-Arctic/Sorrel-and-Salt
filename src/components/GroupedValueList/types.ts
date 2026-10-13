@@ -1,7 +1,6 @@
 import type { Route } from 'next';
-import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { ModalHeading } from '../Modal/types';
-import type { GroupColors, PagePosition } from '../../lib/types';
+import type { GroupColors, PagePosition, PagerHrefs } from '../../lib/types';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
 
 /** A grouped kind's group as the list names it: its column, its filter, and its address parameter. */
@@ -44,7 +43,7 @@ export interface GroupedValueListEntry {
   editHeading: ModalHeading;
 }
 
-export interface GroupedValueListProps extends Partial<PagerHrefs> {
+export interface GroupedValueListProps extends Partial<PagerHrefs<Route>> {
   kind: GroupedValueKind;
   /** This page's rows, in the service's order. */
   values: readonly GroupedValueListEntry[];

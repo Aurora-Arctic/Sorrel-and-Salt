@@ -69,10 +69,10 @@ for (const role of ['owner', 'member', 'viewer'] as const) {
     await expect(overview).toHaveAttribute('aria-current', 'page');
 
     const main = page.getByRole('main');
-    await expect(main.getByRole('button', { name: 'Leave Workspace', exact: true })).toBeEnabled();
+    await expect(main.getByRole('button', { name: 'Leave Coven', exact: true })).toBeEnabled();
     // Delete is the owner's alone; the membership rows above are why a
     // member's and a viewer's absence is a refusal and not an empty page.
-    const remove = main.getByRole('button', { name: 'Delete Workspace', exact: true });
+    const remove = main.getByRole('button', { name: 'Delete Coven', exact: true });
     if (role === 'owner') await expect(remove).toBeEnabled();
     else await expect(remove).toHaveCount(0);
   });
@@ -230,7 +230,7 @@ test.describe('the invitations tab', { tag: '@story-5' }, () => {
 
       await signInAgainAs(page, users.owner.id);
       await page.goto(`/coven/${COVEN_SLUG}/members`);
-      const tabs = page.getByRole('navigation', { name: 'People' });
+      const tabs = page.getByRole('navigation', { name: 'Members' });
       await expect(tabs.getByRole('link', { name: 'Members' })).toHaveAttribute(
         'aria-current',
         'page',
@@ -300,7 +300,7 @@ test.describe('the invitations tab', { tag: '@story-5' }, () => {
     }
     await page.goto(`/coven/${COVEN_SLUG}/members`);
 
-    const tabs = page.getByRole('navigation', { name: 'People' });
+    const tabs = page.getByRole('navigation', { name: 'Members' });
     await expect(tabs.getByRole('link', { name: 'Members' })).toBeVisible();
     await expect(tabs.getByRole('link', { name: 'Invitations' })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Invite', exact: true })).toHaveCount(0);
@@ -340,16 +340,16 @@ test.describe('the only owner leaving', () => {
 
       await signInAgainAs(page, users.owner.id);
       await page.goto(`/coven/${HANDOVER_SLUG}`);
-      const leave = page.getByRole('main').getByRole('button', { name: 'Leave Workspace' });
+      const leave = page.getByRole('main').getByRole('button', { name: 'Leave Coven' });
       await expect(leave).toBeEnabled();
 
       await leave.click();
       const dialog = page.getByRole('dialog');
-      await expect(dialog.getByRole('radio', { name: /^Hand it/ })).toBeChecked();
+      await expect(dialog.getByRole('radio', { name: /^Hand It/ })).toBeChecked();
       // The deletion is the other choice, its confirm taking the row once chosen.
-      await dialog.getByRole('radio', { name: /^Delete it/ }).check();
-      await expect(dialog.getByRole('button', { name: 'Delete Workspace' })).toBeEnabled();
-      await dialog.getByRole('radio', { name: /^Hand it/ }).check();
+      await dialog.getByRole('radio', { name: /^Delete It/ }).check();
+      await expect(dialog.getByRole('button', { name: 'Delete Coven' })).toBeEnabled();
+      await dialog.getByRole('radio', { name: /^Hand It/ }).check();
 
       const search = dialog.getByRole('combobox', { name: 'New Owner' });
       await search.click();
@@ -360,7 +360,16 @@ test.describe('the only owner leaving', () => {
       // By keyboard: focus the action and press Enter.
       await dialog.getByRole('button', { name: 'Promote and Leave' }).focus();
       await page.keyboard.press('Enter');
-      await page.waitForURL('/');
+      // The coven landing, which takes the owner on to a coven they still
+      // hold; the switcher there no longer offers the one they left (MB.119).
+      await page.waitForURL(
+        (url) => url.pathname.startsWith('/coven') && !url.pathname.includes(HANDOVER_SLUG),
+      );
+      const switcher = page.getByRole('combobox', { name: 'Coven' });
+      await switcher.click();
+      await expect(page.getByRole('option').first()).toBeVisible();
+      await expect(page.getByRole('option', { name: HANDOVER_NAME })).toHaveCount(0);
+      await page.keyboard.press('Escape');
 
       const seats = await sql`
         select user_id, role::text, deleted_at is not null as gone from workspace_members

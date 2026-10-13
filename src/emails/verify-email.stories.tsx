@@ -7,7 +7,7 @@ import type { ProviderId } from '../lib/types';
 // link is invented and goes nowhere; the images and fonts come from the
 // workshop, which serves public/.
 export default {
-  title: 'Emails / Verify email',
+  title: 'Emails / Verify Email',
 };
 
 const URL = 'https://sorrelandsalt.com/api/auth/verify-email?token=workshop.preview.token';

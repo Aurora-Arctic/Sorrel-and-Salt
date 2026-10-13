@@ -3,17 +3,18 @@
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
+import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import { ComboboxTypeahead } from '../Combobox/typeahead';
 import DeleteWorkspaceButton from '../DeleteWorkspaceButton';
-import { RadioGroupField, Required } from '../Field';
+import { FieldShell, fieldDescription, RadioGroupField } from '../Field';
 import { WORKSPACE_ROLE_ACCESS } from '../MemberList/role-access';
-import Modal from '../Modal';
+import { ModalButton } from '../Modal';
 import Notice from '../Notice';
 import { workspaceRoleLabel } from '../UserDetail/roles';
-import ActionFailure, { useActionFailure } from '../WorkspaceActions/action-failure';
+import ActionFailure, { useActionFailure } from '../ActionFailure';
 import { LeaveWorkspaceDocument } from './documents';
 import type { OwnerExitProps, WayOut } from './types';
 
@@ -34,41 +35,23 @@ const PromoteSuccessorDocument = graphql(`
   }
 `);
 
-const OwnerExit = ({ workspaceId, name, successors }: OwnerExitProps): ReactElement => {
-  const [open, setOpen] = useState(false);
-  return (
-    <>
-      <button
-        className="btn"
-        type="button"
-        aria-label="Leave Workspace"
-        onClick={() => setOpen(true)}
-      >
-        Leave Workspace
-      </button>
-      {open && (
-        <Modal title="Leave Workspace" onClose={() => setOpen(false)}>
-          {(close) => (
-            // Its own failure place, so a refusal shows in the dialog rather
-            // than on the page behind it.
-            <ActionFailure>
-              {successors.length === 0 ? (
-                <SoleMember workspaceId={workspaceId} name={name} onCancel={close} />
-              ) : (
-                <Options
-                  workspaceId={workspaceId}
-                  name={name}
-                  successors={successors}
-                  onCancel={close}
-                />
-              )}
-            </ActionFailure>
-          )}
-        </Modal>
-      )}
-    </>
-  );
-};
+const OwnerExit = ({ workspaceId, name, successors }: OwnerExitProps): ReactElement => (
+  // The button is always enabled, so nobody concludes they are stuck, and
+  // ModalButton takes the focus back to it however the dialog closes.
+  <ModalButton label="Leave Coven" className="btn" title="Leave Coven">
+    {(close) => (
+      // Its own failure place, so a refusal shows in the dialog rather than
+      // on the page behind it.
+      <ActionFailure>
+        {successors.length === 0 ? (
+          <SoleMember workspaceId={workspaceId} name={name} onCancel={close} />
+        ) : (
+          <Options workspaceId={workspaceId} name={name} successors={successors} onCancel={close} />
+        )}
+      </ActionFailure>
+    )}
+  </ModalButton>
+);
 
 /** Nobody else is in the coven, so deleting it is the whole answer. */
 const SoleMember = ({
@@ -102,6 +85,7 @@ const Options = ({
   const router = useRouter();
   const failure = useActionFailure();
   const id = useId();
+  const ownerField = fieldDescription({ id: `${id}-owner` });
   // One other member is offered by name, with nothing to search (the owner's
   // call); more than one are searched by name.
   const only = successors.length === 1 ? successors[0] : undefined;
@@ -135,8 +119,10 @@ const Options = ({
       );
       return;
     }
-    // The coven is closed to this user now, so the page cannot be read again.
-    router.replace('/');
+    // The coven is closed to this user now, so the page cannot be read again;
+    // the refresh brings the switcher's new list in, as Leave's does.
+    router.replace(COVEN_LANDING_PATH);
+    router.refresh();
   }
 
   return (
@@ -150,14 +136,14 @@ const Options = ({
         options={[
           {
             value: 'hand',
-            label: only ? `Hand it to ${only.name}` : 'Hand it to another member',
+            label: only ? `Hand It to ${only.name}` : 'Hand It to Another Member',
             description: 'They become an owner first, then you leave.',
           },
           {
             value: 'delete',
-            label: 'Delete it',
+            label: 'Delete It',
             description:
-              'Closes it for every other member as well. Only an administrator can restore it.',
+              'Closes it for every other member as well. Only an administrator with database access can restore it.',
           },
         ]}
         value={way}
@@ -165,14 +151,11 @@ const Options = ({
         onChange={(next) => !sending && setWay(next)}
       />
       {way === 'hand' && !only && (
-        <div className="field">
-          <label className="field__label" htmlFor={`${id}-owner`}>
-            New Owner
-            <Required />
-          </label>
+        <FieldShell label="New Owner" required {...ownerField}>
           <ComboboxTypeahead
-            id={`${id}-owner`}
+            id={ownerField.controlId}
             label="New Owner"
+            labelId={ownerField.labelId}
             required
             value={picked}
             onChange={(userId) => !sending && setPicked(userId)}
@@ -185,7 +168,7 @@ const Options = ({
               qualifier: { text: workspaceRoleLabel(role), detail: WORKSPACE_ROLE_ACCESS[role] },
             }))}
           />
-        </div>
+        </FieldShell>
       )}
       <div className="modal__actions">
         {way === 'hand' ? (

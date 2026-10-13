@@ -53,6 +53,22 @@ export interface ModalProps extends ModalHeading {
 }
 
 /**
+ * A button that opens a modal, and takes the focus back when it closes: an
+ * Invite, a Leave Coven. The modal's heading is its title alone.
+ */
+export interface ModalButtonProps {
+  /** The button's text and accessible name, in title case: "Invite". */
+  label: string;
+  /** The button's classes: `btn btn--solid`. */
+  className: string;
+  /** The dialog's heading and accessible name, in title case. */
+  title: string;
+  size?: ModalProps['size'];
+  /** What the modal holds, given the modal's close, so a form can close it after its send. */
+  children: (close: () => void) => ReactNode;
+}
+
+/**
  * Where a modal is in its close: open; fading out (M5.5); closed, the fade
  * over and its owner to be asked; or asked already, with no fade to wait on.
  */

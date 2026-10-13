@@ -49,21 +49,33 @@ the `.workspace-switcher` wrapper so it reads as the row's name. Every part of
 `ComboboxSelect` has its own class and the compound `.input.combobox__control`
 is outweighed by one more class, so no Combobox variant was needed.
 
-- The chosen name in `$font-heading`, 1.5rem, weight 700; a `$hairline` border,
-  `radius('control')`, a transparent ground, `$fill-quiet` on hover, the border
-  in `$text-primary` while open (a change of weight, not of hue); at least
-  `$control-height` tall; the chevron on the right.
+- **The chosen name is set as an h4 is**: `@include heading-face` (the
+  display family, weight 700, letter-spaced 0.01em) and `heading-size(4)`,
+  1.5rem ([`styling.md`](../styling.md), "Type"). Its line height is its own,
+  1.1 rather than the h4's 1.25, so a long name that wraps sets its two lines
+  close inside the control's box.
+- **The box keeps `.input`'s shape and changes its look.** Its corners,
+  `radius('control')`, come from the `field-box` mixin that `.input` includes;
+  the switcher sets no radius of its own. Over that it lays a `$hairline`
+  border, a transparent ground, `$fill-quiet` on hover, and the border in
+  `$text-primary` while open (a change of weight, not of hue). It is at least
+  `$control-height` tall, with the chevron on the right.
+- **Two widths are named at the head of `index.scss`**:
+  `$switcher-min-width`, 12rem, the closed box's narrowest, so a short name
+  still reads as a control; and `$switcher-list-min-width`, 15rem, the open
+  list's narrowest, so the list can be wider than a short chosen name. MB.124
+  weighs both against the account menu's 13rem for one floating-panel width.
 - A long name wraps (`white-space: normal`) rather than being cut. **At or under
   `$shell-phone-width` the control fills the row's width** and is otherwise the
   same as on a desktop (the owner's call).
-- The list opens below at `layer('floating')`, at least 15rem wide. The one
+- The list opens below at `layer('floating')`. The one
   addition to Combobox is an optional `create` flag on a choice
   (`ComboboxChoice`): its row is set off by a hairline rule and led by a plus.
   Create Coven is the only choice that sets it.
 
 ## Stories
 
-`index.stories.tsx`: `InWorkspace`, `OutsideWorkspace`, `CanCreate`, `Phone`. The workshop's
+`index.stories.tsx`, titled "Coven / Coven Switcher": `InWorkspace`, `OutsideWorkspace`, `CanCreate`, `Phone`. The workshop's
 router goes nowhere, so a choice only closes the list.
 
 ## Testing

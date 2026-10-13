@@ -40,7 +40,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   cursor (`?after=` or `?before=`), with "Page X of Y" between them, as the
   privilege ledger beside it counts its pages. Plain anchors rather than
   soft links, for the reason [`pager.md`](pager.md) gives. The page builds the two hrefs through
-  `list-page.tsx`'s `pagerHrefs`, and a cursor that names no row of this list
+  `src/lib/list-href.ts`'s `pagerHrefs`, and a cursor that names no row of this list
   (one copied from another list) reads the first page, through
   `readNumberedPage`. A list of one page shows no pager.
 - **Invite Admin is the tab's action, beside the page's heading** (MB.115,
@@ -71,7 +71,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
 - **The user list's own parts.** Revoke asks first through
   `UserList/confirmed-action.tsx`'s `ConfirmedAction`, in a modal titled
   "Revoke Invitation": "Revoke the invitation to <address>? Its link will say
-  it was revoked." A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
+  it was withdrawn." A locked control is `UserList/locked-control.tsx`'s `LockedControl`:
   `aria-disabled` with the reason in a tip and said again as an alert on a
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).
@@ -85,8 +85,9 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   as the user list's confirmation spaces its own; both are the shared field shell around their
   input ([`field.md`](field.md)). **Send Invitation** stays disabled until
   there is an address, and is a `BusyButton` ([`busy-button.md`](busy-button.md)),
-  a spinner and "Sending" while the request is out; Cancel is quiet and
-  closes back to the tab. With anything typed in either field, Cancel asks
+  a spinner and "Sending" while the request is out; Cancel is quiet, waits
+  while the request is out, and closes back to the tab. The row is the
+  shared `FormActions`, its submit renamed ([`field.md`](field.md#formactions); MB.119). With anything typed in either field, Cancel asks
   first (MB.115, the owner's call; [`modal.md`](modal.md#unsaved-changes));
   Discard Changes closes. The form is
   `invite-form.tsx`'s `InviteFields`, rendered inside the modal so its
@@ -140,7 +141,7 @@ alert (MB.116).
 ## Stories
 
 [`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
-`Admin / Admin Invitations`, inside the admin layout's frame and the People
+`Admin / Admin Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People
 page with its Invitations tab open and Invite Admin beside the heading:
 `Pending`, `NoneWaiting`, `Filtered` (an Email and Expires in 24 Hrs
 applied, Clear offered, one invitation left), `NoMatch` (the

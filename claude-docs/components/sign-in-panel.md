@@ -206,8 +206,8 @@ the spacing scale. The button is `position: relative` to hold it. It casts
 `$shadow-floating`, the shadow `.btn` itself casts, which lifts it off the
 brand fill it overlaps. The badge sets its own colours, so the brand fills and
 their hover states never reach its label. The button column's gap is
-`space(6)`, with `space(4)` above it, leaving room for a badge that sits
-mostly above its button, the first one's included.
+`space(4)`, with `space(4)` above it, room for a badge that sits mostly above its
+button, the first one's included.
 
 Microsoft's button is white in both themes, with the `#808080` edge that
 clears 3:1 on the light page (`styling.md`, "Brand colours"), the owner's call

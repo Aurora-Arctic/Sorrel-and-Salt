@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import ActionFailure from '@/components/ActionFailure';
 import ReceivedInvitations from '@/components/ReceivedInvitations';
 import type { ReceivedInvitationEntry } from '@/components/ReceivedInvitations/types';
 import type {
@@ -10,7 +11,7 @@ import type {
 } from '@/gql/graphql';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 
-// The invitations addressed to the signed-in account, on the /coven landing
+// The invitations addressed to the signed-in account, on the account page
 // (M10.32): one row each, with its own Accept and Decline (M10.34)
 // (claude-docs/components/received-invitations.md).
 
@@ -96,18 +97,63 @@ describe('ReceivedInvitations', () => {
     expect(acceptFor('Fixture Coven')).toBeEnabled();
   });
 
-  it('says the service’s refusal beside the row and offers Accept again', async () => {
-    mockGraphQLError('AcceptInvitationById', {
-      code: 'FORBIDDEN',
-      message: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
+  describe('an Accept the service refuses', () => {
+    const refuse = () =>
+      mockGraphQLError('AcceptInvitationById', {
+        code: 'FORBIDDEN',
+        message: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
+      });
+
+    it('says it in the alert above the list when the page gives a place for it', async () => {
+      refuse();
+      render(
+        <ActionFailure>
+          <ReceivedInvitations invitations={INVITATIONS} />
+        </ActionFailure>,
+      );
+
+      fireEvent.click(acceptFor('Fixture Coven'));
+
+      const alert = await screen.findByRole('alert');
+      const table = screen.getByRole('table', { name: 'Your Invitations' });
+      expect(table).not.toContainElement(alert);
+      expect(alert.compareDocumentPosition(table) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(acceptFor('Fixture Coven')).toBeEnabled();
+      expect(router.push).not.toHaveBeenCalled();
     });
-    show();
 
-    fireEvent.click(acceptFor('Fixture Coven'));
+    it('says it beside the row outside such a place, and offers Accept again', async () => {
+      refuse();
+      show();
 
-    expect(await screen.findByRole('alert')).toBeVisible();
-    expect(acceptFor('Fixture Coven')).toBeEnabled();
-    expect(router.push).not.toHaveBeenCalled();
+      fireEvent.click(acceptFor('Fixture Coven'));
+
+      const alert = await screen.findByRole('alert');
+      expect(screen.getByRole('table', { name: 'Your Invitations' })).toContainElement(alert);
+      expect(acceptFor('Fixture Coven')).toBeEnabled();
+      expect(router.push).not.toHaveBeenCalled();
+    });
+
+    it('clears the alert when Accept is tried again', async () => {
+      refuse();
+      render(
+        <ActionFailure>
+          <ReceivedInvitations invitations={INVITATIONS} />
+        </ActionFailure>,
+      );
+      fireEvent.click(acceptFor('Fixture Coven'));
+      await screen.findByRole('alert');
+      mockGraphQLMutation<AcceptInvitationByIdMutation, AcceptInvitationByIdMutationVariables>(
+        'AcceptInvitationById',
+        (variables) => ({
+          acceptInvitationById: { id: String(variables.id), acceptedAt: '2026-10-13T00:00:00Z' },
+        }),
+      );
+
+      fireEvent.click(acceptFor('Fixture Coven'));
+
+      await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+    });
   });
 
   it('asks before declining, then sends only that invitation’s id and reads the page again', async () => {

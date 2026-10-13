@@ -46,15 +46,6 @@ export interface ListPlace {
   adding: boolean;
 }
 
-/** One cursor, for the page before or the page after. */
-export type PagerCursor = { after: string } | { before: string };
-
-/** The pager's two ends; an end with no page is left out. */
-export interface PagerHrefs {
-  previousHref: Route | undefined;
-  nextHref: Route | undefined;
-}
-
 export interface MissingNoticeProps {
   /** The row the page lists, singular and lower case: "category", "compendium entry". */
   noun: string;

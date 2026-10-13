@@ -29,8 +29,8 @@ panel it opens (MB.7). It is a client component.
 - **The name is said once**, on the button. The avatar disc (up to two
   initials, from the first and last words of the name) is `aria-hidden`.
 - **The panel lists**: Your Account (a link to `/account`, always, not for an
-  unverified viewer), at or under `$shell-tablet-width` the site links, then
-  `SignOutButton`. **The theme switch is not in the panel.** It stays in the
+  unverified viewer), at or under `$shell-tablet-width` the site links, then Sign Out
+  (`sign-out-button.tsx`, below). **The theme switch is not in the panel.** It stays in the
   shell's bar at every width (the owner's call, M10.32), so the panel has no
   theme row, and `AppShell` no longer hides the switch at a phone's width.
 - **Waiting invitations show in three places** (M10.32, the owner's call):
@@ -51,6 +51,33 @@ panel it opens (MB.7). It is a client component.
     It wears an `IconTip` (`placement="below"`) reading "You have N Coven
     Invitations".
 
+- **Sign Out is the panel's last row**, `SignOutButton` in
+  `src/components/AccountMenu/sign-out-button.tsx`: a client component with no
+  props, and drawn nowhere else (it sat beside the account page's heading until
+  MB.7; added in MB.63's PR, on the owner's call, since no task builds a way to
+  sign out). A plain full-size `.btn`, its label in title case.
+  - **Better Auth's own sign-out.** It calls `src/lib/auth-client.ts`'s
+    `signOut`, which posts to `/api/auth/sign-out`: the one path outside
+    GraphQL, carrying the session and no application data
+    ([`auth/graphql-only-exception.md`](../auth/graphql-only-exception.md)), so
+    CLAUDE.md rule 1 holds.
+  - **A success is a full load of `/`**, so nothing the signed-in page held
+    survives it, and a protected page asked for next sends the visitor to sign
+    in.
+  - **While it runs** the button is disabled, `aria-busy`, with a spinner and
+    "Signing Out": a `BusyButton` ([`busy-button.md`](busy-button.md)).
+  - **A failure**, a refusal or a connection that drops, says "That didn't
+    work. Please try again." (`GENERIC_FAILURE`, `src/lib/graphql-failure.ts`)
+    in an error `Notice` beneath the button, which is offered again. The call
+    is Better Auth's, not GraphQL's, but it has no more to say about why than a
+    lost request does, so it takes the same sentence.
+  - **SignInMethods' Sign In Again makes the same call** in the same shape,
+    a refusal or a dropped connection said in `GENERIC_FAILURE`, but lands on
+    `/sign-in?next=%2Faccount` rather than `/`, so a stale session comes back
+    to the account page fresh
+    ([`sign-in-methods.md`](sign-in-methods.md), "A stale session signs in
+    again").
+
 ## Styling
 
 The button has no hover or open wash: the avatar disc answers the pointer and the open state as the theme switch does, darkening to `$accent-hover`.
@@ -66,8 +93,9 @@ review, 2026-10-12). The panel hangs from the
 button's right edge at `layer('floating')`, on `$surface-card` with a
 hairline-weight muted edge, `radius('surface')` and `$shadow-floating`, at
 least 13rem wide. Rows are a control tall and run edge to edge of the panel, with no padding
-around them, no gap between them and no rounding; no list markers. Sign Out alone has padding around it, and its `.btn`
-keeps its outline, full width of that. The current link gets a straight accent
+around them, no gap between them and no rounding; no list markers. Sign Out alone has padding around it (`.account-menu__signout`), and its
+`.btn` keeps its outline, full width of that (`.account-menu__signout-action`;
+the failure stacks beneath it). The current link gets a straight accent
 rule on its left edge and the same weight as the bar's, with no fill, so a hover's wash still shows on it. The focus ring is drawn inside the row (`outline-offset: -2px`), where the panel's own edge would cut an outside one. The account button may give up width (`flex: 0 1 auto`, the bar's one item that can), so a long name ends in an ellipsis rather than pushing the theme disc past the window.
 
 **The panel no longer clips** (`overflow: hidden` is gone, the owner's call at
@@ -87,9 +115,16 @@ rows beneath it.
 
 ## Stories
 
-`Closed`, `Open`, `OpenUnverified`, `OpenPhone` (the links), `OpenAtSevenHundred` (the links in the panel at 700px),
-`ClosedWithInvitations` (the dot), `OpenWithInvitations` and
-`OpenWithInvitationsPhone` (the count beside Your Account, at a phone's width as well).
+[`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx),
+titled "Shell / Account Menu": `Closed`, `Open`, `OpenUnverified` (Sign Out
+alone), `OpenPhone` (the links, at 375px), `OpenAtSevenHundred` (the links in
+the panel at 700px), `ClosedWithInvitations` (the dot), `OpenWithInvitations`
+and `OpenWithInvitationsPhone` (the count beside Your Account, at a phone's
+width as well). Every open story draws Sign Out as its last row; there is no
+story of the button alone, since the app never draws it elsewhere, and in the
+workshop a click shows the failure, as the call reaches no auth server. Each sits at the right, since the panel hangs from the
+button's right edge. The wrapper holds the menu at its top and is tall enough
+for the open panel, because the workshop's frame clips what overflows it.
 
 ## Testing
 
@@ -99,3 +134,13 @@ focus, an outside press, a link press, the unverified panel, the phone links,
 the initials, and the invitations: the button's name and the count link's name
 and `href` when invitations wait, and neither when none do or the viewer is
 unverified.
+
+`tests/components/AccountMenu/sign-out-button.test.tsx` covers Sign Out's busy state and
+the full load of `/`, and the failure said beneath it for a refusal and for a
+dropped connection. `tests/db/sign-out.test.ts` signs out through Better
+Auth's real endpoint: the session row goes, and the same cookie then reads as
+no one. `tests/e2e/shell.spec.ts` opens the account menu, routes a refusal of the
+sign-out call, and finds it said beside the button, with axe. The refusal is
+routed rather than waited for from Better Auth, since whether the served build
+refuses it depends on the origin the browser reaches it on (Better Auth refuses
+a plain-http origin, as it would any `/api/auth` POST there).

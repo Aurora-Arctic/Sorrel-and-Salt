@@ -28,16 +28,16 @@ inside that segment's layout. It keeps `NotAuthorized` in a `main.page-frame`.
   (`ShellViewer`, `src/lib/types.ts`). `isAdmin` is the session's role;
   `canCreate` and `verified` come from the user row; `pendingInvitations` is
   how many coven invitations wait for the viewer's verified address (M10.32).
-- `workspaces`: `{ slug, name }[]`, the viewer's covens.
 - `children`: the page, with any context row its own layout renders.
 
-`src/lib/viewer.ts` exports `viewerOf()`, which builds both from `getMe`,
-`membershipsOf(session, [session.userId])` and, for a verified account only,
-`countReceivedInvitations(session, undefined)` (an unverified account reads 0
-and costs no query), wrapped in React `cache()` so the shell layout, the coven
-layout's switcher and the `/coven` landing's notice cost one set of lookups: one
-count statement per shell page. The count goes to the account menu, which shows
-it ([`account-menu.md`](account-menu.md)). The
+The shell takes no list of covens: the coven layout and the create page read
+them for their switchers. `src/lib/viewer.ts` exports `viewerOf()`, which builds
+the viewer and that list from `getMe`, `membershipsOf(session, [session.userId])`
+and, for a verified account only, `countReceivedInvitations(session, undefined)`
+(an unverified account reads 0 and costs no query), wrapped in React `cache()`
+so the shell layout, the coven layout's switcher and the `/coven` landing's
+notice cost one set of lookups: one count statement per shell page. The count
+goes to the account menu, which shows it ([`account-menu.md`](account-menu.md)). The
 covens are listed alphabetically by name. A refused lookup (impossible for
 one's own id) throws.
 
@@ -100,9 +100,15 @@ link.
 
 ## Stories
 
-`index.stories.tsx`: `CovenPage`, `AdminPage`, `AccountPage`, `Unverified`,
-`Phone` and `PhoneAdmin`, each inside `ShellFrame` (`.ladle/shell-frame.tsx`),
-which draws the layouts' markup with fixture props.
+[`index.stories.tsx`](../../src/components/AppShell/index.stories.tsx), titled
+"Shell / App Shell", each inside `ShellFrame` (`.ladle/shell-frame.tsx`), which
+draws the layouts' markup with fixture props around a stub page. Each area's
+stub wraps and heads itself as that area's real page does: a coven's name in
+the coven layout's column, "Admin" in the admin layout's, "Your Account" or
+"Your Email" in the narrow page frame, and "Create Coven" on its panel.
+`CovenPage`, `AdminPage`, `CreatePage` (`/coven/new`: the switcher alone in the
+context row, with no section nav), `AccountPage`, `Unverified` (the email page's
+bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`.
 
 ## Testing
 

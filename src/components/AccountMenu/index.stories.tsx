@@ -4,12 +4,24 @@ import AccountMenu from '.';
 
 // Render-only; behaviour is asserted in tests/components/AccountMenu. The
 // panel hangs from the button's right edge, so each story sits at the right.
+// The wrapper keeps the menu at the top (`flex-start`), since stretched to the
+// wrapper's height the panel would open from the menu's bottom edge, and is tall
+// enough that the frame, which clips, holds the whole open panel.
 export default {
-  title: 'AccountMenu',
+  title: 'Shell / Account Menu',
 };
 
 const Right = ({ children }: { children: ReactElement }) => (
-  <div style={{ display: 'flex', justifyContent: 'flex-end', minHeight: '14rem' }}>{children}</div>
+  <div
+    style={{
+      display: 'flex',
+      justifyContent: 'flex-end',
+      alignItems: 'flex-start',
+      minHeight: '18rem',
+    }}
+  >
+    {children}
+  </div>
 );
 
 export const Closed: Story = () => (

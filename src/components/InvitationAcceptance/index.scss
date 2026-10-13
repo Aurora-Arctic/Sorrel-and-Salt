@@ -2,15 +2,15 @@
 
 // The page around it is `.page-frame--narrow` (src/app/invite/[token]/page.tsx),
 // which centres it and caps it at the forms' column, so the panel sets no
-// width of its own: a heading, a sentence or two and one button.
+// width of its own. It is a `.panel`, as sign-in's, the email page's and the
+// create page's are; its `.header` (the heading and the grant as a `.lede`)
+// is the layout primitive's, so only the stack below it is set here.
 .invitation-acceptance {
   display: flex;
   flex-direction: column;
   gap: space(3);
 }
 
-.invitation-acceptance__heading,
-.invitation-acceptance__text,
 .invitation-acceptance__actions {
   margin: 0;
 }

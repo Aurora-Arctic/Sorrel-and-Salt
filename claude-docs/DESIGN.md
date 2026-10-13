@@ -234,7 +234,7 @@ The schema entity is `workspaces`; the URL prefix is `/coven/`. This divergence 
 
 `/w/` is unreadable, and nesting workspaces under `/compendium/` would make that word mean two things. `/coven/` reads well in a URL, fits the domain, and stays out of the compendium's way.
 
-Code, schema, and prose use _workspace_. Only the URL segment says _coven_.
+Code, schema, and prose use _workspace_. The URL segment says _coven_, and the screens say _coven_ too: every label, heading, notice and dialog title (MB.119).
 
 ### Tables
 

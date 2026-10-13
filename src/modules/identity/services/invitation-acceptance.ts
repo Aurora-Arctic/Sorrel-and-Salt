@@ -38,6 +38,7 @@ const MESSAGES: Record<InvitationRefusal, string> = {
     'This invitation was declined. If you change your mind, ask whoever sent it for a new one.',
   revoked: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
   expired: 'This invitation has expired. Ask whoever sent it for a new one.',
+  closed: "The coven this invitation was for has been deleted, so it can't be accepted.",
   'different-address':
     'This invitation was sent to a different email address. Sign in with the account that uses that address.',
   unverified:
@@ -109,11 +110,16 @@ async function checkInvitation(
     return { tier: 'site', invitation, user };
   }
   if (!isWorkspaceTier(invitation)) return { refusal: 'invalid' };
-  // A deleted coven is refused here, after the address checks so a stranger
-  // learns nothing of it, and so the person never sees an Accept that fails
-  // on click. The repository write's own live-workspace check is the backstop.
+  // A deleted coven is refused here as `closed`, after the dead-link and
+  // address checks: a link in two states reports the earlier (an accepted
+  // invitation into a coven since deleted still says accepted), and a
+  // stranger learns nothing of the coven. The person never sees an Accept that
+  // fails on click. The repository write's own live-workspace check is the
+  // backstop. The invitation's workspace row always exists (workspaces are
+  // only soft-deleted), so no live coven means a deleted one, and no finder of
+  // deleted rows is needed.
   const coven = await findInvitedCoven(invitation.workspaceId);
-  if (!coven) return { refusal: 'invalid' };
+  if (!coven) return { refusal: 'closed' };
   return { tier: 'workspace', invitation, user, coven };
 }
 
@@ -128,7 +134,10 @@ async function standingOf(session: Session, token: string): Promise<InvitationCh
  */
 async function standingById(session: Session, id: string): Promise<InvitationCheck> {
   if (!RowId.safeParse(id).success) return { refusal: 'invalid' };
-  return checkInvitation(session, await findReceivedInvitation(session, id));
+  const standing = await checkInvitation(session, await findReceivedInvitation(session, id));
+  // The account page lists live covens only, so an id into a deleted one reads
+  // as none, as it did before `closed` existed; only the link names the reason.
+  return standing.refusal === 'closed' ? { refusal: 'invalid' } : standing;
 }
 
 /**
@@ -171,10 +180,9 @@ function refusalError(reason: InvitationRefusal, byId = false): Error {
  * declared the same way, which re-grants it to a person an admin revoked
  * (M5.8's recorded default); one who holds it gets no ledger row.
  *
- * @throws {NotFound} the token names no invitation, or one into a deleted
- * coven.
+ * @throws {NotFound} the token names no invitation.
  * @throws {Forbidden} the invitation is already accepted, withdrawn or
- * expired; it was sent to another address; the address is not yet verified;
+ * expired, or was for a coven since deleted; it was sent to another address; the address is not yet verified;
  * or admin changes are paused and another admin than the primary one sent it.
  */
 export async function acceptInvitation(session: Session, token: string): Promise<InvitationRow> {

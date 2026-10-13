@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import ActionFailure from '../../../../../../components/ActionFailure';
 import ListFrame, { ListBody } from '../../../../../../components/ListFrame';
 import MemberList from '../../../../../../components/MemberList';
 import RemoveControl from '../../../../../../components/MemberList/remove-control';
-import RoleFailure from '../../../../../../components/MemberList/role-failure';
 import RoleControl from '../../../../../../components/MemberList/role-control';
 import type { MemberListEntry } from '../../../../../../components/MemberList/types';
 import Notice from '../../../../../../components/Notice';
@@ -11,7 +11,8 @@ import Pager from '../../../../../../components/Pager';
 import { Forbidden } from '../../../../../../lib/errors';
 import { resolvePage } from '../../../../../../lib/pagination';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
-import { readableCursor, single } from '../../../../../../lib/search-params';
+import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
+import { readPageCursors } from '../../../../../../lib/numbered-page';
 import { displayNamesOf } from '@/modules/identity';
 import { listMembers, memberRoster, rolePermits } from '@/modules/coven';
 import type { CovenLayoutParams } from '../../types';
@@ -35,19 +36,14 @@ export default async function MembersPage({
   searchParams,
 }: CovenLayoutParams & MembersPageProps) {
   const { slug } = await params;
-  const { after, before } = await searchParams;
+  const { after, before } = readPageCursors(await searchParams);
   const { workspace, membership } = await requireCovenMembership(slug);
   const session = await requireSession();
 
-  const afterCursor = readableCursor(single(after));
-  // One cursor at a time: an address carrying both reads as `after`'s page.
-  const beforeCursor = afterCursor ? undefined : readableCursor(single(before));
   let page;
   try {
     page = await resolvePage(
-      afterCursor === undefined && beforeCursor !== undefined
-        ? { last: 25, before: beforeCursor }
-        : { first: 25, after: afterCursor },
+      after === undefined && before !== undefined ? { last: 25, before } : { first: 25, after },
       (request) => listMembers(session, workspace, request),
     );
   } catch (error) {
@@ -87,22 +83,21 @@ export default async function MembersPage({
 
   const canChangeRoles = rolePermits(membership.role, { member: ['update'] });
   const canRemove = rolePermits(membership.role, { member: ['remove'] });
-  const { hasPreviousPage, hasNextPage, startCursor, endCursor } = page.pageInfo;
-  const href = (cursor: string) => `/coven/${slug}/members${cursor}`;
 
   return (
     <>
-      {/* Raised before it is urgent: a quiet status, since it is on the page
-          from the start and asks nothing of the reader yet. */}
-      {soleOwner && (
-        <Notice kind="warn" quiet className="member-list__warning">
-          This coven has one owner. If that person loses access, nobody can manage its members. Make
-          another member an owner to be safe.
-        </Notice>
-      )}
       <ListFrame>
+        {/* Raised before it is urgent: a quiet status, since it is on the page
+            from the start and asks nothing of the reader yet. Inside the
+            frame, so the tabbed panel's own gap spaces it from the list. */}
+        {soleOwner && (
+          <Notice kind="warn" quiet>
+            This coven has one owner. If that person loses access, nobody can manage its members.
+            Make another member an owner to be safe.
+          </Notice>
+        )}
         <ListBody>
-          <RoleFailure>
+          <ActionFailure>
             <MemberList
               members={members}
               currentUserId={session.userId}
@@ -132,16 +127,9 @@ export default async function MembersPage({
                   : undefined
               }
             />
-          </RoleFailure>
+          </ActionFailure>
           <Pager
-            previousHref={
-              hasPreviousPage && startCursor
-                ? href(`?before=${encodeURIComponent(startCursor)}`)
-                : undefined
-            }
-            nextHref={
-              hasNextPage && endCursor ? href(`?after=${encodeURIComponent(endCursor)}`) : undefined
-            }
+            {...pagerHrefs(page.pageInfo, (cursor) => listHref(`/coven/${slug}/members`, cursor))}
             soft
           />
         </ListBody>

@@ -2,8 +2,7 @@ import type { Route } from 'next';
 import type { ReactNode, RefObject } from 'react';
 import type { ModalHeading } from '../Modal/types';
 import type { UserRole } from '../../lib/session';
-import type { PagerHrefs } from '../../app/(shell)/admin/types';
-import type { PagePosition } from '../../lib/types';
+import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /** One listed user: the row's own facts and the providers read beside it. */
 export interface UserListEntry {
@@ -24,7 +23,7 @@ export interface UserListEntry {
   heading: ModalHeading;
 }
 
-export interface UserListProps extends Partial<PagerHrefs> {
+export interface UserListProps extends Partial<PagerHrefs<Route>> {
   /** This page's users, in the list's order. */
   users: readonly UserListEntry[];
   /** The name-or-email filter as asked, blank for none. */
@@ -113,14 +112,14 @@ export interface ConfirmedActionProps {
   onSent?: () => void;
   /** The sentence a refusal shows; absent, the service's own, read from the GraphQL error. */
   refusal?: string;
-  /**
-   * Takes the refusal's sentence (and `undefined` when a new attempt starts)
-   * for the caller to show elsewhere; absent, it shows beside the control.
-   */
   /** A choice the modal asks beside the question, such as a role to move to; the caller holds its state. */
   choices?: ReactNode | ((sending: boolean) => ReactNode);
   /** Close the modal on success, for a control the re-read does not replace. */
   closeOnSent?: boolean;
+  /**
+   * Takes the refusal's sentence (and `undefined` when a new attempt starts)
+   * for the caller to show elsewhere; absent, it shows beside the control.
+   */
   onFailure?: (message: string | undefined) => void;
   /**
    * Drawn inside a modal already, the user's (M9.19): asks over that modal's

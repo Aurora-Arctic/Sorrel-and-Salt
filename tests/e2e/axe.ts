@@ -15,8 +15,11 @@ export async function assertNoAccessibilityViolations(page: Page) {
 // A page holds at a phone's width when nothing pushes it sideways: the
 // document is no wider than the window. Measured in the real browser, since
 // jsdom lays nothing out; 375px is the narrowest width a section signs off at
-// (claude-docs/styling.md, "Designing a section").
-export async function assertNoSidewaysScroll(page: Page) {
+// (claude-docs/styling.md, "Designing a section"). With `restore`, the
+// window goes back to its width afterwards, for a walk that goes on past the
+// measurement at the width it had.
+export async function assertNoSidewaysScroll(page: Page, { restore = false } = {}) {
+  const size = restore ? page.viewportSize() : null;
   await page.setViewportSize({ width: 375, height: 812 });
   const { scrollWidth, clientWidth, wide } = await page.evaluate(() => {
     const root = document.documentElement;
@@ -39,6 +42,7 @@ export async function assertNoSidewaysScroll(page: Page) {
     scrollWidth,
     `wider than the window: ${wide.join('; ') || 'nothing named'}`,
   ).toBeLessThanOrEqual(clientWidth);
+  if (size) await page.setViewportSize(size);
 }
 
 // Every colour eases over the theme's 400ms; a scan straight after a theme

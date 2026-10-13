@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { latestMessageTo } from './mailpit';
 import { signInAgainAs, signInAs } from './session';
@@ -47,7 +47,7 @@ async function mailedInvitePath(to: string): Promise<string> {
   return new URL(link).pathname;
 }
 
-/** The owner invites `email` as a member from the coven's People page. */
+/** The owner invites `email` as a member from the coven's Members page. */
 async function ownerInvites(page: Page, email: string): Promise<void> {
   await signInAgainAs(page, ownerId);
   await page.goto(`/coven/${COVEN_SLUG}/members`);
@@ -61,7 +61,10 @@ async function ownerInvites(page: Page, email: string): Promise<void> {
   await expect(dialog).toHaveCount(0);
 }
 
-/** What the invite page says to a signed-in reader whose link is dead. */
+/**
+ * What the invite page says to a signed-in reader whose link is dead, each
+ * refusal also measured at a phone's width.
+ */
 async function refusalAt(page: Page, path: string): Promise<string> {
   await page.goto(path);
   await expect(page.getByRole('heading', { level: 1, name: 'Your Invitation' })).toBeVisible();
@@ -70,6 +73,7 @@ async function refusalAt(page: Page, path: string): Promise<string> {
   await expect(refusal).toBeVisible();
   const message = (await refusal.textContent()) ?? '';
   expect(message).not.toContain(COVEN_NAME);
+  await assertNoSidewaysScroll(page, { restore: true });
   return message;
 }
 
@@ -181,6 +185,7 @@ test.describe('a coven’s invitation from the account page', () => {
       const see = page.getByRole('link', { name: 'See your invitations' });
       await expect(see).toBeVisible();
       await assertNoAccessibilityViolations(page);
+      await assertNoSidewaysScroll(page, { restore: true });
 
       // The account menu says so too, its count a link to the same section.
       const account = banner.getByRole('button', { name: 'Fixture Person, 1 coven invitation' });
@@ -288,6 +293,42 @@ test.describe('a declined coven invitation', () => {
       // Removing it from the list leaves the link saying what the invitee answered.
       await signInAgainAs(page, (await userIdOf(invited)) as string);
       expect(await refusalAt(page, linkPath)).toBe(declinedMessage);
+    },
+  );
+});
+
+// Last in the file: it deletes the coven every walk above shares.
+test.describe('a deleted coven’s invitation', () => {
+  test(
+    'F’s link is refused for a reason of its own once the coven is deleted',
+    { tag: ['@story-7'] },
+    async ({ page }) => {
+      const invited = address('f');
+      await ownerInvites(page, invited);
+      const linkPath = await mailedInvitePath(invited);
+
+      // F holds the invited address, verified, and the link is unexpired,
+      // unrevoked and unanswered: it would be accepted but for the deletion.
+      await signInAs(page, invited);
+      await page.goto(linkPath);
+      await expect(page.getByRole('button', { name: 'Accept Invitation' })).toBeVisible();
+
+      await withSql(
+        (sql) =>
+          sql`update workspaces set deleted_at = now(), deleted_by = ${ownerId} where id = ${covenId}`,
+      );
+      const closedMessage = await refusalAt(page, linkPath);
+      await assertNoAccessibilityViolations(page);
+
+      // Not the used link's reason, nor a broken link's.
+      expect(closedMessage).not.toBe(usedMessage);
+      expect(closedMessage).not.toBe(await refusalAt(page, '/invite/not-a-real-token'));
+      const seats = await withSql(
+        (sql) => sql`
+        select count(*)::int as count from workspace_members m join users u on u.id = m.user_id
+        where m.workspace_id = ${covenId} and u.email = ${invited}`,
+      );
+      expect(seats[0].count).toBe(0);
     },
   );
 });

@@ -11,6 +11,13 @@ const COVEN = 'coven';
  */
 const NEW = 'new';
 
+/**
+ * The landing everyone who leaves a coven is sent to: where someone in no
+ * coven lands, and which opens the first coven of someone who has another
+ * (M2.8).
+ */
+export const COVEN_LANDING_PATH = `/${COVEN}`;
+
 /** The create-workspace page's address. */
 export const NEW_COVEN_PATH = `/${COVEN}/${NEW}`;
 

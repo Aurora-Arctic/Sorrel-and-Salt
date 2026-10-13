@@ -32,7 +32,10 @@ of invitations keeps the reader at the section rather than the top of the accoun
   `Notice` takes a line of its own above the buttons (`flex-basis: 100%`).
 - **Accept** (`accept-control.tsx`) is the client island. It sends `acceptInvitationById` with the
   row's id, stays busy until the router has opened `/coven/<slug>`, and on a refusal says the
-  service's words in a `Notice` beside the button and enables Accept again. Each button is named
+  service's words and enables Accept again. The words go through `useActionFailure()`
+  (`ActionFailure`, MB.119): the account page wraps the list in one, so a refusal is one alert above
+  the list, not squeezed under a button in a phone's card. The `Notice` beside the button is only the fallback for a list
+  drawn outside an `ActionFailure`. Each button is named
   "Accept the invitation to <coven>", so the rows are told apart by name. After `router.push` it
   calls `router.refresh()`: a navigation keeps the shell's layout, so without the refresh the
   account menu's count would stay at its old figure.
@@ -42,7 +45,7 @@ of invitations keeps the reader at the section rather than the top of the accoun
   owner will see that the invitation was declined and its link will stop working; confirming sends
   `declineInvitationById` with the row's id. On success the page and the shell are read again
   (`router.refresh()`), so the row and the account menu's count go. On a refusal the service's words
-  appear in a `Notice` beside the button, as Accept's do. Nothing is granted or seated: the person
+  appear in a `Notice` beside the button (Decline is a `ConfirmedAction`, which MB.124 moves, so it does not report to an `ActionFailure` yet). Nothing is granted or seated: the person
   is not a member, and the invitation cannot be accepted afterwards by link or by id. Declining
   is final; to join, they ask the owner to invite them again.
 - **The inviter** is shown as "from <name>" only when known; a deleted account shows nothing.
@@ -50,7 +53,11 @@ of invitations keeps the reader at the section rather than the top of the accoun
   it used to run straight on from the name.
 - **No region of its own.** It is a `div.received-invitations`, not a labelled `<section>`: the
   account page's Invitations section is the region, named by its heading, so a second landmark
-  with the same name would only repeat it.
+  with the same name would only repeat it. The table keeps its own name, "Your Invitations", rather
+  than taking the heading's through `aria-labelledby`: the heading already names the region, the
+  lede sits between the two, and the same words twice in a row is what the review set out to stop.
+- **The empty line is live.** The account page draws the section whether or not anything waits, so
+  "No invitations are waiting." shows when the list is empty (MB.119 checked this).
 - **It lives in a `ListFrame`**, since the soft pager ends navigate through it, as
   `PendingInvitations` does.
 
@@ -70,9 +77,19 @@ explain it. Here, in a stacked table:
   line at a phone's width. Each cell is placed by its column's class
   (`received-invitations__coven`, `__role`, `__expires`).
 
-These are the owner's calls at M10.32; the section's design review settles the rest.
+These are the owner's calls at M10.32. MB.119 reviewed the rest and added nothing: the
+refusal's alert is `ActionFailure`'s, which has no styling of its own.
+
+## Stories
+
+`Account / Received Invitations` (`index.stories.tsx`), each inside the account page's section as the
+page draws it (a panel in the narrow frame, under its head and an `ActionFailure`), since the
+stacked rows depend on the panel's width: `OneInvitation`, `SeveralInvitations`,
+`NoInvitations` (the empty line), `SecondPage` (the pager), and `OnePhoneDark`, `OnePhoneLight`,
+`SeveralPhoneDark` and `SeveralPhoneLight` at 375px, where the rows stack.
 
 ## Tests
 
-`tests/components/ReceivedInvitations/index.test.tsx`; the account page's section is in
-`tests/app/(shell)/account/page.test.tsx`, and the landing's notice in `tests/app/(shell)/coven/landing.test.tsx`.
+`tests/components/ReceivedInvitations/index.test.tsx` (a refused Accept is said above the list inside
+an `ActionFailure`, and beside the row outside one); the account page's section is in
+`tests/app/(shell)/account/page.test.tsx` and the landing's notice in `tests/app/(shell)/coven/landing.test.tsx`.

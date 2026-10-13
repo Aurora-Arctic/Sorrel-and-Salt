@@ -43,3 +43,11 @@ export const WithDeclined: Story = () => (
 );
 
 export const Empty: Story = () => <PendingInvitations workspaceId="w" invitations={[]} />;
+
+// A declined row among the pending ones, at phone width: the row drawn as a
+// card, "Declined" in its badge, Remove in place of Revoke.
+export const WithDeclinedPhoneDark: Story = () => <WithDeclined />;
+WithDeclinedPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const WithDeclinedPhoneLight: Story = () => <WithDeclined />;
+WithDeclinedPhoneLight.meta = { theme: 'light', width: 375 };

@@ -6,13 +6,6 @@
 // `.data-table` primitives (claude-docs/styling.md); nothing here styles past
 // the tokens until the section's design review.
 
-// The sole-owner warning above the list, spaced from the refusal notice that can
-// follow it; compounded with `.notice`, whose primitive is `body .notice` in the
-// app, so a lone class would lose to it.
-.notice.member-list__warning {
-  margin-bottom: space(4);
-}
-
 // The name, then "You" beside it on the member's own row.
 .member-list__name {
   display: inline-flex;
@@ -48,17 +41,12 @@
   }
 }
 
-// The Change Role button, at the cell's right edge, given about the same room
-// on every row so the buttons line up down the column.
+// The Change Role button, at the cell's right edge. Every row holds the one
+// button, so the buttons are the same width and line up without a minimum.
 .member-list__actions {
   display: inline-flex;
   gap: space(2);
   margin-inline-start: auto;
-
-  .btn {
-    min-width: 9ch;
-    justify-content: center;
-  }
 }
 
 // The Remove column, the shared dangerous-action column Impersonate is

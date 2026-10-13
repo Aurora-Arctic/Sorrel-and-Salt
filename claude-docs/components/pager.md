@@ -69,6 +69,13 @@ position and Next together down to a 320px screen. Each chevron sits in
 `.pager__mark`, a box a label's em wide, so either guillemet leaves its
 button the same size. `index.scss` holds nothing of its own.
 
+## Stories
+
+[`index.stories.tsx`](../../src/components/Pager/index.stories.tsx), `Layout /
+Pager`, each in a `ListFrame`, which holds the navigation a pager reads:
+`FirstPage`, with Next only; `MiddlePage`, with both and the position
+`2 of 3`; and `LastPage`, with Prev only.
+
 ## Testing
 
 `tests/components/Pager/index.test.tsx` owns paging for every list: both ends

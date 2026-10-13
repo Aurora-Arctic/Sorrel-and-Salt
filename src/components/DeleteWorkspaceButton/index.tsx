@@ -3,9 +3,10 @@
 import { useRouter } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
+import { COVEN_LANDING_PATH } from '../../lib/coven-path';
 import { graphqlRequest } from '../../lib/graphql-client';
 import ConfirmedAction from '../UserList/confirmed-action';
-import { useActionFailure } from '../WorkspaceActions/action-failure';
+import { useActionFailure } from '../ActionFailure';
 import type { DeleteWorkspaceButtonProps } from './types';
 
 // An owner's Delete on the coven index page (M6.14). It asks first, naming the
@@ -31,10 +32,10 @@ const DeleteWorkspaceButton = ({
   const failure = useActionFailure();
   return (
     <ConfirmedAction
-      label="Delete Workspace"
-      accessibleName="Delete Workspace"
+      label="Delete Coven"
+      accessibleName="Delete Coven"
       openClass="btn btn--destructive"
-      title="Delete Workspace"
+      title="Delete Coven"
       question={
         <>
           Delete <strong>{name}</strong>? Its ingredients and its grimoire become inaccessible to
@@ -47,8 +48,13 @@ const DeleteWorkspaceButton = ({
       onFailure={failure?.report}
       inModal={inModal}
       send={() => graphqlRequest(DeleteWorkspaceDocument, { workspaceId })}
-      // The coven is gone for this user too, so the page cannot be read again.
-      onSent={() => router.replace('/')}
+      // The coven is gone for this user too, so the page cannot be read again:
+      // replace it with the landing, and refresh so the shell's switcher stops
+      // listing it (a client-side replace does not re-run the layout).
+      onSent={() => {
+        router.replace(COVEN_LANDING_PATH);
+        router.refresh();
+      }}
     />
   );
 };

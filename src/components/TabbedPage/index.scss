@@ -182,7 +182,7 @@ $track-inset: calc(1px + 0.125rem);
 }
 
 // A list, not bulleted: `typography-base`'s ◆ marker, indent and item
-// margins cleared, as `.link-row` clears them. The pills keep to one line at
+// margins cleared. The pills keep to one line at
 // their own widths at every width; a row wider than its line scrolls inside
 // the track rather than wrapping or squeezing, with no scrollbar, which would
 // cross the open pill's foot inside a track this thin; the label cut off at
