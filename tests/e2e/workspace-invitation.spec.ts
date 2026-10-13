@@ -47,7 +47,7 @@ async function mailedInvitePath(to: string): Promise<string> {
   return new URL(link).pathname;
 }
 
-/** The owner invites `email` as a member from the coven's People page. */
+/** The owner invites `email` as a member from the coven's Members page. */
 async function ownerInvites(page: Page, email: string): Promise<void> {
   await signInAgainAs(page, ownerId);
   await page.goto(`/coven/${COVEN_SLUG}/members`);
