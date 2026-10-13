@@ -167,7 +167,7 @@ without a page routed to it.
   button, notices, a form built from the field primitives (a label row with
   its required mark and `InfoTip` among them), the switch off, on and
   disabled either way, through `SwitchField`, the page frame
-  and its narrow form, the link row with its current-page link, the data
+  and its narrow form (with the account page's heading and `PageNav`), the data
   table, the pager (in a list navigation that goes nowhere, since `Pager`
   reads its `ListFrame`'s), the filter row with a switch, the page header, the four providers' sign-in buttons in
   each state with their brand parts printed from `$brand-palettes`, the

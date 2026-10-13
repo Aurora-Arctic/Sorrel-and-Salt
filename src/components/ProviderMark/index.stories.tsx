@@ -10,14 +10,14 @@ export default {
 };
 
 const Marks = () => (
-  <ul className="link-row">
+  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem 1.5rem' }}>
     {SOCIAL_PROVIDERS.map((provider) => (
-      <li key={provider.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <span key={provider.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
         <ProviderMark id={provider.id} />
         {provider.label}
-      </li>
+      </span>
     ))}
-  </ul>
+  </div>
 );
 
 export const Default: Story = () => <Marks />;

@@ -684,42 +684,6 @@ export default function Foundations(): ReactElement {
         </div>
       </section>
 
-      <section id="fd-link-row">
-        <SectionHead eyebrow="_primitives.scss · .link-row" title="Link Rows">
-          A wrapping row of links that is not a bulleted list: a page's own nav, the admin nav. The
-          list's ◆ marker, indent and item margins are cleared, so the row starts at the column's
-          edge and wraps on a phone rather than overflowing it. The link to the page you are on
-          carries <code>aria-current="page"</code>, drawn firmer and with a heavy underline rather
-          than in another colour.
-        </SectionHead>
-        <div className="panel">
-          <nav aria-label="Example Sections">
-            <ul className="link-row">
-              <li>
-                <a href="#fd-link-row" aria-current="page">
-                  Name
-                </a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Email Address</a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Sign-In Methods</a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Categories</a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Ingredient Forms</a>
-              </li>
-              <li>
-                <a href="#fd-link-row">Invitations</a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-      </section>
-
       <section id="fd-data-table">
         <SectionHead eyebrow="_primitives.scss · .data-table" title="Data Tables">
           A list's table inside its <code>.data-table-frame</code>, banded on the card surface so a
@@ -873,7 +837,7 @@ export default function Foundations(): ReactElement {
           rather than a button: the account page's rows and the admin user list. Decorative, since
           the provider's name always sits beside it.
         </SectionHead>
-        <ul className="panel link-row fd-marks">
+        <ul className="panel fd-marks">
           {SOCIAL_PROVIDERS.map((provider) => (
             <li key={provider.id}>
               <ProviderMark id={provider.id} />
