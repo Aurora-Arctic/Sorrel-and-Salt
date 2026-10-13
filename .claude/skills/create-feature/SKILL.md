@@ -1,5 +1,7 @@
 ---
 name: create-feature
+model: haiku
+effort: low
 description: Use when the user asks to start a new feature branch (e.g. "create a feature branch", "start a new feature", "/create-feature"). Asks for the feature's name, then branches off the latest staging as `feature/<slug>`.
 ---
 

@@ -1,5 +1,7 @@
 ---
 name: create-main-sync
+model: sonnet
+effort: medium
 description: Use when the user asks to sync main into staging, bring main-only changes (e.g. a hotfix) back down into staging, or catch staging up with main (e.g. "sync main into staging", "bring the hotfix back to staging", "/create-main-sync"). Branches off the latest `main` as `main-sync/<timestamp>`, then opens a PR into `staging` summarizing what's included.
 ---
 

@@ -1,5 +1,7 @@
 ---
 name: create-hotfix
+model: haiku
+effort: low
 description: Use when the user asks to start a new hotfix branch (e.g. "create a hotfix branch", "start a hotfix", "/create-hotfix"). Asks for the hotfix's name, then branches off the latest main as `hotfix/<slug>`.
 ---
 
