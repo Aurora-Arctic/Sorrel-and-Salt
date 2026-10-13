@@ -12,9 +12,11 @@ bar's links are client code.
 shared layout without adding to the URL. The root layout stays free of the
 session so the public pages (sign-in, and the compendium to come, MB.80) can
 be rendered ahead of time. Everything that needs a signed-in viewer sits
-under `(shell)`, whose layout calls `requireSession()` and then `viewerOf()`.
-Pages still call their own guards, because a layout does not re-run on a
-client-side navigation.
+under `(shell)`, whose layout calls `viewerOf()`. That sends a signed-out
+visitor to sign in, but never sends an unverified account to the email page:
+the page does that (MB.256, [Route protection](../auth/route-protection.md),
+"Where the email redirect is thrown"). Pages call their own guards anyway,
+because a layout does not re-run on a client-side navigation.
 
 `src/app/(shell)/forbidden.tsx` sits in the group so that a signed-in
 non-admin's 403 draws inside the shell: a segment's `forbidden` boundary sits

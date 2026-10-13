@@ -90,3 +90,42 @@ test('sends an unverified account to the email page instead', async ({ page }) =
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
+
+// MB.256: a link followed into the shell is a client-side navigation, which
+// once refetched the email page about every 80 ms without end. Settled means
+// two quiet seconds with no further fetch of it.
+test('settles an unverified account on the email page after a link into the shell', async ({
+  page,
+}) => {
+  await signInAs(page, 'unverified-link@account-page.test', ['discord'], 'user', {
+    emailVerified: false,
+  });
+  await page.goto('/');
+
+  await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page).toHaveURL('/account/email?next=%2Fcoven');
+  await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
+
+  const refetch = page.waitForRequest((request) => request.url().includes('/account/email'), {
+    timeout: 2000,
+  });
+  await expect(refetch).rejects.toThrow();
+});
+
+// The same by the admin landing, whose own layout under the shell also sends
+// an unverified account to the email page.
+test('settles an unverified admin on the email page after a link into /admin', async ({ page }) => {
+  await signInAs(page, 'unverified-admin-link@account-page.test', ['discord'], 'admin', {
+    emailVerified: false,
+  });
+  await page.goto('/');
+
+  await page.getByRole('link', { name: 'Continue' }).click();
+  await expect(page).toHaveURL('/account/email?next=%2Fadmin');
+  await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
+
+  const refetch = page.waitForRequest((request) => request.url().includes('/account/email'), {
+    timeout: 2000,
+  });
+  await expect(refetch).rejects.toThrow();
+});
