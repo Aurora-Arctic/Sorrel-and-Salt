@@ -8,7 +8,7 @@ import ImpersonationBanner from '.';
 // pointer nears the top; on a touch screen, which the review screenshots
 // emulate, it sits in the page's flow at the top, shown in full.
 export default {
-  title: 'Shell / Impersonation Banner',
+  title: 'Layout / Impersonation Banner',
 };
 
 export const Default: Story = () => (

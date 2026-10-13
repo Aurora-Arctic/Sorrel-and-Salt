@@ -4,7 +4,7 @@ import ThemeToggle from '.';
 // Render-only; behaviour is asserted in tests/components/ThemeToggle. A story
 // pins a theme with `.meta = { theme }`, which the decorator honours over the toolbar.
 export default {
-  title: 'Shell / Theme Toggle',
+  title: 'Layout / Theme Toggle',
 };
 
 // Follows the toolbar's theme control. The first four stories draw the

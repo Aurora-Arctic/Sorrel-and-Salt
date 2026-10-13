@@ -78,7 +78,7 @@ screenshots. The button is
 ## Stories
 
 [`index.stories.tsx`](../../src/components/ImpersonationBanner/index.stories.tsx),
-`Shell / Impersonation Banner`: `Default`, the banner alone, and `PhoneDark` and `PhoneLight`,
+`Layout / Impersonation Banner`: `Default`, the banner alone, and `PhoneDark` and `PhoneLight`,
 the banner over the shell (`ShellFrame`, `.ladle/shell-frame.tsx`) at 375px,
 where the app puts it: first in the body, above the shell's bar. A desktop browser can hover, so it shows the
 banner tucked; the review screenshots emulate a touch screen

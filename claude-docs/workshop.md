@@ -39,14 +39,15 @@ without a page routed to it.
   2. **A piece the app draws in one area goes under that area's group**, in the
      order a person meets them: **Pages** (a whole page with no area of its own:
      Welcome, Not Authorized, the invitation page), **Sign In**, **Shell** (the
-     chrome around a page: the bar, the account menu, the context row, the
-     impersonation banner and the theme switch, even where the root layout
-     draws one on a page without the bar), **Account**, **Coven**, **Admin**
+     bar and what sits in it: the account menu, the context row),
+     **Account**, **Coven**, **Admin**
      and **Emails**. `Coven / Member List`, `Admin / Group List`,
      `Account / Name Form`.
   3. **A piece the app draws in more than one area goes under its kind**:
      **Forms** (fields and the controls inside them), **Layout** (frames,
-     lists, tables, pagers and what every page carries), **Navigation** and
+     lists, tables, pagers and what every page carries, inside the shell or
+     not: the theme switch and the impersonation banner, which the root
+     layout draws on pages without the bar too), **Navigation** and
      **Surfaces** (what says or holds something on the page: a notice, a
      modal, a provider's mark). `Forms / Field`, `Layout / Pager`.
   4. **Titles name the piece as the screens do**, so `Coven`, never

@@ -158,7 +158,7 @@ look differs.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/ThemeToggle/index.stories.tsx),
-titled "Shell / Theme Toggle" — five renders, no test ids and no snapshots; behaviour is asserted in
+titled "Layout / Theme Toggle" — five renders, no test ids and no snapshots; behaviour is asserted in
 `tests/components/ThemeToggle/index.test.tsx`, not here.
 
 - **Default** — follows the toolbar theme control. Default, Light, Dark and
