@@ -49,7 +49,13 @@ rule on its left edge and the same weight as the bar's, with no fill, so a hover
 
 ## Stories
 
-`Closed`, `Open`, `OpenUnverified`, `OpenPhone` (the links and the theme switch), `OpenAtSevenHundred` (the links in the panel at 700px, with no theme item).
+[`index.stories.tsx`](../../src/components/AccountMenu/index.stories.tsx),
+titled "Shell / Account Menu": `Closed`, `Open`, `OpenUnverified` (Sign Out
+alone), `OpenPhone` (the links and the theme switch, at 375px) and
+`OpenAtSevenHundred` (the links in the panel at 700px, with no theme item).
+Each sits at the right, since the panel hangs from the button's right edge. The
+wrapper holds the menu at its top and is tall enough for the open panel,
+because the workshop's frame clips what overflows it.
 
 ## Testing
 
