@@ -146,6 +146,16 @@ without a page routed to it.
   `ADMIN_PAGES`, an `action`, optionally the nav). Nine stories drew this by
   hand before MB.115. It is the layout's markup only; the app's own layout
   reads the session.
+- **`shell-frame.tsx`** — the application shell around a story, as the
+  shell and area layouts draw it: the bar, then a coven's or the admin
+  area's context row, then the page. `ShellFrame` takes the `area`, a
+  `viewer` by what differs from a verified member, the viewer's covens and
+  the address to pretend to be on. Its `FIXTURE_WORKSPACES` carry each
+  coven's `canReadMembers` as the layout works it out from the role (a
+  member of the first two, a viewer of the third), so the coven nav offers
+  Members as it would in the app. Like `admin-frame.tsx` it is markup only;
+  `tsc` does not reach it (below), so a prop the components drop or gain is
+  caught only by reading it. `AppShell`'s stories use it.
 - **`fixtures.ts`** — invented rows the admin stories share, so a form's story
   and its list's story offer the same data: `GROUP_NAMES` (four names per kind
   of group), fixed ids with `asOptions()` and `asSlugs()` to shape them for a
