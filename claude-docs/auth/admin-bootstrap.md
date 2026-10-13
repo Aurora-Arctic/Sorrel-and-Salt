@@ -524,7 +524,7 @@ component docs are [`components/name-form.md`](../components/name-form.md),
   the provider, when it is one on the roster, so the sentence shows in that
   provider's row. The heading stands alone; Sign Out is in the shell's account menu
   (`SignOutButton`,
-  [`components/sign-out-button.md`](../components/sign-out-button.md)):
+  [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only page a

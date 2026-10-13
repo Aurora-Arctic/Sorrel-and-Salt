@@ -114,7 +114,7 @@ explaining it:
    `aria-describedby`.
 4. Sign In Again calls `signOut()` from `src/lib/auth-client.ts`, as
    SignOutButton does, busy as "Signing Out" meanwhile
-   ([`sign-out-button.md`](sign-out-button.md)). Its success is a full load
+   ([`account-menu.md`](account-menu.md), "Contracts"). Its success is a full load
    of `signInPath('/account')` (`/sign-in?next=%2Faccount`), so the sign-in
    lands back here with a new, fresh session. Its failure, a refusal or a
    dropped connection, is `GENERIC_FAILURE` in an error `Notice` beneath the

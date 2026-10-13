@@ -6,7 +6,7 @@ import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
 import { isAtPath } from '../../lib/at-path';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
-import SignOutButton from '../SignOutButton';
+import SignOutButton from './sign-out-button';
 import { initialsOf } from './initials';
 import type { AccountMenuProps } from './types';
 import './index.scss';

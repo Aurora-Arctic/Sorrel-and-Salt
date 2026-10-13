@@ -1,9 +1,0 @@
-@use '../../scss/variables' as *;
-
-// Layout only: the button, and beside it a failure, on one wrapping line.
-.sign-out-button {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(3);
-}
