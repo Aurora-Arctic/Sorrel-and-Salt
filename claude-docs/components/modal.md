@@ -444,6 +444,29 @@ caps itself at that width and the wide modal only drew empty space beside it.
 M8.16's IngredientForm modal should take the default too, for the same reason. It changes only the width; the body scrolls
 within the viewport's height either way.
 
+## Stories
+
+[`index.stories.tsx`](../../src/components/Modal/index.stories.tsx), under
+`Surfaces / Modal`. Each sets `meta = { iframed: true }`, since the dialog
+sits in the top layer ([`workshop.md`](../workshop.md)); each owner keeps an
+Open button to bring it back after Close or Escape.
+
+- `WithAForm`, the default column around a small form, and `Wide`, the wide
+  size around a longer one.
+- `Editing`, an edit dialog's head: the eyebrow, a long title and a binomial
+  as the qualifier. `EditingDark`, `EditingLight`, `EditingPhoneDark` and
+  `EditingPhoneLight` pin its theme and, on a phone, its 375px width.
+- `OpenedByItsAddress`, a `RouteModal` with `content`, as an address opens it.
+  `Loading`, with `LoadingPhoneDark` and `LoadingPhoneLight`, shows the
+  pressed row's head over the skeleton, through a `RouteModalContext` value
+  whose navigation never arrives.
+- `AskingToDiscardChanges`, with `PhoneDark` and `PhoneLight`, the discard
+  question over a form with a change; Escape or Close there flashes it.
+  `AskingToConfirm` shows `ConfirmQuestion`'s Delete and Keep It, Delete busy
+  once pressed.
+- `WithPickers`, a picker and a multi-picker, where Escape closes an open list
+  before it closes the modal.
+
 ## Testing
 
 `tests/components/Modal/index.test.tsx`. jsdom implements neither
@@ -492,8 +515,3 @@ press with a modifier is left to the link, a link outside a provider stays
 plain, the contents replace the skeleton in the same dialog, and a close while
 loading cancels the press. Each admin page test still asserts its modal's
 close href, and the e2e specs open and close the modals in a real browser.
-
-Stories: `OpenedByItsAddress` shows a modal with `content`, as an address
-opens it. `Loading`, with its `LoadingPhoneDark` and `LoadingPhoneLight`
-pair, shows the pressed row's head over the skeleton, through a
-`RouteModalContext` value whose navigation never arrives.
