@@ -12,7 +12,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.6   | Spell recipe view page                                                                                                   | Wave 13 | M10.22                 |
 | MB.7   | Application nav shell                                                                                                    | Wave 9  | M8.16, M8.17           |
 | MB.8   | Zod schema for spells                                                                                                    | Wave 13 | M10.10                 |
-| MB.9   | `ingredientsById` DataLoader                                                                                             | Wave 11 | M8.5, M9.4             |
+| MB.9   | `ingredientsById` DataLoader                                                                                             | Wave 11 | M9.4                   |
 | MB.10  | `usersById` display-name DataLoader                                                                                      | Wave 9  | M6.11, M6.12, M6.18    |
 | MB.11  | GraphQL field exposing the fuzzy duplicate service                                                                       | Wave 8  | M5.10                  |
 | MB.12  | Finish the secrets matrix and verify real OAuth sign-in                                                                  | Wave 6  | M2.3                   |
@@ -1395,7 +1395,9 @@ _Acceptance criteria:_
 
 _Story:_ As an operator, I want ingredient resolution batched so that a list query costs one round trip rather than one per row.
 
-M8.5 and M9.4 both assume batched ingredient resolution; no task built the loader. Constructed per request, never at module level.
+No task built a batched ingredient read, so this one does. M9.4's `InventoryItem.ingredient` and, later, M10's `SpellIngredient.ingredient` resolve through it. Constructed per request, never at module level.
+
+**Amended 2026-10-13 after the Wave 11 review:** the loader is built the way the others are: with `defineSignedInLoader` (`src/graphql/loaders/define-loader.ts`), registered in `LOADERS` in `src/graphql/loaders/index.ts`. It takes a parent-row key, `{ id, workspaceId }`, with a `cacheKeyFn` on the id alone, as `src/modules/ingredients/loaders/ingredient-children.ts` does. One batch reads the compendium tier plus the keyed workspace's own ingredients under the session, in one query, and puts the rows back in the order of the ids with `inIdOrder` (`src/lib/in-id-order.ts`), as `users-by-id.ts` does, so a missing or soft-deleted id resolves to null. "One query per batch" is asserted the way the other loaders do it: a `vi.hoisted` spy on `@/db/repository` and `toHaveBeenCalledTimes(1)`. There is no `variantsById`: `DESIGN.md` says a variant is read only beneath its parent, never by a bare id, so a stock row's variant resolves through the existing `variantsByIngredient` loader, as `Substitute.variant` does. Only M9.4 assumed this loader; M8.5 did not.
 
 _Acceptance criteria:_
 
@@ -1403,6 +1405,7 @@ _Acceptance criteria:_
 - Constructed per request
 - Soft-deleted rows are not returned
 - A missing id resolves to null rather than throwing
+- A row of another workspace resolves to null, not to the row
 
 **MB.10 — `usersById` display-name DataLoader** · 1.5h
 
