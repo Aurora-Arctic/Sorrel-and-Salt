@@ -38,7 +38,7 @@ member, a viewer) gets the plain one, and the page reads nothing for them.
   green Promote and Leave; "Delete It", whose line says every other member loses access, swaps the
   confirm for the red Delete Coven. Both ways out are always on screen together.
 - **The new owner is found by typing, with their role.** Under the hand-over choice, a type-ahead
-  box (`ComboboxTypeahead`) narrows the other members by name as the owner types; each row reads
+  box (`ComboboxTypeahead`) in a `FieldShell`, labelled "New Owner" with the required mark, narrows the other members by name as the owner types; each row reads
   the member with their role, "Fixture B (Member)", and once picked the box shows the role after the
   name as its qualifier, with what that role may do (`WORKSPACE_ROLE_ACCESS`) in the tooltip. Typing
   matches the name alone, never the role (the owner's call). Nobody is chosen until one is picked,
@@ -58,6 +58,9 @@ member, a viewer) gets the plain one, and the page reads nothing for them.
   `DeleteWorkspaceButton` with `inModal` and `onlyOwner`, so its confirmation (which names what
   becomes inaccessible) asks over the dialog, and nothing is deleted from the dialog itself. The
   deletion's radio line says every other member loses access before it is chosen.
+- **The button is a `ModalButton`** ([`modal.md`](modal.md)), so the focus returns to Leave Coven
+  however the dialog closes: Cancel, Escape, Close, or a click outside. `Modal` restores nothing
+  itself (MB.119).
 - **A refusal is said inside the dialog,** through its own `ActionFailure`, not behind it on the page.
 - **The service still decides.** Bypassing the dialog, `leaveWorkspace` refuses the only owner.
 
