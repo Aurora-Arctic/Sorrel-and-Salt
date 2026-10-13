@@ -70,9 +70,9 @@ export default async function CovenLandingPage() {
         ) : (
           <p>
             Ask someone who already uses Sorrel &amp; Salt to invite you. An invitation sent to the
-            address on this account shows up on your account page, and you can open the link they
+            address on this account shows up on your account page, or you can open the link they
             email you instead. Once you accept, your coven opens here. If you would rather start a
-            coven of your own, an admin can approve that.
+            coven of your own, an admin must approve that.
           </p>
         )}
       </section>
