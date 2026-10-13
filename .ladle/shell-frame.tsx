@@ -19,6 +19,7 @@ export const FIXTURE_VIEWER: ShellViewer = {
   isAdmin: false,
   canCreate: true,
   verified: true,
+  pendingInvitations: 0,
 };
 
 // `canReadMembers` is what the viewer's role there may do, as the layout
