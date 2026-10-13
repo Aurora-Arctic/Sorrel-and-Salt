@@ -85,6 +85,7 @@ export const CategoriesOnePageOfSeveral: Story = () => (
     groups={CATEGORY_GROUPS}
     previousHref={groupedValuesHref('category', { before: 'cursor' })}
     nextHref={groupedValuesHref('category', { after: 'cursor' })}
+    position={{ page: 2, pages: 3 }}
   />
 );
 
@@ -98,6 +99,7 @@ export const CategoriesFirstPage: Story = () => (
     filter={NO_FILTER}
     groups={CATEGORY_GROUPS}
     nextHref={groupedValuesHref('category', { after: 'cursor' })}
+    position={{ page: 1, pages: 2 }}
   />
 );
 
