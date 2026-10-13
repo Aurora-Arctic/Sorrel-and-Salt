@@ -31,6 +31,13 @@ without a page routed to it.
   `PhoneLight` stories, `meta = { theme, width: 375 }` as the
   Foundations page has, so a review sees the page at phone width in both
   themes without touching the toolbar.
+- **A story's title is a group, then the piece, both in title case** (M10.33).
+  A piece that lives in one place is grouped by that place: `Pages / Welcome`,
+  `Emails / Verify Email`, `Admin / Group List`, `Coven / Member List`. A piece
+  several places share is grouped by its kind: `Forms / Field`,
+  `Layout / Pager`. The sidebar then reads as the app does, and no component
+  sits loose at the top level. Ladle builds a story's id from its title, so a
+  title change moves the id, and with it any `?story=` link to it.
 - `*.stories.tsx` is excluded from `tsc` while `@ladle/react`'s bundled types
   don't pass `strict`; `ladle build` still compiles stories through esbuild.
   Test files are not excluded — `tests/` is in tsconfig's `include` and `tsc`
