@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
-import { Forbidden } from '@/lib/errors';
+import { Forbidden, NotFound } from '@/lib/errors';
 import { invitationSender } from '@/lib/invitation-mail';
 import type { Session } from '@/lib/session';
 import type { Message } from '@/lib/types';
@@ -15,7 +15,7 @@ import {
   type WorkspaceRow,
 } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
-import { acceptInvitation, invitationStanding } from '@/modules/identity';
+import { acceptInvitation, acceptInvitationById, invitationStanding } from '@/modules/identity';
 import {
   createWorkspaceIngredient,
   deleteWorkspaceIngredient,
@@ -297,6 +297,37 @@ describe('Story 4: Invite someone to my workspace by email with a chosen role (v
     await acceptInvitation(invited, token);
     expect((await invitationFor(INVITED)).accepted_by).toBe(invited.userId);
   });
+
+  it("refuses another verified account the same invitation by its id, and admits the address's holder", async () => {
+    const stranger = await insertInvitee(STRANGER);
+    const invited = await insertInvitee(INVITED);
+    const row = await createInvitation(
+      asUser(A),
+      WORKSPACE_W_ID,
+      { email: INVITED, role: 'member' },
+      sender(),
+    );
+
+    // Why it could have succeeded: the row is pending, the stranger is a
+    // verified signed-in account, and the id is the one the holder will use.
+    expect(await invitationFor(INVITED)).toMatchObject({
+      id: row.id,
+      accepted_at: null,
+      revoked_at: null,
+    });
+    const [verified] = await sql`select email_verified from users where id = ${stranger.userId}`;
+    expect(verified.email_verified).toBe(true);
+
+    await expect(acceptInvitationById(stranger, row.id)).rejects.toThrow(NotFound);
+    expect((await invitationFor(INVITED)).accepted_at).toBeNull();
+    await expect(assertMembership(stranger, WORKSPACE_W_ID, { spell: ['read'] })).rejects.toThrow(
+      Forbidden,
+    );
+
+    // The same id, from the address's holder, is accepted.
+    await acceptInvitationById(invited, row.id);
+    expect((await invitationFor(INVITED)).accepted_by).toBe(invited.userId);
+  });
 });
 
 describe("Story 5: Revoke a pending invitation before it's accepted.", () => {
@@ -370,6 +401,35 @@ describe('Story 6: Accept an invitation and land in the workspace.', () => {
     expect(membership.role).toBe('viewer');
     const [after] = await sql`select can_create_workspace from users where id = ${invited.userId}`;
     expect(after.can_create_workspace).toBe(true);
+  });
+
+  it("accepts from the landing by the invitation's id, with the same seat, stamp and grant", async () => {
+    const invited = await insertInvitee(INVITED);
+    const [before] = await sql`
+      select can_create_workspace from users where id = ${invited.userId}
+    `;
+    expect(before.can_create_workspace).toBe(false);
+    const row = await createInvitation(
+      asUser(A),
+      WORKSPACE_W_ID,
+      { email: INVITED, role: 'viewer' },
+      sender(),
+    );
+    await expect(assertMembership(invited, WORKSPACE_W_ID, { spell: ['read'] })).rejects.toThrow(
+      Forbidden,
+    );
+
+    const accepted = await acceptInvitationById(invited, row.id);
+
+    expect(accepted).toMatchObject({ acceptedBy: invited.userId, workspaceId: WORKSPACE_W_ID });
+    expect(accepted.acceptedAt).toBeInstanceOf(Date);
+    expect((await assertMembership(invited, WORKSPACE_W_ID, { spell: ['read'] })).role).toBe(
+      'viewer',
+    );
+    const [after] = await sql`select can_create_workspace from users where id = ${invited.userId}`;
+    expect(after.can_create_workspace).toBe(true);
+    // The mailed link is spent with it.
+    await expect(acceptInvitation(invited, mailedToken(INVITED))).rejects.toThrow(Forbidden);
   });
 });
 

@@ -155,3 +155,44 @@ test.describe(
     });
   },
 );
+
+test.describe('a coven’s invitation from the landing', () => {
+  test(
+    'D finds it on /coven and accepts it there, and the mailed link is then spent',
+    { tag: ['@story-2', '@story-6'] },
+    async ({ page }) => {
+      const invited = address('d');
+      await ownerInvites(page, invited);
+      const linkPath = await mailedInvitePath(invited);
+
+      // Another signed-in account, with no seat anywhere, sees none of it.
+      await signInAs(page, address('other'));
+      await page.goto('/coven');
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await expect(page.getByRole('table', { name: 'Your Invitations' })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /^Accept the invitation to / })).toHaveCount(0);
+
+      // D holds the invited address, verified, and never opens the mail.
+      const { userId } = await signInAs(page, invited);
+      await page.goto('/coven');
+      const table = page.getByRole('table', { name: 'Your Invitations' });
+      await expect(table).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      expect(await page.content()).not.toContain(linkPath);
+      await page.getByRole('button', { name: `Accept the invitation to ${COVEN_NAME}` }).click();
+
+      await expect(page).toHaveURL(new RegExp(`/coven/${COVEN_SLUG}$`));
+      await expect(page.getByRole('heading', { level: 1, name: COVEN_NAME })).toBeVisible();
+      const [seat] = await withSql(
+        (sql) => sql`
+        select role::text from workspace_members
+        where workspace_id = ${covenId} and user_id = ${userId} and deleted_at is null`,
+      );
+      expect(seat.role).toBe('member');
+
+      // The link D was mailed is the same invitation, now accepted.
+      const accepted = await refusalAt(page, linkPath);
+      expect(accepted).toBe(usedMessage);
+    },
+  );
+});
