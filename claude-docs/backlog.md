@@ -11,8 +11,7 @@
 
 ### Feature Additions
 
-- [ ] We need spell recipes and spell "jars" completed. I.E. The recipe is how to make it the completed is number of times completed and reduces stock. Completed should allow notes. Also has private and coven public options.
-- [ ] Add steps to spells so the order of combination and any ritual can be recorded.
+- [ ]
 
 ### Launch - PUBLIC
 
