@@ -1,29 +1,60 @@
-- [ ] Make sure to use Lexend and choose font.
-- [ ] Design, design, design.
-- [ ] Choose colors.
-- [ ] Setup llms.txt and ai-catalog.json
-- [ ] V2
-  - [ ] Subscription billing — the requirements and the Stripe plugin's fit
-        are in DESIGN.md §13 (MB.79); spike against Stripe's test mode before
-        scheduling it.
-  - [ ] Swap the email page's address validation for my personal email
-        validation library. v1's rule is `validateEmailAddress` in
-        `src/modules/identity/services/email.ts` (MB.54), one deliberately
-        loose function that nothing else reads, so the swap is one import
-        and its tests in `tests/modules/identity/services/email.test.ts`.
-- [ ] V3
-  - [ ] Add label printing.
-  - [ ] Add wikipedia.
-- [ ] V Public
-  - [ ] Configure Vercel's WAF — nothing to build: DDoS mitigation is already
-        on for every plan, and what is missing is a `rate_limit` custom rule
-        on `/api/graphql` and, once MB.83 opens them, on `/compendium/*`,
-        rolled out log-first and published from the CLI. Real rather than
-        notional since MB.80: `/api/graphql` answers the compendium queries
-        to anyone, and graphql-armor (M3.3) bounds what one request costs,
-        not how many one client sends. Blocked and rate-limited requests are
-        not billed.
-  - [ ] Add RLS — deferred here by MB.29. The specification is
-        `claude-docs/design-decisions/mb.24-rls-role-split.md`; `withAudit`
-        already publishes the `app.current_user_id` GUC the policies read, so
-        this is one migration plus its tests, not a re-audit of the write path.
+### Bugs
+
+- [ ]
+
+### Things to Think About
+
+- [ ] Adam and Eve Root contains a form in it's name. - Should it?
+- [ ] Ivy tried to click on the ingredient name itself instead of edit. Should go to the page where it can be edited? Or modal?
+- [ ] Define password policies and create enforcement.
+- [ ] Icons for forms?
+
+### Feature Additions
+
+- [ ] We need spell recipes and spell "jars" completed. I.E. The recipe is how to make it the completed is number of times completed and reduces stock. Completed should allow notes. Also has private and coven public options.
+- [ ] Add steps to spells so the order of combination and any ritual can be recorded.
+
+### Launch - PUBLIC
+
+- [ ] Configure Vercel's WAF — nothing to build: DDoS mitigation is already
+      on for every plan, and what is missing is a `rate_limit` custom rule
+      on `/api/graphql` and, once MB.83 opens them, on `/compendium/*`,
+      rolled out log-first and published from the CLI. Real rather than
+      notional since MB.80: `/api/graphql` answers the compendium queries
+      to anyone, and graphql-armor (M3.3) bounds what one request costs,
+      not how many one client sends. Blocked and rate-limited requests are
+      not billed.
+- [ ] Add RLS — deferred here by MB.29. The specification is
+      `claude-docs/design-decisions/mb.24-rls-role-split.md`; `withAudit`
+      already publishes the `app.current_user_id` GUC the policies read, so
+      this is one migration plus its tests, not a re-audit of the write path.
+
+### V Fast Follow
+
+- [ ] Closed practice warning.
+- [ ] Ethical warnings around ingredients.
+- [ ] Draft and approval ingredients process.
+- [ ] Versioning and history tracking for items.
+- [ ] Allow editors to view some of other editors/admins info so they can collaborate.
+- [ ] Swap the email page's address validation for my personal email
+      validation library. v1's rule is `validateEmailAddress` in
+      `src/modules/identity/services/email.ts` (MB.54), one deliberately
+      loose function that nothing else reads, so the swap is one import
+      and its tests in `tests/modules/identity/services/email.test.ts`.
+
+### V2
+
+- [ ] Subscription billing — the requirements and the Stripe plugin's fit
+      are in DESIGN.md §13 (MB.79); spike against Stripe's test mode before
+      scheduling it.
+- [ ] Suggest compendium additions.
+- [ ] Compendium of pre built spells
+- [ ] Admin editor comment sections for curated entries.
+- [ ] Both private and public comment sections for compendium entries.
+- [ ] _**Dark Magic**_
+- [ ] In spell steps: allow the user to link to a specific ingredient in the spell in the notes but that drops to plain text if they remove the ingredient and displays a warning to update on the step.
+
+### V3
+
+- [ ] Add label printing.
+- [ ] Add wikipedia.
