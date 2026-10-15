@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import ActionFailure from '@/components/ActionFailure';
 import RemoveControl from '@/components/MemberList/remove-control';
-import RoleFailure from '@/components/MemberList/role-failure';
 
 const { refresh, graphqlRequest } = vi.hoisted(() => ({
   refresh: vi.fn(),
@@ -13,12 +13,9 @@ vi.mock('@/lib/graphql-client', () => ({ graphqlRequest }));
 const WORKSPACE = '00000000-0000-0000-0000-000000000001';
 const USER = '00000000-0000-0000-0000-000000000002';
 
-async function openAndConfirm() {
-  render(
-    <RoleFailure>
-      <RemoveControl workspaceId={WORKSPACE} userId={USER} name="Fixture Member" />
-    </RoleFailure>,
-  );
+async function openAndConfirm(wrapped = true) {
+  const control = <RemoveControl workspaceId={WORKSPACE} userId={USER} name="Fixture Member" />;
+  render(wrapped ? <ActionFailure>{control}</ActionFailure> : control);
   fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Member' }));
   const dialog = await screen.findByRole('dialog');
   fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
@@ -51,6 +48,17 @@ describe('RemoveControl', () => {
 
     await openAndConfirm();
 
+    expect(await screen.findByRole('alert')).toBeVisible();
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it('shows a refusal beside the control when nothing above it says one', async () => {
+    graphqlRequest.mockRejectedValue(new Error('Forbidden'));
+
+    await openAndConfirm(false);
+
+    // The control stands outside an ActionFailure, so it must say the refusal
+    // itself rather than drop it.
     expect(await screen.findByRole('alert')).toBeVisible();
     expect(refresh).not.toHaveBeenCalled();
   });

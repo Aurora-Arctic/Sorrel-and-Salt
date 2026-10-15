@@ -5,14 +5,13 @@ import { signOut } from '../../lib/auth-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import Notice from '../Notice';
-import './index.scss';
 
-// Sign Out, beside the account page's heading (MB.63, on the owner's call):
-// Better Auth's own sign-out at `/api/auth/*`, the one path outside GraphQL,
-// which carries the session and no application data
+// Sign Out, the last row of the account menu (MB.63, on the owner's call;
+// MB.7 moved it): Better Auth's own sign-out at `/api/auth/*`, the one path
+// outside GraphQL, which carries the session and no application data
 // (claude-docs/auth/graphql-only-exception.md). A success is a full load of
 // `/`, so nothing the signed-in page held survives it
-// (claude-docs/components/sign-out-button.md).
+// (claude-docs/components/account-menu.md).
 
 const LANDING = '/';
 
@@ -34,7 +33,7 @@ const SignOutButton = (): ReactElement => {
   }
 
   return (
-    <div className="sign-out-button">
+    <div className="account-menu__signout-action">
       <BusyButton
         className="btn"
         disabled={pending}

@@ -10,7 +10,8 @@ import Notice from '../Notice';
 import type { InvitationAcceptanceProps } from './types';
 import './index.scss';
 
-// `/invite/[token]`'s one panel (MB.70): the page reads where the visitor
+// `/invite/[token]`'s one panel (MB.70, a `.panel` as sign-in's and the email
+// page's are: MB.119 decision c): the page reads where the visitor
 // stands, through the accept service's own checks, and this shows it. Accept
 // sends the mutation, which checks again and decides; a refusal is said in
 // the service's words (claude-docs/components/invitation-acceptance.md).
@@ -29,11 +30,21 @@ const GRANTS = {
   workspace: "You've been invited to join a coven on Sorrel & Salt.",
 } as const;
 
+const SIGNED_OUT_GRANT =
+  "You've been invited to Sorrel & Salt. Sign in with an account whose email address is the one this invitation was sent to.";
+
+/** The sentence under the heading, or none for a refusal: its alert says all there is to say. */
+function grantOf(props: InvitationAcceptanceProps): string | undefined {
+  if (props.status === 'signed-out') return SIGNED_OUT_GRANT;
+  if (props.status !== 'acceptable') return undefined;
+  return props.tier === 'workspace' && props.covenName
+    ? `You've been invited to join ${props.covenName} on Sorrel & Salt.`
+    : GRANTS[props.tier];
+}
+
 const Accept = ({
   token,
-  tier,
   landing,
-  covenName,
 }: Extract<InvitationAcceptanceProps, { status: 'acceptable' }>): ReactElement => {
   const router = useRouter();
   const [sending, setSending] = useState(false);
@@ -56,11 +67,6 @@ const Accept = ({
 
   return (
     <>
-      <p className="invitation-acceptance__text">
-        {tier === 'workspace' && covenName
-          ? `You've been invited to join ${covenName} on Sorrel & Salt.`
-          : GRANTS[tier]}
-      </p>
       {failure && <Notice kind="error">{failure}</Notice>}
       <p className="invitation-acceptance__actions">
         <BusyButton
@@ -77,36 +83,36 @@ const Accept = ({
   );
 };
 
-const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement => (
-  <div className="invitation-acceptance">
-    <h1 className="invitation-acceptance__heading">Your Invitation</h1>
-    {props.status === 'signed-out' && (
-      <>
-        <p className="invitation-acceptance__text">
-          You&apos;ve been invited to Sorrel &amp; Salt. Sign in with an account whose email address
-          is the one this invitation was sent to.
-        </p>
+const InvitationAcceptance = (props: InvitationAcceptanceProps): ReactElement => {
+  const grant = grantOf(props);
+  return (
+    <div className="panel invitation-acceptance">
+      <div className="header">
+        <h1>Your Invitation</h1>
+        {grant && <p className="lede">{grant}</p>}
+      </div>
+      {props.status === 'signed-out' && (
         <p className="invitation-acceptance__actions">
           <a className="btn btn--solid" href={props.signInHref}>
             Sign In
           </a>
         </p>
-      </>
-    )}
-    {props.status === 'refused' && (
-      <>
-        <Notice kind="error">{props.message}</Notice>
-        {props.emailHref && (
-          <p className="invitation-acceptance__actions">
-            <a className="btn btn--solid" href={props.emailHref}>
-              Confirm Your Email
-            </a>
-          </p>
-        )}
-      </>
-    )}
-    {props.status === 'acceptable' && <Accept {...props} />}
-  </div>
-);
+      )}
+      {props.status === 'refused' && (
+        <>
+          <Notice kind="error">{props.message}</Notice>
+          {props.emailHref && (
+            <p className="invitation-acceptance__actions">
+              <a className="btn btn--solid" href={props.emailHref}>
+                Confirm Your Email
+              </a>
+            </p>
+          )}
+        </>
+      )}
+      {props.status === 'acceptable' && <Accept {...props} />}
+    </div>
+  );
+};
 
 export default InvitationAcceptance;

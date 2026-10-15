@@ -1,7 +1,6 @@
 import type { Route } from 'next';
-import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { ModalHeading } from '../Modal/types';
-import type { GroupColors, PagePosition } from '../../lib/types';
+import type { GroupColors, PagePosition, PagerHrefs } from '../../lib/types';
 import type { GroupKind } from '../GroupForm/types';
 
 /**
@@ -19,7 +18,7 @@ export interface GroupListEntry extends Partial<GroupColors> {
   editHeading: ModalHeading;
 }
 
-export interface GroupListProps extends Partial<PagerHrefs> {
+export interface GroupListProps extends Partial<PagerHrefs<Route>> {
   kind: GroupKind;
   groups: readonly GroupListEntry[];
   /** Where this page stands among them all, for the pager; none says nothing of it. */

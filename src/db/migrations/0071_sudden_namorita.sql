@@ -1,0 +1,3 @@
+ALTER TABLE "invitations" ADD COLUMN "declined_at" timestamp;--> statement-breakpoint
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_declined_coven" CHECK ("invitations"."declined_at" is null or "invitations"."workspace_id" is not null);--> statement-breakpoint
+ALTER TABLE "invitations" ADD CONSTRAINT "invitations_answered_once" CHECK (num_nonnulls("invitations"."accepted_at", "invitations"."declined_at") <= 1);

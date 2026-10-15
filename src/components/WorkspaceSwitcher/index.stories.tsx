@@ -5,7 +5,7 @@ import WorkspaceSwitcher from '.';
 // Render-only; behaviour is asserted in tests/components/WorkspaceSwitcher.
 // The workshop's router goes nowhere, so a choice only closes the list.
 export default {
-  title: 'WorkspaceSwitcher',
+  title: 'Coven / Coven Switcher',
 };
 
 const WORKSPACES = [

@@ -403,8 +403,8 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/UserList/index.stories.tsx),
-`Admin / Users`, every story inside the admin layout's frame and the
-People page with its Users tab open:
+`Admin / Users`, every story inside the admin layout's frame (the nav in its
+context row above the column) and the People page with its Users tab open:
 
 - **States**: `Default`, the page as signed off at MB.115, its tab's
   Pause Admin Changes and each row's Impersonate opening their

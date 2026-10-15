@@ -7,7 +7,7 @@ import NotAuthorized from '.';
 // sits in the page's real frame, `forbidden.tsx`'s `main.page-frame`
 // (claude-docs/workshop.md).
 export default {
-  title: 'Not Authorized',
+  title: 'Pages / Not Authorized',
 };
 
 const Page = (): ReactElement => (

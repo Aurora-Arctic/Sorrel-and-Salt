@@ -28,8 +28,7 @@
   margin: 0;
 }
 
-// No `_typography.scss` ◆ marker. Not `.link-row`, which clears it too: that
-// is a wrapping row of links, and this is a column of rows.
+// No `_typography.scss` ◆ marker: a column of rows, not a bulleted list.
 .sign-in-methods__item::before {
   content: none;
 }

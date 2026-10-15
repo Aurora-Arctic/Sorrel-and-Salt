@@ -74,8 +74,9 @@ $shadow-light: rgba(35, 32, 26, 0.18);
 // Badge palettes
 // ---------------------------------------------------------------------------
 // Safety is a warning and low stock an inventory state, so one is a solid
-// sealing-wax fill and the other a muted tint. Last used is a pointer, not a
-// warning, so it is solid in the accent, which spends no new hue. A palette
+// sealing-wax fill and the other a muted tint. Attention, something waiting on
+// the reader, wears safety's fill. Last used is a pointer, not a warning, so
+// it is solid in the accent, which spends no new hue. A palette
 // emits only its own treatment's parts: safety's ink fails AA as a tint, so
 // asking for its `bg` is a compile error. claude-docs/styling.md, "Badge palettes".
 $badge-treatments: (
@@ -87,13 +88,25 @@ $badge-treatments: (
   ),
 );
 
+// The solid wax fill two palettes share, so they cannot drift apart.
+$wax-badge-dark: color.adjust($wax, $saturation: 22%, $lightness: 18%);
+$wax-badge-light: color.adjust($wax, $saturation: 22%);
+
 $badge-palettes: (
   // Both inks carry +22% saturation, holding the two halves the same red. The
   // dark lift is +18%, sized for the label ($soot) on the fill, not for text on soot.
   'safety': (
       treatment: solid,
-      dark: color.adjust($wax, $saturation: 22%, $lightness: 18%),
-      light: color.adjust($wax, $saturation: 22%),
+      dark: $wax-badge-dark,
+      light: $wax-badge-light,
+    ),
+  // Something waiting on the reader, such as the account menu's count of
+  // pending invitations (M10.32): safety's inks, already contrast-checked for
+  // the label, under a name that does not call the count a hazard.
+  'attention': (
+      treatment: solid,
+      dark: $wax-badge-dark,
+      light: $wax-badge-light,
     ),
   'low-stock': (
     treatment: tinted,
@@ -296,7 +309,7 @@ $font-heading: var(--font-display), 'Cormorant Unicase', Georgia, 'Times New Rom
 // No webfont: incidental inline code, and every platform ships a good monospace.
 $font-mono: ui-monospace, 'SF Mono', 'SFMono-Regular', 'Menlo', 'Consolas', monospace;
 
-// The sizes below body copy, by role. The headings' scale is typography-base's.
+// The sizes below body copy, by role. The headings' scale is $heading-sizes.
 $type-sizes: (
   'body': 1rem,
   // Labels, buttons, notices and field errors: text a person acts on.
@@ -317,6 +330,27 @@ $type-sizes: (
   }
 
   @return map.get($type-sizes, $role);
+}
+
+// The heading scale, h1 to h4, anchored at h4 = 1.5rem and stepped up by
+// roughly 1.2. Kept apart from $type-sizes, which runs below body copy by
+// role; this runs above it by level. h1 is fluid between its two ends, so a
+// phone's title does not take the whole screen. typography-base sets each
+// heading from it, and a component that sets a name in the heading face (the
+// context row's "Admin", the coven switcher) takes its size from here too.
+$heading-sizes: (
+  1: clamp(2.5rem, 5vw, 3.75rem),
+  2: 2.15rem,
+  3: 1.8rem,
+  4: 1.5rem,
+);
+
+@function heading-size($level) {
+  @if not map.has-key($heading-sizes, $level) {
+    @error 'Unknown heading size "#{$level}". The sizes are: #{map.keys($heading-sizes)}.';
+  }
+
+  @return map.get($heading-sizes, $level);
 }
 
 // The reading measure: the longest comfortable line of body copy. `ch` is the
@@ -419,8 +453,7 @@ $table-stack-width: 40rem;
 
 // The heavy rule, for a line that must read by its weight as well as its
 // colour: the impersonation banner's foot, the owner's call in MB.53, where it
-// was the banner's own `$impersonation-banner-rule`; and the underline of
-// `.link-row`'s current-page link, which no hue tells apart (MB.115).
+// was the banner's own `$impersonation-banner-rule`.
 $rule-heavy: 3px;
 
 // The medium rule, a step heavier than a 1px edge and lighter than $rule-heavy:

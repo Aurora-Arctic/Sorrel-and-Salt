@@ -486,36 +486,45 @@ the tests [`tests.md`](tests.md).
 ### The account page (MB.88)
 
 `/account` is the one account page: the name the site shows, the address it
-writes to, and the ways in, changed in one place. Stories 1 and 59; the
+writes to, the ways in, and the coven invitations waiting for that address,
+in one place. Stories 1, 2, 6 and 59; the
 component docs are [`components/name-form.md`](../components/name-form.md),
-[`components/email-form.md`](../components/email-form.md) and
-[`components/sign-in-methods.md`](../components/sign-in-methods.md).
+[`components/email-form.md`](../components/email-form.md),
+[`components/sign-in-methods.md`](../components/sign-in-methods.md) and
+[`components/received-invitations.md`](../components/received-invitations.md).
 
 - **The page.** `src/app/(shell)/account/page.tsx` calls `requireSession()`, so an
   unverified account is sent to the email page instead, and reads `getMe`,
-  `linkedAccounts()` and `sessionIsFresh()`. Under its `<h1>` "Your
-  Account" are three sections, each a region named by its own `<h2>`, which
+  `linkedAccounts()`, `sessionIsFresh()` and one page of
+  `listReceivedInvitations`. Under its `<h1>` "Your
+  Account" are four sections, each a region named by its own `<h2>`, which
   the page writes in a `.header` with the section's intro as its `.lede`:
   Name ("The name Sorrel & Salt shows for you.", then `NameForm`), Email
   (`EmailForm`, embedded, whose own status line says what the section is
   for) and Sign-In Methods ("You can sign in to this account with any of
-  these.", then `SignInMethods`). It carries no link to `/account/email`.
+  these.", then `SignInMethods`) and Invitations ("Covens that have invited
+  this email address to join them.", then `ReceivedInvitations`, M10.32). It
+  carries no link to `/account/email`.
   Under the heading, a nav labelled "On this page"
   links to each section by its prefixed id (`#account-name`,
-  `#account-email`, `#account-sign-in-methods`). Each section stands on its
+  `#account-email`, `#account-sign-in-methods`, `#account-invitations`).
+  The Invitations section is always shown, with the table's empty state when
+  none wait. It pages with `?after=` and `?before=`, and its pager links keep
+  `#account-invitations`. Its id, `ACCOUNT_INVITATIONS_ID`, and the link to it,
+  `ACCOUNT_INVITATIONS_PATH`, are in `src/lib/sign-in.ts`; the `/coven`
+  landing's notice and the account menu's count both link to it. Each section stands on its
   own `.panel`, which parts it from the next, so no rule is drawn between
   them (the owner's call, MB.116; MB.88 ruled them apart with a hairline). A
   section a link lands on stops clear of the top inset. The frame, the
-  sections, the panels and the nav's row are primitives
-  (`.page-frame--narrow`, `.page-frame__section`, `.panel`, `.link-row`;
-  [`styling.md`](../styling.md), "The page frame" and "Link rows and
-  provider marks"), so the page has no stylesheet of its own beyond `.account-page` in `_primitives.scss`: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
+  sections and the panels are primitives
+  (`.page-frame--narrow`, `.page-frame__section`, `.panel`;
+  [`styling.md`](../styling.md), "The page frame"), so the page has no stylesheet of its own beyond `.page-with-nav` in `_primitives.scss`, shared with the coven index: wider than a phone the nav is a vertical menu in a column left of the sections, sticky under the shell bar, and on a phone it is the same menu, a full-width column above them (`PageNav`, [`page-nav.md`](../components/page-nav.md)). A failed link
   lands back with `?error=` and `?provider=`: the page turns the code into
   a sentence with `linkErrorMessage`, and passes it to `SignInMethods` with
   the provider, when it is one on the roster, so the sentence shows in that
   provider's row. The heading stands alone; Sign Out is in the shell's account menu
   (`SignOutButton`,
-  [`components/sign-out-button.md`](../components/sign-out-button.md)):
+  [`components/account-menu.md`](../components/account-menu.md)):
   Better Auth's own sign-out, then a full load of `/` (MB.63, moved by MB.7).
 - **The email page stays, for the flows that are not a visit to the
   account.** Every unverified sign-in lands there, it is the only page a

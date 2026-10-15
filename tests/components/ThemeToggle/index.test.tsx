@@ -68,22 +68,17 @@ describe('ThemeToggle', () => {
   });
 
   describe('the inline variant (the shell’s bar)', () => {
-    it('switches the theme exactly as the corner does, at either size', () => {
-      render(
-        <>
-          <ThemeToggle variant="inline" />
-          <ThemeToggle variant="inline" size="small" />
-        </>,
-      );
-      const [bar, panel] = screen.getAllByRole('button', { name: 'Toggle light and dark mode' });
+    it('switches the theme exactly as the corner does', () => {
+      render(<ThemeToggle variant="inline" />);
+      const bar = screen.getByRole('button', { name: 'Toggle light and dark mode' });
 
-      fireEvent.click(bar!);
+      fireEvent.click(bar);
       expect(document.documentElement.getAttribute('data-theme')).toBe('light');
       expect(bar).toHaveAttribute('aria-pressed', 'true');
 
-      fireEvent.click(panel!);
+      fireEvent.click(bar);
       expect(document.documentElement.getAttribute('data-theme')).toBe('dark');
-      expect(panel).toHaveAttribute('aria-pressed', 'false');
+      expect(bar).toHaveAttribute('aria-pressed', 'false');
     });
   });
 

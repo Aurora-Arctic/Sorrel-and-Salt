@@ -16,12 +16,33 @@ export default {
     'src/emails/*.stories.tsx',
     '.ladle/*.stories.tsx',
   ],
-  // `Default` first in every group, the rest as Ladle sorted them. A global hook
-  // only, over the fully-sorted ids; must stay self-contained because Ladle
+  // The sidebar's order, over the fully-sorted ids: the top-level groups in the
+  // order claude-docs/workshop.md gives (Foundations, the areas as a person
+  // meets them, then the kinds), and `Default` first in every group, the rest as
+  // Ladle sorted them. A group not listed here keeps its place after the
+  // listed ones. A global hook only; must stay self-contained because Ladle
   // serializes it with `.toString()`.
   storyOrder: (stories) => {
+    const topOrder = [
+      'foundations',
+      'pages',
+      'sign-in',
+      'shell',
+      'account',
+      'coven',
+      'admin',
+      'emails',
+      'forms',
+      'layout',
+      'navigation',
+      'surfaces',
+    ];
     const groupOf = (id) => id.split('--').slice(0, -1).join('--');
     const isDefault = (id) => id.split('--').pop() === 'default';
+    const rankOf = (id) => {
+      const rank = topOrder.indexOf(id.split('--')[0]);
+      return rank === -1 ? topOrder.length : rank;
+    };
     const seen = new Set();
     const ordered = [];
     for (const id of stories) {
@@ -31,7 +52,8 @@ export default {
       const inGroup = stories.filter((s) => groupOf(s) === group);
       ordered.push(...inGroup.filter(isDefault), ...inGroup.filter((s) => !isDefault(s)));
     }
-    return ordered;
+    // Array.prototype.sort is stable, so within a top-level group the order above holds.
+    return ordered.sort((a, b) => rankOf(a) - rankOf(b));
   },
   // Ladle's own default ports, stated anyway because the makefile targets name them.
   port: 61000,

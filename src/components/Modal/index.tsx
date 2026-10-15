@@ -4,10 +4,12 @@
 // re-exported its own importer would be a cycle (claude-docs/components/modal.md);
 // the guard over a form's unsaved changes, which every admin form takes; the
 // card a form asks a question in, over itself; and the place beside the title
-// a form may put a control in.
+// a form may put a control in; and the button that opens a modal and takes
+// the focus back when it closes.
 
 export { default } from './modal';
 export { default as RouteModal } from './route-modal';
+export { default as ModalButton } from './modal-button';
 export { RouteModalProvider, useOpenModalClick } from './route-modal-provider';
 export { ConfirmOverlay } from './confirm-overlay';
 export { DiscardQuestion, useDiscardGuard } from './discard';

@@ -47,6 +47,7 @@ $account-menu-avatar: 2rem;
 // The initials on the accent: the same disc as the theme switch, so the two
 // read as one family. $text-on-color is the contrast-checked label for it.
 .account-menu__avatar {
+  position: relative;
   display: inline-flex;
   flex: none;
   align-items: center;
@@ -61,6 +62,21 @@ $account-menu-avatar: 2rem;
   letter-spacing: 0.02em;
   line-height: 1;
   @include theme-transition(background-color);
+}
+
+// Pending invitations (M10.32): a wax dot on the disc's top right, ringed in
+// the bar's own surface so it reads as sitting on the disc's edge rather than
+// merging with it. The same red as the count in the panel, attention's fill.
+.account-menu__dot {
+  position: absolute;
+  top: -0.0625rem;
+  right: -0.0625rem;
+  // Two thirds of the 0.625rem it was first drawn at (the owner's call, M10.32).
+  width: 0.4167rem;
+  height: 0.4167rem;
+  border-radius: 50%;
+  background-color: badge-token('attention', 'fill');
+  box-shadow: 0 0 0 2px $surface-card;
 }
 
 .account-menu__name {
@@ -90,7 +106,6 @@ $account-menu-avatar: 2rem;
   right: 0;
   z-index: layer('floating');
   min-width: 13rem;
-  overflow: hidden;
   border: 1px solid $text-muted;
   border-radius: radius('surface');
   background-color: $surface-card;
@@ -121,11 +136,10 @@ $account-menu-avatar: 2rem;
 }
 
 // A link or a button: one row each, a control tall, edge to edge of the panel
-// (no padding or gap around the rows and no rounding, so the wash on hover and
-// the current mark run to the panel's edges; its `overflow: hidden` clips them
-// to its rounded corners). The pointer's wash on hover. SignOutButton brings its own `.btn`, left as the
-// outlined button it is, so the one action that ends the session reads as a
-// button and not as another link (below).
+// (no padding or gap around the rows, so the wash on hover and the current
+// mark run to the panel's edges). The pointer's wash on hover. Sign Out
+// brings its own `.btn`, left as the outlined button it is, so the one action
+// that ends the session reads as a button and not as another link (below).
 .account-menu__item {
   display: flex;
   align-items: center;
@@ -163,13 +177,67 @@ $account-menu-avatar: 2rem;
   }
 }
 
-// The button keeps the shared `.btn` edge, height, radius and colours (and
-// so its contrast); only the width is set, to the panel row's.
-.account-menu__panel .sign-out-button {
-  display: block;
+// The count of pending invitations, at the right end of Your Account's row
+// (the owner's call, M10.32): the site's badge in attention's red, drawn as
+// a circle, a pill once it runs to two digits. Its tip hangs below it.
+.account-menu__account {
+  position: relative;
 }
 
-.account-menu__panel .sign-out-button .btn {
+// Over the row's right end, so Your Account's wash still runs edge to edge
+// beneath it; the row keeps its text clear of it.
+.account-menu__count {
+  position: absolute;
+  top: 50%;
+  right: space(3);
+  // Above the rows after it, which its tip hangs over: the translate makes the
+  // count a stacking context, so the tip's own layer counts only inside it.
+  z-index: 1;
+  display: inline-flex;
+  translate: 0 -50%;
+}
+
+.account-menu__item--counted {
+  padding-inline-end: space(7);
+}
+
+.account-menu__count-mark {
+  @include badge('attention');
+
+  justify-content: center;
+  box-sizing: border-box;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding: 0 space(1);
+  border-radius: radius('pill');
+  text-decoration: none;
+
+  // A link, so the typography's link hover would recolour the label; it
+  // keeps the badge's contrast-checked label on the fill, and the pointer
+  // gets the badge darkened instead, as the avatar disc darkens.
+  &:hover,
+  &:active {
+    color: $text-on-color;
+    filter: brightness(0.85);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The panel clips nothing, so the count's tip can hang past its edge (the
+// owner's call, M10.32); the top row's wash takes the panel's rounding
+// itself instead, inside its 1px edge. The last row is always Sign Out, which
+// has room around it, so no row's wash meets the bottom corners.
+.account-menu__panel > li:first-child > .account-menu__item {
+  border-radius: calc(#{radius('surface')} - 1px) calc(#{radius('surface')} - 1px) 0 0;
+}
+
+// Sign Out's button keeps the shared `.btn` edge, height, radius and colours
+// (and so its contrast); only the width is set, to the panel row's. A failure
+// stacks beneath it.
+.account-menu__signout-action .btn {
   width: 100%;
 }
 
@@ -183,24 +251,11 @@ $account-menu-avatar: 2rem;
   padding: space(2);
 }
 
-// The theme switch, phone only: pinned to the panel's top right corner, level
-// with the first row, whose text keeps clear of it (below).
-.account-menu__theme {
-  display: none;
-  position: absolute;
-  top: 0;
-  right: space(2);
-  // Above the first row, whose hover wash would otherwise paint over it.
-  z-index: 1;
-  align-items: center;
-  height: $control-height;
-}
-
 // Under the tablet width the bar has no room for the name and the site links
 // (for an admin at 642px the bar's brand, two links, Add Ingredient, the
 // named button and the disc ran past the window; the owner's finding at
 // MB.7's review, 2026-10-12): the button is the avatar alone and the links
-// move into the panel. The disc stays in the bar until the phone's width.
+// move into the panel. The theme disc stays in the bar at every width.
 @media (max-width: $shell-tablet-width) {
   .account-menu__button {
     justify-content: center;
@@ -219,23 +274,5 @@ $account-menu-avatar: 2rem;
 
   .account-menu__link {
     display: block;
-  }
-}
-
-@media (max-width: $shell-phone-width) {
-  .account-menu__theme {
-    display: flex;
-  }
-
-  // With no row to sit beside (an unverified account), the switch takes a row,
-  // right-aligned, instead of covering Sign Out.
-  .account-menu__theme--alone {
-    position: static;
-    justify-content: flex-end;
-    padding: 0 space(2);
-  }
-
-  .account-menu__theme + li > .account-menu__item {
-    padding-right: space(8);
   }
 }

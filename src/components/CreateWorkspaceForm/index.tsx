@@ -6,8 +6,7 @@ import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
-import BusyButton from '../BusyButton';
-import { FieldShell, fieldDescription } from '../Field';
+import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
 
 // The create-workspace page's form (M9.16): one name, sent to M6.7's
@@ -27,6 +26,12 @@ const CreateWorkspaceDocument = graphql(`
     }
   }
 `);
+
+// One string for two jobs: the tip's text, and the id `fieldDescription` makes
+// the control point at. Given to only one of them, the control would point at
+// a tip that was never drawn.
+const NAME_HINT =
+  'What the coven is called. Its address is made from it, and everyone you invite sees it.';
 
 const CreateWorkspaceForm = (): ReactElement => {
   const router = useRouter();
@@ -56,7 +61,7 @@ const CreateWorkspaceForm = (): ReactElement => {
 
   const { aria, ...field } = fieldDescription({
     id: useId(),
-    hint: 'What the coven is called. Its address is made from it, and everyone you invite sees it.',
+    hint: NAME_HINT,
     error: fieldError,
   });
 
@@ -79,7 +84,7 @@ const CreateWorkspaceForm = (): ReactElement => {
       {/* `noValidate`: every refusal is the server's, worded and placed like
           the rest, rather than the browser's own bubble. */}
       <form className="form" onSubmit={handleSubmit} noValidate>
-        <FieldShell label="Name" required {...field}>
+        <FieldShell label="Name" hint={NAME_HINT} required {...field}>
           <input
             id={field.controlId}
             className="input"
@@ -93,19 +98,15 @@ const CreateWorkspaceForm = (): ReactElement => {
             {...aria}
           />
         </FieldShell>
-        <div className="form__actions">
-          {/* Offered only when there is something to create, and busy, saying
-              so, from the press to the next page: the owner's rule for every form. */}
-          <BusyButton
-            type="submit"
-            className="btn btn--solid"
-            disabled={empty || busy}
-            busy={busy}
-            busyLabel="Creating Coven"
-          >
-            Create Coven
-          </BusyButton>
-        </div>
+        {/* Offered only when there is something to create, and busy, saying
+            so, from the press to the next page: the owner's rule for every form. */}
+        <FormActions
+          noun="Coven"
+          label="Create Coven"
+          busyLabel="Creating Coven"
+          dirty={!empty}
+          submitting={busy}
+        />
       </form>
     </>
   );

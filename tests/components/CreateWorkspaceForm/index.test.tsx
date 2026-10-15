@@ -44,6 +44,14 @@ beforeEach(() => {
 });
 
 describe('CreateWorkspaceForm', () => {
+  it('describes the name field by a hint that is on the page, behind its tip button', () => {
+    renderForm();
+
+    expect(screen.getByRole('button', { name: 'About Name' })).toBeInTheDocument();
+    // The field points at the hint's id; a pointer to nothing describes nothing.
+    expect(nameField()).not.toHaveAccessibleDescription('');
+  });
+
   it('has nothing to create until a name is typed', () => {
     renderForm();
 

@@ -18,7 +18,7 @@ const DEFAULT_LIFETIME = sql`now() + interval '7 days'`;
 // (claude-docs/design-decisions/mb.201-two-tier-invitations.md). Only the
 // token's hash is stored, and there must never be a plaintext column. Marked
 // `namedWrites` (MB.198): the row is what authorises a membership or a grant,
-// so it is written only through its named insert, accept and revoke.
+// so it is written only through its named insert, accept, decline and revoke.
 export const invitations = namedWrites(
   pgTable(
     'invitations',
@@ -36,6 +36,10 @@ export const invitations = namedWrites(
       acceptedBy: uuid('accepted_by').references(() => users.id),
       // Who revoked is `updated_by`: revoking is the last write a row takes.
       revokedAt: timestamp('revoked_at'),
+      // The invitee's no (M10.34): a coven invitation only, answered once. Who
+      // declined is the address it was sent to, held verified by the session
+      // that wrote it; the owner's Remove afterwards stamps `revoked_at`.
+      declinedAt: timestamp('declined_at'),
       // Why the person is being invited; optional, and either tier may carry one.
       note: text('note'),
       ...auditColumns,
@@ -49,6 +53,17 @@ export const invitations = namedWrites(
       check(
         'invitations_role_invitable',
         sql`${table.role} is null or ${table.role} in ('viewer', 'member')`,
+      ),
+      // Only a coven invitation is declined: an admin invitation is never
+      // listed to its invitee, so it is accepted by its link or not at all.
+      check(
+        'invitations_declined_coven',
+        sql`${table.declinedAt} is null or ${table.workspaceId} is not null`,
+      ),
+      // Answered once: an invitation is accepted or declined, never both.
+      check(
+        'invitations_answered_once',
+        sql`num_nonnulls(${table.acceptedAt}, ${table.declinedAt}) <= 1`,
       ),
       // The acceptance lookup, across both tiers: one hash must resolve to at
       // most one row. Partial per rule 4, though nothing re-proposes a random hash.

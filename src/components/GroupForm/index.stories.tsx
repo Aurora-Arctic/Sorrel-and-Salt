@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import { GROUP_NAMES, asOptions } from '../../../.ladle/fixtures';
 import { usePressOnMount } from '../../../.ladle/press';
+import { Reopenable } from '../../../.ladle/reopenable';
 import Modal from '../Modal';
 import GroupForm from '.';
 
@@ -28,55 +29,75 @@ const WARDS = {
 const done = () => {};
 
 export const AddingACategoryGroup: Story = () => (
-  <Modal title="Add Category Group" onClose={done}>
-    <GroupForm kind="category" groups={GROUPS} onDone={done} />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal title="Add Category Group" onClose={close}>
+        <GroupForm kind="category" groups={GROUPS} onDone={done} />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 // Press Delete Group to see the move: a group to choose, then the confirmation.
 export const EditingACategoryGroup: Story = () => (
-  <Modal eyebrow="Edit Category Group" title={WARDS.name} onClose={done}>
-    <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Category Group" title={WARDS.name} onClose={close}>
+        <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 export const EditingAFormGroup: Story = () => (
-  <Modal eyebrow="Edit Form Group" title="Testwort Matter" onClose={done}>
-    <GroupForm
-      kind="form"
-      group={{ ...WARDS, name: 'Testwort Matter', colorDark: '', colorLight: '' }}
-      groups={GROUPS}
-      memberCount={0}
-      onDone={done}
-    />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Form Group" title="Testwort Matter" onClose={close}>
+        <GroupForm
+          kind="form"
+          group={{ ...WARDS, name: 'Testwort Matter', colorDark: '', colorLight: '' }}
+          groups={GROUPS}
+          memberCount={0}
+          onDone={done}
+        />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 const TRADITIONS = asOptions(GROUP_NAMES.tradition.slice(0, 2));
 
 export const AddingATradition: Story = () => (
-  <Modal title="Add Tradition" onClose={done}>
-    <GroupForm kind="tradition" groups={TRADITIONS} onDone={done} />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal title="Add Tradition" onClose={close}>
+        <GroupForm kind="tradition" groups={TRADITIONS} onDone={done} />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 // Press Delete Tradition to see the move: its two deities to another tradition.
 export const EditingATradition: Story = () => (
-  <Modal eyebrow="Edit Tradition" title="Fixtural" onClose={done}>
-    <GroupForm
-      kind="tradition"
-      group={{
-        id: TRADITIONS[0].id,
-        name: 'Fixtural',
-        description: 'An invented tradition, for the workshop.',
-        colorDark: '',
-        colorLight: '',
-      }}
-      groups={TRADITIONS}
-      memberCount={2}
-      onDone={done}
-    />
-  </Modal>
+  <Reopenable>
+    {(close) => (
+      <Modal eyebrow="Edit Tradition" title="Fixtural" onClose={close}>
+        <GroupForm
+          kind="tradition"
+          group={{
+            id: TRADITIONS[0].id,
+            name: 'Fixtural',
+            description: 'An invented tradition, for the workshop.',
+            colorDark: '',
+            colorLight: '',
+          }}
+          groups={TRADITIONS}
+          memberCount={2}
+          onDone={done}
+        />
+      </Modal>
+    )}
+  </Reopenable>
 );
 
 // Delete Group pressed once drawn, as a person would: the first step, where

@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { test, expect } from './fixtures';
-import { assertNoAccessibilityViolations } from './axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
 
@@ -59,6 +59,7 @@ test(
     const signIn = page.getByRole('link', { name: 'Sign In' });
     await expect(signIn).toHaveAttribute('href', `/sign-in?next=${encodeURIComponent(path)}`);
     await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page);
   },
 );
 
@@ -79,6 +80,7 @@ test(
     const accept = page.getByRole('button', { name: 'Accept Invitation' });
     await expect(accept).toBeVisible();
     await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page, { restore: true });
     await accept.click();
 
     await expect(page).toHaveURL(/\/admin$/);
@@ -121,6 +123,7 @@ test(
     const accept = page.getByRole('button', { name: 'Accept Invitation' });
     await expect(accept).toBeVisible();
     await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page, { restore: true });
     await accept.click();
 
     await expect(page).toHaveURL(new RegExp(`/coven/${slug}$`));

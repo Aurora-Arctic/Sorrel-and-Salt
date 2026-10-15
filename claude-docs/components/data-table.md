@@ -78,6 +78,14 @@ colours when `colors` holds both `colorDark` and `colorLight`, and as plain
 text otherwise: a form group or a tradition carries none. The group list's
 Name cell and the value lists' group cell draw it.
 
+## Stories
+
+[`index.stories.tsx`](../../src/components/DataTable/index.stories.tsx), `Layout /
+Data Table`: `StackTable` over a few category groups, each in its `ListFrame`
+as an admin list holds it. `Default` has two groups in chips and two plain;
+`Roomy` adds the `data-table--roomy` class; `Empty` shows the empty-state
+sentence; `PhoneDark` and `PhoneLight` show the rows turned into cards at 375px.
+
 ## Testing
 
 No test of its own: each list's test asserts the table it draws — its rows,

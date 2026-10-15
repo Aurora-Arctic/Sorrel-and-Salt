@@ -1,9 +1,12 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // The `/coven` landing (M2.8, Story 2): a member goes into their first coven,
-// anyone else is told what they can do next. The viewer is mocked; who is a
-// member and who may create is tests/lib/viewer's and the services'.
+// anyone else is told what they can do next, and someone with coven
+// invitations waiting is told so, with a link to the account page's
+// Invitations section, where they are listed (M10.32). The viewer is mocked:
+// who is a member, who may create and how many invitations wait are
+// tests/lib/viewer's, and which invitations are theirs the identity service's.
 
 const REDIRECTED = new Error('NEXT_REDIRECT');
 const redirect = vi.fn((_to: string): never => {
@@ -17,9 +20,13 @@ vi.mock('@/lib/viewer', () => ({ viewerOf }));
 
 const { default: CovenLandingPage } = await import('@/app/(shell)/coven/page');
 
-function asViewer(canCreate: boolean, workspaces: { slug: string; name: string }[] = []) {
+function asViewer(
+  canCreate: boolean,
+  workspaces: { slug: string; name: string }[] = [],
+  pendingInvitations = 0,
+) {
   viewerOf.mockResolvedValue({
-    viewer: { name: 'Ada Fixture', isAdmin: false, canCreate, verified: true },
+    viewer: { name: 'Ada Fixture', isAdmin: false, canCreate, verified: true, pendingInvitations },
     workspaces,
   });
 }
@@ -29,6 +36,8 @@ beforeEach(() => {
   requireSession.mockReset().mockResolvedValue({ userId: 'u', role: 'user' });
   viewerOf.mockReset();
 });
+
+const notice = () => screen.queryByRole('status');
 
 describe('the /coven landing', () => {
   it('sends a member to the first coven the switcher lists, whatever they may create', async () => {
@@ -50,6 +59,7 @@ describe('the /coven landing', () => {
       'href',
       '/coven/new',
     );
+    expect(notice()).not.toBeInTheDocument();
     expect(redirect).not.toHaveBeenCalled();
   });
 
@@ -60,6 +70,7 @@ describe('the /coven landing', () => {
 
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Create Coven' })).not.toBeInTheDocument();
+    expect(notice()).not.toBeInTheDocument();
     expect(redirect).not.toHaveBeenCalled();
   });
 
@@ -70,4 +81,25 @@ describe('the /coven landing', () => {
 
     expect(requireSession).toHaveBeenCalled();
   });
+
+  it.each([
+    ['may create a coven', true],
+    ['may not create one', false],
+  ])(
+    'tells someone who %s that invitations wait, linking to the account page’s section',
+    async (_who, canCreate) => {
+      asViewer(canCreate, [], 2);
+
+      render(await CovenLandingPage());
+
+      const status = notice();
+      expect(status).toHaveTextContent('2');
+      expect(within(status as HTMLElement).getByRole('link')).toHaveAttribute(
+        'href',
+        '/account#account-invitations',
+      );
+      // The list itself is the account page's, never drawn here.
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+    },
+  );
 });

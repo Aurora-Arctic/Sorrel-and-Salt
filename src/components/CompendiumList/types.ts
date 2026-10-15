@@ -1,8 +1,7 @@
 import type { Route } from 'next';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
-import type { PagerHrefs } from '../../app/(shell)/admin/types';
 import type { ModalHeading } from '../Modal/types';
-import type { PagePosition } from '../../lib/types';
+import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /**
  * One compendium entry as the list shows it: its classification, its identity
@@ -23,7 +22,7 @@ export interface CompendiumListEntry {
   editHeading: ModalHeading;
 }
 
-export interface CompendiumListProps extends Partial<PagerHrefs> {
+export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   entries: readonly CompendiumListEntry[];
   /** The filter the page shows, which the form starts from and compares against. */
   filter: CompendiumListFilter;

@@ -24,22 +24,29 @@ inside that segment's layout. It keeps `NotAuthorized` in a `main.page-frame`.
 
 ## Props
 
-- `viewer`: `{ name, isAdmin, canCreate, verified }` (`ShellViewer`,
-  `src/lib/types.ts`). `isAdmin` is the session's role; `canCreate` and
-  `verified` come from the user row.
-- `workspaces`: `{ slug, name }[]`, the viewer's covens.
+- `viewer`: `{ name, isAdmin, canCreate, verified, pendingInvitations }`
+  (`ShellViewer`, `src/lib/types.ts`). `isAdmin` is the session's role;
+  `canCreate` and `verified` come from the user row; `pendingInvitations` is
+  how many coven invitations wait for the viewer's verified address (M10.32).
 - `children`: the page, with any context row its own layout renders.
 
-`src/lib/viewer.ts` exports `viewerOf()`, which builds both from `getMe` and
-`membershipsOf(session, [session.userId])`, wrapped in React `cache()` so the
-shell layout and the coven layout's switcher cost one pair of lookups. The
+The shell takes no list of covens: the coven layout and the create page read
+them for their switchers. `src/lib/viewer.ts` exports `viewerOf()`, which builds
+the viewer and that list from `getMe`, `membershipsOf(session, [session.userId])`
+and, for a verified account only, `countReceivedInvitations(session, undefined)`
+(an unverified account reads 0 and costs no query), wrapped in React `cache()`
+so the shell layout, the coven layout's switcher and the `/coven` landing's
+notice cost one set of lookups: one count statement per shell page. The count
+goes to the account menu, which shows it ([`account-menu.md`](account-menu.md)). The
 covens are listed alphabetically by name. A refused lookup (impossible for
 one's own id) throws.
 
 ## Contracts
 
 - **The bar** has the brand, the site nav, then at the right Add Ingredient,
-  the account menu and the theme disc.
+  the account menu and the theme disc. The disc stays in the bar at every
+  width, a phone's included (the owner's call, M10.32): the account panel holds
+  no theme switch.
 - **The brand** is a link to `shellHome(viewer)` and plain text
   for an unverified viewer. `src/lib/shell-home.ts` holds `shellHome` (admin:
   `/admin`, anyone else `/coven`) and `covenHome` (always `/coven`, the
@@ -81,8 +88,8 @@ bar's height, square, and the current one is told by weight and the
 and no fill, so a hover's quiet wash still shows on it. Controls are
 `$control-height` tall. At or under `$shell-tablet-width` the site nav
 leaves the bar and the account button is an avatar alone; at or under
-`$shell-brand-width` the brand shortens and at or under `$shell-phone-width`
-the theme disc leaves the bar too. `_primitives.scss` takes the
+`$shell-brand-width` the brand shortens; the theme disc stays at every width.
+`_primitives.scss` takes the
 bar off `.page-frame`'s height and pads `.app-shell__main` for the bottom bar.
 
 ## Accessibility
@@ -93,14 +100,22 @@ link.
 
 ## Stories
 
-`index.stories.tsx`: `CovenPage`, `AdminPage`, `AccountPage`, `Unverified`,
-`Phone` and `PhoneAdmin`, each inside `ShellFrame` (`.ladle/shell-frame.tsx`),
-which draws the layouts' markup with fixture props.
+[`index.stories.tsx`](../../src/components/AppShell/index.stories.tsx), titled
+"Shell / App Shell", each inside `ShellFrame` (`.ladle/shell-frame.tsx`), which
+draws the layouts' markup with fixture props around a stub page. Each area's
+stub wraps and heads itself as that area's real page does: a coven's name in
+the coven layout's column, "Admin" in the admin layout's, "Your Account" or
+"Your Email" in the narrow page frame, and "Create Coven" on its panel.
+`CovenPage`, `AdminPage`, `CreatePage` (`/coven/new`: the switcher alone in the
+context row, with no section nav), `AccountPage`, `Unverified` (the email page's
+bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`.
 
 ## Testing
 
 `tests/components/AppShell/index.test.tsx` covers who sees the Admin and Your
 Coven links (an admin does; a verified member sees the rest of the bar and not
 these), the brand's target, Add Ingredient being disabled, the unverified
-viewer's bar, and the skip link's target. `tests/lib/shell-home.test.ts` and
-`tests/lib/viewer.test.ts` cover the two helpers.
+viewer's bar, the skip link's target, and the viewer's invitation count reaching
+the account menu's link. `tests/lib/shell-home.test.ts` and
+`tests/lib/viewer.test.ts` cover the two helpers, the latter including the count
+(read for a verified viewer, never queried for an unverified one).

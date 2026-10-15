@@ -29,7 +29,7 @@ const RevokeControl = ({ workspaceId, invitation }: RevokeControlProps): ReactEl
     question={
       <>
         Revoke the invitation to <strong>{invitation.email}</strong>? Its link will say it was
-        revoked.
+        withdrawn.
       </>
     }
     busy="Revoking"

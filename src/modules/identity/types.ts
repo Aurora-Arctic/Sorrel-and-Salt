@@ -81,9 +81,34 @@ export type WorkspaceInvitationRow = InvitationRow & {
   role: NonNullable<InvitationRow['role']>;
 };
 
+/**
+ * A pending coven invitation as its invitee's `/coven` landing shows it: the
+ * coven's name and slug, the role, who sent it and when it lapses. Never the
+ * token, which no response carries, nor the invited address, which is the
+ * viewer's own.
+ */
+export interface ReceivedInvitation {
+  id: string;
+  covenName: string;
+  covenSlug: string;
+  role: NonNullable<InvitationRow['role']>;
+  /** Null once the sender's account is gone. */
+  inviterName: string | null;
+  expiresAt: Date;
+  note: string | null;
+}
+
 /** Why an invitation link cannot be accepted by this session, one reason per link (MB.70, M7.7). */
 export type InvitationRefusal =
-  'invalid' | 'accepted' | 'revoked' | 'expired' | 'different-address' | 'unverified' | 'paused';
+  | 'invalid'
+  | 'accepted'
+  | 'declined'
+  | 'revoked'
+  | 'expired'
+  | 'closed'
+  | 'different-address'
+  | 'unverified'
+  | 'paused';
 
 /** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =

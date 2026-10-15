@@ -7,11 +7,12 @@ import { Forbidden } from '@/lib/errors';
 
 const requireSignedIn = vi.fn();
 const getMe = vi.fn();
+const countReceivedInvitations = vi.fn();
 const membershipsOf = vi.fn();
 // What a role may do is the coven module's to say; here a viewer reads no members.
 const rolePermits = vi.fn((role: string) => role !== 'viewer');
 vi.mock('@/lib/request-session', () => ({ requireSignedIn }));
-vi.mock('@/modules/identity', () => ({ getMe }));
+vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits }));
 
 const { viewerOf } = await import('@/lib/viewer');
@@ -27,6 +28,7 @@ beforeEach(() => {
   requireSignedIn.mockResolvedValue(SESSION);
   getMe.mockResolvedValue(ME);
   membershipsOf.mockResolvedValue([[]]);
+  countReceivedInvitations.mockReset().mockResolvedValue({ totalCount: 0, countBefore: null });
 });
 
 describe('viewerOf', () => {
@@ -41,7 +43,26 @@ describe('viewerOf', () => {
       isAdmin: true,
       canCreate: false,
       verified: false,
+      pendingInvitations: 0,
     });
+  });
+
+  it('counts the coven invitations waiting for a verified viewer, all of them', async () => {
+    countReceivedInvitations.mockResolvedValue({ totalCount: 3, countBefore: null });
+
+    const { viewer } = await viewerOf();
+
+    expect(viewer.pendingInvitations).toBe(3);
+    expect(countReceivedInvitations).toHaveBeenCalledExactlyOnceWith(SESSION, undefined);
+  });
+
+  it('asks no count for an unverified viewer, whose address has none to read', async () => {
+    getMe.mockResolvedValue({ ...ME, emailVerified: false });
+
+    const { viewer } = await viewerOf();
+
+    expect(viewer.pendingInvitations).toBe(0);
+    expect(countReceivedInvitations).not.toHaveBeenCalled();
   });
 
   it('asks for the viewer’s own memberships only', async () => {

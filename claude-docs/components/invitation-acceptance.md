@@ -31,14 +31,30 @@ The page uses `getSession()`, not `requireSession()`: an unverified account
 would otherwise be redirected to the email page without being told why, and
 the signed-out state is the page's to show.
 
+## What a refused link says
+
+Each reason has one sentence, from `MESSAGES` in
+`src/modules/identity/services/invitation-acceptance.ts`, and no sentence names a coven. Two are
+worth knowing:
+
+- **A declined link** (M10.34) says "This invitation was declined. If you change your mind, ask
+  whoever sent it for a new one." The invitee's answer outranks the owner's Remove that may follow.
+- **A link into a deleted coven** (MB.119, decision f) has a reason of its own, `closed`: "The coven
+  this invitation was for has been deleted, so it can't be accepted." It sits after the dead-link
+  and address checks, so a link in two states reports the earlier (an accepted one still says
+  accepted) and another address learns nothing of the coven.
+
 ## Styling
 
-Layout only. The page has no AppShell, the signed-in pages' shared frame, so
+A `.panel` (MB.119, decision c), as sign-in's panel, the email page's and the create page's are:
+the root is `panel invitation-acceptance`, and its `.header` (the layout primitive's) holds the
+`h1` and the grant sentence as a `.lede`. A refusal has no grant, so its header is the heading
+alone and the alert says the rest. The page has no AppShell, the signed-in pages' shared frame, so
 its `main` is the page frame, `.page-frame.page-frame--narrow`
 ([`styling.md`](../styling.md), "The page frame"): it centres the panel,
 holds it clear of the top inset and caps it at the forms' column,
 `$narrow-column` (28rem), so the panel sets no width of its own.
-`.invitation-acceptance` only stacks its heading, sentences and button a
+`.invitation-acceptance` only stacks the header, the alert and the button a
 `space(3)` apart. Both notices, the refusal and a failed accept, are
 `Notice` ([`notice.md`](notice.md)) as errors, so each is an alert; a
 failed accept is read by `readGraphqlFailure` (`src/lib/graphql-failure.ts`),
@@ -49,9 +65,16 @@ buttons and the spinner are the primitives', Accept drawn through
 ## Stories
 
 [`index.stories.tsx`](../../src/components/InvitationAcceptance/index.stories.tsx) —
-`SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified` and `Expired`, each inside the
-page's own `main.page-frame.page-frame--narrow`, so the workshop shows what
-the page shows. Render-only.
+`Pages / Invitation Acceptance`, each inside the page's own
+`main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only.
+
+- **The states:** `SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified`, and one for each other
+  refusal: `Invalid`, `Accepted`, `Revoked`, `Expired`, `Declined`, `DeletedCoven`,
+  `DifferentAddress` and `Paused`. The refusal sentences are copied from the service's `MESSAGES`,
+  as a story cannot import a server-only module.
+- **Phone and both themes:** `SignedOut`, `AcceptableCoven`, `Unverified` and `DeletedCoven` each
+  have `PhoneDark` and `PhoneLight` (375px), covering a sentence and a button, an alert and a
+  button, and an alert alone.
 
 ## Tests
 

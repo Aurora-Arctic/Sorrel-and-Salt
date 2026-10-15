@@ -6,7 +6,7 @@ import CreateWorkspaceForm from '.';
 // submit in the workshop fails into the alert region. The TanStack Query
 // client comes from the workshop's global provider (.ladle/components.tsx).
 export default {
-  title: 'Forms / Create Coven',
+  title: 'Coven / Create Coven Form',
 };
 
 // Inside the page's frame and head, as src/app/(shell)/coven/new/page.tsx writes

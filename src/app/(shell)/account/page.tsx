@@ -1,11 +1,25 @@
-import type { Metadata } from 'next';
-import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/identity';
+import type { Metadata, Route } from 'next';
+import { readNumberedPage, readPageCursors } from '@/lib/numbered-page';
+import {
+  countReceivedInvitations,
+  getMe,
+  isPlaceholderEmail,
+  listReceivedInvitations,
+  verificationWaitSeconds,
+} from '@/modules/identity';
+import ActionFailure from '../../../components/ActionFailure';
 import EmailForm from '../../../components/EmailForm';
 import NameForm from '../../../components/NameForm';
 import PageNav from '../../../components/PageNav';
+import ReceivedInvitations from '../../../components/ReceivedInvitations';
 import SignInMethods from '../../../components/SignInMethods';
 import { linkedAccounts, requireSession, sessionIsFresh } from '../../../lib/request-session';
-import { linkErrorMessage, postSignInLanding } from '../../../lib/sign-in';
+import {
+  ACCOUNT_INVITATIONS_ID,
+  ACCOUNT_PATH,
+  linkErrorMessage,
+  postSignInLanding,
+} from '../../../lib/sign-in';
 import { isRosterProvider } from '../../../lib/social-providers';
 // Server-only — see social-providers-config.ts's own header. Only the
 // resulting `configured` ids reach the client component.
@@ -18,10 +32,11 @@ export const metadata: Metadata = {
 };
 
 // The one account page (MB.88): the name the site shows, the address it
-// writes to, and the ways in, each a section on its own panel under its own
+// writes to, the ways in, and the coven invitations waiting for that address
+// (M10.32), each a section on its own panel under its own
 // heading, reached from a nav of jump links: a column to the left of the sections on a
 // wide screen, a menu above them on a phone (the owner's calls, MB.88, MB.116
-// and MB.7). Sign Out is the shell's account menu's, not this page's. The page owns all three heads, so each section is a
+// and MB.7). Sign Out is the shell's account menu's, not this page's. The page owns all four heads, so each section is a
 // region named by its heading. The ids are prefixed so no form's own id can
 // meet them. A link to add a provider lands back here, with `?error=` and
 // `?provider=` when it failed (claude-docs/auth/admin-bootstrap.md, "The
@@ -29,11 +44,21 @@ export const metadata: Metadata = {
 // sends it to the email page.
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
-  const [me, linked, fresh] = await Promise.all([
+  const { after, before } = readPageCursors(params);
+  const [me, linked, fresh, invitations] = await Promise.all([
     getMe(session),
     linkedAccounts(),
     sessionIsFresh(),
+    readNumberedPage(
+      { after, before },
+      (request) => listReceivedInvitations(session, request),
+      (start) => countReceivedInvitations(session, start),
+    ),
   ]);
+  // The pager stays at the section: a page of invitations is what was asked for.
+  const invitationsHref = (cursor: Record<string, string>) =>
+    `${ACCOUNT_PATH}?${new URLSearchParams(cursor).toString()}#${ACCOUNT_INVITATIONS_ID}` as Route;
+  const { hasPreviousPage, hasNextPage, startCursor, endCursor } = invitations.pageInfo;
   const linkError = linkErrorMessage(params.error);
   // Which row the failure belongs in; anything not on the roster leaves it
   // at the head of the section.
@@ -43,7 +68,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
       : undefined;
 
   return (
-    <main className="page-frame page-frame--narrow account-page">
+    <main className="page-frame page-frame--narrow page-with-nav">
       <h1>Your Account</h1>
       <PageNav
         label="On this page"
@@ -51,6 +76,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           { href: '#account-name', label: 'Name' },
           { href: '#account-email', label: 'Email' },
           { href: '#account-sign-in-methods', label: 'Sign-In Methods' },
+          { href: `#${ACCOUNT_INVITATIONS_ID}`, label: 'Invitations' },
         ]}
       />
       <section
@@ -101,6 +127,30 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           fresh={fresh}
           error={linkError ? { providerId: failedProvider, message: linkError } : undefined}
         />
+      </section>
+      <section
+        id={ACCOUNT_INVITATIONS_ID}
+        className="page-frame__section panel"
+        aria-labelledby="account-invitations-heading"
+      >
+        <div className="header">
+          <h2 id="account-invitations-heading">Invitations</h2>
+          <p className="lede">Covens that have invited this email address to join them.</p>
+        </div>
+        {/* A refused Accept is said once, above the list, rather than inside
+            a row, where a phone's card would wrap it under the button. The
+            list is drawn even with no rows, so its own empty line is live:
+            the section is always on the page (M10.32). */}
+        <ActionFailure>
+          <ReceivedInvitations
+            invitations={invitations.edges.map(({ node }) => node)}
+            position={invitations.position}
+            previousHref={
+              hasPreviousPage && startCursor ? invitationsHref({ before: startCursor }) : undefined
+            }
+            nextHref={hasNextPage && endCursor ? invitationsHref({ after: endCursor }) : undefined}
+          />
+        </ActionFailure>
       </section>
     </main>
   );

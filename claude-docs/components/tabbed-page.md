@@ -156,8 +156,7 @@ it renders.
   carries it. The two mixes are local to the stylesheet;
   `tests/scss/tokens.test.ts` holds the open label and edge, and the muted
   labels on the track, to their floors in both themes. The pill has no shadow
-  now. The row is not the `.link-row` primitive, whose underline it does not
-  draw; it clears the list's marker, indent and item margins itself.
+  now. The row clears the list's marker, indent and item margins itself.
 - **Each pill's hit area is a control tall.** The pill is smaller than
   `$control-height` (2.78rem), so a transparent `::before` pads each link
   back to it, above and below. The row inside the track is itself a control
@@ -246,8 +245,8 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 ## Stories
 
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
-`Admin / Tabbed Page`: the People page under the admin nav with its
-Invitations tab open and the pills beside the heading, Invite Admin at the
+`Layout / Tabbed Page`: the People page in the admin layout's frame, the nav in
+its context row above, with its Invitations tab open and the pills beside the heading, Invite Admin at the
 end of the line, as `/admin/invitations` draws it. `Default`; `PhoneDark` and
 `PhoneLight` at 375px, the pills under the heading and Invite Admin at its own width at the line's start; `AddAsPlus` in a frame 600px wide, the Add as a plus at the heading's end with the pills on the line; `AddBeneathAtThreeFifty` in a frame 382px wide, the Add labelled again beneath the heading with the pills beneath it; `PhoneScrolled` at 375px, on Privilege Changes, the last
 tab, with no action; and `LoadingState` with `LoadingPhoneDark` and

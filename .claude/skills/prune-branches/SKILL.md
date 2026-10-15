@@ -1,5 +1,7 @@
 ---
 name: prune-branches
+model: sonnet
+effort: medium
 description: Use when the user asks to clean up, prune, or delete stale local branches (e.g. "clean up my branches", "delete branches that are gone on remote", "prune old branches"). Deletes local branches whose remote counterpart was removed automatically; for local branches that were never pushed, asks which ones to delete and shows what commits each has that the default branch doesn't.
 ---
 

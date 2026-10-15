@@ -2,7 +2,6 @@ import type { ReactElement } from 'react';
 import SectionNav from '../SectionNav';
 import type { SectionNavItem } from '../SectionNav/types';
 import { ADMIN_SECTIONS } from './sections';
-import './index.scss';
 
 export { default as AdminContents } from './contents';
 

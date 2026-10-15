@@ -96,7 +96,7 @@ icon.
 invented people, each story's rows what its filter would show: every route, a
 note on a role grant and the flag it set at one instant, a deleted subject and
 the seed's actor, unlinked. `PhoneDark` and `PhoneLight` show the page's
-header and every change as a card at 375px, inside the admin layout's frame,
+header and every change as a card at 375px, inside the admin layout's frame and the People page with its Privilege Changes tab open,
 and `FilteredPhoneDark` and `FilteredPhoneLight` `OneUserAdminOnly` there, with
 Clear offered.
 Render-only, no test ids, no snapshots.

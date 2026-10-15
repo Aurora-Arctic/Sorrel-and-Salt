@@ -52,6 +52,24 @@ test('one user holds creation rights and the other does not', async ({ page }) =
   }
 });
 
+// Before either user has a coven, so both see the landing: a holder is asked
+// to start one, the other to join one (MB.119).
+test('the landing passes the scans in both themes, for a holder and for the other', async ({
+  page,
+}) => {
+  for (const user of [users.holder, users.outsider]) {
+    await signInAgainAs(page, user.id);
+    await page.goto('/coven');
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+    for (const colorScheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme });
+      await settleTransitions(page);
+      await assertNoAccessibilityViolations(page);
+    }
+    await assertNoSidewaysScroll(page);
+  }
+});
+
 test(
   'a holder creates a coven from the keyboard and lands in it as owner',
   { tag: '@story-3' },
@@ -74,7 +92,7 @@ test(
     await expect(page).toHaveURL(/\/coven\/fixture-coven$/);
     await expect(page.getByRole('heading', { level: 1, name: 'Fixture Coven' })).toBeVisible();
     // Delete is shown by the owner's permission: the page agrees with the row.
-    await expect(page.getByRole('button', { name: 'Delete Workspace', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete Coven', exact: true })).toBeVisible();
     expect(await ownersOf('fixture-coven')).toEqual([{ user_id: users.holder.id, role: 'owner' }]);
   },
 );

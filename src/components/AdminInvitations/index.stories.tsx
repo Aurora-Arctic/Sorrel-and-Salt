@@ -1,8 +1,10 @@
 import type { Story } from '@ladle/react';
+import { useState } from 'react';
 import type { ReactElement } from 'react';
 import { ADMIN_CHANGES_PAUSED_REFUSAL } from '../../lib/primary-admin';
 import { AdminTabbedFrame } from '../../../.ladle/admin-frame';
 import { INVITATIONS } from '../../../.ladle/fixtures';
+import { WorkshopNavigation } from '../../../.ladle/navigation';
 import AdminInvitations, { InviteAdmin } from '.';
 import { invitationsHref } from './href';
 import type { AdminInvitationEntry, AdminInvitationsFilter, AdminInvitationsProps } from './types';
@@ -84,8 +86,28 @@ OnePageOfSeveralPhoneDark.meta = { theme: 'dark', width: 375 };
 export const OnePageOfSeveralPhoneLight: Story = () => <PageTwo />;
 OnePageOfSeveralPhoneLight.meta = { theme: 'light', width: 375 };
 
-// Invite Admin pressed: the form `?invite` opens over the list.
-export const Inviting: Story = () => <Frame invitations={INVITATIONS} inviting />;
+// Invite Admin pressed: the form `?invite` opens over the list. Closing it
+// navigates to the list's address without `?invite`, which the workshop's
+// router reports (.ladle/navigation.ts) and this holds as the page's state,
+// so the list beneath is usable once the form is gone, and Open Again
+// brings the form back.
+export const Inviting: Story = () => {
+  const [inviting, setInviting] = useState(true);
+  return (
+    <WorkshopNavigation.Provider
+      value={(href) =>
+        setInviting(new URL(href, 'http://workshop.test').searchParams.has('invite'))
+      }
+    >
+      <Frame invitations={INVITATIONS} inviting={inviting} />
+      {!inviting && (
+        <button type="button" className="btn btn--solid" onClick={() => setInviting(true)}>
+          Open Again
+        </button>
+      )}
+    </WorkshopNavigation.Provider>
+  );
+};
 
 // Paused, to an admin who is not the primary one: Invite Admin and every
 // Revoke in view but locked, the pause as the reason in a tip.

@@ -6,7 +6,7 @@ import { covenInvitationMessage } from './coven-invitation';
 // The link is invented and goes nowhere; the images and fonts come from the
 // workshop, which serves public/.
 export default {
-  title: 'Emails / Coven invitation',
+  title: 'Emails / Coven Invitation',
 };
 
 const URL = 'https://sorrelandsalt.com/invite/workshop-preview-token';
