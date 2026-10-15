@@ -30,7 +30,7 @@ merely absent:
   and `categoryGroupsById`, `ingredientFormGroupsById`, `deityTraditionsById`
   and `ingredientFormsById` (`vocabulary`, for `Category.group`,
   `IngredientFormValue.group`, `Deity.tradition` and `IngredientVariant.formChoice`;
-  the last two MB.167's); MB.9 `ingredientsById` follows. M6.11 adds no
+  the last two MB.167's); MB.9 `ingredientsById` follows in Wave 11, keyed by workspace, for `InventoryItem.ingredient`. M6.11 adds no
   `membersByWorkspace`: `Workspace.members` reads a coven at a time
   ([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)). A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the

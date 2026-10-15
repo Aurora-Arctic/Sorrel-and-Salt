@@ -31,7 +31,7 @@ imports nothing.
 
 `src/modules/ingredients/schema/units.ts` is the single source of §5's
 vocabulary, its three dimensions and their units. Both pgEnums (`inventory_unit`,
-`unit_dimension`), the CHECK constraint below, M9.5's `unitConvert()`, M9.8's
+`unit_dimension`), the CHECK constraint below, M9.5's `unitConvert()` (in `src/modules/ingredients/units/convert.ts`), M9.8's
 badges and every later Zod enum are built from it. **Adding a unit is one
 edit** — that map, plus a regenerated migration.
 
@@ -42,12 +42,7 @@ layer at all (rule 2, MB.33) — a file that imports no `drizzle-orm` carries
 none in. It sits in `schema/` rather than in `src/lib/` because the tables are
 built from it, which puts it in the graph drizzle-kit loads.
 
-`fl oz` is stored as **`fl_oz`**. §5 names the unit in prose, where a space is
-how a human writes it; the stored label has to survive a Postgres enum, a
-GraphQL enum (M9.4) and a URL query parameter (M9.7's filter chips), and of
-those a GraphQL enum value cannot contain a space at all. The unit is §5's;
-only its spelling is settled here, and how it is _displayed_ stays a question
-for the UI tasks rather than a column value.
+`fl oz` is stored as two values, **`fl_oz_uk`** and **`fl_oz_us`**, because the two fluid ounces are different sizes: a British kitchen's is 28.413 ml and a US bottle's is 29.574 ml, about four per cent apart. A single `fl_oz` would force `unitConvert()` to guess which one a recipe means. M11.17 makes the change: it renames the stored `fl_oz` to `fl_oz_uk` and adds `fl_oz_us`, in the units map and in a migration. §5 names the unit in prose, where a space is how a human writes it; the stored label has to survive a Postgres enum, a GraphQL enum (M9.4) and a URL query parameter (M9.7's filter chips), and of those a GraphQL enum value cannot contain a space at all. The unit is §5's; only its spelling is settled here, and how it is _displayed_ stays a question for the UI tasks rather than a column value.
 
 The schema file is forbidden to spell a unit or a dimension out, and that is
 asserted as a property of its source text rather than of its values: equal

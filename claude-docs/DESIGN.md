@@ -479,7 +479,7 @@ The bodies run the luminaries, the planets outward from the Sun, then the other 
 
 **`inventory_items`** — `id`, `workspaceId`, `ingredientId`, `variantId` (MB.215), `quantityOnHand`, `unit`, `unitDimension`, `lowStockThreshold`, `source`, `acquiredDate`, + audit.
 
-A stock row is of one form: `variantId` is `NOT NULL`, since a jar of Rosemary holds the herb or the oil and never the plant in the abstract, and the composite key holds it to the row's ingredient (MB.217). Unique on `(workspaceId, variantId) WHERE deleted_at IS NULL`, so a coven may hold Rosemary herb and Rosemary oil as two rows, and adding a form it already holds is the existing row (M9.4). Units cover three dimensions, metric and imperial in each: **weight** — mg, g, kg, oz, lb; **volume** — ml, l, tsp, tbsp, fl oz, cup; **count** — piece, drop, pinch. `unitDimension` is stored alongside `unit` rather than derived at each call site, so a query can filter or group by it; a row whose dimension contradicts its unit cannot be written. One shared module owns the unit-to-dimension map, imported by both the Zod schema and the conversion library so the list cannot drift in two places.
+A stock row is of one form: `variantId` is `NOT NULL`, since a jar of Rosemary holds the herb or the oil and never the plant in the abstract, and the composite key holds it to the row's ingredient (MB.217). Unique on `(workspaceId, variantId) WHERE deleted_at IS NULL`, so a coven may hold Rosemary herb and Rosemary oil as two rows, and adding a form it already holds is the existing row (M9.4). Units cover three dimensions, metric and imperial in each: **weight** — mg, g, kg, oz, lb; **volume** — ml, l, tsp, tbsp, fl oz (UK), fl oz (US), cup (the two fluid ounces differ by about four per cent, so both are stored: M11.17); **count** — piece, drop, pinch. `unitDimension` is stored alongside `unit` rather than derived at each call site, so a query can filter or group by it; a row whose dimension contradicts its unit cannot be written. One shared module owns the unit-to-dimension map, imported by both the Zod schema and the conversion library so the list cannot drift in two places.
 
 `lowStockThreshold` is written onto the row at creation with a dimension-appropriate default (3 for count, 10 g for weight, 15 ml for volume, converted into the row's unit), not left null and defaulted at read time.
 
@@ -612,7 +612,7 @@ WHERE c.workspace_id IS NULL AND c.deleted_at IS NULL
 | Cronewort / _A. vulgaris_   | Mugwort / _A. vulgaris_   | suppressed — labels differ, identity matches                                                    |
 | Mugwort / _A. vulgaris_     | Mugwort / _A. absinthium_ | **both shown** — different plants                                                               |
 | Graveyard dirt / `none`     | Graveyard dirt / `none`   | compendium suppressed                                                                           |
-| Cat's Claw / —              | Cat's Claw ×4             | all four suppressed — over-suppression, and what the fuzzy warning flags before the stub exists |
+| Cat's Claw / —              | Cat's Claw ×5             | all five suppressed — over-suppression, and what the fuzzy warning flags before the stub exists |
 
 A workspace-local ingredient may therefore share a label, and an identity, with a compendium entry. Forbidding the collision would block someone who disagrees with an admin's correspondences from keeping their own version.
 
@@ -838,10 +838,16 @@ type Query {
     first: Int
     after: String
   ): QueryZodiacSuggestionsConnection!
+  # A connection of Ingredient: the coven's own entries, plus every compendium entry it holds a live stock row for,
+  # the compendium part passed through §5's local-beats-compendium anti-join (M8.3). Stock reads through Ingredient.stock.
   workspaceIngredients(
     workspaceId: ID!
     query: String
     categoryIds: [ID!]
+    form: String # keeps entries with a variant of this form (M9.4)
+    source: IngredientSource # local or compendium only; all by default (M9.7)
+    inStockOnly: Boolean # keeps entries the coven holds in stock (M9.7)
+    lowStockOnly: Boolean # keeps entries running low (M9.8)
     first: Int
     after: String
   ): QueryWorkspaceIngredientsConnection!
@@ -857,10 +863,13 @@ type Mutation {
   createWorkspace(input: WorkspaceInput!): Workspace! # gated on canCreateWorkspace, which every admin holds
   createWorkspaceIngredient(workspaceId: ID!, input: IngredientInput!): Ingredient! # input.categoryIds files it (story 30, MB.125)
   updateIngredient(workspaceId: ID!, id: ID!, input: IngredientUpdateInput!): Ingredient! # replaces the row: every field non-null, "" or [] clears — categoryIds included
+  promoteFolkName(workspaceId: ID, id: ID!, folkNameId: ID!): Ingredient! # swaps the display name with one folk name in one write; a null workspaceId is the compendium tier under the admin proof, and the swap is then global (M8.3a)
   deleteIngredient(workspaceId: ID!, id: ID!): ID! # a soft delete of the coven's own ingredient; a spell holding it keeps it
   createReference(workspaceId: ID, input: ReferenceInput!): Reference! # a null workspaceId writes the compendium tier, under the admin proof (§5)
   updateReference(workspaceId: ID, id: ID!, input: ReferenceInput!): Reference! # reaches every row linking it; nothing deletes one in v1
   addIngredientToWorkspace(workspaceId: ID!, variantId: ID!, input: StockInput!): InventoryItem! # stock is of one form (MB.215); the existing row when the coven holds that form already
+  updateStock(workspaceId: ID!, id: ID!, input: StockInput!): InventoryItem! # replaces the jar's fields (M9.4)
+  deleteStock(workspaceId: ID!, id: ID!): ID! # a soft delete of the jar; the entry stays (M9.4)
   createSpell(workspaceId: ID!, input: SpellInput!): Spell!
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace only
   createInvitation(workspaceId: ID!, email: String!, role: InvitableRole!): Invitation! # the link is mailed; no response carries it
@@ -925,6 +934,7 @@ type Ingredient {
   references: [ReferenceLink!]! # alphabetical by citation, through a loader; [] when none (MB.151)
   isGlobal: Boolean!
   categories: [Category!]!
+  stock(workspaceId: ID!): [InventoryItem!]! # the coven's jars of this entry, one per form it holds; empty for a local it holds unstocked; a loader keyed by ingredient and workspace (M9.4)
   audit: AuditInfo!
   # a v2 notes section slots in here
 }
@@ -944,6 +954,60 @@ type IngredientVariant {
   substitutes: [Substitute!]! # what may stand in for this form
   references: [ReferenceLink!]! # this form's own sources, beside the ingredient's
   audit: AuditInfo!
+}
+
+# A coven's jar of one form of an ingredient (§5, inventory_items; MB.215). Built by M9.4.
+type InventoryItem {
+  id: ID!
+  ingredient: Ingredient! # through MB.9's loader
+  variant: IngredientVariant! # the form held, beneath its ingredient
+  quantityOnHand: Float # null is "held, unweighed"; 0 is out of stock
+  unit: InventoryUnit
+  unitDimension: UnitDimension # derived from unit on write, never input
+  lowStockThreshold: Float
+  source: String
+  acquiredDate: LocalDate
+  audit: AuditInfo!
+}
+
+# M9.2's inventory_unit, built from schema/units.ts. Two fluid ounces since M11.17: the UK and US ounces differ by about four per cent, so both are stored.
+enum InventoryUnit {
+  mg
+  g
+  kg
+  oz
+  lb
+  ml
+  l
+  tsp
+  tbsp
+  fl_oz_uk
+  fl_oz_us
+  cup
+  piece
+  drop
+  pinch
+}
+
+enum UnitDimension {
+  weight
+  volume
+  count
+} # what a unit measures; conversion stays inside one (§11); M9.4
+# The fields of one jar, M4.5's Zod schema on the wire (M9.4). variantId is the mutation's argument, not a field.
+input StockInput {
+  quantityOnHand: Float
+  unit: InventoryUnit
+  lowStockThreshold: Float # a missing threshold takes the dimension's default on add (M9.3)
+  source: String
+  acquiredDate: LocalDate
+}
+
+# Which tier workspaceIngredients reads from (M9.7).
+enum IngredientSource {
+  all
+  local
+  compendium
 }
 
 # A link or a typed name (§5, ingredient_substitutes), as a spell layer is.
@@ -1482,7 +1546,7 @@ Acceptance coverage is tracked separately from the 80% line threshold, because t
 `src/lib/` carries the heaviest coverage:
 
 - There is no `filterIngredients()`: the search is the `compendium` query's, in SQL (M8.5; §14), because rule 8 means the browser never holds the whole list
-- `unitConvert()` — within a single dimension only: weight↔weight, volume↔volume, to a defined precision. Weight↔volume and anything involving count are refused as an explicit result the caller must handle, never null or a guess. No density table exists anywhere in the codebase
+- `unitConvert()` — lives in the ingredients module, `src/modules/ingredients/units/convert.ts`, built from `schema/units.ts` and reaching no database code, not in `src/lib/`; within a single dimension only: weight↔weight, volume↔volume, to a defined precision. Weight↔volume and anything involving count are refused as an explicit result the caller must handle, never null or a guess. No density table exists anywhere in the codebase
 - `summarizeSpellCategories()` — union and dedupe across ingredients
 - `compareSpellCategories()` — intended-not-present and present-not-intended, both directions
 - `resolveSpellVisibility()` — the read decision and every transition, exhaustively; `private → workspace` permitted, `workspace → private` rejected
@@ -1738,7 +1802,7 @@ The generic revision trigger above already captures every status transition and 
 
 v1 adds compendium ingredients to a workspace one row at a time — story 14, the "Add ingredient" action slot on `IngredientSearch`. Stocking a fresh workspace from a 200-entry compendium is 200 modal round trips. This makes it one.
 
-**No schema change.** Bulk add writes the same `inventory_items` rows as `addIngredientToWorkspace`; it only batches them. The partial unique index on `(workspace_id, ingredient_id) WHERE deleted_at IS NULL` already defines what "already added" means, and nothing else in §5 is touched.
+**No schema change.** Bulk add writes the same `inventory_items` rows as `addIngredientToWorkspace`; it only batches them. The partial unique index on `(workspace_id, variant_id) WHERE deleted_at IS NULL` already defines what "already added" means, and nothing else in §5 is touched.
 
 **UI.** `/compendium` gains a selection mode. A toggle turns each result row into a checkbox; a header control selects every entry matching the current filter — filter state is already in the URL, so "select all" means all matching rows, not just those on screen. A sticky bar shows the count and an **Add to ingredients** action. If the user belongs to more than one workspace the bar carries a workspace picker, since the compendium is shared across workspaces and the target can't be inferred from the route. Selection clears on leaving the mode or navigating away.
 
