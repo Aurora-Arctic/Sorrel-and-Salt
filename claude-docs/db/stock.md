@@ -264,7 +264,7 @@ uses: a compendium entry the coven has its own version of (same formal name, or
 the same label when the local entry declares no formal name) is left out, and
 the local entry shows in its place.
 
-The search, category and form filters are the compendium's own, from
+The search, category, form, deity, zodiac sign, planet and toxic filters (the form filter a list, and the last four, since M11.22) are the compendium's own, from
 `compendiumList`, so the list matches, ranks and pages exactly as the
 compendium does. They run under the coven's proof rather than the compendium
 tier, so a filter never reaches another coven's rows.
