@@ -123,6 +123,15 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// A caller's own control at the start of the control box: a flex item that
+// keeps its own size, and centres its button against the text's line.
+.combobox__leading {
+  display: flex;
+  flex: none;
+  align-items: center;
+  align-self: stretch;
+}
+
 .combobox__indicators {
   display: flex;
   flex: none;
@@ -256,6 +265,42 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &.is-open {
     display: block;
   }
+}
+
+// With an empty message the popup is the placed, bordered panel; the
+// listbox inside it is a plain list with no panel of its own. Without one,
+// the list above is the panel, as it always was. The popup does not scroll:
+// Downshift scrolls the highlighted row into view within the listbox
+// element, so a scroller outside it (the popup) is never moved and an
+// arrowed-to row stays hidden. The listbox is the scroller, as above, and
+// reads `--combobox-list-room`, which the placement sets on the popup and
+// the listbox inherits.
+.combobox__popup {
+  z-index: 1;
+  display: none;
+  box-sizing: border-box;
+
+  @include floating-panel;
+
+  &.is-open {
+    display: block;
+  }
+}
+
+.combobox__list.is-inset {
+  display: block;
+  border: 0;
+  box-shadow: none;
+}
+
+.combobox__list.is-inset:not(.is-open) {
+  display: none;
+}
+
+// The message sits in the popup's surface, set in by a row's padding; the
+// design review styles it.
+.combobox__empty {
+  padding: space(2) space(3);
 }
 
 // A bucket and its rows: no typography-base ◆, no list margins.

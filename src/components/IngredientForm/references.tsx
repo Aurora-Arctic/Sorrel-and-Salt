@@ -316,7 +316,7 @@ export function ReferencesField({
           // owner's call, 2026-10-16).
           suggestions={suggestions}
           listAnchor={boxRow}
-          create={{ label: 'New Reference…', onCreate: openPanel }}
+          action={{ label: 'New Reference…', onSelect: openPanel }}
           inputRef={(element) => {
             field.ref(element);
             boxElement.current = element;

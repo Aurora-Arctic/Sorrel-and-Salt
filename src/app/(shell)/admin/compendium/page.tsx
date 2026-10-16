@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import CompendiumList from '../../../../components/CompendiumList';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
+import { editHeading } from '../../../../components/CompendiumList/heading';
 import type {
   CompendiumFormChoice,
   CompendiumListForm,
@@ -28,8 +29,6 @@ import { formChoicesOf, formGroupsOf, listIngredientFormValues } from '@/modules
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
 import { readEditPlace, readListPlace } from '../list-page';
-import type { ModalHeading } from '../../../../components/Modal/types';
-import type { IngredientFormValues } from '../../../../components/IngredientForm/types';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { entryValues } from './entry-values';
@@ -136,40 +135,6 @@ const readEntry = async (slug: string) => {
 
 /** The add dialog's head and the button that opens it. */
 const ADD_TITLE = 'Add Ingredient';
-
-/**
- * The nomenclatures whose formal name is a binomial, set in italics; a
- * mineral's or a chemical's is set upright (claude-docs/styling.md, "Type").
- */
-const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
-  'botanical',
-  'fungal',
-  'zoological',
-]);
-
-/**
- * An entry's edit dialog head (MB.115): the name it was saved under, not the
- * Name field's, and its formal name after it, as the list's rows name it.
- * Its row's Edit opens with the same head (M9.18), so it reads the fields the
- * row and the form's values share; a row's missing formal name is `null`.
- */
-function editHeading({
-  name,
-  canonicalName,
-  nomenclature,
-}: {
-  name: string;
-  canonicalName: string | null;
-  nomenclature: IngredientFormValues['nomenclature'];
-}): ModalHeading {
-  const formal = (canonicalName ?? '').trim();
-  const set = BINOMIAL_KINDS.has(nomenclature) ? (
-    <span className="binomial">{formal}</span>
-  ) : (
-    formal
-  );
-  return { eyebrow: 'Edit Ingredient', title: name, qualifier: formal ? set : undefined };
-}
 
 // The global compendium, for an admin to add to, edit and retire (M5.5). A
 // wide modal over the list does the writing, opened by the address — `?new`,

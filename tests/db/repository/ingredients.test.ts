@@ -274,6 +274,21 @@ describe('findCompendiumPage', () => {
         ]);
       });
 
+      it('answers one row for an entry two of whose variants both match by form', async () => {
+        await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
+        await insertVariant(sql, mugwortId, { form: 'Testoil, refined' }, A.id);
+        // The precondition: each form matches the query on its own, so a
+        // listing that did not group by entry would answer the entry twice.
+        const [scores] = await sql`
+          select word_similarity('testoil', 'Testoil') as plain,
+                 word_similarity('testoil', 'Testoil, refined') as refined`;
+        expect(scores).toEqual({ plain: 1, refined: 1 });
+
+        const page = await pageOf({ query: 'testoil' }, { first: 100 });
+
+        expect(page.edges.map((edge) => edge.node.name)).toEqual(['Fixture Mugwort']);
+      });
+
       it('matches nothing through a soft-deleted variant', async () => {
         const variantId = await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
         // The precondition: the live variant is found.

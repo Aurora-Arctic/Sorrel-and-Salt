@@ -353,11 +353,11 @@ describe('Combobox', () => {
     });
   });
 
-  describe('a create row', () => {
-    const create = (onCreate = vi.fn()) => ({ label: 'New Reference…', onCreate });
+  describe('an action row', () => {
+    const action = (onSelect = vi.fn()) => ({ label: 'New Reference…', onSelect });
 
     it('is the last row, with no typed one, there with a blank box too', () => {
-      render(<Harness suggestions={ONE_BUCKET} create={create()} />);
+      render(<Harness suggestions={ONE_BUCKET} action={action()} />);
 
       key('ArrowDown');
       expect(options()).toEqual([
@@ -372,7 +372,7 @@ describe('Combobox', () => {
     });
 
     it('opens on ArrowDown with no suggestions at all, the row being one', () => {
-      render(<Harness suggestions={{ options: [], pending: false }} create={create()} />);
+      render(<Harness suggestions={{ options: [], pending: false }} action={action()} />);
 
       key('ArrowDown');
 
@@ -381,9 +381,9 @@ describe('Combobox', () => {
     });
 
     it('calls its own callback when picked, by click or by keyboard, and never onPick', () => {
-      const onCreate = vi.fn();
+      const onSelect = vi.fn();
       const onPick = vi.fn();
-      render(<Harness suggestions={ONE_BUCKET} create={create(onCreate)} onPick={onPick} />);
+      render(<Harness suggestions={ONE_BUCKET} action={action(onSelect)} onPick={onPick} />);
 
       type('fix');
       fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
@@ -395,7 +395,7 @@ describe('Combobox', () => {
       );
       key('Enter');
 
-      expect(onCreate).toHaveBeenCalledTimes(2);
+      expect(onSelect).toHaveBeenCalledTimes(2);
       expect(onPick).not.toHaveBeenCalled();
       // The text is the caller's: picking the row leaves it as typed.
       expect(box()).toHaveValue('fix');
@@ -1389,5 +1389,137 @@ describe('Combobox', () => {
       expect(elements()).toHaveAttribute('aria-expanded', 'false');
       expect(screen.queryByRole('option')).not.toBeInTheDocument();
     });
+  });
+});
+
+// The empty message (M8.10): a settled lookup with no rows says so, outside the
+// listbox, and it is no option.
+describe('Combobox empty message', () => {
+  const NONE: Suggestions = { options: [], pending: false };
+  const status = () => screen.getByRole('status', { name: 'Form suggestions' });
+  const listbox = () => screen.getByRole('listbox', { hidden: true });
+
+  it('shows the message on a settled lookup with no rows, outside the listbox and announced', () => {
+    render(<Harness offerTyped={false} suggestions={NONE} empty="Nothing Found" />);
+
+    type('zzz');
+
+    const message = screen.getByText('Nothing Found', { selector: 'div' });
+    expect(message).toBeVisible();
+    expect(listbox()).not.toContainElement(message);
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    expect(status()).toHaveTextContent('Nothing Found');
+  });
+
+  it('shows no message while the lookup is pending, the text is blank, or none is given', () => {
+    const { rerender } = render(
+      <Harness
+        offerTyped={false}
+        suggestions={{ options: [], pending: true }}
+        empty="Nothing Found"
+      />,
+    );
+    type('zzz');
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+
+    rerender(<Harness offerTyped={false} suggestions={NONE} empty="Nothing Found" initial="" />);
+    type('   ');
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+
+    rerender(<Harness offerTyped={false} suggestions={NONE} />);
+    type('zzz');
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+  });
+
+  it('keeps the count in the status, and no message, once rows arrive', () => {
+    render(<Harness offerTyped={false} suggestions={ONE_BUCKET} empty="Nothing Found" />);
+
+    type('fix');
+
+    expect(status()).toHaveTextContent('2 suggestions');
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('option')).toHaveLength(2);
+  });
+});
+
+describe('Combobox leading node and toggle', () => {
+  const control = () => box().closest('.combobox__control') as HTMLElement;
+  const precedes = (a: Element, b: Element) =>
+    Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  it('draws the caller node inside the control, ahead of the text box', () => {
+    render(<Harness suggestions={ONE_BUCKET} leading={<button type="button">Go</button>} />);
+
+    const go = screen.getByRole('button', { name: 'Go' });
+    expect(control()).toContainElement(go);
+    expect(precedes(go, box())).toBe(true);
+  });
+
+  it('draws it alone when the box has no clear and no suggestions', () => {
+    render(<Harness leading={<button type="button">Go</button>} />);
+
+    expect(control()).toContainElement(screen.getByRole('button', { name: 'Go' }));
+  });
+
+  it('fires the leading button without closing an open list or emptying the value', () => {
+    const onGo = vi.fn();
+    render(
+      <Harness
+        suggestions={ONE_BUCKET}
+        leading={
+          <button type="button" onClick={onGo}>
+            Go
+          </button>
+        }
+      />,
+    );
+    type('fix');
+    expect(screen.getAllByRole('option')).toHaveLength(3);
+
+    const go = screen.getByRole('button', { name: 'Go' });
+    fireEvent.mouseDown(go);
+    fireEvent.mouseUp(go);
+    fireEvent.click(go);
+
+    expect(onGo).toHaveBeenCalledTimes(1);
+    expect(box()).toHaveValue('fix');
+    expect(screen.getAllByRole('option')).toHaveLength(3);
+  });
+
+  it('puts the caret in the text on a press beside the leading button, as on the padding', () => {
+    render(<Harness suggestions={ONE_BUCKET} leading={<button type="button">Go</button>} />);
+    const ground = screen.getByRole('button', { name: 'Go' }).parentElement as HTMLElement;
+    // The press lands on the leading node's own ground, not the button or the control.
+    expect(ground).not.toBe(control());
+
+    fireEvent.mouseDown(ground);
+    expect(box()).toHaveFocus();
+  });
+
+  it('leaves out the chevron with toggle false, and still opens as you type', () => {
+    render(
+      <Harness
+        suggestions={ONE_BUCKET}
+        toggle={false}
+        clear={{ label: 'Clear Form', onClear: () => {}, empty: true }}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /^Show Form/ })).not.toBeInTheDocument();
+    expect(control().querySelectorAll('.combobox__separator')).toHaveLength(0);
+    type('fix');
+    expect(screen.getAllByRole('option')).toHaveLength(3);
+  });
+
+  it('draws the chevron by default', () => {
+    render(<Harness suggestions={ONE_BUCKET} />);
+
+    expect(screen.getByRole('button', { name: 'Show Form suggestions' })).toBeInTheDocument();
+  });
+
+  it('draws no indicators when there is no clear, no suggestions and no leading node', () => {
+    render(<Harness />);
+
+    expect(control().querySelector('.combobox__indicators')).toBeNull();
   });
 });

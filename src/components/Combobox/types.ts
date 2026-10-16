@@ -61,6 +61,14 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   onRemoveLast?: () => void;
   /** The suggestions for the text; left out for a box with no source, which never opens. */
   suggestions?: Suggestions<O>;
+  /**
+   * What an open list says once its lookup has settled with no rows and the
+   * text is not blank: "No Matches". Drawn in the popup outside the listbox (it
+   * is no option), and read by the status. The typed row counts as a row, so
+   * a caller wanting the message passes `offerTyped={false}`. Without it a
+   * list with no rows stays closed.
+   */
+  empty?: string;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
   /**
@@ -71,11 +79,30 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    */
   clear?: { label: string; onClear: () => void; empty: boolean };
   /**
-   * A last row that makes something new rather than picking a suggestion,
-   * "New Reference…", there whatever is typed and in place of the typed row:
-   * for a list whose entries can only be picked (MB.154; last since MB.115).
+   * A caller's own control drawn inside the control box, before the text and
+   * before any entries: a form's submit, say. A slot rather than a built-in
+   * because Combobox knows nothing about forms or what the caller wants
+   * pressed. A button given here should be styled `combobox__indicator` to
+   * match the others; a press on it is inside the box, so it neither closes an
+   * open list nor moves the focus.
    */
-  create?: { label: string; onCreate: () => void };
+  leading?: ReactNode;
+  /**
+   * Whether a box with `suggestions` draws its chevron button. Left out
+   * (`false`) for a free-text search that opens as you type, where a chevron
+   * promises a set to browse. Typing still opens the list. Defaults to true.
+   */
+  toggle?: boolean;
+  /**
+   * A last row that does something rather than picking a suggestion, there
+   * whatever is typed and in place of the typed row, set off in italics as the
+   * typed row is. Two callers use it: "New Reference…" makes something new for
+   * a list whose entries can only be picked (MB.154; last since MB.115), and
+   * "See all results." applies the search to the list (M8.10). Reached by the
+   * arrow keys and picked by Enter or a click, which call `onSelect`; it is
+   * no result, so the status does not count it.
+   */
+  action?: { label: string; onSelect: () => void };
   /**
    * Whether the typed row is offered: false for text the caller would
    * refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which
@@ -232,14 +259,14 @@ export interface TypedRow {
   typed: true;
 }
 
-/** The first row of a list whose caller can make something new: its label. */
-export interface CreateRow {
+/** The last row of a list whose caller gave an `action`: its label. */
+export interface ActionRow {
   value: string;
-  create: true;
+  action: true;
 }
 
-/** A row Downshift numbers: a suggestion, the typed row, or the create row. */
-export type Item<O extends ComboboxOption> = O | TypedRow | CreateRow;
+/** A row Downshift numbers: a suggestion, the typed row, or the action row. */
+export type Item<O extends ComboboxOption> = O | TypedRow | ActionRow;
 
 /** A bucket of rows under its heading, or the one unheaded list of a source with one bucket. */
 export interface Bucket<O extends ComboboxOption> {
