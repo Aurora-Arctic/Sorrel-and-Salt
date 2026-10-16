@@ -33,7 +33,7 @@ compendium page wrap it rather than containing their own form.
 
 The props are a union on `workspaceId` (`IngredientFormProps`, `types.ts`):
 a coven's id writes that coven's new ingredient, and `null` writes the
-compendium — a new entry, or the `entry` given. A coven's edit is M8.16's,
+compendium — a new entry, or the `entry` given. A coven's edit is M8.17's,
 so the union cannot say one yet.
 
 | Prop            | Meaning                                                                                                                                                                                                                                                                                 |
