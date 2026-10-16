@@ -1107,6 +1107,15 @@
     margin-inline-start: auto;
   }
 
+  // A form's Undo and Redo (M12.9): two small quiet buttons side by side. In a
+  // modal they sit in its header slot beside Open All; elsewhere, at the start
+  // of the form.
+  .form-history {
+    display: inline-flex;
+    align-self: flex-start;
+    gap: space(1);
+  }
+
   .field {
     display: flex;
     flex-direction: column;
