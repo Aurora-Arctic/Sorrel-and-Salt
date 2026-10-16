@@ -151,7 +151,12 @@ ignores that spec too
   slot's; the config passes each server its own as `webServer.env.DATABASE_URL`,
   so the built app reads from it instead of the dev database.
   `recreateE2eDatabase()` re-clones the calling worker's slot database alone,
-  and `dropE2eTemplate()` removes the template again.
+  then sends its server ten session lookups at once, repeated until all answer 200. The drop kills the server's pooled connections, and the server reads
+  each socket's close only some milliseconds later; a test's first request in
+  that gap writes to a dead socket and gets a 500 (`CONNECTION_CLOSED`, `EPIPE`
+  or `57P01`). With the coverage hooks off, the next file starts quickly enough
+  to land in the gap (M11.18). The lookups find the dead connections first, and
+  the pool replaces them. `dropE2eTemplate()` removes the template again.
 - **`globalSetup: './tests/e2e/global-setup.ts'`** calls `seedE2eTemplate()`
   and then `cloneE2eDatabases()`, once per run. It runs _after_ the servers
   have started, since Playwright sets up the `webServer` entries first, and
@@ -539,3 +544,33 @@ Video off won every pair: a tenth to a sixth of the summed test time (the
 single warm run in the variants table said 8%, these said 7% to 17%), and 2
 to 4 s of wall. A failing test still leaves its trace and screenshot under
 `.reports/test-results/`, checked by failing one on purpose.
+
+**After coverage went behind a switch** (lever 4: JS coverage is collected only
+under `E2E_COVERAGE=1`, which `playwright.yml` sets). Two sets of figures, and
+they compare within themselves, not with each other, nor with the idle table at
+the top of this section.
+
+Set 1, before the reclone fix below: one interleaved pair, coverage off then
+on, on a quiet machine, gate suite, 6 workers. Two further pairs were disturbed
+by other sessions (lock waits of about 30 s, load near 11) and are not
+reported.
+
+| Coverage | Wall time | Sum of test durations |
+| -------- | --------- | --------------------- |
+| Off      | 27.2 s    | 70.9 s                |
+| On       | 32.8 s    | 91.9 s                |
+
+Set 2, after the reclone fix, on a loaded machine, Playwright's own reported
+time:
+
+| Coverage                       | Playwright's time                  |
+| ------------------------------ | ---------------------------------- |
+| Off                            | 39.4, 39.4, 38.1 s (median 39.4 s) |
+| On (`E2E_COVERAGE=1`, one run) | 48.9 s                             |
+
+Turning the hooks off exposed a race they had been hiding: the slot
+database's reclone killed the server's pooled connections, and the next file
+started fast enough to hit a dead one. The slot-databases bullet near the top
+of this file explains the warm-up that now follows each reclone.
+`.reports/coverage-e2e/` is written only under `E2E_COVERAGE=1`, which
+`.github/workflows/playwright.yml` sets.
