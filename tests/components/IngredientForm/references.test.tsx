@@ -582,6 +582,25 @@ describe('ReferencesField', () => {
       expect(editSource(NOTES_SHORT)).toHaveFocus();
     });
 
+    // MB.258: the × at the panel's top closes it as Cancel does.
+    it('closes from its close button, saving nothing, the focus back on the row', async () => {
+      offerReference(NOTES_WHOLE);
+      const updates = acceptReferenceUpdate(RENAMED_CITATION);
+      renderListed([NOTES]);
+      await openEdit(NOTES_SHORT);
+
+      typeIn(inEditPanel('Article Title'), 'Notes on Fixtureleaf');
+      press(within(editPanel()).getByRole('button', { name: 'Close Edit Source' }));
+
+      noEditPanel();
+      expect(updates).toHaveLength(0);
+      // The row still cites the source as it was.
+      expect(
+        within(ingredient()).queryByRole('button', { name: `Edit ${RENAMED_SHORT}` }),
+      ).toBeNull();
+      expect(editSource(NOTES_SHORT)).toHaveFocus();
+    });
+
     // Why it could have been offered: the coven's own source, beside it, is.
     it('offers no edit of a compendium source in a coven’s form', () => {
       renderListed([HERBAL, NOTES]);
