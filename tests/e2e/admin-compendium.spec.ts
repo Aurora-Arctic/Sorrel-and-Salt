@@ -203,3 +203,74 @@ test('the edit source panel leaves the dialog in place and closes from its top b
   await expect(editing).toHaveCount(0);
   await expect(adding.getByRole('button', { name: 'Edit Source Mockleaf Herbal' })).toBeFocused();
 });
+
+// M11.21: the toxic toggles, the ingredient's and each form's, which no story
+// walks: each starts off, saving stores it, and reopening reads it back, the
+// two apart. The ingredient's is turned by keyboard, a form's by a press.
+test('the toxic toggles start off, save, and read back on reopening, each its own', async ({
+  page,
+}) => {
+  await signInAs(page, 'toxic-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?new');
+  const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
+  await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Toxicwort');
+  await adding.getByRole('combobox', { name: 'Classification' }).click();
+  await adding
+    .getByRole('listbox', { name: 'Classification choices' })
+    .getByRole('option', { name: 'None' })
+    .click();
+  for (const form of ['Herb', 'Oil']) {
+    const box = adding.getByRole('combobox', { name: 'New Form' });
+    await box.click();
+    await box.fill(form);
+    await adding
+      .getByRole('listbox', { name: 'New Form suggestions' })
+      .getByRole('option', { name: new RegExp(`^${form} \\(`) })
+      .click();
+    // Each new form opens with its toggle off, closing the one added before it.
+    const card = adding.getByRole('group', { name: form, exact: true });
+    await expect(card.getByRole('switch', { name: 'Toxic', exact: true })).not.toBeChecked();
+  }
+
+  // The ingredient's starts off too.
+  const toggles = adding.getByRole('switch', { name: 'Toxic', exact: true });
+  await expect(toggles.first()).not.toBeChecked();
+
+  // The ingredient's, reached from its Safety Notes by Tab, past its hint's
+  // info tip, and turned by Space. Its sections come before Variants, so its
+  // toggle is the first.
+  await adding.getByRole('textbox', { name: 'Safety Notes' }).first().focus();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await expect(toggles.first()).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(toggles.first()).toBeChecked();
+  const oil = adding.getByRole('group', { name: 'Oil', exact: true });
+  await oil.getByRole('switch', { name: 'Toxic', exact: true }).click();
+  await assertNoAccessibilityViolations(page);
+  await adding.getByRole('button', { name: 'Save Ingredient' }).click();
+
+  // Read back from the server: the ingredient's on, Herb's off, Oil's on.
+  const editing = page.getByRole('dialog', { name: 'Edit Ingredient, Aaa Toxicwort', exact: true });
+  await expect(editing).toBeVisible();
+  await page.reload();
+  await editing.getByRole('button', { name: 'Open All' }).click();
+  // The forms' cards are shut, so the one toggle shown is the ingredient's.
+  const ingredientToggle = editing.getByRole('switch', { name: 'Toxic', exact: true });
+  await expect(ingredientToggle).toHaveCount(1);
+  await expect(ingredientToggle).toBeChecked();
+  for (const [form, toxic] of [
+    ['Herb', false],
+    ['Oil', true],
+  ] as const) {
+    await editing.getByRole('button', { name: `Edit ${form}` }).click();
+    const card = editing.getByRole('group', { name: form, exact: true });
+    // Open All may have opened its sections already; open Details & Care if not.
+    const details = card.getByRole('button', { name: 'Details & Care', exact: true });
+    if ((await details.getAttribute('aria-expanded')) !== 'true') await details.click();
+    const toggle = card.getByRole('switch', { name: 'Toxic', exact: true });
+    if (toxic) await expect(toggle).toBeChecked();
+    else await expect(toggle).not.toBeChecked();
+  }
+  await assertNoAccessibilityViolations(page);
+});

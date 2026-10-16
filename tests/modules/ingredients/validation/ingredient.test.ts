@@ -604,6 +604,7 @@ describe('the ingredient fields, on the local variant', () => {
       formId: '',
       description: '',
       safetyNotes: '',
+      toxic: false,
       elements: [],
       celestialBodies: [],
       zodiacSigns: [],

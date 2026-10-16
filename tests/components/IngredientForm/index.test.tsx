@@ -184,6 +184,7 @@ describe('IngredientForm', () => {
       addEntry('Zodiac Sign', 'Gemini');
       addEntry('Colour', 'Silver-green');
       type('Safety Notes', 'None known.');
+      fireEvent.click(screen.getByRole('switch', { name: 'Toxic' }));
       save();
 
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
@@ -198,6 +199,7 @@ describe('IngredientForm', () => {
         zodiacSigns: ['Gemini'],
         colors: ['Silver-green'],
         safetyNotes: 'None known.',
+        toxic: true,
         deities: [],
         substitutes: [],
         folkNames: [],

@@ -119,6 +119,7 @@ function whole(input: Record<string, unknown>): Record<string, unknown> {
     deities: [],
     colors: [],
     safetyNotes: '',
+    toxic: false,
     substitutes: [],
     references: [],
     folkNames: [],
