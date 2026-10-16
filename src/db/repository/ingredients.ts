@@ -500,19 +500,12 @@ function compendiumList(filter: IngredientFilter): {
   return {
     arms: and(
       ...categoryArms(filter.categoryIds ?? []),
-      formArm(filter.form),
+      formArm(filter.forms),
       pickedFormArm(filter.formId),
-      listArm(ingredients.celestialBodies, filter.celestialBody),
-      listArm(ingredients.zodiacSigns, filter.zodiacSign),
-      filter.deityId
-        ? existsIn(
-            ingredientDeities,
-            and(
-              eq(ingredientDeities.ingredientId, ingredients.id),
-              eq(ingredientDeities.deityId, filter.deityId),
-            ),
-          )
-        : undefined,
+      listArm(ingredients.celestialBodies, filter.celestialBodies),
+      listArm(ingredients.zodiacSigns, filter.zodiacSigns),
+      deityArm(filter.deityIds),
+      toxicArm(filter.toxic),
       filter.withoutReferences ? citesNowhere() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
     ),
@@ -664,30 +657,81 @@ function categoryArms(categoryIds: readonly string[]): SQL[] {
 }
 
 /**
- * `list` holds an entry folding to `value`, both trimmed and lower-cased as
- * the suggestions fold one (MB.162). Blank means no filter.
+ * The values of a list filter that say something, blank ones dropped, so
+ * `['', 'Mars']` filters by Mars and `[' ']` by nothing (M11.22). They are
+ * not folded here: the fold stays in SQL, beside the column's own.
  */
-function listArm(list: AnyPgColumn, value: string | undefined): SQL | undefined {
-  if (!value?.trim()) return undefined;
-  return inArray(fold(value), listFolds(list));
+function stated(values: readonly string[] | undefined): string[] {
+  return (values ?? []).filter((value) => value.trim() !== '');
 }
 
 /**
- * The entry holds a live variant whose form is `form`, both trimmed and
- * lower-cased (MB.222): any of its forms, so an entry with two is found under
- * either. A correlated `EXISTS` rather than a join, so an entry is one row
- * however many of its forms match, and the count reads the rows the page
- * does. Blank means no filter.
+ * `list` holds an entry folding to any of `values`, both sides trimmed and
+ * lower-cased as the suggestions fold one (MB.162). One `IN` per value, ORed,
+ * rather than an array overlap (`&&`): the list's side has to be folded entry
+ * by entry, which `listFolds` does, and an overlap would compare the raw
+ * spellings. Blank values are skipped, and none means no filter.
  */
-function formArm(form: string | undefined): SQL | undefined {
-  if (!form?.trim()) return undefined;
+function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL | undefined {
+  const wanted = stated(values);
+  if (wanted.length === 0) return undefined;
+  return or(...wanted.map((value) => inArray(fold(value), listFolds(list))));
+}
+
+/**
+ * The entry holds a live variant whose form is any of `forms`, both sides
+ * trimmed and lower-cased (MB.222, M11.22). A correlated `EXISTS` rather than
+ * a join, so an entry is one row however many of its forms match, and the
+ * count reads the rows the page does. Blank values are skipped, and none
+ * means no filter.
+ */
+function formArm(forms: readonly string[] | undefined): SQL | undefined {
+  const wanted = stated(forms);
+  if (wanted.length === 0) return undefined;
   return existsIn(
     ingredientVariants,
     and(
       eq(ingredientVariants.ingredientId, ingredients.id),
-      eq(fold(ingredientVariants.form), fold(form)),
+      inArray(fold(ingredientVariants.form), wanted.map(fold)),
     ),
   );
+}
+
+/**
+ * The entry holds a live link to any of the curated deities `deityIds`
+ * (MB.167, M11.22): a correlated `EXISTS`, so an entry linking two of them is
+ * one row, answered by `ingredient_deities_deity_id_idx`. Empty means no
+ * filter.
+ */
+function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
+  if (!deityIds?.length) return undefined;
+  return existsIn(
+    ingredientDeities,
+    and(
+      eq(ingredientDeities.ingredientId, ingredients.id),
+      inArray(ingredientDeities.deityId, deityIds),
+    ),
+  );
+}
+
+/**
+ * M11.21's two flags read together (M11.22): an entry is toxic when its own
+ * flag is on or a live variant's is, and not toxic when neither is. The
+ * variant's side is an `existsIn`, which skips a soft-deleted variant, so a
+ * retired form's flag counts for nothing either way. Not toxic is the
+ * negation of the same predicate rather than a second one, so the two
+ * settings always split the list between them. Absent means any.
+ */
+function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
+  if (!toxic) return undefined;
+  const flagged = or(
+    eq(ingredients.toxic, true),
+    existsIn(
+      ingredientVariants,
+      and(eq(ingredientVariants.ingredientId, ingredients.id), eq(ingredientVariants.toxic, true)),
+    ),
+  ) as SQL;
+  return toxic === 'toxic' ? flagged : not(flagged);
 }
 
 /**

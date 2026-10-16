@@ -746,7 +746,37 @@ type Query {
   celestialBodies(after: String, before: String, first: Int, last: Int, query: String): QueryCelestialBodiesConnection!
   celestialBodySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCelestialBodySuggestionsConnection!
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCommonNameSuggestionsConnection!
-  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, nomenclature: Nomenclature, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
+  compendium(
+    after: String
+    before: String
+    categoryIds: [ID!]
+
+    """
+    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    """
+    celestialBodies: [String!]
+
+    """Keeps entries linked to any one of these curated deities, by id."""
+    deityIds: [ID!]
+    first: Int
+
+    """
+    Keeps entries with a live form named any one of these, ignoring case and outer spaces.
+    """
+    forms: [String!]
+    last: Int
+    nomenclature: Nomenclature
+    query: String
+
+    """
+    Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
+    """
+    toxic: ToxicFilter
+    withoutReferences: Boolean
+
+    """Keeps entries listing any one of these zodiac signs, ignoring case."""
+    zodiacSigns: [String!]
+  ): QueryCompendiumConnection!
 
   """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
@@ -800,13 +830,31 @@ type Query {
     after: String
     before: String
     categoryIds: [ID!]
+
+    """
+    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    """
+    celestialBodies: [String!]
+
+    """Keeps entries linked to any one of these curated deities, by id."""
+    deityIds: [ID!]
     first: Int
 
-    """Keeps entries with a form of this name."""
-    form: String
+    """
+    Keeps entries with a live form named any one of these, ignoring case and outer spaces.
+    """
+    forms: [String!]
     last: Int
     query: String
+
+    """
+    Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
+    """
+    toxic: ToxicFilter
     workspaceId: ID!
+
+    """Keeps entries listing any one of these zodiac signs, ignoring case."""
+    zodiacSigns: [String!]
   ): QueryWorkspaceIngredientsConnection!
 
   """
@@ -1182,6 +1230,15 @@ input SubstituteInput {
 type SuggestionClaimant {
   canonicalName: String
   name: String!
+}
+
+"""
+Which entries a search keeps by toxicity: any (no filter); toxic, flagged on the entry or on any live form; or not_toxic, flagged on neither.
+"""
+enum ToxicFilter {
+  any
+  not_toxic
+  toxic
 }
 
 """What a unit measures; conversion stays inside one."""
