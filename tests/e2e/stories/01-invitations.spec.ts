@@ -126,6 +126,9 @@ const REVOKE_INVITATION = `mutation ($workspaceId: ID!, $id: ID!) {
 const ACCEPT_INVITATION = `mutation ($token: String!) {
   acceptInvitation(token: $token) { id }
 }`;
+const ACCEPT_INVITATION_BY_ID = `mutation ($id: ID!) {
+  acceptInvitationById(id: $id) { id }
+}`;
 
 /** The invitation's id, which no page shows to anyone but an owner's controls. */
 async function invitationIdFor(email: string): Promise<string> {
@@ -377,7 +380,7 @@ test(
 );
 
 test(
-  'a signed-in account whose verified address differs is refused at the link, with no Accept and no coven named',
+  'a signed-in account whose verified address differs is refused at the link, with no Accept and no coven named, and is offered nothing on the account page',
   { tag: '@story-4' },
   async ({ page }) => {
     const stranger = await signInNamed(page, address('stranger'), 'Fixture Stranger');
@@ -392,6 +395,20 @@ test(
     await assertNoAccessibilityViolations(page);
 
     await directAcceptRefused(page, invitedPath);
+
+    // Nor is it theirs on the account page, and its id sent by hand is refused.
+    await page.goto('/account#account-invitations');
+    const section = page.getByRole('region', { name: 'Invitations' });
+    await expect(section).toBeVisible();
+    await expect(
+      section.getByRole('button', { name: `Accept the invitation to ${COVEN_NAME}` }),
+    ).toHaveCount(0);
+    const byId = await sendFromPage(page, ACCEPT_INVITATION_BY_ID, {
+      id: await invitationIdFor(invited.email),
+    });
+    expect(byId.errors?.length).toBeGreaterThan(0);
+    expect((await page.goto(`/coven/${COVEN_SLUG}`))?.status()).toBe(404);
+
     expect(await ownerReadsRoll(page, stranger.name)).toBe(1 + 3);
   },
 );
