@@ -33,7 +33,7 @@ compendium page wrap it rather than containing their own form.
 
 The props are a union on `workspaceId` (`IngredientFormProps`, `types.ts`):
 a coven's id writes that coven's new ingredient, and `null` writes the
-compendium — a new entry, or the `entry` given. A coven's edit is M8.16's,
+compendium — a new entry, or the `entry` given. A coven's edit is M8.17's,
 so the union cannot say one yet.
 
 | Prop            | Meaning                                                                                                                                                                                                                                                                                 |
@@ -43,7 +43,7 @@ so the union cannot say one yet.
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
 | `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                         |
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                     |
-| `duplicateHref` | Where the duplicate warning links a near match. Left out, a coven's ingredient page, `/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                           |
+| `duplicateHref` | Where the duplicate warning links a near match. Left out, a coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                              |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                              |
 
 ## The fields
@@ -962,7 +962,7 @@ owner's call at MB.115), since it sets a question aside rather than acting. Each
 name, since the label alone can name five plants; one with no formal name
 shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and by
-default to `/ingredients/[id]`, DESIGN.md §9's signed-in page, which
+default to `/coven/[slug]/ingredients/[id]`, DESIGN.md §9's coven page, which
 reaches compendium and coven entries alike. It opens in a new tab, so the
 form and what is typed in it stay where they are (the owner's call at
 MB.115's review), and its name ends "(opens in a new tab)" for a screen
@@ -1101,7 +1101,7 @@ primary, a `.btn--solid`, and first, so it is the form's default: Enter in a
 field presses it. It saves and asks the page to open what it made, passing
 `'open'` to `onSaved`. The form navigates nowhere itself: the page that
 holds it does, M5.5's admin page and M8.16's modal, so the form never leads
-to a page that does not exist yet (`/ingredients/[id]` is M8.19's), and the
+to a page that does not exist yet (`/coven/[slug]/ingredients/[id]` is M8.19's), and the
 workshop needs no router. Its form is about to go, so it keeps its values.
 **Save & Add Another** is the secondary, a plain `.btn` beside it: it saves,
 passes `'another'`, and leaves the form blank for the next ingredient. Which

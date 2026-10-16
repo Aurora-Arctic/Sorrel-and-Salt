@@ -59,8 +59,8 @@ one's own id) throws.
   under `$shell-brand-width` (a narrow phone; wider than that the bar has room
   for the name once the site links have gone) the brand reads "S&S"; the full
   name stays in the page, visually hidden, for a screen reader.
-- **The site nav** (`nav` named "Site") lists Your Coven and Admin, **for a curator or an admin only** (`canCurate`), on every shell page. There is no Compendium link until its
-  public route exists (MB.80). With no links the nav is not rendered. At or
+- **The site nav** (`nav` named "Site") lists Your Coven and Admin, **for a curator or an admin only** (`canCurate`), on every shell page. There is no Compendium link until MB.83
+  adds it, with the public route (MB.80). With no links the nav is not rendered. At or
   under `$shell-tablet-width` the bar has no room for them beside the brand,
   Add Ingredient, the account button and the disc, so the same links are
   offered in the account panel.
