@@ -27,15 +27,13 @@ A `UserCoven` is `workspaceId`, `name`, `slug`, the user's `role` there and
   one, where the other modals stand their actions. A table at a modal's width
   stacks into cards that repeat every label on every coven.
 - **The table's facts come first**: a `<dl>` of Email (verified
-  or not, the word with the check or cross to its right), Role (bold for an admin, with the
+  or not, the word with the check or cross to its right), Role (bold for an admin or a curator, with the
   primary-admin crown), Coven Creation (Yes or No, the mark to its right),
   Sign-In Methods and Signed Up, the terms in one column and their values in
   the next. The address itself is not repeated: the heading carries it, under
   the name.
 - **The row's controls sit beside the facts they change, at the right edge**
-  (the owner's call, 2026-10-12): Promote or Revoke of admin beside Role,
-  Approve or Revoke of coven creation beside Coven Creation (none for an
-  admin, as on the row). They are the row's own `RoleControl` and
+  (the owner's call, 2026-10-12): Change Role beside Role, Approve or Revoke of coven creation beside Coven Creation (none for a curator or an admin, as on the row). They are the row's own `RoleControl` and
   `CreationControl`, keyed by their action, locked by `changesPaused` as the
   row's are (MB.63). With `inModal`, `ConfirmedAction` asks over this modal's
   body through `ConfirmOverlay`, its warning and Reason field included,
@@ -86,7 +84,7 @@ which the workshop does not serve: the question can be seen, its answer cannot.
 ## Tests
 
 `tests/components/UserDetail/index.test.tsx`, with the component inside a
-`Modal` (the question draws into its layer): the facts (a term and definition each, the sign-up `<time>`, the providers, the primary-admin mark only on the primary admin), Promote and Approve beside their facts and no creation control on an admin, each asking inside the one dialog and sending its write, both locked while paused, the order, role and joining date of each coven,
+`Modal` (the question draws into its layer): the facts (a term and definition each, the sign-up `<time>`, the providers, the primary-admin mark only on the primary admin), Change Role and Approve beside their facts and no creation control on a curator or an admin, each asking inside the one dialog and sending its write, both locked while paused, the order, role and joining date of each coven,
 no links, no coven list when empty, Impersonate present for a user and absent for an
 admin or when off, the question before any send, Cancel, a confirm sending
 `{ userId }` then landing on `/`, and a refusal showing an alert and not

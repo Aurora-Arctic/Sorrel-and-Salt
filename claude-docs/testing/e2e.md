@@ -200,7 +200,7 @@ ignores that spec too
 providers, role, { emailVerified })` writes what a Discord sign-in would leave into the calling
   worker's slot database, the one its server reads: a user stamped as
   its own creator, holding the site role given
-  (`user` unless the spec asks for `admin`), verified unless the spec passes
+  (`user` unless the spec asks for `curator` or `admin`; any role but `user` also holds `canCreateWorkspace`, which the CHECK demands (M11.20)), verified unless the spec passes
   `emailVerified: false` (MB.205, for an admin approving an unverified
   account), one `accounts` row per provider named, and a session. It then hands the browser the session cookie Better
   Auth would have set. The value is the token, a dot, and its base64

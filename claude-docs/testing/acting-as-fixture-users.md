@@ -14,7 +14,7 @@ await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).reject
   so `withAudit(asUser(A), …)` typechecks with no cast. A fresh object comes
   back per call, so a service that mutates what it is handed cannot carry that
   mutation into the next assertion.
-- **The cast is re-exported, not redeclared.** `A`, `B`, `C`, `D` and `E` are
+- **The cast is re-exported, not redeclared.** `A`, `B`, `C`, `D`, `E` and `F` are
   bindings taken straight from `src/db/seed/standard.ts`'s `FIXTURE_USERS` —
   the same constant the seed inserts. A second copy of the ids in the test
   harness would drift from the database without a single test failing: every
@@ -36,6 +36,12 @@ await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).reject
   succeeds), never as A, B, C and D in turn: the four would fail in the same
   diff for the same reason (MB.227). A refusal that turns on a workspace role
   keeps a fixture per role it distinguishes.
+- **F, the curator, stands for the role between the two** (M11.20). A
+  people-page refusal is asserted as F with two preconditions: E's same call
+  succeeds, and F passes `assertCurator`, so the row fails if the admin guard
+  is loosened to the curator one. A curation check that admits F is asserted
+  beside E's success. `tests/modules/identity/services/curator-boundary.test.ts`
+  holds every people-page service in one table.
 
 What any of these tests may assert at all — state, never copy — is
 [`layer-ownership.md`](layer-ownership.md)'s "What a test may assert".
