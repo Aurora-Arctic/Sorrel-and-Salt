@@ -79,6 +79,9 @@ test('an admin sees the admin layout and its nav', async ({ page }) => {
 test('an admin lists the users at /admin/users, filtered, with their sign-in methods', async ({
   page,
 }) => {
+  // The one account here not yet approved, which the Needs Approval filter
+  // narrows the list to.
+  await signInAs(page, 'not-an-admin@admin-users.test');
   await signInAs(page, 'an-admin@admin-users.test', ['discord', 'google'], 'admin');
 
   const response = await page.goto('/admin/users?query=admin-users.test');
