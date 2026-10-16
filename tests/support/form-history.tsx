@@ -127,7 +127,16 @@ export function HistoryProbe({
             <TextField<ProbeValues> name="note" label="Note" />
           </details>
           {openCombobox && (
-            <input role="combobox" aria-expanded="true" aria-label="Open Box" readOnly />
+            <>
+              <input
+                role="combobox"
+                aria-expanded="true"
+                aria-controls="open-box-list"
+                aria-label="Open Box"
+                readOnly
+              />
+              <datalist id="open-box-list" aria-label="Open Box Options" />
+            </>
           )}
           <button type="button" onClick={() => methods.reset({ ...START, title: 'Reset' })}>
             Start Over

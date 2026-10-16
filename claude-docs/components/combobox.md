@@ -745,7 +745,8 @@ suggestions still shown, Enter still handed to `onCommit`, and the list shut
 when it would have been the only row; Enter handed to `onCommit` with the
 list open or closed, and otherwise closing the list or reaching the form;
 Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape,
-blur and a pick keeping the text; a box with no source never opening; the
+blur and a pick keeping the text, Escape prevented on the open list and not on a closed box
+holding text; a box with no source never opening; the
 status region's count, and its busy and empty states; the qualifier read as
 the box's description after the field's own, a press on it putting the caret
 in the text, its detail's tooltip on hover
