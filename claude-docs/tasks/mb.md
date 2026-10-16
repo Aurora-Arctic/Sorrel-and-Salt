@@ -1313,6 +1313,7 @@ _Acceptance criteria:_
 - A signed-in account outside the coven still gets a 404 from `/coven/[slug]` by direct id, asserted with a coven the account could otherwise have reached
 - The PR body names the cause and says whether a production build shows it too
 - The docs that describe the post-sign-in landing are corrected if the fix changes where sign-in sends a member
+- The story suite's landing check is reassessed with the fix: `landingRedirect` in `tests/e2e/stories/01-invitations.spec.ts` (Story 6) reads the 307 from `/coven` and ignores Next's prefetch of it, which the shell's brand link fires from every page. If the fix changes where a member is sent or how `/coven` answers, that helper and the Story 6 step change with it, in this task's PR
 
 **MB.258 — The Edit Source Form Leaves Blank Space and Has No Close Button** · 2h
 
