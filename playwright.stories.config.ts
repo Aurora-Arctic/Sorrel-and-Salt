@@ -2,8 +2,8 @@ import { defineConfig, devices } from '@playwright/test';
 import { HTML_REPORT, baseConfig, slotServers } from './playwright.config';
 
 // The story suite (M9.1): one browser flow per user story, under
-// tests/e2e/stories/, run by `npm run test:stories` and by CI's own
-// stories.yml workflow rather than the merge gate. It shares the slot servers,
+// tests/e2e/stories/, run by `npm run test:stories` and by the PR gate's
+// `stories` job, which is never a required check. It shares the slot servers,
 // databases and browser options with the gate suite (playwright.config.ts) and
 // nothing else: not the providers-configured or compendium-cache servers, which
 // no story needs.

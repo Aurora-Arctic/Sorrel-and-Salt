@@ -67,18 +67,22 @@ same per-worker database and production server as a gate spec, on ports 8001
 and up. It takes the same lock, `/tmp/sorrel-e2e.lock`, so the two suites
 never run at once on one machine. `npm run e2e` ignores `tests/e2e/stories/`.
 
-## Its own CI workflow
+## In CI
 
-`.github/workflows/stories.yml` runs on a pull request into `staging` or
-`main`, on a push to `staging`, and by hand. It calls `playwright.yml` with
+The PR gate, `.github/workflows/pr-gate.yml`, runs the suite as its `stories`
+job on every pull request whose files match the job's path filter. The job
+needs the same image jobs as `playwright`, so the two suites share one e2e
+image and one database image, and it runs beside the other jobs rather than
+after them. It calls `playwright.yml` with
 `suite: stories`, which switches the run command, the summariser
 (`.github/scripts/summarize-stories.mjs`), the check name and the comment
 thread (marker `stories`), and skips the coverage artifact. It is never a
 required check, and the run step carries `continue-on-error: true` (a job that
 calls a workflow cannot carry it), so a red scaffold or an unfinished story
 shows in the PR's Stories comment, read from `steps.run.outcome`, without
-blocking a merge. It has its own workflow so that the merge gate's time does
-not grow with the suite.
+blocking a merge. Nothing in the gate waits on it, so the gate's time does not
+grow with the suite. It runs on pull requests only; `npm run test:stories`
+gives the checklist for any branch.
 
 ## The two suites
 

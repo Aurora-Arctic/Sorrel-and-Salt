@@ -49,8 +49,8 @@ on:
       suite:
         description: >-
           Which suite to run: `e2e` (the gate suite, the default) or `stories`
-          (the story suite under tests/e2e/stories/, run by stories.yml, never a
-          required check). claude-docs/testing/acceptance.md.
+          (the story suite under tests/e2e/stories/, pr-gate.yml's `stories` job,
+          never a required check). claude-docs/testing/acceptance.md.
         required: false
         type: string
         default: e2e
@@ -190,11 +190,14 @@ jobs:
           path: /app/.next-e2e/cache
           key: ${{ steps.e2e-cache.outputs.cache-primary-key }}
 
+      # A failing story fails only its step, under continue-on-error, so the
+      # step's outcome is read as well as the job's. Each suite names its own
+      # artifact: the two run in one workflow, where a name may appear once.
       - name: Upload Playwright report
-        if: failure()
+        if: failure() || steps.run.outcome == 'failure'
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: ${{ inputs.suite == 'stories' && 'stories-report' || 'playwright-report' }}
           path: |
             /app/.reports/playwright-report/
             /app/.reports/test-results/

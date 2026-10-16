@@ -88,7 +88,7 @@ TDD throughout: write the failing test, watch it fail, write the minimum, refact
 - Fixture users: **A** owner of W · **B** member of W · **C** viewer in W · **D** member of unrelated X · **E** site admin in no workspace. `asUser(A)` gives a session; services throw `Forbidden`.
 - **Fixture factory defaults are invented names, never real ones** (M1.25) — Testwort / _Fixtura testalis_, Fixture Coven.
 - **Setup rows go through the raw `postgres` client and the shared inserters, never `withAudit`** (MB.101).
-- **A story is proved by a browser flow** under `tests/e2e/stories/`, tagged `{ tag: '@story-N' }`, never by a service call (M9.1). `npm run test:stories` reads the tags into the checklist, a flaky story reads as failing, and the suite runs in its own CI workflow, tracked apart from the 80% line. A gate spec proves only what no story walks.
+- **A story is proved by a browser flow** under `tests/e2e/stories/`, tagged `{ tag: '@story-N' }`, never by a service call (M9.1). `npm run test:stories` reads the tags into the checklist, a flaky story reads as failing, and the suite runs as the PR gate's `stories` job, never a required check, tracked apart from the 80% line. A gate spec proves only what no story walks.
 - **Accessibility is asserted in Playwright** via `@axe-core/playwright`, not `vitest-axe`.
 - Component tests use role and label queries only. No test ids for anything a user can see. A test proves a functional requirement by the state it leaves, never by copy, class or layout; a regression test needs a bug that reached a PR.
 - **No snapshots** except design tokens and the GraphQL SDL.

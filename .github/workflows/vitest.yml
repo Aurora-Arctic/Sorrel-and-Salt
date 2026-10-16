@@ -1,6 +1,7 @@
 name: Vitest
 
-# The Vitest suite with coverage. The story checklist runs in stories.yml.
+# The Vitest suite with coverage. The story checklist is pr-gate.yml's
+# `stories` job.
 # workflow_call only, from pr-gate. claude-docs/ci/reusable-checks.md, "Reusable checks" is
 # the walkthrough. `services: postgres:` is why the `db` project can run; the
 # image is built once by the caller and shared with playwright.yml.

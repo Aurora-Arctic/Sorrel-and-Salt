@@ -7,8 +7,9 @@ query (DESIGN.md §11, "Acceptance tests — story traceability";
 
 `npm run test:stories` (or `make test-stories`) runs only this directory, with
 `playwright.stories.config.ts`, and prints a checklist of the 52 v1 stories.
-A story with no test reads "no test yet". CI runs it in its own workflow,
-`.github/workflows/stories.yml`, so a red scaffold is never on the merge path.
+A story with no test reads "no test yet". CI runs it as the `stories` job of
+`.github/workflows/pr-gate.yml`, never a required check, so a red scaffold is
+never on the merge path.
 `npm run e2e` (the gate suite) skips this directory.
 
 ## Naming a story

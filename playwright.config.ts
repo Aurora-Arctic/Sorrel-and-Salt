@@ -114,7 +114,7 @@ const compendiumCacheServer = {
 const COMPENDIUM_CACHE_SPEC = /compendium-cache\.spec\.ts/;
 
 // The story suite (M9.1) has its own config, playwright.stories.config.ts, and
-// its own CI workflow. A project's own `testIgnore` replaces a top-level one
+// its own job in pr-gate.yml. A project's own `testIgnore` replaces a top-level one
 // rather than adding to it, so each project that matches everything under
 // `testDir` lists this itself; `npm run e2e` never runs a story.
 const STORIES_SPECS = /[\\/]stories[\\/]/;

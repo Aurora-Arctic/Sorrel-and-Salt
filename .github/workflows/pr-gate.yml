@@ -34,7 +34,8 @@ run-name: >-
 # else: a job that had started would leave a cancelled check run under its own
 # name, newer than the real run's, and a required check reads the newest.
 # `build-db-image` is built once here rather than nested in vitest.yml and
-# playwright.yml, which would pay twice for an identical image.
+# playwright.yml, which would pay twice for an identical image, and
+# `build-e2e-image` once for both Playwright suites.
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited, closed]
@@ -75,6 +76,7 @@ jobs:
       migration_order: ${{ steps.filter.outputs.migration_order }}
       vitest: ${{ steps.filter.outputs.vitest }}
       playwright: ${{ steps.filter.outputs.playwright }}
+      stories: ${{ steps.filter.outputs.stories }}
     steps:
       # A step-level `if:`, so the header's rule holds. Every other job needs
       # this one, so nothing else starts. `changes.base` is in the payload only
@@ -195,6 +197,25 @@ jobs:
               - 'next.config.ts'
               - 'package.json'
               - 'package-lock.json'
+            # The playwright filter's, with the story suite's summariser and
+            # config in place of the gate suite's.
+            stories:
+              - *shared
+              - '.github/workflows/playwright.yml'
+              - '.github/workflows/build-e2e-image.yml'
+              - '.github/workflows/build-db-image.yml'
+              - 'Docker/Dockerfile.postgres'
+              - 'Docker/postgres-init/**'
+              - '.github/scripts/summarize-stories.mjs'
+              - 'Docker/Dockerfile.e2e'
+              - 'src/**'
+              - 'tests/e2e/**'
+              - 'tests/support/**'
+              - 'playwright.config.ts'
+              - 'playwright.stories.config.ts'
+              - 'next.config.ts'
+              - 'package.json'
+              - 'package-lock.json'
 
   # Cancellable like every job here: a cancelled build leaves no tag and no
   # cache index behind, so the next run rebuilds rather than reusing half an
@@ -257,6 +278,24 @@ jobs:
       pr-number: ${{ github.event.pull_request.number }}
       # No job-level `if:` — see the header.
       should-run: ${{ needs.changes.outputs.playwright == 'true' }}
+
+  # The story suite (M9.1), on the same images as `playwright` and beside it,
+  # so it adds nothing to the gate's time. Never a required check: its run step
+  # carries `continue-on-error`, so a red scaffold shows in the Stories comment
+  # without blocking a merge (claude-docs/testing/acceptance.md).
+  stories:
+    needs: [build-e2e-image, build-db-image, changes, gitflow]
+    concurrency:
+      group: pr-gate-stories-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    uses: ./.github/workflows/playwright.yml
+    with:
+      image: ${{ needs.build-e2e-image.outputs.image }}
+      db-image: ${{ needs.build-db-image.outputs.image }}
+      pr-number: ${{ github.event.pull_request.number }}
+      suite: stories
+      # No job-level `if:` — see the header.
+      should-run: ${{ needs.changes.outputs.stories == 'true' }}
 
   # Every check job `needs: gitflow`, so a wrong source branch burns no CI time.
   gitflow:
