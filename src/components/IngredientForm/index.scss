@@ -161,6 +161,19 @@
   }
 }
 
+// A switch here, Toxic on the ingredient and on each variant, stands at the
+// start of its column, its label and hint above it at the start too, as the
+// fields above it do (the owner's call, 2026-10-16). Not the primitive's
+// centring, which lines a filter bar's switch up under its label among
+// boxes; here it sits alone on its row beneath full-width fields.
+.ingredient-form .switch {
+  align-items: flex-start;
+
+  .field__label {
+    text-align: start;
+  }
+}
+
 // The section's heading, at a size off the type scale as a heading's may be:
 // the display face, a step under h4, so it heads its fields without
 // outweighing the dialog's title. Nested, to outweigh typography-base's

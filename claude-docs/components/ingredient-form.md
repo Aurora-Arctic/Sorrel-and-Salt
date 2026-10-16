@@ -1361,6 +1361,11 @@ Reference) is a `BusyButton` ([`busy-button.md`](busy-button.md)). A
 disabled field's dashed edge and dimmed label are the primitives' too; a
 closed set's box and its muted placeholder are the combobox's.
 
+The Toxic switches, the ingredient's and each variant's, stand at the start
+of the column with their label and hint, as the fields above them do, rather
+than centred under the label as the switch primitive draws it for a filter
+bar (`.ingredient-form .switch`; the owner's call, 2026-10-16).
+
 The component's own stylesheet holds what is the form's alone. Its column
 is at most `$dialog-column` (32rem), narrower than the measure as the other
 forms keep, and the compendium's modal is the default one, no wider than the

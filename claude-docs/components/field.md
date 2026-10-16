@@ -209,7 +209,7 @@ error and its label takes the press feedback. A `hint` puts the label in a
 `.field__label-row` beside an InfoTip, as `FieldShell` does, and names the
 tip in the toggle's `aria-describedby`; a filter switch takes none. The rest: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
-`role="switch"`, beneath it in `.switch__control`, centred under the label. The label is its
+`role="switch"`, beneath it in `.switch__control`, centred under the label, which lines a filter bar's switch up among its boxes; the ingredient form sets its Toxic switches and their labels at the start of the column instead ([`ingredient-form.md`](ingredient-form.md), "Styling"). The label is its
 accessible name and a click on it turns it; the label and the toggle are
 each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native
