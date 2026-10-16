@@ -138,6 +138,20 @@ describe('suggestForms', () => {
       });
     });
 
+    it('carries each curated row’s group’s icon, and none on a value only in use', async () => {
+      await sql`update ingredient_form_groups set icon = 'botanical' where name = 'Botanical'`;
+      await sql`update ingredient_form_groups set icon = null where name = 'Substance'`;
+      await addIngredient({ name: 'Testwort', workspaceId: WORKSPACE_W_ID, form: 'root bark' });
+
+      const suggestions = await all(asUser(B), 'root');
+      const waxes = await all(asUser(B), 'wax');
+
+      expect(find(suggestions, 'Root')).toMatchObject({ icon: 'botanical', curated: true });
+      expect(find(suggestions, 'root bark')).toMatchObject({ icon: null, curated: false });
+      // A curated form whose group has no icon reads null, not a default.
+      expect(waxes.find((s) => s.group === 'Substance')?.icon).toBeNull();
+    });
+
     // §5: uniqueness is on the slug alone, so two live forms may share a
     // display name, and the group is the only thing that tells them apart.
     it('returns two same-named forms in different groups, each with its own group', async () => {

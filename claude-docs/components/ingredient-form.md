@@ -905,7 +905,18 @@ when that form is.
 Two curated forms may share a name, Wax under _Animal_ and Wax under
 _Substance_ (DESIGN.md §5), and both fill the box with "Wax". So a pick of a
 curated row is kept beside the text, as `formLink` in the form's values:
-the row's id, the name picked, its group and its description (MB.169).
+the row's id, the name picked, its group, its group's `icon` and its
+description (MB.169, M12.7).
+
+- **Every form wears its group's icon** (M12.7), resolved once, as
+  `<FormIcon name={icon ?? null} />`, the salt spoon for a null: before each
+  curated suggestion and the typed row (the spoon, for a value only in use),
+  before the name in the Form box while it holds a pick, through the
+  combobox's `icon` (the owner's call, rather than beside the group in
+  brackets), before the variant card's head and
+  before the substitute summary's Form line, which reads it from
+  `formChoice { group { icon } }`. The icon is decoration, outside every
+  accessible name.
 
 - **The box shows the group.** "Wax" stays as the box's editable text, and
   "(Substance)" follows it in the muted ink, so the box reads as the row

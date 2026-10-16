@@ -10,6 +10,7 @@ import type { EditedGroup, GroupChoice, GroupKind } from '../../../components/Gr
 import type { ModalHeading } from '../../../components/Modal/types';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import type { GroupFilter } from '@/modules/vocabulary';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
 export interface AdminLayoutProps {
   children: ReactNode;
@@ -91,6 +92,8 @@ export interface ValueGroupRow {
   name: string;
   colorDark?: string;
   colorLight?: string;
+  /** A form group's icon name, `null` for none; absent for the other kinds. */
+  icon?: FormGroupIcon | null;
 }
 
 /** The filter a value page reads its list and count under: blank is `undefined`. */
@@ -151,6 +154,8 @@ export interface GroupRow {
   description: string;
   colorDark?: string;
   colorLight?: string;
+  /** A form group's icon name, `null` for none; absent for the other kinds. */
+  icon?: FormGroupIcon | null;
   /** Its audit stamps, which the Updated column reads (MB.260). */
   updatedBy: string;
   updatedAt: Date;

@@ -92,6 +92,8 @@ export const FormGroups: Story = () => (
         name,
         slug,
         description: 'An invented group, for the workshop.',
+        // The first has an icon; the second shows the generic.
+        icon: name === GROUP_NAMES.form[0] ? ('mineral' as const) : null,
         updatedBy: 'Fixture Editor',
         updatedAt: new Date('2026-05-06T10:00:00Z'),
         editHref: groupsHref('form', {}, { edit: slug }),

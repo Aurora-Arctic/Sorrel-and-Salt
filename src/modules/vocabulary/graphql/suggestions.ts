@@ -11,6 +11,8 @@ import {
   suggestZodiacSigns,
 } from '../services/suggestions';
 
+import { FormGroupIconEnum } from './ingredient-form-groups';
+
 export const CorrespondenceSuggestionRef = builder
   .objectRef<VocabularySuggestion>('CorrespondenceSuggestion')
   .implement({
@@ -50,6 +52,7 @@ const FormSuggestionRef = builder.objectRef<FormSuggestion>('FormSuggestion').im
     value: t.exposeString('value'),
     description: t.exposeString('description', { nullable: true }),
     group: t.exposeString('group', { nullable: true }),
+    icon: t.expose('icon', { type: FormGroupIconEnum, nullable: true }),
     curated: t.exposeBoolean('curated'),
     claimants: t.field({ type: [SuggestionClaimantRef], resolve: (s) => s.claimants }),
   }),

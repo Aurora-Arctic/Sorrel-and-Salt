@@ -1,5 +1,6 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { Resolver } from 'react-hook-form';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { z } from 'zod';
 
 /**
@@ -14,6 +15,8 @@ export type GroupedValueKind = 'category' | 'form' | 'deity' | 'celestialBody' |
 export interface GroupedValueGroupChoice {
   id: string;
   name: string;
+  /** A form group's icon name, `null` for none; absent for the other kinds. */
+  icon?: FormGroupIcon | null;
 }
 
 /**

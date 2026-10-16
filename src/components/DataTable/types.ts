@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { GroupColors } from '../../lib/types';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
 /**
  * One column of a stacking table: its heading, which is also the label each
@@ -47,6 +48,12 @@ export interface GroupChipProps {
   name: string;
   /** The group's chip pair; without both, the name is drawn plain. */
   colors?: Partial<GroupColors>;
+  /**
+   * A form group's icon, drawn before the name: its icon name, or `null`
+   * for a group with none, which draws the generic. Absent for a group of
+   * another kind, which draws no icon.
+   */
+  icon?: FormGroupIcon | null;
 }
 
 /**

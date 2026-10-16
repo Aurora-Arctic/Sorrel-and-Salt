@@ -429,6 +429,11 @@
 
 .ingredient-form__variant-form {
   font-weight: 500;
+
+  // The group's mark, a little clear of the form's name.
+  .form-icon {
+    margin-inline-end: space(1);
+  }
 }
 
 .ingredient-form__variant-group,

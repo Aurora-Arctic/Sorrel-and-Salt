@@ -19,6 +19,7 @@ import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
+import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 
 // The repository's types: the table shapes a finder or writer admits, the
 // options `selectFrom` reads, the writer `withAudit` hands out, and the
@@ -688,6 +689,8 @@ export interface FormSuggestion extends VocabularySuggestion {
   id: string | null;
   /** The curated row's group, which tells two same-named forms apart; none in use. */
   group: string | null;
+  /** The curated row's group's icon name; none for a group without one and for a value in use. */
+  icon: FormGroupIcon | null;
   claimants: Claimant[];
 }
 
@@ -718,6 +721,8 @@ export interface SuggestionRow {
   value: string;
   description: string | null;
   group: string | null;
+  /** The form group's icon; none for a deity, a tradition or a value in use. */
+  icon: FormGroupIcon | null;
   fold: string;
   /** The curated row's id; an in-use value's fold, which its tier holds once. */
   tiebreak: string;

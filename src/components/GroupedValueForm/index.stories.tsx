@@ -2,6 +2,7 @@ import type { Story } from '@ladle/react';
 import { GROUP_NAMES, asOptions } from '../../../.ladle/fixtures';
 import { usePressOnMount } from '../../../.ladle/press';
 import { Reopenable } from '../../../.ladle/reopenable';
+import { FORM_GROUP_ICONS } from '../../modules/vocabulary/schema/form-group-icons';
 import Modal from '../Modal';
 import GroupedValueForm from '.';
 
@@ -15,7 +16,11 @@ export default {
 
 // Enough of each to narrow: every group field is typed into (MB.115).
 const CATEGORY_GROUPS = asOptions(GROUP_NAMES.category);
-const FORM_GROUPS = asOptions(GROUP_NAMES.form);
+// A form group's choices draw its icon: the first two their own, one none (the generic).
+const FORM_GROUPS = asOptions(GROUP_NAMES.form).map((group, index) => ({
+  ...group,
+  icon: index === 3 ? null : FORM_GROUP_ICONS[index],
+}));
 const TRADITIONS = asOptions(GROUP_NAMES.tradition);
 
 const done = () => {};

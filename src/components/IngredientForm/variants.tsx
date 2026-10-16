@@ -15,6 +15,7 @@ import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
 import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
 import { useOnEachSubmit } from './on-submit';
+import FormIcon from '../FormIcon';
 import { EditIcon, RemoveIcon } from './icons';
 import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField, ToggleField } from './fields';
@@ -371,6 +372,7 @@ function VariantFieldset({
         <div className="ingredient-form__variant-title">
           {/* The form as the box reads it, its group after it in the muted ink. */}
           <span className="ingredient-form__variant-form">
+            <FormIcon name={variant.formLink?.icon ?? null} />
             <span id={legendId}>{legend}</span>
             {group && <span className="ingredient-form__variant-group"> ({group})</span>}
           </span>

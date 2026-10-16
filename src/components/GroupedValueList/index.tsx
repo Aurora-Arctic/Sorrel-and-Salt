@@ -62,7 +62,13 @@ const GroupedValueList = ({
             { heading: 'Name', cell: (entry) => entry.name },
             group && {
               heading: group.label,
-              cell: (entry) => <GroupChip name={entry.groupName} colors={entry.groupColors} />,
+              cell: (entry) => (
+                <GroupChip
+                  name={entry.groupName}
+                  colors={entry.groupColors}
+                  icon={kind === 'form' ? (entry.groupIcon ?? null) : undefined}
+                />
+              ),
             },
             {
               heading: 'Description',

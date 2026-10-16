@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -16,6 +16,7 @@ import {
   EMPTY_VARIANT,
   ingredientResolver,
 } from '@/components/IngredientForm/values';
+import FormIcon from '@/components/FormIcon';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { renderWithClient } from '../../support/ingredient-form';
 import { press, type } from '../../support/interact';
@@ -107,6 +108,7 @@ describe('FormField', () => {
     value: 'Wax',
     description: null,
     group: 'Animal',
+    icon: null,
     curated: true,
     claimants: [{ name: 'Testwort', canonicalName: 'Fixtura testalis' }],
   };
@@ -115,6 +117,7 @@ describe('FormField', () => {
     value: 'Wax',
     description: 'Candle and poppet wax.',
     group: 'Substance',
+    icon: null,
     curated: true,
     claimants: [],
   };
@@ -124,6 +127,7 @@ describe('FormField', () => {
     value: 'Rhizomes',
     description: null,
     group: null,
+    icon: null,
     curated: false,
     claimants: [{ name: 'Mockleaf', canonicalName: null }],
   };
@@ -187,6 +191,36 @@ describe('FormField', () => {
     // What was typed comes first, the owner's call.
     const rows = within(screen.getByRole('listbox', { name: 'Form suggestions' }));
     expect(rows.getAllByRole('option')[0]).toHaveAccessibleName(expect.stringContaining('wax'));
+  });
+
+  // M12.7: a curated form wears its group's icon, one only in use the spoon,
+  // and a pick carries its icon into the box, before the form's name (the
+  // owner's call), never into the group's brackets.
+  it('draws each suggestion and the picked form with its group icon, the spoon where there is none', async () => {
+    const { container: animal } = render(<FormIcon name="animal" />);
+    const { container: spoon } = render(<FormIcon name={null} />);
+    const glyph = (el: HTMLElement) => el.querySelector('svg')!.innerHTML;
+    renderField();
+    const calls = offerForms([{ ...WAX_ANIMAL, icon: 'animal' }, RHIZOMES]);
+
+    await lookUp('Form', calls, 'wax');
+
+    const curated = await screen.findByRole('option', { name: /^Wax \(Animal\)/ });
+    expect(glyph(curated)).toBe(glyph(animal));
+    expect(glyph(screen.getByRole('option', { name: /^Rhizomes/ }))).toBe(glyph(spoon));
+
+    fireEvent.click(curated);
+    // The box's own row, its text and what is drawn with it, short of the chevron.
+    const control = box('Form').closest('.combobox__values') as HTMLElement;
+    const marks = control.querySelectorAll('[aria-hidden="true"] svg');
+    expect(marks).toHaveLength(1);
+    expect(marks[0].innerHTML).toBe(glyph(animal));
+    expect(marks[0].compareDocumentPosition(box('Form'))).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(box('Form')).toHaveAccessibleName('Form');
+
+    // Typed away from the pick, the box holds text alone and draws no mark.
+    type('Form', 'wa');
+    expect(control.querySelector('svg')).toBeNull();
   });
 
   // MB.169: the text alone reads the same for both Waxes; the group tells

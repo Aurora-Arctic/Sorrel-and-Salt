@@ -17,6 +17,7 @@ import type {
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import type { VariablesArg } from '../../lib/types';
+import FormIcon from '../FormIcon';
 import type { ComboboxOption, Suggestions } from '../Combobox/types';
 import { ListField, SuggestField } from './fields';
 import type {
@@ -49,6 +50,7 @@ const FormSuggestionsDocument = graphql(`
           value
           description
           group
+          icon
           curated
           claimants {
             name
@@ -227,10 +229,18 @@ const formOptions = (data: FormSuggestionsQuery): FormOption[] =>
     label: qualified(node.value, node.group),
     note: [node.description, usedBy(node.claimants)].filter(Boolean).join(' · ') || undefined,
     curated: node.curated,
+    // Null for a form only in use, which `FormIcon` draws as the generic.
+    icon: <FormIcon name={node.icon ?? null} />,
     // A curated row is what a pick links (MB.169); a form only in use has no
     // row, and a pick of it is typed text.
     link: node.id
-      ? { id: node.id, name: node.value, group: node.group, description: node.description }
+      ? {
+          id: node.id,
+          name: node.value,
+          group: node.group,
+          icon: node.icon ?? null,
+          description: node.description,
+        }
       : undefined,
   }));
 
@@ -392,6 +402,10 @@ export function FormField({ workspaceId, at, pickOnly }: FormFieldProps): ReactE
       qualifier={
         link?.group ? { text: link.group, detail: link.description ?? undefined } : undefined
       }
+      // Before the name, as each row has it (the owner's call, 2026-10-16):
+      // there while the box holds a pick, since an edit away drops the link.
+      icon={link ? <FormIcon name={link.icon ?? null} /> : undefined}
+      typedIcon={<FormIcon name={null} />}
       offerTyped={!pickOnly}
     />
   );
