@@ -519,6 +519,13 @@
       "when": 1792131157892,
       "tag": "0073_curator-role",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1792134442110,
+      "tag": "0074_curator-invitations",
+      "breakpoints": true
     }
   ]
 }

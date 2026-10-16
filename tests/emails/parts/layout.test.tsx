@@ -51,6 +51,7 @@ const MAILS: {
       adminInvitationMessage({
         to: 'someone@layout.test',
         url: `${ORIGIN}/invite/fixture-admin-token`,
+        siteRole: 'admin',
         inviterName: 'Fixture Owner',
       }),
   },

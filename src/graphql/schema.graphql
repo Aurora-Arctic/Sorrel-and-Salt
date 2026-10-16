@@ -398,6 +398,14 @@ enum InvitableRole {
 }
 
 """
+A site role an invitation may grant: never `user`, which every account holds.
+"""
+enum InvitableSiteRole {
+  admin
+  curator
+}
+
+"""
 An invitation, pending or not. Its link is mailed to the address and never answered.
 """
 type Invitation {
@@ -418,6 +426,9 @@ type Invitation {
 
   """The role acceptance grants in the coven; none for an admin invitation."""
   role: InvitableRole
+
+  """The site role a site invitation grants; none on a coven invitation."""
+  siteRole: InvitableSiteRole
 
   """
   The coven invited into, where the caller is a member of it; none for an admin invitation.
@@ -447,9 +458,9 @@ type Mutation {
   addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
 
   """
-  Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.
+  Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.
   """
-  createAdminInvitation(email: String!, note: String): Invitation!
+  createAdminInvitation(email: String!, note: String, siteRole: InvitableSiteRole!): Invitation!
   createCategory(input: CategoryInput!): Category!
   createCategoryGroup(input: CategoryGroupInput!): CategoryGroup!
   createCelestialBody(input: CelestialBodyInput!): CelestialBody!

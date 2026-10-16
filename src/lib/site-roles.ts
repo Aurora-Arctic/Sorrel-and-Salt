@@ -10,3 +10,16 @@ import type { UserRole } from './session';
 export function curates(role: UserRole): boolean {
   return role === 'curator' || role === 'admin';
 }
+
+/**
+ * The site roles from least to most: each holds what the one before it does,
+ * and more. Change Role offers them in this order and reads a promotion by
+ * it; an admin invitation is refused, and its acceptance grants nothing, when
+ * the address holds the invited role or one above it (M11.20).
+ */
+export const SITE_ROLES: readonly UserRole[] = ['user', 'curator', 'admin'];
+
+/** Whether `role` stands above `other` on `SITE_ROLES`. */
+export function outranks(role: UserRole, other: UserRole): boolean {
+  return SITE_ROLES.indexOf(role) > SITE_ROLES.indexOf(other);
+}

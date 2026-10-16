@@ -29,21 +29,18 @@ const ROLE_NOUNS: Record<UserRole, string> = {
 };
 
 /**
- * The grant every route to admin but the bootstrap shares, inside the
- * caller's transaction: the creation flag too, since the users CHECK refuses
- * an admin without it (MB.177). An admin's grant and an accepted admin
- * invitation (MB.70) both write it; the route is the caller's declaration.
+ * The grant of a curating role every route but the bootstrap shares, inside
+ * the caller's transaction: the creation flag too, since the users CHECK
+ * refuses a curator or an admin without it (MB.177, M11.20). An admin's role
+ * change and an accepted site invitation (MB.70) both write it; the route is
+ * the caller's declaration.
  */
-export function writeAdminGrant(write: AuditWriter, userId: string): Promise<UserRow[]> {
-  return write.updateById(users, userId, { role: 'admin', canCreateWorkspace: true });
-}
-
-/**
- * The curator grant, inside the caller's transaction: the creation flag too,
- * since the users CHECK holds a curator to it as it holds an admin (M11.20).
- */
-function writeCuratorGrant(write: AuditWriter, userId: string): Promise<UserRow[]> {
-  return write.updateById(users, userId, { role: 'curator', canCreateWorkspace: true });
+export function writeSiteRoleGrant(
+  write: AuditWriter,
+  userId: string,
+  role: 'curator' | 'admin',
+): Promise<UserRow[]> {
+  return write.updateById(users, userId, { role, canCreateWorkspace: true });
 }
 
 /**
@@ -72,11 +69,9 @@ async function writeRole(
     }
   }
   const [written] =
-    role === 'admin'
-      ? await writeAdminGrant(write, user.id)
-      : role === 'curator'
-        ? await writeCuratorGrant(write, user.id)
-        : await write.updateById(users, user.id, { role });
+    role === 'user'
+      ? await write.updateById(users, user.id, { role })
+      : await writeSiteRoleGrant(write, user.id, role);
   // Soft-deleted between the read and the write: the update matches no row,
   // so the trigger never fires and nothing is recorded.
   if (!written) throw new NotFound('No such user');

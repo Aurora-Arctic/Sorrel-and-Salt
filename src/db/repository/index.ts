@@ -116,6 +116,7 @@ export type {
   IngredientIdentity,
   IngredientRow,
   InvitableRole,
+  InvitableSiteRole,
   InvitationRow,
   InvitedCoven,
   JoinedRow,

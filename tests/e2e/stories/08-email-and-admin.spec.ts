@@ -186,24 +186,28 @@ async function chooseRole(
   return dialog;
 }
 
-/** Invites `email` from /admin/invitations as the signed-in admin, and answers the mailed link's path. */
+/**
+ * Invites `email` from /admin/invitations as the signed-in admin, to the
+ * admin role unless told otherwise, and answers the mailed link's path.
+ */
 async function inviteAdmin(
   page: Page,
   email: string,
-  reason?: string,
-  seen: readonly string[] = [],
+  { reason, role = 'Admin' }: { reason?: string; role?: 'Curator' | 'Admin' } = {},
 ): Promise<string> {
   await visit(page, '/admin/invitations');
   await page.getByRole('link', { name: 'Invite Admin' }).click();
   const dialog = page.getByRole('dialog', { name: 'Invite Admin' });
   await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
+  // The radio's name opens with the role, its description following.
+  await dialog.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
   // By role: "Reason" also names its info tip's button.
   if (reason) await dialog.getByRole('textbox', { name: 'Reason' }).fill(reason);
   await dialog.getByRole('button', { name: 'Send Invitation' }).click();
   await expect(
     page.getByRole('region', { name: 'Admin Invitations' }).getByRole('status'),
   ).toContainText(email);
-  return mailedPath(email, INVITE_LINK, seen);
+  return mailedPath(email, INVITE_LINK);
 }
 
 /** The refusal an invitation link shows: its alert, and no Accept beside it. */
@@ -733,6 +737,8 @@ test(
     await expect(section.getByRole('status')).toContainText(invited);
     const row = section.getByRole('row', { name: new RegExp(invited.replace(/[.]/g, '\\.')) });
     await expect(row).toContainText('Curates the resins');
+    // The role the form starts on, the lesser one (M11.20).
+    await expect(row).toContainText('Curator');
     // Mailed to the invited address alone, and the page answers no link:
     // the mail is the only place the token is.
     const path = await mailedPath(invited, INVITE_LINK);
@@ -760,7 +766,7 @@ test(
   async ({ page, browser, baseURL }) => {
     const invited = address('invitee');
     await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
-    const path = await inviteAdmin(page, invited, 'Curates the resins');
+    const path = await inviteAdmin(page, invited, { reason: 'Curates the resins' });
 
     // Signed out: asked to sign in and brought back, shown nothing of the invitation.
     const visitor = await signedOutPage(browser, baseURL);
@@ -848,6 +854,58 @@ test(
         'Invitation accepted',
         'Invited Fixturewort',
         'Curates the resins',
+      ],
+    ]);
+  },
+);
+
+// M11.20: the same invitation, to the curator role. The acceptance is the
+// admin's above; this proves what accepting it grants, and what it does not.
+test(
+  'an invitation to the curator role lands its invitee on /admin with the curation pages and no People, both grants in the ledger',
+  { tag: '@story-62' },
+  async ({ page }) => {
+    const invited = address('curator-invitee');
+    const { userId: admin } = await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
+    const path = await inviteAdmin(page, invited, { reason: 'Keeps the herbals', role: 'Curator' });
+
+    const { userId: invitee } = await signInAs(page, invited, ['google']);
+    await rename(invitee, 'Curator Fixturewort');
+    await visit(page, path);
+    await page.getByRole('button', { name: 'Accept Invitation' }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+    await expectAdminArea(page, true);
+    const nav = page.getByRole('navigation', { name: 'Admin' });
+    await expect(nav.getByRole('link', { name: 'Compendium', exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
+    expect((await visit(page, '/admin/users')).status()).toBe(403);
+
+    // The ledger is People's, so the inviting admin reads it.
+    await signInAgainAs(page, admin);
+    await visit(page, `/admin/privilege-changes?query=${encodeURIComponent(invited)}`);
+    const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
+    await expect(rows).toHaveCount(2);
+    const changes = await Promise.all(
+      [0, 1].map(async (index) =>
+        (await rows.nth(index).getByRole('cell').allTextContents()).slice(1),
+      ),
+    );
+    expect([...changes].sort((a, b) => a[1].localeCompare(b[1]))).toEqual([
+      [
+        'Curator Fixturewort',
+        'Coven Creation',
+        'Granted',
+        'Invitation accepted',
+        'Curator Fixturewort',
+        'Keeps the herbals',
+      ],
+      [
+        'Curator Fixturewort',
+        'Curator',
+        'Granted',
+        'Invitation accepted',
+        'Curator Fixturewort',
+        'Keeps the herbals',
       ],
     ]);
   },

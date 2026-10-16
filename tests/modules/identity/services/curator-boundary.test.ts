@@ -66,8 +66,9 @@ let covenInvitationId: string;
 /** A pending invitation, inserted as the seed would; site tier unless a coven is named. */
 async function invite(email: string, by: string, workspaceId: string | null): Promise<string> {
   const [row] = await sql`
-    insert into invitations (email, token_hash, workspace_id, role, created_by, updated_by, expires_at)
+    insert into invitations (email, token_hash, workspace_id, role, site_role, created_by, updated_by, expires_at)
     values (${email}, ${sha256(email)}, ${workspaceId}, ${workspaceId ? 'viewer' : null},
+      ${workspaceId ? null : 'admin'}::user_role,
       ${by}, ${by}, now() + interval '7 days')
     returning id
   `;
@@ -118,7 +119,7 @@ const PEOPLE_PAGE: [string, Call][] = [
   ['countPrivilegeChanges', (session) => countPrivilegeChanges(session, {}, undefined)],
   [
     'createAdminInvitation',
-    (session) => createAdminInvitation(session, `invited${DOMAIN}`, undefined, sender()),
+    (session) => createAdminInvitation(session, `invited${DOMAIN}`, 'admin', undefined, sender()),
   ],
   ['revokeAdminInvitation', (session) => revokeAdminInvitation(session, adminInvitationId)],
   ['listPendingAdminInvitations', (session) => listPendingAdminInvitations(session, {}, PAGE)],

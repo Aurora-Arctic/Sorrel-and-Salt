@@ -512,9 +512,9 @@ export interface AuditWriter {
     values: WorkspaceInvitationValues,
   ): Promise<InvitationRow[]>;
   /**
-   * Invite an address to become an admin, on the site tier, where the
-   * workspace and the role are both null (MB.69; MB.202). On the same terms
-   * otherwise.
+   * Invite an address to the site role it names, curator or admin, on the
+   * site tier, where the workspace and the coven role are both null (MB.69;
+   * MB.202; M11.20). On the same terms otherwise.
    */
   insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
   /**
@@ -763,26 +763,35 @@ export interface ReceivedInvitationInviter {
   name: string;
 }
 
+/** A site role an invitation may grant: `curator` or `admin`, as the CHECK has it (M11.20). */
+export type InvitableSiteRole = Exclude<NonNullable<InvitationRow['siteRole']>, 'user'>;
+
 /**
- * A site-tier invitation, which grants admin: the workspace and the role both
- * null, as the `invitations_tier` CHECK makes them together (MB.201).
+ * A site-tier invitation, which grants the site role it names: the workspace
+ * and the coven role both null, as the `invitations_tier` CHECK makes them
+ * together (MB.201), and the site role set, as `invitations_site_role_tier`
+ * makes it (M11.20).
  */
-export type SiteInvitationRow = InvitationRow & { workspaceId: null; role: null };
+export type SiteInvitationRow = InvitationRow & {
+  workspaceId: null;
+  role: null;
+  siteRole: InvitableSiteRole;
+};
 
 /** A role an invitation may grant: every workspace role but `owner`, as the CHECK has it. */
 export type InvitableRole = Exclude<NonNullable<InvitationRow['role']>, 'owner'>;
 
-/** What a site-tier invitation starts with; the expiry defaults to seven days out. */
-export type SiteInvitationValues = Pick<
-  typeof invitations.$inferInsert,
-  'email' | 'expiresAt' | 'note'
-> & {
+/** What an invitation on either tier starts with; the expiry defaults to seven days out. */
+type InvitationValues = Pick<typeof invitations.$inferInsert, 'email' | 'expiresAt' | 'note'> & {
   /** The link's token, never stored: the writer stores its hash. */
   token: string;
 };
 
-/** What a workspace invitation starts with: the same, and the role it grants. */
-export type WorkspaceInvitationValues = SiteInvitationValues & { role: InvitableRole };
+/** What a site-tier invitation starts with: the same, and the site role it grants. */
+export type SiteInvitationValues = InvitationValues & { siteRole: InvitableSiteRole };
+
+/** What a workspace invitation starts with: the same, and the coven role it grants. */
+export type WorkspaceInvitationValues = InvitationValues & { role: InvitableRole };
 
 /** What the admin invitation list is narrowed by (MB.115). Each part is optional, and absent means no filter. */
 export interface SiteInvitationFilter {

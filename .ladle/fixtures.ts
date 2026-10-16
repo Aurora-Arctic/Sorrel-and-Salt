@@ -38,12 +38,14 @@ export const INVITATIONS: AdminInvitationEntry[] = [
   {
     id: 'i1',
     email: 'ada@example.test',
+    siteRole: 'curator',
     note: 'Curates the resins',
     expiresAt: new Date('2026-10-17T20:05:00Z'),
   },
   {
     id: 'i2',
     email: 'brook.fixturewort@example.test',
+    siteRole: 'admin',
     note: null,
     expiresAt: new Date('2026-10-16T09:00:00Z'),
   },

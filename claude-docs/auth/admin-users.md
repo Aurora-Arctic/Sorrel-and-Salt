@@ -385,15 +385,19 @@ against the built server.
 ## Inviting an admin (MB.70)
 
 An admin can make someone an admin who has not signed in yet, by inviting
-their address: M2.9's option B
+their address, or since M11.20 a curator, the role picked in the invite form:
+M2.9's option B
 ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md), "The
 approaches"), on the site tier of MB.201's `invitations`
 ([`db/invitations.md`](../db/invitations.md)). The link is mailed to the
 address and accepted only by an account that has proved it holds it, so no
 one is handed a bearer token for the site's highest privilege (story 62).
+The names in code still say "admin invitation" for both roles: an admin is
+who sends one, and renaming the mutation and the services would buy no
+behaviour.
 
 - **One service each way, two checks.** `createAdminInvitation(session,
-email, note, sender)` and `revokeAdminInvitation(session, id)`
+email, siteRole, note, sender)` and `revokeAdminInvitation(session, id)`
   (`src/modules/identity/services/admin-invitations.ts`) assert the site role
   themselves, by direct call, and the two mutations in front of them carry the
   `admin` scope as the second check. `listPendingAdminInvitations(session,
@@ -417,9 +421,16 @@ filter, page)` is one page of the pending list, newest first, and
   row, for the mail to open with. A failed
   send is logged by the transport and never thrown, so the invitation stays
   pending, to be withdrawn and sent again.
+- **The role is the invitation's.** `siteRole` is `curator` or `admin`,
+  stored on the row (`invitations.site_role`), named in the mail's subject
+  and body, and on the Accept page; GraphQL takes it as the
+  `InvitableSiteRole` enum, which has no `user`.
 - **What is refused at creation.** An address the email page would refuse,
-  as a `ValidationError` on `email`, and the address of a live admin, who
-  would have nothing to accept. A second invitation to the same address is
+  as a `ValidationError` on `email`, and the address of an account that
+  already holds the invited role or a higher one, which would have nothing to
+  accept: a curator invited as a curator, an admin as either. The ladder is
+  `outranks` in `src/lib/site-roles.ts`, user below curator below admin, so
+  a curator may be invited to become an admin. A second invitation to the same address is
   not refused: either link works, and the other then says it has been
   accepted, or the admin withdraws it.
 - **Paused with the rest (MB.63).** While admin changes are paused, inviting
@@ -468,14 +479,16 @@ filter, page)` is one page of the pending list, newest first, and
      grant its invitee completes. One a rogue admin sent before the pause
      waits for the resume.
 - **Accepting is a grant.** The invitation is stamped `acceptedAt` and
-  `acceptedBy`, and the user made an admin who may create covens through
-  `writeAdminGrant`, MB.59's role write, in one transaction declared
-  `{ via: 'invitation', note }` with the invitation's note, so the trigger on
-  `users` records an `admin` grant, and a `create_workspace` grant if the flag
-  was off, as the accepting user's act. The service writes no ledger row. An
-  account that is already an admin has the invitation stamped and nothing
-  granted, so nothing is recorded. A curator who accepts becomes an admin: a
-  `curator` revoke and an `admin` grant at one instant, via the invitation. A revoke or a second accept that commits
+  `acceptedBy`, and the user given the invitation's role, who may then create
+  covens, through `writeSiteRoleGrant`, MB.59's role write, in one transaction
+  declared `{ via: 'invitation', note }` with the invitation's note, so the
+  trigger on `users` records a grant of that role, and a `create_workspace`
+  grant if the flag was off, as the accepting user's act. The service writes
+  no ledger row. **An invitation never lowers a role**: an account that has
+  since come to hold the invited role or a higher one has the invitation
+  stamped and nothing granted, so nothing is recorded. A curator who accepts
+  an admin invitation becomes an admin: a `curator` revoke and an `admin`
+  grant at one instant, via the invitation. A revoke or a second accept that commits
   between the checks and the stamp leaves nothing to stamp, and the refusal
   is the link's state read again.
 - **`/invite/[token]`** is public in `src/proxy.ts`. Signed out, it says an
@@ -483,13 +496,16 @@ filter, page)` is one page of the pending list, newest first, and
   reads nothing of the invitation until a session holds it. Signed in, it
   asks `invitationStanding(session, token)`, the same checks as the accept,
   and shows the refusal, with a link to the email page for an unverified
-  match, or Accept Invitation, whose mutation lands an admin on `/admin`. An
+  match, or Accept Invitation, naming the role it grants, whose mutation
+  lands a new curator or admin on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
 - **On `/admin/invitations`**, the People page's Invitations tab (beneath
   the user list on `/admin/users` until MB.115), every admin sees Invite
-  Admin, and the pending invitations 25 to a page, each with
-  its address, its reason, when it expires and Revoke, and the pager
+  Admin, whose form asks for the address, the role (Curator chosen to begin
+  with, so granting the People page is a choice) and an optional reason, and
+  the pending invitations 25 to a page, each with
+  its address, its role, its reason, when it expires and Revoke, and the pager
   beneath them
   ([`components/admin-invitations.md`](../components/admin-invitations.md)).
   While changes are paused, both controls are `aria-disabled` for any admin
@@ -502,13 +518,16 @@ list of past invitations is kept.
 
 **Tests.** `tests/modules/identity/services/admin-invitations.test.ts` covers
 creating, with the real sender over a mocked transport, so the link that
-reaches the address is the one read back; revoking and listing; the list's
+reaches the address is the one read back; the role recorded, and each
+address refused for already holding the role or a higher one beside the
+curator invited to become an admin; revoking and listing; the list's
 pages, newest first and by id within an instant, the filter narrowing every
 page, and its count; each
 non-admin fixture user refused by direct call, with E proven able; and the
 pause, with the same calls succeeding once resumed.
 `tests/modules/identity/services/invitation-acceptance.test.ts` covers the
-grant and its ledger rows; the same write undeclared refused by the trigger;
+grant of each role and its ledger rows, and an account already a curator or
+an admin accepting a curator invitation, lowered and recorded nowhere; the same write undeclared refused by the trigger;
 the unverified match and the different address, each beside the call that
 succeeds; each dead link, the two-state links, a second use, a hashed token
 and a workspace invitation; and the pause, by whom the invitation was sent.

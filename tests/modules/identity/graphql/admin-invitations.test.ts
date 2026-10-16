@@ -43,8 +43,8 @@ const sha256 = (value: string) => createHash('sha256').update(value).digest('hex
 function recordingSender() {
   const sent: { to: string; token: string; inviterName: string }[] = [];
   const sender: InvitationSender = {
-    siteInvitation: async (to, token, { name }) => {
-      sent.push({ to, token, inviterName: name });
+    siteInvitation: async (to, token, { inviterName }) => {
+      sent.push({ to, token, inviterName });
     },
     workspaceInvitation: async () => {
       throw new Error('an admin invitation mails no coven');
@@ -74,9 +74,9 @@ afterEach(() => {
 });
 
 const CREATE = `
-  mutation ($email: String!, $note: String) {
-    createAdminInvitation(email: $email, note: $note) {
-      id email note expiresAt audit { createdBy }
+  mutation ($email: String!, $siteRole: InvitableSiteRole = admin, $note: String) {
+    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {
+      id email siteRole note expiresAt audit { createdBy }
     }
   }
 `;
@@ -97,6 +97,7 @@ describe('Mutation.createAdminInvitation', () => {
     expect(result.errors).toBeUndefined();
     expect(result.data?.createAdminInvitation).toMatchObject({
       email: INVITED,
+      siteRole: 'admin',
       note: 'Curates the resins',
       audit: { createdBy: E.id },
     });
@@ -129,8 +130,39 @@ describe('Mutation.createAdminInvitation', () => {
       'note',
       'revokedAt',
       'role',
+      'siteRole',
       'workspace',
     ]);
+  });
+
+  // M11.20: the role is the admin's choice, and the transport carries it through.
+  it('answers the curator role it was asked to invite to', async () => {
+    const { sender } = recordingSender();
+
+    const result = await run<CreateAdminInvitationResult>(
+      asUser(E),
+      CREATE,
+      { email: INVITED, siteRole: 'curator' },
+      { invitations: sender },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.createAdminInvitation).toMatchObject({ siteRole: 'curator' });
+  });
+
+  it('refuses the user role, which no invitation grants, before the service is reached', async () => {
+    const { sent, sender } = recordingSender();
+
+    const result = await run(
+      asUser(E),
+      CREATE,
+      { email: INVITED, siteRole: 'user' },
+      { invitations: sender },
+    );
+
+    expect(result.errors).toHaveLength(1);
+    expect(result.data).toBeUndefined();
+    expect(sent).toEqual([]);
   });
 
   it('answers a malformed address as VALIDATION on the email', async () => {

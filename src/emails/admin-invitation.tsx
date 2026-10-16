@@ -10,25 +10,34 @@ import type { AdminInvitationProps } from './types';
 
 // MB.70's mail: the one place an admin invitation's link exists outside the
 // reader's inbox, since only its token's hash is stored and no response
-// carries it (claude-docs/auth/admin-users.md, "Inviting an admin").
+// carries it (claude-docs/auth/admin-users.md, "Inviting an admin"). It names
+// the site role it grants, curator or admin (M11.20), in the subject as well,
+// so the inbox says which.
 
-const SUBJECT = 'You Are Invited to Be an Admin';
-
-const PREVIEW = 'Accept within seven days to become an admin.';
+/** The role as the mail names it, with its article: "an admin". */
+const ROLE: Record<AdminInvitationProps['siteRole'], { title: string; prose: string }> = {
+  curator: { title: 'a Curator', prose: 'a curator' },
+  admin: { title: 'an Admin', prose: 'an admin' },
+};
 
 // The column's default, `now() + interval '7 days'`; nothing sets another.
 const LIFETIME = 'seven days';
 
 export function AdminInvitation({
   url,
+  siteRole,
   inviterName,
   origin = new URL(url).origin,
   part,
 }: AdminInvitationProps) {
   return (
-    <EmailLayout preview={PREVIEW} heading="You Are Invited" origin={origin}>
+    <EmailLayout
+      preview={`Accept within ${LIFETIME} to become ${ROLE[siteRole].prose}.`}
+      heading="You Are Invited"
+      origin={origin}
+    >
       <Paragraph>
-        {`${inviterName}, an admin of Sorrel & Salt, has invited this email address to become an admin.`}
+        {`${inviterName}, an admin of Sorrel & Salt, has invited this email address to become ${ROLE[siteRole].prose}.`}
       </Paragraph>
       <Paragraph>
         {`To accept, ${actionVerb(part)} within ${LIFETIME}, then sign in with an account that uses this email address.`}
@@ -40,4 +49,7 @@ export function AdminInvitation({
 }
 
 /** The admin invitation mail for `to`, rendered to the html and plain text `send` takes. */
-export const adminInvitationMessage = defineMessage<AdminInvitationProps>(SUBJECT, AdminInvitation);
+export const adminInvitationMessage = defineMessage<AdminInvitationProps>(
+  ({ siteRole }) => `You Are Invited to Be ${ROLE[siteRole].title}`,
+  AdminInvitation,
+);

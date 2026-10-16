@@ -45,11 +45,16 @@ const TOKEN = 'fixture-token-cccccccccccccccccccccccccccccccc';
 
 const sha256 = (value: string) => createHash('sha256').update(value).digest('hex');
 
-async function insertUser(id: string, email: string, role: 'user' | 'admin', verified = true) {
+async function insertUser(
+  id: string,
+  email: string,
+  role: 'user' | 'curator' | 'admin',
+  verified = true,
+) {
   await asManualFix(sql, async (tx) => {
     await tx`
       insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
-      values (${id}, 'Fixture Person', ${email}, ${verified}, ${role}, ${role === 'admin'}, ${id}, ${id})
+      values (${id}, 'Fixture Person', ${email}, ${verified}, ${role}, ${role !== 'user'}, ${id}, ${id})
     `;
   });
 }
@@ -63,14 +68,15 @@ async function invite(fixture: InvitationFixture = {}): Promise<string> {
     note = 'Curates the resins',
     workspaceId = null,
     role = null,
+    siteRole = workspaceId ? null : 'admin',
     expired = false,
     revoked = false,
     accepted = false,
   } = fixture;
   const [row] = await sql`
-    insert into invitations (email, token_hash, note, workspace_id, role, created_by, updated_by,
-      expires_at, revoked_at, accepted_at, accepted_by)
-    values (${email}, ${sha256(token)}, ${note}, ${workspaceId}, ${role}, ${createdBy}, ${createdBy},
+    insert into invitations (email, token_hash, note, workspace_id, role, site_role, created_by,
+      updated_by, expires_at, revoked_at, accepted_at, accepted_by)
+    values (${email}, ${sha256(token)}, ${note}, ${workspaceId}, ${role}, ${siteRole}, ${createdBy}, ${createdBy},
       ${expired ? sql`now() - interval '1 second'` : sql`now() + interval '7 days'`},
       ${revoked ? sql`now()` : null}, ${accepted ? sql`now()` : null}, ${accepted ? STRANGER : null})
     returning id
@@ -128,6 +134,7 @@ describe('acceptInvitation, on the site tier', () => {
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
       acceptable: true,
       tier: 'site',
+      siteRole: 'admin',
     });
 
     const acceptance = await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
@@ -226,6 +233,74 @@ describe('acceptInvitation, on the site tier', () => {
     });
     expect(await invitation()).toMatchObject({ accepted_by: PRIMARY });
     expect(await ledger()).toEqual([]);
+  });
+
+  // M11.20: a site invitation grants the role it names.
+  describe('to the curator role', () => {
+    it('makes the verified holder of the address a curator who may create covens, recorded via the invitation with its note', async () => {
+      expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user', can_create_workspace: false });
+      await invite({ siteRole: 'curator' });
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
+        acceptable: true,
+        tier: 'site',
+        siteRole: 'curator',
+      });
+
+      await acceptInvitation(asUser(AS_GRANTEE), TOKEN);
+
+      expect(await roleOf(GRANTEE)).toEqual({
+        role: 'curator',
+        can_create_workspace: true,
+        updated_by: GRANTEE,
+      });
+      expect(await invitation()).toMatchObject({ accepted_by: GRANTEE });
+      expect(
+        (await ledger()).map(({ user_id, privilege, change, via, note }) => ({
+          user_id,
+          privilege,
+          change,
+          via,
+          note,
+        })),
+      ).toEqual([
+        {
+          user_id: GRANTEE,
+          privilege: 'create_workspace',
+          change: 'grant',
+          via: 'invitation',
+          note: 'Curates the resins',
+        },
+        {
+          user_id: GRANTEE,
+          privilege: 'curator',
+          change: 'grant',
+          via: 'invitation',
+          note: 'Curates the resins',
+        },
+      ]);
+    });
+
+    // The service refuses to send these; one that predates a promotion still
+    // reaches its link, and accepting it never lowers the role.
+    it.each([
+      ['a curator', 'curator'],
+      ['an admin', 'admin'],
+    ] as const)(
+      'stamps it for an account already %s, lowering and recording nothing',
+      async (_holder, held) => {
+        await asManualFix(sql, async (tx) => {
+          await tx`update users set role = ${held}, can_create_workspace = true where id = ${GRANTEE}`;
+        });
+        await sql`truncate user_privilege_changes`;
+        await invite({ siteRole: 'curator' });
+
+        await acceptInvitation(asUser({ id: GRANTEE, role: held }), TOKEN);
+
+        expect(await roleOf(GRANTEE)).toMatchObject({ role: held });
+        expect(await invitation()).toMatchObject({ accepted_by: GRANTEE });
+        expect(await ledger()).toEqual([]);
+      },
+    );
   });
 });
 
@@ -589,21 +664,26 @@ describe('while admin changes are paused', () => {
     await pauseAdminRoleChanges(asUser(AS_PRIMARY));
   });
 
-  it('refuses another admin’s invitation, naming nobody, and accepts it once resumed', async () => {
-    await invite({ createdBy: E.id });
+  // The pause holds every site role an invitation grants, the curator's too (M11.20).
+  it.each(['admin', 'curator'] as const)(
+    'refuses another admin’s invitation to %s, naming nobody, and accepts it once resumed',
+    async (siteRole) => {
+      await invite({ createdBy: E.id, siteRole });
 
-    expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
-      reason: 'paused',
-    });
-    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
-    expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user' });
-    expect((await invitation()).accepted_at).toBeNull();
+      expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toMatchObject({
+        reason: 'paused',
+      });
+      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).rejects.toThrow(Forbidden);
+      expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user' });
+      expect((await invitation()).accepted_at).toBeNull();
 
-    await resumeAdminRoleChanges(asUser(AS_PRIMARY));
-    await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).resolves.toMatchObject({
-      acceptedAt: expect.any(Date),
-    });
-  });
+      await resumeAdminRoleChanges(asUser(AS_PRIMARY));
+      await expect(acceptInvitation(asUser(AS_GRANTEE), TOKEN)).resolves.toMatchObject({
+        acceptedAt: expect.any(Date),
+      });
+      expect(await roleOf(GRANTEE)).toMatchObject({ role: siteRole });
+    },
+  );
 
   // The primary admin is exempt from the pause, and its invitation with it.
   it('accepts the primary admin’s invitation', async () => {
@@ -750,6 +830,7 @@ describe('acceptInvitationById (M10.32)', () => {
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
       acceptable: true,
       tier: 'site',
+      siteRole: 'admin',
     });
 
     await expect(acceptInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(NotFound);
@@ -850,6 +931,7 @@ describe('declineInvitationById (M10.34)', () => {
     expect(await invitationStanding(asUser(AS_GRANTEE), TOKEN)).toEqual({
       acceptable: true,
       tier: 'site',
+      siteRole: 'admin',
     });
 
     await expect(declineInvitationById(asUser(AS_GRANTEE), id)).rejects.toThrow(NotFound);

@@ -295,7 +295,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   // A malformed address, so an admin past the scope is refused by the service
   // before anything is written or mailed.
   createAdminInvitation: write(
-    'mutation { createAdminInvitation(email: "not-an-address") { id } }',
+    'mutation { createAdminInvitation(email: "not-an-address", siteRole: curator) { id } }',
   ),
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
   acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),

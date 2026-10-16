@@ -28,12 +28,14 @@ const INVITATIONS = [
   {
     id: 'i1',
     email: 'ada@example.test',
+    siteRole: 'curator' as const,
     note: 'Curates the resins',
     expiresAt: new Date('2026-10-17T20:05:00Z'),
   },
   {
     id: 'i2',
     email: 'brook@example.test',
+    siteRole: 'admin' as const,
     note: null,
     expiresAt: new Date('2026-10-16T09:00:00Z'),
   },
@@ -47,13 +49,18 @@ beforeEach(() => {
 
 const dialog = () => screen.getByRole('dialog', { name: 'Invite Admin' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });
+/** A role's radio, by the start of its name: its description is read after it. */
+const roleRadio = (role: 'Curator' | 'Admin') =>
+  within(dialog()).getByRole('radio', { name: new RegExp(`^${role}`) });
 
 describe('AdminInvitations', () => {
-  it('lists each pending invitation with its address, reason and expiry', () => {
+  it('lists each pending invitation with its address, role, reason and expiry', () => {
     render(<AdminInvitations invitations={INVITATIONS} />);
 
     const [, first, second] = screen.getAllByRole('row');
     expect(within(first).getByText('ada@example.test')).toBeInTheDocument();
+    expect(within(first).getByText('Curator')).toBeInTheDocument();
+    expect(within(second).getByText('Admin')).toBeInTheDocument();
     expect(within(first).getByText('Curates the resins')).toBeInTheDocument();
     expect(within(first).getByText('17 October 2026, 20:05 UTC')).toBeInTheDocument();
     expect(within(second).getByText('brook@example.test')).toBeInTheDocument();
@@ -74,7 +81,7 @@ describe('AdminInvitations', () => {
     );
   });
 
-  it('sends an invitation with its optional reason, Send disabled until there is the required address, and closes back to the re-read tab', async () => {
+  it('sends an invitation to the curator role with its optional reason, Send disabled until there is the required address, and closes back to the re-read tab', async () => {
     const calls: CreateAdminInvitationMutationVariables[] = [];
     mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
       'CreateAdminInvitation',
@@ -88,6 +95,8 @@ describe('AdminInvitations', () => {
     expect(send()).toBeDisabled();
     expect(within(dialog()).getByRole('textbox', { name: 'Email Address' })).toBeRequired();
     expect(within(dialog()).getByRole('textbox', { name: 'Reason' })).not.toBeRequired();
+    // The lesser role is the one an admin has to choose against (M11.20).
+    expect(roleRadio('Curator')).toBeChecked();
     fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
       target: { value: ' cass@example.test ' },
     });
@@ -102,7 +111,9 @@ describe('AdminInvitations', () => {
         status.textContent?.includes('cass@example.test'),
       ),
     ).toHaveLength(1);
-    expect(calls).toEqual([{ email: 'cass@example.test', note: 'Knows the celestial bodies' }]);
+    expect(calls).toEqual([
+      { email: 'cass@example.test', siteRole: 'curator', note: 'Knows the celestial bodies' },
+    ]);
     await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/admin/invitations'));
     expect(router.refresh).toHaveBeenCalled();
 
@@ -114,6 +125,27 @@ describe('AdminInvitations', () => {
         .getAllByRole('status')
         .filter((status) => status.textContent?.includes('cass@example.test')),
     ).toHaveLength(1);
+  });
+
+  it('sends the admin role when it is chosen', async () => {
+    const calls: CreateAdminInvitationMutationVariables[] = [];
+    mockGraphQLMutation<CreateAdminInvitationMutation, CreateAdminInvitationMutationVariables>(
+      'CreateAdminInvitation',
+      (variables) => {
+        calls.push(variables);
+        return { createAdminInvitation: { id: 'i3' } };
+      },
+    );
+    render(<AdminInvitations invitations={[]} inviting />);
+
+    fireEvent.change(within(dialog()).getByRole('textbox', { name: 'Email Address' }), {
+      target: { value: 'cass@example.test' },
+    });
+    fireEvent.click(roleRadio('Admin'));
+    fireEvent.click(send());
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalled());
+    expect(calls).toEqual([{ email: 'cass@example.test', siteRole: 'admin' }]);
   });
 
   // Every way out asks first while the form has anything typed (MB.115): the

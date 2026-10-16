@@ -9,6 +9,7 @@ import { noMatchText } from '../../lib/text';
 import { inUtc } from '../../lib/utc';
 import ConfirmedAction from '../UserList/confirmed-action';
 import LockedControl from '../UserList/locked-control';
+import { roleLabel } from '../UserList/roles';
 import ListFrame, { ListBody } from '../ListFrame';
 import { useOpenModalClick } from '../Modal';
 import Notice from '../Notice';
@@ -26,8 +27,8 @@ import './index.scss';
 
 // The People page's Invitations tab, `/admin/invitations` (MB.70; a tab of
 // its own since MB.115): a filter by address and by expiry within 24 hours,
-// a page of the pending invitations it leaves, each with its address, reason
-// and expiry, and Revoke, the pager beneath them, and the invite form
+// a page of the pending invitations it leaves, each with its address, the
+// site role it grants (M11.20), reason and expiry, and Revoke, the pager beneath them, and the invite form
 // `?invite` opens over them. Invite Admin is the tab's action, beside the page's heading. While
 // admin changes are paused both are in view but locked for any admin but the
 // primary one, with the pause as the reason, as the role controls are. The
@@ -150,6 +151,7 @@ const AdminInvitations = ({
           <StackTable
             columns={[
               { heading: 'Email', cell: (invitation) => invitation.email },
+              { heading: 'Role', cell: (invitation) => roleLabel(invitation.siteRole) },
               {
                 heading: 'Reason',
                 cell: (invitation) =>

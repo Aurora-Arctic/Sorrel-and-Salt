@@ -8,7 +8,8 @@ import type { UserRole } from '../../lib/session';
 import { RadioGroupField } from '../Field';
 import ConfirmedAction from './confirmed-action';
 import LockedControl from './locked-control';
-import { roleLabel, SITE_ROLE_ACCESS, SITE_ROLES } from './roles';
+import { outranks, SITE_ROLES } from '../../lib/site-roles';
+import { roleLabel, SITE_ROLE_ACCESS } from './roles';
 import { unverifiedWarning } from './warning';
 import type { RoleControlProps } from './types';
 
@@ -65,7 +66,7 @@ const RoleControl = ({
   // Up the list is a promotion, down it a demotion; the confirm says which,
   // green for one and red for the other, as the choice is made. Only a
   // promotion vouches for the address, so only it warns (MB.205).
-  const promoting = SITE_ROLES.indexOf(chosen) > SITE_ROLES.indexOf(role);
+  const promoting = outranks(chosen, role);
   return (
     <ConfirmedAction
       label={label}

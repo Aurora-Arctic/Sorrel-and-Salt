@@ -1,10 +1,15 @@
 import type { Route } from 'next';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
+/** A site role an invitation may grant: never `user`, which every account holds. */
+export type InvitableSiteRole = 'curator' | 'admin';
+
 /** One pending admin invitation, as `/admin/invitations` lists it (MB.70). */
 export interface AdminInvitationEntry {
   id: string;
   email: string;
+  /** The site role it grants once accepted (M11.20). */
+  siteRole: InvitableSiteRole;
   /** Why the person is invited, where the inviting admin gave a reason. */
   note: string | null;
   expiresAt: Date;

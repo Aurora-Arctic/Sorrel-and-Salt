@@ -57,7 +57,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   `?email=fern&expiring&after=…&invite`, and the form closes back to the
   tab at that page, as a value page's Add does. While locked it is the locked control instead, and `?invite`
   opens nothing.
-- **Props.** `invitations`, this page, newest first, each `{ id, email, note, expiresAt }`;
+- **Props.** `invitations`, this page, newest first, each `{ id, email, siteRole, note, expiresAt }`;
   `filter`, the filter shown, `{ email, expiringSoon }`, none when left out;
   `cursor`, the page shown, `{ after?, before? }`, the first when left out;
   `previousHref` and `nextHref`, the pager's ends, each absent where there
@@ -77,7 +77,11 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   stands on its own in the workshop without the list's stylesheet (MB.115).
 - **The invite form** (`invite-form.tsx`) is a `RouteModal` titled
   "Invite Admin", the link's own name ([`modal.md`](modal.md)), with the **Email Address**, required and marked
-  with the shared red asterisk, and a **Reason**, labelled plainly: a field
+  with the shared red asterisk; a **Role** (M11.20), the shared
+  `RadioGroupField` ([`field.md`](field.md)) offering Curator and Admin,
+  each with the line Change Role shows beside it (`UserList/roles.ts`'s
+  `SITE_ROLE_ACCESS`), Curator chosen to begin with so that granting the
+  People page is a choice the admin makes; and a **Reason**, labelled plainly: a field
   is optional unless it carries the required mark, so no label says
   "(Optional)". What it is for, "Kept with the invitation, and in the record
   of who changed what once it is accepted.", is its hint, behind an
@@ -87,7 +91,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   there is an address, and is a `BusyButton` ([`busy-button.md`](busy-button.md)),
   a spinner and "Sending" while the request is out; Cancel is quiet, waits
   while the request is out, and closes back to the tab. The row is the
-  shared `FormActions`, its submit renamed ([`field.md`](field.md#formactions); MB.119). With anything typed in either field, Cancel asks
+  shared `FormActions`, its submit renamed ([`field.md`](field.md#formactions); MB.119). With anything typed in either field, or Admin chosen, Cancel asks
   first (MB.115, the owner's call; [`modal.md`](modal.md#unsaved-changes));
   Discard Changes closes. The form is
   `invite-form.tsx`'s `InviteFields`, rendered inside the modal so its
@@ -103,7 +107,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   and the compendium's do, through the one wording `noMatchText`
   (`src/lib/text.ts`): "No invitations match “fern” and Expires in 24 Hrs.
   Change or clear the filter to see more."
-- **Four columns**: Email, Reason, Expires and Revoke, drawn by
+- **Five columns**: Email, Role (Curator or Admin, M11.20), Reason, Expires and Revoke, drawn by
   [`StackTable`](data-table.md), which gives each cell its heading as its
   card label and writes the table's roles out so it can stack into cards at
   phone width. Revoke is a `'foot'` action, across the card's foot.
@@ -157,9 +161,10 @@ fails into its alert. Render-only, no test ids, no snapshots.
 
 ## Tests
 
-`tests/components/AdminInvitations/index.test.tsx` covers the list and the
-empty state; Invite Admin a link to `?invite`; sending, with Send disabled
-until there is an address, the trimmed variables, the close back to the tab
+`tests/components/AdminInvitations/index.test.tsx` covers the list, each
+row's role included, and the empty state; Invite Admin a link to `?invite`;
+sending, with Send disabled until there is an address, Curator chosen to
+begin with and Admin sent when chosen, the trimmed variables, the close back to the tab
 and its refresh, and the notice outlasting the form; Cancel and Escape
 asking once something is typed, Discard Changes closing, and Cancel closing
 at once with nothing typed; a refused address beside its field;

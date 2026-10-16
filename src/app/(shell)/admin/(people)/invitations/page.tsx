@@ -34,9 +34,10 @@ const readInvitations = cache(
       (start) => countPendingAdminInvitations(session, filter, start),
     );
     // What the list shows of each: no token or hash leaves the page.
-    const invitations = page.edges.map(({ node: { id, email, note, expiresAt } }) => ({
+    const invitations = page.edges.map(({ node: { id, email, siteRole, note, expiresAt } }) => ({
       id,
       email,
+      siteRole,
       note,
       expiresAt,
     }));

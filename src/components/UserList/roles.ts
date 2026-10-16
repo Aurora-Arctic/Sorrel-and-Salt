@@ -15,12 +15,6 @@ export const ROLE_LABELS: readonly (SelectOption & { value: UserRole })[] = [
 /** The roles alone, for reading a hand-edited `?role` with `oneOf`. */
 export const ROLES: readonly UserRole[] = ROLE_LABELS.map(({ value }) => value);
 
-/**
- * The roles from least to most, the order Change Role offers them in and
- * reads a promotion by: each holds what the one before it does, and more.
- */
-export const SITE_ROLES: readonly UserRole[] = ['user', 'curator', 'admin'];
-
 /** What each site role may do, in the words Change Role shows beside it (DESIGN.md §5). */
 export const SITE_ROLE_ACCESS: Record<UserRole, string> = {
   user: 'Uses the site through their covens, and creates covens once approved.',
