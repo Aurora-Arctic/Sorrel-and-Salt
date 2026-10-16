@@ -1,11 +1,12 @@
 import Welcome from '../components/Welcome';
 import { getSession } from '../lib/request-session';
-import { postSignInLanding } from '../lib/sign-in';
+import { signedInLanding } from '../lib/landing';
 
 // The one public page that reads the session — with getSession(), never
 // requireSession(), which would redirect the signed-out visitors it exists
-// for — and reads it for one thing: which way in to offer, the landing for a
-// signed-in visitor's role or the sign-in page.
+// for — and reads it for one thing: which way in to offer, where a signed-in
+// visitor belongs (their first coven, or their role's landing) or the sign-in
+// page.
 // See claude-docs/design-decisions/mb.57-post-sign-in-landing.md.
 export default async function HomePage() {
   const session = await getSession();
@@ -15,7 +16,7 @@ export default async function HomePage() {
     // the hook Backdrop's `body:has(.welcome-page)` reads to draw its larger
     // front-door art, so the root layout needs no route awareness.
     <main className="page-frame welcome-page">
-      <Welcome landing={session ? postSignInLanding(session.role) : undefined} />
+      <Welcome landing={session ? await signedInLanding(session) : undefined} />
     </main>
   );
 }
