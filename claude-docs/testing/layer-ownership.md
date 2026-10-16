@@ -190,8 +190,10 @@ Two files stand over it by the owner's decision, and the ⚠ on them is expected
   planner choose the trigram indexes (`claude-docs/db/fuzzy-matching.md`), and
   plan tests keep their row counts (MB.184).
 
-CI's figures come from the `vitest` job, which has run on Blacksmith's
-8-vCPU runner with seven workers since MB.96 ([`ci/runner-budget.md`](../ci/runner-budget.md)).
+CI's figures come from the `vitest` job. From MB.96 to M11.24 it ran on
+Blacksmith's 8-vCPU runner with seven workers, and the figures here were
+measured there; from M11.24 it runs on GitHub's 4-vCPU runner with three
+workers, so expect longer blocks ([`ci/runner-budget.md`](../ci/runner-budget.md)).
 It is a shared cloud machine, so a single run's block is a reading, not a
 measurement: one tree ran 64 s and 110 s of wall, and `index.test.tsx` 13 s
 and 30 s (MB.189), and six runs on 10–11 October 2026 spent 44–62 s running
