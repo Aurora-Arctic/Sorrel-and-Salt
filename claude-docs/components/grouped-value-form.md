@@ -153,6 +153,8 @@ it. Covens' ingredients keep what they wrote, as their own value.` A refusal com
   quiet, since they change nothing; the two deletes and Discard Changes are
   destructive.
 
+- **Undo and redo** ([`field.md`](field.md#undo-and-redo), M12.9). The form calls `useFormHistory` on its `<form>`, provides it to `FormHistoryButtons` and passes `onKeyDown`. It is off while the unsaved-changes question or the delete question is up. The form does not reset after a save (a save closes it), so nothing calls `clear()`.
+
 ## On the admin pages
 
 `/admin/categories`, `/admin/forms`, `/admin/deities`, `/admin/celestial-bodies` and

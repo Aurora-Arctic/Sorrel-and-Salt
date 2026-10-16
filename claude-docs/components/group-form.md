@@ -37,6 +37,8 @@ Everything that tells one kind from another is its entry in `index.tsx`'s `KINDS
 - **Unsaved changes are asked about** (MB.115, the owner's call). The form hands `formState.isDirty` to the shared guard ([`modal.md`](modal.md#unsaved-changes)). Its question comes ahead of a delete step and replaces it until answered; Discard Changes calls `onDone`.
 - **Buttons are title case**: Save Group, Cancel, Delete Group, Continue, Keep It, Move and Delete, Back, Delete, Discard Changes, Keep Editing; a tradition's Save Tradition and Delete Tradition. Save and Continue are solid. Cancel, Keep It, Back and Keep Editing are quiet. Delete Group (Delete Tradition), Move and Delete, Delete and Discard Changes are destructive.
 
+- **Undo and redo** ([`field.md`](field.md#undo-and-redo), M12.9). The form calls `useFormHistory` on its `<form>`, provides it to `FormHistoryButtons` and passes `onKeyDown`. It is off while the unsaved-changes question or either delete step is up. Undoing a colour redraws its hex box, picker and sample chip from the restored value, since `ChipColorField` re-derives them from its `value`; a colour and the partner it filled are one step.
+
 ## The pair
 
 A category group's two colours are one family, the owner's call ([`m5.6b-admin-groups.md`](../design-decisions/m5.6b-admin-groups.md), "A category group's pair keeps one hue"):

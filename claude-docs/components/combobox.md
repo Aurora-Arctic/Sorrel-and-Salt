@@ -248,6 +248,11 @@ value, in the same `combobox__icon` span the suggesting box uses: `aria-hidden`
 and outside the accessible name. The type-ahead box passes it on to its rows
 too; the combobox knows no icon set.
 
+A Ctrl or Cmd keydown on the closed select is not Downshift's to take: its
+handler sets `preventDownshiftDefault`, so Ctrl+Z, the form's undo
+([`field.md`](field.md#undo-and-redo)), is not read as a letter to search for
+that opens the list.
+
 The chevron is drawn inside the control and hidden from assistive
 technology, since the whole control is the one target. The control takes the
 focus ring itself, where a suggesting box draws it for its inner text.

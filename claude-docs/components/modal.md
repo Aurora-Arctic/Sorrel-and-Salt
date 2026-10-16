@@ -146,6 +146,7 @@ each form.
   `<output>`, a polite live region, alternating a trailing no-break space so
   a repeat is a change and is read again. Keep Editing sets the count back
   to 0.
+- **Undo can release the guard.** A form with undo and redo ([`field.md`](field.md#undo-and-redo)) that is undone back to its starting values is no longer dirty, so Cancel and the other ways out close at once again. The undo is off while the question is asked.
 - **The browser's own ways out are not covered.** Back, a reload or closing
   the tab leave without asking: no `beforeunload` handler is added, since the
   modals are opened by their address and Back is how one is left.
@@ -309,7 +310,7 @@ under the heading, at its start, and empty it takes no line. The
 modal hands that place down as an element (`HeaderSlotContext`), and its
 contents may portal one control of their own into it through
 `useModalHeaderSlot()`: the ingredient form's Open All / Close All, the
-owner's call at MB.115. A slot, as the guard is, since the form sits inside
+owner's call at MB.115, and a form's Undo and Redo buttons (`FormHistoryButtons`, M12.9). A slot, as the guard is, since the form sits inside
 the modal's render prop, out of its owner's reach. Outside a modal the hook
 answers null and the form keeps the control in its own flow. The place sat
 between the title and the × until the owner moved it, at MB.115: there it

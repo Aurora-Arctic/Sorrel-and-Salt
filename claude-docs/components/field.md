@@ -28,20 +28,24 @@ It has five ways in:
 `MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
 the same shell until its design review (MB.120).
 
-| File                      | What it holds                                                                       |
-| ------------------------- | ----------------------------------------------------------------------------------- |
-| `index.tsx`               | The exports, below                                                                  |
-| `shell.tsx`               | `FieldShell`, `FieldError`, `Required`: no hook, so a server component may use them |
-| `description.ts`          | `fieldDescription`                                                                  |
-| `use-field.ts`            | `useField`, `fieldDescription` over a react-hook-form field's own error             |
-| `text-field.tsx`          | `TextField`                                                                         |
-| `select-field.tsx`        | `SelectField`                                                                       |
-| `radio-group-field.tsx`   | `RadioGroupField`                                                                   |
-| `switch-field.tsx`        | `SwitchField`                                                                       |
-| `search-field.tsx`        | `SearchField`                                                                       |
-| `filter-select-field.tsx` | `FilterSelectField`                                                                 |
-| `icons.tsx`               | `MagnifierIcon`, the search's mark                                                  |
-| `types.ts`                | The props, and `SelectOption`                                                       |
+| File                       | What it holds                                                                         |
+| -------------------------- | ------------------------------------------------------------------------------------- |
+| `index.tsx`                | The exports, below                                                                    |
+| `shell.tsx`                | `FieldShell`, `FieldError`, `Required`: no hook, so a server component may use them   |
+| `description.ts`           | `fieldDescription`                                                                    |
+| `use-field.ts`             | `useField`, `fieldDescription` over a react-hook-form field's own error               |
+| `text-field.tsx`           | `TextField`                                                                           |
+| `select-field.tsx`         | `SelectField`                                                                         |
+| `radio-group-field.tsx`    | `RadioGroupField`                                                                     |
+| `switch-field.tsx`         | `SwitchField`                                                                         |
+| `search-field.tsx`         | `SearchField`                                                                         |
+| `filter-select-field.tsx`  | `FilterSelectField`                                                                   |
+| `icons.tsx`                | `MagnifierIcon`, the search's mark; `UndoIcon` and `RedoIcon`, the history buttons'   |
+| `form-history.ts`          | The history's reducer: what a step is, when two edits join, the 100-step cap          |
+| `use-form-history.ts`      | `useFormHistory`: records a form's changes, puts them back, owns focus and the chords |
+| `form-history-context.ts`  | `FormHistoryContext` and `useFormHistoryContext`                                      |
+| `form-history-buttons.tsx` | `FormHistoryButtons`: Undo, Redo and the live region                                  |
+| `types.ts`                 | The props, and `SelectOption`                                                         |
 
 ## The exports
 
@@ -280,6 +284,79 @@ caller narrowing it to its own type reads it with `oneOf`
   reads the form state by the field's name.
 - **`disabled` is the attribute**, not react-hook-form's option, which would
   also drop the value from what is validated and sent.
+
+## Undo and redo
+
+`useFormHistory` (M12.9) gives a react-hook-form form an undo and a redo. The
+form stays the one store of values; the hook watches its changes, keeps a list
+of what each action changed, and puts values back with `setValue`. It is not
+`reset`, which would also wipe the errors and the submit count. The argument
+is in `claude-docs/design-decisions/m12.9-plan.md`.
+
+```tsx
+const root = useRef<HTMLFormElement>(null);
+const history = useFormHistory(methods, { root, enabled: !discard.asking });
+<FormHistoryContext.Provider value={history}>
+  <form ref={root} onKeyDown={history.onKeyDown}>
+    <FormHistoryButtons />
+    ...
+```
+
+- **A step is what one action changed.** Several fields changed in the same
+  moment, such as a pick that empties another field, are one step. Typing in
+  one text box joins into one step until a pause of half a second (`pauseMs`)
+  or until the focus leaves the box; a pick from a list never joins typing.
+  The list keeps the last 100 steps (`limit`). A new edit after an undo drops
+  what could have been redone.
+- **Undo takes the newest step first**, and redo puts back the one undone last.
+  Undoing to the starting values turns `isDirty` off, so Save goes off and a
+  modal's unsaved-changes guard lets go ([`modal.md`](modal.md#unsaved-changes)).
+  After a submit, a restored value is validated again, so its error shows;
+  before one it is not.
+- **The chords** are Ctrl or Cmd with Z to undo, with Shift to redo, and Ctrl
+  with Y to redo. Either modifier is accepted on every platform, with no
+  sniffing of the platform: Ctrl+Z is not undo on a Mac, so nothing is lost.
+  `onKeyDown` goes on the `<form>` and handles only keys that reach it. It
+  stands aside for a key already handled, one composing text (an input method),
+  one with Alt, one inside an open combobox or its list (Downshift owns those
+  keys), and anything `ignore(target)` says is not this form's, such as a
+  panel with a history of its own. A closed select would take Ctrl+Z as a
+  letter to search for; see [`combobox.md`](combobox.md#the-select-only-box).
+- **It always calls `preventDefault` on the chord**, even with nothing to
+  undo. The browser keeps its own undo list for each text box, which knows
+  nothing of the form: after a save that reset the form, say, it would revert
+  a box behind the form's back. Calling it every time keeps the form's list
+  the only one in play; with nothing to do, the live region says so.
+- **Focus follows the undo.** After a step is applied the hook calls
+  `onRestored(names)` first, so a form can open whatever holds those fields,
+  then focuses the first field changed. A list field has no single control, so
+  focus goes to the first control in its fieldset, else the fieldset. If
+  nothing can take it, the Undo button does, never the page.
+- **The live region** is an `<output>` named "Edit History", in
+  `FormHistoryButtons`. It says "Undid change to Name", "Redid change to Light
+  Theme Colour" or "Nothing to undo". The field's name is read from the page at
+  undo time: its label, else its `aria-label`, else the legend of its fieldset.
+- **A `reset` clears the history.** The hook sees the form's defaults change
+  and starts over. A form that makes its saved values the new start another
+  way calls `history.clear()`. `enabled: false` makes the chords, the buttons
+  and `canUndo` and `canRedo` inert; forms turn it off while a question is
+  asked over them.
+- **Two internals of react-hook-form are read.** `control._fields` finds a
+  control with no `name` attribute (a select's box, a colour box) by the ref it
+  registered; `setFocus` reads the same ref but focuses on a timer, too late
+  for the fall-back to the Undo button. The test for a single subscription
+  reads `control._subjects`. A react-hook-form upgrade re-checks both.
+- **The buttons** are small quiet icon buttons in an `IconTip`, labelled Undo and
+  Redo and disabled while there is nothing to do. In a modal they portal into
+  the header slot beside the title ([`modal.md`](modal.md#a-control-in-the-header));
+  elsewhere they sit at the start of the form. `FormHistoryButtons` draws nothing
+  without a `FormHistoryContext`. Their `.form-history` row is styled in
+  `src/scss/_primitives.scss`.
+
+Wired in [`GroupedValueForm`](grouped-value-form.md) and
+[`GroupForm`](group-form.md); the ingredient form follows in M12.10.
+`tests/components/Field/` covers the reducer, the hook (on a probe form in
+`tests/support/form-history.tsx`) and the buttons.
 
 ## Styling
 
