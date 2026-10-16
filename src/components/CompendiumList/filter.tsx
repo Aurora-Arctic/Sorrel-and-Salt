@@ -18,7 +18,7 @@ import type { CompendiumListFilterProps, CompendiumPlace } from './types';
 // Classification applies on its pick and No Refs on its press, each carrying
 // the name typed but not yet searched (read from the search form with
 // `useSearchText`); the form once a choice settles, a pick, its clear or
-// leaving the box, never while it is typed; the name on the magnifier or Enter.
+// leaving the box, never while it is typed; the name on the magnifier, Enter or its clear.
 // Picking a name in the dropdown opens that entry's modal over the list as it
 // is shown, the typed text not applied (the owner's call, M8.10). Each field
 // but the name is drawn from the filter shown and holds its own value after,

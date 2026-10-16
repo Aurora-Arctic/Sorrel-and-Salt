@@ -36,6 +36,8 @@ movable, on dnd-kit.
 | `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                                                                                                                                 |
 | `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                                                                                                                                 |
 | `clear`            | `{ label, onClear, empty }`: a control that empties the box, "Clear Folk Names"; `empty` while there is nothing to clear, when it is hidden but keeps its room.                                                                                                                                |
+| `leading`          | A caller's own control drawn inside the control box before the text and any entries: a form's submit, say. A slot rather than a built-in, as Combobox knows nothing about forms.                                                                                                               |
+| `toggle`           | Whether a box with `suggestions` draws its chevron button; `true` unless said. Leave it out (`false`) for a free-text search that opens as you type.                                                                                                                                           |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
 | `create`           | `{ label, onCreate }`: a last row that makes something new, "New Reference…", with no typed row, there with a blank box too. See "The create row".                                                                                                                                             |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                     |
@@ -135,6 +137,18 @@ colour is never the only cue.
   the control's width, which matters wherever the control sizes itself, as
   in a filter row. A pressed clear hides, so its owner puts the focus back in
   the box. The multi-select's clear does the same.
+- **A `leading` control sits before the text.** It is drawn inside the control
+  box, ahead of the entries and the text, in its own wrapper that does not grow,
+  so the tab order matches the screen. A button given there takes the
+  `combobox__indicator` class, so it looks and focuses like the others. A press
+  on it counts as inside the control, so it does not close an open list or
+  empty the box, and its click still fires, so a submit goes through.
+- **Leave out the chevron (`toggle={false}`) on a free-text search.** The list
+  opens as you type, and a chevron promises a set to browse. No design system
+  surveyed puts one on a search box: React Aria's
+  [SearchField](https://react-aria.adobe.com/SearchField), Apple's Human
+  Interface Guidelines search fields, and Algolia Autocomplete, whose API
+  reference lists no toggle.
 - **The entries sit inside the control**, ahead of the text, each a chip with
   its own × — the owner's call, after react-select's multi-select — with the
   clear and the chevron on the control's right, parted by a line. Backspace or Delete in an empty box takes the last entry through `onRemoveLast`. The chip's

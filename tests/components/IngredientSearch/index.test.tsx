@@ -120,6 +120,19 @@ describe('IngredientSearch', () => {
     expect(screen.getByRole('button', { name: 'Search' })).toHaveAttribute('type', 'submit');
   });
 
+  it("draws the Search submit inside the box's control before the text, with no chevron, and a press on it submits the form", () => {
+    renderSearch('wort');
+
+    const search = screen.getByRole('button', { name: 'Search' });
+    expect(box().closest('.combobox__control')).toContainElement(search);
+    expect(search.compareDocumentPosition(box()) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Show Name/ })).not.toBeInTheDocument();
+    const submitted = vi.fn((event: Event) => event.preventDefault());
+    form().addEventListener('submit', submitted);
+    fireEvent.click(search);
+    expect(submitted).toHaveBeenCalledTimes(1);
+  });
+
   it('asks once after the debounce, not on every keystroke', async () => {
     offer([match(1)]);
     renderSearch();
@@ -249,7 +262,7 @@ describe('IngredientSearch', () => {
     expect(screen.getByText('Results go here')).toBeInTheDocument();
   });
 
-  it('empties the box with its clear and changes nothing else', async () => {
+  it('empties the box with its clear and applies the empty search', async () => {
     offer([match(1)]);
     renderSearch('wort');
 
@@ -257,7 +270,7 @@ describe('IngredientSearch', () => {
 
     expect(box()).toHaveValue('');
     expect(box()).toHaveFocus();
-    expect(router.push).not.toHaveBeenCalled();
+    expect(router.push.mock.calls).toEqual([[searchHref('')]]);
   });
 
   it('applies the text on Enter in a closed box, trimmed, and not while typing', async () => {

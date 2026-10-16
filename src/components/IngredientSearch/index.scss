@@ -1,19 +1,9 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Tokens and primitives only until the section's design review: the box and
-// its magnifier sit on one line, and the action beneath the filter row takes
-// the row's own spacing (claude-docs/components/ingredient-search.md).
-
-.ingredient-search__box {
-  display: flex;
-  align-items: center;
-  gap: space(1);
-}
-
-.ingredient-search__box > .combobox {
-  flex: 1 1 auto;
-}
+// Tokens and primitives only until the section's design review: the action
+// beneath the filter row takes the row's own spacing
+// (claude-docs/components/ingredient-search.md).
 
 .ingredient-search__action {
   display: flex;

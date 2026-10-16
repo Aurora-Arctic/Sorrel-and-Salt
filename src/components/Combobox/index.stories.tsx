@@ -2,6 +2,7 @@ import type { Story } from '@ladle/react';
 import { type ReactElement, type ReactNode, useId, useState } from 'react';
 import { usePressOnMount } from '../../../.ladle/press';
 import { FieldShell, fieldDescription } from '../Field';
+import { MagnifierIcon } from '../Field/icons';
 import Combobox, {
   ComboboxEntry,
   ComboboxMultiSelect,
@@ -448,3 +449,28 @@ export const QualifierInForm: Story = () => <QualifiedField />;
 // At a phone's width, where the tooltip's cap at 60% of the box shows.
 export const QualifierInFormPhone: Story = () => <QualifiedField />;
 QualifierInFormPhone.meta = { width: 375 };
+
+/** A caller's own control at the box's start, inside the control: a form's submit. Typing opens the list, and `toggle={false}` leaves the chevron out. */
+export const Leading: Story = () => {
+  const [value, setValue] = useState('');
+  return (
+    <Labelled label="Name">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Name"
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          placeholder="Search names"
+          toggle={false}
+          leading={
+            <button type="button" className="combobox__indicator" aria-label="Search">
+              <MagnifierIcon />
+            </button>
+          }
+        />
+      )}
+    </Labelled>
+  );
+};

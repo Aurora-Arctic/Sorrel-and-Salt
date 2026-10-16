@@ -1460,3 +1460,85 @@ describe('Combobox empty message and footer', () => {
     expect(box()).toHaveAttribute('aria-expanded', 'true');
   });
 });
+
+describe('Combobox leading node and toggle', () => {
+  const control = () => box().closest('.combobox__control') as HTMLElement;
+  const precedes = (a: Element, b: Element) =>
+    Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+  it('draws the caller node inside the control, ahead of the text box', () => {
+    render(<Harness suggestions={ONE_BUCKET} leading={<button type="button">Go</button>} />);
+
+    const go = screen.getByRole('button', { name: 'Go' });
+    expect(control()).toContainElement(go);
+    expect(precedes(go, box())).toBe(true);
+  });
+
+  it('draws it alone when the box has no clear and no suggestions', () => {
+    render(<Harness leading={<button type="button">Go</button>} />);
+
+    expect(control()).toContainElement(screen.getByRole('button', { name: 'Go' }));
+  });
+
+  it('fires the leading button without closing an open list or emptying the value', () => {
+    const onGo = vi.fn();
+    render(
+      <Harness
+        suggestions={ONE_BUCKET}
+        leading={
+          <button type="button" onClick={onGo}>
+            Go
+          </button>
+        }
+      />,
+    );
+    type('fix');
+    expect(screen.getAllByRole('option')).toHaveLength(3);
+
+    const go = screen.getByRole('button', { name: 'Go' });
+    fireEvent.mouseDown(go);
+    fireEvent.mouseUp(go);
+    fireEvent.click(go);
+
+    expect(onGo).toHaveBeenCalledTimes(1);
+    expect(box()).toHaveValue('fix');
+    expect(screen.getAllByRole('option')).toHaveLength(3);
+  });
+
+  it('puts the caret in the text on a press beside the leading button, as on the padding', () => {
+    render(<Harness suggestions={ONE_BUCKET} leading={<button type="button">Go</button>} />);
+    const ground = screen.getByRole('button', { name: 'Go' }).parentElement as HTMLElement;
+    // The press lands on the leading node's own ground, not the button or the control.
+    expect(ground).not.toBe(control());
+
+    fireEvent.mouseDown(ground);
+    expect(box()).toHaveFocus();
+  });
+
+  it('leaves out the chevron with toggle false, and still opens as you type', () => {
+    render(
+      <Harness
+        suggestions={ONE_BUCKET}
+        toggle={false}
+        clear={{ label: 'Clear Form', onClear: () => {}, empty: true }}
+      />,
+    );
+
+    expect(screen.queryByRole('button', { name: /^Show Form/ })).not.toBeInTheDocument();
+    expect(control().querySelectorAll('.combobox__separator')).toHaveLength(0);
+    type('fix');
+    expect(screen.getAllByRole('option')).toHaveLength(3);
+  });
+
+  it('draws the chevron by default', () => {
+    render(<Harness suggestions={ONE_BUCKET} />);
+
+    expect(screen.getByRole('button', { name: 'Show Form suggestions' })).toBeInTheDocument();
+  });
+
+  it('draws no indicators when there is no clear, no suggestions and no leading node', () => {
+    render(<Harness />);
+
+    expect(control().querySelector('.combobox__indicators')).toBeNull();
+  });
+});

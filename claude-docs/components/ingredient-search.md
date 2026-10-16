@@ -44,12 +44,19 @@ in the filter slot to carry.
   and passes it as `search`, so the list frame stays a server component.
 - **The box asks; the list does not.** The text is debounced
   ([`DEBOUNCE_MS`](../../src/lib/debounce.ts)) and feeds the dropdown only.
-  The list changes on Enter, a pick or See All Results, and on nothing else.
+  The list changes on Enter, the clear, a pick or See All Results, and on nothing else.
 - **A pick leaves the list as it was** and the typed text stays in the box.
-- **The clear (x) empties the box only.** It does not apply anything.
-- **The magnifier Search button is the form's one submit.** Without
-  JavaScript the box is a plain GET form to `action`, sending its text as
-  `query`.
+- **The clear (x) empties the box and applies the empty search** (the
+  owner's call, reversing "empties the box only"): the list reloads with no
+  name, and the other filters the consumer carries in `searchHref` stay.
+- **The magnifier Search button is the form's one submit.** It sits inside
+  the box at its start (Combobox's `leading` slot), with the clear alone at the
+  end: `[magnifier  Search names…  x]`. There is no chevron (`toggle={false}`),
+  since typing opens the dropdown already. This is the owner's call of
+  2026-10-16, after a survey of design systems; Nielsen Norman Group's
+  [magnifying-glass article](https://www.nngroup.com/articles/magnifying-glass-icon/)
+  says a magnifier must submit when clicked. Without JavaScript the box is a
+  plain GET form to `action`, sending its text as `query`.
 - **Nothing is asked until the box is focused**, nor while the text is under
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
   by `src/modules/ingredients/validation/compendium-filter.ts`, a zod-only file
@@ -71,8 +78,8 @@ in the filter slot to carry.
 
 ## Styling
 
-Tokens only, until the section's design review: a flex row for the box and its
-submit, and the action right-aligned beneath it.
+Tokens only, until the section's design review: the box's submit is drawn
+by Combobox inside the box, at its start, and the action sits right-aligned beneath it.
 
 ## Stories
 
@@ -85,5 +92,5 @@ Results) and `NoMatches`. Each stubs `window.fetch` for `/api/graphql`.
 `tests/components/IngredientSearch/index.test.tsx` asserts the requests the box
 makes (once after the debounce, never before focus or under the floor, first 25
 and no cursor), the footer and empty message, that a pick opens the match
-without applying the text, that the clear changes nothing else, and that Enter
+without applying the text, that the clear empties the box and applies the empty search, and that Enter
 applies the trimmed text.

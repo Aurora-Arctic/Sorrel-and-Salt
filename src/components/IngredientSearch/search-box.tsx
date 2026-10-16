@@ -18,9 +18,9 @@ import type { IngredientSearchBoxProps, IngredientSearchOption } from './types';
 import './index.scss';
 
 // The search row's first control (M8.10): a type-ahead over the compendium's
-// ranked search, with the magnifier beside it as the form's one submit. The
+// ranked search, with the magnifier at the start of its box as the form's one submit. The
 // debounced text asks `compendium(query:, first: 25)` for the dropdown; the
-// list itself changes only on Enter, a pick or See All Results
+// list itself changes only on Enter, the clear, a pick or See All Results
 // (claude-docs/components/ingredient-search.md).
 
 const IngredientSearchMatchesDocument = graphql(`
@@ -113,48 +113,55 @@ const IngredientSearchBox = ({
 
   return (
     <FieldShell label="Name" {...field}>
-      <div className="ingredient-search__box">
-        <Combobox<IngredientSearchOption>
-          id={field.controlId}
-          label="Name"
-          labelId={field.labelId}
-          name="query"
-          value={text}
-          onChange={onText}
-          onFocus={() => setActive(true)}
-          onPick={pick}
-          // Enter with the dropdown open and no row highlighted would only
-          // close it; it applies the text, as a closed box does through the form.
-          onCommit={(value) => apply(searchHref(value.trim()))}
-          suggestions={{ options, pending: text.trim() !== query || isFetching }}
-          empty={searchesNow ? 'No Matches' : undefined}
-          footer={
-            hasMore ? (
-              <a href={seeAllHref} onClick={seeAll}>
-                See All Results
-              </a>
-            ) : undefined
-          }
-          offerTyped={false}
-          noun="result"
-          placeholder="Search names"
-          inputRef={input}
-          clear={{
-            label: 'Clear Name',
-            onClear: () => {
-              onText('');
-              input.current?.focus();
-            },
-            empty: text === '',
-          }}
-        />
-        {/* The form's one submit, as SearchField's is: Enter in the closed
-            box reaches it too, and before hydration it sends the whole form. */}
-        <button type="submit" className="search-field__submit">
-          <MagnifierIcon />
-          <span className="visually-hidden">Search</span>
-        </button>
-      </div>
+      <Combobox<IngredientSearchOption>
+        id={field.controlId}
+        label="Name"
+        labelId={field.labelId}
+        name="query"
+        value={text}
+        onChange={onText}
+        onFocus={() => setActive(true)}
+        onPick={pick}
+        // Enter with the dropdown open and no row highlighted would only
+        // close it; it applies the text, as a closed box does through the form.
+        onCommit={(value) => apply(searchHref(value.trim()))}
+        suggestions={{ options, pending: text.trim() !== query || isFetching }}
+        empty={searchesNow ? 'No Matches' : undefined}
+        footer={
+          hasMore ? (
+            <a href={seeAllHref} onClick={seeAll}>
+              See All Results
+            </a>
+          ) : undefined
+        }
+        offerTyped={false}
+        noun="result"
+        placeholder="Search names"
+        inputRef={input}
+        // The clear empties the box and applies the empty search (the owner's
+        // call), so the list drops its name filter and keeps the others.
+        clear={{
+          label: 'Clear Name',
+          onClear: () => {
+            onText('');
+            input.current?.focus();
+            apply(searchHref(''));
+          },
+          empty: text === '',
+        }}
+        // No chevron: a free-text search opens as you type, and the magnifier submits,
+        // as a search field's does.
+        toggle={false}
+        leading={
+          // The form's one submit, as SearchField's was, at the start of the box:
+          // Enter in the closed box reaches it too, and before hydration it
+          // sends the whole form. Its own id lets FilterForm give it the focus back.
+          <button id={`${field.controlId}-submit`} type="submit" className="combobox__indicator">
+            <MagnifierIcon />
+            <span className="visually-hidden">Search</span>
+          </button>
+        }
+      />
     </FieldShell>
   );
 };

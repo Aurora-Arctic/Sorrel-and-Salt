@@ -123,6 +123,15 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// A caller's own control at the start of the control box: a flex item that
+// keeps its own size, and centres its button against the text's line.
+.combobox__leading {
+  display: flex;
+  flex: none;
+  align-items: center;
+  align-self: stretch;
+}
+
 .combobox__indicators {
   display: flex;
   flex: none;

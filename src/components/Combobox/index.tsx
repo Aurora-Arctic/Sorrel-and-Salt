@@ -221,6 +221,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   footer,
   entries,
   clear,
+  leading,
+  toggle = true,
   create,
   offerTyped = true,
   highlightFirst = false,
@@ -346,6 +348,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       target === event.currentTarget ||
       target.classList.contains('combobox__values') ||
       target.classList.contains('combobox__indicators') ||
+      target.classList.contains('combobox__leading') ||
       target.closest('.combobox__qualifier')
     ) {
       event.preventDefault();
@@ -407,6 +410,11 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         className={invalid ? 'input combobox__control is-invalid' : 'input combobox__control'}
         onMouseDown={focusText}
       >
+        {/* The caller's own control, ahead of the text so the tab order reads
+            as the screen does. Pressing a button in it is not a press on the
+            control's ground, so focusText leaves it alone (its click must
+            still fire), and Downshift sees it inside the box. */}
+        {leading && <div className="combobox__leading">{leading}</div>}
         <div className="combobox__values">
           {entries}
           {/* The text's slot. With a qualifier it is as wide as the text,
@@ -485,7 +493,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             </span>
           )}
         </div>
-        {(clear || hasSource) && (
+        {(clear || (hasSource && toggle)) && (
           <div className="combobox__indicators">
             {/* Always drawn once the caller has a clear, and hidden while
                 there is nothing to clear, rather than left out: its room,
@@ -504,13 +512,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 <ClearIcon />
               </button>
             )}
-            {clear && hasSource && (
+            {clear && hasSource && toggle && (
               <span
                 className={clear.empty ? 'combobox__separator is-empty' : 'combobox__separator'}
                 aria-hidden="true"
               />
             )}
-            {hasSource && (
+            {hasSource && toggle && (
               <button
                 type="button"
                 className="combobox__indicator"

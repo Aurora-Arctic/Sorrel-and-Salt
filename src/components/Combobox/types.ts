@@ -79,6 +79,21 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    */
   clear?: { label: string; onClear: () => void; empty: boolean };
   /**
+   * A caller's own control drawn inside the control box, before the text and
+   * before any entries: a form's submit, say. A slot rather than a built-in
+   * because Combobox knows nothing about forms or what the caller wants
+   * pressed. A button given here should be styled `combobox__indicator` to
+   * match the others; a press on it is inside the box, so it neither closes an
+   * open list nor moves the focus.
+   */
+  leading?: ReactNode;
+  /**
+   * Whether a box with `suggestions` draws its chevron button. Left out
+   * (`false`) for a free-text search that opens as you type, where a chevron
+   * promises a set to browse. Typing still opens the list. Defaults to true.
+   */
+  toggle?: boolean;
+  /**
    * A last row that makes something new rather than picking a suggestion,
    * "New Reference…", there whatever is typed and in place of the typed row:
    * for a list whose entries can only be picked (MB.154; last since MB.115).
