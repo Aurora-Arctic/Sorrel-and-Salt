@@ -1664,7 +1664,7 @@ Each spec tags the stories it walks (`@story-N`), and the stories checklist repo
 
 ### Ported verbatim from `resume-2026`
 
-`.github/workflows/` (`pr-gate.yml`, `merge-queue.yml`, the reusable per-check workflows `lint`/`format`/`typecheck`/`vitest`/`build`/`playwright`/`audit`/`gitflow`, the shared composite actions, `build-image.yml`) — MB.32 has since collapsed the five `lint`/`format`/`typecheck`/`build`/`audit` workflows into one `checks.yml` matrix and deleted `merge-queue.yml` until M7.A.1, so `claude-docs/ci.md` is the current inventory, `.actrc` and the `make act-*` targets, `Docker/` (multi-stage `Dockerfile.node` with `development`/`testing`/`devcontainer`, plus `docker-compose.yaml`), `.devcontainer/`, `makefile`, `.oxlintrc.json`, `.prettierrc`, `.prettierignore`, the `"pre-commit": ["lint", "format:check", "typecheck"]` array, and `.claude/skills/`.
+`.github/workflows/` (`pr-gate.yml`, `merge-queue.yml`, the reusable per-check workflows `lint`/`format`/`typecheck`/`vitest`/`build`/`playwright`/`audit`/`gitflow`, the shared composite actions, `build-image.yml`) — MB.32 has since collapsed the five `lint`/`format`/`typecheck`/`build`/`audit` workflows into one `checks.yml` matrix and deleted `merge-queue.yml` until M7.A.1, so `claude-docs/ci.md` is the current inventory, `.actrc` and the `make act-*` targets, `Docker/` (multi-stage `Dockerfile.node` with `development`/`testing`/`devcontainer`, plus `docker-compose.yaml`), `.devcontainer/`, `makefile`, `.oxlintrc.json`, `.prettierrc`, `.prettierignore`, `lint-staged.config.mjs` and the `"pre-commit": ["pre-commit:staged"]` array that runs it (M11.23), and `.claude/skills/`.
 
 ### Gitflow — unchanged
 
