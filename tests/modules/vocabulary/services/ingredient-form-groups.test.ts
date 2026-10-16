@@ -324,10 +324,10 @@ describe('updateIngredientFormGroup', () => {
   });
 });
 
-// The glyph standing for the group (M12.6): one of the six, or NULL for the
+// The icon standing for the group (M12.6): one of the six, or NULL for the
 // generic. An update rewrites the group whole, so an input without one clears
 // it — the only way GraphQL's `icon: null` reaches the service, as absent.
-describe('the glyph', () => {
+describe('the icon', () => {
   const expired = vi.mocked(revalidateTag);
   beforeEach(() => expired.mockClear());
 

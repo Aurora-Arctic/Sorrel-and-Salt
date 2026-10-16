@@ -13,7 +13,7 @@ pgEnum that could not take a ninth group.
   an admin may add more.
 - **`ingredient_forms`** — as in the [identity section](identity-model.md), with `groupId`
   (FK to `ingredient_form_groups`) in place of the earlier `group` text.
-- **`ingredient_form_groups`** — seeds §5's six; no colour (§5); each carries an `icon`, one of six glyph names or NULL for the generic (M12.6).
+- **`ingredient_form_groups`** — seeds §5's six; no colour (§5); each carries an `icon`, one of six icon names or NULL for the generic (M12.6).
 
 Each is global and admin-curated, carries the columns §5 lists, and lists
 alphabetically by `name`.

@@ -13,7 +13,7 @@ import type { FormRow } from './types';
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle>;
 
-/** Each group's glyph, by the seed key the group was seeded under. */
+/** Each group's icon, by the seed key the group was seeded under. */
 async function glyphs(): Promise<Record<string, string | null>> {
   const rows = await sql`select seed_key, icon from ingredient_form_groups`;
   return Object.fromEntries(rows.map((row) => [row.seed_key, row.icon]));
@@ -74,8 +74,8 @@ describe('seedForms(db) over a database an admin has edited', () => {
     expect(herbs[0]).toMatchObject({ seed_key: null, description: 'Written by an admin.' });
   });
 
-  // The glyph standing for each group (M12.6), which the admin owns once seeded.
-  it('gives each group a fresh seed writes the glyph FORM_GROUPS names', async () => {
+  // The icon standing for each group (M12.6), which the admin owns once seeded.
+  it('gives each group a fresh seed writes the icon FORM_GROUPS names', async () => {
     await seedForms(db);
 
     expect(await glyphs()).toEqual({
@@ -88,8 +88,8 @@ describe('seedForms(db) over a database an admin has edited', () => {
     });
   });
 
-  // A cleared glyph is the admin's answer, the generic, and not a gap to fill.
-  it('leaves a glyph an admin changed, and one an admin cleared, as they are', async () => {
+  // A cleared icon is the admin's answer, the generic, and not a gap to fill.
+  it('leaves an icon an admin changed, and one an admin cleared, as they are', async () => {
     await seedForms(db);
     await sql`update ingredient_form_groups set icon = 'curio' where seed_key = 'mineral'`;
     await sql`update ingredient_form_groups set icon = null where seed_key = 'fluid'`;

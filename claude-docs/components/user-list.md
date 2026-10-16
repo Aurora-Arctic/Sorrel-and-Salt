@@ -348,7 +348,7 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   body ink.
 - **The marks** are 1.25em, a ratio of the text beside them rather than a
   fixed size. **The history link and the crown** are `$icon-size` boxes,
-  WCAG 2.2's 24px target, around a `$glyph-size` glyph, in `$text-muted`;
+  WCAG 2.2's 24px target, around a `$glyph-size` icon, in `$text-muted`;
   the history link's hit area reaches `$control-height` through a
   pseudo-element.
 - **The tips** are the `tip-bubble` mixin's: a mark's or logo's centred
