@@ -16,3 +16,14 @@ const coverageOptions: CoverageReportOptions = {
 };
 
 export default coverageOptions;
+
+/**
+ * Whether this run collects JS coverage at all (M11.18). CI sets
+ * `E2E_COVERAGE=1` in .github/workflows/playwright.yml, so its artifact and
+ * summary are unchanged; a local run collects none unless asked
+ * (`E2E_COVERAGE=1 npm run e2e`), since starting and stopping coverage on
+ * every page and merging it at teardown cost about a tenth of the summed test
+ * time for a report nobody read (claude-docs/testing/e2e.md, "Where a run's
+ * time goes").
+ */
+export const coverageRequested = process.env.E2E_COVERAGE === '1';
