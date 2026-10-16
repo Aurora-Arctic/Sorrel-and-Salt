@@ -25,7 +25,8 @@ import type { SectionNavItem, SectionNavProps } from './types';
 // How many sections stay in view on a phone, and what the server and the
 // first client render show; the stylesheet's `--extra` class hides the rest,
 // so the number lives here once and the stylesheet is told by the class, not
-// by a second count. Wider than the phone a measured count replaces it with a measured count.
+// by a second count. Wider than the phone a measured count replaces it, and
+// until that is known the stylesheet shows every tab (`index.scss`).
 const VISIBLE = 4;
 
 // Wider than the phone (`$shell-phone-width`, 40rem; `_variables.scss`): the
@@ -215,6 +216,7 @@ const SectionLinks = ({ label, sections }: SectionNavProps): ReactElement => {
       className="section-nav"
       data-keyboard={keyboard ? 'open' : undefined}
       data-fit={tablet && fit !== null ? '' : undefined}
+      data-measuring={measuring ? '' : undefined}
     >
       <ul ref={list} className="section-nav__list">
         {sections.map((section, at) => (

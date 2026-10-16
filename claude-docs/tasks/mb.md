@@ -266,6 +266,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.261 | The No Refs Switch Cannot Be Toggled With Enter                                                                          | Bugfixes | —                      |
 | MB.262 | Mail Shows Its Light Colours in Zoho Mail's Dark Mode                                                                    | Bugfixes | —                      |
 | MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
+| MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1481,6 +1482,29 @@ _Acceptance criteria:_
 - The sign-in callback and every Continue choose the landing through one helper, and the shell's links read the coven list the shell already loads, so they add no lookup
 - `/coven` still redirects a member who opens it directly, from a bookmark or after leaving a coven
 - `app-shell.md`, `welcome.md`, `email-form.md`, `route-protection.md`, `admin-bootstrap.md`, `auth/tests.md` and the MB.57 decision record are corrected
+
+**MB.264 — The Admin Nav Folds Two Tabs on Refresh at Desktop Width** · 2h
+
+_Story:_ As a site admin, I want the admin nav to show every tab that fits from the first paint, so that a refresh does not flash a folded row before unfolding it.
+
+Found on 2026-10-16, on the local dev server. The server cannot know the window's width, so `section-links.tsx` renders the phone's count of four tabs, marks the rest as extras behind More, and the stylesheet hides that class at every width. Wider than the phone the row is only corrected after hydration has measured it (React reconciles the band's server snapshot in a passive effect). With six admin sections, two tabs sit behind More from the first paint until then: about 40 ms on a production build, longer on the dev server. It happens every time and is cosmetic. The fix: the stylesheet shows every tab before the nav carries `data-fit`, wrapping any overflow out of sight with More hidden, and the measuring render marks itself (`data-measuring`) so More is still drawn for measurement. The corrections to `claude-docs/components/section-nav.md` are deferred to M11.22 at the owner's request.
+
+Steps to reproduce:
+
+1. Sign in as a site admin on the local dev server.
+2. Make the window wider than 882px (a desktop width).
+3. Open `/admin` and refresh the page.
+
+Actual: for a moment the admin nav shows four tabs and a More button holding the other two; then More vanishes and all six tabs show.
+Expected: all six tabs show from the first paint, with no More button, since they fit the row.
+
+_Acceptance criteria:_
+
+- A Playwright regression test under `tests/e2e`, with the script chunks delayed at desktop width, fails before the fix and passes after: before hydration every admin link is visible and no More button is present
+- The server's HTML for `/admin` still carries every section's link once, the hidden tabs hidden by class only
+- The fit tests at 642, 768 and 882px in `tests/e2e/shell.spec.ts` pass unchanged
+- At a phone width the first four tabs and More show as before
+- The measuring render is never painted: no frame shows the row overflowing
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
