@@ -10,6 +10,7 @@ import { FILTER_ROWS, drawnOnServer } from '../../support/filter-form';
 import { Navigating } from '../../support/navigating';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import type { FilterFormSubject } from '../../support/types';
+import { stubLocationAssign } from '../../support/location';
 
 const router = { refresh: vi.fn(), push: vi.fn() };
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
@@ -220,7 +221,7 @@ describe('UserList impersonation', () => {
 
   it('impersonates the row’s user once confirmed, and opens the site as them', async () => {
     impersonateUserMock.mockResolvedValue({ data: {}, error: null });
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    stubLocationAssign(assignMock);
     render(<UserList {...props({ canImpersonate: true })} />);
 
     openFor(BO.name);
@@ -250,7 +251,7 @@ describe('UserList impersonation', () => {
       data: null,
       error: { status: 403, message: 'You cannot impersonate admins' },
     });
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    stubLocationAssign(assignMock);
     render(<UserList {...props({ canImpersonate: true })} />);
 
     openFor(BO.name);

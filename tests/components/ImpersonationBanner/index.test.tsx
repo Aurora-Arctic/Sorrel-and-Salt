@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import ImpersonationBanner from '@/components/ImpersonationBanner';
+import { stubLocationAssign } from '../../support/location';
 
 // MB.53's way out: every page, `/admin` included, says whose session this is
 // and carries Stop (claude-docs/components/impersonation-banner.md).
@@ -33,7 +34,7 @@ describe('ImpersonationBanner', () => {
 
   it('stops, and returns the admin to the user list', async () => {
     stopImpersonatingMock.mockResolvedValue({ data: {}, error: null });
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    stubLocationAssign(assignMock);
     render(<ImpersonationBanner {...BO} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Stop Impersonating' }));
@@ -60,7 +61,7 @@ describe('ImpersonationBanner', () => {
 
   it('says so when stopping fails, and stays', async () => {
     stopImpersonatingMock.mockResolvedValue({ data: null, error: { status: 500 } });
-    vi.stubGlobal('location', { ...window.location, assign: assignMock });
+    stubLocationAssign(assignMock);
     render(<ImpersonationBanner {...BO} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Stop Impersonating' }));

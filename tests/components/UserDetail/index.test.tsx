@@ -4,6 +4,7 @@ import Modal from '@/components/Modal';
 import UserDetail from '@/components/UserDetail';
 import type { UserCoven, UserDetailProps, UserDetailUser } from '@/components/UserDetail/types';
 import { mockGraphQLMutation } from '../../support/msw/graphql';
+import { stubLocationAssign } from '../../support/location';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
 // navigates, which jsdom cannot follow.
@@ -30,7 +31,7 @@ beforeEach(() => {
   impersonateUserMock.mockReset();
   assignMock.mockReset();
   router.refresh.mockReset();
-  vi.stubGlobal('location', { ...window.location, assign: assignMock });
+  stubLocationAssign(assignMock);
 });
 afterEach(() => vi.unstubAllGlobals());
 

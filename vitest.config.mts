@@ -204,7 +204,7 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'dom',
-          environment: 'jsdom',
+          environment: 'happy-dom',
           globals: true,
           include: ['tests/**/*.test.tsx', ...DOM_TS],
           exclude: NOT_UNIT,

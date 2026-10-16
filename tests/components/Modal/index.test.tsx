@@ -145,8 +145,8 @@ describe('Modal', () => {
 
   // The owner's call during M5.5: it fades in and out. In is CSS alone. Out
   // is the modal's: it fades, then asks its owner to close, since the owner's
-  // unmount would take it away at once. jsdom draws no transition, so its end
-  // is fired here, and `matchMedia` is stood in for: jsdom has none.
+  // unmount would take it away at once. The dom project draws no transition, so its end
+  // is fired here, and `matchMedia` is stood in for: the setup reports reduced motion.
   describe('fading out', () => {
     const motion = (reduced: boolean) =>
       vi.stubGlobal(

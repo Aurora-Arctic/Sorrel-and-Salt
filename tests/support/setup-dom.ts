@@ -65,3 +65,39 @@ HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
 HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
   this.removeAttribute('open');
 };
+
+// A browser answers `matchMedia`; jsdom has none and happy-dom answers "no
+// preference" to everything. Neither is the person this suite stands in for:
+// a test environment draws no CSS transitions, so it reports the one preference
+// that says not to wait for one. Modal then closes at once rather than holding
+// for a `transitionend` that nothing here can fire. A test of the fade, or of a
+// system theme, stubs `matchMedia` itself over this.
+const environmentMedia = (query: string): MediaQueryList =>
+  ({
+    matches: query.includes('prefers-reduced-motion: reduce'),
+    media: query,
+    onchange: null,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    addListener: () => undefined,
+    removeListener: () => undefined,
+    dispatchEvent: () => false,
+  }) as MediaQueryList;
+Object.defineProperty(window, 'matchMedia', {
+  value: environmentMedia,
+  writable: true,
+  configurable: true,
+});
+
+// happy-dom's built-in default stylesheet leaves an inline element's `display`
+// empty, where a browser (and jsdom) reports the property's initial value,
+// `inline`. dom-accessibility-api reads it to decide whether the parts of an
+// accessible name need a space between them, so "Edit Ingredient, Testwort" came out as
+// "Edit Ingredient , Testwort". The HTML rendering section's inline elements are
+// declared here, as a browser's own sheet declares them; `:where` keeps the
+// specificity at zero, so a test's own styles still win.
+const defaults = document.createElement('style');
+defaults.setAttribute('data-test-default-styles', '');
+defaults.textContent =
+  ':where(a, abbr, b, bdi, bdo, cite, code, data, dfn, em, i, kbd, mark, q, s, samp, small, span, strong, sub, sup, time, u, var, label) { display: inline; }';
+document.head.append(defaults);
