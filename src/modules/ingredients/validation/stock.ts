@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CalendarDay, optionalText } from '../../../lib/validation';
+import { CalendarDay, RowId, optionalText } from '../../../lib/validation';
 import { MAX_QUANTITY } from '../schema/quantities';
 import { UNITS } from '../schema/units';
 
@@ -27,6 +27,18 @@ export const StockInput = z.object({
   lowStockThreshold: amount('Low-stock threshold'),
   source: optionalText(),
   acquiredDate: CalendarDay.nullish(),
+});
+
+/**
+ * The amount a coven chooses to keep when a local ingredient's save merges a
+ * jar into one it already holds (M12.8): the moving jar's id, and the figure
+ * the merged jar takes, in the stock fields' own rules. Service input until
+ * M8.17 puts it on the wire.
+ */
+export const JarMerge = z.object({
+  jarId: RowId,
+  quantityOnHand: StockInput.shape.quantityOnHand,
+  unit: StockInput.shape.unit,
 });
 
 export type StockInput = z.output<typeof StockInput>;

@@ -244,7 +244,7 @@ describe('IngredientForm', () => {
         'Save & Add Another',
       ]);
       type('Name', 'Testwort');
-      // A submit with no button pressed, as implicit submission from a field is in jsdom.
+      // A submit with no button pressed, as implicit submission from a field is in happy-dom.
       fireEvent.submit(textbox('Name').closest('form') as HTMLFormElement);
 
       await waitFor(() => expect(onSaved).toHaveBeenCalledWith(expect.anything(), 'open'));

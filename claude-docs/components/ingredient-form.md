@@ -1816,7 +1816,7 @@ and Delete deleting from over the form.
 An entry's categories shown picked, and a pick beside them sent, are
 CategoryPicker's and `index.test.tsx`'s.
 
-Role and label queries only. It runs in the `dom` (jsdom) Vitest project —
+Role and label queries only. It runs in the `dom` (happy-dom) Vitest project —
 `npm run test:coverage`.
 
 **Accessibility is asserted in Playwright** (CLAUDE.md, Testing), once a page

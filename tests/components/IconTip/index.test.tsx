@@ -86,7 +86,7 @@ describe('IconTip', () => {
     expect(fireEvent.keyDown(button, { key: 'Escape' })).toBe(true);
   });
 
-  // jsdom turns no Escape into the dialog's `cancel`; stood in for as a
+  // happy-dom turns no Escape into the dialog's `cancel`; stood in for as a
   // browser behaves, the cancel fired only for a keydown left unhandled. Its
   // `showModal` and `close` are the shared stub's (tests/support/setup-dom.ts).
   describe('inside a modal', () => {

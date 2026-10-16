@@ -294,7 +294,7 @@ describe('Combobox', () => {
   });
 
   // MB.154, the owner's calls: the open list spans what it is anchored to,
-  // and never runs off the screen. jsdom lays nothing out, so each test gives
+  // and never runs off the screen. happy-dom lays nothing out, so each test gives
   // the viewport, the box, the anchor and the list the sizes Floating UI reads.
   describe('where the list opens', () => {
     const rect = (left: number, top: number, width: number, height: number) =>
@@ -675,7 +675,7 @@ describe('Combobox', () => {
       return onRemove;
     }
 
-    // jsdom lays nothing out, so a text is cut off when it is longer than 30
+    // happy-dom lays nothing out, so a text is cut off when it is longer than 30
     // characters: wider than the 240px left to it.
     beforeEach(() => {
       vi.spyOn(HTMLElement.prototype, 'scrollWidth', 'get').mockImplementation(function (
@@ -1151,7 +1151,7 @@ describe('Combobox', () => {
     });
 
     // In a modal, an Escape let through shuts the whole dialog (MB.115); a
-    // `<dialog>` ignores one marked handled, which jsdom cannot show, so the
+    // `<dialog>` ignores one marked handled, which happy-dom cannot show, so the
     // mark is what is asserted here (the browser checks the dialog stays open).
     it('keeps Escape to itself while its list is open, and lets it through once shut', () => {
       render(<SelectHarness placeholder="Choose an element" />);

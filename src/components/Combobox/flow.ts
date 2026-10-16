@@ -21,7 +21,7 @@ export function originOf(rects: { left: number; top: number }[]): { left: number
 
 /**
  * The row's shape, read off the list as a move starts: its width, and the
- * gaps between chips and rows. A gap the stylesheet does not give — jsdom's
+ * gaps between chips and rows. A gap the stylesheet does not give — happy-dom's
  * — is read off where the chips sit instead.
  */
 export function shapeOf(list: HTMLElement, rects: DOMRect[]): FlowShape {

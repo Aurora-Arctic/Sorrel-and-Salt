@@ -5,7 +5,7 @@ import { GENERIC_LINK_ERROR, GENERIC_UNLINK_ERROR } from '@/lib/sign-in';
 import type { LinkedAccount, ProviderId } from '@/lib/types';
 
 // Mocked wholesale, as in SignInPanel's test: a link assigns
-// `window.location.href`, which jsdom cannot follow, and a sign-out's
+// `window.location.href`, which happy-dom cannot follow, and a sign-out's
 // success navigates, as in SignOutButton's.
 const linkSocialMock = vi.fn();
 const unlinkAccountMock = vi.fn();
