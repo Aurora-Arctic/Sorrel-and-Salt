@@ -258,6 +258,42 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// With an empty message or a footer the popup is the placed, bordered panel
+// and scrolls as one; the listbox inside it is a plain list, with no panel of
+// its own. Without either, the list above is the panel, as it always was.
+.combobox__popup {
+  z-index: 1;
+  display: none;
+  box-sizing: border-box;
+  max-height: min(20rem, var(--combobox-list-room, 20rem));
+  overflow: hidden auto;
+
+  @include floating-panel;
+
+  &.is-open {
+    display: block;
+  }
+}
+
+.combobox__list.is-inset {
+  display: block;
+  max-height: none;
+  overflow: visible;
+  border: 0;
+  box-shadow: none;
+}
+
+.combobox__list.is-inset:not(.is-open) {
+  display: none;
+}
+
+// The message and the footer sit in the popup's surface, set in by a row's
+// padding; the design review styles them.
+.combobox__empty,
+.combobox__footer {
+  padding: space(2) space(3);
+}
+
 // A bucket and its rows: no typography-base ◆, no list margins.
 .combobox__group,
 .combobox__option {

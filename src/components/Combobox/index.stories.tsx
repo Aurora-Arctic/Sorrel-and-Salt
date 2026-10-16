@@ -57,6 +57,50 @@ const NAMES: ComboboxOption[] = [
   { value: 'Fixture Bane', note: 'Used by Mockleaf, Fixturewort' },
 ];
 
+/** Rows with a footer beneath them in the same popup: a link that is no row of the list. */
+export const WithFooter: Story = () => {
+  const [value, setValue] = useState('fix');
+  usePressOnMount('Show Name suggestions');
+  return (
+    <Labelled label="Name">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Name"
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          offerTyped={false}
+          suggestions={{ options: NAMES, pending: false }}
+          footer={<a href="#all-results">See All Results</a>}
+        />
+      )}
+    </Labelled>
+  );
+};
+
+/** A lookup that settled with no rows: the popup opens and says so, outside the list. */
+export const EmptyMessage: Story = () => {
+  const [value, setValue] = useState('zzz');
+  usePressOnMount('Show Name suggestions');
+  return (
+    <Labelled label="Name">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Name"
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          offerTyped={false}
+          suggestions={{ options: [], pending: false }}
+          empty="No Matches"
+        />
+      )}
+    </Labelled>
+  );
+};
+
 /** A field whose suggestions come in two buckets: the vocabulary, then values in use outside it. */
 export const TwoBuckets: Story = () => {
   const [value, setValue] = useState('');

@@ -43,6 +43,8 @@ movable, on dnd-kit.
 | `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                      |
 | `required`         | `aria-required`, as the field marks it.                                                                                                                                                                                                                                                        |
 | `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Enter with nothing highlighted still reaches `onCommit`.                                                                                                              |
+| `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank, "No Matches". Outside the listbox, and read by the status. See "The empty message and the footer".                                                                                           |
+| `footer`           | Optional: an area drawn beneath the listbox in the same popup while it is open, a "See All Results" link. Never a row of the listbox. See "The empty message and the footer".                                                                                                                  |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                             |
 
@@ -166,6 +168,41 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
 happy-dom lays nothing out, so the tests give the viewport, the box, the anchor
 and the list the sizes Floating UI reads, as the sortable tests give the
 chips theirs.
+
+## The empty message and the footer
+
+Two optional props (M8.10), for a lookup that searches rather than completes.
+A box that passes neither renders exactly what it did before.
+
+- **`empty`** opens the popup once the lookup has settled (`pending` is
+  false), the text is not blank, the person wants the list open, and there
+  are no rows at all (the typed and create rows count as rows). The message
+  is drawn beneath the listbox, never in it: it is not an option, so a screen
+  reader must not count it as one. The status region reads the message; a
+  closed list is otherwise silent. With rows the status keeps its count and no
+  message shows. Downshift has no rows to hold here, so it still reads the
+  list as closed (`aria-expanded` is false).
+- **`footer`** is drawn beneath the listbox while the popup is open, with
+  rows or with the message. It is not a row: the listbox holds options only,
+  and the footer is its sibling inside the popup.
+- **One placed popup.** When either prop is passed, a `combobox__popup`
+  wrapper takes the place of the `<ul>` as the floating element (see "Where
+  the list opens"), so the listbox, message and footer move together,
+  beneath the box or above it. The `<ul>` keeps Downshift's `getMenuProps`,
+  so its `id` and the input's `aria-controls` still agree. Without either
+  prop the `<ul>` is placed itself.
+- **A press on the footer lands.** Downshift closes the list on a page-wide
+  mouse-up, or touch-end, outside its input, toggle and listbox
+  (`useMouseAndTouchTracker`, `targetWithinDownshift`), which would remove a
+  link before its click. The mouse path: the footer cancels the mouse-down's
+  default, so focus stays in the box, and Downshift's mouse-up check counts the
+  focused input as inside. The touch path: that check tests the target alone,
+  so the footer stops the touch-end reaching Downshift's listener.
+- **The keyboard path.** The footer is not a promised Tab stop. A keyboard user
+  applies the text with Enter in the box, and the footer link is the pointer's
+  shortcut to the same result.
+- Styling stops at the tokens: the message and footer take a row's padding
+  inside the popup's surface, and the section's design review does the rest.
 
 ## The create row
 
@@ -651,6 +688,8 @@ a form draws one, and the stories that open a list do it by pressing the
 chevron on mount, as a person would (`.ladle/press.ts`).
 
 ## Testing
+
+The empty message and the footer have their own block in the same file: the message shown outside the listbox with the status reading it, none while pending, blank or unset, the count kept once rows arrive, the footer beneath the listbox in the one popup with `aria-controls` still matching the list, absent while closed, and a whole mouse press and a touch on a footer link leaving the box focused and open with the click landed.
 
 `tests/components/Combobox/index.test.tsx` renders the box with fixed
 suggestions and asserts: the box closed until something is typed; the rows,

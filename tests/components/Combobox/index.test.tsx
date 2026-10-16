@@ -1343,3 +1343,120 @@ describe('Combobox', () => {
     });
   });
 });
+
+// The empty message and the footer (M8.10): a settled lookup with no rows says
+// so, and a caller can draw an area beneath the rows. Neither is an option.
+describe('Combobox empty message and footer', () => {
+  const NONE: Suggestions = { options: [], pending: false };
+  const status = () => screen.getByRole('status', { name: 'Form suggestions' });
+  const listbox = () => screen.getByRole('listbox', { hidden: true });
+
+  it('shows the message on a settled lookup with no rows, outside the listbox and announced', () => {
+    render(<Harness offerTyped={false} suggestions={NONE} empty="Nothing Found" />);
+
+    type('zzz');
+
+    const message = screen.getByText('Nothing Found', { selector: 'div' });
+    expect(message).toBeVisible();
+    expect(listbox()).not.toContainElement(message);
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    expect(status()).toHaveTextContent('Nothing Found');
+  });
+
+  it('shows no message while the lookup is pending, the text is blank, or none is given', () => {
+    const { rerender } = render(
+      <Harness
+        offerTyped={false}
+        suggestions={{ options: [], pending: true }}
+        empty="Nothing Found"
+      />,
+    );
+    type('zzz');
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+
+    rerender(<Harness offerTyped={false} suggestions={NONE} empty="Nothing Found" initial="" />);
+    type('   ');
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+
+    rerender(<Harness offerTyped={false} suggestions={NONE} />);
+    type('zzz');
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+  });
+
+  it('keeps the count in the status, and no message, once rows arrive', () => {
+    render(<Harness offerTyped={false} suggestions={ONE_BUCKET} empty="Nothing Found" />);
+
+    type('fix');
+
+    expect(status()).toHaveTextContent('2 suggestions');
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+    expect(screen.getAllByRole('option')).toHaveLength(2);
+  });
+
+  it('draws the footer beneath the listbox in the same popup, never as a row', () => {
+    render(
+      <Harness
+        offerTyped={false}
+        suggestions={ONE_BUCKET}
+        footer={<a href="#all">See All Results</a>}
+      />,
+    );
+
+    type('fix');
+
+    const link = screen.getByRole('link', { name: 'See All Results' });
+    expect(link).toBeVisible();
+    expect(listbox()).not.toContainElement(link);
+    expect(link.closest('[role=listbox]')).toBeNull();
+    expect(screen.getAllByRole('option')).toHaveLength(2);
+    const popup = listbox().parentElement;
+    expect(popup).toContainElement(link);
+    expect(listbox()).toHaveAttribute('id', 'box-list');
+    expect(box()).toHaveAttribute('aria-controls', 'box-list');
+  });
+
+  it('hides the footer while the popup is closed', () => {
+    render(
+      <Harness
+        offerTyped={false}
+        suggestions={ONE_BUCKET}
+        footer={<a href="#all">See All Results</a>}
+      />,
+    );
+
+    expect(screen.queryByRole('link', { name: 'See All Results' })).not.toBeInTheDocument();
+  });
+
+  it('lets a press on a footer link land, mouse and touch, without closing the box first', () => {
+    const onClick = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
+    render(
+      <Harness
+        offerTyped={false}
+        suggestions={ONE_BUCKET}
+        footer={
+          <a href="#all" onClick={onClick}>
+            See All Results
+          </a>
+        }
+      />,
+    );
+    act(() => box().focus());
+    type('fix');
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
+
+    // A whole press, as a pointer makes one: the page-wide mouse-up is what
+    // Downshift reads as a press outside, and the click comes after it.
+    const link = screen.getByRole('link', { name: 'See All Results' });
+    fireEvent.mouseDown(link);
+    fireEvent.mouseUp(link);
+    fireEvent.click(link);
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+    expect(box()).toHaveFocus();
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
+
+    fireEvent.touchStart(screen.getByRole('link', { name: 'See All Results' }));
+    fireEvent.touchEnd(screen.getByRole('link', { name: 'See All Results' }));
+    expect(box()).toHaveAttribute('aria-expanded', 'true');
+  });
+});

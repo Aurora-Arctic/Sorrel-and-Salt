@@ -55,6 +55,20 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   onRemoveLast?: () => void;
   /** The suggestions for the text; left out for a box with no source, which never opens. */
   suggestions?: Suggestions<O>;
+  /**
+   * What an open list says once its lookup has settled with no rows and the
+   * text is not blank: "No Matches". Drawn in the popup outside the listbox (it
+   * is no option), and read by the status. The typed row counts as a row, so
+   * a caller wanting the message passes `offerTyped={false}`. Without it a
+   * list with no rows stays closed.
+   */
+  empty?: string;
+  /**
+   * An area drawn beneath the listbox in the same popup while it is open: a
+   * "See All Results" link. Never a row of the listbox, and no Tab stop is
+   * promised; a keyboard user applies the text with Enter (claude-docs/components/combobox.md).
+   */
+  footer?: ReactNode;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
   /**

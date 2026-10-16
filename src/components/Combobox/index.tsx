@@ -2,9 +2,12 @@
 
 import { useCombobox, type UseComboboxStateChangeOptions } from 'downshift';
 import {
+  type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
+  type ReactNode,
+  type TouchEvent,
   useEffect,
   useId,
   useLayoutEffect,
@@ -150,11 +153,56 @@ function keepText<O extends ComboboxOption>(
   }
 }
 
-function statusOf(isOpen: boolean, suggestions: Suggestions | undefined, noun: string): string {
-  if (!isOpen || !suggestions) return '';
+function statusOf(
+  isOpen: boolean,
+  suggestions: Suggestions | undefined,
+  noun: string,
+  empty: string | undefined,
+): string {
+  if (!suggestions) return '';
+  if (!isOpen) return empty ?? '';
   const count = suggestions.options.length;
   if (count > 0) return `${count} ${noun}${count === 1 ? '' : 's'}`;
   return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
+}
+
+/**
+ * With an empty message or a footer, the popup that holds the listbox and what
+ * sits beneath it, and the element that is placed, so they move together.
+ * Without either, just the listbox, which is placed itself (the output is then
+ * as it always was). Downshift counts only the input, the toggle and the
+ * listbox as inside, and closes on a press anywhere else: see `keepFocus`.
+ */
+function Popup({
+  wrapped,
+  popupRef,
+  open,
+  style,
+  placement,
+  after,
+  children,
+}: {
+  wrapped: boolean;
+  popupRef: (element: HTMLElement | null) => void;
+  open: boolean;
+  style: CSSProperties;
+  placement: string;
+  after: ReactNode;
+  children: ReactNode;
+}): ReactElement {
+  if (!wrapped) return <>{children}</>;
+  return (
+    <div
+      ref={popupRef}
+      className={open ? 'combobox__popup is-open' : 'combobox__popup'}
+      style={style}
+      data-placement={placement}
+      hidden={!open}
+    >
+      {children}
+      {after}
+    </div>
+  );
 }
 
 function Combobox<O extends ComboboxOption = ComboboxOption>({
@@ -169,6 +217,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   onCommit,
   onRemoveLast,
   suggestions,
+  empty,
+  footer,
   entries,
   clear,
   create,
@@ -211,12 +261,24 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     [suggestions, value, createLabel, offerTyped],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
-  const { setControl, setList, listStyle, placement } = useListPosition(isOpen, listAnchor);
+  // A settled lookup with nothing found, said aloud rather than left as a
+  // list that never opens. Not "open" to Downshift, which has no rows to hold.
+  const showEmpty =
+    empty !== undefined &&
+    wantsOpen &&
+    suggestions?.pending === false &&
+    value.trim() !== '' &&
+    items.length === 0;
+  const popupOpen = isOpen || showEmpty;
+  // With an empty message or a footer the listbox is one part of a popup, and
+  // the popup is what is placed; otherwise the list is, as it always was.
+  const wrapped = empty !== undefined || footer !== undefined;
+  const { setControl, setList, listStyle, placement } = useListPosition(popupOpen, listAnchor);
 
   // The list opens where the tip would be read, and is what typing is for.
   useEffect(() => {
-    if (isOpen) hideTip();
-  }, [isOpen, hideTip]);
+    if (popupOpen) hideTip();
+  }, [popupOpen, hideTip]);
 
   const {
     getInputProps,
@@ -290,6 +352,14 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       event.currentTarget.querySelector<HTMLInputElement>('.combobox__input')?.focus();
     }
   };
+
+  // A press on the footer must not move focus out of the box: a blur closes
+  // the list, and the link would be gone before its click landed. Downshift
+  // reads the page-wide mouse-up as inside while the box still holds focus.
+  const keepFocus = (event: MouseEvent<HTMLElement>) => event.preventDefault();
+  // A touch has no such focus check in Downshift (it tests the target alone),
+  // so the touch is kept from reaching its page-wide listener instead.
+  const keepOpen = (event: TouchEvent<HTMLElement>) => event.stopPropagation();
 
   let index = 0;
   const row = (item: Item<O>) => {
@@ -453,44 +523,77 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         )}
       </div>
       {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
-      <ul
-        className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
-        // Placed beneath or above the box, as there is room (useListPosition).
+      <Popup
+        wrapped={wrapped}
+        popupRef={setList}
+        open={popupOpen}
         style={listStyle}
-        data-placement={placement}
-        {...getMenuProps({ ref: setList, 'aria-label': `${label} ${noun}s` })}
+        placement={placement}
+        after={
+          <>
+            {showEmpty && (
+              // Not an option, so not in the listbox: a reader hears it through
+              // the status, and would count it as a choice inside the list.
+              <div className="combobox__empty">{empty}</div>
+            )}
+            {popupOpen && footer !== undefined && (
+              <div
+                className="combobox__footer"
+                role="presentation"
+                onMouseDown={keepFocus}
+                onTouchEnd={keepOpen}
+              >
+                {footer}
+              </div>
+            )}
+          </>
+        }
       >
-        {isOpen && firstRow && row(firstRow)}
-        {isOpen &&
-          buckets.map((bucket) =>
-            bucket.heading === null ? (
-              bucket.rows.map(row)
-            ) : (
-              // A listbox's group is ARIA's own; optgroup belongs to a select.
-              // On a div inside a presentational li, which the tree leaves
-              // out, since ARIA allows no `group` role on an li (axe's
-              // aria-allowed-role, first caught by M5.5's scan in a browser).
-              // oxlint-disable jsx-a11y/prefer-tag-over-role
-              <li key={bucket.key} role="presentation" className="combobox__group">
-                <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
-                  <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
-                    {bucket.heading}
+        <ul
+          className={['combobox__list', isOpen && 'is-open', wrapped && 'is-inset']
+            .filter(Boolean)
+            .join(' ')}
+          // Placed beneath or above the box, as there is room (useListPosition);
+          // inside a popup, the popup is.
+          style={wrapped ? undefined : listStyle}
+          data-placement={wrapped ? undefined : placement}
+          {...getMenuProps({
+            ref: wrapped ? undefined : setList,
+            'aria-label': `${label} ${noun}s`,
+          })}
+        >
+          {isOpen && firstRow && row(firstRow)}
+          {isOpen &&
+            buckets.map((bucket) =>
+              bucket.heading === null ? (
+                bucket.rows.map(row)
+              ) : (
+                // A listbox's group is ARIA's own; optgroup belongs to a select.
+                // On a div inside a presentational li, which the tree leaves
+                // out, since ARIA allows no `group` role on an li (axe's
+                // aria-allowed-role, first caught by M5.5's scan in a browser).
+                // oxlint-disable jsx-a11y/prefer-tag-over-role
+                <li key={bucket.key} role="presentation" className="combobox__group">
+                  <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
+                    <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
+                      {bucket.heading}
+                    </div>
+                    <ul role="presentation" className="combobox__rows">
+                      {bucket.rows.map(row)}
+                    </ul>
                   </div>
-                  <ul role="presentation" className="combobox__rows">
-                    {bucket.rows.map(row)}
-                  </ul>
-                </div>
-              </li>
-              // oxlint-enable jsx-a11y/prefer-tag-over-role
-            ),
-          )}
-        {isOpen && lastRow && row(lastRow)}
-      </ul>
+                </li>
+                // oxlint-enable jsx-a11y/prefer-tag-over-role
+              ),
+            )}
+          {isOpen && lastRow && row(lastRow)}
+        </ul>
+      </Popup>
       {/* What the list holds, for a screen reader: the rows arrive after the
           typing, and nothing else says so. */}
       {hasSource && (
         <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
-          {statusOf(isOpen, suggestions, noun)}
+          {statusOf(isOpen, suggestions, noun, showEmpty ? empty : undefined)}
         </output>
       )}
     </div>
