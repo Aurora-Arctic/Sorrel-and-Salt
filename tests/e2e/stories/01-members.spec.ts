@@ -11,10 +11,7 @@ import { expectRoll, makeCoven, makeUser, seatsOf, withSql } from './accounts-se
 // removal or a role change in one cannot reach another; the step each story
 // is about goes through the page. A refusal is shown twice over: the control
 // is absent where the page knows better, and where a page loaded earlier
-// still offers it, the server refuses it and the page says so. Serial, so
-// the file's tests run in order on one worker against its one reseed
-// (claude-docs/testing/e2e.md).
-test.describe.configure({ mode: 'serial' });
+// still offers it, the server refuses it and the page says so.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

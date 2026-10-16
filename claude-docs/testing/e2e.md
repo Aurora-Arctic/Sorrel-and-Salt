@@ -170,18 +170,35 @@ ignores that spec too
   baseline every file started from was an empty database —
   [`design-decisions/m1.11-e2e-reseed-without-seed.md`](../design-decisions/m1.11-e2e-reseed-without-seed.md)
   records why that was enough at the time.
-  **Every db-touching spec file must open with
-  `test.describe.configure({ mode: 'serial' })`** (M1.14) — `playwright.config.ts`
-  sets `fullyParallel: true`, which lets Playwright split one file's tests
-  across multiple workers, and `beforeAll` then runs once _per worker_
-  handling that file rather than once for the file. Two workers both
-  reaching `smoke.spec.ts` both ran `DROP`/`CREATE DATABASE sorrel_e2e`
-  concurrently and threw `duplicate key value violates unique constraint
-"pg_database_datname_index"` before this was added. `serial` pins the
-  whole file to one worker, so the reset genuinely happens once. Per-slot
-  databases have since ended that race but not the rule: `serial` is still
-  what keeps a file's tests on one worker, running in order against its one
-  reseed of that worker's database.
+  **A file's tests spread across the workers, and `beforeAll` runs on each
+  worker that comes to the file** (M11.18): `playwright.config.ts` sets
+  `fullyParallel: true`, so a worker picking up its share of a file's tests
+  first reclones its own slot database and builds the file's setup rows
+  there, tens of milliseconds each, and runs that share in file order
+  (twelve tests over six workers ran `beforeAll` six times, measured). That
+  is why a file's setup belongs in `beforeAll`, never in its first test,
+  which only one worker would run; a test is independent when it signs in its
+  own user and reads only seed rows, rows its file's `beforeAll` wrote, or
+  rows it writes itself. **Serial mode,
+  `test.describe.configure({ mode: 'serial' })`, is the choice for a file
+  whose tests chain**, each reading what the one before it wrote — a mailed
+  link one test sends and the next follows, a cache one test warms and the
+  next reads — and the line says which chain in a comment beside it. It can
+  sit inside one `test.describe` block, pinning that block alone:
+  `tests/e2e/compendium-cache.spec.ts` and
+  `tests/e2e/stories/01-invitations.spec.ts` are serial whole, and
+  `01-accounts.spec.ts`'s coven-creation block and
+  `08-email-and-admin.spec.ts`'s primary-admin block are. The guard
+  `tests/guards/e2e-serial-chains.test.ts` holds the rule: it parses every
+  spec and fails a test outside a serial scope that assigns a variable
+  declared outside it, the one shape every chained file here had, while an
+  assignment in a hook stays legal. Until M11.18 every
+  db-touching file was serial (M1.14), a rule written when the workers shared
+  one `sorrel_e2e` database and two of them reseeding it at once threw
+  `duplicate key value violates unique constraint "pg_database_datname_index"`.
+  MB.112's database per slot ended that race, and the rule outlived it by a
+  fortnight of runs whose wall time was their longest file's ("Where a run's time
+  goes", below).
 - **Mail is read back from Mailpit** (MB.65). `tests/e2e/mailpit.ts`'s
   `latestMessageTo(address)` searches Mailpit's REST API at `MAILPIT_URL` for
   the newest message to that address and returns its sender, recipients,
@@ -479,3 +496,27 @@ one cold run the same day took 99 s for 50 stories (15 more are `fixme`),
 on another. It writes no HTML report locally, so its per-file sums are read
 from the list reporter's `(2.6s)` suffixes instead; CI's figures for it are
 the runner budget's `stories` row.
+
+**After the serial rule was dropped** (the plan's lever 2, this task's second
+PR), the same machine and method, three cold runs each, the servers started
+by each run. The gate suite has 59 tests now: the three that only set up a
+file's users moved into that file's `beforeAll`.
+
+| Measure, median of three cold runs         | Before             | After                       |
+| ------------------------------------------ | ------------------ | --------------------------- |
+| Gate suite, wall time                      | 34.4 s             | 28.7 s (28.6, 28.7, 29.3)   |
+| Gate suite, sum of every test's duration   | 74 s               | 76 s (74.5, 75.9, 79.3)     |
+| `shell.spec.ts`, sum of its tests          | 18.4 s on 1 worker | 22.6 s spread over 6        |
+| Story suite, wall time                     | 99 s (one run)     | 41.1 s (39.6, 41.1, 43.4)   |
+| Story suite, Playwright's own time         | 96 s               | 40.7 s (39.1, 40.7, 43.0)   |
+| Story suite, sum of every story's duration | 233 s              | 153 s (151.3, 153.4, 171.3) |
+| `07-admin.spec.ts`, sum of its tests       | 78 s on 1 worker   | 67.4 s spread over 6        |
+
+The story suite more than halved, because its two long files now spread over
+every worker instead of setting the span one worker at a time. The gate suite
+gained less: its critical path was `shell.spec.ts`, and that file's own time
+went up by about 4 s, since its `beforeAll` (a reclone and a sign-in) now
+runs once on each of the six workers that come to it rather than once. Its
+tests are evenly spread, so the run is now its startup and teardown plus
+the even spread of its tests, 12.7 s, and what is left to shorten is the
+startup, the teardown, the video and the coverage: the plan's levers 3 to 5.

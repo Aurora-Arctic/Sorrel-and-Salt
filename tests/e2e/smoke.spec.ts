@@ -3,11 +3,11 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// `fullyParallel` would split this file across workers, each running
-// `beforeAll` and a share of the tests against its own slot's database.
-// Serial keeps the file's tests in order on one worker, against its one
-// reseed. Every db-touching spec file needs this.
-test.describe.configure({ mode: 'serial' });
+// `fullyParallel` splits this file across workers, each running `beforeAll`
+// and a share of the tests against its own slot's database (MB.112). That is
+// the reseed every db-touching spec file opens with, and all this file needs:
+// a test signs in its own user when it needs one and reads only seed rows, so
+// no test waits on another (M11.18; claude-docs/testing/e2e.md, "Reseeding between spec files").
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

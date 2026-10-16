@@ -8,8 +8,6 @@ import { signInAs } from './session';
 // every Add is greyed; linking itself is asserted through Better Auth's
 // endpoints in tests/db/account-linking.test.ts, and a rename through
 // tests/components/NameForm and the set-name service.
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

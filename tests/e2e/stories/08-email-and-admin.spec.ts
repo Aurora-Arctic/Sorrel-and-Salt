@@ -15,8 +15,6 @@ import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 // Accounts are made by `signInAs` and rows a flow needs in place by raw SQL
 // (MB.101); the story's own step goes through the page, and a mailed link is
 // read from Mailpit and followed.
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -384,168 +382,176 @@ test(
   },
 );
 
-test(
-  'another admin cannot revoke the primary admin: its Change Role is locked with the reason, and the server refuses the revoke sent directly',
-  { tag: '@story-60' },
-  async ({ page }) => {
-    const primary = await primaryAdminId(page);
-    const peerEmail = address('peer-admin');
-    await signInAs(page, peerEmail, ['discord'], 'admin');
-    await signInAs(page, address('acting-admin'), ['discord'], 'admin');
+// Story 60's three tests on the primary admin share one worker, in this order,
+// because the last demotes every other admin in the worker's database, the
+// primary included, which the two before it need in place. Serial inside this
+// block alone: the tests after it make their own admins.
+test.describe('the primary admin', () => {
+  test.describe.configure({ mode: 'serial' });
 
-    // Another admin's Change Role is there to be used: the guard is about the primary admin alone.
-    const peer = await userRow(page, peerEmail);
-    const usable = peer.getByRole('button', { name: 'Change Role for Fixture Person' });
-    await expect(usable).toBeVisible();
-    await expect(usable).not.toHaveAttribute('aria-disabled', 'true');
+  test(
+    'another admin cannot revoke the primary admin: its Change Role is locked with the reason, and the server refuses the revoke sent directly',
+    { tag: '@story-60' },
+    async ({ page }) => {
+      const primary = await primaryAdminId(page);
+      const peerEmail = address('peer-admin');
+      await signInAs(page, peerEmail, ['discord'], 'admin');
+      await signInAs(page, address('acting-admin'), ['discord'], 'admin');
 
-    // The primary admin's row: marked, its Change Role in view but locked, saying why.
-    const row = await userRow(page, PRIMARY_ADMIN_EMAIL);
-    await expect(row.getByRole('button', { name: 'Primary Admin' })).toBeVisible();
-    await expect(roleCell(row)).toHaveText(/^Admin/);
-    const locked = row.getByRole('button', { name: 'Change Role for Fixture Person' });
-    await expect(locked).toHaveAttribute('aria-disabled', 'true');
-    await expect(locked).toHaveAccessibleDescription(/\S/);
+      // Another admin's Change Role is there to be used: the guard is about the primary admin alone.
+      const peer = await userRow(page, peerEmail);
+      const usable = peer.getByRole('button', { name: 'Change Role for Fixture Person' });
+      await expect(usable).toBeVisible();
+      await expect(usable).not.toHaveAttribute('aria-disabled', 'true');
 
-    // Pressed anyway, from the keyboard since a pointer click waits for an
-    // enabled control, it says why again and opens nothing.
-    await locked.focus();
-    await page.keyboard.press('Enter');
-    await expect(row.getByRole('alert')).toBeVisible();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await assertNoAccessibilityViolations(page);
+      // The primary admin's row: marked, its Change Role in view but locked, saying why.
+      const row = await userRow(page, PRIMARY_ADMIN_EMAIL);
+      await expect(row.getByRole('button', { name: 'Primary Admin' })).toBeVisible();
+      await expect(roleCell(row)).toHaveText(/^Admin/);
+      const locked = row.getByRole('button', { name: 'Change Role for Fixture Person' });
+      await expect(locked).toHaveAttribute('aria-disabled', 'true');
+      await expect(locked).toHaveAccessibleDescription(/\S/);
 
-    // Sent straight to the server, the revoke is refused there too.
-    const result = await sendFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      // Pressed anyway, from the keyboard since a pointer click waits for an
+      // enabled control, it says why again and opens nothing.
+      await locked.focus();
+      await page.keyboard.press('Enter');
+      await expect(row.getByRole('alert')).toBeVisible();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
 
-    // Read afresh, the primary admin is an admin still, and reaches the admin area.
-    const reread = await userRow(page, PRIMARY_ADMIN_EMAIL);
-    await expect(roleCell(reread)).toHaveText(/^Admin/);
-    await signInAgainAs(page, primary);
-    await expectAdminArea(page, true);
-  },
-);
+      // Sent straight to the server, the revoke is refused there too.
+      const result = await sendFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
 
-test(
-  "the primary admin pauses admin changes: another admin's grant is refused while the primary's works, and resuming restores it",
-  { tag: '@story-60' },
-  async ({ page }) => {
-    const primary = await primaryAdminId(page);
-    const granteeEmail = address('paused-grantee');
-    const { userId: grantee } = await signInAs(page, granteeEmail);
-    const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
-    const list = `/admin/users?query=${encodeURIComponent(granteeEmail)}`;
-    // The page's statement while paused, and none while open (the owner's call).
-    const status = page.getByRole('main').getByRole('status');
+      // Read afresh, the primary admin is an admin still, and reaches the admin area.
+      const reread = await userRow(page, PRIMARY_ADMIN_EMAIL);
+      await expect(roleCell(reread)).toHaveText(/^Admin/);
+      await signInAgainAs(page, primary);
+      await expectAdminArea(page, true);
+    },
+  );
 
-    // Another admin sees the switch, unusable, and why.
-    await visit(page, list);
-    const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
-    await expect(unusable).toHaveAttribute('aria-disabled', 'true');
-    await expect(unusable).toHaveAccessibleDescription(/\S/);
-    await expect(status).toHaveCount(0);
+  test(
+    "the primary admin pauses admin changes: another admin's grant is refused while the primary's works, and resuming restores it",
+    { tag: '@story-60' },
+    async ({ page }) => {
+      const primary = await primaryAdminId(page);
+      const granteeEmail = address('paused-grantee');
+      const { userId: grantee } = await signInAs(page, granteeEmail);
+      const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
+      const list = `/admin/users?query=${encodeURIComponent(granteeEmail)}`;
+      // The page's statement while paused, and none while open (the owner's call).
+      const status = page.getByRole('main').getByRole('status');
 
-    // The primary admin pauses, behind a modal asking first. Scoped to it:
-    // the button that opens it has the same name.
-    await signInAgainAs(page, primary);
-    await visit(page, list);
-    await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
-    const pausing = page.getByRole('dialog', { name: 'Pause Admin Changes' });
-    await pausing.getByRole('button', { name: 'Pause Admin Changes' }).click();
-    await expect(pausing).toHaveCount(0);
-    await expect(status).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
-    await assertNoAccessibilityViolations(page);
+      // Another admin sees the switch, unusable, and why.
+      await visit(page, list);
+      const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
+      await expect(unusable).toHaveAttribute('aria-disabled', 'true');
+      await expect(unusable).toHaveAccessibleDescription(/\S/);
+      await expect(status).toHaveCount(0);
 
-    // The other admin's Change Role is locked; tried from the keyboard, it says
-    // why and opens nothing, and Approve is locked the same way.
-    await signInAgainAs(page, other);
-    await visit(page, list);
-    await expect(status).toBeVisible();
-    const row = page.getByRole('row', { name: new RegExp(granteeEmail.replace(/[.]/g, '\\.')) });
-    const grant = row.getByRole('button', { name: 'Change Role for Fixture Person' });
-    await expect(grant).toHaveAttribute('aria-disabled', 'true');
-    await expect(grant).toHaveAccessibleDescription(/\S/);
-    await grant.focus();
-    await page.keyboard.press('Enter');
-    await expect(row.getByRole('alert')).toBeVisible();
-    await assertNoAccessibilityViolations(page);
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
-    await expect(approve).toHaveAttribute('aria-disabled', 'true');
-    await expect(approve).toHaveAccessibleDescription(/\S/);
-    // Sent straight to the server, the grant is refused there too.
-    const refused = await sendFromPage(page, SET_USER_ROLE, { userId: grantee, role: 'admin' });
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    await visit(page, list);
-    await expect(roleCell(row)).toHaveText(/^User/);
-    await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+      // The primary admin pauses, behind a modal asking first. Scoped to it:
+      // the button that opens it has the same name.
+      await signInAgainAs(page, primary);
+      await visit(page, list);
+      await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
+      const pausing = page.getByRole('dialog', { name: 'Pause Admin Changes' });
+      await pausing.getByRole('button', { name: 'Pause Admin Changes' }).click();
+      await expect(pausing).toHaveCount(0);
+      await expect(status).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
+      await assertNoAccessibilityViolations(page);
 
-    // The primary admin, whom the pause does not bind, still promotes.
-    await signInAgainAs(page, primary);
-    await visit(page, list);
-    const granting = await chooseRole(page, row, 'Fixture Person', 'Admin');
-    await granting.getByRole('button', { name: 'Promote' }).click();
-    await expect(granting).toHaveCount(0);
-    await expect(roleCell(row)).toHaveText(/^Admin/);
+      // The other admin's Change Role is locked; tried from the keyboard, it says
+      // why and opens nothing, and Approve is locked the same way.
+      await signInAgainAs(page, other);
+      await visit(page, list);
+      await expect(status).toBeVisible();
+      const row = page.getByRole('row', { name: new RegExp(granteeEmail.replace(/[.]/g, '\\.')) });
+      const grant = row.getByRole('button', { name: 'Change Role for Fixture Person' });
+      await expect(grant).toHaveAttribute('aria-disabled', 'true');
+      await expect(grant).toHaveAccessibleDescription(/\S/);
+      await grant.focus();
+      await page.keyboard.press('Enter');
+      await expect(row.getByRole('alert')).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
+      await expect(approve).toHaveAttribute('aria-disabled', 'true');
+      await expect(approve).toHaveAccessibleDescription(/\S/);
+      // Sent straight to the server, the grant is refused there too.
+      const refused = await sendFromPage(page, SET_USER_ROLE, { userId: grantee, role: 'admin' });
+      expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      await visit(page, list);
+      await expect(roleCell(row)).toHaveText(/^User/);
+      await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-    // And resumes.
-    await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
-    await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
-    await expect(status).toHaveCount(0);
+      // The primary admin, whom the pause does not bind, still promotes.
+      await signInAgainAs(page, primary);
+      await visit(page, list);
+      const granting = await chooseRole(page, row, 'Fixture Person', 'Admin');
+      await granting.getByRole('button', { name: 'Promote' }).click();
+      await expect(granting).toHaveCount(0);
+      await expect(roleCell(row)).toHaveText(/^Admin/);
 
-    // The other admin's controls work again: the revoke goes through.
-    await signInAgainAs(page, other);
-    await visit(page, list);
-    await expect(status).toHaveCount(0);
-    const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
-    await revoking.getByRole('button', { name: 'Demote' }).click();
-    await expect(revoking).toHaveCount(0);
-    await expect(roleCell(row)).toHaveText(/^User/);
-  },
-);
+      // And resumes.
+      await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
+      await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+      await expect(status).toHaveCount(0);
 
-// Last of story 60's tests: it leaves one admin, the primary admin demoted
-// with the rest, so it must follow every test that needs the primary admin.
-test(
-  'the last admin is refused revoking their own admin, and stays an admin',
-  { tag: '@story-60' },
-  async ({ page }) => {
-    const loneEmail = address('last-admin');
-    const { userId: lone } = await signInAs(page, loneEmail, ['discord'], 'admin');
-    // Every other admin demoted as a `psql` fix would, so this one is the last.
-    const demoted = await withSql((sql) =>
-      sql.begin(async (tx) => {
-        await tx`select set_config('app.privilege_route', 'manual', true)`;
-        return tx`
+      // The other admin's controls work again: the revoke goes through.
+      await signInAgainAs(page, other);
+      await visit(page, list);
+      await expect(status).toHaveCount(0);
+      const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
+      await revoking.getByRole('button', { name: 'Demote' }).click();
+      await expect(revoking).toHaveCount(0);
+      await expect(roleCell(row)).toHaveText(/^User/);
+    },
+  );
+
+  // Last of the three, and it must stay so: it demotes every other admin in the
+  // worker's database, the primary admin included.
+  test(
+    'the last admin is refused revoking their own admin, and stays an admin',
+    { tag: '@story-60' },
+    async ({ page }) => {
+      const loneEmail = address('last-admin');
+      const { userId: lone } = await signInAs(page, loneEmail, ['discord'], 'admin');
+      // Every other admin demoted as a `psql` fix would, so this one is the last.
+      const demoted = await withSql((sql) =>
+        sql.begin(async (tx) => {
+          await tx`select set_config('app.privilege_route', 'manual', true)`;
+          return tx`
           update users set role = 'user', updated_by = ${lone}
           where role = 'admin' and deleted_at is null and id <> ${lone}
           returning id
         `;
-      }),
-    );
-    expect(demoted.length).toBeGreaterThan(0);
+        }),
+      );
+      expect(demoted.length).toBeGreaterThan(0);
 
-    const response = await visit(page, '/admin/users?role=admin');
-    expect(response.status()).toBe(200);
-    const admins = page.getByRole('row').filter({ has: page.getByRole('cell') });
-    await expect(admins).toHaveCount(1);
-    const row = await userRow(page, loneEmail);
+      const response = await visit(page, '/admin/users?role=admin');
+      expect(response.status()).toBe(200);
+      const admins = page.getByRole('row').filter({ has: page.getByRole('cell') });
+      await expect(admins).toHaveCount(1);
+      const row = await userRow(page, loneEmail);
 
-    // The control is offered, since the list cannot know the count stays
-    // above one; pressed, the server refuses and the row says why.
-    const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
-    await revoking.getByRole('button', { name: 'Demote' }).click();
-    await expect(revoking).toHaveCount(0);
-    await expect(row.getByRole('alert')).toBeVisible();
-    await assertNoAccessibilityViolations(page);
+      // The control is offered, since the list cannot know the count stays
+      // above one; pressed, the server refuses and the row says why.
+      const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
+      await revoking.getByRole('button', { name: 'Demote' }).click();
+      await expect(revoking).toHaveCount(0);
+      await expect(row.getByRole('alert')).toBeVisible();
+      await assertNoAccessibilityViolations(page);
 
-    const reread = await userRow(page, loneEmail);
-    await expect(roleCell(reread)).toHaveText(/^Admin/);
-    await expectAdminArea(page, true);
-  },
-);
+      const reread = await userRow(page, loneEmail);
+      await expect(roleCell(reread)).toHaveText(/^Admin/);
+      await expectAdminArea(page, true);
+    },
+  );
+});
 
 test(
   'an admin reads every privilege change newest first, with who, how, when and why, narrows it to one user, and a user meets the 403',

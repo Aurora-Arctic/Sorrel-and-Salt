@@ -10,6 +10,9 @@ import { signInAs } from './session';
 // (claude-docs/db/compendium-cache.md, "In tests"). Nothing here assumes the
 // cache starts empty: a local run may reuse a server an earlier run warmed, and
 // each run's names are its own.
+// Serial, because the tests chain: the second reads the cache the first
+// warmed and renamed beneath, and both share the one cache server, which
+// another worker's test would be warming at the same time (M11.18).
 test.describe.configure({ mode: 'serial' });
 
 async function inDatabase<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
