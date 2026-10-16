@@ -248,3 +248,49 @@ export interface FilterSelectFieldProps {
   /** Typed into once hydrated, its list narrowing to the choices holding the text. */
   typeahead?: boolean;
 }
+
+/** One field an action changed: what it held before, and what it holds now. */
+export interface HistoryDiff {
+  /** The form path: `name`, `variants.0.form`, or an array's own path, `variants`. */
+  name: string;
+  before: unknown;
+  after: unknown;
+}
+
+/** What one action changed: the fields it touched, when, and whether it was typing. */
+export interface HistoryStep {
+  diffs: HistoryDiff[];
+  /** The time of the newest change in the step, from `Date.now()`. */
+  at: number;
+  /** Typed into one text box, so that the next key within the pause may extend it. */
+  typing: boolean;
+}
+
+/** The two stacks: `past` oldest first, `future` the steps undone, next redo last. */
+export interface HistoryState {
+  past: HistoryStep[];
+  future: HistoryStep[];
+}
+
+export type HistoryAction =
+  | { type: 'recorded'; step: HistoryStep; limit: number }
+  | { type: 'extended'; diffs: HistoryDiff[]; at: number }
+  | { type: 'undone' }
+  | { type: 'redone' }
+  | { type: 'cleared' };
+
+/** What a new change is to the newest step: its own step, part of it, or more of its typing. */
+export type HistoryMerge = 'new' | 'join' | 'extend';
+
+/** What `decideMerge` weighs. */
+export interface HistoryMergeInput {
+  newest: HistoryStep | undefined;
+  name: string;
+  typing: boolean;
+  now: number;
+  pauseMs: number;
+  /** The newest step was recorded in the event or microtask still running. */
+  sameTick: boolean;
+  /** Focus left a field, or a step was undone, since the newest step. */
+  sealed: boolean;
+}
