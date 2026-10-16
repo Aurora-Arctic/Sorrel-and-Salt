@@ -27,8 +27,8 @@ resolves through, rather than one read per row.
 | `position`     | `{ page, pages }`, the pager's "Page X of Y"                            |
 
 A `CompendiumListEntry` is the entry's id, name and slug, its
-`canonicalName`, `null` for none, its `forms` (`string[]`, the entry's live
-forms' text in form order, `[]` for none), and `editHref`. In the
+`canonicalName`, `null` for none, its `forms` (`CompendiumListForm[]`, `{ name, icon }` for each of the entry's live
+forms in form order, `[]` for none; `icon` is the form's group's icon name, `null` for a form with none, and the Form column draws each as `<FormIcon name={icon} />` before its name, M12.7), and `editHref`. In the
 filter, `query`, `form` and `nomenclature` are blank for none, `form` is a
 form's text, and `nomenclature` is otherwise a `NomenclatureKind`.
 
@@ -111,7 +111,7 @@ different groups, so the page offers each name once, whatever its case.
 - **`next/link`, not a plain anchor**, as the category list's Edit: opening
   the modal is a soft navigation, and the page calls the admin guard on every
   render.
-- **The Form column lists the entry's forms**, joined: "Herb, Oil".
+- **The Form column lists the entry's forms**, joined: "Herb, Oil". Each form is one unit, its icon then its name with the comma after it, held on one line (`.compendium-list__form`): the icon sits a quarter of an em from its own name and a wider gap, `space(2)`, sets it apart from the form before, so an icon never reads as the previous form's (the owner's call, 2026-10-16).
 - **None is an em dash.** A null formal name, or an entry with no form, shows
   "—" rather than an empty cell: the Unknown list tells an entry with an
   unconfirmed formal name from one with none by this column.

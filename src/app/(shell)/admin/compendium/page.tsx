@@ -5,6 +5,7 @@ import CompendiumList from '../../../../components/CompendiumList';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import type {
   CompendiumFormChoice,
+  CompendiumListForm,
   CompendiumListEntry,
   CompendiumListFilter,
 } from '../../../../components/CompendiumList/types';
@@ -23,7 +24,7 @@ import {
   NOMENCLATURE_KINDS,
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
-import { listIngredientFormValues } from '@/modules/vocabulary';
+import { formChoicesOf, formGroupsOf, listIngredientFormValues } from '@/modules/vocabulary';
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
 import { readEditPlace, readListPlace } from '../list-page';
@@ -70,13 +71,31 @@ const readCompendium = cache(
       null,
       page.edges.map(({ node }) => ({ id: node.id, workspaceId: null })),
     );
+    const variants = forms.map((answer) => {
+      // A compendium ref is never refused (MB.80).
+      if (answer instanceof Error) throw answer;
+      return answer;
+    });
+    // Each form's icon is its curated form's group's: two batches for the
+    // page, as `IngredientVariant.formChoice` reads them. A form that is
+    // only text, or whose form or group is retired, has none.
+    const choices = await formChoicesOf(variants.flat().flatMap(({ formId }) => formId ?? []));
+    const live = choices.flatMap((choice) => choice ?? []);
+    const groups = await formGroupsOf(live.map((choice) => choice.groupId));
+    const iconOfForm = new Map(
+      live.map((choice, i) => {
+        const group = groups[i];
+        return [choice.id, group === undefined || group instanceof Error ? null : group.icon];
+      }),
+    );
     return {
       ...page,
-      forms: forms.map((answer) => {
-        // A compendium ref is never refused (MB.80).
-        if (answer instanceof Error) throw answer;
-        return answer.map((variant) => variant.form);
-      }),
+      forms: variants.map((own) =>
+        own.map(({ form, formId }): CompendiumListForm => ({
+          name: form,
+          icon: (formId && iconOfForm.get(formId)) || null,
+        })),
+      ),
     };
   },
 );
