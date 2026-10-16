@@ -6,7 +6,7 @@
 
 - [ ] Adam and Eve Root contains a form in it's name. - Should it?
 - [ ] Ivy tried to click on the ingredient name itself instead of edit. Should go to the page where it can be edited? Or modal?
-- [ ] Define password policies and create enforcement.
+- [x] Define password policies and create enforcement.
 - [ ] Icons for forms?
 
 ### Feature Additions
