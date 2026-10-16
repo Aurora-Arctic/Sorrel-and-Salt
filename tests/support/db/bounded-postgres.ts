@@ -1,8 +1,8 @@
 import postgres from 'postgres';
 import type { ClientOptions } from './types';
 
-// What `import postgres from 'postgres'` resolves to inside the `db` project
-// and the acceptance suite: postgres.js itself, every pool capped at
+// What `import postgres from 'postgres'` resolves to inside the `db` project:
+// postgres.js itself, every pool capped at
 // TEST_POOL_MAX. The app's client in src/db/connection.ts and the client each
 // test file opens would otherwise each default to ten, and eleven workers of
 // those are more than Postgres's slots once another run or an idle e2e server

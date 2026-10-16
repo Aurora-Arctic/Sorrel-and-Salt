@@ -3,8 +3,8 @@ import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
 import type { TestConfig } from './types.ts';
 
-// The Postgres-backed harness, spread into both the `db` project and the
-// acceptance config so the second cannot quietly diverge from the first.
+// The Postgres-backed harness, spread into the `db` and `db-mocking` projects
+// so the two cannot quietly diverge.
 //
 // `.mts`, imported with its extension, and erasable syntax only: a config's
 // imports run at config-load time, where Vite's native loader hands a `.ts` in

@@ -8,10 +8,10 @@ pins both. Nothing under `src/` is a test.
 tests/
   app/ components/ lib/ db/   # mirror the src/ path of the code under test
   rsc/                        # what can only be seen from inside a server render, mirroring src/ below it
-  acceptance/                 # one describe per user story — make test-stories
   guards/                     # the sweeps lint cannot carry (below)
   support/                    # the harness: as-user, db-setup, seeded-database, msw, paths
   e2e/                        # Playwright specs and their harness (database, fixtures, axe, coverage)
+  e2e/stories/                # one browser flow per user story, tagged @story-N — npm run test:stories
   support/fixtures/           # makeIngredient / makeSpell / makeWorkspace
   db/support/                 # the db-only half: useTestDatabase, tableFacts, the audit lists
 ```
@@ -85,7 +85,7 @@ what it scans — an empty listing satisfies every `toEqual([])`.
 
 - **`unit`** — `environment: 'node'`, `globals: true`. `include`s
   `tests/**/*.test.ts`, excluding every file `db` runs, `tests/rsc/**`,
-  `tests/acceptance/**`, `tests/e2e/**` and the two `DOM_TS` files `dom`
+  `tests/e2e/**` and the two `DOM_TS` files `dom`
   claims (below). `db`'s files are listed by a `globSync` when the config
   loads rather than excluded as two trees, since Vitest's `exclude` takes no
   negation and `DB_FREE` could not be carved back out of them; a file added
@@ -348,8 +348,8 @@ loaded runner (#737).
 
 `npm run test` (`vitest run`, no coverage) and `npm run test:coverage`
 (`vitest run --coverage`) both run all five projects — and neither runs
-`tests/acceptance/`, which `unit` and `dom` exclude and only
-`npm run test:stories` includes (["Acceptance"](acceptance.md)). Neither is
+the story suite, which is Playwright (`tests/e2e/stories/`, `npm run test:stories`;
+["Acceptance"](acceptance.md)). Neither is
 wired into `pre-commit` — CLAUDE.md's pre-commit list is unchanged by this task.
 
 **Wired into CI (M1.14).** `pr-gate.yml`'s `vitest` job calls the real

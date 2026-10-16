@@ -32,27 +32,9 @@ const summary = coverage ? `${testSummary} — ${coverage.stat}` : testSummary;
 // The outermost suite per file is titled with the file name, shown
 // separately, so it is left out of the breadcrumb.
 const failures = [];
-// Each spec's outcome under every `@story-N` tag it carries: the stories this
-// run walked in the browser. Traceability only; the acceptance suite stays
-// what decides a story is done.
-const walked = new Map();
-function outcomeOf(spec) {
-  if (!spec.ok) return 'failing';
-  // Playwright counts a skipped test as ok; here it did not walk the story.
-  if ((spec.tests ?? []).some((t) => t.status === 'skipped')) return 'skipped';
-  return 'walked';
-}
 function walk(suite, ancestors, skipOwnTitle) {
   const nextAncestors = skipOwnTitle ? ancestors : [...ancestors, suite.title];
   for (const spec of suite.specs ?? []) {
-    // The JSON reporter writes a tag without its leading `@` ("story-6" for
-    // `@story-6`), unlike the reporter API, so the match takes either form.
-    for (const tag of spec.tags ?? []) {
-      const match = /^@?story-(\d+)$/.exec(tag);
-      if (!match) continue;
-      const id = Number(match[1]);
-      walked.set(id, [...(walked.get(id) ?? []), outcomeOf(spec)]);
-    }
     if (spec.ok) continue;
     const result = (spec.tests ?? [])
       .flatMap((t) => t.results ?? [])
@@ -70,25 +52,6 @@ for (const fileSuite of data.suites ?? []) {
   walk(fileSuite, [], true);
 }
 
-// A story is ticked when every spec tagged with it passed; any failure marks
-// it failing, and otherwise any skip leaves it skipped.
-const STORY_SUFFIX = { walked: '', failing: ' — **failing**', skipped: ' — skipped' };
-let stories = '';
-if (walked.size > 0) {
-  const lines = ['<details><summary>Stories walked</summary>', ''];
-  for (const id of [...walked.keys()].sort((a, b) => a - b)) {
-    const outcomes = walked.get(id);
-    const outcome = outcomes.includes('failing')
-      ? 'failing'
-      : outcomes.includes('skipped')
-        ? 'skipped'
-        : 'walked';
-    lines.push(`- [${outcome === 'walked' ? 'x' : ' '}] Story ${id}${STORY_SUFFIX[outcome]}`);
-  }
-  lines.push('', '</details>');
-  stories = lines.join('\n');
-}
-
 let details = '';
 if (failures.length > 0) {
   const lines = ['<details><summary>Failing tests</summary>', ''];
@@ -104,7 +67,7 @@ if (failures.length > 0) {
   details = lines.join('\n');
 }
 
-for (const block of [stories, coverage?.table]) {
+for (const block of [coverage?.table]) {
   if (block) details = details ? `${details}\n\n${block}` : block;
 }
 

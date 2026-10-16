@@ -35,59 +35,38 @@ export interface Story {
   title: string;
 }
 
-export type SuiteState = 'passed' | 'failed' | 'skipped' | 'pending';
+export type StoryState = 'passed' | 'failed' | 'skipped';
 
-/** The little of Vitest's TestSuite the checklist reads. */
-export interface ReportedSuite {
-  readonly name: string;
-  state(): SuiteState;
-}
-
-/** The little of Vitest's TestModule the checklist reads. */
-export interface ReportedModule {
-  readonly relativeModuleId: string;
-  readonly children: { allSuites(): Iterable<ReportedSuite> };
+/** One test's verdict on one story, as the reporter reads it from a `@story-N` tag. */
+export interface StoryObservation {
+  storyId: number;
+  state: StoryState;
+  /** Failed only because it passed on a retry: a flake, which counts as failing. */
+  flaky?: boolean;
+  /** The spec holding the test, repo-relative. */
+  file: string;
 }
 
 export type StoryStatus = 'passed' | 'failed' | 'skipped' | 'untested';
 
 export interface StoryEntry extends Story {
   status: StoryStatus;
-  /** Every module holding a suite that names this story. */
-  suites: string[];
-  /** Every e2e spec tagged `@story-N` with this story: its browser flows. */
-  browser: string[];
+  /** Every spec holding a test tagged with this story. */
+  files: string[];
+  /** Every failure was a pass-on-retry. */
+  flaky: boolean;
 }
 
-export interface UnknownSuite {
-  /** A number §10 does not list — a v2 story, or a typo. */
+/** A tag `@story-N` naming a number §10 does not list — a v2 story, or a typo. */
+export interface UnknownStory {
   id: number;
-  name: string;
-  module: string;
-}
-
-/** An e2e tag `@story-N` naming a number §10 does not list. */
-export interface UnknownTag {
-  id: number;
-  /** The spec holding the tag, repo-relative. */
   file: string;
-}
-
-/** What tests/support/browser-flows.ts reads out of the e2e specs. */
-export interface BrowserFlows {
-  /** The repo-relative specs tagged with each known story, sorted. */
-  byStory: ReadonlyMap<number, readonly string[]>;
-  unknown: UnknownTag[];
 }
 
 export interface Checklist {
   stories: StoryEntry[];
-  unknown: UnknownSuite[];
-  /** E2e tags naming no v1 story, beside the suites that do the same. */
-  unknownTags: UnknownTag[];
+  unknown: UnknownStory[];
   counts: Record<StoryStatus, number>;
-  /** Stories with a browser flow. Apart from `counts`, whose statuses are exclusive. */
-  browserFlows: number;
   total: number;
 }
 

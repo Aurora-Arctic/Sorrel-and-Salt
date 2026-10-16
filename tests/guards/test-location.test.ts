@@ -13,8 +13,8 @@ import config from '../../vitest.config.mts';
 // config's own, matched with picomatch, which Vitest's globber is built on.
 
 const TEST_FILE = /\.test\.tsx?$/;
-/** Playwright's and the acceptance suite's, which no project in the main config runs. */
-const NOT_A_PROJECTS = ['tests/e2e/', 'tests/acceptance/'];
+/** Playwright's, which no project in the main config runs. */
+const NOT_A_PROJECTS = ['tests/e2e/'];
 
 interface Project {
   test: { name: string; include: string[]; exclude?: string[] };

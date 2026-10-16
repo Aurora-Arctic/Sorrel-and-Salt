@@ -1,7 +1,6 @@
 import { vi } from 'vitest';
 
-// `next/cache` under Vitest, aliased in by vitest.config.mts and
-// vitest.stories.config.mts. Next's own throws outside a request — it finds no
+// `next/cache` under Vitest, aliased in by vitest.config.mts. Next's own throws outside a request — it finds no
 // incremental cache to read, and no work store to queue a revalidation on — and
 // a test is never inside one. So the data cache is a pass-through, and every
 // read reaches Postgres as it would with the cache empty: a test sees what the
