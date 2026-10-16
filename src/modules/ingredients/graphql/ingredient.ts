@@ -107,6 +107,9 @@ IngredientVariantRef.implement({
     }),
     description: t.exposeString('description', { nullable: true }),
     safetyNotes: t.exposeString('safetyNotes', { nullable: true }),
+    toxic: t.exposeBoolean('toxic', {
+      description: "Whether this form is toxic: its own flag, never its ingredient's.",
+    }),
     elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
     celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
@@ -148,6 +151,9 @@ IngredientRef.implement({
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
     colors: t.exposeStringList('colors', { nullable: true }),
     safetyNotes: t.exposeString('safetyNotes', { nullable: true }),
+    toxic: t.exposeBoolean('toxic', {
+      description: 'Whether the ingredient is toxic. Each form carries its own flag.',
+    }),
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
     // The row is the loaders' key: they read `workspaceId` off it to know
     // which coven to check, and cache by `id`.

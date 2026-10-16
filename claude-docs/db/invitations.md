@@ -89,7 +89,7 @@ check refused anything but a workspace role, are what the nullable pair
 answers.
 
 Since M11.20 a site-tier row also names the site role it grants,
-`site_role` (the `user_role` enum), `curator` or `admin`: migration 0074
+`site_role` (the `user_role` enum), `curator` or `admin`: migration 0075
 added it, set every site-tier row there before it to `admin`, and added two
 CHECKs, `invitations_site_role_tier`, `(workspace_id is null) = (site_role
 is not null)`, and `invitations_site_role_invitable`, which admits only

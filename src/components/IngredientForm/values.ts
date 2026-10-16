@@ -84,6 +84,7 @@ export const EMPTY_VARIANT: VariantFormValues = {
   formLink: null,
   description: '',
   safetyNotes: '',
+  toxic: false,
   elements: [],
   celestialBodies: [],
   zodiacSigns: [],
@@ -109,6 +110,7 @@ export const EMPTY_VALUES: IngredientFormValues = {
   substitutes: [],
   categoryIds: [],
   safetyNotes: '',
+  toxic: false,
   references: [],
   referencePanelOpen: false,
   variants: [],
@@ -728,6 +730,7 @@ const SHARED_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
   categoryIds: 'relations',
   substitutes: 'relations',
   safetyNotes: 'details',
+  toxic: 'details',
   references: 'sources',
   referencePanelOpen: 'sources',
 };

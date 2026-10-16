@@ -1,4 +1,4 @@
-# 0073_curator-role — destructive DDL
+# 0074_curator-role — destructive DDL
 
 Destructive DDL acknowledged: this adds the site role `curator` (M11.20) and widens the CHECK that holds a privileged account to the workspace-creation flag from admins alone to every role but `user`. The CHECK `users_admin_can_create_workspace` is dropped and `users_privileged_can_create_workspace` added in the same transaction, so no write meets `users` without one. Every row the old CHECK accepted, the new one accepts too, since before this migration no row holds `curator`.
 

@@ -1,5 +1,5 @@
 {
-  "id": "376a3929-b43f-4a9a-a832-2d1f97b55150",
+  "id": "850ca6a0-baa7-4bb9-8d66-2d36d5913d20",
   "prevId": "b8e03f6f-3e1b-45ef-994a-c48b6964a4f7",
   "version": "7",
   "dialect": "postgresql",
@@ -1773,9 +1773,9 @@
           "name": "users_email_lower_case",
           "value": "\"users\".\"email\" = lower(\"users\".\"email\")"
         },
-        "users_privileged_can_create_workspace": {
-          "name": "users_privileged_can_create_workspace",
-          "value": "\"users\".\"role\" = 'user' or \"users\".\"can_create_workspace\""
+        "users_admin_can_create_workspace": {
+          "name": "users_admin_can_create_workspace",
+          "value": "\"users\".\"role\" <> 'admin' or \"users\".\"can_create_workspace\""
         }
       },
       "isRLSEnabled": false
@@ -2656,6 +2656,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "toxic": {
+          "name": "toxic",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "elements": {
           "name": "elements",
           "type": "ingredient_element[]",
@@ -2948,6 +2955,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "toxic": {
+          "name": "toxic",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "seed_key": {
           "name": "seed_key",
@@ -5547,7 +5561,7 @@
     "public.user_privilege": {
       "name": "user_privilege",
       "schema": "public",
-      "values": ["admin", "create_workspace", "curator"]
+      "values": ["admin", "create_workspace"]
     },
     "public.user_privilege_change": {
       "name": "user_privilege_change",
@@ -5562,7 +5576,7 @@
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": ["user", "curator", "admin"]
+      "values": ["user", "admin"]
     },
     "public.ingredient_element": {
       "name": "ingredient_element",

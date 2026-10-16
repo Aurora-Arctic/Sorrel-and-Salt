@@ -80,6 +80,11 @@ input CompendiumIngredientInput {
   substitutes: [SubstituteInput!]
 
   """
+  Whether the ingredient is toxic, off when left out; each form's flag is its own.
+  """
+  toxic: Boolean
+
+  """
   Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
   """
   variants: [IngredientVariantInput!]!
@@ -105,6 +110,9 @@ input CompendiumIngredientUpdateInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """Whether the ingredient is toxic; each form's flag is its own."""
+  toxic: Boolean!
 
   """
   Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
@@ -198,6 +206,9 @@ type Ingredient {
   """
   stock(workspaceId: ID!): [InventoryItem!]!
   substitutes: [Substitute!]!
+
+  """Whether the ingredient is toxic. Each form carries its own flag."""
+  toxic: Boolean!
   variants: [IngredientVariant!]!
   zodiacSigns: [String!]
 }
@@ -275,6 +286,11 @@ input IngredientInput {
   substitutes: [SubstituteInput!]
 
   """
+  Whether the ingredient is toxic, off when left out; each form's flag is its own.
+  """
+  toxic: Boolean
+
+  """
   Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
   """
   variants: [IngredientVariantInput!]!
@@ -300,6 +316,9 @@ input IngredientUpdateInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """Whether the ingredient is toxic; each form's flag is its own."""
+  toxic: Boolean!
 
   """
   Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
@@ -328,6 +347,9 @@ type IngredientVariant {
   references: [ReferenceLink!]!
   safetyNotes: String
   substitutes: [Substitute!]!
+
+  """Whether this form is toxic: its own flag, never its ingredient's."""
+  toxic: Boolean!
   zodiacSigns: [String!]
 }
 
@@ -353,6 +375,11 @@ input IngredientVariantInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """
+  Whether this form is toxic: its own flag, whatever the ingredient's says.
+  """
+  toxic: Boolean!
   zodiacSigns: [String!]!
 }
 
@@ -1208,6 +1235,11 @@ type Workspace {
 
 type WorkspaceMember {
   audit: AuditInfo!
+
+  """
+  The member's address, as their own account holds it now. Owners only; null for someone the coven no longer seats.
+  """
+  email: String
   invitedBy: CoMember
   joinedAt: DateTime!
   role: WorkspaceRole!

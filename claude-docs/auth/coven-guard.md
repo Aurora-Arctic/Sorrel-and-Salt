@@ -111,8 +111,8 @@ menu by role) and `tests/e2e/coven.spec.ts`
 and joining date. Owners and members see it; a viewer gets the same 404 a
 stranger does, so the page's existence says nothing about anyone's role (the
 owner's call, 2026-10-12). The `member` role holds `member: read` and no
-other `member` statement, so inviting, changing a role and removing stay
-with owners.
+other `member` statement, so inviting, changing a role, removing and reading
+members' addresses stay with owners.
 
 - **The page asks the service, not the role.** It reads through
   `listMembers`, which checks `member: read`; a `Forbidden` becomes
@@ -124,6 +124,19 @@ with owners.
   refuses anyone else, and a change that would leave no owner. It moves a
   member to any other role, and only ever an existing member:
   invitations cannot grant ownership, so this is the only route to it.
+- **Addresses are the owner's** (M11.19). An owner sees an Email column with
+  each member's address, and no verified mark, since every member's address is verified. A seat is taken only by accepting an invitation, which matches a verified address, or by creating a coven, which an unverified account cannot reach, and an address changes only at verification. The addresses come from a statement only owners
+  hold, `member: readEmail`, checked by the members service's `memberEmails`,
+  which reads `users.email` when the page is drawn,
+  for the coven's own live members and nobody else, in SQL. The page asks for
+  them only when `rolePermits(role, { member: ['readEmail'] })`; a member gets
+  no Email column, and the service refuses them even though they hold
+  `member: read`. A site admin in no coven is refused like any non-member.
+  Over GraphQL the address is its own field, `WorkspaceMember.email`, never
+  part of `CoMember`, which every member reads: it resolves through the
+  `memberEmailsByMember` loader, one read per page of members, and answers
+  `FORBIDDEN` to everyone but an owner. Nothing is stored on
+  `workspace_members`.
 - **A quiet note when there is one owner** (M6.16): if that person loses
   access nobody can manage members. A status, not an alert, drawn above the
   table from the whole roll (`memberRoster`), since one page cannot count owners.
@@ -136,6 +149,9 @@ with owners.
 Tests: `tests/app/(shell)/coven/members.test.tsx` (who gets controls, the
 404), `tests/components/CovenNav/index.test.tsx` (the link by role),
 `tests/modules/coven/services/access-control.test.ts` (the pinned matrix),
+`tests/modules/coven/services/members.test.ts` and
+`tests/modules/coven/graphql/workspace-members.test.ts` (who may read the
+addresses, directly and over GraphQL),
 and `tests/e2e/coven.spec.ts` (walks story 9, untagged: a viewer's 404, a promotion, the
 axe scan).
 

@@ -1,6 +1,6 @@
 import { isObjectType } from 'graphql';
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { WORKSPACE_W_ID } from '@/db/seed/standard';
+import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
@@ -15,17 +15,22 @@ useRawClient();
 // reaches the wire as `FORBIDDEN`. Who may list a coven's members is the
 // service's, in tests/modules/coven/services/members.test.ts.
 
-const repository = vi.hoisted(() => ({ findCoMemberNamesIncludingSoftDeleted: vi.fn() }));
+const repository = vi.hoisted(() => ({
+  findCoMemberNamesIncludingSoftDeleted: vi.fn(),
+  findMemberEmails: vi.fn(),
+}));
 vi.mock('@/db/repository', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/db/repository')>();
   repository.findCoMemberNamesIncludingSoftDeleted.mockImplementation(
     actual.findCoMemberNamesIncludingSoftDeleted,
   );
+  repository.findMemberEmails.mockImplementation(actual.findMemberEmails);
   return { ...actual, ...repository };
 });
 
 beforeEach(() => {
   repository.findCoMemberNamesIncludingSoftDeleted.mockClear();
+  repository.findMemberEmails.mockClear();
 });
 
 // Run below the route's depth limit, as every resolver test is: through `me`,
@@ -206,5 +211,141 @@ describe('WorkspaceMember.user', () => {
     expect(isObjectType(type)).toBe(true);
 
     expect(Object.keys(isObjectType(type) ? type.getFields() : {}).sort()).toEqual(['id', 'name']);
+  });
+});
+
+// The owner-only address (M11.19): its own field rather than a widened
+// `CoMember`, which every member reads. Who may read it is the service's, in
+// tests/modules/coven/services/members.test.ts; here, that a refusal reaches
+// the wire as FORBIDDEN, and one read per page of members.
+describe('WorkspaceMember.email', () => {
+  const EMAILS = /* GraphQL */ `
+    query {
+      me {
+        memberships {
+          role
+          workspace {
+            id
+            members(first: 10) {
+              edges {
+                node {
+                  user {
+                    id
+                  }
+                  email
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+  type Emails = {
+    me: {
+      memberships: {
+        role: string;
+        workspace: {
+          id: string;
+          members: {
+            edges: {
+              node: { user: { id: string }; email: string | null };
+            }[];
+          };
+        };
+      }[];
+    };
+  };
+
+  it("answers an owner every member's address, one read per coven listed", async () => {
+    const result = await run<Emails>(asUser(A), EMAILS);
+
+    expect(result.errors).toBeUndefined();
+    const emails = Object.fromEntries(
+      result.data!.me.memberships.map(({ workspace }) => [
+        workspace.id,
+        workspace.members.edges.map(({ node }) => ({ id: node.user.id, email: node.email })),
+      ]),
+    );
+    expect(emails[WORKSPACE_W_ID]).toEqual(
+      expect.arrayContaining([
+        { id: A.id, email: A.email },
+        { id: B.id, email: B.email },
+        { id: C.id, email: C.email },
+      ]),
+    );
+    expect(emails[covenY]).toEqual(expect.arrayContaining([{ id: D.id, email: D.email }]));
+    // Five members across two covens, and a read per coven, never per member.
+    expect(repository.findMemberEmails).toHaveBeenCalledTimes(2);
+  });
+
+  it('answers FORBIDDEN, and no address, to a member who is listed the roll', async () => {
+    // B in W, and D in X and the second coven, are each a member, which reads
+    // the roll: the field is all that is refused. D has no path to W's roll.
+    for (const [caller, inW] of [
+      [B, true],
+      [D, false],
+    ] as const) {
+      const roll = await run<Rolls>(asUser(caller), ROLLS);
+      expect(roll.errors).toBeUndefined();
+      const covens = roll.data!.me.memberships.map(({ workspace }) => workspace.id);
+      expect(covens.includes(WORKSPACE_W_ID)).toBe(inW);
+
+      const result = await run<Emails>(asUser(caller), EMAILS);
+
+      const memberships = result.data!.me.memberships;
+      expect(memberships.map(({ role }) => role)).toEqual(covens.map(() => 'member'));
+      const nodes = memberships.flatMap(({ workspace }) =>
+        workspace.members.edges.map(({ node }) => node),
+      );
+      expect(nodes.length).toBeGreaterThan(0);
+      expect(nodes.map(({ email }) => email)).toEqual(nodes.map(() => null));
+      expect(new Set(result.errors?.map((error) => error.extensions?.code))).toEqual(
+        new Set(['FORBIDDEN']),
+      );
+    }
+  });
+
+  it("answers FORBIDDEN to a site admin who reads an owner's covens, and no address", async () => {
+    const ADMIN = /* GraphQL */ `
+      query ($query: String) {
+        users(first: 1, query: $query) {
+          edges {
+            node {
+              memberships {
+                workspace {
+                  id
+                  members(first: 10) {
+                    edges {
+                      node {
+                        email
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+    // Why this could have reached the roll: an admin reads anyone's covens
+    // (M9.19), so E is handed A's W.
+    const covens = await run<{
+      users: { edges: { node: { memberships: { workspace: { id: string } }[] } }[] };
+    }>(
+      asUser(E),
+      'query ($query: String) { users(first: 1, query: $query) { edges { node { memberships { workspace { id } } } } } }',
+      { query: A.email },
+    );
+    expect(
+      covens.data!.users.edges[0].node.memberships.map(({ workspace }) => workspace.id),
+    ).toContain(WORKSPACE_W_ID);
+
+    const result = await run(asUser(E), ADMIN, { query: A.email });
+
+    expect(result.errors?.map((error) => error.extensions?.code)).toContain('FORBIDDEN');
+    expect(JSON.stringify(result.data)).not.toContain(B.email);
+    expect(repository.findMemberEmails).not.toHaveBeenCalled();
   });
 });

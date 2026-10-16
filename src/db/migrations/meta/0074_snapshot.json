@@ -1,6 +1,6 @@
 {
-  "id": "6f2cd0bc-dc7c-4ebd-9dd7-9a460454b45f",
-  "prevId": "376a3929-b43f-4a9a-a832-2d1f97b55150",
+  "id": "376a3929-b43f-4a9a-a832-2d1f97b55150",
+  "prevId": "850ca6a0-baa7-4bb9-8d66-2d36d5913d20",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -74,13 +74,6 @@
         "note": {
           "name": "note",
           "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "site_role": {
-          "name": "site_role",
-          "type": "user_role",
-          "typeSchema": "public",
           "primaryKey": false,
           "notNull": false
         },
@@ -199,14 +192,6 @@
         "invitations_role_invitable": {
           "name": "invitations_role_invitable",
           "value": "\"invitations\".\"role\" is null or \"invitations\".\"role\" in ('viewer', 'member')"
-        },
-        "invitations_site_role_tier": {
-          "name": "invitations_site_role_tier",
-          "value": "(\"invitations\".\"workspace_id\" is null) = (\"invitations\".\"site_role\" is not null)"
-        },
-        "invitations_site_role_invitable": {
-          "name": "invitations_site_role_invitable",
-          "value": "\"invitations\".\"site_role\" is null or \"invitations\".\"site_role\"::text in ('curator', 'admin')"
         },
         "invitations_declined_coven": {
           "name": "invitations_declined_coven",
@@ -2671,6 +2656,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "toxic": {
+          "name": "toxic",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "elements": {
           "name": "elements",
           "type": "ingredient_element[]",
@@ -2963,6 +2955,13 @@
           "type": "text",
           "primaryKey": false,
           "notNull": false
+        },
+        "toxic": {
+          "name": "toxic",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "seed_key": {
           "name": "seed_key",

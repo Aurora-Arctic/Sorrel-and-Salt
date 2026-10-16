@@ -35,10 +35,12 @@ const statements = {
   spell: ['read', 'create', 'update', 'delete'],
   /**
    * Members and invitations. `/coven/[slug]/members` shows the roll to owners
-   * and members (`read`); inviting, changing a role and removing stay with
-   * owners (M6.13).
+   * and members (`read`); each member's address (`readEmail`, M11.19),
+   * inviting, changing a role and removing stay with owners (M6.13). The
+   * address is its own action rather than part of `read`, since a member
+   * reads the roll and an owner alone needs to tell two people apart by it.
    */
-  member: ['read', 'invite', 'update', 'remove'],
+  member: ['read', 'readEmail', 'invite', 'update', 'remove'],
   /** The coven itself: renaming it, and deleting it. */
   workspace: ['read', 'update', 'delete'],
 } as const;
@@ -65,12 +67,12 @@ const member = ac.newRole({
   workspace: ['read'],
 });
 
-/** The member's, plus the membership roll and the workspace row itself. */
+/** The member's, plus the membership roll with its addresses, and the workspace row itself. */
 const owner = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
-  member: ['read', 'invite', 'update', 'remove'],
+  member: ['read', 'readEmail', 'invite', 'update', 'remove'],
   workspace: ['read', 'update', 'delete'],
 });
 

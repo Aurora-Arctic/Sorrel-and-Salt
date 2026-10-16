@@ -80,6 +80,7 @@ export interface PickedVariant {
   formId: string | null;
   description: string | null;
   safetyNotes: string | null;
+  toxic: boolean;
   elements: VariantRecord['elements'];
   celestialBodies: string[] | null;
   zodiacSigns: string[] | null;

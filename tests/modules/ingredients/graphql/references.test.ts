@@ -227,6 +227,7 @@ describe('Ingredient.references', () => {
     deities: [],
     colors: [],
     safetyNotes: '',
+    toxic: false,
     substitutes: [],
     folkNames: [],
     references,

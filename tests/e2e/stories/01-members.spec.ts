@@ -73,6 +73,21 @@ test.describe('who is in a coven', () => {
         await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/members$`));
         await expect(membersLink(page)).toHaveAttribute('aria-current', 'page');
         await expectRoll(page, { [ASH]: 'Owner', [BIRCH]: 'Member', [CEDAR]: 'Viewer' }, NAMES);
+        // The addresses are the owner's alone (M11.19): each row carries its
+        // member's for Ash, and none reaches Birch's page.
+        const table = page.getByRole('table', { name: 'Members' });
+        for (const [name, address] of [
+          [ASH, 'ash@roll.members-story.test'],
+          [BIRCH, 'birch@roll.members-story.test'],
+          [CEDAR, 'cedar@roll.members-story.test'],
+        ]) {
+          // By the name cell: Ash is also named in other rows' Invited By and Updated.
+          const row = table
+            .getByRole('row')
+            .filter({ has: page.getByRole('cell', { name: new RegExp(`^${name}( You)?$`) }) });
+          if (reader === ash) await expect(row).toContainText(address);
+          else await expect(row).not.toContainText(address);
+        }
         if (reader === ash) {
           await assertNoAccessibilityViolations(page);
           await assertNoSidewaysScroll(page);

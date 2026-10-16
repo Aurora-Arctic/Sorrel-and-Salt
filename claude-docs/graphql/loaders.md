@@ -15,6 +15,9 @@ merely absent:
   the name a resolver reads it by. `createLoaders(session)` calls every factory
   and is called only by `createContext`. Each loader arrives with the schema it
   loads: `membershipsByUser` (`coven`, for `User.memberships`),
+  `memberEmailsByMember` (`coven`, for the owner-only `WorkspaceMember.email`,
+  M11.19: keyed `{ workspaceId, userId }`, one check and one read per coven a
+  batch names, a `Forbidden` per key to anyone but an owner),
   `providersByUser` (`identity`, for `User.providers`, MB.52),
   `usersByIdForAdmin` (`identity`, for `PrivilegeChange.subject` and
   `.actor`, MB.199), `usersById` (`identity`, a co-member's display name, MB.10,

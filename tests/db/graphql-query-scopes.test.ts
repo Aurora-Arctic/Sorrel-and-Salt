@@ -270,6 +270,7 @@ const WHOLE_INGREDIENT = {
   deities: [],
   colors: [],
   safetyNotes: '',
+  toxic: false,
   substitutes: [],
   folkNames: [],
   references: [],

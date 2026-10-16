@@ -7,7 +7,7 @@
 -- one role that may lack the flag, so it never uses `curator`, which Postgres
 -- refuses inside the transaction that adds the value. The function names it,
 -- but a function body is read when it runs, not here. The sidecar
--- 0073_curator-role.ack.md covers the drop.
+-- 0074_curator-role.ack.md covers the drop.
 ALTER TYPE "public"."user_privilege" ADD VALUE 'curator';--> statement-breakpoint
 ALTER TYPE "public"."user_role" ADD VALUE 'curator' BEFORE 'admin';--> statement-breakpoint
 ALTER TABLE "users" DROP CONSTRAINT "users_admin_can_create_workspace";--> statement-breakpoint

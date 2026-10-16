@@ -14,7 +14,7 @@ import { requireCovenMembership, requireSession } from '../../../../../../lib/re
 import { listHref, pagerHrefs } from '../../../../../../lib/list-href';
 import { readPageCursors } from '../../../../../../lib/numbered-page';
 import { displayNamesOf } from '@/modules/identity';
-import { listMembers, memberRoster, rolePermits } from '@/modules/coven';
+import { listMembers, memberEmails, memberRoster, rolePermits } from '@/modules/coven';
 import type { CovenLayoutParams } from '../../types';
 import type { MembersPageProps } from './types';
 
@@ -29,7 +29,9 @@ export const metadata: Metadata = {
 // GraphQL end at one check (CLAUDE.md rule 1). The role controls are drawn for
 // owners only and the service refuses anyone else again. The page checks
 // `member: read` through the service rather than reading the role itself
-// (claude-docs/auth/coven-guard.md, "The members page"). The heading, the
+// (claude-docs/auth/coven-guard.md, "The members page"). Each member's address
+// is an owner's alone (M11.19): asked for only when the role holds
+// `member: readEmail`, and checked again by `memberEmails`. The heading, the
 // tabs and the Invite button are the `(people)` layout's.
 export default async function MembersPage({
   params,
@@ -71,6 +73,15 @@ export default async function MembersPage({
   // The editor's name withheld, the stamp is left empty: a date with no one to
   // ask about it says little.
   const editorOf = (id: string) => names[ids.indexOf(id)] ?? null;
+  const showEmail = rolePermits(membership.role, { member: ['readEmail'] });
+  const emails = showEmail
+    ? await memberEmails(
+        session,
+        workspace.id,
+        page.edges.map(({ node }) => node.userId),
+      )
+    : [];
+  const emailOf = (id: string) => emails.find(({ userId }) => userId === id)?.address ?? null;
   const members = page.edges.map(({ node }): MemberListEntry => ({
     userId: node.userId,
     name: nameOf(node.userId),
@@ -79,6 +90,7 @@ export default async function MembersPage({
     updatedBy: editorOf(node.updatedBy),
     updatedAt: editorOf(node.updatedBy) ? node.updatedAt : null,
     invitedBy: node.invitedBy ? editorOf(node.invitedBy) : null,
+    email: emailOf(node.userId),
   }));
 
   const canChangeRoles = rolePermits(membership.role, { member: ['update'] });
@@ -101,6 +113,7 @@ export default async function MembersPage({
             <MemberList
               members={members}
               currentUserId={session.userId}
+              showEmail={showEmail}
               roleAction={
                 canChangeRoles
                   ? (member) => (
