@@ -9,6 +9,7 @@ export * from './services/workspace-ingredients';
 export * from './services/compendium';
 export * from './services/references';
 export * from './services/promote-folk-name';
+export * from './services/stock';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
 export * from './graphql/common-names';
@@ -30,6 +31,8 @@ export type {
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
+  StockRow,
+  StockValues,
   SubstituteRow,
   VariantKey,
 } from './types';
