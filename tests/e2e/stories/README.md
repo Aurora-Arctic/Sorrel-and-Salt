@@ -62,6 +62,10 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 
 Stories 63–64 have no file yet.
 
+Which old acceptance test each file replaces, and which gate e2e tests it made
+obsolete, is tabled in the decision record's "Mapping" section
+(`claude-docs/design-decisions/m9.1-stories-are-browser-flows.md`).
+
 Story 19 (an admin has no access to a coven's ingredients or grimoire) is
 walked here by URL, as far as the pages exist. The per-entity sweep of the
 services behind it stays in the workspace-isolation suite (M6.6),
