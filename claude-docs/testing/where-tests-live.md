@@ -348,7 +348,9 @@ did under `v8`, and `vi.resetModules()` keeps the transform cache, so only that
 first import pays. A file that imports one inside its tests calls
 `warmImport` (`tests/support/warm-import.ts`) to pay it in a `beforeAll` with its
 own timeout instead: charged to a test, it overran the 5 s budget on CI's
-loaded runner (#737).
+loaded runner (#737). Every project's `testTimeout` is 20 s rather than Vitest's
+5 s: it guards against a hang, and three workers sharing GitHub's four vCPUs ran
+a 1.2 s test past 5 s ([Runner budget](../ci/runner-budget.md)).
 
 `npm run test` (`vitest run`, no coverage) and `npm run test:coverage`
 (`vitest run --coverage`) both run all five projects — and neither runs

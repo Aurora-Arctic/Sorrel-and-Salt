@@ -127,6 +127,16 @@ export default defineConfig({
     // Every project at the db harness's capped count: the projects share one
     // pool group, which Vitest requires to agree (tests/support/db-project.mts).
     maxWorkers: dbMaxWorkers,
+    // A guard against a hung test, not a speed assertion, so it has headroom
+    // over the slowest honest test on the slowest runner. Vitest's 5 s default
+    // tripped on GitHub's 4-vCPU runner, where three workers share four cores
+    // and a test that takes 1.2 s on an idle machine ran past 5 s (run
+    // 38877563430). On the shared base rather than the `dom` project alone: a
+    // hang is a hang in any project, and a `db` test shares those cores too.
+    // The hooks keep their own default: the clone each `db` file starts with
+    // runs at the top of a setup file, not in a hook
+    // (claude-docs/ci/runner-budget.md, "Where a gate run's time goes").
+    testTimeout: 20_000,
     // Quiet under Claude Code, which sets `CLAUDECODE=1` in its shell and
     // nothing else does: a session reads the per-file coverage table and the
     // per-file test lines, ~400 lines a run, and needs neither — a failure
