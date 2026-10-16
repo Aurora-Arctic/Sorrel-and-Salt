@@ -596,8 +596,12 @@ export interface IngredientFilter {
   query?: string;
   /** Every one of these, not any: an entry must carry each id listed. */
   categoryIds?: readonly string[];
-  /** The form, trimmed and lower-cased on both sides. */
-  form?: string;
+  /**
+   * Any of these forms, not every one: an entry matches when one of its live
+   * variants has a form in the list, both sides trimmed and lower-cased
+   * (M11.22). Blank entries are skipped, and an empty list is no filter.
+   */
+  forms?: readonly string[];
   /**
    * The curated form one of an entry's live variants picked, by its `form_id`
    * (MB.167, MB.220): how a form's delete finds the entries holding it
@@ -605,19 +609,28 @@ export interface IngredientFilter {
    */
   formId?: string;
   /**
-   * A celestial body the entry's `celestialBodies` list holds, an entry at a time under the
-   * suggestions' fold (MB.162): how a celestial body's delete and rename find the
-   * entries holding it (MB.95). Blank means no filter.
+   * Any of these celestial bodies: an entry matches when its
+   * `celestialBodies` list holds one of them, compared under the
+   * suggestions' fold (MB.162). How a celestial body's delete and rename find
+   * the entries holding it (MB.95), with a one-item list. Blank entries are
+   * skipped, and an empty list is no filter (M11.22).
    */
-  celestialBody?: string;
-  /** A sign the entry's `zodiacSigns` list holds, as `celestialBody` reads the celestial bodies. */
-  zodiacSign?: string;
+  celestialBodies?: readonly string[];
+  /** Any of these signs, read from the entry's `zodiacSigns` as `celestialBodies` reads its list. */
+  zodiacSigns?: readonly string[];
   /**
-   * A curated deity the entry holds a live link to, by `ingredient_deities.deity_id`
-   * (MB.167): how a deity's delete finds the entries holding it (MB.132). A
-   * uuid; the caller checks one first.
+   * Any of these curated deities: an entry matches when it holds a live link
+   * to one of them, by `ingredient_deities.deity_id` (MB.167, M11.22). How a
+   * deity's delete finds the entries holding it (MB.132), with a one-item
+   * list. Uuids; the caller checks them first. An empty list is no filter.
    */
-  deityId?: string;
+  deityIds?: readonly string[];
+  /**
+   * `toxic`: the entry's own flag is on, or a live variant's is. `not_toxic`:
+   * neither is. A soft-deleted variant's flag counts for nothing either way.
+   * Absent means any (M11.22).
+   */
+  toxic?: 'toxic' | 'not_toxic';
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */

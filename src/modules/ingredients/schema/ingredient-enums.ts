@@ -35,3 +35,11 @@ export const INGREDIENT_ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'] a
 export const REFERENCE_KINDS = ['book', 'chapter', 'article', 'entry', 'web_page'] as const;
 
 export type ReferenceKind = (typeof REFERENCE_KINDS)[number];
+
+// Not a column: the toxic setting a search takes (M11.22), kept here so the
+// GraphQL enum, the filter's Zod schema and the facet screen read one list.
+// `any` is no filter; `toxic` keeps an entry flagged on itself or on a live
+// form, and `not_toxic` one flagged on neither.
+export const TOXIC_FILTERS = ['any', 'toxic', 'not_toxic'] as const;
+
+export type ToxicFilter = (typeof TOXIC_FILTERS)[number];

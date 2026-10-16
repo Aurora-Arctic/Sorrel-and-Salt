@@ -311,7 +311,7 @@ CREATE INDEX ON ingredient_variants
 
 **Inheritance is a union: a variant adds to its ingredient and never removes.** A reader of one form sees the ingredient's correspondences, categories, substitutes and references plus that variant's own. Nothing on a variant overrides or hides the ingredient's, so no read merges two values and no list needs an "explicitly none" flag. When a property is not true of every form — a safety note only the oil carries, an element only the root is worked with — the curator moves it off the ingredient onto the forms it is true of. Rosemary keeps `Fire` and its folk names on the ingredient; "dilute before it touches the skin" sits on the oil variant alone.
 
-**The toxic flag is the one exception: it does not union.** `ingredients.toxic` and `ingredient_variants.toxic` are each a yes/no, default no, and each says only what its own row says (M11.21, the owner's call): the ingredient's is on when any part of it is poisonous, to people or to pets, and a form's when that form is. To whom, and how, is the safety notes' to say. A preparation toxic when the plant is not, an essential oil say, flags its form, and whether the ingredient takes the flag too is the curator's call. A form is toxic when its own flag is on, whatever the ingredient's flag says, and turning either flag leaves the other as it was. A reader of one form reads the form's flag, never the ingredient's in its place, and no read combines the two.
+**The toxic flag is the one exception: it does not union.** `ingredients.toxic` and `ingredient_variants.toxic` are each a yes/no, default no, and each says only what its own row says (M11.21, the owner's call): the ingredient's is on when any part of it is poisonous, to people or to pets, and a form's when that form is. To whom, and how, is the safety notes' to say. A preparation toxic when the plant is not, an essential oil say, flags its form, and whether the ingredient takes the flag too is the curator's call. A form is toxic when its own flag is on, whatever the ingredient's flag says, and turning either flag leaves the other as it was. A reader of one form reads the form's flag, never the ingredient's in its place, and no read combines the two but the search's toxic filter, which reads both only to choose which entries to list (M11.22, [`design-decisions/m11.22-search-facets.md`](design-decisions/m11.22-search-facets.md)).
 
 **An ingredient with no variant is information only.** It can be read, searched, and linked as a substitute, but nothing is held or laid in a jar without a form: a stock row and a linked spell layer each name a variant (`inventory_items`, `spell_ingredients`, below). An entry with no form is flagged on the admin's to-do list on the compendium page (M8.18), and the entry form asks for at least one (MB.221).
 
@@ -792,7 +792,11 @@ type Query {
   compendium(
     query: String
     categoryIds: [ID!]
-    form: String # an entry holding a live variant of that form (M8.13)
+    forms: [String!] # entries holding a live variant of any one of these forms (M8.13, M11.22)
+    deityIds: [ID!] # entries linked to any one of these deities (M11.22)
+    zodiacSigns: [String!] # entries holding any one of these signs (M11.22)
+    celestialBodies: [String!] # entries holding any one of these planets (M11.22)
+    toxic: ToxicFilter # any, toxic or not_toxic: the entry or any live form flagged (M11.22)
     withoutReferences: Boolean # the admin's to-do list: live entries with no live link (§5, M5.5)
     nomenclature: Nomenclature # the other to-do list: unknown is the formal names still to look up (M5.5)
     first: Int
@@ -846,7 +850,11 @@ type Query {
     workspaceId: ID!
     query: String
     categoryIds: [ID!]
-    form: String # keeps entries with a variant of this form (M9.4)
+    forms: [String!] # filter as compendium's do (M9.4, M11.22)
+    deityIds: [ID!]
+    zodiacSigns: [String!]
+    celestialBodies: [String!]
+    toxic: ToxicFilter
     source: IngredientSource # local or compendium only; all by default (M9.7)
     inStockOnly: Boolean # keeps entries the coven holds in stock (M9.7)
     lowStockOnly: Boolean # keeps entries running low (M9.8)
@@ -1164,6 +1172,12 @@ type Workspace {
   audit: AuditInfo!
 }
 
+enum ToxicFilter {
+  any
+  toxic
+  not_toxic
+}
+
 enum Nomenclature {
   botanical
   fungal
@@ -1335,7 +1349,7 @@ Component folders follow the `resume-2026` convention — `src/components/Ingred
 
 **`AppShell`** is the application-wide navigation frame, not a route. It wraps every signed-in page — the in-app ingredient detail included, which sits outside `/coven/` — and carries the primary nav, the `WorkspaceSwitcher`, and one global Add Ingredient button (amended 2026-10-12, MB.7). The button's target follows the area: a coven page adds to that coven's ingredients, an admin page to the compendium, and elsewhere to the viewer's only coven or a choice. Editing is on the ingredient wherever it is shown, never inside a relational field, and never in the shell. An account menu offers Your Account and Sign Out, and, while coven invitations wait for the viewer's verified address, a dot on its button and a count that links to the account page's Invitations section (M10.32); on shell pages the theme toggle sits in the bar at every width instead of the fixed corner, and the menu holds none. The section nav is one component for the coven and admin areas: icon tabs in a context row under the bar, and a bottom bar on a phone. It is a layout component rather than a route because the nav must persist across navigation between workspace-scoped and global pages; the coven layout nests inside it and adds only workspace-scoped chrome. The two public compendium pages (MB.80) do not render it on the server: they carry a minimal public frame, and the shell's signed-in chrome arrives through a client island once a session is found (MB.83).
 
-**`IngredientSearch`** is shared by compendium, ingredients, and spell builder. Debounced text match on `name`, on the folk names, on `canonicalName` — searching the formal name is how someone who knows the binomial finds the right one of four rows labelled "Cat's Claw" — and on each variant's form and description (MB.215), still one row per ingredient however many of its forms match; multi-select category chips grouped by the category's `groupId`, groups alphabetical by name, AND by default with an OR toggle, an entry matching a category filed on it or on any of its forms; secondary filters for form, element, in-stock-only, where the form filter matches an entry holding a live variant of the form chosen, and its options come from the curated vocabulary plus the variant forms in use outside it (§5) rather than a fixed set, and the element filter, the five, matches an ingredient whose `elements` holds the one chosen, among others or alone (MB.157); filter state in the URL query string. Each consumer supplies the action slot — Compendium passes "Add ingredient," Ingredients passes Edit/Delete, Spell Builder passes "Add to jar."
+**`IngredientSearch`** is shared by compendium, ingredients, and spell builder. Debounced text match on `name`, on the folk names, on `canonicalName` — searching the formal name is how someone who knows the binomial finds the right one of four rows labelled "Cat's Claw" — and on each variant's form and description (MB.215), still one row per ingredient however many of its forms match; multi-select category chips grouped by the category's `groupId`, groups alphabetical by name, AND by default with an OR toggle, an entry matching a category filed on it or on any of its forms; secondary filters for form, element, in-stock-only, where the form filter takes a list and matches an entry holding a live variant of any form chosen, and a toxic setting keeps entries flagged toxic on the entry or any live form, or neither (M11.22, `claude-docs/design-decisions/m11.22-search-facets.md`), and its options come from the curated vocabulary plus the variant forms in use outside it (§5) rather than a fixed set, and the element filter, the five, matches an ingredient whose `elements` holds the one chosen, among others or alone (MB.157); filter state in the URL query string. Each consumer supplies the action slot — Compendium passes "Add ingredient," Ingredients passes Edit/Delete, Spell Builder passes "Add to jar."
 
 **`IngredientCard`** renders the formal name and the entry's forms as a secondary line beneath the display label — "_Salvia rosmarinus_ · Herb, Oil" — read from its variants, since two entries can share a label and the forms are what a reader holds. Lists sort on `(lower(name), identity_key, id)`, so identically labelled entries keep a stable order told apart by their formal names (M8.14, amended by MB.215).
 
