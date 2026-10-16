@@ -21,7 +21,7 @@ anything already present, every slug derived rather than written down — a
 category's by `slugify(name)`, a form's by `formSlug(name, group)` (M5.6a) — and the whole run inside one transaction that publishes
 `app.current_user_id` and stamps through `applyAudit`. What it does not share is a colour: form groups section
 an autofill dropdown rather than tinting a chip, so there is no colour pair to
-write and no contrast floor to clear (§5, MB.35).
+write and no contrast floor to clear (§5, MB.35). What a form group carries instead is its `icon`, one of six glyph names the seed writes beside each group (M12.6). `0077_backfill-form-group-icons.sql` fills it on a database seeded before the column existed, only where it is still NULL; a reseed leaves a set or cleared icon alone, as it leaves every present row.
 
 **The groups answer "what are you holding", not "how was it made".** Three
 by source — Botanical, Animal, Mineral — for what still has the shape it grew

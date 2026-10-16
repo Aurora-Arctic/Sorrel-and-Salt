@@ -168,6 +168,15 @@ input DeityTraditionInput {
   name: String!
 }
 
+enum FormGroupIcon {
+  animal
+  botanical
+  curio
+  fluid
+  mineral
+  substance
+}
+
 type FormSuggestion {
   claimants: [SuggestionClaimant!]!
   curated: Boolean!
@@ -244,6 +253,7 @@ enum IngredientElement {
 
 type IngredientFormGroup {
   description: String!
+  icon: FormGroupIcon
   id: ID!
   name: String!
   slug: String!
@@ -251,6 +261,7 @@ type IngredientFormGroup {
 
 input IngredientFormGroupInput {
   description: String!
+  icon: FormGroupIcon
   name: String!
 }
 

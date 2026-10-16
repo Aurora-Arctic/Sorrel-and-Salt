@@ -1,0 +1,2 @@
+CREATE TYPE "public"."form_group_icon" AS ENUM('botanical', 'animal', 'mineral', 'substance', 'fluid', 'curio');--> statement-breakpoint
+ALTER TABLE "ingredient_form_groups" ADD COLUMN "icon" "form_group_icon";

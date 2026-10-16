@@ -916,7 +916,7 @@ vocabulary adds is told to it:
   form's `group`, a deity's `tradition`: the field, read through its loader,
   and the id column, which is also the input's required `ID`.
 - **`fields` and `input`**, the type's and the input's own: a category
-  group's two colours.
+  group's two colours, a form group's `icon`.
 - **`services`**, the three exported writes, each calling `assertSiteAdmin`
   itself; the input reaches them through `definedArgs`.
 - **`moveTo`**, present for a group whose delete moves its rows first: the
