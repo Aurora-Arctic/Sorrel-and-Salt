@@ -17,7 +17,7 @@ import type { ShellFrameProps } from './types';
 
 export const FIXTURE_VIEWER: ShellViewer = {
   name: 'Fixture Member',
-  isAdmin: false,
+  canCurate: false,
   canCreate: true,
   verified: true,
   pendingInvitations: 0,

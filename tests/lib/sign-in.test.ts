@@ -23,6 +23,11 @@ describe('postSignInLanding', () => {
     expect(postSignInLanding('admin')).toBe('/admin');
   });
 
+  // M11.20: a curator's work is in the admin area too.
+  it('sends a curator to the admin area', () => {
+    expect(postSignInLanding('curator')).toBe('/admin');
+  });
+
   it('sends everyone else to the /coven landing', () => {
     expect(postSignInLanding('user')).toBe('/coven');
   });

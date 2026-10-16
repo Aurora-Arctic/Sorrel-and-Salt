@@ -3,6 +3,7 @@ import { cache } from 'react';
 import { byCovenName, membershipsOf, rolePermits } from '@/modules/coven';
 import { countReceivedInvitations, getMe } from '@/modules/identity';
 import { requireSignedIn } from './request-session';
+import { curates } from './site-roles';
 import type { ShellViewer, ShellWorkspace } from './types';
 
 // What the application shell draws and the coven layout's switcher lists: the
@@ -32,7 +33,7 @@ export const viewerOf = cache(
     return {
       viewer: {
         name: me.name,
-        isAdmin: session.role === 'admin',
+        canCurate: curates(session.role),
         canCreate: me.canCreateWorkspace,
         verified: me.emailVerified,
         pendingInvitations,

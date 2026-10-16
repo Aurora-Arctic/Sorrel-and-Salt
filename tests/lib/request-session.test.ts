@@ -40,6 +40,7 @@ const {
   getSession,
   linkedAccounts,
   requireAdminSession,
+  requireCuratorSession,
   requireCovenMembership,
   requireSession,
   requireSignedIn,
@@ -234,6 +235,49 @@ describe('requireAdminSession', () => {
 
     await expect(requireAdminSession()).rejects.toThrow(
       `redirect:/account/email?next=${encodeURIComponent('/admin')}`,
+    );
+  });
+
+  // M11.20: the people pages keep this guard, so a curator is refused there.
+  it('answers a curator with the forbidden page, whom the curation guard admits', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('curator'));
+
+    await expect(requireCuratorSession()).resolves.toEqual({ userId: USER_ID, role: 'curator' });
+    await expect(requireAdminSession()).rejects.toThrow('forbidden');
+  });
+});
+
+// M11.20: the guard on `/admin` and every curation page under it, the
+// people pages excepted. A curator or an admin passes; anyone else gets the
+// forbidden page, as at requireAdminSession (claude-docs/auth/admin-guard.md).
+describe('requireCuratorSession', () => {
+  it.each([
+    ['a curator', 'curator'],
+    ['an admin', 'admin'],
+  ])('returns the session of %s', async (_who, role) => {
+    getSessionMock.mockResolvedValue(betterAuthSession(role));
+
+    await expect(requireCuratorSession()).resolves.toEqual({ userId: USER_ID, role });
+  });
+
+  it('answers a signed-in user who holds no site role with the forbidden page', async () => {
+    getSessionMock.mockResolvedValue(betterAuthSession('user'));
+    requestHeaders.set(RETURN_PATH_HEADER, '/admin');
+
+    await expect(requireSession()).resolves.toEqual({ userId: USER_ID, role: 'user' });
+    await expect(requireCuratorSession()).rejects.toThrow('forbidden');
+  });
+
+  it('sends a signed-out visitor to /sign-in, and an unverified curator to the email page', async () => {
+    requestHeaders.set(RETURN_PATH_HEADER, '/admin/categories');
+    getSessionMock.mockResolvedValue(null);
+    await expect(requireCuratorSession()).rejects.toThrow(
+      `redirect:/sign-in?next=${encodeURIComponent('/admin/categories')}`,
+    );
+
+    getSessionMock.mockResolvedValue(betterAuthSession('curator', false));
+    await expect(requireCuratorSession()).rejects.toThrow(
+      `redirect:/account/email?next=${encodeURIComponent('/admin/categories')}`,
     );
   });
 });

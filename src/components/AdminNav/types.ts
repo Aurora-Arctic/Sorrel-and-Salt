@@ -18,4 +18,12 @@ export interface AdminPage {
 export interface AdminSection {
   name: string;
   pages: readonly AdminPage[];
+  /** Shown to an admin alone: a curator manages no one (M11.20). */
+  adminOnly?: true;
+}
+
+// What the nav and the index take: whether the viewer is an admin, and so
+// sees the People section, or a curator, who does not.
+export interface AdminNavProps {
+  managesPeople: boolean;
 }

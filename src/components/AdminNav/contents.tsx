@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { ADMIN_SECTIONS } from './sections';
+import { adminSections } from './sections';
+import type { AdminNavProps } from './types';
 
 // The `/admin` index's table of contents (MB.115): the nav's sections, each a
 // titled list of its pages with the one line saying what each is for. Here
@@ -12,9 +13,9 @@ import { ADMIN_SECTIONS } from './sections';
 const descriptionId = (href: string): string =>
   `admin-contents-${href.slice(href.lastIndexOf('/') + 1)}`;
 
-const AdminContents = (): ReactElement => (
+const AdminContents = ({ managesPeople }: AdminNavProps): ReactElement => (
   <div className="admin-contents">
-    {ADMIN_SECTIONS.map(({ name, pages }, at) => (
+    {adminSections(managesPeople).map(({ name, pages }, at) => (
       <section key={name} className="page-frame__section" aria-labelledby={`admin-section-${at}`}>
         <h2 id={`admin-section-${at}`}>{name}</h2>
         <ul className="admin-contents__list">

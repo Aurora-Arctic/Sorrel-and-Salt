@@ -8,6 +8,7 @@ import {
   signIn as signInThrough,
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
+import type { UserRole } from '@/lib/session';
 import type { Message, ProviderId } from '@/lib/types';
 import { slugify } from '@/lib/slugify';
 import { importAuth } from '../support/auth-module';
@@ -28,6 +29,7 @@ vi.mock('@/lib/mail', () => ({ send }));
 const DOMAIN = '@sign-in-landing.test';
 const PRIMARY = `primary${DOMAIN}`;
 const ADMIN = `admin${DOMAIN}`;
+const CURATOR = `curator${DOMAIN}`;
 const MEMBER = `member${DOMAIN}`;
 const COVEN_PREFIX = 'Fixture Landing ';
 
@@ -94,13 +96,14 @@ async function roleOf(email: string): Promise<string | undefined> {
 }
 
 /** A verified row with no provider account yet: a verified Google sign-in links to it. */
-async function insertVerified(email: string, role: 'user' | 'admin'): Promise<void> {
-  // An admin inserted by hand declares itself, as a `psql` fix must (MB.195).
+async function insertVerified(email: string, role: UserRole): Promise<void> {
+  // A curator or an admin inserted by hand declares itself, as a `psql` fix
+  // must (MB.195), and holds the flag the CHECK asks of them (M11.20).
   await asManualFix(
     sql,
     (tx) => tx`
       insert into users (name, email, role, can_create_workspace, email_verified, created_by, updated_by)
-      values ('Fixture Person', ${email}, ${role}, ${role === 'admin'}, true,
+      values ('Fixture Person', ${email}, ${role}, ${role !== 'user'}, true,
               ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
     `,
   );
@@ -139,6 +142,14 @@ describe('a sign-in with no return path', () => {
     expect(response.status).toBe(302);
     expect(landingOf(response)).toBe('/admin');
     expect(cookieHeader(response)).toMatch(/session_token=/);
+  });
+
+  it('lands a verified curator on the admin area, as an admin (M11.20)', async () => {
+    await insertVerified(CURATOR, 'curator');
+
+    const response = await signIn('google', { sub: 'g-curator', email: CURATOR, verified: true });
+
+    expect(landingOf(response)).toBe('/admin');
   });
 
   // Why the admin's could have been /coven: the same sign-in, differing only

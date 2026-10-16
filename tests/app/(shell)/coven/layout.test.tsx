@@ -31,7 +31,7 @@ const params = (slug: string) => Promise.resolve({ slug });
 beforeEach(() => {
   requireCovenMembership.mockReset();
   viewerOf.mockResolvedValue({
-    viewer: { name: 'Fixture Owner', isAdmin: false, canCreate: true, verified: true },
+    viewer: { name: 'Fixture Owner', canCurate: false, canCreate: true, verified: true },
     workspaces: [{ slug: 'fixture-coven', name: 'Fixture Coven' }],
   });
 });
