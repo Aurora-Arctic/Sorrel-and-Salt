@@ -320,7 +320,7 @@ test.fixme(
     annotation: {
       type: 'fixme',
       description:
-        'M8.16 opens the Add Ingredient modal from the shell, and M9.6 builds /coven/[slug]/ingredients',
+        'M8.16 opens the Add Ingredient modal from the shell, M9.6 builds /coven/[slug]/ingredients and M8.19 the entry page Save Ingredient opens',
     },
   },
   async ({ page }) => {
@@ -359,16 +359,17 @@ test.fixme(
       await page.goto(`/coven/${coven.slug}/ingredients`);
       const dialog = await openAddIngredient(page);
       // Name is the one required field (claude-docs/components/ingredient-form.md).
-      await dialog.getByRole('textbox', { name: 'Name' }).fill(NAME);
+      await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill(NAME);
       await dialog.getByRole('button', { name: 'Save Ingredient' }).click();
 
-      // Save Ingredient opens what it saved, at /ingredients/[id] (M8.16).
-      await expect(page).toHaveURL(/\/ingredients\/[0-9a-f-]{36}$/);
+      // Save Ingredient opens what it saved, at the coven's entry page,
+      // /coven/[slug]/ingredients/[id] (M8.19; the Wave 12 review).
+      await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}$`));
       const tiers = await tiersHolding();
       // Local, and only local: the compendium still lacks it.
       expect(tiers).toEqual([{ id: expect.any(String), workspace_id: coven.id }]);
       createdId = tiers[0].id;
-      expect(page.url()).toMatch(new RegExp(`/ingredients/${createdId}$`));
+      expect(page.url()).toMatch(new RegExp(`/coven/${coven.slug}/ingredients/${createdId}$`));
     });
 
     for (const [who, userId] of [
@@ -410,7 +411,10 @@ test.fixme(
       await expect(rowOf(ingredientList(page), NAME)).toHaveCount(0);
 
       expect((await page.goto(`/coven/${coven.slug}/ingredients`))?.status()).toBe(404);
-      expect((await page.goto(`/ingredients/${createdId}`))?.status()).toBe(404);
+      // The entry's page is the coven's too, so a non-member meets the same 404 (M8.19).
+      expect((await page.goto(`/coven/${coven.slug}/ingredients/${createdId}`))?.status()).toBe(
+        404,
+      );
 
       // By direct id, under either coven's name: refused under the one D is
       // not in, and not found in the one D is.
@@ -459,12 +463,14 @@ test.fixme(
         where workspace_id is null and deleted_at is null and name = 'Cat''s Claw'`,
     );
     expect(clawIds.map((row) => row.canonical_name).sort()).toEqual(CATS_CLAWS);
-    const hrefs = clawIds.map((row) => `/ingredients/${row.id}`);
+    // Each match links the coven's entry page, which reaches a compendium
+    // entry too (claude-docs/components/ingredient-form.md, the duplicate warning).
+    const hrefs = clawIds.map((row) => `/coven/${coven.slug}/ingredients/${row.id}`);
 
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/ingredients`);
     const dialog = await openAddIngredient(page);
-    const name = dialog.getByRole('textbox', { name: 'Name' });
+    const name = dialog.getByRole('textbox', { name: 'Name', exact: true });
     const warning = dialog.getByRole('status', { name: 'Possible duplicates' });
     const matches = warning.getByRole('link');
 
@@ -515,7 +521,7 @@ test.fixme(
       await dialog.getByRole('button', { name: 'Create Anyway' }).click();
       await dialog.getByRole('button', { name: 'Save Ingredient' }).click();
 
-      await expect(page).toHaveURL(/\/ingredients\/[0-9a-f-]{36}$/);
+      await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}$`));
       const created = await withSql(
         (sql) => sql<{ id: string; name: string; canonical_name: string }[]>`
           select id, name, canonical_name from ingredients where workspace_id = ${coven.id}`,
