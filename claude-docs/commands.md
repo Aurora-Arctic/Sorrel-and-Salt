@@ -24,17 +24,46 @@ local deploy command ([`ci/deploy.md`](ci/deploy.md), "Deploy").
 
 ## The app
 
-| npm (`make`)                                           | Purpose                                                                                                                                                                                        |
-| ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `npm run dev` (`make dev`)                             | Next.js dev server on **8000**; a signed-in browser opening `/api/graphql` gets Altair, for running queries by hand ([`manual-api-testing.md`](manual-api-testing.md))                         |
-| `npm run dev:debug` (`make dev-debug`)                 | The dev server with the Node inspector on **9229** ([`debugging.md`](debugging.md))                                                                                                            |
-| `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec                                                                     |
-| `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint, then `lint:css`; `lint:fix` is Oxlint's alone                                                                                                                                          |
-| `npm run lint:css`                                     | Stylelint over `src/**/*.scss` and `.ladle/**/*.scss`, configured below the table                                                                                                              |
-| `npm run format` / `format:check`                      | Prettier, writing or checking                                                                                                                                                                  |
-| `npm run typecheck` (`make typecheck`)                 | `tsc --noEmit`                                                                                                                                                                                 |
-| `npm run pre-commit` (`make pre-commit`)               | `lint`, `format:check` and `typecheck` — test-free by decision (MB.38); the mechanical guards in `tests/guards/` run in CI's `vitest` job                                                      |
-| `npm run codegen` (`make codegen`)                     | Regenerates the client types in `src/gql/` from the committed SDL (`codegen.ts`, graphql-codegen's `client-preset`); commit the output, since CI's `checks / codegen` leg fails on stale files |
+| npm (`make`)                                           | Purpose                                                                                                                                                                                                         |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev` (`make dev`)                             | Next.js dev server on **8000**; a signed-in browser opening `/api/graphql` gets Altair, for running queries by hand ([`manual-api-testing.md`](manual-api-testing.md))                                          |
+| `npm run dev:debug` (`make dev-debug`)                 | The dev server with the Node inspector on **9229** ([`debugging.md`](debugging.md))                                                                                                                             |
+| `npm run build` / `start` (`make build` / `start`)     | Production build; e2e serves it on **8001** and up, one server per worker, plus **8100** for the configured-providers spec                                                                                      |
+| `npm run lint` / `lint:fix` (`make lint` / `lint-fix`) | Oxlint, then `lint:css`; `lint:fix` is Oxlint's alone                                                                                                                                                           |
+| `npm run lint:css`                                     | Stylelint over `src/**/*.scss` and `.ladle/**/*.scss`, configured below the table                                                                                                                               |
+| `npm run format` / `format:check`                      | Prettier, writing or checking                                                                                                                                                                                   |
+| `npm run typecheck` (`make typecheck`)                 | `tsc --noEmit`                                                                                                                                                                                                  |
+| `npm run pre-commit` (`make pre-commit`)               | `lint`, `format:check` and `typecheck` on the files changed since the last commit, described below the table — test-free by decision (MB.38); the mechanical guards in `tests/guards/` run in CI's `vitest` job |
+| `npm run codegen` (`make codegen`)                     | Regenerates the client types in `src/gql/` from the committed SDL (`codegen.ts`, graphql-codegen's `client-preset`); commit the output, since CI's `checks / codegen` leg fails on stale files                  |
+
+**Pre-commit** (M11.23) checks only the files that changed, so a one-line fix
+doesn't pay for checking the whole repo. A tool called lint-staged works out
+the file list and hands it to each check; `lint-staged.config.mjs` says which
+check gets which files. It runs two ways:
+
+| Run                           | Files checked                                                                                                                                                                                                                               |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The git hook, on `git commit` | The staged files, through `npm run pre-commit:staged`, which `package.json`'s `"pre-commit"` array names. Every unstaged edit is set aside while the checks run and put back afterwards, so the hook checks exactly what is being committed |
+| By hand, `npm run pre-commit` | Every tracked file changed since the last commit, staged or not. A new file needs `git add` first                                                                                                                                           |
+
+Three things are not narrowed:
+
+- **Typecheck runs whole or not at all.** `tsc` can't check a single file on
+  its own terms: changing an exported type can break a file nobody touched. So
+  it runs over the whole project, once, and only when a TypeScript file,
+  `tsconfig.json`, `package.json` or `package-lock.json` changed. A commit
+  touching only Markdown skips it.
+- **A check's own config reruns that check over everything.** Changing
+  `.oxlintrc.json` or `lint/` runs `oxlint .`; `.prettierrc` or
+  `.prettierignore` runs `prettier --check .`; `.stylelintrc.json` or
+  `package.json` (which holds `browserslist`) runs `lint:css`. A narrowed run
+  would miss what the new rule now flags.
+- **`lint`, `format:check` and `typecheck` stay whole-repo.** They are what
+  CI's `checks.yml` runs, so the local narrowing gives up no protection.
+
+Every check runs to the end even when another fails (`--continue-on-error`),
+so one run lists every problem. Prettier still honours `.prettierignore` for a
+file passed by name, so a staged file under `src/gql/` is not flagged.
 
 **Stylelint** (`.stylelintrc.json`, MB.116) carries one binding rule,
 "only `_variables.scss` may name a raw hue" ([`styling.md`](styling.md),
