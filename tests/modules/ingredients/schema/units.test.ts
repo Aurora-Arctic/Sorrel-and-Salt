@@ -8,10 +8,10 @@ import {
 } from '@/modules/ingredients/schema/units';
 
 // DESIGN.md §5 transcribed rather than imported, so the module is compared
-// against the spec, not itself. `fl oz` is spelled `fl_oz` — see the module.
+// against the spec, not itself. `fl oz` is two units, `fl_oz_uk` and `fl_oz_us` — see the module.
 const SPECIFIED = {
   weight: ['mg', 'g', 'kg', 'oz', 'lb'],
-  volume: ['ml', 'l', 'tsp', 'tbsp', 'fl_oz', 'cup'],
+  volume: ['ml', 'l', 'tsp', 'tbsp', 'fl_oz_uk', 'fl_oz_us', 'cup'],
   count: ['piece', 'drop', 'pinch'],
 };
 
