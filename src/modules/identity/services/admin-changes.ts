@@ -20,6 +20,15 @@ export function isSiteAdmin(session: Session): boolean {
   return session.role === 'admin';
 }
 
+/**
+ * Whether the session's role curates: `curator` or `admin` (M11.20). The one
+ * place the curating roles are written down; `assertCurator` reads it, as do
+ * the GraphQL scope and the shell's Admin link.
+ */
+export function isCurator(session: Session): boolean {
+  return session.role === 'curator' || session.role === 'admin';
+}
+
 /** A batch every slot of which is refused in `reason`'s words: a non-admin's DataLoader batch. */
 export function refuseBatch(ids: readonly string[], reason: string): Forbidden[] {
   return ids.map(() => new Forbidden(reason));

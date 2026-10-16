@@ -15,7 +15,7 @@ import type { referenceLinks } from '../../modules/ingredients/schema/reference-
 import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
-import type { SiteAdmin } from '@/modules/identity';
+import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
@@ -41,7 +41,8 @@ export type Unscoped = { workspaceId?: never };
 
 // A scoped table whose `workspace_id` is nullable has a second tier, the
 // compendium, where it is null — `ingredients` and `retired_ingredient_slugs`.
-// Only such a table takes the compendium-tier writes, under a `SiteAdmin`.
+// Only such a table takes the compendium-tier writes, under a `Curator`
+// (which an admin's `SiteAdmin` is too, M11.20).
 export type TwoTier = { workspaceId: AnyPgColumn<{ notNull: false }> };
 
 // And once more for visibility (M10.3), so that a table goes through exactly
@@ -342,7 +343,7 @@ export interface AuditWriter {
    * `insertInWorkspace`, under its proof.
    */
   insertInCompendium<TTable extends PgTable & TwoTier & Generic>(
-    admin: SiteAdmin,
+    curator: Curator,
     table: TTable,
     values: WritableInWorkspace<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
@@ -352,7 +353,7 @@ export interface AuditWriter {
    * written and nothing returned.
    */
   updateByIdInCompendium<TTable extends PgTable & TwoTier & Generic & Identified>(
-    admin: SiteAdmin,
+    curator: Curator,
     table: TTable,
     id: string,
     values: Partial<WritableInWorkspace<TTable>>,
@@ -361,7 +362,7 @@ export interface AuditWriter {
   softDeleteByIdInCompendium<
     TTable extends PgTable & TwoTier & SoftDeletable & Generic & Identified,
   >(
-    admin: SiteAdmin,
+    curator: Curator,
     table: TTable,
     id: string,
   ): Promise<TTable['$inferSelect'][]>;
@@ -372,7 +373,7 @@ export interface AuditWriter {
    * provisional-account delete is, because the table carries `deleted_at`.
    */
   deleteLapsedSlugRetirements(
-    admin: SiteAdmin,
+    curator: Curator,
     at: Date,
   ): Promise<(typeof retiredIngredientSlugs.$inferSelect)[]>;
   /**
@@ -385,7 +386,7 @@ export interface AuditWriter {
    * tables, since the vocabulary module that renames a form may not name them.
    */
   carryFormRename(
-    admin: SiteAdmin,
+    curator: Curator,
     formId: string,
     form: string,
   ): Promise<(typeof ingredientVariants.$inferSelect)[]>;
@@ -399,7 +400,7 @@ export interface AuditWriter {
    * `carryFormRename` is.
    */
   carryAstrologyRename(
-    admin: SiteAdmin,
+    curator: Curator,
     list: AstrologyList,
     from: string,
     to: string,
@@ -414,7 +415,7 @@ export interface AuditWriter {
    * tables, as `carryFormRename` is.
    */
   carryDeityRename(
-    admin: SiteAdmin,
+    curator: Curator,
     deityId: string,
     name: string,
   ): Promise<(typeof ingredientDeities.$inferSelect)[]>;
