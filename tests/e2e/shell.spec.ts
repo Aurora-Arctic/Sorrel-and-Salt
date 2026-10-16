@@ -4,7 +4,7 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
-import { browserUrl, currentSlot, slotPort } from './slots';
+import { slotUrl } from './slots';
 
 // The application shell against the built server (MB.7): the bar, the context
 // row and the section navs that frame every signed-in page, at a desktop and
@@ -27,12 +27,12 @@ const users = {
   plain: { id: '' }, // signed in, in no coven, no admin
 };
 
-test.beforeAll(async ({ browser }) => {
+test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
 
   // `signInAs` wants a page; only its rows matter here, so the page, and the
   // session it holds, is thrown away. Each test signs in again for itself.
-  const setup = await browser.newPage({ baseURL: browserUrl(slotPort(currentSlot())) });
+  const setup = await browser.newPage({ baseURL: slotUrl(slot) });
   try {
     await seedFixtures(setup);
   } finally {

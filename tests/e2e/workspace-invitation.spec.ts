@@ -5,7 +5,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { latestMessageTo } from './mailpit';
 import { signInAgainAs, signInAs } from './session';
-import { browserUrl, currentSlot, slotPort } from './slots';
+import { slotUrl } from './slots';
 import type { Page } from '@playwright/test';
 
 // The parts of a coven invitation no v1 story walks, against the built
@@ -36,12 +36,12 @@ async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
   }
 }
 
-test.beforeAll(async ({ browser }) => {
+test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
 
   // `signInAs` wants a page; only its rows matter here, so the page, and the
   // session it holds, is thrown away. Each test signs in again for itself.
-  const setup = await browser.newPage({ baseURL: browserUrl(slotPort(currentSlot())) });
+  const setup = await browser.newPage({ baseURL: slotUrl(slot) });
   try {
     ownerId = (await signInAs(setup, address('owner'))).userId;
   } finally {

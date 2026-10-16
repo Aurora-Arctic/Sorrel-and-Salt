@@ -187,7 +187,12 @@ ignores that spec too
   sit inside one `test.describe` block, pinning that block alone:
   `tests/e2e/compendium-cache.spec.ts` and
   `tests/e2e/stories/01-invitations.spec.ts` are serial whole, and
-  `01-accounts.spec.ts`'s coven-creation block is. Until M11.18 every
+  `01-accounts.spec.ts`'s coven-creation block and
+  `08-email-and-admin.spec.ts`'s primary-admin block are. The guard
+  `tests/guards/e2e-serial-chains.test.ts` holds the rule: it parses every
+  spec and fails a test outside a serial scope that assigns a variable
+  declared outside it, the one shape every chained file here had, while an
+  assignment in a hook stays legal. Until M11.18 every
   db-touching file was serial (M1.14), a rule written when the workers shared
   one `sorrel_e2e` database and two of them reseeding it at once threw
   `duplicate key value violates unique constraint "pg_database_datname_index"`.

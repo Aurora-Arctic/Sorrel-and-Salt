@@ -95,3 +95,10 @@ export const serverUrl = (port: number) => `http://localhost:${port}`;
  */
 export const browserUrl = (port: number) =>
   wsEndpoint || auditWsEndpoint ? `http://devcontainer:${port}` : serverUrl(port);
+
+/**
+ * A slot server's address for the browser: what the `baseURL` fixture hands
+ * a test (tests/e2e/fixtures.ts), and what a file's `beforeAll`, which has
+ * the worker fixtures but not that one, gives the page it sets up with.
+ */
+export const slotUrl = (slot: number) => browserUrl(slotPort(slot));

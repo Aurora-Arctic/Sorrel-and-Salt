@@ -1,7 +1,7 @@
 import { test as base, type Page } from '@playwright/test';
 import MCR from 'monocart-coverage-reports';
 import coverageOptions from './coverage.config';
-import { browserUrl, currentSlot, slotPort } from './slots';
+import { currentSlot, slotUrl } from './slots';
 
 // Every spec imports `test`/`expect` from here so these fixtures run for
 // every test.
@@ -16,7 +16,7 @@ export const test = base.extend<{ coverageAutoFixture: string }, { slot: number 
   // worker's slot server, which reads the database its reseed and `signInAs`
   // write.
   baseURL: async ({ baseURL, slot }, use) => {
-    await use(baseURL ?? browserUrl(slotPort(slot)));
+    await use(baseURL ?? slotUrl(slot));
   },
 
   coverageAutoFixture: [
