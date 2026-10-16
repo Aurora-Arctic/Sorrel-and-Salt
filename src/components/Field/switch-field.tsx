@@ -15,6 +15,10 @@ import type { SwitchFieldProps } from './types';
  * since a phone shows `:active` late or not at all. Controlled by `checked`,
  * or uncontrolled from `defaultChecked`, as a filter that applies on the
  * change draws it: the new list draws it again from the filter it shows.
+ * Enter turns it as a click does (MB.261): a native checkbox flips on Space
+ * alone and Enter would only submit the form around it, so the key press is
+ * cancelled and answered with a click, which flips the checkbox and fires its
+ * change whether it is controlled or not, the one path a press takes.
  */
 export function SwitchField({
   label,
@@ -46,6 +50,11 @@ export function SwitchField({
           defaultChecked={defaultChecked}
           disabled={disabled}
           onChange={(event) => onChange(event.target.checked)}
+          onKeyDown={(event) => {
+            if (event.key !== 'Enter') return;
+            event.preventDefault();
+            event.currentTarget.click();
+          }}
           {...pressFeedback}
         />
       </div>

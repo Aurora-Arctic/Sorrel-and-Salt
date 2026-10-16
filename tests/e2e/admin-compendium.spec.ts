@@ -120,3 +120,32 @@ test('the compendium form lines its controls up and keeps its pickers inside the
   await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
 });
+
+// MB.261: a keyboard user turns the No Refs switch with Enter, as a click
+// does, and Space still does. No story walks it, so this is the gate.
+test('Enter turns the No Refs switch and applies the filter, as Space does', async ({ page }) => {
+  await signInAs(page, 'keyboard-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  // Hydrated first: before it, Enter submits the form natively with the switch off.
+  await page.waitForLoadState('networkidle');
+
+  const noRefs = page.getByRole('switch', { name: 'No Refs' });
+  await noRefs.focus();
+  await expect(noRefs).not.toBeChecked();
+
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/withoutReferences=1/);
+  await expect(noRefs).toBeChecked();
+
+  await page.waitForLoadState('networkidle');
+  await noRefs.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).not.toHaveURL(/withoutReferences/);
+  await expect(noRefs).not.toBeChecked();
+
+  await page.waitForLoadState('networkidle');
+  await noRefs.focus();
+  await page.keyboard.press('Space');
+  await expect(page).toHaveURL(/withoutReferences=1/);
+  await assertNoAccessibilityViolations(page);
+});
