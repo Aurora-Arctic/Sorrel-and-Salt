@@ -109,6 +109,19 @@ worker starts for itself, and one server picking a database per request.
 - **A further slot costs about half a second and 180 MB**, MB.112's
   measurement of one more `next start` over the built `.next-e2e`; the
   servers start in turn, so the half seconds add to startup.
+- **Keeping the servers warm (M11.18).** `npm run e2e:servers` builds
+  `.next-e2e` and starts every server a run needs, from the same definitions
+  as the configs (`tests/e2e/servers.ts`), then prints one line per server and
+  waits. Stop it with Ctrl-C. While it is up, `npm run e2e` and
+  `npm run test:stories` attach to the servers instead of starting them
+  (Playwright's `reuseExistingServer`, on whenever `CI` is unset), which
+  skips the build and the boots: the output shows no build step. It is a
+  process the developer runs beside `npm run dev`, and staleness is the
+  developer's: nothing watches the code, so after a change stop it and start it
+  again, which rebuilds. A run against servers left over from older code tests
+  that older code. The servers are also shared by every checkout on the
+  machine, because the ports are fixed: a run from another worktree attaches
+  to them and tests this checkout's build, so stop them before switching.
 
 **The configured-providers server is one more**, because the sign-in page
 reads OAuth credentials per request and its two provider states cannot share
@@ -432,8 +445,7 @@ one takes the time its longest file needs, because that file is serial.
 starts, and the readiness polls pass. The build and the eight servers came
 to 10.6 s when started by hand over the cached `.next-e2e`; a first run in a
 fresh checkout, with no cache to build from, took 82 s. "Warm" attaches to
-servers left running, which `reuseExistingServer: !CI` allows and nothing in
-the repo yet provides (the plan's lever 5). The warm run's 27 s is 18 s of
+servers left running, which `reuseExistingServer: !CI` allows and `npm run e2e:servers` provides (see "Keeping the servers warm" in the slot list above). The warm run's 27 s is 18 s of
 `shell.spec.ts` on one worker, with the other five idle behind it, and
 about 9 s of startup and teardown: the template seed (1.4 s) and its
 eight clones (0.9 s together), Playwright's own start and the worker
@@ -445,6 +457,24 @@ What the rest of the suite costs, warm, per file: `admin-compendium.spec.ts`
 together. The longest single test is 3.5 s (`account.spec.ts`'s four-section
 scan), so once no file is pinned to a worker, no run can be shorter than
 startup plus about 4 s, and the even spread above is the floor to aim at.
+
+**Warm servers, measured (M11.18, lever 5).** The same suite after the
+servers were left up by `npm run e2e:servers` (all eight answering in 1.0 s
+once built), three runs each, median in bold. The machine was not idle this
+time: other sessions' runs shared the cores (load average 9 to 16, and every
+run waited 85 to 123 s for the lock), so these figures run slower than the
+table above and compare with each other, not with it. The warm series also
+included one failure, an axe scan that found a page with no `<title>` on
+`admin.spec.ts`'s zodiac filter test, which passed in the other five runs
+and is not caused by the servers; the stories run was green.
+
+| Wall time, three runs  | Cold (the run builds and boots) | Warm (servers up)             |
+| ---------------------- | ------------------------------- | ----------------------------- |
+| `npm run e2e`          | 51.9, 36.5, **45.3** s          | 28.7, 30.9, 25.8 s (**28.7**) |
+| `npm run test:stories` | not measured                    | 33.5 s (one run)              |
+
+Median saving about 17 s of 45, more than the 10 s the build and boots cost
+on an idle machine, since a loaded one starts eight servers slower.
 
 Three settings were each turned off for one warm run, to see what every
 test pays for them:
