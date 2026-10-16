@@ -16,6 +16,10 @@ import { CompendiumFilter } from '../validation/compendium-filter';
  * a link. A blank query offers all, and so does one under the compendium's
  * `MIN_QUERY_LENGTH`, since it matches as the compendium search does.
  *
+ * A `form` ranks the entries holding that form first, then those holding another
+ * form of its curated group (M8.3). A coven's own ingredient hides the
+ * compendium entry it names (claude-docs/db/compendium-read.md).
+ *
  * Asks only `ingredient: ['read']`: every row it can return is one a reader of
  * this workspace could already list.
  *
@@ -26,8 +30,9 @@ export async function suggestIngredients(
   workspaceId: string,
   query: string,
   page: PageRequest,
+  form?: string,
 ): Promise<PageEntry<typeof ingredients.$inferSelect, CompendiumScore>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
   const filter = parseInput(CompendiumFilter, { query });
-  return findIngredientSuggestions(membership, filter.query ?? '', page);
+  return findIngredientSuggestions(membership, filter.query ?? '', page, form);
 }

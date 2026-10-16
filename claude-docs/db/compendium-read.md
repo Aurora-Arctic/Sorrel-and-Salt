@@ -245,7 +245,7 @@ reads the compendium alone, and a miss is `NotFound` either way.
 
 ## The ingredient picker's search (MB.138)
 
-**`findIngredientSuggestions(membership, query, page)`** is what a coven's
+**`findIngredientSuggestions(membership, query, page, form?)`** is what a coven's
 substitute picker reads, behind `ingredientSuggestions`
 ([`graphql/schema.md`](../graphql/schema.md)) and the `ingredients` service
 `suggestIngredients`. It offers exactly what a coven's substitute may link
@@ -271,6 +271,18 @@ workspace_id = <the proof's>`.
   from both expression indexes. `compendium-search-query.test.ts` runs it
   over the same ~20,000 rows and asserts it; that the scope holds is
   `ingredient-suggestions.test.ts`'s, by the rows it answers.
-- **No local-beats-compendium suppression yet.** A coven entry and the
-  compendium entry it shadows are both offered until M8.3 builds the
-  suppression, which applies here as it does to every workspace result.
+- **A coven's own entry hides the compendium entry it names (M8.3).** One
+  predicate, `notHiddenByLocal(membership)`, is a `NOT EXISTS` over the
+  coven's live rows (DESIGN.md §5), so a hidden entry never leaves the
+  database. A compendium row is hidden when a live local row has the same
+  `identity_key`, whatever forms either holds, or, only when that local row
+  declares no formal name, the same label with case folded. So one
+  unidentified local "Cat's Claw" hides all five compendium rows of that
+  name, while a local naming another species hides none. A coven's own rows
+  always pass. M9.4's `workspaceIngredients` adopts the same predicate.
+- **A `form` ranks, and filters nothing.** A non-blank `form` puts a rank
+  first in the sort: 0 for an entry holding a live variant of that form
+  (folded), 1 for one holding a form of the same curated group (a variant
+  matched to a live `ingredient_forms` row by `form_id` or by folded
+  name), 2 for the rest. The rank is part of the key, so the cursor and
+  the count stay consistent.
