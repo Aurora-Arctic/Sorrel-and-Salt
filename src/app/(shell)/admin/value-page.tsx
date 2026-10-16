@@ -6,7 +6,7 @@ import { groupedValuesHref } from '../../../components/GroupedValueList/href';
 import { KINDS } from '../../../components/GroupedValueList/kinds';
 import type { GroupedValueListEntry } from '../../../components/GroupedValueList/types';
 import { resolveNumberedPage } from '../../../lib/pagination';
-import { requireAdminSession } from '../../../lib/request-session';
+import { requireCuratorSession } from '../../../lib/request-session';
 import { single } from '../../../lib/search-params';
 import { editorStamps } from './editors';
 import AddAction from './add-action';
@@ -98,7 +98,7 @@ function editHeading(
  * cursor, as every link on the page does.
  */
 export async function ValueAction({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
-  await requireAdminSession();
+  await requireCuratorSession();
   const { here } = await readPlace(kind, await searchParams);
   const title = `Add ${KINDS[kind].label}`;
   return (
@@ -116,7 +116,7 @@ export async function ValueAction({ kind, searchParams }: ValuePageProps): Promi
  * keeps (claude-docs/components/grouped-value-form.md, "On the admin pages").
  */
 export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise<ReactElement> {
-  const session = await requireAdminSession();
+  const session = await requireCuratorSession();
   const place = await readPlace(kind, await searchParams);
   const { filter, here, after, before, adding, groups, group } = place;
   const { label, noun } = KINDS[kind];

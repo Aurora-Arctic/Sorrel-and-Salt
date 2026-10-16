@@ -6,10 +6,16 @@ import {
   findUserByEmail,
   withAudit,
 } from '../../../db/repository';
-import type { InvitationRow, SiteInvitationFilter } from '../../../db/repository';
+import type {
+  InvitableSiteRole,
+  InvitationRow,
+  SiteInvitationRow,
+  SiteInvitationFilter,
+} from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import { newToken } from '../../../lib/invitation-token';
-import type { Session } from '../../../lib/session';
+import type { Session, UserRole } from '../../../lib/session';
+import { outranks } from '../../../lib/site-roles';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { normaliseEmail, validateEmailAddress } from './email';
 import { users } from '../schema/users';
@@ -19,15 +25,17 @@ import { assertAdminChangesOpen } from './admin-role-pause';
 import type { AdminInvitationFilter, InvitationSender } from '../types';
 
 // MB.70: an admin invites an address to become an admin, M2.9's option B on
-// MB.201's site tier of `invitations`. Who may invite and the pause are this
-// service's; the token's hash, the expiry and the pending predicate are the
+// MB.201's site tier of `invitations`, or since M11.20 a curator; the names
+// still say "admin invitation", since an admin is who sends one. Who may
+// invite, the role ladder and the pause are this service's; the token's
+// hash, the expiry and the pending predicate are the
 // repository's named writes'. Accepting is invitation-acceptance.ts's
 // (claude-docs/auth/admin-users.md, "Inviting an admin").
 
 const REFUSAL = 'Only a site admin may invite or withdraw an admin invitation';
 
 /**
- * Invites `input` to become an admin: a pending site-tier invitation, stamped
+ * Invites `input` to `siteRole`, curator or admin: a pending site-tier invitation, stamped
  * as the admin, whose token is mailed to the address through `sender` and
  * stored as its hash alone. `note` is the optional reason, a blank one stored
  * as none, which accepting records on the ledger row. Answers the row, which
@@ -37,11 +45,13 @@ const REFUSAL = 'Only a site admin may invite or withdraw an admin invitation';
  * @throws {Forbidden} the session's role is not `admin`, or the primary admin
  * has paused admin changes and the caller is another admin (MB.63).
  * @throws {ValidationError} on `email`: malformed, unmailable, or a live
- * admin's already.
+ * account's that holds `siteRole` or a role above it, which accepting would
+ * leave as it is.
  */
 export async function createAdminInvitation(
   session: Session,
   input: string,
+  siteRole: InvitableSiteRole,
   note: string | undefined,
   sender: InvitationSender,
 ): Promise<InvitationRow> {
@@ -49,22 +59,31 @@ export async function createAdminInvitation(
   const email = normaliseEmail(input);
   const issue = validateEmailAddress(email);
   if (issue) throw new ValidationError([issue]);
-  if ((await findUserByEmail(email))?.role === 'admin') {
+  const held = (await findUserByEmail(email))?.role;
+  if (held && !outranks(siteRole, held)) {
     throw new ValidationError([
-      { path: ['email'], message: 'That address belongs to an admin already' },
+      { path: ['email'], message: `That address belongs to ${withArticle(held)} already` },
     ]);
   }
 
   const token = newToken();
   const [row] = await withAudit(session, (write) =>
-    write.insertInvitation(admin, { email, token, note: adminDeclaration(note).note ?? null }),
+    write.insertInvitation(admin, {
+      email,
+      token,
+      siteRole,
+      note: adminDeclaration(note).note ?? null,
+    }),
   );
   // After the commit, so a mailed link always names a row.
   // The mail names who sent it; the session holds the id alone, so the name is read here.
   const inviter = await findOneById(users, session.userId);
-  await sender.siteInvitation(email, token, { name: inviter?.name ?? '' });
+  await sender.siteInvitation(email, token, { siteRole, inviterName: inviter?.name ?? '' });
   return row;
 }
+
+/** A held role as the refusal names it: "an admin", "a curator". */
+const withArticle = (role: UserRole): string => (role === 'admin' ? 'an admin' : `a ${role}`);
 
 /**
  * Withdraws a pending admin invitation, stamped as the admin: its link is
@@ -98,7 +117,7 @@ export async function listPendingAdminInvitations(
   session: Session,
   filter: AdminInvitationFilter,
   page: PageRequest,
-): Promise<PageEntry<InvitationRow>[]> {
+): Promise<PageEntry<SiteInvitationRow>[]> {
   const admin = assertSiteAdmin(session, LIST_REFUSAL);
   return findPendingSiteInvitationPage(admin, siteFilter(filter), page);
 }

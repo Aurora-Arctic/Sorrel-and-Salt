@@ -425,6 +425,14 @@ enum InvitableRole {
 }
 
 """
+A site role an invitation may grant: never `user`, which every account holds.
+"""
+enum InvitableSiteRole {
+  admin
+  curator
+}
+
+"""
 An invitation, pending or not. Its link is mailed to the address and never answered.
 """
 type Invitation {
@@ -445,6 +453,9 @@ type Invitation {
 
   """The role acceptance grants in the coven; none for an admin invitation."""
   role: InvitableRole
+
+  """The site role a site invitation grants; none on a coven invitation."""
+  siteRole: InvitableSiteRole
 
   """
   The coven invited into, where the caller is a member of it; none for an admin invitation.
@@ -474,9 +485,9 @@ type Mutation {
   addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
 
   """
-  Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.
+  Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.
   """
-  createAdminInvitation(email: String!, note: String): Invitation!
+  createAdminInvitation(email: String!, note: String, siteRole: InvitableSiteRole!): Invitation!
   createCategory(input: CategoryInput!): Category!
   createCategoryGroup(input: CategoryGroupInput!): CategoryGroup!
   createCelestialBody(input: CelestialBodyInput!): CelestialBody!
@@ -610,7 +621,7 @@ type Mutation {
   setName(name: String!): User!
 
   """
-  Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.
+  Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.
   """
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
@@ -1196,15 +1207,17 @@ type User {
 }
 
 """
-A privilege on `users`: `admin` is the site role, `create_workspace` the flag.
+A privilege on `users`: `admin` and `curator` are site roles, `create_workspace` the flag.
 """
 enum UserPrivilege {
   admin
   create_workspace
+  curator
 }
 
 enum UserRole {
   admin
+  curator
   user
 }
 

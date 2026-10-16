@@ -36,19 +36,27 @@ export default async function InvitePage({ params }: InvitePageProps) {
     panel = { status: 'signed-out', signInHref: signInPath(here) };
   } else {
     const standing = await standingOf(session, token);
-    panel = standing.acceptable
+    panel = !standing.acceptable
       ? {
-          status: 'acceptable',
-          token,
-          tier: standing.tier,
-          landing: standing.tier === 'site' ? ADMIN_LANDING : route(`/coven/${standing.slug}`),
-          covenName: standing.tier === 'workspace' ? standing.name : undefined,
-        }
-      : {
           status: 'refused',
           message: standing.message,
           emailHref: standing.reason === 'unverified' ? emailPagePath(here) : undefined,
-        };
+        }
+      : standing.tier === 'site'
+        ? {
+            status: 'acceptable',
+            token,
+            tier: 'site',
+            siteRole: standing.siteRole,
+            landing: ADMIN_LANDING,
+          }
+        : {
+            status: 'acceptable',
+            token,
+            tier: 'workspace',
+            landing: route(`/coven/${standing.slug}`),
+            covenName: standing.name,
+          };
   }
 
   return (

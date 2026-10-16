@@ -32,7 +32,7 @@ import {
   suggestZodiacSigns,
 } from '@/modules/vocabulary';
 import type { PageRequest } from '@/lib/types';
-import { A, B, C, E, asUser } from '../../../support/as-user';
+import { A, B, C, E, F, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
@@ -145,6 +145,10 @@ const liveFolkNames = async (ingredientId: string) =>
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
+const CURATORS = [
+  ['the site admin', E],
+  ['a curator', F],
+] as const;
 
 const admin = asUser(E);
 
@@ -153,23 +157,27 @@ const admin = asUser(E);
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
   expect(admin.role).toBe('admin');
+  expect(asUser(F).role).toBe('curator');
 });
 
 describe('createCompendiumEntry', () => {
-  it('lets the site admin create one, in the compendium and stamped by them', async () => {
-    const created = await createCompendiumEntry(admin, entry());
+  it.each(CURATORS)(
+    'lets %s create one, in the compendium and stamped by them',
+    async (_who, user) => {
+      const created = await createCompendiumEntry(asUser(user), entry());
 
-    expect(created).toMatchObject({
-      workspaceId: null,
-      name: 'Testwort',
-      canonicalName: 'Fixtura testalis',
-      nomenclature: 'botanical',
-      createdBy: E.id,
-      updatedBy: E.id,
-      deletedAt: null,
-    });
-    expect(created.slug).toBe(ingredientSlug('Testwort', 'Fixtura testalis'));
-  });
+      expect(created).toMatchObject({
+        workspaceId: null,
+        name: 'Testwort',
+        canonicalName: 'Fixtura testalis',
+        nomenclature: 'botanical',
+        createdBy: user.id,
+        updatedBy: user.id,
+        deletedAt: null,
+      });
+      expect(created.slug).toBe(ingredientSlug('Testwort', 'Fixtura testalis'));
+    },
+  );
 
   it('saves several elements, celestial bodies, signs and colours, each in the order entered', async () => {
     const created = await createCompendiumEntry(admin, {
@@ -244,19 +252,26 @@ describe('createCompendiumEntry', () => {
 });
 
 describe('updateCompendiumEntry', () => {
-  it('lets the site admin rewrite it, stamping updated_by and keeping created_by', async () => {
-    const id = await seed();
+  it.each(CURATORS)(
+    'lets %s rewrite it, stamping updated_by and keeping created_by',
+    async (_who, user) => {
+      const id = await seed();
 
-    const updated = await updateCompendiumEntry(admin, id, entry({ name: 'Testwort, relabelled' }));
+      const updated = await updateCompendiumEntry(
+        asUser(user),
+        id,
+        entry({ name: 'Testwort, relabelled' }),
+      );
 
-    expect(updated).toMatchObject({
-      id,
-      workspaceId: null,
-      name: 'Testwort, relabelled',
-      createdBy: A.id,
-      updatedBy: E.id,
-    });
-  });
+      expect(updated).toMatchObject({
+        id,
+        workspaceId: null,
+        name: 'Testwort, relabelled',
+        createdBy: A.id,
+        updatedBy: user.id,
+      });
+    },
+  );
 
   it('replaces the whole row, clearing a field the input leaves out', async () => {
     const id = await seed({ description: 'A fixture described' });
@@ -360,15 +375,18 @@ describe('updateCompendiumEntry', () => {
 });
 
 describe('deleteCompendiumEntry', () => {
-  it('lets the site admin soft-delete it, stamping deleted_by and keeping the row', async () => {
-    const id = await seed();
+  it.each(CURATORS)(
+    'lets %s soft-delete it, stamping deleted_by and keeping the row',
+    async (_who, user) => {
+      const id = await seed();
 
-    await deleteCompendiumEntry(admin, id);
+      await deleteCompendiumEntry(asUser(user), id);
 
-    const row = await rowOf(id);
-    expect(row).toMatchObject({ deleted_by: E.id, created_by: A.id });
-    expect(row.deleted_at).toBeInstanceOf(Date);
-  });
+      const row = await rowOf(id);
+      expect(row).toMatchObject({ deleted_by: user.id, created_by: A.id });
+      expect(row.deleted_at).toBeInstanceOf(Date);
+    },
+  );
 
   it.each(NON_ADMINS)('refuses %s and leaves the entry as it was', async (_who, user) => {
     const id = await seed();

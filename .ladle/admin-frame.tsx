@@ -4,7 +4,7 @@ import { ADMIN_PAGES } from '../src/components/AdminNav/sections';
 import ContextRow from '../src/components/ContextRow';
 import TabbedPage from '../src/components/TabbedPage';
 import { WorkshopPathname } from './navigation';
-import type { AdminTabbedFrameProps } from './types';
+import type { AdminFrameProps, AdminTabbedFrameProps } from './types';
 
 // The admin layout's frame for a story, so the workshop shows a component as
 // an admin page holds it: nine stories drew it by hand before MB.115. Not the
@@ -27,19 +27,18 @@ const Opened = ({ at, children }: { at?: string; children: ReactNode }): ReactEl
  * The admin layout as it is: the context row with the nav, then the
  * `.admin-layout` column around `children`. `open` is the address the
  * workshop pretends to be on (./navigation.ts), which decides the nav's
- * current page; the People page's Users tab by default.
+ * current page; the People page's Users tab by default. `managesPeople`
+ * false draws a curator's nav, without People (M11.20).
  */
 export const AdminFrame = ({
   open,
+  managesPeople = true,
   children,
-}: {
-  open?: string;
-  children?: ReactNode;
-}): ReactElement => (
+}: AdminFrameProps): ReactElement => (
   <Opened at={open}>
     <div className="app-shell__main">
       <ContextRow lead={<span className="context-row__name">Admin</span>}>
-        <AdminNav />
+        <AdminNav managesPeople={managesPeople} />
       </ContextRow>
       <div className="admin-layout">{children}</div>
     </div>

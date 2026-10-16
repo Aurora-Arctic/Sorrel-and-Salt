@@ -13,12 +13,12 @@ const { default: AppShell } = await import('@/components/AppShell');
 
 const MEMBER: ShellViewer = {
   name: 'Fixture Member',
-  isAdmin: false,
+  canCurate: false,
   canCreate: false,
   verified: true,
   pendingInvitations: 0,
 };
-const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', isAdmin: true };
+const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', canCurate: true };
 const UNVERIFIED: ShellViewer = { ...MEMBER, verified: false };
 const COVENS: ShellWorkspace[] = [
   { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
@@ -121,7 +121,7 @@ describe('AppShell', () => {
   });
 
   it('offers an unverified admin no links either', () => {
-    shell({ ...UNVERIFIED, isAdmin: true });
+    shell({ ...UNVERIFIED, canCurate: true });
 
     expect(screen.queryByRole('navigation', { name: 'Site' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();

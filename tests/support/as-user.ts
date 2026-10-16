@@ -8,10 +8,11 @@ import type { SessionUser } from './types';
 
 /**
  * The cast: **A** owner of W · **B** member of W · **C** viewer in W · **D**
- * member of unrelated X · **E** site admin. Only the site role travels on a
- * session; the workspace roles are `workspace_members` rows.
+ * member of unrelated X · **E** site admin · **F** site curator (M11.20). Only
+ * the site role travels on a session; the workspace roles are
+ * `workspace_members` rows.
  */
-export const { A, B, C, D, E } = FIXTURE_USERS;
+export const { A, B, C, D, E, F } = FIXTURE_USERS;
 
 /**
  * The session a service would have received had this user signed in.

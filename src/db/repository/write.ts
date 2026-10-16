@@ -89,12 +89,13 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     // The proof is not read: unlike a `Membership` it carries nothing the
     // query needs, and what it buys is that the call cannot be written without
     // it. `workspaceId` last, as above.
-    insertInCompendium: (_admin, table, values) => insert(table, { ...values, workspaceId: null }),
-    updateByIdInCompendium: (_admin, table, id, values) =>
+    insertInCompendium: (_curator, table, values) =>
+      insert(table, { ...values, workspaceId: null }),
+    updateByIdInCompendium: (_curator, table, id, values) =>
       update(table, values, inCompendiumById(table, id)),
-    softDeleteByIdInCompendium: (_admin, table, id) =>
+    softDeleteByIdInCompendium: (_curator, table, id) =>
       softDelete(table, inCompendiumById(table, id)),
-    deleteLapsedSlugRetirements: (_admin, at) =>
+    deleteLapsedSlugRetirements: (_curator, at) =>
       tx
         .delete(retiredIngredientSlugs)
         .where(and(inCompendium(retiredIngredientSlugs), lte(retiredIngredientSlugs.expiresAt, at)))
@@ -102,7 +103,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     // One statement: no slug moves, so every holding entry takes the same
     // rewrite. The list is rebuilt in its own order, each entry folding to
     // `from` replaced and every other kept as written.
-    carryAstrologyRename: (_admin, list, from, to) => {
+    carryAstrologyRename: (_curator, list, from, to) => {
       const column = ingredients[list];
       const fromFold = fold(from);
       const entry = sql.identifier('entry');
@@ -122,7 +123,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     // form (MB.220), so every pick takes the same rewrite. The entry's tier
     // and liveness by the builder's correlated `EXISTS`, so a coven's variant
     // is never reached.
-    carryFormRename: (_admin, formId, form) =>
+    carryFormRename: (_curator, formId, form) =>
       update(
         ingredientVariants,
         { form },
@@ -138,7 +139,7 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
     // link takes the same rewrite. `deity_id` is matched here as the service
     // read it, and the entry's tier and liveness by the builder's correlated
     // `EXISTS`, so a coven's link is never reached.
-    carryDeityRename: (_admin, deityId, name) =>
+    carryDeityRename: (_curator, deityId, name) =>
       update(
         ingredientDeities,
         { name },

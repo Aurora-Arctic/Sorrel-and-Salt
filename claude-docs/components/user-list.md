@@ -35,7 +35,7 @@ head, both built by the page per row, as the other admin lists carry
 - **The filter is a GET form to `/admin/users`** (`USERS_PATH`, `href.ts`), named "Filter Users" inside
   a `<search>` landmark: a search box labelled "Name or Email" (`query`), a
   Role dropdown, a native select from the server and the select-only box once
-  hydrated (`role`: All Roles, then `ROLE_LABELS`, Admin or User;
+  hydrated (`role`: All Roles, then `ROLE_LABELS`: Admin, Curator or User;
   a `FilterSelectField`, [`field.md`](field.md)), a "Needs Approval"
   switch (`awaiting`), each label in title case on the owner's call, and no
   Filter button (MB.115). The switch is `SwitchField`, a slide toggle with its label
@@ -75,8 +75,7 @@ head, both built by the page per row, as the other admin lists carry
   the two facts read rather than changed follow them (reordered during MB.59,
   on the owner's call). The Email
   cell leads with whether the address is verified, then the address, so the
-  two are one column. Sign-in methods and the verified mark are what an admin
-  granting admin judges a person by (MB.59). A yes-or-no is a mark, on the
+  two are one column. Sign-in methods and the verified mark are what an admin changing a role judges a person by (MB.59, M11.20). A yes-or-no is a mark, on the
   owner's call: a green check (`$accent`) or a red cross (`$secondary`), from
   `icons.tsx`, its word beside it in `.visually-hidden` since the mark is
   drawn alone, and the icon `aria-hidden`. The email's says Verified or
@@ -85,7 +84,7 @@ head, both built by the page per row, as the other admin lists carry
   native `title` showed too late to be seen, on the owner's review. The bubble
   is `aria-hidden`, the reader having the hidden word. The creation flag's
   says Yes or No, which its heading asks, and has no bubble.
-  An admin's role is bold, on the owner's call. The signup is the UTC
+  An admin's or a curator's role is bold, on the owner's call. The signup is the UTC
   date, in a `<time>` carrying the full instant. A provider shows as its
   logo, on the owner's call: the shared provider mark, `ProviderMark`
   ([`provider-mark.md`](provider-mark.md)), which draws the sign-in page's own
@@ -198,8 +197,7 @@ head, both built by the page per row, as the other admin lists carry
   and the heading says what is approved so the buttons stay one word. A user
   who may not yet create a coven has Approve, quiet, named "Approve <name>";
   one who may has Revoke, red, named "Revoke approval for <name>", on the
-  owner's call; an admin's row has the
-  mark alone, since every admin holds the flag (MB.177). Each asks first, in a
+  owner's call; a curator's or an admin's row has the mark alone, since each holds the flag (MB.177, M11.20): the control shows for a `user` only. Each asks first, in a
   `Modal` ([`modal.md`](modal.md)) titled "Approve Coven Creation" or "Revoke
   Coven Creation", on the owner's call, the name in bold: "Let <name> create
   covens?", or "Stop <name> from creating covens? Covens they own stay
@@ -219,7 +217,7 @@ head, both built by the page per row, as the other admin lists carry
 - **Approving or promoting an unverified address warns first** (MB.205,
   MB.59). When the row's `emailVerified` is false, the Approve modal says,
   under its question, in a quiet warning `Notice`: "Nobody has confirmed this
-  email address yet. Approving also keeps the account from lapsing." Promote's says the same with "Promoting": the
+  email address yet. Approving also keeps the account from lapsing." A promotion's says the same with "Promoting": the
   one sentence is `warning.ts`'s `unverifiedWarning(verb)`, and a grant's
   ledger row keeps the account from the sweep as an approval's does. An
   approval vouches for whoever holds the address, and the vouching keeps the
@@ -230,33 +228,34 @@ head, both built by the page per row, as the other admin lists carry
   lands there on opening. It is quiet, `<Notice kind="warn" quiet>`, so it
   renders as an `<output>`, a status, with the warning's look: an alert would
   be read a second time. The `id` the Approve names is the notice's `id`
-  prop, and `.user-list__warning` its layout class. A verified
-  user's Approve or Promote, and every Revoke, carries
-  none. The control takes `emailVerified` from the row for it.
-- **The Role cell holds the role's control** (MB.59,
-  [`auth/admin-users.md`](../auth/admin-users.md), "Granting and revoking
-  admin"), from `role-control.tsx`, beside the role it changes: one column
+  prop, and `.user-list__warning` its layout class. A verified user's Approve or promotion, and every Revoke and demotion, carries none. The control takes `emailVerified` from the row for it.
+- **The Role cell holds one Change Role control** (MB.59, M11.20,
+  [`auth/admin-users.md`](../auth/admin-users.md), "Changing a site role"),
+  from `role-control.tsx`, beside the role it changes: one column
   rather than a second saying the same thing, as Coven Creation holds its
-  own. A user's row has Promote, quiet, named "Promote <name> to admin" (Grant until
-  the owner renamed it, M9.19); an
-  admin's has Revoke, red, named "Revoke admin from <name>". Each asks first
-  in a `Modal` titled "Promote to Admin" or "Revoke Admin", the name in bold:
-  "Make <name> an admin? They will curate the compendium, grant and revoke
-  admin, and create covens.", or "Stop
-  <name> being an admin? They keep their covens, and everything they wrote
-  stays as it is." Under the question is a Reason field, labelled plainly
-  "Reason": a field is optional unless it carries the required mark, so no
-  label says "(Optional)". What it is for, "Kept with the change in the record
-  of who changed what.", is its hint, behind an `InfoTip` beside the label
-  (the shared field shell's `hint`, MB.115 on the owner's call), and read
-  with the field. A blank reason is sent as none, and the service stores what is sent as the ledger row's note. The
-  modal, its focus, Cancel, the busy confirm and a refusal in the row behave
-  as the creation control's: both are `confirmed-action.tsx`'s
-  `ConfirmedAction`, each control only its words and its write. Impersonate,
-  Pause Admin Changes and the invitations' Revoke build one too; Impersonate
-  passes `onSent`, its full load in place of the refresh, and `refusal`, its
-  own sentence in place of the service's. Promote warns
-  on an unverified address as Approve does, in its own verb (below).
+  own. It replaces the Promote and Revoke pair the row had before the curator
+  role: every row has one quiet button, named "Change Role for <name>". It
+  opens a `Modal` titled "Change Role", with the question "Choose a role for
+  <name>." (the name in bold) over a "New Role" radio group of every role but
+  the one the user holds, in the order user, curator, admin (`SITE_ROLES`),
+  each with a line saying what it allows. The first of those roles is chosen
+  when the dialog opens. The confirm reads **Promote** when the chosen role is
+  higher on the ladder user < curator < admin than the one held, solid, and
+  **Demote** when lower, `.btn--destructive`, changing as the choice does.
+  Under the choice is a Reason field, labelled plainly "Reason": a field is
+  optional unless it carries the required mark, so no label says "(Optional)".
+  What it is for, "Kept with the change in the record of who changed what.",
+  is its hint, behind an `InfoTip` beside the label (the shared field shell's
+  `hint`, MB.115 on the owner's call), and read with the field. A blank
+  reason is sent as none, and the service stores what is sent as the ledger
+  row's note. The modal, its focus, Cancel, the busy confirm ("Promoting" or
+  "Demoting") and a refusal in the row behave as the creation control's: both
+  are `confirmed-action.tsx`'s `ConfirmedAction`, each control only its words
+  and its write. Impersonate, Pause Admin Changes and the invitations' Revoke
+  build one too; Impersonate passes `onSent`, its full load in place of the
+  refresh, and `refusal`, its own sentence in place of the service's. A
+  promotion warns on an unverified address as Approve does, in its own verb
+  (above); a demotion does not.
 - **The switch on admin changes is the Users tab's action** (MB.63,
   [`auth/admin-users.md`](../auth/admin-users.md), "Pausing admin changes"),
   from `pause-control.tsx`, exported beside the list as `PauseControl`: the
@@ -282,23 +281,21 @@ head, both built by the page per row, as the other admin lists carry
   `.btn--destructive`, big and red on the owner's call, so the control keeps
   its look as it flips. For the primary admin (`canToggle`), Pause asks
   first, a `ConfirmedAction` whose `Modal` is titled "Pause Admin Changes"
-  and says whom it stops: "Pause admin changes? Until you resume them, no
-  other admin can grant or revoke admin, approve or revoke coven creation, or
+  and says whom it stops: "Pause admin changes? Until you resume them, no other admin can change a role, approve or revoke coven creation, or
   invite an admin." That reverses MB.63's call that pausing needs no
   confirmation, on the owner's call at MB.115's sign-off
   ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)).
   Resume gives back what the pause stopped, so it sends at once. Either stays
   busy, spinner and "Pausing" or "Resuming", until `router.refresh()`
   re-reads the page; a refusal says why beside it. For any other admin it is `locked-control.tsx`'s
-  `LockedControl`, as the primary admin's Revoke is: in view,
+  `LockedControl`, as the primary admin's Change Role is: in view,
   `aria-disabled`, its reason in a tip, "Only the primary admin can pause or
   resume admin changes.", that describes it and that each try mounts afresh as
   an alert.
-- **While paused, an admin the pause binds cannot use Promote or Revoke, nor
-  coven creation's Approve or Revoke** (MB.63, on the owner's call; the
+- **While paused, an admin the pause binds cannot use Change Role, nor coven creation's Approve or Revoke** (MB.63, on the owner's call; the
   creation controls amended 2026-10-10). The page passes the pause it already read,
   and every row's role and creation control, for a viewer who is not the primary admin
-  (`canToggle`), is locked as the primary admin's Revoke is. That reading,
+  (`canToggle`), is locked as the primary admin's Change Role is. That reading,
   paused and not the primary admin, is `changesLocked` (`lock.ts`), which the
   Invitations tab's lock reads too. Locked means in view,
   `aria-disabled`, described by the service's own refusal in a tip,
@@ -306,8 +303,7 @@ head, both built by the page per row, as the other admin lists carry
   both): "The primary admin has paused admin changes. Ask them to resume
   changes." Activating it opens nothing, sends
   nothing and mounts the reason afresh as an alert. The primary admin's
-  controls stay usable, since the pause exempts it, and its own Revoke keeps
-  its own reason. The service still refuses: the lock only reflects it.
+  controls stay usable, since the pause exempts it, and its own Change Role keeps its own reason. The service still refuses: the lock only reflects it.
 - **The primary admin's row is marked by a crown** beside the role
   (`primary-admin-mark.tsx`), a button named "Primary Admin" with a tip
   saying so, as InfoTip's ⓘ is a button with its tip, and through the same
@@ -416,9 +412,7 @@ context row above the column) and the People page with its Users tab open:
   approval and an approved user, so each control shows. `UnverifiedApproval`
   holds two users awaiting approval, one unverified and one verified, so the
   first's Approve opens the warning (MB.205) and the second's does not.
-  `AdminRoles` holds the primary admin, its Revoke unusable with the reason
-  beside it, a second admin whose Revoke opens its modal, and users whose
-  Promote opens theirs, Bo's with the warning (MB.59). `AdminChangesPaused`
+  `AdminRoles` holds the primary admin, its Change Role unusable with the reason beside it, a second admin, a curator (bold, with no coven-creation control) and users, each Change Role opening its modal, Bo's with the warning on a promotion (MB.59, M11.20). `AdminChangesPaused`
   shows the switch paused with the primary admin's Resume, and
   `AdminChangesNotPrimary` the switch on, unusable, with its reason (MB.63).
   `OnePageOfSeveral` is a middle page of 25, both pager ends live and
@@ -444,24 +438,19 @@ the history link before every name and its address; each name a link to its
 `openHref`, a plain press calling the opener with the row's href and heading; the Impersonate column:
 absent when off, on non-admin rows only, the modal asking first with Cancel
 sending nothing, the call and the landing once confirmed, the confirm busy
-while pending with a second press sending nothing, and the refusal; the creation cell: Approve on rows awaiting approval, Revoke on
-approved ones and nothing on an admin's, each modal naming the user and its
+while pending with a second press sending nothing, and the refusal; the creation cell: Approve on rows awaiting approval, Revoke on approved ones and nothing on a curator's or an admin's, each modal naming the user and its
 focus, Cancel sending nothing, each call with its reason and its busy state
 until the refresh, and the refusal in the row; the unverified warning
 describing Approve for an unverified user, who is still approved, and absent
-from Revoke; the role cell (MB.59): Promote on a user's row and Revoke on an
-admin's, each modal, the reason sent trimmed or not at all, Cancel sending
-nothing, Promote's warning for an unverified user, the refusal in the row, and
-the primary admin's crown and its `aria-disabled` Revoke, described by the
+from Revoke; the role cell (MB.59, M11.20): Change Role on every row, offering every role but the one held, Promote or Demote by the ladder with a demotion styled destructive, the chosen role and the reason sent trimmed or not at all, Cancel sending nothing, the warning on a promotion of an unverified user and on no demotion, the refusal in the row, and the primary admin's crown and its `aria-disabled` Change Role, described by the
 reason and raising an alert each time it is tried, sending nothing; the
 switch on admin changes (MB.63): no notice while on and one while paused,
 Pause asking first with Cancel sending nothing, Pause's confirm and Resume
 busy until the refresh, a refusal beside it, and another
 admin's locked switch, described by its reason and raising an alert when
-tried; and, while paused, every Promote, Revoke, Approve and coven Revoke
-locked for another admin and described by the pause, the primary admin's
+tried; and, while paused, every Change Role, Approve and coven Revoke locked for another admin and described by the pause, the primary admin's
 Approve usable, nothing locked while changes are on, and the primary admin's
-Revoke kept on its own reason — which of the two reasons won is told by
+Change Role kept on its own reason — which of the two reasons won is told by
 which of the two strings describes it. Its colours, marks, tips and their placement, and the cards at phone width,
 are presentation; paging is Pager's. `tests/app/(shell)/admin/(people)/users/page.test.tsx` reads the page's
 half: what it hands the list, the impersonation gate and the primary admin's
@@ -471,7 +460,7 @@ their covens as the guard's session into a dialog, each name's link keeping the
 filter, and the notice with no dialog, and no read, for an id that is not one,
 and the notice for a user the service finds none of or the list leaves out.
 `tests/e2e/admin.spec.ts` approves and revokes a user against the built
-server, and grants admin with a reason and revokes it, with axe over each open
+server, and changes a role through the dialog with a reason, with axe over each open
 modal; and, tagged `@story-19`, opens a user's modal from their name, finds
 their coven and role in it, no link to the coven and no Impersonate (the run
 registers none), axe over it, and Close back to the filtered list, then

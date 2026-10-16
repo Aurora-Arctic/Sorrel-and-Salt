@@ -7,7 +7,7 @@ import { groupsHref } from '../../../components/GroupList/href';
 import { KINDS } from '../../../components/GroupList/kinds';
 import type { GroupListEntry } from '../../../components/GroupList/types';
 import { resolveNumberedPage } from '../../../lib/pagination';
-import { requireAdminSession } from '../../../lib/request-session';
+import { requireCuratorSession } from '../../../lib/request-session';
 import {
   countCategories,
   countCategoryGroups,
@@ -129,7 +129,7 @@ function editHeading(kind: GroupKind, name: string): ModalHeading {
  * cursor, as every link on the page does.
  */
 export async function GroupAction({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
-  await requireAdminSession();
+  await requireCuratorSession();
   const { here } = readPlace(kind, await searchParams);
   const { add, label } = KINDS[kind];
   return (
@@ -146,7 +146,7 @@ export async function GroupAction({ kind, searchParams }: GroupPageProps): Promi
  * (claude-docs/components/group-form.md, "On the admin pages").
  */
 export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
-  const session = await requireAdminSession();
+  const session = await requireCuratorSession();
   const place = readPlace(kind, await searchParams);
   const { query, here, adding } = place;
   const { noun, label } = KINDS[kind];

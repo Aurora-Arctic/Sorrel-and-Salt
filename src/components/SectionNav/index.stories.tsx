@@ -44,14 +44,14 @@ export const Coven: Story = () => (
 // current (on its Groups tab's address).
 export const Admin: Story = () => (
   <Row path="/admin/category-groups">
-    <AdminNav />
+    <AdminNav managesPeople />
   </Row>
 );
 
 // Tablet: the tabs that fit, the rest behind More (measured, so a story in Ladle shows what its width allows).
 export const AdminTablet: Story = () => (
   <Row path="/admin/category-groups">
-    <AdminNav />
+    <AdminNav managesPeople />
   </Row>
 );
 AdminTablet.meta = { width: 700 };
@@ -59,7 +59,7 @@ AdminTablet.meta = { width: 700 };
 // Tablet, on a page that is behind More: More names it and carries the mark.
 export const AdminOnAHiddenPage: Story = () => (
   <Row path="/admin/users">
-    <AdminNav />
+    <AdminNav managesPeople />
   </Row>
 );
 AdminOnAHiddenPage.meta = { width: 700 };
@@ -67,21 +67,21 @@ AdminOnAHiddenPage.meta = { width: 700 };
 // Phone: the bar along the foot of the window, in each theme.
 export const AdminPhoneDark: Story = () => (
   <Row path="/admin/forms">
-    <AdminNav />
+    <AdminNav managesPeople />
   </Row>
 );
 AdminPhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const AdminPhoneLight: Story = () => (
   <Row path="/admin/forms">
-    <AdminNav />
+    <AdminNav managesPeople />
   </Row>
 );
 AdminPhoneLight.meta = { theme: 'light', width: 375 };
 
 export const AdminPhoneOnAHiddenPage: Story = () => (
   <Row path="/admin/celestial-bodies">
-    <AdminNav />
+    <AdminNav managesPeople />
   </Row>
 );
 AdminPhoneOnAHiddenPage.meta = { width: 375 };

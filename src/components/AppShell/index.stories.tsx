@@ -58,7 +58,7 @@ export const CovenPage: Story = () => (
 
 // An admin on an admin page: Your Coven and Admin in the bar, "Admin" in the row.
 export const AdminPage: Story = () => (
-  <ShellFrame area="admin" viewer={{ name: 'Fixture Admin', isAdmin: true }} open="/admin">
+  <ShellFrame area="admin" viewer={{ name: 'Fixture Admin', canCurate: true }} open="/admin">
     <AdminStub />
   </ShellFrame>
 );
@@ -96,7 +96,7 @@ export const Phone: Story = () => (
 Phone.meta = { width: 375 };
 
 export const PhoneAdmin: Story = () => (
-  <ShellFrame area="admin" viewer={{ name: 'Fixture Admin', isAdmin: true }} open="/admin">
+  <ShellFrame area="admin" viewer={{ name: 'Fixture Admin', canCurate: true }} open="/admin">
     <AdminStub />
   </ShellFrame>
 );

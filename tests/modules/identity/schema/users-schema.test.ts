@@ -5,6 +5,7 @@ import { asManualFix } from '../../../support/db/privileges';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { BOOTSTRAP_USER_ID } from '@/db/bootstrap';
 import { users } from '@/modules/identity/schema/users';
+import type { UserRole } from '@/lib/session';
 
 // Schema shape via Drizzle's introspection; the seeded rows are asserted in
 // seeded-template.test.ts.
@@ -82,17 +83,19 @@ describe('users email case', () => {
 // MB.177: the flag is what lets anyone create a workspace, admins included, so
 // a CHECK holds every admin to it rather than the gate reading `role` beside
 // it (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
-describe('users admin creation flag', () => {
+// M11.20 widens it to every role but `user`, curators included
+// (claude-docs/design-decisions/m11.20-curator-role.md).
+describe('users privileged creation flag', () => {
   let sql: postgres.Sql;
   useTestDatabase((client) => {
     sql = client;
   });
 
-  const CONSTRAINT = 'users_admin_can_create_workspace';
+  const CONSTRAINT = 'users_privileged_can_create_workspace';
 
   // Each write here that grants a privilege declares itself, as a `psql` fix
   // must since MB.195's trigger; the CHECK refuses before the trigger runs.
-  const insert = (email: string, role: 'user' | 'admin', canCreateWorkspace: boolean) =>
+  const insert = (email: string, role: UserRole, canCreateWorkspace: boolean) =>
     sql.begin(async (tx) => {
       await tx`select set_config('app.privilege_route', 'manual', true)`;
       return tx<{ id: string }[]>`
@@ -116,6 +119,32 @@ describe('users admin creation flag', () => {
   it('accepts an admin holding the flag, and a user without it', async () => {
     await expect(insert('flagged-admin@admin-flag.test', 'admin', true)).resolves.toHaveLength(1);
     await expect(insert('flagless-user@admin-flag.test', 'user', false)).resolves.toHaveLength(1);
+  });
+
+  it('refuses a curator row without the flag, and accepts one holding it', async () => {
+    const error = await failureOf(insert('flagless-curator@admin-flag.test', 'curator', false));
+
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CONSTRAINT);
+    await expect(insert('flagged-curator@admin-flag.test', 'curator', true)).resolves.toHaveLength(
+      1,
+    );
+  });
+
+  it('refuses taking the flag from a curator, and keeps it through a move to admin', async () => {
+    const [{ id }] = await insert('kept@admin-flag.test', 'curator', true);
+
+    const error = await failureOf(
+      asManualFix(sql, (tx) => tx`update users set can_create_workspace = false where id = ${id}`),
+    );
+
+    expect(error.code).toBe('23514');
+    expect(error.constraint_name).toBe(CONSTRAINT);
+    await asManualFix(sql, (tx) => tx`update users set role = 'admin' where id = ${id}`);
+    await asManualFix(sql, (tx) => tx`update users set role = 'curator' where id = ${id}`);
+    const [row] =
+      await sql`select role::text as role, can_create_workspace from users where id = ${id}`;
+    expect(row).toEqual({ role: 'curator', can_create_workspace: true });
   });
 
   it('refuses making a user admin without the flag, and accepts both together', async () => {

@@ -12,7 +12,7 @@ import {
   suggestReferences,
   updateReference,
 } from '@/modules/ingredients';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertReference } from '../../../support/db/insert-reference';
 
@@ -30,6 +30,11 @@ useTestDatabase((client) => {
 beforeEach(async () => {
   await sql`truncate ingredients, "references" cascade`;
 });
+
+const CURATORS = [
+  ['a site admin', E],
+  ['a curator', F],
+] as const;
 
 const BOOK = {
   kind: 'book' as const,
@@ -56,11 +61,11 @@ async function rowOf(id: string) {
 }
 
 describe('createReference', () => {
-  it('writes a compendium reference for a site admin', async () => {
-    const created = await createReference(asUser(E), null, BOOK);
+  it.each(CURATORS)('writes a compendium reference for %s', async (_who, user) => {
+    const created = await createReference(asUser(user), null, BOOK);
 
     expect(created).toMatchObject({ workspaceId: null, title: BOOK.title, kind: 'book' });
-    expect(await rowOf(created.id)).toMatchObject({ workspace_id: null, created_by: E.id });
+    expect(await rowOf(created.id)).toMatchObject({ workspace_id: null, created_by: user.id });
   });
 
   it('writes a coven’s reference for its member, in the coven of the proof', async () => {
@@ -124,22 +129,29 @@ describe('createReference', () => {
 });
 
 describe('updateReference', () => {
-  it('replaces a compendium reference for a site admin, clearing a field left out', async () => {
-    const id = await insertReference(
-      sql,
-      { authors: 'Testwort, Fixtura', place: 'Testford' },
-      E.id,
-    );
+  it.each(CURATORS)(
+    'replaces a compendium reference for %s, clearing a field left out',
+    async (_who, user) => {
+      const id = await insertReference(
+        sql,
+        { authors: 'Testwort, Fixtura', place: 'Testford' },
+        user.id,
+      );
 
-    const { authors: _, ...withoutAuthors } = BOOK;
-    const updated = await updateReference(asUser(E), null, id, {
-      ...withoutAuthors,
-      title: 'A Second Herbal',
-    });
+      const { authors: _, ...withoutAuthors } = BOOK;
+      const updated = await updateReference(asUser(user), null, id, {
+        ...withoutAuthors,
+        title: 'A Second Herbal',
+      });
 
-    expect(updated).toMatchObject({ title: 'A Second Herbal', authors: null });
-    expect(await rowOf(id)).toMatchObject({ authors: null, place: 'Testford', updated_by: E.id });
-  });
+      expect(updated).toMatchObject({ title: 'A Second Herbal', authors: null });
+      expect(await rowOf(id)).toMatchObject({
+        authors: null,
+        place: 'Testford',
+        updated_by: user.id,
+      });
+    },
+  );
 
   it('replaces a coven’s reference for its member', async () => {
     const id = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);

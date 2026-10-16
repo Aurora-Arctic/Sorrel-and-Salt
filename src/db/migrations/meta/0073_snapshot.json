@@ -3411,7 +3411,7 @@
       "checkConstraints": {
         "inventory_items_unit_matches_dimension": {
           "name": "inventory_items_unit_matches_dimension",
-          "value": "(unit is null) = (unit_dimension is null) and (unit is null or ((unit_dimension = 'weight' and unit in ('mg', 'g', 'kg', 'oz', 'lb')) or (unit_dimension = 'volume' and unit in ('ml', 'l', 'tsp', 'tbsp', 'fl_oz_uk', 'fl_oz_us', 'cup')) or (unit_dimension = 'count' and unit in ('piece', 'drop', 'pinch'))))"
+          "value": "(unit is null) = (unit_dimension is null) and (unit is null or ((unit_dimension = 'weight' and unit::text in ('mg', 'g', 'kg', 'oz', 'lb')) or (unit_dimension = 'volume' and unit::text in ('ml', 'l', 'tsp', 'tbsp', 'fl_oz_uk', 'fl_oz_us', 'cup')) or (unit_dimension = 'count' and unit::text in ('piece', 'drop', 'pinch'))))"
         }
       },
       "isRLSEnabled": false

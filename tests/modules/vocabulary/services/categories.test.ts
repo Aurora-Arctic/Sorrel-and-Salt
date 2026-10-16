@@ -16,7 +16,7 @@ import {
 } from '@/modules/vocabulary';
 import type { CategoryFilter } from '@/modules/vocabulary';
 import type { CategoryInput } from '@/modules/vocabulary/validation/category';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -53,10 +53,15 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
+const CURATORS = [
+  ['the site admin', E],
+  ['a curator', F],
+] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
   expect(admin.role).toBe('admin');
+  expect(asUser(F).role).toBe('curator');
 });
 
 function input(overrides: Partial<CategoryInput> = {}): CategoryInput {
@@ -268,20 +273,23 @@ describe('getCategoryBySlug', () => {
 });
 
 describe('createCategory', () => {
-  it('lets the site admin create one, its slug from the name, stamped by them', async () => {
-    const created = await createCategory(admin, input({ name: 'Testcraft Made' }));
+  it.each(CURATORS)(
+    'lets %s create one, its slug from the name, stamped by them',
+    async (_who, user) => {
+      const created = await createCategory(asUser(user), input({ name: 'Testcraft Made' }));
 
-    expect(await rowOf(created.id)).toMatchObject({
-      name: 'Testcraft Made',
-      slug: 'testcraft-made',
-      description: 'A category this test made',
-      group_id: groupId,
-      seed_key: null,
-      created_by: E.id,
-      updated_by: E.id,
-      deleted_at: null,
-    });
-  });
+      expect(await rowOf(created.id)).toMatchObject({
+        name: 'Testcraft Made',
+        slug: 'testcraft-made',
+        description: 'A category this test made',
+        group_id: groupId,
+        seed_key: null,
+        created_by: user.id,
+        updated_by: user.id,
+        deleted_at: null,
+      });
+    },
+  );
 
   it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
     await expect(createCategory(asUser(user), input())).rejects.toThrow(Forbidden);
@@ -338,24 +346,27 @@ describe('createCategory', () => {
 });
 
 describe('updateCategory', () => {
-  it('lets the site admin rewrite it, the slug following the name, created_by kept', async () => {
-    const id = await seed('Testcraft Old');
+  it.each(CURATORS)(
+    'lets %s rewrite it, the slug following the name, created_by kept',
+    async (_who, user) => {
+      const id = await seed('Testcraft Old');
 
-    await updateCategory(admin, id, {
-      name: 'Testcraft New',
-      description: 'Rewritten',
-      groupId: otherGroupId,
-    });
+      await updateCategory(asUser(user), id, {
+        name: 'Testcraft New',
+        description: 'Rewritten',
+        groupId: otherGroupId,
+      });
 
-    expect(await rowOf(id)).toMatchObject({
-      name: 'Testcraft New',
-      slug: 'testcraft-new',
-      description: 'Rewritten',
-      group_id: otherGroupId,
-      created_by: A.id,
-      updated_by: E.id,
-    });
-  });
+      expect(await rowOf(id)).toMatchObject({
+        name: 'Testcraft New',
+        slug: 'testcraft-new',
+        description: 'Rewritten',
+        group_id: otherGroupId,
+        created_by: A.id,
+        updated_by: user.id,
+      });
+    },
+  );
 
   // MB.171: the seed recognises its own rows by the key, so a renamed seeded
   // row must keep it or the next deploy reinserts the original beside it.
@@ -440,15 +451,18 @@ describe('updateCategory', () => {
 });
 
 describe('deleteCategory', () => {
-  it('lets the site admin soft-delete one nothing is filed under, keeping the row', async () => {
-    const id = await seed('Testcraft Unused');
+  it.each(CURATORS)(
+    'lets %s soft-delete one nothing is filed under, keeping the row',
+    async (_who, user) => {
+      const id = await seed('Testcraft Unused');
 
-    await deleteCategory(admin, id);
+      await deleteCategory(asUser(user), id);
 
-    const row = await rowOf(id);
-    expect(row).toMatchObject({ deleted_by: E.id, created_by: A.id });
-    expect(row.deleted_at).toBeInstanceOf(Date);
-  });
+      const row = await rowOf(id);
+      expect(row).toMatchObject({ deleted_by: user.id, created_by: A.id });
+      expect(row.deleted_at).toBeInstanceOf(Date);
+    },
+  );
 
   it.each(NON_ADMINS)('refuses %s and leaves the row as it was', async (_who, user) => {
     const id = await seed('Testcraft Standing');

@@ -54,6 +54,19 @@ const BO = {
   heading: { eyebrow: 'User', title: 'Bo Fixturewort', qualifier: 'bo@users.test' },
 } as const;
 
+// A curator (M11.20): holds the creation flag, as the CHECK makes every
+// curator do, and an unverified address.
+const CY = {
+  ...BO,
+  id: '8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
+  name: 'Cy Fixturewort',
+  email: 'cy@users.test',
+  role: 'curator',
+  canCreateWorkspace: true,
+  openHref: '/admin/users?user=8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
+  heading: { eyebrow: 'User', title: 'Cy Fixturewort', qualifier: 'cy@users.test' },
+} as const;
+
 const props = (overrides: Partial<UserListProps> = {}): UserListProps => ({
   users: [ADA, BO],
   query: '',
@@ -172,13 +185,14 @@ describe('UserList impersonation', () => {
     expect(screen.queryByRole('columnheader', { name: 'Impersonate' })).not.toBeInTheDocument();
   });
 
-  it('offers it on each non-admin row, naming the user, and on no admin row', () => {
-    render(<UserList {...props({ canImpersonate: true })} />);
+  it('offers it on each non-admin row, a curator’s included, naming the user, and on no admin row', () => {
+    render(<UserList {...props({ users: [ADA, BO, CY], canImpersonate: true })} />);
 
     expect(screen.getByRole('columnheader', { name: 'Impersonate' })).toBeInTheDocument();
     const bo = screen.getByRole('row', { name: /Bo Fixturewort/ });
     const impersonate = within(bo).getByRole('button', { name: 'Impersonate Bo Fixturewort' });
     expect(impersonate).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Impersonate Cy Fixturewort' })).toBeEnabled();
     const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
     expect(within(ada).queryByRole('button', { name: /Impersonate/ })).not.toBeInTheDocument();
   });
@@ -309,7 +323,7 @@ describe('UserList filter', () => {
       within(role)
         .getAllByRole('option')
         .map((option) => option.getAttribute('value')),
-    ).toEqual(['', 'admin', 'user']);
+    ).toEqual(['', 'admin', 'curator', 'user']);
 
     await hydrate();
     fireEvent.click(within(container).getByRole('combobox', { name: 'Role' }));
@@ -412,15 +426,18 @@ describe('UserList approval', () => {
 
   const boRow = () => screen.getByRole('row', { name: /Bo Fixturewort/ });
 
-  it('offers Approve on the row of a user awaiting approval, naming them, and nothing on an admin', () => {
-    render(<UserList {...props()} />);
+  it('offers Approve on the row of a user awaiting approval, naming them, and nothing on an admin or a curator', () => {
+    render(<UserList {...props({ users: [ADA, BO, CY] })} />);
 
     expect(within(boRow()).getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
     expect(within(boRow()).queryByRole('button', { name: /Revoke/ })).not.toBeInTheDocument();
-    const ada = screen.getByRole('row', { name: /Ada Fixturewort/ });
-    expect(
-      within(ada).queryByRole('button', { name: /Approve|Revoke approval/ }),
-    ).not.toBeInTheDocument();
+    for (const name of [/Ada Fixturewort/, /Cy Fixturewort/]) {
+      expect(
+        within(screen.getByRole('row', { name })).queryByRole('button', {
+          name: /Approve|Revoke approval/,
+        }),
+      ).not.toBeInTheDocument();
+    }
   });
 
   it('offers Revoke on the row of a user who may create a coven, and no Approve', () => {
@@ -591,53 +608,74 @@ describe('UserList approval', () => {
   });
 });
 
-// MB.59: the role cell's Promote or Revoke, each asking first in a modal naming
-// the user, with an optional reason; the primary admin's Revoke in view but
-// unusable, saying why. The service is the guard, and refuses the same.
-describe('UserList admin role', () => {
+// MB.59, M11.20: the role cell's Change Role, asking in a modal naming the
+// user which role they move to, every role but the one held, with an
+// optional reason; the primary admin's in view but unusable, saying why. The
+// service is the guard, and refuses the same.
+describe('UserList site role', () => {
   afterEach(() => {
     router.refresh.mockReset();
   });
 
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
-  const dialog = (title: string) => screen.getByRole('dialog', { name: title });
-
-  it('offers Promote on a user’s row and Revoke on an admin’s, each naming the user', () => {
-    render(<UserList {...props()} />);
-
-    const grant = within(row('Bo Fixturewort')).getByRole('button', {
-      name: 'Promote Bo Fixturewort to admin',
+  const dialog = () => screen.getByRole('dialog', { name: 'Change Role' });
+  const changeRole = (name: string) =>
+    within(row(name)).getByRole('button', { name: `Change Role for ${name}` });
+  const radios = () =>
+    within(dialog())
+      .getAllByRole('radio')
+      .map((radio) => (radio as HTMLInputElement).value);
+  const sent = () => {
+    const calls: unknown[] = [];
+    mockGraphQLMutation('SetUserRole', (variables) => {
+      calls.push(variables);
+      return {
+        setUserRole: { id: variables.userId, role: variables.role, canCreateWorkspace: true },
+      };
     });
-    expect(grant).toBeEnabled();
-    const revoke = within(row('Ada Fixturewort')).getByRole('button', {
-      name: 'Revoke admin from Ada Fixturewort',
-    });
-    expect(revoke).toBeEnabled();
-    expect(revoke).not.toHaveAttribute('aria-disabled');
+    return calls;
+  };
+
+  it('offers Change Role on every row, naming the user, the role shown beside it', () => {
+    render(<UserList {...props({ users: [ADA, BO, CY] })} />);
+
+    for (const [name, role] of [
+      ['Ada Fixturewort', 'Admin'],
+      ['Bo Fixturewort', 'User'],
+      ['Cy Fixturewort', 'Curator'],
+    ]) {
+      const open = changeRole(name);
+      expect(open).toBeEnabled();
+      expect(open).not.toHaveAttribute('aria-disabled');
+      expect(within(row(name)).getAllByRole('cell')[2]).toHaveTextContent(new RegExp(`^${role}`));
+    }
     // Nobody here is the primary admin.
     expect(screen.queryByRole('button', { name: 'Primary Admin' })).not.toBeInTheDocument();
   });
 
-  it('grants from a modal naming the user, sending the reason, busy until the list is read again', async () => {
-    const calls: unknown[] = [];
-    mockGraphQLMutation('SetUserRole', (variables) => {
-      calls.push(variables);
-      return { setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true } };
-    });
+  it.each([
+    ['a user', BO, ['curator', 'admin']],
+    ['a curator', CY, ['user', 'admin']],
+    ['an admin', ADA, ['user', 'curator']],
+  ])('offers %s every role but the one held', (_who, user, offered) => {
+    render(<UserList {...props({ users: [user] })} />);
+
+    fireEvent.click(changeRole(user.name));
+
+    expect(dialog()).toHaveTextContent(user.name);
+    expect(radios()).toEqual(offered);
+    expect(within(dialog()).getAllByRole('radio', { checked: true })).toHaveLength(1);
+  });
+
+  it('promotes from the modal, sending the role picked and the reason, busy until the list is read again', async () => {
+    const calls = sent();
     render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />);
 
-    fireEvent.click(
-      within(row('Bo Fixturewort')).getByRole('button', {
-        name: 'Promote Bo Fixturewort to admin',
-      }),
-    );
-
-    const asking = dialog('Promote to Admin');
-    expect(asking).toHaveTextContent('Bo Fixturewort');
-    const confirm = within(asking).getByRole('button', { name: 'Promote' });
-    expect(confirm).toHaveFocus();
+    fireEvent.click(changeRole('Bo Fixturewort'));
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Admin/ }));
+    const confirm = within(dialog()).getByRole('button', { name: 'Promote' });
     expect(confirm).not.toHaveAccessibleDescription();
-    const reason = within(asking).getByRole('textbox', { name: 'Reason' });
+    const reason = within(dialog()).getByRole('textbox', { name: 'Reason' });
     expect(reason).toHaveAccessibleDescription(/\S/);
     fireEvent.change(reason, { target: { value: '  Curates the celestial bodies  ' } });
     fireEvent.click(confirm);
@@ -648,54 +686,73 @@ describe('UserList admin role', () => {
     expect(calls).toEqual([{ userId: BO.id, role: 'admin', note: 'Curates the celestial bodies' }]);
   });
 
-  it('sends no reason when none is given, and Cancel closes the modal with nothing sent', async () => {
-    const calls: unknown[] = [];
-    mockGraphQLMutation('SetUserRole', (variables) => {
-      calls.push(variables);
-      return { setUserRole: { id: ADA.id, role: 'user', canCreateWorkspace: true } };
-    });
+  it('makes a user a curator', async () => {
+    const calls = sent();
+    render(<UserList {...props({ users: [{ ...BO, emailVerified: true }] })} />);
+
+    fireEvent.click(changeRole('Bo Fixturewort'));
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Curator/ }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Promote' }));
+
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: BO.id, role: 'curator' }]);
+  });
+
+  it('demotes an admin to a curator with no reason, and Cancel first closes the modal with nothing sent', async () => {
+    const calls = sent();
     render(<UserList {...props()} />);
-    const open = within(row('Ada Fixturewort')).getByRole('button', {
-      name: 'Revoke admin from Ada Fixturewort',
-    });
+    const open = changeRole('Ada Fixturewort');
 
     fireEvent.click(open);
-    fireEvent.click(within(dialog('Revoke Admin')).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }));
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(open).toHaveFocus();
     expect(calls).toEqual([]);
 
     fireEvent.click(open);
-    const asking = dialog('Revoke Admin');
-    expect(asking).toHaveTextContent('Ada Fixturewort');
-    fireEvent.click(within(asking).getByRole('button', { name: 'Revoke' }));
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Curator/ }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Demote' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-    expect(calls).toEqual([{ userId: ADA.id, role: 'user' }]);
+    expect(calls).toEqual([{ userId: ADA.id, role: 'curator' }]);
   });
 
-  // MB.205's warning, in Promote's words: a promotion vouches as an approval does.
-  it('warns before granting to a user whose email is unverified, and still grants', async () => {
-    mockGraphQLMutation('SetUserRole', () => ({
-      setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true },
-    }));
-    render(<UserList {...props()} />);
-    expect(within(row('Bo Fixturewort')).getAllByRole('cell')[1]).toHaveTextContent(/^Unverified/);
+  it('moves a curator down to user, or up to admin', async () => {
+    const calls = sent();
+    render(<UserList {...props({ users: [CY] })} />);
 
-    fireEvent.click(
-      within(row('Bo Fixturewort')).getByRole('button', {
-        name: 'Promote Bo Fixturewort to admin',
-      }),
-    );
+    fireEvent.click(changeRole('Cy Fixturewort'));
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Admin/ }));
+    expect(within(dialog()).getByRole('button', { name: 'Promote' })).toBeInTheDocument();
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^User/ }));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Demote' }));
 
-    const confirm = within(dialog('Promote to Admin')).getByRole('button', { name: 'Promote' });
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(calls).toEqual([{ userId: CY.id, role: 'user' }]);
+  });
+
+  // MB.205's warning, in Promote's words: a promotion vouches as an approval
+  // does; a demotion vouches for no one.
+  it('warns before promoting a user whose email is unverified, and not before demoting them', async () => {
+    sent();
+    render(<UserList {...props({ users: [CY] })} />);
+    expect(within(row('Cy Fixturewort')).getAllByRole('cell')[1]).toHaveTextContent(/^Unverified/);
+
+    fireEvent.click(changeRole('Cy Fixturewort'));
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^User/ }));
+    expect(
+      within(dialog()).getByRole('button', { name: 'Demote' }),
+    ).not.toHaveAccessibleDescription();
+    fireEvent.click(within(dialog()).getByRole('radio', { name: /^Admin/ }));
+    const confirm = within(dialog()).getByRole('button', { name: 'Promote' });
     expect(confirm).toHaveAccessibleDescription(/\S/);
+
     fireEvent.click(confirm);
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
   });
 
-  it('says why in the row when the service refuses, and offers Revoke again', async () => {
+  it('says why in the row when the service refuses, and offers Change Role again', async () => {
     mockGraphQLError('SetUserRole', {
       code: 'FORBIDDEN',
       message:
@@ -703,37 +760,27 @@ describe('UserList admin role', () => {
     });
     render(<UserList {...props()} />);
 
-    fireEvent.click(
-      within(row('Ada Fixturewort')).getByRole('button', {
-        name: 'Revoke admin from Ada Fixturewort',
-      }),
-    );
-    fireEvent.click(within(dialog('Revoke Admin')).getByRole('button', { name: 'Revoke' }));
+    fireEvent.click(changeRole('Ada Fixturewort'));
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Demote' }));
 
     expect(await within(row('Ada Fixturewort')).findByRole('alert')).toBeVisible();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(router.refresh).not.toHaveBeenCalled();
+    expect(changeRole('Ada Fixturewort')).toBeEnabled();
   });
 
-  it('marks the primary admin with a crown, whose Revoke is in view but aria-disabled, described by the reason', () => {
-    const calls: unknown[] = [];
-    mockGraphQLMutation('SetUserRole', (variables) => {
-      calls.push(variables);
-      return { setUserRole: { id: ADA.id, role: 'user', canCreateWorkspace: true } };
-    });
+  it('marks the primary admin with a crown, whose Change Role is in view but aria-disabled, described by the reason', () => {
     render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }, BO] })} />);
     const primary = row('Ada Fixturewort');
 
     expect(within(primary).getByRole('button', { name: 'Primary Admin' })).toBeInTheDocument();
 
-    const revoke = within(primary).getByRole('button', {
-      name: 'Revoke admin from Ada Fixturewort',
-    });
+    const open = changeRole('Ada Fixturewort');
     // In view and reachable, not `disabled`, and described by the reason.
-    expect(revoke).toBeVisible();
-    expect(revoke).toBeEnabled();
-    expect(revoke).toHaveAttribute('aria-disabled', 'true');
-    expect(revoke).toHaveAccessibleDescription(/\S/);
+    expect(open).toBeVisible();
+    expect(open).toBeEnabled();
+    expect(open).toHaveAttribute('aria-disabled', 'true');
+    expect(open).toHaveAccessibleDescription(PRIMARY_ADMIN_REFUSAL);
     expect(within(primary).queryByRole('alert')).not.toBeInTheDocument();
     // Only the primary admin's row is marked.
     expect(
@@ -741,26 +788,20 @@ describe('UserList admin role', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('states the reason when the primary admin’s Revoke is tried, opening nothing and sending nothing', () => {
-    const calls: unknown[] = [];
-    mockGraphQLMutation('SetUserRole', (variables) => {
-      calls.push(variables);
-      return { setUserRole: { id: ADA.id, role: 'user', canCreateWorkspace: true } };
-    });
+  it('states the reason when the primary admin’s Change Role is tried, opening nothing and sending nothing', () => {
+    const calls = sent();
     render(<UserList {...props({ users: [{ ...ADA, primaryAdmin: true }] })} />);
     const primary = row('Ada Fixturewort');
-    const revoke = within(primary).getByRole('button', {
-      name: 'Revoke admin from Ada Fixturewort',
-    });
+    const open = changeRole('Ada Fixturewort');
 
-    fireEvent.click(revoke);
+    fireEvent.click(open);
 
     // The tip opens, as an alert.
     expect(within(primary).getByRole('alert')).toBeVisible();
     expect(within(primary).getByRole('alert')).toHaveAttribute('aria-hidden', 'false');
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     // A second try says it again, as a fresh alert.
-    fireEvent.click(revoke);
+    fireEvent.click(open);
     expect(within(primary).getByRole('alert')).toBeVisible();
     expect(calls).toEqual([]);
   });
@@ -884,7 +925,7 @@ describe('UserList admin changes switch', () => {
 });
 
 // MB.63: while admin changes are paused, an admin the pause binds sees every
-// Promote and Revoke in view but unusable, saying why; the primary admin, whom
+// Change Role in view but unusable, saying why; the primary admin, whom
 // the pause exempts, keeps them. The service refuses the same.
 describe('UserList admin role while admin changes are paused', () => {
   afterEach(() => {
@@ -893,7 +934,7 @@ describe('UserList admin role while admin changes are paused', () => {
 
   const row = (name: string) => screen.getByRole('row', { name: new RegExp(name) });
 
-  it('locks Promote and Revoke for another admin, each described by the reason, opening and sending nothing', () => {
+  it('locks every Change Role for another admin, each described by the reason, opening and sending nothing', () => {
     let calls = 0;
     mockGraphQLMutation('SetUserRole', () => {
       calls += 1;
@@ -902,10 +943,10 @@ describe('UserList admin role while admin changes are paused', () => {
     render(<UserList {...props({ adminChanges: { paused: true, canToggle: false } })} />);
 
     const grant = within(row('Bo Fixturewort')).getByRole('button', {
-      name: 'Promote Bo Fixturewort to admin',
+      name: 'Change Role for Bo Fixturewort',
     });
     const revoke = within(row('Ada Fixturewort')).getByRole('button', {
-      name: 'Revoke admin from Ada Fixturewort',
+      name: 'Change Role for Ada Fixturewort',
     });
     for (const button of [grant, revoke]) {
       expect(button).toBeEnabled();
@@ -971,14 +1012,14 @@ describe('UserList admin role while admin changes are paused', () => {
   it('locks nothing while changes are on', () => {
     render(<UserList {...props({ adminChanges: { paused: false, canToggle: false } })} />);
 
-    for (const name of ['Promote Bo Fixturewort to admin', 'Revoke admin from Ada Fixturewort']) {
+    for (const name of ['Change Role for Bo Fixturewort', 'Change Role for Ada Fixturewort']) {
       expect(screen.getByRole('button', { name })).not.toHaveAttribute('aria-disabled');
     }
   });
 
   // The primary admin's own reason holds whether or not changes are paused:
   // which of the two reasons won is told by which of the two strings it reads.
-  it('keeps the primary admin’s Revoke on its own reason while paused', () => {
+  it('keeps the primary admin’s Change Role on its own reason while paused', () => {
     render(
       <UserList
         {...props({
@@ -990,7 +1031,7 @@ describe('UserList admin role while admin changes are paused', () => {
 
     expect(
       within(row('Ada Fixturewort')).getByRole('button', {
-        name: 'Revoke admin from Ada Fixturewort',
+        name: 'Change Role for Ada Fixturewort',
       }),
     ).toHaveAccessibleDescription(PRIMARY_ADMIN_REFUSAL);
   });

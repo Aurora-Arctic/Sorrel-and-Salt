@@ -42,7 +42,7 @@ builder.mutationField('createCompendiumIngredient', (t) =>
       input: t.arg({ type: CompendiumIngredientInput, required: true }),
       endRedirect: t.arg.boolean({ required: false, description: END_REDIRECT }),
     },
-    authScopes: { admin: true },
+    authScopes: { curator: true },
     resolve: (_root, { input, endRedirect }, context) =>
       createCompendiumEntry(sessionOf(context), {
         ...input,
@@ -60,7 +60,7 @@ builder.mutationField('updateCompendiumIngredient', (t) =>
       input: t.arg({ type: CompendiumIngredientUpdateInput, required: true }),
       endRedirect: t.arg.boolean({ required: false, description: END_REDIRECT }),
     },
-    authScopes: { admin: true },
+    authScopes: { curator: true },
     resolve: async (_root, { id, input, endRedirect }, { loaders, ...context }) => {
       const row = await updateCompendiumEntry(sessionOf(context), id, {
         ...input,
@@ -77,7 +77,7 @@ builder.mutationField('deleteCompendiumIngredient', (t) =>
   t.id({
     description: 'A soft delete; a spell holding the entry still reaches it.',
     args: { id: t.arg.id({ required: true }) },
-    authScopes: { admin: true },
+    authScopes: { curator: true },
     resolve: async (_root, { id }, context) => {
       await deleteCompendiumEntry(sessionOf(context), id);
       return id;

@@ -12,7 +12,7 @@ import type { TabSwitch } from './types';
 // Render-only; behaviour is asserted in tests/components/TabbedPage. The
 // People page as `/admin/invitations` draws it: the admin layout's frame and
 // nav, the page's heading with its three tabs beside it, Invitations open, and
-// the open tab's Invite Admin at the end of the line, then the tab's own content
+// the open tab's New Invitation at the end of the line, then the tab's own content
 // beneath. The workshop's stub says which address is open (.ladle/navigation.ts), and
 // a tab switch provided above the page says a tab is on its way, since the
 // stub router goes nowhere.
@@ -43,7 +43,7 @@ const Invitations = () => (
   </People>
 );
 
-// Users pressed and on its way: the heading where it was, Invite Admin and
+// Users pressed and on its way: the heading where it was, New Invitation and
 // every tab greyed out and closed to another press, the pill moved to Users
 // in its pending look, grey and flat, while Invitations is still the current
 // page, and in place of the invitations the skeleton of the list on its
@@ -112,8 +112,8 @@ PhoneScrolled.meta = { width: 375 };
 export const AddAsPlus: Story = () => (
   <People
     action={
-      <AddAction href="/admin/invitations?invite" heading={{ title: 'Invite Admin' }}>
-        Invite Admin
+      <AddAction href="/admin/invitations?invite" heading={{ title: 'New Invitation' }}>
+        New Invitation
       </AddAction>
     }
   >
@@ -127,8 +127,8 @@ AddAsPlus.meta = { width: 600 };
 export const AddBeneathAtThreeFifty: Story = () => (
   <People
     action={
-      <AddAction href="/admin/invitations?invite" heading={{ title: 'Invite Admin' }}>
-        Invite Admin
+      <AddAction href="/admin/invitations?invite" heading={{ title: 'New Invitation' }}>
+        New Invitation
       </AddAction>
     }
   >

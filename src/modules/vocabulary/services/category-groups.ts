@@ -13,14 +13,14 @@ import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { parseInput } from '../../../lib/validation';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryGroupInput } from '../validation/category-group';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CategoryGroupRow, CuratedGroup } from '../types';
 
 // The category groups: their reads, public reference data like every curated
-// vocabulary (MB.80), and their writes, the site admin's alone (M5.6b). Each
+// vocabulary (MB.80), and their writes, a curator's or an admin's alone (M5.6b). Each
 // colour is held to 4.5:1 against its own theme's harder surface by the input
 // schema (MB.36). A group is deleted only once its live categories have
 // somewhere to go — the admin names a group and they move there in the same
@@ -72,7 +72,7 @@ export async function getCategoryGroupBySlug(slug: string): Promise<CategoryGrou
 /**
  * Adds a category group, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is not a site admin — checked before the
+ * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `CategoryGroupInput` — a colour
  * under the floor on its own column — or its slug is a live group's.
@@ -81,7 +81,7 @@ export async function createCategoryGroup(
   session: Session,
   input: CategoryGroupInput,
 ): Promise<CategoryGroupRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const fields = parseInput(CategoryGroupInput, input);
   const slug = slugify(fields.name);
 
@@ -98,7 +98,7 @@ export async function createCategoryGroup(
  * category: a category's slug is its own name alone. Its `seedKey` is left as
  * it was, so a renamed seeded row is still the seed's (MB.171).
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} as `createCategoryGroup` throws it, the row's own
  * slug excepted.
  * @throws {NotFound} no live group has this id.
@@ -108,7 +108,7 @@ export async function updateCategoryGroup(
   id: string,
   input: CategoryGroupInput,
 ): Promise<CategoryGroupRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const fields = parseInput(CategoryGroupInput, input);
   const written = await updateGroup(session, GROUPS, id, fields);
   expireCompendium();
@@ -125,7 +125,7 @@ export async function updateCategoryGroup(
  * group in the instant between is left under a deleted one, which every read
  * drops, as a category's own delete leaves an entry filed under it.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} on `moveTo`, the group has live categories and
  * `moveTo` names no other live group.
  * @throws {NotFound} no live group has this id.
@@ -135,7 +135,7 @@ export async function deleteCategoryGroup(
   id: string,
   moveTo?: string,
 ): Promise<void> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   await deleteGroup(session, GROUPS, id, moveTo);
   expireCompendium();
 }

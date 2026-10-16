@@ -19,7 +19,7 @@ export interface TabbedPageProps {
   tabs: readonly PageTab[];
   /**
    * The open tab's one action, at the end of the heading's line: Add
-   * Category, Invite Admin, Pause Admin Changes. The route group's `@action`
+   * Category, New Invitation, Pause Admin Changes. The route group's `@action`
    * slot, so it changes with the tab; nothing for a tab with none.
    */
   action?: ReactNode;

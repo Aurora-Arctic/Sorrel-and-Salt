@@ -17,6 +17,7 @@ import type {
   ReceivedInvitationCoven,
   ReceivedInvitationInviter,
   SiteInvitationFilter,
+  SiteInvitationRow,
   SiteInvitationValues,
   SortPart,
   WorkspaceInvitationValues,
@@ -25,7 +26,7 @@ import type {
 
 // The invitation's finders and named writes, both tiers (MB.202): a workspace
 // invitation is read and written under its workspace's `Membership`, a
-// site-tier one, which grants admin, under the `SiteAdmin` proof, and the
+// site-tier one, which grants a site role, under the `SiteAdmin` proof, and the
 // accept and the token read under no proof at all
 // (claude-docs/db/invitations.md, "Invitations").
 
@@ -182,20 +183,22 @@ function pendingOnSite({ email, expiresWithinHours }: SiteInvitationFilter): SQL
 /**
  * One page of the site tier's pending invitations, newest first, for
  * `/admin/invitations` (MB.70), narrowed in SQL by a `SiteInvitationFilter`
- * and paged by the cursor helper (MB.115; CLAUDE.md rule 8).
+ * and paged by the cursor helper (MB.115; CLAUDE.md rule 8). Typed as the site
+ * tier's rows, since the scope keeps to it and the CHECKs give every one there
+ * its site role (M11.20).
  */
 export function findPendingSiteInvitationPage(
   _admin: SiteAdmin,
   filter: SiteInvitationFilter,
   page: PageRequest,
-): Promise<PageEntry<InvitationRow>[]> {
+): Promise<PageEntry<SiteInvitationRow>[]> {
   return findPageInScope(
     invitations,
     onSiteTier(),
     PENDING_INVITATION_ORDER,
     page,
     pendingOnSite(filter),
-  );
+  ) as Promise<PageEntry<SiteInvitationRow>[]>;
 }
 
 /**
@@ -380,7 +383,8 @@ export function invitationWrites({
   return {
     // The columns named rather than spread, as `workspaceId` is placed last
     // in `insertInWorkspace`: an invitation starts pending, in the proof's
-    // tier, even if a cast smuggled a stamp, a workspace or a role in.
+    // tier, even if a cast smuggled a stamp, a workspace or a role in, and
+    // grants only its own tier's role.
     insertInvitation: (
       proof: Membership | SiteAdmin,
       values: WorkspaceInvitationValues | SiteInvitationValues,
@@ -388,8 +392,12 @@ export function invitationWrites({
       const { email, token, expiresAt, note } = values;
       const tier =
         'workspaceId' in proof
-          ? { workspaceId: proof.workspaceId, role: (values as WorkspaceInvitationValues).role }
-          : { workspaceId: null, role: null };
+          ? {
+              workspaceId: proof.workspaceId,
+              role: (values as WorkspaceInvitationValues).role,
+              siteRole: null,
+            }
+          : { workspaceId: null, role: null, siteRole: (values as SiteInvitationValues).siteRole };
       return insert(invitations, {
         email,
         tokenHash: hashToken(token),

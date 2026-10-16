@@ -5,8 +5,9 @@ import { PRIMARY_ADMIN_REFUSAL } from '@/lib/primary-admin';
 import { withAudit } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { users } from '@/modules/identity/schema/users';
-import { setUserRole } from '@/modules/identity';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { assertCurator, setUserRole } from '@/modules/identity';
+import type { UserRole } from '@/lib/session';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { asManualFix, refusalOf } from '../../../support/db/privileges';
@@ -34,21 +35,22 @@ const APPROVED = '00000000-0000-0000-0000-0000000000d2';
 const OTHER_ADMIN = '00000000-0000-0000-0000-0000000000d3';
 const PRIMARY = '00000000-0000-0000-0000-0000000000d4';
 const DELETED = '00000000-0000-0000-0000-0000000000d5';
+const CURATOR = '00000000-0000-0000-0000-0000000000d6';
 const NOWHERE = '00000000-0000-0000-0000-0000000000d9';
 const PRIMARY_EMAIL = `owner${DOMAIN}`;
 
-/** Inserts a user on this file's domain; an admin is declared as a `psql` fix declares one. */
+/** Inserts a user on this file's domain; an admin or curator is declared as a `psql` fix declares one. */
 async function insertUser(
   id: string,
   name: string,
   email: string,
   {
     role = 'user',
-    canCreateWorkspace = role === 'admin',
+    canCreateWorkspace = role !== 'user',
     emailVerified = true,
     deleted = false,
   }: {
-    role?: 'user' | 'admin';
+    role?: UserRole;
     canCreateWorkspace?: boolean;
     emailVerified?: boolean;
     deleted?: boolean;
@@ -65,11 +67,12 @@ async function insertUser(
 
 beforeEach(async () => {
   // The ledger first, since its rows name the users deleted below; then E,
-  // A and B back as the seed made them, as a `psql` fix would put them.
+  // F, A and B back as the seed made them, as a `psql` fix would put them.
   await sql`truncate user_privilege_changes`;
   await sql`delete from users where email like ${`%${DOMAIN}`}`;
   await asManualFix(sql, async (tx) => {
     await tx`update users set role = 'admin', can_create_workspace = true where id = ${E.id}`;
+    await tx`update users set role = 'curator', can_create_workspace = true where id = ${F.id}`;
     await tx`update users set role = 'user', can_create_workspace = true where id in (${A.id}, ${B.id})`;
   });
   await insertUser(PLAIN, 'Plain Fixturewort', `plain${DOMAIN}`, { emailVerified: false });
@@ -300,6 +303,121 @@ describe('setUserRole, revoking', () => {
   });
 });
 
+// M11.20: the curator role is set on the same dialog, through the same
+// service. Becoming a curator sets the creation flag in the same write, as
+// becoming an admin does, and a move between curator and admin is a revoke
+// of one and a grant of the other.
+describe('setUserRole and the curator role', () => {
+  beforeEach(async () => {
+    await insertUser(CURATOR, 'Curator Fixturewort', `curator${DOMAIN}`, { role: 'curator' });
+    await insertUser(OTHER_ADMIN, 'Other Fixturewort', `other${DOMAIN}`, { role: 'admin' });
+    await sql`truncate user_privilege_changes`;
+  });
+
+  it('makes a user without the flag a curator, the flag set in the same write, as two rows at one instant', async () => {
+    expect(await roleOf(PLAIN)).toMatchObject({ role: 'user', can_create_workspace: false });
+
+    const user = await setUserRole(asUser(E), PLAIN, 'curator', 'Keeps the deity list');
+
+    expect(user).toMatchObject({ id: PLAIN, role: 'curator', canCreateWorkspace: true });
+    expect(await roleOf(PLAIN)).toEqual({
+      role: 'curator',
+      can_create_workspace: true,
+      updated_by: E.id,
+    });
+    const rows = await changes();
+    expect(rows.map(({ created_at: _at, ...row }) => row)).toEqual([
+      {
+        user_id: PLAIN,
+        privilege: 'create_workspace',
+        change: 'grant',
+        via: 'admin',
+        note: 'Keeps the deity list',
+        created_by: E.id,
+      },
+      {
+        user_id: PLAIN,
+        privilege: 'curator',
+        change: 'grant',
+        via: 'admin',
+        note: 'Keeps the deity list',
+        created_by: E.id,
+      },
+    ]);
+    expect(rows[0]?.created_at).toEqual(rows[1]?.created_at);
+  });
+
+  it('records a curator grant to a user who holds the flag as the curator row alone', async () => {
+    expect(await roleOf(APPROVED)).toMatchObject({ can_create_workspace: true });
+
+    await setUserRole(asUser(E), APPROVED, 'curator');
+
+    expect((await changes()).map(({ privilege, change }) => [privilege, change])).toEqual([
+      ['curator', 'grant'],
+    ]);
+  });
+
+  it.each([
+    [
+      'a curator an admin',
+      CURATOR,
+      'admin' as const,
+      [
+        ['admin', 'grant'],
+        ['curator', 'revoke'],
+      ],
+    ],
+    [
+      'an admin a curator',
+      OTHER_ADMIN,
+      'curator' as const,
+      [
+        ['admin', 'revoke'],
+        ['curator', 'grant'],
+      ],
+    ],
+    ['a curator a user', CURATOR, 'user' as const, [['curator', 'revoke']]],
+  ])('makes %s, the flag kept, recorded at one instant', async (_what, target, role, recorded) => {
+    const user = await setUserRole(asUser(E), target, role);
+
+    expect(user).toMatchObject({ role, canCreateWorkspace: true });
+    expect(await roleOf(target)).toEqual({ role, can_create_workspace: true, updated_by: E.id });
+    const rows = await changes();
+    expect(rows.map(({ privilege, change }) => [privilege, change])).toEqual(recorded);
+    expect(new Set(rows.map((row) => row.created_at.getTime())).size).toBe(1);
+  });
+
+  it.each([
+    ['a user', PLAIN, 'user' as const],
+    ['a curator', CURATOR, 'curator' as const],
+    ['an admin', OTHER_ADMIN, 'admin' as const],
+  ])('refuses giving %s the role they hold, writing nothing', async (_who, target, role) => {
+    const before = await roleOf(target);
+    expect(before.role).toBe(role);
+
+    await expect(setUserRole(asUser(E), target, role)).rejects.toThrow(Forbidden);
+
+    expect(await roleOf(target)).toEqual(before);
+    expect(await changes()).toEqual([]);
+  });
+
+  // F curates, so a pass here is the people-page check refusing a curator,
+  // not a session that holds no site role at all. E's same call succeeds.
+  it('refuses a curator as Forbidden by direct call, for another user and for themselves', async () => {
+    expect(assertCurator(asUser(F))).toMatchObject({ userId: F.id });
+
+    await expect(setUserRole(asUser(F), PLAIN, 'curator')).rejects.toThrow(Forbidden);
+    await expect(setUserRole(asUser(F), F.id, 'admin')).rejects.toThrow(Forbidden);
+
+    expect(await roleOf(PLAIN)).toMatchObject({ role: 'user', updated_by: PLAIN });
+    expect(await roleOf(F.id)).toMatchObject({ role: 'curator' });
+    expect(await changes()).toEqual([]);
+    await expect(setUserRole(asUser(E), PLAIN, 'curator')).resolves.toMatchObject({
+      role: 'curator',
+    });
+  });
+});
+
 describe('setUserRole and the primary admin', () => {
   beforeEach(async () => {
     await insertUser(PRIMARY, 'Owner Fixturewort', PRIMARY_EMAIL, { role: 'admin' });
@@ -322,6 +440,20 @@ describe('setUserRole and the primary admin', () => {
     await expect(refusal).rejects.toThrow(PRIMARY_ADMIN_REFUSAL);
     expect(await roleOf(PRIMARY)).toMatchObject({ role: 'admin' });
     expect(await changes()).toEqual([]);
+  });
+
+  // Leaving admin for curator is a revoke of admin, so it is held to the same rule.
+  it('refuses moving the primary admin to curator', async () => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', PRIMARY_EMAIL);
+
+    await expect(setUserRole(asUser(E), PRIMARY, 'curator')).rejects.toThrow(PRIMARY_ADMIN_REFUSAL);
+    expect(await roleOf(PRIMARY)).toMatchObject({ role: 'admin' });
+    expect(await changes()).toEqual([]);
+
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', `successor${DOMAIN}`);
+    await expect(setUserRole(asUser(E), PRIMARY, 'curator')).resolves.toMatchObject({
+      role: 'curator',
+    });
   });
 
   it('can revoke the previous primary admin once the variable names someone else', async () => {
@@ -355,6 +487,19 @@ describe('setUserRole and the last admin', () => {
     // With a second admin the same call succeeds, so it was the count.
     await insertUser(OTHER_ADMIN, 'Other Fixturewort', `other${DOMAIN}`, { role: 'admin' });
     await expect(setUserRole(asUser(E), E.id, 'user')).resolves.toMatchObject({ role: 'user' });
+  });
+
+  it('refuses moving the last live admin to curator', async () => {
+    expect(await liveAdmins()).toEqual([E.id]);
+
+    await expect(setUserRole(asUser(E), E.id, 'curator')).rejects.toThrow(Forbidden);
+    expect(await liveAdmins()).toEqual([E.id]);
+    expect(await changes()).toEqual([]);
+
+    await insertUser(OTHER_ADMIN, 'Other Fixturewort', `other${DOMAIN}`, { role: 'admin' });
+    await expect(setUserRole(asUser(E), E.id, 'curator')).resolves.toMatchObject({
+      role: 'curator',
+    });
   });
 
   it('leaves exactly one admin when the only two revoke each other at once', async () => {

@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import { forbidden, notFound, redirect } from 'next/navigation';
 import { cache } from 'react';
 import { type CovenMembership, membershipBySlug } from '@/modules/coven';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { auth } from './auth';
 import { Forbidden } from './errors';
 import type { Session, SessionState } from './session';
@@ -124,6 +124,24 @@ export async function requireAdminSession(): Promise<Session> {
   const session = await requireSession();
   try {
     assertSiteAdmin(session);
+  } catch (error) {
+    if (error instanceof Forbidden) forbidden();
+    throw error;
+  }
+  return session;
+}
+
+/**
+ * `requireSession()`, then the curation check (M11.20): a curator or an admin
+ * passes, and anyone else gets the forbidden page, as at
+ * `requireAdminSession()`. The layout under `/admin` calls it, and so does every
+ * curation page there; the people pages call `requireAdminSession()`, which a
+ * curator fails (claude-docs/auth/admin-guard.md, "The curator guard").
+ */
+export async function requireCuratorSession(): Promise<Session> {
+  const session = await requireSession();
+  try {
+    assertCurator(session);
   } catch (error) {
     if (error instanceof Forbidden) forbidden();
     throw error;

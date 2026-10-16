@@ -55,6 +55,7 @@ export interface CreateAdminInvitationResult {
   createAdminInvitation: {
     id: string;
     email: string;
+    siteRole: 'curator' | 'admin' | null;
     note: string | null;
     expiresAt: string;
     audit: { createdBy: string };

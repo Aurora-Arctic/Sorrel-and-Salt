@@ -4,10 +4,10 @@ import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { schema } from '@/graphql/schema';
 import { Forbidden } from '@/lib/errors';
-import { assertSiteAdmin } from '@/modules/identity';
-import { A, E, asUser } from '../support/as-user';
+import { assertCurator, assertSiteAdmin } from '@/modules/identity';
+import { A, E, F, asUser } from '../support/as-user';
 import { run } from '../support/graphql/run';
-import type { AdminWrite, ScopeProbe } from './types';
+import type { AdminWrite, Governed, ScopeProbe } from './types';
 
 // MB.80's line, drawn field by field: the compendium is the one public
 // surface, so its queries answer a null session and every other query
@@ -296,7 +296,7 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   // A malformed address, so an admin past the scope is refused by the service
   // before anything is written or mailed.
   createAdminInvitation: write(
-    'mutation { createAdminInvitation(email: "not-an-address") { id } }',
+    'mutation { createAdminInvitation(email: "not-an-address", siteRole: curator) { id } }',
   ),
   revokeAdminInvitation: write(`mutation { revokeAdminInvitation(id: "${NOWHERE}") { id } }`),
   acceptInvitation: write('mutation { acceptInvitation(token: "no-such-token") { id } }'),
@@ -457,14 +457,14 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
   // M5.8: who may create a coven, granted and revoked by an admin.
   grantWorkspaceCreation: { governs: 'workspace creation' },
   revokeWorkspaceCreation: { governs: 'workspace creation' },
-  // MB.59: who is an admin, granted and revoked by an admin.
-  setUserRole: { governs: 'admin role' },
+  // MB.59, M11.20: who is an admin or a curator, granted and revoked by an admin.
+  setUserRole: { governs: 'site role' },
   // MB.63: the primary admin's pause on those changes.
-  pauseAdminRoleChanges: { governs: 'admin role' },
-  resumeAdminRoleChanges: { governs: 'admin role' },
+  pauseAdminRoleChanges: { governs: 'site role' },
+  resumeAdminRoleChanges: { governs: 'site role' },
   // MB.70: inviting an address to become an admin, and withdrawing it.
-  createAdminInvitation: { governs: 'admin role' },
-  revokeAdminInvitation: { governs: 'admin role' },
+  createAdminInvitation: { governs: 'site role' },
+  revokeAdminInvitation: { governs: 'site role' },
   createCategory: { governs: 'categories' },
   updateCategory: { governs: 'categories' },
   deleteCategory: { governs: 'categories' },
@@ -574,4 +574,76 @@ describe('a signed-in non-admin at every admin write', () => {
       extensions: { code: 'FORBIDDEN' },
     });
   });
+});
+
+// M11.20: the people page's writes are an admin's alone, and every other admin
+// write is curation, which a curator's scope admits as an admin's does. The
+// split is by what a write governs, so a write added to ADMIN_WRITES lands on
+// one side or the other without a list of its own.
+const PEOPLE_PAGE: readonly Governed[] = ['workspace creation', 'site role'];
+const governsPeople = (field: string) => PEOPLE_PAGE.includes(ADMIN_WRITES[field].governs);
+const PEOPLE_WRITES = Object.keys(ADMIN_WRITES).filter(governsPeople);
+const CURATION_WRITES = Object.keys(ADMIN_WRITES).filter((field) => !governsPeople(field));
+
+/** The codes a result's errors carry, none for none. */
+const codesOf = (result: Awaited<ReturnType<typeof run>>) =>
+  result.errors?.map((error) => error.extensions?.code) ?? [];
+
+describe('a curator at every admin write, and at the people page’s reads', () => {
+  beforeEach(() => {
+    vi.stubEnv('ADMIN_BOOTSTRAP_EMAIL', E.email);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  // Each side holds something, or the sweeps below would pass by running nothing.
+  it('splits the admin writes into curation and the people page', () => {
+    expect(CURATION_WRITES.length).toBeGreaterThan(0);
+    expect(PEOPLE_WRITES).toEqual(
+      expect.arrayContaining(['setUserRole', 'grantWorkspaceCreation', 'createAdminInvitation']),
+    );
+  });
+
+  it.each(CURATION_WRITES)('%s admits a curator past the scope and the service', async (field) => {
+    const probe = adminProbe(field);
+    // Why F could have been refused: the role is not an admin's.
+    expect(asUser(F).role).toBe('curator');
+    expect(() => assertSiteAdmin(asUser(F))).toThrow(Forbidden);
+
+    const result = await run(asUser(F), probe.source, probe.variables);
+
+    expect(codesOf(result)).not.toContain('FORBIDDEN');
+  });
+
+  it.each(PEOPLE_WRITES)('%s refuses a curator at the scope', async (field) => {
+    const probe = adminProbe(field);
+    // Preconditions: the field admits an admin, and F holds a proof that
+    // curates, so the refusal below is the scope's line between the two.
+    expect(codesOf(await run(asUser(E), probe.source, probe.variables))).not.toContain('FORBIDDEN');
+    expect(assertCurator(asUser(F))).toEqual({ userId: F.id });
+
+    const result = await run(asUser(F), probe.source, probe.variables);
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]).toMatchObject({
+      path: [field],
+      message: SCOPE_REFUSAL,
+      extensions: { code: 'FORBIDDEN' },
+    });
+  });
+
+  it.each(['users', 'privilegeChanges'])(
+    '%s refuses a curator, answering an admin',
+    async (field) => {
+      const { source } = PROBES[field];
+      expect(codesOf(await run(asUser(E), source))).toEqual([]);
+
+      const result = await run(asUser(F), source);
+
+      expect(result.data?.[field] ?? null).toBeNull();
+      expect(codesOf(result)).toEqual(['FORBIDDEN']);
+    },
+  );
 });

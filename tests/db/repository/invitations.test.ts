@@ -70,9 +70,12 @@ const inviteIntoW = (values: InvitationOverrides = {}, proof = () => inW) =>
     write.insertInvitation(proof(), { email: INVITED, role: 'member', token: TOKEN, ...values }),
   );
 
-const inviteToSite = (values: InvitationOverrides = {}) =>
+const inviteToSite = (
+  values: InvitationOverrides = {},
+  siteRole: SiteInvitationValues['siteRole'] = 'admin',
+) =>
   withAudit(asUser(E), (write) =>
-    write.insertInvitation(admin, { email: INVITED, token: TOKEN, ...values }),
+    write.insertInvitation(admin, { email: INVITED, token: TOKEN, siteRole, ...values }),
   );
 
 const acceptAs = (user: SessionUser, token = TOKEN) =>
@@ -114,12 +117,21 @@ describe('insertInvitation', () => {
     expect(inserted).toMatchObject({
       workspaceId: null,
       role: null,
+      siteRole: 'admin',
       email: INVITED,
       tokenHash: sha256(TOKEN),
       note: 'Takes over the vocabularies',
       createdBy: E.id,
     });
     expect(Object.values(await rowOf(inserted!.id))).not.toContain(TOKEN);
+  });
+
+  it('writes the site role a site-tier invitation names, and none on a coven invitation', async () => {
+    const [curators] = await inviteToSite({}, 'curator');
+    const [owners] = await inviteIntoW({ token: OTHER_TOKEN });
+
+    expect(curators).toMatchObject({ workspaceId: null, siteRole: 'curator' });
+    expect(owners).toMatchObject({ workspaceId: WORKSPACE_W_ID, siteRole: null });
   });
 
   // The tier is the proof's, whatever a cast smuggled into the values.
@@ -130,20 +142,27 @@ describe('insertInvitation', () => {
         role: 'viewer',
         token: TOKEN,
         workspaceId: WORKSPACE_X_ID,
+        siteRole: 'admin',
       } as WorkspaceInvitationValues),
     );
     const [admins] = await withAudit(asUser(E), (write) =>
       write.insertInvitation(admin, {
         email: INVITED,
         token: OTHER_TOKEN,
+        siteRole: 'curator',
         workspaceId: WORKSPACE_W_ID,
         role: 'member',
         acceptedBy: E.id,
       } as SiteInvitationValues),
     );
 
-    expect(owners).toMatchObject({ workspaceId: WORKSPACE_W_ID, role: 'viewer' });
-    expect(admins).toMatchObject({ workspaceId: null, role: null, acceptedBy: null });
+    expect(owners).toMatchObject({ workspaceId: WORKSPACE_W_ID, role: 'viewer', siteRole: null });
+    expect(admins).toMatchObject({
+      workspaceId: null,
+      role: null,
+      siteRole: 'curator',
+      acceptedBy: null,
+    });
   });
 });
 

@@ -15,7 +15,7 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  */
 type Documents = {
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": typeof types.RevokeAdminInvitationDocument,
-    "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n": typeof types.CreateAdminInvitationDocument,
+    "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n": typeof types.CreateAdminInvitationDocument,
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceDocument,
     "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.DeleteWorkspaceDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": typeof types.SetEmailDocument,
@@ -81,7 +81,7 @@ type Documents = {
 };
 const documents: Documents = {
     "\n  mutation RevokeAdminInvitation($id: ID!) {\n    revokeAdminInvitation(id: $id) {\n      id\n    }\n  }\n": types.RevokeAdminInvitationDocument,
-    "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n": types.CreateAdminInvitationDocument,
+    "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n": types.CreateAdminInvitationDocument,
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceDocument,
     "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": types.DeleteWorkspaceDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": types.SetEmailDocument,
@@ -167,7 +167,7 @@ export function graphql(source: "\n  mutation RevokeAdminInvitation($id: ID!) {\
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateAdminInvitation($email: String!, $note: String) {\n    createAdminInvitation(email: $email, note: $note) {\n      id\n    }\n  }\n"];
+export function graphql(source: "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

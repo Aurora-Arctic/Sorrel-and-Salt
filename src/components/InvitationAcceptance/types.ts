@@ -10,7 +10,15 @@ export type InvitationAcceptanceProps =
   | {
       status: 'acceptable';
       token: string;
-      tier: 'site' | 'workspace';
+      tier: 'site';
+      /** The site role accepting grants (M11.20). */
+      siteRole: 'curator' | 'admin';
+      landing: Route;
+    }
+  | {
+      status: 'acceptable';
+      token: string;
+      tier: 'workspace';
       landing: Route;
       covenName?: string;
     };

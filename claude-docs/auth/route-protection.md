@@ -4,13 +4,14 @@ Every page is protected unless it is named public, and two layers do the
 protecting: a cheap one that owns the redirect, and a secure one that owns the
 answer.
 
-| Layer                               | Where                        | Checks                                           | On failure                                                                        |
-| ----------------------------------- | ---------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- |
-| Proxy (optimistic)                  | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>`                                           |
-| `requireSession()` (secure)         | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page                                                  |
-| `requireSignedIn()`, the shell      | `src/lib/request-session.ts` | The secure check, without the email check        | The same redirect, from the shell layout                                          |
-| Proxy, `/workshop/*` only           | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-admin                                              |
-| `requireAdminSession()`, `/admin/*` | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`       | The redirect, or a 403 page for a non-admin (["The admin guard"](admin-guard.md)) |
+| Layer                                                | Where                        | Checks                                           | On failure                                                                        |
+| ---------------------------------------------------- | ---------------------------- | ------------------------------------------------ | --------------------------------------------------------------------------------- |
+| Proxy (optimistic)                                   | `src/proxy.ts`               | A Better Auth session cookie is present          | 307 to `/sign-in?next=<path and query>`                                           |
+| `requireSession()` (secure)                          | `src/lib/request-session.ts` | Better Auth finds a live session in the database | The same redirect, from the page                                                  |
+| `requireSignedIn()`, the shell                       | `src/lib/request-session.ts` | The secure check, without the email check        | The same redirect, from the shell layout                                          |
+| Proxy, `/workshop/*` only                            | `src/proxy.ts`               | The secure check, then `assertWorkshopAccess()`  | The redirect, or 403 for a non-admin                                              |
+| `requireCuratorSession()`, `/admin/*` curation pages | `src/lib/request-session.ts` | The secure check, then `assertCurator()`         | The redirect, or a 403 page for a user (["The curator guard"](admin-guard.md))    |
+| `requireAdminSession()`, `/admin/*` people pages     | `src/lib/request-session.ts` | The secure check, then `assertSiteAdmin()`       | The redirect, or a 403 page for a non-admin (["The admin guard"](admin-guard.md)) |
 
 - **Deny by default.** `PUBLIC_ROUTES` in `src/proxy.ts` is a plain list of
   the pages a signed-out visitor may reach — `/`, the general entry page
@@ -84,7 +85,7 @@ answer.
   full page load settled, because the server answers it with a 307 before
   anything is drawn. Thrown by the page instead, the redirect settles both
   ways. A layout further down may still throw it: `/admin`'s does, through
-  `requireAdminSession()`, and the same link into `/admin` settles. The
+  `requireCuratorSession()`, and the same link into `/admin` settles. The
   difference we can see is that the email page sits beneath the shell layout
   and not beneath `/admin`'s. `tests/e2e/account.spec.ts` follows both
   links. What it costs: the shell layout no longer stops an unverified account
@@ -103,7 +104,7 @@ answer.
   (`undefined`), because which landing then applies is the role's, and only
   the callback knows the role once any promotion has run.
 - **With no return path, the landing is the role's** (MB.113). A verified
-  admin lands on `/admin`, `ADMIN_LANDING`; everyone else on `/coven`,
+  curator or admin lands on `/admin`, `ADMIN_LANDING` (M11.20); everyone else on `/coven`,
   `POST_SIGN_IN_LANDING`, the post-sign-in landing M2.8 builds — not `/`:
   someone who has just signed in has been through the front door already
   ([`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md)).
@@ -137,7 +138,7 @@ answer.
   bare on the confirmed view: its Continue takes the role's landing too, read
   when the page renders, after the link has promoted the primary admin (["The
   email page"](admin-bootstrap.md#the-email-page-mb54)). `/`'s Continue offers a signed-in visitor the same landing,
-  so an admin's front door leads to `/admin` too
+  so a curator's or an admin's front door leads to `/admin` too
   ([`components/welcome.md`](../components/welcome.md)). The helpers are shared
   with the tests' OAuth harness, whose `signIn` with no destination is
   `SignInPanel`'s sign-in with none.

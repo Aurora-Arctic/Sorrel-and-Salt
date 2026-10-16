@@ -79,6 +79,7 @@ export interface InvitationStateRow {
   id: string;
   workspace_id: string | null;
   role: string | null;
+  site_role?: string | null;
   email: string;
   token_hash: string;
   note: string | null;
@@ -98,6 +99,8 @@ export interface InvitationFixture {
   note?: string | null;
   workspaceId?: string | null;
   role?: 'viewer' | 'member' | null;
+  /** The site role a site-tier invitation grants; `admin` by default there, none on a coven's. */
+  siteRole?: 'curator' | 'admin' | null;
   expired?: boolean;
   revoked?: boolean;
   accepted?: boolean;
