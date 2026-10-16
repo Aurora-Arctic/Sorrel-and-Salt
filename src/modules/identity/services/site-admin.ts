@@ -1,7 +1,8 @@
 import 'server-only';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { isCurator, isSiteAdmin } from './admin-changes';
+import { curates } from '../../../lib/site-roles';
+import { isSiteAdmin } from './admin-changes';
 
 // CLAUDE.md rule 5's two layers, on the site role rather than a workspace
 // role, twice over: `assertCurator` and `assertSiteAdmin` are the checks, and
@@ -40,7 +41,7 @@ export type SiteAdmin = Curator & {
  * @throws {Forbidden} the session's role is neither `curator` nor `admin`.
  */
 export function assertCurator(session: Session, reason = 'Only a curator may do this'): Curator {
-  if (!isCurator(session)) throw new Forbidden(reason);
+  if (!curates(session.role)) throw new Forbidden(reason);
   return { userId: session.userId } as Curator;
 }
 

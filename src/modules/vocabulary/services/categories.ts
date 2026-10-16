@@ -11,7 +11,7 @@ import type { Session } from '../../../lib/session';
 import { slugify } from '../../../lib/slugify';
 import { plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import { categories, categoryGroups } from '../schema/categories';
 import { CategoryInput } from '../validation/category';
 import { cachedFilteredList } from './curated-lists';
@@ -20,7 +20,7 @@ import { refuseWhileHeld } from './held-entries';
 import type { CategoryFilter, CategoryRow, CuratedVocabulary } from '../types';
 
 // The category vocabulary: its reads, public reference data like every
-// curated vocabulary (MB.80), and its writes, the site admin's alone (M5.6).
+// curated vocabulary (MB.80), and its writes, a curator's or an admin's alone (M5.6).
 // A delete leaves every link in place and every read drops a deleted
 // category; it is refused only while a live compendium entry is filed under
 // it (claude-docs/db/categories.md, "Category writes").
@@ -76,13 +76,13 @@ export async function getCategoryBySlug(slug: string): Promise<CategoryRow> {
 /**
  * Adds a category, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is not a site admin — checked before the
+ * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `CategoryInput`, names no live
  * group, or its slug is a live category's.
  */
 export async function createCategory(session: Session, input: CategoryInput): Promise<CategoryRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const fields = await parseCategory(input);
   const slug = slugify(fields.name);
 
@@ -98,7 +98,7 @@ export async function createCategory(session: Session, input: CategoryInput): Pr
  * Rewrites a category whole, its slug following the name. Its `seedKey` is
  * left as it was, so a renamed seeded row is still the seed's (MB.171).
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} as `createCategory` throws it, the row's own slug
  * excepted.
  * @throws {NotFound} no live category has this id.
@@ -108,7 +108,7 @@ export async function updateCategory(
   id: string,
   input: CategoryInput,
 ): Promise<CategoryRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const fields = await parseCategory(input);
   await liveRow(CATEGORIES, id);
   const slug = slugify(fields.name);
@@ -131,12 +131,12 @@ export async function updateCategory(
  * category in the instant between is left holding a deleted one, which every
  * read drops.
  *
- * @throws {Forbidden} the caller is not a site admin, or a live compendium
+ * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium
  * entry is filed under the category — the message names the entries.
  * @throws {NotFound} no live category has this id.
  */
 export async function deleteCategory(session: Session, id: string): Promise<void> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const category = await liveRow(CATEGORIES, id);
   await refuseWhileHeld(
     { categoryIds: [category.id] },

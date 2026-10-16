@@ -12,7 +12,7 @@ import { slugify } from '../../../lib/slugify';
 import { plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { parseInput } from '../../../lib/validation';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import { celestialBodies, zodiacSigns } from '../schema/astrology';
 import {
   type AstrologyValueInput,
@@ -25,10 +25,11 @@ import { refuseWhileHeld } from './held-entries';
 import type { AstrologyValueFilter, AstrologyValueRow, CuratedField } from '../types';
 
 // The two curated astrology vocabularies: their reads, public reference data
-// like every curated vocabulary (MB.80), and their writes, the site admin's
-// alone (MB.95). One code path for both, keyed by the ingredient list each
-// curates. A compendium entry's celestial bodies and signs are spellings the
-// vocabulary curates (MB.162), so a value a live entry's list holds is held:
+// like every curated vocabulary (MB.80), and their writes, a curator's or an
+// admin's alone (MB.95, M11.20). One code path for both, keyed by the
+// ingredient list each curates. A compendium entry's celestial bodies and
+// signs are spellings the vocabulary curates (MB.162), so a value a live
+// entry's list holds is held:
 // its delete is refused, and its rename is carried onto the list in the same
 // write. A coven's ingredient never holds a value and is never rewritten: its
 // spelling moves into the coven's in-use values, and an admin writes nothing
@@ -119,7 +120,7 @@ export async function getAstrologyValueBySlug(
 /**
  * Adds a celestial body or a sign, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is not a site admin — checked before the
+ * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks the vocabulary's schema, or its
  * slug is a live row's.
@@ -129,7 +130,7 @@ export async function createAstrologyValue(
   field: CuratedField,
   input: AstrologyValueInput,
 ): Promise<AstrologyValueRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const vocabulary = VOCABULARY[field];
   const fields = parseInput(vocabulary.input, input);
   const slug = slugify(fields.name);
@@ -152,7 +153,7 @@ export async function createAstrologyValue(
  * transaction; no slug moves, since a celestial body or a sign is no part of an
  * entry's identity or slug. A soft-deleted entry keeps the old spelling.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} as `createAstrologyValue` throws it, the row's
  * own slug excepted.
  * @throws {NotFound} no live row of the vocabulary has this id.
@@ -163,7 +164,7 @@ export async function updateAstrologyValue(
   id: string,
   input: AstrologyValueInput,
 ): Promise<AstrologyValueRow> {
-  const admin = assertSiteAdmin(session);
+  const curator = assertCurator(session);
   const vocabulary = VOCABULARY[field];
   const fields = parseInput(vocabulary.input, input);
   const current = await liveRow<AstrologyTable>(vocabulary, id);
@@ -173,7 +174,7 @@ export async function updateAstrologyValue(
     const [row] = await write.updateById(vocabulary.table, id, { ...fields, slug });
     if (!row) throw new NotFound(`No such ${vocabulary.noun}`);
     if (current.name !== fields.name) {
-      await write.carryAstrologyRename(admin, field, current.name, fields.name);
+      await write.carryAstrologyRename(curator, field, current.name, fields.name);
     }
     return row;
   }).catch((error: unknown) => refuseSlugCollision(vocabulary, error, slug));
@@ -189,7 +190,7 @@ export async function updateAstrologyValue(
  * The entries are read before the transaction, so an entry saved with the
  * value in the instant between is left holding a retired spelling.
  *
- * @throws {Forbidden} the caller is not a site admin, or a live compendium
+ * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium
  * entry holds the value — the message names the entries.
  * @throws {NotFound} no live row of the vocabulary has this id.
  */
@@ -198,7 +199,7 @@ export async function deleteAstrologyValue(
   field: CuratedField,
   id: string,
 ): Promise<void> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const vocabulary = VOCABULARY[field];
   const row = await liveRow<AstrologyTable>(vocabulary, id);
   await refuseWhileHeld(vocabulary.holding(row.name), {

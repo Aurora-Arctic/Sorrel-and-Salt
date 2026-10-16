@@ -117,7 +117,7 @@ const ReferenceInput = builder.inputType('ReferenceInput', {
  * admits anyone signed in, the membership check deciding who may.
  */
 const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
-  workspaceId == null ? { admin: true } : { signedIn: true };
+  workspaceId == null ? { curator: true } : { signedIn: true };
 
 builder.mutationField('createReference', (t) =>
   t.field({

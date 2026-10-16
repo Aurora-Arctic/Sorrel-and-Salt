@@ -13,7 +13,7 @@ import { formSlug } from '../../../lib/slugify';
 import { joinAnd, plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
 import { IngredientFormValueInput } from '../validation/ingredient-form-value';
 import { cachedFilteredList } from './curated-lists';
@@ -26,7 +26,7 @@ import type {
 } from '../types';
 
 // The curated form vocabulary: its reads, public reference data like every
-// curated vocabulary (MB.80), and its writes, the site admin's alone (M5.6a).
+// curated vocabulary (MB.80), and its writes, a curator's or an admin's alone (M5.6a).
 // A compendium entry's forms are its variants, each a pick (MB.167, MB.215),
 // so a form a live entry's variant picked holds: its delete is refused, and
 // its rename is carried onto every such variant in the same write (MB.162). A
@@ -89,7 +89,7 @@ export async function getIngredientFormValueBySlug(slug: string): Promise<Ingred
 /**
  * Adds a form, its slug derived from the name and the group's name.
  *
- * @throws {Forbidden} the caller is not a site admin — checked before the
+ * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `IngredientFormValueInput`,
  * names no live group, or its slug is a live form's.
@@ -98,7 +98,7 @@ export async function createIngredientFormValue(
   session: Session,
   input: IngredientFormValueInput,
 ): Promise<IngredientFormValueRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const { fields, groupName } = await parseForm(input);
   const slug = formSlug(fields.name, groupName);
 
@@ -121,7 +121,7 @@ export async function createIngredientFormValue(
  * of an entry's address since MB.215. A change of group alone rewrites no
  * variant, since a variant holds the form's name and not its group.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} as `createIngredientFormValue` throws it, the
  * row's own slug excepted; on `name`, a rename that would give an entry two
  * forms of one name, naming the entry.
@@ -132,7 +132,7 @@ export async function updateIngredientFormValue(
   id: string,
   input: IngredientFormValueInput,
 ): Promise<IngredientFormValueRow> {
-  const admin = assertSiteAdmin(session);
+  const curator = assertCurator(session);
   const { fields, groupName } = await parseForm(input);
   const current = await liveRow(FORMS, id);
   const slug = formSlug(fields.name, groupName);
@@ -144,7 +144,7 @@ export async function updateIngredientFormValue(
   const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(ingredientForms, id, { ...fields, slug });
     if (!row) throw new NotFound('No such form');
-    if (renamed) await write.carryFormRename(admin, id, fields.name);
+    if (renamed) await write.carryFormRename(curator, id, fields.name);
     return row;
   }).catch(async (error: unknown) => {
     if (renamed) await refuseDoubledForms(rename, error);
@@ -163,12 +163,12 @@ export async function updateIngredientFormValue(
  * The entries are read before the transaction, so an entry picking the form
  * in the instant between is left holding a deleted one, which reads as no pick.
  *
- * @throws {Forbidden} the caller is not a site admin, or a live compendium
+ * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium
  * entry picked the form — the message names the entries.
  * @throws {NotFound} no live form has this id.
  */
 export async function deleteIngredientFormValue(session: Session, id: string): Promise<void> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const form = await liveRow(FORMS, id);
   // Read through the compendium's own filter on the pick.
   await refuseWhileHeld(
