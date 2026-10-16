@@ -10,7 +10,7 @@ import {
   findReferencesOf,
   withAudit,
 } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
@@ -21,7 +21,7 @@ import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { referenceLinks } from '../schema/reference-links';
-import type { Membership } from '@/modules/coven';
+import { type Membership, assertMembership } from '@/modules/coven';
 import { curatedNames, foldVocabularyValue } from '@/modules/vocabulary';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import type { ValidationIssue } from '../../../lib/types';
@@ -48,6 +48,24 @@ import type { ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 // services import it, and the index does not. A tier is told by
 // `memberships`, as the repository's two-tier finders take it: none for a
 // compendium entry, the proof's coven for a coven's.
+
+/**
+ * The proof that `session` may read the ingredients of coven `workspaceId`,
+ * or `undefined` for a caller who may not (or none): a read that skips that
+ * coven's rows rather than failing the batch it sits in.
+ */
+export async function proofFor(
+  session: Session | null,
+  workspaceId: string,
+): Promise<Membership | undefined> {
+  if (!session) return undefined;
+  try {
+    return await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  } catch (error) {
+    if (error instanceof Forbidden) return undefined;
+    throw error;
+  }
+}
 
 /**
  * The parsed input as columns, every optional one written — `null` where the

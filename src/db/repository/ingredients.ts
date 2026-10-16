@@ -369,6 +369,23 @@ export function findOneIngredient(
 }
 
 /**
+ * The live ingredients among these ids, in the compendium or in a coven one of
+ * `memberships` proves, in no particular order — a loader's batch read, as
+ * `findOneIngredient` is the single one. An id in a coven with no proof, or
+ * soft-deleted, is absent. No proofs reads the compendium alone.
+ */
+export function findManyIngredients(
+  memberships: readonly Membership[],
+  ids: readonly string[],
+): Promise<IngredientRow[]> {
+  if (ids.length === 0) return Promise.resolve([]);
+  return selectFrom(
+    ingredients,
+    and(readableInTiers(memberships, ingredients), inArray(ingredients.id, [...ids])),
+  );
+}
+
+/**
  * The live compendium entry keyed as `identity` would be — the row a
  * compendium write carrying it collides with — or `undefined`. The key is the
  * formal name, or the label without one (MB.215), compared through the

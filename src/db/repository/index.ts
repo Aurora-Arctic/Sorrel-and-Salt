@@ -35,6 +35,7 @@ export {
   findCompendiumPage,
   findDeitiesOfIngredients,
   findIngredientSuggestions,
+  findManyIngredients,
   findManyOfIngredients,
   findManyOfVariants,
   findOneIngredient,

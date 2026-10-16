@@ -10,6 +10,7 @@ export * from './services/compendium';
 export * from './services/references';
 export * from './services/promote-folk-name';
 export * from './loaders/ingredient-children';
+export * from './loaders/ingredients-by-id';
 export * from './graphql/common-names';
 export * from './graphql/duplicates';
 export * from './graphql/ingredient-suggestions';
