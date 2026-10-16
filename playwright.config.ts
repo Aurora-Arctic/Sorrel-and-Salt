@@ -171,10 +171,15 @@ export const baseConfig = {
   // server wherever a project names none.
   use: {
     // On CI a retry filters flake first; locally there is no retry, so the
-    // first failure must carry its own evidence.
+    // first failure must carry its own evidence: the trace, which holds a
+    // screenshot and a DOM snapshot per action, and the final screenshot.
     trace: process.env.CI ? 'on-first-retry' : 'retain-on-failure',
     screenshot: process.env.CI ? 'off' : 'only-on-failure',
-    video: process.env.CI ? 'off' : 'retain-on-failure',
+    // Never a video, locally either (M11.18): recording every test cost a tenth
+    // to a sixth of the summed test time, measured, and was encoded on the
+    // browser server, which shares these cores, for a failure the trace already
+    // shows (claude-docs/testing/e2e.md, "Where a run's time goes").
+    video: 'off',
     ...(wsEndpoint ? { connectOptions: { wsEndpoint } } : {}),
     // `.btn` transitions its colours; without this an axe scan can sample
     // one mid-fade — on hover, or as a Save button enables — rather than the
