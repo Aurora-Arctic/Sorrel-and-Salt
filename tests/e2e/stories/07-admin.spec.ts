@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page, Request, Route as PlaywrightRoute } from '@playwright/test';
 import postgres from 'postgres';
 import { slugify } from '@/lib/slugify';
 import { insertIngredient } from '../../support/db/insert-ingredient';
@@ -193,7 +193,7 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
       await expect(dialog.getByRole('button', { name: /Impersonate/ })).toHaveCount(0);
       await assertNoAccessibilityViolations(page);
 
-      await dialog.getByRole('button', { name: 'Close' }).click();
+      await dialog.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(page.getByRole('dialog')).toHaveCount(0);
       await expect(page).toHaveURL(/\/admin\/users\?query=[^&]*$/);
     },
@@ -247,4 +247,382 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
       },
     );
   }
+});
+
+/**
+ * Holds every request for `path` whose address carries `param` — the press's
+ * navigation and any prefetch of it — until `release` is called, which lets
+ * them through and resolves once the last is answered: how a test sees a
+ * modal open on the press, before the page that fills it arrives (M9.18;
+ * claude-docs/components/modal.md, "Opening at once").
+ */
+async function holdModalRequests(page: Page, path: string, param: string) {
+  const held: PlaywrightRoute[] = [];
+  let released = false;
+  const opens = (url: URL) => url.pathname === path && url.searchParams.has(param);
+  // Not `unroute` on release: it lets the held requests go itself.
+  await page.route(opens, async (route) => {
+    if (released) await route.continue();
+    else held.push(route);
+  });
+  return {
+    async release(): Promise<void> {
+      released = true;
+      const answered = held.map((route) => route.request());
+      await Promise.all(held.map((route) => route.continue()));
+      await Promise.all(answered.map((request: Request) => request.response()));
+    },
+  };
+}
+
+/** The dialog's contents marked busy: the skeleton, until the form arrives. */
+const busy = (dialog: Locator) => dialog.locator('[aria-busy="true"]');
+
+/** The row whose first cell is `name`, in the list named `table` or the page's one list. */
+const rowOf = (page: Page, table: string | null, name: string) =>
+  (table ? page.getByRole('table', { name: table, exact: true }) : page.getByRole('table'))
+    .getByRole('row')
+    .filter({ has: page.getByRole('cell', { name, exact: true }) });
+
+/** Presses a dialog's Delete, then the confirmation's. */
+async function deleteFrom(dialog: Locator, noun: string) {
+  await dialog.getByRole('button', { name: `Delete ${noun}`, exact: true }).click();
+  const confirm = dialog.getByRole('button', { name: 'Delete', exact: true });
+  await expect(confirm).toBeVisible();
+  await confirm.click();
+}
+
+/**
+ * A group's delete that moves what it holds to `destination` first: the
+ * question names how many, the picker is inside it, and the move is
+ * confirmed before it is made (M5.6b).
+ */
+async function moveAndDelete(page: Page, dialog: Locator, picker: string, destination: string) {
+  await dialog.getByRole('button', { name: /^Delete (Group|Tradition)$/ }).click();
+  await dialog.getByRole('combobox', { name: picker }).click();
+  await dialog.getByRole('option', { name: destination, exact: true }).click();
+  await dialog.getByRole('button', { name: 'Continue' }).click();
+  const confirm = dialog.getByRole('button', { name: 'Move and Delete' });
+  await expect(confirm).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await confirm.click();
+}
+
+test.describe('story 18: an admin adds, edits and soft-deletes what the compendium is built from', () => {
+  test(
+    'an admin adds a compendium entry, edits it, and deletes it, the list following each',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      await signInAs(page, 'compendium@story-18.test', ['discord'], 'admin');
+      expect((await page.goto('/admin/compendium'))?.status()).toBe(200);
+      const add = page.getByRole('link', { name: 'Add Ingredient' });
+      await expect(add).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+
+      // Add opens its modal on the press, before the page that fills it arrives.
+      const gate = await holdModalRequests(page, '/admin/compendium', 'new');
+      await add.click();
+      const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
+      await expect(adding).toBeVisible();
+      await expect(adding.getByRole('status')).toHaveCount(1);
+      await expect(busy(adding)).toHaveCount(1);
+      await expect(page).toHaveURL(/\/admin\/compendium$/);
+      await gate.release();
+      await expect(page).toHaveURL(/\/admin\/compendium\?new$/);
+      const name = adding.getByRole('textbox', { name: 'Name', exact: true });
+      await expect(name).toBeVisible();
+      await expect(busy(adding)).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
+
+      /** Picks the curated form `form` from the New Form box, which adds it as a variant (MB.221). */
+      const addForm = async (dialog: Locator, form: string) => {
+        const box = dialog.getByRole('combobox', { name: 'New Form' });
+        await box.click();
+        await box.fill(form);
+        await dialog
+          .getByRole('listbox', { name: 'New Form suggestions' })
+          .getByRole('option', { name: new RegExp(`^${form} \\(`) })
+          .click();
+        await expect(dialog.getByRole('group', { name: form, exact: true })).toBeVisible();
+      };
+
+      await name.fill('Aaa Testwort');
+      await adding.getByRole('combobox', { name: 'Classification' }).click();
+      await adding
+        .getByRole('listbox', { name: 'Classification choices' })
+        .getByRole('option', { name: 'None' })
+        .click();
+      await addForm(adding, 'Herb');
+      await adding.getByRole('button', { name: 'Save Ingredient' }).click();
+
+      // Save opens what it saved, at its address, under its saved name (MB.115).
+      const editing = page.getByRole('dialog', {
+        name: 'Edit Ingredient, Aaa Testwort',
+        exact: true,
+      });
+      await expect(editing).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/compendium\?edit=aaa-testwort$/);
+      await editing.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(editing).toHaveCount(0);
+      // In the list, with the form it was given.
+      const row = rowOf(page, null, 'Aaa Testwort');
+      await expect(row.getByRole('cell', { name: 'Herb', exact: true })).toBeVisible();
+
+      // Edited: renamed, described, and given a second form with a safety note of its own.
+      await row.getByRole('link', { name: 'Edit Aaa Testwort' }).click();
+      await expect(editing).toBeVisible();
+      // An edit opens with every section closed (MB.115); Open All opens them.
+      await editing.getByRole('button', { name: 'Open All' }).click();
+      const save = editing.getByRole('button', { name: 'Save Ingredient' });
+      await expect(save).toBeDisabled();
+      await editing
+        .getByRole('textbox', { name: 'Name', exact: true })
+        .fill('Aaa Testwort Renamed');
+      await editing.getByRole('textbox', { name: 'Description' }).first().fill('Made by the story');
+      await addForm(editing, 'Oil');
+      const oil = editing.getByRole('group', { name: 'Oil', exact: true });
+      await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
+      await expect(save).toBeEnabled();
+      await assertNoAccessibilityViolations(page);
+      await save.click();
+      const renamed = page.getByRole('dialog', {
+        name: 'Edit Ingredient, Aaa Testwort Renamed',
+        exact: true,
+      });
+      await expect(renamed.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
+      await expect(
+        renamed.getByRole('status').filter({ hasText: 'Aaa Testwort Renamed' }),
+      ).toBeVisible();
+
+      // Read back from the server: the new name, both forms, the oil's note its own.
+      await page.reload();
+      await expect(renamed).toBeFocused();
+      await renamed.getByRole('button', { name: 'Variants', exact: true }).click();
+      await expect(renamed.getByRole('group', { name: 'Herb', exact: true })).toBeVisible();
+      await renamed.getByRole('button', { name: 'Edit Oil' }).click();
+      const reopenedOil = renamed.getByRole('group', { name: 'Oil', exact: true });
+      await reopenedOil.getByRole('button', { name: 'Details & Care', exact: true }).click();
+      await expect(reopenedOil.getByRole('textbox', { name: 'Safety Notes' })).toHaveValue(
+        'Dilute before use.',
+      );
+      await assertNoAccessibilityViolations(page);
+      await renamed.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(renamed).toHaveCount(0);
+      const renamedRow = rowOf(page, null, 'Aaa Testwort Renamed');
+      await expect(renamedRow.getByRole('cell', { name: 'Herb, Oil', exact: true })).toBeVisible();
+      await expect(rowOf(page, null, 'Aaa Testwort')).toHaveCount(0);
+
+      // Deleted: the modal closes onto the list, which no longer holds it.
+      await renamedRow.getByRole('link', { name: 'Edit Aaa Testwort Renamed' }).click();
+      await expect(renamed).toBeVisible();
+      await deleteFrom(renamed, 'Ingredient');
+      await expect(renamed).toHaveCount(0);
+      await expect(page).toHaveURL(/\/admin\/compendium$/);
+      await expect(page.getByRole('table')).toBeVisible();
+      await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
+    },
+  );
+
+  test(
+    'an admin adds a category, edits it, and deletes it, and is told which entries hold one before it can go',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      await signInAs(page, 'categories@story-18.test', ['discord'], 'admin');
+      expect((await page.goto('/admin/categories'))?.status()).toBe(200);
+      const add = page.getByRole('link', { name: 'Add Category' });
+      await expect(page.getByRole('table', { name: 'Categories' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+
+      // Closed while it loads, it stays closed once its page lands.
+      const newGate = await holdModalRequests(page, '/admin/categories', 'new');
+      await add.click();
+      const adding = page.getByRole('dialog', { name: 'Add Category' });
+      await expect(adding.getByRole('status')).toHaveCount(1);
+      await page.keyboard.press('Escape');
+      await expect(adding).toHaveCount(0);
+      await newGate.release();
+      await expect(adding).toHaveCount(0);
+      await expect(page).toHaveURL(/\/admin\/categories$/);
+      await page.unrouteAll();
+
+      // Added: first by name, so on the first page, with its group and description.
+      await add.click();
+      await expect(adding).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/categories\?new$/);
+      await expect(adding.getByRole('button', { name: 'Save Category' })).toBeDisabled();
+      await assertNoAccessibilityViolations(page);
+      await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft');
+      await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
+      await adding.getByRole('combobox', { name: 'Group' }).click();
+      // The modal's own list: the filter's Group box has a list of its own.
+      await adding.getByRole('option', { name: 'Cleansing & Release', exact: true }).click();
+      await adding.getByRole('button', { name: 'Save Category' }).click();
+      await expect(adding).toHaveCount(0);
+      const row = rowOf(page, 'Categories', 'Aaa Testcraft');
+      await expect(row.getByRole('cell', { name: 'Cleansing & Release' })).toBeVisible();
+      await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
+
+      // Edited: its Edit opens the modal on the press, and the form fills that same dialog.
+      const editGate = await holdModalRequests(page, '/admin/categories', 'edit');
+      await row.getByRole('link', { name: 'Edit Aaa Testcraft' }).click();
+      // An edit dialog is named by its eyebrow and the saved name (MB.115).
+      const editing = page.getByRole('dialog', {
+        name: 'Edit Category, Aaa Testcraft',
+        exact: true,
+      });
+      await expect(editing).toBeVisible();
+      await expect(editing.getByRole('status')).toHaveCount(1);
+      await expect(busy(editing)).toHaveCount(1);
+      await expect(editing.getByRole('textbox')).toHaveCount(0);
+      await expect(page).toHaveURL(/\/admin\/categories$/);
+      await assertNoAccessibilityViolations(page);
+      const pressed = await editing.elementHandle();
+      await editGate.release();
+      await expect(page).toHaveURL(/\/admin\/categories\?edit=aaa-testcraft$/);
+      await expect(editing.getByRole('textbox', { name: 'Name' })).toBeFocused();
+      await expect(busy(editing)).toHaveCount(0);
+      // The dialog the press opened is the one the form arrived in.
+      expect(await pressed?.evaluate((node) => node.isConnected && node.hasAttribute('open'))).toBe(
+        true,
+      );
+      await page.unrouteAll();
+      await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testcraft Renamed');
+      await editing.getByRole('textbox', { name: 'Description' }).fill('Rewritten by the story');
+      await assertNoAccessibilityViolations(page);
+      await editing.getByRole('button', { name: 'Save Category' }).click();
+      await expect(editing).toHaveCount(0);
+      const renamed = rowOf(page, 'Categories', 'Aaa Testcraft Renamed');
+      await expect(
+        renamed.getByRole('cell', { name: 'Rewritten by the story', exact: true }),
+      ).toBeVisible();
+      await expect(rowOf(page, 'Categories', 'Aaa Testcraft')).toHaveCount(0);
+
+      // Deleted, at the address its new name gives it.
+      await page.goto('/admin/categories?edit=aaa-testcraft-renamed');
+      const deleting = page.getByRole('dialog', {
+        name: 'Edit Category, Aaa Testcraft Renamed',
+        exact: true,
+      });
+      await deleteFrom(deleting, 'Category');
+      await expect(deleting).toHaveCount(0);
+      await expect(page.getByRole('table', { name: 'Categories' })).toBeVisible();
+      await expect(page.getByRole('row', { name: /Aaa Testcraft/ })).toHaveCount(0);
+
+      // One the compendium files entries under is refused, naming them: the
+      // standard seed files Bay Laurel under Protection.
+      await page.goto('/admin/categories?edit=protection');
+      const held = page.getByRole('dialog', { name: 'Edit Category, Protection', exact: true });
+      await deleteFrom(held, 'Category');
+      await expect(held.getByRole('alert')).toContainText('Bay Laurel');
+      await expect(held).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      await held.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(held).toHaveCount(0);
+      await page.goto('/admin/categories?query=Protection');
+      await expect(rowOf(page, 'Categories', 'Protection')).toBeVisible();
+    },
+  );
+
+  test(
+    'an admin adds a category group, is refused a colour too dark for its ground, renames it, and moves its category before deleting it',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      const { userId } = await signInAs(
+        page,
+        'category-groups@story-18.test',
+        ['discord'],
+        'admin',
+      );
+      expect((await page.goto('/admin/category-groups'))?.status()).toBe(200);
+      await expect(page.getByRole('table', { name: 'Category Groups' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+
+      await page.getByRole('link', { name: 'Add Group' }).click();
+      const adding = page.getByRole('dialog', { name: 'Add Category Group' });
+      await expect(adding).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/category-groups\?new$/);
+      await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Wards');
+      await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
+      await adding.getByRole('textbox', { name: 'Dark Theme Colour', exact: true }).fill('#4e8bc2');
+      await adding
+        .getByRole('textbox', { name: 'Light Theme Colour', exact: true })
+        .fill('#0c5393');
+      const saveNew = adding.getByRole('button', { name: 'Save Group' });
+      await expect(saveNew).toBeEnabled();
+      await assertNoAccessibilityViolations(page);
+      await saveNew.click();
+      await expect(adding).toHaveCount(0);
+      const row = rowOf(page, 'Category Groups', 'Aaa Testwort Wards');
+      await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
+
+      // A rename carrying a dark-theme colour too dark for the dark card is
+      // refused at the field, and nothing of it is saved.
+      await row.getByRole('link', { name: 'Edit Aaa Testwort Wards' }).click();
+      const editing = page.getByRole('dialog', {
+        name: 'Edit Category Group, Aaa Testwort Wards',
+        exact: true,
+      });
+      await expect(editing).toBeVisible();
+      const dark = editing.getByRole('textbox', { name: 'Dark Theme Colour', exact: true });
+      // Scanned before the bad colour goes in: the preview then shows that
+      // colour on the dark ground at its failing contrast, which is the point of it.
+      await assertNoAccessibilityViolations(page);
+      await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Bulwarks');
+      await dark.fill('#0c5393');
+      await editing.getByRole('button', { name: 'Save Group' }).click();
+      await expect(dark).toHaveAttribute('aria-invalid', 'true');
+      await expect(editing).toBeVisible();
+      // Leaving asks before the changes go, and the list is as it was.
+      await page.keyboard.press('Escape');
+      await editing.getByRole('button', { name: 'Discard Changes' }).click();
+      await expect(editing).toHaveCount(0);
+      await expect(row).toBeVisible();
+      await expect(rowOf(page, 'Category Groups', 'Aaa Testwort Bulwarks')).toHaveCount(0);
+
+      // The rename again, with a colour that holds: saved, and read back.
+      await row.getByRole('link', { name: 'Edit Aaa Testwort Wards' }).click();
+      await expect(editing).toBeVisible();
+      await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Bulwarks');
+      await dark.fill('#5b9bd5');
+      await expect(dark).not.toHaveAttribute('aria-invalid', 'true');
+      await editing.getByRole('button', { name: 'Save Group' }).click();
+      await expect(editing).toHaveCount(0);
+      const renamed = rowOf(page, 'Category Groups', 'Aaa Testwort Bulwarks');
+      await expect(renamed).toBeVisible();
+      await expect(rowOf(page, 'Category Groups', 'Aaa Testwort Wards')).toHaveCount(0);
+      await renamed.getByRole('link', { name: 'Edit Aaa Testwort Bulwarks' }).click();
+      const bulwarks = page.getByRole('dialog', {
+        name: 'Edit Category Group, Aaa Testwort Bulwarks',
+        exact: true,
+      });
+      await expect(
+        bulwarks.getByRole('textbox', { name: 'Dark Theme Colour', exact: true }),
+      ).toHaveValue('#5b9bd5');
+      await bulwarks.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(bulwarks).toHaveCount(0);
+
+      // A category filed under it, so its delete has something to move.
+      await withSql(
+        (sql) => sql`
+          insert into categories (name, slug, description, group_id, created_by, updated_by)
+          select 'Aaa Testcraft Moved', 'aaa-testcraft-moved', 'Filed under the group', id,
+            ${userId}, ${userId}
+          from category_groups where name = 'Aaa Testwort Bulwarks' and deleted_at is null`,
+      );
+      await page.goto('/admin/category-groups?edit=aaa-testwort-bulwarks');
+      await expect(bulwarks).toBeVisible();
+      await moveAndDelete(page, bulwarks, 'Move Its 1 Category To', 'Cleansing & Release');
+      await expect(bulwarks).toHaveCount(0);
+      await expect(page.getByRole('table', { name: 'Category Groups' })).toBeVisible();
+      await expect(rowOf(page, 'Category Groups', 'Aaa Testwort Bulwarks')).toHaveCount(0);
+
+      // The category lives on, in the group the admin picked.
+      await page.goto('/admin/categories?query=Aaa+Testcraft+Moved');
+      await expect(
+        rowOf(page, 'Categories', 'Aaa Testcraft Moved').getByRole('cell', {
+          name: 'Cleansing & Release',
+        }),
+      ).toBeVisible();
+    },
+  );
 });
