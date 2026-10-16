@@ -767,6 +767,17 @@ service, one `NOT_FOUND` for the update and the delete, and one `VALIDATION`
 for the create. A non-admin at the `admin` scope is the sweep's; who the
 service refuses, and every collision, are `services/compendium-entries.test.ts`'s.
 
+### Promoting a common name: `promoteFolkName`
+
+`promoteFolkName(workspaceId: ID, id: ID!, folkNameId: ID!): Ingredient!`
+(M8.3a) swaps an ingredient's display name with one of its common names
+([`db/workspace-ingredients.md`](../db/workspace-ingredients.md), "Workspace
+ingredients"). It takes `createReference`'s shape: a null `workspaceId` names a
+compendium entry and carries the `admin` scope, anything else the `signedIn`
+scope with the membership check deciding. It answers the swapped entity, and
+clears the child loaders as `updateIngredient` does. A common name that is not
+live on that ingredient answers `NOT_FOUND`.
+
 ### References: `Reference`, `reference`, `createReference`, `updateReference` and `referenceSuggestions`
 
 A source, kept once and linked from every row it supports (DESIGN.md §5,

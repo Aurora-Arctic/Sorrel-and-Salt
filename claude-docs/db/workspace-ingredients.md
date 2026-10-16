@@ -72,6 +72,24 @@ clears the case-folded unique index before the insert meets it. The service
 test asserts the one transaction by comparing `xmin`: every row a
 transaction writes carries its id.
 
+**Promoting a folk name** (M8.3a) swaps the display name with one of the
+ingredient's common names, in one `withAudit` transaction, through
+`promoteFolkName` (`services/promote-folk-name.ts`). A null `workspaceId` goes
+to the compendium's `promoteCompendiumFolkName`, anything else to
+`promoteWorkspaceFolkName`. The promoted row is soft-deleted before the old
+name is inserted, since the unique index on `(ingredient_id, lower(name))`
+would otherwise refuse a name that differs only by case. The old name is added
+once: a remaining common name that matches it in any case is kept instead.
+`identity_key` is a generated column, so a row with a formal name keeps its key
+and a row with none moves to the new name's; a clash with another entry is
+refused through the tier's `refuseCollision` as a `ValidationError` at `name`.
+The slug is derived from the name, so it moves either way. On the compendium
+tier the old slug is retired for the 180-day redirect, and a new slug sitting
+under another entry's live redirect is refused (`refuseEndingARedirect`)
+without offering to end it; M12.1's control may need to. Coven slugs redirect
+nowhere. Admins promote on the compendium, owners and members on their coven's
+rows, and a viewer is `Forbidden`.
+
 **Every child is written by one call, the compendium's own** (MB.211). Each
 write hands `writeChildren` in `services/ingredient-rows.ts` its folk names,
 substitutes, deities, references, categories and forms, `'add'` on a create and

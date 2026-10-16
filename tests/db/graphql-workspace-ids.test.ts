@@ -28,6 +28,9 @@ const MALFORMED = ['not-a-coven', WORKSPACE_W_ID.slice(0, -1)];
 let ingredientId: string;
 // Its own row, so the delete probe's admitted call leaves the update probe's standing.
 let deletableId: string;
+// Its own row and common name, which the promote probe's admitted call swaps.
+let promotableId: string;
+let folkNameId: string;
 // A coven of its own for the delete probe's admitted call, which would take W down.
 let deletableWorkspaceId: string;
 // Covens of their own for the removal and leave probes, whose admitted calls take B out of one.
@@ -50,6 +53,19 @@ beforeAll(async () => {
     makeIngredient({ workspaceId: WORKSPACE_W_ID, name: 'Fixture Deleted', nomenclature: 'none' }),
     A.id,
   );
+  promotableId = await insertIngredient(
+    sql,
+    makeIngredient({
+      workspaceId: WORKSPACE_W_ID,
+      name: 'Fixture Promoted',
+      nomenclature: 'none',
+      folkNames: ['Fixture Folk Name'],
+    }),
+    A.id,
+  );
+  const [folk] = await sql`
+    select id from ingredient_folk_names where ingredient_id = ${promotableId}`;
+  folkNameId = folk.id as string;
   referenceId = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
   const insertCoven = async (name: string) => {
     const [coven] = await sql`
@@ -193,6 +209,12 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       updateReference(workspaceId: $workspaceId, id: $id, input: $input) { id }
     }`,
     variables: () => ({ id: referenceId, input: REFERENCE }),
+  },
+  promoteFolkName: {
+    source: `mutation ($workspaceId: ID, $id: ID!, $folkNameId: ID!) {
+      promoteFolkName(workspaceId: $workspaceId, id: $id, folkNameId: $folkNameId) { id }
+    }`,
+    variables: () => ({ id: promotableId, folkNameId }),
   },
   deleteIngredient: {
     source:
