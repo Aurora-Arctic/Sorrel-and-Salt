@@ -96,25 +96,25 @@ The eleven milestone-anchored passes this namespace originally replaced (M1.29, 
 
 The `## M… —` sections that followed the execution order moved to [`tasks/`](tasks/) in MB.143, one file per milestone, and each wave's reasoning to [`waves/`](waves/), linked from its row above. Together with this file they are one document: `scripts/tasks-md.mjs` names them in reading order, so a range in the table (`M3.3 → M3.10`) is the headings between its ends across that sequence, so a new milestone file is added to it. Read a task by its `**<ID> — ` heading, to the next heading, and its wave file — never a whole file.
 
-| File                           | Section                                                                                              |
-| ------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| [`tasks/m0.md`](tasks/m0.md)   | M0 — Repo, tooling & environment · _33 tasks · 45 hours_                                             |
-| [`tasks/m1.md`](tasks/m1.md)   | M1 — Database foundation · _28 tasks · 45 hours_                                                     |
-| [`tasks/m2.md`](tasks/m2.md)   | M2 — Auth and users · _10 tasks · 17 hours_                                                          |
-| [`tasks/m3.md`](tasks/m3.md)   | M3 — GraphQL foundation · _10 tasks · 17 hours_                                                      |
-| [`tasks/m4.md`](tasks/m4.md)   | M4 — Compendium data layer · _13 tasks · 21.5 hours_                                                 |
-| [`tasks/m5.md`](tasks/m5.md)   | M5 — Admin curation tool · _13 tasks · 34.5 hours_                                                   |
-| [`tasks/m6.md`](tasks/m6.md)   | M6 — Workspaces and membership · _16 live tasks · 29 hours · 2 retired (M6.4, M6.5)_                 |
-| [`tasks/m7.md`](tasks/m7.md)   | M7 — Invitations · _7 tasks · 14 hours_                                                              |
-| [`tasks/m8.md`](tasks/m8.md)   | M8 — Compendium browsing and local ingredients · _19 live tasks · 40 hours · 2 retired (M8.1, M8.4)_ |
-| [`tasks/m9.md`](tasks/m9.md)   | M9 — Workspace ingredients · _18 tasks · 39.5 hours_                                                 |
-| [`tasks/m10.md`](tasks/m10.md) | M10 — Grimoire · _33 tasks · 76 hours_                                                               |
-| [`tasks/m11.md`](tasks/m11.md) | M11 — Hardening and launch · _21 tasks · 46.5 hours_                                                 |
-| [`tasks/m12.md`](tasks/m12.md) | M12 — Ingredient UI additions · _7 tasks · 27.5 hours_                                               |
-| [`tasks/m13.md`](tasks/m13.md) | M13 — Grimoire additions · _9 tasks · 22 hours_                                                      |
-| [`tasks/m14.md`](tasks/m14.md) | M14 — Sweep close-out additions · _1 task · 6 hours_                                                 |
-| [`tasks/m15.md`](tasks/m15.md) | M15 — Launch additions · _4 tasks · 10 hours_                                                        |
-| [`tasks/m16.md`](tasks/m16.md) | M16 — More login options · _10 tasks · 27 hours_                                                     |
-| [`tasks/m7a.md`](tasks/m7a.md) | M7.A — PR gates · _1 task · 1 hour · unscheduled by design_                                          |
-| [`tasks/mb.md`](tasks/mb.md)   | MB — Bugfixes and gap tasks                                                                          |
-| [`tasks/mw.md`](tasks/mw.md)   | MW — Wave close-out · _2 done, 12 retired, 1 live: MW.15 at 3 hours_                                 |
+| File                           | Section                                                                                                     |
+| ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
+| [`tasks/m0.md`](tasks/m0.md)   | M0 — Repo, tooling & environment · _33 tasks · 45 hours_                                                    |
+| [`tasks/m1.md`](tasks/m1.md)   | M1 — Database foundation · _28 tasks · 45 hours_                                                            |
+| [`tasks/m2.md`](tasks/m2.md)   | M2 — Auth and users · _10 tasks · 17 hours_                                                                 |
+| [`tasks/m3.md`](tasks/m3.md)   | M3 — GraphQL foundation · _10 tasks · 17 hours_                                                             |
+| [`tasks/m4.md`](tasks/m4.md)   | M4 — Compendium data layer · _13 tasks · 21.5 hours_                                                        |
+| [`tasks/m5.md`](tasks/m5.md)   | M5 — Admin curation tool · _13 tasks · 34.5 hours_                                                          |
+| [`tasks/m6.md`](tasks/m6.md)   | M6 — Workspaces and membership · _16 live tasks · 30 hours · 2 retired (M6.4, M6.5)_                        |
+| [`tasks/m7.md`](tasks/m7.md)   | M7 — Invitations · _7 tasks · 14 hours_                                                                     |
+| [`tasks/m8.md`](tasks/m8.md)   | M8 — Compendium browsing and local ingredients · _18 live tasks · 54 hours · 3 retired (M8.1, M8.4, M8.15)_ |
+| [`tasks/m9.md`](tasks/m9.md)   | M9 — Workspace ingredients · _18 tasks · 66.5 hours_                                                        |
+| [`tasks/m10.md`](tasks/m10.md) | M10 — Grimoire · _33 tasks · 76 hours_                                                                      |
+| [`tasks/m11.md`](tasks/m11.md) | M11 — Hardening and launch · _21 tasks · 46.5 hours_                                                        |
+| [`tasks/m12.md`](tasks/m12.md) | M12 — Ingredient UI additions · _8 tasks · 33 hours_                                                        |
+| [`tasks/m13.md`](tasks/m13.md) | M13 — Grimoire additions · _9 tasks · 22 hours_                                                             |
+| [`tasks/m14.md`](tasks/m14.md) | M14 — Sweep close-out additions · _1 task · 6 hours_                                                        |
+| [`tasks/m15.md`](tasks/m15.md) | M15 — Launch additions · _4 tasks · 10 hours_                                                               |
+| [`tasks/m16.md`](tasks/m16.md) | M16 — More login options · _10 tasks · 27 hours_                                                            |
+| [`tasks/m7a.md`](tasks/m7a.md) | M7.A — PR gates · _1 task · 1 hour · unscheduled by design_                                                 |
+| [`tasks/mb.md`](tasks/mb.md)   | MB — Bugfixes and gap tasks                                                                                 |
+| [`tasks/mw.md`](tasks/mw.md)   | MW — Wave close-out · _2 done, 12 retired, 1 live: MW.15 at 3 hours_                                        |

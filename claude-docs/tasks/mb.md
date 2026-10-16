@@ -4461,7 +4461,7 @@ A References section on M8.19's page, on both its routes: beneath the substitute
 
 _Acceptance criteria:_
 
-- Every reference renders in Chicago form through MB.153's one renderer, `renderCitation`, on `/compendium/ingredients/[slug]` and `/ingredients/[id]` alike
+- Every reference renders in Chicago form through MB.153's one renderer, `renderCitation`, on `/compendium/ingredients/[slug]` and `/coven/[slug]/ingredients/[id]` alike (the coven route since the Wave 12 review, 2026-10-16)
 - The order is alphabetical, which holds from the loader already (it sorts with `byCitation`), asserted here
 - A locator renders beside its citation and a `url` as a link to the source
 - The empty state reads as intentional, not broken
