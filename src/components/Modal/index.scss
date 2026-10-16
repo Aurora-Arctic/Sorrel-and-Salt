@@ -20,13 +20,16 @@ $modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
 // past them: the long form overran the screen by it. A column, the header
 // over the body, which scrolls beneath it while the dialog holds still
 // (MB.115): open only, since the closed element's `display: none` is the
-// browser's.
+// browser's. Clipped rather than hidden, so the dialog is no scroll container
+// at all: `hidden` still lets a script or a focus scroll it, and a field's
+// `scrollIntoView` did, lifting the header out of view and leaving blank
+// space beneath the body (MB.258).
 .modal-dialog {
   container: modal / inline-size;
   box-sizing: border-box;
   width: min(calc($dialog-column + #{$modal-padding}), calc(100vw - #{$modal-gap} * 2));
   max-height: calc(100dvh - #{$modal-gap} * 2);
-  overflow: hidden;
+  overflow: clip;
   border: 0;
 
   &[open] {
