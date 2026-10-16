@@ -81,6 +81,67 @@ each half stripped in turn.
 A stub row (both null) is admitted, because it claims nothing and so
 contradicts nothing.
 
+### Converting between units
+
+`unitConvert(value, from, to)`, in `src/modules/ingredients/units/convert.ts`
+and exported from `@/modules/ingredients` (M9.5), turns an amount in one unit
+into another of the same dimension: teaspoons into millilitres, ounces into
+grams. It imports only the two schema files that import nothing, `units.ts`
+and `quantities.ts`, so it reaches no database code and could load in the
+browser.
+
+**What it answers.** A result the caller has to test, `{ ok: true, value }` or
+`{ ok: false, reason }`. A refusal has no `value` at all, so TypeScript will
+not let a caller read one as a number without checking `ok` first. It refuses
+two kinds of pair:
+
+- **`dimension`**: weight to volume, or volume to weight. Grams to teaspoons
+  depends on what is being measured, and a wrong guess silently doubles or
+  halves an ingredient in a working.
+- **`count`**: any pair with a count unit in it, `piece` to `piece` included.
+  Three pinches is no amount of millilitres, and no amount of pieces either.
+
+**The sizes.** Each unit has one size in its dimension's base unit, milligrams
+for weight and millilitres for volume, as the owner chose them on 2026-10-13:
+
+| Weight | Size             | Volume     | Size             |
+| ------ | ---------------- | ---------- | ---------------- |
+| `mg`   | 1 mg             | `ml`       | 1 ml             |
+| `g`    | 1,000 mg         | `l`        | 1,000 ml         |
+| `kg`   | 1,000,000 mg     | `tsp`      | 5 ml             |
+| `oz`   | 28,349.523125 mg | `tbsp`     | 15 ml            |
+| `lb`   | 453,592.37 mg    | `cup`      | 250 ml           |
+|        |                  | `fl_oz_uk` | 28.4130625 ml    |
+|        |                  | `fl_oz_us` | 29.5735295625 ml |
+
+Spoons and the cup are metric, as a British kitchen measures them, and both
+fluid ounces are kept because a recipe's origin decides which it means. The
+sizes are keyed by dimension, so no size can join two dimensions, and count
+has none. A unit added to `units.ts` is a type error in the converter until it
+is given a size.
+
+**Exact, then rounded once.** The sizes are written as decimal text rather
+than JavaScript numbers, because 29.5735295625 has no exact binary form. The
+converter turns the amount and both sizes into whole numbers (`BigInt`), works
+out amount × source size ÷ target size as one fraction, and rounds only that,
+to three decimals, the scale of the stock columns' `numeric(12,3)`. Rounding at
+the base unit on the way would be a thousandth out often enough to matter:
+0.525 oz is 14,883.499640625 mg, which rounds to 14,883.5 mg and then to
+14.884 g, where the true answer is 14.883 g. A half rounds up, as Postgres
+rounds a positive `numeric`, so the value returned is the value the column
+would store. A negative amount, like one that is not a finite number, throws:
+the stock schema refuses both before a service could pass one in.
+
+**Round trips.** Out to a unit no larger and back returns the original
+exactly. Out to a larger unit loses what three decimals of it cannot hold: 1 mg
+is 0.000 lb, and comes back as 0 mg. That is the column's precision rather
+than the converter's, and the return is never further off than half a
+thousandth of the larger unit.
+
+**No density table**, anywhere in the app: DESIGN.md §11 refuses
+cross-dimension conversion outright. The converter's sizes are keyed by
+dimension, so it has nowhere to put one; elsewhere the rule is held by review.
+
 ### Nullability, and why zero is not the same as nothing
 
 `quantityOnHand` is nullable because **zero is already taken**: M9.8 renders
