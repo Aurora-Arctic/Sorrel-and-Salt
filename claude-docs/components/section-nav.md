@@ -111,13 +111,16 @@ the shell's other bars (`$shell-phone-width`, `$shell-tablet-width`,
   `hidden` takes it out of sight with `visibility`, held until the fade has
   run, as a tip's bubble is) and its chevron flips with `rotateX(180deg)` over the same duration;
   under `prefers-reduced-motion: reduce` there is none.
-- **Icons.** `icons.tsx` draws ten small stroke-only SVGs on a 24-unit square
+- **Icons.** `icons.tsx` draws nine small stroke-only SVGs on a 24-unit square
   (1.6 stroke, round caps, `currentColor`, `aria-hidden`): overview (four
   squares), ingredients (leaf), grimoire (open book), members (two people),
-  compendium (books), categories (tag), forms (flask), deities (four-point
-  sparkle), astrology (crescent), people (id card), plus the three dots of
-  More. Drawn from the design review's mock-up. Inline rather than an icon
-  package: they are used here and nowhere else.
+  compendium (books), categories (tag), deities (four-point sparkle),
+  astrology (crescent), people (id card), plus the three dots of More. Drawn
+  from the design review's mock-up. Inline rather than an icon package: they
+  are used here and nowhere else. The tenth, forms, is the generic form
+  icon, the salt spoon, imported from `FormIcon` (M12.7; it replaced the
+  flask), so one mark means "a form" everywhere
+  ([`form-icon.md`](form-icon.md)).
 
 ## Stories
 
