@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  type KeyboardEvent,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -310,10 +309,26 @@ export function useFormHistory<V extends FieldValues>(
     }
   });
 
-  const onKeyDown = useCallback(
-    (event: KeyboardEvent<HTMLElement>) => {
-      if (!enabled || event.defaultPrevented || event.nativeEvent.isComposing || event.altKey)
-        return;
+  // The chords, heard by a native listener on the form itself rather than a
+  // React `onKeyDown` prop on it: a key handler on a non-interactive element is
+  // what the a11y lint refuses, and the form is already held through `root`.
+  // Bubble phase, so an inner element's own native listener runs first.
+  //
+  // Ordering: React dispatches its synthetic handlers from the root container,
+  // so this listener runs BEFORE any React `onKeyDown` inside the form
+  // (Downshift's, a panel's). That is why the target checks read the DOM
+  // (`aria-expanded`) and do not wait for an inner React handler to set
+  // `defaultPrevented`. A nested form that wants its own chords uses the
+  // `ignore` option, or a native listener of its own.
+  //
+  // The current `enabled`, `ignore`, `undo` and `redo` are effect
+  // dependencies, so the listener is registered again when one changes and
+  // never sees a stale one.
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (!enabled || event.defaultPrevented || event.isComposing || event.altKey) return;
       const target = event.target as HTMLElement;
       // A combobox's list owns its keys.
       if (target.closest('[role="combobox"][aria-expanded="true"], [role="listbox"]')) return;
@@ -330,9 +345,10 @@ export function useFormHistory<V extends FieldValues>(
         event.preventDefault();
         redo();
       }
-    },
-    [enabled, ignore, undo, redo],
-  );
+    };
+    element.addEventListener('keydown', onKeyDown);
+    return () => element.removeEventListener('keydown', onKeyDown);
+  }, [root, enabled, ignore, undo, redo]);
 
   // A live region speaks only a change, so a repeat alternates a no-break space.
   const announcement = spoken.text && spoken.count % 2 === 0 ? `${spoken.text}\u00a0` : spoken.text;
@@ -344,11 +360,10 @@ export function useFormHistory<V extends FieldValues>(
       canUndo: enabled && state.past.length > 0,
       canRedo: enabled && state.future.length > 0,
       clear,
-      onKeyDown,
       announcement,
       undoButton,
       redoButton,
     }),
-    [undo, redo, enabled, state, clear, onKeyDown, announcement],
+    [undo, redo, enabled, state, clear, announcement],
   );
 }

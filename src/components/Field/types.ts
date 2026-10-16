@@ -1,4 +1,4 @@
-import type { HTMLInputTypeAttribute, KeyboardEvent, ReactNode, RefObject } from 'react';
+import type { HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 
 /** What every field shares: what it is called, and what it is told about it. */
@@ -319,8 +319,6 @@ export interface FormHistory {
   canRedo: boolean;
   /** Forgets every step: after a save, or whatever else starts the form over. */
   clear: () => void;
-  /** For the form's `onKeyDown`. */
-  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
   /** What the live region says; it differs from the last even when the words are the same. */
   announcement: string;
   /** The buttons register themselves here: the last place focus may land. */

@@ -18,7 +18,7 @@ import type { FormHistory } from '@/components/Field/types';
 // A small react-hook-form form for the undo and redo tests (M12.9): a text
 // field, a select, a list of rows in a fieldset with a legend, and a field
 // inside a folded `<details>` that `onRestored` opens. It is wired as the
-// admin forms are: the hook, its `onKeyDown` on the `<form>`, the provider and
+// admin forms are: the hook, its `ref` on the `<form>`, the provider and
 // `FormHistoryButtons` inside it, and a Save that follows `isDirty`.
 
 export interface ProbeValues {
@@ -95,7 +95,7 @@ export function HistoryProbe({
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={root} onKeyDown={history.onKeyDown} onSubmit={handleSubmit(() => undefined)}>
+        <form ref={root} onSubmit={handleSubmit(() => undefined)}>
           {buttons && <FormHistoryButtons />}
           <TextField<ProbeValues> name="title" label="Title" required />
           <SelectField<ProbeValues>

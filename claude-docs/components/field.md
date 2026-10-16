@@ -297,7 +297,7 @@ is in `claude-docs/design-decisions/m12.9-plan.md`.
 const root = useRef<HTMLFormElement>(null);
 const history = useFormHistory(methods, { root, enabled: !discard.asking });
 <FormHistoryContext.Provider value={history}>
-  <form ref={root} onKeyDown={history.onKeyDown}>
+  <form ref={root}>
     <FormHistoryButtons />
     ...
 ```
@@ -316,8 +316,13 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
 - **The chords** are Ctrl or Cmd with Z to undo, with Shift to redo, and Ctrl
   with Y to redo. Either modifier is accepted on every platform, with no
   sniffing of the platform: Ctrl+Z is not undo on a Mac, so nothing is lost.
-  `onKeyDown` goes on the `<form>` and handles only keys that reach it. It
-  stands aside for a key already handled, one composing text (an input method),
+  The hook listens for them itself, with a native `keydown` listener on the
+  `<form>` it holds through `root`, and returns no key handler; it handles
+  only keys that reach the form. That listener runs before any React
+  `onKeyDown` inside the form (React dispatches from the root container), so
+  it reads the DOM rather than waiting for an inner handler to mark a key
+  handled. A nested form that wants its own chords passes `ignore`, or listens
+  natively itself. It stands aside for a key already handled, one composing text (an input method),
   one with Alt, one inside an open combobox or its list (Downshift owns those
   keys), and anything `ignore(target)` says is not this form's, such as a
   panel with a history of its own. A closed select would take Ctrl+Z as a

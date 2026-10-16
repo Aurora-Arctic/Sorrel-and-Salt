@@ -477,7 +477,6 @@ const GroupForm = ({
         <form
           ref={root}
           className="form"
-          onKeyDown={history.onKeyDown}
           onSubmit={handleSubmit((input) => send(input))}
           noValidate
         >
