@@ -1481,12 +1481,15 @@ _Story 56 — As a workspace member, I want to read a saved spell on its own pag
 
 `/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to. Two ingredients sharing a display label render with their formal name alongside it, since the page has no hover affordance to disambiguate them the way a card's tooltip can.
 
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text, plus an Ingredients summary above them, the ingredient steps in order, for gathering before starting (M13.1). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to.
+
 _Acceptance criteria:_
 
 - Route resolves a spell by id within the workspace
 - Visibility is enforced in SQL: a private spell is reachable only by its author
 - A non-member receives 404, consistent with the rest of `/coven/[slug]`
-- Ingredients render in layer order with quantities
+- Steps render numbered in `position` order, an ingredient step with its quantity and unit
+- The Ingredients summary lists the ingredient steps in order
 - Two ingredients sharing a label are disambiguated by their formal name, not by hover
 - A custom, one-off ingredient (MB.40) renders its own name and form in layer order with the rest, marked as one-off, and links to no ingredient page
 - The page is the only view M10.22 styles for print
@@ -1535,10 +1538,13 @@ _Story:_ As a developer, I want one validation schema for spells so that the bui
 
 M4.5 covers ingredient and category only. M10.10 needs the spell equivalent.
 
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the layer list becomes one ordered `steps` list (M13.1). A step is `{ body?, ingredientId + variantId? | name + form?, quantity?, unit?, note? }`: at least one of an instruction (`body`) or an identity, at most one identity, and `quantity`, `unit` and `note` only beside an identity. The spell gains its free-text `note`.
+
 _Acceptance criteria:_
 
 - One schema shared by client and server
-- Covers title, visibility, layers, quantities and units
+- Covers title, visibility, note, steps, quantities and units
+- A step carries an instruction, an identity, or both, and never neither; `quantity`, `unit` and `note` on an instruction-only step are rejected, and a blank instruction is rejected, mirroring M13.1's CHECKs
 - A layer is `{ ingredientId }` or `{ name, form? }` and never both or neither (MB.40); `form` beside `ingredientId` is rejected, and a blank `name` or `form` is rejected — the table's four CHECKs, mirrored so the CHECK is never what a user sees
 - Unit validation imports M9.2's shared unit-to-dimension module rather than keeping its own list
 - Rejects a visibility value outside `private` and `workspace`
@@ -3902,6 +3908,8 @@ _Story:_ As a coven member, I want building and reading a spell to feel crafted,
 
 Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoire list (M10.11), `SpellBuilder` with its fields, visibility control, intent categories, layers and reordering (M10.12 to M10.16), the intent-versus-derived comparison panel (M10.17), the safety and out-of-stock warnings (M10.18, M10.19), draft and complete (M10.20), and the recipe view (MB.6) with its print layout (M10.22), the one print style on the site.
 
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the review also covers the step editor (M13.3), the Record a Working dialog with its deduction preview (M13.7), and the recipe page's Workings section (M13.8). M13.9 follows it.
+
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
 _Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
@@ -3914,7 +3922,8 @@ _Acceptance criteria:_
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The recipe view's print layout is reviewed on paper or as a PDF as well as on screen
-- Reordering layers reads clearly by keyboard as well as by pointer
+- Reordering steps reads clearly by keyboard as well as by pointer
+- The deduction preview reads plainly, and a shortfall or a step not deducted is told apart without colour alone
 - The comparison panel reads without relying on colour alone
 
 **MB.124 — Design review: error, loading and empty states, and the whole site** · 3h
