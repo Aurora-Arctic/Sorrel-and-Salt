@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { UserRole } from './session';
+import { curates } from './site-roles';
 
 // Pure helpers for /sign-in?next=&error=, shared by the sign-in page and route
 // protection (src/proxy.ts, src/lib/request-session.ts) — one rule for which
@@ -8,18 +9,18 @@ import type { UserRole } from './session';
 
 /**
  * Where a sign-in goes when no page asked for the visitor back, for anyone
- * but an admin: the post-sign-in landing (M2.8), not `/` — `/` is the public
+ * but a curator or an admin: the post-sign-in landing (M2.8), not `/` — `/` is the public
  * front door, and a visitor who has just signed in has been through it already
  * (claude-docs/design-decisions/mb.57-post-sign-in-landing.md).
  */
 export const POST_SIGN_IN_LANDING = '/coven' satisfies Route;
 
-/** An admin's landing instead: curating starts in the admin area (MB.113). */
+/** A curator's or an admin's landing instead: curating starts in the admin area (MB.113, M11.20). */
 export const ADMIN_LANDING = '/admin' satisfies Route;
 
 /** Where a sign-in with no return path lands, by the role the account holds once it has signed in. */
 export function postSignInLanding(role: UserRole): Route {
-  return role === 'admin' ? ADMIN_LANDING : POST_SIGN_IN_LANDING;
+  return curates(role) ? ADMIN_LANDING : POST_SIGN_IN_LANDING;
 }
 
 /**

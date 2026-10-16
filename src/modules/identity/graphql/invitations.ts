@@ -1,7 +1,7 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
 import { sessionOf } from '../../../graphql/context-helpers';
-import type { InvitationRow } from '../../../db/repository';
+import type { InvitableSiteRole, InvitationRow } from '../../../db/repository';
 import { createAdminInvitation, revokeAdminInvitation } from '../services/admin-invitations';
 import {
   acceptInvitation,
@@ -13,7 +13,16 @@ import {
 // token or a link: the token exists only in the mail, and the row holds its
 // hash, which is not exposed either (claude-docs/auth/admin-users.md,
 // "Inviting an admin"). The workspace tier's `workspace` and `role` are added
-// from `coven` (M7.3), since `identity` cannot name a `Workspace`.
+// from `coven` (M7.3), since `identity` cannot name a `Workspace`. The names
+// still say "admin invitation" for the site tier, which since M11.20 may
+// invite a curator as well: `siteRole` says which.
+
+const INVITABLE_SITE_ROLES = ['curator', 'admin'] as const satisfies readonly InvitableSiteRole[];
+
+const InvitableSiteRoleEnum = builder.enumType('InvitableSiteRole', {
+  description: 'A site role an invitation may grant: never `user`, which every account holds.',
+  values: INVITABLE_SITE_ROLES,
+});
 
 export const InvitationRef = builder.objectRef<InvitationRow>('Invitation').implement({
   description:
@@ -24,6 +33,13 @@ export const InvitationRef = builder.objectRef<InvitationRow>('Invitation').impl
     note: t.exposeString('note', {
       nullable: true,
       description: 'Why the person is invited, where the inviter gave a reason.',
+    }),
+    siteRole: t.field({
+      type: InvitableSiteRoleEnum,
+      nullable: true,
+      description: 'The site role a site invitation grants; none on a coven invitation.',
+      // A CHECK holds the column to these two (invitations_site_role_invitable).
+      resolve: (row) => row.siteRole as InvitableSiteRole | null,
     }),
     expiresAt: t.expose('expiresAt', { type: 'DateTime' }),
     acceptedAt: t.expose('acceptedAt', { type: 'DateTime', nullable: true }),
@@ -44,11 +60,21 @@ builder.mutationField('createAdminInvitation', (t) =>
   t.field({
     type: InvitationRef,
     description:
-      'Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.',
-    args: { email: t.arg.string({ required: true }), note: t.arg.string() },
+      'Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.',
+    args: {
+      email: t.arg.string({ required: true }),
+      siteRole: t.arg({ type: InvitableSiteRoleEnum, required: true }),
+      note: t.arg.string(),
+    },
     authScopes: { admin: true },
-    resolve: (_root, { email, note }, context) =>
-      createAdminInvitation(sessionOf(context), email, note ?? undefined, context.invitations),
+    resolve: (_root, { email, siteRole, note }, context) =>
+      createAdminInvitation(
+        sessionOf(context),
+        email,
+        siteRole,
+        note ?? undefined,
+        context.invitations,
+      ),
   }),
 );
 

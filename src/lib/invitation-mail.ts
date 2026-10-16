@@ -14,10 +14,10 @@ export function invitationSender(request: Request): InvitationSender {
   const linkFor = async (token: string) =>
     `${await requestOrigin(request, '/')}/invite/${encodeURIComponent(token)}`;
   return {
-    async siteInvitation(to, token, { name }) {
+    async siteInvitation(to, token, { siteRole, inviterName }) {
       const url = await linkFor(token);
       const { send } = await import('./mail');
-      await send(await adminInvitationMessage({ to, url, inviterName: name }));
+      await send(await adminInvitationMessage({ to, url, siteRole, inviterName }));
     },
     async workspaceInvitation(to, token, { name, role, inviterName }) {
       const url = await linkFor(token);

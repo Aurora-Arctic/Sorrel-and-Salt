@@ -1,6 +1,11 @@
 import type { userPrivilegeChanges } from './schema/user-privilege-changes';
 import type { users } from './schema/users';
-import type { InvitationRow, InvitedCoven, SiteInvitationRow } from '../../db/repository';
+import type {
+  InvitableSiteRole,
+  InvitationRow,
+  InvitedCoven,
+  SiteInvitationRow,
+} from '../../db/repository';
 
 export type { PrivilegeChangeFilter, UserFilter } from '../../db/repository';
 
@@ -61,8 +66,16 @@ export interface AdminRoleChangePauseState {
  * service may not import it.
  */
 export interface InvitationSender {
-  /** Mails `to` the link that accepts the invitation `token` names. Never throws on a failed send. */
-  siteInvitation(to: string, token: string, inviter: { name: string }): Promise<void>;
+  /**
+   * Mails `to` the link that accepts the site invitation `token` names,
+   * saying which site role it grants and who sent it (M11.20). Never throws
+   * on a failed send.
+   */
+  siteInvitation(
+    to: string,
+    token: string,
+    invitation: { siteRole: InvitableSiteRole; inviterName: string },
+  ): Promise<void>;
   /**
    * Mails `to` the link that accepts the coven invitation `token` names,
    * saying which coven, in what role and who invited them (M7.3). Never
@@ -112,7 +125,8 @@ export type InvitationRefusal =
 
 /** Whether this session may accept the invitation a link names, and if not, why, in words. */
 export type InvitationStanding =
-  | { acceptable: true; tier: 'site' }
+  /** The site role accepting grants, curator or admin (M11.20). */
+  | { acceptable: true; tier: 'site'; siteRole: InvitableSiteRole }
   /** The coven's name, for the matching verified account alone, and its slug, where accepting lands: `/coven/[slug]`. */
   | { acceptable: true; tier: 'workspace'; slug: string; name: string }
   | { acceptable: false; reason: InvitationRefusal; message: string };

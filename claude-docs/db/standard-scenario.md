@@ -1,19 +1,20 @@
 ## The standard scenario (M1.22)
 
 `src/db/seed/standard.ts` implements DESIGN.md §"Seed data"'s second scenario:
-five fixture users, workspaces W and X, and a populated compendium. It is the
+six fixture users, workspaces W and X, and a populated compendium. It is the
 fixture every authorization test reads against, which is why the cast is fixed
 rather than generated — `asUser(A)` (M1.26, `tests/support/as-user.ts`, which
 re-exports this module's own `FIXTURE_USERS`) has to mean the same person in
 every suite, and an id a test can name beats one this run happened to produce.
 
-| User | Id      | Role    | Where                 |
-| ---- | ------- | ------- | --------------------- |
-| A    | `…0003` | `user`  | owner of W            |
-| B    | `…0004` | `user`  | member of W           |
-| C    | `…0005` | `user`  | viewer in W           |
-| D    | `…0006` | `user`  | member of unrelated X |
-| E    | `…0007` | `admin` | no workspace at all   |
+| User | Id      | Role      | Where                        |
+| ---- | ------- | --------- | ---------------------------- |
+| A    | `…0003` | `user`    | owner of W                   |
+| B    | `…0004` | `user`    | member of W                  |
+| C    | `…0005` | `user`    | viewer in W                  |
+| D    | `…0006` | `user`    | member of unrelated X        |
+| E    | `…0007` | `admin`   | no workspace at all          |
+| F    | `…0008` | `curator` | no workspace at all (M11.20) |
 
 The ids continue the series `…0001` (the bootstrap user, MB.5) and `…0002`
 (`minimal`'s plain user) opened; W and X take `…0001-…0001` and `…0001-…0002`,
@@ -25,6 +26,8 @@ implementation, exactly as every other slug in the repo.
 admin has no access to any workspace's ingredients or grimoire" (CLAUDE.md,
 asserted by M6.6) is only assertable against an admin who is in none, and W and
 X sharing no member is what makes a cross-workspace denial test say something.
+
+**F is the curator (M11.20)**: the fixture that proves a curator reaches the compendium's writes and refuses the people ones, and, like E, belongs to no workspace. F is seeded with the flag `true`, since the CHECK that replaced MB.177's (`users_privileged_can_create_workspace`) refuses any non-`user` role without it.
 
 **`canCreateWorkspace` follows the invite gate rather than convenience.** A–D
 are seeded `true` because each is in a workspace, and under §5 that is how the
@@ -38,8 +41,8 @@ seed writes no ledger row itself: the trigger on `users` records each
 privilege a fixture user is inserted holding, by the route the seed declares
 around the insert, `bootstrap` (`declaringBootstrapPrivileges`). A–D are
 inserted as the seed's own user, so each has one `create_workspace` grant
-stamped as it; E is inserted alone with itself published as the acting user,
-so its `admin` and `create_workspace` grants are stamped as E, as a primary
+stamped as it; E and F are each inserted alone with themselves published as the acting user,
+so E's `admin` and `create_workspace` grants, and F's `curator` and `create_workspace` ones, are stamped as themselves, as a primary
 admin's promotion is stamped as that admin. A second run inserts no user, so
 the trigger records nothing more (MB.195;
 [`mb.194-privilege-ledger-by-trigger.md`](../design-decisions/mb.194-privilege-ledger-by-trigger.md)).

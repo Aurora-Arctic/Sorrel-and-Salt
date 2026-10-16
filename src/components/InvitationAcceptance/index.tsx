@@ -24,11 +24,14 @@ const AcceptInvitationDocument = graphql(`
   }
 `);
 
-/** What accepting grants, by tier; a coven's own name is added when the page has it. */
-const GRANTS = {
-  site: "You've been invited to be an admin of Sorrel & Salt.",
-  workspace: "You've been invited to join a coven on Sorrel & Salt.",
+/** What a site invitation grants, by the role it names (M11.20). */
+const SITE_GRANTS = {
+  curator: "You've been invited to be a curator of Sorrel & Salt.",
+  admin: "You've been invited to be an admin of Sorrel & Salt.",
 } as const;
+
+/** What a coven's invitation grants when the page has not the coven's own name. */
+const WORKSPACE_GRANT = "You've been invited to join a coven on Sorrel & Salt.";
 
 const SIGNED_OUT_GRANT =
   "You've been invited to Sorrel & Salt. Sign in with an account whose email address is the one this invitation was sent to.";
@@ -37,9 +40,10 @@ const SIGNED_OUT_GRANT =
 function grantOf(props: InvitationAcceptanceProps): string | undefined {
   if (props.status === 'signed-out') return SIGNED_OUT_GRANT;
   if (props.status !== 'acceptable') return undefined;
-  return props.tier === 'workspace' && props.covenName
+  if (props.tier === 'site') return SITE_GRANTS[props.siteRole];
+  return props.covenName
     ? `You've been invited to join ${props.covenName} on Sorrel & Salt.`
-    : GRANTS[props.tier];
+    : WORKSPACE_GRANT;
 }
 
 const Accept = ({

@@ -14,13 +14,13 @@ import { references } from '../schema/references';
 import { CompendiumFilter } from '../validation/compendium-filter';
 import { ReferenceInput } from '../validation/reference';
 import { type Membership, assertMembership, readersOf } from '@/modules/coven';
-import { type SiteAdmin, assertSiteAdmin } from '@/modules/identity';
+import { type Curator, assertCurator } from '@/modules/identity';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import type { ReferenceValues } from '../types';
 
 // A reference, kept once in its tier and linked from every row it supports
 // (MB.151; claude-docs/db/references.md). Two tiers, as ingredients are: a
-// null `workspaceId` is the compendium's, written under the `SiteAdmin` proof
+// null `workspaceId` is the compendium's, written under the `Curator` proof
 // alone, and a coven's is written under its `Membership`, whoever links it —
 // so a member who cites a compendium reference reads it and cannot change it.
 // Nothing deletes one in v1. Revalidating the `compendium` tag on a
@@ -64,10 +64,10 @@ export async function createReference(
   input: ReferenceValues,
 ): Promise<ReferenceRow> {
   if (workspaceId == null) {
-    const admin = assertSiteAdmin(session);
+    const curator = assertCurator(session);
     const values = parseInput(ReferenceInput, input);
     const written = await withAudit(session, async (write) => {
-      const [row] = await write.insertInCompendium(admin, references, values);
+      const [row] = await write.insertInCompendium(curator, references, values);
       return row;
     });
     expireCompendium();
@@ -100,9 +100,9 @@ export async function updateReference(
   id: string,
   input: ReferenceValues,
 ): Promise<ReferenceRow> {
-  const proof: { admin: SiteAdmin } | { membership: Membership } =
+  const proof: { curator: Curator } | { membership: Membership } =
     workspaceId == null
-      ? { admin: assertSiteAdmin(session) }
+      ? { curator: assertCurator(session) }
       : { membership: await assertMembership(session, workspaceId, { ingredient: ['update'] }) };
   const values = { ...NOTHING, ...parseInput(ReferenceInput, input) };
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
@@ -110,14 +110,14 @@ export async function updateReference(
 
   const written = await withAudit(session, async (write) => {
     const [row] =
-      'admin' in proof
-        ? await write.updateByIdInCompendium(proof.admin, references, id, values)
+      'curator' in proof
+        ? await write.updateByIdInCompendium(proof.curator, references, id, values)
         : await write.updateByIdInWorkspace(proof.membership, references, id, values);
     if (!row) throw new NotFound('No such source');
     return row;
   });
   // A coven's reference is in no cached read.
-  if ('admin' in proof) expireCompendium();
+  if ('curator' in proof) expireCompendium();
   return written;
 }
 

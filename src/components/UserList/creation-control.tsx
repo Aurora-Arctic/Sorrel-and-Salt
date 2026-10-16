@@ -11,8 +11,8 @@ import type { CreationControlProps } from './types';
 
 // The row's Approve or Revoke (M5.8), beside the mark it changes: lets a user
 // with no invitation create a coven, or stops them, behind a confirmation
-// naming them, with an optional reason the ledger keeps, as Grant and Revoke
-// of admin take one. A success re-reads the page, whose row then offers the
+// naming them, with an optional reason the ledger keeps, as Change Role
+// takes one. A success re-reads the page, whose row then offers the
 // other action. Approving an unverified address warns first, and still
 // approves (MB.205).
 
@@ -42,7 +42,7 @@ const CreationControl = ({
   action,
   inModal = false,
 }: CreationControlProps): ReactElement =>
-  // Locked while admin changes are paused, as Grant and Revoke are (MB.63).
+  // Locked while admin changes are paused, as Change Role is (MB.63).
   paused ? (
     <LockedControl
       label={action === 'approve' ? 'Approve' : 'Revoke'}

@@ -519,6 +519,20 @@
       "when": 1792133076468,
       "tag": "0073_toxic-flags",
       "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1792133077468,
+      "tag": "0074_curator-role",
+      "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1792133078468,
+      "tag": "0075_curator-invitations",
+      "breakpoints": true
     }
   ]
 }

@@ -69,8 +69,9 @@ export async function grantWorkspaceCreation(
  *
  * @throws {Forbidden} the session's role is not `admin`; admin changes are
  * paused and the caller is not the primary admin (MB.63); the user cannot
- * create one already; or the user is an admin, whom the users CHECK holds to
- * the flag (MB.177), so revoking their admin role is the route.
+ * create one already; or the user is an admin or a curator, whom the users
+ * CHECK holds to the flag (MB.177, M11.20), so making them a user is the
+ * route.
  * @throws {NotFound} no live user has this id.
  */
 export async function revokeWorkspaceCreation(
@@ -83,9 +84,10 @@ export async function revokeWorkspaceCreation(
   if (!user.canCreateWorkspace) {
     throw new Forbidden(`${user.name} cannot create a coven, so there is nothing to revoke`);
   }
-  if (user.role === 'admin') {
+  if (user.role !== 'user') {
+    const role = user.role === 'admin' ? 'an admin' : 'a curator';
     throw new Forbidden(
-      `${user.name} is an admin, and every admin may create a coven. Revoke their admin role first.`,
+      `${user.name} is ${role}, and every ${user.role} may create a coven. Make them a user first.`,
     );
   }
   return setFlag(session, userId, false, note);

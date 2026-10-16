@@ -13,14 +13,14 @@ import type { Session } from '../../../lib/session';
 import { formSlug, slugify } from '../../../lib/slugify';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { parseInput } from '../../../lib/validation';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import { ingredientFormGroups, ingredientForms } from '../schema/ingredient-forms';
 import { IngredientFormGroupInput } from '../validation/ingredient-form-group';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CuratedGroup, IngredientFormGroupRow } from '../types';
 
 // The ingredient form groups: their reads, public reference data like every
-// curated vocabulary (MB.80), and their writes, the site admin's alone
+// curated vocabulary (MB.80), and their writes, a curator's or an admin's alone
 // (M5.6b). A form's slug is its name and its group (M5.6a), so a rename moves
 // every live form's slug under the group, and a delete first moves its live
 // forms to the group the admin names, each re-slugged there. The forms stay
@@ -72,7 +72,7 @@ export async function getIngredientFormGroupBySlug(slug: string): Promise<Ingred
 /**
  * Adds a form group, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is not a site admin — checked before the
+ * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `IngredientFormGroupInput`, or
  * its slug is a live group's.
@@ -81,7 +81,7 @@ export async function createIngredientFormGroup(
   session: Session,
   input: IngredientFormGroupInput,
 ): Promise<IngredientFormGroupRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const fields = parseInput(IngredientFormGroupInput, input);
   const slug = slugify(fields.name);
 
@@ -102,7 +102,7 @@ export async function createIngredientFormGroup(
  * The forms are read before the transaction, so one added under the group in
  * the instant between keeps the slug it was given.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} as `createIngredientFormGroup` throws it, the
  * row's own slug excepted; on `name`, a rename that would move a form onto
  * another form's address, naming both.
@@ -113,7 +113,7 @@ export async function updateIngredientFormGroup(
   id: string,
   input: IngredientFormGroupInput,
 ): Promise<IngredientFormGroupRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const fields = parseInput(IngredientFormGroupInput, input);
   const written = await updateGroup(session, GROUPS, id, fields);
   expireCompendium();
@@ -128,7 +128,7 @@ export async function updateIngredientFormGroup(
  * The forms are read before the transaction, so one added under the group in
  * the instant between is left under a deleted one, which reads as uncurated.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} on `moveTo`, the group has live forms and
  * `moveTo` names no other live group, or a form would move onto another
  * form's address, naming both.
@@ -139,7 +139,7 @@ export async function deleteIngredientFormGroup(
   id: string,
   moveTo?: string,
 ): Promise<void> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   await deleteGroup(session, GROUPS, id, moveTo);
   expireCompendium();
 }

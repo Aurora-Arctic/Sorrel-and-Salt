@@ -9,7 +9,7 @@ import { IngredientRef } from './ingredient';
 // workspaceId names a compendium entry and takes the admin scope; otherwise
 // any signed-in caller may ask and the membership check in the service decides.
 const tierScope = (_root: unknown, { workspaceId }: { workspaceId?: string | null }) =>
-  workspaceId == null ? { admin: true } : { signedIn: true };
+  workspaceId == null ? { curator: true } : { signedIn: true };
 
 builder.mutationField('promoteFolkName', (t) =>
   t.field({

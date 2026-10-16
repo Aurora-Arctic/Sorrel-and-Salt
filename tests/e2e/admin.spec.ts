@@ -3,9 +3,11 @@ import { assertNoAccessibilityViolations } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { slugify } from '@/lib/slugify';
 
 // The admin pages against the built server, for what no story walks: the
-// layout, the user list and its approval, and the zodiac filter. A non-admin's
+// layout, the user list and its approval, the curator role (M11.20), and the
+// zodiac filter. A non-admin's
 // 403 on every admin route, each curated page's add, edit and delete, and the
 // user modal are the story suite's (tests/e2e/stories/07-admin.spec.ts,
 // stories 17–19); admin grants and the pause are story 60's
@@ -204,6 +206,102 @@ test('an admin approves a user awaiting approval at /admin/users, then revokes i
 
   await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
   await expect(row.getByRole('button', { name: 'Approve Fixture Person' })).toBeVisible();
+});
+
+// M11.20: the curator role, given and taken back through the one Change Role
+// dialog, each change in the ledger. A curator holds the creation flag from
+// the same write, and keeps it when the role is taken away, as an admin does.
+test('an admin makes a user a curator from the user screen, then takes the role back', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'becoming@admin-curator.test');
+  await signInAs(page, 'an-admin@admin-curator.test', ['discord'], 'admin');
+
+  const response = await page.goto('/admin/users?query=becoming%40admin-curator.test');
+  expect(response?.status()).toBe(200);
+  const row = page.getByRole('row', { name: /becoming@admin-curator\.test/ });
+  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+
+  await row.getByRole('button', { name: 'Change Role for Fixture Person' }).click();
+  const granting = page.getByRole('dialog', { name: 'Change Role' });
+  await expect(granting).toContainText('Fixture Person');
+  await granting.getByRole('radio', { name: /^Curator\b/ }).check();
+  await granting.getByRole('textbox', { name: 'Reason' }).fill('Keeps the herbals');
+  await assertNoAccessibilityViolations(page);
+  await granting.getByRole('button', { name: 'Promote' }).click();
+  await expect(granting).toHaveCount(0);
+
+  // A curator, who may create a coven: the creation cell holds the mark alone.
+  await expect(row.getByRole('cell').nth(2)).toHaveText(/^Curator/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText('Yes');
+  expect(await privilegeChanges(userId)).toEqual([
+    { privilege: 'create_workspace', change: 'grant', via: 'admin', note: 'Keeps the herbals' },
+    { privilege: 'curator', change: 'grant', via: 'admin', note: 'Keeps the herbals' },
+  ]);
+
+  // Taken back to a user, the flag staying.
+  await row.getByRole('button', { name: 'Change Role for Fixture Person' }).click();
+  const demoting = page.getByRole('dialog', { name: 'Change Role' });
+  await demoting.getByRole('radio', { name: /^User\b/ }).check();
+  await demoting.getByRole('button', { name: 'Demote' }).click();
+  await expect(demoting).toHaveCount(0);
+
+  await expect(row.getByRole('cell').nth(2)).toHaveText(/^User/);
+  await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
+  expect((await privilegeChanges(userId)).slice(2)).toEqual([
+    { privilege: 'curator', change: 'revoke', via: 'admin', note: null },
+  ]);
+});
+
+// M11.20: a curator reaches every curation page and nothing on People. The
+// navigation leaving People out is only what they see; each People page
+// refuses them itself, and a coven they hold no seat in is a 404 as for
+// anyone else.
+test('a curator reaches /admin and the curation pages, and is refused People and a coven', async ({
+  page,
+}) => {
+  // A desktop window, as the admin's nav test, since this one counts every link.
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await signInAs(page, 'a-curator@admin-curator.test', ['discord'], 'curator');
+
+  const response = await page.goto('/admin');
+  expect(response?.status()).toBe(200);
+  const nav = page.getByRole('navigation', { name: 'Admin' });
+  const pages = [
+    ['Compendium', '/admin/compendium'],
+    ['Categories', '/admin/categories'],
+    ['Forms', '/admin/forms'],
+    ['Deities', '/admin/deities'],
+    ['Astrology', '/admin/celestial-bodies'],
+  ];
+  await expect(nav.getByRole('link')).toHaveCount(pages.length);
+  for (const [name, href] of pages) {
+    await expect(nav.getByRole('link', { name, exact: true })).toHaveAttribute('href', href);
+  }
+  await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
+
+  for (const path of [
+    '/admin/compendium',
+    '/admin/categories',
+    '/admin/category-groups',
+    '/admin/forms',
+    '/admin/form-groups',
+    '/admin/deities',
+    '/admin/deity-traditions',
+    '/admin/celestial-bodies',
+    '/admin/zodiac-signs',
+  ]) {
+    expect((await page.goto(path))?.status(), path).toBe(200);
+  }
+
+  for (const path of ['/admin/users', '/admin/privilege-changes', '/admin/invitations']) {
+    expect((await page.goto(path))?.status(), path).toBe(403);
+  }
+
+  // The standard seed's coven W, which this curator holds no seat in.
+  expect((await page.goto(`/coven/${slugify('Whitethorn Coven')}`))?.status()).toBe(404);
 });
 // The zodiac page's one flow, since the celestial bodies' CRUD covers the shared
 // modal: its list read through the address a filter makes.

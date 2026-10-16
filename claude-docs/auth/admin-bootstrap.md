@@ -565,14 +565,14 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
-An admin grants and revokes admin from a user's row on `/admin/users`
-(MB.59; [`admin-users.md`](admin-users.md), "Granting and revoking admin"),
-where the primary admin cannot be revoked and a revoke that would leave no
+An admin grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/admin/users`
+(MB.59; [`admin-users.md`](admin-users.md), "Changing a site role"),
+where the primary admin cannot be revoked and a demotion that would leave no
 admin is refused. Changing who the primary admin is, is that section's too.
 
 A hand fix in `psql` stays possible, for a database no admin can sign in to.
-It sets `can_create_workspace` with `role`, since MB.177's CHECK refuses an
-admin without the flag, and declares itself first, since the trigger on
+It sets `can_create_workspace` with `role`, since the `users_privileged_can_create_workspace` CHECK (MB.177, M11.20) refuses an
+admin or curator without the flag, and declares itself first, since the trigger on
 `users` refuses a privilege change that names no route (MB.195):
 
 ```sql

@@ -49,9 +49,11 @@ fails the test instead of going through unnoticed.
 The task left two questions to answer from running code. Both answers:
 
 - **The `role` column works unmapped.** The plugin reads `user.role` as a
-  string and checks it against its default roles, `admin` and `user`. Those
-  are the `user_role` enum's two values, so an admin may impersonate and a
-  user may not, with no `roles` option needed.
+  string and checks it against its default roles, `admin` and `user`. The
+  `user_role` enum has a third value since M11.20, `curator`, which the plugin
+  does not know and so treats as a user: `adminRoles` stays `['admin']`, so an
+  admin may impersonate, and neither a user nor a curator may, with no `roles`
+  option needed. A curator can be impersonated like any non-admin.
 - **The ban endpoints and columns can be declined.** The endpoints go with
   the rest. The narrowed plugin's schema keeps only `session.impersonatedBy`,
   so Better Auth expects no `banned`, `banReason` or `banExpires` column on
@@ -63,7 +65,7 @@ The task left two questions to answer from running code. Both answers:
 The endpoint is the guard. The control on `/admin/users` only puts it where
 an admin looks.
 
-- **A non-admin is refused** with a 403, even where the plugin is registered:
+- **A non-admin, a curator included, is refused** with a 403, even where the plugin is registered:
   the default `user` role has no `impersonate` permission.
 - **An admin cannot impersonate another admin**, the primary admin included.
   `allowImpersonatingAdmins` stays at its default, off, and the default `admin`

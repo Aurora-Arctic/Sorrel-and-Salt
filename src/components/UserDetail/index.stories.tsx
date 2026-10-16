@@ -34,6 +34,15 @@ const ADA: UserDetailUser = {
   primaryAdmin: true,
   canCreateWorkspace: true,
 };
+// A curator (M11.20): the role in bold, no coven-creation control, and Impersonate.
+const DEE: UserDetailUser = {
+  ...FACTS,
+  id: 'u-dee',
+  name: 'Dee Fixturewort',
+  email: 'dee@fixture.test',
+  role: 'curator',
+  canCreateWorkspace: true,
+};
 const MANY: UserDetailUser = {
   ...BO,
   providers: ['google', 'discord', 'facebook', 'microsoft'],
@@ -73,6 +82,8 @@ export const SeveralProviders: Story = () => <UserDetail user={MANY} memberships
 
 // The primary admin carries the crown. No Impersonate on an admin: the endpoint refuses one (MB.53).
 export const Admin: Story = () => <UserDetail user={ADA} memberships={COVENS} canImpersonate />;
+
+export const Curator: Story = () => <UserDetail user={DEE} memberships={[]} canImpersonate />;
 
 export const WithoutImpersonation: Story = () => <UserDetail user={BO} memberships={COVENS} />;
 

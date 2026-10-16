@@ -4,7 +4,7 @@ import { readInvitationsPlace } from '../../invitations/filter';
 import { invitationsLock } from '../../invitations/lock';
 import type { AdminInvitationsPageProps } from '../../invitations/types';
 
-// Invite Admin, beside the page's heading while Invitations is open
+// New Invitation, beside the page's heading while Invitations is open
 // (MB.70; MB.115): a link to the tab's `?invite`, keeping the tab's filter
 // and page, which opens the form, or locked with the pause as its reason.
 export default async function InvitationsAction({ searchParams }: AdminInvitationsPageProps) {

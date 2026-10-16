@@ -1,7 +1,7 @@
 import type { SelectOption } from '../Field/types';
 import type { LedgerPrivilege } from './types';
 
-// The two privileges as the ledger names them (MB.115): the privilege filter's
+// The privileges as the ledger names them (MB.115): the privilege filter's
 // choices, the Privilege column's text and the page's reading of
 // `?privilege`, one list so the three cannot drift apart. Title case, as a
 // choice in a select is labelled.
@@ -9,6 +9,7 @@ import type { LedgerPrivilege } from './types';
 /** Each privilege and its label, in the order the filter offers them. */
 export const PRIVILEGE_LABELS: readonly (SelectOption & { value: LedgerPrivilege })[] = [
   { value: 'admin', label: 'Admin' },
+  { value: 'curator', label: 'Curator' },
   { value: 'create_workspace', label: 'Coven Creation' },
 ];
 

@@ -20,7 +20,7 @@ const BRAND = 'Sorrel & Salt';
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
   // No Compendium link yet: its public route is MB.80's. When it lands it is
   // the first entry here, for everyone, and the nav stops being admin-only.
-  const links: SiteLink[] = viewer.isAdmin
+  const links: SiteLink[] = viewer.canCurate
     ? [
         {
           label: 'Your Coven',

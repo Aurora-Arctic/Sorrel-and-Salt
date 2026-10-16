@@ -30,8 +30,8 @@ Why statements rather than the rank the design doc originally specified, and
 what that costs while most of the services are still unwritten:
 [`m6.3-permission-statements.md`](../design-decisions/m6.3-permission-statements.md).
 
-The **site role** is not consulted. `session.role` is `'user' | 'admin'` and a
-site admin curates the compendium and reaches no workspace at all, so
+The **site role** is not consulted. `session.role` is `'user' | 'curator' | 'admin'` and a
+curator or site admin curates the compendium and reaches no workspace at all, so
 `assertMembership` never reads it — which is what makes that invariant true by
 construction rather than by a branch someone could add later.
 

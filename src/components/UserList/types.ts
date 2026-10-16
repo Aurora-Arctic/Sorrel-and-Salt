@@ -39,7 +39,7 @@ export interface UserListProps extends Partial<PagerHrefs<Route>> {
   canImpersonate?: boolean;
   /**
    * The pause on admin changes and whether this admin may flip it (MB.63):
-   * while paused, a viewer who may not has every Grant and Revoke locked. The
+   * while paused, a viewer who may not has every Change Role locked. The
    * switch itself is the page's, beside its heading.
    */
   adminChanges?: PauseControlProps;
@@ -143,23 +143,22 @@ export interface ConfirmAnswersProps {
 }
 
 /** What a row's role control does: make a user an admin, or stop one being one (MB.59). */
-export type RoleAction = 'grant' | 'revoke';
-
 export interface RoleControlProps {
   userId: string;
   /** The user's name, completing the button's accessible name and the question. */
   name: string;
-  /** Whether the user's address is verified; Grant warns when it is not (MB.205). */
+  /** Whether the user's address is verified; a promotion warns when it is not (MB.205). */
   emailVerified: boolean;
-  /** Whether this is the primary admin, whose Revoke says why it cannot be used. */
+  /** Whether this is the primary admin, whose Change Role says why it cannot be used. */
   primaryAdmin: boolean;
   /**
    * Whether admin changes are paused for the viewing admin (MB.63): paused,
-   * and the viewer not the primary admin, whom the pause exempts. Its Grant
-   * or Revoke then says why it cannot be used.
+   * and the viewer not the primary admin, whom the pause exempts. Change
+   * Role then says why it cannot be used.
    */
   paused?: boolean;
-  action: RoleAction;
+  /** The role the user holds now, which Change Role does not offer. */
+  role: UserRole;
   /** Drawn in the user's modal, so it asks over the modal's body (M9.19). */
   inModal?: boolean;
 }

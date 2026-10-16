@@ -18,12 +18,12 @@ describe('covenHome', () => {
 });
 
 describe('shellHome', () => {
-  it('is /admin for an admin, even one with a coven', () => {
-    expect(shellHome({ isAdmin: true }, COVENS)).toBe('/admin');
+  it('is /admin for a curator or an admin, even one with a coven', () => {
+    expect(shellHome({ canCurate: true }, COVENS)).toBe('/admin');
   });
 
   it('is the viewer’s first coven for anyone else, or the landing when they have none', () => {
-    expect(shellHome({ isAdmin: false }, COVENS)).toBe('/coven/fixture-coven');
-    expect(shellHome({ isAdmin: false }, [])).toBe('/coven');
+    expect(shellHome({ canCurate: false }, COVENS)).toBe('/coven/fixture-coven');
+    expect(shellHome({ canCurate: false }, [])).toBe('/coven');
   });
 });

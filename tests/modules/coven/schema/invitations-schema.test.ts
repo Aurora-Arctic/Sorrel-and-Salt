@@ -29,6 +29,7 @@ const OWN_COLUMNS = [
   'revoked_at',
   'declined_at',
   'note',
+  'site_role',
 ];
 
 const TOKEN_HASH_INDEX = 'invitations_token_hash_unique';
@@ -36,6 +37,8 @@ const TIER_CHECK = 'invitations_tier';
 const ROLE_CHECK = 'invitations_role_invitable';
 const DECLINED_CHECK = 'invitations_declined_coven';
 const ANSWERED_CHECK = 'invitations_answered_once';
+const SITE_TIER_CHECK = 'invitations_site_role_tier';
+const SITE_ROLE_CHECK = 'invitations_site_role_invitable';
 
 describe('invitations schema', () => {
   const { byName } = tableFacts(invitations);
@@ -136,11 +139,11 @@ async function invite(
   return inserted.id as string;
 }
 
-/** A site-tier invitation, by E: no workspace and no role. */
-async function inviteToSite({ tokenHash = HASH_A } = {}) {
+/** A site-tier invitation, by E: no workspace and no coven role, and the site role it grants. */
+async function inviteToSite({ tokenHash = HASH_A, siteRole = 'admin' } = {}) {
   const [inserted] = await sql`
-    insert into invitations (email, token_hash, created_by, updated_by)
-    values ('rowan@example.com', ${tokenHash}, ${ADMIN}, ${ADMIN})
+    insert into invitations (email, token_hash, site_role, created_by, updated_by)
+    values ('rowan@example.com', ${tokenHash}, ${siteRole}::user_role, ${ADMIN}, ${ADMIN})
     returning id
   `;
   return inserted.id as string;
@@ -165,8 +168,8 @@ describe('invitations table', () => {
 
     it('refuses a role without a workspace', async () => {
       const error = await failureOf(sql`
-        insert into invitations (email, role, token_hash, created_by, updated_by)
-        values ('rowan@example.com', 'member', ${HASH_A}, ${ADMIN}, ${ADMIN})
+        insert into invitations (email, role, site_role, token_hash, created_by, updated_by)
+        values ('rowan@example.com', 'member', 'admin', ${HASH_A}, ${ADMIN}, ${ADMIN})
       `);
 
       expect(error.code).toBe('23514');
@@ -177,6 +180,48 @@ describe('invitations table', () => {
     // nullable, and a row with both, or with neither, is well-formed.
     it('accepts a null pair, the site tier', async () => {
       await expect(inviteToSite()).resolves.toBeDefined();
+    });
+  });
+
+  // M11.20: a site invitation names the site role it grants, curator or
+  // admin, and a coven invitation names none.
+  describe('the site role', () => {
+    it('refuses a site-tier invitation that names no site role', async () => {
+      const error = await failureOf(sql`
+        insert into invitations (email, token_hash, created_by, updated_by)
+        values ('rowan@example.com', ${HASH_A}, ${ADMIN}, ${ADMIN})
+      `);
+
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe(SITE_TIER_CHECK);
+    });
+
+    it('refuses a coven invitation that names a site role', async () => {
+      const error = await failureOf(sql`
+        insert into invitations (workspace_id, email, role, site_role, token_hash, created_by, updated_by)
+        values (${COVEN}, 'rowan@example.com', 'member', 'admin', ${HASH_A}, ${OWNER}, ${OWNER})
+      `);
+
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe(SITE_TIER_CHECK);
+    });
+
+    it('refuses user, which grants nothing', async () => {
+      const error = await failureOf(inviteToSite({ siteRole: 'user' }));
+
+      expect(error.code).toBe('23514');
+      expect(error.constraint_name).toBe(SITE_ROLE_CHECK);
+    });
+
+    // Why the refusals above could have succeeded: the column is nullable and
+    // the enum admits `user`, and a coven invitation without one is well-formed.
+    it('accepts curator and admin on the site tier, and none on a coven invitation', async () => {
+      await inviteToSite({ siteRole: 'curator' });
+      await inviteToSite({ siteRole: 'admin', tokenHash: HASH_B });
+      await invite('member', { tokenHash: 'c'.repeat(64) });
+
+      const rows = await sql`select site_role::text from invitations order by site_role nulls last`;
+      expect(rows.map((row) => row.site_role)).toEqual(['admin', 'curator', null]);
     });
   });
 

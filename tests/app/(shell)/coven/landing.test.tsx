@@ -26,7 +26,13 @@ function asViewer(
   pendingInvitations = 0,
 ) {
   viewerOf.mockResolvedValue({
-    viewer: { name: 'Ada Fixture', isAdmin: false, canCreate, verified: true, pendingInvitations },
+    viewer: {
+      name: 'Ada Fixture',
+      canCurate: false,
+      canCreate,
+      verified: true,
+      pendingInvitations,
+    },
     workspaces,
   });
 }

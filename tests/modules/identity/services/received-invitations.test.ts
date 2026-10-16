@@ -105,8 +105,8 @@ describe('listReceivedInvitations', () => {
   it('never lists an admin invitation to the same address', async () => {
     const { id } = await invite();
     await sql`
-      insert into invitations (email, token_hash, created_by, updated_by, expires_at)
-      values (${D.email}, ${sha256('fixture-token-site')}, ${E.id}, ${E.id}, now() + interval '7 days')
+      insert into invitations (email, token_hash, site_role, created_by, updated_by, expires_at)
+      values (${D.email}, ${sha256('fixture-token-site')}, 'admin', ${E.id}, ${E.id}, now() + interval '7 days')
     `;
     // Why it could have been listed: pending, to D's verified address, and one more row there.
     expect(await sql`select id from invitations where workspace_id is null`).toHaveLength(1);

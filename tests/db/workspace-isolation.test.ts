@@ -14,7 +14,7 @@ import {
   updateStock,
   updateWorkspaceIngredient,
 } from '@/modules/ingredients';
-import { A, D, E, asUser } from '../support/as-user';
+import { A, D, E, F, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertSpell } from '../support/db/insert-spell';
 import { insertStock } from '../support/db/insert-stock';
@@ -299,7 +299,8 @@ describe('Grimoire — the spell and what it is made of', () => {
 // gets no bypass"): E's refusal of each entity is the ordinary stranger's
 // refusal, and nothing about it can regress a capability checked on
 // `session.role`. Each service proves E's refusal once too; this is the sweep.
-describe('E’s site role carries no bypass and no penalty from the membership check', () => {
+// F, the curator (M11.20), is held to the same: curating buys no coven either.
+describe('E’s and F’s site roles carry no bypass and no penalty from the membership check', () => {
   const stranger = asUser({ id: '00000000-0000-0000-0000-0000000000fe', role: 'user' });
 
   type Seeded = { ingredientId: string; stockId: string; spellId: string };
@@ -331,7 +332,7 @@ describe('E’s site role carries no bypass and no penalty from the membership c
   ];
 
   it.each(ATTEMPTS)(
-    'is refused %s, exactly as a stranger with no membership row would be, leaving it as it was',
+    'refuses E and F %s, exactly as a stranger with no membership row would be, leaving it as it was',
     async (_attempt, attempt) => {
       const ingredientId = await seedIngredient();
       const seeded = {
@@ -339,9 +340,10 @@ describe('E’s site role carries no bypass and no penalty from the membership c
         stockId: await seedStock(ingredientId),
         spellId: await seedSpell(),
       };
-      // Why E could have been let through: the site role is real, and the rows
-      // are W's own, read by W's owner.
+      // Why E and F could have been let through: the site roles are real, and
+      // the rows are W's own, read by W's owner.
       expect(asUser(E).role).toBe('admin');
+      expect(asUser(F).role).toBe('curator');
       await expect(
         getWorkspaceIngredient(asUser(A), WORKSPACE_W_ID, seeded.ingredientId),
       ).resolves.toMatchObject({ id: seeded.ingredientId });
@@ -354,11 +356,14 @@ describe('E’s site role carries no bypass and no penalty from the membership c
       });
 
       const admin = await refusalOf(attempt(asUser(E), seeded));
+      const curator = await refusalOf(attempt(asUser(F), seeded));
       const outsider = await refusalOf(attempt(stranger, seeded));
 
       expect(admin).toBeInstanceOf(Forbidden);
+      expect(curator).toBeInstanceOf(Forbidden);
       expect(outsider).toBeInstanceOf(Forbidden);
       expect(admin.message).toBe(outsider.message);
+      expect(curator.message).toBe(outsider.message);
       expect(await nameOf(seeded.ingredientId)).not.toBe('Hijacked');
       expect(await quantityOf(seeded.stockId)).toBe(5);
       expect(await visibilityOf(seeded.spellId)).toBe('workspace');
@@ -391,6 +396,15 @@ describe('E’s site role carries no bypass and no penalty from the membership c
     await expect(
       getWorkspaceIngredient(asUser(E), WORKSPACE_X_ID, ingredientId),
     ).rejects.toBeInstanceOf(Forbidden);
+  });
+
+  // The precondition the sweep above stands on: F is seeded a curator in no coven.
+  it('seeds F a curator holding the creation flag, with no membership row', async () => {
+    const [row] = await sql`
+      select role::text as role, can_create_workspace from users where id = ${F.id}
+    `;
+    expect(row).toEqual({ role: 'curator', can_create_workspace: true });
+    expect(await sql`select 1 from workspace_members where user_id = ${F.id}`).toHaveLength(0);
   });
 
   it('leaves the compendium itself untouched by the refusal', async () => {

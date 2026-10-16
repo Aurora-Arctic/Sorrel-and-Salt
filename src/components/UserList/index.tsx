@@ -74,23 +74,23 @@ const columns = (
   },
   {
     heading: 'Role',
-    // An admin's role in bold, on the owner's call: the rows to notice. On
-    // the right, the control that changes it (MB.59), as Coven Creation holds
-    // its own: one column rather than a second saying the same thing. The
-    // primary admin is marked by a crown with a tip, and its Revoke's tip
-    // says why it cannot be used.
+    // An admin's or a curator's role in bold, on the owner's call: the rows to
+    // notice. On the right, the control that changes it (MB.59, M11.20), as
+    // Coven Creation holds its own: one column rather than a second saying the
+    // same thing. The primary admin is marked by a crown with a tip, and its
+    // Change Role's tip says why it cannot be used.
     cell: (user) => (
       <div className="user-list__role">
         <span className="user-list__role-name">
-          {user.role === 'admin' ? (
+          {user.role !== 'user' ? (
             <strong>{roleLabel(user.role)}</strong>
           ) : (
             <span>{roleLabel(user.role)}</span>
           )}
           {user.primaryAdmin && <PrimaryAdminMark />}
         </span>
-        {/* Keyed by the action, so the refresh after a change mounts a fresh
-            control for the other one rather than keeping this one's busy state. */}
+        {/* Keyed by the role, so the refresh after a change mounts a fresh
+            control offering the others rather than keeping this one's busy state. */}
         <RoleControl
           key={user.role}
           userId={user.id}
@@ -98,7 +98,7 @@ const columns = (
           emailVerified={user.emailVerified}
           primaryAdmin={user.primaryAdmin}
           paused={changesPaused}
-          action={user.role === 'admin' ? 'revoke' : 'grant'}
+          role={user.role}
         />
       </div>
     ),
@@ -106,11 +106,12 @@ const columns = (
   {
     heading: 'Coven Creation',
     // Whether they may, and beside it the control that changes it (M5.8);
-    // none on an admin's row, whom the users CHECK holds to the flag (MB.177).
+    // none on an admin's or a curator's row, whom the users CHECK holds to the
+    // flag (MB.177, M11.20).
     cell: (user) => (
       <div className="user-list__creation">
         <Mark value={user.canCreateWorkspace} label={user.canCreateWorkspace ? 'Yes' : 'No'} />
-        {user.role === 'admin' ? null : (
+        {user.role !== 'user' ? null : (
           // Keyed by the action, so the refresh after a change mounts a fresh
           // control for the other one rather than keeping this one's busy state.
           <CreationControl

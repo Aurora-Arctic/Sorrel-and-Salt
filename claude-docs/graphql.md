@@ -29,7 +29,7 @@ The endpoint sets `cors: false` and sends no `Access-Control-*` headers, because
 
 ## The schema
 
-Code-first Pothos with no ORM plugin and fields non-null by default: the `DateTime` scalar, `AuditInfo`, every field from `me` to the workspace and compendium ingredient mutations, the `signedIn`, `admin` and `self` scopes as the second check, and the committed `schema.graphql` snapshot. [`graphql/schema.md`](graphql/schema.md)
+Code-first Pothos with no ORM plugin and fields non-null by default: the `DateTime` scalar, `AuditInfo`, every field from `me` to the workspace and compendium ingredient mutations, the `signedIn`, `curator`, `admin` and `self` scopes as the second check, and the committed `schema.graphql` snapshot. [`graphql/schema.md`](graphql/schema.md)
 
 ### `me`, `User` and the first module types
 

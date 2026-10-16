@@ -14,7 +14,7 @@ import {
   updateIngredientFormGroup,
 } from '@/modules/vocabulary';
 import type { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
@@ -53,10 +53,15 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
+const CURATORS = [
+  ['the site admin', E],
+  ['a curator', F],
+] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
   expect(admin.role).toBe('admin');
+  expect(asUser(F).role).toBe('curator');
 });
 
 function input(overrides: Partial<IngredientFormGroupInput> = {}): IngredientFormGroupInput {
@@ -184,19 +189,22 @@ describe('getIngredientFormGroupBySlug', () => {
 });
 
 describe('createIngredientFormGroup', () => {
-  it('lets the site admin create one, its slug from the name, stamped by them', async () => {
-    const created = await createIngredientFormGroup(admin, input());
+  it.each(CURATORS)(
+    'lets %s create one, its slug from the name, stamped by them',
+    async (_who, user) => {
+      const created = await createIngredientFormGroup(asUser(user), input());
 
-    expect(await groupOf(created.id)).toMatchObject({
-      name: 'Fixture Matter',
-      slug: 'fixture-matter',
-      description: 'A group this test made',
-      seed_key: null,
-      created_by: E.id,
-      updated_by: E.id,
-      deleted_at: null,
-    });
-  });
+      expect(await groupOf(created.id)).toMatchObject({
+        name: 'Fixture Matter',
+        slug: 'fixture-matter',
+        description: 'A group this test made',
+        seed_key: null,
+        created_by: user.id,
+        updated_by: user.id,
+        deleted_at: null,
+      });
+    },
+  );
 
   it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
     await expect(createIngredientFormGroup(asUser(user), input())).rejects.toThrow(Forbidden);
@@ -225,18 +233,21 @@ describe('createIngredientFormGroup', () => {
 });
 
 describe('updateIngredientFormGroup', () => {
-  it('lets the site admin rewrite it, the slug following the name, created_by kept', async () => {
-    const id = await seedGroup('Fixture Matter');
+  it.each(CURATORS)(
+    'lets %s rewrite it, the slug following the name, created_by kept',
+    async (_who, user) => {
+      const id = await seedGroup('Fixture Matter');
 
-    await updateIngredientFormGroup(admin, id, input({ name: 'Fixture Stuff' }));
+      await updateIngredientFormGroup(asUser(user), id, input({ name: 'Fixture Stuff' }));
 
-    expect(await groupOf(id)).toMatchObject({
-      name: 'Fixture Stuff',
-      slug: 'fixture-stuff',
-      created_by: A.id,
-      updated_by: E.id,
-    });
-  });
+      expect(await groupOf(id)).toMatchObject({
+        name: 'Fixture Stuff',
+        slug: 'fixture-stuff',
+        created_by: A.id,
+        updated_by: user.id,
+      });
+    },
+  );
 
   // A form's slug names its group (M5.6a), so it follows the group's rename.
   it('moves the slug of every live form under it, in the same write, and touches no ingredient', async () => {
@@ -311,13 +322,19 @@ describe('updateIngredientFormGroup', () => {
 });
 
 describe('deleteIngredientFormGroup', () => {
-  it('lets the site admin soft-delete one with no forms, keeping the row', async () => {
-    const id = await seedGroup('Fixture Matter');
+  it.each(CURATORS)(
+    'lets %s soft-delete one with no forms, keeping the row',
+    async (_who, user) => {
+      const id = await seedGroup('Fixture Matter');
 
-    await deleteIngredientFormGroup(admin, id);
+      await deleteIngredientFormGroup(asUser(user), id);
 
-    expect(await groupOf(id)).toMatchObject({ deleted_by: E.id, deleted_at: expect.any(Date) });
-  });
+      expect(await groupOf(id)).toMatchObject({
+        deleted_by: user.id,
+        deleted_at: expect.any(Date),
+      });
+    },
+  );
 
   it('moves its live forms to the group named, re-slugged there, then deletes it', async () => {
     const id = await seedGroup('Fixture Matter');

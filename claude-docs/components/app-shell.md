@@ -24,8 +24,8 @@ inside that segment's layout. It keeps `NotAuthorized` in a `main.page-frame`.
 
 ## Props
 
-- `viewer`: `{ name, isAdmin, canCreate, verified, pendingInvitations }`
-  (`ShellViewer`, `src/lib/types.ts`). `isAdmin` is the session's role;
+- `viewer`: `{ name, canCurate, canCreate, verified, pendingInvitations }`
+  (`ShellViewer`, `src/lib/types.ts`). `canCurate` is true for a curator or an admin, read from the session's role (M11.20);
   `canCreate` and `verified` come from the user row; `pendingInvitations` is
   how many coven invitations wait for the viewer's verified address (M10.32).
 - `workspaces`: the viewer's covens (`ShellWorkspace[]`), in the switcher's
@@ -51,9 +51,7 @@ one's own id) throws.
   width, a phone's included (the owner's call, M10.32): the account panel holds
   no theme switch.
 - **The brand** is a link to `shellHome(viewer, workspaces)` and plain text
-  for an unverified viewer. `src/lib/shell-home.ts` holds `shellHome` (admin:
-  `/admin`, anyone else `covenHome`) and `covenHome` (the admin's Your Coven
-  link): `/coven/<slug>` of the first coven the switcher lists, or the
+  for an unverified viewer. `src/lib/shell-home.ts` holds `shellHome` (a curator or an admin: `/admin`, anyone else `covenHome`) and `covenHome` (their Your Coven link): `/coven/<slug>` of the first coven the switcher lists, or the
   `/coven` landing (M2.8) for someone in none, which offers the create page or
   explains the invitation. The links go into the coven themselves rather than
   to `/coven`, which would only redirect a member there and leave the browser
@@ -61,8 +59,7 @@ one's own id) throws.
   under `$shell-brand-width` (a narrow phone; wider than that the bar has room
   for the name once the site links have gone) the brand reads "S&S"; the full
   name stays in the page, visually hidden, for a screen reader.
-- **The site nav** (`nav` named "Site") lists Your Coven and Admin, **for an
-  admin only**, on every shell page. There is no Compendium link until its
+- **The site nav** (`nav` named "Site") lists Your Coven and Admin, **for a curator or an admin only** (`canCurate`), on every shell page. There is no Compendium link until its
   public route exists (MB.80). With no links the nav is not rendered. At or
   under `$shell-tablet-width` the bar has no room for them beside the brand,
   Add Ingredient, the account button and the disc, so the same links are
@@ -118,8 +115,7 @@ bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`.
 ## Testing
 
 `tests/components/AppShell/index.test.tsx` covers who sees the Admin and Your
-Coven links (an admin does; a verified member sees the rest of the bar and not
-these), the brand's target, Add Ingredient being disabled, the unverified
+Coven links (a curator or an admin does; a verified member sees the rest of the bar and not these), the brand's target, Add Ingredient being disabled, the unverified
 viewer's bar, the skip link's target, and the viewer's invitation count reaching
 the account menu's link. `tests/lib/shell-home.test.ts` and
 `tests/lib/viewer.test.ts` cover the two helpers, the latter including the count

@@ -230,7 +230,7 @@ const ROWS: Record<string, PartialIndexRow> = {
   },
   // The site tier, a null pair: the index spans both tiers alike (MB.201).
   invitations_token_hash_unique: {
-    row: async () => stamped({ email: address(), token_hash: token() }),
+    row: async () => stamped({ email: address(), token_hash: token(), site_role: 'admin' }),
   },
   reference_links_celestial_body_unique: {
     row: referenceLink('celestial_body_id', 'celestial_bodies', celestialBody),
