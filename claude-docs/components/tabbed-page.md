@@ -277,7 +277,7 @@ and a second press going nowhere, `aria-current` still on the open tab
 and the pressed one `aria-busy`; a navigation that renders moves
 `aria-current` to the pressed tab and clears the rest; a Ctrl, Cmd or Shift
 press is not intercepted. Where the pill and the scroll land is layout,
-which jsdom has none of, so the workshop's screenshots and measurements
+which happy-dom has none of, so the workshop's screenshots and measurements
 show them. `tests/components/AdminNav/index.test.tsx` checks a page's nav entry
 is current on each of its tabs. The page tests render each tab's slot page
 beside its page, as the layout does: `tests/app/(shell)/admin/value-page.test.tsx`

@@ -4,7 +4,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 // Ported from resume-2026; the aria-label and the Tooltip wrapper changed, the
 // rest carries over.
-// jsdom's `matchMedia` always answers `false` — the "system asks for neither"
+// The setup's `matchMedia` answers `false` to a colour scheme — the "system asks for neither"
 // case — so a light system needs a stub.
 const stubLightSystemPreference = (): void => {
   vi.stubGlobal('matchMedia', (query: string) => ({

@@ -49,8 +49,9 @@ const showFormat = (name: 'HSB' | 'HSL' | 'RGB') => {
 };
 
 describe('ChipColorField', () => {
-  // jsdom has no ResizeObserver, and the format tooltip's positioning watches
-  // its trigger with one, a frame after it opens.
+  // The format tooltip's positioning watches
+  // its trigger with a ResizeObserver, a frame after it opens; stood in for so the
+  // test does not depend on whether the environment has one.
   beforeAll(() => {
     vi.stubGlobal(
       'ResizeObserver',

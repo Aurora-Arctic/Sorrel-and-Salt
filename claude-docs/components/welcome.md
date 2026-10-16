@@ -75,7 +75,7 @@ Render-only, no test ids, no snapshots.
 link to `/sign-in` with no "Continue", and the signed-in link to the
 `landing` given, an admin's included, with no Sign In. What the page says is
 copy, and no test asserts it. Role and label queries only. Runs in the `dom`
-(jsdom) Vitest project — `npm run test:coverage`.
+(happy-dom) Vitest project — `npm run test:coverage`.
 `tests/app/page.test.tsx` covers the page's half, with the session mocked:
 Sign In signed out, and Continue signed in.
 

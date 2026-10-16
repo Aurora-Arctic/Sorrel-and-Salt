@@ -13,7 +13,7 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
   const [current, setCurrent] = useState(entries[0]?.href);
 
   useEffect(() => {
-    // No observer (an old browser, jsdom): the server's mark stays.
+    // No observer (an old browser): the server's mark stays.
     if (typeof IntersectionObserver === 'undefined') return;
     const targets = entries
       .map((entry) => document.getElementById(entry.href.slice(1)))

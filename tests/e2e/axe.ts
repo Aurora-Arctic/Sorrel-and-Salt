@@ -14,7 +14,7 @@ export async function assertNoAccessibilityViolations(page: Page) {
 
 // A page holds at a phone's width when nothing pushes it sideways: the
 // document is no wider than the window. Measured in the real browser, since
-// jsdom lays nothing out; 375px is the narrowest width a section signs off at
+// happy-dom lays nothing out; 375px is the narrowest width a section signs off at
 // (claude-docs/styling.md, "Designing a section"). With `restore`, the
 // window goes back to its width afterwards, for a walk that goes on past the
 // measurement at the width it had.

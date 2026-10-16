@@ -905,7 +905,7 @@ column's cell names its column in a `data-label` attribute:
   `row`, `columnheader` and `cell`. WebKit drops a table's meaning once
   `display` changes on its parts, so a screen reader in Safari would read the
   cards as loose text; the explicit roles put the meaning back. They are the
-  roles the elements have already, so nothing else changes, and a jsdom test's
+  roles the elements have already, so nothing else changes, and a happy-dom test's
   `getByRole('cell')` finds a `td` either way. Every admin list's table is
   [`StackTable`](components/data-table.md), which spreads them from one
   helper, `src/lib/table-roles.ts`: `tableRole('row')` for a part, and

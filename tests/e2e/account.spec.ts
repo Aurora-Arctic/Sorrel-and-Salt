@@ -54,7 +54,7 @@ test('shows all four sections, with no accessibility violations', async ({ page 
 // The on-page nav marks its current entry with `aria-current`; the marker is
 // drawn by a rule keyed to that attribute's value, so only a real browser
 // can say whether the rule still matches the attribute the component sets.
-// A jsdom test of the attribute alone stayed green while the bar never drew.
+// A happy-dom test of the attribute alone stayed green while the bar never drew.
 test('the on-page nav draws a marker on the current entry only', async ({ page }) => {
   await signInAs(page, 'nav-marker@account-page.test');
 

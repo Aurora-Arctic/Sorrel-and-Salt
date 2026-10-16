@@ -163,7 +163,7 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
   address in a citation, breaks anywhere (`overflow-wrap: anywhere` on the
   row, `overflow-x: hidden` on the list).
 
-jsdom lays nothing out, so the tests give the viewport, the box, the anchor
+happy-dom lays nothing out, so the tests give the viewport, the box, the anchor
 and the list the sizes Floating UI reads, as the sortable tests give the
 chips theirs.
 
@@ -487,7 +487,7 @@ standard package rather than a bespoke one, the task's preference
   it is, `columnGap` apart along a row and onto the next row once the list's
   width is used up. The row's shape, its width and gaps, is measured as a
   move starts (`shapeOf`), from the stylesheet, or from where the chips sit
-  where there is none, as in jsdom. Each chip making way, and the moved chip
+  where there is none, as in happy-dom. Each chip making way, and the moved chip
   under the keyboard, is translated to its place in that layout, never
   scaled, so what is shown while the chip is held is what the drop leaves.
 - **By keyboard**, Space or Enter lifts the focused chip, and Space or Enter
@@ -699,7 +699,7 @@ the chips' layout while one is held are presentation, owned by the workshop
 story and the Playwright scan. Role and label queries only, in the `dom`
 project.
 
-jsdom lays nothing out, and dnd-kit finds where a chip may go from each
+happy-dom lays nothing out, and dnd-kit finds where a chip may go from each
 chip's box, so `tests/support/sortable.ts` gives every chip one, on one
 line 100px apart, or with `wrapChips` as wide as its text and wrapped onto
 rows as the control wraps them, and drives a move: `moveByKeyboard` waits a task after
@@ -720,7 +720,7 @@ it and keeping the focus; a qualified choice read with its qualifier in the
 row, describing the chosen box by it, and matched by its label alone; and
 `onSettle`, heard on a pick, the clear and
 leaving the box, with the choice the text names or `''`, and never while
-typed. The control's width, which jsdom does not lay out,
+typed. The control's width, which happy-dom does not lay out,
 was measured in the workshop at MB.115: one width empty, mid-typing, chosen
 and cleared.
 

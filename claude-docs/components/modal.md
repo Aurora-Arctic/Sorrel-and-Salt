@@ -52,7 +52,7 @@ is the wrapper every admin page opens it through (below).
   away at once: Close, Escape and a click outside set `.is-closing`, and the
   owner is asked once the fade ends, or after `FADE_LIMIT_MS` should the end
   never be reported, once however many ways it was asked. Under reduced
-  motion, or with no `matchMedia` to ask (jsdom), nothing fades and the owner
+  motion, or with no `matchMedia` to ask, nothing fades and the owner
   is asked at once, in the event. Contents that close it themselves — a
   form's save or delete — take the modal's own close as a render prop,
   `children(close)`, so that fades too.
@@ -512,10 +512,10 @@ Open button to bring it back after Close or Escape.
 
 ## Testing
 
-`tests/components/Modal/index.test.tsx`. jsdom implements neither
-`showModal()` nor `close()`, so the test stands both in on the prototype,
-adding and removing `open` as a browser does. A click outside is told by
-where the press began and ended, jsdom laying nothing out: pressed and
+`tests/components/Modal/index.test.tsx`. happy-dom's `<dialog>` has a bare
+`showModal()` and `close()` that set and clear `open` and trap no focus, so the
+test puts spies on the prototype that do the same and can be asserted on. A click outside is told by
+where the press began and ended, happy-dom laying nothing out: pressed and
 released on the backdrop closes it; its contents, and a press inside let go
 outside, do not. Its own padding is inside its box, which only a real layout
 shows, as does the wide size. The fade asks the owner once its transition
@@ -537,7 +537,7 @@ count rising each time), the focus back on Keep Editing and the status
 speaking. The overlay's own state is asserted there too: while asking, the
 form's fields and buttons and a control beside the title are inert, and the
 question, a group, and the Close button are not; answered, all are live
-again, and the focus is back on Cancel. jsdom implements `inert`'s
+again, and the focus is back on Cancel. happy-dom implements `inert`'s
 attribute but not its effect, so the attribute is what is asserted; Playwright
 runs the real thing. Each admin form's own test asserts only its wiring,
 through `tests/support/discard-guard.tsx`: `expectGuardedWaysOut` for the
