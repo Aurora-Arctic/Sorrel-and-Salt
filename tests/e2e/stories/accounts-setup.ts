@@ -90,14 +90,19 @@ export async function rollOf(
   page: Page,
   names: readonly string[],
 ): Promise<Record<string, string>> {
-  const rows = await page.getByRole('table', { name: 'Members' }).getByRole('row').all();
+  const table = page.getByRole('table', { name: 'Members' });
+  const rows = await table.getByRole('row').all();
+  // The Role column found by its heading, since an owner's table has the
+  // Email column before it (M11.19).
+  const headings = await table.getByRole('columnheader').allInnerTexts();
+  const role = headings.findIndex((heading) => heading.trim() === 'Role');
   const roll: Record<string, string> = {};
   // The first row is the column headings.
   for (const row of rows.slice(1)) {
     const cells = row.getByRole('cell');
     const text = (await cells.nth(0).innerText()).trim();
     const name = names.find((each) => text.startsWith(each)) ?? text;
-    roll[name] = (await cells.nth(1).innerText()).trim().split(/\s/)[0];
+    roll[name] = (await cells.nth(role).innerText()).trim().split(/\s/)[0];
   }
   return roll;
 }

@@ -1,4 +1,4 @@
-import { membershipsByUser } from '@/modules/coven';
+import { memberEmailsByMember, membershipsByUser } from '@/modules/coven';
 import { providersByUser, usersById, usersByIdForAdmin } from '@/modules/identity';
 import {
   categoriesByIngredient,
@@ -25,6 +25,7 @@ import type { Built, LoaderFactory } from './types';
 // is added by the task that adds its schema, off its module's index
 // (claude-docs/graphql/loaders.md, "Loaders").
 const LOADERS = {
+  memberEmailsByMember,
   membershipsByUser,
   providersByUser,
   usersById,

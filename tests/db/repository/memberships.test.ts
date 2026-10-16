@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import {
+  findMemberEmails,
   findMemberPage,
   findMembershipsOfUsers,
   findWorkspaceRole,
@@ -158,5 +159,21 @@ describe('findMemberPage, a coven roll keyed on the pair (M6.11)', () => {
     }
 
     expect(walked).toEqual([A.id, B.id, D.id].sort());
+  });
+});
+
+describe("findMemberEmails, the roll's addresses under the proof (M11.19)", () => {
+  it("answers the proof's coven's live members alone, whichever ids are asked about", async () => {
+    // Why D could have been answered: D holds a live seat, in X, and a user row.
+    await expect(findWorkspaceRole(D.id, WORKSPACE_X_ID)).resolves.toBe('member');
+    const membership = await assertMembership(asUser(A), WORKSPACE_W_ID, { member: ['read'] });
+
+    const rows = await findMemberEmails(membership, [A.id, B.id, D.id, E.id]);
+
+    expect(rows.map(({ id }) => id).sort()).toEqual([A.id, B.id].sort());
+    expect(rows.find(({ id }) => id === B.id)).toEqual({
+      id: B.id,
+      email: B.email,
+    });
   });
 });

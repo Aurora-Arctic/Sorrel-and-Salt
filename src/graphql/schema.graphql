@@ -1104,6 +1104,11 @@ type Workspace {
 
 type WorkspaceMember {
   audit: AuditInfo!
+
+  """
+  The member's address, as their own account holds it now. Owners only; null for someone the coven no longer seats.
+  """
+  email: String
   invitedBy: CoMember
   joinedAt: DateTime!
   role: WorkspaceRole!

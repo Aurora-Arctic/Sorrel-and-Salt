@@ -19,8 +19,10 @@ vi.mock('@/lib/request-session', () => ({ requireCovenMembership, requireSession
 
 const listMembers = vi.fn();
 const memberRoster = vi.fn();
+const memberEmails = vi.fn();
 vi.mock('@/modules/coven', async () => ({
   listMembers,
+  memberEmails,
   memberRoster,
   rolePermits: (
     await vi.importActual<typeof import('@/modules/coven/services/access-control')>(
@@ -57,6 +59,9 @@ const render_ = async (role: WorkspaceRole) => {
 
 beforeEach(() => {
   vi.clearAllMocks();
+  memberEmails.mockImplementation(async (_session: unknown, _workspaceId: string, ids: string[]) =>
+    ids.map((userId) => ({ userId, address: `${userId}@testwort.test` })),
+  );
   memberRoster.mockImplementation(async () => SEATS.map(([userId, role]) => ({ userId, role })));
   listMembers.mockImplementation(async () =>
     SEATS.map(([userId, role], index) => ({
@@ -176,5 +181,25 @@ describe('the /coven/[slug]/members page', () => {
     await render_('owner');
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  // M11.19: the addresses are the owner's, asked for this page's members.
+  it("shows an owner each member's address, read for this page's members", async () => {
+    await render_('owner');
+
+    expect(memberEmails).toHaveBeenCalledWith(
+      expect.anything(),
+      'w',
+      expect.arrayContaining(SEATS.map(([userId]) => userId)),
+    );
+    const table = screen.getByRole('table', { name: 'Members' });
+    for (const [userId] of SEATS) expect(table).toHaveTextContent(`${userId}@testwort.test`);
+  });
+
+  it('asks no address for a member, and shows none', async () => {
+    await render_('member');
+
+    expect(memberEmails).not.toHaveBeenCalled();
+    expect(screen.getByRole('table', { name: 'Members' })).not.toHaveTextContent('@testwort.test');
   });
 });
