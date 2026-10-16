@@ -569,9 +569,11 @@ legend as a list's is.
   it is left, `formatLocator`, its ranges dashed. One row is open at a time,
   and the edit pressed again closes it. A row whose locator is in error
   stays open whatever was pressed, so the focus after a save can reach the
-  box. The × removes the row, after which the box keeps the focus.
-  Backspace in the empty box takes the last row, as in every list, and each
-  add and removal is announced in a "References changes" region. The rows
+  box. The × asks before it removes the row, and once removed the box takes
+  the focus ([Removing a variant or a reference](#removing-a-variant-or-a-reference)).
+  Unlike the chip lists, Backspace and Delete in the empty box take no row,
+  asked or not (the owner's call, 2026-10-16). Each add and removal is
+  announced in a "References changes" region. The rows
   keep the order picked: the service reads them back alphabetical by
   citation (MB.153), so nothing here moves them. Beside the tier, an open
   row whose source the form may change has **Edit Source**, which edits the
@@ -742,6 +744,10 @@ as the ingredient's page shows its forms after it (MB.221).
   rows' two icon buttons, a pencil and a × (MB.115, the owner's call),
   named for the form, "Edit Oil" and "Remove Oil". The card is
   a fieldset named by the form alone, through `aria-labelledby`.
+- **Remove asks first, and only removes.** It never opens or closes the
+  card: Keep It leaves the variant as it was, open or closed, and Remove
+  takes it, the focus going to the New Form box
+  ([Removing a variant or a reference](#removing-a-variant-or-a-reference)).
 - **Edit opens it in place, one at a time.** Edit carries `aria-expanded`
   and `aria-controls`, naming the region of the variant's fields, and is
   described by the summary while closed. Opening one closes any other; the
@@ -837,6 +843,30 @@ and `fieldNameOf` places it as it places the ingredient's: on that variant's
 field, its list entry, or its reference row; one on the variant as a whole,
 or on its kept `id`, is its Form box's.
 
+### Removing a variant or a reference
+
+A variant's × and a reference row's × each ask before they remove, the
+owner's call (2026-10-16). Both rows take more typing to put back than a
+chip does, and a variant's × had read as closing its card. The question is
+the form's usual card ([`ConfirmQuestion`](modal.md)), drawn by
+`RemoveQuestion` in `remove-question.tsx`: "Remove "Oil"? …" with
+**Remove** and **Keep It**, the focus on Keep It.
+
+- **Nothing is lost until the save.** Remove takes the row from the form,
+  as the × did before; the entry changes only when it is saved, and Cancel
+  still discards the removal with the rest.
+- **The focus.** Keep It hands it back to the ×. Remove hands it to the
+  list's box, New Form or Reference, since the × went with its row. The
+  removal is committed at once (`flushSync`) so the card's own hand-back,
+  to the first field when the × is gone, comes first and the box's second.
+- **One question at a time.** While the unsaved-changes question asks, a
+  removal question steps aside, through `DiscardAskingContext`, and comes
+  back on Keep Editing.
+- **The row by its id.** The question holds the row's field-array id rather
+  than its place, which an add while asking would move.
+- **The chip lists are unchanged.** A chip's × still removes at once, and
+  Backspace in their empty box still takes the last chip.
+
 ### Copying from the ingredient
 
 A form often says much of what its ingredient says, so each of an open
@@ -905,7 +935,18 @@ when that form is.
 Two curated forms may share a name, Wax under _Animal_ and Wax under
 _Substance_ (DESIGN.md §5), and both fill the box with "Wax". So a pick of a
 curated row is kept beside the text, as `formLink` in the form's values:
-the row's id, the name picked, its group and its description (MB.169).
+the row's id, the name picked, its group, its group's `icon` and its
+description (MB.169, M12.7).
+
+- **Every form wears its group's icon** (M12.7), resolved once, as
+  `<FormIcon name={icon ?? null} />`, the salt spoon for a null: before each
+  curated suggestion and the typed row (the spoon, for a value only in use),
+  before the name in the Form box while it holds a pick, through the
+  combobox's `icon` (the owner's call, rather than beside the group in
+  brackets), before the variant card's head and
+  before the substitute summary's Form line, which reads it from
+  `formChoice { group { icon } }`. The icon is decoration, outside every
+  accessible name.
 
 - **The box shows the group.** "Wax" stays as the box's editable text, and
   "(Substance)" follows it in the muted ink, so the box reads as the row
@@ -1320,6 +1361,11 @@ Reference) is a `BusyButton` ([`busy-button.md`](busy-button.md)). A
 disabled field's dashed edge and dimmed label are the primitives' too; a
 closed set's box and its muted placeholder are the combobox's.
 
+The Toxic switches, the ingredient's and each variant's, stand at the start
+of the column with their label and hint, as the fields above them do, rather
+than centred under the label as the switch primitive draws it for a filter
+bar (`.ingredient-form .switch`; the owner's call, 2026-10-16).
+
 The component's own stylesheet holds what is the form's alone. Its column
 is at most `$dialog-column` (32rem), narrower than the measure as the other
 forms keep, and the compendium's modal is the default one, no wider than the
@@ -1535,7 +1581,8 @@ as a name; a variant added from the New Form box listed as
 its own fieldset and sent in `variants`, with no top-level `form`; a
 compendium pick carried into the variant's Form box; a typed compendium form
 refused beside its box, focused, with nothing sent; a variant removed by its
-own button; a repeat form refused at Add, no second fieldset added; a server
+own button once confirmed, kept open as it was on Keep It, and its question
+stepping aside while the unsaved changes' asks; a repeat form refused at Add, no second fieldset added; a server
 issue at `['variants', 1, 'form']` on that variant's box alone; an edit's
 variant sent back by its `id`; and a variant's substitutes ranked for its
 form, offered form by form after an any-form row, a form row sending
@@ -1711,7 +1758,8 @@ short form, open, the citation whole; a row kept to one
 line until its edit opens it (`aria-expanded`, the Locator focused) and
 closes it again (MB.115); each row's locator
 labelled and read with its citation and its tip, and tidied as it is left; the
-× and Backspace removing a row; Enter with nothing picked submitting nothing;
+× removing a row once confirmed and keeping it on Keep It; Backspace and
+Delete in the empty box taking none; Enter with nothing picked submitting nothing;
 a search left in the box, and an open panel, each stopping the save. The panel
 from the field: opened by the create row, "New Reference…", taking you to
 Kind, and again while it is open; a source it saves listed by its id and

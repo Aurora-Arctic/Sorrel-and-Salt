@@ -9,10 +9,10 @@ import { FIXTURE_USERS } from '@/db/seed/standard';
 // Rule 7 (claude-docs/testing/layer-ownership.md, "What a test may assert"):
 // a migration data test, retired once `0077` is in production's journal. It
 // re-runs the backfill, read off disk, against the seeded groups with their
-// glyphs put back to NULL, as the migration meets them straight after `0076`
-// adds the column. That an admin's cleared glyph survives a reseed is
+// icons put back to NULL, as the migration meets them straight after `0076`
+// adds the column. That an admin's cleared icon survives a reseed is
 // tests/db/seed/forms.test.ts's: this backfill runs once, before any admin
-// could clear one, and cannot tell a cleared glyph from one never set.
+// could clear one, and cannot tell a cleared icon from one never set.
 
 const migration = (file: string) =>
   readFileSync(fromRoot('src/db/migrations', file), 'utf8')
@@ -22,7 +22,7 @@ const migration = (file: string) =>
 const ADD_COLUMN = migration('0076_form-group-icon.sql');
 const BACKFILL = migration('0077_backfill-form-group-icons.sql');
 
-/** The six seed keys, each with the glyph the backfill gives it. */
+/** The six seed keys, each with the icon the backfill gives it. */
 const GLYPHS: Record<string, string> = {
   botanical: 'botanical',
   animal: 'animal',
@@ -38,7 +38,7 @@ useTestDatabase((client) => (sql = client));
 
 type Glyph = { icon: string | null; updated_by: string };
 
-/** Each seeded group's glyph and last writer, by seed key. */
+/** Each seeded group's icon and last writer, by seed key. */
 const groups = async (): Promise<Record<string, Glyph>> =>
   Object.fromEntries(
     (
@@ -55,14 +55,14 @@ beforeEach(async () => {
       updated_by = ${FIXTURE_USERS.E.id}
     where seed_key in ${sql(KEYS)}
   `;
-  // Precondition: all six are the seed's live rows, each still without a glyph.
+  // Precondition: all six are the seed's live rows, each still without an icon.
   const before = await groups();
   expect(Object.keys(before).sort()).toEqual([...KEYS].sort());
   expect(Object.values(before).every((row) => row.icon === null)).toBe(true);
 });
 
-describe('0077: the form group glyph backfill', () => {
-  it('gives each seeded group its glyph by seed key, stamped as the seed’s', async () => {
+describe('0077: the form group icon backfill', () => {
+  it('gives each seeded group its icon by seed key, stamped as the seed’s', async () => {
     await sql.unsafe(BACKFILL);
 
     expect(await groups()).toEqual(
@@ -72,7 +72,7 @@ describe('0077: the form group glyph backfill', () => {
     );
   });
 
-  it('leaves a glyph an admin chose, and a removed group, as they are', async () => {
+  it('leaves an icon an admin chose, and a removed group, as they are', async () => {
     await sql`
       update ingredient_form_groups set icon = 'fluid', updated_by = ${FIXTURE_USERS.E.id}
       where seed_key = 'mineral'

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import FormIcon from '@/components/FormIcon';
 import GroupedValueList from '@/components/GroupedValueList';
 import { groupedValuesHref } from '@/components/GroupedValueList/href';
 import type {
@@ -102,6 +103,28 @@ describe('GroupedValueList', () => {
       'href',
       `${path}?edit=${entries[0].slug}`,
     );
+  });
+
+  // M12.7: a form's group is named with its icon, the spoon where it has none.
+  it("leads a form's group with its icon, the spoon where it has none, and a deity's with none", () => {
+    const svgOf = (name: Parameters<typeof FormIcon>[0]['name']) =>
+      render(<FormIcon name={name} />).container.querySelector('svg')!.innerHTML;
+    const [leafy, bare] = entries.map((entry, i) => ({
+      ...entry,
+      groupIcon: i === 0 ? ('botanical' as const) : null,
+    }));
+    const { unmount } = render(
+      <GroupedValueList {...props({ kind: 'form', values: [leafy, bare] })} />,
+    );
+
+    const drawn = (name: RegExp) =>
+      screen.getByRole('row', { name }).querySelector('.form-icon')!.innerHTML;
+    expect(drawn(/Testra/)).toBe(svgOf('botanical'));
+    expect(drawn(/Mockra/)).toBe(svgOf(null));
+    unmount();
+
+    render(<GroupedValueList {...props({ values: [leafy] })} />);
+    expect(screen.getByRole('row', { name: /Testra/ }).querySelector('.form-icon')).toBeNull();
   });
 
   // MB.95's flat kinds, folded in at MB.115: filed under nothing, so

@@ -92,6 +92,8 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
 export interface SelectOption {
   value: string;
   label: string;
+  /** A mark drawn before the label, outside its accessible name: pass one hidden from assistive technology. */
+  icon?: ReactNode;
 }
 
 /** A closed set in a react-hook-form form, whose value is one of its options. */
@@ -142,6 +144,8 @@ export interface RadioOption<T extends string> {
   label: string;
   /** What choosing it means, read after its name. */
   description?: string;
+  /** A mark drawn before the name, outside its accessible name: pass one hidden from assistive technology. */
+  icon?: ReactNode;
 }
 
 export interface RadioGroupFieldProps<T extends string> {
@@ -157,6 +161,13 @@ export interface RadioGroupFieldProps<T extends string> {
   disabled?: boolean;
   /** A line for the whole group, read with it: what holds whichever is chosen. */
   note?: string;
+  /**
+   * How the options are laid out: `list`, one row each with its explanation
+   * (the default), or `strip`, one bar of icon-only segments with the chosen name
+   * beneath, for a choice that is seen rather than read. A radio underneath
+   * either way.
+   */
+  layout?: 'list' | 'strip';
 }
 
 /** A form's row of actions: Save, any further saves, Cancel and Delete. */

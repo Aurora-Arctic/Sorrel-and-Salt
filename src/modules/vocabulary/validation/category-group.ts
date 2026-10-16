@@ -6,7 +6,7 @@ import { curatedValueInput } from '../../../lib/validation';
 
 // A category group as an admin writes one (M5.6b): a curated value's name and
 // description, and the chip's two colours. Built on curatedValueInput rather
-// than on a form group's input, which carries a glyph a category group does
+// than on a form group's input, which carries an icon a category group does
 // not take (M12.6): its chip colours stand for it, so an `icon` is dropped.
 // Each colour is held to 4.5:1 against the harder of its own theme's surfaces
 // (MB.36) here rather than by a CHECK, so the refusal can name the column and

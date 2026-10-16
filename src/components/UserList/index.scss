@@ -185,7 +185,7 @@
 }
 
 // `$icon-size`: WCAG 2.2's 24px minimum target around a `$glyph-size`
-// glyph, as InfoTip's button. The muted ink, so it reads as a fact about the
+// icon, as InfoTip's button. The muted ink, so it reads as a fact about the
 // row, not a control.
 .user-list__primary-mark {
   @include icon-button($icon-size, $glyph-size, radius('pill'), help);

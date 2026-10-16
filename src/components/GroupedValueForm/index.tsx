@@ -10,6 +10,7 @@ import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
 import { ConfirmQuestion, useDiscardGuard } from '../Modal';
+import FormIcon from '../FormIcon';
 import { FormActions, SelectField, TextField } from '../Field';
 import Notice from '../Notice';
 import {
@@ -374,7 +375,12 @@ const GroupedValueForm = ({
     onDone();
   };
 
-  const choices = groups.map((each) => ({ value: each.id, label: each.name }));
+  const choices = groups.map((each) => ({
+    value: each.id,
+    label: each.name,
+    // Only a form group has an icon; one with none shows the generic.
+    icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
+  }));
   const rootError = errors.root?.message ?? alert;
   const noteId = `${id}-rename-note`;
 

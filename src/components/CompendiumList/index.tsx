@@ -1,5 +1,6 @@
 import { EditLink } from '../IconTip';
-import type { ReactElement } from 'react';
+import { Fragment, type ReactElement } from 'react';
+import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
@@ -12,6 +13,7 @@ import type {
   CompendiumListFilter as Filter,
   CompendiumListProps,
 } from './types';
+import './index.scss';
 
 // `/admin/compendium`'s filter, table and pager (M5.5), as the category
 // list's. Render-only: the page reads one page of the compendium under the
@@ -33,7 +35,26 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     heading: 'Classification',
     cell: (entry) => labelOf(NOMENCLATURE_OPTIONS, entry.nomenclature),
   },
-  { heading: 'Form', cell: (entry) => (entry.forms.length ? entry.forms.join(', ') : NONE) },
+  {
+    heading: 'Form',
+    // Each form led by its group's icon, the generic where it has none, the
+    // two held together as one unit that never wraps apart: the icon close
+    // to its name and the next form farther off (the owner's call,
+    // 2026-10-16). The comma stays, on the name before it, so a screen
+    // reader hears a list; a space after it lets the line break there.
+    cell: (entry) =>
+      entry.forms.length
+        ? entry.forms.map(({ name, icon }, i) => (
+            <Fragment key={name}>
+              {i > 0 && ' '}
+              <span className="compendium-list__form">
+                <FormIcon name={icon} />
+                {i < entry.forms.length - 1 ? `${name},` : name}
+              </span>
+            </Fragment>
+          ))
+        : NONE,
+  },
   updatedColumn(),
   {
     heading: 'Edit',

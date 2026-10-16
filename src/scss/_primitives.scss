@@ -1633,6 +1633,104 @@
     }
   }
 
+  // The strip layout of a radio group (RadioGroupField `layout="strip"`): one
+  // bar of icon-only segments, the chosen one filled with the accent and its
+  // name printed beneath. The native radio stays, visually hidden, so the
+  // arrow keys, the checked state and the label all work as in the list; the
+  // segment carries the state by its fill as well as the name beneath
+  // (WCAG 1.4.1). Both classes, so it outranks `.fieldset`'s own column
+  // direction below.
+  .fieldset.radio-group--strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: space(2);
+  }
+
+  // Not `overflow: hidden` for the rounded ends, which would clip each
+  // segment's name tip above the bar: the end segments round their own.
+  .radio-strip {
+    display: inline-flex;
+    border: 1px solid $text-muted;
+    border-radius: radius('control');
+    background-color: $surface-card;
+
+    // Each segment sits in its IconTip's wrapper, so the divider and the
+    // rounded ends are counted on the wrappers.
+    > :not(:first-child) .radio--segment {
+      border-inline-start: 1px solid $text-muted;
+    }
+
+    > :first-child .radio--segment {
+      border-start-start-radius: calc(#{radius('control')} - 1px);
+      border-end-start-radius: calc(#{radius('control')} - 1px);
+    }
+
+    > :last-child .radio--segment {
+      border-start-end-radius: calc(#{radius('control')} - 1px);
+      border-end-end-radius: calc(#{radius('control')} - 1px);
+    }
+  }
+
+  .radio--segment {
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: 3rem;
+    block-size: 3rem;
+    @include theme-transition(background-color, color);
+
+    // Hidden but still focusable and reachable, as a screen-reader-only
+    // control is: its own ring is drawn on the segment by :has below.
+    input {
+      @include visually-hidden;
+
+      inline-size: 1px;
+      block-size: 1px;
+      pointer-events: none;
+    }
+
+    // Half the segment: the icons are a line drawing, so they need the room
+    // to read (the owner's call, 2026-10-16). A form icon is 1.25em of its
+    // line, so this line's size is set to bring it to 1.5rem.
+    .radio__segment-icon {
+      display: flex;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    &:hover {
+      background-color: color-mix(in srgb, $accent 12%, $surface-card);
+    }
+
+    &:has(input:checked) {
+      background-color: $accent;
+      color: $text-on-color;
+    }
+
+    &:has(input:focus-visible) {
+      @include focus-ring;
+    }
+
+    &:has(input:disabled) {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    @include forced-colors {
+      &:has(input:checked) {
+        background-color: Highlight;
+        color: HighlightText;
+      }
+    }
+  }
+
+  .radio-strip__chosen {
+    margin: 0;
+    color: $text-muted;
+    font-size: type-size('caption');
+  }
+
   .radio__text {
     display: flex;
     flex-direction: column;

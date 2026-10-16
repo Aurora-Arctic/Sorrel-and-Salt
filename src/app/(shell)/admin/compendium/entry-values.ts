@@ -22,6 +22,7 @@ import {
   variantsOf,
 } from '@/modules/ingredients';
 import { deityTraditionsOf, formChoicesOf, formGroupsOf } from '@/modules/vocabulary';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
 // A compendium entry as the form edits it: every value and link the form
 // shows, read on the navigation through the services the GraphQL `Ingredient`
@@ -36,6 +37,10 @@ function only<T>([answer]: readonly (T | Error)[]): T {
 }
 
 /** The name of a group or tradition, or null once it is gone. */
+/** The icon of a form group, or null once it is gone or carries none. */
+const iconOf = (group: { icon: FormGroupIcon | null } | Error | undefined): FormGroupIcon | null =>
+  group === undefined || group instanceof Error ? null : group.icon;
+
 const nameOf = (group: { name: string } | Error | undefined): string | null =>
   group === undefined || group instanceof Error ? null : group.name;
 
@@ -124,7 +129,9 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
     ]),
   );
   const toSubstitute = substituteEntry(formsOfLinked);
-  const formOf = new Map(live.map((form, i) => [form.id, { form, group: nameOf(groups[i]) }]));
+  const formOf = new Map(
+    live.map((form, i) => [form.id, { form, group: nameOf(groups[i]), icon: iconOf(groups[i]) }]),
+  );
   const traditionOf = new Map(picked.map((deity, i) => [deity.id, nameOf(traditions[i])]));
 
   return {
@@ -145,6 +152,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
               id: choice.form.id,
               name: choice.form.name,
               group: choice.group,
+              icon: choice.icon,
               description: choice.form.description,
             }
           : null,

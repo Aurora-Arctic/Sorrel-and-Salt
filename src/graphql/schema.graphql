@@ -182,6 +182,7 @@ type FormSuggestion {
   curated: Boolean!
   description: String
   group: String
+  icon: FormGroupIcon
 
   """The curated row, which a pick sends; null for a value only in use."""
   id: ID

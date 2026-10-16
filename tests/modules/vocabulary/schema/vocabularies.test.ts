@@ -26,7 +26,7 @@ const nameOf = (table: PgTable) => getTableConfig(table).name;
 
 // What a group carries beside the shared columns, and what an insert of one
 // needs, which are not the same list: a category group's two colours are NOT
-// NULL, a form group's glyph (M12.6) is nullable, so an insert needs no value.
+// NULL, a form group's icon (M12.6) is nullable, so an insert needs no value.
 const GROUP_EXTRAS = new Map<PgTable, { own: string[]; values: Row }>([
   [categoryGroups, { own: Object.keys(COLOURS), values: COLOURS }],
   [ingredientFormGroups, { own: ['icon'], values: {} }],
@@ -153,10 +153,10 @@ describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, grou
   });
 });
 
-// The glyph standing for a form group (M12.6): a closed list, so an enum, and
-// nullable, since NULL is the generic glyph rather than a missing answer.
+// The icon standing for a form group (M12.6): a closed list, so an enum, and
+// nullable, since NULL is the generic icon rather than a missing answer.
 describe('ingredient_form_groups.icon', () => {
-  it('is a nullable form_group_icon holding exactly the six glyphs, as the code declares them', async () => {
+  it('is a nullable form_group_icon holding exactly the six icons, as the code declares them', async () => {
     const [column] = await sql`
       select is_nullable, udt_name from information_schema.columns
       where table_name = 'ingredient_form_groups' and column_name = 'icon'

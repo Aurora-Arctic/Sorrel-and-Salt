@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import FormIcon from '@/components/FormIcon';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { NotFound } from '@/lib/errors';
@@ -38,9 +39,12 @@ vi.mock('@/modules/ingredients', () => ({
   variantsOf,
 }));
 
-// The curated forms the Form box offers, read through the vocabulary module.
+// The curated forms the Form box offers, read through the vocabulary module,
+// and the two batches that give each listed form its group's icon (M12.7).
 const listIngredientFormValues = vi.fn();
-vi.mock('@/modules/vocabulary', () => ({ listIngredientFormValues }));
+const formChoicesOf = vi.fn();
+const formGroupsOf = vi.fn();
+vi.mock('@/modules/vocabulary', () => ({ listIngredientFormValues, formChoicesOf, formGroupsOf }));
 
 const entryValues = vi.fn();
 vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
@@ -143,6 +147,11 @@ beforeEach(() => {
   variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
     refs.map(() => [{ form: 'Herb' }]),
   );
+  // A form that is only text has no curated row, so no icon.
+  formChoicesOf.mockReset();
+  formChoicesOf.mockImplementation(async (ids: string[]) => ids.map(() => null));
+  formGroupsOf.mockReset();
+  formGroupsOf.mockImplementation(async (ids: string[]) => ids.map(() => new Error('none')));
   // Two curated forms, on one page.
   listIngredientFormValues.mockReset();
   listIngredientFormValues.mockResolvedValue(['Fixture Oil', 'Fixture Powder'].map(curatedForm));
@@ -183,6 +192,34 @@ describe('the /admin/compendium page', () => {
     ).toHaveAttribute('href', `/admin/compendium?edit=${TESTWORT.slug}`);
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(resolveCompendiumSlug).not.toHaveBeenCalled();
+  });
+
+  it("draws each curated form's group icon in the Form column, and the generic for one that is only text", async () => {
+    variantsOf.mockImplementation(async (_session: unknown, refs: unknown[]) =>
+      refs.map(() => [
+        { form: 'Fixture Shard', formId: 'form-1' },
+        { form: 'Herb', formId: null },
+      ]),
+    );
+    formChoicesOf.mockImplementation(async (ids: string[]) =>
+      ids.map((id) => ({ id, groupId: 'group-1' })),
+    );
+    formGroupsOf.mockImplementation(async (ids: string[]) =>
+      ids.map((id) => ({ id, icon: 'mineral' })),
+    );
+
+    await renderPage();
+
+    expect(formChoicesOf).toHaveBeenCalledWith(['form-1']);
+    expect(formGroupsOf).toHaveBeenCalledWith(['group-1']);
+    const row = within(screen.getByRole('table')).getAllByRole('row')[1];
+    const [curated, text] = within(row)
+      .getByRole('cell', { name: 'Fixture Shard, Herb' })
+      .querySelectorAll('svg');
+    const glyph = (name: 'mineral' | null) =>
+      render(<FormIcon name={name} />).container.querySelector('svg')?.innerHTML;
+    expect(curated?.innerHTML).toBe(glyph('mineral'));
+    expect(text?.innerHTML).toBe(glyph(null));
   });
 
   it('says which page of how many, counted from the first row of the page', async () => {

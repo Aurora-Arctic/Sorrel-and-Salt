@@ -73,10 +73,13 @@ its mixin in `_mixins.scss`:
 
 ## GroupChip
 
-`<GroupChip name colors>` draws a group's name in a `.chip` in its own
+`<GroupChip name colors icon>` draws a group's name in a `.chip` in its own
 colours when `colors` holds both `colorDark` and `colorLight`, and as plain
-text otherwise: a form group or a tradition carries none. The group list's
-Name cell and the value lists' group cell draw it.
+text otherwise: a form group or a tradition carries none. An `icon` leads the
+name with a [`FormIcon`](form-icon.md): a form group's icon name, or `null`
+for a form group with none, which draws the generic spoon (M12.7). `icon`
+absent draws no icon, as for a category group or a tradition. The group
+list's Name cell and the value lists' group cell draw it.
 
 ## updatedColumn
 

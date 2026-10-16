@@ -47,6 +47,12 @@ const category = (name: string, groupName: string, description: string) => {
 
 const FORM_GROUPS = asSlugs(GROUP_NAMES.form);
 
+// Two of the invented groups carry an icon; any other shows the generic.
+const GLYPHS: Record<string, 'mineral' | 'botanical'> = {
+  [GROUP_NAMES.form[0]]: 'mineral',
+  [GROUP_NAMES.form[1]]: 'botanical',
+};
+
 const form = (name: string, groupName: string, description: string) => {
   const slug = formSlug(name, groupName);
   return {
@@ -55,6 +61,7 @@ const form = (name: string, groupName: string, description: string) => {
     slug,
     description,
     groupName,
+    groupIcon: GLYPHS[groupName] ?? null,
     updatedBy: 'Fixture Editor',
     updatedAt: new Date('2026-05-06T10:00:00Z'),
     editHref: groupedValuesHref('form', {}, { edit: slug }),

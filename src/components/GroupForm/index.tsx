@@ -13,11 +13,15 @@ import { capitalise, plural } from '../../lib/text';
 import type { GroupColorColumn } from '../../lib/types';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
+import FormIcon from '../FormIcon';
 import { KINDS as VALUE_LIST_KINDS } from '../GroupedValueList/kinds';
 import { KINDS as GROUP_LIST_KINDS } from '../GroupList/kinds';
-import { FieldShell, FormActions, TextField, fieldDescription } from '../Field';
+import { FieldShell, FormActions, RadioGroupField, TextField, fieldDescription } from '../Field';
+import type { RadioOption } from '../Field/types';
 import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { z } from 'zod';
+import { FORM_GROUP_ICONS, type FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
@@ -70,6 +74,7 @@ const CreateIngredientFormGroupDocument = graphql(`
     createIngredientFormGroup(input: $input) {
       id
       slug
+      icon
     }
   }
 `);
@@ -79,6 +84,7 @@ const UpdateIngredientFormGroupDocument = graphql(`
     updateIngredientFormGroup(id: $id, input: $input) {
       id
       slug
+      icon
     }
   }
 `);
@@ -113,10 +119,10 @@ const DeleteDeityTraditionDocument = graphql(`
   }
 `);
 
-const FIELDS = ['name', 'description', 'colorDark', 'colorLight'] as const;
+const FIELDS = ['name', 'description', 'colorDark', 'colorLight', 'icon'] as const;
 type FieldName = (typeof FIELDS)[number];
 
-const EMPTY: GroupValues = { name: '', description: '', colorDark: '', colorLight: '' };
+const EMPTY: GroupValues = { name: '', description: '', colorDark: '', colorLight: '', icon: '' };
 
 /**
  * A kind as the form uses it, from its declaration, as GroupedValueForm's
@@ -161,8 +167,14 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     moved: "Each form keeps its name and takes its new group's address.",
     // The question a form group answers: what kind of thing is it (DESIGN.md §5).
     describe: 'What kind of thing the forms in this group are',
-    // Drops the two empty colours, which a form group's input does not take.
-    schema: IngredientFormGroupInput,
+    // Drops the two empty colours, which a form group's input does not take,
+    // and reads the radio group's empty value, None, as the null that clears the icon.
+    schema: IngredientFormGroupInput.extend({
+      icon: z.preprocess(
+        (icon) => (icon === '' ? null : icon),
+        IngredientFormGroupInput.shape.icon,
+      ),
+    }),
     create: CreateIngredientFormGroupDocument,
     update: UpdateIngredientFormGroupDocument,
     remove: DeleteIngredientFormGroupDocument,
@@ -198,6 +210,16 @@ const COLORS: GroupColorField[] = [
   },
 ];
 
+/** The strip's choices: each icon by its name, then None last, the generic one. */
+const ICONS: readonly RadioOption<FormGroupIcon | ''>[] = [
+  ...FORM_GROUP_ICONS.map((icon) => ({
+    value: icon,
+    label: capitalise(icon),
+    icon: <FormIcon name={icon} />,
+  })),
+  { value: '', label: 'None', icon: <FormIcon name={null} /> },
+];
+
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
 
 const GroupForm = ({
@@ -221,6 +243,7 @@ const GroupForm = ({
           description: group.description,
           colorDark: group.colorDark,
           colorLight: group.colorLight,
+          icon: group.icon,
         }
       : EMPTY,
     resolver,
@@ -360,7 +383,12 @@ const GroupForm = ({
               setMoveTo(value);
               setMoveError(undefined);
             }}
-            choices={others.map((each) => ({ value: each.id, label: each.name }))}
+            choices={others.map((each) => ({
+              value: each.id,
+              label: each.name,
+              // A form group with no icon shows the generic; the other kinds carry none.
+              icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
+            }))}
             placeholder={`Choose a ${noun}`}
             required
             {...aria}
@@ -497,6 +525,23 @@ const GroupForm = ({
               </FieldShell>
             );
           })}
+        {kind === 'form' && (
+          <Controller
+            control={control}
+            name="icon"
+            render={({ field }) => (
+              <RadioGroupField<FormGroupIcon | ''>
+                legend="Icon"
+                layout="strip"
+                name={`${id}-icon`}
+                options={ICONS}
+                value={field.value}
+                onChange={field.onChange}
+                note="The icon drawn beside each form in this group. None draws the generic one."
+              />
+            )}
+          />
+        )}
         <FormActions
           noun={title}
           dirty={isDirty}
