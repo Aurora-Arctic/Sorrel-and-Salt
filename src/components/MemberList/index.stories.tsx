@@ -4,7 +4,8 @@ import ListFrame, { ListBody } from '../ListFrame';
 import Notice from '../Notice';
 import type { MemberListEntry } from './types';
 
-// Render-only; behaviour is asserted in tests/components/MemberList. The
+// Render-only; behaviour is asserted in tests/components/MemberList. A
+// member's view leaves the addresses out; an owner's draws them (M11.19). The
 // controls are plain buttons standing in for the page's own, styled as the
 // admin user table styles its own: Change Role quiet, Remove destructive.
 export default {
@@ -20,6 +21,7 @@ const MEMBERS: readonly MemberListEntry[] = [
     updatedBy: 'Ada Fixturewort',
     updatedAt: new Date('2026-03-04'),
     invitedBy: null,
+    email: 'ada@fixture.test',
   },
   {
     userId: 'u-bo',
@@ -29,6 +31,7 @@ const MEMBERS: readonly MemberListEntry[] = [
     updatedBy: 'Ada Fixturewort',
     updatedAt: new Date('2026-05-06'),
     invitedBy: 'Ada Fixturewort',
+    email: 'bo@fixture.test',
   },
   {
     userId: 'u-cy',
@@ -38,6 +41,7 @@ const MEMBERS: readonly MemberListEntry[] = [
     updatedBy: 'Ada Fixturewort',
     updatedAt: new Date('2026-06-07'),
     invitedBy: 'Bo Fixturewort',
+    email: 'cy@fixture.test',
   },
 ];
 
@@ -47,6 +51,7 @@ export const WithActions: Story = () => (
   <MemberList
     members={MEMBERS}
     currentUserId="u-ada"
+    showEmail
     roleAction={() => (
       <button type="button" className="btn btn--small btn--quiet">
         Change Role
@@ -75,6 +80,7 @@ const SoleOwnerPage = () => (
       <MemberList
         members={MEMBERS}
         currentUserId="u-ada"
+        showEmail
         roleAction={() => (
           <button type="button" className="btn btn--small btn--quiet">
             Change Role

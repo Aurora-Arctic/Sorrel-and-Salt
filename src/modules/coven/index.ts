@@ -12,11 +12,13 @@ export * from './services/memberships';
 export * from './services/workspace-creation';
 export * from './services/workspace-deletion';
 export * from './services/workspace-by-slug';
+export * from './loaders/member-emails';
 export * from './loaders/memberships-by-user';
 export * from './graphql/invitations';
 export * from './graphql/workspace';
 export type {
   CovenMembership,
+  MemberEmail,
   MembershipWithWorkspace,
   WorkspaceRole,
   WorkspaceRow,

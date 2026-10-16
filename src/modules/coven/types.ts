@@ -16,3 +16,15 @@ export type CovenMembership = {
   workspace: WorkspaceRow;
   membership: Membership;
 };
+
+/** A member's address as the owner's Email column reads it (M11.19). */
+export type MemberEmail = {
+  userId: string;
+  address: string;
+};
+
+/** One member of one coven: what `WorkspaceMember.email` is loaded by. */
+export type MemberKey = {
+  workspaceId: string;
+  userId: string;
+};
