@@ -13,7 +13,11 @@ import { viewerOf } from '../../lib/viewer';
 // shell, left the router refetching the email page without end (MB.256). The
 // page's own `requireSession()` throws it instead.
 export default async function ShellLayout({ children }: { children: ReactNode }) {
-  const { viewer } = await viewerOf();
+  const { viewer, workspaces } = await viewerOf();
 
-  return <AppShell viewer={viewer}>{children}</AppShell>;
+  return (
+    <AppShell viewer={viewer} workspaces={workspaces}>
+      {children}
+    </AppShell>
+  );
 }

@@ -14,12 +14,8 @@ import PageNav from '../../../components/PageNav';
 import ReceivedInvitations from '../../../components/ReceivedInvitations';
 import SignInMethods from '../../../components/SignInMethods';
 import { linkedAccounts, requireSession, sessionIsFresh } from '../../../lib/request-session';
-import {
-  ACCOUNT_INVITATIONS_ID,
-  ACCOUNT_PATH,
-  linkErrorMessage,
-  postSignInLanding,
-} from '../../../lib/sign-in';
+import { ACCOUNT_INVITATIONS_ID, ACCOUNT_PATH, linkErrorMessage } from '../../../lib/sign-in';
+import { signedInLanding } from '../../../lib/landing';
 import { isRosterProvider } from '../../../lib/social-providers';
 // Server-only — see social-providers-config.ts's own header. Only the
 // resulting `configured` ids reach the client component.
@@ -45,10 +41,11 @@ export const metadata: Metadata = {
 export default async function AccountPage({ searchParams }: AccountPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
   const { after, before } = readPageCursors(params);
-  const [me, linked, fresh, invitations] = await Promise.all([
+  const [me, linked, fresh, landing, invitations] = await Promise.all([
     getMe(session),
     linkedAccounts(),
     sessionIsFresh(),
+    signedInLanding(session),
     readNumberedPage(
       { after, before },
       (request) => listReceivedInvitations(session, request),
@@ -106,7 +103,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           // never shows one (claude-docs/components/email-form.md).
           email={isPlaceholderEmail(me.email) ? '' : me.email}
           verified={me.emailVerified}
-          landing={postSignInLanding(session.role)}
+          landing={landing}
           waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
         />
       </section>

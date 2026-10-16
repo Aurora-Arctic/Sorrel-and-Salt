@@ -28,10 +28,13 @@ inside that segment's layout. It keeps `NotAuthorized` in a `main.page-frame`.
   (`ShellViewer`, `src/lib/types.ts`). `isAdmin` is the session's role;
   `canCreate` and `verified` come from the user row; `pendingInvitations` is
   how many coven invitations wait for the viewer's verified address (M10.32).
+- `workspaces`: the viewer's covens (`ShellWorkspace[]`), in the switcher's
+  order. The shell reads only the first one's slug, for the brand and Your
+  Coven.
 - `children`: the page, with any context row its own layout renders.
 
-The shell takes no list of covens: the coven layout and the create page read
-them for their switchers. `src/lib/viewer.ts` exports `viewerOf()`, which builds
+The coven layout and the create page read the same list for their switchers.
+`src/lib/viewer.ts` exports `viewerOf()`, which builds
 the viewer and that list from `getMe`, `membershipsOf(session, [session.userId])`
 and, for a verified account only, `countReceivedInvitations(session, undefined)`
 (an unverified account reads 0 and costs no query), wrapped in React `cache()`
@@ -47,12 +50,14 @@ one's own id) throws.
   the account menu and the theme disc. The disc stays in the bar at every
   width, a phone's included (the owner's call, M10.32): the account panel holds
   no theme switch.
-- **The brand** is a link to `shellHome(viewer)` and plain text
+- **The brand** is a link to `shellHome(viewer, workspaces)` and plain text
   for an unverified viewer. `src/lib/shell-home.ts` holds `shellHome` (admin:
-  `/admin`, anyone else `/coven`) and `covenHome` (always `/coven`, the
-  admin's Your Coven link). The `/coven` landing (M2.8) chooses between the
-  viewer's first coven, the create page and the invite-only explanation, so the
-  shell takes no list of covens. At or
+  `/admin`, anyone else `covenHome`) and `covenHome` (the admin's Your Coven
+  link): `/coven/<slug>` of the first coven the switcher lists, or the
+  `/coven` landing (M2.8) for someone in none, which offers the create page or
+  explains the invitation. The links go into the coven themselves rather than
+  to `/coven`, which would only redirect a member there and leave the browser
+  a stop with nothing on it, most visibly from `/admin` (MB.257). At or
   under `$shell-brand-width` (a narrow phone; wider than that the bar has room
   for the name once the site links have gone) the brand reads "S&S"; the full
   name stays in the page, visually hidden, for a screen reader.
