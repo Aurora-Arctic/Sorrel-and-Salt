@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import ActionFailure from '@/components/ActionFailure';
 import RemoveControl from '@/components/MemberList/remove-control';
@@ -18,7 +18,10 @@ async function openAndConfirm(wrapped = true) {
   render(wrapped ? <ActionFailure>{control}</ActionFailure> : control);
   fireEvent.click(screen.getByRole('button', { name: 'Remove Fixture Member' }));
   const dialog = await screen.findByRole('dialog');
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
+  // Async, so the refusal's updates land inside act rather than after it.
+  await act(async () => {
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
+  });
 }
 
 describe('RemoveControl', () => {

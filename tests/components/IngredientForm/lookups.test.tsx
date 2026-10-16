@@ -88,13 +88,14 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
-const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+/** Lets the typing settle, and what it sets going — an open list's position, a microtask on — land inside `act`. */
+const settle = () => act(async () => void vi.advanceTimersByTime(DEBOUNCE_MS));
 /** Focuses the box, waits for its first, empty ask, then types `text` and lets it settle. */
 const lookUp = async (entry: string, calls: unknown[], text: string) => {
   act(() => box(entry).focus());
   await waitFor(() => expect(calls).toHaveLength(1));
   type(entry, text);
-  settle();
+  await settle();
   await waitFor(() => expect(calls).toHaveLength(2));
 };
 
@@ -151,7 +152,7 @@ describe('FormField', () => {
     renderField();
     const calls = offerForms([WAX_ANIMAL]);
 
-    settle();
+    await settle();
     expect(calls).toHaveLength(0);
 
     act(() => box('Form').focus());
@@ -162,7 +163,7 @@ describe('FormField', () => {
     act(() => vi.advanceTimersByTime(DEBOUNCE_MS - 1));
     expect(calls).toHaveLength(1);
 
-    settle();
+    await settle();
     await waitFor(() => expect(calls).toHaveLength(2));
     expect(calls[1]).toEqual({ workspaceId: WORKSPACE_ID, query: 'wax', first: 10 });
   });
@@ -211,7 +212,7 @@ describe('FormField', () => {
     const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
 
     await pickWax(calls, /^Wax \(Substance\)/);
-    settle();
+    await settle();
     fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
     fireEvent.click(await screen.findByRole('option', { name: /^Wax \(Animal\)/ }));
 
@@ -369,7 +370,7 @@ describe('LookupListField', () => {
       renderList(list);
       const calls = offer();
 
-      settle();
+      await settle();
       expect(calls).toHaveLength(0);
 
       await lookUp(list.entry, calls, 'mo');
@@ -434,7 +435,7 @@ describe('LookupListField', () => {
     expect(typedRow('Mo')).toBeInTheDocument();
 
     type('Celestial Body', ' MOON ');
-    settle();
+    await settle();
     await screen.findByRole('option', { name: 'Moonfixture' });
     expect(typedRow('MOON')).not.toBeInTheDocument();
   });
@@ -467,7 +468,7 @@ describe('LookupListField', () => {
     fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
     expect(changes('Deities')).toHaveTextContent('Hecate (Greek)');
     type('Deity', 'hecate');
-    settle();
+    await settle();
     fireEvent.click(await screen.findByRole('option', { name: 'Hecate (Roman)' }));
 
     // Its description in its tooltip and its x's description, as a linked
@@ -541,7 +542,7 @@ describe('LookupListField', () => {
     await screen.findByRole('option', { name: /^Mockwort/ });
     fireEvent.keyDown(box('Substitute Ingredient'), { key: 'Enter' });
     type('Substitute Ingredient', 'Mockwort Rind');
-    settle();
+    await settle();
     fireEvent.click(
       await screen.findByRole('option', { name: 'Use what you typed: Mockwort Rind' }),
     );

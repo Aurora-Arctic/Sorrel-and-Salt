@@ -1,4 +1,4 @@
-import { fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 
 // What a person does to a form in a component test — press a button, pick a
 // choice from a list, type into a field — written once for every form's
@@ -30,7 +30,8 @@ export const byLabel = (label: string, selector: string) =>
 export function press(button: string | HTMLElement): void {
   const pressed =
     typeof button === 'string' ? screen.getByRole('button', { name: button }) : button;
-  pressed.focus();
+  // In `act`: moving the focus blurs the box it leaves, which sets state.
+  act(() => pressed.focus());
   fireEvent.click(pressed);
 }
 

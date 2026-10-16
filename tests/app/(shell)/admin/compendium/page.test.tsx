@@ -404,7 +404,7 @@ describe('the /admin/compendium modal', () => {
   it('closes the modal back to the filtered page it opened over', async () => {
     await renderPage({ ...FILTERED, edit: TESTWORT.slug });
 
-    within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }).click();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
     expect(router.replace).toHaveBeenCalledWith(FILTERED_HREF);
   });

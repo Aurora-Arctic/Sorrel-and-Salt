@@ -1,5 +1,12 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor as waitForDom, within } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor as waitForDom,
+  within,
+} from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { byLabel } from './interact';
@@ -19,9 +26,15 @@ export function renderWithClient(ui: ReactElement) {
  * RTL's waitFor, polled every 5 ms rather than its 50: most waits here are
  * for a mock to have been called — a save sent, a lookup asked — which no DOM
  * mutation announces, so each would otherwise cost a whole tick (MB.181).
+ *
+ * It first lets what the test's last step set going settle inside `act`: an
+ * open list's position is worked out a microtask later, and an update landing
+ * between the step and RTL's wait is outside `act`, which React warns of.
  */
-export const waitFor: typeof waitForDom = (callback, options) =>
-  waitForDom(callback, { interval: 5, ...options });
+export const waitFor: typeof waitForDom = async (callback, options) => {
+  await act(async () => {});
+  return waitForDom(callback, { interval: 5, ...options });
+};
 
 /** A text box or text area by its label. */
 export const textbox = (name: string) => byLabel(name, 'input:not([role]), textarea');
