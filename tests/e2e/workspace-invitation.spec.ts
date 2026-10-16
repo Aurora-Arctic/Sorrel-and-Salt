@@ -5,6 +5,7 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { latestMessageTo } from './mailpit';
 import { signInAgainAs, signInAs } from './session';
+import { browserUrl, currentSlot, slotPort } from './slots';
 import type { Page } from '@playwright/test';
 
 // The parts of a coven invitation no v1 story walks, against the built
@@ -13,7 +14,9 @@ import type { Page } from '@playwright/test';
 // the link and the used, revoked and expired refusals are the story suite's
 // (tests/e2e/stories/01-invitations.spec.ts, stories 4 to 7, M9.1). The
 // accept service's checks are the unit tests'; this walks them in a browser.
-test.describe.configure({ mode: 'serial' });
+// Each worker builds the owner and the coven in its own database before its
+// first test, and every walk invites a new address, so the walks are
+// independent and spread across workers.
 
 const COVEN_NAME = 'Fixture Invite Coven';
 const DOMAIN = '@workspace-invitation.test';
@@ -23,7 +26,6 @@ const address = (local: string) => `${local}-${run}${DOMAIN}`;
 
 let ownerId = '';
 let covenId = '';
-let usedMessage = '';
 
 async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
   const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
@@ -34,8 +36,26 @@ async function withSql<T>(work: (sql: postgres.Sql) => Promise<T>): Promise<T> {
   }
 }
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ browser }) => {
   await recreateE2eDatabase();
+
+  // `signInAs` wants a page; only its rows matter here, so the page, and the
+  // session it holds, is thrown away. Each test signs in again for itself.
+  const setup = await browser.newPage({ baseURL: browserUrl(slotPort(currentSlot())) });
+  try {
+    ownerId = (await signInAs(setup, address('owner'))).userId;
+  } finally {
+    await setup.close();
+  }
+  await withSql(async (sql) => {
+    const [coven] = await sql`
+      insert into workspaces (name, slug, created_by, updated_by)
+      values (${COVEN_NAME}, ${COVEN_SLUG}, ${ownerId}, ${ownerId}) returning id`;
+    covenId = coven.id as string;
+    await sql`
+      insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+      values (${covenId}, ${ownerId}, 'owner', ${ownerId}, ${ownerId})`;
+  });
 });
 
 /** The invitation's path from the mailed link: the build's origin is its fallback, not this server. */
@@ -75,21 +95,6 @@ async function refusalAt(page: Page, path: string): Promise<string> {
   await assertNoSidewaysScroll(page, { restore: true });
   return message;
 }
-
-// The owner and the coven the tests below invite into; they ran at the head
-// of the first walk, which the story flows now cover.
-test('the owner and their coven are in place', async ({ page }) => {
-  ownerId = (await signInAs(page, address('owner'))).userId;
-  await withSql(async (sql) => {
-    const [coven] = await sql`
-        insert into workspaces (name, slug, created_by, updated_by)
-        values (${COVEN_NAME}, ${COVEN_SLUG}, ${ownerId}, ${ownerId}) returning id`;
-    covenId = coven.id as string;
-    await sql`
-        insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
-        values (${covenId}, ${ownerId}, 'owner', ${ownerId}, ${ownerId})`;
-  });
-});
 
 test.describe('a coven’s invitation from the account page', () => {
   test('D is told on /coven, accepts it on the account page, and the mailed link is then spent', async ({
@@ -143,8 +148,7 @@ test.describe('a coven’s invitation from the account page', () => {
     expect(seat.role).toBe('member');
 
     // The link D was mailed is the same invitation, now accepted.
-    const accepted = await refusalAt(page, linkPath);
-    usedMessage = accepted;
+    await refusalAt(page, linkPath);
   });
 });
 
@@ -183,7 +187,7 @@ test.describe('a declined coven invitation', () => {
 
     // The mailed link is the same invitation, refused for a reason of its own.
     const declinedMessage = await refusalAt(page, linkPath);
-    expect(declinedMessage).not.toBe(usedMessage);
+    expect(declinedMessage).not.toBe(await refusalAt(page, '/invite/not-a-real-token'));
 
     // The owner still lists it, marked declined, with Remove in place of Revoke.
     await signInAgainAs(page, ownerId);
@@ -218,7 +222,9 @@ test.describe('a declined coven invitation', () => {
   });
 });
 
-// Last in the file: it deletes the coven every walk above shares.
+// Last in the file: it deletes the coven every walk above shares. Workers take
+// a file's tests in order, each in a database of its own, so none runs it
+// before an earlier test of the same file.
 test.describe('a deleted coven’s invitation', () => {
   test('F’s link is refused for a reason of its own once the coven is deleted', async ({
     page,
@@ -240,8 +246,7 @@ test.describe('a deleted coven’s invitation', () => {
     const closedMessage = await refusalAt(page, linkPath);
     await assertNoAccessibilityViolations(page);
 
-    // Not the used link's reason, nor a broken link's.
-    expect(closedMessage).not.toBe(usedMessage);
+    // Not a broken link's reason.
     expect(closedMessage).not.toBe(await refusalAt(page, '/invite/not-a-real-token'));
     const seats = await withSql(
       (sql) => sql`

@@ -7,8 +7,6 @@ import { signInAs } from './session';
 // with its way onward. The 500 boundary is covered by tests/app/error.test.tsx;
 // no page throws on demand to walk it here.
 
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

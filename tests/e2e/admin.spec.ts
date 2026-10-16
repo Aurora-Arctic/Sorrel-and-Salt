@@ -11,8 +11,6 @@ import { signInAs } from './session';
 // stories 17–19); admin grants and the pause are story 60's
 // (08-email-and-admin.spec.ts). A signed-out visitor's redirect is
 // route-protection.spec.ts's.
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

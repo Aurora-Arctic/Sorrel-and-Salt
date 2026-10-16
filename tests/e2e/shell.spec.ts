@@ -4,14 +4,16 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
+import { browserUrl, currentSlot, slotPort } from './slots';
 
 // The application shell against the built server (MB.7): the bar, the context
 // row and the section navs that frame every signed-in page, at a desktop and
 // at a phone's width. What a component test cannot prove is here: where the
 // browser lays the bottom bar, which element takes the focus after a key, and
 // the scans over the whole frame. The switcher's entry to the create page
-// (Story 3) is walked here once; coven-create.spec.ts walks the form.
-test.describe.configure({ mode: 'serial' });
+// (Story 3) is walked here once; coven-create.spec.ts walks the form. Each
+// worker builds the fixture rows in its own database before its first test,
+// so the tests are independent and spread across workers.
 
 const ALPHA = { name: 'Shell Alpha', slug: 'shell-alpha' };
 const BETA = { name: 'Shell Beta', slug: 'shell-beta' };
@@ -25,11 +27,20 @@ const users = {
   plain: { id: '' }, // signed in, in no coven, no admin
 };
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ browser }) => {
   await recreateE2eDatabase();
+
+  // `signInAs` wants a page; only its rows matter here, so the page, and the
+  // session it holds, is thrown away. Each test signs in again for itself.
+  const setup = await browser.newPage({ baseURL: browserUrl(slotPort(currentSlot())) });
+  try {
+    await seedFixtures(setup);
+  } finally {
+    await setup.close();
+  }
 });
 
-test('the fixture users and their covens are in place', async ({ page }) => {
+async function seedFixtures(page: Page): Promise<void> {
   for (const key of Object.keys(users) as (keyof typeof users)[]) {
     users[key] = {
       id: (
@@ -71,7 +82,7 @@ test('the fixture users and their covens are in place', async ({ page }) => {
   } finally {
     await sql.end();
   }
-});
+}
 
 /** The theme button, in the bar at every width (M10.32). */
 async function toggleTheme(page: Page): Promise<void> {

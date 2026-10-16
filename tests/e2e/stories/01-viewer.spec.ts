@@ -21,7 +21,6 @@ import {
 // grimoire, and who last touched a jar. Both are scaffolds: the pages they
 // walk are built in Waves 11 and 12, and the task named in each annotation
 // turns its `fixme` into `test` and makes it pass.
-test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

@@ -9,9 +9,7 @@ import { makeCoven, makeUser, seatsOf, withSql } from './accounts-setup';
 // signing in, the landing an account with no coven meets, creating a coven,
 // and moving between covens. The people and covens each story starts from
 // are written by SQL (accounts-setup.ts); the step the story is about goes
-// through the page. Serial, so the file's tests run in order on one worker
-// against its one reseed (claude-docs/testing/e2e.md).
-test.describe.configure({ mode: 'serial' });
+// through the page.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -154,6 +152,10 @@ test.describe('the landing an account with no coven meets', () => {
 });
 
 test.describe('creating a coven', () => {
+  // Serial inside this block only: each test reads the holder or outsider id,
+  // and the coven, the one before it made.
+  test.describe.configure({ mode: 'serial' });
+
   const holder = { id: '' };
   const outsider = { id: '' };
 

@@ -3,13 +3,16 @@ import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import postgres from 'postgres';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
+import { browserUrl, currentSlot, slotPort } from './slots';
+import type { Page } from '@playwright/test';
 import { slugify } from '@/lib/slugify';
 
 // The coven page and its section nav against the built server (M9.15), and
 // the guard that fronts them (claude-docs/auth/coven-guard.md, "The coven
 // guard"): a member of any role opens the page, and a signed-in stranger
-// meets the same 404 as an address that names no coven at all.
-test.describe.configure({ mode: 'serial' });
+// meets the same 404 as an address that names no coven at all. Each worker
+// builds the coven in its own database before its first test, so the tests
+// are independent and spread across workers.
 
 const COVEN_NAME = 'Fixture Coven';
 const COVEN_SLUG = slugify(COVEN_NAME);
@@ -22,11 +25,21 @@ const users: Record<Role | 'stranger', { id: string }> = {
   stranger: { id: '' },
 };
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ browser }) => {
   await recreateE2eDatabase();
+
+  // `signInAs` wants a page; only its rows matter here, so the page, and the
+  // session it holds, is thrown away. Each test signs in again for itself.
+  const setup = await browser.newPage({ baseURL: browserUrl(slotPort(currentSlot())) });
+  try {
+    await seedFixtureCoven(setup);
+  } finally {
+    await setup.close();
+  }
 });
 
-test('the fixture coven holds its three members and no one else', async ({ page }) => {
+/** The coven holds its three members and no one else: the stranger has no seat. */
+async function seedFixtureCoven(page: Page): Promise<void> {
   for (const key of Object.keys(users) as (keyof typeof users)[]) {
     users[key] = { id: (await signInAs(page, `${key}@coven-page.test`)).userId };
   }
@@ -51,7 +64,7 @@ test('the fixture coven holds its three members and no one else', async ({ page 
   } finally {
     await sql.end();
   }
-});
+}
 
 for (const role of ['owner', 'member', 'viewer'] as const) {
   test(`a ${role} opens the coven page with its nav, and Leave is offered to every role`, async ({

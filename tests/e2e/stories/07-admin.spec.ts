@@ -12,7 +12,6 @@ import { signInAgainAs, signInAs } from '../session';
 // how, what everyone else is refused, and what an admin does not reach — a
 // coven's own pages. Setup goes straight to the database (MB.101); each
 // story's own step goes through the pages a person would use.
-test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -616,7 +615,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await withSql(
         (sql) => sql`
           insert into categories (name, slug, description, group_id, created_by, updated_by)
-          select 'Aaa Testcraft Moved', 'aaa-testcraft-moved', 'Filed under the group', id,
+          select 'Aaa Hearthcraft Moved', 'aaa-hearthcraft-moved', 'Filed under the group', id,
             ${userId}, ${userId}
           from category_groups where name = 'Aaa Testwort Bulwarks' and deleted_at is null`,
       );
@@ -628,9 +627,9 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(rowOf(page, 'Category Groups', 'Aaa Testwort Bulwarks')).toHaveCount(0);
 
       // The category lives on, in the group the admin picked.
-      await page.goto('/admin/categories?query=Aaa+Testcraft+Moved');
+      await page.goto('/admin/categories?query=Aaa+Hearthcraft+Moved');
       await expect(
-        rowOf(page, 'Categories', 'Aaa Testcraft Moved').getByRole('cell', {
+        rowOf(page, 'Categories', 'Aaa Hearthcraft Moved').getByRole('cell', {
           name: 'Cleansing & Release',
         }),
       ).toBeVisible();
@@ -734,7 +733,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await withSql(
         (sql) => sql`
           insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
-          select 'Aaa Testwort Grit', ${formSlug('Aaa Testwort Grit', 'Aaa Fixture Matter')},
+          select 'Aaa Fixture Grit', ${formSlug('Aaa Fixture Grit', 'Aaa Fixture Matter')},
             'Filed under the group', id, ${userId}, ${userId}
           from ingredient_form_groups where name = 'Aaa Fixture Matter' and deleted_at is null`,
       );
@@ -753,7 +752,7 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(rowOf(page, 'Form Groups', 'Aaa Fixture Matter')).toHaveCount(0);
       // The form is listed under the group's new name.
       await page.goto('/admin/forms');
-      const grit = rowOf(page, 'Forms', 'Aaa Testwort Grit');
+      const grit = rowOf(page, 'Forms', 'Aaa Fixture Grit');
       await expect(
         grit.getByRole('cell', { name: 'Aaa Fixture Stuff', exact: true }),
       ).toBeVisible();

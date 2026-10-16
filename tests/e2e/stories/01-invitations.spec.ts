@@ -21,6 +21,10 @@ import { slugify } from '@/lib/slugify';
 // state a user can see (the pending list, the roll, the 404) shows nothing
 // changed. That request is the browser's own `/api/graphql` call, the one
 // path a page's controls have to the server (CLAUDE.md rule 1).
+//
+// Serial is the choice for a file whose tests chain: one test's mailed link
+// (invitedPath) and refusals (usedRefusal, revokedRefusal) are read by later
+// ones, and the roll counts assume each earlier acceptance has happened.
 test.describe.configure({ mode: 'serial' });
 
 const COVEN_NAME = 'Fixture Invitation Coven';

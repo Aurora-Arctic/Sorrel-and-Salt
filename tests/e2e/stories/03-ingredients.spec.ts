@@ -29,7 +29,6 @@ import {
 // each story's own task, named in its annotation, turns its `fixme` into
 // `test` and makes it pass. Each story writes its own coven, so one story's
 // rows never decide another's counts.
-test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

@@ -15,7 +15,6 @@ import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 // Accounts are made by `signInAs` and rows a flow needs in place by raw SQL
 // (MB.101); the story's own step goes through the page, and a mailed link is
 // read from Mailpit and followed.
-test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -490,8 +489,10 @@ test(
   },
 );
 
-// Last of story 60's tests: it leaves one admin, the primary admin demoted
-// with the rest, so it must follow every test that needs the primary admin.
+// Last of story 60's tests, and it must stay so: it demotes every other admin in
+// the worker's database, the primary admin included, so it has to follow 60b
+// and 60c, which need the primary admin. File order keeps that true on any
+// worker; the tests after it make their own admins.
 test(
   'the last admin is refused revoking their own admin, and stays an admin',
   { tag: '@story-60' },
