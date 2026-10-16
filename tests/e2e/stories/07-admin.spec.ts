@@ -445,6 +445,18 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(adding).toHaveCount(0);
       await expect(page).toHaveURL(/\/admin\/categories$/);
       await page.unrouteAll();
+      // The list beneath is whole: the seeded first page, 25 rows and the header.
+      await expect(page.getByRole('table', { name: 'Categories' }).getByRole('row')).toHaveCount(
+        26,
+      );
+
+      // Opened and left untouched, Escape closes it, and the address loses `?new`.
+      await add.click();
+      await expect(adding.getByRole('textbox', { name: 'Name' })).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/categories\?new$/);
+      await page.keyboard.press('Escape');
+      await expect(adding).toHaveCount(0);
+      await expect(page).toHaveURL(/\/admin\/categories$/);
 
       // Added: first by name, so on the first page, with its group and description.
       await add.click();
