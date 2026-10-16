@@ -163,13 +163,22 @@ precision`, and while the keyset casts its sort back to `real`, the score
   form's pair carries the `ingredient_id` too (MB.217), so the arm matches the
   union, and since the table is hard-deleted a soft-deleted form's pairs stay
   behind, so the arm reads the form's liveness through a nested `EXISTS`.
-- **`form`** matches an entry holding a live variant of that form (MB.222):
-  a correlated `EXISTS` over `ingredient_variants`, comparing
+- **Within one kind of filter, any value matches; across kinds, every kind
+  must** (M11.22). The four list filters below, `forms`, `celestialBodies`,
+  `zodiacSigns` and `deityIds`, each find an entry holding _any one_ of the
+  values listed, and the filters a caller sets together all have to hold.
+  So `{ forms: ['Oil', 'Resin'], celestialBodies: ['Venus'] }` lists the
+  entries that come as an oil or a resin _and_ hold Venus. In each list a
+  blank value is skipped, and an empty or all-blank list is no filter.
+  Categories are the exception, kept as all-of (above).
+- **`forms`** matches an entry holding a live variant whose form is any of
+  those listed (MB.222, M11.22): a correlated `EXISTS` over
+  `ingredient_variants`, a subquery run for each entry, comparing
   `lower(btrim(…))` on both sides, the fold `ingredient_variants_form_unique`
-  holds. An entry with two forms is found under either, once, so the count
-  agrees with the page. `form` and `formId` each read any of the entry's live
+  holds. An entry with two of the listed forms is still one row, so the count
+  agrees with the page. `forms` and `formId` each read any of the entry's live
   forms on their own: an entry with a variant picked as Root and another typed
-  as Herb answers `formId` Root with `form` `herb`.
+  as Herb answers `formId` Root with `forms` `['herb']`.
 - **`formId`** matches an entry holding a live variant that picked the
   curated form, by the variant's `form_id` (MB.167, MB.220): a correlated
   `EXISTS` over `ingredient_variants`, read through
@@ -179,11 +188,30 @@ precision`, and while the keyset casts its sort back to `real`, the score
 - **`nomenclature`** (M5.5) is equality on the column, so `unknown` lists the
   formal names still to look up: the admin's to-do list beside
   `withoutReferences`' (["References"](references.md)).
-- **`celestialBody`** and **`zodiacSign`** match an entry whose list holds the value,
-  entry by entry under the suggestions' fold, `lower(btrim(…))` on both sides
-  through `listFolds`: how a celestial body's or a sign's delete and rename find the
-  entries holding it (MB.95). The repository's filter alone, as `formId` is,
-  and unindexed: only those two admin writes read it, over the compendium tier.
+- **`celestialBodies`** and **`zodiacSigns`** match an entry whose own list
+  holds any of the values given, compared entry by entry under the
+  suggestions' fold, `lower(btrim(…))` on both sides through `listFolds`
+  (M11.22). Each value is its own `IN` over the folded list, ORed, rather than
+  Postgres's array overlap `&&`, which would compare the raw spellings. A
+  celestial body's or a sign's delete and rename pass a one-item list to find
+  the entries holding it (MB.95). Unindexed: the list is short and read an
+  entry at a time.
+- **`deityIds`** matches an entry holding a live link to any of the curated
+  deities listed, by `ingredient_deities.deity_id` (MB.167, M11.22): a
+  correlated `EXISTS`, answered by `ingredient_deities_deity_id_idx`, so an
+  entry linking two of them is one row. A deity's delete passes a one-item
+  list to find the entries holding it (MB.132).
+- **`toxic`** reads M11.21's two yes/no flags together (M11.22). `toxic`
+  lists an entry whose own `ingredients.toxic` is on, or that has a live
+  variant whose `ingredient_variants.toxic` is on; `not_toxic` lists the
+  rest; absent is any. A soft-deleted (retired) variant's flag counts for
+  nothing either way, since the variant side is an `existsIn`, which skips
+  deleted rows: an entry whose only toxic form was retired reads as not
+  toxic. `not_toxic` is the same test negated, so the two settings always
+  split the list between them. The filter is the one place the two flags are
+  read together, and only to choose which entries to list: what a single
+  form reports about itself is still its own flag alone (DESIGN.md §5, "The
+  toxic flag is the one exception").
 
 Names order under the database's own collation (`en_US.utf8` in the image).
 M8.14's `(lower(name), identity_key, id)` declares its parts on the same

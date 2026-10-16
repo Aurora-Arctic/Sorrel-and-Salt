@@ -21,8 +21,7 @@ run-name: >-
 # unconditionally and passes its filter result down as a workflow_call input.
 #
 # `edited` is in the trigger types so retargeting a PR's base re-runs the gate
-# against the new one. Every other edit — a description, a title, the footer
-# Blacksmith's [code]smith appends to each new PR seconds after it opens —
+# against the new one. Every other edit — a title or a description —
 # changes nothing the gate checks, so its run must not cancel the run in
 # flight: the group's cancel excludes `edited`, the run waits its turn, and
 # `changes` cancels it unless the payload carries `changes.base`.
