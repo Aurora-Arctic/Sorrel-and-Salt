@@ -3,13 +3,13 @@ import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
 
 // What the schema adds over curatedValueInput, whose name, description and
-// dropped slug are tests/lib/validation.test.ts's: the glyph standing for the
+// dropped slug are tests/lib/validation.test.ts's: the icon standing for the
 // group (M12.6), one of the six or none, which is the generic.
 
 const VALID = { name: 'Fixture Matter', description: 'Invented.' };
 
 describe('IngredientFormGroupInput', () => {
-  it('takes each of the six glyphs, and null, as given', () => {
+  it('takes each of the six icons, and null, as given', () => {
     for (const icon of [...FORM_GROUP_ICONS, null]) {
       expect(IngredientFormGroupInput.parse({ ...VALID, icon }).icon, String(icon)).toBe(icon);
     }

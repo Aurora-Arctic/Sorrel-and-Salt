@@ -25,12 +25,12 @@ long form the owner chose at MB.115's sign-off.
 
 `GroupedValueFormProps` (`types.ts`):
 
-| Prop     | What it is                                                                                                     |
-| -------- | -------------------------------------------------------------------------------------------------------------- |
-| `kind`   | Which vocabulary: its mutations, its schema, whether it has a group, and what the copy says                    |
-| `value`  | The value to edit, as `{ id, name, description, groupId }`, `groupId` absent for a flat kind                   |
-| `groups` | Every live group of the kind as `{ id, name }`, alphabetical (MB.35); none for a flat kind                     |
-| `onDone` | Called after a save or a delete, and on Cancel, after Discard Changes if anything changed; the owner closes it |
+| Prop     | What it is                                                                                                                         |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`   | Which vocabulary: its mutations, its schema, whether it has a group, and what the copy says                                        |
+| `value`  | The value to edit, as `{ id, name, description, groupId }`, `groupId` absent for a flat kind                                       |
+| `groups` | Every live group of the kind as `{ id, name }`, alphabetical (MB.35), a form group's also its `icon` (M12.7); none for a flat kind |
+| `onDone` | Called after a save or a delete, and on Cancel, after Discard Changes if anything changed; the owner closes it                     |
 
 Without `value`, the form adds one.
 
@@ -88,6 +88,10 @@ its three mutation documents, and nothing else:
   the kind's label, "Group", and its list is "Group choices"; a deity's is
   "Tradition", "Choose a tradition" and "Tradition choices". The list floats
   over the modal rather than stretching it, as every combobox list does.
+  For a form, each group's row and the chosen value draw its [`FormIcon`](form-icon.md)
+  before the name (M12.7), the generic spoon for a group with no icon; the
+  icon is decoration, outside the option's accessible name. A category group's
+  and a tradition's rows carry none.
 - **Every field is required**, as the schema and the columns say, and
   each label carries an asterisk in the error red. The asterisk is hidden from
   the field's name: a screen reader hears "Name" and the control's
@@ -215,7 +219,7 @@ there is none.
 
 [`index.stories.tsx`](../../src/components/GroupedValueForm/index.stories.tsx),
 `Admin / Grouped Value Form`, each in the modal and its own iframe, each kind's
-groups four invented ones, enough to narrow. The workshop has no API, so a
+groups four invented ones, enough to narrow, the form groups carrying icons (one none). The workshop has no API, so a
 save answers with the generic error.
 
 - `AddingACategory`, `EditingACategory`, `AddingAForm`, `EditingAForm`,

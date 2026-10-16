@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import FormIcon from '@/components/FormIcon';
 import type { SectionNavItem } from '@/components/SectionNav/types';
 import { currentHrefs, hrefs } from '../../support/links';
 
@@ -63,6 +64,16 @@ describe('SectionNav', () => {
     render(<SectionNav label="Test" sections={ITEMS} />);
 
     expect(currentHrefs(row())).toEqual(expected);
+  });
+
+  // One mark means "a form" everywhere: the Forms tab wears the generic form
+  // icon, the salt spoon, not a mark of its own (M12.7).
+  it('draws the generic form icon on the Forms tab', () => {
+    const { container: spoon } = render(<FormIcon name={null} />);
+    render(<SectionNav label="Test" sections={ITEMS} />);
+
+    const forms = within(nav()).getByRole('link', { name: 'Forms' });
+    expect(forms.querySelector('svg')!.innerHTML).toBe(spoon.querySelector('svg')!.innerHTML);
   });
 
   it('draws no More button when the sections fit', () => {

@@ -82,7 +82,7 @@ Option C's risks were each drawn two ways, and the owner picked one for each.
 11. **Copy says Coven** (below).
 12. **The account menu names the user once,** on its button; its panel opens on Your Account, then Sign Out.
 13. **One section nav component** serves the coven and the admin areas, with an inline stroke icon per section. `AdminNav`'s `<details>` jump menu goes.
-14. **The theme toggle keeps its feel:** the knotwork crescent and sun on the accent disc, as a 32px disc in the bar and a labelled row in the account panel on a phone. Never a plain glyph. _(M10.32, the owner's call, 2026-10-13: the disc stays in the bar at every width and the panel holds no theme row.)_
+14. **The theme toggle keeps its feel:** the knotwork crescent and sun on the accent disc, as a 32px disc in the bar and a labelled row in the account panel on a phone. Never a plain icon. _(M10.32, the owner's call, 2026-10-13: the disc stays in the bar at every width and the panel holds no theme row.)_
 
 ## The Sign-Off Adjustments
 

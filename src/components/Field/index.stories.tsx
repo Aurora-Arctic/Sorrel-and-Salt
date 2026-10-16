@@ -2,6 +2,11 @@ import type { Story } from '@ladle/react';
 import { type ReactNode, useId, useState } from 'react';
 import { type FieldErrors, FormProvider, useForm } from 'react-hook-form';
 import {
+  FORM_GROUP_ICONS,
+  type FormGroupIcon,
+} from '../../modules/vocabulary/schema/form-group-icons';
+import FormIcon from '../FormIcon';
+import {
   FieldShell,
   FilterSelectField,
   FormActions,
@@ -156,6 +161,31 @@ export const RadioGroup: Story = () => {
             description: 'Reads and writes the ingredients and the grimoire.',
           },
           { value: 'viewer', label: 'Viewer', description: 'Reads only.' },
+        ]}
+      />
+    </div>
+  );
+};
+
+// The strip layout: the same native radios, drawn as one bar of icons, None last.
+export const RadioStrip: Story = () => {
+  const [icon, setIcon] = useState<FormGroupIcon | ''>('');
+  return (
+    <div className="form" style={{ maxWidth: '24rem' }}>
+      <RadioGroupField<FormGroupIcon | ''>
+        legend="Icon"
+        name="icon"
+        layout="strip"
+        value={icon}
+        onChange={setIcon}
+        note="The icon drawn beside each form in this group. None draws the generic one."
+        options={[
+          ...FORM_GROUP_ICONS.map((name) => ({
+            value: name,
+            label: name.charAt(0).toUpperCase() + name.slice(1),
+            icon: <FormIcon name={name} />,
+          })),
+          { value: '', label: 'None', icon: <FormIcon name={null} /> },
         ]}
       />
     </div>

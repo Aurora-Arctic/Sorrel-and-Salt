@@ -1,6 +1,7 @@
 import type { Story } from '@ladle/react';
 import { type ReactElement, type ReactNode, useId, useState } from 'react';
 import { usePressOnMount } from '../../../.ladle/press';
+import FormIcon from '../FormIcon';
 import { FieldShell, fieldDescription } from '../Field';
 import { MagnifierIcon } from '../Field/icons';
 import Combobox, {
@@ -45,12 +46,24 @@ const FORMS: ComboboxOption[] = [
   {
     value: 'Wax',
     label: 'Wax (Animal)',
+    icon: <FormIcon name="animal" />,
     note: 'Used by Testwort (Fixtura testalis)',
     curated: true,
   },
-  { value: 'Wax', label: 'Wax (Substance)', note: 'Candle and poppet wax.', curated: true },
+  {
+    value: 'Wax',
+    label: 'Wax (Substance)',
+    icon: <FormIcon name="substance" />,
+    note: 'Candle and poppet wax.',
+    curated: true,
+  },
   { value: 'Ointment', label: 'Ointment (Preparation)', note: 'A salve or balm.', curated: true },
-  { value: 'wax shavings', note: 'Used by Mockleaf', curated: false },
+  {
+    value: 'wax shavings',
+    icon: <FormIcon name={null} />,
+    note: 'Used by Mockleaf',
+    curated: false,
+  },
 ];
 
 const NAMES: ComboboxOption[] = [
@@ -338,6 +351,29 @@ export const SelectOnly: Story = () => {
           onChange={setValue}
           choices={KINDS}
           placeholder="Choose a classification"
+        />
+      )}
+    </Labelled>
+  );
+};
+
+/** The select-only box with an icon on each choice, in its list and in its closed value: the group picker of a form. */
+export const SelectWithIcons: Story = () => {
+  const [value, setValue] = useState('');
+  return (
+    <Labelled label="Group">
+      {(ids) => (
+        <ComboboxSelect
+          {...ids}
+          label="Group"
+          value={value}
+          onChange={setValue}
+          choices={[
+            { value: 'mineral', label: 'Fixture Mineral', icon: <FormIcon name="mineral" /> },
+            { value: 'animal', label: 'Fixture Animal', icon: <FormIcon name="animal" /> },
+            { value: 'none', label: 'Fixture Plain', icon: <FormIcon name={null} /> },
+          ]}
+          placeholder="Choose a group"
         />
       )}
     </Labelled>

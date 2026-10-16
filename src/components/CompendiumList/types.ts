@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading } from '../Modal/types';
@@ -16,11 +17,17 @@ export interface CompendiumListEntry extends UpdatedStamp {
   /** Its naming system, shown by the label the filter gives it. */
   nomenclature: NomenclatureKind;
   canonicalName: string | null;
-  /** Its live forms' text, in form order: `[]` for an entry with none. */
-  forms: string[];
+  /** Its live forms, in form order: `[]` for an entry with none. */
+  forms: CompendiumListForm[];
   editHref: Route;
   /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
   editHeading: ModalHeading;
+}
+
+/** One live form of an entry: its text, and its curated group's icon name, null for a form with none. */
+export interface CompendiumListForm {
+  name: string;
+  icon: FormGroupIcon | null;
 }
 
 export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {

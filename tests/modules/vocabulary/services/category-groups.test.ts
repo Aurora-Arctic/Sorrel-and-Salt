@@ -192,7 +192,7 @@ describe('createCategoryGroup', () => {
     },
   );
 
-  // A glyph is a form group's (M12.6): a category group's input drops one,
+  // An icon is a form group's (M12.6): a category group's input drops one,
   // even a value a form group would refuse, rather than reading it.
   it('takes no icon, writing the group as though none were given', async () => {
     const withIcon = { ...input(), icon: 'banana' } as CategoryGroupInput;

@@ -25,7 +25,7 @@ import type {
 /**
  * §5's six groups in §5's order, which nothing reads — groups list
  * alphabetically — kept so the two compare by eye and by test. Each names the
- * glyph that stands for it (M12.6), written only into a group the seed
+ * icon that stands for it (M12.6), written only into a group the seed
  * inserts, so an admin's later choice survives a reseed; migration 0077
  * carried them onto databases seeded before.
  */

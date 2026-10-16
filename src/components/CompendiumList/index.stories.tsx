@@ -7,6 +7,7 @@ import PageHeader from '../PageHeader';
 import { slugify } from '../../lib/slugify';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
 import type { CompendiumListEntry, CompendiumListFilter } from './types';
+import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
 // Render-only; behaviour is asserted in tests/components/CompendiumList. The
@@ -48,6 +49,13 @@ const FORMS = ['Dried', 'Essential Oil', 'Oil', 'Powder', 'Resin', 'Tincture'].m
   name,
 }));
 
+// The group icon each form wears in the Form column; a form with none wears the spoon.
+const ICONS: Record<string, FormGroupIcon> = {
+  Dried: 'botanical',
+  Oil: 'fluid',
+  Powder: 'substance',
+};
+
 const entry = (
   name: string,
   nomenclature: NomenclatureKind,
@@ -61,7 +69,7 @@ const entry = (
     slug,
     nomenclature,
     canonicalName,
-    forms,
+    forms: forms.map((name) => ({ name, icon: ICONS[name] ?? null })),
     updatedBy: 'Fixture Editor',
     updatedAt: new Date('2026-05-06T10:00:00Z'),
     editHref: compendiumHref({}, { edit: slug }),

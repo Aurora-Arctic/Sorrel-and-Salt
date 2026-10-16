@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import FormIcon from '@/components/FormIcon';
 import GroupedValueForm from '@/components/GroupedValueForm';
 import type { GroupedValueFormProps } from '@/components/GroupedValueForm/types';
 import type {
@@ -302,6 +303,27 @@ describe('GroupedValueForm, a form', () => {
     renderForm({ kind: 'form', groups: FORM_GROUPS, ...props });
   const save = () => screen.getByRole('button', { name: 'Save Form' });
 
+  it('draws the icon of each group in the group choices, the generic where it has none', () => {
+    renderFormKind({
+      groups: [
+        { id: FORM_GROUPS[0].id, name: 'Fixture Mineral', icon: 'mineral' },
+        { id: FORM_GROUPS[1].id, name: 'Fixture Substance', icon: null },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole('combobox', { name: 'Group' }));
+
+    const drawn = (label: string) =>
+      screen.getByRole('option', { name: label }).querySelector('[aria-hidden="true"] svg')!
+        .innerHTML;
+    expect(drawn('Fixture Mineral')).toBe(
+      render(<FormIcon name="mineral" />).container.querySelector('svg')!.innerHTML,
+    );
+    expect(drawn('Fixture Substance')).toBe(
+      render(<FormIcon name={null} />).container.querySelector('svg')!.innerHTML,
+    );
+  });
+
   describe('adding', () => {
     it('creates the form from what was entered, then is done', async () => {
       const calls: CreateIngredientFormValueMutationVariables[] = [];
@@ -447,6 +469,18 @@ describe('GroupedValueForm, a deity', () => {
     renderForm({ kind: 'deity', groups: TRADITIONS, ...props });
   const tradition = () => screen.getByRole('combobox', { name: 'Tradition' });
   const save = () => screen.getByRole('button', { name: 'Save Deity' });
+
+  it('draws no icon in the tradition choices', () => {
+    renderDeity();
+
+    fireEvent.click(tradition());
+
+    const options = within(screen.getByRole('listbox', { name: 'Tradition choices' })).getAllByRole(
+      'option',
+    );
+    expect(options.length).toBeGreaterThan(0);
+    for (const option of options) expect(option.querySelector('svg')).toBeNull();
+  });
 
   it('creates the deity with its tradition as `traditionId`, then is done', async () => {
     const calls: CreateDeityMutationVariables[] = [];

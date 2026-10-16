@@ -43,7 +43,7 @@ describe('ingredientResolver', () => {
   ])(
     'puts an issue with a variant’s pick, or with its text, on its Form ($issue)',
     async ({ id, form }) => {
-      const formLink = { id, name: 'Wax', group: null, description: null };
+      const formLink = { id, name: 'Wax', group: null, icon: null, description: null };
 
       const { errors } = await ingredientResolver(
         withVariant({ form, formLink }),

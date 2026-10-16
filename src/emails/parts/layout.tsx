@@ -93,7 +93,7 @@ const OVERLAP = 56;
 const EXACT_LINES = { msoLineHeightRule: 'exactly' } as CSSProperties;
 
 // The margin every Paragraph ends on. The salt's padding is built from it, so
-// the photograph meets the text block's edge and never a glyph: measured in
+// the photograph meets the text block's edge and never an icon: measured in
 // MB.118, the light salt's darkest pixel holds the muted ink at 2.14:1 and the
 // link at 1.66:1, and no opacity fixes the link.
 const PARAGRAPH_GAP = 16;

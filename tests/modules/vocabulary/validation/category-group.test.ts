@@ -30,7 +30,7 @@ function failedPaths(input: unknown) {
 }
 
 describe('CategoryGroupInput', () => {
-  // A form group's glyph is its own (M12.6): a category group's chip colours
+  // A form group's icon is its own (M12.6): a category group's chip colours
   // stand for it, so a stray `icon`, even one no form group would take, is dropped.
   it('drops an icon, whatever it holds', () => {
     for (const icon of ['curio', 'banana']) {

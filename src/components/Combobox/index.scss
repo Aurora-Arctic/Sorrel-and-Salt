@@ -400,6 +400,23 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   font-style: italic;
 }
 
+// A mark before a row's label or the qualifier: decorative, a little clear of
+// the text, and as tall as the text beside it.
+.combobox__icon {
+  margin-inline-end: space(1);
+}
+
+// The chosen choice's mark ahead of the type-ahead box's text (M12.7):
+// spaced by the values' own gap rather than the row mark's margin, and a
+// press on it is a press on the text, as on the qualifier.
+.combobox__lead {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-inline-end: 0;
+  cursor: text;
+}
+
 // Who claims the value, or what a curated row stands for, beneath its name.
 .combobox__note {
   color: $text-muted;
@@ -571,7 +588,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // body ink while it is held.
 .combobox__entry-grip {
   flex: none;
-  // Two columns of dots, half a glyph wide: the mark's own geometry.
+  // Two columns of dots, half an icon wide: the mark's own geometry.
   width: 0.5rem;
   height: $glyph-size;
   color: $text-muted;
@@ -645,7 +662,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// The link mark, a glyph ahead of the text in the button's own ink.
+// The link mark, an icon ahead of the text in the button's own ink.
 .combobox__entry-mark {
   flex: none;
   width: $glyph-size;

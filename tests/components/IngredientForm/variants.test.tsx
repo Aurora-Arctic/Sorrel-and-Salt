@@ -37,6 +37,7 @@ const OIL: FormNode = {
   value: 'Oil',
   description: null,
   group: 'Preparation',
+  icon: null,
   curated: true,
   claimants: [],
 };
@@ -148,13 +149,19 @@ const twoForms = (oil: Partial<IngredientFormValues['variants'][number]> = {}) =
       ...EMPTY_VARIANT,
       variantId: HERB_VARIANT_ID,
       form: 'Oil',
-      formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', description: null },
+      formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', icon: null, description: null },
       ...oil,
     },
     {
       ...EMPTY_VARIANT,
       form: 'Herb',
-      formLink: { id: HERB_FORM_ID, name: 'Herb', group: 'Plant part', description: null },
+      formLink: {
+        id: HERB_FORM_ID,
+        name: 'Herb',
+        group: 'Plant part',
+        icon: null,
+        description: null,
+      },
     },
   ],
 });
@@ -247,7 +254,13 @@ describe('IngredientForm’s variants', () => {
             ...EMPTY_VARIANT,
             variantId: HERB_VARIANT_ID,
             form: 'Oil',
-            formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', description: null },
+            formLink: {
+              id: OIL_ID,
+              name: 'Oil',
+              group: 'Preparation',
+              icon: null,
+              description: null,
+            },
           },
         ],
       },
@@ -272,7 +285,9 @@ describe('IngredientForm’s variants', () => {
     noVariant('Oyl');
   });
 
-  it('removes a variant by its own button, and sends the rest', async () => {
+  // Its × asks first, and only removes: an open card stays open until the
+  // answer, and Keep It leaves it so (the owner's call, 2026-10-16).
+  it('removes a variant by its own button once confirmed, and sends the rest', async () => {
     const calls = acceptCreate();
     renderForm({ workspaceId: WORKSPACE_ID });
 
@@ -281,11 +296,50 @@ describe('IngredientForm’s variants', () => {
     addVariant('Herb');
     fireEvent.click(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
 
+    expect(variant('Oil')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Keep It' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+
     noVariant('Oil');
     expect(variant('Herb')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    expect(newForm()).toHaveFocus();
     save();
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input.variants?.map(({ form }) => form)).toEqual(['Herb']);
+  });
+
+  it('keeps a variant, open as it was, when its removal is answered Keep It', () => {
+    renderForm({ workspaceId: WORKSPACE_ID });
+
+    addVariant('Oil');
+    const remove = within(variant('Oil')).getByRole('button', { name: 'Remove Oil' });
+    expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+    press(remove);
+    press('Keep It');
+
+    expect(variant('Oil')).toBeInTheDocument();
+    expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    expect(remove).toHaveFocus();
+  });
+
+  it('asks one question at a time: Cancel while a removal asks shows the unsaved changes instead', () => {
+    offerNothing();
+    renderWithClient(
+      <IngredientForm workspaceId={WORKSPACE_ID} onSaved={vi.fn()} onCancel={vi.fn()} />,
+    );
+
+    addVariant('Oil');
+    press(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
+    // Outside a modal nothing holds the form inert, so Cancel is still in reach.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    press('Keep Editing');
+
+    expect(screen.getByRole('button', { name: 'Keep It' })).toBeInTheDocument();
+    expect(variant('Oil')).toBeInTheDocument();
   });
 
   it('refuses a repeat form at Add, folded as the save folds it, adding no second fieldset', () => {
@@ -332,7 +386,13 @@ describe('IngredientForm’s variants', () => {
             ...EMPTY_VARIANT,
             variantId: HERB_VARIANT_ID,
             form: 'Oil',
-            formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', description: null },
+            formLink: {
+              id: OIL_ID,
+              name: 'Oil',
+              group: 'Preparation',
+              icon: null,
+              description: null,
+            },
             safetyNotes: 'Dilute before use.',
           },
         ],

@@ -56,7 +56,11 @@ const GroupList = ({
           {
             heading: 'Name',
             cell: (group) => (
-              <GroupChip name={group.name} colors={kind === 'category' ? group : undefined} />
+              <GroupChip
+                name={group.name}
+                colors={kind === 'category' ? group : undefined}
+                icon={kind === 'form' ? (group.icon ?? null) : undefined}
+              />
             ),
           },
           {

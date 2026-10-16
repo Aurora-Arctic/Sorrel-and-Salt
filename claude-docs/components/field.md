@@ -160,7 +160,7 @@ form's values, `TextField<IngredientFormValues>`, so `name` is checked
 against the form's own paths; left out, any string passes.
 
 `RadioGroupField` (`RadioGroupFieldProps`, M6.13) takes a `legend`, the
-radios' shared `name`, `options` (`value`, `label`, optional `description`),
+radios' shared `name`, `options` (`value`, `label`, optional `description`, optional `icon`, a mark drawn before the label and outside its accessible name),
 the chosen `value` held by the caller, and `onChange(value)`. A native radio
 group in a `.fieldset.radio-group`: each radio is a small ring whose centre dot, in the
 accent green, grows in with only a thin gap to the ring over the switch's `$motion-short` ease
@@ -172,6 +172,29 @@ fieldset's own `aria-describedby` so it is read with the group. The group carrie
 a confirm's modal. As a direct child of a `.form` it carries none, because the
 form's gap spaces it like any field (MB.119). First used by the members page's
 Promote and Demote modal.
+
+`layout="strip"` (M12.7) draws the same group as one segmented bar of
+icon-only segments (`icon`, here the whole of the choice's picture), for a
+choice that is seen before it is read: a form group's icon. The chosen
+segment is filled with the accent and its icon takes `$text-on-color`; the
+chosen option's label is printed beneath the bar in muted text
+(`.radio-strip__chosen`, `aria-hidden` because the checked radio already
+names the choice). A `description` is not drawn in this layout. The owner
+chose it over a row of labelled tiles, which wrapped unevenly over two rows
+(2026-10-16). It is a radio underneath, not a row of buttons: each segment is a
+`label` wrapping a visually hidden native `input type="radio"`, with the
+option's label in a visually hidden span, so the arrow keys, the "2 of 3" a
+screen reader announces, `checked`, the form's reset and the label query all
+come from the browser, with no ARIA to keep right. The segment's fill and
+focus ring follow the radio through `:has()` on its state, in
+`.radio-group--strip`, `.radio-strip` and `.radio--segment` in
+`_primitives.scss` beside `.radio`. A note is kept under the bar. Each
+segment wears its option's label in an [`IconTip`](icon-tip.md) above it, on
+hover and on its radio's focus, for a sighted person who cannot tell the icons
+apart (the owner's call, 2026-10-16); the radio keeps its own name, so the tip
+is decoration. The tips need the bar unclipped, so `.radio-strip` has no
+`overflow: hidden`: the end segments round their own corners, and the
+dividers are counted on the tips' wrappers.
 
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),
@@ -186,7 +209,7 @@ error and its label takes the press feedback. A `hint` puts the label in a
 `.field__label-row` beside an InfoTip, as `FieldShell` does, and names the
 tip in the toggle's `aria-describedby`; a filter switch takes none. The rest: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
-`role="switch"`, beneath it in `.switch__control`, centred under the label. The label is its
+`role="switch"`, beneath it in `.switch__control`, centred under the label, which lines a filter bar's switch up among its boxes; the ingredient form sets its Toxic switches and their labels at the start of the column instead ([`ingredient-form.md`](ingredient-form.md), "Styling"). The label is its
 accessible name and a click on it turns it; the label and the toggle are
 each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native
@@ -278,7 +301,7 @@ accent when pointed at or focused.
 [`index.stories.tsx`](../../src/components/Field/index.stories.tsx), `Forms /
 Field`: `TextField` as `Default`, `Required`, `WithHint`, `WithNote`,
 `WithError`, `Multiline` and `Disabled`, each in a `FormProvider`;
-`PlainShell`, the shell around a native input with an error; `Switch`,
+`RadioStrip`, the radio group as a strip of icons; `PlainShell`, the shell around a native input with an error; `Switch`,
 `SwitchField` off, on, and disabled off and on; `Actions`, `FormActions` with
 nothing to save, with something to save and Delete, saving, and renamed to
 Send Invitation; `Reason`,

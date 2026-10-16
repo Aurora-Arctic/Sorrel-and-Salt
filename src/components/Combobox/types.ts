@@ -24,6 +24,12 @@ export interface ComboboxOption {
    * edged in it, so the colour its chip will wear is seen before the pick.
    */
   colors?: GroupColors;
+  /**
+   * A mark drawn before the label, outside the option's accessible name: a
+   * form's group icon. A `ReactNode` rather than a typed name, so the
+   * combobox knows no icon set; the caller hands over a drawn, decorative one.
+   */
+  icon?: ReactNode;
 }
 
 /** What a source has for the text as it stands: the rows, and whether more are on their way. */
@@ -115,6 +121,14 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    * status's count. "suggestion" unless said; a closed set's are "choice"s.
    */
   noun?: string;
+  /** The mark on the typed row, "Use what you typed": the same slot as an option's `icon`. */
+  typedIcon?: ReactNode;
+  /**
+   * A mark drawn before the text, decorative: the type-ahead box's chosen
+   * icon, there while the box reads the chosen label, as the select-only
+   * box's closed value draws its choice's (M12.7).
+   */
+  icon?: ReactNode;
   /** Shown, muted, while the box is empty. */
   placeholder?: string;
   /** `aria-required`, as the field marks it. */
@@ -281,6 +295,12 @@ export interface ComboboxChoice {
    * plus. The caller decides what choosing it does.
    */
   create?: boolean;
+  /**
+   * A mark drawn before the label, in its row and in the closed value, outside
+   * the accessible name: a form group's icon. Handed over drawn and decorative,
+   * as `ComboboxOption.icon` is.
+   */
+  icon?: ReactNode;
 }
 
 /** The select-only box: a closed set, chosen from the same control and list. */

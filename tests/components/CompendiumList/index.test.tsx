@@ -3,6 +3,7 @@ import { type ReactElement, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumListBase from '@/components/CompendiumList';
+import FormIcon from '@/components/FormIcon';
 import { compendiumHref } from '@/components/CompendiumList/href';
 import type {
   CompendiumListEntry,
@@ -45,7 +46,10 @@ const ENTRIES: CompendiumListEntry[] = [
     slug: 'testwort',
     nomenclature: 'botanical',
     canonicalName: 'Fixtura testalis',
-    forms: ['Fixture Herb', 'Fixture Oil'],
+    forms: [
+      { name: 'Fixture Herb', icon: 'botanical' },
+      { name: 'Fixture Oil', icon: null },
+    ],
     editHref: compendiumHref({}, { edit: 'testwort' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
   },
@@ -102,6 +106,21 @@ describe('CompendiumList', () => {
       within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' }),
     ).toBeInTheDocument();
     expect(within(rows[2]).getByRole('cell', { name: 'Fixture Salt' })).toBeInTheDocument();
+  });
+
+  // M12.7: each form wears its group's icon; a form with none wears the spoon.
+  it('draws each form with its group icon in the Form column', () => {
+    const { container: botanical } = render(<FormIcon name="botanical" />);
+    const { container: spoon } = render(<FormIcon name={null} />);
+    render(<CompendiumList {...props()} />);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    const cell = within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' });
+    const glyphs = [...cell.querySelectorAll('svg')].map((svg) => svg.innerHTML);
+    expect(glyphs).toEqual([
+      botanical.querySelector('svg')!.innerHTML,
+      spoon.querySelector('svg')!.innerHTML,
+    ]);
   });
 
   // MB.260: who last edited each row, and when, as the coven's member list has it.

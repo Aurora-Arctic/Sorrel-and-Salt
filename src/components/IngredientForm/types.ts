@@ -14,6 +14,7 @@ import type {
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
 import type { FieldProps, SelectOption } from '../Field/types';
 import type { Announce, LegendAction } from '../CategoryPicker/types';
@@ -180,6 +181,8 @@ export interface FormLink {
   id: string;
   name: string;
   group: string | null;
+  /** The group's icon name, or null for a group without one or a form with no group: `FormIcon` draws the generic. */
+  icon: FormGroupIcon | null;
   description: string | null;
 }
 
@@ -339,8 +342,12 @@ export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> ex
   onEdit?: (text: string) => void;
   /** What a pick leaves out of the text, drawn in the box: a picked form's group. */
   qualifier?: ComboboxQualifier;
+  /** A mark drawn before the text, decorative: a picked form's group icon. */
+  icon?: ReactNode;
   /** Whether the typed row is offered: false for a box whose text must be a pick. */
   offerTyped?: boolean;
+  /** The mark on the typed row: a form's is the generic. */
+  typedIcon?: ReactNode;
 }
 
 export interface ListFieldProps {
@@ -504,7 +511,8 @@ export interface VariantFieldsetProps extends LookupFieldProps {
   open: boolean;
   /** Opens it, closing any other, or closes it. */
   onToggle: (open: boolean) => void;
-  onRemove: (index: number) => void;
+  /** Asks whether to remove it; its × does nothing else (the owner's call, 2026-10-16). */
+  onRemove: () => void;
   /** Which of its sections are open, by its place in the list. */
   folds: VariantFolds;
 }
@@ -718,4 +726,18 @@ export interface SkippedNoticeProps {
   onDone: () => void;
   /** The variant's Copy From Ingredient, which takes the focus when the notice goes. */
   copyButton: RefObject<HTMLButtonElement | null>;
+}
+
+/** A variant's or a reference row's removal, asked before it goes. */
+export interface RemoveQuestionProps {
+  /** A removal is waiting on the answer. */
+  asked: boolean;
+  /** "Remove "Oil"? …", naming the row. */
+  question: ReactNode;
+  /** Removes the row and stops asking, both in the one commit. */
+  onRemove: () => void;
+  /** Where the focus goes once the row and the question have gone. */
+  afterRemove: () => void;
+  /** Stops asking, the row kept. */
+  onKeep: () => void;
 }

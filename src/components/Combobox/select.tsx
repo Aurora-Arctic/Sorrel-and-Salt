@@ -66,7 +66,14 @@ export function ComboboxSelect({
       >
         <div className="combobox__values">
           {selected ? (
-            <span className="combobox__value">{selected.label}</span>
+            <span className="combobox__value">
+              {selected.icon && (
+                <span className="combobox__icon" aria-hidden="true">
+                  {selected.icon}
+                </span>
+              )}
+              {selected.label}
+            </span>
           ) : (
             <span className="combobox__value is-placeholder">{placeholder}</span>
           )}
@@ -99,7 +106,14 @@ export function ComboboxSelect({
               {...getItemProps({ item: choice, index })}
             >
               {choice.create && <PlusIcon />}
-              <span className="combobox__label">{choice.label}</span>
+              <span className="combobox__label">
+                {choice.icon && (
+                  <span className="combobox__icon" aria-hidden="true">
+                    {choice.icon}
+                  </span>
+                )}
+                {choice.label}
+              </span>
             </li>
           ))}
       </ul>

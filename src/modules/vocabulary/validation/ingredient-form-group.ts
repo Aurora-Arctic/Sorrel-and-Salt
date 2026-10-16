@@ -4,12 +4,12 @@ import { FORM_GROUP_ICONS } from '../schema/form-group-icons';
 
 // A form group as an admin writes one (M5.6b). No slug (curatedValueInput says
 // why). No colour: a form group sections a dropdown, it colours no chip. The
-// glyph that stands for it is one of the six or none, the generic (M12.6):
+// icon that stands for it is one of the six or none, the generic (M12.6):
 // null and absent both mean none, since the service writes the group whole
 // and GraphQL hands a null over as absent.
 export const IngredientFormGroupInput = curatedValueInput('group').extend({
   icon: z
-    .enum(FORM_GROUP_ICONS, { error: 'Choose one of the six glyphs, or none' })
+    .enum(FORM_GROUP_ICONS, { error: 'Choose one of the six icons, or none' })
     .nullable()
     .optional(),
 });

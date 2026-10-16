@@ -78,7 +78,7 @@ control that precedes it in the page.
 
 Tokens only. The button is the muted ink, the body ink on hover and focus,
 with the focus ring, and a 24px target, WCAG 2.2's minimum, the `$icon-size`
-token, around a `$glyph-size` (1rem) glyph that sits beside a label without
+token, around a `$glyph-size` (1rem) icon that sits beside a label without
 raising its line much. Both tokens, and `$tip-width`, are shared with
 Combobox's marks and the user list's (MB.115).
 

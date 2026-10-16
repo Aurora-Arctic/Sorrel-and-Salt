@@ -169,6 +169,7 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
     description: node.description,
     colorDark: node.colorDark,
     colorLight: node.colorLight,
+    icon: node.icon,
     editHref: groupsHref(kind, here, { edit: node.slug }),
     editHeading: editHeading(kind, node.name),
   }));
@@ -202,6 +203,7 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
                   // A form group's and a tradition's are `''`: they have none.
                   colorDark: edited.group.colorDark ?? '',
                   colorLight: edited.group.colorLight ?? '',
+                  icon: edited.group.icon ?? '',
                 },
                 memberCount: edited.memberCount,
               }

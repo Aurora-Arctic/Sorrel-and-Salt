@@ -230,6 +230,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   placeholder,
   required,
   qualifier,
+  typedIcon,
+  icon,
   listAnchor,
   inputRef,
   name,
@@ -349,7 +351,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       target.classList.contains('combobox__values') ||
       target.classList.contains('combobox__indicators') ||
       target.classList.contains('combobox__leading') ||
-      target.closest('.combobox__qualifier')
+      target.closest('.combobox__qualifier') ||
+      target.closest('.combobox__lead')
     ) {
       event.preventDefault();
       event.currentTarget.querySelector<HTMLInputElement>('.combobox__input')?.focus();
@@ -385,10 +388,26 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         {...getItemProps({ item, index: at })}
       >
         {isCreate(item) && item.value}
-        {isTyped(item) && `Use what you typed: ${item.value}`}
+        {isTyped(item) && (
+          <span className="combobox__label">
+            {typedIcon && (
+              <span className="combobox__icon" aria-hidden="true">
+                {typedIcon}
+              </span>
+            )}
+            {`Use what you typed: ${item.value}`}
+          </span>
+        )}
         {!isCreate(item) && !isTyped(item) && (
           <>
-            <span className="combobox__label">{item.label ?? item.value}</span>
+            <span className="combobox__label">
+              {item.icon && (
+                <span className="combobox__icon" aria-hidden="true">
+                  {item.icon}
+                </span>
+              )}
+              {item.label ?? item.value}
+            </span>
             {item.note && <div className="combobox__note">{item.note}</div>}
           </>
         )}
@@ -417,6 +436,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         {leading && <div className="combobox__leading">{leading}</div>}
         <div className="combobox__values">
           {entries}
+          {/* The chosen choice's mark, ahead of the text as a row's is ahead
+              of its label; a press on it is a press on the text. */}
+          {icon && (
+            <span className="combobox__icon combobox__lead" aria-hidden="true">
+              {icon}
+            </span>
+          )}
           {/* The text's slot. With a qualifier it is as wide as the text,
               sized by a hidden copy of it, so the qualifier reads straight
               after: "Wax (Animal)". Always in the page, so that a pick

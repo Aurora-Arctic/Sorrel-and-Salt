@@ -829,6 +829,7 @@ describe('IngredientForm', () => {
           value: 'Wax',
           description: null,
           group: 'Substance',
+          icon: null,
           curated: true,
           claimants: [],
         },
