@@ -106,3 +106,17 @@ export interface ReferenceNode {
   isGlobal: boolean;
   audit: { createdBy: string; updatedBy: string };
 }
+
+/** One `InventoryItem` as stock.test.ts selects it (M9.4). */
+export interface InventoryItemNode {
+  id: string;
+  quantityOnHand: number | null;
+  unit: string | null;
+  unitDimension: string | null;
+  lowStockThreshold: number | null;
+  source: string | null;
+  acquiredDate: string | null;
+  ingredient: { id: string; name: string; stock: { id: string; quantityOnHand: number | null }[] };
+  variant: { id: string; form: string };
+  audit: { createdBy: string; updatedBy: string };
+}

@@ -1,0 +1,275 @@
+import { beforeEach, describe, expect, it } from 'vitest';
+import type postgres from 'postgres';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
+import type { Session } from '@/lib/session';
+import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { useTestDatabase } from '../../../support/db/database';
+import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertStock } from '../../../support/db/insert-stock';
+import { variantIdOf } from '../../../support/db/read-variants';
+import { makeIngredient, makeVariant } from '../../../support/fixtures';
+import { run } from '../../../support/graphql/run';
+import type { InventoryItemNode } from './types';
+
+// Story 14 over the wire (M9.4): the three mutations a coven's jars are
+// written through, `InventoryItem` as they answer it, and `Ingredient.stock`.
+// This file holds the transport's half (claude-docs/testing/layer-ownership.md):
+// the answer as a fresh read gives it, the stock loader cleared between two
+// writes in one request, and one refusal per error code per field, read as the
+// browser reads it. Which roles are refused at which jars is
+// services/stock.test.ts's, and every Zod rule validation/stock.test.ts's.
+
+let sql: postgres.Sql;
+useTestDatabase((client) => {
+  sql = client;
+});
+
+/** A compendium entry with two forms, and the form ids. */
+let entry: string;
+let herb: string;
+let oil: string;
+
+beforeEach(async () => {
+  await sql`truncate ingredients cascade`;
+  entry = await insertIngredient(
+    sql,
+    makeIngredient({ variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })] }),
+    E.id,
+  );
+  herb = await variantIdOf(sql, entry, 'Herb');
+  oil = await variantIdOf(sql, entry, 'Oil');
+});
+
+const ITEM = `
+  id quantityOnHand unit unitDimension lowStockThreshold source acquiredDate
+  ingredient { id name stock(workspaceId: "${WORKSPACE_W_ID}") { id quantityOnHand } }
+  variant { id form }
+  audit { createdBy updatedBy }
+`;
+
+const ADD = `mutation ($workspaceId: ID!, $variantId: ID!, $input: StockInput!) {
+  addIngredientToWorkspace(workspaceId: $workspaceId, variantId: $variantId, input: $input) { ${ITEM} }
+}`;
+
+const UPDATE = `mutation ($workspaceId: ID!, $id: ID!, $input: StockInput!) {
+  updateStock(workspaceId: $workspaceId, id: $id, input: $input) { ${ITEM} }
+}`;
+
+const DELETE = `mutation ($workspaceId: ID!, $id: ID!) {
+  deleteStock(workspaceId: $workspaceId, id: $id)
+}`;
+
+const STOCK = `query ($id: ID!, $workspaceId: ID!) {
+  ingredient(id: $id) { stock(workspaceId: $workspaceId) { id variant { form } } }
+}`;
+
+const add = (session: Session, variantId: string, input: Record<string, unknown> = {}) =>
+  run<{ addIngredientToWorkspace: InventoryItemNode }>(session, ADD, {
+    workspaceId: WORKSPACE_W_ID,
+    variantId,
+    input,
+  });
+
+const update = (session: Session, id: string, input: Record<string, unknown>) =>
+  run<{ updateStock: InventoryItemNode }>(session, UPDATE, {
+    workspaceId: WORKSPACE_W_ID,
+    id,
+    input,
+  });
+
+const remove = (session: Session, id: string) =>
+  run<{ deleteStock: string }>(session, DELETE, { workspaceId: WORKSPACE_W_ID, id });
+
+/** A raw jar of the herb in W, 5 g. */
+const seedJar = () =>
+  insertStock(
+    sql,
+    {
+      workspaceId: WORKSPACE_W_ID,
+      ingredientId: entry,
+      variantId: herb,
+      quantityOnHand: '5',
+      unit: 'g',
+      lowStockThreshold: '10',
+    },
+    A.id,
+  );
+
+/** How many live jars W holds. */
+async function liveJars(): Promise<number> {
+  const [row] = await sql`
+    select count(*)::int as count from inventory_items
+    where workspace_id = ${WORKSPACE_W_ID} and deleted_at is null`;
+  return row.count as number;
+}
+
+describe('addIngredientToWorkspace', () => {
+  it('answers the jar as a fresh read would, its ingredient and form included', async () => {
+    const result = await add(asUser(B), oil, {
+      quantityOnHand: 30,
+      unit: 'ml',
+      source: 'Fixture Apothecary',
+      acquiredDate: '2026-10-01',
+    });
+
+    expect(result.errors).toBeUndefined();
+    const item = result.data?.addIngredientToWorkspace;
+    expect(item).toMatchObject({
+      quantityOnHand: 30,
+      unit: 'ml',
+      unitDimension: 'volume',
+      lowStockThreshold: 15,
+      source: 'Fixture Apothecary',
+      acquiredDate: '2026-10-01',
+      ingredient: { id: entry },
+      variant: { id: oil, form: 'Oil' },
+      audit: { createdBy: B.id, updatedBy: B.id },
+    });
+    expect(item?.ingredient.stock).toEqual([{ id: item?.id, quantityOnHand: 30 }]);
+  });
+
+  it('refuses a form the coven holds as VALIDATION beside variantId, writing nothing', async () => {
+    await seedJar();
+
+    const result = await add(asUser(B), herb, { quantityOnHand: 10, unit: 'g' });
+
+    expect(result.data).toBeNull();
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['variantId'] }],
+    });
+    expect(await liveJars()).toBe(1);
+  });
+
+  it('refuses a negative quantity as VALIDATION on the field, writing nothing', async () => {
+    const result = await add(asUser(B), herb, { quantityOnHand: -1, unit: 'g' });
+
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['quantityOnHand'] }],
+    });
+    expect(await liveJars()).toBe(0);
+  });
+
+  it('is NOT_FOUND for an entry with no form, whose id names no form to stock', async () => {
+    const formless = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Formlesswort', nomenclature: 'none', variants: [] }),
+      E.id,
+    );
+
+    const result = await add(asUser(B), formless);
+
+    expect(result.errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    expect(await liveJars()).toBe(0);
+  });
+
+  it('is FORBIDDEN to a viewer, who reads the coven, writing nothing', async () => {
+    const result = await add(asUser(C), herb);
+
+    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect(await liveJars()).toBe(0);
+  });
+});
+
+describe('updateStock', () => {
+  it('answers the changed jar, keeping a field the input leaves out', async () => {
+    const id = await seedJar();
+
+    const result = await update(asUser(B), id, { quantityOnHand: 2.5, source: null });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.updateStock).toMatchObject({
+      id,
+      quantityOnHand: 2.5,
+      unit: 'g',
+      lowStockThreshold: 10,
+      source: null,
+      variant: { id: herb },
+      audit: { createdBy: A.id, updatedBy: B.id },
+    });
+  });
+
+  it('answers its own stock when one request updates the jar twice', async () => {
+    const id = await seedJar();
+
+    const result = await run<{ first: InventoryItemNode; second: InventoryItemNode }>(
+      asUser(B),
+      `mutation ($workspaceId: ID!, $id: ID!) {
+        first: updateStock(workspaceId: $workspaceId, id: $id, input: { quantityOnHand: 1 }) { ${ITEM} }
+        second: updateStock(workspaceId: $workspaceId, id: $id, input: { quantityOnHand: 2 }) { ${ITEM} }
+      }`,
+      { workspaceId: WORKSPACE_W_ID, id },
+    );
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.first.ingredient.stock).toEqual([{ id, quantityOnHand: 1 }]);
+    expect(result.data?.second.ingredient.stock).toEqual([{ id, quantityOnHand: 2 }]);
+  });
+
+  it('refuses a negative threshold as VALIDATION on the field, changing nothing', async () => {
+    const id = await seedJar();
+
+    const result = await update(asUser(B), id, { lowStockThreshold: -3 });
+
+    expect(result.errors?.[0]?.extensions).toMatchObject({
+      code: 'VALIDATION',
+      fieldErrors: [{ path: ['lowStockThreshold'] }],
+    });
+    const [row] = await sql`select low_stock_threshold from inventory_items where id = ${id}`;
+    expect(Number(row.low_stock_threshold)).toBe(10);
+  });
+
+  it('is FORBIDDEN to a viewer, and NOT_FOUND for an id that is not an id', async () => {
+    const id = await seedJar();
+
+    expect((await update(asUser(C), id, { quantityOnHand: 1 })).errors?.[0]?.extensions?.code).toBe(
+      'FORBIDDEN',
+    );
+    expect(
+      (await update(asUser(B), 'not-an-id', { quantityOnHand: 1 })).errors?.[0]?.extensions?.code,
+    ).toBe('NOT_FOUND');
+  });
+});
+
+describe('deleteStock', () => {
+  it('answers the deleted id, and the jar leaves its ingredient’s stock', async () => {
+    const id = await seedJar();
+
+    const result = await remove(asUser(B), id);
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.deleteStock).toBe(id);
+    const after = await run<{ ingredient: { stock: unknown[] } }>(asUser(B), STOCK, {
+      id: entry,
+      workspaceId: WORKSPACE_W_ID,
+    });
+    expect(after.data?.ingredient.stock).toEqual([]);
+  });
+
+  it('is FORBIDDEN to a viewer, and NOT_FOUND for an id that is not an id', async () => {
+    const id = await seedJar();
+
+    expect((await remove(asUser(C), id)).errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+    expect((await remove(asUser(B), 'not-an-id')).errors?.[0]?.extensions?.code).toBe('NOT_FOUND');
+    expect(await liveJars()).toBe(1);
+  });
+});
+
+describe('Ingredient.stock', () => {
+  it('is FORBIDDEN naming a coven the caller is not in, at the field', async () => {
+    const id = await seedJar();
+    const asked = { id: entry, workspaceId: WORKSPACE_W_ID };
+    // Why it could have answered: the jar is there, and B reads it.
+    const asB = await run<{ ingredient: { stock: { id: string }[] } }>(asUser(B), STOCK, asked);
+    expect(asB.data?.ingredient.stock).toEqual([{ id, variant: { form: 'Herb' } }]);
+
+    const asD = await run(asUser(D), STOCK, asked);
+
+    expect(asD.data).toBeNull();
+    expect(asD.errors?.[0]).toMatchObject({
+      path: ['ingredient', 'stock'],
+      extensions: { code: 'FORBIDDEN' },
+    });
+  });
+});

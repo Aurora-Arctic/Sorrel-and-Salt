@@ -725,6 +725,65 @@ loaders cleared between two updates in one request; and per mutation one
 `VALIDATION`, one `FORBIDDEN` (a viewer, who reads the row) and, for the update
 and the delete, one `NOT_FOUND`.
 
+### `workspaceIngredients`
+
+Story 14's list (M9.4), registered by `ingredients` in
+`graphql/workspace-ingredient-list.ts` over `listWorkspaceIngredients`
+([`db/stock.md`](../db/stock.md), "The workspace ingredient list"): a coven's
+own entries and the compendium entries it holds a jar of, a page at a time,
+as a `t.pagedConnection` of `Ingredient`. It takes the coven as `workspaceId`,
+and `query`, `categoryIds` and `form`, which filter as `compendium`'s do. A
+coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
+may read it. An entry's jars are its `stock` field, below, so a page reads its
+stock in one batch whatever its length.
+
+`tests/modules/ingredients/graphql/workspace-ingredient-list.test.ts` holds the
+transport's half: the page and its cursor, the arguments reaching the read,
+one read each for a page's stock, its categories and its jars' forms, and the
+one refusal. Which rows the list holds is the service test's.
+
+### Stock: `InventoryItem`, `Ingredient.stock` and the three stock writes
+
+Story 14's jars (M9.4), registered by `ingredients` in `graphql/stock.ts` over
+the stock service ([`db/stock.md`](../db/stock.md), "The stock service").
+
+- **`InventoryItem`** is one jar: one form of one ingredient in one coven. Its
+  `ingredient` loads through `ingredientsById`, keyed by the jar's coven, and
+  its `variant` is the form it names, found in `variantsByIngredient`'s
+  answer, so a page of jars costs one read for each. `quantityOnHand` and
+  `lowStockThreshold` are `Float`: Postgres returns `numeric` as text, and the
+  field turns it into a number. `unit` is the `InventoryUnit` enum and
+  `unitDimension` the `UnitDimension` enum, both built from
+  `src/modules/ingredients/schema/units.ts`, so the schema cannot drift from
+  the one module that owns the units. `acquiredDate` is a `LocalDate`.
+- **`Ingredient.stock(workspaceId)`** is the coven's live jars of the entry, one
+  per form it holds, empty when it holds none. It reads through the
+  `stockByIngredient` loader ([`loaders.md`](loaders.md)), so a page of entries
+  makes one read per coven named. A coven the caller is not in refuses at the
+  field, `FORBIDDEN` with the field's path.
+- **`StockInput`** has every field optional and no `unitDimension`, which the
+  service derives from the unit. On `updateStock` a field left out keeps its
+  value and `null` clears it. The form is the add's own `variantId` argument,
+  never an input field, so a jar cannot be moved to another form.
+- **`addIngredientToWorkspace(workspaceId, variantId, input)`** starts a jar of
+  one form. A form the coven already holds is `VALIDATION` beside `variantId`,
+  and an id naming no form the coven may read, such as an entry with no forms,
+  is `NOT_FOUND`. Picking the one form of a single-form entry without asking
+  is the page's job (M9.6); the API always takes a form.
+- **`updateStock(workspaceId, id, input)`** answers the changed jar, and
+  **`deleteStock(workspaceId, id)`** soft-deletes it and answers its id.
+
+All three writes carry the `signedIn` scope, and the service asks the proof for
+`inventory: update`, which viewers do not hold. The add and the update clear
+the changed jar's `stockByIngredient` key, so a second write in one request
+answers its own stock; the delete answers no row to key by, so it clears the
+loader whole.
+
+`tests/modules/ingredients/graphql/stock.test.ts` holds the transport's half:
+each answer equal to a fresh read, the loader cleared between two updates in
+one request, and per field one refusal per error code it can answer. Which
+roles are refused at which jars is `services/stock.test.ts`'s.
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in
