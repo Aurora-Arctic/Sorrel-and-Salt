@@ -11,7 +11,8 @@ import type { PrivilegeChangeRow } from '../types';
 import { UserRef } from './user';
 
 const UserPrivilegeEnum = builder.enumType('UserPrivilege', {
-  description: 'A privilege on `users`: `admin` is the site role, `create_workspace` the flag.',
+  description:
+    'A privilege on `users`: `admin` and `curator` are site roles, `create_workspace` the flag.',
   values: userPrivilege.enumValues,
 });
 

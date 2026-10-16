@@ -196,6 +196,28 @@ describe('acceptInvitation, on the site tier', () => {
     expect(await roleOf(GRANTEE)).toMatchObject({ role: 'user' });
   });
 
+  // M11.20: an admin invitation sent to a curator's address makes them an
+  // admin, a revoke of curator and a grant of admin at one instant.
+  it('makes a curator an admin, recorded as a curator revoke and an admin grant via the invitation', async () => {
+    await asManualFix(sql, async (tx) => {
+      await tx`update users set role = 'curator', can_create_workspace = true where id = ${GRANTEE}`;
+    });
+    await sql`truncate user_privilege_changes`;
+    await invite();
+
+    await acceptInvitation(asUser({ id: GRANTEE, role: 'curator' }), TOKEN);
+
+    expect(await roleOf(GRANTEE)).toMatchObject({ role: 'admin', can_create_workspace: true });
+    const rows = await ledger();
+    expect(
+      rows.map(({ privilege, change, via, note }) => ({ privilege, change, via, note })),
+    ).toEqual([
+      { privilege: 'admin', change: 'grant', via: 'invitation', note: 'Curates the resins' },
+      { privilege: 'curator', change: 'revoke', via: 'invitation', note: 'Curates the resins' },
+    ]);
+    expect(rows[0]?.created_at).toEqual(rows[1]?.created_at);
+  });
+
   it('stamps the invitation for an account already an admin, granting and recording nothing', async () => {
     await invite({ email: PRIMARY_EMAIL });
 

@@ -6,7 +6,7 @@ import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { countUsers, listUsers, providersOf } from '@/modules/identity';
 import type { UserFilter } from '@/modules/identity';
 import type { PageRequest } from '@/lib/types';
-import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { A, B, C, D, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix } from '../../../support/db/privileges';
 import type { ListedUserRow } from './types';
@@ -162,22 +162,22 @@ describe('listUsers', () => {
     const live = await sql<{ id: string; role: string }[]>`
       select id, role::text from users where deleted_at is null and id <> ${BOOTSTRAP_USER_ID}
     `;
-    const admins = live.filter((row) => row.role === 'admin').map((row) => row.id);
-    // Both roles are live, or a filter narrowing nothing would pass.
-    expect(admins).toContain(E.id);
-    expect(admins.length).toBeLessThan(live.length);
+    const of = (role: string) => live.filter((row) => row.role === role).map((row) => row.id);
+    // Every role is live, or a filter narrowing nothing would pass.
+    expect(of('admin')).toContain(E.id);
+    expect(of('curator')).toContain(F.id);
+    expect(of('user').length).toBeGreaterThan(0);
 
-    const onlyAdmins = await listUsers(asUser(E), { role: 'admin' }, PAGE);
-    const onlyUsers = await listUsers(asUser(E), { role: 'user' }, PAGE);
-
-    expect(onlyAdmins.map((entry) => entry.node.id).sort()).toEqual([...admins].sort());
-    expect(onlyUsers).toHaveLength(live.length - admins.length);
-    expect(onlyUsers.every((entry) => entry.node.role === 'user')).toBe(true);
+    for (const role of ['user', 'curator', 'admin'] as const) {
+      const listed = await listUsers(asUser(E), { role }, PAGE);
+      expect(listed.map((entry) => entry.node.id).sort()).toEqual(of(role).sort());
+    }
     expect(await names({ role: 'user', awaitingApproval: true, query: 'pending' })).toEqual([
       'Pending Fixturewort',
     ]);
-    // Every admin holds the flag (MB.177), so none awaits approval.
+    // Every admin and curator holds the flag (MB.177, M11.20), so none awaits approval.
     expect(await names({ role: 'admin', awaitingApproval: true })).toEqual([]);
+    expect(await names({ role: 'curator', awaitingApproval: true })).toEqual([]);
   });
 
   // Why it could have succeeded: the rows exist and the same call answers E.

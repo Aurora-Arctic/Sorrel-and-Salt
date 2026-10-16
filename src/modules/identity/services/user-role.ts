@@ -11,15 +11,22 @@ import { isPrimaryAdmin } from './primary-admin';
 import type { SiteAdmin } from './site-admin';
 import type { UserRow } from '../types';
 
-// MB.59: an admin makes a user an admin, or stops one being one, from
-// `/admin/users`. Each change is declared `via: 'admin'` and the trigger on
-// `users` records it in the privilege ledger (MB.195); the service writes no
-// ledger row. Why each rule is what it is:
+// MB.59, M11.20: an admin sets a user's site role, `user`, `curator` or
+// `admin`, from `/admin/users`. Each change is declared `via: 'admin'` and
+// the trigger on `users` records it in the privilege ledger (MB.195); the
+// service writes no ledger row. Why each rule is what it is:
 // claude-docs/design-decisions/m2.9-granting-admin.md, "The primary admin",
-// "Granting" and "Revoking"; the shape is claude-docs/auth/admin-users.md,
-// "Granting and revoking admin".
+// "Granting" and "Revoking", and m11.20-curator-role.md; the shape is
+// claude-docs/auth/admin-users.md, "Changing a site role".
 
-const REFUSAL = 'Only a site admin may change who is an admin';
+const REFUSAL = 'Only a site admin may change a site role';
+
+/** The role's name in a refusal: "already a curator". */
+const ROLE_NOUNS: Record<UserRole, string> = {
+  user: 'a user',
+  curator: 'a curator',
+  admin: 'an admin',
+};
 
 /**
  * The grant every route to admin but the bootstrap shares, inside the
@@ -32,10 +39,18 @@ export function writeAdminGrant(write: AuditWriter, userId: string): Promise<Use
 }
 
 /**
- * The role write an admin's grant and revoke share, inside the caller's
- * transaction: a grant is `writeAdminGrant`, and a revoke leaves the flag,
- * the grant having been a vouching too. A revoke first locks the live admins and counts
- * them, so two revokes at once cannot leave none.
+ * The curator grant, inside the caller's transaction: the creation flag too,
+ * since the users CHECK holds a curator to it as it holds an admin (M11.20).
+ */
+function writeCuratorGrant(write: AuditWriter, userId: string): Promise<UserRow[]> {
+  return write.updateById(users, userId, { role: 'curator', canCreateWorkspace: true });
+}
+
+/**
+ * The role write, inside the caller's transaction. Leaving `admin`, for
+ * `curator` or `user`, is a revoke of admin: it first locks the live admins
+ * and counts them, so two revokes at once cannot leave none. Moving to
+ * `user` leaves the flag, the grant having been a vouching too.
  */
 async function writeRole(
   write: AuditWriter,
@@ -43,7 +58,7 @@ async function writeRole(
   user: UserRow,
   role: UserRole,
 ): Promise<UserRow> {
-  if (role === 'user') {
+  if (user.role === 'admin') {
     const admins = await write.lockLiveAdmins(admin);
     // Read again under the lock: a revoke that committed while this one
     // waited has already taken its row out.
@@ -59,7 +74,9 @@ async function writeRole(
   const [written] =
     role === 'admin'
       ? await writeAdminGrant(write, user.id)
-      : await write.updateById(users, user.id, { role });
+      : role === 'curator'
+        ? await writeCuratorGrant(write, user.id)
+        : await write.updateById(users, user.id, { role });
   // Soft-deleted between the read and the write: the update matches no row,
   // so the trigger never fires and nothing is recorded.
   if (!written) throw new NotFound('No such user');
@@ -67,15 +84,16 @@ async function writeRole(
 }
 
 /**
- * Makes a live user an admin, or stops an admin being one, stamped as the
- * acting admin and recorded by the trigger with `note`, the confirmation's
- * optional reason, a blank one as none. Answers the row as written.
+ * Gives a live user a site role, stamped as the acting admin and recorded by
+ * the trigger with `note`, the confirmation's optional reason, a blank one as
+ * none. Answers the row as written.
  *
- * @throws {Forbidden} the session's role is not `admin`; the user already
- * holds the role asked for, since the change would record nothing; the
- * revoke's target is the primary admin, for every caller, the primary admin
- * included; the revoke would leave no live admin; or the primary admin has
- * paused admin changes and the caller is another admin (MB.63).
+ * @throws {Forbidden} the session's role is not `admin`, a curator's
+ * included; the user already holds the role asked for, since the change
+ * would record nothing; the user is the primary admin and the role is not
+ * `admin`, for every caller, the primary admin included; the change would
+ * leave no live admin; or the primary admin has paused admin changes and the
+ * caller is another admin (MB.63).
  * @throws {NotFound} no live user has this id.
  */
 export async function setUserRole(
@@ -86,11 +104,6 @@ export async function setUserRole(
 ): Promise<UserRow> {
   const admin = await assertAdminChangesOpen(session, REFUSAL);
   const user = await liveUser(userId);
-  if (role === 'admin' && user.role === 'admin') {
-    throw new Forbidden(`${user.name} is already an admin`);
-  }
-  if (role === 'user' && user.role !== 'admin') {
-    throw new Forbidden(`${user.name} is not an admin, so there is nothing to revoke`);
-  }
+  if (user.role === role) throw new Forbidden(`${user.name} is already ${ROLE_NOUNS[role]}`);
   return withAudit(session, (write) => writeRole(write, admin, user, role), adminDeclaration(note));
 }

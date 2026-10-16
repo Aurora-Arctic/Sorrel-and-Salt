@@ -194,6 +194,7 @@ export type SubstituteInput = {
 
 export type UserRole =
   | 'admin'
+  | 'curator'
   | 'user';
 
 export type WorkspaceRole =

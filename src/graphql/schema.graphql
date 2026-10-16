@@ -583,7 +583,7 @@ type Mutation {
   setName(name: String!): User!
 
   """
-  Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.
+  Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.
   """
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
@@ -1169,15 +1169,17 @@ type User {
 }
 
 """
-A privilege on `users`: `admin` is the site role, `create_workspace` the flag.
+A privilege on `users`: `admin` and `curator` are site roles, `create_workspace` the flag.
 """
 enum UserPrivilege {
   admin
   create_workspace
+  curator
 }
 
 enum UserRole {
   admin
+  curator
   user
 }
 
