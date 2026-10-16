@@ -2,12 +2,11 @@
 
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { type MouseEvent, type ReactElement, useId, useMemo, useRef, useState } from 'react';
+import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
 import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
-import { opensElsewhere } from '../../lib/opens-elsewhere';
 import Combobox from '../Combobox';
 import { MagnifierIcon } from '../Field/icons';
 import { fieldDescription } from '../Field/description';
@@ -20,7 +19,7 @@ import './index.scss';
 // The search row's first control (M8.10): a type-ahead over the compendium's
 // ranked search, with the magnifier at the start of its box as the form's one submit. The
 // debounced text asks `compendium(query:, first: 25)` for the dropdown; the
-// list itself changes only on Enter, the clear, a pick or See All Results
+// list itself changes only on Enter, the clear, a pick or the last row
 // (claude-docs/components/ingredient-search.md).
 
 const IngredientSearchMatchesDocument = graphql(`
@@ -108,12 +107,6 @@ const IngredientSearchBox = ({
     else router.push(href);
   }
 
-  function seeAll(event: MouseEvent<HTMLAnchorElement>) {
-    if (opensElsewhere(event)) return;
-    event.preventDefault();
-    apply(seeAllHref);
-  }
-
   return (
     <FieldShell label="Name" {...field}>
       <Combobox<IngredientSearchOption>
@@ -133,12 +126,10 @@ const IngredientSearchBox = ({
           pending: !belowFloor && (text.trim() !== query || isFetching),
         }}
         empty={belowFloor ? 'Keep typing to search' : searchesNow ? 'No Matches' : undefined}
-        footer={
-          hasMore ? (
-            <a href={seeAllHref} onClick={seeAll}>
-              See All Results
-            </a>
-          ) : undefined
+        // The last row of the listbox, reached by the arrows like a result and
+        // set in italics so it reads as the message it is, not a match.
+        action={
+          hasMore ? { label: 'See all results.', onSelect: () => apply(seeAllHref) } : undefined
         }
         offerTyped={false}
         noun="result"

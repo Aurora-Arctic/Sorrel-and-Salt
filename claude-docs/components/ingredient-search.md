@@ -44,7 +44,7 @@ in the filter slot to carry.
   and passes it as `search`, so the list frame stays a server component.
 - **The box asks; the list does not.** The text is debounced
   ([`DEBOUNCE_MS`](../../src/lib/debounce.ts)) and feeds the dropdown only.
-  The list changes on Enter, the clear, a pick or See All Results, and on nothing else.
+  The list changes on Enter, the clear, a pick or the last row, and on nothing else.
 - **A pick leaves the list as it was** and the typed text stays in the box.
 - **The clear (x) empties the box and applies the empty search** (the
   owner's call, reversing "empties the box only"): the list reloads with no
@@ -66,10 +66,13 @@ in the filter slot to carry.
   and announced by the status region, so one character is not met by silence
   (the owner, 2026-10-16). It is a message rather than a label, so sentence case.
 - **The dropdown shows at most 25 rows, the first page, in the server's
-  order.** It never asks for a second. When there is another page, See All
-  Results sits beneath the rows and applies the debounced text to the list;
-  when nothing matches, "No Matches" sits in the dropdown. Both are the
-  combobox's `empty` and `footer` ([`combobox.md`](combobox.md)).
+  order.** It never asks for a second. When there is another page, a last row, See all results., ends the
+  listbox and applies the debounced text to the list. It is selectable like
+  any result (arrow keys, then Enter or a click), set in italics, and
+  sentence case with a full stop because it is a message, not a label (the
+  owner, 2026-10-16); it is not counted in the status. When nothing matches,
+  "No Matches" sits in the dropdown. They are the combobox's `action` and
+  `empty` ([`combobox.md`](combobox.md)).
 - **A pick opens the match.** With `pickHeading`, through the route modal
   opener, so the modal shows its heading at once while its page loads, as the
   list's own edit links do. Without it, a plain `router.push`. Neither goes
@@ -86,13 +89,13 @@ by Combobox inside the box, at its start, and the action sits right-aligned bene
 ## Stories
 
 [`index.stories.tsx`](../../src/components/IngredientSearch/index.stories.tsx),
-under `Lists / Ingredient Search`: `FewMatches`, `ManyMatches` (See All
-Results) and `NoMatches`. Each stubs `window.fetch` for `/api/graphql`.
+under `Lists / Ingredient Search`: `FewMatches`, `ManyMatches` (See all
+results.) and `NoMatches`. Each stubs `window.fetch` for `/api/graphql`.
 
 ## Testing
 
 `tests/components/IngredientSearch/index.test.tsx` asserts the requests the box
 makes (once after the debounce, never before focus or under the floor, first 25
-and no cursor), the footer and empty message, that a pick opens the match
+and no cursor), the action row and empty message, that a pick opens the match
 without applying the text, that the clear empties the box and applies the empty search, and that Enter
 applies the trimmed text.

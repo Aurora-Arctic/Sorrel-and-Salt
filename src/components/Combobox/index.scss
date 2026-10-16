@@ -267,15 +267,18 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// With an empty message or a footer the popup is the placed, bordered panel
-// and scrolls as one; the listbox inside it is a plain list, with no panel of
-// its own. Without either, the list above is the panel, as it always was.
+// With an empty message the popup is the placed, bordered panel; the
+// listbox inside it is a plain list with no panel of its own. Without one,
+// the list above is the panel, as it always was. The popup does not scroll:
+// Downshift scrolls the highlighted row into view within the listbox
+// element, so a scroller outside it (the popup) is never moved and an
+// arrowed-to row stays hidden. The listbox is the scroller, as above, and
+// reads `--combobox-list-room`, which the placement sets on the popup and
+// the listbox inherits.
 .combobox__popup {
   z-index: 1;
   display: none;
   box-sizing: border-box;
-  max-height: min(20rem, var(--combobox-list-room, 20rem));
-  overflow: hidden auto;
 
   @include floating-panel;
 
@@ -286,8 +289,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
 .combobox__list.is-inset {
   display: block;
-  max-height: none;
-  overflow: visible;
   border: 0;
   box-shadow: none;
 }
@@ -296,17 +297,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   display: none;
 }
 
-// The message and the footer sit in the popup's surface, set in by a row's
-// padding; the design review styles them.
-.combobox__empty,
-.combobox__footer {
+// The message sits in the popup's surface, set in by a row's padding; the
+// design review styles it.
+.combobox__empty {
   padding: space(2) space(3);
-}
-
-// A step more beneath the footer than above it, so its link does not sit on
-// the panel edge (the owner, 2026-10-16).
-.combobox__footer {
-  padding-bottom: space(3);
 }
 
 // A bucket and its rows: no typography-base ◆, no list margins.

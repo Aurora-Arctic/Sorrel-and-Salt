@@ -71,28 +71,6 @@ const NAMES: ComboboxOption[] = [
   { value: 'Fixture Bane', note: 'Used by Mockleaf, Fixturewort' },
 ];
 
-/** Rows with a footer beneath them in the same popup: a link that is no row of the list. */
-export const WithFooter: Story = () => {
-  const [value, setValue] = useState('fix');
-  usePressOnMount('Show Name suggestions');
-  return (
-    <Labelled label="Name">
-      {(ids) => (
-        <Combobox
-          {...ids}
-          label="Name"
-          value={value}
-          onChange={setValue}
-          onPick={setValue}
-          offerTyped={false}
-          suggestions={{ options: NAMES, pending: false }}
-          footer={<a href="#all-results">See All Results</a>}
-        />
-      )}
-    </Labelled>
-  );
-};
-
 /** A lookup that settled with no rows: the popup opens and says so, outside the list. */
 export const EmptyMessage: Story = () => {
   const [value, setValue] = useState('zzz');
@@ -305,7 +283,7 @@ export const CreateRow: Story = () => {
             onChange={setValue}
             onPick={setValue}
             suggestions={{ options: NAMES, pending: false }}
-            create={{ label: 'New Reference…', onCreate: () => setMade((count) => count + 1) }}
+            action={{ label: 'New Reference…', onSelect: () => setMade((count) => count + 1) }}
             placeholder="Search references"
           />
           {made > 0 && <output className="story-note">New Reference… picked {made}×.</output>}

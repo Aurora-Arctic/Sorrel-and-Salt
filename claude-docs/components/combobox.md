@@ -40,14 +40,13 @@ movable, on dnd-kit.
 | `leading`          | A caller's own control drawn inside the control box before the text and any entries: a form's submit, say. A slot rather than a built-in, as Combobox knows nothing about forms.                                                                                                               |
 | `toggle`           | Whether a box with `suggestions` draws its chevron button; `true` unless said. Leave it out (`false`) for a free-text search that opens as you type.                                                                                                                                           |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
-| `create`           | `{ label, onCreate }`: a last row that makes something new, "New Reference…", with no typed row, there with a blank box too. See "The create row".                                                                                                                                             |
+| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference…" makes something new (no typed row, there with a blank box too), "See all results." applies a search to its list. See "The action row".                                    |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                     |
 | `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                             |
 | `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                      |
 | `required`         | `aria-required`, as the field marks it.                                                                                                                                                                                                                                                        |
 | `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Enter with nothing highlighted still reaches `onCommit`.                                                                                                              |
-| `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank, "No Matches". Outside the listbox, and read by the status. See "The empty message and the footer".                                                                                           |
-| `footer`           | Optional: an area drawn beneath the listbox in the same popup while it is open, a "See All Results" link. Never a row of the listbox. See "The empty message and the footer".                                                                                                                  |
+| `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank, "No Matches". Outside the listbox, and read by the status. See "The empty message".                                                                                                          |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                             |
 
@@ -193,46 +192,44 @@ happy-dom lays nothing out, so the tests give the viewport, the box, the anchor
 and the list the sizes Floating UI reads, as the sortable tests give the
 chips theirs.
 
-## The empty message and the footer
+## The empty message
 
-Two optional props (M8.10), for a lookup that searches rather than completes.
-A box that passes neither renders exactly what it did before.
+An optional prop (M8.10), for a lookup that searches rather than completes.
+A box that omits it renders exactly what it did before.
 
 - **`empty`** opens the popup once the lookup has settled (`pending` is
   false), the text is not blank, the person wants the list open, and there
-  are no rows at all (the typed and create rows count as rows). The message
+  are no rows at all (the typed and action rows count as rows). The message
   is drawn beneath the listbox, never in it: it is not an option, so a screen
   reader must not count it as one. The status region reads the message; a
   closed list is otherwise silent. With rows the status keeps its count and no
   message shows. Downshift has no rows to hold here, so it still reads the
   list as closed (`aria-expanded` is false).
-- **`footer`** is drawn beneath the listbox while the popup is open, with
-  rows or with the message. It is not a row: the listbox holds options only,
-  and the footer is its sibling inside the popup.
-- **One placed popup.** When either prop is passed, a `combobox__popup`
+- **One placed popup.** When `empty` is passed, a `combobox__popup`
   wrapper takes the place of the `<ul>` as the floating element (see "Where
-  the list opens"), so the listbox, message and footer move together,
+  the list opens"), so the listbox and message move together,
   beneath the box or above it. The `<ul>` keeps Downshift's `getMenuProps`,
-  so its `id` and the input's `aria-controls` still agree. Without either
-  prop the `<ul>` is placed itself.
-- **A press on the footer lands.** Downshift closes the list on a page-wide
-  mouse-up, or touch-end, outside its input, toggle and listbox
-  (`useMouseAndTouchTracker`, `targetWithinDownshift`), which would remove a
-  link before its click. The mouse path: the footer cancels the mouse-down's
-  default, so focus stays in the box, and Downshift's mouse-up check counts the
-  focused input as inside. The touch path: that check tests the target alone,
-  so the footer stops the touch-end reaching Downshift's listener.
-- **The keyboard path.** The footer is not a promised Tab stop. A keyboard user
-  applies the text with Enter in the box, and the footer link is the pointer's
-  shortcut to the same result.
-- Styling stops at the tokens: the message and footer take a row's padding
+  so its `id` and the input's `aria-controls` still agree. Without it the `<ul>` is placed itself.
+  The popup is a panel and does not scroll; the `<ul>` does, in both cases,
+  because Downshift scrolls the highlighted row into view within the menu
+  element, and a scroller outside it is never moved (the Name box on
+  `/admin/compendium` once left an arrowed-to row hidden that way).
+- Styling stops at the tokens: the message takes a row's padding
   inside the popup's surface, and the section's design review does the rest.
 
-## The create row
+## The action row
 
-A list whose entries can only be picked, the references' (MB.154), has
+`action` is a last row that does something rather than picking a suggestion.
+It has two users. "See all results." (M8.10, the owner's call 2026-10-16)
+ends the ingredient search's dropdown when there is another page, and applies
+the search to the list; it is reached by the arrow keys like a result, italic
+so it reads as a message and not a match, and sentence case with a full stop
+because it is one. It is no result, so the status does not count it.
+
+The references' box (MB.154) is the other. A list whose entries can only be
+picked has
 nothing to do with what was typed: a search is not a source. Its caller
-passes `create`, and the list's last row reads its label, "New
+passes `action`, and the list's last row reads its label, "New
 Reference…", with no typed row, and italic as that row is. Last since
 MB.115, the owner's call: the references' box lost its New Reference button
 to this row, so the sources found come first and making one is the way out
@@ -240,7 +237,7 @@ at the end, as an "Add new…" row ends a picker's list; it was the first
 row, "Add a reference", under MB.154. It is there whatever the box holds, a
 blank box included, so ArrowDown or the chevron opens the list even before
 any suggestion has arrived, on this row alone until one does, and ArrowUp
-opens it on this row. Picking it, by click or by Enter, calls `onCreate`
+opens it on this row. Picking it, by click or by Enter, calls `onSelect`
 and never `onPick`, and leaves the text as typed. The caller still passes an `onCommit`, a no-op for the
 references, so that Enter with nothing highlighted never reaches the form.
 
@@ -248,7 +245,7 @@ references, so that Enter with nothing highlighted never reaches the form.
 Downshift remembers the last row picked, and with `selectedItem` held at
 `null` the next pick read as that prop changing, so Downshift wrote the null
 item's text, `''`, into the box. A list empties its box on a pick anyway, so
-nothing showed it until the create row, picked twice, emptied a search. The
+nothing showed it until the action row, picked twice, emptied a search. The
 state reducer keeps the text on `ControlledPropUpdatedSelectedItem` as it
 does on a click or Enter.
 
@@ -724,7 +721,7 @@ chevron on mount, as a person would (`.ladle/press.ts`).
 
 ## Testing
 
-The empty message and the footer have their own block in the same file: the message shown outside the listbox with the status reading it, none while pending, blank or unset, the count kept once rows arrive, the footer beneath the listbox in the one popup with `aria-controls` still matching the list, absent while closed, and a whole mouse press and a touch on a footer link leaving the box focused and open with the click landed.
+The empty message has its own block in the same file: the message shown outside the listbox with the status reading it, none while pending, blank or unset, and the count kept once rows arrive.
 
 `tests/components/Combobox/index.test.tsx` renders the box with fixed
 suggestions and asserts: the box closed until something is typed; the rows,
@@ -733,8 +730,8 @@ headed rows grouped under their headings in first-seen order, and two
 same-named rows under different headings told apart and counted; a row's
 accessible name carrying its label and note; picking by keyboard and by
 click, and the typed row as `null`; the list opening above the box with no
-room beneath it; the create row last with no typed row, there with a
-blank box and with no suggestions, calling `onCreate` by click or keyboard
+room beneath it; the action row last with no typed row, there with a
+blank box and with no suggestions, calling `onSelect` by click or keyboard
 and never `onPick`; the typed row withheld under `offerTyped={false}`, the
 suggestions still shown, Enter still handed to `onCommit`, and the list shut
 when it would have been the only row; Enter handed to `onCommit` with the

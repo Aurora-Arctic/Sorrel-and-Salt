@@ -69,12 +69,6 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    * list with no rows stays closed.
    */
   empty?: string;
-  /**
-   * An area drawn beneath the listbox in the same popup while it is open: a
-   * "See All Results" link. Never a row of the listbox, and no Tab stop is
-   * promised; a keyboard user applies the text with Enter (claude-docs/components/combobox.md).
-   */
-  footer?: ReactNode;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
   /**
@@ -100,11 +94,15 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    */
   toggle?: boolean;
   /**
-   * A last row that makes something new rather than picking a suggestion,
-   * "New Reference…", there whatever is typed and in place of the typed row:
-   * for a list whose entries can only be picked (MB.154; last since MB.115).
+   * A last row that does something rather than picking a suggestion, there
+   * whatever is typed and in place of the typed row, set off in italics as the
+   * typed row is. Two callers use it: "New Reference…" makes something new for
+   * a list whose entries can only be picked (MB.154; last since MB.115), and
+   * "See all results." applies the search to the list (M8.10). Reached by the
+   * arrow keys and picked by Enter or a click, which call `onSelect`; it is
+   * no result, so the status does not count it.
    */
-  create?: { label: string; onCreate: () => void };
+  action?: { label: string; onSelect: () => void };
   /**
    * Whether the typed row is offered: false for text the caller would
    * refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which
@@ -261,14 +259,14 @@ export interface TypedRow {
   typed: true;
 }
 
-/** The first row of a list whose caller can make something new: its label. */
-export interface CreateRow {
+/** The last row of a list whose caller gave an `action`: its label. */
+export interface ActionRow {
   value: string;
-  create: true;
+  action: true;
 }
 
-/** A row Downshift numbers: a suggestion, the typed row, or the create row. */
-export type Item<O extends ComboboxOption> = O | TypedRow | CreateRow;
+/** A row Downshift numbers: a suggestion, the typed row, or the action row. */
+export type Item<O extends ComboboxOption> = O | TypedRow | ActionRow;
 
 /** A bucket of rows under its heading, or the one unheaded list of a source with one bucket. */
 export interface Bucket<O extends ComboboxOption> {

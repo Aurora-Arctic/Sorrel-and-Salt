@@ -1,7 +1,10 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { recreateE2eDatabase } from './database';
+import postgres from 'postgres';
+import { makeIngredient } from '../support/fixtures/ingredient';
+import { insertIngredient } from '../support/db/insert-ingredient';
+import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
 // M5.5: the admin's compendium form's presentation — IngredientForm on
@@ -325,6 +328,60 @@ test('a name typed shows matching rows, and a pick opens its modal over the list
   await expect(page).toHaveURL(/[?&]nomenclature=botanical(&|$)/);
   await expect(page).toHaveURL(/[?&]edit=cat/);
   await expect(page).not.toHaveURL(/query=/);
+});
+
+test('arrowing down the Name box keeps the highlighted row inside the dropdown', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'search-scroll-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  // Enough matches to fill the dropdown past its height, which the seed has no one query for.
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    for (let i = 1; i <= 30; i++) {
+      const name = `Scrollwort ${String(i).padStart(2, '0')}`;
+      await insertIngredient(sql, makeIngredient({ name, nomenclature: 'none' }), userId);
+    }
+  } finally {
+    await sql.end();
+  }
+  await page.goto('/admin/compendium');
+  await page.waitForLoadState('networkidle');
+
+  const name = page.getByRole('combobox', { name: 'Name' });
+  await name.fill('scrollwort');
+  const listbox = page.getByRole('listbox').filter({ has: page.getByRole('option') });
+  const options = listbox.getByRole('option');
+  await expect(options.first()).toBeVisible();
+
+  // The panel that clips the rows: the listbox, or the popup around it. Its
+  // box is what a row has to lie inside to be seen.
+  const clip = await listbox.evaluateHandle((el) => {
+    for (let n: Element | null = el; n; n = n.parentElement) {
+      if (n.scrollHeight > n.clientHeight + 1 && getComputedStyle(n).overflowY !== 'visible')
+        return n;
+    }
+    return el;
+  });
+  // Why the check below could fail: the rows fill more than the panel shows.
+  expect(await clip.evaluate((el) => el.scrollHeight > el.clientHeight + 1)).toBe(true);
+
+  // The last row starts below the fold; ArrowDown walks to it from the top.
+  const count = await options.count();
+  for (let i = 0; i < count; i++) await name.press('ArrowDown');
+
+  const active = listbox.locator('[role="option"][aria-selected="true"]');
+  await expect(active).toHaveCount(1);
+  const inside = await active.evaluate((row, panel) => {
+    const r = row.getBoundingClientRect();
+    const p = panel.getBoundingClientRect();
+    return r.top >= p.top - 1 && r.bottom <= p.bottom + 1;
+  }, clip);
+  expect(inside).toBe(true);
 });
 
 test('Enter in the Name box applies the name, keeping Classification and No Refs', async ({

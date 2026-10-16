@@ -17,7 +17,7 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // The search shell and its row (M8.10): a type-ahead over the compendium's
 // ranked search, whose dropdown follows the debounced text while the list
-// changes only on Enter, a pick or See All Results
+// changes only on Enter, a pick or the action row
 // (claude-docs/components/ingredient-search.md, "Testing").
 
 const PATH = '/compendium';
@@ -202,7 +202,8 @@ describe('IngredientSearch', () => {
     typeName('wort');
     await settle();
 
-    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(25));
+    // The 25 results, then the action row (there is another page).
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(26));
     expect(asked.every((variables) => !('after' in variables) && !('before' in variables))).toBe(
       true,
     );
@@ -213,23 +214,39 @@ describe('IngredientSearch', () => {
     expect(names[24]).toContain('Testwort 25');
   });
 
-  it('offers See All Results beneath the list only when there is another page, to the list under the text', async () => {
+  it('ends the listbox with an action row when there is another page, reached by the arrows and picked by Enter', async () => {
     offer([match(1), match(2)], true);
     renderSearch();
 
     typeName('wort');
     await settle();
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3));
 
-    const link = await screen.findByRole('link', { name: 'See All Results' });
-    expect(link).toHaveAttribute('href', searchHref('wort'));
-    expect(screen.getByRole('listbox')).not.toContainElement(link);
+    const last = screen.getAllByRole('option')[2];
+    fireEvent.keyDown(box(), { key: 'ArrowDown' });
+    fireEvent.keyDown(box(), { key: 'ArrowDown' });
+    fireEvent.keyDown(box(), { key: 'ArrowDown' });
+    expect(box()).toHaveAttribute('aria-activedescendant', last.id);
     expect(router.push).not.toHaveBeenCalled();
 
-    fireEvent.click(link);
-    expect(router.push).toHaveBeenCalledWith(searchHref('wort'));
+    fireEvent.keyDown(box(), { key: 'Enter' });
+    expect(router.push.mock.calls).toEqual([[searchHref('wort')]]);
   });
 
-  it('offers no See All Results when every match is on the first page', async () => {
+  it('applies the text to the list when the action row is clicked', async () => {
+    offer([match(1), match(2)], true);
+    renderSearch();
+
+    typeName('wort');
+    await settle();
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3));
+
+    fireEvent.click(screen.getAllByRole('option')[2]);
+
+    expect(router.push.mock.calls).toEqual([[searchHref('wort')]]);
+  });
+
+  it('has no action row when every match is on the first page, and counts only the results when it has', async () => {
     offer([match(1), match(2)], false);
     renderSearch();
 
@@ -237,7 +254,15 @@ describe('IngredientSearch', () => {
     await settle();
 
     await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
-    expect(screen.queryByRole('link', { name: 'See All Results' })).not.toBeInTheDocument();
+    await waitFor(() => expect(status()).toHaveTextContent('2'));
+
+    offer([match(1), match(2)], true);
+    typeName('worts');
+    await settle();
+
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(3));
+    expect(status()).toHaveTextContent('2');
+    expect(status()).not.toHaveTextContent('3');
   });
 
   it('counts its rows in the status, and reads the empty message when nothing matches', async () => {

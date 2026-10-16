@@ -353,11 +353,11 @@ describe('Combobox', () => {
     });
   });
 
-  describe('a create row', () => {
-    const create = (onCreate = vi.fn()) => ({ label: 'New Reference…', onCreate });
+  describe('an action row', () => {
+    const action = (onSelect = vi.fn()) => ({ label: 'New Reference…', onSelect });
 
     it('is the last row, with no typed one, there with a blank box too', () => {
-      render(<Harness suggestions={ONE_BUCKET} create={create()} />);
+      render(<Harness suggestions={ONE_BUCKET} action={action()} />);
 
       key('ArrowDown');
       expect(options()).toEqual([
@@ -372,7 +372,7 @@ describe('Combobox', () => {
     });
 
     it('opens on ArrowDown with no suggestions at all, the row being one', () => {
-      render(<Harness suggestions={{ options: [], pending: false }} create={create()} />);
+      render(<Harness suggestions={{ options: [], pending: false }} action={action()} />);
 
       key('ArrowDown');
 
@@ -381,9 +381,9 @@ describe('Combobox', () => {
     });
 
     it('calls its own callback when picked, by click or by keyboard, and never onPick', () => {
-      const onCreate = vi.fn();
+      const onSelect = vi.fn();
       const onPick = vi.fn();
-      render(<Harness suggestions={ONE_BUCKET} create={create(onCreate)} onPick={onPick} />);
+      render(<Harness suggestions={ONE_BUCKET} action={action(onSelect)} onPick={onPick} />);
 
       type('fix');
       fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
@@ -395,7 +395,7 @@ describe('Combobox', () => {
       );
       key('Enter');
 
-      expect(onCreate).toHaveBeenCalledTimes(2);
+      expect(onSelect).toHaveBeenCalledTimes(2);
       expect(onPick).not.toHaveBeenCalled();
       // The text is the caller's: picking the row leaves it as typed.
       expect(box()).toHaveValue('fix');
@@ -1390,9 +1390,9 @@ describe('Combobox', () => {
   });
 });
 
-// The empty message and the footer (M8.10): a settled lookup with no rows says
-// so, and a caller can draw an area beneath the rows. Neither is an option.
-describe('Combobox empty message and footer', () => {
+// The empty message (M8.10): a settled lookup with no rows says so, outside the
+// listbox, and it is no option.
+describe('Combobox empty message', () => {
   const NONE: Suggestions = { options: [], pending: false };
   const status = () => screen.getByRole('status', { name: 'Form suggestions' });
   const listbox = () => screen.getByRole('listbox', { hidden: true });
@@ -1437,73 +1437,6 @@ describe('Combobox empty message and footer', () => {
     expect(status()).toHaveTextContent('2 suggestions');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
     expect(screen.getAllByRole('option')).toHaveLength(2);
-  });
-
-  it('draws the footer beneath the listbox in the same popup, never as a row', () => {
-    render(
-      <Harness
-        offerTyped={false}
-        suggestions={ONE_BUCKET}
-        footer={<a href="#all">See All Results</a>}
-      />,
-    );
-
-    type('fix');
-
-    const link = screen.getByRole('link', { name: 'See All Results' });
-    expect(link).toBeVisible();
-    expect(listbox()).not.toContainElement(link);
-    expect(link.closest('[role=listbox]')).toBeNull();
-    expect(screen.getAllByRole('option')).toHaveLength(2);
-    const popup = listbox().parentElement;
-    expect(popup).toContainElement(link);
-    expect(listbox()).toHaveAttribute('id', 'box-list');
-    expect(box()).toHaveAttribute('aria-controls', 'box-list');
-  });
-
-  it('hides the footer while the popup is closed', () => {
-    render(
-      <Harness
-        offerTyped={false}
-        suggestions={ONE_BUCKET}
-        footer={<a href="#all">See All Results</a>}
-      />,
-    );
-
-    expect(screen.queryByRole('link', { name: 'See All Results' })).not.toBeInTheDocument();
-  });
-
-  it('lets a press on a footer link land, mouse and touch, without closing the box first', () => {
-    const onClick = vi.fn((event: { preventDefault: () => void }) => event.preventDefault());
-    render(
-      <Harness
-        offerTyped={false}
-        suggestions={ONE_BUCKET}
-        footer={
-          <a href="#all" onClick={onClick}>
-            See All Results
-          </a>
-        }
-      />,
-    );
-    act(() => box().focus());
-    type('fix');
-    expect(box()).toHaveAttribute('aria-expanded', 'true');
-
-    // A whole press, as a pointer makes one: the page-wide mouse-up is what
-    // Downshift reads as a press outside, and the click comes after it.
-    const link = screen.getByRole('link', { name: 'See All Results' });
-    fireEvent.mouseDown(link);
-    fireEvent.mouseUp(link);
-    fireEvent.click(link);
-
-    expect(onClick).toHaveBeenCalledTimes(1);
-    expect(box()).toHaveFocus();
-    expect(box()).toHaveAttribute('aria-expanded', 'true');
-
-    fireEvent.touchStart(screen.getByRole('link', { name: 'See All Results' }));
-    fireEvent.touchEnd(screen.getByRole('link', { name: 'See All Results' }));
-    expect(box()).toHaveAttribute('aria-expanded', 'true');
   });
 });
 

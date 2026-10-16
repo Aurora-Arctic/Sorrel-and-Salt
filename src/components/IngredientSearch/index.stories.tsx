@@ -84,10 +84,10 @@ const Shell = ({
   );
 };
 
-/** Type "wort": a few matches, no See All Results. */
+/** Type "wort": a few matches, no action row. */
 export const FewMatches: Story = () => <Shell rows={matches(4)} hasNextPage={false} />;
 
-/** Type "wort": a full dropdown with See All Results beneath it. */
+/** Type "wort": a full dropdown ending in the See all results. row. */
 export const ManyMatches: Story = () => <Shell rows={matches(25)} hasNextPage />;
 
 /** Type "wort": nothing matches, so the dropdown says so. */
