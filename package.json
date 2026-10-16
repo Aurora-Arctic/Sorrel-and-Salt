@@ -19,7 +19,7 @@
     "pre-commit:staged": "lint-staged --hide-unstaged --continue-on-error",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:stories": "vitest run --config vitest.stories.config.mts",
+    "test:stories": "flock /tmp/sorrel-e2e.lock playwright test --config playwright.stories.config.ts",
     "test:debug": "vitest run --inspectBrk=0.0.0.0:9230 --no-file-parallelism --maxWorkers=1",
     "test:ui": "vitest --ui",
     "e2e": "playwright test",

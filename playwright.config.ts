@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig, devices, type PlaywrightTestConfig } from '@playwright/test';
 import {
   COMPENDIUM_CACHE_DATABASE,
   CONFIGURED_PROVIDERS_DATABASE,
@@ -75,7 +75,7 @@ const serverEnv = (
 
 // The first slot's server builds; Playwright starts the entries in order, so
 // every later one serves the build the first has finished.
-const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
+export const slotServers = Array.from({ length: E2E_SLOTS }, (_, slot) => ({
   command: slot === 0 ? 'npm run build && npm run start' : 'npm run start',
   url: serverUrl(slotPort(slot)),
   reuseExistingServer: !process.env.CI,
@@ -113,6 +113,12 @@ const compendiumCacheServer = {
 
 const COMPENDIUM_CACHE_SPEC = /compendium-cache\.spec\.ts/;
 
+// The story suite (M9.1) has its own config, playwright.stories.config.ts, and
+// its own job in pr-gate.yml. A project's own `testIgnore` replaces a top-level one
+// rather than adding to it, so each project that matches everything under
+// `testDir` lists this itself; `npm run e2e` never runs a story.
+const STORIES_SPECS = /[\\/]stories[\\/]/;
+
 // The audit (M10.25): the suite in WebKit, Firefox and as a phone, on demand
 // and never on CI, which stays Chromium alone. The three projects exist only
 // under `E2E_AUDIT=1` (`npm run e2e:audit`), so `npm run e2e` is unchanged
@@ -134,7 +140,7 @@ if (AUDIT && !auditWsEndpoint)
   );
 const auditProject = (name: string, device: (typeof devices)[string]) => ({
   name,
-  testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC],
+  testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS],
   use: { ...device, connectOptions: { wsEndpoint: auditWsEndpoint! } },
 });
 const auditProjects = AUDIT
@@ -148,17 +154,17 @@ const auditProjects = AUDIT
 // Every output under .reports/ with the rest of the generated files. The
 // reporter list lives here rather than on CI's command line because a CLI
 // `--reporter` replaces this list and with it the html report's folder.
-const HTML_REPORT = { outputFolder: '.reports/playwright-report', open: 'never' } as const;
+export const HTML_REPORT = { outputFolder: '.reports/playwright-report', open: 'never' } as const;
 
-export default defineConfig({
-  testDir: './tests/e2e',
+// What the e2e config and the story config (playwright.stories.config.ts) share:
+// where output goes, how many workers, the setup and teardown that reseed the
+// slot databases, and the browser options.
+export const baseConfig = {
   outputDir: '.reports/test-results',
   fullyParallel: true,
   // One per slot server; tests/e2e/slots.ts.
   workers: E2E_SLOTS,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  reporter: process.env.CI ? [['list'], ['json'], ['html', HTML_REPORT]] : [['html', HTML_REPORT]],
   globalSetup: './tests/e2e/global-setup.ts',
   globalTeardown: './tests/e2e/global-teardown.ts',
   // No `baseURL` here: tests/e2e/fixtures.ts gives each worker its own slot's
@@ -175,12 +181,19 @@ export default defineConfig({
     // colour a user settles on.
     reducedMotion: 'reduce',
   },
+} satisfies PlaywrightTestConfig;
+
+export default defineConfig({
+  ...baseConfig,
+  testDir: './tests/e2e',
+  retries: process.env.CI ? 2 : 0,
+  reporter: process.env.CI ? [['list'], ['json'], ['html', HTML_REPORT]] : [['html', HTML_REPORT]],
   // Production build, against the e2e databases rather than the dev one.
   webServer: [...slotServers, configuredProvidersServer, compendiumCacheServer],
   projects: [
     {
       name: 'chromium',
-      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC],
+      testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS],
       use: { ...devices['Desktop Chrome'] },
     },
     {

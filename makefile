@@ -76,7 +76,7 @@ check-migration-order:
 pre-commit:
 	npm run pre-commit
 
-## The acceptance suite only, printed as a checklist of the v1 user stories
+## The story suite (Playwright flows under tests/e2e/stories/), printed as a checklist of the v1 user stories
 test-stories:
 	npm run test:stories
 

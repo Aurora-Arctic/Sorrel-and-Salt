@@ -185,17 +185,22 @@
   ([`testing/layer-ownership.md`](../testing/layer-ownership.md)).
   `should-run` path-filters the same way `lint`/
   `typecheck` do.
-- **`vitest.yml`'s second step (M1.28)** — `npm run test:stories`, the
-  acceptance suite on `vitest.stories.config.mts`, run after the coverage step
-  with `always()` and no `--coverage` of its own, so a story never counts toward
-  the 80% threshold (`claude-docs/testing/acceptance.md`). Its reporter writes
-  the checklist as JSON (`--outputFile=/app/stories.json`) and
-  `.github/scripts/summarize-stories.mjs` renders it — "3 of 50 stories passing"
-  and a markdown checklist — into a second job-summary section and a second PR
-  comment thread (`marker-slug: stories`). A failing story fails the job; M2.1
-  decides how a deliberately red scaffold is tolerated. `pr-gate.yml`'s `vitest`
-  filter lists `vitest.stories.config.mts` and the script, so editing either
-  reruns the job.
+- **`playwright.yml` with `suite: stories`** (M9.1) — the story suite, as
+  `pr-gate.yml`'s `stories` job rather than a step of `vitest.yml`. It
+  shares the gate's `build-e2e-image` and `build-db-image` jobs with
+  `playwright` and runs beside it, under its own `stories` path filter. The
+  input switches the run command (`npm run test:stories` with
+  `STORIES_JSON=/app/stories.json`), the summariser
+  (`.github/scripts/summarize-stories.mjs`: "3 of 52 stories passing" and a
+  markdown checklist), the check name, the comment thread
+  (`marker-slug: stories`) and the report artifact's name (`stories-report`,
+  since one workflow run may not upload two artifacts under one name), and
+  skips the coverage artifact. The run step carries `continue-on-error: true`
+  for stories, since a job that calls a workflow cannot, so a red story never
+  fails the job; the comment reads the real result from `steps.run.outcome`,
+  and so does the report upload. It is never a required check, which keeps red
+  scaffolds off the merge path, and nothing waits on it, which keeps the
+  gate's time down (`claude-docs/testing/acceptance.md`).
 - **`playwright.yml`** (M1.14) — `npm run e2e` against the servers
   `webServer` builds and starts: one per worker slot on 8001 and up — four
   on GitHub's 4-vCPU runner, since the job sets `E2E_WORKERS: 4` over the

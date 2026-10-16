@@ -1,9 +1,11 @@
 import { readFileSync } from 'node:fs';
-import { fromRoot } from './paths';
+import { resolve } from 'node:path';
 import type { Story } from './types';
 
 // The v1 user stories, parsed out of DESIGN.md §10 rather than copied: a second
-// list here would drift without a test failing.
+// list here would drift without a test failing. The path starts from the working
+// directory, not tests/support/paths.ts: Playwright loads its reporters as
+// CommonJS, where `import.meta` does not exist, and both runners start at the root.
 
 const SECTION_HEADING = /^## 10\. User stories\s*$/m;
 const NEXT_SECTION = /^## \d+\./m;
@@ -26,15 +28,6 @@ export function parseStories(design: string): Story[] {
     .map((match) => ({ id: Number(match[1]), title: match[2] }));
 }
 
-/**
- * `Story 12: …` split into id and title; anything else, including a lower-case
- * `story` or a missing colon, answers `undefined`.
- */
-export function parseStoryHeading(name: string): Story | undefined {
-  const match = /^Story (\d+): (.+)$/.exec(name);
-  return match ? { id: Number(match[1]), title: match[2] } : undefined;
-}
-
 /** "1–34, 47–57": the ids as runs, for a message that should not go stale. */
 export function describeRanges(ids: readonly number[]): string {
   const runs: Array<[number, number]> = [];
@@ -50,7 +43,7 @@ export function describeRanges(ids: readonly number[]): string {
 }
 
 export const V1_STORIES: readonly Story[] = parseStories(
-  readFileSync(fromRoot('claude-docs/DESIGN.md'), 'utf8'),
+  readFileSync(resolve(process.cwd(), 'claude-docs/DESIGN.md'), 'utf8'),
 );
 
 export const V1_STORY_IDS: readonly number[] = V1_STORIES.map((story) => story.id);
