@@ -2,7 +2,7 @@ import type { Route } from 'next';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
 /** A privilege on `users`, as the ledger names it. */
-export type LedgerPrivilege = 'admin' | 'create_workspace';
+export type LedgerPrivilege = 'admin' | 'curator' | 'create_workspace';
 
 /** A grant or a revoke. */
 export type LedgerChange = 'grant' | 'revoke';
