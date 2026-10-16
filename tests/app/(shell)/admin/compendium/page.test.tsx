@@ -110,7 +110,7 @@ function lastFilter(): unknown {
 
 const NO_FILTER = {
   query: undefined,
-  form: undefined,
+  forms: undefined,
   nomenclature: undefined,
   withoutReferences: false,
 };
@@ -200,7 +200,7 @@ describe('the /admin/compendium page', () => {
 });
 
 describe('the /admin/compendium filter', () => {
-  it('reads ?query= and ?form= trimmed, a ?nomenclature= kind and ?withoutReferences=1 into the list and its count', async () => {
+  it('reads ?query= and ?form= trimmed, the form as a one-item list, a ?nomenclature= kind and ?withoutReferences=1 into the list and its count', async () => {
     await renderPage({
       query: '  test wort ',
       form: ' Fixture Oil ',
@@ -210,7 +210,7 @@ describe('the /admin/compendium filter', () => {
 
     expect(lastFilter()).toEqual({
       query: 'test wort',
-      form: 'Fixture Oil',
+      forms: ['Fixture Oil'],
       nomenclature: 'unknown',
       withoutReferences: true,
     });
