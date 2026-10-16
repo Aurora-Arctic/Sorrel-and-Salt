@@ -72,7 +72,7 @@ check-destructive-ddl:
 check-migration-order:
 	npm run check:migration-order
 
-## The pre-commit checks: lint, format:check, typecheck
+## The pre-commit checks on changed files: lint, format:check, typecheck
 pre-commit:
 	npm run pre-commit
 

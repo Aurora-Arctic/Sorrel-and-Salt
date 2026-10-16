@@ -23,7 +23,9 @@ every change follows are in [`CLAUDE.md`](CLAUDE.md).
 4. `npm run dev` — Next.js dev server on <http://localhost:8000>.
 5. `make help` — lists every make target and marks the ones that are still
    placeholders.
-6. Before every commit: `npm run pre-commit` (lint, `format:check`, typecheck).
+6. Before every commit: `npm run pre-commit` (lint, `format:check`, typecheck,
+   on the files you changed). The git hook runs the same checks on the files
+   you staged.
 
 The Docker stack (`make docker-up`) and the component workshop
 (`npm run workshop`, on 61000) both work today, as do `npm run db:migrate` and
