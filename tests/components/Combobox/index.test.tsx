@@ -478,12 +478,14 @@ describe('Combobox', () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 
     type('wax');
-    key('Escape');
+    // On the open list the key is the list's, so a modal around it stays.
+    expect(key('Escape')).toBe(false);
     expect(box()).toHaveAttribute('aria-expanded', 'false');
     expect(box()).toHaveValue('wax');
 
-    // Escape on a closed box, which Downshift would otherwise empty.
-    key('Escape');
+    // Escape on a closed box, which Downshift would otherwise empty, and
+    // would stop the dialog around it from hearing.
+    expect(key('Escape')).toBe(true);
     expect(box()).toHaveValue('wax');
 
     key('ArrowDown');

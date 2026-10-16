@@ -709,7 +709,8 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(saveCategory).toBeEnabled();
 
       // Redone but unsaved, leaving asks; Discard Changes drops it.
-      await category.getByRole('button', { name: 'Cancel', exact: true }).click();
+      await picker.focus();
+      await page.keyboard.press('Escape');
       await category.getByRole('button', { name: 'Discard Changes' }).click();
       await expect(category).toHaveCount(0);
     },

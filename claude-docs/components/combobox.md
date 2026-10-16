@@ -86,6 +86,9 @@ colour is never the only cue.
   pick through `onPick`; Downshift's own fill-on-select is turned off in the
   state reducer, as are its select-on-blur and its emptying of a closed box on
   Escape. So a blur, Escape and Enter all keep what was typed.
+- **Escape on a closed box is left to the dialog.** Downshift would prevent
+  the key whenever the box holds text, which stops a modal around it hearing
+  its `cancel` event; the box marks it `preventDownshiftDefault` instead.
 - **Leaving the box shuts its list for good.** The list is open only while
   it is wanted and has rows, so a box left while its lookup had none to show
   still wanted it, and the answer arriving later opened it, which Downshift
