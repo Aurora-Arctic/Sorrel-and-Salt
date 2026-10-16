@@ -86,7 +86,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.80  | Re-scope the compendium as public and search-indexable                                                                   | Wave 7   | —                      |
 | MB.81  | `ingredients.slug`, the pending-slug columns and the `retired_ingredient_slugs` table                                    | Wave 8   | MB.82                  |
 | MB.82  | Ingredient slugs: set on create, follow a rename, retire with a 308, hand over once confirmed                            | Wave 8   | M5.5, M8.19, MB.84     |
-| MB.83  | Public compendium chrome, proxy entries and the signed-in island                                                         | Wave 12  | M8.18, M8.19           |
+| MB.83  | Public compendium chrome and proxy entries                                                                               | Wave 12  | M8.18, M8.19           |
 | MB.84  | robots, sitemap, page metadata and noindex off production                                                                | Wave 12  | —                      |
 | MB.85  | Story 63: a visitor reads the compendium without signing in                                                              | Wave 12  | —                      |
 | MB.86  | Restructure `src/` into domain modules with a guarded boundary                                                           | Wave 7   | —                      |
@@ -266,6 +266,8 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.261 | The No Refs Switch Cannot Be Toggled With Enter                                                                          | Bugfixes | —                      |
 | MB.262 | Mail Shows Its Light Colours in Zoho Mail's Dark Mode                                                                    | Bugfixes | —                      |
 | MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
+| MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
+| MB.265 | The Zodiac Signs Filter Test Fails Axe's Title Check Under Load                                                          | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1481,6 +1483,53 @@ _Acceptance criteria:_
 - The sign-in callback and every Continue choose the landing through one helper, and the shell's links read the coven list the shell already loads, so they add no lookup
 - `/coven` still redirects a member who opens it directly, from a bookmark or after leaving a coven
 - `app-shell.md`, `welcome.md`, `email-form.md`, `route-protection.md`, `admin-bootstrap.md`, `auth/tests.md` and the MB.57 decision record are corrected
+
+**MB.264 — The Admin Nav Folds Two Tabs on Refresh at Desktop Width** · 2h
+
+_Story:_ As a site admin, I want the admin nav to show every tab that fits from the first paint, so that a refresh does not flash a folded row before unfolding it.
+
+Found on 2026-10-16, on the local dev server. The server cannot know the window's width, so `section-links.tsx` renders the phone's count of four tabs, marks the rest as extras behind More, and the stylesheet hides that class at every width. Wider than the phone the row is only corrected after hydration has measured it (React reconciles the band's server snapshot in a passive effect). With six admin sections, two tabs sit behind More from the first paint until then: about 40 ms on a production build, longer on the dev server. It happens every time and is cosmetic. The fix: the stylesheet shows every tab before the nav carries `data-fit`, wrapping any overflow out of sight with More hidden, and the measuring render marks itself (`data-measuring`) so More is still drawn for measurement. The corrections to `claude-docs/components/section-nav.md` are deferred to M11.22 at the owner's request.
+
+Steps to reproduce:
+
+1. Sign in as a site admin on the local dev server.
+2. Make the window wider than 882px (a desktop width).
+3. Open `/admin` and refresh the page.
+
+Actual: for a moment the admin nav shows four tabs and a More button holding the other two; then More vanishes and all six tabs show.
+Expected: all six tabs show from the first paint, with no More button, since they fit the row.
+
+_Acceptance criteria:_
+
+- A Playwright regression test under `tests/e2e`, with the script chunks delayed at desktop width, fails before the fix and passes after: before hydration every admin link is visible and no More button is present
+- The server's HTML for `/admin` still carries every section's link once, the hidden tabs hidden by class only
+- The fit tests at 642, 768 and 882px in `tests/e2e/shell.spec.ts` pass unchanged
+- At a phone width the first four tabs and More show as before
+- The measuring render is never painted: no frame shows the row overflowing
+
+**MB.265 — The Zodiac Signs Filter Test Fails Axe's Title Check Under Load** · 2h
+
+_Story:_ As a developer running the gate suite, I want the zodiac signs filter test to pass every time, so that a red run means a real regression and not a busy machine.
+
+Found on 2026-10-16, locally, during M11.18's measurement runs. The gate test "an admin filters the zodiac signs by part of a name" in `tests/e2e/admin.spec.ts` failed twice with an axe-core accessibility violation, rule `document-title` (the document has no title), on `/admin/zodiac-signs?query=AR` after filtering, and passed on every other run. Both sightings were under a load average of 11 to 24, with several Playwright and Vitest runs sharing twelve cores. The page declares a static `title` in its metadata (`src/app/(shell)/admin/(astrology)/zodiac-signs/page.tsx`), so a document without a title should not be possible. One hypothesis is that under load axe runs against a streamed document whose head has not yet carried the title; that is unproven. It is a flaky test, not a broken page, so it is not a hotfix.
+
+Steps to reproduce:
+
+1. Have the machine under heavy load: several Playwright and Vitest runs sharing the cores, load average over 10 (assumed, from the two sightings).
+2. Run the gate suite, `npm run e2e`.
+3. The test signs in as a site admin, opens `/admin/zodiac-signs`, fills the Name search with "AR" and clicks Search.
+4. It waits for `/admin/zodiac-signs?query=AR` and three rows, then runs axe-core on the page.
+
+Actual: sometimes axe reports a `document-title` violation and the test fails; the next run passes.
+Expected: the filtered page always carries its title, so axe passes and the test is stable.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: either a reproduction of the missing title (axe run against the page before hydration or during streaming), or, if the title is proved always present, a test showing the harness ran axe too early
+- The cause is established and recorded, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
+- The fix lives where the cause is: the page if the title is missing, `tests/e2e/axe.ts` if the harness ran early, never a retry or a skip
+- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass
+- `claude-docs/testing/e2e.md`'s "Where a run's time goes (M11.18)" section stops calling this failure unexplained once it is explained
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -3210,46 +3259,52 @@ _Acceptance criteria:_
 - A coven ingredient's slug follows its name under the `(workspace_id, slug)` scope, through the `Membership` proof, and retires nothing
 - The pending-slug columns and their two indexes are declared nowhere in the schema; MB.107 drops them from the database
 
-**MB.83 — Public compendium chrome, proxy entries and the signed-in island** · 2h
+**MB.83 — Public compendium chrome and proxy entries** · 4h
 
 _Story 63 — As a visitor who is not signed in, I want the compendium pages to open without a redirect and to offer me the way in, so that I can read the reference and know how to join._
 
 Lands after M8.17 and before M8.18, which composes it. `PUBLIC_ROUTES` in `src/proxy.ts` gains `/compendium`, `/compendium/*`, `/robots.txt` and `/sitemap.xml`, and `tests/proxy.test.ts` moves `/compendium` from the lookalike list to the public list and pins the two crawler files as passed through. A public frame for the two compendium pages: the site name, Sign in, and nothing workspace-shaped, in the same minimal shape as `/`. The signed-in affordances — the `AppShell` chrome and the Add to my ingredients slot — are one client island that asks `/api/graphql` `me` after hydration and renders a sign-in link for a null session, so the page itself reads no cookies or headers and stays static. Off production the proxy sets `X-Robots-Tag: noindex` on every response, because `staging.sorrelandsalt.com` is a public URL.
 
+**Amended by the Wave 12 review (2026-10-16):** the public pages are dynamic over the cached reads, the owner's call ([`design-decisions/mb.80-public-compendium.md`](../design-decisions/mb.80-public-compendium.md)). There is no client island and no `me` call. The public frame is a `(public)` route group whose layout reads the session when there is one and renders the signed-in or signed-out chrome on the server, with a skip link, a `<nav>` and `<main id="main">`. The pages themselves stay sessionless and read through `cachedCompendiumRead`. `AppShell` gains a Compendium link for everyone, replacing the "No Compendium link yet" comment in `src/components/AppShell/index.tsx`. `PUBLIC_ROUTES` also gains `/llms.txt`, `/.well-known/*` and the asset paths (favicon, icons, manifest) that M11.16 will fill, so a favicon request never redirects to sign-in; no such file exists yet, so the paths are listed ahead of it. The `X-Robots-Tag` rule stays here. Re-estimated from 2h for the route group and the shell change.
+
 _Acceptance criteria:_
 
-- A signed-out request to `/compendium` and `/compendium/ingredients/x` passes the proxy; `/coven/*` still redirects; `/robots.txt` and `/sitemap.xml` pass
-- The island renders the signed-in chrome for a session and a sign-in link without one, tested both ways
-- The island is the only place the two public pages learn who is viewing; a guard fails if either page calls `cookies()` or `headers()`
+- A signed-out request to `/compendium` and `/compendium/ingredients/x` passes the proxy; `/coven/*` still redirects; `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/.well-known/*` pass
+- The signed-out chrome (the site name and a Sign In link) is in the server-rendered HTML, with no script needed; a signed-in request gets the signed-in chrome from the same layout
+- The frame has a skip link, a `<nav>` and `<main id="main">`, asserted
+- The Compendium link shows in `AppShell` for every viewer
 - Off production every response carries `X-Robots-Tag: noindex`
 - axe clean signed out at 375px
 
-**MB.84 — robots, sitemap, page metadata and noindex off production** · 3h
+**MB.84 — robots, sitemap, page metadata and noindex off production** · 4h
 
 _Story:_ As the owner, I want search engines to find and correctly title every compendium page, and to find nothing on staging, so that the public reference is indexed once at its canonical address.
 
-Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` allows `/compendium` and `/compendium/*`, disallows everything else and points at the sitemap; under a `VERCEL_ENV` other than `production` it disallows all. `src/app/sitemap.ts` lists `/compendium` and one `/compendium/ingredients/<slug>` per current entry, read through the cached compendium, `lastModified` from `updated_at`. `generateMetadata` on the list page, the public detail page and the in-app detail page: a title from the name, the form and the site, a description from the entry, `alternates.canonical` set to the public URL on every route, and Open Graph fields with M11.16's image. Filtered list views carry canonical `/compendium` and `noindex`, so category combinations are not a crawl trap. An unknown slug is a real 404; a retired slug inside its window answers `permanentRedirect()` to the current one, and a test pins that the redirect carries no `max-age`, `Expires` or `Last-Modified`.
+Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` allows `/compendium` and `/compendium/*`, disallows everything else and points at the sitemap; under a `VERCEL_ENV` other than `production` it disallows all. `src/app/sitemap.ts` lists `/compendium` and one `/compendium/ingredients/<slug>` per current entry. `generateMetadata` on the list page, the public detail page and the in-app detail page: a title from the name and the site, a description from the entry, and `alternates.canonical` set to the public URL on every route. Filtered list views carry canonical `/compendium` and `noindex`, so category combinations are not a crawl trap. An unknown slug is a real 404; a retired slug inside its window answers `permanentRedirect()` to the current one, and a test pins that the redirect carries no `max-age`, `Expires` or `Last-Modified`.
+
+**Amended by the Wave 12 review (2026-10-16):** four changes. (1) The sitemap needs a read of every current slug, and none is cached today: `src/modules/ingredients/services/compendium.ts` wraps only the page and count reads. This task adds a sessionless one, `cachedCompendiumRead('compendium-slugs', …)` from `src/lib/compendium-cache.ts`, which M12.2's `llms.txt` reuses. (2) `lastModified` comes from MB.106's one definition of "changed", so the sitemap does not report a no-op save. MB.106 therefore lands before this task. (3) The title is built from the name and the site, with no form, because the form is a variant beneath the ingredient (MB.215) and a page is the ingredient. Two entries sharing a label are still told apart by the formal name. (4) There is no Open Graph image: M11.16 (Wave 15) adds it, and until then the page carries no `og:image`. `src/app/robots.ts` is written so that M12.2 can add its two paths (`/llms.txt` and `/.well-known/ai-catalog.json`) without restructuring it. Re-estimated from 3h for the new read.
 
 _Acceptance criteria:_
 
 - `/robots.txt` and `/sitemap.xml` answer 200 with the shapes above; the sitemap carries every current slug and no retired one
 - Off production robots disallows all
+- The sitemap is served from the cached all-slug read, which takes no session, and its `lastModified` follows MB.106's definition of a change
 - Every compendium page carries a title, description and canonical; two entries sharing a label are distinguished in the title by the formal name
 - A filtered list view is `noindex` with canonical `/compendium`
 - An unknown slug is 404; a retired slug is 308 to the current one, with no browser-cacheable freshness headers
 - A Lighthouse SEO audit passes on both public pages signed out
 
-**MB.85 — Story 63: a visitor reads the compendium without signing in** · 1h
+**MB.85 — Story 63: a visitor reads the compendium without signing in** · 2h
 
 _Story 63 — As a visitor, I want to read the compendium and its entries without signing in, so that the site's reference is useful to people who are not in a coven._
 
-Closes Wave 12, once MB.83, M8.18, M8.19 and MB.84 have landed. The story flow for story 63 in `tests/e2e/stories/02-compendium.spec.ts`; a service test that the compendium read takes no session while a null session is refused on every workspace read, asserting the rows exist before asserting the refusal; a route test that a workspace ingredient's slug at `/compendium/ingredients/` is 404, stating that the row is a workspace entry; and the e2e: a signed-out visit to `/compendium` lands on the page rather than `/sign-in?next=`, follows a card to its entry, and both pages are axe clean signed out.
+Closes Wave 12, once MB.83, M8.18, M8.19 and MB.84 have landed. **Amended by the Wave 12 review (2026-10-16):** re-estimated from 1h. The spec carries no `@story-63` tag yet, so this task adds the flow with that tag, and walks story 63 only. The story flow for story 63 in `tests/e2e/stories/02-compendium.spec.ts`; a service test that the compendium read takes no session while a null session is refused on every workspace read, asserting the rows exist before asserting the refusal; the route test that a workspace ingredient's slug at `/compendium/ingredients/` is 404 is M8.19's, asserted once there, so this task cites it and adds no second one; and the e2e: a signed-out visit to `/compendium` lands on the page rather than `/sign-in?next=`, follows a card to its entry, and both pages are axe clean signed out.
 
 _Acceptance criteria:_
 
-- `make test-stories` reports story 63 passing
+- `npm run test:stories` reports story 63 passing, and it is the only story this spec walks
 - The null-session denial test asserts the rows exist before asserting the refusal
-- The direct-slug 404 test states the row is a workspace entry
+- The direct-slug 404 is M8.19's test, which states the row is a workspace entry; this task cites it
 - The e2e runs signed out and scans both pages with axe
 
 **MB.86 — Restructure `src/` into domain modules with a guarded boundary** · 5h
@@ -3602,19 +3657,22 @@ _Acceptance criteria:_
 - A signed-out query reads both fields
 - The SDL snapshot and `src/gql/` are regenerated; `claude-docs/graphql.md` ("Pagination", the compendium section), `claude-docs/db.md` ("Keyset pages", "The compendium read") and DESIGN.md §7 describe the two fields and the client's formula
 
-**MB.106 — Mark compendium entries New or Updated for 30 days** · 3h
+**MB.106 — Mark compendium entries New or Updated for 30 days** · 4h
 
 _Story:_ As a reader of the compendium, I want to see which entries are new and which have changed lately, so that a return visit shows me what moved since I last looked.
 
-A compendium entry reads **New** for 30 days after it is created and **Updated** for 30 days after its last change, New winning while both hold. Compendium entries only: a coven's ingredients are its members' own, and they made the changes themselves. Both markers are computed at read time from the entry's stamps, so there is no column and nothing runs on a schedule. They show on M8.14's card in M8.18's list and on M8.19's entry page, public and in-app. M8.6's hour-long cache and the pages' ISR mean a marker appears or lapses up to an hour late, which is accepted rather than worked around.
+A compendium entry reads **New** for 30 days after it is created and **Updated** for 30 days after its last change, New winning while both hold. Compendium entries only: a coven's ingredients are its members' own, and they made the changes themselves. Both markers are computed at read time from the entry's stamps, so there is no column and nothing runs on a schedule. They show on M8.14's card in M8.18's list and on M8.19's entry page, public and in-app.
 
 Two things the task settles, because the stamps as they stand do not say "changed". `updateCompendiumEntry` replaces the whole row, and M1.18's trigger stamps `updated_at` on every `UPDATE`, so a save that changes nothing would read as an update. And an entry's folk names and categories are child rows, whose changes do not move the entry's own `updated_at`. Raised while scoping MB.82, whose "new at this address" notice this replaces with a marker every new entry carries.
+
+**Amended by the Wave 12 review (2026-10-16):** the two settled points now have one mechanism, and the task moves before MB.84 so the sitemap's `lastModified` shares its definition of a change. (1) A new expand-only migration redefines `set_updated_at()` from `0016_updated-at-trigger.sql` with `CREATE OR REPLACE FUNCTION`, so that it leaves `updated_at` alone when `NEW IS DISTINCT FROM OLD` is false (an `UPDATE` that changed nothing). It drops nothing, so it needs no acknowledgement file. (2) The ingredient service touches the parent row after any child-list replace, so a change to folk names, categories, variants or references moves the parent's own `updated_at`. The child lists are replaced by `writeChildren` in `src/modules/ingredients/services/ingredient-rows.ts`, and the touch goes there. New is read from `created_at` and Updated from `updated_at`. The "up to an hour late" caveat goes: the pages are dynamic over cached reads, and the cache is tagged and refreshed on every admin edit. One cost is accepted and named: a seeded database has every entry created at seed time, so it reads New for 30 days after a seed. Re-estimated from 3h for the migration and the touch.
 
 _Acceptance criteria:_
 
 - An entry created within the last 30 days reads New, and one changed within them reads Updated; New wins when both hold, and neither shows after 30 days, tested at either side of the boundary
-- A save that changes nothing leaves the entry's marker as it was
-- A change to an entry's folk names or categories marks it Updated
+- A save that changes nothing leaves `updated_at`, and so the entry's marker, as it was; tested against the trigger's function directly as well as through the service
+- A change to an entry's folk names, categories, variants or references marks it Updated, tested through `writeChildren`
+- A freshly seeded database reads every entry New, asserted and named as accepted
 - The markers show on the compendium list's cards and on the entry page, public and in-app, as text a screen reader announces rather than colour alone
 - A coven's ingredients carry no marker
 
@@ -3893,7 +3951,9 @@ _Acceptance criteria:_
 
 _Story:_ As a visitor, I want the public compendium to look finished and read well on any device, so that it earns trust as a reference.
 
-Minted during M5.4. Reviews the public compendium and the ingredient components the rest of the site shares, once MB.106's markers land: `IngredientSearch` with its chips, OR toggle and filters (M8.10 to M8.13), `SafetyNote` (M8.13a), the local-or-compendium chip and the stock badges (M9.7, M9.8), `IngredientCard` (M8.14), `IngredientForm` read-only and inside the add and edit modals (M8.15 to M8.17), the public frame and its signed-in island (MB.83), the compendium page and its pager (M8.18, MB.105), the entry page (M8.19) and the New and Updated markers (MB.106). The compendium is the site's public, indexable face (MB.80), so it is reviewed signed out as well as signed in.
+Minted during M5.4. Reviews the public compendium and the ingredient components the rest of the site shares, once MB.106's markers land: the public frame's landmarks, which are the skip link, `<nav>` and `<main id="main">` (MB.83); `IngredientSearch` with its chips, OR toggle and filters (M8.10 to M8.13); `IngredientCard` (M8.14); `SafetyNote` and the toxic mark (M8.13a); the compendium page and its pager (M8.18, MB.105); the entry page (M8.19); the Add Ingredient dialog (M8.16); and the New and Updated markers (MB.106). M9.12's dialog, M8.17's edit flow, the local-or-compendium chip and the stock badges (M9.7, M9.8) belong to MB.121, which reviews them on the coven page.
+
+**Amended by the Wave 12 review (2026-10-16):** the scope above replaces the earlier list, which named M8.15 (retired into M8.19) and a signed-in island that no longer exists. The compendium is the site's public, indexable face (MB.80), so it is reviewed signed out as well as signed in.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
@@ -3908,19 +3968,21 @@ _Acceptance criteria:_
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
 - Each component's doc updates its Styling section, and its stories show the reviewed design
-- The compendium and entry pages read the same signed out and signed in, apart from the signed-in island
+- The compendium and entry pages read the same signed out and signed in, apart from the chrome the layout renders for a session
 - A safety note stands out from the rest of an entry without relying on colour alone
 - The card grid holds its layout from phone width to a wide screen
 
-**MB.121 — Design review: the workspace ingredients page** · 2h
+**MB.121 — Design review: the workspace ingredients page** · 3h
 
 _Story:_ As a coven member, I want the ingredients page to make stock easy to scan and edit, so that keeping it current is quick.
 
-Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — inline row editing (M9.9), last-edited-by on its rows (M6.18, moved here from MB.119 when it moved to Wave 12 on 2026-10-12), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
+Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — editing a jar from its row (M9.9), last-edited-by on its rows (M6.18, moved here from MB.119 when it moved to Wave 12 on 2026-10-12), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
+
+**Amended by the Wave 12 review (2026-10-16):** the page is a card per ingredient with a jar line per held form (`IngredientCard`, M8.14), not a table, so the list is no longer a `StackTable`. The scope gains the in-stock and low-stock filters and the stock badges (M9.7, M9.8), `StockFields` (M9.9), the edit flow for a local (M8.17), M9.12's add dialog, the Edit control (M12.5), the folk-name control (M12.1), M12.7's glyphs on the jar lines, and the coven home's Contents. Re-estimated from 2h.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight.
+_Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `IngredientCard` for its rows (corrected by the Wave 12 review; the admin lists use `StackTable`, a table that turns each row into a card on a narrow screen, `components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight.
 
 _Acceptance criteria:_
 
@@ -3929,7 +3991,7 @@ _Acceptance criteria:_
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
 - Each component's doc updates its Styling section, and its stories show the reviewed design
-- A row being edited reads differently from one at rest, and an unsaved change shows
+- A jar being edited reads differently from one at rest, and an unsaved change shows
 - The empty state says what to do next
 
 **MB.122 — ~~Design review: the navigation~~** · **RETIRED 2026-10-12, folded into MB.7**
@@ -4440,17 +4502,20 @@ _Acceptance criteria:_
 
 _Story 64 — As a reader of the compendium, I want to see where an entry's information came from, so that I can judge a claim and read further._
 
-A References section on M8.19's page, on both its routes: beneath the substitutes, above the slot v2's notes take, a bibliography list of the entry's references in Chicago form, each with its locator where one was given and its `url` a link that opens the source, `rel="noopener"`. The page renders the parts `renderCitation` returns rather than the plain `citation`, each italic part in `<cite>` (MB.151). An entry with none shows a deliberate empty state — "No sources recorded" — rather than nothing, so the gap is as visible to a reader as it is on the admin's to-do list. The public route serves it from the same static page under the `compendium` tag, so a reference an admin edits refreshes it through `revalidateTag`. Story 64's acceptance test is written here.
+A References section on M8.19's page, on both its routes: beneath the substitutes, above the slot v2's notes take, a bibliography list of the entry's references in Chicago form, each with its locator where one was given and its `url` a link that opens the source, `rel="noopener"`. The page renders the parts `renderCitation` returns rather than the plain `citation`, each italic part in `<cite>` (MB.151). An entry with none shows a deliberate empty state — "No sources recorded" — rather than nothing, so the gap is as visible to a reader as it is on the admin's to-do list. The public route serves it from the same page, dynamic over the cached reads under the `compendium` tag, so a reference an admin edits refreshes it through `revalidateTag`. Story 64's acceptance test is written here: the flow in `tests/e2e/stories/02-compendium.spec.ts`, tagged `@story-64`.
+
+**Amended by the Wave 12 review (2026-10-16):** the one renderer is `renderCitation` in `src/lib/citation.ts`, and the order is not this task's to build.
 
 **Amended by MB.215 (2026-10-11):** a form's own references are listed in its section of the page, beneath the ingredient's, in the same Chicago form ([`design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 _Acceptance criteria:_
 
-- Every reference renders in Chicago form through MB.153's one renderer, alphabetical, on `/compendium/ingredients/[slug]` and `/ingredients/[id]` alike
+- Every reference renders in Chicago form through MB.153's one renderer, `renderCitation`, on `/compendium/ingredients/[slug]` and `/coven/[slug]/ingredients/[id]` alike (the coven route since the Wave 12 review, 2026-10-16)
+- The order is alphabetical, which holds from the loader already (it sorts with `byCitation`), asserted here
 - A locator renders beside its citation and a `url` as a link to the source
 - The empty state reads as intentional, not broken
 - The section sits above the notes slot and the page's structure is unchanged for it
-- axe clean; story 64's acceptance test passes
+- axe clean; the `@story-64` flow in `02-compendium.spec.ts` passes
 - A variant's own references are listed in its section, beneath the ingredient's (MB.215)
 
 **MB.156 — Seed the curated vocabularies' sources** · 6h

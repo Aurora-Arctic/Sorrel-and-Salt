@@ -83,7 +83,9 @@ worker starts for itself, and one server picking a database per request.
 - **The worker count is `E2E_WORKERS`, not `--workers`**, because the servers
   are declared up front, one per slot. `playwright.config.ts` sets `workers`
   to `E2E_SLOTS`: `E2E_WORKERS` if it is set, otherwise half the CPUs floored
-  at one — Playwright's own default, which serves local runs.
+  at one — Playwright's own default, which serves local runs (6 on 12 cores;
+  9 and 12 were measured and did not beat it, see "Where a run's time goes").
+  This is the local default; CI sets `E2E_WORKERS` itself.
   Anything but a whole number from 1 to `MAX_SLOTS` (99) throws, naming the
   variable. A `--workers` above the count would put a worker on a slot with
   no server, so `tests/e2e/fixtures.ts`'s worker-scoped auto fixture `slot`
@@ -109,6 +111,19 @@ worker starts for itself, and one server picking a database per request.
 - **A further slot costs about half a second and 180 MB**, MB.112's
   measurement of one more `next start` over the built `.next-e2e`; the
   servers start in turn, so the half seconds add to startup.
+- **Keeping the servers warm (M11.18).** `npm run e2e:servers` builds
+  `.next-e2e` and starts every server a run needs, from the same definitions
+  as the configs (`tests/e2e/servers.ts`), then prints one line per server and
+  waits. Stop it with Ctrl-C. While it is up, `npm run e2e` and
+  `npm run test:stories` attach to the servers instead of starting them
+  (Playwright's `reuseExistingServer`, on whenever `CI` is unset), which
+  skips the build and the boots: the output shows no build step. It is a
+  process the developer runs beside `npm run dev`, and staleness is the
+  developer's: nothing watches the code, so after a change stop it and start it
+  again, which rebuilds. A run against servers left over from older code tests
+  that older code. The servers are also shared by every checkout on the
+  machine, because the ports are fixed: a run from another worktree attaches
+  to them and tests this checkout's build, so stop them before switching.
 
 **The configured-providers server is one more**, because the sign-in page
 reads OAuth credentials per request and its two provider states cannot share
@@ -151,7 +166,12 @@ ignores that spec too
   slot's; the config passes each server its own as `webServer.env.DATABASE_URL`,
   so the built app reads from it instead of the dev database.
   `recreateE2eDatabase()` re-clones the calling worker's slot database alone,
-  and `dropE2eTemplate()` removes the template again.
+  then sends its server ten session lookups at once, repeated until all answer 200. The drop kills the server's pooled connections, and the server reads
+  each socket's close only some milliseconds later; a test's first request in
+  that gap writes to a dead socket and gets a 500 (`CONNECTION_CLOSED`, `EPIPE`
+  or `57P01`). With the coverage hooks off, the next file starts quickly enough
+  to land in the gap (M11.18). The lookups find the dead connections first, and
+  the pool replaces them. `dropE2eTemplate()` removes the template again.
 - **`globalSetup: './tests/e2e/global-setup.ts'`** calls `seedE2eTemplate()`
   and then `cloneE2eDatabases()`, once per run. It runs _after_ the servers
   have started, since Playwright sets up the `webServer` entries first, and
@@ -432,8 +452,7 @@ one takes the time its longest file needs, because that file is serial.
 starts, and the readiness polls pass. The build and the eight servers came
 to 10.6 s when started by hand over the cached `.next-e2e`; a first run in a
 fresh checkout, with no cache to build from, took 82 s. "Warm" attaches to
-servers left running, which `reuseExistingServer: !CI` allows and nothing in
-the repo yet provides (the plan's lever 5). The warm run's 27 s is 18 s of
+servers left running, which `reuseExistingServer: !CI` allows and `npm run e2e:servers` provides (see "Keeping the servers warm" in the slot list above). The warm run's 27 s is 18 s of
 `shell.spec.ts` on one worker, with the other five idle behind it, and
 about 9 s of startup and teardown: the template seed (1.4 s) and its
 eight clones (0.9 s together), Playwright's own start and the worker
@@ -445,6 +464,25 @@ What the rest of the suite costs, warm, per file: `admin-compendium.spec.ts`
 together. The longest single test is 3.5 s (`account.spec.ts`'s four-section
 scan), so once no file is pinned to a worker, no run can be shorter than
 startup plus about 4 s, and the even spread above is the floor to aim at.
+
+**Warm servers, measured (M11.18, lever 5).** The same suite after the
+servers were left up by `npm run e2e:servers` (all eight answering in 1.0 s
+once built), three runs each, median in bold. The machine was not idle this
+time: other sessions' runs shared the cores (load average 9 to 16, and every
+run waited 85 to 123 s for the lock), so these figures run slower than the
+table above and compare with each other, not with it. The warm series also
+included one failure, an axe scan that found a page with no `<title>` on
+`admin.spec.ts`'s zodiac filter test. That test passed in the other five runs
+and the stories run was green, but it was not rerun or investigated, so the
+cause is unknown.
+
+| Wall time, three runs  | Cold (the run builds and boots) | Warm (servers up)             |
+| ---------------------- | ------------------------------- | ----------------------------- |
+| `npm run e2e`          | 51.9, 36.5, **45.3** s          | 28.7, 30.9, 25.8 s (**28.7**) |
+| `npm run test:stories` | not measured                    | 33.5 s (one run)              |
+
+Median saving about 17 s of 45, more than the 10 s the build and boots cost
+on an idle machine, since a loaded one starts eight servers slower.
 
 Three settings were each turned off for one warm run, to see what every
 test pays for them:
@@ -539,3 +577,77 @@ Video off won every pair: a tenth to a sixth of the summed test time (the
 single warm run in the variants table said 8%, these said 7% to 17%), and 2
 to 4 s of wall. A failing test still leaves its trace and screenshot under
 `.reports/test-results/`, checked by failing one on purpose.
+
+**After coverage went behind a switch** (lever 4: JS coverage is collected only
+under `E2E_COVERAGE=1`, which `playwright.yml` sets). Two sets of figures, and
+they compare within themselves, not with each other, nor with the idle table at
+the top of this section.
+
+Set 1, before the reclone fix below: one interleaved pair, coverage off then
+on, on a quiet machine, gate suite, 6 workers. Two further pairs were disturbed
+by other sessions (lock waits of about 30 s, load near 11) and are not
+reported.
+
+| Coverage | Wall time | Sum of test durations |
+| -------- | --------- | --------------------- |
+| Off      | 27.2 s    | 70.9 s                |
+| On       | 32.8 s    | 91.9 s                |
+
+Set 2, after the reclone fix, on a loaded machine, Playwright's own reported
+time:
+
+| Coverage                       | Playwright's time                  |
+| ------------------------------ | ---------------------------------- |
+| Off                            | 39.4, 39.4, 38.1 s (median 39.4 s) |
+| On (`E2E_COVERAGE=1`, one run) | 48.9 s                             |
+
+Turning the hooks off exposed a race they had been hiding: the slot
+database's reclone killed the server's pooled connections, and the next file
+started fast enough to hit a dead one. The slot-databases bullet near the top
+of this file explains the warm-up that now follows each reclone.
+`.reports/coverage-e2e/` is written only under `E2E_COVERAGE=1`, which
+`.github/workflows/playwright.yml` sets.
+
+**After the worker count changed** (lever 6): the gate suite (`npm run e2e`,
+62 tests) and the story suite (`npm run test:stories`, 51 run, 15 `fixme`)
+at `E2E_WORKERS` 6, 9 and 12, three runs each, interleaved (6, 9, 12, 6, 9,
+12, ...), on the lever 3 harness (video off, coverage still always on). Each
+run took the lock first and was timed from holding it; every run is a cold
+start, since the server count changes between runs. Two other sessions ran
+Vitest and Playwright on the same 12 cores throughout, so the load average at
+the start of a run was 11 to 24 and the figures sit well above the earlier
+tables; the spread inside one count is as large as the gap between counts, so
+read the medians with that in mind. Free memory never fell below 14.6 GB. Wall
+times and sums of test durations are from the JSON reporter, which carries
+the same figures as the HTML report's embedded JSON.
+
+| Suite, workers | Wall time, median (runs 1, 2, 3) | Sum of test durations, median (runs) | Load at start, runs 1-3 | Failures               |
+| -------------- | -------------------------------- | ------------------------------------ | ----------------------- | ---------------------- |
+| Gate, 6        | 41.5 s (50.3, 41.5, 38.8)        | 107 s (107, 113, 104)                | 11.1, 15.3, 24.2        | none                   |
+| Gate, 9        | 43.1 s (43.1, 43.5, 40.9)        | 141 s (151, 141, 130)                | 15.6, 17.0, 17.0        | none                   |
+| Gate, 12       | 50.3 s (46.7, 59.3, 50.3)        | 229 s (176, 337, 229)                | 11.3, 19.4, 15.8        | none                   |
+| Stories, 6     | 58.0 s (58.0, 67.1, 47.2)        | 201 s (201, 301, 179)                | 16.0, 13.7, 20.2        | none                   |
+| Stories, 9     | 49.8 s (58.0, 49.8, 46.3)        | 263 s (322, 263, 221)                | 14.3, 14.8, 15.7        | none                   |
+| Stories, 12    | 64.7 s (64.7, 63.9, 86.4)        | 344 s (344, 332, 665)                | 11.5, 23.0, 19.2        | run 3: 2 failed, below |
+
+Lock waits before the runs ranged from 0 to 202 s and are not in the times.
+
+What it shows. Summed test time rises with the worker count (gate 107 s,
+141 s, 229 s), so each test gets slower as slots are added: the cores, or the
+browser server sharing them, are the limit, not the number of servers or free
+memory. The gate suite gained nothing from 9 (43 s against 41.5 s) and lost
+9 s at 12. The story suite was 8 s faster at 9 by median, but its 6 and 9
+ranges overlap (47 to 67 s against 46 to 58 s) under this load, so that is
+not a difference worth a default. At 12 workers, run 3 of the story suite
+timed out two `07-admin.spec.ts` story-18 tests at the 30 s limit (the
+compendium entry and the category flows), with a summed test time of 665 s and
+the host load at 19; nothing else failed in any run. Memory was not the limit
+and nothing swapped; the cores and the browser server were. The default stays
+at 6. Whether 9 would win on a quiet machine this series does not settle. It
+changes only the local default: CI sets `E2E_WORKERS` itself.
+
+Merged staging, default 6: `npm run e2e` on the merged branch took 41.3 s wall
+from holding the lock, with a load average of 6.7 at the start, and passed
+all 64 tests (staging had grown since the 62 above). It ran with coverage off,
+since the merged harness has coverage behind `E2E_COVERAGE=1`, so it is not
+comparable with the 6, 9 and 12 table, which ran with coverage on under load.

@@ -127,6 +127,10 @@ jobs:
       # runs: a test mostly waits on the browser, not on the cores. MB.236
       # measured it; claude-docs/testing/e2e.md, "E2E".
       E2E_WORKERS: 4
+      # JS coverage is collected only when asked (tests/e2e/coverage.config.ts,
+      # M11.18); CI asks, so the coverage artifact below and
+      # summarize-playwright.mjs's table are unchanged.
+      E2E_COVERAGE: '1'
     steps:
       - name: Checkout into /app
         if: inputs.should-run
