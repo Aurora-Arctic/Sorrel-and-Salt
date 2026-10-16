@@ -18,6 +18,7 @@ import {
   stockEditor,
   withSql,
 } from './coven-ingredients';
+import { openAddIngredient } from './ingredient-dialogs';
 
 // Stories 14, 15 and 16: the compendium as anyone browses it, an entry added
 // from it to a coven, a coven's own ingredient, and the warning that a new
@@ -309,14 +310,6 @@ test.fixme(
     });
   },
 );
-
-/** The shell's Add Ingredient, which on a coven's page adds to that coven (claude-docs/components/app-shell.md). */
-async function openAddIngredient(page: Page) {
-  await page.getByRole('button', { name: 'Add Ingredient', disabled: false }).click();
-  const dialog = page.getByRole('dialog', { name: 'Add Ingredient' });
-  await expect(dialog).toBeVisible();
-  return dialog;
-}
 
 const INGREDIENT_QUERY = 'query ($id: ID!, $w: ID) { ingredient(id: $id, workspaceId: $w) { id } }';
 
