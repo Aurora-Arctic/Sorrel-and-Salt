@@ -1,6 +1,8 @@
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type postgres from 'postgres';
+import { revalidateTag } from 'next/cache';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
+import { COMPENDIUM_TAG } from '@/lib/compendium-cache';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { decodeCursor, resolvePage } from '@/lib/pagination';
 import { formSlug, slugify } from '@/lib/slugify';
@@ -13,6 +15,7 @@ import {
   listIngredientFormGroups,
   updateIngredientFormGroup,
 } from '@/modules/vocabulary';
+import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import type { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
 import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
@@ -318,6 +321,67 @@ describe('updateIngredientFormGroup', () => {
     for (const id of [gone, '00000000-0000-4000-8000-000000000000', 'not-a-uuid']) {
       await expect(updateIngredientFormGroup(admin, id, input())).rejects.toThrow(NotFound);
     }
+  });
+});
+
+// The glyph standing for the group (M12.6): one of the six, or NULL for the
+// generic. An update rewrites the group whole, so an input without one clears
+// it — the only way GraphQL's `icon: null` reaches the service, as absent.
+describe('the glyph', () => {
+  const expired = vi.mocked(revalidateTag);
+  beforeEach(() => expired.mockClear());
+
+  const iconOf = async (id: string) => (await groupOf(id)).icon as string | null;
+
+  it('is written as given by a create, each of the six and none, expiring the compendium', async () => {
+    for (const icon of [...FORM_GROUP_ICONS, null]) {
+      const created = await createIngredientFormGroup(
+        admin,
+        input({ name: `Fixture ${icon ?? 'Generic'}`, icon }),
+      );
+
+      expect(await iconOf(created.id), String(icon)).toBe(icon);
+    }
+    expect(expired.mock.calls).toEqual(
+      Array.from({ length: FORM_GROUP_ICONS.length + 1 }, () => [COMPENDIUM_TAG, { expire: 0 }]),
+    );
+  });
+
+  it('is written as given by an update, each of the six and null, expiring the compendium', async () => {
+    const id = await seedGroup('Fixture Matter');
+
+    for (const icon of [...FORM_GROUP_ICONS, null]) {
+      await updateIngredientFormGroup(admin, id, input({ icon }));
+
+      expect(await iconOf(id), String(icon)).toBe(icon);
+    }
+    expect(expired).toHaveBeenCalledTimes(FORM_GROUP_ICONS.length + 1);
+  });
+
+  it('is cleared by an update that carries none', async () => {
+    const id = await seedGroup('Fixture Matter');
+    await sql`update ingredient_form_groups set icon = 'curio' where id = ${id}`;
+
+    await updateIngredientFormGroup(admin, id, input());
+
+    expect(await iconOf(id)).toBeNull();
+  });
+
+  it('refuses any other value on `icon`, writing nothing and expiring nothing', async () => {
+    const id = await seedGroup('Fixture Kept');
+    await sql`update ingredient_form_groups set icon = 'curio' where id = ${id}`;
+    const before = await groupOf(id);
+    const bad = { icon: 'banana' } as unknown as Partial<IngredientFormGroupInput>;
+
+    expect(await issuesOf(createIngredientFormGroup(admin, input(bad)))).toEqual([
+      { path: ['icon'], message: expect.any(String) },
+    ]);
+    expect(await issuesOf(updateIngredientFormGroup(admin, id, input(bad)))).toEqual([
+      { path: ['icon'], message: expect.any(String) },
+    ]);
+    expect(await countNamed('Fixture Matter')).toBe(0);
+    expect(await groupOf(id)).toEqual(before);
+    expect(expired).not.toHaveBeenCalled();
   });
 });
 
