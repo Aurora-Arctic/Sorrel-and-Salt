@@ -465,8 +465,9 @@ time: other sessions' runs shared the cores (load average 9 to 16, and every
 run waited 85 to 123 s for the lock), so these figures run slower than the
 table above and compare with each other, not with it. The warm series also
 included one failure, an axe scan that found a page with no `<title>` on
-`admin.spec.ts`'s zodiac filter test, which passed in the other five runs
-and is not caused by the servers; the stories run was green.
+`admin.spec.ts`'s zodiac filter test. That test passed in the other five runs
+and the stories run was green, but it was not rerun or investigated, so the
+cause is unknown.
 
 | Wall time, three runs  | Cold (the run builds and boots) | Warm (servers up)             |
 | ---------------------- | ------------------------------- | ----------------------------- |
