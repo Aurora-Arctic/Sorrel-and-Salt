@@ -10,11 +10,12 @@ import {
 import { byCitation, citationText } from '../../../lib/citation';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { proofFor } from './ingredient-rows';
 import { ingredientCategories } from '../schema/ingredient-categories';
 import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { categories } from '@/modules/vocabulary/schema/categories';
-import { type Membership, assertMembership } from '@/modules/coven';
+import type { Membership } from '@/modules/coven';
 import type {
   CategoryRow,
   CitedReference,
@@ -292,19 +293,6 @@ function citedBy(
 }
 
 /** The proof for one coven, or `undefined` where the check refuses it. */
-async function proofFor(
-  session: Session | null,
-  workspaceId: string,
-): Promise<Membership | undefined> {
-  if (!session) return undefined;
-  try {
-    return await assertMembership(session, workspaceId, { ingredient: ['read'] });
-  } catch (error) {
-    if (error instanceof Forbidden) return undefined;
-    throw error;
-  }
-}
-
 function byName(a: { name: string }, b: { name: string }): number {
   return a.name.localeCompare(b.name);
 }
