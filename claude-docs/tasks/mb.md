@@ -2680,7 +2680,7 @@ _Acceptance criteria:_
 - A followed link lands on the page's confirmed view (`?verified`): the address and Continue, no field; a verified account that comes back sees the field alone. A link opened from a signed-out browser goes to `/sign-in` with a sentence saying to sign in and open it again, and nothing from the link in the URL
 - The form uses no native validation: an empty or malformed field is the server's refusal, shown beside the input like every other
 - A signed-in user can reach the same page to change their email, with the same rules
-- Covered by a component test with role and label queries, and stories 58 and 59's acceptance tests pass in a new `tests/acceptance/08-email-and-admin.test.ts`
+- Covered by a component test with role and label queries, and stories 58 and 59's flows pass in `tests/e2e/stories/08-email-and-admin.spec.ts` (M9.1 moved it from `tests/acceptance/`)
 
 **MB.55 — Scan both provider availability states in the e2e accessibility run** · 2h
 
@@ -3199,7 +3199,7 @@ _Acceptance criteria:_
 
 _Story 63 — As a visitor, I want to read the compendium and its entries without signing in, so that the site's reference is useful to people who are not in a coven._
 
-Closes Wave 12, once MB.83, M8.18, M8.19 and MB.84 have landed. The acceptance test for story 63 in `tests/acceptance/02-compendium.test.ts`; a service test that the compendium read takes no session while a null session is refused on every workspace read, asserting the rows exist before asserting the refusal; a route test that a workspace ingredient's slug at `/compendium/ingredients/` is 404, stating that the row is a workspace entry; and the e2e: a signed-out visit to `/compendium` lands on the page rather than `/sign-in?next=`, follows a card to its entry, and both pages are axe clean signed out.
+Closes Wave 12, once MB.83, M8.18, M8.19 and MB.84 have landed. The story flow for story 63 in `tests/e2e/stories/02-compendium.spec.ts`; a service test that the compendium read takes no session while a null session is refused on every workspace read, asserting the rows exist before asserting the refusal; a route test that a workspace ingredient's slug at `/compendium/ingredients/` is 404, stating that the row is a workspace entry; and the e2e: a signed-out visit to `/compendium` lands on the page rather than `/sign-in?next=`, follows a card to its entry, and both pages are axe clean signed out.
 
 _Acceptance criteria:_
 
