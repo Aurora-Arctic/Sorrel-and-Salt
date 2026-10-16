@@ -132,6 +132,8 @@ export interface SwitchFieldProps {
   onChange: (checked: boolean) => void;
   /** Shut: dashed, faded, its name dimmed. */
   disabled?: boolean;
+  /** Optional: what the switch is for, behind an info tip beside the label. */
+  hint?: string;
 }
 
 /** One choice of a `RadioGroupField`: its value, its name and what it means. */

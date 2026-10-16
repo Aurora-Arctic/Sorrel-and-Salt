@@ -175,14 +175,16 @@ Promote and Demote modal.
 
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),
-`onChange(checked)`, `disabled`, and either `checked`, held by the caller,
+`onChange(checked)`, `disabled`, an optional `hint`, and either `checked`, held by the caller,
 or `defaultChecked`, the state it is first drawn in, the native checkbox
 holding it after. A list filter takes `defaultChecked`: the switch applies
 the filter on its change, and the new list draws the filter again, switch
 and all, from the filter it shows, so there is no state of the caller's to
 keep ([`filter-form.md`](filter-form.md)). It draws a `.field`
-block of its own rather than `FieldShell`, since it has no hint, note or
-error and its label takes the press feedback: the label above, tied to the
+block of its own rather than `FieldShell`, since it has no note or
+error and its label takes the press feedback. A `hint` puts the label in a
+`.field__label-row` beside an InfoTip, as `FieldShell` does, and names the
+tip in the toggle's `aria-describedby`; a filter switch takes none. The rest: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
 `role="switch"`, beneath it in `.switch__control`, centred under the label. The label is its
 accessible name and a click on it turns it; the label and the toggle are

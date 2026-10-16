@@ -835,6 +835,8 @@ const ENTRY = {
           description: null,
         },
         safetyNotes: 'Dry away from damp.',
+        // Its own toxic flag, the entry's left off (M11.21): its card line says so.
+        toxic: true,
         celestialBodies: [{ value: 'Mercury' }],
         categoryIds: [CATEGORIES[0].id, CATEGORIES[1].id],
         // A form's link names one form of what it links (MB.115): Fixturewort

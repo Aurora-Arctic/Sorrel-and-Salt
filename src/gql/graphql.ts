@@ -37,6 +37,8 @@ export type CompendiumIngredientInput = {
   references?: Array<ReferenceLinkInput> | null | undefined;
   safetyNotes?: string | null | undefined;
   substitutes?: Array<SubstituteInput> | null | undefined;
+  /** Whether the ingredient is toxic, off when left out; each form's flag is its own. */
+  toxic?: boolean | null | undefined;
   /** Its forms, each replacing the one it names; a form not listed is removed, and [] is none. */
   variants: Array<IngredientVariantInput>;
   zodiacSigns?: Array<string> | null | undefined;
@@ -58,6 +60,8 @@ export type CompendiumIngredientUpdateInput = {
   references: Array<ReferenceLinkInput>;
   safetyNotes: string;
   substitutes: Array<SubstituteInput>;
+  /** Whether the ingredient is toxic; each form's flag is its own. */
+  toxic: boolean;
   /** Its forms, each replacing the one it names; a form not listed is removed, and [] is none. */
   variants: Array<IngredientVariantInput>;
   zodiacSigns: Array<string>;
@@ -113,6 +117,8 @@ export type IngredientInput = {
   references?: Array<ReferenceLinkInput> | null | undefined;
   safetyNotes?: string | null | undefined;
   substitutes?: Array<SubstituteInput> | null | undefined;
+  /** Whether the ingredient is toxic, off when left out; each form's flag is its own. */
+  toxic?: boolean | null | undefined;
   /** Its forms, each replacing the one it names; a form not listed is removed, and [] is none. */
   variants: Array<IngredientVariantInput>;
   zodiacSigns?: Array<string> | null | undefined;
@@ -134,6 +140,8 @@ export type IngredientVariantInput = {
   references: Array<ReferenceLinkInput>;
   safetyNotes: string;
   substitutes: Array<SubstituteInput>;
+  /** Whether this form is toxic: its own flag, whatever the ingredient's says. */
+  toxic: boolean;
   zodiacSigns: Array<string>;
 };
 

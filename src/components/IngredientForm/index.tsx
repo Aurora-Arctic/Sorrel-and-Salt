@@ -21,7 +21,7 @@ import { CollapsibleSection } from './section';
 import { SubstituteForms } from './substitute-forms';
 import { EntryHrefContext } from './substitute-summary';
 import { FormActions, SelectField, TextField } from '../Field';
-import { ListField, MultiSelectField } from './fields';
+import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
 import {
   LookupListField,
@@ -434,6 +434,8 @@ const IngredientForm = ({
                   placeholder="Add safety notes"
                   multiline
                 />
+                {/* Its own flag: a toxic form says so on its own (M11.21). */}
+                <ToggleField name="toxic" label="Toxic" hint="On if any part of it is poisonous." />
               </CollapsibleSection>
               <CollapsibleSection
                 title="Correspondences"
