@@ -520,3 +520,22 @@ runs once on each of the six workers that come to it rather than once. Its
 tests are evenly spread, so the run is now its startup and teardown plus
 the even spread of its tests, 12.7 s, and what is left to shorten is the
 startup, the teardown, the video and the coverage: the plan's levers 3 to 5.
+
+**After the video went** (lever 3, `video: 'off'` for every run, where CI
+already had it off): three pairs of cold gate runs on one tree, video off then
+on, each pair back to back, so that whatever else the machine was doing fell on
+both sides alike. Another session loaded it throughout (load average 2 to 10),
+which is why these absolute figures sit above the table before, and why the
+pairs rather than the medians are the evidence. 62 tests, since staging had
+grown by then.
+
+| Pair | Video off: wall, sum of test durations | Video on: wall, sum of test durations |
+| ---- | -------------------------------------- | ------------------------------------- |
+| 1    | 30.3 s, 80 s                           | 32.5 s, 97 s                          |
+| 2    | 31.1 s, 87 s                           | 35.6 s, 106 s                         |
+| 3    | 34.4 s, 93 s                           | 36.5 s, 100 s                         |
+
+Video off won every pair: a tenth to a sixth of the summed test time (the
+single warm run in the variants table said 8%, these said 7% to 17%), and 2
+to 4 s of wall. A failing test still leaves its trace and screenshot under
+`.reports/test-results/`, checked by failing one on purpose.
