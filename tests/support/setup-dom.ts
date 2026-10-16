@@ -10,8 +10,8 @@ afterEach(() => {
   cleanup();
 });
 
-// Node's own `localStorage` global shadows jsdom's once Vitest merges jsdom's
-// window into the global scope. Replaced without reading it first: merely
+// Node's own `localStorage` global shadows the DOM library's once Vitest
+// merges its window into the global scope. Replaced without reading it first: merely
 // reading `window.localStorage` to check invokes Node's getter and prints its
 // ExperimentalWarning.
 class MemoryStorage implements Storage {
@@ -54,10 +54,10 @@ afterEach(() => {
   window.localStorage.clear();
 });
 
-// jsdom implements no modal dialog: `showModal` and `close` are missing from
-// its `<dialog>`, and every Modal in a test calls them. Stood in for here, as
-// a browser behaves — the element gains and loses `open` — rather than in
-// each test that renders one. A test asserting the calls themselves
+// happy-dom's `<dialog>` has a bare `showModal` and `close`, and every Modal in
+// a test calls them. Pinned here, as a browser behaves for what a test can see
+// — the element gains and loses `open` — so a change to the library's version
+// of them cannot reach a test, rather than repeated in each test that renders one. A test asserting the calls themselves
 // (tests/components/Modal) puts its own spies over these.
 HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
   this.setAttribute('open', '');
@@ -66,10 +66,10 @@ HTMLDialogElement.prototype.close = function (this: HTMLDialogElement) {
   this.removeAttribute('open');
 };
 
-// A browser answers `matchMedia`; jsdom has none and happy-dom answers "no
-// preference" to everything. Neither is the person this suite stands in for:
-// a test environment draws no CSS transitions, so it reports the one preference
-// that says not to wait for one. Modal then closes at once rather than holding
+// A browser answers `matchMedia`; happy-dom answers "no preference" to
+// everything (and jsdom, which this suite used to run on, has none). Neither
+// is the person this suite stands in for: a test environment draws no CSS
+// transitions, so it reports the one preference that says not to wait for one. Modal then closes at once rather than holding
 // for a `transitionend` that nothing here can fire. A test of the fade, or of a
 // system theme, stubs `matchMedia` itself over this.
 const environmentMedia = (query: string): MediaQueryList =>
@@ -90,10 +90,10 @@ Object.defineProperty(window, 'matchMedia', {
 });
 
 // happy-dom's built-in default stylesheet leaves an inline element's `display`
-// empty, where a browser (and jsdom) reports the property's initial value,
-// `inline`. dom-accessibility-api reads it to decide whether the parts of an
-// accessible name need a space between them, so "Edit Ingredient, Testwort" came out as
-// "Edit Ingredient , Testwort". The HTML rendering section's inline elements are
+// empty, where a browser reports the property's initial value, `inline`
+// (happy-dom issue #2467). dom-accessibility-api reads it to decide whether the parts of an
+// accessible name need a space between them, so "Edit Ingredient Testwort" came out with
+// spaces inside the words. The HTML rendering section's inline elements are
 // declared here, as a browser's own sheet declares them; `:where` keeps the
 // specificity at zero, so a test's own styles still win.
 const defaults = document.createElement('style');

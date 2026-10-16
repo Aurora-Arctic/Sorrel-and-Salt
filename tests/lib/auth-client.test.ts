@@ -17,7 +17,7 @@ describe('auth-client', () => {
     const fetchMock = vi.fn(
       async (_url: string, _init?: RequestInit) =>
         // No `redirect: true`, so Better Auth's own redirect plugin never
-        // assigns `window.location.href`, which jsdom cannot follow.
+        // assigns `window.location.href`, which happy-dom cannot follow.
         new Response(JSON.stringify({ url: 'https://accounts.google.com/o/oauth2/v2/auth' }), {
           status: 200,
           headers: { 'Content-Type': 'application/json' },

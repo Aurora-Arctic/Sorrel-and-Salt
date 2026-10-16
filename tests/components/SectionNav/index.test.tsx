@@ -193,7 +193,7 @@ describe('SectionNav', () => {
   });
 
   // Wider than the phone shows as many leading tabs as fit the row, measured in
-  // the browser. jsdom draws no layout, so the widths are stood in for: every
+  // the browser. happy-dom draws no layout, so the widths are stood in for: every
   // tab 100px, the chevron none, the list 450px wide.
   describe('wider than the phone', () => {
     beforeEach(() => {

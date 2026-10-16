@@ -7,7 +7,7 @@ import { mockGraphQLMutation } from '../../support/msw/graphql';
 import { stubLocationAssign } from '../../support/location';
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
-// navigates, which jsdom cannot follow.
+// navigates, which happy-dom cannot follow.
 const impersonateUserMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({
   impersonateUser: (...args: unknown[]) => impersonateUserMock(...args),

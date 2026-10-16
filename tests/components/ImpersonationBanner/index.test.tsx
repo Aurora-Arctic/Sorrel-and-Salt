@@ -7,7 +7,7 @@ import { stubLocationAssign } from '../../support/location';
 // and carries Stop (claude-docs/components/impersonation-banner.md).
 
 // Mocked wholesale: a real call would reach /api/auth, and its success
-// navigates, which jsdom cannot follow.
+// navigates, which happy-dom cannot follow.
 const stopImpersonatingMock = vi.fn();
 vi.mock('@/lib/auth-client', () => ({
   stopImpersonating: (...args: unknown[]) => stopImpersonatingMock(...args),

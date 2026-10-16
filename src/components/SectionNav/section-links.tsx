@@ -64,7 +64,7 @@ const measureNatural = (list: HTMLElement): Natural | null => {
   const widths = items.map(
     (item) => item.offsetWidth + pixels(getComputedStyle(item).marginInlineStart),
   );
-  // No layout (jsdom, a hidden nav): there is nothing to fit, so keep the default.
+  // No layout (happy-dom, a hidden nav): there is nothing to fit, so keep the default.
   if (widths.length === 0 || widths.some((width) => width === 0)) return null;
   const more = list.querySelector<HTMLElement>(':scope > .section-nav__more');
   const chevron = more?.querySelector<HTMLElement>('.section-nav__chevron');

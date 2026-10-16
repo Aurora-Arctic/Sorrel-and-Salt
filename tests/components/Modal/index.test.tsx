@@ -6,8 +6,8 @@ import Modal, { DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '@/c
 
 // A dialog over the page, on the native element's modal mode, which brings
 // the focus trap, Escape and the inert page (claude-docs/components/modal.md).
-// jsdom implements neither `showModal` nor `close`, so both are stood in for
-// here as a browser behaves: the element gains and loses `open`.
+// happy-dom's `showModal` and `close` only set and clear `open`, with no focus
+// trap, so both are replaced here by spies that do the same and can be asserted on.
 
 const showModal = vi.fn(function (this: HTMLDialogElement) {
   this.setAttribute('open', '');
@@ -121,7 +121,7 @@ describe('Modal', () => {
 
   // The owner's call during M5.5: a click outside closes it, as Escape does.
   // The backdrop is the dialog's own box to an event, so outside is told by
-  // the point; jsdom lays nothing out, so every point is outside the box and
+  // the point; happy-dom lays nothing out, so every point is outside the box and
   // what is tested is where the press began and ended. Its own padding is
   // inside the box, which only a real layout shows (tests/e2e/admin-compendium.spec.ts).
   it('asks its owner to close it for a press and release on the backdrop, and for nothing else', () => {
