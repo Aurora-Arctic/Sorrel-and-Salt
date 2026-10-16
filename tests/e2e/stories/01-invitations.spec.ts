@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import postgres from 'postgres';
 import { test, expect } from '../fixtures';
-import { assertNoAccessibilityViolations } from '../axe';
+import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
 import { latestMessageTo } from '../mailpit';
 import { signInAgainAs, signInAs } from '../session';
@@ -256,9 +256,17 @@ test(
   'an owner invites an address as a member from the Invitations page, offered viewer and member only, and the link goes to that address alone',
   { tag: '@story-4' },
   async ({ page }) => {
+    // Invite is on the roll's tab too; the owner goes on to the Invitations tab.
     await signInAgainAs(page, people.owner.id);
-    await page.goto(`/coven/${COVEN_SLUG}/invitations`);
-    await page.getByRole('main').getByRole('button', { name: 'Invite', exact: true }).click();
+    await page.goto(`/coven/${COVEN_SLUG}/members`);
+    const invite = page.getByRole('main').getByRole('button', { name: 'Invite', exact: true });
+    await expect(invite).toBeVisible();
+    await page
+      .getByRole('navigation', { name: 'Members' })
+      .getByRole('link', { name: 'Invitations' })
+      .click();
+    await expectInvitationsTab(page);
+    await invite.click();
     const dialog = page.getByRole('dialog');
 
     // The role choice is viewer or member; owner is not on offer.
@@ -293,6 +301,7 @@ test(
       row.getByRole('button', { name: `Revoke the invitation to ${invited.email}` }),
     ).toBeVisible();
     await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page, { restore: true });
 
     // Nor is it on the list, read again from the server.
     await page.reload();
@@ -433,6 +442,7 @@ test(
     const accept = page.getByRole('button', { name: 'Accept Invitation' });
     await expect(accept).toBeVisible();
     await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page, { restore: true });
     await accept.click();
 
     await expect(page).toHaveURL(new RegExp(`/coven/${COVEN_SLUG}$`));
@@ -488,6 +498,7 @@ test(
     await signInAgainAs(page, invited.id);
     usedRefusal = await refusalAt(page, invitedPath);
     await assertNoAccessibilityViolations(page);
+    await assertNoSidewaysScroll(page, { restore: true });
 
     // Revoke sent by hand for the accepted invitation is refused: the link
     // still gives the used reason, not the revoked one, and the seat stands.
