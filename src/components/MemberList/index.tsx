@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import StackTable from '../DataTable';
+import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import type { MemberListEntry, MemberListProps } from './types';
@@ -63,22 +63,7 @@ const columns = (
     className: 'member-list__fact',
     cell: (member) => member.invitedBy && <span>{member.invitedBy}</span>,
   },
-  {
-    heading: 'Updated',
-    className: 'member-list__fact',
-    // "by Fixture A on 2026-10-12": who last changed the membership, and when.
-    // Both are withheld together: a date with no one to ask about it says little.
-    cell: (member) =>
-      member.updatedBy &&
-      member.updatedAt && (
-        <span>
-          by <strong>{member.updatedBy}</strong> on{' '}
-          <time dateTime={member.updatedAt.toISOString()}>
-            {member.updatedAt.toISOString().slice(0, 10)}
-          </time>
-        </span>
-      ),
-  },
+  updatedColumn('member-list__fact'),
   Boolean(removeAction) && {
     heading: 'Remove',
     action: 'corner',

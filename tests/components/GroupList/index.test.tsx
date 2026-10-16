@@ -16,6 +16,8 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 const WARDS: GroupListEntry = {
   id: 'g1',
+  updatedBy: 'Fixture Editor',
+  updatedAt: new Date('2026-05-06T10:00:00Z'),
   name: 'Fixture Wards',
   slug: 'fixture-wards',
   description: 'An invented group',
@@ -34,6 +36,19 @@ describe('GroupList', () => {
     expect(within(row).getByRole('link', { name: 'Edit Fixture Wards' })).toHaveAttribute(
       'href',
       '/admin/category-groups?edit=fixture-wards',
+    );
+  });
+
+  // MB.260: who last edited each row, and when, as the coven's member list has it.
+  it('shows who last edited each row and when in an Updated column', () => {
+    render(<GroupList kind="category" groups={[WARDS]} />);
+
+    expect(screen.getByRole('columnheader', { name: 'Updated' })).toBeInTheDocument();
+    const row = screen.getByRole('row', { name: /Fixture Wards/ });
+    expect(within(row).getByText('Fixture Editor')).toBeInTheDocument();
+    expect(within(row).getByText('2026-05-06')).toHaveAttribute(
+      'datetime',
+      '2026-05-06T10:00:00.000Z',
     );
   });
 
