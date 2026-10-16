@@ -20,6 +20,10 @@ merely absent:
   `.actor`, MB.199), `usersById` (`identity`, a co-member's display name, MB.10,
   landed ahead of the fields that read it, M6.11's `WorkspaceMember.user` and
   M6.18's last editor; [`auth/display-names.md`](../auth/display-names.md)),
+  `ingredientsById` (`ingredients`, an ingredient by id for the row that names
+  it, MB.9: keyed `{ id, workspaceId }`, cached by the id, null for a missing,
+  soft-deleted or other-coven id; read by M9.4's `InventoryItem.ingredient`
+  and M10's `SpellIngredient.ingredient`),
   `categoriesByIngredient`, `folkNamesByIngredient`,
   `substitutesByIngredient`, `deitiesByIngredient`, `referencesByIngredient`
   and `variantsByIngredient` (`ingredients`, for `Ingredient.categories`,
