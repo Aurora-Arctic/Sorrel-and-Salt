@@ -17,13 +17,13 @@ Hence the order M8.10, M8.13, M8.11, M8.12, M12.3, M12.4, M8.13a, M9.7, M9.8, M8
 1. The public layout reads the session when there is one and renders the right chrome on the server; there is no client island and no `me` call.
 2. The coven Ingredients list is a card per ingredient with a jar line per held form, so `IngredientCard` serves both the public compendium and the coven page.
 3. Add Ingredient and Add to My Ingredients target the switcher's current coven, with a coven select only when the viewer is in more than one.
-4. A jar carries over to a local entry that hides its compendium entry, which is the new task M12.8.
+4. A jar carries over to a local entry that hides its compendium entry, which is the new task M12.8. Where the local already holds a jar of that form the two merge, and when their units differ the member chooses how, never the code.
 5. M8.15 is retired into M8.19.
 6. MB.84 ships without the Open Graph image, which M11.16 adds in Wave 15; MB.83 makes the asset paths public so a favicon never redirects.
 7. M6.18 shows a relative time with the absolute date visible, worked out on the client.
 8. M12.1 folds the folk-name id change in.
 
-**M12.8 follows M8.9**, minted 2026-10-16 on the Wave 12 review (decision 4). It is a service change with no UI, so it lands early, ahead of the pages that would otherwise need it: M8.16's save status names a jar it carried over, and M9.6 and M9.12 add and show jars on entries a local may hide.
+**M12.8 follows M8.9**, minted 2026-10-16 on the Wave 12 review (decision 4). It is a service change with no UI, so it lands early, ahead of the pages that would otherwise need it: M8.16's save status names a jar it carried over, and M9.6 and M9.12 add and show jars on entries a local may hide. M8.17 asks the member how to merge two jars of one form when their units differ, so it carries that half.
 
 **M12.3 and M12.4 follow M8.13** (minted 2026-10-15 on the owner's backlog): M12.3 reads the count each filter value would give, over the list arguments M11.22 adds in Wave 11 and M8.12's category mode, and M12.4 puts the facet chips, their counts and the one-sentence summary of the search on `IngredientSearch`, through M8.13's URL state, so both land before M8.18 and M9.6 compose the search.
 
