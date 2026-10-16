@@ -118,7 +118,8 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
         ['discord'],
         'admin',
       );
-      const name = 'Aaa Testwort Guarded';
+      // Unlike every name story 18 adds, so its own adds meet no possible-duplicate prompt.
+      const name = 'Fixture Bramble Guarded';
       const slug = slugify(name);
       await withSql((sql) =>
         insertIngredient(
