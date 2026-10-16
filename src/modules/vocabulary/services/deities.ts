@@ -147,7 +147,7 @@ export async function deleteDeity(session: Session, id: string): Promise<void> {
   // Read through the compendium's own filter on the pick, which the
   // `ingredient_deities_deity_id_idx` index answers.
   await refuseWhileHeld(
-    { deityId: deity.id },
+    { deityIds: [deity.id] },
     {
       name: deity.name,
       holding: 'is among the deities of',
