@@ -4,14 +4,16 @@
 
 ### Things to Think About
 
-- [ ] Adam and Eve Root contains a form in it's name. - Should it?
-- [ ] Ivy tried to click on the ingredient name itself instead of edit. Should go to the page where it can be edited? Or modal?
+- [x] Adam and Eve Root contains a form in it's name. - Should it?
+      Yes, because a root can still have multiple forms and some things have different names for different parts.
+- [x] Ivy tried to click on the ingredient name itself instead of edit. Should go to the page where it can be edited? Or modal?
+      It should open a modal.
 - [x] Define password policies and create enforcement.
-- [ ] Icons for forms?
+- [x] Icons for forms?
 
 ### Feature Additions
 
-- [ ]
+- [ ] When a ingredient name is clicked in the list it should open a modal with the ingredient details. If this is by an admin with a compendium entry or by a coven memember/owner with a coven entry it should have an edit button so they can modify it in a modal there. This can be added across the site in the milestone that handles coven ingredients.
 
 ### Launch - PUBLIC
 
