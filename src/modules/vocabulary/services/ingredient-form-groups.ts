@@ -70,7 +70,8 @@ export async function getIngredientFormGroupBySlug(slug: string): Promise<Ingred
 }
 
 /**
- * Adds a form group, its slug derived from the name.
+ * Adds a form group, its slug derived from the name, and with no glyph the
+ * generic one (M12.6).
  *
  * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
@@ -86,7 +87,11 @@ export async function createIngredientFormGroup(
   const slug = slugify(fields.name);
 
   const written = await withAudit(session, async (write) => {
-    const [row] = await write.insert(ingredientFormGroups, { ...fields, slug });
+    const [row] = await write.insert(ingredientFormGroups, {
+      ...fields,
+      icon: fields.icon ?? null,
+      slug,
+    });
     return row;
   }).catch((error: unknown) => refuseSlugCollision(GROUPS, error, slug));
   expireCompendium();
@@ -94,10 +99,10 @@ export async function createIngredientFormGroup(
 }
 
 /**
- * Rewrites a form group whole, its slug following the name, and on a rename
- * the slug of every live form under it, in the same transaction. Its
- * `seedKey` is left as it was, so a renamed seeded row is still the seed's
- * (MB.171).
+ * Rewrites a form group whole, its slug following the name and its glyph
+ * cleared when the input carries none, and on a rename the slug of every live
+ * form under it, in the same transaction. Its `seedKey` is left as it was, so
+ * a renamed seeded row is still the seed's (MB.171).
  *
  * The forms are read before the transaction, so one added under the group in
  * the instant between keeps the slug it was given.
@@ -115,7 +120,9 @@ export async function updateIngredientFormGroup(
 ): Promise<IngredientFormGroupRow> {
   assertCurator(session);
   const fields = parseInput(IngredientFormGroupInput, input);
-  const written = await updateGroup(session, GROUPS, id, fields);
+  // Written whole, so an input without a glyph clears the one held: GraphQL's
+  // `definedArgs` hands `icon: null` over as absent, and absent is how it clears.
+  const written = await updateGroup(session, GROUPS, id, { ...fields, icon: fields.icon ?? null });
   expireCompendium();
   return written;
 }

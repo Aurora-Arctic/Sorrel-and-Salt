@@ -78,6 +78,14 @@ export type DeityTraditionInput = {
   name: string;
 };
 
+export type FormGroupIcon =
+  | 'animal'
+  | 'botanical'
+  | 'curio'
+  | 'fluid'
+  | 'mineral'
+  | 'substance';
+
 /** A curated deity picked, or a name typed: exactly one of the two. */
 export type IngredientDeityInput = {
   deityId?: string | number | null | undefined;
@@ -93,6 +101,7 @@ export type IngredientElement =
 
 export type IngredientFormGroupInput = {
   description: string;
+  icon?: FormGroupIcon | null | undefined;
   name: string;
 };
 
