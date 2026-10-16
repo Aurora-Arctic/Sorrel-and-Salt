@@ -113,7 +113,7 @@ const CREATE = `mutation ($w: ID!, $name: String!) {
 }`;
 
 test.fixme(
-  'Story 28: a member opens Add Ingredient from the shell, adding to the coven it is on',
+  'a member opens Add Ingredient from the shell, adding to the coven it is on',
   {
     tag: '@story-28',
     annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
@@ -223,7 +223,7 @@ test.fixme(
 );
 
 test.fixme(
-  'Story 29: a member saves a name-only stub, and Save & Add Another keeps the dialog for the next',
+  'a member saves a name-only stub, and Save & Add Another keeps the dialog for the next',
   {
     tag: '@story-29',
     annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
@@ -271,7 +271,7 @@ test.fixme(
 );
 
 test.fixme(
-  'Story 30: a member files a new ingredient under categories through the picker',
+  'a member files a new ingredient under categories through the picker',
   {
     tag: '@story-30',
     annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
@@ -315,7 +315,7 @@ test.fixme(
 );
 
 test.fixme(
-  'Story 31: errors show beside their fields on leaving one and on submit',
+  'errors show beside their fields on leaving one and on submit',
   {
     tag: '@story-31',
     annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
@@ -383,7 +383,7 @@ test.fixme(
 );
 
 test.fixme(
-  'Story 32: closing with unsaved input asks before discarding it',
+  'closing with unsaved input asks before discarding it',
   {
     tag: '@story-32',
     annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
@@ -490,7 +490,7 @@ const REFUSED_UPDATE = {
 };
 
 test.fixme(
-  "Story 33: a member opens an entry's edit pre-filled, from its row and its page, never the shell",
+  "a member opens an entry's edit pre-filled, from its row and its page, never the shell",
   {
     tag: '@story-33',
     annotation: {
@@ -516,9 +516,10 @@ test.fixme(
       await expect(dialog.getByRole('textbox', { name: 'Formal Name', exact: true })).toHaveValue(
         'Fixtura testalis',
       );
+      // The select-only box is no input: what it shows of its choice is its text (claude-docs/components/combobox.md).
       await expect(
         dialog.getByRole('combobox', { name: 'Classification', exact: true }),
-      ).toHaveValue('Botanical');
+      ).toHaveText('Botanical');
       await expect(dialog.getByRole('textbox', { name: 'Description', exact: true })).toHaveValue(
         TESTWORT.description,
       );
@@ -613,7 +614,7 @@ test.fixme(
 );
 
 test.fixme(
-  "Story 34: a saved edit shows in the list and on the entry's page without a reload",
+  "a saved edit shows in the list and on the entry's page without a reload",
   {
     tag: '@story-34',
     annotation: {

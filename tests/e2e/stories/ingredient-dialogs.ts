@@ -21,7 +21,7 @@ export function shellAddIngredient(page: Page): Locator {
 
 /** The shell's Add Ingredient, which on a coven's page adds to that coven (claude-docs/components/app-shell.md). */
 export async function openAddIngredient(page: Page) {
-  await page.getByRole('button', { name: 'Add Ingredient', disabled: false }).click();
+  await shellAddIngredient(page).click();
   const dialog = page.getByRole('dialog', { name: 'Add Ingredient' });
   await expect(dialog).toBeVisible();
   return dialog;
