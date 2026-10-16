@@ -1,6 +1,6 @@
 import 'server-only';
 import { cache } from 'react';
-import { membershipsOf, rolePermits } from '@/modules/coven';
+import { byCovenName, membershipsOf, rolePermits } from '@/modules/coven';
 import { countReceivedInvitations, getMe } from '@/modules/identity';
 import { requireSignedIn } from './request-session';
 import type { ShellViewer, ShellWorkspace } from './types';
@@ -44,7 +44,7 @@ export const viewerOf = cache(
           name,
           canReadMembers: rolePermits(role, { member: ['read'] }),
         }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
+        .sort(byCovenName),
     };
   },
 );

@@ -17,6 +17,7 @@ const requireSession = vi.fn<() => Promise<Session>>();
 const linkedAccounts = vi.fn(async () => [{ id: 'a1', providerId: 'discord', accountId: 'd-1' }]);
 const sessionIsFresh = vi.fn(async () => true);
 vi.mock('@/lib/request-session', () => ({ requireSession, linkedAccounts, sessionIsFresh }));
+vi.mock('@/modules/coven', () => ({ firstCovenSlugOf: async () => undefined }));
 vi.mock('@/lib/social-providers-config', () => ({ configuredProviders: () => [] }));
 // Accept reads the router, which a page test has no app to give.
 vi.mock('next/navigation', async (importOriginal) => ({

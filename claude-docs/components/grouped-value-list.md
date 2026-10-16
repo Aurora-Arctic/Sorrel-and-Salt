@@ -11,7 +11,9 @@ until MB.115 folded it in. It is render-only and a server component: the page
 ([`grouped-value-form.md`](grouped-value-form.md), "On the admin pages")
 reads one page of the vocabulary under the address's filter and hands it
 over, each value with its group's name and the address that opens it to
-edit, with the filter as asked and the groups it can narrow to.
+edit, with the filter as asked and the groups it can narrow to. Its last
+column before Edit is Updated (MB.260): who last edited the value and when
+([`updatedColumn`](data-table.md)).
 
 ## Props
 

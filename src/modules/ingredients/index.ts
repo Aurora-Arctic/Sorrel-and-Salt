@@ -20,6 +20,8 @@ export * from './graphql/compendium-entries';
 export * from './graphql/promote-folk-name';
 export * from './graphql/references';
 export * from './graphql/workspace-ingredients';
+export { unitConvert } from './units/convert';
+export type { ConversionRefusal, UnitConversion } from './units/types';
 export type {
   CategoryRow,
   CitedReference,

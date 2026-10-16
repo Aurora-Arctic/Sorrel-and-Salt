@@ -1,5 +1,6 @@
 import type { Route } from 'next';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading } from '../Modal/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
 
@@ -8,7 +9,7 @@ import type { PagePosition, PagerHrefs } from '../../lib/types';
  * — the formal name, null for none — its live forms, and the address that
  * opens it to edit.
  */
-export interface CompendiumListEntry {
+export interface CompendiumListEntry extends UpdatedStamp {
   id: string;
   name: string;
   slug: string;

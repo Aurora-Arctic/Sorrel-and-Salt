@@ -1,6 +1,6 @@
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
-import StackTable, { GroupChip } from '../DataTable';
+import StackTable, { GroupChip, updatedColumn } from '../DataTable';
 import { noMatchText } from '../../lib/text';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
@@ -69,6 +69,7 @@ const GroupedValueList = ({
               className: 'grouped-value-list__description',
               cell: (entry) => entry.description,
             },
+            updatedColumn(),
             {
               heading: 'Edit',
               hiddenHeading: true,

@@ -8,13 +8,13 @@ The traditions' list has a name search; the category and form groups' have none.
 
 `GroupListProps` (`types.ts`):
 
-| Prop                       | What it is                                                                                                          |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `kind`                     | `'category'`, `'form'` or `'tradition'`                                                                             |
-| `groups`                   | The page's groups: `{ id, name, slug, description, editHref }`, plus `colorDark`, `colorLight` for a category group |
-| `previousHref`, `nextHref` | The pager's links, none at either end                                                                               |
-| `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                   |
-| `filter`                   | `{ query }`, the name search the page shows, `''` for none; absent, the list draws no search at all                 |
+| Prop                       | What it is                                                                                                                                |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `kind`                     | `'category'`, `'form'` or `'tradition'`                                                                                                   |
+| `groups`                   | The page's groups: `{ id, name, slug, description, editHref, updatedBy, updatedAt }`, plus `colorDark`, `colorLight` for a category group |
+| `previousHref`, `nextHref` | The pager's links, none at either end                                                                                                     |
+| `position`                 | Where this page stands, `{ page, pages }`, for the pager's "Page X of Y"; none says nothing of it                                         |
+| `filter`                   | `{ query }`, the name search the page shows, `''` for none; absent, the list draws no search at all                                       |
 
 `groupsHref(kind, place, dialog?)` builds `/admin/category-groups`, `/admin/form-groups` or `/admin/deity-traditions` with the page's search and cursor, and `?new` or `?edit=<slug>` for a modal, through the shared `listHref` (`src/lib/list-href.ts`): `/admin/deity-traditions?query=wort&after=c&new`. A blank search is written as none. `groupsPath(kind)` is the bare page, which the search submits to and Clear opens. Each kind's address, table name, row nouns, Add label and the value kind it holds are `kinds.ts`'s `KINDS`, the one table the form, the page and the nav's tabs read too (`GroupForm` takes its nouns from it and from the held kind's in [`grouped-value-list.md`](grouped-value-list.md)).
 
@@ -30,7 +30,7 @@ The traditions' list has a name search; the category and form groups' have none.
 
 ## Styling
 
-The list is built from the list primitives ([`../styling.md`](../styling.md), "Tables at phone width"): its root is a `.list-frame`, and its table is [`StackTable`](data-table.md), a `.data-table.data-table--stack` in a `.data-table-frame`, banded at desktop width as every admin table is (MB.115's sign-off kept the bands over a hairline rule). Under 40rem of the frame's width each row becomes a card, led by "Name" and "Description" from each cell's `data-label`, with the Edit pencil at the card's top right beside the name (a `'corner'` action column, MB.115, the owner's call). StackTable writes out the table's roles, since WebKit drops a table's meaning once its parts change `display`.
+The list is built from the list primitives ([`../styling.md`](../styling.md), "Tables at phone width"): its root is a `.list-frame`, and its table is [`StackTable`](data-table.md), a `.data-table.data-table--stack` in a `.data-table-frame`, banded at desktop width as every admin table is (MB.115's sign-off kept the bands over a hairline rule). The Updated column (MB.260) names who last edited the group and when ([`updatedColumn`](data-table.md)). Under 40rem of the frame's width each row becomes a card, led by "Name" and "Description" from each cell's `data-label`, with the Edit pencil at the card's top right beside the name (a `'corner'` action column, MB.115, the owner's call). StackTable writes out the table's roles, since WebKit drops a table's meaning once its parts change `display`.
 
 The search is the shared `.filter-row`, whose one field takes the row's whole width on a narrow column, with Clear on a line of its own beneath it, as every filter row stacks ([`filter-form.md`](filter-form.md), "Styling").
 

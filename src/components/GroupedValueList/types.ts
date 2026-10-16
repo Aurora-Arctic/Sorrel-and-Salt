@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading } from '../Modal/types';
 import type { GroupColors, PagePosition, PagerHrefs } from '../../lib/types';
 import type { GroupedValueKind } from '../GroupedValueForm/types';
@@ -29,7 +30,7 @@ export interface GroupedValueListKind {
 }
 
 /** One value as the list shows it: its group by name and colours, and the address that opens it to edit. */
-export interface GroupedValueListEntry {
+export interface GroupedValueListEntry extends UpdatedStamp {
   id: string;
   name: string;
   slug: string;

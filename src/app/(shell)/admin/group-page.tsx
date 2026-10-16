@@ -24,6 +24,7 @@ import {
 } from '@/modules/vocabulary';
 import GroupDialog from './group-dialog';
 import { GROUP_READERS } from './group-readers';
+import { editorStamps } from './editors';
 import AddAction from './add-action';
 import { pagerHrefs } from '../../../lib/list-href';
 import { readEditPlace, readListPlace } from './list-page';
@@ -145,7 +146,7 @@ export async function GroupAction({ kind, searchParams }: GroupPageProps): Promi
  * (claude-docs/components/group-form.md, "On the admin pages").
  */
 export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise<ReactElement> {
-  await requireAdminSession();
+  const session = await requireAdminSession();
   const place = readPlace(kind, await searchParams);
   const { query, here, adding } = place;
   const { noun, label } = KINDS[kind];
@@ -156,7 +157,12 @@ export async function GroupPage({ kind, searchParams }: GroupPageProps): Promise
     readChoices(kind),
     readEditPlace(place, (slug) => readGroup(kind, slug)),
   ]);
-  const groups = page.edges.map(({ node }): GroupListEntry => ({
+  const stamps = await editorStamps(
+    session,
+    page.edges.map(({ node }) => node),
+  );
+  const groups = page.edges.map(({ node }, i): GroupListEntry => ({
+    ...stamps[i],
     id: node.id,
     name: node.name,
     slug: node.slug,

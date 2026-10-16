@@ -7,7 +7,7 @@ component: the page reads one page of the compendium under the address's
 filter through `listCompendium` and hands it over, each entry with its
 formal name, its classification, its live forms and the address that opens
 it to edit, with the filter as asked and the curated forms the filter
-offers. The table's columns are Name, Formal Name, Classification and Form:
+offers. The table's columns are Name, Formal Name, Classification, Form and Updated (MB.260; `updatedColumn`, [data-table.md](data-table.md)):
 the formal name sits beside the label because it is the entry's identity
 (MB.215), the owner's call in MB.115. The page reads each page's forms in
 one batch through `variantsOf(null, refs)`, the read `Ingredient.variants`
