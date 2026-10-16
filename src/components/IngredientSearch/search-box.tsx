@@ -35,6 +35,7 @@ const IngredientSearchMatchesDocument = graphql(`
           slug
           name
           canonicalName
+          nomenclature
         }
       }
     }
@@ -122,6 +123,9 @@ const IngredientSearchBox = ({
           onChange={onText}
           onFocus={() => setActive(true)}
           onPick={pick}
+          // Enter with the dropdown open and no row highlighted would only
+          // close it; it applies the text, as a closed box does through the form.
+          onCommit={(value) => apply(searchHref(value.trim()))}
           suggestions={{ options, pending: text.trim() !== query || isFetching }}
           empty={searchesNow ? 'No Matches' : undefined}
           footer={

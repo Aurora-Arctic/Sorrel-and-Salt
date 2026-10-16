@@ -29,6 +29,7 @@ const match = (n: number): IngredientSearchMatch => ({
   slug: `testwort-${n}`,
   name: `Testwort ${n}`,
   canonicalName: n === 1 ? 'Fixtura testalis' : null,
+  nomenclature: 'botanical',
 });
 
 /** Every variables object the lookup was asked with, in order. */
@@ -267,6 +268,18 @@ describe('IngredientSearch', () => {
     expect(router.push).not.toHaveBeenCalled();
 
     fireEvent.submit(form());
+
+    expect(router.push.mock.calls).toEqual([[searchHref('wort')]]);
+  });
+
+  it('applies the text on Enter while the dropdown is open and no row is highlighted', async () => {
+    offer([match(1)]);
+    renderSearch();
+
+    typeName(' wort ');
+    await settle();
+    await screen.findByRole('option', { name: /Testwort 1/ });
+    fireEvent.keyDown(box(), { key: 'Enter' });
 
     expect(router.push.mock.calls).toEqual([[searchHref('wort')]]);
   });

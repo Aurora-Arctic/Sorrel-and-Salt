@@ -296,3 +296,106 @@ test('the toxic toggles start off, save, and read back on reopening, each its ow
   }
   await assertNoAccessibilityViolations(page);
 });
+
+// M8.10: the Name box is IngredientSearch's type-ahead. Its matching is the
+// repository's and its states are the component test's; these walk it in a
+// browser, where the dropdown, the modal it opens and the form before
+// JavaScript are real (claude-docs/components/ingredient-search.md).
+const CATS_CLAW = /^Cat's Claw \(Uncaria/;
+
+test('a name typed shows matching rows, and a pick opens its modal over the list as it was shown', async ({
+  page,
+}) => {
+  await signInAs(page, 'search-pick-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?nomenclature=botanical');
+  // Hydrated first: before it, the box is a plain text field with no dropdown.
+  await page.waitForLoadState('networkidle');
+
+  const name = page.getByRole('combobox', { name: 'Name' });
+  await name.fill('cats claw');
+  const rows = page.getByRole('option', { name: CATS_CLAW });
+  await expect(rows.first()).toBeVisible();
+  // Why the URL below could have carried the typed text: it was not applied while typing.
+  await expect(page).not.toHaveURL(/query=/);
+
+  await rows.first().click();
+
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Cat's Claw/ });
+  await expect(dialog).toBeVisible();
+  await expect(page).toHaveURL(/[?&]nomenclature=botanical(&|$)/);
+  await expect(page).toHaveURL(/[?&]edit=cat/);
+  await expect(page).not.toHaveURL(/query=/);
+});
+
+test('Enter in the Name box applies the name, keeping Classification and No Refs', async ({
+  page,
+}) => {
+  await signInAs(page, 'search-enter-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  await page.waitForLoadState('networkidle');
+
+  await page.getByRole('combobox', { name: 'Classification' }).click();
+  await page
+    .getByRole('listbox', { name: 'Classification choices' })
+    .getByRole('option', { name: 'Botanical' })
+    .click();
+  await expect(page).toHaveURL(/nomenclature=botanical/);
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('switch', { name: 'No Refs' }).click();
+  await expect(page).toHaveURL(/withoutReferences=1/);
+  await page.waitForLoadState('networkidle');
+
+  const edit = (formalName: string) =>
+    page.getByRole('link', { name: `Edit Cat's Claw, ${formalName}` });
+  // Why the narrowing below proves the name applied: the thorn one is listed first.
+  await expect(edit('Senegalia greggii')).toBeVisible();
+
+  const name = page.getByRole('combobox', { name: 'Name' });
+  await name.fill('uncaria');
+  await expect(page.getByRole('option').first()).toBeVisible();
+  // The dropdown is open; Enter applies the typed text, not the highlighted row.
+  await name.press('Enter');
+
+  await expect(page).toHaveURL(/query=uncaria/);
+  await expect(page).toHaveURL(/nomenclature=botanical/);
+  await expect(page).toHaveURL(/withoutReferences=1/);
+  await expect(edit('Uncaria tomentosa')).toBeVisible();
+  await expect(edit('Senegalia greggii')).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('the filter form works with JavaScript off: a name and the Search button send query', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  try {
+    const page = await context.newPage();
+    await signInAs(page, 'search-nojs-admin@admin-compendium.test', ['discord'], 'admin');
+    await page.goto('/admin/compendium');
+
+    const edit = (formalName: string) =>
+      page.getByRole('link', { name: `Edit Cat's Claw, ${formalName}` });
+    await expect(edit('Senegalia greggii')).toBeVisible();
+
+    await page.getByRole('combobox', { name: 'Name' }).fill('uncaria');
+    await page.getByRole('button', { name: 'Search' }).click();
+
+    await expect(page).toHaveURL(/query=uncaria/);
+    await expect(edit('Uncaria tomentosa')).toBeVisible();
+    await expect(edit('Senegalia greggii')).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test('the open Name dropdown has no accessibility violations', async ({ page }) => {
+  await signInAs(page, 'search-axe-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  await page.waitForLoadState('networkidle');
+
+  await page.getByRole('combobox', { name: 'Name' }).fill('cats claw');
+  await expect(page.getByRole('option', { name: CATS_CLAW }).first()).toBeVisible();
+
+  await assertNoAccessibilityViolations(page);
+});

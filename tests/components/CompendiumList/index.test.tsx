@@ -1,15 +1,20 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { type ReactElement, useState } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import CompendiumList from '@/components/CompendiumList';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { QueryClientProvider } from '@tanstack/react-query';
+import CompendiumListBase from '@/components/CompendiumList';
 import { compendiumHref } from '@/components/CompendiumList/href';
 import type {
   CompendiumListEntry,
   CompendiumListFilter,
   CompendiumListProps,
 } from '@/components/CompendiumList/types';
+import { DEBOUNCE_MS } from '@/lib/debounce';
+import { makeQueryClient } from '@/lib/graphql-client';
 import { FILTER_ROWS, drawnOnServer, sent } from '../../support/filter-form';
-import { choose } from '../../support/interact';
+import { waitFor } from '../../support/ingredient-form';
+import { choose, typeIn } from '../../support/interact';
+import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
 
@@ -21,6 +26,15 @@ vi.mock('next/navigation', () => ({ useRouter: () => router }));
 // formal name and live forms, an Edit link opening it in the page's modal, the
 // filter that narrows them to the admin's to-do lists, and the pager
 // (claude-docs/components/compendium-list.md).
+
+// The Name box is IngredientSearch's type-ahead, which asks the server through
+// TanStack Query, so every render sits under a client, as the app's providers give it.
+const client = makeQueryClient();
+const CompendiumList = (listProps: CompendiumListProps): ReactElement => (
+  <QueryClientProvider client={client}>
+    <CompendiumListBase {...listProps} />
+  </QueryClientProvider>
+);
 
 const ENTRIES: CompendiumListEntry[] = [
   {
@@ -193,7 +207,7 @@ describe('CompendiumList filter', () => {
   });
 
   const searchButton = () => screen.getByRole('button', { name: 'Search' });
-  const nameBox = () => screen.getByRole('searchbox', { name: 'Name' });
+  const nameBox = () => screen.getByRole('combobox', { name: 'Name' });
   const formBox = () => screen.getByRole('combobox', { name: 'Form' });
   const kindSelect = () => screen.getByRole('combobox', { name: 'Classification' });
   /** The classification the form sends: once hydrated, the select-only box's hidden input. */
@@ -209,6 +223,7 @@ describe('CompendiumList filter', () => {
     label: 'Filter the Compendium',
     path: '/admin/compendium',
     searchLabel: 'Name',
+    searchRole: 'combobox',
     push: router.push,
     none: {
       list: <CompendiumList {...props()} />,
@@ -333,6 +348,58 @@ describe('CompendiumList filter', () => {
         '/admin/compendium?query=Test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1',
       ],
     ]);
+  });
+
+  it('applies No Refs on its press carrying the name typed, trimmed', () => {
+    render(<CompendiumList {...props()} />);
+
+    fireEvent.change(nameBox(), { target: { value: ' Test wort ' } });
+    fireEvent.click(unsourcedSwitch());
+
+    expect(router.push.mock.calls).toEqual([
+      ['/admin/compendium?query=Test+wort&withoutReferences=1'],
+    ]);
+  });
+
+  // The owner's call (M8.10): a pick opens the entry over the list as it
+  // stands, so the text typed and not searched is not applied.
+  describe('picking a name from the dropdown', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('opens that entry\x27s modal over the filter shown, not the text typed', async () => {
+      mockGraphQLQuery('IngredientSearchMatches', () => ({
+        compendium: {
+          pageInfo: { hasNextPage: false },
+          edges: [
+            {
+              node: {
+                id: 'i1',
+                slug: 'testwort',
+                name: 'Testwort',
+                canonicalName: 'Fixtura testalis',
+                nomenclature: 'botanical',
+              },
+            },
+          ],
+        },
+      }));
+      render(<CompendiumList {...props({ filter: SHOWN })} />);
+
+      act(() => nameBox().focus());
+      typeIn(nameBox(), 'fixt');
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(DEBOUNCE_MS);
+      });
+      fireEvent.click(await screen.findByRole('option', { name: /Testwort/ }));
+
+      await waitFor(() => expect(router.push).toHaveBeenCalled());
+      expect(router.push.mock.calls).toEqual([[compendiumHref(SHOWN, { edit: 'testwort' })]]);
+    });
   });
 
   it('applies No Refs on its press, on or off, keeping the rest of the filter shown', () => {
@@ -502,7 +569,7 @@ describe('CompendiumList Clear', () => {
     render(<CompendiumList {...props()} />);
     expect(screen.queryByRole('link', { name: 'Clear' })).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
+    fireEvent.change(screen.getByRole('combobox', { name: 'Name' }), {
       target: { value: 'draft' },
     });
     fireEvent.change(screen.getByRole('combobox', { name: 'Form' }), { target: { value: 'zz' } });
@@ -513,7 +580,7 @@ describe('CompendiumList Clear', () => {
   it('opens the unfiltered list, whatever the fields hold, while the page shows a filter', () => {
     render(<CompendiumList {...props({ filter: { ...NO_FILTER, query: 'test' } })} />);
 
-    fireEvent.change(screen.getByRole('searchbox', { name: 'Name' }), {
+    fireEvent.change(screen.getByRole('combobox', { name: 'Name' }), {
       target: { value: 'other' },
     });
     fireEvent.click(clearLink());

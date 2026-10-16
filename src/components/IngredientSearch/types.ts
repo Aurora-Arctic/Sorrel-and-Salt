@@ -13,6 +13,8 @@ export interface IngredientSearchMatch {
   name: string;
   /** Its formal name, null for none. */
   canonicalName: string | null;
+  /** Its naming system, which a pick's dialog head sets the formal name by. */
+  nomenclature: string;
 }
 
 /** A dropdown row: the combobox's option, carrying the match it stands for. */

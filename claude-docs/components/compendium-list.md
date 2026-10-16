@@ -64,9 +64,13 @@ different groups, so the page offers each name once, whatever its case.
   the Clear link and the soft navigation; Clear is drawn while the page
   shows a name, a form, a classification or No Refs, and opens
   `/admin/compendium` with none, and is not drawn while it shows none,
-  whatever the fields hold. M8.10 turns the Name box into its
-  typeahead, a picked row opening the entry's `?edit=` modal, with this form
-  kept underneath.
+  whatever the fields hold. The Name box is `IngredientSearch`'s typeahead
+  ([`ingredient-search.md`](ingredient-search.md)): a picked row opens that
+  entry's `?edit=` modal over the filter as shown, without applying the
+  text typed, and Enter or the magnifier applies it. The Form, Classification
+  and No Refs fields sit in its slot and carry the typed name through
+  `useSearchText`. The form is still a GET form underneath, so it filters
+  before hydration.
 - **Form is a type-ahead over the curated forms once hydrated**, the
   curated lists' group filter's pattern
   ([`grouped-value-list.md`](grouped-value-list.md)), the owner's call in
