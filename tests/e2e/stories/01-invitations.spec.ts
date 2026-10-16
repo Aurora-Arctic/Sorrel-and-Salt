@@ -215,10 +215,16 @@ async function directAcceptRefused(page: Page, path: string): Promise<void> {
   expect((await page.goto(`/coven/${COVEN_SLUG}`))?.status()).toBe(404);
 }
 
-/** Where `/coven`, the landing, sends this browser, read from its redirect. */
+/**
+ * Where `/coven`, the landing, sends this browser, read from its redirect.
+ * Only the navigation's own response counts: the shell's brand links to the
+ * landing, so Next prefetches it from every page as a 200 (an RSC fetch),
+ * and one still in flight would answer here instead of the 307.
+ */
 async function landingRedirect(page: Page): Promise<string | undefined> {
   const redirected = page.waitForResponse(
-    (response) => new URL(response.url()).pathname === '/coven',
+    (response) =>
+      new URL(response.url()).pathname === '/coven' && response.request().isNavigationRequest(),
   );
   await page.goto('/coven').catch(() => {});
   const response = await redirected;
