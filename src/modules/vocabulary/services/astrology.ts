@@ -48,7 +48,7 @@ const VOCABULARY = {
     noun: 'celestial body',
     listNoun: 'celestial bodies',
     slugIndex: 'celestial_bodies_slug_unique',
-    holding: (name: string) => ({ celestialBody: name }),
+    holding: (name: string) => ({ celestialBodies: [name] }),
   },
   zodiacSigns: {
     table: zodiacSigns,
@@ -56,7 +56,7 @@ const VOCABULARY = {
     noun: 'sign',
     listNoun: 'zodiac signs',
     slugIndex: 'zodiac_signs_slug_unique',
-    holding: (name: string) => ({ zodiacSign: name }),
+    holding: (name: string) => ({ zodiacSigns: [name] }),
   },
 } as const satisfies Record<CuratedField, unknown>;
 

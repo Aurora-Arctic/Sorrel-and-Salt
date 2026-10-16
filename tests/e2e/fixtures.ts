@@ -1,6 +1,6 @@
 import { test as base, type Page } from '@playwright/test';
 import MCR from 'monocart-coverage-reports';
-import coverageOptions from './coverage.config';
+import coverageOptions, { coverageRequested } from './coverage.config';
 import { currentSlot, slotUrl } from './slots';
 
 // Every spec imports `test`/`expect` from here so these fixtures run for
@@ -21,7 +21,9 @@ export const test = base.extend<{ coverageAutoFixture: string }, { slot: number 
 
   coverageAutoFixture: [
     async ({ context }, use) => {
-      const isChromium = test.info().project.name === 'chromium';
+      // Chromium alone has the coverage API, and only a run that asked for it
+      // pays for it (coverage.config.ts).
+      const collecting = coverageRequested && test.info().project.name === 'chromium';
 
       // JS only: CSS coverage has no sourcemap path back to Sass.
       // claude-docs/testing/coverage.md, "Coverage".
@@ -29,13 +31,13 @@ export const test = base.extend<{ coverageAutoFixture: string }, { slot: number 
         await page.coverage.startJSCoverage({ resetOnNavigation: false });
       };
 
-      if (isChromium) {
+      if (collecting) {
         context.on('page', startCoverage);
       }
 
       await use('coverageAutoFixture');
 
-      if (isChromium) {
+      if (collecting) {
         context.off('page', startCoverage);
         const coverageList = await Promise.all(
           context.pages().map((page) => page.coverage.stopJSCoverage()),

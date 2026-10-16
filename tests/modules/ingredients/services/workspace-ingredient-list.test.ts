@@ -7,7 +7,7 @@ import type { Session } from '@/lib/session';
 import { listWorkspaceIngredients } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
@@ -126,7 +126,7 @@ describe('listWorkspaceIngredients', () => {
     expect(row.deleted_at).toBeNull();
   });
 
-  it("filters by search, category and form, under the coven's proof", async () => {
+  it("filters by search, category and forms, under the coven's proof", async () => {
     await add('Mugfixture', {
       workspaceId: WORKSPACE_W_ID,
       folkNames: ['Cronefixture'],
@@ -159,7 +159,7 @@ describe('listWorkspaceIngredients', () => {
       'Mugfixture',
       'Oilfixture',
     ]);
-    expect(await listed(asUser(B), WORKSPACE_W_ID, { form: 'oil' })).toEqual(['Oilfixture']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { forms: ['oil'] })).toEqual(['Oilfixture']);
   });
 
   it.each([
@@ -186,5 +186,71 @@ describe('listWorkspaceIngredients', () => {
     expect(await listed(asUser(B))).toEqual(['Covenwort']);
 
     await expect(listed(asUser(E))).rejects.toThrow(Forbidden);
+  });
+
+  /** The ids `session` is listed in `workspaceId` under `filter`. */
+  async function idsListed(
+    session: Session,
+    workspaceId: string,
+    filter: Parameters<typeof listWorkspaceIngredients>[2],
+  ): Promise<string[]> {
+    const page = await resolvePage({ first: 100 }, (request) =>
+      listWorkspaceIngredients(session, workspaceId, filter, request),
+    );
+    return page.edges.map(({ node }) => node.id);
+  }
+
+  // M11.22's five facets each sit under the coven's proof: the row in W
+  // matches every one of them, and so does X's, so a facet read past the
+  // proof would list W's row to D, or X's row to B. Each coven also holds a
+  // row matching none, so a facet the read ignored would list it.
+  describe('under each facet', () => {
+    let hecate: string;
+    let covenRow: string;
+    let elseRow: string;
+
+    beforeEach(async () => {
+      const [deity] = await sql`
+        select id from deities where name = 'Hecate' and deleted_at is null`;
+      hecate = deity.id as string;
+      const matching = {
+        toxic: true,
+        celestialBodies: ['Fixture Sun'],
+        zodiacSigns: ['Fixture Ram'],
+        variants: [makeVariant({ form: 'Fixture Oil' })],
+      };
+      covenRow = await add('Facetfixture', { ...matching, workspaceId: WORKSPACE_W_ID });
+      await insertDeityLink(sql, covenRow, hecate, 0, A.id);
+      elseRow = await add('Elsefixture', { ...matching, workspaceId: WORKSPACE_X_ID });
+      await insertDeityLink(sql, elseRow, hecate, 0, A.id);
+      for (const workspaceId of [WORKSPACE_W_ID, WORKSPACE_X_ID]) {
+        await add('Plainfixture', {
+          workspaceId,
+          variants: [makeVariant({ form: 'Fixture Root' })],
+        });
+      }
+    });
+
+    const facets: [string, () => Parameters<typeof listWorkspaceIngredients>[2]][] = [
+      ['forms', () => ({ forms: ['fixture oil'] })],
+      ['deityIds', () => ({ deityIds: [hecate] })],
+      ['zodiacSigns', () => ({ zodiacSigns: ['fixture ram'] })],
+      ['celestialBodies', () => ({ celestialBodies: ['fixture sun'] })],
+      ['toxic', () => ({ toxic: 'toxic' })],
+    ];
+
+    it.each(facets)(
+      'under %s, lists the row to B by its id and refuses D naming W',
+      async (_facet, facet) => {
+        // Unfiltered, W lists both its rows, so the facet is what narrows.
+        expect(await idsListed(asUser(B), WORKSPACE_W_ID, {})).toHaveLength(2);
+        // Why the read could have answered D: the facet matches W's row, D is
+        // admitted to a coven, and the same facet lists X's row to D there.
+        expect(await idsListed(asUser(B), WORKSPACE_W_ID, facet())).toEqual([covenRow]);
+        expect(await idsListed(asUser(D), WORKSPACE_X_ID, facet())).toEqual([elseRow]);
+
+        await expect(idsListed(asUser(D), WORKSPACE_W_ID, facet())).rejects.toThrow(Forbidden);
+      },
+    );
   });
 });

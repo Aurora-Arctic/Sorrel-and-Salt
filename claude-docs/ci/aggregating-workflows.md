@@ -51,9 +51,9 @@
   retargeted the base** (MB.100). `edited` is in the trigger types so a
   retarget re-runs the gate against the new base, but an edit to a title or a
   description changes nothing the gate checks, and once its run cancelled the
-  one in flight like a push. Blacksmith's [code]smith appends a
-  footer to every new PR's body four to nine seconds after it opens, so every
-  PR since the app was installed had its `opened` run cancelled and re-run;
+  one in flight like a push. Blacksmith's [code]smith, while it was installed (until M11.24), appended a
+  footer to every new PR's body four to nine seconds after it opened, so every
+  PR in that time had its `opened` run cancelled and re-run;
   on #535 the cancellation wedged, `build-image` neither running nor
   cancelled, and the group stayed held so the second run never started. A
   person editing a description mid-run did the same. Now the group's
@@ -154,11 +154,10 @@
     the symptom either.
   - **The rule stays in force until MB.39 settles it.** It costs a container
     pull per filtered-off leg (~20s on a `checks` leg, 46s on `playwright`, and
-    37s on `vitest` while it ran on GitHub's runners — the flag is resolved in
-    the first step, which runs _after_ `Initialize containers`), and that is
-    the cheaper side of the bet while the naming behaviour is unknown. On
-    Blacksmith the pull is cached, but the filtered-off `vitest` job still
-    starts a metered runner ([Runner budget](runner-budget.md)).
+    37s on `vitest` — the flag is resolved in the first step, which runs
+    _after_ `Initialize containers`), and that is the cheaper side of the bet
+    while the naming behaviour is unknown. GitHub's minutes are free on a
+    public repo ([Runner budget](runner-budget.md)).
 - **Live GitHub settings are confirmed with the user before being changed**, and
   a permissions-blocked write is reported rather than routed around.
 - **Runners are pinned to `ubuntu-26.04`** (MB.37), not `ubuntu-latest`. GitHub
@@ -166,8 +165,7 @@
   (actions/runner-images#14748) and annotated every job with a notice until
   then; pinning did the move on a PR that was watched and silenced the notice.
   Bumping it is one `sed` across `.github/workflows/`, and `.actrc`'s `-P`
-  platform mapping must move with it. **The one exception is `vitest.yml`**, on
-  `blacksmith-8vcpu-ubuntu-2404` since MB.96 — [Runner budget](runner-budget.md)
-  has why that job and no other. Blacksmith has no 26.04 label, and it does not
-  matter: the job runs inside `container:`, so the host's Ubuntu is only Docker
-  and the runner agent.
+  platform mapping must move with it. There is no exception: `vitest.yml` ran on
+  `blacksmith-8vcpu-ubuntu-2404` from MB.96 to M11.24, and [Runner
+  budget](runner-budget.md) has why it came back. The job runs inside
+  `container:`, so the host's Ubuntu is only Docker and the runner agent.

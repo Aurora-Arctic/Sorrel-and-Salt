@@ -4,7 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
@@ -53,7 +53,11 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $workspaceId: ID!
       $query: String
       $categoryIds: [ID!]
-      $form: String
+      $forms: [String!]
+      $deityIds: [ID!]
+      $zodiacSigns: [String!]
+      $celestialBodies: [String!]
+      $toxic: ToxicFilter
       $first: Int
       $after: String
     ) {
@@ -61,7 +65,11 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         workspaceId: $workspaceId
         query: $query
         categoryIds: $categoryIds
-        form: $form
+        forms: $forms
+        deityIds: $deityIds
+        zodiacSigns: $zodiacSigns
+        celestialBodies: $celestialBodies
+        toxic: $toxic
         first: $first
         after: $after
       ) {
@@ -86,7 +94,11 @@ async function names(variables: Record<string, unknown>): Promise<string[]> {
   return result.data?.workspaceIngredients.edges.map((edge) => edge.node.name) ?? [];
 }
 
-/** W's own entry and a compendium entry W holds the oil of, each in Protection. */
+/**
+ * W's own entry, linked to Hecate and listing a sign and a planet, and a
+ * compendium entry W holds the oil of, its oil flagged toxic; each in Protection.
+ */
+let hecate: string;
 let own: string;
 let held: string;
 let jar: string;
@@ -102,15 +114,20 @@ beforeEach(async () => {
       workspaceId: WORKSPACE_W_ID,
       folkNames: ['Cronefixture'],
       categories: ['Protection'],
+      zodiacSigns: ['Fixture Ram'],
+      celestialBodies: ['Fixture Sun'],
     }),
     A.id,
   );
+  const [deity] = await sql`select id from deities where name = 'Hecate' and deleted_at is null`;
+  hecate = deity.id as string;
+  await insertDeityLink(sql, own, hecate, 0, A.id);
   held = await insertIngredient(
     sql,
     makeIngredient({
       name: 'Heldwort',
       nomenclature: 'none',
-      variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })],
+      variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil', toxic: true })],
       categories: ['Protection'],
     }),
     A.id,
@@ -149,7 +166,7 @@ describe('workspaceIngredients', () => {
     ]);
   });
 
-  it('passes the search, category and form arguments to the read', async () => {
+  it('passes the search, category and facet arguments to the read', async () => {
     const [protection] = await sql`
       select id from categories where name = 'Protection' and deleted_at is null`;
     // Why each filter could have answered both: both entries are listed unfiltered.
@@ -157,7 +174,13 @@ describe('workspaceIngredients', () => {
 
     expect(await names({ query: 'cronefixture' })).toEqual(['Covenwort']);
     expect(await names({ categoryIds: [protection.id] })).toEqual(['Covenwort', 'Heldwort']);
-    expect(await names({ form: 'oil' })).toEqual(['Heldwort']);
+    expect(await names({ forms: ['Fixture Root', 'oil'] })).toEqual(['Heldwort']);
+    expect(await names({ deityIds: [hecate] })).toEqual(['Covenwort']);
+    expect(await names({ zodiacSigns: ['fixture ram'] })).toEqual(['Covenwort']);
+    expect(await names({ celestialBodies: ['fixture sun'] })).toEqual(['Covenwort']);
+    expect(await names({ toxic: 'toxic' })).toEqual(['Heldwort']);
+    expect(await names({ toxic: 'not_toxic' })).toEqual(['Covenwort']);
+    expect(await names({ toxic: 'any' })).toEqual(['Covenwort', 'Heldwort']);
   });
 
   it("resolves a page's stock, its jars' forms and its categories in one read each", async () => {

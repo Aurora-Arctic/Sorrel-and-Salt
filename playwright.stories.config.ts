@@ -1,5 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
-import { HTML_REPORT, baseConfig, slotServers } from './playwright.config';
+import { HTML_REPORT, baseConfig } from './playwright.config';
+import { slotServers } from './tests/e2e/servers';
 
 // The story suite (M9.1): one browser flow per user story, under
 // tests/e2e/stories/, run by `npm run test:stories` and by the PR gate's

@@ -1,5 +1,6 @@
 import { cloneDatabase, databaseUrl, dropDatabase, seedTemplate } from '../support/seeded-database';
-import { E2E_SLOTS, currentSlot } from './slots';
+import { SESSION_COOKIE, signed } from './session-cookie';
+import { E2E_SLOTS, currentSlot, serverUrl, slotPort } from './slots';
 
 // One database per worker slot, which that slot's server reads: global-setup.ts
 // builds the seeded template once per run and clones every slot's database
@@ -33,9 +34,42 @@ export async function cloneE2eDatabases(): Promise<void> {
   }
 }
 
-/** Between spec files: the calling worker's slot database back to the seeded baseline. */
+/**
+ * Between spec files: the calling worker's slot database back to the seeded
+ * baseline, and the slot's server told so. `DROP DATABASE ... WITH (FORCE)`
+ * kills the server's pooled connections, but the server learns of it only when
+ * its event loop reads each socket's close. A request landing first writes its
+ * query to a dead socket and fails (CONNECTION_CLOSED, EPIPE or 57P01), a 500
+ * on whichever test is first to load a page. So a burst of session lookups, the
+ * query every signed-in page opens with, goes to the server before this
+ * returns: each dead connection fails here, where nothing is watching, and the
+ * pool replaces it. The burst repeats until every request answers 200. Not a
+ * pause: no wait is long enough to promise the close has been read. If five
+ * bursts in a row still fail, it throws, naming the status codes of the last
+ * burst, so that a different server fault surfaces here rather than as a
+ * confusing 500 in the file's first test.
+ */
 export async function recreateE2eDatabase(): Promise<void> {
-  await cloneDatabase(slotDatabase(currentSlot()), E2E_TEMPLATE);
+  const slot = currentSlot();
+  await cloneDatabase(slotDatabase(slot), E2E_TEMPLATE);
+  const secret = process.env.BETTER_AUTH_SECRET;
+  if (!secret)
+    throw new Error('BETTER_AUTH_SECRET must be set for the runner and the server alike');
+  // A validly signed token no session row holds: the server looks it up, and
+  // answers 200 with no session. A 500 is the dead connection being found.
+  const request = () =>
+    fetch(`${serverUrl(slotPort(slot))}/api/auth/get-session`, {
+      headers: { cookie: `${SESSION_COOKIE}=${signed('warm-up', secret)}` },
+    }).catch(() => undefined);
+  let statuses: string[] = [];
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const responses = await Promise.all(Array.from({ length: 10 }, request));
+    if (responses.every((response) => response?.ok)) return;
+    statuses = responses.map((response) => (response ? String(response.status) : 'no response'));
+  }
+  throw new Error(
+    `The slot server at ${serverUrl(slotPort(slot))} kept failing session lookups after the database was recloned. Status codes in the last burst: ${statuses.join(', ')}.`,
+  );
 }
 
 /** Once per run, after the last spec. The slot databases are left for inspection. */

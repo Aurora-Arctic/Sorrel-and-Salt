@@ -65,6 +65,14 @@ report unless `node_modules` is excluded first.
   (the native V8 report) plus a `console-details` table printed at the end
   of the run.
 
+**Only when asked (M11.18).** None of the above runs unless `E2E_COVERAGE=1`
+is set: `tests/e2e/coverage.config.ts` exports `coverageRequested`, and the
+fixture, `cleanCache()` and `generate()` each check it. CI sets the variable
+in `playwright.yml`, so its artifact and summary are as before; a local run
+collects nothing and writes no `.reports/coverage-e2e/` unless it is run as
+`E2E_COVERAGE=1 npm run e2e`. What the collection cost every test, and the
+pairs that measured the saving: `e2e.md`, "Where a run's time goes", "After coverage went behind a switch".
+
 **Wired into CI (M1.14).** `playwright.yml`'s "Upload coverage artifact" step
 uploads `.reports/coverage-e2e/` on every run (pass or fail), parallel to
 `vitest.yml`'s `.reports/coverage/` upload. The run's reporters (`list`, `json`,
