@@ -652,21 +652,36 @@ test(
     expect(times).toEqual([...times].sort((a, b) => b - a));
     await assertNoAccessibilityViolations(page);
 
-    // The privilege dropdown narrows it further, once the page has hydrated:
-    // a select-only box, which applies the moment a choice is picked.
+    // Typed by hand, the search takes part of an address in any case; the
+    // privilege dropdown, a select-only box once the page has hydrated,
+    // applies the moment a choice is picked, carrying the search with it.
     await page.waitForLoadState('networkidle');
     const filter = page.getByRole('form', { name: 'Filter Privilege Changes' });
+    const search = filter.getByLabel('Name or Email');
+    const part = subjectEmail.split('@')[0].toUpperCase();
+    await search.fill(part);
     const privilege = filter.getByRole('combobox', { name: 'Privilege' });
     const choices = filter.getByRole('listbox', { name: 'Privilege choices' });
     await privilege.click();
     await choices.getByRole('option', { name: 'Coven Creation', exact: true }).click();
-    await expect(page).toHaveURL(/privilege=create_workspace$/);
+    await expect(page).toHaveURL(
+      `/admin/privilege-changes?query=${encodeURIComponent(part)}&privilege=create_workspace`,
+    );
     await expect(rows).toHaveCount(1);
+    await expect(rows.first().getByRole('cell').nth(1)).toHaveText('Ledger Fixturewort');
     await expect(rows.first().getByRole('cell').nth(5)).toHaveText('Ledger Keeper');
     await privilege.click();
     await choices.getByRole('option', { name: 'Admin', exact: true }).click();
     await expect(page).toHaveURL(/privilege=admin$/);
     await expect(rows).toHaveCount(2);
+
+    // A search nobody matches leaves no table, only the page saying so.
+    await search.fill('nobody-by-this-name');
+    await privilege.click();
+    await choices.getByRole('option', { name: 'Coven Creation', exact: true }).click();
+    await expect(page).toHaveURL(/query=nobody-by-this-name&privilege=create_workspace$/);
+    await expect(page.getByRole('table')).toHaveCount(0);
+    await assertNoAccessibilityViolations(page);
 
     // The subject, a user again, is refused the ledger it has just been shown in.
     await signInAgainAs(page, subject);
@@ -743,6 +758,8 @@ test(
       'href',
       `/sign-in?next=${encodeURIComponent(path)}`,
     );
+    // Not even what kind of invitation it is: the word admin appears nowhere on it.
+    await expect(visitor.getByRole('main').getByText(/admin/i)).toHaveCount(0);
     await expect(visitor.getByRole('main')).not.toContainText(invited);
     await expect(visitor.getByRole('main')).not.toContainText('Curates the resins');
     await expect(visitor.getByRole('button', { name: 'Accept Invitation' })).toHaveCount(0);
