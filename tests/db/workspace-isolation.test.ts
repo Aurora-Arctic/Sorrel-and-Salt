@@ -8,10 +8,17 @@ import { Forbidden, NotFound } from '@/lib/errors';
 import type { Session } from '@/lib/session';
 import { assertMembership, membershipsOf } from '@/modules/coven';
 import { setSpellVisibility } from '@/modules/grimoire';
-import { getWorkspaceIngredient, updateWorkspaceIngredient } from '@/modules/ingredients';
+import {
+  getStock,
+  getWorkspaceIngredient,
+  updateStock,
+  updateWorkspaceIngredient,
+} from '@/modules/ingredients';
 import { A, D, E, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertSpell } from '../support/db/insert-spell';
+import { insertStock } from '../support/db/insert-stock';
+import { variantIdOf } from '../support/db/read-variants';
 import { makeIngredient, makeSpell, variantInput } from '../support/fixtures';
 
 // Story 19 — an outsider and a site admin both refused a coven's ingredients
@@ -23,7 +30,8 @@ import { makeIngredient, makeSpell, variantInput } from '../support/fixtures';
 //
 // This is the per-entity sweep: every entity a coven holds, reached the way a
 // caller reaches it — an ingredient through the ingredients service
-// (getWorkspaceIngredient, updateWorkspaceIngredient), a spell's one write
+// (getWorkspaceIngredient, updateWorkspaceIngredient), a jar of stock through
+// the stock service (getStock, updateStock), a spell's one write
 // through setSpellVisibility, and the grimoire's reads, which have no service
 // yet, through the repository's finders under a real Membership. The rule
 // behind each refusal is its service's, proved there by direct id for every
@@ -49,7 +57,8 @@ afterAll(async () => {
 beforeEach(async () => {
   // `ingredients` also holds the compendium (`workspace_id is null`), which
   // the last describe block needs intact — so only the workspace-scoped rows
-  // are cleared, never the whole table.
+  // are cleared, never the whole table. Stock first: a jar names its form.
+  await sql`delete from inventory_items`;
   await sql`
     delete from ingredient_variants
     where ingredient_id in (select id from ingredients where workspace_id is not null)
@@ -63,6 +72,22 @@ const FABRICATED_ID = '00000000-0000-0000-0000-00000000dead';
 /** W's own ingredient, seeded through the shared inserter and stamped by A. */
 const seedIngredient = () =>
   insertIngredient(sql, makeIngredient({ workspaceId: WORKSPACE_W_ID }), A.id);
+
+/** W's jar of the ingredient's one form, stamped by A. */
+async function seedStock(ingredientId: string) {
+  const variantId = await variantIdOf(sql, ingredientId, 'Testform');
+  return insertStock(
+    sql,
+    { workspaceId: WORKSPACE_W_ID, ingredientId, variantId, quantityOnHand: '5', unit: 'g' },
+    A.id,
+  );
+}
+
+const quantityOf = async (stockId: string) =>
+  Number(
+    (await sql`select quantity_on_hand from inventory_items where id = ${stockId}`)[0]
+      .quantity_on_hand,
+  );
 
 /** A shared spell in W, one layer and one assigned category, stamped by A. */
 const seedSpell = () =>
@@ -122,6 +147,19 @@ describe('Ingredients — a workspace’s own stock', () => {
         getWorkspaceIngredient(asUser(D), WORKSPACE_W_ID, ingredientId),
       ).rejects.toBeInstanceOf(Forbidden);
     });
+
+    it('withholds W’s jar from D’s own, valid proof of a different workspace', async () => {
+      const stockId = await seedStock(await seedIngredient());
+      // Why this could have succeeded: the jar is W's and W's owner reads it,
+      // and D really may read stock — in X.
+      await expect(getStock(asUser(A), WORKSPACE_W_ID, stockId)).resolves.toMatchObject({
+        id: stockId,
+      });
+      await assertMembership(asUser(D), WORKSPACE_X_ID, { inventory: ['read'] });
+
+      await expect(getStock(asUser(D), WORKSPACE_X_ID, stockId)).rejects.toBeInstanceOf(NotFound);
+      await expect(getStock(asUser(D), WORKSPACE_W_ID, stockId)).rejects.toBeInstanceOf(Forbidden);
+    });
   });
 
   describe('writes', () => {
@@ -160,6 +198,34 @@ describe('Ingredients — a workspace’s own stock', () => {
       expect(real).toBeInstanceOf(Forbidden);
       expect(bogus).toBeInstanceOf(Forbidden);
       expect(real.message).toBe(bogus.message);
+    });
+
+    it('leaves W’s jar unchanged under D’s own valid proof of X', async () => {
+      const stockId = await seedStock(await seedIngredient());
+      // Why this could have succeeded: D may change stock — in X.
+      await assertMembership(asUser(D), WORKSPACE_X_ID, { inventory: ['update'] });
+
+      await expect(
+        updateStock(asUser(D), WORKSPACE_X_ID, stockId, { quantityOnHand: 0 }),
+      ).rejects.toBeInstanceOf(NotFound);
+
+      expect(await quantityOf(stockId)).toBe(5);
+    });
+
+    it('throws the identical Forbidden whether the jar id is real or fabricated', async () => {
+      const stockId = await seedStock(await seedIngredient());
+
+      const real = await refusalOf(
+        updateStock(asUser(D), WORKSPACE_W_ID, stockId, { quantityOnHand: 0 }),
+      );
+      const bogus = await refusalOf(
+        updateStock(asUser(D), WORKSPACE_W_ID, FABRICATED_ID, { quantityOnHand: 0 }),
+      );
+
+      expect(real).toBeInstanceOf(Forbidden);
+      expect(bogus).toBeInstanceOf(Forbidden);
+      expect(real.message).toBe(bogus.message);
+      expect(await quantityOf(stockId)).toBe(5);
     });
   });
 });
@@ -236,7 +302,7 @@ describe('Grimoire — the spell and what it is made of', () => {
 describe('E’s site role carries no bypass and no penalty from the membership check', () => {
   const stranger = asUser({ id: '00000000-0000-0000-0000-0000000000fe', role: 'user' });
 
-  type Seeded = { ingredientId: string; spellId: string };
+  type Seeded = { ingredientId: string; stockId: string; spellId: string };
   const ATTEMPTS: [string, (session: Session, seeded: Seeded) => Promise<unknown>][] = [
     [
       'W’s ingredient, read by id',
@@ -246,6 +312,12 @@ describe('E’s site role carries no bypass and no penalty from the membership c
       'W’s ingredient, rewritten',
       (session, { ingredientId }) =>
         updateWorkspaceIngredient(session, WORKSPACE_W_ID, ingredientId, hijack()),
+    ],
+    ['W’s jar, read by id', (session, { stockId }) => getStock(session, WORKSPACE_W_ID, stockId)],
+    [
+      'W’s jar, changed',
+      (session, { stockId }) =>
+        updateStock(session, WORKSPACE_W_ID, stockId, { quantityOnHand: 0 }),
     ],
     // The grimoire's reads have no service yet: the proof is what they take.
     [
@@ -261,13 +333,21 @@ describe('E’s site role carries no bypass and no penalty from the membership c
   it.each(ATTEMPTS)(
     'is refused %s, exactly as a stranger with no membership row would be, leaving it as it was',
     async (_attempt, attempt) => {
-      const seeded = { ingredientId: await seedIngredient(), spellId: await seedSpell() };
+      const ingredientId = await seedIngredient();
+      const seeded = {
+        ingredientId,
+        stockId: await seedStock(ingredientId),
+        spellId: await seedSpell(),
+      };
       // Why E could have been let through: the site role is real, and the rows
       // are W's own, read by W's owner.
       expect(asUser(E).role).toBe('admin');
       await expect(
         getWorkspaceIngredient(asUser(A), WORKSPACE_W_ID, seeded.ingredientId),
       ).resolves.toMatchObject({ id: seeded.ingredientId });
+      await expect(getStock(asUser(A), WORKSPACE_W_ID, seeded.stockId)).resolves.toMatchObject({
+        id: seeded.stockId,
+      });
       const inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { spell: ['read'] });
       await expect(findOneSpell(inW, seeded.spellId)).resolves.toMatchObject({
         id: seeded.spellId,
@@ -280,6 +360,7 @@ describe('E’s site role carries no bypass and no penalty from the membership c
       expect(outsider).toBeInstanceOf(Forbidden);
       expect(admin.message).toBe(outsider.message);
       expect(await nameOf(seeded.ingredientId)).not.toBe('Hijacked');
+      expect(await quantityOf(seeded.stockId)).toBe(5);
       expect(await visibilityOf(seeded.spellId)).toBe('workspace');
     },
   );

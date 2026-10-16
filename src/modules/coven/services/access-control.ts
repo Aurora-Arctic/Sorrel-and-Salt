@@ -25,7 +25,12 @@ const statements = {
    * curated by site role rather than workspace role (M5.2, M5.7).
    */
   ingredient: ['read', 'create', 'update', 'delete'],
-  /** Stock levels on those entries. No `create`: a jar exists because the entry does. */
+  /**
+   * Stock: the jars a coven holds, one per form, of its own entries or the
+   * compendium's. No `create` or `delete`: adding and throwing out a jar are
+   * writes to the coven's stock like any change to it, so all three check
+   * `update` (M9.3).
+   */
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
   /**

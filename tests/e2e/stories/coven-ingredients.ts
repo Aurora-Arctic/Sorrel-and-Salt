@@ -146,7 +146,7 @@ export interface Stock {
 
 /**
  * A stock row, the coven's jar of `held`, written by `author` as M9.3's
- * `addStock` would write it: the threshold stated on the row, never left to
+ * `createStock` would write it: the threshold stated on the row, never left to
  * a constant read later (M9.8).
  */
 export async function insertStock(
