@@ -16,3 +16,7 @@ export { FilterSelectField } from './filter-select-field';
 export { useField } from './use-field';
 export { FormActions } from './form-actions';
 export { ReasonField } from './reason-field';
+export { useFormHistory } from './use-form-history';
+export { FormHistoryContext, useFormHistoryContext } from './form-history-context';
+export { FormHistoryButtons } from './form-history-buttons';
+export type { FormHistory } from './types';

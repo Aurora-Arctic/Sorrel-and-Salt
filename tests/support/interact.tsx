@@ -61,3 +61,28 @@ export function type(label: string, text: string): void {
 export function typeIn(field: HTMLElement, text: string): void {
   fireEvent.change(field, { target: { value: text } });
 }
+
+/**
+ * The chord for undo (Ctrl+Z) at the focused element, as a keyboard sends
+ * it: `meta` for Cmd, `shift` for the redo chord. Returns whether the key was
+ * left to the browser, `fireEvent`'s answer: false when the form took it.
+ */
+export function undo({ meta = false, shift = false, alt = false } = {}): boolean {
+  return fireEvent.keyDown(document.activeElement ?? document.body, {
+    key: 'z',
+    ctrlKey: !meta,
+    metaKey: meta,
+    shiftKey: shift,
+    altKey: alt,
+  });
+}
+
+/** Redo as the keyboard has it: Ctrl+Shift+Z, or Ctrl+Y with `viaY`; `meta` for Cmd. */
+export function redo({ meta = false, viaY = false } = {}): boolean {
+  return fireEvent.keyDown(document.activeElement ?? document.body, {
+    key: viaY ? 'y' : 'z',
+    ctrlKey: !meta,
+    metaKey: meta,
+    shiftKey: !viaY,
+  });
+}

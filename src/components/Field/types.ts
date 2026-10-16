@@ -1,4 +1,4 @@
-import type { HTMLInputTypeAttribute, ReactNode } from 'react';
+import type { HTMLInputTypeAttribute, KeyboardEvent, ReactNode, RefObject } from 'react';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 
 /** What every field shares: what it is called, and what it is told about it. */
@@ -293,4 +293,37 @@ export interface HistoryMergeInput {
   sameTick: boolean;
   /** Focus left a field, or a step was undone, since the newest step. */
   sealed: boolean;
+}
+
+/** What `useFormHistory` is given besides the form. */
+export interface UseFormHistoryOptions {
+  /** The form's element: where the hook looks for the fields it restores, and listens for focus leaving. */
+  root: RefObject<HTMLElement | null>;
+  /** False while a question is up over the form: nothing is undone, and both buttons are off. */
+  enabled?: boolean;
+  /** True for a target whose chords the form leaves alone: a panel with a history of its own. */
+  ignore?: (target: HTMLElement) => boolean;
+  /** Told the field names a step restored, before focus moves, so a folded section holding one can open. */
+  onRestored?: (names: string[]) => void;
+  /** How long a pause in typing ends its step. */
+  pauseMs?: number;
+  /** How many steps are kept. */
+  limit?: number;
+}
+
+/** What `useFormHistory` returns, and `FormHistoryContext` carries to the buttons. */
+export interface FormHistory {
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  /** Forgets every step: after a save, or whatever else starts the form over. */
+  clear: () => void;
+  /** For the form's `onKeyDown`. */
+  onKeyDown: (event: KeyboardEvent<HTMLElement>) => void;
+  /** What the live region says; it differs from the last even when the words are the same. */
+  announcement: string;
+  /** The buttons register themselves here: the last place focus may land. */
+  undoButton: RefObject<HTMLButtonElement | null>;
+  redoButton: RefObject<HTMLButtonElement | null>;
 }
