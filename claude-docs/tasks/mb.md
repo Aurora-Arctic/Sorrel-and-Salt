@@ -1422,6 +1422,8 @@ _Story:_ As someone reading the site's mail in the Zoho Mail app with dark mode 
 
 Found on 2026-10-15 on production. The three mails the site sends (verification, admin invitation, coven invitation) share the frame in `src/emails/parts/layout.tsx`. It writes the dark theme inline and overrides it with the light theme inside a `prefers-color-scheme: light` media query. It also declares `color-scheme` in two meta tags. In the Zoho Mail app with dark mode on, the mails show black text on a white background, so the light theme is winning. Zoho probably reports a light colour scheme to the mail, or ignores the media query and the meta tags; that is a guess to confirm during the fix. The fix may go beyond the frame: test in Zoho's real dark mode, then choose between changing which theme is the default and adding markup Zoho honours. Whatever is chosen must not break the clients that already show the dark theme correctly.
 
+Found during the fix (2026-10-16, by reading the DOM Zoho builds from probe mails): Zoho reads no `<style>` at all in its dark mode and drops every `@media` block in its light mode, and in dark mode it inverts every inline colour it can see — except on an anchor whose background is an image, which it leaves alone. The frame now paints its backgrounds with a gradient and sets every run of text inside such an anchor, so Zoho shows the dark theme in both of its modes, as Gmail does (`email.md`, "Design").
+
 Steps to reproduce:
 
 1. Turn on dark mode in the Zoho Mail app (assumed: the app's own dark theme).
@@ -1436,7 +1438,7 @@ Seen on production. It happens every time. Severity: wrong result.
 _Acceptance criteria:_
 
 - A regression test fails before the fix and passes after it: it renders each of the three mails and checks that the markup Zoho Mail reads leaves the dark theme in effect there; the cause found decides what it checks
-- Each of the three mails shows its dark theme in the Zoho Mail app with dark mode on, and its light theme with dark mode off; the check is recorded on the issue
+- Each of the three mails shows its dark theme in the Zoho Mail app with dark mode on, and stays dark with dark mode off, as it does in Gmail, since Zoho reads no light theme; the check is recorded on the issue
 - Clients that already render correctly (those that honour `prefers-color-scheme`, and Gmail, which takes the inline dark) are unchanged, and the every-mail test still passes
 - `email.md`, "Design", records what Zoho Mail does with dark mode and why the frame is written the way it is
 
