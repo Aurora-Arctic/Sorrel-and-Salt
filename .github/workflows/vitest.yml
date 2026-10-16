@@ -46,13 +46,13 @@ permissions:
 
 jobs:
   vitest:
-    # Blacksmith, not GitHub: eight vCPUs give the suite seven workers, and it
-    # caches the job and service images. Everything else stays on GitHub's
-    # runners, which are free and unlimited on a public repo, where
-    # Blacksmith's free tier is capped. The work runs in `container:`, so the
-    # host's 24.04 (Blacksmith has no 26.04) is only Docker and the runner
-    # agent. claude-docs/ci/runner-budget.md, "Runner budget".
-    runs-on: blacksmith-8vcpu-ubuntu-2404
+    # GitHub's runner, like every other job: minutes are free and unlimited on
+    # a public repo. From MB.96 to M11.24 this job ran on a third-party runner
+    # whose free tier is metered and shared by the whole organisation, and the
+    # job sat at its edge. The work runs in `container:`, so the host's
+    # Ubuntu is only Docker and the runner agent. claude-docs/ci/runner-budget.md,
+    # "Runner budget".
+    runs-on: ubuntu-26.04
     container:
       image: ${{ inputs.image }}
       credentials:
