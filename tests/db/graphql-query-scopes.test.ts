@@ -152,6 +152,13 @@ const PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: WORKSPACE_W_ID, id: NOWHERE },
     outcome: 'refuses',
   },
+  workspaceIngredients: {
+    source: `query ($workspaceId: ID!) {
+      workspaceIngredients(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
   deitySuggestions: suggestion('deitySuggestions'),
   formSuggestions: suggestion('formSuggestions'),
   celestialBodySuggestions: suggestion('celestialBodySuggestions'),
@@ -215,6 +222,14 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
   ingredientSuggestions: {
     source: `query ($workspaceId: ID!) {
       ingredientSuggestions(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: null },
+    outcome: 'invalid',
+  },
+  // A coven's ingredients are always some coven's (M9.4).
+  workspaceIngredients: {
+    source: `query ($workspaceId: ID!) {
+      workspaceIngredients(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
     }`,
     variables: { workspaceId: null },
     outcome: 'invalid',
@@ -320,6 +335,17 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   ),
   deleteIngredient: write(
     `mutation { deleteIngredient(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
+  ),
+  // Ids naming no form and no jar, so a caller past the scope is refused by
+  // the service before anything is written.
+  addIngredientToWorkspace: write(
+    `mutation { addIngredientToWorkspace(workspaceId: "${WORKSPACE_W_ID}", variantId: "${NOWHERE}", input: {}) { id } }`,
+  ),
+  updateStock: write(
+    `mutation { updateStock(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: {}) { id } }`,
+  ),
+  deleteStock: write(
+    `mutation { deleteStock(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
   ),
   createCompendiumIngredient: write(
     'mutation { createCompendiumIngredient(input: { name: "Testwort", nomenclature: none, variants: [] }) { id } }',
@@ -490,6 +516,10 @@ const OPEN_WRITES = [
   'createWorkspaceIngredient',
   'updateIngredient',
   'deleteIngredient',
+  // The coven's `inventory: update` decides, which the stock service checks (M9.4).
+  'addIngredientToWorkspace',
+  'updateStock',
+  'deleteStock',
   'createReference',
   'updateReference',
   'promoteFolkName',

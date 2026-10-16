@@ -43,6 +43,7 @@ export {
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByIdentity,
+  findWorkspaceIngredientPage,
 } from './ingredients';
 export { findStockById, findStockOfIngredients } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';

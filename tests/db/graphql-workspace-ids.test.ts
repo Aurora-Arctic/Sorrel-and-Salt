@@ -9,8 +9,10 @@ import { schema } from '@/graphql/schema';
 import { A, B, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { insertReference } from '../support/db/insert-reference';
+import { insertStock } from '../support/db/insert-stock';
+import { variantIdOf } from '../support/db/read-variants';
 import { noSender } from '../support/email-verification';
-import { makeIngredient, makeWorkspace, workspaceColumns } from '../support/fixtures';
+import { makeIngredient, makeVariant, makeWorkspace, workspaceColumns } from '../support/fixtures';
 import type { Context } from '@/graphql/types';
 import type { InvitationSender } from '@/modules/identity';
 import type { Answer, WorkspaceIdProbe } from './types';
@@ -40,6 +42,12 @@ let leavableWorkspaceId: string;
 let revocableInvitationId: string;
 // W's own reference, which the read probe reads and the update probe replaces.
 let referenceId: string;
+// Three forms of one W entry: the add probe stocks the first, the update probe
+// changes the second's jar and the delete probe deletes the third's, so no
+// admitted call depends on another having run.
+let unheldVariantId: string;
+let jarId: string;
+let deletableJarId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
@@ -67,6 +75,29 @@ beforeAll(async () => {
     select id from ingredient_folk_names where ingredient_id = ${promotableId}`;
   folkNameId = folk.id as string;
   referenceId = await insertReference(sql, { workspace_id: WORKSPACE_W_ID }, A.id);
+  const stockedId = await insertIngredient(
+    sql,
+    makeIngredient({
+      workspaceId: WORKSPACE_W_ID,
+      name: 'Fixture Stocked',
+      nomenclature: 'none',
+      variants: ['Root', 'Herb', 'Oil'].map((form) => makeVariant({ form })),
+    }),
+    A.id,
+  );
+  unheldVariantId = await variantIdOf(sql, stockedId, 'Root');
+  const jarOf = async (form: string) =>
+    insertStock(
+      sql,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        ingredientId: stockedId,
+        variantId: await variantIdOf(sql, stockedId, form),
+      },
+      A.id,
+    );
+  jarId = await jarOf('Herb');
+  deletableJarId = await jarOf('Oil');
   const insertCoven = async (name: string) => {
     const [coven] = await sql`
       insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
@@ -220,6 +251,28 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     source:
       'mutation ($workspaceId: ID!, $id: ID!) { deleteIngredient(workspaceId: $workspaceId, id: $id) }',
     variables: () => ({ id: deletableId }),
+  },
+  workspaceIngredients: {
+    source: `query ($workspaceId: ID!) {
+      workspaceIngredients(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+  },
+  addIngredientToWorkspace: {
+    source: `mutation ($workspaceId: ID!, $variantId: ID!) {
+      addIngredientToWorkspace(workspaceId: $workspaceId, variantId: $variantId, input: {}) { id }
+    }`,
+    variables: () => ({ variantId: unheldVariantId }),
+  },
+  updateStock: {
+    source: `mutation ($workspaceId: ID!, $id: ID!) {
+      updateStock(workspaceId: $workspaceId, id: $id, input: { quantityOnHand: 1 }) { id }
+    }`,
+    variables: () => ({ id: jarId }),
+  },
+  deleteStock: {
+    source:
+      'mutation ($workspaceId: ID!, $id: ID!) { deleteStock(workspaceId: $workspaceId, id: $id) }',
+    variables: () => ({ id: deletableJarId }),
   },
 };
 

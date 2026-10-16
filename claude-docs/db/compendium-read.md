@@ -279,7 +279,7 @@ workspace_id = <the proof's>`.
   declares no formal name, the same label with case folded. So one
   unidentified local "Cat's Claw" hides all five compendium rows of that
   name, while a local naming another species hides none. A coven's own rows
-  always pass. M9.4's `workspaceIngredients` adopts the same predicate.
+  always pass. M9.4's `workspaceIngredients` applies the same predicate.
 - **A `form` ranks, and filters nothing.** A non-blank `form` puts a rank
   first in the sort: 0 for an entry holding a live variant of that form
   (folded), 1 for one holding a form of the same curated group (a variant

@@ -192,6 +192,11 @@ type Ingredient {
   references: [ReferenceLink!]!
   safetyNotes: String
   slug: String!
+
+  """
+  The coven's jars of this entry, one per form it holds; empty for an entry it holds unstocked.
+  """
+  stock(workspaceId: ID!): [InventoryItem!]!
   substitutes: [Substitute!]!
   variants: [IngredientVariant!]!
   zodiacSigns: [String!]
@@ -351,6 +356,42 @@ input IngredientVariantInput {
   zodiacSigns: [String!]!
 }
 
+"""A coven's jar of one form of an ingredient."""
+type InventoryItem {
+  acquiredDate: LocalDate
+  audit: AuditInfo!
+  id: ID!
+  ingredient: Ingredient!
+  lowStockThreshold: Float
+
+  """Null is "held, unweighed"; 0 is out of stock."""
+  quantityOnHand: Float
+  source: String
+  unit: InventoryUnit
+
+  """The unit's, derived on write and never input."""
+  unitDimension: UnitDimension
+  variant: IngredientVariant!
+}
+
+enum InventoryUnit {
+  cup
+  drop
+  fl_oz_uk
+  fl_oz_us
+  g
+  kg
+  l
+  lb
+  mg
+  ml
+  oz
+  piece
+  pinch
+  tbsp
+  tsp
+}
+
 enum InvitableRole {
   member
   viewer
@@ -399,6 +440,11 @@ type Mutation {
   Accepts a pending coven invitation sent to the signed-in account's verified address, by its id, as the account page lists it; an admin invitation is accepted by its link alone.
   """
   acceptInvitationById(id: ID!): Invitation!
+
+  """
+  Starts the coven's jar of one form; a form it already holds is refused beside variantId.
+  """
+  addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
 
   """
   Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.
@@ -477,6 +523,9 @@ type Mutation {
   A soft delete, refused while a live compendium entry picked the form; a coven keeps its pick.
   """
   deleteIngredientFormValue(id: ID!): ID!
+
+  """A soft delete of the jar; the entry stays."""
+  deleteStock(id: ID!, workspaceId: ID!): ID!
 
   """
   Deletes a coven, which no member can reach afterwards. Owners only; nothing is destroyed, so it can be restored by hand.
@@ -589,6 +638,9 @@ type Mutation {
 
   """Reaches every row citing it; nothing deletes a reference in v1."""
   updateReference(id: ID!, input: ReferenceInput!, workspaceId: ID): Reference!
+
+  """Changes a jar: a field left out keeps its value, and null clears it."""
+  updateStock(id: ID!, input: StockInput!, workspaceId: ID!): InventoryItem!
 
   """
   Replaces the sign; the slug follows the name. A rename is carried onto every live compendium entry listing it.
@@ -706,6 +758,18 @@ type Query {
   reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
+  workspaceIngredients(
+    after: String
+    before: String
+    categoryIds: [ID!]
+    first: Int
+
+    """Keeps entries with a form of this name."""
+    form: String
+    last: Int
+    query: String
+    workspaceId: ID!
+  ): QueryWorkspaceIngredientsConnection!
 
   """
   The curated zodiac signs by name: those whose name holds `query`, case-insensitively, when given.
@@ -919,6 +983,16 @@ type QueryUsersConnectionEdge {
   node: User!
 }
 
+type QueryWorkspaceIngredientsConnection {
+  edges: [QueryWorkspaceIngredientsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryWorkspaceIngredientsConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+}
+
 type QueryZodiacSignsConnection {
   """
   How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
@@ -1024,6 +1098,16 @@ input ReferenceLinkInput {
   referenceId: ID!
 }
 
+input StockInput {
+  acquiredDate: LocalDate
+
+  """A missing threshold takes the unit dimension's default on add."""
+  lowStockThreshold: Float
+  quantityOnHand: Float
+  source: String
+  unit: InventoryUnit
+}
+
 """
 Another ingredient to use in its place: a link to one, or the name of one not entered.
 """
@@ -1060,6 +1144,13 @@ input SubstituteInput {
 type SuggestionClaimant {
   canonicalName: String
   name: String!
+}
+
+"""What a unit measures; conversion stays inside one."""
+enum UnitDimension {
+  count
+  volume
+  weight
 }
 
 type User {

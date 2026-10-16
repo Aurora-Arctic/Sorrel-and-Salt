@@ -3,9 +3,10 @@ import {
   type StockRow,
   findReadableVariant,
   findStockById,
+  findStockOfIngredients,
   withAudit,
 } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -13,7 +14,7 @@ import { inventoryItems } from '../schema/inventory-items';
 import { type Unit, dimensionOf } from '../schema/units';
 import { unitConvert } from '../units/convert';
 import { StockInput } from '../validation/stock';
-import type { StockValues } from '../types';
+import type { StockKey, StockValues } from '../types';
 import { type Membership, assertMembership } from '@/modules/coven';
 
 // Story 12's stock half: what a coven holds of each form, written by its
@@ -134,6 +135,54 @@ export async function getStock(
 ): Promise<StockRow> {
   const membership = await assertMembership(session, workspaceId, { inventory: ['read'] });
   return readableJar(membership, id);
+}
+
+/**
+ * Each ingredient's live jars in the coven its ref names, one per form held,
+ * one answer per ref in the order given: `Ingredient.stock`'s batch (M9.4).
+ * One read per coven named, whatever the batch size, plus a role lookup each.
+ * A ref naming a coven the caller may not read the stock of gets a
+ * `Forbidden` in its slot while the rest of the batch stands.
+ */
+export async function stockOf(
+  session: Session,
+  refs: readonly StockKey[],
+): Promise<(StockRow[] | Forbidden)[]> {
+  const covens = [...new Set(refs.map((ref) => ref.workspaceId))];
+  const jars = new Map(
+    await Promise.all(
+      covens.map(async (workspaceId) => {
+        const ids = [
+          ...new Set(
+            refs.filter((ref) => ref.workspaceId === workspaceId).map((ref) => ref.ingredientId),
+          ),
+        ];
+        return [workspaceId, await jarsOf(session, workspaceId, ids)] as const;
+      }),
+    ),
+  );
+  return refs.map((ref) => {
+    const held = jars.get(ref.workspaceId);
+    return held instanceof Forbidden
+      ? held
+      : (held ?? []).filter((jar) => jar.ingredientId === ref.ingredientId);
+  });
+}
+
+/** One coven's live jars of these ingredients, or the refusal its proof threw. */
+async function jarsOf(
+  session: Session,
+  workspaceId: string,
+  ingredientIds: string[],
+): Promise<StockRow[] | Forbidden> {
+  let membership: Membership;
+  try {
+    membership = await assertMembership(session, workspaceId, { inventory: ['read'] });
+  } catch (error) {
+    if (error instanceof Forbidden) return error;
+    throw error;
+  }
+  return findStockOfIngredients(membership, ingredientIds);
 }
 
 /**
