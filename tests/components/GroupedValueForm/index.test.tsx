@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import GroupedValueForm from '@/components/GroupedValueForm';
@@ -22,7 +22,7 @@ import type {
 import { makeQueryClient } from '@/lib/graphql-client';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import { ADDING, DELETING, EDITING } from '../../support/grouped-value-form';
-import { choose, press, typeIn } from '../../support/interact';
+import { choose, press, redo, typeIn, undo } from '../../support/interact';
 import type { GroupedValueFormSubject } from '../../support/types';
 import {
   expectAnswered,
@@ -645,5 +645,90 @@ describe.each(FLAT)('GroupedValueForm, the flat kind $kind', ({ kind, type: muta
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ id: FLAT_VALUE.id }]);
+  });
+});
+
+// Undo and redo (M12.9): the hook is tested in tests/components/Field; this
+// is its wiring, and where it is switched off.
+describe('GroupedValueForm, its undo and redo', () => {
+  const save = () => screen.getByRole('button', { name: 'Save Category' });
+
+  it('undoes a group pick back to the saved one, and Save goes off with it', () => {
+    renderForm({ kind: 'category', value: CATEGORY, groups: CATEGORY_GROUPS });
+    expect(save()).toBeDisabled();
+    chooseGroup(CATEGORY_GROUPS[0].name);
+    expect(group()).toHaveValue(CATEGORY_GROUPS[0].name);
+    expect(save()).toBeEnabled();
+
+    undo();
+
+    expect(group()).toHaveValue(CATEGORY_GROUPS[1].name);
+    expect(save()).toBeDisabled();
+  });
+
+  it('undoes typing and redoes it', () => {
+    renderForm({ kind: 'category', value: CATEGORY, groups: CATEGORY_GROUPS });
+    act(() => name().focus());
+    typeIn(name(), 'Testcraft Two');
+
+    undo();
+    expect(name()).toHaveValue(CATEGORY.name);
+
+    redo();
+    expect(name()).toHaveValue('Testcraft Two');
+  });
+
+  it('has Undo and Redo buttons, off with nothing to do, that act on a click', () => {
+    renderForm({ kind: 'category', value: CATEGORY, groups: CATEGORY_GROUPS });
+    const undoButton = () => screen.getByRole('button', { name: 'Undo' });
+    const redoButton = () => screen.getByRole('button', { name: 'Redo' });
+    expect(undoButton()).toBeDisabled();
+    expect(redoButton()).toBeDisabled();
+    typeIn(name(), 'Testcraft Two');
+    expect(undoButton()).toBeEnabled();
+
+    press(undoButton());
+    expect(name()).toHaveValue(CATEGORY.name);
+    expect(redoButton()).toBeEnabled();
+
+    press(redoButton());
+    expect(name()).toHaveValue('Testcraft Two');
+  });
+
+  it('undoes nothing while the unsaved changes question is up', () => {
+    renderInModal((done) => (
+      <GroupedValueForm kind="category" value={CATEGORY} groups={CATEGORY_GROUPS} onDone={done} />
+    ));
+    typeIn(name(), 'Testcraft Two');
+    press('Cancel');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep Editing' }));
+
+    undo();
+
+    expect(name()).toHaveValue('Testcraft Two');
+    press('Keep Editing');
+    undo();
+    expect(name()).toHaveValue(CATEGORY.name);
+  });
+
+  it('undoes nothing while the delete question is up', () => {
+    renderInModal((done) => (
+      <GroupedValueForm kind="category" value={CATEGORY} groups={CATEGORY_GROUPS} onDone={done} />
+    ));
+    typeIn(name(), 'Testcraft Two');
+    press('Delete Category');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+
+    undo();
+
+    expect(name()).toHaveValue('Testcraft Two');
+  });
+
+  it('puts its buttons in the modal header', () => {
+    renderInModal((done) => (
+      <GroupedValueForm kind="category" value={CATEGORY} groups={CATEGORY_GROUPS} onDone={done} />
+    ));
+
+    expect(screen.getByRole('button', { name: 'Undo' }).closest('form')).toBeNull();
   });
 });
