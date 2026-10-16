@@ -239,12 +239,10 @@ test.describe('story 19: an admin sees a user’s covens but reaches none of the
           expect(response?.status(), path).toBe(404);
           // Nothing of the coven, in the markup or the RSC payload it carries.
           expect(await response?.text()).not.toContain(`${W} ${tag}`);
-          await expect(page.getByRole('heading', { level: 1, name: '404' })).toBeVisible();
+          await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
           await expect(page.getByRole('navigation', { name: 'Coven' })).toHaveCount(0);
+          await assertNoAccessibilityViolations(page);
         }
-        // No axe scan: the 404 is Next's default page, since the app has no
-        // not-found.tsx, and it has no main landmark, which axe refuses
-        // (landmark-one-main, region). The scan joins when the app draws its own.
       },
     );
   }
