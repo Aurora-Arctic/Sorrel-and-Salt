@@ -22,7 +22,10 @@ export const MAX_SLOTS = CONFIGURED_PROVIDERS_PORT - FIRST_SLOT_PORT;
 
 /**
  * `E2E_WORKERS`, or else half the CPUs floored at one — Playwright's own
- * default, which a `workers` left unset would have given.
+ * default, which a `workers` left unset would have given. Kept after trying 9
+ * and 12 on 12 cores: 9 matched 6 within noise, 12 was slower and timed out
+ * two stories (claude-docs/testing/e2e.md, "Where a run's time goes"). This is
+ * the local default only; CI sets `E2E_WORKERS` itself.
  */
 export function slotCount(env: SlotEnv = process.env, cpus = os.cpus().length): number {
   const raw = env.E2E_WORKERS;
@@ -95,3 +98,10 @@ export const serverUrl = (port: number) => `http://localhost:${port}`;
  */
 export const browserUrl = (port: number) =>
   wsEndpoint || auditWsEndpoint ? `http://devcontainer:${port}` : serverUrl(port);
+
+/**
+ * A slot server's address for the browser: what the `baseURL` fixture hands
+ * a test (tests/e2e/fixtures.ts), and what a file's `beforeAll`, which has
+ * the worker fixtures but not that one, gives the page it sets up with.
+ */
+export const slotUrl = (slot: number) => browserUrl(slotPort(slot));

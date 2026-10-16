@@ -1,20 +1,20 @@
 import type { ReactNode } from 'react';
 import type { WorkspaceRole } from '@/modules/coven';
+import type { UpdatedStamp } from '../DataTable/types';
 
 /** One listed member: who they are, what they may do here, and when they joined. */
-export interface MemberListEntry {
+export interface MemberListEntry extends UpdatedStamp {
   /** The user's id, which the row is keyed by and `currentUserId` is matched against. */
   userId: string;
   /** The display name, `WorkspaceMember.user.name`. */
   name: string;
   role: WorkspaceRole;
   joinedAt: Date;
-  /** Who last changed the membership, by display name (`updatedBy` resolved); null when the name is withheld, and then `updatedAt` is null too. */
-  updatedBy: string | null;
-  /** When the membership last changed: a role change moves it, the joining date does not. */
-  updatedAt: Date | null;
+  // `updatedBy` is who last changed the membership, `updatedAt` when: a role change moves it, the joining date does not.
   /** Who invited them, by display name; null for a coven's creator, or when the name is withheld. */
   invitedBy: string | null;
+  /** Their address, which the page reads for an owner alone (M11.19). */
+  email?: string | null;
 }
 
 export interface MemberListProps {
@@ -22,6 +22,12 @@ export interface MemberListProps {
   members: readonly MemberListEntry[];
   /** The signed-in user, whose own row is marked "You". */
   currentUserId: string;
+  /**
+   * Whether to draw the Email column, which the page sets for an owner alone
+   * (M11.19). When absent, the list
+   * has no such column.
+   */
+  showEmail?: boolean;
   /**
    * The role change beside each role — Change Role — given the member it
    * is for; it may return nothing for a row with none. When absent, the Role

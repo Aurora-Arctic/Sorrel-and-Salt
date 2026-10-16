@@ -74,10 +74,12 @@ describe('verifyEmailMessage in a mail client', () => {
     ).html;
   }
 
-  // iOS Mail, iCloud, Yahoo, AOL, Zoho, o2.pl, Seznam and Outlook.com each
-  // applied the light text rules and not the light page rule, leaving dark
-  // text on the dark page. So every light rule hangs off the one cell that
-  // carries the page colour: a client that loses that rule loses them all.
+  // iOS Mail, iCloud, Yahoo, AOL, o2.pl, Seznam and Outlook.com each applied
+  // the light text rules and not the light page rule, leaving dark text on
+  // the dark page. So every light rule hangs off the one cell that carries
+  // the page colour: a client that loses that rule loses them all. (Zoho was
+  // on that list from a preview tool; measured, it reads no stylesheet at all
+  // — MB.262.)
   it('scopes every light rule beneath the one cell that carries the page colour', async () => {
     const page = await html();
     const light = page.match(/@media \(prefers-color-scheme: light\)\{(.*?)\}\}/s)?.[1] ?? '';
@@ -91,7 +93,9 @@ describe('verifyEmailMessage in a mail client', () => {
     expect(page.replace(light, '')).not.toMatch(/\.ss-[a-z]+[^{]*\{/);
     // The class is on exactly one element, the cell with the inline dark page.
     expect(page.match(/class="[^"]*ss-page[^"]*"/g)).toEqual(['class="ss-page"']);
-    expect(page).toMatch(/<td class="ss-page" style="background-color:#14120e;color:#ebe4d4;/);
+    expect(page).toMatch(
+      /<td class="ss-page" style="background:#14120e linear-gradient\(#14120e,#14120e\);color:#ebe4d4;/,
+    );
   });
 
   // Backgrounds rather than <img>, so the text can run over their edges: Gmail

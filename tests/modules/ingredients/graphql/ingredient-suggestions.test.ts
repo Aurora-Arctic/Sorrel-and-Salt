@@ -5,7 +5,12 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { run as runOperation } from '../../../support/graphql/run';
-import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
+import {
+  type IngredientFixture,
+  type Overrides,
+  makeIngredient,
+  makeVariant,
+} from '../../../support/fixtures';
 import type { DuplicateNode, IngredientSuggestionConnection } from './types';
 
 // The transport half of the substitute picker's search (MB.138), which
@@ -31,12 +36,18 @@ function addIngredient(entry: Overrides<IngredientFixture>): Promise<string> {
 
 const run = (
   session: Session | null,
-  variables: { query?: string; workspaceId?: string; first?: number; after?: string | null },
+  variables: {
+    query?: string;
+    form?: string;
+    workspaceId?: string;
+    first?: number;
+    after?: string | null;
+  },
 ) =>
   runOperation<{ ingredientSuggestions: IngredientSuggestionConnection }>(
     session,
-    `query ($workspaceId: ID!, $query: String, $first: Int, $after: String) {
-      ingredientSuggestions(workspaceId: $workspaceId, query: $query, first: $first, after: $after) {
+    `query ($workspaceId: ID!, $query: String, $form: String, $first: Int, $after: String) {
+      ingredientSuggestions(workspaceId: $workspaceId, query: $query, form: $form, first: $first, after: $after) {
         edges { cursor node { id name canonicalName isGlobal folkNames } }
         pageInfo { hasNextPage endCursor }
       }
@@ -110,5 +121,36 @@ describe('ingredientSuggestions', () => {
     const rest = next.data?.ingredientSuggestions as IngredientSuggestionConnection;
     expect(rest.edges.map((edge) => edge.node.name)).toEqual(['Mugwart']);
     expect(rest.pageInfo.hasNextPage).toBe(false);
+  });
+
+  it('ranks by the form asked for and pages on through the ranking', async () => {
+    await addIngredient({ name: 'Fixture A Plain', variants: [makeVariant({ form: 'Powder' })] });
+    await addIngredient({ name: 'Fixture B Group', variants: [makeVariant({ form: 'Resin' })] });
+    await addIngredient({ name: 'Fixture C Exact', variants: [makeVariant({ form: 'Root' })] });
+
+    const first = await run(asUser(B), { form: 'root', first: 2 });
+    const page = first.data?.ingredientSuggestions as IngredientSuggestionConnection;
+    const next = await run(asUser(B), {
+      form: 'root',
+      first: 2,
+      after: page.pageInfo.endCursor,
+    });
+
+    expect(page.edges.map((edge) => edge.node.name)).toEqual([
+      'Fixture C Exact',
+      'Fixture B Group',
+    ]);
+    expect(next.data?.ingredientSuggestions.edges.map((edge) => edge.node.name)).toEqual([
+      'Fixture A Plain',
+    ]);
+  });
+
+  it("hides a compendium entry the coven's own ingredient names", async () => {
+    await addIngredient({ name: 'Fixturewort' });
+    await addIngredient({ name: 'Fixturewort', workspaceId: WORKSPACE_W_ID });
+
+    const nodes = await nodesFor(asUser(B), { query: 'fixturewort' });
+
+    expect(nodes.map((node) => node.isGlobal)).toEqual([false]);
   });
 });

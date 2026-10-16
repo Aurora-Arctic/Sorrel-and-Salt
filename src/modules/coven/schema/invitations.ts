@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { check, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { namedWrites } from '../../../db/table-marks';
-import { auditColumns, users } from '../../identity/schema/users';
+import { auditColumns, userRole, users } from '../../identity/schema/users';
 import { workspaceRole, workspaces } from './workspaces';
 import { idColumn, liveUnique } from '../../../db/schema-parts';
 
@@ -12,8 +12,8 @@ const DEFAULT_LIFETIME = sql`now() + interval '7 days'`;
 
 // Every invitation, in two tiers as `ingredients` is (MB.201): a row naming a
 // workspace and a role invites into that coven, and a row with neither is a
-// site-tier invitation, which grants admin, as a null workspace is a
-// compendium entry. In `coven` with the workspace it mostly names; the admin
+// site-tier invitation, which grants the site role it names, curator or admin
+// (M11.20), as a null workspace is a compendium entry. In `coven` with the workspace it mostly names; the admin
 // tier reaches it as admin curation reaches `ingredients`
 // (claude-docs/design-decisions/mb.201-two-tier-invitations.md). Only the
 // token's hash is stored, and there must never be a plaintext column. Marked
@@ -42,6 +42,9 @@ export const invitations = namedWrites(
       declinedAt: timestamp('declined_at'),
       // Why the person is being invited; optional, and either tier may carry one.
       note: text('note'),
+      // The site role a site-tier invitation grants, `curator` or `admin`
+      // (M11.20); null on a coven invitation, which grants `role` instead.
+      siteRole: userRole('site_role'),
       ...auditColumns,
     },
     (table) => [
@@ -53,6 +56,19 @@ export const invitations = namedWrites(
       check(
         'invitations_role_invitable',
         sql`${table.role} is null or ${table.role} in ('viewer', 'member')`,
+      ),
+      // A site role on the site tier and only there.
+      check(
+        'invitations_site_role_tier',
+        sql`(${table.workspaceId} is null) = (${table.siteRole} is not null)`,
+      ),
+      // The allowed set, as for `role`, so `user` grants nothing. Compared as
+      // text: as the enum, each literal is cast to `user_role`, and Postgres
+      // refuses `curator` in the transaction that adds it (55P04), which
+      // drizzle-kit runs with this migration on a database migrated before both.
+      check(
+        'invitations_site_role_invitable',
+        sql`${table.siteRole} is null or ${table.siteRole}::text in ('curator', 'admin')`,
       ),
       // Only a coven invitation is declined: an admin invitation is never
       // listed to its invitee, so it is accepted by its link or not at all.

@@ -119,15 +119,15 @@ for (const { field, description, write } of CREATION_WRITES) {
   );
 }
 
-// MB.59's grant and revoke: the site admin's alone, scoped here and refused
-// again by the service, which is the real gate. The note is the
-// confirmation's optional reason, kept on the ledger row the trigger writes;
-// the actor is the session's, never an argument.
+// MB.59's and M11.20's role change: the site admin's alone, a curator's
+// not, scoped here and refused again by the service, which is the real gate.
+// The note is the confirmation's optional reason, kept on the ledger row the
+// trigger writes; the actor is the session's, never an argument.
 builder.mutationField('setUserRole', (t) =>
   t.field({
     type: UserRef,
     description:
-      'Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.',
+      'Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.',
     args: {
       userId: t.arg.id({ required: true }),
       role: t.arg({ type: UserRoleEnum, required: true }),

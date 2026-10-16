@@ -17,7 +17,7 @@ import type { ShellFrameProps } from './types';
 
 export const FIXTURE_VIEWER: ShellViewer = {
   name: 'Fixture Member',
-  isAdmin: false,
+  canCurate: false,
   canCreate: true,
   verified: true,
   pendingInvitations: 0,
@@ -59,7 +59,7 @@ export const ShellFrame = ({
     workspaces.find((workspace) => workspace.slug === OPEN_COVEN)?.canReadMembers ?? true;
   return (
     <WorkshopPathname.Provider value={open}>
-      <AppShell viewer={who}>
+      <AppShell viewer={who} workspaces={workspaces}>
         {area === 'coven' && (
           <>
             <ContextRow

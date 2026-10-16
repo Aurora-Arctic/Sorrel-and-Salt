@@ -1,7 +1,6 @@
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
@@ -16,12 +15,16 @@ import { EMAIL_THEMES } from '../theme';
 import { ORNAMENTS, ornamentPath, type Corner } from '../ornaments';
 import type { Message } from '../../lib/types';
 import type { BaseEmailProps, MessageInput } from '../types';
-import type { EmailLayoutProps, Part } from './types';
+import type { EmailLayoutProps, InkProps, Part } from './types';
 
 // Every mail's frame: the site's palette, type and corner photographs
 // (claude-docs/email.md, "Design"). Dark is written inline, because clients
 // that ignore `prefers-color-scheme` (Gmail) also ignore most <style>; light
 // is the override in the one media query, for the clients that honour it.
+// Zoho Mail reads no <style> at all and, in its Night mode, inverts every
+// inline colour it can see — so the dark is written in the two forms it leaves
+// alone: a gradient for a background, and an anchor around every run of text
+// (MB.262; the measurements are in email.md).
 
 const { dark, light } = EMAIL_THEMES;
 
@@ -65,16 +68,18 @@ function stylesheet(origin: string): string {
     // Every light rule hangs off the one page cell, so a client applies all of
     // them or none. A bare class per element let a client keep the text rules
     // and drop the page rule, which rendered dark text on the dark page.
-    `.ss-page{background-color:${light.page}!important;color:${light.text}!important;}` +
+    // `background`, not `background-color`: the shorthand also clears the
+    // gradient the inline dark is painted with.
+    `.ss-page{background:${light.page}!important;color:${light.text}!important;}` +
     `.ss-page .ss-text{color:${light.text}!important;}` +
     `.ss-page .ss-muted{color:${light.muted}!important;}` +
     `.ss-page .ss-link{color:${light.accent}!important;}` +
     `.ss-page .ss-wordmark{color:${light.text}!important;}` +
-    `.ss-page .ss-button{background-color:${light.accent}!important;color:${light.onAccent}!important;}` +
+    `.ss-page .ss-button{background:${light.accent}!important;color:${light.onAccent}!important;}` +
     `.ss-page .ss-sorrel{background-image:url(${origin}${ornamentPath('sorrel', 'light')})!important;}` +
     `.ss-page .ss-salt{background-image:url(${origin}${ornamentPath('salt', 'light')})!important;}` +
     // The surround outside the page cell; readable whichever way it goes.
-    `.ss-body{background-color:${light.page}!important;}` +
+    `.ss-body{background:${light.page}!important;}` +
     '}'
   );
 }
@@ -96,6 +101,38 @@ const PARAGRAPH_GAP = 16;
 // The wordmark's row, top right, beside the sorrel.
 const WORDMARK_TOP = 24;
 const WORDMARK_LINE = 24;
+
+/**
+ * A background Zoho Mail's Night mode keeps: it inverts a `background-color`
+ * and leaves a gradient alone, so the colour is painted twice, as itself and
+ * as a one-colour gradient over it. The shorthand, because Gmail for Android
+ * mangles a gradient written as `background-image` (email-bugs#135).
+ */
+function paint(color: string): string {
+  return `${color} linear-gradient(${color},${color})`;
+}
+
+// Zoho leaves an <a> alone when its background is an image of any kind — it
+// cannot judge the contrast, so it does not try — and this gradient paints
+// nothing. It is what lets a run of text keep its colour there.
+const INK_BACKGROUND = 'linear-gradient(rgba(0,0,0,0),rgba(0,0,0,0))';
+
+/**
+ * A run of text in the one element Zoho Mail's Night mode does not recolour:
+ * an anchor over a (transparent) gradient. No `href`, so it is text, not a
+ * link; the text must sit directly inside it, since Zoho still rewrites any
+ * element nested within.
+ */
+function Ink({ className, color, font, children }: InkProps) {
+  return (
+    <a
+      className={className}
+      style={{ background: INK_BACKGROUND, color, fontFamily: font, textDecoration: 'none' }}
+    >
+      {children}
+    </a>
+  );
+}
 
 /** One corner photograph as the background of a section; the light one is the media query's. */
 function ornament(corner: Corner, origin: string, position: string): CSSProperties {
@@ -147,7 +184,7 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
         style={{
           margin: 0,
           padding: 0,
-          backgroundColor: dark.page,
+          background: paint(dark.page),
           color: dark.text,
           fontFamily: BODY_FONT,
           fontWeight: 300,
@@ -167,7 +204,7 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
             <tr>
               <td
                 className="ss-page"
-                style={{ backgroundColor: dark.page, color: dark.text, padding: '0 0 24px' }}
+                style={{ background: paint(dark.page), color: dark.text, padding: '0 0 24px' }}
               >
                 <span data-mso="open" />
                 {/* Backgrounds rather than images, so the text can run over their edges:
@@ -187,6 +224,7 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
                             href={origin}
                             className="ss-wordmark"
                             style={{
+                              background: INK_BACKGROUND,
                               color: dark.text,
                               fontFamily: HEADING_FONT,
                               fontSize: '21px',
@@ -205,7 +243,6 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
                       >
                         <Heading
                           as="h1"
-                          className="ss-text"
                           style={{
                             margin: '0 0 16px',
                             color: dark.text,
@@ -217,7 +254,9 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
                             ...EXACT_LINES,
                           }}
                         >
-                          {heading}
+                          <Ink className="ss-text" color={dark.text} font={HEADING_FONT}>
+                            {heading}
+                          </Ink>
                         </Heading>
                         {children}
                       </PaddedCell>
@@ -234,20 +273,25 @@ export function EmailLayout({ preview, heading, origin, children }: EmailLayoutP
   );
 }
 
+/** A paragraph's own style; the colour is repeated on the Ink inside it, which is what Zoho reads. */
+function paragraphStyle(muted: boolean): CSSProperties {
+  return {
+    margin: `0 0 ${PARAGRAPH_GAP}px`,
+    color: muted ? dark.muted : dark.text,
+    fontFamily: BODY_FONT,
+    fontSize: muted ? '14px' : '16px',
+    lineHeight: muted ? '22px' : '26px',
+    ...EXACT_LINES,
+  };
+}
+
+/** A paragraph of text only: a link inside one goes through `Action`, since an anchor cannot nest. */
 export function Paragraph({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
   return (
-    <Text
-      className={muted ? 'ss-muted' : 'ss-text'}
-      style={{
-        margin: `0 0 ${PARAGRAPH_GAP}px`,
-        color: muted ? dark.muted : dark.text,
-        fontFamily: BODY_FONT,
-        fontSize: muted ? '14px' : '16px',
-        lineHeight: muted ? '22px' : '26px',
-        ...EXACT_LINES,
-      }}
-    >
-      {children}
+    <Text style={paragraphStyle(muted)}>
+      <Ink className={muted ? 'ss-muted' : 'ss-text'} color={muted ? dark.muted : dark.text}>
+        {children}
+      </Ink>
     </Text>
   );
 }
@@ -257,35 +301,62 @@ export function Action({ href, label, part }: { href: string; label: string; par
   if (part === 'text') return <Paragraph>{href}</Paragraph>;
   return (
     <>
-      <Section style={{ margin: '8px 0 24px' }}>
-        <Button
-          href={href}
-          className="ss-button"
-          style={{
-            backgroundColor: dark.accent,
-            color: dark.onAccent,
-            borderRadius: '8px',
-            padding: '14px 24px',
-            fontFamily: BODY_FONT,
-            fontSize: '16px',
-            fontWeight: 500,
-            textDecoration: 'none',
-          }}
-        >
-          {label}
-        </Button>
-      </Section>
-      <Paragraph muted>
-        Or copy this link into your browser:
+      {/* The button is an anchor of our own, not React Email's, whose label
+          sits in a nested span Zoho would recolour. A gradient alone paints
+          it, so Zoho has no colour to invert; the cell's `bgcolor` is for
+          Word, which draws no gradient, and the anchor covers it elsewhere. */}
+      <table
+        role="presentation"
+        border={0}
+        cellPadding={0}
+        cellSpacing={0}
+        style={{ margin: '8px 0 24px' }}
+      >
+        <tbody>
+          <tr>
+            <td {...{ bgcolor: dark.accent }} style={{ borderRadius: '8px' }}>
+              <a
+                href={href}
+                target="_blank"
+                className="ss-button"
+                style={{
+                  display: 'block',
+                  background: `linear-gradient(${dark.accent},${dark.accent})`,
+                  color: dark.onAccent,
+                  borderRadius: '8px',
+                  padding: '14px 24px',
+                  fontFamily: BODY_FONT,
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  lineHeight: '20px',
+                  textDecoration: 'none',
+                  ...EXACT_LINES,
+                }}
+              >
+                {label}
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <Text style={paragraphStyle(true)}>
+        <Ink className="ss-muted" color={dark.muted}>
+          Or copy this link into your browser:
+        </Ink>
         <br />
         <Link
           href={href}
           className="ss-link"
-          style={{ color: dark.accent, fontFamily: BODY_FONT, wordBreak: 'break-all' }}
+          style={{
+            background: INK_BACKGROUND,
+            color: dark.accent,
+            fontFamily: BODY_FONT,
+            wordBreak: 'break-all',
+          }}
         >
           {href}
         </Link>
-      </Paragraph>
+      </Text>
     </>
   );
 }

@@ -25,15 +25,22 @@ const statements = {
    * curated by site role rather than workspace role (M5.2, M5.7).
    */
   ingredient: ['read', 'create', 'update', 'delete'],
-  /** Stock levels on those entries. No `create`: a jar exists because the entry does. */
+  /**
+   * Stock: the jars a coven holds, one per form, of its own entries or the
+   * compendium's. No `create` or `delete`: adding and throwing out a jar are
+   * writes to the coven's stock like any change to it, so all three check
+   * `update` (M9.3).
+   */
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
   /**
    * Members and invitations. `/coven/[slug]/members` shows the roll to owners
-   * and members (`read`); inviting, changing a role and removing stay with
-   * owners (M6.13).
+   * and members (`read`); each member's address (`readEmail`, M11.19),
+   * inviting, changing a role and removing stay with owners (M6.13). The
+   * address is its own action rather than part of `read`, since a member
+   * reads the roll and an owner alone needs to tell two people apart by it.
    */
-  member: ['read', 'invite', 'update', 'remove'],
+  member: ['read', 'readEmail', 'invite', 'update', 'remove'],
   /** The coven itself: renaming it, and deleting it. */
   workspace: ['read', 'update', 'delete'],
 } as const;
@@ -60,12 +67,12 @@ const member = ac.newRole({
   workspace: ['read'],
 });
 
-/** The member's, plus the membership roll and the workspace row itself. */
+/** The member's, plus the membership roll with its addresses, and the workspace row itself. */
 const owner = ac.newRole({
   ingredient: ['read', 'create', 'update', 'delete'],
   inventory: ['read', 'update'],
   spell: ['read', 'create', 'update', 'delete'],
-  member: ['read', 'invite', 'update', 'remove'],
+  member: ['read', 'readEmail', 'invite', 'update', 'remove'],
   workspace: ['read', 'update', 'delete'],
 });
 

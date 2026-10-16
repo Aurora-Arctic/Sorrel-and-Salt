@@ -6,7 +6,7 @@ import type { Session } from '../../../lib/session';
 import { deitySlug } from '../../../lib/slugify';
 import { plural } from '../../../lib/text';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import { deities, deityTraditions } from '../schema/deities';
 import { DeityInput } from '../validation/deity';
 import { cachedFilteredList } from './curated-lists';
@@ -15,7 +15,7 @@ import { refuseWhileHeld } from './held-entries';
 import type { CuratedVocabulary, DeityFilter, DeityRow } from '../types';
 
 // The curated deity vocabulary: its reads, public reference data like every
-// curated vocabulary (MB.80), and its writes, the site admin's alone
+// curated vocabulary (MB.80), and its writes, a curator's or an admin's alone
 // (MB.132). A compendium entry's deities are picks (MB.167), so a deity a live
 // entry links holds: its delete is refused, and its rename is carried onto the
 // entry's link in the same write. A deity is no part of an entry's identity or
@@ -75,13 +75,13 @@ export async function getDeityBySlug(slug: string): Promise<DeityRow> {
 /**
  * Adds a deity, its slug derived from the name and the tradition's name.
  *
- * @throws {Forbidden} the caller is not a site admin — checked before the
+ * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `DeityInput`, names no live
  * tradition, or its slug is a live deity's.
  */
 export async function createDeity(session: Session, input: DeityInput): Promise<DeityRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const { fields, traditionName } = await parseDeity(input);
   const slug = deitySlug(fields.name, traditionName);
 
@@ -103,7 +103,7 @@ export async function createDeity(session: Session, input: DeityInput): Promise<
  * or slug. A change of tradition alone rewrites nothing, since a link holds
  * the deity's name and not its tradition's.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} as `createDeity` throws it, the row's own slug
  * excepted.
  * @throws {NotFound} no live deity has this id.
@@ -113,7 +113,7 @@ export async function updateDeity(
   id: string,
   input: DeityInput,
 ): Promise<DeityRow> {
-  const admin = assertSiteAdmin(session);
+  const curator = assertCurator(session);
   const { fields, traditionName } = await parseDeity(input);
   const current = await liveRow(DEITIES, id);
   const slug = deitySlug(fields.name, traditionName);
@@ -121,7 +121,7 @@ export async function updateDeity(
   const written = await withAudit(session, async (write) => {
     const [row] = await write.updateById(deities, id, { ...fields, slug });
     if (!row) throw new NotFound('No such deity');
-    if (current.name !== fields.name) await write.carryDeityRename(admin, id, fields.name);
+    if (current.name !== fields.name) await write.carryDeityRename(curator, id, fields.name);
     return row;
   }).catch((error: unknown) => refuseSlugCollision(DEITIES, error, slug));
   expireCompendium();
@@ -137,17 +137,17 @@ export async function updateDeity(
  * The entries are read before the transaction, so an entry linking the deity
  * in the instant between is left holding a deleted one, which reads as its name.
  *
- * @throws {Forbidden} the caller is not a site admin, or a live compendium
+ * @throws {Forbidden} the caller is neither a curator nor an admin, or a live compendium
  * entry links the deity — the message names the entries.
  * @throws {NotFound} no live deity has this id.
  */
 export async function deleteDeity(session: Session, id: string): Promise<void> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const deity = await liveRow(DEITIES, id);
   // Read through the compendium's own filter on the pick, which the
   // `ingredient_deities_deity_id_idx` index answers.
   await refuseWhileHeld(
-    { deityId: deity.id },
+    { deityIds: [deity.id] },
     {
       name: deity.name,
       holding: 'is among the deities of',

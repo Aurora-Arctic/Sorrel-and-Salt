@@ -13,7 +13,9 @@ const membershipsOf = vi.fn();
 const rolePermits = vi.fn((role: string) => role !== 'viewer');
 vi.mock('@/lib/request-session', () => ({ requireSignedIn }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
-vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits }));
+// The switcher's order is the coven module's too; stood in for by the rule it states.
+const byCovenName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits, byCovenName }));
 
 const { viewerOf } = await import('@/lib/viewer');
 
@@ -40,11 +42,25 @@ describe('viewerOf', () => {
 
     expect(viewer).toEqual({
       name: 'Fixture Member',
-      isAdmin: true,
+      canCurate: true,
       canCreate: false,
       verified: false,
       pendingInvitations: 0,
     });
+  });
+
+  // M11.20: the shell's Admin link and home follow curation, which an admin
+  // and a curator hold and a user does not.
+  it.each([
+    ['admin', true],
+    ['curator', true],
+    ['user', false],
+  ] as const)('reads %s as curating: %s', async (role, canCurate) => {
+    requireSignedIn.mockResolvedValue({ ...SESSION, role });
+
+    const { viewer } = await viewerOf();
+
+    expect(viewer.canCurate).toBe(canCurate);
   });
 
   it('counts the coven invitations waiting for a verified viewer, all of them', async () => {

@@ -393,7 +393,7 @@ The substitute picker's search (MB.138), registered by `ingredients` over
 `suggestIngredients` and the finder `findIngredientSuggestions`
 ([`db/compendium-read.md`](../db/compendium-read.md), "The ingredient
 picker's search"). MB.131's combobox calls it as a substitute is typed, with
-`workspaceId`, `query` and the connection arguments, and picking a node
+`workspaceId`, `query`, an optional `form` and the connection arguments, and picking a node
 writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
 
 - **A node is an `Ingredient`**, as on `possibleDuplicates`, because a pick
@@ -410,6 +410,10 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
   `mu` is under 0.4 similar to Mugwort and 0.67 word-similar. Best match
   first, under the compendium's weights, with no score on the edge, since a picker ranks rather than reports.
   A blank `query` lists both tiers by name, so an opened box lists something.
+- **Local beats compendium, and `form` ranks (M8.3).** A coven's own ingredient
+  hides the compendium entry it names, and a `form` lists entries holding it
+  first, then those holding a form of its curated group
+  ([`db/compendium-read.md`](../db/compendium-read.md)).
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
   A viewer is answered, a coven the caller is not in is refused, and so is a
@@ -439,14 +443,14 @@ type QueryCompendiumConnectionEdge {
 }
 ```
 
-- **The `compendium` query is the search.** `query`, `categoryIds` and
-  `form` are the service's, filtered in SQL
+- **The `compendium` query is the search.** `query`, `categoryIds`,
+  `forms`, `deityIds`, `zodiacSigns`, `celestialBodies` and `toxic` are the service's, filtered in SQL
   ([`db/compendium-read.md`](../db/compendium-read.md), "The compendium
   read"): the query at least 0.5 word-similar (`<%`) to the label, the formal
   name, a live folk name, or a live variant's form or description (MB.218),
   case- and accent-folded, so a prefix and a
   transposed pair both find their entry; every listed category (AND; M8.12
-  adds a mode); and an entry holding a live variant of the form, trimmed and lower-cased on both sides, so an entry with two forms is found under either, once (MB.222). The browser never holds more than a page (rule
+  adds a mode); and four lists and a toxic setting (M11.22, [`../design-decisions/m11.22-search-facets.md`](../design-decisions/m11.22-search-facets.md)). `forms` keeps an entry holding a live variant whose form, trimmed and lower-cased, is any one of the list, so an entry with two forms is found under either, once (MB.222). `deityIds` keeps an entry with a live link to any one of the listed curated deities. `zodiacSigns` and `celestialBodies` keep an entry whose own list holds any one of the values, folded on both sides. `toxic` is the `ToxicFilter` enum, `any`, `toxic` or `not_toxic` (lower case, as `Nomenclature` is): `toxic` keeps an entry flagged on itself or on any live form, `not_toxic` one where neither holds, a retired form's flag counts for nothing, and `any` or leaving it out is no filter. Within one kind the chosen values OR; across kinds the filters AND. An empty list, a blank entry, or a value matching nothing is no filter rather than an error. The single `form: String` argument is gone; the admin list sends a one-item `forms`. The facet screen and its counts are M12.3 and M12.4. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) is
   that task's argument to add, and matches an entry whose `elements` holds
@@ -575,7 +579,7 @@ compendium-only mode reaching its service with a null workspace, with
 thresholds, the scope, what the compendium-only mode answers and who is
 refused are their services' tests' (MB.187).
 
-**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, celestialBodies, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 dropped `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, made `variants` required on all four inputs, and made the `compendium` query's `form` argument match an entry holding a live variant of that form. The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: `IngredientVariant` and `Ingredient.variants`.** MB.218 adds the type for an ingredient's forms, `IngredientVariant { id, form, formChoice, description, safetyNotes, elements, celestialBodies, zodiacSigns, colors, categories, substitutes, references, audit }`, and `Ingredient.variants: [IngredientVariant!]!`, a list nested on its ingredient and so bare rather than a connection, since the pagination guard reads `Query` alone; each list comes through a loader, and `Substitute` gains `variant`. MB.219 adds `variants: [IngredientVariantInput!]` to `ingredientInputFields`, so the four ingredient inputs carry it, and there is no variant mutation (DESIGN.md §7). MB.222 dropped `Ingredient.form` and `formChoice` and the inputs' `form` and `formId`, made `variants` required on all four inputs, and made the `compendium` query's `form` argument match an entry holding a live variant of that form (M11.22 later turned it into the `forms` list). The SDL snapshot and `src/gql/` follow each ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 ### The workspace ingredient mutations
 
@@ -721,6 +725,65 @@ loaders cleared between two updates in one request; and per mutation one
 `VALIDATION`, one `FORBIDDEN` (a viewer, who reads the row) and, for the update
 and the delete, one `NOT_FOUND`.
 
+### `workspaceIngredients`
+
+Story 14's list (M9.4), registered by `ingredients` in
+`graphql/workspace-ingredient-list.ts` over `listWorkspaceIngredients`
+([`db/stock.md`](../db/stock.md), "The workspace ingredient list"): a coven's
+own entries and the compendium entries it holds a jar of, a page at a time,
+as a `t.pagedConnection` of `Ingredient`. It takes the coven as `workspaceId`,
+and `query`, `categoryIds`, `forms`, `deityIds`, `zodiacSigns`, `celestialBodies` and `toxic` (M11.22), which filter as `compendium`'s do, still under the coven's membership check. A
+coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
+may read it. An entry's jars are its `stock` field, below, so a page reads its
+stock in one batch whatever its length.
+
+`tests/modules/ingredients/graphql/workspace-ingredient-list.test.ts` holds the
+transport's half: the page and its cursor, the arguments reaching the read,
+one read each for a page's stock, its categories and its jars' forms, and the
+one refusal. Which rows the list holds is the service test's.
+
+### Stock: `InventoryItem`, `Ingredient.stock` and the three stock writes
+
+Story 14's jars (M9.4), registered by `ingredients` in `graphql/stock.ts` over
+the stock service ([`db/stock.md`](../db/stock.md), "The stock service").
+
+- **`InventoryItem`** is one jar: one form of one ingredient in one coven. Its
+  `ingredient` loads through `ingredientsById`, keyed by the jar's coven, and
+  its `variant` is the form it names, found in `variantsByIngredient`'s
+  answer, so a page of jars costs one read for each. `quantityOnHand` and
+  `lowStockThreshold` are `Float`: Postgres returns `numeric` as text, and the
+  field turns it into a number. `unit` is the `InventoryUnit` enum and
+  `unitDimension` the `UnitDimension` enum, both built from
+  `src/modules/ingredients/schema/units.ts`, so the schema cannot drift from
+  the one module that owns the units. `acquiredDate` is a `LocalDate`.
+- **`Ingredient.stock(workspaceId)`** is the coven's live jars of the entry, one
+  per form it holds, empty when it holds none. It reads through the
+  `stockByIngredient` loader ([`loaders.md`](loaders.md)), so a page of entries
+  makes one read per coven named. A coven the caller is not in refuses at the
+  field, `FORBIDDEN` with the field's path.
+- **`StockInput`** has every field optional and no `unitDimension`, which the
+  service derives from the unit. On `updateStock` a field left out keeps its
+  value and `null` clears it. The form is the add's own `variantId` argument,
+  never an input field, so a jar cannot be moved to another form.
+- **`addIngredientToWorkspace(workspaceId, variantId, input)`** starts a jar of
+  one form. A form the coven already holds is `VALIDATION` beside `variantId`,
+  and an id naming no form the coven may read, such as an entry with no forms,
+  is `NOT_FOUND`. Picking the one form of a single-form entry without asking
+  is the page's job (M9.6); the API always takes a form.
+- **`updateStock(workspaceId, id, input)`** answers the changed jar, and
+  **`deleteStock(workspaceId, id)`** soft-deletes it and answers its id.
+
+All three writes carry the `signedIn` scope, and the service asks the proof for
+`inventory: update`, which viewers do not hold. The add and the update clear
+the changed jar's `stockByIngredient` key, so a second write in one request
+answers its own stock; the delete answers no row to key by, so it clears the
+loader whole.
+
+`tests/modules/ingredients/graphql/stock.test.ts` holds the transport's half:
+each answer equal to a fresh read, the loader cleared between two updates in
+one request, and per field one refusal per error code it can answer. Which
+roles are refused at which jars is `services/stock.test.ts`'s.
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in
@@ -732,8 +795,8 @@ gives them. Everything the workspace mutations above say of the inputs'
 lists, the answer and a refusal holds here, bar the tier and MB.162's
 curated values.
 
-- **The site admin's alone, twice.** Each carries `authScopes: { admin: true }`,
-  and the service's `assertSiteAdmin` refuses again; a coven's owner is
+- **A curator's or the site admin's, twice.** Each carries `authScopes: { curator: true }`,
+  and the service's `assertCurator` refuses again (M11.20); a coven's owner is
   refused as its viewer is. No coven is an argument, and neither input
   declares a tier or a stamp.
 - **`CompendiumIngredientInput` is the create's**: `IngredientInput`'s
@@ -762,6 +825,17 @@ loaders cleared between two updates, `endRedirect` reaching the update's
 service, one `NOT_FOUND` for the update and the delete, and one `VALIDATION`
 for the create. A non-admin at the `admin` scope is the sweep's; who the
 service refuses, and every collision, are `services/compendium-entries.test.ts`'s.
+
+### Promoting a common name: `promoteFolkName`
+
+`promoteFolkName(workspaceId: ID, id: ID!, folkNameId: ID!): Ingredient!`
+(M8.3a) swaps an ingredient's display name with one of its common names
+([`db/workspace-ingredients.md`](../db/workspace-ingredients.md), "Workspace
+ingredients"). It takes `createReference`'s shape: a null `workspaceId` names a
+compendium entry and carries the `curator` scope, anything else the `signedIn`
+scope with the membership check deciding. It answers the swapped entity, and
+clears the child loaders as `updateIngredient` does. A common name that is not
+live on that ingredient answers `NOT_FOUND`.
 
 ### References: `Reference`, `reference`, `createReference`, `updateReference` and `referenceSuggestions`
 
@@ -1050,22 +1124,23 @@ role and rule is `services/deities.test.ts`'s and
 
 ### Auth scopes: the second check
 
-`@pothos/plugin-scope-auth` gives the schema three scopes, all read off the
+`@pothos/plugin-scope-auth` gives the schema four scopes, all read off the
 context without a query:
 
-| Scope      | Holds when                                   |
-| ---------- | -------------------------------------------- |
-| `signedIn` | the request has a session                    |
-| `admin`    | the session's role is admin                  |
-| `self`     | the user id it is given is the session's own |
+| Scope      | Holds when                                      |
+| ---------- | ----------------------------------------------- |
+| `signedIn` | the request has a session                       |
+| `curator`  | the session's role is curator or admin (M11.20) |
+| `admin`    | the session's role is admin                     |
+| `self`     | the user id it is given is the session's own    |
 
 A scope is the second check, never the first. The service's own check is the
 gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
-either does; every admin mutation carries `admin`, each from the task that
-built it, M5.8's two creation writes included, and `createReference` and
-`updateReference` carry it when their `workspaceId` is null, the compendium's
+either does; every people mutation (roles, creation approval, pause, admin invitations) carries `admin`, each from the task that
+built it, M5.8's two creation writes included, and every compendium and vocabulary write carries `curator`, which an admin holds too (M11.20); `createReference` and
+`updateReference` carry `curator` when their `workspaceId` is null, the compendium's
 tier, and `signedIn` otherwise. `ok` and the
 compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
 them so. The private fields'

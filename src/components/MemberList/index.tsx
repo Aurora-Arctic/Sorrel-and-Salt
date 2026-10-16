@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react';
-import StackTable from '../DataTable';
+import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { workspaceRoleLabel } from '../UserDetail/roles';
 import type { MemberListEntry, MemberListProps } from './types';
@@ -12,7 +12,8 @@ import './index.scss';
 // holds no permission check (claude-docs/components/member-list.md).
 
 /**
- * The columns: the name, then the role with its change beside it (as the
+ * The columns: the name, then where the page asks, the address (M11.19);
+ * then the role with its change beside it (as the
  * admin list holds Promote and Revoke), then the facts no control changes: when they joined, who invited them, and who last changed the
  * membership and when, in one Updated column.
  * Remove is last, in a column ruled in red as Impersonate is, since it is the
@@ -20,7 +21,11 @@ import './index.scss';
  */
 const columns = (
   currentUserId: string,
-  { roleAction, removeAction }: Pick<MemberListProps, 'roleAction' | 'removeAction'>,
+  {
+    showEmail,
+    roleAction,
+    removeAction,
+  }: Pick<MemberListProps, 'showEmail' | 'roleAction' | 'removeAction'>,
 ): readonly (StackColumn<MemberListEntry> | false)[] => [
   {
     heading: 'Name',
@@ -30,6 +35,13 @@ const columns = (
         {member.userId === currentUserId && <span className="member-list__you">You</span>}
       </span>
     ),
+  },
+  // The address alone, with no verified mark as the admin list draws: a seat
+  // is only ever taken by a verified address, and an address changes only at
+  // verification, so a member's always is (M11.19).
+  Boolean(showEmail) && {
+    heading: 'Email',
+    cell: (member) => member.email,
   },
   {
     heading: 'Role',
@@ -63,22 +75,7 @@ const columns = (
     className: 'member-list__fact',
     cell: (member) => member.invitedBy && <span>{member.invitedBy}</span>,
   },
-  {
-    heading: 'Updated',
-    className: 'member-list__fact',
-    // "by Fixture A on 2026-10-12": who last changed the membership, and when.
-    // Both are withheld together: a date with no one to ask about it says little.
-    cell: (member) =>
-      member.updatedBy &&
-      member.updatedAt && (
-        <span>
-          by <strong>{member.updatedBy}</strong> on{' '}
-          <time dateTime={member.updatedAt.toISOString()}>
-            {member.updatedAt.toISOString().slice(0, 10)}
-          </time>
-        </span>
-      ),
-  },
+  updatedColumn('member-list__fact'),
   Boolean(removeAction) && {
     heading: 'Remove',
     action: 'corner',
@@ -91,13 +88,14 @@ const columns = (
 const MemberList = ({
   members,
   currentUserId,
+  showEmail,
   roleAction,
   removeAction,
 }: MemberListProps): ReactElement => (
   <div className="member-list">
     <StackTable
       aria-label="Members"
-      columns={columns(currentUserId, { roleAction, removeAction })}
+      columns={columns(currentUserId, { showEmail, roleAction, removeAction })}
       rows={members}
       rowKey={(member) => member.userId}
       empty="There are no members yet."

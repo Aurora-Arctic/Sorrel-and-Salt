@@ -114,7 +114,7 @@ follows is what exists.
   down rather than read from `now()`, so a test pins the window exactly and a
   retirement's `retired_at` is the same instant the check compared against.
 - **A coven ingredient's slug retires nothing.** No route reads it — the
-  in-app page is `/ingredients/[id]` — so `updateWorkspaceIngredient` moves
+  in-app page is `/coven/[slug]/ingredients/[id]`, by id — so `updateWorkspaceIngredient` moves
   it and writes no retirement, and a collision is refused on `name` as on
   create.
 

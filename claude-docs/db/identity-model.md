@@ -18,7 +18,9 @@ What follows describes all three as built.
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, the generated `identityKey` (MB.216; below), the correspondence
   columns (`description`, `elements[]`, `celestialBodies[]`, `zodiacSigns[]`,
-  `colors[]`, `safetyNotes`), `seedKey` (MB.241), + audit. `seedKey` is the
+  `colors[]`, `safetyNotes`), `toxic` (M11.21; a yes/no, default no, and
+  each form carries its own, which never unions with this one — DESIGN.md
+  §5), `seedKey` (MB.241), + audit. `seedKey` is the
   key the compendium seed (MB.242) gives an entry it writes, so an entry an
   admin renames is not seeded again beside itself; it is null on every other
   row, the `standard` fixture's included (DESIGN.md §5, "`seedKey`"). `name` is the display label —
@@ -438,8 +440,9 @@ column is null, so a CHECK closes the gap wherever the ingredient may be null.
 - `reference_links.ingredient_variant_id`, one entry in the `SOURCED` registry
   ([References](references.md)).
 
-Nothing writes `variant_id` on stock yet (M9.4), nor on layers but the demo
-seed and the test fixtures (the grimoire tasks); MB.219 writes a form's
+The stock service writes `variant_id` on stock (M9.3, over the wire M9.4);
+nothing writes it on layers but the demo seed and the test fixtures (the
+grimoire tasks); MB.219 writes a form's
 categories, substitutes and references. `tests/db/migrations/0063-variant-children.test.ts`
 re-runs the fill and the guard, and retires once `0063` is in production's
 journal (claude-docs/testing/layer-ownership.md, "What a test may assert",

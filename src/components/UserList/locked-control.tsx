@@ -9,8 +9,8 @@ import './controls.scss';
 // (claude-docs/components/user-list.md).
 
 /**
- * A control that cannot be used, and says why: the primary admin's Revoke,
- * every Grant and Revoke while admin changes are paused to an admin the pause
+ * A control that cannot be used, and says why: the primary admin's Change Role,
+ * every Change Role while admin changes are paused to an admin the pause
  * binds, and the pause switch itself to any admin but the primary one (MB.63).
  * `aria-disabled` rather than `disabled`, so it keeps its place in the tab
  * order and a click still lands, which says why rather than doing nothing. The reason is the button's description, in a tip

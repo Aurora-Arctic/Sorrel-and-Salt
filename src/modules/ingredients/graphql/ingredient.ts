@@ -1,6 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from '../schema/ingredient-enums';
+import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS, TOXIC_FILTERS } from '../schema/ingredient-enums';
 import { ReferenceLinkRef } from './references';
 import { CategoryRef, DeityRef, IngredientFormValueRef } from '@/modules/vocabulary';
 import type {
@@ -17,6 +17,12 @@ import type {
 // database's own, and the tier is a flag.
 
 export const NomenclatureEnum = builder.enumType('Nomenclature', { values: NOMENCLATURE_KINDS });
+// A search's toxic setting (M11.22), an argument rather than a field.
+export const ToxicFilterEnum = builder.enumType('ToxicFilter', {
+  values: TOXIC_FILTERS,
+  description:
+    'Which entries a search keeps by toxicity: any (no filter); toxic, flagged on the entry or on any live form; or not_toxic, flagged on neither.',
+});
 export const IngredientElementEnum = builder.enumType('IngredientElement', {
   values: INGREDIENT_ELEMENTS,
 });
@@ -107,6 +113,9 @@ IngredientVariantRef.implement({
     }),
     description: t.exposeString('description', { nullable: true }),
     safetyNotes: t.exposeString('safetyNotes', { nullable: true }),
+    toxic: t.exposeBoolean('toxic', {
+      description: "Whether this form is toxic: its own flag, never its ingredient's.",
+    }),
     elements: t.expose('elements', { type: [IngredientElementEnum], nullable: true }),
     celestialBodies: t.exposeStringList('celestialBodies', { nullable: true }),
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
@@ -148,6 +157,9 @@ IngredientRef.implement({
     zodiacSigns: t.exposeStringList('zodiacSigns', { nullable: true }),
     colors: t.exposeStringList('colors', { nullable: true }),
     safetyNotes: t.exposeString('safetyNotes', { nullable: true }),
+    toxic: t.exposeBoolean('toxic', {
+      description: 'Whether the ingredient is toxic. Each form carries its own flag.',
+    }),
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
     // The row is the loaders' key: they read `workspaceId` off it to know
     // which coven to check, and cache by `id`.

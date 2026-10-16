@@ -20,6 +20,7 @@ import type { CompendiumConnection, SubstituteNode } from './types';
 // page never makes one, and the count to show it runs only when asked for.
 const repository = vi.hoisted(() => ({
   findCompendiumCount: vi.fn(),
+  findCompendiumPage: vi.fn(),
   findCuratedRowsByIds: vi.fn(),
   findDeitiesOfIngredients: vi.fn(),
   findManyOfIngredients: vi.fn(),
@@ -60,7 +61,11 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
     `query (
       $query: String
       $categoryIds: [ID!]
-      $form: String
+      $forms: [String!]
+      $deityIds: [ID!]
+      $zodiacSigns: [String!]
+      $celestialBodies: [String!]
+      $toxic: ToxicFilter
       $nomenclature: Nomenclature
       $first: Int
       $after: String
@@ -68,7 +73,11 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       compendium(
         query: $query
         categoryIds: $categoryIds
-        form: $form
+        forms: $forms
+        deityIds: $deityIds
+        zodiacSigns: $zodiacSigns
+        celestialBodies: $celestialBodies
+        toxic: $toxic
         nomenclature: $nomenclature
         first: $first
         after: $after
@@ -167,6 +176,43 @@ describe('compendium', () => {
     expect(none.every((node) => node.nomenclature === 'none')).toBe(true);
     // Fixture Wroot is a `none` too, read by B, and still not the compendium's.
     expect(none.map((node) => node.name)).not.toContain('Fixture Wroot');
+  });
+
+  // M11.22's facets: the four lists and the toxic setting reach the read as
+  // the service parses them, and `any` as no filter. What each matches is
+  // tests/db/repository/ingredients.test.ts's.
+  it('passes the facet arguments to the read, the toxic setting as a ToxicFilter', async () => {
+    const [hecate] = await sql`select id from deities where name = 'Hecate' and deleted_at is null`;
+
+    await nodesOf({
+      forms: [' Oil ', ''],
+      deityIds: [hecate.id],
+      zodiacSigns: ['Scorpio'],
+      celestialBodies: ['Moon'],
+      toxic: 'not_toxic',
+    });
+    await nodesOf({ toxic: 'any' });
+
+    expect(repository.findCompendiumPage.mock.calls.map(([filter]) => filter)).toEqual([
+      {
+        forms: ['Oil'],
+        deityIds: [hecate.id],
+        zodiacSigns: ['Scorpio'],
+        celestialBodies: ['Moon'],
+        toxic: 'not_toxic',
+      },
+      {},
+    ]);
+  });
+
+  it('no longer takes the single form argument, which forms replaced', async () => {
+    const result = await runOperation(
+      null,
+      '{ compendium(form: "Oil") { edges { node { id } } } }',
+    );
+
+    expect(result.errors?.[0]?.extensions?.code).toBe('GRAPHQL_VALIDATION_FAILED');
+    expect(repository.findCompendiumPage).not.toHaveBeenCalled();
   });
 
   // MB.140: every entry on the page asks for its substitutes, and one read
@@ -311,17 +357,20 @@ describe('compendium', () => {
     });
   });
 
-  it('refuses a category id that is not a uuid as VALIDATION', async () => {
-    // Why it could have answered: a real category's id narrows the same list.
-    expect((await run(null, { categoryIds: [category('Healing')] })).errors).toBeUndefined();
+  it.each(['categoryIds', 'deityIds'])(
+    'refuses a %s entry that is not a uuid as VALIDATION',
+    async (argument) => {
+      // Why it could have answered: a real category's id narrows the same list.
+      expect((await run(null, { categoryIds: [category('Healing')] })).errors).toBeUndefined();
 
-    const result = await run(null, { categoryIds: ['not-a-uuid'] });
+      const result = await run(null, { [argument]: ['not-a-uuid'] });
 
-    expect(result.data).toBeNull();
-    expect(result.errors).toHaveLength(1);
-    expect(result.errors?.[0]).toMatchObject({
-      path: ['compendium'],
-      extensions: { code: 'VALIDATION' },
-    });
-  });
+      expect(result.data).toBeNull();
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors?.[0]).toMatchObject({
+        path: ['compendium'],
+        extensions: { code: 'VALIDATION' },
+      });
+    },
+  );
 });

@@ -3,7 +3,8 @@ import { getMe, isPlaceholderEmail, verificationWaitSeconds } from '@/modules/id
 import EmailForm from '../../../../components/EmailForm';
 import { hasVerifiedFlag, verifyErrorMessage } from '../../../../lib/account-email';
 import { requireSession } from '../../../../lib/request-session';
-import { ACCOUNT_PATH, postSignInLanding, safeReturnPath } from '../../../../lib/sign-in';
+import { signedInLanding } from '../../../../lib/landing';
+import { ACCOUNT_PATH, safeReturnPath } from '../../../../lib/sign-in';
 import type { EmailPageProps } from './types';
 
 export const metadata: Metadata = {
@@ -15,7 +16,7 @@ export const metadata: Metadata = {
 // on to the account page inside the card.
 export default async function EmailPage({ searchParams }: EmailPageProps) {
   const [session, params] = await Promise.all([requireSession(), searchParams]);
-  const me = await getMe(session);
+  const [me, landing] = await Promise.all([getMe(session), signedInLanding(session)]);
 
   return (
     <main className="page-frame page-frame--narrow">
@@ -31,7 +32,7 @@ export default async function EmailPage({ searchParams }: EmailPageProps) {
             me.emailVerified && hasVerifiedFlag(params.verified) && params.error === undefined
           }
           next={safeReturnPath(params.next)}
-          landing={postSignInLanding(session.role)}
+          landing={landing}
           error={verifyErrorMessage(params.error)}
           waitSeconds={verificationWaitSeconds(me.verificationSentAt)}
           // Inside the card, as a secondary button (the owner, 2026-10-11); the

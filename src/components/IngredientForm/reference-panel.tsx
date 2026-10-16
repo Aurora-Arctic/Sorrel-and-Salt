@@ -2,12 +2,22 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { type KeyboardEvent, type ReactElement, useEffect, useId, useMemo, useRef } from 'react';
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  type ReactNode,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+} from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlQuery, graphqlRequest } from '../../lib/graphql-client';
 
+import IconTip from '../IconTip';
 import Notice from '../Notice';
+import { RemoveIcon } from './icons';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
@@ -344,6 +354,41 @@ export default function ReferencePanel(props: ReferencePanelProps): ReactElement
 }
 
 /**
+ * The panel's top line: what it says first, if anything, and a × that closes
+ * it as Cancel does (MB.258), so a long panel can be left without scrolling
+ * to its foot. Named for the panel, since the modal around it has a Close of
+ * its own; held while a save is in flight, as Cancel is.
+ */
+function PanelHead({
+  legend,
+  held = false,
+  onClose,
+  children,
+}: {
+  legend: string;
+  held?: boolean;
+  onClose: () => void;
+  children?: ReactNode;
+}): ReactElement {
+  return (
+    <div className="ingredient-form__panel-head">
+      {children}
+      <IconTip tip="Close">
+        <button
+          type="button"
+          className="ingredient-form__icon-button ingredient-form__panel-close"
+          aria-label={`Close ${legend}`}
+          disabled={held}
+          onClick={onClose}
+        >
+          <RemoveIcon />
+        </button>
+      </IconTip>
+    </div>
+  );
+}
+
+/**
  * The edit's read, then the panel prefilled with it. Kept for no longer than
  * the panel is open, so an edit opened again reads the source as it now is.
  * The tier is the source's own: a coven's under its coven, the compendium's
@@ -368,10 +413,11 @@ function EditSourcePanel({ editing, ...props }: EditSourcePanelProps): ReactElem
       <legend className="fieldset__legend" id={legendId}>
         Edit Source
       </legend>
-      {isError ? (
+      <PanelHead legend="Edit Source" onClose={props.onCancel}>
+        {!isError && <output className="ingredient-form__panel-note">Loading the source…</output>}
+      </PanelHead>
+      {isError && (
         <Notice kind="error">This source could not be loaded. Cancel, and try again.</Notice>
-      ) : (
-        <output className="ingredient-form__panel-note">Loading the source…</output>
       )}
       <div className="form__actions">
         <button type="button" className="btn btn--quiet" onClick={props.onCancel}>
@@ -465,6 +511,7 @@ function PanelForm({
   };
 
   const noun = editing ? 'Source' : 'Reference';
+  const legend = editing ? 'Edit Source' : 'New Reference';
   return (
     <FormProvider {...methods}>
       {/* A group, named by its legend, holding its own save: a save with
@@ -480,13 +527,15 @@ function PanelForm({
         onKeyDown={onKeyDown}
       >
         <legend className="fieldset__legend" id={legendId}>
-          {editing ? 'Edit Source' : 'New Reference'}
+          {legend}
         </legend>
-        {editing && (
-          <p className="ingredient-form__panel-note" id={noteId}>
-            A change here reaches every entry citing this source.
-          </p>
-        )}
+        <PanelHead legend={legend} held={isSubmitting} onClose={onCancel}>
+          {editing && (
+            <p className="ingredient-form__panel-note" id={noteId}>
+              A change here reaches every entry citing this source.
+            </p>
+          )}
+        </PanelHead>
         {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
         <SelectField<ReferenceFormValues>
           name="kind"

@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { boolean, check, index, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { auditColumns } from '../../identity/schema/users';
 import { ingredientForms } from '../../vocabulary/schema/ingredient-forms';
 import { ingredientElement, ingredients } from './ingredients';
@@ -26,6 +26,10 @@ export const ingredientVariants = pgTable(
     formId: uuid('form_id').references(() => ingredientForms.id),
     description: text('description'),
     safetyNotes: text('safety_notes'),
+    // Whether this form is dangerous (M11.21): on only where its own flag is,
+    // whatever its ingredient says, so not a union with the ingredient's
+    // (DESIGN.md §5, "The toxic flag is the one exception").
+    toxic: boolean('toxic').notNull().default(false),
     // The four lists the ingredient carries, added to it for this form alone.
     elements: ingredientElement('elements').array(),
     celestialBodies: text('celestial_bodies').array(),

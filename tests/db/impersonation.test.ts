@@ -3,7 +3,7 @@ import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { ORIGIN, cookieHeader } from '../support/oauth';
-import { A, B, E } from '../support/as-user';
+import { A, B, E, F } from '../support/as-user';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance } from '../support/types';
@@ -102,6 +102,37 @@ describe('impersonating a user', () => {
     );
 
     expect((await impersonate(asE, target)).status).toBe(403);
+  });
+
+  // M11.20: a curator holds no permission in the plugin, whose admin roles
+  // stay `['admin']`, so it impersonates no one. F curates, so the refusal is
+  // the people page's check, not a session without a site role.
+  it('refuses a curator, who passes the curation check, where the same call answers an admin', async () => {
+    const { assertCurator } = await import('@/modules/identity');
+    const asF = await signedInAs(F.id);
+    const curator = await requestSession.sessionFromHeaders(new Headers({ cookie: asF }));
+    if (!curator) throw new Error('F has no session');
+    expect(curator.role).toBe('curator');
+    expect(assertCurator(curator)).toMatchObject({ userId: F.id });
+    expect((await impersonate(await signedInAs(E.id), B.id)).status).toBe(200);
+
+    expect((await impersonate(asF, B.id)).status).toBe(403);
+    const [{ count }] = await sql`
+      select count(*)::int as count from sessions where impersonated_by = ${F.id}
+    `;
+    expect(count).toBe(0);
+  });
+
+  // The plugin shields only its admin roles, so a curator is handed over as
+  // any non-admin is (M11.20).
+  it('hands a curator over to an admin, as any non-admin is', async () => {
+    const response = await impersonate(await signedInAs(E.id), F.id);
+    expect(response.status).toBe(200);
+
+    const session = await requestSession.sessionFromHeaders(
+      new Headers({ cookie: cookieHeader(response) }),
+    );
+    expect(session).toEqual({ userId: F.id, role: 'curator', impersonatedBy: E.id });
   });
 
   it('gives the admin the user’s session, recording the admin on it', async () => {

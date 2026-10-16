@@ -86,9 +86,9 @@ compendium entries that list it.
 The writes that call it are every service in the `ingredients` and
 `vocabulary` modules gated by `assertSiteAdmin`: the compendium's create,
 update and delete; `createReference` and `updateReference` when
-`workspaceId` is null, and only then; and the create, update and delete of
+`workspaceId` is null, and only then; `promoteFolkName` on a null `workspaceId`; and the create, update and delete of
 categories, category groups, forms, form groups, celestial bodies and zodiac signs,
-deities and deity traditions. That is 26 services, and an admin's write
+deities and deity traditions. That is 27 services, and an admin's write
 reaches only these, since the GraphQL mutations over them are its only path
 (CLAUDE.md rule 1).
 
@@ -112,8 +112,7 @@ been hiding, both appear on the next load.
 
 **Vitest never caches.** Next's `unstable_cache` throws outside a request,
 finding no incremental cache, and `revalidateTag` throws finding no work
-store, and a test is in neither. `vitest.config.mts` and
-`vitest.stories.config.mts` alias `next/cache` to
+store, and a test is in neither. `vitest.config.mts` aliases `next/cache` to
 `tests/support/next-cache.ts`, where `unstable_cache` is a pass-through and
 `revalidateTag` a `vi.fn` that records its calls. Every read reaches Postgres
 as it would with the cache empty, so a test sees what the database holds,

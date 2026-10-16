@@ -328,7 +328,7 @@ node scripts/review-screenshots.mjs --out .reports/mb.116-screenshots \
   are the only checks covering those files; `tsc --noEmit` will not flag them.
 - **The gate runs in CI, and not in pre-commit.** `workshop:build` runs on
   `checks.yml`'s `build` leg. Pre-commit is lint,
-  `format:check` and typecheck, test-free by decision (MB.38): a hook that
+  `format:check` and typecheck on the files a commit changes, test-free by decision (MB.38): a hook that
   runs tests is a hook people start skipping, and a PR cannot skip CI.
 
 ## On staging (M2.10)

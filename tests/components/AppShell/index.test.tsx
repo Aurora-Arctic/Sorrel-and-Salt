@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { ShellViewer } from '@/lib/types';
+import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
@@ -13,17 +13,21 @@ const { default: AppShell } = await import('@/components/AppShell');
 
 const MEMBER: ShellViewer = {
   name: 'Fixture Member',
-  isAdmin: false,
+  canCurate: false,
   canCreate: false,
   verified: true,
   pendingInvitations: 0,
 };
-const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', isAdmin: true };
+const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', canCurate: true };
 const UNVERIFIED: ShellViewer = { ...MEMBER, verified: false };
+const COVENS: ShellWorkspace[] = [
+  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
+  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
+];
 
-const shell = (viewer: ShellViewer) =>
+const shell = (viewer: ShellViewer, workspaces: ShellWorkspace[] = COVENS) =>
   render(
-    <AppShell viewer={viewer}>
+    <AppShell viewer={viewer} workspaces={workspaces}>
       <main>The page</main>
     </AppShell>,
   );
@@ -50,6 +54,16 @@ describe('AppShell', () => {
     const nav = screen.getByRole('navigation', { name: 'Site' });
     expect(nav).toContainElement(screen.getByRole('link', { name: 'Your Coven' }));
     expect(screen.getByRole('link', { name: 'Admin' })).toHaveAttribute('href', '/admin');
+    // Into the first coven, not via the /coven landing's redirect (MB.257).
+    expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven',
+    );
+  });
+
+  it('sends an admin in no coven to the /coven landing, which offers the create page', () => {
+    shell(ADMIN, []);
+
     expect(screen.getByRole('link', { name: 'Your Coven' })).toHaveAttribute('href', '/coven');
   });
 
@@ -71,12 +85,21 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Your Coven' })).not.toHaveAttribute('aria-current');
   });
 
-  it('sends the brand to the admin area for an admin, and to the /coven landing for anyone else', () => {
+  it('sends the brand to the admin area for an admin, and anyone else into their first coven', () => {
     const { unmount } = shell(ADMIN);
     expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/admin');
     unmount();
 
     shell(MEMBER);
+    expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven',
+    );
+  });
+
+  it('sends the brand to the /coven landing for someone in no coven', () => {
+    shell(MEMBER, []);
+
     expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/coven');
   });
 
@@ -98,7 +121,7 @@ describe('AppShell', () => {
   });
 
   it('offers an unverified admin no links either', () => {
-    shell({ ...UNVERIFIED, isAdmin: true });
+    shell({ ...UNVERIFIED, canCurate: true });
 
     expect(screen.queryByRole('navigation', { name: 'Site' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Admin' })).not.toBeInTheDocument();

@@ -1305,7 +1305,8 @@
     // centred under its label, whatever width the row gives the field.
     align-items: center;
 
-    > .field__label {
+    // Its label, on its own or in a `.field__label-row` beside a hint.
+    .field__label {
       cursor: pointer;
       text-align: center;
     }

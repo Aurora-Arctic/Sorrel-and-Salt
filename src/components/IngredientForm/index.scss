@@ -362,6 +362,19 @@
     padding: 0 space(1);
   }
 
+  // Its top line (MB.258): the note, if it has one, and the × at the end,
+  // which keeps to the right edge with no note beside it.
+  .ingredient-form__panel-head {
+    display: flex;
+    gap: space(2);
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .ingredient-form__panel-close {
+    margin-inline-start: auto;
+  }
+
   // What an edit reaches, or that the source is loading: a caption's ink,
   // as the tier's, above the fields.
   .ingredient-form__panel-note {

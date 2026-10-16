@@ -175,14 +175,16 @@ Promote and Demote modal.
 
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),
-`onChange(checked)`, `disabled`, and either `checked`, held by the caller,
+`onChange(checked)`, `disabled`, an optional `hint`, and either `checked`, held by the caller,
 or `defaultChecked`, the state it is first drawn in, the native checkbox
 holding it after. A list filter takes `defaultChecked`: the switch applies
 the filter on its change, and the new list draws the filter again, switch
 and all, from the filter it shows, so there is no state of the caller's to
 keep ([`filter-form.md`](filter-form.md)). It draws a `.field`
-block of its own rather than `FieldShell`, since it has no hint, note or
-error and its label takes the press feedback: the label above, tied to the
+block of its own rather than `FieldShell`, since it has no note or
+error and its label takes the press feedback. A `hint` puts the label in a
+`.field__label-row` beside an InfoTip, as `FieldShell` does, and names the
+tip in the toggle's `aria-describedby`; a filter switch takes none. The rest: the label above, tied to the
 toggle by `htmlFor`, and the toggle, a native checkbox with
 `role="switch"`, beneath it in `.switch__control`, centred under the label. The label is its
 accessible name and a click on it turns it; the label and the toggle are
@@ -190,7 +192,10 @@ each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native
 checked state is the switch's, and one written beside it would go stale on
 a press before hydration, so the lint rule asking for it is switched off on
-that line with the reason.
+that line with the reason. Space is the platform's. Enter, which on a native
+checkbox would only submit the form around it, is cancelled and answered with
+a click, so it turns the switch exactly as a press does and submits nothing
+(MB.261).
 
 `SearchField` (`SearchFieldProps`) takes `label`, `name` (the parameter
 the text submits under, `query`), `placeholder`, `value` and
@@ -293,7 +298,9 @@ checks by the button's accessible name; `ReasonField` by the UserList and AdminI
 `SwitchField`, found by its `switch` role: turned by a click, sent with the
 form, the server's before hydration included, applying the filter on its change, and
 `aria-disabled` while a list is on its way. Space is the platform's and
-jsdom does not run it, so it was checked in the workshop's Chromium. The
+jsdom does not run it, so it was checked in the workshop's Chromium; Enter is
+asserted in `tests/components/Field/switch-field.test.tsx` and walked in
+Playwright on `/admin/compendium`. The
 lists' tests cover `SearchField` too, found by its `searchbox` role and its
 `Search` button: the submit applying the search, and the button in the
 server's markup. They cover `FilterSelectField` by the address each

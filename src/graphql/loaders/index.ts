@@ -1,12 +1,14 @@
-import { membershipsByUser } from '@/modules/coven';
+import { memberEmailsByMember, membershipsByUser } from '@/modules/coven';
 import { providersByUser, usersById, usersByIdForAdmin } from '@/modules/identity';
 import {
   categoriesByIngredient,
   categoriesByVariant,
   deitiesByIngredient,
   folkNamesByIngredient,
+  ingredientsById,
   referencesByIngredient,
   referencesByVariant,
+  stockByIngredient,
   substitutesByIngredient,
   substitutesByVariant,
   variantsByIngredient,
@@ -24,12 +26,14 @@ import type { Built, LoaderFactory } from './types';
 // is added by the task that adds its schema, off its module's index
 // (claude-docs/graphql/loaders.md, "Loaders").
 const LOADERS = {
+  memberEmailsByMember,
   membershipsByUser,
   providersByUser,
   usersById,
   usersByIdForAdmin,
   categoriesByIngredient,
   folkNamesByIngredient,
+  ingredientsById,
   substitutesByIngredient,
   deitiesByIngredient,
   referencesByIngredient,
@@ -37,6 +41,7 @@ const LOADERS = {
   categoriesByVariant,
   substitutesByVariant,
   referencesByVariant,
+  stockByIngredient,
   categoryGroupsById,
   ingredientFormGroupsById,
   ingredientFormsById,

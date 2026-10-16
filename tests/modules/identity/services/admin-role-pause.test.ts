@@ -155,6 +155,9 @@ describe('setUserRole while admin changes are paused', () => {
   it.each([
     ['a grant', GRANTEE, 'admin' as const],
     ['a revoke', OTHER_ADMIN, 'user' as const],
+    // The curator role is changed on the same dialog, so the pause covers it (M11.20).
+    ['a curator grant', GRANTEE, 'curator' as const],
+    ['a move from admin to curator', OTHER_ADMIN, 'curator' as const],
   ])(
     'refuses %s by another admin, naming nobody, and records nothing',
     async (_what, target, role) => {

@@ -35,13 +35,17 @@ export {
   findCompendiumPage,
   findDeitiesOfIngredients,
   findIngredientSuggestions,
+  findManyIngredients,
   findManyOfIngredients,
   findManyOfVariants,
   findOneIngredient,
+  findReadableVariant,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByIdentity,
+  findWorkspaceIngredientPage,
 } from './ingredients';
+export { findStockById, findStockOfIngredients } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
   findAstrologyValueCount,
@@ -63,6 +67,7 @@ export { findCommonNameSuggestions } from './common-names';
 export { findCompendiumEntryBySlug, findCompendiumSlugRedirect } from './slugs';
 export {
   findMemberByEmail,
+  findMemberEmails,
   findMemberPage,
   findMembershipsOfUsers,
   findWorkspaceRole,
@@ -112,6 +117,7 @@ export type {
   IngredientIdentity,
   IngredientRow,
   InvitableRole,
+  InvitableSiteRole,
   InvitationRow,
   InvitedCoven,
   JoinedRow,
@@ -127,6 +133,7 @@ export type {
   SiteInvitationValues,
   SlugRedirect,
   SortPart,
+  StockRow,
   SuggestingVocabulary,
   UserFilter,
   VocabularySuggestion,

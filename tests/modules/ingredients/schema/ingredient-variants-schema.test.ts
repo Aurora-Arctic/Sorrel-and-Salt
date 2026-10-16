@@ -19,6 +19,7 @@ const OWN_COLUMNS = [
   'form_id',
   'description',
   'safety_notes',
+  'toxic',
   'elements',
   'celestial_bodies',
   'zodiac_signs',

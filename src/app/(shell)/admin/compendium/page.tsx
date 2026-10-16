@@ -10,7 +10,8 @@ import type {
 } from '../../../../components/CompendiumList/types';
 import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
-import { requireAdminSession } from '../../../../lib/request-session';
+import { editorStamps } from '../editors';
+import { requireCuratorSession } from '../../../../lib/request-session';
 import { oneOf, single, trimmed } from '../../../../lib/search-params';
 import {
   countCompendium,
@@ -52,7 +53,8 @@ const readCompendium = cache(
   ) => {
     const filter = {
       query: query || undefined,
-      form: form || undefined,
+      // The Form box names one form; the read takes a list (M11.22).
+      forms: form ? [form] : undefined,
       nomenclature,
       withoutReferences,
     };
@@ -157,7 +159,7 @@ function editHeading({
 // Unknown is the curation to-do list — and to the entries citing nothing, the
 // second.
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
-  await requireAdminSession();
+  const session = await requireCuratorSession();
   const params: CompendiumSearchParams = await searchParams;
   const place = readListPlace(params);
   const { query, after, before, adding } = place;
@@ -186,7 +188,12 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   if (edited?.kind === 'moved') redirect(compendiumHref(here, { edit: edited.slug }));
   // The entry the modal edits; none on an add, which wins over an `?edit=`.
   const editing = !adding && edited?.kind === 'entry' ? edited : undefined;
+  const stamps = await editorStamps(
+    session,
+    page.edges.map(({ node }) => node),
+  );
   const entries = page.edges.map(({ node }, i): CompendiumListEntry => ({
+    ...stamps[i],
     id: node.id,
     slug: node.slug,
     name: node.name,

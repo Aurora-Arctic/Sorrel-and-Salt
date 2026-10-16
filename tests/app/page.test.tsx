@@ -5,10 +5,14 @@ import type { Session } from '@/lib/session';
 // `/` offers a signed-in visitor the landing for their role and a signed-out
 // one the sign-in page (claude-docs/components/welcome.md). What the session
 // is, is tests/lib/request-session.test.ts's, and which landing a role gets
-// tests/lib/sign-in.test.ts's; here the session is mocked.
+// tests/lib/sign-in.test.ts's; here the session and the viewer's first coven
+// are mocked.
 
 const getSession = vi.fn<() => Promise<Session | null>>();
 vi.mock('@/lib/request-session', () => ({ getSession }));
+
+const firstCovenSlugOf = vi.fn<() => Promise<string | undefined>>();
+vi.mock('@/modules/coven', () => ({ firstCovenSlugOf }));
 
 const { default: HomePage } = await import('@/app/page');
 
@@ -16,6 +20,8 @@ const USER_ID = '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f';
 
 beforeEach(() => {
   getSession.mockReset();
+  firstCovenSlugOf.mockReset();
+  firstCovenSlugOf.mockResolvedValue(undefined);
 });
 
 describe('the / page', () => {
@@ -33,5 +39,26 @@ describe('the / page', () => {
     render(await HomePage());
 
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
+  });
+
+  // Into the coven itself, never via the /coven landing's redirect (MB.257).
+  it('continues a signed-in member straight into their first coven', async () => {
+    getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
+    firstCovenSlugOf.mockResolvedValue('fixture-coven');
+
+    render(await HomePage());
+
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute(
+      'href',
+      '/coven/fixture-coven',
+    );
+  });
+
+  it('continues someone in no coven to the /coven landing', async () => {
+    getSession.mockResolvedValue({ userId: USER_ID, role: 'user' });
+
+    render(await HomePage());
+
+    expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/coven');
   });
 });

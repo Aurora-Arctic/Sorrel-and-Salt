@@ -28,6 +28,7 @@ export const DB_FREE = [
   'tests/modules/identity/services/site-admin.test.ts',
   'tests/modules/identity/services/workshop-access.test.ts',
   'tests/modules/ingredients/schema/units.test.ts',
+  'tests/modules/ingredients/units/**',
 ];
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
@@ -72,9 +73,9 @@ function leaksPastItsFile(file: string): boolean {
 // (claude-docs/testing/db-harness.md, "Two db projects").
 const DB_MOCKING = DB_FILES.filter(leaksPastItsFile);
 
-// What neither `unit` nor `dom` runs: the other projects' files, the
-// acceptance suite, and Playwright's (its specs end `.spec.ts`, but say so).
-export const NOT_UNIT = [...DB_FILES, 'tests/rsc/**', 'tests/acceptance/**', 'tests/e2e/**'];
+// What neither `unit` nor `dom` runs: the other projects' files, and
+// Playwright's (its specs end `.spec.ts`, but say so).
+export const NOT_UNIT = [...DB_FILES, 'tests/rsc/**', 'tests/e2e/**'];
 
 // The `.ts` tests that need jsdom's `location` all the same: Better Auth's
 // client reads `window.location.origin` and `document.cookie`, and the MSW
@@ -83,12 +84,10 @@ export const DOM_TS = ['tests/lib/auth-client.test.ts', 'tests/support/msw/graph
 
 // Five projects: `unit` in node and `dom` in jsdom, both with MSW refusing any
 // request a test did not register; `db` and `db-mocking` against local
-// Postgres through tests/support/db-project.mts's `dbHarness`, which the
-// acceptance config spreads too, split by whether a file mocks (DB_MOCKING
-// above); and `rsc` for what can only be observed from inside a server
-// render. The acceptance suite is deliberately not a sixth project, and the
-// first two exclude it so their globs do not sweep those files up:
-// claude-docs/testing/acceptance.md, "Acceptance".
+// Postgres through tests/support/db-project.mts's `dbHarness`, split by
+// whether a file mocks (DB_MOCKING above); and `rsc` for what can only be
+// observed from inside a server render. The story suite is Playwright's, not
+// Vitest's (tests/e2e/stories/; claude-docs/testing/acceptance.md).
 //
 // `unit` and `dom` split on the file extension: a `.tsx` test renders and gets
 // jsdom, a `.ts` test runs in node unless DOM_TS names it. jsdom, jest-dom and
@@ -128,6 +127,16 @@ export default defineConfig({
     // Every project at the db harness's capped count: the projects share one
     // pool group, which Vitest requires to agree (tests/support/db-project.mts).
     maxWorkers: dbMaxWorkers,
+    // A guard against a hung test, not a speed assertion, so it has headroom
+    // over the slowest honest test on the slowest runner. Vitest's 5 s default
+    // tripped on GitHub's 4-vCPU runner, where three workers share four cores
+    // and a test that takes 1.2 s on an idle machine ran past 5 s (run
+    // 38877563430). On the shared base rather than the `dom` project alone: a
+    // hang is a hang in any project, and a `db` test shares those cores too.
+    // The hooks keep their own default: the clone each `db` file starts with
+    // runs at the top of a setup file, not in a hook
+    // (claude-docs/ci/runner-budget.md, "Where a gate run's time goes").
+    testTimeout: 20_000,
     // Quiet under Claude Code, which sets `CLAUDECODE=1` in its shell and
     // nothing else does: a session reads the per-file coverage table and the
     // per-file test lines, ~400 lines a run, and needs neither — a failure

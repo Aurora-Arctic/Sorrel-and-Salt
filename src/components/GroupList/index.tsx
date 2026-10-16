@@ -1,6 +1,6 @@
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
-import StackTable, { GroupChip } from '../DataTable';
+import StackTable, { GroupChip, updatedColumn } from '../DataTable';
 import type { GroupKind } from '../GroupForm/types';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
@@ -64,6 +64,7 @@ const GroupList = ({
             className: 'group-list__description',
             cell: (group) => group.description,
           },
+          updatedColumn(),
           {
             heading: 'Edit',
             hiddenHeading: true,

@@ -10,7 +10,7 @@ import {
   updateDeityTradition,
 } from '@/modules/vocabulary';
 import type { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
-import { A, E, asUser } from '../../../support/as-user';
+import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -42,10 +42,15 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
+const CURATORS = [
+  ['the site admin', E],
+  ['a curator', F],
+] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
   expect(admin.role).toBe('admin');
+  expect(asUser(F).role).toBe('curator');
 });
 
 function input(overrides: Partial<DeityTraditionInput> = {}): DeityTraditionInput {
@@ -129,19 +134,22 @@ describe('getDeityTraditionBySlug', () => {
 });
 
 describe('createDeityTradition', () => {
-  it('lets the site admin create one, its slug from the name, stamped by them', async () => {
-    const created = await createDeityTradition(admin, input({ name: 'Fixture Made' }));
+  it.each(CURATORS)(
+    'lets %s create one, its slug from the name, stamped by them',
+    async (_who, user) => {
+      const created = await createDeityTradition(asUser(user), input({ name: 'Fixture Made' }));
 
-    expect(await traditionOf(created.id)).toMatchObject({
-      name: 'Fixture Made',
-      slug: 'fixture-made',
-      description: 'A tradition this test made',
-      seed_key: null,
-      created_by: E.id,
-      updated_by: E.id,
-      deleted_at: null,
-    });
-  });
+      expect(await traditionOf(created.id)).toMatchObject({
+        name: 'Fixture Made',
+        slug: 'fixture-made',
+        description: 'A tradition this test made',
+        seed_key: null,
+        created_by: user.id,
+        updated_by: user.id,
+        deleted_at: null,
+      });
+    },
+  );
 
   it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
     await expect(createDeityTradition(asUser(user), input())).rejects.toThrow(Forbidden);
@@ -170,19 +178,25 @@ describe('createDeityTradition', () => {
 });
 
 describe('updateDeityTradition', () => {
-  it('lets the site admin rewrite it, the slug following the name, created_by kept', async () => {
-    const id = await seedTradition('Fixture Old');
+  it.each(CURATORS)(
+    'lets %s rewrite it, the slug following the name, created_by kept',
+    async (_who, user) => {
+      const id = await seedTradition('Fixture Old');
 
-    await updateDeityTradition(admin, id, { name: 'Fixture New', description: 'Rewritten' });
+      await updateDeityTradition(asUser(user), id, {
+        name: 'Fixture New',
+        description: 'Rewritten',
+      });
 
-    expect(await traditionOf(id)).toMatchObject({
-      name: 'Fixture New',
-      slug: 'fixture-new',
-      description: 'Rewritten',
-      created_by: A.id,
-      updated_by: E.id,
-    });
-  });
+      expect(await traditionOf(id)).toMatchObject({
+        name: 'Fixture New',
+        slug: 'fixture-new',
+        description: 'Rewritten',
+        created_by: A.id,
+        updated_by: user.id,
+      });
+    },
+  );
 
   // An entry's link holds the deity's name and id, never its slug, so the
   // re-slug carries onto no ingredient.
@@ -276,15 +290,18 @@ describe('updateDeityTradition', () => {
 });
 
 describe('deleteDeityTradition', () => {
-  it('lets the site admin soft-delete one with no deities, keeping the row', async () => {
-    const id = await seedTradition('Fixture Empty');
+  it.each(CURATORS)(
+    'lets %s soft-delete one with no deities, keeping the row',
+    async (_who, user) => {
+      const id = await seedTradition('Fixture Empty');
 
-    await deleteDeityTradition(admin, id);
+      await deleteDeityTradition(asUser(user), id);
 
-    const row = await traditionOf(id);
-    expect(row).toMatchObject({ deleted_by: E.id, created_by: A.id });
-    expect(row.deleted_at).toBeInstanceOf(Date);
-  });
+      const row = await traditionOf(id);
+      expect(row).toMatchObject({ deleted_by: user.id, created_by: A.id });
+      expect(row.deleted_at).toBeInstanceOf(Date);
+    },
+  );
 
   it('moves its live deities to the tradition named, re-slugged there, then deletes it, in one write', async () => {
     const id = await seedTradition('Fixture Leaving');

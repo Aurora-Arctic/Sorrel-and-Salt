@@ -12,8 +12,10 @@ export const metadata: Metadata = {
 };
 
 // The post-sign-in landing (M2.8, MB.57): where a sign-in with no return path
-// ends, and where the brand and Your Coven point. Three states, one address.
-// A member goes into the first coven the switcher lists. Someone with none who
+// ends for someone in no coven, and where the brand and Your Coven point for
+// them. Three states, one address. A member who opens it anyway (a bookmark,
+// leaving a coven) goes into the first coven the switcher lists; sign-in and
+// the shell's links send them there directly, skipping this redirect (MB.257). Someone with none who
 // holds the right to create one is offered the create page (M9.16). Anyone
 // else is told how to get in. An admin gets the same three, and with no coven
 // holds the right by CHECK (MB.177), so sees the second. Nothing here creates

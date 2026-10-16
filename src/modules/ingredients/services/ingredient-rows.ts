@@ -10,7 +10,7 @@ import {
   findReferencesOf,
   withAudit,
 } from '../../../db/repository';
-import { NotFound, ValidationError } from '../../../lib/errors';
+import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
 import { ingredientSlug } from '../../../lib/slugify';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
@@ -21,7 +21,7 @@ import { ingredientFolkNames } from '../schema/ingredient-folk-names';
 import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { referenceLinks } from '../schema/reference-links';
-import type { Membership } from '@/modules/coven';
+import { type Membership, assertMembership } from '@/modules/coven';
 import { curatedNames, foldVocabularyValue } from '@/modules/vocabulary';
 import { categories } from '@/modules/vocabulary/schema/categories';
 import type { ValidationIssue } from '../../../lib/types';
@@ -50,6 +50,24 @@ import type { ReferenceLinkEntry, SubstituteEntry } from '../validation/types';
 // compendium entry, the proof's coven for a coven's.
 
 /**
+ * The proof that `session` may read the ingredients of coven `workspaceId`,
+ * or `undefined` for a caller who may not (or none): a read that skips that
+ * coven's rows rather than failing the batch it sits in.
+ */
+export async function proofFor(
+  session: Session | null,
+  workspaceId: string,
+): Promise<Membership | undefined> {
+  if (!session) return undefined;
+  try {
+    return await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  } catch (error) {
+    if (error instanceof Forbidden) return undefined;
+    throw error;
+  }
+}
+
+/**
  * The parsed input as columns, every optional one written — `null` where the
  * input has nothing — so an update replaces the row rather than merging into
  * it; and the slug, derived from the label and the formal name
@@ -67,6 +85,7 @@ export function ingredientColumns(fields: IngredientFields) {
     zodiacSigns: fields.zodiacSigns ?? null,
     colors: fields.colors ?? null,
     safetyNotes: fields.safetyNotes ?? null,
+    toxic: fields.toxic ?? false,
     slug: ingredientSlug(fields.name, fields.canonicalName),
   };
 }
@@ -883,13 +902,23 @@ async function writeVariant(
   variant: PickedVariant,
   row?: VariantRecord,
 ): Promise<string> {
-  const { form, formId, description, safetyNotes, elements, celestialBodies, zodiacSigns, colors } =
-    variant;
+  const {
+    form,
+    formId,
+    description,
+    safetyNotes,
+    toxic,
+    elements,
+    celestialBodies,
+    zodiacSigns,
+    colors,
+  } = variant;
   const columns = {
     form,
     formId,
     description,
     safetyNotes,
+    toxic,
     elements,
     celestialBodies,
     zodiacSigns,
@@ -915,4 +944,48 @@ async function writeVariant(
   );
   if (differs) await write.updateById(ingredientVariants, row.id, columns).catch(refuse);
   return row.id;
+}
+
+/**
+ * The folk name `folkNameId` of ingredient `ingredientId`, and the names the
+ * ingredient's other live folk names hold — the two things a promotion reads
+ * before it writes. `memberships` is the tier the parent is read in, as
+ * `findManyOfIngredients` takes it: none for a compendium entry.
+ *
+ * @throws {NotFound} the ingredient holds no live folk name with this id —
+ * another ingredient's included, and an id that is not one.
+ */
+export async function readPromotedFolkName(
+  memberships: readonly Membership[],
+  ingredientId: string,
+  folkNameId: string,
+): Promise<{ promoted: { id: string; name: string }; others: string[] }> {
+  const notFound = () => new NotFound('No such common name on this ingredient');
+  if (!RowId.safeParse(folkNameId).success) throw notFound();
+  const live = await findManyOfIngredients(memberships, ingredientFolkNames, [ingredientId]);
+  const promoted = live.find((row) => row.id === folkNameId);
+  if (!promoted) throw notFound();
+  return {
+    promoted,
+    others: live.filter((row) => row.id !== folkNameId).map((row) => row.name),
+  };
+}
+
+/**
+ * The folk-name half of a promotion, in the caller's `withAudit`: the promoted
+ * row is soft-deleted first, so the case-folded unique index is clear, and then
+ * the old display name is written as a folk name — unless another live folk
+ * name already matches it in any case, which keeps it once.
+ */
+export async function swapFolkName(
+  write: AuditWriter,
+  ingredientId: string,
+  promotedId: string,
+  previousName: string,
+  others: readonly string[],
+) {
+  await write.softDeleteByIds(ingredientFolkNames, [promotedId]);
+  const folded = previousName.toLowerCase();
+  if (others.some((name) => name.toLowerCase() === folded)) return;
+  await write.insert(ingredientFolkNames, { ingredientId, name: previousName });
 }

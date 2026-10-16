@@ -66,7 +66,7 @@ function mailedToken(): { token: string; message: Message } {
 
 async function invitations(): Promise<InvitationStateRow[]> {
   return sql<InvitationStateRow[]>`
-    select id, workspace_id, role::text, email, token_hash, note, accepted_at, revoked_at,
+    select id, workspace_id, role::text, site_role::text, email, token_hash, note, accepted_at, revoked_at,
       expires_at, created_by, updated_by
     from invitations order by created_at
   `;
@@ -97,6 +97,7 @@ describe('createAdminInvitation', () => {
     const row = await createAdminInvitation(
       asUser(E),
       `  ${INVITED.toUpperCase()} `,
+      'admin',
       '  Helps with the herbals  ',
       sender(),
     );
@@ -111,6 +112,7 @@ describe('createAdminInvitation', () => {
         id: row.id,
         workspace_id: null,
         role: null,
+        site_role: 'admin',
         email: INVITED,
         token_hash: sha256(token),
         note: 'Helps with the herbals',
@@ -125,16 +127,16 @@ describe('createAdminInvitation', () => {
   });
 
   it('mints a fresh token for every invitation', async () => {
-    await createAdminInvitation(asUser(E), INVITED, undefined, sender());
+    await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
     const first = mailedToken().token;
     send.mockClear();
-    await createAdminInvitation(asUser(E), INVITED, undefined, sender());
+    await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
 
     expect(mailedToken().token).not.toBe(first);
   });
 
   it('stores a blank reason as none', async () => {
-    await createAdminInvitation(asUser(E), INVITED, '   ', sender());
+    await createAdminInvitation(asUser(E), INVITED, 'admin', '   ', sender());
 
     expect((await invitations())[0].note).toBeNull();
   });
@@ -142,7 +144,13 @@ describe('createAdminInvitation', () => {
   // The address rules are email.ts's (tests/modules/identity/services/email.test.ts);
   // one row proves this service parses its input before writing or mailing.
   it('refuses a malformed address as a ValidationError on the email, writing and mailing nothing', async () => {
-    const refusal = createAdminInvitation(asUser(E), 'not-an-address', undefined, sender());
+    const refusal = createAdminInvitation(
+      asUser(E),
+      'not-an-address',
+      'admin',
+      undefined,
+      sender(),
+    );
 
     await expect(refusal).rejects.toThrow(ValidationError);
     await expect(refusal).rejects.toMatchObject({ issues: [{ path: ['email'] }] });
@@ -154,6 +162,7 @@ describe('createAdminInvitation', () => {
     const refusal = createAdminInvitation(
       asUser(E),
       PRIMARY_EMAIL.toUpperCase(),
+      'admin',
       undefined,
       sender(),
     );
@@ -163,14 +172,64 @@ describe('createAdminInvitation', () => {
     expect(await invitations()).toEqual([]);
   });
 
+  // M11.20: the site role is the admin's pick, and the row records it.
+  it('invites to the curator role, recording it on the row', async () => {
+    await createAdminInvitation(asUser(E), INVITED, 'curator', undefined, sender());
+
+    expect(mailedToken().message.to).toBe(INVITED);
+    expect(await invitations()).toEqual([
+      expect.objectContaining({ workspace_id: null, role: null, site_role: 'curator' }),
+    ]);
+  });
+
+  // Accepting never lowers a role, so an invitation that could only stamp the
+  // row is refused up front. A curator's address may still be invited to admin.
+  describe('against the role the address holds', () => {
+    const CURATOR = '00000000-0000-0000-0000-0000000000c1';
+    const CURATOR_EMAIL = `curator${DOMAIN}`;
+
+    beforeEach(async () => {
+      await asManualFix(
+        sql,
+        (tx) => tx`
+        insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
+        values (${CURATOR}, 'Fixture Curator', ${CURATOR_EMAIL}, true, 'curator', true, ${CURATOR}, ${CURATOR})
+      `,
+      );
+    });
+
+    it.each([
+      ['a curator', CURATOR_EMAIL, 'curator'],
+      ['an admin', PRIMARY_EMAIL, 'curator'],
+    ] as const)(
+      'refuses %s’s address invited to %s, writing and mailing nothing',
+      async (_holder, email, siteRole) => {
+        const refusal = createAdminInvitation(asUser(E), email, siteRole, undefined, sender());
+
+        await expect(refusal).rejects.toThrow(ValidationError);
+        await expect(refusal).rejects.toMatchObject({ issues: [{ path: ['email'] }] });
+        expect(await invitations()).toEqual([]);
+        expect(send).not.toHaveBeenCalled();
+      },
+    );
+
+    it('invites a curator’s address to admin', async () => {
+      await createAdminInvitation(asUser(E), CURATOR_EMAIL, 'admin', undefined, sender());
+
+      expect(await invitations()).toEqual([
+        expect.objectContaining({ email: CURATOR_EMAIL, site_role: 'admin' }),
+      ]);
+    });
+  });
+
   // E creates one in the first test. The check reads the site role alone, so
   // one non-admin — A, a coven owner — stands for every one.
   it('refuses a non-admin as Forbidden by direct call, writing and mailing nothing', async () => {
     expect(asUser(A).role).toBe('user');
 
-    await expect(createAdminInvitation(asUser(A), INVITED, undefined, sender())).rejects.toThrow(
-      Forbidden,
-    );
+    await expect(
+      createAdminInvitation(asUser(A), INVITED, 'admin', undefined, sender()),
+    ).rejects.toThrow(Forbidden);
     expect(await invitations()).toEqual([]);
     expect(send).not.toHaveBeenCalled();
   });
@@ -178,7 +237,7 @@ describe('createAdminInvitation', () => {
 
 describe('revokeAdminInvitation', () => {
   async function invite(): Promise<string> {
-    const row = await createAdminInvitation(asUser(E), INVITED, undefined, sender());
+    const row = await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
     send.mockClear();
     return row.id;
   }
@@ -221,14 +280,14 @@ describe('revokeAdminInvitation', () => {
 describe('listPendingAdminInvitations', () => {
   it('lists the pending site-tier invitations newest first, and nothing accepted, revoked, expired or a coven’s', async () => {
     await sql`
-        insert into invitations (email, token_hash, note, created_at, created_by, updated_by, accepted_at, accepted_by, revoked_at, expires_at, workspace_id, role)
+        insert into invitations (email, token_hash, note, created_at, created_by, updated_by, accepted_at, accepted_by, revoked_at, expires_at, workspace_id, role, site_role)
         values
-          (${`older${DOMAIN}`}, 'h1', 'first', now() - interval '2 hours', ${E.id}, ${E.id}, null, null, null, now() + interval '1 day', null, null),
-          (${`newer${DOMAIN}`}, 'h2', null, now() - interval '1 hour', ${E.id}, ${E.id}, null, null, null, now() + interval '1 day', null, null),
-          (${`accepted${DOMAIN}`}, 'h3', null, now(), ${E.id}, ${E.id}, now(), ${E.id}, null, now() + interval '1 day', null, null),
-          (${`revoked${DOMAIN}`}, 'h4', null, now(), ${E.id}, ${E.id}, null, null, now(), now() + interval '1 day', null, null),
-          (${`expired${DOMAIN}`}, 'h5', null, now(), ${E.id}, ${E.id}, null, null, null, now() - interval '1 second', null, null),
-          (${`coven${DOMAIN}`}, 'h6', null, now(), ${A.id}, ${A.id}, null, null, null, now() + interval '1 day', ${WORKSPACE_W_ID}, 'member')
+          (${`older${DOMAIN}`}, 'h1', 'first', now() - interval '2 hours', ${E.id}, ${E.id}, null, null, null, now() + interval '1 day', null, null, 'admin'),
+          (${`newer${DOMAIN}`}, 'h2', null, now() - interval '1 hour', ${E.id}, ${E.id}, null, null, null, now() + interval '1 day', null, null, 'admin'),
+          (${`accepted${DOMAIN}`}, 'h3', null, now(), ${E.id}, ${E.id}, now(), ${E.id}, null, now() + interval '1 day', null, null, 'admin'),
+          (${`revoked${DOMAIN}`}, 'h4', null, now(), ${E.id}, ${E.id}, null, null, now(), now() + interval '1 day', null, null, 'admin'),
+          (${`expired${DOMAIN}`}, 'h5', null, now(), ${E.id}, ${E.id}, null, null, null, now() - interval '1 second', null, null, 'admin'),
+          (${`coven${DOMAIN}`}, 'h6', null, now(), ${A.id}, ${A.id}, null, null, null, now() + interval '1 day', ${WORKSPACE_W_ID}, 'member', null)
       `;
 
     const listed = await pending();
@@ -245,10 +304,10 @@ describe('listPendingAdminInvitations', () => {
 
   it('narrows by a fragment of the address, in any case, trimmed', async () => {
     await sql`
-        insert into invitations (email, token_hash, created_by, updated_by, expires_at)
+        insert into invitations (email, token_hash, created_by, updated_by, expires_at, site_role)
         values
-          (${`fern.moss${DOMAIN}`}, 'h1', ${E.id}, ${E.id}, now() + interval '1 day'),
-          (${`bracken${DOMAIN}`}, 'h2', ${E.id}, ${E.id}, now() + interval '1 day')
+          (${`fern.moss${DOMAIN}`}, 'h1', ${E.id}, ${E.id}, now() + interval '1 day', 'admin'),
+          (${`bracken${DOMAIN}`}, 'h2', ${E.id}, ${E.id}, now() + interval '1 day', 'admin')
       `;
     // Why the second could have been listed: it is pending, as the first is.
     expect(await listedEmails({})).toEqual([`bracken${DOMAIN}`, `fern.moss${DOMAIN}`]);
@@ -258,13 +317,13 @@ describe('listPendingAdminInvitations', () => {
 
   it('narrows to the pending invitations lapsing within 24 hours', async () => {
     await sql`
-        insert into invitations (email, token_hash, created_by, updated_by, accepted_at, accepted_by, revoked_at, expires_at)
+        insert into invitations (email, token_hash, created_by, updated_by, accepted_at, accepted_by, revoked_at, expires_at, site_role)
         values
-          (${`soon${DOMAIN}`}, 'h1', ${E.id}, ${E.id}, null, null, null, now() + interval '23 hours'),
-          (${`later${DOMAIN}`}, 'h2', ${E.id}, ${E.id}, null, null, null, now() + interval '25 hours'),
-          (${`expired${DOMAIN}`}, 'h3', ${E.id}, ${E.id}, null, null, null, now() - interval '1 second'),
-          (${`accepted${DOMAIN}`}, 'h4', ${E.id}, ${E.id}, now(), ${E.id}, null, now() + interval '23 hours'),
-          (${`revoked${DOMAIN}`}, 'h5', ${E.id}, ${E.id}, null, null, now(), now() + interval '23 hours')
+          (${`soon${DOMAIN}`}, 'h1', ${E.id}, ${E.id}, null, null, null, now() + interval '23 hours', 'admin'),
+          (${`later${DOMAIN}`}, 'h2', ${E.id}, ${E.id}, null, null, null, now() + interval '25 hours', 'admin'),
+          (${`expired${DOMAIN}`}, 'h3', ${E.id}, ${E.id}, null, null, null, now() - interval '1 second', 'admin'),
+          (${`accepted${DOMAIN}`}, 'h4', ${E.id}, ${E.id}, now(), ${E.id}, null, now() + interval '23 hours', 'admin'),
+          (${`revoked${DOMAIN}`}, 'h5', ${E.id}, ${E.id}, null, null, now(), now() + interval '23 hours', 'admin')
       `;
     // Why the later one could have been listed: it is pending, as the soon one is.
     expect(await listedEmails({})).toEqual([`later${DOMAIN}`, `soon${DOMAIN}`]);
@@ -280,14 +339,14 @@ describe('listPendingAdminInvitations', () => {
   // fern or bracken by turn, so a filter picks rows from every page.
   async function fivePending() {
     await sql`
-        insert into invitations (id, email, token_hash, created_at, created_by, updated_by, expires_at)
+        insert into invitations (id, email, token_hash, created_at, created_by, updated_by, expires_at, site_role)
         values
-          (${id(1)}, ${`fern.one${DOMAIN}`}, 'h1', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day'),
-          (${id(3)}, ${`bracken.one${DOMAIN}`}, 'h3', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day'),
-          (${id(2)}, ${`fern.two${DOMAIN}`}, 'h2', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day'),
-          (${id(4)}, ${`bracken.two${DOMAIN}`}, 'h4', now() - interval '3 hours', ${E.id}, ${E.id}, now() + interval '1 day'),
-          (${id(5)}, ${`fern.three${DOMAIN}`}, 'h5', now() - interval '4 hours', ${E.id}, ${E.id}, now() + interval '1 day'),
-          (${id(6)}, ${`fern.revoked${DOMAIN}`}, 'h6', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day')
+          (${id(1)}, ${`fern.one${DOMAIN}`}, 'h1', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day', 'admin'),
+          (${id(3)}, ${`bracken.one${DOMAIN}`}, 'h3', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day', 'admin'),
+          (${id(2)}, ${`fern.two${DOMAIN}`}, 'h2', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day', 'admin'),
+          (${id(4)}, ${`bracken.two${DOMAIN}`}, 'h4', now() - interval '3 hours', ${E.id}, ${E.id}, now() + interval '1 day', 'admin'),
+          (${id(5)}, ${`fern.three${DOMAIN}`}, 'h5', now() - interval '4 hours', ${E.id}, ${E.id}, now() + interval '1 day', 'admin'),
+          (${id(6)}, ${`fern.revoked${DOMAIN}`}, 'h6', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day', 'admin')
       `;
     await sql`update invitations set revoked_at = now() where id = ${id(6)}`;
   }
@@ -331,7 +390,7 @@ describe('listPendingAdminInvitations', () => {
   });
 
   it('refuses a non-admin as Forbidden', async () => {
-    await createAdminInvitation(asUser(E), INVITED, undefined, sender());
+    await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
     expect(await pending()).toHaveLength(1);
     expect(asUser(C).role).toBe('user');
 
@@ -342,13 +401,13 @@ describe('listPendingAdminInvitations', () => {
 describe('countPendingAdminInvitations', () => {
   it('counts the pending invitations under the filter, and those before a page', async () => {
     await sql`
-        insert into invitations (email, token_hash, created_at, created_by, updated_by, expires_at, revoked_at)
+        insert into invitations (email, token_hash, created_at, created_by, updated_by, expires_at, revoked_at, site_role)
         values
-          (${`fern.one${DOMAIN}`}, 'h1', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day', null),
-          (${`bracken${DOMAIN}`}, 'h2', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day', null),
-          (${`fern.two${DOMAIN}`}, 'h3', now() - interval '3 hours', ${E.id}, ${E.id}, now() + interval '1 day', null),
-          (${`fern.three${DOMAIN}`}, 'h4', now() - interval '4 hours', ${E.id}, ${E.id}, now() + interval '1 day', null),
-          (${`fern.revoked${DOMAIN}`}, 'h5', now() - interval '5 hours', ${E.id}, ${E.id}, now() + interval '1 day', now())
+          (${`fern.one${DOMAIN}`}, 'h1', now() - interval '1 hour', ${E.id}, ${E.id}, now() + interval '1 day', null, 'admin'),
+          (${`bracken${DOMAIN}`}, 'h2', now() - interval '2 hours', ${E.id}, ${E.id}, now() + interval '1 day', null, 'admin'),
+          (${`fern.two${DOMAIN}`}, 'h3', now() - interval '3 hours', ${E.id}, ${E.id}, now() + interval '1 day', null, 'admin'),
+          (${`fern.three${DOMAIN}`}, 'h4', now() - interval '4 hours', ${E.id}, ${E.id}, now() + interval '1 day', null, 'admin'),
+          (${`fern.revoked${DOMAIN}`}, 'h5', now() - interval '5 hours', ${E.id}, ${E.id}, now() + interval '1 day', now(), 'admin')
       `;
     const fern = { email: 'fern' };
     const first = await resolvePage({ first: 2 }, (request) =>
@@ -374,7 +433,7 @@ describe('countPendingAdminInvitations', () => {
 
   // Why the refusal is the role's: the same count as an admin finds a row.
   it('refuses a non-admin as Forbidden', async () => {
-    await createAdminInvitation(asUser(E), INVITED, undefined, sender());
+    await createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
     expect((await countPendingAdminInvitations(asUser(E), {}, undefined)).totalCount).toBe(1);
     expect(asUser(C).role).toBe('user');
 
@@ -388,7 +447,7 @@ describe('while admin changes are paused', () => {
   });
 
   it('refuses another admin’s invitation, naming nobody, and sends it once resumed', async () => {
-    const refusal = createAdminInvitation(asUser(E), INVITED, undefined, sender());
+    const refusal = createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender());
 
     await expect(refusal).rejects.toThrow(Forbidden);
     await expect(refusal).rejects.toThrow(PAUSED_REFUSAL);
@@ -397,12 +456,18 @@ describe('while admin changes are paused', () => {
 
     await resumeAdminRoleChanges(asUser(AS_PRIMARY));
     await expect(
-      createAdminInvitation(asUser(E), INVITED, undefined, sender()),
+      createAdminInvitation(asUser(E), INVITED, 'admin', undefined, sender()),
     ).resolves.toMatchObject({ email: INVITED });
   });
 
   it('refuses another admin’s revoke, and revokes once resumed', async () => {
-    const { id } = await createAdminInvitation(asUser(AS_PRIMARY), INVITED, undefined, sender());
+    const { id } = await createAdminInvitation(
+      asUser(AS_PRIMARY),
+      INVITED,
+      'admin',
+      undefined,
+      sender(),
+    );
 
     await expect(revokeAdminInvitation(asUser(E), id)).rejects.toThrow(PAUSED_REFUSAL);
     expect((await invitations())[0].revoked_at).toBeNull();
@@ -412,7 +477,13 @@ describe('while admin changes are paused', () => {
   });
 
   it('lets the primary admin invite and revoke', async () => {
-    const { id } = await createAdminInvitation(asUser(AS_PRIMARY), INVITED, undefined, sender());
+    const { id } = await createAdminInvitation(
+      asUser(AS_PRIMARY),
+      INVITED,
+      'admin',
+      undefined,
+      sender(),
+    );
     await revokeAdminInvitation(asUser(AS_PRIMARY), id);
 
     expect(await invitations()).toEqual([
@@ -422,7 +493,7 @@ describe('while admin changes are paused', () => {
   });
 
   it('still lists the pending invitations to every admin', async () => {
-    await createAdminInvitation(asUser(AS_PRIMARY), INVITED, undefined, sender());
+    await createAdminInvitation(asUser(AS_PRIMARY), INVITED, 'admin', undefined, sender());
 
     expect(await pending()).toHaveLength(1);
   });

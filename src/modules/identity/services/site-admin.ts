@@ -1,31 +1,56 @@
 import 'server-only';
 import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { curates } from '../../../lib/site-roles';
 import { isSiteAdmin } from './admin-changes';
 
 // CLAUDE.md rule 5's two layers, on the site role rather than a workspace
-// role: `assertSiteAdmin` is the check, and the `SiteAdmin` it returns is the
-// proof the check ran, which every compendium-tier `AuditWriter` method
-// demands — see claude-docs/db/site-admin-proof.md, "The SiteAdmin proof".
+// role, twice over: `assertCurator` and `assertSiteAdmin` are the checks, and
+// the `Curator` and `SiteAdmin` they return are the proofs each ran. Every
+// compendium-tier `AuditWriter` method demands a `Curator`, and every
+// people-page one a `SiteAdmin` — see claude-docs/db/site-admin-proof.md,
+// "The SiteAdmin proof".
 
-// Not exported, so no object literal outside this file satisfies `SiteAdmin`.
-declare const brand: unique symbol;
+// Not exported, so no object literal outside this file satisfies either proof.
+declare const curatorBrand: unique symbol;
+declare const adminBrand: unique symbol;
 
 /**
- * Proof that `assertSiteAdmin` found this user a site admin. It names no
- * workspace: an admin curates the compendium and reaches no coven.
+ * Proof that `assertCurator` found this user a curator or an admin (M11.20).
+ * It names no workspace: a curator curates the compendium and reaches no coven.
  */
-export type SiteAdmin = {
+export type Curator = {
   readonly userId: string;
-  readonly [brand]: true;
+  readonly [curatorBrand]: true;
 };
 
 /**
- * The site-role check, for everything only a site admin may do: the
- * compendium-tier writes, the admin-curated vocabularies and the admin reads.
- * Reads the session's role and nothing else, which the request read off the
- * user's row. `reason` is what the refusal says, when the caller has a more
- * particular one than the default.
+ * Proof that `assertSiteAdmin` found this user a site admin. An admin curates
+ * too, so it is a `Curator` with a brand of its own beside, and a curator's
+ * proof is not one: nothing on the people page takes it.
+ */
+export type SiteAdmin = Curator & {
+  readonly [adminBrand]: true;
+};
+
+/**
+ * The curation check, for everything a curator may do and an admin with them:
+ * the compendium-tier writes and the admin-curated vocabularies. Reads the
+ * session's role and nothing else, as `assertSiteAdmin` does.
+ *
+ * @throws {Forbidden} the session's role is neither `curator` nor `admin`.
+ */
+export function assertCurator(session: Session, reason = 'Only a curator may do this'): Curator {
+  if (!curates(session.role)) throw new Forbidden(reason);
+  return { userId: session.userId } as Curator;
+}
+
+/**
+ * The site-role check, for everything only a site admin may do: the people
+ * page — the user list, roles, coven creation, invitations, the pause and the
+ * privilege ledger — and the workshop. Reads the session's role and nothing
+ * else, which the request read off the user's row. `reason` is what the
+ * refusal says, when the caller has a more particular one than the default.
  *
  * @throws {Forbidden} the session's role is not `admin`.
  */

@@ -39,3 +39,22 @@ export async function membershipsOf(
     });
   });
 }
+
+/**
+ * The order the coven switcher lists in: alphabetical by name. The service's
+ * own order is the database's, which looks random.
+ */
+export function byCovenName(a: { name: string }, b: { name: string }): number {
+  return a.name.localeCompare(b.name);
+}
+
+/**
+ * The slug of the first coven the switcher lists for this account, or
+ * `undefined` for one in none. The sign-in callback lands a member there
+ * itself, so the browser makes no stop at `/coven` on the way (MB.257).
+ */
+export async function firstCovenSlugOf(session: Session): Promise<string | undefined> {
+  const [memberships] = await membershipsOf(session, [session.userId]);
+  if (!memberships || memberships instanceof Error) return undefined;
+  return memberships.map(({ workspace }) => workspace).sort(byCovenName)[0]?.slug;
+}

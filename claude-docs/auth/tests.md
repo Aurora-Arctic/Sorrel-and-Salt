@@ -21,8 +21,8 @@
   integration files that drive `auth.handler` — `tests/db/` account-linking,
   email-change, email-verification, sign-in-landing, last-login-method,
   oauth-token-encryption and impersonation, and
-  `tests/modules/identity/services/{admin-role,provisional-accounts}.test.ts`
-  and `tests/acceptance/08-email-and-admin.test.ts` — build Better Auth once,
+  and `tests/modules/identity/services/{admin-role,provisional-accounts}.test.ts`
+  — build Better Auth once,
   in `beforeAll`, through `tests/support/auth-module.ts`'s
   `importAuth(env)`: `vi.resetModules()`, the env applied for the import
   alone, `import('@/lib/auth')`, the env restored. The module reads its
@@ -86,8 +86,8 @@
   placeholder mapping), `tests/app/account/email/page.test.tsx` (where
   Continue goes, by `next` or by role), `tests/db/sign-in-landing.test.ts`
   (the callback's landing, the email page's and the sign-up link's, by role
-  and by return path), and `tests/acceptance/08-email-and-admin.test.ts`
-  (stories 58 and 59).
+  and by return path), and the browser flows of stories 58 and 59 in
+  `tests/e2e/stories/08-email-and-admin.spec.ts`.
 - **`tests/db/account-linking.test.ts` (MB.71)**: `/link-social` and
   `/unlink-account` through `auth.handler`, on `tests/support/oauth.ts`'s
   `link` helper. A Microsoft profile reporting `email_verified: false` links
@@ -163,16 +163,11 @@
   `tests/db/audit-columns.test.ts` reads `accounts`, `sessions` and
   `verifications` from the catalogue as its named counter-example — the
   three tables that carry `updated_at` and no audit id, and so no trigger.
-- **`tests/acceptance/01-accounts.test.ts` (M2.1)** — stories 1 and 2,
-  deliberately red. Both are blocked on UI Wave 6 hasn't built yet, not on the
-  auth wiring: story 1 checks for `/sign-in` (DESIGN.md §9) at
-  `src/app/sign-in/page.tsx`, which M2.6 adds; story 2 checks that
-  `src/app/(shell)/coven/page.tsx` exists, the landing M2.8 adds. Each checks
-  its route's file on disk rather than importing or rendering it — the files
-  don't exist yet, and
-  a static import of a page that isn't there would fail typecheck rather than
-  the test. `claude-docs/testing/acceptance.md`, "Acceptance" covers how CI
-  tolerates this suite failing until M2 closes.
+- **Stories 1 and 2 (M2.1, M9.1)** — browser flows in
+  `tests/e2e/stories/01-accounts.spec.ts`, tagged `@story-1` and `@story-2`.
+  M2.1 first wrote them as deliberately red Node tests that checked a route's
+  file on disk; M9.1 replaced them with flows a user could walk
+  (`claude-docs/testing/acceptance.md`, "Acceptance").
 - **Route protection (M2.7)** — `tests/proxy.test.ts` pins the matcher and
   the public list, lookalikes included, and asserts the proxy's
   redirect, its return path, and the header it forwards, overwriting a
@@ -182,7 +177,7 @@
   of return paths through `signInPath()` and `safeReturnPath()`, and pins
   `postSignInLanding()` and `socialSignInTarget()`;
   `tests/db/sign-in-landing.test.ts` drives the callback's landing by role
-  (MB.113).
+  (MB.113) and by membership, through `signedInLanding` (MB.257).
   `tests/e2e/route-protection.spec.ts` runs the whole thing against the built
   server: a signed-out visit to a protected route lands on `/sign-in` with
   its `next`; `tests/e2e/invite.spec.ts` renders `/invite/*` signed out, not

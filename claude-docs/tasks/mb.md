@@ -2,263 +2,272 @@
 
 Work that was not in the original breakdown. `MB.*` exists so a defect or a missing dependency can be scheduled without renumbering an immutable ID. MB.1 through MB.4 are merged; MB.5 through MB.11 were minted by the re-sequencing audit; MB.12 was minted after M2.2/M2.4/M2.5/M0.27 merged with real verification still outstanding. MB.13 was minted during M1.16, when `/create-pr` nearly pushed a feature branch straight at `staging`. MB.14 was minted during M1.17, when its eleventh test file tipped M1.9's per-worker database naming past the set of clones that exist. MB.15 was minted during M1.20, on noticing that the two smoke-check workflows still built their own copy of the testing image that M0.24 had since made shared; collapsing them onto the shared image showed they were a strict subset of `pr-gate.yml`, and the task was re-scoped in place to deleting them. MB.16 through MB.18 were minted together, also during M1.20, when tracing why `build-db-image.yml` runs on a push to `staging` turned up three separate things: a Dependabot base-image bump no prose ever followed (MB.16), a `latest` tag nothing consumes standing in the docs as the push trigger's whole purpose (MB.17), and — on comparing the three image-build workflows side by side — a skip-if-exists check that only `build-db-image.yml` lacks, for a documented reason that holds on the `push` path and fails on the `workflow_call` path every PR actually takes (MB.18). MB.19 was minted on request, after `npm audit` was found to carry a standing moderate advisory (GHSA-67mh-4wv8-2f99) reached only through `drizzle-kit`'s devDependency chain, with no fix available on its stable dist-tag. MB.19 was then **retired without being done** — it is the first task to be retired rather than completed or re-scoped — when re-examining it showed the advisory has no runtime path and that the upgrade traded a frozen stable dependency for a prerelease one; its ID and analysis are kept because task IDs are immutable, and the standing decision now lives in `db.md`. MB.20 was minted in the same pass: tracing what would eventually force that upgrade anyway identified `@pothos/plugin-drizzle`, a `0.x` package that tracks `drizzle-orm`'s version and whose primary capability — resolver-level database access — CLAUDE.md rule 1 forbids. Dropping it before M3 is written is what makes staying on `0.45.2` sustainable. MB.21 was minted on request: there was no way to browse the local database without `psql`, and `drizzle-kit` — pinned at `0.31.10` by MB.20's decision — already ships a `studio` subcommand that needs only wiring, not a new dependency. MB.22 was minted on request, for the same reason as MB.21 but broader: there was no debugging story at all — no Node inspector wired anywhere in the container, no `.vscode/` directory, no way to step into a service, a repository call, or a test, and no way to watch what `withAudit`'s `SET LOCAL app.current_user_id` and RLS actually do to a query beyond reading its output. It is scoped and sized as a single task rather than split across several, as an explicit exception to the normal 1–2h task sizing: the work is uniformly tooling-only (no table, no service, no page), lands as one coherent developer-experience change, and the user asked for it as one PR. MB.23 was minted on request immediately after MB.22 merged: writing an e2e spec by hand means hand-guessing role and label queries against a page nobody has inspected, and `playwright codegen` records a real interaction and emits exactly the query style CLAUDE.md mandates — but MB.22's `playwright-server` service has no display for the recorder to open, a limitation its own design record names. MB.23 gives that service a display (Xvfb, a window manager, and a noVNC tab at `:7900`) rather than standing up a second service, which as a side effect also delivers `page.pause()` and UI mode's locator picker that MB.22 wrote off. MB.24 through MB.26 were minted together, out of the question of whether RLS was worth its cost at all. Checking §8 against the code answered it twice over: the policies M6.4 was about to write would have been **inert**, since the app owns every table they would filter, and fixing only that would have broken **every read**, since the read path opens no transaction for the GUC — two defects that concealed each other ([`design-decisions/mb.24-rls-role-split.md`](../design-decisions/mb.24-rls-role-split.md), "The two findings"). MB.24 is the decision and the doc correction, MB.25 the role split, MB.26 the read-side wrapper. MB.27 was minted in the same pass from a separate defect found while tracing how `DATABASE_URL` resolves per branch: `deploy.yml` calls `vercel pull` without `--git-branch`, so M1.1's branch-scoped `staging` override has never reached a build. MB.29 through MB.34 were minted together, out of a review of the plan against what had actually been built: eleven days and 99 PRs had produced ~2,700 lines of application code and ~23,000 lines of process, and the question was which of that process was paying for itself. Four answers came back and one did not. MB.31 retires the per-task transcript, the scheduled compression pass and `TASKS.csv`, none of which the PR body was not already doing. MB.29 defers RLS, whose remaining cost after MB.24 was not the ~8h of work but a read transaction on every service call for the life of the project. MB.30 asks whether the Better Auth plugin that justified choosing Better Auth can carry M6 and M7, which nobody had checked. MB.32 collapses five copies of one CI workflow, and MB.33 replaces a guard that reads source as text with a lint rule that bans the capability. MB.34 came out of the same pass from a different direction — the six-column audit spread on a join table means a soft-deleted row per chip toggle, forever. **Two proposals from that review were rejected and are recorded in DESIGN.md §14 so they are not re-argued**: replacing GraphQL with server functions, and trunk-based branching. MB.28 was minted while designing the ingredient identity model: `lower(name)` uniqueness cannot express an admin-curated compendium holding several unrelated things under one ambiguous common name, and DESIGN.md §5 needs that fix recorded before M4.1 can treat the `CREATE TABLE` as transcription rather than design. MB.35 and MB.36 were minted together during M4.2, on the decision that an admin may add a category group — which §6 had modelled as a closed set of eight and M4.2 had therefore built as a pgEnum. MB.35 is the doc-and-scoping half and follows MB.28's shape exactly; MB.36 is the code half, since a group created at runtime cannot have a build-time Sass token. The sequence is worth keeping: M4.2 was **built, complete and green, and then rebuilt**, because the design doc it faithfully transcribed described a closed set. That is the cost MB.28 exists to prevent, paid once here for want of asking whether the eight were a starting point or a boundary — and it is the reason the doc task comes first rather than after, even when the table is already written. MB.37 was minted on a report that the destructive-DDL check fires too much: it fired on every local run and on no PR at all, and the first symptom hid the second, since a check that is always red locally is one nobody looks at in CI either. The CI half was MB.32's — it deleted the calling job without folding the check into the matrix it was collapsing everything else onto, and left every other surface (the path filters, the workflow file, `ci.md`) describing a check that ran on nothing. **The lesson is the one the sweep-task rule already states**: a check deleted from a file five other checks share is noticed; a check that is merely no longer called is not. MB.38 came out of the same reading, from the other end — `check-workshop-theme-default.ts` says in its own header that it is a script rather than a test only because Vitest had not landed yet, and it has since M1.7. MB.39 was minted on a question about step order — whether a leg's should-run flag could be resolved before its container is pulled. It cannot, because `Initialize containers` is job initialization; the only decision point earlier than the pull is the job-level `if:` every workflow here refuses. Tracing why turned up the actual finding: **the rule the entire filtering design is built on was copied verbatim from `resume-2026` at M0.16 and has never been tested here** — the repo has no ruleset requiring a status check, so the symptom it warns about could not have occurred, while `audit / audit` carried a job-level `if:` for eight days and `deploy.yml` carries three today. It is the MB.24 shape exactly: a constraint that everything downstream was arranged around, load-bearing enough that nobody re-derived it, and wrong or right for reasons no one had checked. MB.40 was minted on request during M4.3a, from the question of what it would take for a spell to call for something the workspace will never stock. The answer was cheap only because nothing queries `spell_ingredients` until Wave 13: reshaping it now is a contract migration against zero rows, adopted by each Wave 13 task in its own PR, where the same change as a fast-follow would have been a retrofit across every consumer and a breaking nullability change in the SDL. It is the first contract migration in the repo, and so the first PR to carry rule 10's acknowledgement line. MB.54 was minted during M2.6, which re-scoped the OAuth provider roster to Google, Discord, Facebook and Microsoft: Discord and Facebook can both return a profile with no email, which M2.6 only turns into a readable error rather than a recoverable one. MB.57 was minted during M2.7, which first protected `/` as DESIGN.md §9's post-sign-in landing and was then directed to leave it public as the site's general entry page; what that page says, and where the post-sign-in landing now lives, is MB.57's to decide. MB.58 through MB.63 are M2.9's follow-ups. MB.58 and MB.59 are a table task and a behaviour task, split under CLAUDE.md's table-then-behaviour rule. MB.60 fixes the admin bootstrap, which promoted an unverified sign-up and ran only at account creation. MB.61 scopes first-party email verification, which lifts the provider restriction MB.60 has to impose, moves invitations to email, and re-scopes MB.54 to follow it. MB.62 and MB.63 are the pause switch the primary admin flips against a rogue admin, a table and a behaviour task. Stories 58–61 were added for them: 58 and 59 for the email flow, 60 and 61 for granting admin and the ledger, in a §10 section of their own. MB.64 was minted on request when the repo root had reached fifty entries, eight of them generated output sitting beside the source; it gathers Playwright under `tests/` and every report under one ignored directory, and is housekeeping with no behaviour change. MB.65 through MB.70 are MB.61's follow-ups ([`design-decisions/mb.61-email-verification-and-delivery.md`](../design-decisions/mb.61-email-verification-and-delivery.md)): the mail transport, Better Auth's verification turned on and session-bound, provisional accounts that expire, promotion at verification, and the admin invitation's table and behaviour, the last two split under the table-then-behaviour rule. MB.61 also rewrote M7.3 through M7.5 in place for delivery by mail and re-scoped MB.54 from an interstitial to a page, and found that Better Auth's verification token is a signed JWT that is never stored, so its own "stored hashed" premise had to go. MB.71 was minted during MB.66, on the question of what it would take for an admin who signed up through Discord to sign in through Microsoft now that the site verifies addresses itself. The answer is that verification is the wrong side of the equation: Better Auth links a sign-in to an existing row only when the _provider_ vouches for the address, and Microsoft is pinned never to, against nOAuth (MB.60). What works is an explicit link from a signed-in session, which Better Auth already ships, after which the provider signs in by account id and never by address ([`design-decisions/mb.71-plan.md`](../design-decisions/mb.71-plan.md)). MB.73 was minted on request after M3.1 merged, from asking how to test queries by hand through a Postman-style client given OAuth-only sign-in. The only credential the API accepts is Better Auth's `httpOnly` session cookie, so every desktop client is paste-from-DevTools-and-expire; the one client that gets the cookie for free is a page the app serves same-origin, which Yoga's GraphiQL already was. Swapping it for Altair is the shape of one branch in the route plus a doc. MB.74 was minted on request, to review Better Auth's plugin roster against an OAuth-only, invite-gated site; it minted MB.75 through MB.78. MB.79 was minted on the owner's question of whether Better Auth's Stripe plugin could carry subscriptions for workspace owners. Read against the five things wanted, it carries the plumbing and per-seat pricing at checkout and has MB.30's two structural costs, so the answer is recorded in DESIGN.md §13 for v2 rather than built. MB.80 was minted on the owner's question of what it would take for the compendium list and every compendium entry to be public and fully indexable by search engines. Nothing compendium-shaped existed yet, so the answer was a design change rather than an ungating: the compendium becomes the site's public face while accounts, workspaces and everything in them stay gated. It amended M5.2, M5.5, M8.5, M8.6, M8.18 and M8.19 in place and minted MB.81 through MB.85 — the slug columns and the retirements table, the slug rule that follows a rename with a reserved 308 window, the public frame with its proxy entries and signed-in island, the robots-sitemap-metadata surface, and story 63 ([`design-decisions/mb.80-public-compendium.md`](../design-decisions/mb.80-public-compendium.md)). MB.86 was minted on the owner's question of how the structure would have to change for a later move to separate services to be a transport change rather than a rewrite. The rules already gave most of a modular monolith; the layout did not, since `src/db/schema`, `src/services`, `src/graphql/schema` and `src/graphql/loaders` each mixed every domain. It restructures `src/` into five modules with a guarded boundary, and records why the `ingredients` table stays one table ([`design-decisions/mb.86-modular-monolith.md`](../design-decisions/mb.86-modular-monolith.md)). MB.87 was minted on request once M3.10 had grown `src/db/repository.ts` past five hundred lines: it splits the file into a `src/db/repository/` folder, one file per concern, and makes the select builder folder-private rather than file-private, with the deep-import ban that trade needs ([`design-decisions/mb.87-plan.md`](../design-decisions/mb.87-plan.md)). MB.88 was minted on request during MB.71, once `/account` held the sign-in methods and the address lived on a page of its own: it makes `/account` the one account page, with the name, the address and the sign-in methods together, and leaves `/account/email` to the flows that are not a visit to the account. MB.90 was minted because a new engineer had no starting point: `README.md`'s "Local setup" had gone stale and the subsystem summaries had no reading order, so it adds a Day 1 guide with one, and the root `.env.example` and `npm run setup` that shorten its first hour. MB.91 through MB.95 were minted during M4.5, on the owner's question of what it would take to put the hardcoded lists in the database: M4.5 had left the planet and zodiac suggestions in a TypeScript constant, the shape `form` had before MB.35, so MB.91 records them as two admin-curated vocabularies in `form`'s pattern, and MB.92 through MB.95 are the table, the seed, the suggestions and the admin page ([`design-decisions/mb.91-plan.md`](../design-decisions/mb.91-plan.md)). `nomenclature` and `element` stay enums. MB.96 through MB.99 were minted on the report that the CI Vitest job was approaching three minutes: the suite runs in 14s locally and 110s in CI, so the answer was the runner and the per-file overhead rather than the tests, and sizing the runner budget turned up 130 gate runs created by one bulk edit of closed PR bodies and a layer cache at its 10 GB cap holding the same blobs five times over ([`design-decisions/mb.96-plan.md`](../design-decisions/mb.96-plan.md)). MB.104 was minted during M8.5, on the owner's question of what ranking the compendium search by its score would take, once M8.5 had shipped it alphabetical. MB.105 was minted during MB.104, on the owner's question of what page numbers on the compendium would take; the same question settled that the search box's typeahead is the first page of the ranked search rather than a query of its own, which M8.10 now says ([`design-decisions/mb.105-plan.md`](../design-decisions/mb.105-plan.md)). MB.110 was minted during M5.3, on the owner's review that a layer should leave a spell only by a user's choice, and then recoverably ([`design-decisions/m5.3-spells-keep-deleted-ingredients.md`](../design-decisions/m5.3-spells-keep-deleted-ingredients.md)). MB.111 was minted during M5.4, when trying `/admin` as a new account showed that confirming the address lands on `/coven` rather than the page the account was headed for. MB.112 was minted during M5.4 too, when `admin.spec.ts` reseeding beside `account.spec.ts` showed that Playwright's one shared database made every reseed a race between workers, which CI had only avoided by the order its files happened to fall in. MB.113 through MB.124 were minted during M5.4 as well, on the owner's decisions: MB.113 lands an admin on `/admin` after a sign-in with no return path, and MB.114 through MB.124 are the design reviews the standing rule that the design will change had left without a task — the foundations first, then each section once it is built, the nav once MB.7 builds it, and the sign-in methods on their own. MB.125 through MB.132 were minted during M5.9, on the owner's review of the entry form: an ingredient carried categories that nothing wrote, and the owner chose a curated list for deities over the values already in use. MB.133 came out of the same review: nothing bounded how long a list entry could be drawn. So did MB.134 through MB.141: the owner made planet, zodiac sign and colour lists, and let a substitute link an existing ingredient as well as name one. MB.151 through MB.156 were minted during MB.127, on the owner's request that every compendium entry show where its information came from, and that the sources be one table any curated row can link rather than a child of `ingredients`: the model first, then the tables, the services and API, the form field, the page section, and a seed of the sources the vocabulary docs already record. The rule came first — CLAUDE.md's "What the compendium says, it sources" and DESIGN.md §5's "References" — and MB.127's own list was the first held to it: its Wikipedia lists were joined by reference works per tradition, in Chicago form. MB.161 was minted during MB.131, on the owner's question of what it would take for an `unknown` classification to carry a formal name; the spec moved in the same pass, so the task is the build alone ([`design-decisions/mb.161-plan.md`](../design-decisions/mb.161-plan.md)). MB.162 was minted during MB.131 too, on the owner's call that a compendium entry hold only the curated vocabularies' values, so that the autofill's "From Compendium" and "From Coven" say where a value comes from; MB.163 was minted in its scoping, once the owner chose to carry a curated row's rename onto the compendium in the rename's own transaction, to move that rewrite into a background job ([`design-decisions/mb.162-compendium-holds-curated-values.md`](../design-decisions/mb.162-compendium-holds-curated-values.md)). MB.164 to MB.169 were minted together on the owner's request that a picked form, deity and substitute show which one was picked: a substitute already saves its link, so MB.164 is display alone, while a form or deity saves only its text, which two same-named curated rows share, so the pick is stored first, a link beside the text in MB.138 to MB.141's expand-and-contract shape, and shown after ([`design-decisions/mb.165-plan.md`](../design-decisions/mb.165-plan.md)). MB.170 was minted during MB.165, on the owner's call that an order a member cannot change once typed is of little use: once deities kept the order entered, as planets, zodiac signs and colours do, those four list fields wanted a reorder control, and the same task opens up the spacing of a list field's wrapped chips ([`design-decisions/mb.165-record-the-picked-vocabulary-row.md`](../design-decisions/mb.165-record-the-picked-vocabulary-row.md)). MB.171 and MB.172 were minted during MB.156, on the owner's question of what a reseed does to a seeded row an admin has since edited: keyed by what an admin can change — a slug that follows the name, a citation that follows its fields — it reinserts the original as a twin, so every seeded table records the key the seed gave the row, the column first and the seeds after ([`design-decisions/mb.171-seed-keys.md`](../design-decisions/mb.171-seed-keys.md)). MB.174 was minted during MB.154, on the owner's call: its References search left out a source already listed, while the other list fields offered and added a repeat until the save refused it. MB.175 was minted on the owner's request for FAQ and help articles that teach how the site is used, and on their call that it is a v2, post-launch item: the shape was decided when it was minted — rows an admin edits, read without an account — and recorded in DESIGN.md §13, and the task sits unscheduled last in Wave 15's row as MB.163 does, to mint the build when it fires. MB.177 was minted on the owner's call that every admin can create a coven: the spec let an admin create regardless of the flag, but no admin row held it, so a CHECK now makes every admin hold it and M6.7's gate reads the flag alone ([`design-decisions/mb.177-admins-hold-workspace-creation.md`](../design-decisions/mb.177-admins-hold-workspace-creation.md)). MB.178 was minted while M5.6 was built, on the owner's call that its list wants a search: a name search and a group filter in MB.52's shape, its own task because it would have added three-quarters to M5.6's. MB.180 through MB.189 were minted together on the owner's report that CI was slowing as the suite grew: one component file held 38 % of the run's worker time and was its wall clock, seeds and the auth module were re-run per test, and the same rule was asserted at every layer, three quarters of the ingredients resolver tests re-running a service test; MB.180 lands the ownership doc and a warn-only file budget first under the sweep-task rule, MB.181 and MB.182 take the critical path, and the rest work down the layers ([`design-decisions/mb.180-plan.md`](../design-decisions/mb.180-plan.md)). MB.190 was minted on the owner's report that the checks ran beside the staging and production deploys, to have a PR that only promotes gated commits skip them, and **retired without being done** the same day: the report was of checks on the push, which runs none, and the release PR's gate it found is one the owner wants. MB.191 was minted during MB.181, when its profiling found v8 coverage roughly triples a dom file's time, on the owner's call to measure istanbul against it. MB.192 was minted in MB.183's close-out, when the reseed's restoring of a deleted deity pick was found to fail on a pick removed from the middle of its list. MB.215 to MB.223 were minted together on 2026-10-11, on the owner's call to hold once what an ingredient's forms share: a parent ingredient carrying the shared data, an `ingredient_variants` row per form with that form's own references, substitutes and categories beneath it, and identity on the formal name alone, the model recorded first and the tables, the behaviour and the drop after it ([`design-decisions/mb.215-plan.md`](../design-decisions/mb.215-plan.md)); their ids sit below MB.224's because they were reserved before the test lanes were minted.
 
-| ID     | Task                                                                                                                     | Status  | Needed by              |
-| ------ | ------------------------------------------------------------------------------------------------------------------------ | ------- | ---------------------- |
-| MB.1   | Fix prefers-reduced-motion facet swap in ThemeToggle                                                                     | merged  | —                      |
-| MB.2   | Fix sun facet swinging in on first paint in light mode                                                                   | merged  | —                      |
-| MB.3   | Fix Prettier formatting in `m1.1-neon-branch-strategy.md`                                                                | merged  | —                      |
-| MB.4   | Stop destructive-ddl scanning non-migration changed files                                                                | merged  | —                      |
-| MB.5   | Restore `users` FKs on `auditColumns`                                                                                    | merged  | every table            |
-| MB.6   | Spell recipe view page                                                                                                   | Wave 13 | M10.22                 |
-| MB.7   | Application nav shell                                                                                                    | Wave 9  | M8.16, M8.17           |
-| MB.8   | Zod schema for spells                                                                                                    | Wave 13 | M10.10                 |
-| MB.9   | `ingredientsById` DataLoader                                                                                             | Wave 11 | M8.5, M9.4             |
-| MB.10  | `usersById` display-name DataLoader                                                                                      | Wave 9  | M6.11, M6.12, M6.18    |
-| MB.11  | GraphQL field exposing the fuzzy duplicate service                                                                       | Wave 8  | M5.10                  |
-| MB.12  | Finish the secrets matrix and verify real OAuth sign-in                                                                  | Wave 6  | M2.3                   |
-| MB.13  | Stop branch skills setting the base branch as upstream                                                                   | Wave 2  | —                      |
-| MB.14  | Key the per-worker test database off `VITEST_POOL_ID`                                                                    | Wave 2  | —                      |
-| MB.15  | Delete the redundant smoke-check workflows                                                                               | Wave 2  | —                      |
-| MB.16  | Correct the Postgres version across the live docs                                                                        | Wave 2  | —                      |
-| MB.17  | Drop the dead `latest` tag from `build-db-image`                                                                         | Wave 2  | MB.18                  |
-| MB.18  | Give `build-db-image` the skip-if-exists check                                                                           | Wave 2  | —                      |
-| MB.19  | ~~Move `drizzle-kit`/`drizzle-orm` off the `@esbuild-kit` advisory~~ — **retired, not done**                             | —       | —                      |
-| MB.20  | Drop `@pothos/plugin-drizzle` from the GraphQL stack                                                                     | Wave 2  | —                      |
-| MB.21  | Drizzle Studio for local development                                                                                     | Wave 2  | —                      |
-| MB.22  | Set up modern debugging tooling                                                                                          | Wave 2  | —                      |
-| MB.23  | Playwright codegen for local development                                                                                 | Wave 2  | MB.22                  |
-| MB.24  | Decide the RLS role split and read-path identity — **superseded by MB.29**                                               | merged  | —                      |
-| MB.25  | ~~Split the database roles so RLS applies to the app~~ — **retired, not done**                                           | —       | —                      |
-| MB.26  | ~~`withViewer`, the read-side identity wrapper~~ — **retired, not done**                                                 | —       | —                      |
-| MB.27  | `vercel pull` ignores branch-scoped variables                                                                            | Wave 4  | —                      |
-| MB.28  | Record the ingredient identity model in the design docs                                                                  | merged  | M4.1                   |
-| MB.29  | Defer RLS to the public launch; make the second layer a `Membership` proof                                               | Wave 3  | M6.3, M10.3            |
-| MB.30  | Spike Better Auth's organization plugin for workspaces and invitations                                                   | Wave 3  | M4.1, M6.7             |
-| MB.31  | Retire transcripts, the MW compression passes and `TASKS.csv`                                                            | Wave 3  | —                      |
-| MB.32  | Collapse the five check workflows onto one matrix                                                                        | Wave 3  | —                      |
-| MB.33  | Ban runtime `drizzle-orm` outside the repository by lint                                                                 | Wave 3  | —                      |
-| MB.34  | Hard-delete rows in the three join tables                                                                                | Wave 3  | M4.4                   |
-| MB.35  | Make category and form groups admin-curated data                                                                         | Wave 3  | M4.2a, M4.4            |
-| MB.36  | Chip colour from the row, not the token                                                                                  | Wave 3  | MB.35                  |
-| MB.37  | Restore the destructive-DDL gate as a checks leg, scope the local run to the branch                                      | Wave 3  | —                      |
-| MB.38  | Move the two workshop guards into Vitest                                                                                 | Wave 3  | MB.37                  |
-| MB.39  | Settle whether a job-level `if:` really renames a check                                                                  | Wave 14 | —                      |
-| MB.40  | Custom one-off spell ingredients (schema)                                                                                | Wave 4  | M1.23, M10.5           |
-| MB.41  | Move Vitest tests into `tests/`                                                                                          | Wave 4  | M1.23                  |
-| MB.42  | CI container jobs run against files the repo has deleted                                                                 | Wave 4  | —                      |
-| MB.43  | Map service errors to GraphQL errors with field-level detail                                                             | Wave 7  | M5.9, M8.8             |
-| MB.44  | ~~Release to `main`, then drop the coverage excludes MB.42 made dead~~ — **retired, not done**                           | —       | —                      |
-| MB.45  | `vercel pull --git-branch` is rejected on the production target                                                          | Wave 5  | MB.27                  |
-| MB.46  | CI cannot see what `vercel pull` actually returned                                                                       | Wave 5  | MB.45                  |
-| MB.47  | CI cannot read the Sensitive Vercel variables it needs                                                                   | Wave 5  | MB.46                  |
-| MB.48  | A destructive-DDL acknowledgement does not survive the release PR                                                        | Wave 5  | MB.37                  |
-| MB.49  | `drizzle-kit` fails silently, so a bad `DATABASE_URL` has no cause                                                       | Wave 5  | MB.47                  |
-| MB.50  | Make code comments concise; move the arguments into `claude-docs/`                                                       | Wave 5  | —                      |
-| MB.51  | Deduplicate the db-test harness, seed logic and image-build workflows                                                    | Wave 5  | —                      |
-| MB.52  | Admin user list page                                                                                                     | Wave 8  | M5.8, MB.53            |
-| MB.53  | Impersonate a user outside production                                                                                    | Wave 8  | —                      |
-| MB.56  | Rebuild the Asana board mechanism for the free Personal plan                                                             | Wave 6  | —                      |
-| MB.54  | Set the account's email: prefilled from the provider, editable, verified before it counts                                | Wave 7  | M7.5                   |
-| MB.55  | Scan both provider availability states in the e2e accessibility run                                                      | Wave 6  | M2.6                   |
-| MB.57  | Build the public entry page at `/`                                                                                       | Wave 6  | M2.7                   |
-| MB.58  | The admin role ledger (schema)                                                                                           | Wave 8  | MB.59                  |
-| MB.59  | Grant and revoke admin                                                                                                   | Wave 8  | —                      |
-| MB.60  | Promote the primary admin at sign-in, from Google or Discord only                                                        | Wave 6  | MB.12, MB.59           |
-| MB.61  | Scope first-party email verification and email invitations                                                               | Wave 6  | MB.65, M7.3            |
-| MB.62  | The admin-role-change pause ledger (schema)                                                                              | Wave 8  | MB.63                  |
-| MB.63  | Pause admin role changes                                                                                                 | Wave 8  | MB.70                  |
-| MB.64  | Reduce root-folder clutter                                                                                               | Wave 6  | —                      |
-| MB.65  | Mail transport: Resend, the Mailtrap Sandbox and Mailpit over HTTP                                                       | Wave 6  | MB.66, M7.3            |
-| MB.66  | Turn on Better Auth email verification, audited and session-bound                                                        | Wave 6  | MB.67, MB.68           |
-| MB.67  | Provisional accounts: expire unverified rows and sweep them at the next callback                                         | Wave 6  | MB.54                  |
-| MB.68  | Promote the primary admin at first-party verification                                                                    | Wave 6  | MB.54                  |
-| MB.69  | `admin_invitations` schema                                                                                               | Wave 8  | MB.70                  |
-| MB.70  | Invite an admin by email                                                                                                 | Wave 8  | —                      |
-| MB.71  | Link a second sign-in method from the account page                                                                       | Wave 7  | MB.77, MB.88           |
-| MB.72  | Scope the mail's light-mode rules beneath the page cell                                                                  | Wave 6  | —                      |
-| MB.73  | Serve Altair at `/api/graphql` in local development                                                                      | Wave 7  | —                      |
-| MB.74  | Review Better Auth's plugin roster: what lands before launch, what waits                                                 | Wave 7  | MB.75                  |
-| MB.75  | `rate_limits` schema for Better Auth's rate limiter                                                                      | Wave 7  | MB.76                  |
-| MB.76  | Pin Better Auth's rate limiter, OAuth token encryption and session lifetimes                                             | Wave 7  | —                      |
-| MB.77  | Mark the last-used provider on the sign-in page                                                                          | Wave 7  | —                      |
-| MB.78  | OAuth proxy, so a hotfix preview can complete a real sign-in                                                             | Wave 15 | MB.53                  |
-| MB.79  | Record subscription billing as a v2 feature and the Stripe plugin's fit                                                  | Wave 7  | —                      |
-| MB.80  | Re-scope the compendium as public and search-indexable                                                                   | Wave 7  | —                      |
-| MB.81  | `ingredients.slug`, the pending-slug columns and the `retired_ingredient_slugs` table                                    | Wave 8  | MB.82                  |
-| MB.82  | Ingredient slugs: set on create, follow a rename, retire with a 308, hand over once confirmed                            | Wave 8  | M5.5, M8.19, MB.84     |
-| MB.83  | Public compendium chrome, proxy entries and the signed-in island                                                         | Wave 12 | M8.18, M8.19           |
-| MB.84  | robots, sitemap, page metadata and noindex off production                                                                | Wave 12 | —                      |
-| MB.85  | Story 63: a visitor reads the compendium without signing in                                                              | Wave 12 | —                      |
-| MB.86  | Restructure `src/` into domain modules with a guarded boundary                                                           | Wave 7  | —                      |
-| MB.87  | Split `src/db/repository.ts` into a `src/db/repository/` folder                                                          | Wave 7  | —                      |
-| MB.88  | One account page: name, email and sign-in methods                                                                        | Wave 8  | —                      |
-| MB.89  | Move task tracking from Asana to GitHub Issues and Projects                                                              | Wave 7  | —                      |
-| MB.90  | Day 1 new developer guide, root `.env.example` and `npm run setup`                                                       | Wave 14 | —                      |
-| MB.91  | Make the planet and zodiac suggestion lists admin-curated vocabularies                                                   | Wave 8  | MB.92                  |
-| MB.92  | `planets` and `zodiac_signs` schema                                                                                      | Wave 8  | MB.93                  |
-| MB.93  | Seed the planet and zodiac vocabularies                                                                                  | Wave 8  | MB.94                  |
-| MB.94  | Scoped suggestion fields for planet and zodiac                                                                           | Wave 8  | M5.10a, MB.95          |
-| MB.95  | Admin planet and zodiac CRUD                                                                                             | Wave 8  | M5.7                   |
-| MB.96  | Run the vitest job on Blacksmith                                                                                         | Wave 8  | —                      |
-| MB.97  | A node Vitest project for the unit files that need no DOM                                                                | Wave 8  | —                      |
-| MB.98  | Gate runs stop when their PR is closed                                                                                   | Wave 8  | MB.96                  |
-| MB.99  | Docker layer cache to the registry                                                                                       | Wave 8  | —                      |
-| MB.100 | Raw SQL only where a rule or the planner needs it                                                                        | Wave 8  | M8.2, M5.1             |
-| MB.101 | One inserter for an ingredient and its children in tests                                                                 | Wave 8  | M8.2                   |
-| MB.102 | Board calls that defer to the Project's workflows and fit the rate limit                                                 | Wave 8  | —                      |
-| MB.103 | Reorder the Project's items into execution order                                                                         | Wave 8  | —                      |
-| MB.104 | Rank the compendium search by word similarity                                                                            | Wave 8  | M8.10, M8.14           |
-| MB.105 | Page numbers on the compendium connection                                                                                | Wave 8  | M8.6, M8.18            |
-| MB.106 | Mark compendium entries New or Updated for 30 days                                                                       | Wave 12 | —                      |
-| MB.107 | Drop the pending-slug columns MB.82 stopped declaring                                                                    | Wave 8  | —                      |
-| MB.108 | Move type declarations into type-only files                                                                              | Wave 8  | —                      |
-| MB.109 | Move the tests' type declarations into type-only files                                                                   | Wave 8  | —                      |
-| MB.110 | Make spell layers soft-deletable                                                                                         | Wave 8  | M10.10                 |
-| MB.111 | Carry the return path through the verification link                                                                      | Wave 8  | —                      |
-| MB.112 | Give each Playwright worker its own server and database                                                                  | Wave 8  | —                      |
-| MB.113 | Land an admin on the admin area after a sign-in with no return path                                                      | Wave 8  | —                      |
-| MB.114 | Design review: foundations                                                                                               | Wave 8  | —                      |
-| MB.115 | Design review: the admin area                                                                                            | Wave 8  | —                      |
-| MB.116 | Design review: the sign-in and account pages                                                                             | Wave 8  | —                      |
-| MB.117 | ~~Design review: sign-in methods~~ — **merged into MB.116**                                                              | —       | —                      |
-| MB.118 | Design review: the site's mail                                                                                           | Wave 10 | —                      |
-| MB.119 | Design review: the coven and invitations                                                                                 | Wave 10 | —                      |
-| MB.120 | Design review: the public compendium and shared ingredient components                                                    | Wave 12 | —                      |
-| MB.121 | Design review: the workspace ingredients page                                                                            | Wave 12 | —                      |
-| MB.122 | ~~Design review: the navigation~~ — **folded into MB.7**                                                                 | —       | —                      |
-| MB.123 | Design review: the grimoire                                                                                              | Wave 13 | —                      |
-| MB.124 | Design review: error, loading and empty states, and the whole site                                                       | Wave 15 | —                      |
-| MB.125 | Categories on the ingredient writes                                                                                      | Wave 8  | MB.126, M5.5           |
-| MB.126 | Grouped category picker in IngredientForm                                                                                | Wave 8  | M5.5, M8.11            |
-| MB.127 | Make deities an admin-curated vocabulary                                                                                 | Wave 8  | MB.128                 |
-| MB.128 | `deities` schema                                                                                                         | Wave 8  | MB.129                 |
-| MB.129 | Seed the deity vocabulary                                                                                                | Wave 8  | MB.130                 |
-| MB.130 | Scoped suggestion field for deities                                                                                      | Wave 8  | MB.131, MB.132         |
-| MB.131 | Deity, planet, zodiac and substitute lookups in IngredientForm                                                           | Wave 8  | —                      |
-| MB.132 | Admin deity CRUD                                                                                                         | Wave 8  | M5.7                   |
-| MB.133 | Long list entries in IngredientForm                                                                                      | Wave 8  | —                      |
-| MB.134 | Make planet, zodiac sign and colour lists                                                                                | Wave 8  | MB.135                 |
-| MB.135 | List columns for planet, zodiac sign and colour                                                                          | Wave 8  | MB.136                 |
-| MB.136 | Read and write planet, zodiac sign and colour as lists                                                                   | Wave 8  | MB.130, MB.131, MB.137 |
-| MB.137 | Drop the single planet, zodiac and colour columns                                                                        | Wave 8  | —                      |
-| MB.138 | Let a substitute link an existing ingredient                                                                             | Wave 8  | MB.139, MB.131         |
-| MB.139 | `ingredient_substitutes` table, filled from the list                                                                     | Wave 8  | MB.140                 |
-| MB.140 | Read and write substitutes as links or text                                                                              | Wave 8  | MB.131, MB.141, M8.19  |
-| MB.141 | Drop `ingredients.substitutes`                                                                                           | Wave 8  | —                      |
-| MB.142 | Cut the per-turn context: plugin, reporters, stale MCP                                                                   | Wave 8  | —                      |
-| MB.143 | Split TASKS.md by milestone and wave                                                                                     | Wave 8  | MB.144, MB.147         |
-| MB.144 | Slim CLAUDE.md into path-scoped rules                                                                                    | Wave 8  | MB.147                 |
-| MB.145 | Split db.md by section                                                                                                   | Wave 8  | MB.147                 |
-| MB.146 | Split auth.md, ci.md, testing.md and graphql.md by section                                                               | Wave 8  | MB.147                 |
-| MB.147 | One home per fact across the docs                                                                                        | Wave 8  | —                      |
-| MB.148 | A read inside a write runs on the write's transaction                                                                    | Wave 15 | —                      |
-| MB.149 | Migrations give up a lock they cannot take                                                                               | Wave 15 | —                      |
-| MB.150 | Combobox's × buttons move as a button does                                                                               | Wave 8  | —                      |
-| MB.151 | Record the references model                                                                                              | Wave 8  | MB.152                 |
-| MB.152 | `references` and `reference_links` tables                                                                                | Wave 8  | MB.153, MB.156         |
-| MB.153 | Read and write references on an ingredient                                                                               | Wave 8  | MB.154, M5.5           |
-| MB.154 | IngredientForm — References field                                                                                        | Wave 8  | M5.5                   |
-| MB.155 | References section on the ingredient page                                                                                | Wave 12 | —                      |
-| MB.156 | Seed the curated vocabularies' sources                                                                                   | Wave 8  | —                      |
-| MB.157 | Make element a list                                                                                                      | Wave 8  | MB.158                 |
-| MB.158 | List column for element                                                                                                  | Wave 8  | MB.159                 |
-| MB.159 | Read and write element as a list                                                                                         | Wave 8  | MB.160, M5.5           |
-| MB.160 | Drop the single element column                                                                                           | Wave 8  | —                      |
-| MB.161 | Let an unknown classification carry a formal name                                                                        | Wave 8  | M5.5, M8.19            |
-| MB.162 | Hold compendium entries to the curated vocabularies                                                                      | Wave 8  | M5.5                   |
-| MB.163 | Rewrite a renamed curated value in a background job                                                                      | Wave 15 | —                      |
-| MB.164 | Show what a picked substitute is                                                                                         | Wave 8  | —                      |
-| MB.165 | Record the picked form and deities beside their text                                                                     | Wave 8  | MB.167                 |
-| MB.166 | Fill `ingredient_deities` from the list                                                                                  | Wave 8  | MB.167                 |
-| MB.167 | Read and write the picked form and deities                                                                               | Wave 8  | M5.5, MB.169           |
-| MB.168 | Drop `ingredients.deities`                                                                                               | Wave 8  | —                      |
-| MB.169 | Show what a picked form and deity are                                                                                    | Wave 8  | M5.5, MB.170           |
-| MB.170 | Reorder the ordered list fields                                                                                          | Wave 8  | M5.5                   |
-| MB.171 | `seed_key` on the seeded tables                                                                                          | Wave 8  | MB.172, MB.156         |
-| MB.172 | The vocabulary seeds key on `seed_key`                                                                                   | Wave 8  | MB.156                 |
-| MB.173 | Refuse a migration older than its base's newest                                                                          | Wave 8  | —                      |
-| MB.174 | Stop the list fields offering or adding a repeat                                                                         | Wave 8  | M5.5                   |
-| MB.175 | Help and FAQ articles                                                                                                    | Wave 15 | —                      |
-| MB.176 | Bug reports                                                                                                              | Wave 15 | M11.8                  |
-| MB.177 | Every admin holds `canCreateWorkspace`                                                                                   | Wave 8  | M5.8, M6.7             |
-| MB.178 | Search and filter the admin categories list                                                                              | Wave 8  | —                      |
-| MB.179 | Keep the test suite inside Postgres's connection limit                                                                   | Wave 8  | —                      |
-| MB.180 | Test-layer ownership, and a per-file time budget in the PR comment                                                       | Wave 8  | —                      |
-| MB.181 | IngredientForm's list field and closed sets tested as components                                                         | Wave 8  | —                      |
-| MB.182 | The reference panel and compendium mode on their own harness                                                             | Wave 8  | —                      |
-| MB.183 | Seeds: one reseed per file, the shared shape once                                                                        | Wave 8  | —                      |
-| MB.184 | Guards share one scan; plan tests share one seed                                                                         | Wave 8  | —                      |
-| MB.185 | The ingredients GraphQL files hold the transport's half                                                                  | Wave 8  | —                      |
-| MB.186 | The vocabulary, identity and coven GraphQL files, the same way                                                           | Wave 8  | —                      |
-| MB.187 | Services own the rules; repositories own the mechanism                                                                   | Wave 8  | —                      |
-| MB.188 | Catalogue sweeps once, and the auth module imported once per file                                                        | Wave 8  | —                      |
-| MB.189 | Config moves, the admin pages' half, and the closing measurement                                                         | Wave 8  | —                      |
-| MB.190 | ~~Release and main-sync PRs skip the gate's checks~~ — **retired, not done**                                             | —       | —                      |
-| MB.191 | The coverage provider chosen by measurement, istanbul against v8                                                         | Wave 8  | —                      |
-| MB.192 | A reseed of standard puts a deleted deity pick back at the end of its list                                               | Wave 8  | —                      |
-| MB.193 | The workspace creation ledger (schema)                                                                                   | Wave 8  | M5.8                   |
-| MB.194 | `user_privilege_changes`, the one privilege ledger (schema)                                                              | Wave 8  | MB.195                 |
-| MB.195 | Privilege changes record themselves, with their route                                                                    | Wave 8  | MB.59                  |
-| MB.196 | Nothing declares the two old privilege ledgers                                                                           | Wave 8  | MB.197                 |
-| MB.197 | Drop `admin_role_changes` and `workspace_creation_changes`                                                               | Wave 8  | —                      |
-| MB.198 | One table mark replaces the state-ledger markers                                                                         | Wave 8  | MB.201                 |
-| MB.199 | Read the privilege ledger                                                                                                | Wave 8  | MB.200                 |
-| MB.200 | The privilege ledger page                                                                                                | Wave 8  | —                      |
-| MB.201 | `invitations`, one two-tier table (schema)                                                                               | Wave 8  | MB.202                 |
-| MB.202 | Invitations are written and read by tier                                                                                 | Wave 8  | MB.70, M7.2            |
-| MB.203 | Drop `workspace_invitations` and `admin_invitations`                                                                     | Wave 8  | —                      |
-| MB.204 | The provisional-account sweep skips an account holding a privilege change                                                | Wave 8  | —                      |
-| MB.205 | Warn before approving an unverified account for coven creation                                                           | Wave 8  | —                      |
-| MB.206 | Repository: the two-tier read scope and the page pair, written once                                                      | Wave 8  | MB.210                 |
-| MB.207 | Schema: the vocabulary columns, indexes and the sourced-entity registry from one place                                   | Wave 8  | MB.214, MB.208         |
-| MB.208 | Seed: one key reader, one actor publisher, one two-tier registry                                                         | Wave 8  | —                      |
-| MB.209 | Validation: one `requiredText`, one `RowId`, one link-or-name rule                                                       | Wave 8  | MB.212, MB.115         |
-| MB.210 | Vocabulary and identity services: the curated write steps once                                                           | Wave 8  | MB.211                 |
-| MB.211 | Ingredient writes: the child sequence and the input fields once                                                          | Wave 8  | MB.212                 |
-| MB.212 | GraphQL transport: the resolver plumbing and the curated-vocabulary writes once                                          | Wave 8  | —                      |
-| MB.213 | Auth, sign-in and mail: the provider roster once, the gates once                                                         | Wave 8  | —                      |
-| MB.214 | Categories and category groups refuse a blank description                                                                | Wave 8  | —                      |
-| MB.224 | Tests assert functional requirements: the rules, lint carries the architecture guards, harness tests go                  | Wave 8  | —                      |
-| MB.225 | `tests/db/`: catalogue sweeps once, seed content once, harness tests gone                                                | Wave 8  | —                      |
-| MB.226 | Module schema and validation tests: shape once, behaviour particular to the table                                        | Wave 8  | —                      |
-| MB.227 | Services, GraphQL, loaders and acceptance: one refusal per rule, the transport's half only                               | Wave 8  | —                      |
-| MB.228 | Component tests: the owner component once, no noun matrices, no presentation, no copy                                    | Wave 8  | —                      |
-| MB.229 | Page, lib and email tests: no re-run of lib or e2e, no design pins, no copy                                              | Wave 8  | —                      |
-| MB.230 | Playwright: duplicates of Vitest flows go, the build cache warms, the closing measurement                                | Wave 8  | —                      |
-| MB.231 | The repository's query helpers and predicates import one way, and the import-cycle lint rule covers `src/db/repository/` | Wave 8  | —                      |
-| MB.232 | The hand-written `scripts/*.d.mts` declarations go with the `tests/scripts/` files that read them                        | Wave 8  | —                      |
-| MB.233 | `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`                     | Wave 8  | —                      |
-| MB.234 | The e2e build cache is saved from `staging`, so a pull request's Playwright job restores it                              | Wave 8  | —                      |
-| MB.235 | Playwright restores the e2e build cache on a pull request and saves it only from `staging`                               | Wave 8  | —                      |
-| MB.236 | Four Playwright workers on the gate's 4-vCPU runner, kept only if measured faster                                        | Wave 8  | —                      |
-| MB.237 | A Chromium-only e2e image on `node:26.6.0-bookworm-slim`                                                                 | Wave 8  | —                      |
-| MB.238 | The `db` project's files that register no mock run without isolation, measured                                           | Wave 8  | —                      |
-| MB.239 | Two tests that depend on the order of the tests in their file                                                            | Wave 8  | —                      |
-| MB.215 | Ingredient variants: the model, the record and the re-scoped tasks                                                       | Wave 8  | MB.216                 |
-| MB.216 | `ingredient_variants`, the fill, and identity on the formal name (schema)                                                | Wave 8  | MB.217                 |
-| MB.217 | A variant beneath stock, layers, categories, substitutes and references (schema)                                         | Wave 8  | MB.218                 |
-| MB.218 | Variants are read and searched                                                                                           | Wave 8  | MB.219                 |
-| MB.219 | Variants are written                                                                                                     | Wave 8  | MB.220                 |
-| MB.220 | Identity is the formal name alone, and the form vocabulary reads variants                                                | Wave 8  | MB.221                 |
-| MB.221 | IngredientForm's Variants section                                                                                        | Wave 8  | MB.222                 |
-| MB.222 | The form leaves the ingredient row: filters, list, SDL, seeds, fixtures                                                  | Wave 8  | MB.223                 |
-| MB.223 | Drop `canonical_key`, `form`, `form_id` and what indexed them                                                            | Wave 8  | —                      |
-| MB.240 | The compendium seed: scope, sourcing rules, the candidate list and the library                                           | Wave 9  | MB.242                 |
-| MB.241 | `seed_key` on `ingredients`                                                                                              | Wave 9  | MB.242                 |
-| MB.242 | `db:seed:compendium`, the guard, CI and a 14-ingredient pilot                                                            | Wave 9  | MB.243                 |
-| MB.243 | The compendium seed: plants A to Cn                                                                                      | Wave 9  | MB.249                 |
-| MB.244 | The compendium seed: plants Co to K                                                                                      | Wave 9  | MB.249                 |
-| MB.245 | The compendium seed: plants L to Q                                                                                       | Wave 9  | MB.249                 |
-| MB.246 | The compendium seed: plants R to Z                                                                                       | Wave 9  | MB.249                 |
-| MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 9  | MB.249                 |
-| MB.248 | The compendium seed: stones and metals                                                                                   | Wave 9  | MB.249                 |
-| MB.249 | Close the compendium seed                                                                                                | Wave 9  | —                      |
-| MB.251 | Call the planets Celestial Bodies wherever a person reads them                                                           | Wave 8  | MB.253, MB.254         |
-| MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9  | MB.253                 |
-| MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9  | MB.254                 |
-| MB.254 | Drop the planet columns and view                                                                                         | Wave 9  | —                      |
-| MB.255 | The e2e session cookie never reaches a WebKit page                                                                       | Wave 10 | —                      |
-| MB.256 | An unverified account loops on the email page after a link into the shell                                                | Wave 10 | —                      |
+| ID     | Task                                                                                                                     | Status   | Needed by              |
+| ------ | ------------------------------------------------------------------------------------------------------------------------ | -------- | ---------------------- |
+| MB.1   | Fix prefers-reduced-motion facet swap in ThemeToggle                                                                     | merged   | —                      |
+| MB.2   | Fix sun facet swinging in on first paint in light mode                                                                   | merged   | —                      |
+| MB.3   | Fix Prettier formatting in `m1.1-neon-branch-strategy.md`                                                                | merged   | —                      |
+| MB.4   | Stop destructive-ddl scanning non-migration changed files                                                                | merged   | —                      |
+| MB.5   | Restore `users` FKs on `auditColumns`                                                                                    | merged   | every table            |
+| MB.6   | Spell recipe view page                                                                                                   | Wave 13  | M10.22                 |
+| MB.7   | Application nav shell                                                                                                    | Wave 9   | M8.16, M8.17           |
+| MB.8   | Zod schema for spells                                                                                                    | Wave 13  | M10.10                 |
+| MB.9   | `ingredientsById` DataLoader                                                                                             | Wave 11  | M9.4                   |
+| MB.10  | `usersById` display-name DataLoader                                                                                      | Wave 9   | M6.11, M6.12, M6.18    |
+| MB.11  | GraphQL field exposing the fuzzy duplicate service                                                                       | Wave 8   | M5.10                  |
+| MB.12  | Finish the secrets matrix and verify real OAuth sign-in                                                                  | Wave 6   | M2.3                   |
+| MB.13  | Stop branch skills setting the base branch as upstream                                                                   | Wave 2   | —                      |
+| MB.14  | Key the per-worker test database off `VITEST_POOL_ID`                                                                    | Wave 2   | —                      |
+| MB.15  | Delete the redundant smoke-check workflows                                                                               | Wave 2   | —                      |
+| MB.16  | Correct the Postgres version across the live docs                                                                        | Wave 2   | —                      |
+| MB.17  | Drop the dead `latest` tag from `build-db-image`                                                                         | Wave 2   | MB.18                  |
+| MB.18  | Give `build-db-image` the skip-if-exists check                                                                           | Wave 2   | —                      |
+| MB.19  | ~~Move `drizzle-kit`/`drizzle-orm` off the `@esbuild-kit` advisory~~ — **retired, not done**                             | —        | —                      |
+| MB.20  | Drop `@pothos/plugin-drizzle` from the GraphQL stack                                                                     | Wave 2   | —                      |
+| MB.21  | Drizzle Studio for local development                                                                                     | Wave 2   | —                      |
+| MB.22  | Set up modern debugging tooling                                                                                          | Wave 2   | —                      |
+| MB.23  | Playwright codegen for local development                                                                                 | Wave 2   | MB.22                  |
+| MB.24  | Decide the RLS role split and read-path identity — **superseded by MB.29**                                               | merged   | —                      |
+| MB.25  | ~~Split the database roles so RLS applies to the app~~ — **retired, not done**                                           | —        | —                      |
+| MB.26  | ~~`withViewer`, the read-side identity wrapper~~ — **retired, not done**                                                 | —        | —                      |
+| MB.27  | `vercel pull` ignores branch-scoped variables                                                                            | Wave 4   | —                      |
+| MB.28  | Record the ingredient identity model in the design docs                                                                  | merged   | M4.1                   |
+| MB.29  | Defer RLS to the public launch; make the second layer a `Membership` proof                                               | Wave 3   | M6.3, M10.3            |
+| MB.30  | Spike Better Auth's organization plugin for workspaces and invitations                                                   | Wave 3   | M4.1, M6.7             |
+| MB.31  | Retire transcripts, the MW compression passes and `TASKS.csv`                                                            | Wave 3   | —                      |
+| MB.32  | Collapse the five check workflows onto one matrix                                                                        | Wave 3   | —                      |
+| MB.33  | Ban runtime `drizzle-orm` outside the repository by lint                                                                 | Wave 3   | —                      |
+| MB.34  | Hard-delete rows in the three join tables                                                                                | Wave 3   | M4.4                   |
+| MB.35  | Make category and form groups admin-curated data                                                                         | Wave 3   | M4.2a, M4.4            |
+| MB.36  | Chip colour from the row, not the token                                                                                  | Wave 3   | MB.35                  |
+| MB.37  | Restore the destructive-DDL gate as a checks leg, scope the local run to the branch                                      | Wave 3   | —                      |
+| MB.38  | Move the two workshop guards into Vitest                                                                                 | Wave 3   | MB.37                  |
+| MB.39  | Settle whether a job-level `if:` really renames a check                                                                  | Wave 14  | —                      |
+| MB.40  | Custom one-off spell ingredients (schema)                                                                                | Wave 4   | M1.23, M10.5           |
+| MB.41  | Move Vitest tests into `tests/`                                                                                          | Wave 4   | M1.23                  |
+| MB.42  | CI container jobs run against files the repo has deleted                                                                 | Wave 4   | —                      |
+| MB.43  | Map service errors to GraphQL errors with field-level detail                                                             | Wave 7   | M5.9, M8.8             |
+| MB.44  | ~~Release to `main`, then drop the coverage excludes MB.42 made dead~~ — **retired, not done**                           | —        | —                      |
+| MB.45  | `vercel pull --git-branch` is rejected on the production target                                                          | Wave 5   | MB.27                  |
+| MB.46  | CI cannot see what `vercel pull` actually returned                                                                       | Wave 5   | MB.45                  |
+| MB.47  | CI cannot read the Sensitive Vercel variables it needs                                                                   | Wave 5   | MB.46                  |
+| MB.48  | A destructive-DDL acknowledgement does not survive the release PR                                                        | Wave 5   | MB.37                  |
+| MB.49  | `drizzle-kit` fails silently, so a bad `DATABASE_URL` has no cause                                                       | Wave 5   | MB.47                  |
+| MB.50  | Make code comments concise; move the arguments into `claude-docs/`                                                       | Wave 5   | —                      |
+| MB.51  | Deduplicate the db-test harness, seed logic and image-build workflows                                                    | Wave 5   | —                      |
+| MB.52  | Admin user list page                                                                                                     | Wave 8   | M5.8, MB.53            |
+| MB.53  | Impersonate a user outside production                                                                                    | Wave 8   | —                      |
+| MB.56  | Rebuild the Asana board mechanism for the free Personal plan                                                             | Wave 6   | —                      |
+| MB.54  | Set the account's email: prefilled from the provider, editable, verified before it counts                                | Wave 7   | M7.5                   |
+| MB.55  | Scan both provider availability states in the e2e accessibility run                                                      | Wave 6   | M2.6                   |
+| MB.57  | Build the public entry page at `/`                                                                                       | Wave 6   | M2.7                   |
+| MB.58  | The admin role ledger (schema)                                                                                           | Wave 8   | MB.59                  |
+| MB.59  | Grant and revoke admin                                                                                                   | Wave 8   | —                      |
+| MB.60  | Promote the primary admin at sign-in, from Google or Discord only                                                        | Wave 6   | MB.12, MB.59           |
+| MB.61  | Scope first-party email verification and email invitations                                                               | Wave 6   | MB.65, M7.3            |
+| MB.62  | The admin-role-change pause ledger (schema)                                                                              | Wave 8   | MB.63                  |
+| MB.63  | Pause admin role changes                                                                                                 | Wave 8   | MB.70                  |
+| MB.64  | Reduce root-folder clutter                                                                                               | Wave 6   | —                      |
+| MB.65  | Mail transport: Resend, the Mailtrap Sandbox and Mailpit over HTTP                                                       | Wave 6   | MB.66, M7.3            |
+| MB.66  | Turn on Better Auth email verification, audited and session-bound                                                        | Wave 6   | MB.67, MB.68           |
+| MB.67  | Provisional accounts: expire unverified rows and sweep them at the next callback                                         | Wave 6   | MB.54                  |
+| MB.68  | Promote the primary admin at first-party verification                                                                    | Wave 6   | MB.54                  |
+| MB.69  | `admin_invitations` schema                                                                                               | Wave 8   | MB.70                  |
+| MB.70  | Invite an admin by email                                                                                                 | Wave 8   | —                      |
+| MB.71  | Link a second sign-in method from the account page                                                                       | Wave 7   | MB.77, MB.88           |
+| MB.72  | Scope the mail's light-mode rules beneath the page cell                                                                  | Wave 6   | —                      |
+| MB.73  | Serve Altair at `/api/graphql` in local development                                                                      | Wave 7   | —                      |
+| MB.74  | Review Better Auth's plugin roster: what lands before launch, what waits                                                 | Wave 7   | MB.75                  |
+| MB.75  | `rate_limits` schema for Better Auth's rate limiter                                                                      | Wave 7   | MB.76                  |
+| MB.76  | Pin Better Auth's rate limiter, OAuth token encryption and session lifetimes                                             | Wave 7   | —                      |
+| MB.77  | Mark the last-used provider on the sign-in page                                                                          | Wave 7   | —                      |
+| MB.78  | OAuth proxy, so a hotfix preview can complete a real sign-in                                                             | Wave 15  | MB.53                  |
+| MB.79  | Record subscription billing as a v2 feature and the Stripe plugin's fit                                                  | Wave 7   | —                      |
+| MB.80  | Re-scope the compendium as public and search-indexable                                                                   | Wave 7   | —                      |
+| MB.81  | `ingredients.slug`, the pending-slug columns and the `retired_ingredient_slugs` table                                    | Wave 8   | MB.82                  |
+| MB.82  | Ingredient slugs: set on create, follow a rename, retire with a 308, hand over once confirmed                            | Wave 8   | M5.5, M8.19, MB.84     |
+| MB.83  | Public compendium chrome and proxy entries                                                                               | Wave 12  | M8.18, M8.19           |
+| MB.84  | robots, sitemap, page metadata and noindex off production                                                                | Wave 12  | —                      |
+| MB.85  | Story 63: a visitor reads the compendium without signing in                                                              | Wave 12  | —                      |
+| MB.86  | Restructure `src/` into domain modules with a guarded boundary                                                           | Wave 7   | —                      |
+| MB.87  | Split `src/db/repository.ts` into a `src/db/repository/` folder                                                          | Wave 7   | —                      |
+| MB.88  | One account page: name, email and sign-in methods                                                                        | Wave 8   | —                      |
+| MB.89  | Move task tracking from Asana to GitHub Issues and Projects                                                              | Wave 7   | —                      |
+| MB.90  | Day 1 new developer guide, root `.env.example` and `npm run setup`                                                       | Wave 14  | —                      |
+| MB.91  | Make the planet and zodiac suggestion lists admin-curated vocabularies                                                   | Wave 8   | MB.92                  |
+| MB.92  | `planets` and `zodiac_signs` schema                                                                                      | Wave 8   | MB.93                  |
+| MB.93  | Seed the planet and zodiac vocabularies                                                                                  | Wave 8   | MB.94                  |
+| MB.94  | Scoped suggestion fields for planet and zodiac                                                                           | Wave 8   | M5.10a, MB.95          |
+| MB.95  | Admin planet and zodiac CRUD                                                                                             | Wave 8   | M5.7                   |
+| MB.96  | Run the vitest job on Blacksmith                                                                                         | Wave 8   | —                      |
+| MB.97  | A node Vitest project for the unit files that need no DOM                                                                | Wave 8   | —                      |
+| MB.98  | Gate runs stop when their PR is closed                                                                                   | Wave 8   | MB.96                  |
+| MB.99  | Docker layer cache to the registry                                                                                       | Wave 8   | —                      |
+| MB.100 | Raw SQL only where a rule or the planner needs it                                                                        | Wave 8   | M8.2, M5.1             |
+| MB.101 | One inserter for an ingredient and its children in tests                                                                 | Wave 8   | M8.2                   |
+| MB.102 | Board calls that defer to the Project's workflows and fit the rate limit                                                 | Wave 8   | —                      |
+| MB.103 | Reorder the Project's items into execution order                                                                         | Wave 8   | —                      |
+| MB.104 | Rank the compendium search by word similarity                                                                            | Wave 8   | M8.10, M8.14           |
+| MB.105 | Page numbers on the compendium connection                                                                                | Wave 8   | M8.6, M8.18            |
+| MB.106 | Mark compendium entries New or Updated for 30 days                                                                       | Wave 12  | —                      |
+| MB.107 | Drop the pending-slug columns MB.82 stopped declaring                                                                    | Wave 8   | —                      |
+| MB.108 | Move type declarations into type-only files                                                                              | Wave 8   | —                      |
+| MB.109 | Move the tests' type declarations into type-only files                                                                   | Wave 8   | —                      |
+| MB.110 | Make spell layers soft-deletable                                                                                         | Wave 8   | M10.10                 |
+| MB.111 | Carry the return path through the verification link                                                                      | Wave 8   | —                      |
+| MB.112 | Give each Playwright worker its own server and database                                                                  | Wave 8   | —                      |
+| MB.113 | Land an admin on the admin area after a sign-in with no return path                                                      | Wave 8   | —                      |
+| MB.114 | Design review: foundations                                                                                               | Wave 8   | —                      |
+| MB.115 | Design review: the admin area                                                                                            | Wave 8   | —                      |
+| MB.116 | Design review: the sign-in and account pages                                                                             | Wave 8   | —                      |
+| MB.117 | ~~Design review: sign-in methods~~ — **merged into MB.116**                                                              | —        | —                      |
+| MB.118 | Design review: the site's mail                                                                                           | Wave 10  | —                      |
+| MB.119 | Design review: the coven and invitations                                                                                 | Wave 10  | —                      |
+| MB.120 | Design review: the public compendium and shared ingredient components                                                    | Wave 12  | —                      |
+| MB.121 | Design review: the workspace ingredients page                                                                            | Wave 12  | —                      |
+| MB.122 | ~~Design review: the navigation~~ — **folded into MB.7**                                                                 | —        | —                      |
+| MB.123 | Design review: the grimoire                                                                                              | Wave 13  | —                      |
+| MB.124 | Design review: error, loading and empty states, and the whole site                                                       | Wave 15  | —                      |
+| MB.125 | Categories on the ingredient writes                                                                                      | Wave 8   | MB.126, M5.5           |
+| MB.126 | Grouped category picker in IngredientForm                                                                                | Wave 8   | M5.5, M8.11            |
+| MB.127 | Make deities an admin-curated vocabulary                                                                                 | Wave 8   | MB.128                 |
+| MB.128 | `deities` schema                                                                                                         | Wave 8   | MB.129                 |
+| MB.129 | Seed the deity vocabulary                                                                                                | Wave 8   | MB.130                 |
+| MB.130 | Scoped suggestion field for deities                                                                                      | Wave 8   | MB.131, MB.132         |
+| MB.131 | Deity, planet, zodiac and substitute lookups in IngredientForm                                                           | Wave 8   | —                      |
+| MB.132 | Admin deity CRUD                                                                                                         | Wave 8   | M5.7                   |
+| MB.133 | Long list entries in IngredientForm                                                                                      | Wave 8   | —                      |
+| MB.134 | Make planet, zodiac sign and colour lists                                                                                | Wave 8   | MB.135                 |
+| MB.135 | List columns for planet, zodiac sign and colour                                                                          | Wave 8   | MB.136                 |
+| MB.136 | Read and write planet, zodiac sign and colour as lists                                                                   | Wave 8   | MB.130, MB.131, MB.137 |
+| MB.137 | Drop the single planet, zodiac and colour columns                                                                        | Wave 8   | —                      |
+| MB.138 | Let a substitute link an existing ingredient                                                                             | Wave 8   | MB.139, MB.131         |
+| MB.139 | `ingredient_substitutes` table, filled from the list                                                                     | Wave 8   | MB.140                 |
+| MB.140 | Read and write substitutes as links or text                                                                              | Wave 8   | MB.131, MB.141, M8.19  |
+| MB.141 | Drop `ingredients.substitutes`                                                                                           | Wave 8   | —                      |
+| MB.142 | Cut the per-turn context: plugin, reporters, stale MCP                                                                   | Wave 8   | —                      |
+| MB.143 | Split TASKS.md by milestone and wave                                                                                     | Wave 8   | MB.144, MB.147         |
+| MB.144 | Slim CLAUDE.md into path-scoped rules                                                                                    | Wave 8   | MB.147                 |
+| MB.145 | Split db.md by section                                                                                                   | Wave 8   | MB.147                 |
+| MB.146 | Split auth.md, ci.md, testing.md and graphql.md by section                                                               | Wave 8   | MB.147                 |
+| MB.147 | One home per fact across the docs                                                                                        | Wave 8   | —                      |
+| MB.148 | A read inside a write runs on the write's transaction                                                                    | Wave 15  | —                      |
+| MB.149 | Migrations give up a lock they cannot take                                                                               | Wave 15  | —                      |
+| MB.150 | Combobox's × buttons move as a button does                                                                               | Wave 8   | —                      |
+| MB.151 | Record the references model                                                                                              | Wave 8   | MB.152                 |
+| MB.152 | `references` and `reference_links` tables                                                                                | Wave 8   | MB.153, MB.156         |
+| MB.153 | Read and write references on an ingredient                                                                               | Wave 8   | MB.154, M5.5           |
+| MB.154 | IngredientForm — References field                                                                                        | Wave 8   | M5.5                   |
+| MB.155 | References section on the ingredient page                                                                                | Wave 12  | —                      |
+| MB.156 | Seed the curated vocabularies' sources                                                                                   | Wave 8   | —                      |
+| MB.157 | Make element a list                                                                                                      | Wave 8   | MB.158                 |
+| MB.158 | List column for element                                                                                                  | Wave 8   | MB.159                 |
+| MB.159 | Read and write element as a list                                                                                         | Wave 8   | MB.160, M5.5           |
+| MB.160 | Drop the single element column                                                                                           | Wave 8   | —                      |
+| MB.161 | Let an unknown classification carry a formal name                                                                        | Wave 8   | M5.5, M8.19            |
+| MB.162 | Hold compendium entries to the curated vocabularies                                                                      | Wave 8   | M5.5                   |
+| MB.163 | Rewrite a renamed curated value in a background job                                                                      | Wave 15  | —                      |
+| MB.164 | Show what a picked substitute is                                                                                         | Wave 8   | —                      |
+| MB.165 | Record the picked form and deities beside their text                                                                     | Wave 8   | MB.167                 |
+| MB.166 | Fill `ingredient_deities` from the list                                                                                  | Wave 8   | MB.167                 |
+| MB.167 | Read and write the picked form and deities                                                                               | Wave 8   | M5.5, MB.169           |
+| MB.168 | Drop `ingredients.deities`                                                                                               | Wave 8   | —                      |
+| MB.169 | Show what a picked form and deity are                                                                                    | Wave 8   | M5.5, MB.170           |
+| MB.170 | Reorder the ordered list fields                                                                                          | Wave 8   | M5.5                   |
+| MB.171 | `seed_key` on the seeded tables                                                                                          | Wave 8   | MB.172, MB.156         |
+| MB.172 | The vocabulary seeds key on `seed_key`                                                                                   | Wave 8   | MB.156                 |
+| MB.173 | Refuse a migration older than its base's newest                                                                          | Wave 8   | —                      |
+| MB.174 | Stop the list fields offering or adding a repeat                                                                         | Wave 8   | M5.5                   |
+| MB.175 | Help and FAQ articles                                                                                                    | Wave 15  | —                      |
+| MB.176 | Bug reports                                                                                                              | Wave 15  | M11.8                  |
+| MB.177 | Every admin holds `canCreateWorkspace`                                                                                   | Wave 8   | M5.8, M6.7             |
+| MB.178 | Search and filter the admin categories list                                                                              | Wave 8   | —                      |
+| MB.179 | Keep the test suite inside Postgres's connection limit                                                                   | Wave 8   | —                      |
+| MB.180 | Test-layer ownership, and a per-file time budget in the PR comment                                                       | Wave 8   | —                      |
+| MB.181 | IngredientForm's list field and closed sets tested as components                                                         | Wave 8   | —                      |
+| MB.182 | The reference panel and compendium mode on their own harness                                                             | Wave 8   | —                      |
+| MB.183 | Seeds: one reseed per file, the shared shape once                                                                        | Wave 8   | —                      |
+| MB.184 | Guards share one scan; plan tests share one seed                                                                         | Wave 8   | —                      |
+| MB.185 | The ingredients GraphQL files hold the transport's half                                                                  | Wave 8   | —                      |
+| MB.186 | The vocabulary, identity and coven GraphQL files, the same way                                                           | Wave 8   | —                      |
+| MB.187 | Services own the rules; repositories own the mechanism                                                                   | Wave 8   | —                      |
+| MB.188 | Catalogue sweeps once, and the auth module imported once per file                                                        | Wave 8   | —                      |
+| MB.189 | Config moves, the admin pages' half, and the closing measurement                                                         | Wave 8   | —                      |
+| MB.190 | ~~Release and main-sync PRs skip the gate's checks~~ — **retired, not done**                                             | —        | —                      |
+| MB.191 | The coverage provider chosen by measurement, istanbul against v8                                                         | Wave 8   | —                      |
+| MB.192 | A reseed of standard puts a deleted deity pick back at the end of its list                                               | Wave 8   | —                      |
+| MB.193 | The workspace creation ledger (schema)                                                                                   | Wave 8   | M5.8                   |
+| MB.194 | `user_privilege_changes`, the one privilege ledger (schema)                                                              | Wave 8   | MB.195                 |
+| MB.195 | Privilege changes record themselves, with their route                                                                    | Wave 8   | MB.59                  |
+| MB.196 | Nothing declares the two old privilege ledgers                                                                           | Wave 8   | MB.197                 |
+| MB.197 | Drop `admin_role_changes` and `workspace_creation_changes`                                                               | Wave 8   | —                      |
+| MB.198 | One table mark replaces the state-ledger markers                                                                         | Wave 8   | MB.201                 |
+| MB.199 | Read the privilege ledger                                                                                                | Wave 8   | MB.200                 |
+| MB.200 | The privilege ledger page                                                                                                | Wave 8   | —                      |
+| MB.201 | `invitations`, one two-tier table (schema)                                                                               | Wave 8   | MB.202                 |
+| MB.202 | Invitations are written and read by tier                                                                                 | Wave 8   | MB.70, M7.2            |
+| MB.203 | Drop `workspace_invitations` and `admin_invitations`                                                                     | Wave 8   | —                      |
+| MB.204 | The provisional-account sweep skips an account holding a privilege change                                                | Wave 8   | —                      |
+| MB.205 | Warn before approving an unverified account for coven creation                                                           | Wave 8   | —                      |
+| MB.206 | Repository: the two-tier read scope and the page pair, written once                                                      | Wave 8   | MB.210                 |
+| MB.207 | Schema: the vocabulary columns, indexes and the sourced-entity registry from one place                                   | Wave 8   | MB.214, MB.208         |
+| MB.208 | Seed: one key reader, one actor publisher, one two-tier registry                                                         | Wave 8   | —                      |
+| MB.209 | Validation: one `requiredText`, one `RowId`, one link-or-name rule                                                       | Wave 8   | MB.212, MB.115         |
+| MB.210 | Vocabulary and identity services: the curated write steps once                                                           | Wave 8   | MB.211                 |
+| MB.211 | Ingredient writes: the child sequence and the input fields once                                                          | Wave 8   | MB.212                 |
+| MB.212 | GraphQL transport: the resolver plumbing and the curated-vocabulary writes once                                          | Wave 8   | —                      |
+| MB.213 | Auth, sign-in and mail: the provider roster once, the gates once                                                         | Wave 8   | —                      |
+| MB.214 | Categories and category groups refuse a blank description                                                                | Wave 8   | —                      |
+| MB.224 | Tests assert functional requirements: the rules, lint carries the architecture guards, harness tests go                  | Wave 8   | —                      |
+| MB.225 | `tests/db/`: catalogue sweeps once, seed content once, harness tests gone                                                | Wave 8   | —                      |
+| MB.226 | Module schema and validation tests: shape once, behaviour particular to the table                                        | Wave 8   | —                      |
+| MB.227 | Services, GraphQL, loaders and acceptance: one refusal per rule, the transport's half only                               | Wave 8   | —                      |
+| MB.228 | Component tests: the owner component once, no noun matrices, no presentation, no copy                                    | Wave 8   | —                      |
+| MB.229 | Page, lib and email tests: no re-run of lib or e2e, no design pins, no copy                                              | Wave 8   | —                      |
+| MB.230 | Playwright: duplicates of Vitest flows go, the build cache warms, the closing measurement                                | Wave 8   | —                      |
+| MB.231 | The repository's query helpers and predicates import one way, and the import-cycle lint rule covers `src/db/repository/` | Wave 8   | —                      |
+| MB.232 | The hand-written `scripts/*.d.mts` declarations go with the `tests/scripts/` files that read them                        | Wave 8   | —                      |
+| MB.233 | `DROP DATABASE … WITH (FORCE)` may end an autovacuum worker: the test role joins `pg_signal_backend`                     | Wave 8   | —                      |
+| MB.234 | The e2e build cache is saved from `staging`, so a pull request's Playwright job restores it                              | Wave 8   | —                      |
+| MB.235 | Playwright restores the e2e build cache on a pull request and saves it only from `staging`                               | Wave 8   | —                      |
+| MB.236 | Four Playwright workers on the gate's 4-vCPU runner, kept only if measured faster                                        | Wave 8   | —                      |
+| MB.237 | A Chromium-only e2e image on `node:26.6.0-bookworm-slim`                                                                 | Wave 8   | —                      |
+| MB.238 | The `db` project's files that register no mock run without isolation, measured                                           | Wave 8   | —                      |
+| MB.239 | Two tests that depend on the order of the tests in their file                                                            | Wave 8   | —                      |
+| MB.215 | Ingredient variants: the model, the record and the re-scoped tasks                                                       | Wave 8   | MB.216                 |
+| MB.216 | `ingredient_variants`, the fill, and identity on the formal name (schema)                                                | Wave 8   | MB.217                 |
+| MB.217 | A variant beneath stock, layers, categories, substitutes and references (schema)                                         | Wave 8   | MB.218                 |
+| MB.218 | Variants are read and searched                                                                                           | Wave 8   | MB.219                 |
+| MB.219 | Variants are written                                                                                                     | Wave 8   | MB.220                 |
+| MB.220 | Identity is the formal name alone, and the form vocabulary reads variants                                                | Wave 8   | MB.221                 |
+| MB.221 | IngredientForm's Variants section                                                                                        | Wave 8   | MB.222                 |
+| MB.222 | The form leaves the ingredient row: filters, list, SDL, seeds, fixtures                                                  | Wave 8   | MB.223                 |
+| MB.223 | Drop `canonical_key`, `form`, `form_id` and what indexed them                                                            | Wave 8   | —                      |
+| MB.240 | The compendium seed: scope, sourcing rules, the candidate list and the library                                           | Wave 9   | MB.242                 |
+| MB.241 | `seed_key` on `ingredients`                                                                                              | Wave 9   | MB.242                 |
+| MB.242 | `db:seed:compendium`, the guard, CI and a 14-ingredient pilot                                                            | Wave 9   | MB.243                 |
+| MB.243 | The compendium seed: plants A to Cn                                                                                      | Wave 14  | MB.249                 |
+| MB.244 | The compendium seed: plants Co to K                                                                                      | Wave 14  | MB.249                 |
+| MB.245 | The compendium seed: plants L to Q                                                                                       | Wave 14  | MB.249                 |
+| MB.246 | The compendium seed: plants R to Z                                                                                       | Wave 14  | MB.249                 |
+| MB.247 | The compendium seed: resins, woods and other ingredients                                                                 | Wave 9   | MB.249                 |
+| MB.248 | The compendium seed: stones and metals                                                                                   | Wave 14  | MB.249                 |
+| MB.249 | Close the compendium seed                                                                                                | Wave 14  | —                      |
+| MB.251 | Call the planets Celestial Bodies wherever a person reads them                                                           | Wave 8   | MB.253, MB.254         |
+| MB.252 | The celestial bodies table and columns, beside the planet ones                                                           | Wave 9   | MB.253                 |
+| MB.253 | Read and write celestial bodies under their own names                                                                    | Wave 9   | MB.254                 |
+| MB.254 | Drop the planet columns and view                                                                                         | Wave 9   | —                      |
+| MB.255 | The e2e session cookie never reaches a WebKit page                                                                       | Wave 10  | —                      |
+| MB.256 | An unverified account loops on the email page after a link into the shell                                                | Wave 10  | —                      |
+| MB.257 | The Coven Landing Shows a Blank Page Before Redirecting                                                                  | Bugfixes | —                      |
+| MB.258 | The Edit Source Form Leaves Blank Space and Has No Close Button                                                          | Bugfixes | —                      |
+| MB.259 | Category Chips Sometimes Show a UUID Instead of the Name                                                                 | Bugfixes | —                      |
+| MB.260 | Admin Curated Lists Show No Updated Column                                                                               | Bugfixes | —                      |
+| MB.261 | The No Refs Switch Cannot Be Toggled With Enter                                                                          | Bugfixes | —                      |
+| MB.262 | Mail Shows Its Light Colours in Zoho Mail's Dark Mode                                                                    | Bugfixes | —                      |
+| MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
+| MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
+| MB.265 | The Zodiac Signs Filter Test Fails Axe's Title Check Under Load                                                          | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1035,6 +1044,8 @@ Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-
 
 The lane brief is the README's: every field value traces to a source read during the task, the owner's book by page or a fetched page by URL; a claim with no source is left out; no page, URL, edition or year is invented; `accessed` is the real fetch date; no prose is copied from any source; descriptions are 100 to 250 words, in British spelling, written fresh; shared works are named by their `works.ts` handle; a substitute links only an identity in this shard or an earlier one; every formal name is checked against POWO or Mindat as the entry is written, since the candidate list's are Wikipedia's. Every entry carries at least its primary form; a further form only where a source attaches something to it. An entry that cannot be sourced at depth goes to the doc's "What is left out, and why".
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1043,6 +1054,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1052,6 +1064,8 @@ _Story:_ As a reader, I want the plants from Co to K in the compendium with thei
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the second content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-co-k.ts` and `claude-docs/db/compendium-seed/plants-co-k.md`, 116 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1060,6 +1074,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1069,6 +1084,8 @@ _Story:_ As a reader, I want the plants from L to Q in the compendium with their
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the third content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-l-q.ts` and `claude-docs/db/compendium-seed/plants-l-q.md`, 104 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1077,6 +1094,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1086,6 +1104,8 @@ _Story:_ As a reader, I want the plants from R to Z in the compendium with their
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the fourth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-r-z.ts` and `claude-docs/db/compendium-seed/plants-r-z.md`, 98 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1094,6 +1114,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1120,6 +1141,8 @@ _Story:_ As a reader, I want the stones, crystals and metals in the compendium w
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the sixth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/stones-and-metals.ts` and `claude-docs/db/compendium-seed/stones-and-metals.md`, 136 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. A mineral variety is `<Species> var. <variety>` as `standard` writes `Quartz var. amethyst`, with Mindat as the reference for names, and a metal is `chemical`. The 8 hours are an estimate on MB.243's calibration, scaled to the shard's size.
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1128,6 +1151,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1135,7 +1159,7 @@ _Acceptance criteria:_
 
 _Story:_ As the owner, I want the seeded compendium counted against the candidate list and every entry shown to be sourced, so that I know what the 614 became and what was left out.
 
-Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten. It starts after each shard's final part has merged, not merely after each shard's first PR: five shards, `plants-a-cn`, `plants-co-k`, `plants-l-q`, `plants-r-z` and `stones-and-metals`, merged as part 1 only, as each one's doc under `claude-docs/db/compendium-seed/` says, and only `resins-woods-and-other` is whole. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner.
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten. It starts after each shard's final part has merged, not merely after each shard's first PR: five shards, `plants-a-cn`, `plants-co-k`, `plants-l-q`, `plants-r-z` and `stones-and-metals`, merged as part 1 only, as each one's doc under `claude-docs/db/compendium-seed/` says, and only `resins-woods-and-other` is whole. It also starts after M14.1, which flags the entries a source calls poisonous, and counts the flagged entries and forms beside the seeded totals. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner.
 
 **Staging is brought back in line with the literal.** The seed writes an entry once and skips it, with everything beneath it, on every later run (`claude-docs/db/compendium-seed/README.md`, "Write-once, and how a correction lands"). So an edit to a shard's literal made after a deploy seeded that entry never reaches staging. Two edits made during MB.115 are of that kind: commit `2aa282b5` rewrote 1,078 seed locator lines from "s.v." to "under", and `f007a51b` relinked Almond's Nut form from Apricot as a whole to Apricot's Seed form, since a form's linked substitute now names a form ([`design-decisions/mb.115-variant-substitutes-name-a-form.md`](../design-decisions/mb.115-variant-substitutes-name-a-form.md)). Any entry staging seeded before those commits still holds the old locators and the whole-ingredient link. This task lists what differs on staging and repairs it, by one of two routes, chosen and argued in the PR body: a correction list an admin works through on staging's compendium page, which is the README's own rule for a correction, or a one-off step that re-applies those two edits to entries already present. Staging's database has not been read for this entry, so the size of the drift is unknown until the task lists it.
 
@@ -1152,6 +1176,7 @@ Tests are written first:
 _Acceptance criteria:_
 
 - The seeded, left-out and candidate counts are recorded and reconcile
+- The entries and forms flagged toxic are counted beside them
 - The tests above are green over the full `COMPENDIUM`
 - On staging, the admin compendium page's unsourced filter shows no seeded entry
 - On staging, every entry seeded before MB.115's two edits carries the literal's locators and links, and the PR body names the route taken
@@ -1286,6 +1311,226 @@ _Acceptance criteria:_
 - An unverified account still reaches no page but `/account/email`, by full load and by client-side navigation alike, and a signed-out visitor is still sent to sign in
 - `claude-docs/auth/route-protection.md` and `claude-docs/auth/admin-bootstrap.md` ("The email page") say where the unverified redirect is thrown, and why
 
+**MB.257 — The Coven Landing Shows a Blank Page Before Redirecting** · 3h
+
+_Story:_ As a coven member, I want sign-in to take me straight to my coven's page, so that I don't see a blank page on the way.
+
+Found on 2026-10-15, on the local dev server. `src/app/(shell)/coven/page.tsx` reads the viewer and calls `redirect()` to the first coven the switcher lists. On a member's sign-in the browser lands on `/coven`, shows a blank page for a moment, and only then reaches `/coven/[slug]`. It happens every time and is cosmetic. The cause is not yet established: it may be a loading state, the dev server compiling the route on first request, or the sign-in return path ending on `/coven` rather than on the coven. The task names the cause and says whether a production build shows it too. If it is the dev server alone, the task records that and lands the cheapest change that removes the extra hop.
+
+Steps to reproduce:
+
+1. Run the dev server locally.
+2. Sign in as a coven member. This takes you to `/coven`, which redirects to `/coven/[slug]`.
+
+Actual: `/coven` shows a blank page for a moment before `/coven/[slug]` loads.
+Expected: the member goes directly to `/coven/[slug]`.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: a signed-in member with a coven who goes to `/coven` ends on `/coven/[slug]` with no page body shown in between. It is a Playwright spec, since it is a navigation behaviour
+- A member with no coven still sees the landing's three states (M2.8, MB.57) and is not redirected
+- A signed-in account outside the coven still gets a 404 from `/coven/[slug]` by direct id, asserted with a coven the account could otherwise have reached
+- The PR body names the cause and says whether a production build shows it too
+- The docs that describe the post-sign-in landing are corrected if the fix changes where sign-in sends a member
+- The story suite's landing check is reassessed with the fix: `landingRedirect` in `tests/e2e/stories/01-invitations.spec.ts` (Story 6) reads the 307 from `/coven` and ignores Next's prefetch of it, which the shell's brand link fires from every page. If the fix changes where a member is sent or how `/coven` answers, that helper and the Story 6 step change with it, in this task's PR
+
+**MB.258 — The Edit Source Form Leaves Blank Space and Has No Close Button** · 2h
+
+_Story:_ As a site admin, I want the edit source form to open without extra blank space and to have a close button at the top, so that I can edit a source cleanly and leave the form without hunting for another way out.
+
+Found on 2026-10-15. When a site admin edits a source (a reference row) from the admin Compendium, the form expands inside the ingredient modal. It opened once with extra blank space below the form, and it has no close button at the top. It looks like the modal's height does not settle to its content when the form expands, but the cause is not confirmed. The blank space was seen once, so the first job is to find what makes it appear.
+
+Steps to reproduce:
+
+1. Sign in as a site admin.
+2. Open the admin Compendium and find a source (reference) row.
+3. Choose to edit that source. The form expands inside the ingredient modal.
+
+Actual: Extra blank space appears at the bottom of the modal when the form opens (seen once, not every time). The form has no close button at the top.
+Expected: The modal fits its content with no extra blank space, and the form has a close button at the top.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: the edit source form has a close button, and using it closes the form and leaves the source unchanged
+- Opening the edit source form leaves no extra blank space below it in the modal, and the PR body names the cause of the intermittent space
+- The close button sits at the top of the form, can be reached by keyboard and has an accessible name, and `@axe-core/playwright` is clean on the open form
+- Closing the form saves nothing, and the form keeps the form save rules (Cancel stays quiet)
+- The component's doc and story are corrected if the fix changes them
+
+**MB.259 — Category Chips Sometimes Show a UUID Instead of the Name** · 3h
+
+_Story:_ As a site admin, I want the categories input on an ingredient's edit form to always show category names, so that I can tell which categories an ingredient has and edit them.
+
+Found on 2026-10-15, on the local dev server. In the admin Compendium, the Categories input under the Relations section of an ingredient's edit form sometimes shows each chosen category as its UUID (its unique id) instead of its name. It is intermittent, and the cause is not yet known. It may be that the chip's name is looked up from a list that has not loaded when the chip draws, or that the names are cached and missing. The task finds the cause and says whether staging and production show it too.
+
+Steps to reproduce:
+
+1. Run the dev server locally.
+2. Sign in as a site admin.
+3. Go to `/admin/compendium` and click edit on an ingredient.
+4. Expand the Relations section.
+5. Look at the Categories input.
+
+Actual: Sometimes the chips in the Categories input show the categories' UUIDs instead of their names.
+Expected: Every chip always shows its category's name.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: an ingredient that has categories shows each chip with its category's name and never its id, including when the category options have not finished loading, proven by role and label queries
+- The test sets up the condition that produces the UUID chip, and fails without the fix
+- The categories saved on the ingredient are unchanged by opening the form, expanding Relations or closing it
+- The PR body names the cause and says whether a production build shows it too
+- The docs for the categories input and the ingredient form are corrected if the fix changes them
+
+**MB.260 — Admin Curated Lists Show No Updated Column** · 5h
+
+_Story:_ As a site admin, I want every curated list in the admin area to show who last edited each row and when, so that I can see how current an entry is and who to ask about it, as I can on the Coven members table.
+
+Found on 2026-10-15, on the local dev server. The Coven members table has an Updated column. None of the admin curated lists have one (the Compendium, categories, the ingredient form vocabulary, the group vocabularies, the celestial body and zodiac vocabularies, and the deity and tradition vocabularies). So an admin can't see who last changed a row or when. Every audited table already records who changed a row and when (`...auditColumns`, with a trigger that sets `updated_at`), so the data should already exist. The task lists the lists that need the column, reuses the Coven members table's Updated cell rather than writing a second one, and reads the editor's name through the service layer.
+
+Steps to reproduce:
+
+1. Run the dev server locally.
+2. Sign in as a site admin (assumed).
+3. Open an admin curated list, such as categories or ingredient forms under `/admin` (assumed).
+4. Look at the table's columns.
+5. Compare with the Coven members table, which has an Updated column.
+
+Actual: The admin curated lists have no Updated column, so they don't show who last edited a row or when.
+Expected: Each admin curated list has an Updated column, like the Coven members table, showing who last edited the row and when.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: each admin curated list renders an Updated column, and a row shows the name of the admin who last edited it and when, proven by role and label queries on the state
+- A row that has been edited shows the editor who made the latest edit, not the one who created it; the test edits a row as a second admin and asserts the first would be shown without the fix
+- A row whose editor has since been removed still shows a sensible value, not a UUID or a crash
+- The editor's name reaches the page through a service that checks the viewer is a site admin; a signed-in non-admin is refused by direct id, and a coven owner who could otherwise reach the page is asserted to be refused, so the check is shown to matter
+- Every list paginates through the cursor helper and loads editors in one batched lookup, so the column adds no per-row query
+- The components' docs and stories are corrected for the new column
+
+**MB.261 — The No Refs Switch Cannot Be Toggled With Enter** · 2h
+
+_Story:_ As a site admin using only the keyboard, I want Enter to flip a focused switch such as No Refs, so that I can use the Compendium filter without a mouse.
+
+Found on 2026-10-15, on the local dev server, signed in as a site admin. On `/admin/compendium` the No Refs filter is a switch (`SwitchField`, a native checkbox, used in `src/components/CompendiumList/filter.tsx`). With it focused, pressing Enter does nothing. A native checkbox flips on Space, and Enter only submits the surrounding form, so a keyboard user who presses Enter gets no change. The fix belongs in the shared switch, so every `SwitchField` behaves the same, not in this one filter.
+
+Steps to reproduce:
+
+1. Run the dev server (`npm run dev`, port 8000) (assumed).
+2. Sign in as a site admin.
+3. Open the Compendium page, `/admin/compendium`.
+4. Use the keyboard to move focus to the No Refs switch.
+5. Press Enter.
+
+Actual: The switch's state does not change, so it cannot be operated from the keyboard.
+Expected: Pressing Enter with the switch focused changes its state (assumed to happen every time).
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: with a switch focused, pressing Enter flips its checked state
+- Enter on the No Refs switch changes the filter and updates the list, as a click does
+- Space still flips the switch, and Enter does not also submit a surrounding form a second time
+- Every `SwitchField` switch behaves the same, not only No Refs
+- A Playwright spec walks the keyboard path on `/admin/compendium`, with `@axe-core/playwright` clean
+- Docs corrected if the switch's keyboard behaviour is described in `claude-docs/` or in the component's doc
+
+**MB.262 — Mail Shows Its Light Colours in Zoho Mail's Dark Mode** · 3h
+
+_Story:_ As someone reading the site's mail in the Zoho Mail app with dark mode on, I want the mail to show its dark theme, so that I read light text on a dark background instead of a bright white page.
+
+Found on 2026-10-15 on production. The three mails the site sends (verification, admin invitation, coven invitation) share the frame in `src/emails/parts/layout.tsx`. It writes the dark theme inline and overrides it with the light theme inside a `prefers-color-scheme: light` media query. It also declares `color-scheme` in two meta tags. In the Zoho Mail app with dark mode on, the mails show black text on a white background, so the light theme is winning. Zoho probably reports a light colour scheme to the mail, or ignores the media query and the meta tags; that is a guess to confirm during the fix. The fix may go beyond the frame: test in Zoho's real dark mode, then choose between changing which theme is the default and adding markup Zoho honours. Whatever is chosen must not break the clients that already show the dark theme correctly.
+
+Found during the fix (2026-10-16, by reading the DOM Zoho builds from probe mails): Zoho reads no `<style>` at all in its dark mode and drops every `@media` block in its light mode, and in dark mode it inverts every inline colour it can see — except on an anchor whose background is an image, which it leaves alone. The frame now paints its backgrounds with a gradient and sets every run of text inside such an anchor, so Zoho shows the dark theme in both of its modes, as Gmail does (`email.md`, "Design").
+
+Steps to reproduce:
+
+1. Turn on dark mode in the Zoho Mail app (assumed: the app's own dark theme).
+2. Trigger any of the site's mails on production to an address read in Zoho Mail.
+3. Open the mail in the Zoho Mail app.
+
+Actual: the mail shows black text on a white background, as the light theme does, though the app is in dark mode.
+Expected: the mail shows its dark theme, as it does in clients that honour dark mode.
+
+Seen on production. It happens every time. Severity: wrong result.
+
+_Acceptance criteria:_
+
+- A regression test fails before the fix and passes after it: it renders each of the three mails and checks that the markup Zoho Mail reads leaves the dark theme in effect there; the cause found decides what it checks
+- Each of the three mails shows its dark theme in the Zoho Mail app with dark mode on, and stays dark with dark mode off, as it does in Gmail, since Zoho reads no light theme; the check is recorded on the issue
+- Clients that already render correctly (those that honour `prefers-color-scheme`, and Gmail, which takes the inline dark) are unchanged, and the every-mail test still passes
+- `email.md`, "Design", records what Zoho Mail does with dark mode and why the frame is written the way it is
+
+**MB.263 — The Coven Links Still Stop on a Blank Page Before the Coven** · 2h
+
+_Story:_ As a signed-in member or admin, I want Your Coven, the brand and Continue to take me straight to my coven, so that I don't see a blank page on the way.
+
+Found on 2026-10-16, on the local dev server. MB.257 sent sign-in straight to the first coven, but four other links still point at `/coven`: the admin's Your Coven link, the brand for a non-admin, Continue on `/`, and Continue in the email form (the email page and the account page). `/coven` then redirects the browser to `/coven/[slug]`, leaving a blank stop on the way. It happens every time and is cosmetic.
+
+Steps to reproduce:
+
+1. Run the dev server locally.
+2. Sign in as a site admin who belongs to a coven.
+3. On `/admin`, click Your Coven in the bar.
+
+Actual: the browser stops on `/coven` and shows a blank page for a moment, then redirects to `/coven/[slug]`.
+Expected: Your Coven goes straight to `/coven/[slug]`.
+
+_Acceptance criteria:_
+
+- Regression tests that fail before the fix check that the admin's Your Coven link, a member's brand link, Continue on `/` and Continue on the email page each point at the viewer's first coven, `/coven/[slug]`
+- Someone in no coven still gets `/coven` from each of these links, and still sees the landing's three states (M2.8, MB.57)
+- An admin's brand still goes to `/admin`; only Your Coven goes into the coven
+- The sign-in callback and every Continue choose the landing through one helper, and the shell's links read the coven list the shell already loads, so they add no lookup
+- `/coven` still redirects a member who opens it directly, from a bookmark or after leaving a coven
+- `app-shell.md`, `welcome.md`, `email-form.md`, `route-protection.md`, `admin-bootstrap.md`, `auth/tests.md` and the MB.57 decision record are corrected
+
+**MB.264 — The Admin Nav Folds Two Tabs on Refresh at Desktop Width** · 2h
+
+_Story:_ As a site admin, I want the admin nav to show every tab that fits from the first paint, so that a refresh does not flash a folded row before unfolding it.
+
+Found on 2026-10-16, on the local dev server. The server cannot know the window's width, so `section-links.tsx` renders the phone's count of four tabs, marks the rest as extras behind More, and the stylesheet hides that class at every width. Wider than the phone the row is only corrected after hydration has measured it (React reconciles the band's server snapshot in a passive effect). With six admin sections, two tabs sit behind More from the first paint until then: about 40 ms on a production build, longer on the dev server. It happens every time and is cosmetic. The fix: the stylesheet shows every tab before the nav carries `data-fit`, wrapping any overflow out of sight with More hidden, and the measuring render marks itself (`data-measuring`) so More is still drawn for measurement. The corrections to `claude-docs/components/section-nav.md` are deferred to M11.22 at the owner's request.
+
+Steps to reproduce:
+
+1. Sign in as a site admin on the local dev server.
+2. Make the window wider than 882px (a desktop width).
+3. Open `/admin` and refresh the page.
+
+Actual: for a moment the admin nav shows four tabs and a More button holding the other two; then More vanishes and all six tabs show.
+Expected: all six tabs show from the first paint, with no More button, since they fit the row.
+
+_Acceptance criteria:_
+
+- A Playwright regression test under `tests/e2e`, with the script chunks delayed at desktop width, fails before the fix and passes after: before hydration every admin link is visible and no More button is present
+- The server's HTML for `/admin` still carries every section's link once, the hidden tabs hidden by class only
+- The fit tests at 642, 768 and 882px in `tests/e2e/shell.spec.ts` pass unchanged
+- At a phone width the first four tabs and More show as before
+- The measuring render is never painted: no frame shows the row overflowing
+
+**MB.265 — The Zodiac Signs Filter Test Fails Axe's Title Check Under Load** · 2h
+
+_Story:_ As a developer running the gate suite, I want the zodiac signs filter test to pass every time, so that a red run means a real regression and not a busy machine.
+
+Found on 2026-10-16, locally, during M11.18's measurement runs. The gate test "an admin filters the zodiac signs by part of a name" in `tests/e2e/admin.spec.ts` failed twice with an axe-core accessibility violation, rule `document-title` (the document has no title), on `/admin/zodiac-signs?query=AR` after filtering, and passed on every other run. Both sightings were under a load average of 11 to 24, with several Playwright and Vitest runs sharing twelve cores. The page declares a static `title` in its metadata (`src/app/(shell)/admin/(astrology)/zodiac-signs/page.tsx`), so a document without a title should not be possible. One hypothesis is that under load axe runs against a streamed document whose head has not yet carried the title; that is unproven. It is a flaky test, not a broken page, so it is not a hotfix.
+
+Steps to reproduce:
+
+1. Have the machine under heavy load: several Playwright and Vitest runs sharing the cores, load average over 10 (assumed, from the two sightings).
+2. Run the gate suite, `npm run e2e`.
+3. The test signs in as a site admin, opens `/admin/zodiac-signs`, fills the Name search with "AR" and clicks Search.
+4. It waits for `/admin/zodiac-signs?query=AR` and three rows, then runs axe-core on the page.
+
+Actual: sometimes axe reports a `document-title` violation and the test fails; the next run passes.
+Expected: the filtered page always carries its title, so axe passes and the test is stable.
+
+_Acceptance criteria:_
+
+- A regression test that fails before the fix: either a reproduction of the missing title (axe run against the page before hydration or during streaming), or, if the title is proved always present, a test showing the harness ran axe too early
+- The cause is established and recorded, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
+- The fix lives where the cause is: the page if the title is missing, `tests/e2e/axe.ts` if the harness ran early, never a retry or a skip
+- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass
+- `claude-docs/testing/e2e.md`'s "Where a run's time goes (M11.18)" section stops calling this failure unexplained once it is explained
+
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
 Merged before this file carried per-task hours; sized after the fact from the merged diff. The reduced-motion swap of the toggle's facets, and the workshop story that simulates the preference.
@@ -1329,12 +1574,15 @@ _Story 56 — As a workspace member, I want to read a saved spell on its own pag
 
 `/coven/[slug]/grimoire/[id]`, added to §9's route table by this audit. M10.22 and CLAUDE.md both reference "the spell recipe view" and story 56 is about _reading_ a spell, but §9 had no spell detail route — `/grimoire/new` is the builder, and you cannot print a saved spell from it. This is the page M10.22 attaches print styles to. Two ingredients sharing a display label render with their formal name alongside it, since the page has no hover affordance to disambiguate them the way a card's tooltip can.
 
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the page renders the spell's numbered steps in `position` order, an ingredient step with its quantity and unit and an instruction-only step as its text, plus an Ingredients summary above them, the ingredient steps in order, for gathering before starting (M13.1). It shows the spell's `note`, and it is the page M13.7's Record a Working control and M13.8's Workings section attach to.
+
 _Acceptance criteria:_
 
 - Route resolves a spell by id within the workspace
 - Visibility is enforced in SQL: a private spell is reachable only by its author
 - A non-member receives 404, consistent with the rest of `/coven/[slug]`
-- Ingredients render in layer order with quantities
+- Steps render numbered in `position` order, an ingredient step with its quantity and unit
+- The Ingredients summary lists the ingredient steps in order
 - Two ingredients sharing a label are disambiguated by their formal name, not by hover
 - A custom, one-off ingredient (MB.40) renders its own name and form in layer order with the rest, marked as one-off, and links to no ingredient page
 - The page is the only view M10.22 styles for print
@@ -1383,10 +1631,13 @@ _Story:_ As a developer, I want one validation schema for spells so that the bui
 
 M4.5 covers ingredient and category only. M10.10 needs the spell equivalent.
 
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the layer list becomes one ordered `steps` list (M13.1). A step is `{ body?, ingredientId + variantId? | name + form?, quantity?, unit?, note? }`: at least one of an instruction (`body`) or an identity, at most one identity, and `quantity`, `unit` and `note` only beside an identity. The spell gains its free-text `note`.
+
 _Acceptance criteria:_
 
 - One schema shared by client and server
-- Covers title, visibility, layers, quantities and units
+- Covers title, visibility, note, steps, quantities and units
+- A step carries an instruction, an identity, or both, and never neither; `quantity`, `unit` and `note` on an instruction-only step are rejected, and a blank instruction is rejected, mirroring M13.1's CHECKs
 - A layer is `{ ingredientId }` or `{ name, form? }` and never both or neither (MB.40); `form` beside `ingredientId` is rejected, and a blank `name` or `form` is rejected — the table's four CHECKs, mirrored so the CHECK is never what a user sees
 - Unit validation imports M9.2's shared unit-to-dimension module rather than keeping its own list
 - Rejects a visibility value outside `private` and `workspace`
@@ -1395,7 +1646,9 @@ _Acceptance criteria:_
 
 _Story:_ As an operator, I want ingredient resolution batched so that a list query costs one round trip rather than one per row.
 
-M8.5 and M9.4 both assume batched ingredient resolution; no task built the loader. Constructed per request, never at module level.
+No task built a batched ingredient read, so this one does. M9.4's `InventoryItem.ingredient` and, later, M10's `SpellIngredient.ingredient` resolve through it. Constructed per request, never at module level.
+
+**Amended 2026-10-13 after the Wave 11 review:** the loader is built the way the others are: with `defineSignedInLoader` (`src/graphql/loaders/define-loader.ts`), registered in `LOADERS` in `src/graphql/loaders/index.ts`. It takes a parent-row key, `{ id, workspaceId }`, with a `cacheKeyFn` on the id alone, as `src/modules/ingredients/loaders/ingredient-children.ts` does. One batch reads the compendium tier plus the keyed workspace's own ingredients under the session, in one query, and puts the rows back in the order of the ids with `inIdOrder` (`src/lib/in-id-order.ts`), as `users-by-id.ts` does, so a missing or soft-deleted id resolves to null. "One query per batch" is asserted the way the other loaders do it: a `vi.hoisted` spy on `@/db/repository` and `toHaveBeenCalledTimes(1)`. There is no `variantsById`: `DESIGN.md` says a variant is read only beneath its parent, never by a bare id, so a stock row's variant resolves through the existing `variantsByIngredient` loader, as `Substitute.variant` does. Only M9.4 assumed this loader; M8.5 did not.
 
 _Acceptance criteria:_
 
@@ -1403,6 +1656,7 @@ _Acceptance criteria:_
 - Constructed per request
 - Soft-deleted rows are not returned
 - A missing id resolves to null rather than throwing
+- A row of another workspace resolves to null, not to the row
 
 **MB.10 — `usersById` display-name DataLoader** · 1.5h
 
@@ -2519,7 +2773,7 @@ _Acceptance criteria:_
 - A followed link lands on the page's confirmed view (`?verified`): the address and Continue, no field; a verified account that comes back sees the field alone. A link opened from a signed-out browser goes to `/sign-in` with a sentence saying to sign in and open it again, and nothing from the link in the URL
 - The form uses no native validation: an empty or malformed field is the server's refusal, shown beside the input like every other
 - A signed-in user can reach the same page to change their email, with the same rules
-- Covered by a component test with role and label queries, and stories 58 and 59's acceptance tests pass in a new `tests/acceptance/08-email-and-admin.test.ts`
+- Covered by a component test with role and label queries, and stories 58 and 59's flows pass in `tests/e2e/stories/08-email-and-admin.spec.ts` (M9.1 moved it from `tests/acceptance/`)
 
 **MB.55 — Scan both provider availability states in the e2e accessibility run** · 2h
 
@@ -3005,46 +3259,52 @@ _Acceptance criteria:_
 - A coven ingredient's slug follows its name under the `(workspace_id, slug)` scope, through the `Membership` proof, and retires nothing
 - The pending-slug columns and their two indexes are declared nowhere in the schema; MB.107 drops them from the database
 
-**MB.83 — Public compendium chrome, proxy entries and the signed-in island** · 2h
+**MB.83 — Public compendium chrome and proxy entries** · 4h
 
 _Story 63 — As a visitor who is not signed in, I want the compendium pages to open without a redirect and to offer me the way in, so that I can read the reference and know how to join._
 
 Lands after M8.17 and before M8.18, which composes it. `PUBLIC_ROUTES` in `src/proxy.ts` gains `/compendium`, `/compendium/*`, `/robots.txt` and `/sitemap.xml`, and `tests/proxy.test.ts` moves `/compendium` from the lookalike list to the public list and pins the two crawler files as passed through. A public frame for the two compendium pages: the site name, Sign in, and nothing workspace-shaped, in the same minimal shape as `/`. The signed-in affordances — the `AppShell` chrome and the Add to my ingredients slot — are one client island that asks `/api/graphql` `me` after hydration and renders a sign-in link for a null session, so the page itself reads no cookies or headers and stays static. Off production the proxy sets `X-Robots-Tag: noindex` on every response, because `staging.sorrelandsalt.com` is a public URL.
 
+**Amended by the Wave 12 review (2026-10-16):** the public pages are dynamic over the cached reads, the owner's call ([`design-decisions/mb.80-public-compendium.md`](../design-decisions/mb.80-public-compendium.md)). There is no client island and no `me` call. The public frame is a `(public)` route group whose layout reads the session when there is one and renders the signed-in or signed-out chrome on the server, with a skip link, a `<nav>` and `<main id="main">`. The pages themselves stay sessionless and read through `cachedCompendiumRead`. `AppShell` gains a Compendium link for everyone, replacing the "No Compendium link yet" comment in `src/components/AppShell/index.tsx`. `PUBLIC_ROUTES` also gains `/llms.txt`, `/.well-known/*` and the asset paths (favicon, icons, manifest) that M11.16 will fill, so a favicon request never redirects to sign-in; no such file exists yet, so the paths are listed ahead of it. The `X-Robots-Tag` rule stays here. Re-estimated from 2h for the route group and the shell change.
+
 _Acceptance criteria:_
 
-- A signed-out request to `/compendium` and `/compendium/ingredients/x` passes the proxy; `/coven/*` still redirects; `/robots.txt` and `/sitemap.xml` pass
-- The island renders the signed-in chrome for a session and a sign-in link without one, tested both ways
-- The island is the only place the two public pages learn who is viewing; a guard fails if either page calls `cookies()` or `headers()`
+- A signed-out request to `/compendium` and `/compendium/ingredients/x` passes the proxy; `/coven/*` still redirects; `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/.well-known/*` pass
+- The signed-out chrome (the site name and a Sign In link) is in the server-rendered HTML, with no script needed; a signed-in request gets the signed-in chrome from the same layout
+- The frame has a skip link, a `<nav>` and `<main id="main">`, asserted
+- The Compendium link shows in `AppShell` for every viewer
 - Off production every response carries `X-Robots-Tag: noindex`
 - axe clean signed out at 375px
 
-**MB.84 — robots, sitemap, page metadata and noindex off production** · 3h
+**MB.84 — robots, sitemap, page metadata and noindex off production** · 4h
 
 _Story:_ As the owner, I want search engines to find and correctly title every compendium page, and to find nothing on staging, so that the public reference is indexed once at its canonical address.
 
-Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` allows `/compendium` and `/compendium/*`, disallows everything else and points at the sitemap; under a `VERCEL_ENV` other than `production` it disallows all. `src/app/sitemap.ts` lists `/compendium` and one `/compendium/ingredients/<slug>` per current entry, read through the cached compendium, `lastModified` from `updated_at`. `generateMetadata` on the list page, the public detail page and the in-app detail page: a title from the name, the form and the site, a description from the entry, `alternates.canonical` set to the public URL on every route, and Open Graph fields with M11.16's image. Filtered list views carry canonical `/compendium` and `noindex`, so category combinations are not a crawl trap. An unknown slug is a real 404; a retired slug inside its window answers `permanentRedirect()` to the current one, and a test pins that the redirect carries no `max-age`, `Expires` or `Last-Modified`.
+Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` allows `/compendium` and `/compendium/*`, disallows everything else and points at the sitemap; under a `VERCEL_ENV` other than `production` it disallows all. `src/app/sitemap.ts` lists `/compendium` and one `/compendium/ingredients/<slug>` per current entry. `generateMetadata` on the list page, the public detail page and the in-app detail page: a title from the name and the site, a description from the entry, and `alternates.canonical` set to the public URL on every route. Filtered list views carry canonical `/compendium` and `noindex`, so category combinations are not a crawl trap. An unknown slug is a real 404; a retired slug inside its window answers `permanentRedirect()` to the current one, and a test pins that the redirect carries no `max-age`, `Expires` or `Last-Modified`.
+
+**Amended by the Wave 12 review (2026-10-16):** four changes. (1) The sitemap needs a read of every current slug, and none is cached today: `src/modules/ingredients/services/compendium.ts` wraps only the page and count reads. This task adds a sessionless one, `cachedCompendiumRead('compendium-slugs', …)` from `src/lib/compendium-cache.ts`, which M12.2's `llms.txt` reuses. (2) `lastModified` comes from MB.106's one definition of "changed", so the sitemap does not report a no-op save. MB.106 therefore lands before this task. (3) The title is built from the name and the site, with no form, because the form is a variant beneath the ingredient (MB.215) and a page is the ingredient. Two entries sharing a label are still told apart by the formal name. (4) There is no Open Graph image: M11.16 (Wave 15) adds it, and until then the page carries no `og:image`. `src/app/robots.ts` is written so that M12.2 can add its two paths (`/llms.txt` and `/.well-known/ai-catalog.json`) without restructuring it. Re-estimated from 3h for the new read.
 
 _Acceptance criteria:_
 
 - `/robots.txt` and `/sitemap.xml` answer 200 with the shapes above; the sitemap carries every current slug and no retired one
 - Off production robots disallows all
+- The sitemap is served from the cached all-slug read, which takes no session, and its `lastModified` follows MB.106's definition of a change
 - Every compendium page carries a title, description and canonical; two entries sharing a label are distinguished in the title by the formal name
 - A filtered list view is `noindex` with canonical `/compendium`
 - An unknown slug is 404; a retired slug is 308 to the current one, with no browser-cacheable freshness headers
 - A Lighthouse SEO audit passes on both public pages signed out
 
-**MB.85 — Story 63: a visitor reads the compendium without signing in** · 1h
+**MB.85 — Story 63: a visitor reads the compendium without signing in** · 2h
 
 _Story 63 — As a visitor, I want to read the compendium and its entries without signing in, so that the site's reference is useful to people who are not in a coven._
 
-Closes Wave 12, once MB.83, M8.18, M8.19 and MB.84 have landed. The acceptance test for story 63 in `tests/acceptance/02-compendium.test.ts`; a service test that the compendium read takes no session while a null session is refused on every workspace read, asserting the rows exist before asserting the refusal; a route test that a workspace ingredient's slug at `/compendium/ingredients/` is 404, stating that the row is a workspace entry; and the e2e: a signed-out visit to `/compendium` lands on the page rather than `/sign-in?next=`, follows a card to its entry, and both pages are axe clean signed out.
+Closes Wave 12, once MB.83, M8.18, M8.19 and MB.84 have landed. **Amended by the Wave 12 review (2026-10-16):** re-estimated from 1h. The spec carries no `@story-63` tag yet, so this task adds the flow with that tag, and walks story 63 only. The story flow for story 63 in `tests/e2e/stories/02-compendium.spec.ts`; a service test that the compendium read takes no session while a null session is refused on every workspace read, asserting the rows exist before asserting the refusal; the route test that a workspace ingredient's slug at `/compendium/ingredients/` is 404 is M8.19's, asserted once there, so this task cites it and adds no second one; and the e2e: a signed-out visit to `/compendium` lands on the page rather than `/sign-in?next=`, follows a card to its entry, and both pages are axe clean signed out.
 
 _Acceptance criteria:_
 
-- `make test-stories` reports story 63 passing
+- `npm run test:stories` reports story 63 passing, and it is the only story this spec walks
 - The null-session denial test asserts the rows exist before asserting the refusal
-- The direct-slug 404 test states the row is a workspace entry
+- The direct-slug 404 is M8.19's test, which states the row is a workspace entry; this task cites it
 - The e2e runs signed out and scans both pages with axe
 
 **MB.86 — Restructure `src/` into domain modules with a guarded boundary** · 5h
@@ -3397,19 +3657,22 @@ _Acceptance criteria:_
 - A signed-out query reads both fields
 - The SDL snapshot and `src/gql/` are regenerated; `claude-docs/graphql.md` ("Pagination", the compendium section), `claude-docs/db.md` ("Keyset pages", "The compendium read") and DESIGN.md §7 describe the two fields and the client's formula
 
-**MB.106 — Mark compendium entries New or Updated for 30 days** · 3h
+**MB.106 — Mark compendium entries New or Updated for 30 days** · 4h
 
 _Story:_ As a reader of the compendium, I want to see which entries are new and which have changed lately, so that a return visit shows me what moved since I last looked.
 
-A compendium entry reads **New** for 30 days after it is created and **Updated** for 30 days after its last change, New winning while both hold. Compendium entries only: a coven's ingredients are its members' own, and they made the changes themselves. Both markers are computed at read time from the entry's stamps, so there is no column and nothing runs on a schedule. They show on M8.14's card in M8.18's list and on M8.19's entry page, public and in-app. M8.6's hour-long cache and the pages' ISR mean a marker appears or lapses up to an hour late, which is accepted rather than worked around.
+A compendium entry reads **New** for 30 days after it is created and **Updated** for 30 days after its last change, New winning while both hold. Compendium entries only: a coven's ingredients are its members' own, and they made the changes themselves. Both markers are computed at read time from the entry's stamps, so there is no column and nothing runs on a schedule. They show on M8.14's card in M8.18's list and on M8.19's entry page, public and in-app.
 
 Two things the task settles, because the stamps as they stand do not say "changed". `updateCompendiumEntry` replaces the whole row, and M1.18's trigger stamps `updated_at` on every `UPDATE`, so a save that changes nothing would read as an update. And an entry's folk names and categories are child rows, whose changes do not move the entry's own `updated_at`. Raised while scoping MB.82, whose "new at this address" notice this replaces with a marker every new entry carries.
+
+**Amended by the Wave 12 review (2026-10-16):** the two settled points now have one mechanism, and the task moves before MB.84 so the sitemap's `lastModified` shares its definition of a change. (1) A new expand-only migration redefines `set_updated_at()` from `0016_updated-at-trigger.sql` with `CREATE OR REPLACE FUNCTION`, so that it leaves `updated_at` alone when `NEW IS DISTINCT FROM OLD` is false (an `UPDATE` that changed nothing). It drops nothing, so it needs no acknowledgement file. (2) The ingredient service touches the parent row after any child-list replace, so a change to folk names, categories, variants or references moves the parent's own `updated_at`. The child lists are replaced by `writeChildren` in `src/modules/ingredients/services/ingredient-rows.ts`, and the touch goes there. New is read from `created_at` and Updated from `updated_at`. The "up to an hour late" caveat goes: the pages are dynamic over cached reads, and the cache is tagged and refreshed on every admin edit. One cost is accepted and named: a seeded database has every entry created at seed time, so it reads New for 30 days after a seed. Re-estimated from 3h for the migration and the touch.
 
 _Acceptance criteria:_
 
 - An entry created within the last 30 days reads New, and one changed within them reads Updated; New wins when both hold, and neither shows after 30 days, tested at either side of the boundary
-- A save that changes nothing leaves the entry's marker as it was
-- A change to an entry's folk names or categories marks it Updated
+- A save that changes nothing leaves `updated_at`, and so the entry's marker, as it was; tested against the trigger's function directly as well as through the service
+- A change to an entry's folk names, categories, variants or references marks it Updated, tested through `writeChildren`
+- A freshly seeded database reads every entry New, asserted and named as accepted
 - The markers show on the compendium list's cards and on the entry page, public and in-app, as text a screen reader announces rather than colour alone
 - A coven's ingredients carry no marker
 
@@ -3688,7 +3951,9 @@ _Acceptance criteria:_
 
 _Story:_ As a visitor, I want the public compendium to look finished and read well on any device, so that it earns trust as a reference.
 
-Minted during M5.4. Reviews the public compendium and the ingredient components the rest of the site shares, once MB.106's markers land: `IngredientSearch` with its chips, OR toggle and filters (M8.10 to M8.13), `SafetyNote` (M8.13a), the local-or-compendium chip and the stock badges (M9.7, M9.8), `IngredientCard` (M8.14), `IngredientForm` read-only and inside the add and edit modals (M8.15 to M8.17), the public frame and its signed-in island (MB.83), the compendium page and its pager (M8.18, MB.105), the entry page (M8.19) and the New and Updated markers (MB.106). The compendium is the site's public, indexable face (MB.80), so it is reviewed signed out as well as signed in.
+Minted during M5.4. Reviews the public compendium and the ingredient components the rest of the site shares, once MB.106's markers land: the public frame's landmarks, which are the skip link, `<nav>` and `<main id="main">` (MB.83); `IngredientSearch` with its chips, OR toggle and filters (M8.10 to M8.13); `IngredientCard` (M8.14); `SafetyNote` and the toxic mark (M8.13a); the compendium page and its pager (M8.18, MB.105); the entry page (M8.19); the Add Ingredient dialog (M8.16); and the New and Updated markers (MB.106). M9.12's dialog, M8.17's edit flow, the local-or-compendium chip and the stock badges (M9.7, M9.8) belong to MB.121, which reviews them on the coven page.
+
+**Amended by the Wave 12 review (2026-10-16):** the scope above replaces the earlier list, which named M8.15 (retired into M8.19) and a signed-in island that no longer exists. The compendium is the site's public, indexable face (MB.80), so it is reviewed signed out as well as signed in.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
@@ -3703,19 +3968,21 @@ _Acceptance criteria:_
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
 - Each component's doc updates its Styling section, and its stories show the reviewed design
-- The compendium and entry pages read the same signed out and signed in, apart from the signed-in island
+- The compendium and entry pages read the same signed out and signed in, apart from the chrome the layout renders for a session
 - A safety note stands out from the rest of an entry without relying on colour alone
 - The card grid holds its layout from phone width to a wide screen
 
-**MB.121 — Design review: the workspace ingredients page** · 2h
+**MB.121 — Design review: the workspace ingredients page** · 3h
 
 _Story:_ As a coven member, I want the ingredients page to make stock easy to scan and edit, so that keeping it current is quick.
 
-Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — inline row editing (M9.9), last-edited-by on its rows (M6.18, moved here from MB.119 when it moved to Wave 12 on 2026-10-12), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
+Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — editing a jar from its row (M9.9), last-edited-by on its rows (M6.18, moved here from MB.119 when it moved to Wave 12 on 2026-10-12), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
+
+**Amended by the Wave 12 review (2026-10-16):** the page is a card per ingredient with a jar line per held form (`IngredientCard`, M8.14), not a table, so the list is no longer a `StackTable`. The scope gains the in-stock and low-stock filters and the stock badges (M9.7, M9.8), `StockFields` (M9.9), the edit flow for a local (M8.17), M9.12's add dialog, the Edit control (M12.5), the folk-name control (M12.1), M12.7's glyphs on the jar lines, and the coven home's Contents. Re-estimated from 2h.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
-_Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight.
+_Left by MB.115:_ A list builds on the admin section's pieces rather than its own: `IngredientCard` for its rows (corrected by the Wave 12 review; the admin lists use `StackTable`, a table that turns each row into a card on a narrow screen, `components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight.
 
 _Acceptance criteria:_
 
@@ -3724,7 +3991,7 @@ _Acceptance criteria:_
 - Contrast holds at 4.5:1 in both themes, and no raw hue or size is added outside `_variables.scss`
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
 - Each component's doc updates its Styling section, and its stories show the reviewed design
-- A row being edited reads differently from one at rest, and an unsaved change shows
+- A jar being edited reads differently from one at rest, and an unsaved change shows
 - The empty state says what to do next
 
 **MB.122 — ~~Design review: the navigation~~** · **RETIRED 2026-10-12, folded into MB.7**
@@ -3747,6 +4014,8 @@ _Story:_ As a coven member, I want building and reading a spell to feel crafted,
 
 Minted during M5.4. Reviews the grimoire once its print layout lands: the grimoire list (M10.11), `SpellBuilder` with its fields, visibility control, intent categories, layers and reordering (M10.12 to M10.16), the intent-versus-derived comparison panel (M10.17), the safety and out-of-stock warnings (M10.18, M10.19), draft and complete (M10.20), and the recipe view (MB.6) with its print layout (M10.22), the one print style on the site.
 
+**Amended 2026-10-16 by the spell steps and workings plan** ([`design-decisions/m13.1-plan.md`](../design-decisions/m13.1-plan.md)): the review also covers the step editor (M13.3), the Record a Working dialog with its deduction preview (M13.7), and the recipe page's Workings section (M13.8). M13.9 follows it.
+
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
 _Left by MB.115:_ The grimoire list builds on the admin section's pieces rather than its own: `StackTable` for its rows, a table that turns each row into a card on a narrow screen (`components/data-table.md`), `FilterForm` and `Pager` for narrowing and paging it, with `FilterSelectField` for a filter's choice, a native select until the page's script loads, then the forms' own dropdown, or a type-ahead for a long list, and `BusyButton` for a button whose request is in flight. A question asked before a step that cannot be undone, such as deleting a spell, is `ConfirmQuestion`, drawn over the form (`components/modal.md`).
@@ -3759,7 +4028,8 @@ _Acceptance criteria:_
 - Every page in the section is axe clean with visible keyboard focus, and its e2e specs and stories pass
 - Each component's doc updates its Styling section, and its stories show the reviewed design
 - The recipe view's print layout is reviewed on paper or as a PDF as well as on screen
-- Reordering layers reads clearly by keyboard as well as by pointer
+- Reordering steps reads clearly by keyboard as well as by pointer
+- The deduction preview reads plainly, and a shortfall or a step not deducted is told apart without colour alone
 - The comparison panel reads without relying on colour alone
 
 **MB.124 — Design review: error, loading and empty states, and the whole site** · 3h
@@ -4232,17 +4502,20 @@ _Acceptance criteria:_
 
 _Story 64 — As a reader of the compendium, I want to see where an entry's information came from, so that I can judge a claim and read further._
 
-A References section on M8.19's page, on both its routes: beneath the substitutes, above the slot v2's notes take, a bibliography list of the entry's references in Chicago form, each with its locator where one was given and its `url` a link that opens the source, `rel="noopener"`. The page renders the parts `renderCitation` returns rather than the plain `citation`, each italic part in `<cite>` (MB.151). An entry with none shows a deliberate empty state — "No sources recorded" — rather than nothing, so the gap is as visible to a reader as it is on the admin's to-do list. The public route serves it from the same static page under the `compendium` tag, so a reference an admin edits refreshes it through `revalidateTag`. Story 64's acceptance test is written here.
+A References section on M8.19's page, on both its routes: beneath the substitutes, above the slot v2's notes take, a bibliography list of the entry's references in Chicago form, each with its locator where one was given and its `url` a link that opens the source, `rel="noopener"`. The page renders the parts `renderCitation` returns rather than the plain `citation`, each italic part in `<cite>` (MB.151). An entry with none shows a deliberate empty state — "No sources recorded" — rather than nothing, so the gap is as visible to a reader as it is on the admin's to-do list. The public route serves it from the same page, dynamic over the cached reads under the `compendium` tag, so a reference an admin edits refreshes it through `revalidateTag`. Story 64's acceptance test is written here: the flow in `tests/e2e/stories/02-compendium.spec.ts`, tagged `@story-64`.
+
+**Amended by the Wave 12 review (2026-10-16):** the one renderer is `renderCitation` in `src/lib/citation.ts`, and the order is not this task's to build.
 
 **Amended by MB.215 (2026-10-11):** a form's own references are listed in its section of the page, beneath the ingredient's, in the same Chicago form ([`design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
 _Acceptance criteria:_
 
-- Every reference renders in Chicago form through MB.153's one renderer, alphabetical, on `/compendium/ingredients/[slug]` and `/ingredients/[id]` alike
+- Every reference renders in Chicago form through MB.153's one renderer, `renderCitation`, on `/compendium/ingredients/[slug]` and `/coven/[slug]/ingredients/[id]` alike (the coven route since the Wave 12 review, 2026-10-16)
+- The order is alphabetical, which holds from the loader already (it sorts with `byCitation`), asserted here
 - A locator renders beside its citation and a `url` as a link to the source
 - The empty state reads as intentional, not broken
 - The section sits above the notes slot and the page's structure is unchanged for it
-- axe clean; story 64's acceptance test passes
+- axe clean; the `@story-64` flow in `02-compendium.spec.ts` passes
 - A variant's own references are listed in its section, beneath the ingredient's (MB.215)
 
 **MB.156 — Seed the curated vocabularies' sources** · 6h

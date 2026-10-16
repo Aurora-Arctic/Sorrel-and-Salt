@@ -22,7 +22,7 @@ export default {
 const FILTER: AdminInvitationsFilter = { email: 'brook', expiringSoon: true };
 
 // The admin layout's frame and the People page with its Invitations tab
-// open, as /admin/invitations draws them: Invite Admin beside the heading as
+// open, as /admin/invitations draws them: New Invitation beside the heading as
 // the tab's action, the filter row and the list beneath.
 const Frame = ({
   invitations,
@@ -86,7 +86,7 @@ OnePageOfSeveralPhoneDark.meta = { theme: 'dark', width: 375 };
 export const OnePageOfSeveralPhoneLight: Story = () => <PageTwo />;
 OnePageOfSeveralPhoneLight.meta = { theme: 'light', width: 375 };
 
-// Invite Admin pressed: the form `?invite` opens over the list. Closing it
+// New Invitation pressed: the form `?invite` opens over the list. Closing it
 // navigates to the list's address without `?invite`, which the workshop's
 // router reports (.ladle/navigation.ts) and this holds as the page's state,
 // so the list beneath is usable once the form is gone, and Open Again
@@ -109,13 +109,13 @@ export const Inviting: Story = () => {
   );
 };
 
-// Paused, to an admin who is not the primary one: Invite Admin and every
+// Paused, to an admin who is not the primary one: New Invitation and every
 // Revoke in view but locked, the pause as the reason in a tip.
 export const Paused: Story = () => (
   <Frame invitations={INVITATIONS} locked={ADMIN_CHANGES_PAUSED_REFUSAL} />
 );
 
-// At phone width: Invite Admin across the line beneath the heading, the
+// At phone width: New Invitation across the line beneath the heading, the
 // filter row stacked, the Email box across the line and the switch, and
 // Clear beneath it, and each invitation a card, Revoke across its
 // foot.

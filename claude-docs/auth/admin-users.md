@@ -2,11 +2,12 @@
 
 `/admin/users` lists everyone with an account, so an admin can act on a person
 without being sent their id: M5.8's approval control and MB.59's grant control
-act on its rows, and MB.53 picks an impersonation target from it. Each row
+act on its rows (Change Role since M11.20), and MB.53 picks an impersonation target from it. Each row
 shows the name, the email, the role, whether the user may create a workspace,
 when the account was made, the providers linked to it, and whether its address
-is verified. The last two are what an admin granting admin is asked to judge
-the person by (MB.59).
+is verified. The last two are what an admin changing a role is asked to judge
+the person by (MB.59). The role column names `User`, `Curator` or `Admin`, the last two in bold; the
+coven-creation column and its control show for a `user` only, since every curator and admin holds the flag.
 
 **It confers no workspace access.** Reading who has an account is what the
 admin role already implies. The page reads a user's memberships — each
@@ -49,7 +50,7 @@ may _change_.
   is an `ilike` rather than a trigram match, because an admin looks a person
   up by part of an address, which similarity scores poorly. `?awaiting`, a flag read by
   its presence (MB.53), narrows to `canCreateWorkspace = false`, the to-do
-  list M5.8 acts on. `?role=admin` or `?role=user` narrows to that site role
+  list M5.8 acts on. `?role=admin`, `?role=curator` or `?role=user` narrows to that site role
   (M5.8, on the owner's review); any other value is no role, since only a
   hand-edited address carries one. The filter is a GET form to the page
   itself, so a filtered page is an address.
@@ -93,7 +94,7 @@ server, with axe.
 ## The user modal (M9.19)
 
 Pressing a user's name on the list opens a modal over it, so an admin sees
-what a person already holds before approving, revoking, granting admin or
+what a person already holds before approving, revoking, changing their role or
 impersonating them. The owner narrowed story 19 for this: "private data" is a
 workspace's contents, and which covens someone belongs to is not among them
 ([`design-decisions/m9.19-admin-sees-user-covens.md`](../design-decisions/m9.19-admin-sees-user-covens.md)).
@@ -106,7 +107,7 @@ workspace's contents, and which covens someone belongs to is not among them
   the qualifier. The body is `UserDetail`
   ([`components/user-detail.md`](../components/user-detail.md)): every fact
   the list's row shows (the page reads them with the user, so the modal holds
-  the whole row), with the row's Promote or Revoke and Approve or Revoke
+  the whole row), with the row's Change Role and Approve or Revoke
   beside the facts they change, asking inside the modal and going through the
   same mutations and services as the row's, then a Covens list (each coven's name, with its role and joining date beneath), owners first, then members, then viewers, each
   by name. Coven names are text, not links: an admin reaches no coven, and
@@ -141,7 +142,7 @@ An admin approves someone who has no invitation from that person's row on
 `/admin/users`, so a person starting a coven of their own gets in without
 knowing an existing user, and can revoke the approval from the same row. It is
 the second of the flag's routes: the first is accepting a workspace invitation
-(M7.5), and being made admin sets it in its own write (MB.177). Neither act
+(M7.5), and being made a curator or an admin sets it in its own write (MB.177, M11.20). Neither act
 touches anything but the flag: it confers no workspace access on the admin,
 creates no workspace, and a revoke leaves every workspace the user already
 created, and their ownership of it
@@ -167,10 +168,12 @@ created, and their ownership of it
   who may already create a workspace, or revoking one who cannot, is refused
   with a `Forbidden` naming them, and writes no ledger row: it would record a
   change that never happened.
-- **An admin's flag cannot be revoked.** MB.177's CHECK holds every admin to
-  it, so the service refuses first with a `Forbidden` saying revoking their
-  admin role is the route, and the row offers no control. A revoke racing a
-  grant of admin is refused by the CHECK itself and writes nothing.
+- **A curator's or an admin's flag cannot be revoked.** The
+  `users_privileged_can_create_workspace` CHECK holds every curator and admin
+  to it, so `revokeWorkspaceCreation` refuses any role but `user` first with a
+  `Forbidden` saying to make them a user first, and the row offers no control
+  (nor an approval, which a curator has no need of). A revoke racing a
+  promotion is refused by the CHECK itself and writes nothing.
 - **A soft-deleted user is `NotFound`**, as an unknown id is: the read and the
   update both drop the row (rule 4), and a user deleted between the two rolls
   the transaction back before the ledger hears of it.
@@ -178,7 +181,7 @@ created, and their ownership of it
   destructive and says their covens stay theirs, and an approval of an
   unverified address warns that nobody has proved who holds it and that
   approving keeps the account from lapsing (MB.204, MB.205), and still
-  approves. Each takes the same optional Reason as Promote and Revoke of admin
+  approves. Each takes the same optional Reason as Change Role
   ([`components/user-list.md`](../components/user-list.md)).
 
 **Tests.** `tests/modules/identity/services/workspace-creation.test.ts` covers
@@ -193,64 +196,95 @@ approving with a reason read back off the ledger. The note on the ledger, trimme
 the service test's, and the transport test asserts the actor is the
 session's whatever the request carries.
 
-## Granting and revoking admin (MB.59)
+## Changing a site role (MB.59, M11.20)
 
-An admin makes another user an admin, or stops one being one, from that
-person's row on `/admin/users`, so a second admin is no longer an `UPDATE` in
-`psql`. The rules, and the approaches rejected, are
+An admin gives another user a site role, `user`, `curator` or `admin`, from
+that person's row on `/admin/users`, so a second admin is no longer an `UPDATE`
+in `psql`. A curator is between the two: it uses every curation screen an admin
+can and reaches no people page
+([`admin-guard.md`](admin-guard.md), "The curator guard"). The rules, and the
+approaches rejected, are
 [`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)'s
-"The primary admin", "Granting" and "Revoking"; this is the shape.
+"The primary admin", "Granting" and "Revoking", and
+[`m11.20-curator-role.md`](../design-decisions/m11.20-curator-role.md); this is
+the shape.
 
 - **One service, two checks.** `setUserRole(session, userId, role, note?)`
-  (`src/modules/identity/services/user-role.ts`) asserts the site role itself,
+  (`src/modules/identity/services/user-role.ts`) checks the site role itself,
   by direct call, and the `setUserRole` mutation in front of it carries the
   `admin` scope as the second check ([`graphql/schema.md`](../graphql/schema.md),
-  "Auth scopes"). The page has no path of its own: the row's control sends the
-  mutation.
+  "Auth scopes"). A curator is refused at both: changing roles is a people-page
+  act. The page has no path of its own: the row's control sends the mutation.
+- **One dialog, every role but the one held.** The row's Change Role button
+  opens a dialog naming the user and listing the roles they do not hold, each
+  with a line on what it allows, and an optional reason. Nothing is preselected,
+  and the confirm button reads Promote or Demote by the ladder `user` <
+  `curator` < `admin`, a demotion styled as destructive
+  ([`components/user-list.md`](../components/user-list.md)). It replaces the
+  old pair of Promote and Revoke buttons.
 - **Each change is a ledger row, written by the database.** The role is an
   `updateById` on the user's row through `withAudit`, declared
   `{ via: 'admin', note }`, `note` being the confirmation's optional reason, a
-  blank one stored as none. The trigger on `users` writes an `admin` `grant`
-  or `revoke` row in `user_privilege_changes` beside it, stamped as the admin
-  from the session, never the request (MB.195); the service writes none.
-- **A grant sets `canCreateWorkspace` in the same write**, since MB.177's
-  CHECK holds every admin to it, so a grant to a user without the flag is two
-  rows at one instant, `admin` and `create_workspace`, and a grant to one who
-  holds it the `admin` row alone. **A revoke leaves the flag**, the grant
-  having been a vouching too, and leaves memberships and the `created_by` of
-  everything the admin wrote: rows are stamped with a person, not a role.
-- **Any live user may be granted, verified or not.** Confirming who someone is
-  is the granting admin's job, from the row's sign-in methods and verified
-  mark; the confirmation warns when the address is unverified, since a grant,
-  like an approval, keeps the account from MB.67's sweep (MB.204, MB.205).
-  The grantee must already have an account; inviting by email is MB.70's,
-  below.
+  blank one stored as none. The trigger on `users` writes the rows in
+  `user_privilege_changes` beside it, stamped as the admin from the session,
+  never the request (MB.195); the service writes none. `admin` and `curator`
+  are each a privilege of their own in the ledger, so a move between two roles
+  is a revoke of one and a grant of the other, at one instant:
+
+  | Change           | Ledger rows                                                       |
+  | ---------------- | ----------------------------------------------------------------- |
+  | user to curator  | `curator` grant, and `create_workspace` grant if the flag was off |
+  | user to admin    | `admin` grant, and `create_workspace` grant if the flag was off   |
+  | curator to admin | `curator` revoke and `admin` grant                                |
+  | admin to curator | `admin` revoke and `curator` grant                                |
+  | curator to user  | `curator` revoke; the flag stays                                  |
+  | admin to user    | `admin` revoke; the flag stays                                    |
+
+- **Becoming a curator or an admin sets `canCreateWorkspace` in the same
+  write**, since the `users_privileged_can_create_workspace` CHECK
+  (`role = 'user' or can_create_workspace`, replacing MB.177's
+  `users_admin_can_create_workspace`) holds every curator and every admin to
+  the flag, so a promotion of a user without it is two rows at one instant.
+  **Becoming a user leaves the flag**, the grant having been a vouching too,
+  and leaves memberships and the `created_by` of everything the person wrote:
+  rows are stamped with a person, not a role.
+- **Any live user may be changed, verified or not.** Confirming who someone is
+  is the changing admin's job, from the row's sign-in methods and verified
+  mark; the dialog warns when the address is unverified, **on a promotion
+  only**, since a promotion, like an approval, keeps the account from MB.67's
+  sweep (MB.204, MB.205). The user must already have an account; inviting by
+  email is MB.70's, below.
 - **A change that changes nothing is refused**, with a `Forbidden` naming the
-  user: granting to an admin, or revoking from someone who is not one. No
-  column changes, so the trigger records nothing.
-- **The primary admin cannot be revoked**, by anyone, itself included. It is
-  the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL` when the check
-  runs, read from the variable at each check by `isPrimaryAdmin` (in
-  `user-role.ts`, over `src/lib/primary-admin.ts`), compared case-insensitively. The refusal is a
-  `Forbidden` in plain words that name no variable, the words its row shows:
-  "You can't revoke the primary admin. The site's configuration sets who that
-  is." How to change it is
-  below, and in [`admin-bootstrap.md`](admin-bootstrap.md).
-- **The count is the fallback.** A revoke locks every live admin row
-  `for update`, in id order, through the writer's `lockLiveAdmins`, then
-  refuses with a `Forbidden` if the target is the only one. Two admins
-  revoking each other at once queue on the lock; the second reads the first's
-  committed revoke, finds itself counting one, and is refused, so exactly one
-  admin is left. While the primary admin exists the count is never what
-  refuses; it guards the gap a change of the variable opens, before the new
-  address's first qualifying sign-in, or for good if it never makes one.
-- **A revoke takes effect on the next request.** The revoked admin's sessions
+  user ("is already a curator"): the same role as the one held. No column
+  changes, so the trigger records nothing.
+- **The primary admin cannot be moved off admin**, by anyone, itself included.
+  It is the live admin whose email matches `ADMIN_BOOTSTRAP_EMAIL` when the
+  check runs, read from the variable at each check by `isPrimaryAdmin` (in
+  `user-role.ts`, over `src/lib/primary-admin.ts`), compared
+  case-insensitively. The refusal is a `Forbidden` in plain words that name no
+  variable, the words its row shows: "You can't revoke the primary admin. The
+  site's configuration sets who that is." How to change it is below, and in
+  [`admin-bootstrap.md`](admin-bootstrap.md).
+- **The count is the fallback.** Leaving `admin`, for `curator` or `user`, locks
+  every live admin row `for update`, in id order, through the writer's
+  `lockLiveAdmins`, then refuses with a `Forbidden` if the target is the only
+  one. Two admins demoting each other at once queue on the lock; the second
+  reads the first's committed change, finds itself counting one, and is
+  refused, so exactly one admin is left. While the primary admin exists the
+  count is never what refuses; it guards the gap a change of the variable opens,
+  before the new address's first qualifying sign-in, or for good if it never
+  makes one.
+- **Paused with the rest.** `setUserRole` stays behind the primary admin's
+  pause (MB.63, below), for a curator change as for an admin one.
+- **A change takes effect on the next request.** A demoted admin's sessions
   stay valid, since they are still a user, and no new session is issued; their
-  next request reads `role: 'user'` off the users row, so `/admin` and every
-  admin mutation close to them. That holds because Better Auth's
-  `session.cookieCache` is off, which `tests/lib/auth.test.ts` pins in its
-  "session lifetimes" block: a cache would answer from the cookie until its
-  TTL ran out.
+  next request reads the new role off the users row, so `/admin`'s people pages
+  and every admin mutation close to them (and, for a demotion to `user`, the
+  curation pages too). That holds because Better Auth's `session.cookieCache`
+  is off, which `tests/lib/auth.test.ts` pins in its "session lifetimes" block:
+  a cache would answer from the cookie until its TTL ran out.
+- **A curator can be impersonated like any non-admin**, since Better Auth's
+  `adminRoles` stays `['admin']`; being a curator grants no impersonation.
 - **A soft-deleted user is `NotFound`**, as an unknown id is.
 
 **Changing the primary admin.** Set `ADMIN_BOOTSTRAP_EMAIL` to the new address
@@ -258,33 +292,37 @@ on the Vercel project and redeploy ([`config.md`](config.md)); the new address
 is promoted at its next Google or Discord sign-in, or when it verifies the
 address by mail ([`admin-bootstrap.md`](admin-bootstrap.md)). The previous
 primary admin keeps `role: 'admin'` and is simply no longer protected: any
-admin may now revoke them like any other. Between the redeploy and the new
+admin may now demote them like any other. Between the redeploy and the new
 address's promotion nobody is protected, and the count above is what keeps a
-revoke from leaving no admin.
+demotion from leaving no admin.
 
 **Any future user-deletion path must refuse the primary admin.** v1 deletes no
 user but the provisional-account sweep, which only ever reaches an unverified
 account holding no privilege. A path added later that soft-deletes or removes
-a `users` row must call `isPrimaryAdmin` and refuse, as the revoke does.
+a `users` row must call `isPrimaryAdmin` and refuse, as the role change does.
 
 **Tests.** `tests/modules/identity/services/user-role.test.ts` covers each
-write, its stamps and its ledger rows; the unverified grantee; the trigger
-refusing the same write undeclared; each non-admin fixture user refused by
-direct call, with the same call proven to succeed for E; the repeated change
-refused with nothing written; memberships and `created_by` surviving a revoke;
-the primary admin refused for another admin and for itself, with the same
-revoke succeeding once the variable names someone else; the last admin
-refused with no primary admin in the fixture; and two real concurrent revokes
-leaving one admin. `tests/db/admin-revocation.test.ts` reads a revoked admin's
-next request through the real session reader.
+write, its stamps and its ledger rows; the unverified user; the trigger
+refusing the same write undeclared; each non-admin fixture user, F the curator
+included, refused by direct call, with the same call proven to succeed for E;
+the repeated change refused with nothing written; memberships and `created_by`
+surviving a demotion; the primary admin refused for another admin and for
+itself, with the same demotion succeeding once the variable names someone else;
+the last admin refused with no primary admin in the fixture; and two real
+concurrent demotions leaving one admin. `tests/db/privilege-change-trigger.test.ts`
+covers the curator and admin ledger rows,
+`tests/modules/identity/services/curator-boundary.test.ts` that a curator
+reaches nothing on the people page, and `tests/db/admin-revocation.test.ts`
+reads a demoted admin's next request through the real session reader.
 `tests/modules/identity/graphql/user-role.test.ts` is the transport's half, a
 signed-out caller and the scope are `tests/db/graphql-query-scopes.test.ts`'s,
-and `tests/e2e/admin.spec.ts` grants and revokes against the built server.
+and `tests/e2e/admin.spec.ts` changes a role through the dialog against the
+built server.
 
 ## Pausing admin changes (MB.63)
 
-The primary admin can switch granting and revoking admin off for every other
-admin, so an admin account gone rogue can neither make more admins nor remove
+The primary admin can switch role changes off for every other
+admin, so an admin account gone rogue can neither make more admins or curators nor remove
 the good ones while it is dealt with, and back on. The argument is
 [`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md)'s
 "Granting"; the ledger the switch is kept in is MB.62's
@@ -304,7 +342,7 @@ the good ones while it is dealt with, and back on. The argument is
   nothing and answers the state, `true` paused or `false` not, so a double
   click is not an error. Nothing in v1 lists the rows.
 - **While paused, `setUserRole` refuses every other admin.** It reads the
-  open pause first, and refuses a grant or a revoke from any admin but the
+  open pause first, and refuses a change to any role, a curator's included, from any admin but the
   primary one with "The primary admin has paused admin changes. Ask them to
   resume changes.", naming a role and no person. Nothing
   changes, so the trigger on `users` records nothing. Revokes are paused as
@@ -324,7 +362,7 @@ the good ones while it is dealt with, and back on. The argument is
   control as the tab's action, beside the page's heading, and a warning saying changes are paused while they are. The
   control is usable by the primary admin alone, in view but `aria-disabled`
   for any other, with the reason in a tip; while paused, such an admin's
-  Promote and Revoke, and coven creation's Approve and Revoke, are locked the
+  Change Role, and coven creation's Approve and Revoke, are locked the
   same way
   ([`components/user-list.md`](../components/user-list.md)). The page reads
   the state through `adminRoleChangePauseState(session)`.
@@ -347,15 +385,19 @@ against the built server.
 ## Inviting an admin (MB.70)
 
 An admin can make someone an admin who has not signed in yet, by inviting
-their address: M2.9's option B
+their address, or since M11.20 a curator, the role picked in the invite form:
+M2.9's option B
 ([`m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md), "The
 approaches"), on the site tier of MB.201's `invitations`
 ([`db/invitations.md`](../db/invitations.md)). The link is mailed to the
 address and accepted only by an account that has proved it holds it, so no
 one is handed a bearer token for the site's highest privilege (story 62).
+The names in code still say "admin invitation" for both roles: an admin is
+who sends one, and renaming the mutation and the services would buy no
+behaviour.
 
 - **One service each way, two checks.** `createAdminInvitation(session,
-email, note, sender)` and `revokeAdminInvitation(session, id)`
+email, siteRole, note, sender)` and `revokeAdminInvitation(session, id)`
   (`src/modules/identity/services/admin-invitations.ts`) assert the site role
   themselves, by direct call, and the two mutations in front of them carry the
   `admin` scope as the second check. `listPendingAdminInvitations(session,
@@ -379,9 +421,16 @@ filter, page)` is one page of the pending list, newest first, and
   row, for the mail to open with. A failed
   send is logged by the transport and never thrown, so the invitation stays
   pending, to be withdrawn and sent again.
+- **The role is the invitation's.** `siteRole` is `curator` or `admin`,
+  stored on the row (`invitations.site_role`), named in the mail's subject
+  and body, and on the Accept page; GraphQL takes it as the
+  `InvitableSiteRole` enum, which has no `user`.
 - **What is refused at creation.** An address the email page would refuse,
-  as a `ValidationError` on `email`, and the address of a live admin, who
-  would have nothing to accept. A second invitation to the same address is
+  as a `ValidationError` on `email`, and the address of an account that
+  already holds the invited role or a higher one, which would have nothing to
+  accept: a curator invited as a curator, an admin as either. The ladder is
+  `outranks` in `src/lib/site-roles.ts`, user below curator below admin, so
+  a curator may be invited to become an admin. A second invitation to the same address is
   not refused: either link works, and the other then says it has been
   accepted, or the admin withdraws it.
 - **Paused with the rest (MB.63).** While admin changes are paused, inviting
@@ -430,13 +479,16 @@ filter, page)` is one page of the pending list, newest first, and
      grant its invitee completes. One a rogue admin sent before the pause
      waits for the resume.
 - **Accepting is a grant.** The invitation is stamped `acceptedAt` and
-  `acceptedBy`, and the user made an admin who may create covens through
-  `writeAdminGrant`, MB.59's role write, in one transaction declared
-  `{ via: 'invitation', note }` with the invitation's note, so the trigger on
-  `users` records an `admin` grant, and a `create_workspace` grant if the flag
-  was off, as the accepting user's act. The service writes no ledger row. An
-  account that is already an admin has the invitation stamped and nothing
-  granted, so nothing is recorded. A revoke or a second accept that commits
+  `acceptedBy`, and the user given the invitation's role, who may then create
+  covens, through `writeSiteRoleGrant`, MB.59's role write, in one transaction
+  declared `{ via: 'invitation', note }` with the invitation's note, so the
+  trigger on `users` records a grant of that role, and a `create_workspace`
+  grant if the flag was off, as the accepting user's act. The service writes
+  no ledger row. **An invitation never lowers a role**: an account that has
+  since come to hold the invited role or a higher one has the invitation
+  stamped and nothing granted, so nothing is recorded. A curator who accepts
+  an admin invitation becomes an admin: a `curator` revoke and an `admin`
+  grant at one instant, via the invitation. A revoke or a second accept that commits
   between the checks and the stamp leaves nothing to stamp, and the refusal
   is the link's state read again.
 - **`/invite/[token]`** is public in `src/proxy.ts`. Signed out, it says an
@@ -444,13 +496,16 @@ filter, page)` is one page of the pending list, newest first, and
   reads nothing of the invitation until a session holds it. Signed in, it
   asks `invitationStanding(session, token)`, the same checks as the accept,
   and shows the refusal, with a link to the email page for an unverified
-  match, or Accept Invitation, whose mutation lands an admin on `/admin`. An
+  match, or Accept Invitation, naming the role it grants, whose mutation
+  lands a new curator or admin on `/admin`. An
   unverified account reaches the page, since `requireSession()`'s redirect
   would lose the reason; the accept refuses it all the same.
 - **On `/admin/invitations`**, the People page's Invitations tab (beneath
   the user list on `/admin/users` until MB.115), every admin sees Invite
-  Admin, and the pending invitations 25 to a page, each with
-  its address, its reason, when it expires and Revoke, and the pager
+  Admin, whose form asks for the address, the role (Curator chosen to begin
+  with, so granting the People page is a choice) and an optional reason, and
+  the pending invitations 25 to a page, each with
+  its address, its role, its reason, when it expires and Revoke, and the pager
   beneath them
   ([`components/admin-invitations.md`](../components/admin-invitations.md)).
   While changes are paused, both controls are `aria-disabled` for any admin
@@ -463,23 +518,26 @@ list of past invitations is kept.
 
 **Tests.** `tests/modules/identity/services/admin-invitations.test.ts` covers
 creating, with the real sender over a mocked transport, so the link that
-reaches the address is the one read back; revoking and listing; the list's
+reaches the address is the one read back; the role recorded, and each
+address refused for already holding the role or a higher one beside the
+curator invited to become an admin; revoking and listing; the list's
 pages, newest first and by id within an instant, the filter narrowing every
 page, and its count; each
 non-admin fixture user refused by direct call, with E proven able; and the
 pause, with the same calls succeeding once resumed.
 `tests/modules/identity/services/invitation-acceptance.test.ts` covers the
-grant and its ledger rows; the same write undeclared refused by the trigger;
+grant of each role and its ledger rows, and an account already a curator or
+an admin accepting a curator invitation, lowered and recorded nowhere; the same write undeclared refused by the trigger;
 the unverified match and the different address, each beside the call that
 succeeds; each dead link, the two-state links, a second use, a hashed token
 and a workspace invitation; and the pause, by whom the invitation was sent.
 `tests/modules/identity/graphql/admin-invitations.test.ts` is the
 transport's half, the scope is `tests/db/graphql-query-scopes.test.ts`'s, and
-story 62's acceptance test is in `tests/acceptance/08-email-and-admin.test.ts`.
+story 62's browser flow is in `tests/e2e/stories/08-email-and-admin.spec.ts`.
 
 ## The privilege ledger (MB.199, MB.200)
 
-Every change to who is an admin and who may create a coven is a row of
+Every change to who is an admin or a curator and who may create a coven is a row of
 `user_privilege_changes`, which the database writes and nothing in the
 application inserts into (MB.194, MB.195; DESIGN.md §5). MB.199 is its read
 and MB.200 its page, `/admin/privilege-changes`, now the People page's
@@ -513,7 +571,7 @@ first, for the admin who suspects misuse (story 61).
 - **One page, not one per privilege.** `/admin/privilege-changes` is one
   ledger, filtered by part of the subject's name or email (`?query=`, which
   the privilege changes icon before each name on `/admin/users` opens with
-  that user's address) and by privilege (`?privilege=admin|create_workspace`,
+  that user's address) and by privilege (`?privilege=admin|curator|create_workspace`,
   a dropdown). The page takes no `?user=`: the read's `userId` is GraphQL's.
   It is not merged with the pause or the invitations, which stay where they
   are acted on; an accepted invitation is already in the ledger as its
@@ -542,6 +600,6 @@ transport's half: every field, the filters reaching the service, subject and
 actor in one user read per page by query count, and the scope's own refusal.
 A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s. The page's
 half is `tests/app/admin/(people)/privilege-changes/page.test.tsx`, story 61's
-acceptance test is `tests/acceptance/08-email-and-admin.test.ts`'s, and
+browser flow is `tests/e2e/stories/08-email-and-admin.spec.ts`'s, and
 `tests/e2e/admin/privilege-changes.spec.ts` reads the page, its filters and
 the history icon link against the built server, with axe.

@@ -456,11 +456,12 @@ the tests [`tests.md`](tests.md).
   and `getMe`, and passes the form `''` for a placeholder, `next` through
   `safeReturnPath`, the seconds left on the mail clock, `?error=` through
   `src/lib/account-email.ts`'s `verifyErrorMessage` (one sentence per code
-  Better Auth or the gate appends, never the code), and the session role's
-  `postSignInLanding` as `landing`, which Continue takes when there is no
+  Better Auth or the gate appends, never the code), and the session's
+  `signedInLanding` as `landing`, which Continue takes when there is no
   `next`. That is `/admin` for an admin, a primary admin a followed link
   has just promoted included, since the page reads the role after the
-  link's write. `EmailForm` has two views: `?verified` on a verified row is
+  link's write; a member's first coven; or `/coven` for someone in none
+  (MB.257). `EmailForm` has two views: `?verified` on a verified row is
   the confirmed one, the address and Continue with nothing to edit;
   otherwise the field, prefilled and always editable, which is how any
   account changes its address later. Its success message names the typed
@@ -564,14 +565,14 @@ component docs are [`components/name-form.md`](../components/name-form.md),
 
 Specified in DESIGN.md §5 and argued in
 [`design-decisions/m2.9-granting-admin.md`](../design-decisions/m2.9-granting-admin.md).
-An admin grants and revokes admin from a user's row on `/admin/users`
-(MB.59; [`admin-users.md`](admin-users.md), "Granting and revoking admin"),
-where the primary admin cannot be revoked and a revoke that would leave no
+An admin grants and revokes admin (or sets the curator role, M11.20) from a user's row on `/admin/users`
+(MB.59; [`admin-users.md`](admin-users.md), "Changing a site role"),
+where the primary admin cannot be revoked and a demotion that would leave no
 admin is refused. Changing who the primary admin is, is that section's too.
 
 A hand fix in `psql` stays possible, for a database no admin can sign in to.
-It sets `can_create_workspace` with `role`, since MB.177's CHECK refuses an
-admin without the flag, and declares itself first, since the trigger on
+It sets `can_create_workspace` with `role`, since the `users_privileged_can_create_workspace` CHECK (MB.177, M11.20) refuses an
+admin or curator without the flag, and declares itself first, since the trigger on
 `users` refuses a privilege change that names no route (MB.195):
 
 ```sql

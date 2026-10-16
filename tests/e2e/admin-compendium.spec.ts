@@ -4,12 +4,10 @@ import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 
-// M5.5: the admin's compendium, and the modal the address opens over it — IngredientForm on
+// M5.5: the admin's compendium form's presentation — IngredientForm on
 // the compendium, which carries the form's first axe scans in a browser,
 // the Combobox's among them (claude-docs/components/ingredient-form.md,
 // "Testing").
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -66,155 +64,235 @@ test('the compendium form keeps a margin of the page in view on a phone', async 
   await expectMarginAround(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
 });
 
-test(
-  'a signed-in non-admin is refused at /admin/compendium with the 403 page',
-  { tag: '@story-17' },
-  async ({ page }) => {
-    await signInAs(page, 'not-an-admin@admin-compendium.test');
+// The compendium form's presentation in the app, which no story checks: the
+// add, edit and delete themselves are story 18's
+// (tests/e2e/stories/07-admin.spec.ts).
+test('the compendium form lines its controls up and keeps its pickers inside the dialog', async ({
+  page,
+}) => {
+  await signInAs(page, 'an-admin@admin-compendium.test', ['discord'], 'admin');
 
-    const response = await page.goto('/admin/compendium?new');
+  const response = await page.goto('/admin/compendium?new');
+  expect(response?.status()).toBe(200);
+  const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
+  await expect(adding).toBeVisible();
 
-    expect(response?.status()).toBe(403);
-    await expect(page.getByRole('heading', { level: 1, name: 'Not Authorized' })).toBeVisible();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-  },
-);
+  // The modal keeps a margin of the page in view on every side, the owner's
+  // call: the long form scrolls inside it rather than running off the screen.
+  await expectMarginAround(page, adding);
 
-test(
-  'an admin adds, edits and deletes a compendium entry in the modal over the list',
-  { tag: '@story-18' },
-  async ({ page }) => {
-    await signInAs(page, 'an-admin@admin-compendium.test', ['discord'], 'admin');
-
-    const response = await page.goto('/admin/compendium');
-    expect(response?.status()).toBe(200);
-    const add = page.getByRole('link', { name: 'Add Ingredient' });
-    await expect(add).toBeVisible();
-    await assertNoAccessibilityViolations(page);
-
-    await add.click();
-    const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
-    await expect(adding).toBeVisible();
-    await expect(page).toHaveURL(/\/admin\/compendium\?new$/);
-    await assertNoAccessibilityViolations(page);
-
-    // The modal keeps a margin of the page in view on every side, the owner's
-    // call: the long form scrolls inside it rather than running off the screen.
-    await expectMarginAround(page, adding);
-
-    // Every one-line control stands at one height, $control-height: a text
-    // field, a select, a list's box and the Add beside it. Measured in the app,
-    // whose `body .input` the workshop's frame scope does not reproduce.
-    const heightOf = (box: Locator) =>
-      box.evaluate((element) => {
-        const control = element.closest('.combobox__control') ?? element;
-        return control.getBoundingClientRect().height;
-      });
-    const field = await heightOf(adding.getByRole('textbox', { name: 'Name', exact: true }));
-    for (const box of [
-      adding.getByRole('combobox', { name: 'Classification' }),
-      adding.getByRole('combobox', { name: 'New Form' }),
-      adding.getByRole('combobox', { name: 'Folk Name' }),
-      adding.getByRole('combobox', { name: 'Reference' }),
-      adding.getByRole('button', { name: 'Add Folk Name' }),
-    ]) {
-      expect(await heightOf(box)).toBeCloseTo(field, 0);
-    }
-
-    // Escape on a picker's open list closes the list alone, not the dialog
-    // (MB.115): the flow below goes on in the same dialog. Before anything is
-    // typed, so a leaked Escape would close it rather than ask to discard.
-    const classification = adding.getByRole('combobox', { name: 'Classification' });
-    const choices = adding.getByRole('listbox', { name: 'Classification choices' });
-    await classification.click();
-    await expect(choices.getByRole('option').first()).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(choices.getByRole('option')).toHaveCount(0);
-    await expect(classification).toHaveAttribute('aria-expanded', 'false');
-    await expect(adding).toBeVisible();
-
-    // A lookup open inside the dialog: the suggestions float in its top layer.
-    await adding.getByRole('combobox', { name: 'Celestial Body' }).click();
-    await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('M');
-    await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
-    await assertNoAccessibilityViolations(page);
-    // Left in the box, the text would hold the save: a celestial body here is a pick.
-    await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('');
-
-    /** Picks the curated form `form` from the New Form box, which adds it as a variant (MB.221). */
-    const addForm = async (dialog: Locator, form: string) => {
-      const box = dialog.getByRole('combobox', { name: 'New Form' });
-      await box.click();
-      await box.fill(form);
-      await dialog
-        .getByRole('listbox', { name: 'New Form suggestions' })
-        .getByRole('option', { name: new RegExp(`^${form} \\(`) })
-        .click();
-      await expect(dialog.getByRole('group', { name: form, exact: true })).toBeVisible();
-    };
-
-    await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Testwort');
-    await classification.click();
-    await choices.getByRole('option', { name: 'None' }).click();
-    await addForm(adding, 'Herb');
-    await adding.getByRole('button', { name: 'Save Ingredient' }).click();
-
-    // Save Ingredient opens what it saved, at its address, named by its saved
-    // name (MB.115): no formal name, since it is classified None.
-    const editing = page.getByRole('dialog', {
-      name: 'Edit Ingredient, Aaa Testwort',
-      exact: true,
+  // Every one-line control stands at one height, $control-height: a text
+  // field, a select, a list's box and the Add beside it. Measured in the app,
+  // whose `body .input` the workshop's frame scope does not reproduce.
+  const heightOf = (box: Locator) =>
+    box.evaluate((element) => {
+      const control = element.closest('.combobox__control') ?? element;
+      return control.getBoundingClientRect().height;
     });
-    await expect(editing).toBeVisible();
-    await expect(page).toHaveURL(/\/admin\/compendium\?edit=aaa-testwort$/);
-    // An edit opens with every section closed (MB.115); the control in the
-    // modal's header opens them all.
-    await editing.getByRole('button', { name: 'Open All' }).click();
-    await expect(editing.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(
-      'Aaa Testwort',
-    );
-    await expect(editing.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
+  const field = await heightOf(adding.getByRole('textbox', { name: 'Name', exact: true }));
+  for (const box of [
+    adding.getByRole('combobox', { name: 'Classification' }),
+    adding.getByRole('combobox', { name: 'New Form' }),
+    adding.getByRole('combobox', { name: 'Folk Name' }),
+    adding.getByRole('combobox', { name: 'Reference' }),
+    adding.getByRole('button', { name: 'Add Folk Name' }),
+  ]) {
+    expect(await heightOf(box)).toBeCloseTo(field, 0);
+  }
 
-    // The ingredient's own description, ahead of its forms' (MB.221).
-    await editing
-      .getByRole('textbox', { name: 'Description' })
-      .first()
-      .fill('Made by the e2e spec');
-    // A second form, with a safety note of its own. Added here, it opens with
-    // every section open.
-    await addForm(editing, 'Oil');
-    const oil = editing.getByRole('group', { name: 'Oil', exact: true });
-    await oil.getByRole('textbox', { name: 'Safety Notes' }).fill('Dilute before use.');
-    await assertNoAccessibilityViolations(page);
-    await editing.getByRole('button', { name: 'Save Ingredient' }).click();
-    await expect(editing.getByRole('button', { name: 'Save Ingredient' })).toBeDisabled();
-    await expect(editing.getByRole('status').filter({ hasText: 'Aaa Testwort' })).toBeVisible();
+  // Escape on a picker's open list closes the list alone, not the dialog
+  // (MB.115). Before anything is typed, so a leaked Escape would close it
+  // rather than ask to discard.
+  const classification = adding.getByRole('combobox', { name: 'Classification' });
+  const choices = adding.getByRole('listbox', { name: 'Classification choices' });
+  await classification.click();
+  await expect(choices.getByRole('option').first()).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(choices.getByRole('option')).toHaveCount(0);
+  await expect(classification).toHaveAttribute('aria-expanded', 'false');
+  await expect(adding).toBeVisible();
 
-    // Read back from the server: both forms, the oil's note its own.
-    await page.reload();
-    const reopened = page.getByRole('dialog', {
-      name: 'Edit Ingredient, Aaa Testwort',
-      exact: true,
-    });
-    // Every section closed, it opens with the focus on the dialog itself.
-    await expect(reopened).toBeFocused();
-    // Each section opens by its heading (MB.115).
-    await reopened.getByRole('button', { name: 'Variants', exact: true }).click();
-    await expect(reopened.getByRole('group', { name: 'Herb', exact: true })).toBeVisible();
-    // A variant opens closed to its summary line (MB.115): its Edit shows its
-    // sections, each closed. Details & Care is the oil's own, inside its card.
-    await reopened.getByRole('button', { name: 'Edit Oil' }).click();
-    const reopenedOil = reopened.getByRole('group', { name: 'Oil', exact: true });
-    await reopenedOil.getByRole('button', { name: 'Details & Care', exact: true }).click();
-    await expect(reopenedOil.getByRole('textbox', { name: 'Safety Notes' })).toHaveValue(
-      'Dilute before use.',
-    );
-    await assertNoAccessibilityViolations(page);
+  // A lookup open inside the dialog: the suggestions float in its top layer.
+  await adding.getByRole('combobox', { name: 'Celestial Body' }).click();
+  await adding.getByRole('combobox', { name: 'Celestial Body' }).fill('M');
+  await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+});
 
-    await reopened.getByRole('button', { name: 'Delete Ingredient' }).click();
-    await reopened.getByRole('button', { name: 'Delete', exact: true }).click();
-    await expect(reopened).toHaveCount(0);
-    await expect(page).toHaveURL(/\/admin\/compendium$/);
-    await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
-  },
-);
+// MB.261: a keyboard user turns the No Refs switch with Enter, as a click
+// does, and Space still does. No story walks it, so this is the gate.
+test('Enter turns the No Refs switch and applies the filter, as Space does', async ({ page }) => {
+  await signInAs(page, 'keyboard-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  // Hydrated first: before it, Enter submits the form natively with the switch off.
+  await page.waitForLoadState('networkidle');
+
+  const noRefs = page.getByRole('switch', { name: 'No Refs' });
+  await noRefs.focus();
+  await expect(noRefs).not.toBeChecked();
+
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/withoutReferences=1/);
+  await expect(noRefs).toBeChecked();
+
+  await page.waitForLoadState('networkidle');
+  await noRefs.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).not.toHaveURL(/withoutReferences/);
+  await expect(noRefs).not.toBeChecked();
+
+  await page.waitForLoadState('networkidle');
+  await noRefs.focus();
+  await page.keyboard.press('Space');
+  await expect(page).toHaveURL(/withoutReferences=1/);
+  await assertNoAccessibilityViolations(page);
+});
+
+// M11.22: the read takes a list of forms, and the Form box sends its one
+// choice as a list of one, so the box still narrows the list by its form.
+test('the Form box keeps only the entries holding the form chosen', async ({ page }) => {
+  await signInAs(page, 'form-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  // Hydrated first: before it, the box is a native select rather than a type-ahead.
+  await page.waitForLoadState('networkidle');
+  const editOf = (formalName: string) =>
+    page.getByRole('link', { name: `Edit Cat's Claw, ${formalName}` });
+  // Why the filter could have kept it: the thorn Cat's Claw is listed beside the bark ones.
+  await expect(editOf('Senegalia greggii')).toBeVisible();
+  await expect(editOf('Uncaria tomentosa')).toBeVisible();
+
+  await page.getByRole('combobox', { name: 'Form' }).fill('bark');
+  await page.getByRole('option', { name: /^Bark/ }).click();
+
+  await expect(page).toHaveURL(/[?&]form=Bark(&|$)/);
+  await expect(editOf('Uncaria tomentosa')).toBeVisible();
+  await expect(editOf('Uncaria guianensis')).toBeVisible();
+  await expect(editOf('Senegalia greggii')).toHaveCount(0);
+});
+
+// MB.258: opening Edit Source scrolled the dialog itself, which `overflow:
+// hidden` let a script do, so its header left the top and blank space showed
+// beneath the body; and the panel had no close at its top.
+test('the edit source panel leaves the dialog in place and closes from its top by keyboard', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signInAs(page, 'source-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?new');
+  const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
+  await expect(adding).toBeVisible();
+
+  // A source to edit: a new one, written through the panel.
+  await adding.getByRole('combobox', { name: 'Reference' }).click();
+  await page.getByRole('option', { name: 'New Reference…' }).click();
+  const creating = adding.getByRole('group', { name: 'New Reference' });
+  await creating.getByRole('combobox', { name: 'Kind' }).click();
+  await page
+    .getByRole('listbox', { name: 'Kind choices' })
+    .getByRole('option', { name: 'Book', exact: true })
+    .click();
+  await creating.getByRole('textbox', { name: /^Title/ }).fill('Mockleaf Herbal');
+  await creating.getByRole('textbox', { name: /^Published/ }).fill('1901');
+  await creating.getByRole('button', { name: 'Save Reference' }).click();
+  await expect(creating).toHaveCount(0);
+
+  const pencil = adding.getByRole('button', { name: 'Edit Mockleaf Herbal', exact: true });
+  await expect(pencil).toBeVisible();
+  if ((await pencil.getAttribute('aria-expanded')) !== 'true') await pencil.click();
+  await adding.getByRole('button', { name: 'Edit Source Mockleaf Herbal' }).click();
+  const editing = adding.getByRole('group', { name: 'Edit Source' });
+  const kind = editing.getByRole('combobox', { name: 'Kind' });
+  await expect(kind).toBeFocused();
+
+  // The precondition: the body scrolled to bring the panel up, which is
+  // what scrolled the dialog with it.
+  const body = adding.locator('.modal-dialog__body');
+  expect(await body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  // The dialog itself holds still, its own Close in view at its top.
+  expect(await adding.evaluate((element) => element.scrollTop)).toBe(0);
+  await expect(adding.getByRole('button', { name: 'Close', exact: true })).toBeInViewport();
+  await assertNoAccessibilityViolations(page);
+
+  // The panel's × is the one stop before Kind, and Enter on it closes the
+  // panel, saving nothing, the focus back on the row's Edit Source.
+  await editing.getByRole('textbox', { name: /^Title/ }).fill('Fixtureleaf Herbal');
+  await kind.focus();
+  await page.keyboard.press('Shift+Tab');
+  const close = editing.getByRole('button', { name: 'Close Edit Source' });
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  await expect(editing).toHaveCount(0);
+  await expect(adding.getByRole('button', { name: 'Edit Source Mockleaf Herbal' })).toBeFocused();
+});
+
+// M11.21: the toxic toggles, the ingredient's and each form's, which no story
+// walks: each starts off, saving stores it, and reopening reads it back, the
+// two apart. The ingredient's is turned by keyboard, a form's by a press.
+test('the toxic toggles start off, save, and read back on reopening, each its own', async ({
+  page,
+}) => {
+  await signInAs(page, 'toxic-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?new');
+  const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
+  await adding.getByRole('textbox', { name: 'Name', exact: true }).fill('Aaa Toxicwort');
+  await adding.getByRole('combobox', { name: 'Classification' }).click();
+  await adding
+    .getByRole('listbox', { name: 'Classification choices' })
+    .getByRole('option', { name: 'None' })
+    .click();
+  for (const form of ['Herb', 'Oil']) {
+    const box = adding.getByRole('combobox', { name: 'New Form' });
+    await box.click();
+    await box.fill(form);
+    await adding
+      .getByRole('listbox', { name: 'New Form suggestions' })
+      .getByRole('option', { name: new RegExp(`^${form} \\(`) })
+      .click();
+    // Each new form opens with its toggle off, closing the one added before it.
+    const card = adding.getByRole('group', { name: form, exact: true });
+    await expect(card.getByRole('switch', { name: 'Toxic', exact: true })).not.toBeChecked();
+  }
+
+  // The ingredient's starts off too.
+  const toggles = adding.getByRole('switch', { name: 'Toxic', exact: true });
+  await expect(toggles.first()).not.toBeChecked();
+
+  // The ingredient's, reached from its Safety Notes by Tab, past its hint's
+  // info tip, and turned by Space. Its sections come before Variants, so its
+  // toggle is the first.
+  await adding.getByRole('textbox', { name: 'Safety Notes' }).first().focus();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await expect(toggles.first()).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(toggles.first()).toBeChecked();
+  const oil = adding.getByRole('group', { name: 'Oil', exact: true });
+  await oil.getByRole('switch', { name: 'Toxic', exact: true }).click();
+  await assertNoAccessibilityViolations(page);
+  await adding.getByRole('button', { name: 'Save Ingredient' }).click();
+
+  // Read back from the server: the ingredient's on, Herb's off, Oil's on.
+  const editing = page.getByRole('dialog', { name: 'Edit Ingredient, Aaa Toxicwort', exact: true });
+  await expect(editing).toBeVisible();
+  await page.reload();
+  await editing.getByRole('button', { name: 'Open All' }).click();
+  // The forms' cards are shut, so the one toggle shown is the ingredient's.
+  const ingredientToggle = editing.getByRole('switch', { name: 'Toxic', exact: true });
+  await expect(ingredientToggle).toHaveCount(1);
+  await expect(ingredientToggle).toBeChecked();
+  for (const [form, toxic] of [
+    ['Herb', false],
+    ['Oil', true],
+  ] as const) {
+    await editing.getByRole('button', { name: `Edit ${form}` }).click();
+    const card = editing.getByRole('group', { name: form, exact: true });
+    // Open All may have opened its sections already; open Details & Care if not.
+    const details = card.getByRole('button', { name: 'Details & Care', exact: true });
+    if ((await details.getAttribute('aria-expanded')) !== 'true') await details.click();
+    const toggle = card.getByRole('switch', { name: 'Toxic', exact: true });
+    if (toxic) await expect(toggle).toBeChecked();
+    else await expect(toggle).not.toBeChecked();
+  }
+  await assertNoAccessibilityViolations(page);
+});

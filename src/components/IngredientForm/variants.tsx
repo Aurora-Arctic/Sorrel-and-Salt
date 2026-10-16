@@ -17,7 +17,7 @@ import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
 import { useOnEachSubmit } from './on-submit';
 import { EditIcon, RemoveIcon } from './icons';
 import { FieldError, TextField } from '../Field';
-import { ListField, MultiSelectField } from './fields';
+import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
 import { CollapsibleSection, FoldFlag, useFoldIds } from './section';
@@ -457,6 +457,9 @@ function VariantFieldset({
               action={<CopyFromIngredient at={at} field="safetyNotes" />}
               multiline
             />
+            {/* Its own flag, never copied from the ingredient's: the two are
+                independent, the one exception to the union rule (M11.21). */}
+            <ToggleField name={`${at}.toxic`} label="Toxic" hint="On if this form is poisonous." />
           </CollapsibleSection>
           <CollapsibleSection
             title="Correspondences"

@@ -16,6 +16,16 @@ const message = () =>
   adminInvitationMessage({
     to: 'someone@example.com',
     url: URL,
+    siteRole: 'admin',
+    inviterName: 'Fixture Owner',
+    origin: WORKSHOP_ORIGIN,
+  });
+
+const curatorMessage = () =>
+  adminInvitationMessage({
+    to: 'someone@example.com',
+    url: URL,
+    siteRole: 'curator',
     inviterName: 'Fixture Owner',
     origin: WORKSHOP_ORIGIN,
   });
@@ -29,3 +39,6 @@ Dark.meta = { theme: 'dark' };
 
 export const Light: Story = () => <EmailPreview message={message} />;
 Light.meta = { theme: 'light' };
+
+// The same mail inviting to the curator role (M11.20).
+export const Curator: Story = () => <EmailPreview message={curatorMessage} />;

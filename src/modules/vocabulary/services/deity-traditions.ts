@@ -13,14 +13,14 @@ import type { Session } from '../../../lib/session';
 import { deitySlug, slugify } from '../../../lib/slugify';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../../lib/types';
 import { parseInput } from '../../../lib/validation';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import { deities, deityTraditions } from '../schema/deities';
 import { DeityTraditionInput } from '../validation/deity-tradition';
 import { deleteGroup, refuseSlugCollision, updateGroup } from './curated-writes';
 import type { CuratedGroup, DeityTraditionRow, GroupFilter } from '../types';
 
 // The deity traditions: their reads, public reference data like every curated
-// vocabulary (MB.80), and their writes, the site admin's alone (MB.132), in
+// vocabulary (MB.80), and their writes, a curator's or an admin's alone (MB.132), in
 // the form groups' shape (M5.6b). A deity's slug is its name and its
 // tradition's (MB.132), so a rename moves every live deity's slug under the
 // tradition, and a delete first moves its live deities to the tradition the
@@ -82,7 +82,7 @@ export async function getDeityTraditionBySlug(slug: string): Promise<DeityTradit
 /**
  * Adds a tradition, its slug derived from the name.
  *
- * @throws {Forbidden} the caller is not a site admin — checked before the
+ * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `DeityTraditionInput`, or its
  * slug is a live tradition's.
@@ -91,7 +91,7 @@ export async function createDeityTradition(
   session: Session,
   input: DeityTraditionInput,
 ): Promise<DeityTraditionRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const fields = parseInput(DeityTraditionInput, input);
   const slug = slugify(fields.name);
 
@@ -113,7 +113,7 @@ export async function createDeityTradition(
  * The deities are read before the transaction, so one added under the
  * tradition in the instant between keeps the slug it was given.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} as `createDeityTradition` throws it, the row's
  * own slug excepted; on `name`, a rename that would move a deity onto another
  * deity's address, naming both.
@@ -124,7 +124,7 @@ export async function updateDeityTradition(
   id: string,
   input: DeityTraditionInput,
 ): Promise<DeityTraditionRow> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   const fields = parseInput(DeityTraditionInput, input);
   const written = await updateGroup(session, TRADITIONS, id, fields);
   expireCompendium();
@@ -140,7 +140,7 @@ export async function updateDeityTradition(
  * tradition in the instant between is left under a deleted one, which reads
  * as uncurated.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} on `moveTo`, the tradition has live deities and
  * `moveTo` names no other live tradition, or a deity would move onto another
  * deity's address, naming both.
@@ -151,7 +151,7 @@ export async function deleteDeityTradition(
   id: string,
   moveTo?: string,
 ): Promise<void> {
-  assertSiteAdmin(session);
+  assertCurator(session);
   await deleteGroup(session, TRADITIONS, id, moveTo);
   expireCompendium();
 }

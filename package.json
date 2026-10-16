@@ -15,14 +15,16 @@
     "format:check": "prettier --check .",
     "check:destructive-ddl": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-destructive-ddl.ts",
     "check:migration-order": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-migration-order.ts",
-    "pre-commit": "npm run lint && npm run format:check && npm run typecheck",
+    "pre-commit": "lint-staged --diff=HEAD --continue-on-error",
+    "pre-commit:staged": "lint-staged --hide-unstaged --continue-on-error",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:stories": "vitest run --config vitest.stories.config.mts",
+    "test:stories": "flock /tmp/sorrel-e2e.lock playwright test --config playwright.stories.config.ts",
     "test:debug": "vitest run --inspectBrk=0.0.0.0:9230 --no-file-parallelism --maxWorkers=1",
     "test:ui": "vitest --ui",
     "e2e": "playwright test",
     "e2e:audit": "E2E_AUDIT=1 flock /tmp/sorrel-e2e.lock playwright test --project webkit --project firefox --project phone",
+    "e2e:servers": "tsx scripts/e2e-servers.ts",
     "e2e:ui": "playwright test --ui --ui-host 0.0.0.0 --ui-port 9324",
     "e2e:debug": "playwright test --debug",
     "e2e:trace": "playwright show-trace --host 0.0.0.0 --port 9323",
@@ -44,9 +46,7 @@
     "workshop:build": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/build-workshop.ts"
   },
   "pre-commit": [
-    "lint",
-    "format:check",
-    "typecheck"
+    "pre-commit:staged"
   ],
   "dependencies": {
     "@ark-ui/react": "^5.39.3",
@@ -85,6 +85,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
+    "@babel/parser": "^7.29.9",
     "@graphql-codegen/cli": "^7.4.3",
     "@graphql-codegen/client-preset": "^6.2.0",
     "@ladle/react": "^5.1.1",
@@ -100,6 +101,7 @@
     "drizzle-kit": "^0.31.11",
     "github-slugger": "^2.0.0",
     "jsdom": "^30.1.1",
+    "lint-staged": "^17.6.0",
     "monocart-coverage-reports": "^2.13.0",
     "msw": "^2.15.0",
     "oxlint": "^1.86.0",

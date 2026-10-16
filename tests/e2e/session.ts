@@ -1,7 +1,9 @@
-import { createHmac, randomBytes, randomUUID } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import postgres from 'postgres';
+import type { UserRole } from '@/lib/session';
 import { e2eDatabaseUrl } from './database';
+import { SESSION_COOKIE, signed } from './session-cookie';
 import { browserUrl, plainSessionCookie } from './slots';
 
 // A signed-in browser without a provider round trip, which CI cannot make:
@@ -10,14 +12,6 @@ import { browserUrl, plainSessionCookie } from './slots';
 // Auth would have set, signed with the secret the served build shares with
 // this runner (claude-docs/testing/e2e.md, "E2E").
 
-// A production build's base URL forces https (src/lib/auth.ts, "baseURL"), so
-// Better Auth names the cookie with the `__Secure-` prefix. Under the audit the
-// servers are started without it (E2E_PLAIN_SESSION_COOKIE, set by
-// playwright.config.ts; src/lib/e2e-session-cookie.ts).
-const SESSION_COOKIE = plainSessionCookie
-  ? 'better-auth.session_token'
-  : '__Secure-better-auth.session_token';
-
 /**
  * The address every e2e server is given as ADMIN_BOOTSTRAP_EMAIL, CI's own
  * placeholder on the reserved `.invalid` domain: set by playwright.config.ts
@@ -25,12 +19,6 @@ const SESSION_COOKIE = plainSessionCookie
  * the primary admin (MB.59) the same way locally as on CI.
  */
 export const PRIMARY_ADMIN_EMAIL = 'placeholder@admin-bootstrap.invalid';
-
-/** better-call's `signCookieValue`: `<value>.<base64 HMAC-SHA256>`, percent-encoded. */
-function signed(value: string, secret: string): string {
-  const signature = createHmac('sha256', secret).update(value).digest('base64');
-  return encodeURIComponent(`${value}.${signature}`);
-}
 
 /**
  * Gives `page` the session cookie. A browser never sends a `Secure` cookie to
@@ -71,7 +59,7 @@ export async function signInAs(
   page: Page,
   email: string,
   providers: readonly string[] = ['discord'],
-  role: 'user' | 'admin' = 'user',
+  role: UserRole = 'user',
   { emailVerified = true, database }: { emailVerified?: boolean; database?: string } = {},
 ): Promise<{ userId: string }> {
   const secret = process.env.BETTER_AUTH_SECRET;
@@ -87,10 +75,11 @@ export async function signInAs(
       // privilege trigger refuses an undeclared change to `role` or
       // `can_create_workspace` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
       await tx`select set_config('app.privilege_route', 'manual', true)`;
-      // Stamped as its own creator, as the sign-up hook stamps one.
+      // Stamped as its own creator, as the sign-up hook stamps one. A curator
+      // or an admin holds the creation flag, as the users CHECK asks (M11.20).
       await tx`
         insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
-        values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role === 'admin'}, ${userId}, ${userId})
+        values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role !== 'user'}, ${userId}, ${userId})
       `;
       for (const [index, providerId] of providers.entries()) {
         await tx`

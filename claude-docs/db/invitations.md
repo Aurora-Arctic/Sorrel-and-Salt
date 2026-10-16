@@ -88,6 +88,15 @@ objections to reusing the workspace table, that it was scoped and that its
 check refused anything but a workspace role, are what the nullable pair
 answers.
 
+Since M11.20 a site-tier row also names the site role it grants,
+`site_role` (the `user_role` enum), `curator` or `admin`: migration 0075
+added it, set every site-tier row there before it to `admin`, and added two
+CHECKs, `invitations_site_role_tier`, `(workspace_id is null) = (site_role
+is not null)`, and `invitations_site_role_invitable`, which admits only
+`curator` and `admin`. The second compares the column as text, since
+Postgres refuses a value an enum gained in the same transaction (55P04), and
+drizzle-kit runs every pending migration in one.
+
 ### Written and read by tier (MB.202)
 
 The row is what authorises a membership or a grant, so a generic insert would
@@ -101,7 +110,8 @@ marks"; MB.198). In their place, in the repository's `invitations.ts`, which
   into the proof's workspace with the role `values` names, which the type
   requires and confines to `viewer` or `member`.
   **`insertInvitation(admin, values)`**, under the `SiteAdmin` proof, writes
-  the null pair. Either takes the email, the token, the note and an optional
+  the null pair and the site role `values` names, which the type requires
+  and confines to `curator` or `admin` (M11.20). Either takes the email, the token, the note and an optional
   expiry, and writes the token's hash and nothing else, so a row starts
   pending, and in the proof's tier, even if a cast smuggled a stamp, a
   workspace or a role in.
@@ -280,8 +290,8 @@ re-invite. The test for it runs the real `send` over a `fetch` that answers
 
 **The mail** is `src/emails/coven-invitation.tsx`, rendered twice by
 `renderParts` as HTML and plain text. The plain-text part carries the
-`/invite/<token>` link, because story 4's acceptance test reads the token from
-it. `InvitationSender` (`identity/types.ts`) gained
+`/invite/<token>` link, because story 4's browser flow reads the token from
+the mailed message. `InvitationSender` (`identity/types.ts`) gained
 `workspaceInvitation(to, token, { name, role, inviterName })` beside
 `siteInvitation(to, token, { name })`; the
 real one is built in `src/lib/invitation-mail.ts` and shares the admin one's
@@ -296,8 +306,7 @@ invitation answers none for both. No field carries the token, its hash or a
 link; the existing field-list test in
 `tests/modules/identity/graphql/admin-invitations.test.ts` pins that.
 
-Story 4's acceptance test passes `createInvitation` now and stops at
-`acceptInvitation`, whose workspace branch M7.5 added.
+Story 4's flow walks sending an invitation; accepting it is story 6's, whose workspace branch M7.5 added.
 
 ### Listing and revoking in a coven (M7.6)
 

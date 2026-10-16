@@ -19,8 +19,9 @@ imports nothing.
   MB.217: a row names the form the jar holds through `variant_id`, NOT NULL,
   held to its `ingredient_id` by the composite key
   `inventory_items_variant_fk`, so Rosemary herb and Rosemary oil are two
-  rows of one coven. It is what "already added" _means_: M9.4's `addIngredientToWorkspace` is
-  idempotent against it rather than defining the notion again. The predicate is
+  rows of one coven. It is what "already added" _means_: M9.3's `createStock`, which M9.4's
+  `addIngredientToWorkspace` calls, refuses a held form on it rather than
+  defining the notion again. The predicate is
   load-bearing rather than ceremonial here — story 25 soft-deletes a row and
   calls it recoverable, so without it, throwing a jar out would reserve that
   ingredient against ever being stocked again. Verified by rebuilding the
@@ -31,7 +32,7 @@ imports nothing.
 
 `src/modules/ingredients/schema/units.ts` is the single source of §5's
 vocabulary, its three dimensions and their units. Both pgEnums (`inventory_unit`,
-`unit_dimension`), the CHECK constraint below, M9.5's `unitConvert()`, M9.8's
+`unit_dimension`), the CHECK constraint below, M9.5's `unitConvert()` (in `src/modules/ingredients/units/convert.ts`), M9.8's
 badges and every later Zod enum are built from it. **Adding a unit is one
 edit** — that map, plus a regenerated migration.
 
@@ -42,12 +43,7 @@ layer at all (rule 2, MB.33) — a file that imports no `drizzle-orm` carries
 none in. It sits in `schema/` rather than in `src/lib/` because the tables are
 built from it, which puts it in the graph drizzle-kit loads.
 
-`fl oz` is stored as **`fl_oz`**. §5 names the unit in prose, where a space is
-how a human writes it; the stored label has to survive a Postgres enum, a
-GraphQL enum (M9.4) and a URL query parameter (M9.7's filter chips), and of
-those a GraphQL enum value cannot contain a space at all. The unit is §5's;
-only its spelling is settled here, and how it is _displayed_ stays a question
-for the UI tasks rather than a column value.
+`fl oz` is stored as two values, **`fl_oz_uk`** and **`fl_oz_us`**, because the two fluid ounces are different sizes: a British kitchen's is 28.413 ml and a US bottle's is 29.574 ml, about four per cent apart. A single `fl_oz` would force `unitConvert()` to guess which one a recipe means. M11.17 made the change: migration `0072_fluid-ounces` renamed the stored `fl_oz` to `fl_oz_uk` and added `fl_oz_us`, so a row saved before it reads as the British ounce. §5 names the unit in prose, where a space is how a human writes it; the stored label has to survive a Postgres enum, a GraphQL enum (M9.4) and a URL query parameter (M9.7's filter chips), and of those a GraphQL enum value cannot contain a space at all. The unit is §5's; only its spelling is settled here, and how it is _displayed_ stays a question for the UI tasks rather than a column value.
 
 The schema file is forbidden to spell a unit or a dimension out, and that is
 asserted as a property of its source text rather than of its values: equal
@@ -86,6 +82,67 @@ each half stripped in turn.
 A stub row (both null) is admitted, because it claims nothing and so
 contradicts nothing.
 
+### Converting between units
+
+`unitConvert(value, from, to)`, in `src/modules/ingredients/units/convert.ts`
+and exported from `@/modules/ingredients` (M9.5), turns an amount in one unit
+into another of the same dimension: teaspoons into millilitres, ounces into
+grams. It imports only the two schema files that import nothing, `units.ts`
+and `quantities.ts`, so it reaches no database code and could load in the
+browser.
+
+**What it answers.** A result the caller has to test, `{ ok: true, value }` or
+`{ ok: false, reason }`. A refusal has no `value` at all, so TypeScript will
+not let a caller read one as a number without checking `ok` first. It refuses
+two kinds of pair:
+
+- **`dimension`**: weight to volume, or volume to weight. Grams to teaspoons
+  depends on what is being measured, and a wrong guess silently doubles or
+  halves an ingredient in a working.
+- **`count`**: any pair with a count unit in it, `piece` to `piece` included.
+  Three pinches is no amount of millilitres, and no amount of pieces either.
+
+**The sizes.** Each unit has one size in its dimension's base unit, milligrams
+for weight and millilitres for volume, as the owner chose them on 2026-10-13:
+
+| Weight | Size             | Volume     | Size             |
+| ------ | ---------------- | ---------- | ---------------- |
+| `mg`   | 1 mg             | `ml`       | 1 ml             |
+| `g`    | 1,000 mg         | `l`        | 1,000 ml         |
+| `kg`   | 1,000,000 mg     | `tsp`      | 5 ml             |
+| `oz`   | 28,349.523125 mg | `tbsp`     | 15 ml            |
+| `lb`   | 453,592.37 mg    | `cup`      | 250 ml           |
+|        |                  | `fl_oz_uk` | 28.4130625 ml    |
+|        |                  | `fl_oz_us` | 29.5735295625 ml |
+
+Spoons and the cup are metric, as a British kitchen measures them, and both
+fluid ounces are kept because a recipe's origin decides which it means. The
+sizes are keyed by dimension, so no size can join two dimensions, and count
+has none. A unit added to `units.ts` is a type error in the converter until it
+is given a size.
+
+**Exact, then rounded once.** The sizes are written as decimal text rather
+than JavaScript numbers, because 29.5735295625 has no exact binary form. The
+converter turns the amount and both sizes into whole numbers (`BigInt`), works
+out amount × source size ÷ target size as one fraction, and rounds only that,
+to three decimals, the scale of the stock columns' `numeric(12,3)`. Rounding at
+the base unit on the way would be a thousandth out often enough to matter:
+0.525 oz is 14,883.499640625 mg, which rounds to 14,883.5 mg and then to
+14.884 g, where the true answer is 14.883 g. A half rounds up, as Postgres
+rounds a positive `numeric`, so the value returned is the value the column
+would store. A negative amount, like one that is not a finite number, throws:
+the stock schema refuses both before a service could pass one in.
+
+**Round trips.** Out to a unit no larger and back returns the original
+exactly. Out to a larger unit loses what three decimals of it cannot hold: 1 mg
+is 0.000 lb, and comes back as 0 mg. That is the column's precision rather
+than the converter's, and the return is never further off than half a
+thousandth of the larger unit.
+
+**No density table**, anywhere in the app: DESIGN.md §11 refuses
+cross-dimension conversion outright. The converter's sizes are keyed by
+dimension, so it has nowhere to put one; elsewhere the rule is held by review.
+
 ### Nullability, and why zero is not the same as nothing
 
 `quantityOnHand` is nullable because **zero is already taken**: M9.8 renders
@@ -104,8 +161,8 @@ test: `0.000` and `NULL` are asserted to be distinguishable on the row.
   also gives `StockInput` its ceiling of 999,999,999.999, so an amount the
   column cannot hold is a field error rather than a raw overflow
   ([`validation.md`](../validation.md)).
-- `lowStockThreshold` carries **no database default**. M9.8 writes §5's
-  dimension-appropriate value onto the row at creation rather than applying
+- `lowStockThreshold` carries **no database default**. M9.3's `createStock` writes §5's
+  dimension-appropriate value onto the row at creation (M9.8 shows it) rather than applying
   a constant at read time, so it stays visible and editable and changing the
   constant later does not silently reinterpret every existing row. A column
   default could not do it anyway: the value depends on the row's own unit,
@@ -125,6 +182,97 @@ against hooks the design doc does not name applies to CHECKs as readily as to
 columns. A negative quantity is a validation error with something to say, which
 makes it the service and Zod layers' job rather than a constraint's.
 
-The table is inert at Wave 3: nothing queries it until M9.3's service and
-M9.4's mutations land in Wave 11, which is the table-task-then-behaviour-task
-rule and the reason the DDL can be constrained now, while the table is empty.
+The table was inert from Wave 3 until M9.3's service in Wave 11, which is the
+table-task-then-behaviour-task rule and the reason the DDL could be constrained
+while the table was empty.
+
+### The stock service
+
+`src/modules/ingredients/services/stock.ts` (M9.3) is how anything reads or
+writes a coven's stock. It has five functions, each taking the coven's id and
+checking membership first:
+
+| Function                                              | Checks              | What it does                                                      |
+| ----------------------------------------------------- | ------------------- | ----------------------------------------------------------------- |
+| `createStock(session, workspaceId, variantId, input)` | `inventory: update` | Starts a jar of one form the coven does not hold yet              |
+| `updateStock(session, workspaceId, id, input)`        | `inventory: update` | Changes a jar: a field left out keeps its value, `null` clears it |
+| `deleteStock(session, workspaceId, id)`               | `inventory: update` | Soft-deletes a jar: marks it deleted, leaving the row in place    |
+| `getStock(session, workspaceId, id)`                  | `inventory: read`   | One jar, for any member of the coven, viewers included            |
+| `stockOf(session, refs)`                              | `inventory: read`   | The jars of many ingredients at once, for `Ingredient.stock`      |
+
+The permission is the `inventory` statement in
+`src/modules/coven/services/access-control.ts`: viewers hold `read`, members
+and owners `read` and `update`. The statement has no `create` or `delete`,
+so all three writes check `update`; the `ingredient` statement is not used for
+stock.
+
+- **A jar is read through a live form of a live ingredient.** M5.3's ingredient
+  delete leaves the jar in place, so the repository's stock finders
+  (`src/db/repository/stock.ts`) add `readableVariantParent` to the proof's
+  own scope: the form must be live, and its ingredient live and in the
+  compendium or this coven. A deleted ingredient's jar is then in no read, and
+  an update or delete of it answers `NotFound`. The writes read the jar first
+  for this reason: the writer's by-id methods see the jar's own tombstone, not
+  its ingredient's. `findStockOfIngredients` is the batch read behind
+  `stockOf`, which M9.4's `Ingredient.stock` loader calls. `stockOf` takes
+  each ingredient with the coven it was asked about, checks each coven once and
+  reads each coven's jars in one call, so a coven the caller is not in refuses
+  its own entries and no others.
+- **The form must be one the coven may read.** `createStock` looks the variant up
+  with `findReadableVariant` under the coven's proof, so another coven's form,
+  a deleted form, or a form of a deleted ingredient is `NotFound`. The
+  composite foreign key alone would accept another coven's form, since it holds
+  only the variant to its ingredient.
+- **A form the coven holds is refused.** `createStock` throws a
+  `ValidationError` beside `variantId` and writes nothing. It neither
+  returns the held jar nor adds the input's amount to it: either would
+  report success for a write that did not happen as asked, and someone
+  sending 10 g to a jar of 5 g could not tell whether they now hold 5 g or
+  15 g. Changing a jar is `updateStock`'s. The check is the insert breaking
+  `inventory_items_workspace_id_variant_id_unique`, with no read before it,
+  so two creates racing for one form are refused alike. After a soft delete
+  there is no live jar, so the create inserts a new row and the old one stays
+  as it was ([`design-decisions/m9.3-create-stock-refuses-held-form.md`](../design-decisions/m9.3-create-stock-refuses-held-form.md)).
+- **The dimension is never input.** `StockInput` has no `unitDimension`
+  field, so one sent anyway is dropped while parsing, and the service writes
+  `dimensionOf(unit)` wherever it writes a unit.
+- **A new jar gets the default threshold.** When the input names a unit and no
+  threshold, `createStock` writes 3 for a count unit, and 10 g or 15 ml
+  converted into the jar's own unit with `unitConvert` for a weight or a
+  volume: 10 g is 0.01 in kilograms and 15 ml is 3 in teaspoons. A threshold the
+  input states, `0` included, is kept. A jar with no unit gets none, and
+  `updateStock` never applies the default.
+
+### The workspace ingredient list
+
+`listWorkspaceIngredients(session, workspaceId, filter, page)`
+(`src/modules/ingredients/services/workspace-ingredient-list.ts`, M9.4) is
+the list on the coven's Ingredients page. It checks `ingredient: read`, so any
+member of the coven, viewers included, may read it, and answers one page from
+`findWorkspaceIngredientPage` in `src/db/repository/ingredients.ts`.
+
+A coven's ingredients are two kinds of row, in one query:
+
+- **The coven's own entries**, live.
+- **The compendium entries it holds a jar of.** The jar must be live and of a
+  live form; a deleted jar, or a jar of a deleted form, does not put its entry
+  in the list. An entry is listed once however many of its forms the coven
+  holds. Another coven's jar of a compendium entry never puts it here.
+
+Both kinds pass `notHiddenByLocal`, the same anti-join `ingredientSuggestions`
+uses: a compendium entry the coven has its own version of (same formal name, or
+the same label when the local entry declares no formal name) is left out, and
+the local entry shows in its place.
+
+The search, category, form, deity, zodiac sign, planet and toxic filters (the form filter a list, and the last four, since M11.22) are the compendium's own, from
+`compendiumList`, so the list matches, ranks and pages exactly as the
+compendium does. They run under the coven's proof rather than the compendium
+tier, so a filter never reaches another coven's rows.
+
+**A jar a local entry hides stays where it is.** If a coven holds a jar of a
+compendium entry and later adds its own version of that entry, the compendium
+entry leaves the list and its jar reaches no read, since `Ingredient.stock` is
+asked about the local entry. Nothing moves the jar to the local entry or
+deletes it: either would change the coven's stock behind the member's back.
+The jar comes back if the local entry is deleted, or relabelled so it no longer
+matches.

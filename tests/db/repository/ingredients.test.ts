@@ -713,9 +713,9 @@ describe('findCompendiumPage', () => {
     });
   });
 
-  // The text, on any of an entry's live forms (MB.222): an entry with two
-  // forms is found under either, and once.
-  describe('form', () => {
+  // The text, on any of an entry's live forms (MB.222), any of the listed
+  // forms (M11.22): an entry holding two of them is found once.
+  describe('forms', () => {
     beforeEach(async () => {
       await add('Fixture Both', {
         variants: [makeVariant({ form: 'Fixture Herb' }), makeVariant({ form: 'Fixture Oil' })],
@@ -736,25 +736,55 @@ describe('findCompendiumPage', () => {
         select count(*)::int as count from ingredient_variants where form = 'Fixture Oil'`;
       expect(count).toBe(2);
 
-      expect(await namesOf({ form: ' fixture HERB ' })).toEqual(['Fixture Both']);
-      expect(await namesOf({ form: 'FIXTURE OIL' })).toEqual(['Fixture Both']);
-      expect(await namesOf({ form: 'fixture root' })).toEqual(['Fixture Dropped', 'Fixture Root']);
+      expect(await namesOf({ forms: [' fixture HERB '] })).toEqual(['Fixture Both']);
+      expect(await namesOf({ forms: ['FIXTURE OIL'] })).toEqual(['Fixture Both']);
+      expect(await namesOf({ forms: ['fixture root'] })).toEqual([
+        'Fixture Dropped',
+        'Fixture Root',
+      ]);
     });
 
-    it('combines with search, under either form', async () => {
-      expect(await namesOf({ query: 'both', form: 'fixture herb' })).toEqual(['Fixture Both']);
-      expect(await namesOf({ query: 'both', form: 'fixture oil' })).toEqual(['Fixture Both']);
-      expect(await namesOf({ query: 'both', form: 'fixture root' })).toEqual([]);
+    it('finds an entry holding any one of the listed forms, once however many it holds', async () => {
+      // Why Fixture Both could have come back twice: it holds both forms listed.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredient_variants
+        where form in ('Fixture Herb', 'Fixture Oil') and deleted_at is null`;
+      expect(count).toBe(2);
+
+      expect(await namesOf({ forms: ['fixture herb', 'fixture oil'] })).toEqual(['Fixture Both']);
+      expect(await namesOf({ forms: ['fixture herb', 'fixture root'] })).toEqual([
+        'Fixture Both',
+        'Fixture Dropped',
+        'Fixture Root',
+      ]);
+    });
+
+    it('ignores a blank entry, and is no filter when empty or all blank', async () => {
+      expect(await namesOf({ forms: [' ', 'fixture root', ''] })).toEqual([
+        'Fixture Dropped',
+        'Fixture Root',
+      ]);
+      expect(await namesOf({ forms: [] })).toHaveLength(3);
+      expect(await namesOf({ forms: ['', ' '] })).toHaveLength(3);
+    });
+
+    it('combines with search, under any listed form', async () => {
+      expect(await namesOf({ query: 'both', forms: ['fixture herb'] })).toEqual(['Fixture Both']);
+      expect(await namesOf({ query: 'both', forms: ['fixture root', 'fixture oil'] })).toEqual([
+        'Fixture Both',
+      ]);
+      expect(await namesOf({ query: 'both', forms: ['fixture root'] })).toEqual([]);
     });
 
     // A search matching both of an entry's forms is still one row, so the
     // count reads what the page holds.
     it('counts what the page holds, alone and with a search', async () => {
       for (const filter of [
-        { form: 'fixture oil' },
-        { form: 'fixture root' },
-        { query: 'fixture', form: 'fixture oil' },
-        { query: 'fixture', form: 'fixture root' },
+        { forms: ['fixture oil'] },
+        { forms: ['fixture root'] },
+        { forms: ['fixture herb', 'fixture oil'] },
+        { query: 'fixture', forms: ['fixture oil'] },
+        { query: 'fixture', forms: ['fixture root', 'fixture herb'] },
       ]) {
         const page = await pageOf(filter, { first: 100 });
         // Precondition: the page holds rows for the count to agree with.
@@ -817,8 +847,8 @@ describe('findCompendiumPage', () => {
     // Each arm reads any of the entry's live forms: Fixture Second picked the
     // root on one and spells the herb on another; Fixture Dropped's herb is gone.
     it('combines with the form text', async () => {
-      expect(await namesOf({ formId: root, form: 'herb' })).toEqual(['Fixture Second']);
-      expect(await namesOf({ formId: root, form: 'root' })).toEqual([
+      expect(await namesOf({ formId: root, forms: ['herb'] })).toEqual(['Fixture Second']);
+      expect(await namesOf({ formId: root, forms: ['root'] })).toEqual([
         'Fixture Dropped',
         'Fixture Second',
       ]);
@@ -826,9 +856,10 @@ describe('findCompendiumPage', () => {
   });
 
   // A deity is a pick too (MB.167): what a deity's delete reads (MB.132), so
-  // only the entries holding a live link to this row answer, not every entry
-  // spelling it, nor one that picked a namesake.
-  describe('deityId', () => {
+  // only the entries holding a live link to a listed row answer, not every
+  // entry spelling it, nor one that picked a namesake. Any listed deity
+  // (M11.22): an entry linking two of them is found once.
+  describe('deityIds', () => {
     let hecate: string;
     let hermes: string;
 
@@ -865,25 +896,58 @@ describe('findCompendiumPage', () => {
         where name = 'Hecate'`;
       expect(count).toBe(6);
 
-      expect(await namesOf({ deityId: hecate })).toEqual(['Fixture Also Picked', 'Fixture Picked']);
-      await expect(findCompendiumCount({ deityId: hecate }, undefined)).resolves.toEqual({
+      expect(await namesOf({ deityIds: [hecate] })).toEqual([
+        'Fixture Also Picked',
+        'Fixture Picked',
+      ]);
+      await expect(findCompendiumCount({ deityIds: [hecate] }, undefined)).resolves.toEqual({
         totalCount: 2,
         countBefore: null,
       });
-      expect(await namesOf({ deityId: hermes })).toEqual(['Fixture Also Picked', 'Fixture Hermes']);
+      expect(await namesOf({ deityIds: [hermes] })).toEqual([
+        'Fixture Also Picked',
+        'Fixture Hermes',
+      ]);
+    });
+
+    it('lists an entry linking any one of the listed deities, once however many it links', async () => {
+      // Why Fixture Also Picked could have come back twice: it links both.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredient_deities
+        where deity_id in (${hecate}, ${hermes}) and deleted_at is null
+          and ingredient_id = (select id from ingredients where name = 'Fixture Also Picked')`;
+      expect(count).toBe(2);
+
+      expect(await namesOf({ deityIds: [hecate, hermes] })).toEqual([
+        'Fixture Also Picked',
+        'Fixture Hermes',
+        'Fixture Picked',
+      ]);
+      await expect(findCompendiumCount({ deityIds: [hecate, hermes] }, undefined)).resolves.toEqual(
+        { totalCount: 3, countBefore: null },
+      );
+    });
+
+    it('is no filter when empty', async () => {
+      expect(await namesOf({ deityIds: [] })).toHaveLength(5);
     });
   });
 
   // The lists hold spellings, not picks (MB.162): what a celestial body's or a sign's
   // delete and rename read (MB.95), matched entry by entry under the
-  // suggestions' fold.
-  describe('celestialBody and zodiacSign', () => {
+  // suggestions' fold, any listed value (M11.22).
+  describe('celestialBodies and zodiacSigns', () => {
     beforeEach(async () => {
-      await add('Fixture Held', { celestialBodies: ['Venus', 'Mars'] });
+      await add('Fixture Held', { celestialBodies: ['Venus', 'Mars'], zodiacSigns: ['Taurus'] });
       await add('Fixture Folded', { celestialBodies: [' mars '] });
-      await add('Fixture Other', { celestialBodies: ['Venus'], zodiacSigns: ['Aries'] });
-      await add('Fixture Coven', { celestialBodies: ['Mars'], workspaceId: WORKSPACE_W_ID });
-      const gone = await add('Fixture Gone', { celestialBodies: ['Mars'] });
+      await add('Fixture Other', { celestialBodies: ['Venus'], zodiacSigns: ['Aries', 'Taurus'] });
+      await add('Fixture Sign', { zodiacSigns: [' aries'] });
+      await add('Fixture Coven', {
+        celestialBodies: ['Mars'],
+        zodiacSigns: ['Aries'],
+        workspaceId: WORKSPACE_W_ID,
+      });
+      const gone = await add('Fixture Gone', { celestialBodies: ['Mars'], zodiacSigns: ['Aries'] });
       await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
     });
 
@@ -894,22 +958,174 @@ describe('findCompendiumPage', () => {
         where exists (select 1 from unnest(celestial_bodies) as p(v) where lower(btrim(v)) = 'mars')`;
       expect(count).toBe(4);
 
-      expect(await namesOf({ celestialBody: 'Mars' })).toEqual(['Fixture Folded', 'Fixture Held']);
-      expect(await namesOf({ celestialBody: 'MARS ' })).toEqual(['Fixture Folded', 'Fixture Held']);
-      await expect(findCompendiumCount({ celestialBody: 'Mars' }, undefined)).resolves.toEqual({
+      expect(await namesOf({ celestialBodies: ['Mars'] })).toEqual([
+        'Fixture Folded',
+        'Fixture Held',
+      ]);
+      expect(await namesOf({ celestialBodies: ['MARS '] })).toEqual([
+        'Fixture Folded',
+        'Fixture Held',
+      ]);
+      await expect(findCompendiumCount({ celestialBodies: ['Mars'] }, undefined)).resolves.toEqual({
         totalCount: 2,
         countBefore: null,
       });
     });
 
-    it('reads the list it names, a sign from the signs alone', async () => {
-      expect(await namesOf({ zodiacSign: 'Aries' })).toEqual(['Fixture Other']);
-      expect(await namesOf({ zodiacSign: 'Mars' })).toEqual([]);
-      expect(await namesOf({ celestialBody: 'Aries' })).toEqual([]);
+    it('lists an entry holding any one of the listed values, once however many it holds', async () => {
+      // Why Fixture Held and Fixture Other could have come back twice: each
+      // holds both values listed in one of its lists.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredients
+        where name in ('Fixture Held', 'Fixture Other')
+          and (celestial_bodies @> array['Venus', 'Mars'] or zodiac_signs @> array['Aries', 'Taurus'])`;
+      expect(count).toBe(2);
+
+      expect(await namesOf({ celestialBodies: ['venus', ' MARS'] })).toEqual([
+        'Fixture Folded',
+        'Fixture Held',
+        'Fixture Other',
+      ]);
+      await expect(
+        findCompendiumCount({ celestialBodies: ['venus', ' MARS'] }, undefined),
+      ).resolves.toEqual({ totalCount: 3, countBefore: null });
+      expect(await namesOf({ zodiacSigns: ['Aries', 'taurus'] })).toEqual([
+        'Fixture Held',
+        'Fixture Other',
+        'Fixture Sign',
+      ]);
+      await expect(
+        findCompendiumCount({ zodiacSigns: ['Aries', 'taurus'] }, undefined),
+      ).resolves.toEqual({ totalCount: 3, countBefore: null });
     });
 
-    it('treats a blank value as no filter, as the form text does', async () => {
-      expect(await namesOf({ celestialBody: ' ' })).toHaveLength(3);
+    it('reads the list it names, a sign from the signs alone', async () => {
+      expect(await namesOf({ zodiacSigns: ['Aries'] })).toEqual(['Fixture Other', 'Fixture Sign']);
+      expect(await namesOf({ zodiacSigns: ['Mars'] })).toEqual([]);
+      expect(await namesOf({ celestialBodies: ['Aries'] })).toEqual([]);
+    });
+
+    it('ignores a blank entry, and is no filter when empty or all blank', async () => {
+      expect(await namesOf({ celestialBodies: [' ', 'Mars'] })).toEqual([
+        'Fixture Folded',
+        'Fixture Held',
+      ]);
+      expect(await namesOf({ celestialBodies: [' '] })).toHaveLength(4);
+      expect(await namesOf({ celestialBodies: [] })).toHaveLength(4);
+      expect(await namesOf({ zodiacSigns: ['', ' '] })).toHaveLength(4);
+    });
+  });
+
+  // M11.21's two flags, read together (M11.22): an entry is toxic when its
+  // own flag or a live form's is on, and not toxic when neither is.
+  describe('toxic', () => {
+    beforeEach(async () => {
+      await add('Fixture Own Flag', { toxic: true });
+      await add('Fixture Form Flag', {
+        variants: [makeVariant(), makeVariant({ form: 'Fixture Oil', toxic: true })],
+      });
+      await add('Fixture Both Flags', {
+        toxic: true,
+        variants: [
+          makeVariant({ form: 'Fixture Oil', toxic: true }),
+          makeVariant({ form: 'Fixture Resin', toxic: true }),
+        ],
+      });
+      // Its only toxic form retired.
+      const retired = await add('Fixture Retired Flag', {
+        variants: [makeVariant(), makeVariant({ form: 'Fixture Oil', toxic: true })],
+      });
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+        where ingredient_id = ${retired} and form = 'Fixture Oil'`;
+      await add('Fixture Plain');
+      await add('Fixture Coven', { toxic: true, workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { toxic: true });
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    });
+
+    it('is reading flags on entries, on live forms and on a retired form', async () => {
+      const [entries] = await sql`
+        select count(*)::int as count from ingredients where toxic`;
+      expect(entries.count).toBe(4);
+      const [retired] = await sql`
+        select count(*)::int as count from ingredient_variants
+        where toxic and deleted_at is not null`;
+      expect(retired.count).toBe(1);
+    });
+
+    it('lists an entry flagged itself and one flagged only on a live form, each once', async () => {
+      expect(await namesOf({ toxic: 'toxic' })).toEqual([
+        'Fixture Both Flags',
+        'Fixture Form Flag',
+        'Fixture Own Flag',
+      ]);
+      await expect(findCompendiumCount({ toxic: 'toxic' }, undefined)).resolves.toEqual({
+        totalCount: 3,
+        countBefore: null,
+      });
+    });
+
+    // The retired form's flag is still on its row, so a read that forgot the
+    // form's liveness would call Fixture Retired Flag toxic.
+    it('lists neither as not toxic, and counts a retired form’s flag for nothing', async () => {
+      expect(await namesOf({ toxic: 'not_toxic' })).toEqual([
+        'Fixture Plain',
+        'Fixture Retired Flag',
+      ]);
+      await expect(findCompendiumCount({ toxic: 'not_toxic' }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+    });
+
+    it('is no filter when absent', async () => {
+      expect(await namesOf({})).toHaveLength(5);
+    });
+  });
+
+  // OR within a kind, AND across kinds (M11.22): each row below matches one
+  // kind alone, and only one matches both.
+  describe('across kinds', () => {
+    beforeEach(async () => {
+      await add('Fixture Both Kinds', {
+        celestialBodies: ['Venus'],
+        zodiacSigns: ['Aries'],
+        variants: [makeVariant({ form: 'Fixture Oil', toxic: true })],
+      });
+      await add('Fixture Body Only', { celestialBodies: ['Mars'], zodiacSigns: ['Aries'] });
+      await add('Fixture Form Only', {
+        variants: [makeVariant({ form: 'Fixture Root', toxic: true })],
+      });
+    });
+
+    it('lists only the entries matching every kind chosen', async () => {
+      const bodies = { celestialBodies: ['Venus', 'Mars'] };
+      const forms = { forms: ['fixture oil', 'fixture root'] };
+      // Why the others could have been listed: each kind alone matches two.
+      expect(await namesOf(bodies)).toEqual(['Fixture Body Only', 'Fixture Both Kinds']);
+      expect(await namesOf(forms)).toEqual(['Fixture Both Kinds', 'Fixture Form Only']);
+      expect(await namesOf({ toxic: 'toxic' })).toEqual([
+        'Fixture Both Kinds',
+        'Fixture Form Only',
+      ]);
+      expect(await namesOf({ zodiacSigns: ['Aries'] })).toEqual([
+        'Fixture Body Only',
+        'Fixture Both Kinds',
+      ]);
+
+      for (const filter of [
+        { ...bodies, ...forms },
+        { ...bodies, toxic: 'toxic' as const },
+        { zodiacSigns: ['Aries'], ...forms },
+      ]) {
+        expect(await namesOf(filter), JSON.stringify(filter)).toEqual(['Fixture Both Kinds']);
+        await expect(
+          findCompendiumCount(filter, undefined),
+          JSON.stringify(filter),
+        ).resolves.toEqual({ totalCount: 1, countBefore: null });
+      }
+      expect(await namesOf({ ...bodies, toxic: 'not_toxic' })).toEqual(['Fixture Body Only']);
     });
   });
 
@@ -944,30 +1160,53 @@ describe('findCompendiumPage', () => {
 describe('findCompendiumCount', () => {
   const SIZE = 3;
   let protection: string;
+  let hecate: string;
+  let hermes: string;
   let excluded: string[];
 
   beforeAll(async () => {
     const [row] = await sql`
       select id from categories where name = 'Protection' and deleted_at is null`;
     protection = row.id as string;
+    const rows = await sql`
+      select id, name from deities where name in ('Hecate', 'Hermes') and deleted_at is null`;
+    const byName = new Map(rows.map((deity) => [deity.name as string, deity.id as string]));
+    hecate = byName.get('Hecate') as string;
+    hermes = byName.get('Hermes') as string;
   });
 
   // Seven herbs that `mugwrot` finds at 0.5 — every other one filed under
-  // Protection — and five roots it does not; then a soft-deleted and a
-  // coven's row that every filter below would otherwise count.
+  // Protection, Venus, Aries and Hecate, the rest under Mars, Taurus and
+  // Hermes, the first two flagged toxic — and five roots it does not, the
+  // first two on a toxic form; then a soft-deleted and a coven's row that
+  // every filter below would otherwise count.
   beforeEach(async () => {
     for (let n = 1; n <= 7; n += 1) {
-      await add(`Fixture Mugwort ${n}`, { categories: n % 2 === 1 ? ['Protection'] : [] });
+      const odd = n % 2 === 1;
+      const id = await add(`Fixture Mugwort ${n}`, {
+        categories: odd ? ['Protection'] : [],
+        celestialBodies: [odd ? 'Venus' : 'Mars'],
+        zodiacSigns: [odd ? 'Aries' : 'Taurus'],
+        toxic: n <= 2,
+      });
+      await insertDeityLink(sql, id, odd ? hecate : hermes, 0, A.id);
     }
     for (let n = 1; n <= 5; n += 1) {
-      await add(`Fixture Nettle ${n}`, { variants: [makeVariant({ form: 'Fixture Root' })] });
+      await add(`Fixture Nettle ${n}`, {
+        variants: [makeVariant({ form: 'Fixture Root', toxic: n <= 2 })],
+      });
     }
-    const gone = await add('Fixture Mugwort 8', { categories: ['Protection'] });
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
-    const coven = await add('Fixture Mugwort 9', {
+    const everything = {
       categories: ['Protection'],
-      workspaceId: WORKSPACE_W_ID,
-    });
+      celestialBodies: ['Venus'],
+      zodiacSigns: ['Aries'],
+      toxic: true,
+    };
+    const gone = await add('Fixture Mugwort 8', everything);
+    await insertDeityLink(sql, gone, hecate, 0, A.id);
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    const coven = await add('Fixture Mugwort 9', { ...everything, workspaceId: WORKSPACE_W_ID });
+    await insertDeityLink(sql, coven, hecate, 0, A.id);
     excluded = [gone, coven];
   });
 
@@ -988,8 +1227,10 @@ describe('findCompendiumCount', () => {
     const [{ count }] = await sql`
       select count(*)::int as count from ingredients
       where id in ${sql(excluded)}
+        and toxic and 'Venus' = any(celestial_bodies) and 'Aries' = any(zodiac_signs)
         and exists (select 1 from ingredient_variants where ingredient_id = ingredients.id)
-        and exists (select 1 from ingredient_categories where ingredient_id = ingredients.id)`;
+        and exists (select 1 from ingredient_categories where ingredient_id = ingredients.id)
+        and exists (select 1 from ingredient_deities where ingredient_id = ingredients.id)`;
     expect(count).toBe(2);
   });
 
@@ -1001,8 +1242,19 @@ describe('findCompendiumCount', () => {
     await expectCountsToMatchTheWalk({ categoryIds: [protection] }, 4);
   });
 
-  it('counts by form', async () => {
-    await expectCountsToMatchTheWalk({ form: 'testform' }, 7);
+  it('counts by any of several forms', async () => {
+    await expectCountsToMatchTheWalk({ forms: ['testform', 'fixture root'] }, 12);
+  });
+
+  it('counts by any of several celestial bodies, zodiac signs and deities', async () => {
+    await expectCountsToMatchTheWalk({ celestialBodies: ['venus', 'mars'] }, 7);
+    await expectCountsToMatchTheWalk({ zodiacSigns: ['aries', 'taurus'] }, 7);
+    await expectCountsToMatchTheWalk({ deityIds: [hecate, hermes] }, 7);
+  });
+
+  it('counts by the toxic setting, each way', async () => {
+    await expectCountsToMatchTheWalk({ toxic: 'toxic' }, 4);
+    await expectCountsToMatchTheWalk({ toxic: 'not_toxic' }, 8);
   });
 
   // Read at pg_trgm's own 0.6, the count would find none of these rows while

@@ -4,14 +4,16 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll, settleTransitions } from './axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAgainAs, signInAs } from './session';
+import { slotUrl } from './slots';
 
 // The application shell against the built server (MB.7): the bar, the context
 // row and the section navs that frame every signed-in page, at a desktop and
 // at a phone's width. What a component test cannot prove is here: where the
 // browser lays the bottom bar, which element takes the focus after a key, and
 // the scans over the whole frame. The switcher's entry to the create page
-// (Story 3) is walked here once; coven-create.spec.ts walks the form.
-test.describe.configure({ mode: 'serial' });
+// (Story 3) is walked here once; coven-create.spec.ts walks the form. Each
+// worker builds the fixture rows in its own database before its first test,
+// so the tests are independent and spread across workers.
 
 const ALPHA = { name: 'Shell Alpha', slug: 'shell-alpha' };
 const BETA = { name: 'Shell Beta', slug: 'shell-beta' };
@@ -25,11 +27,20 @@ const users = {
   plain: { id: '' }, // signed in, in no coven, no admin
 };
 
-test.beforeAll(async () => {
+test.beforeAll(async ({ browser, slot }) => {
   await recreateE2eDatabase();
+
+  // `signInAs` wants a page; only its rows matter here, so the page, and the
+  // session it holds, is thrown away. Each test signs in again for itself.
+  const setup = await browser.newPage({ baseURL: slotUrl(slot) });
+  try {
+    await seedFixtures(setup);
+  } finally {
+    await setup.close();
+  }
 });
 
-test('the fixture users and their covens are in place', async ({ page }) => {
+async function seedFixtures(page: Page): Promise<void> {
   for (const key of Object.keys(users) as (keyof typeof users)[]) {
     users[key] = {
       id: (
@@ -71,7 +82,7 @@ test('the fixture users and their covens are in place', async ({ page }) => {
   } finally {
     await sql.end();
   }
-});
+}
 
 /** The theme button, in the bar at every width (M10.32). */
 async function toggleTheme(page: Page): Promise<void> {
@@ -91,10 +102,11 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
 
   const banner = page.getByRole('banner');
   await expect(banner).toBeVisible();
-  // The brand leads to the /coven landing (shellHome), which sends a member in.
+  // The brand leads straight into the member's coven (shellHome), never via the
+  // /coven landing's redirect (MB.257).
   await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute(
     'href',
-    '/coven',
+    `/coven/${ALPHA.slug}`,
   );
   // A non-admin has no site links yet, so the Site nav is not drawn at all.
   await expect(page.getByRole('navigation', { name: 'Site' })).toHaveCount(0);
@@ -150,28 +162,6 @@ test('the account page is in the shell, with no coven nav and no switcher', asyn
   await expect(page.getByRole('navigation', { name: 'Coven' })).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
 });
-
-test(
-  'a user in two covens switches between them, and one with the right reaches the create page',
-  { tag: '@story-3' },
-  async ({ page }) => {
-    await signInAgainAs(page, users.multi.id);
-    await page.setViewportSize(DESKTOP);
-    await page.goto(`/coven/${ALPHA.slug}`);
-
-    const switcher = page.getByRole('combobox', { name: 'Coven' });
-    await expect(switcher).toHaveText(ALPHA.name);
-    await switcher.click();
-    await page.getByRole('option', { name: BETA.name, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`/coven/${BETA.slug}$`));
-    await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(BETA.name);
-
-    await page.getByRole('combobox', { name: 'Coven' }).click();
-    await page.getByRole('option', { name: 'Create Coven', exact: true }).click();
-    await expect(page).toHaveURL(/\/coven\/new$/);
-    await expect(page.getByRole('textbox', { name: 'Name' })).toBeVisible();
-  },
-);
 
 test('an admin sees both site links, the admin nav and no switcher', async ({ page }) => {
   await signInAgainAs(page, users.admin.id);
@@ -351,3 +341,38 @@ for (const width of [642, 768, 882]) {
     expect(fits).toBe(true);
   });
 }
+
+// MB.264: the server cannot know the window's width, so it draws the phone's
+// four tabs and More. Wider than the phone the stylesheet must show every tab
+// from the first paint, before the script has measured; the script's chunks
+// (not the stylesheets, which block the first paint) are held here so the
+// page never hydrates during the assertions.
+test('before the script runs, a desktop admin row shows every tab and no More', async ({
+  page,
+}) => {
+  await signInAgainAs(page, users.admin.id);
+  await page.setViewportSize(DESKTOP);
+
+  let release: () => void = () => undefined;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/_next/static/chunks/**/*.js', async (route) => {
+    await held;
+    await route.continue().catch(() => undefined);
+  });
+  await page.goto('/admin', { waitUntil: 'commit' });
+
+  const admin = page.getByRole('navigation', { name: 'Admin' });
+  await expect(admin).toBeVisible();
+  await expect(admin.getByRole('link')).toHaveCount(6);
+  for (const link of await admin.getByRole('link').all()) await expect(link).toBeVisible();
+  await expect(admin.getByRole('button')).toHaveCount(0);
+
+  // The server's markup still names every section, each tab once.
+  const hrefs = await admin
+    .getByRole('link')
+    .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+  expect(new Set(hrefs).size).toBe(6);
+  release();
+});

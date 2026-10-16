@@ -11,7 +11,7 @@ import type { users } from '../modules/identity/schema/users';
 // (CLAUDE.md rule 3).
 // See claude-docs/auth/service-session.md, "The service-level session, and the three errors".
 
-/** `'user' | 'admin'`, read off the column rather than restated (DESIGN.md §5). */
+/** `'user' | 'curator' | 'admin'`, read off the column rather than restated (DESIGN.md §5). */
 export type UserRole = (typeof users.$inferSelect)['role'];
 
 /**

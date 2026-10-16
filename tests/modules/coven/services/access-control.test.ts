@@ -26,11 +26,12 @@ const PERMITTED: Record<WorkspaceRole, Partial<Record<string, readonly string[]>
     spell: ['read', 'create', 'update', 'delete'],
     workspace: ['read'],
   },
+  // The roll, plus each member's address (M11.19), and the writes to it.
   owner: {
     ingredient: ['read', 'create', 'update', 'delete'],
     inventory: ['read', 'update'],
     spell: ['read', 'create', 'update', 'delete'],
-    member: ['read', 'invite', 'update', 'remove'],
+    member: ['read', 'readEmail', 'invite', 'update', 'remove'],
     workspace: ['read', 'update', 'delete'],
   },
 };

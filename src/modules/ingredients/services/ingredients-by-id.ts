@@ -1,0 +1,45 @@
+import 'server-only';
+import { findManyIngredients } from '../../../db/repository';
+import { inIdOrder } from '../../../lib/in-id-order';
+import type { Session } from '../../../lib/session';
+import { RowId } from '../../../lib/validation';
+import type { Membership } from '@/modules/coven';
+import { proofFor } from './ingredient-rows';
+import type { IngredientKey, IngredientRow } from '../types';
+
+/**
+ * Each ingredient named, one answer per ref in the order given: a DataLoader's
+ * batch. A ref is the row that holds the id (a stock row, a spell layer) and
+ * so names the coven it is read in; the ingredient is a compendium entry or
+ * that coven's own. Anything else is null, never an error: an id no live row
+ * holds, a soft-deleted row, a row of another coven than the ref's, and a
+ * coven's row when the caller holds no seat there, so an id learns nothing
+ * from the difference. One read whatever the batch size, plus one role lookup
+ * per coven named.
+ */
+export async function ingredientsOf(
+  session: Session,
+  refs: readonly IngredientKey[],
+): Promise<(IngredientRow | null)[]> {
+  const covens = [...new Set(refs.flatMap((ref) => ref.workspaceId ?? []))];
+  const proofs = await Promise.all(covens.map((workspaceId) => proofFor(session, workspaceId)));
+  const memberships = proofs.filter((proof): proof is Membership => proof !== undefined);
+
+  // An id is whatever a row carried, but one that is not a uuid would be a
+  // driver error rather than an ingredient nobody holds.
+  const ids = [...new Set(refs.map((ref) => ref.id).filter((id) => RowId.safeParse(id).success))];
+  const rows = await findManyIngredients(memberships, ids);
+
+  // The read is scoped to every coven the batch proves at once, so a ref
+  // claiming one coven could be answered with a row of another it also names:
+  // the row has to be the compendium's or the ref's own coven's.
+  return inIdOrder(
+    refs.map((ref) => ref.id),
+    rows,
+    () => null,
+  ).map((found, i) =>
+    found && (found.workspaceId === null || found.workspaceId === refs[i].workspaceId)
+      ? found
+      : null,
+  );
+}

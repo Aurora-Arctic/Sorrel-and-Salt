@@ -35,7 +35,7 @@ import type {
   SeedWorkspace,
 } from './types';
 
-// The `standard` scenario: five fixture users, workspaces W and X, and a
+// The `standard` scenario: six fixture users, workspaces W and X, and a
 // populated compendium. The cast is fixed, not generated, so `asUser(A)` is the
 // same person in every suite. The compendium is deliberately awkward — five
 // "Cat's Claw" rows, mineral varieties, `none` and `unknown` — because tidy
@@ -45,10 +45,11 @@ import type {
 
 /**
  * A owns W, B is a member of W, C a viewer in W, D a member of unrelated X, E a
- * site admin in no workspace. `canCreateWorkspace` follows the invite gate: A–D
- * earned it by membership, and E, never invited, holds it as an admin, since the
- * users CHECK requires it of every admin (MB.177). `…0003`–`…0007` continue the
- * bootstrap's series.
+ * site admin in no workspace, F a site curator in no workspace (M11.20).
+ * `canCreateWorkspace` follows the invite gate: A–D earned it by membership,
+ * and E and F, never invited, hold it by their roles, since the users CHECK
+ * requires it of every role but `user` (MB.177, M11.20). `…0003`–`…0008`
+ * continue the bootstrap's series.
  */
 export const FIXTURE_USERS = {
   A: {
@@ -86,7 +87,14 @@ export const FIXTURE_USERS = {
     role: 'admin',
     canCreateWorkspace: true,
   },
-} satisfies Record<'A' | 'B' | 'C' | 'D' | 'E', FixtureUser>;
+  F: {
+    id: '00000000-0000-0000-0000-000000000008',
+    name: 'Fixture F',
+    email: 'f@seed.sorrelandsalt.com',
+    role: 'curator',
+    canCreateWorkspace: true,
+  },
+} satisfies Record<'A' | 'B' | 'C' | 'D' | 'E' | 'F', FixtureUser>;
 
 /** W — the workspace A owns and B and C work in. */
 export const WORKSPACE_W_ID = '00000000-0000-0000-0001-000000000001';
@@ -105,8 +113,8 @@ const MEMBERSHIPS: SeedMembership[] = [
   { workspaceId: WORKSPACE_W_ID, userId: FIXTURE_USERS.B.id, role: 'member' },
   { workspaceId: WORKSPACE_W_ID, userId: FIXTURE_USERS.C.id, role: 'viewer' },
   { workspaceId: WORKSPACE_X_ID, userId: FIXTURE_USERS.D.id, role: 'member' },
-  // E is deliberately absent: "an admin has no access to any workspace" is
-  // only assertable against one in no workspace.
+  // E and F are deliberately absent: "an admin has no access to any
+  // workspace", and a curator none, is only assertable against one in none.
 ];
 
 /**
@@ -494,8 +502,8 @@ function pickOf(ids: Map<string, string>, name: string, what: string): string {
 // updates nothing already present.
 
 // The cast holds its privileges from its first insert, so the trigger on
-// `users` records them, by the seed's route, `bootstrap` (MB.195). A–D's
-// creation grants are stamped as the seed's own user, which inserts them. E
+// `users` records them, by the seed's route, `bootstrap` (MB.195). A–D's and
+// F's grants are stamped as the seed's own user, which inserts them. E
 // is inserted alone and as itself, so its two grants are stamped as E, as a
 // primary admin's promotion is stamped as that admin; its `users` row is
 // still the seed's, as every seeded row is.

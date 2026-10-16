@@ -1,15 +1,16 @@
 import type { z } from 'zod';
-import type { IngredientRow, ReferenceRow } from '../../db/repository';
+import type { IngredientRow, ReferenceRow, StockRow } from '../../db/repository';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
 import type { ReferenceInput } from './validation/reference';
+import type { StockInput } from './validation/stock';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from './validation/types';
 import type { ValidationIssue } from '../../lib/types';
 import type { CategoryRow, DeityRow } from '@/modules/vocabulary';
 
 // The repository's own, rather than a second `typeof …$inferSelect`.
-export type { IngredientRow, ReferenceRow };
+export type { IngredientRow, ReferenceRow, StockRow };
 
 // The vocabulary's own, which a category's loader answers with.
 export type { CategoryRow };
@@ -38,6 +39,17 @@ export type IngredientVariantRow = typeof ingredientVariants.$inferSelect &
  * ingredient, as `IngredientKey` says of an ingredient's.
  */
 export type VariantKey = Pick<IngredientVariantRow, 'id' | 'ingredientId' | 'workspaceId'>;
+
+/**
+ * An ingredient's stock as `Ingredient.stock`'s loader keys it (M9.4): the
+ * ingredient, and the coven whose jars of it are asked for. Unlike
+ * `IngredientKey`'s, `workspaceId` is the argument the caller named, never
+ * the row's own tier, and is always a coven: the compendium holds no stock.
+ */
+export interface StockKey {
+  ingredientId: string;
+  workspaceId: string;
+}
 
 /** One `ingredient_variants` row as the table holds it. */
 export type VariantRecord = typeof ingredientVariants.$inferSelect;
@@ -68,6 +80,7 @@ export interface PickedVariant {
   formId: string | null;
   description: string | null;
   safetyNotes: string | null;
+  toxic: boolean;
   elements: VariantRecord['elements'];
   celestialBodies: string[] | null;
   zodiacSigns: string[] | null;
@@ -164,6 +177,9 @@ export interface CitedReference {
 
 /** What the workspace service parses: the form's values, or the mutation's input. */
 export type IngredientValues = z.input<typeof LocalIngredientInput>;
+
+/** What the stock service parses: the row editor's values, or a mutation's input. */
+export type StockValues = z.input<typeof StockInput>;
 
 /** What the reference service parses: the form's values, or a mutation's input. */
 export type ReferenceValues = z.input<typeof ReferenceInput>;

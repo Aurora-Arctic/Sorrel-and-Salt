@@ -12,6 +12,7 @@ import {
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -22,13 +23,15 @@ import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
   ingredientColumns,
+  readPromotedFolkName,
   resolvePicks,
   softDeleteIngredient,
   splitChildren,
+  swapFolkName,
   writeChildren,
 } from './ingredient-rows';
 import { readersOf } from '@/modules/coven';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator } from '@/modules/identity';
 import {
   type CuratedField,
   curatedSpellings,
@@ -54,7 +57,7 @@ import type {
 
 // The compendium: the public surface (MB.80), so the list takes no session at
 // all and an entry answers anyone (claude-docs/db/compendium-read.md, "The compendium read");
-// its writes, which are the site admin's alone and reach no coven's rows
+// its writes, which are a curator's or an admin's alone and reach no coven's rows
 // (claude-docs/db/compendium-writes.md, "Compendium writes"); and its addresses, which follow an
 // entry's name and redirect from the old one for a window
 // (claude-docs/db/ingredient-slugs.md, "Ingredient slugs").
@@ -67,12 +70,13 @@ const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount
 /**
  * One page of the compendium under `filter`, best match first on a search,
  * each entry carrying its score. Parsed here because the browser is not the
- * only caller, and because a category id reaches a `uuid` comparison inside
+ * only caller, and because a category or deity id reaches a `uuid` comparison inside
  * the keyset query, whose one client text was the cursor: unchecked, a
  * malformed id would come back as "Invalid cursor". A query shorter than
  * `MIN_QUERY_LENGTH` is no search.
  *
- * @throws {ValidationError} a category id is not a uuid.
+ * @throws {ValidationError} a category or deity id is not a uuid, or the
+ * toxic setting is not one of `TOXIC_FILTERS`.
  */
 export async function listCompendium(
   filter: CompendiumFilterInput,
@@ -86,7 +90,8 @@ export async function listCompendium(
  * before `start` — a page's first row, none on an empty page. Parsed as
  * `listCompendium` parses, so it counts the rows that list's pages hold.
  *
- * @throws {ValidationError} a category id is not a uuid.
+ * @throws {ValidationError} a category or deity id is not a uuid, or the
+ * toxic setting is not one of `TOXIC_FILTERS`.
  */
 export async function countCompendium(
   filter: CompendiumFilterInput,
@@ -126,7 +131,7 @@ export async function getIngredient(
  * and the formal name, and the compendium's lapsed retirements are
  * cleared in the same write.
  *
- * @throws {Forbidden} the caller is not a site admin — checked before the
+ * @throws {Forbidden} the caller is neither a curator nor an admin — checked before the
  * input is read.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput` — a
  * missing `nomenclature` included — carries a form or deity not picked from a
@@ -139,7 +144,7 @@ export async function createCompendiumEntry(
   session: Session,
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
-  const admin = assertSiteAdmin(session);
+  const curator = assertCurator(session);
   const {
     fields: parsed,
     lists,
@@ -154,8 +159,8 @@ export async function createCompendiumEntry(
   await refuseEndingARedirect(slug, at, input.endRedirect);
 
   const written = await withAudit(session, async (write) => {
-    await write.deleteLapsedSlugRetirements(admin, at);
-    const [row] = await write.insertInCompendium(admin, ingredients, columns);
+    await write.deleteLapsedSlugRetirements(curator, at);
+    const [row] = await write.insertInCompendium(curator, ingredients, columns);
     await writeChildren(write, [], row.id, { ...lists, ...curated.children }, 'add');
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, undefined));
@@ -176,7 +181,7 @@ export async function createCompendiumEntry(
  * saving one entry at the same instant can retire the older slug rather
  * than the one the other just wrote.
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {ValidationError} the input breaks `CompendiumIngredientInput`,
  * carries a form or deity not picked from a curated row, a celestial body or sign no
  * curated row holds, collides with another entry, would end another entry's
@@ -190,7 +195,7 @@ export async function updateCompendiumEntry(
   id: string,
   input: CompendiumWrite,
 ): Promise<IngredientRow> {
-  const admin = assertSiteAdmin(session);
+  const curator = assertCurator(session);
   const {
     fields: parsed,
     lists,
@@ -211,11 +216,11 @@ export async function updateCompendiumEntry(
   if (moves) await refuseEndingARedirect(slug, at, input.endRedirect, id);
 
   const written = await withAudit(session, async (write) => {
-    await write.deleteLapsedSlugRetirements(admin, at);
-    const [row] = await write.updateByIdInCompendium(admin, ingredients, id, columns);
+    await write.deleteLapsedSlugRetirements(curator, at);
+    const [row] = await write.updateByIdInCompendium(curator, ingredients, id, columns);
     if (!row) throw new NotFound('No such compendium entry');
     if (moves) {
-      await write.insertInCompendium(admin, retiredIngredientSlugs, {
+      await write.insertInCompendium(curator, retiredIngredientSlugs, {
         ingredientId: id,
         slug: current.slug,
         retiredAt: at,
@@ -228,6 +233,60 @@ export async function updateCompendiumEntry(
       { ...lists, ...curated.children, heldDeities: held },
       'replace',
     );
+    return row;
+  }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
+  expireCompendium();
+  return written;
+}
+
+/**
+ * Swaps the display name of a compendium entry with one of its folk names, in
+ * one transaction, as `promoteWorkspaceFolkName` does for a coven's: the folk
+ * name becomes the display name and the old one a folk name, kept once
+ * whatever its case. The change is global — every coven sees the entry's new
+ * name. The slug follows the label, so when it moves the old one is retired and
+ * redirects for 180 days, as in `updateCompendiumEntry`; a slug another
+ * entry's redirect still runs from refuses the promotion, since this write
+ * has no way to confirm ending it.
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {ValidationError} the new display name collides with another entry,
+ * or its address is one another entry's redirect runs from.
+ * @throws {NotFound} no live compendium entry has this id — a coven's
+ * ingredient included — or it holds no such live folk name.
+ */
+export async function promoteCompendiumFolkName(
+  session: Session,
+  id: string,
+  folkNameId: string,
+): Promise<IngredientRow> {
+  const curator = assertCurator(session);
+  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  const current = await findOneIngredient([], id);
+  if (!current) throw new NotFound('No such compendium entry');
+  const { promoted, others } = await readPromotedFolkName([], id, folkNameId);
+
+  const fields = { name: promoted.name, canonicalName: current.canonicalName };
+  const slug = ingredientSlug(fields.name, fields.canonicalName);
+  const at = new Date();
+  const moves = slug !== current.slug;
+  if (moves) await refuseEndingARedirect(slug, at, undefined, id);
+
+  const written = await withAudit(session, async (write) => {
+    await write.deleteLapsedSlugRetirements(curator, at);
+    await swapFolkName(write, id, promoted.id, current.name, others);
+    const [row] = await write.updateByIdInCompendium(curator, ingredients, id, {
+      name: fields.name,
+      slug,
+    });
+    if (!row) throw new NotFound('No such compendium entry');
+    if (moves) {
+      await write.insertInCompendium(curator, retiredIngredientSlugs, {
+        ingredientId: id,
+        slug: current.slug,
+        retiredAt: at,
+      });
+    }
     return row;
   }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
   expireCompendium();
@@ -373,14 +432,14 @@ async function refuseEndingARedirect(
  * and category links stay, and a spell holding it still reaches it
  * (claude-docs/db/spell-visibility.md, "What a spell holds").
  *
- * @throws {Forbidden} the caller is not a site admin.
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
  * @throws {NotFound} no live compendium entry has this id — one already
  * deleted, a coven's ingredient, and an id that is not one included.
  */
 export async function deleteCompendiumEntry(session: Session, id: string): Promise<void> {
-  const admin = assertSiteAdmin(session);
+  const curator = assertCurator(session);
   await softDeleteIngredient(session, id, 'No such compendium entry', (write) =>
-    write.softDeleteByIdInCompendium(admin, ingredients, id),
+    write.softDeleteByIdInCompendium(curator, ingredients, id),
   );
   expireCompendium();
 }
@@ -403,7 +462,7 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
  */
 async function refuseCollision(
   error: unknown,
-  fields: IngredientFields,
+  fields: Pick<IngredientFields, 'name' | 'canonicalName'>,
   slug: string,
   id: string | undefined,
 ): Promise<never> {

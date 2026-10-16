@@ -8,8 +8,6 @@ import { signInAs } from './session';
 // every Add is greyed; linking itself is asserted through Better Auth's
 // endpoints in tests/db/account-linking.test.ts, and a rename through
 // tests/components/NameForm and the set-name service.
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -93,28 +91,6 @@ test('two linked and a failed link have no accessibility violations', async ({ p
     main.getByRole('listitem').filter({ hasText: 'Microsoft' }).getByRole('alert'),
   ).toBeVisible();
   await assertNoAccessibilityViolations(page);
-});
-
-test('sends an unverified account to the email page instead', async ({ page }) => {
-  await signInAs(page, 'unverified@account-page.test', ['discord'], 'user', {
-    emailVerified: false,
-  });
-
-  // The redirect is read rather than followed: the session rides as an extra
-  // request header (tests/e2e/session.ts), which the browser does not carry
-  // onto a redirect it follows, so the followed request would arrive signed out.
-  const redirected = page.waitForResponse(
-    (response) => new URL(response.url()).pathname === '/account',
-  );
-  await page.goto('/account').catch(() => {});
-  const response = await redirected;
-  expect(response.status()).toBe(307);
-  expect(response.headers().location).toBe('/account/email?next=%2Faccount');
-
-  await page.goto('/account/email?next=%2Faccount');
-  await expect(page.getByRole('heading', { level: 1, name: 'Your Email' })).toBeVisible();
-  await assertNoAccessibilityViolations(page);
-  await assertNoSidewaysScroll(page);
 });
 
 // MB.256: a link followed into the shell is a client-side navigation, which

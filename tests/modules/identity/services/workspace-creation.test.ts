@@ -10,7 +10,7 @@ import {
   resumeAdminRoleChanges,
   revokeWorkspaceCreation,
 } from '@/modules/identity';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { asManualFix, refusalOf } from '../../../support/db/privileges';
 import type { CreationChangeRow, CreationFlagRow } from './types';
@@ -232,6 +232,18 @@ describe('revokeWorkspaceCreation', () => {
 
     await expect(refusal).rejects.toThrow(Forbidden);
     expect(await flagOf(E.id)).toMatchObject({ can_create_workspace: true });
+    expect(await changes()).toEqual([]);
+  });
+
+  // The CHECK holds a curator to the flag as it holds an admin (M11.20).
+  it("refuses a curator's flag as Forbidden, before the CHECK would", async () => {
+    expect(await flagOf(F.id)).toMatchObject({ can_create_workspace: true });
+    expect(F.role).toBe('curator');
+
+    const refusal = revokeWorkspaceCreation(asUser(E), F.id);
+
+    await expect(refusal).rejects.toThrow(Forbidden);
+    expect(await flagOf(F.id)).toMatchObject({ can_create_workspace: true });
     expect(await changes()).toEqual([]);
   });
 

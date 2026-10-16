@@ -5,6 +5,7 @@ import ScopeAuthPlugin from '@pothos/plugin-scope-auth';
 import { DateTimeISOResolver, LocalDateResolver } from 'graphql-scalars';
 import { Forbidden } from '../lib/errors';
 import { pageSize } from '../lib/pagination';
+import { curates } from '../lib/site-roles';
 // For its side effect: `t.pagedConnection` on every field builder.
 import './pagination';
 import type { SchemaTypes } from './types';
@@ -56,6 +57,7 @@ export function createBuilder() {
       authScopes: ({ session }) => ({
         signedIn: session !== null,
         admin: session?.role === 'admin',
+        curator: session !== null && curates(session.role),
         self: (userId) => session?.userId === userId,
       }),
       // A service's own refusal type, so the transport maps one shape

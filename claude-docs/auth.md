@@ -78,7 +78,7 @@ Every page is protected unless `src/proxy.ts`'s `PUBLIC_ROUTES` lists it: the pr
 
 ## The admin guard (M5.4)
 
-`requireAdminSession()`, called by the `/admin` layout and every page under it, is `requireSession()` then `assertSiteAdmin()`, so a signed-out visitor goes to sign-in and a non-admin gets a styled 403 through Next's `forbidden()`, not a 404. [`auth/admin-guard.md`](auth/admin-guard.md)
+`requireAdminSession()`, called by every people page under `/admin`, is `requireSession()` then `assertSiteAdmin()`; `requireCuratorSession()`, called by the `/admin` layout and every curation page, is `requireSession()` then `assertCurator()`, which a curator or an admin passes (M11.20). A signed-out visitor goes to sign-in and anyone else refused gets a styled 403 through Next's `forbidden()`, not a 404. [`auth/admin-guard.md`](auth/admin-guard.md)
 
 ## The coven guard (M6.10)
 
@@ -108,9 +108,9 @@ In [`auth/admin-users.md`](auth/admin-users.md#the-user-modal-m919).
 
 In [`auth/admin-users.md`](auth/admin-users.md#approving-workspace-creation-m58).
 
-### Granting and revoking admin (MB.59)
+### Changing a site role (MB.59, M11.20)
 
-An admin grants or revokes admin from a user's row through `setUserRole`, declared `{ via: 'admin', note }` so the trigger on `users` records it; a grant sets `canCreateWorkspace` too, the primary admin named by `ADMIN_BOOTSTRAP_EMAIL` can never be revoked, a count under a `for update` lock refuses leaving no admin, and a revoke takes effect on the next request because the session cookie cache is off. Changing the primary admin is the variable and a redeploy, then the new address's qualifying sign-in or verification; any future user-deletion path must refuse the primary admin. In [`auth/admin-users.md`](auth/admin-users.md#granting-and-revoking-admin-mb59).
+An admin gives a user the role `user`, `curator` or `admin` from the user's row through `setUserRole`, declared `{ via: 'admin', note }` so the trigger on `users` records it; becoming a curator or an admin sets `canCreateWorkspace` too, the primary admin named by `ADMIN_BOOTSTRAP_EMAIL` can never be moved off admin, a count under a `for update` lock refuses leaving no admin, and a change takes effect on the next request because the session cookie cache is off. Changing the primary admin is the variable and a redeploy, then the new address's qualifying sign-in or verification; any future user-deletion path must refuse the primary admin. In [`auth/admin-users.md`](auth/admin-users.md#changing-a-site-role-mb59-m1120).
 
 ### Pausing admin changes (MB.63)
 

@@ -72,11 +72,11 @@ check-destructive-ddl:
 check-migration-order:
 	npm run check:migration-order
 
-## The pre-commit checks: lint, format:check, typecheck
+## The pre-commit checks on changed files: lint, format:check, typecheck
 pre-commit:
 	npm run pre-commit
 
-## The acceptance suite only, printed as a checklist of the v1 user stories
+## The story suite (Playwright flows under tests/e2e/stories/), printed as a checklist of the v1 user stories
 test-stories:
 	npm run test:stories
 

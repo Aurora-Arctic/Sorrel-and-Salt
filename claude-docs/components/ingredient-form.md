@@ -33,7 +33,7 @@ compendium page wrap it rather than containing their own form.
 
 The props are a union on `workspaceId` (`IngredientFormProps`, `types.ts`):
 a coven's id writes that coven's new ingredient, and `null` writes the
-compendium — a new entry, or the `entry` given. A coven's edit is M8.16's,
+compendium — a new entry, or the `entry` given. A coven's edit is M8.17's,
 so the union cannot say one yet.
 
 | Prop            | Meaning                                                                                                                                                                                                                                                                                 |
@@ -43,15 +43,15 @@ so the union cannot say one yet.
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
 | `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                         |
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                     |
-| `duplicateHref` | Where the duplicate warning links a near match. Left out, a coven's ingredient page, `/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                           |
+| `duplicateHref` | Where the duplicate warning links a near match. Left out, a coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                              |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                              |
 
 ## The fields
 
 Name, classification, formal name, folk names, description, element,
 celestial bodies, zodiac signs, colours, deities, substitute ingredients, categories,
-safety notes and references, then the variants, each a form with its own
-description, safety notes, elements, celestial bodies, zodiac signs, colours,
+safety notes, the toxic flag and references, then the variants, each a form with its own
+description, safety notes, toxic flag, elements, celestial bodies, zodiac signs, colours,
 categories, substitutes and references — every field `IngredientInput`
 takes (["The variants"](#the-variants)). The ingredient has no form of its
 own: its forms are its variants (MB.222).
@@ -59,7 +59,7 @@ own: its forms are its variants (MB.222).
 **The fields run in six titled sections** (MB.115, the owner's call, once
 the form read as one long column): Identity (name, classification, formal
 name, folk names), Details & Care (description, then safety notes; the
-owner's call, 2026-10-12), Correspondences (element, celestial bodies, zodiac
+owner's call, 2026-10-12; then the Toxic toggle, M11.21), Correspondences (element, celestial bodies, zodiac
 signs, colours, deities), Relations (categories, substitute ingredients),
 Sources (references) and Variants. The sections cut
 the order the fields already ran in, bar one move on the owner's call:
@@ -74,7 +74,8 @@ Description's and Safety Notes', since the heading names the section, not
 either field.
 **An open variant's fields run in the same sections** (MB.115, the owner's
 call), in the same order and under the same names as far as a form's fields
-go: Identity (its form), Details & Care (description, then safety notes),
+go: Identity (its form), Details & Care (description, safety notes, then its
+own Toxic toggle),
 Correspondences (element, celestial bodies,
 zodiac signs, colours), Relations (categories, substitute ingredients)
 and Sources (references). Their headings are `h4`s,
@@ -275,7 +276,8 @@ where the change is:
   ("Mercury · 2 colours"); categories are always counted; the forms are
   always named ("2 forms: Dried leaf, Whole root", an empty Form box as
   "Unnamed Form", as its card names it); Details & Care reads the
-  description's first words, then the safety notes', joined by a middle dot
+  description's first words, then the safety notes', then "Toxic" when the
+  flag is on, joined by a middle dot
   (`detailsLine`, `summaries.tsx`), cut by the line's ellipsis; Identity reads the name, the
   classification and the formal name in italics; Relations says both its
   lists once either has an entry ("1 category · No substitutes"); an empty
@@ -638,7 +640,14 @@ provides them, and its errors render through `FieldError`.
   cached searches are dropped so the new source is found next time.
 - **Enter in one of its fields saves the source**, not the ingredient, as
   Enter in a form of its own would. Cancel closes it, the box taking the
-  focus. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
+  focus.
+- **A × at its top closes it too** (MB.258), so a panel taller than the
+  dialog can be left without scrolling to its foot. It does exactly what
+  Cancel does, saving nothing and asking nothing, and is held with Cancel
+  while a save is in flight. It shares the note's line, at its right end,
+  and is named for the panel, "Close New Reference" or "Close Edit Source",
+  since the modal's own × is "Close". It comes before Kind in Tab order, as
+  it does on screen. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
   holds `referencePanelOpen: false`.
 - **Asked for again while open, it takes you back**, the owner's call:
   "New Reference…" scrolls the panel's top into view, its
@@ -693,7 +702,7 @@ the source, not the row's link to it, so it reaches every entry citing it.
   The cached searches are dropped, so the picker shows the new text; rows on
   other ingredients read it on their next load, which the page's refresh
   after the modal closes gives them.
-- **Cancel closes it without saving**, the focus back on the row's Edit
+- **Cancel, or the × at its top, closes it without saving**, the focus back on the row's Edit
   Source. The panel's edits live in its own form, never the ingredient's,
   so closing it discards only them and never asks the unsaved-changes
   question. New Reference while an edit is open, or Edit Source on another
@@ -757,7 +766,7 @@ as the ingredient's page shows its forms after it (MB.221).
   error, since the focus runs as that commit lands. Any other variant with
   an error stays closed, its card edged in the error red and its line saying
   it has an error to fix, read with its Edit.
-- **Its fields** are the variant's Form, Description, Safety Notes, Element, Celestial
+- **Its fields** are the variant's Form, Description, Safety Notes, Toxic, Element, Celestial
   Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
   References, in the ingredient's sections (["The fields"](#the-fields)), the ingredient's own field components at the variant's
   place in the values, `variants.1.celestialBodies`, so each validates, errs, focuses
@@ -834,7 +843,11 @@ A form often says much of what its ingredient says, so each of an open
 variant's fields but its Form has a **Copy From Ingredient** button
 (`copy.tsx`, MB.115, the owner's call): Description, Safety Notes, Element, Celestial
 Bodies, Zodiac Signs, Colours, Categories, Substitute Ingredients and
-References. The ingredient's own fields have none.
+References. The ingredient's own fields have none, and nor has a form's
+Toxic toggle: its flag is its own and never the ingredient's (M11.21).
+Each Toxic toggle carries a hint behind its info tip, as every other field
+does: the ingredient's is on when any part of it is poisonous, and a form's
+when that form is.
 
 - **Where it sits.** A small quiet button, `.btn--small.btn--quiet`, at the
   right end of the field's label row or legend, after its tip, through the
@@ -949,7 +962,7 @@ owner's call at MB.115), since it sets a question aside rather than acting. Each
 name, since the label alone can name five plants; one with no formal name
 shows its label. Each links where `duplicateHref` says — the admin's
 compendium page opens the match's own modal, `?edit=<slug>` — and by
-default to `/ingredients/[id]`, DESIGN.md §9's signed-in page, which
+default to `/coven/[slug]/ingredients/[id]`, DESIGN.md §9's coven page, which
 reaches compendium and coven entries alike. It opens in a new tab, so the
 form and what is typed in it stay where they are (the owner's call at
 MB.115's review), and its name ends "(opens in a new tab)" for a screen
@@ -1053,6 +1066,9 @@ becomes its text, and the boxes are left behind. A pick goes as its row's id
 - A substitute goes as `{ ingredientId }` when linked, with
   `substituteVariantId` when a form of it is chosen, and as `{ name }` when
   typed.
+- Each toxic flag goes as `toxic`, `true` or `false`: the ingredient's at the
+  top and each form's on its variant, neither ever read from the other
+  (M11.21; DESIGN.md §5, "The toxic flag is the one exception").
 - The categories go as `categoryIds`, their ids in the order picked, `[]`
   when none is, which an update needs to clear them (MB.126). A repeat is
   not refused: a chip is on or off, so the form cannot send one.
@@ -1085,7 +1101,7 @@ primary, a `.btn--solid`, and first, so it is the form's default: Enter in a
 field presses it. It saves and asks the page to open what it made, passing
 `'open'` to `onSaved`. The form navigates nowhere itself: the page that
 holds it does, M5.5's admin page and M8.16's modal, so the form never leads
-to a page that does not exist yet (`/ingredients/[id]` is M8.19's), and the
+to a page that does not exist yet (`/coven/[slug]/ingredients/[id]` is M8.19's), and the
 workshop needs no router. Its form is about to go, so it keeps its values.
 **Save & Add Another** is the secondary, a plain `.btn` beside it: it saves,
 passes `'another'`, and leaves the form blank for the next ingredient. Which
@@ -1417,7 +1433,7 @@ stand-in answers `IngredientSummary` for each invented ingredient, and
 summary open (MB.115). It also holds three sources, so its rows show each short form —
 a book with a locator, an article by two authors with one, and an
 authorless web page — and two forms,
-Dried leaf carrying a safety note, a celestial body, two categories, a source and
+Dried leaf carrying a safety note, its own toxic flag (the entry's is off), a celestial body, two categories, a source and
 two substitutes of its own, Fixturewort in its Whole root form and the name
 Hedge Mockroot, and Whole root carrying nothing, so both summary lines show;
 `CompendiumEntryVariantOpen` is the same entry with Dried leaf opened by its

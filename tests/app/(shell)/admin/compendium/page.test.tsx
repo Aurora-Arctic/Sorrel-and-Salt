@@ -18,8 +18,14 @@ import { sent } from '../../../../support/filter-form';
 // tests/lib/request-session.test.ts's, the compendium services' tests', and
 // tests/db/admin-compendium-entry-values.test.ts's.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+const requireCuratorSession = vi.fn();
+vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
+
+// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
+const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
+  rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
+);
+vi.mock('@/app/(shell)/admin/editors', () => ({ editorStamps }));
 
 const listCompendium = vi.fn();
 const countCompendium = vi.fn();
@@ -104,7 +110,7 @@ function lastFilter(): unknown {
 
 const NO_FILTER = {
   query: undefined,
-  form: undefined,
+  forms: undefined,
   nomenclature: undefined,
   withoutReferences: false,
 };
@@ -124,8 +130,8 @@ const curatedForm = (name: string, index: number) =>
   entry({ id: `form-${index}`, name, slug: name.toLowerCase().replace(/ /g, '-') });
 
 beforeEach(() => {
-  requireAdminSession.mockReset();
-  requireAdminSession.mockResolvedValue(ADMIN);
+  requireCuratorSession.mockReset();
+  requireCuratorSession.mockResolvedValue(ADMIN);
   listCompendium.mockReset();
   listCompendium.mockResolvedValue([entry(TESTWORT)]);
   countCompendium.mockReset();
@@ -150,10 +156,10 @@ beforeEach(() => {
 
 describe('the /admin/compendium page', () => {
   it('asks the admin guard, and reads nothing when it refuses', async () => {
-    requireAdminSession.mockRejectedValue(new Error('forbidden'));
+    requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
     await expect(renderPage()).rejects.toThrow('forbidden');
-    expect(requireAdminSession).toHaveBeenCalledOnce();
+    expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(listCompendium).not.toHaveBeenCalled();
     expect(countCompendium).not.toHaveBeenCalled();
   });
@@ -161,7 +167,7 @@ describe('the /admin/compendium page', () => {
   it('lists the first page of 25, each entry with its formal name and its forms, and no modal', async () => {
     await renderPage();
 
-    expect(requireAdminSession).toHaveBeenCalledOnce();
+    expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
     expect(lastFilter()).toEqual(NO_FILTER);
     // The page's forms, read in one batch for the entries it lists.
@@ -194,7 +200,7 @@ describe('the /admin/compendium page', () => {
 });
 
 describe('the /admin/compendium filter', () => {
-  it('reads ?query= and ?form= trimmed, a ?nomenclature= kind and ?withoutReferences=1 into the list and its count', async () => {
+  it('reads ?query= and ?form= trimmed, the form as a one-item list, a ?nomenclature= kind and ?withoutReferences=1 into the list and its count', async () => {
     await renderPage({
       query: '  test wort ',
       form: ' Fixture Oil ',
@@ -204,7 +210,7 @@ describe('the /admin/compendium filter', () => {
 
     expect(lastFilter()).toEqual({
       query: 'test wort',
-      form: 'Fixture Oil',
+      forms: ['Fixture Oil'],
       nomenclature: 'unknown',
       withoutReferences: true,
     });

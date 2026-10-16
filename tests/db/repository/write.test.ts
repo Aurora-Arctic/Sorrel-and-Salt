@@ -9,7 +9,7 @@ import {
 } from '@/db/repository';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
-import { assertSiteAdmin } from '@/modules/identity';
+import { assertCurator, assertSiteAdmin } from '@/modules/identity';
 import { namedWrites } from '@/db/table-marks';
 import { A, asUser } from '../../support/as-user';
 import {
@@ -413,7 +413,7 @@ describe('hard delete on a table with no delete columns (MB.34)', () => {
 
 // The compendium tier of a two-tier table, `workspace_id IS NULL`, reached
 // only under the site role's proof (claude-docs/db/site-admin-proof.md, "The SiteAdmin proof").
-describe('the compendium tier, under the SiteAdmin proof', () => {
+describe('the compendium tier, under the Curator proof', () => {
   const admin = assertSiteAdmin({ ...session, role: 'admin' });
   const workspaceId = '55555555-5555-5555-5555-555555555555';
   const DELETED_AT = new Date('2020-01-01T00:00:00Z');
@@ -449,6 +449,18 @@ describe('the compendium tier, under the SiteAdmin proof', () => {
       createdBy: session.userId,
       updatedBy: session.userId,
     });
+  });
+
+  // M11.20: a curator's proof is what the compendium tier asks for, and an
+  // admin's is one, so the tests above write under either.
+  it('inserts into the compendium under a curator’s proof', async () => {
+    const curator = assertCurator({ ...session, role: 'curator' });
+
+    const [row] = await withAudit(session, (write) =>
+      write.insertInCompendium(curator, tinctures, { name: 'Tincture of Testwort' }),
+    );
+
+    expect(row).toMatchObject({ workspaceId: null, createdBy: session.userId });
   });
 
   it('updates a compendium row by id, stamping updated_* only', async () => {
@@ -517,12 +529,19 @@ describe('the compendium tier, under the SiteAdmin proof', () => {
       write.insertInCompendium(admin, herbs, { name: 'Testwort' });
 
     const withoutTheProof = (write: AuditWriter) =>
-      // @ts-expect-error — a SiteAdmin is assertSiteAdmin's alone; an object literal is not one.
+      // @ts-expect-error — a Curator is assertCurator's alone; an object literal is not one.
       write.softDeleteByIdInCompendium({ userId: session.userId }, tinctures, workspaceId);
+
+    // The people page's writes stay the admin's: a curator's proof is refused there.
+    const curator = assertCurator({ ...session, role: 'curator' });
+    const aCuratorLocksAdmins = (write: AuditWriter) =>
+      // @ts-expect-error — lockLiveAdmins takes a SiteAdmin, and a Curator is not one.
+      write.lockLiveAdmins(curator);
 
     expect(intoAWorkspaceOnlyTable).toBeInstanceOf(Function);
     expect(intoAnUnscopedTable).toBeInstanceOf(Function);
     expect(withoutTheProof).toBeInstanceOf(Function);
+    expect(aCuratorLocksAdmins).toBeInstanceOf(Function);
   });
 });
 

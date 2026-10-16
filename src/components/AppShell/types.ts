@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import type { Route } from 'next';
-import type { ShellViewer } from '../../lib/types';
+import type { ShellViewer, ShellWorkspace } from '../../lib/types';
 
 export interface AppShellProps {
   viewer: ShellViewer;
+  /** The viewer's covens, in the switcher's order: the brand and Your Coven go into the first. */
+  workspaces: readonly ShellWorkspace[];
   children: ReactNode;
 }
 

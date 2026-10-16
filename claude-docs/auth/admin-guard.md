@@ -1,12 +1,17 @@
 ## The admin guard (M5.4)
 
-`/admin` answers three visitors three ways, all from the server:
+Since M11.20 `/admin` has two guards, one per kind of page. The curation pages
+(the compendium with its references, and the vocabularies) are open to a curator as
+well as an admin and are guarded by `requireCuratorSession()`, described in
+"The curator guard" below. The people pages (users, invitations and the privilege
+ledger) stay admin-only and are guarded by `requireAdminSession()`, which this
+section describes. Both answer in the same three ways, all from the server:
 
-| Visitor              | Answer                                                  | From                                    |
-| -------------------- | ------------------------------------------------------- | --------------------------------------- |
-| Signed out           | 307 to `/sign-in?next=<path and query>`                 | The proxy, then `requireSession()`      |
-| Signed in, not admin | **403**, the styled not-authorized page at the same URL | `requireAdminSession()`'s `forbidden()` |
-| Admin                | The layout: `AdminNav` above the page                   | `src/app/(shell)/admin/layout.tsx`      |
+| Visitor                                    | Answer                                                  | From                               |
+| ------------------------------------------ | ------------------------------------------------------- | ---------------------------------- |
+| Signed out                                 | 307 to `/sign-in?next=<path and query>`                 | The proxy, then `requireSession()` |
+| Signed in, not allowed on this page        | **403**, the styled not-authorized page at the same URL | The guard's `forbidden()`          |
+| Allowed (see the guard on the page's kind) | The layout: `AdminNav` above the page                   | `src/app/(shell)/admin/layout.tsx` |
 
 - **`requireAdminSession()`** (`src/lib/request-session.ts`) is
   `requireSession()` — so a signed-out visitor and an unverified account are
@@ -53,7 +58,7 @@
   server-render the refusal, and was turned down so that every error page
   works one way; it can still go in front of this guard later without
   changing it.
-- **The layout calls it, and so does every page under `/admin`.** A layout
+- **The layout calls its guard, and so does every page under `/admin`.** A layout
   does not re-run on client-side navigation, and it does not decide whether
   its child segments render — the router renders them (Next's authentication
   guide, "Layouts and auth checks").
@@ -88,3 +93,46 @@
   `tests/e2e/admin.spec.ts` asserts the 403 with no admin markup anywhere in
   the document, and the layout, against the built server; the signed-out
   redirect is `tests/e2e/route-protection.spec.ts`'s.
+
+## The curator guard (M11.20)
+
+A curator is a signed-in account whose site role is `curator`: it uses every
+curation screen an admin can and none of the people pages. The guard that lets
+it in is `requireCuratorSession()`, beside `requireAdminSession()` in
+`src/lib/request-session.ts`. It is `requireSession()` and then the identity
+module's `assertCurator()`, which passes a curator or an admin; the helper turns
+its `Forbidden` into Next's `forbidden()` and returns the `Session`, exactly as
+the admin guard does. A signed-out visitor and an unverified account are
+redirected first, as everywhere.
+
+| Page                                                                                      | Guard                     | A curator gets |
+| ----------------------------------------------------------------------------------------- | ------------------------- | -------------- |
+| `/admin` layout and index, the compendium, categories, forms, deities and astrology pages | `requireCuratorSession()` | The page       |
+| `/admin/users`, `/admin/invitations`, `/admin/privilege-changes` (the `(people)` group)   | `requireAdminSession()`   | **403**        |
+| The workshop (`assertWorkshopAccess`)                                                     | `assertSiteAdmin`         | Refused        |
+
+- **The layout cannot guard the people pages.** The admin layout runs
+  `requireCuratorSession()`, so it lets a curator through; each page in the
+  `(people)` group calls `requireAdminSession()` itself, which is why the rule
+  that every page calls its own guard matters here.
+- **The nav and the index hide People from a curator, and that is display
+  only.** `AdminNav` and the `/admin` index take `managesPeople`, which is true
+  for an admin; a curator's lists leave out the People section
+  ([`components/admin-nav.md`](../components/admin-nav.md)). A curator who types
+  `/admin/users` still gets the 403 from the page's guard.
+- **The services check again.** The curation services call `assertCurator` and
+  the people-page services `assertSiteAdmin`
+  ([`db/site-admin-proof.md`](../db/site-admin-proof.md), "The Curator proof"),
+  and GraphQL puts the `curator` scope on curation fields and keeps `admin` on
+  the people ones ([`graphql/schema.md`](../graphql/schema.md), "Auth scopes").
+- **A curator lands on `/admin` after signing in**, as an admin does
+  (`postSignInLanding` in `src/lib/sign-in.ts`), and the account menu's Admin
+  link and the brand link follow the viewer's `canCurate`, true for either role.
+- **Impersonation.** A curator can be impersonated like any non-admin, because
+  Better Auth's `adminRoles` stays `['admin']`; being a curator grants no
+  impersonation of anyone.
+- **Tests.** `tests/lib/request-session.test.ts` covers the curator, admin and
+  user answers; `tests/app/(shell)/admin/layout.test.tsx` the layout and index;
+  `tests/modules/identity/services/curator-boundary.test.ts` that a curator is
+  refused every people-page service; `tests/e2e/admin.spec.ts` the curator
+  against the built server.

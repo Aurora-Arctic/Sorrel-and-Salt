@@ -4,8 +4,7 @@
 [`act`](https://github.com/nektos/act) against a locally-built
 `Docker/Dockerfile.node` `testing` image (`act-image`). `.actrc` carries
 one `-P …=catthehacker/ubuntu:act-latest` line per `runs-on` label the
-workflows pin — `ubuntu-26.04` and `blacksmith-8vcpu-ubuntu-2404` — and
-`--pull=false`.
+workflows pin — `ubuntu-26.04` alone — and `--pull=false`.
 
 - **One target covers every `checks.yml` leg** (MB.32), where there was one per
   check workflow before the collapse: `make act-check` runs lint,

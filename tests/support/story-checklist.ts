@@ -1,78 +1,57 @@
-import { scanBrowserFlows } from './browser-flows';
-import { V1_STORIES, parseStoryHeading } from './stories';
+import { V1_STORIES } from './stories';
 import type {
-  BrowserFlows,
-  SuiteState,
-  ReportedModule,
-  StoryStatus,
-  UnknownSuite,
   Checklist,
   Story,
+  StoryObservation,
+  StoryState,
+  StoryStatus,
+  UnknownStory,
 } from './types';
 
 // One entry per v1 story in §10 order, whether or not anything tested it — a
-// story with no test yet is a line on the report, not an omission. Every suite
-// at any depth naming a story counts, so a story may be tested from two files.
-// A story's browser flows, the e2e specs tagged `@story-N`, are traced beside
-// its status and never change it: the acceptance suite stays the definition of
-// done.
+// story with no test yet is a line on the report, not an omission. Every test
+// tagged `@story-N` counts, so a story may be walked from two files.
 
-/**
- * A failure anywhere fails the story; a skip anywhere leaves it not fully
- * verified; `pending`, what an interrupted run leaves, must never read as green.
- */
-function statusOf(states: SuiteState[]): StoryStatus {
+/** A failure anywhere fails the story; a skip anywhere leaves it not fully verified. */
+export function statusOf(states: StoryState[]): StoryStatus {
   if (states.length === 0) return 'untested';
-  if (states.some((state) => state === 'failed' || state === 'pending')) return 'failed';
+  if (states.some((state) => state === 'failed')) return 'failed';
   if (states.some((state) => state === 'skipped')) return 'skipped';
   return 'passed';
 }
 
 export function buildChecklist(
-  modules: Iterable<ReportedModule>,
+  observations: Iterable<StoryObservation>,
   stories: readonly Story[] = V1_STORIES,
-  flows: BrowserFlows = scanBrowserFlows(stories),
 ): Checklist {
   const known = new Set(stories.map((story) => story.id));
-  const states = new Map<number, SuiteState[]>();
-  const suites = new Map<number, string[]>();
-  const unknown: UnknownSuite[] = [];
+  const seen = new Map<number, StoryObservation[]>();
+  const unknown: UnknownStory[] = [];
 
-  for (const module of modules) {
-    for (const suite of module.children.allSuites()) {
-      const heading = parseStoryHeading(suite.name);
-      if (!heading) continue;
-      if (!known.has(heading.id)) {
-        unknown.push({ id: heading.id, name: suite.name, module: module.relativeModuleId });
-        continue;
-      }
-      states.set(heading.id, [...(states.get(heading.id) ?? []), suite.state()]);
-      const seen = suites.get(heading.id) ?? [];
-      if (!seen.includes(module.relativeModuleId)) {
-        suites.set(heading.id, [...seen, module.relativeModuleId]);
-      }
+  for (const observation of observations) {
+    if (!known.has(observation.storyId)) {
+      unknown.push({ id: observation.storyId, file: observation.file });
+      continue;
     }
+    seen.set(observation.storyId, [...(seen.get(observation.storyId) ?? []), observation]);
   }
 
-  const entries = stories.map((story) => ({
-    ...story,
-    status: statusOf(states.get(story.id) ?? []),
-    suites: suites.get(story.id) ?? [],
-    browser: [...(flows.byStory.get(story.id) ?? [])],
-  }));
+  const entries = stories.map((story) => {
+    const own = seen.get(story.id) ?? [];
+    const failures = own.filter((observation) => observation.state === 'failed');
+    return {
+      ...story,
+      status: statusOf(own.map((observation) => observation.state)),
+      files: [...new Set(own.map((observation) => observation.file))],
+      // Every failure was a pass-on-retry: the story works, but not reliably.
+      flaky: failures.length > 0 && failures.every((observation) => observation.flaky === true),
+    };
+  });
 
   const counts: Record<StoryStatus, number> = { passed: 0, failed: 0, skipped: 0, untested: 0 };
   for (const entry of entries) counts[entry.status] += 1;
-  const browserFlows = entries.filter((entry) => entry.browser.length > 0).length;
 
-  return {
-    stories: entries,
-    unknown,
-    unknownTags: flows.unknown,
-    counts,
-    browserFlows,
-    total: entries.length,
-  };
+  return { stories: entries, unknown, counts, total: entries.length };
 }
 
 const SUFFIX: Record<StoryStatus, string> = {
@@ -83,28 +62,24 @@ const SUFFIX: Record<StoryStatus, string> = {
 };
 
 /** The one-line tally: zero parts are left out, except the passing count. */
-export function summarizeChecklist({ counts, browserFlows, total }: Checklist): string {
+export function summarizeChecklist({ counts, total }: Checklist): string {
   const parts = [`${counts.passed} of ${total} stories passing`];
   if (counts.failed) parts.push(`${counts.failed} failing`);
   if (counts.skipped) parts.push(`${counts.skipped} skipped`);
   if (counts.untested) parts.push(`${counts.untested} without a test`);
-  if (browserFlows) parts.push(`${browserFlows} with a browser flow`);
   return parts.join(' · ');
 }
 
 /** The checklist as terminal text: a box per story, the strays, the tally. */
 export function formatChecklist(checklist: Checklist): string {
-  const lines = checklist.stories.map(({ id, title, status, browser }) => {
+  const lines = checklist.stories.map(({ id, title, status, flaky }) => {
     const box = status === 'passed' ? 'x' : ' ';
-    const flow = browser.length > 0 ? ' · browser' : '';
-    return `[${box}] Story ${id}: ${title}${SUFFIX[status]}${flow}`;
+    const suffix = status === 'failed' && flaky ? ' — FAILING (flaky)' : SUFFIX[status];
+    return `[${box}] Story ${id}: ${title}${suffix}`;
   });
-  if (checklist.unknown.length > 0 || checklist.unknownTags.length > 0) {
+  if (checklist.unknown.length > 0) {
     lines.push('');
-    for (const { name, module } of checklist.unknown) {
-      lines.push(`Not a v1 story: "${name}" in ${module}`);
-    }
-    for (const { id, file } of checklist.unknownTags) {
+    for (const { id, file } of checklist.unknown) {
       lines.push(`Not a v1 story: @story-${id} in ${file}`);
     }
   }

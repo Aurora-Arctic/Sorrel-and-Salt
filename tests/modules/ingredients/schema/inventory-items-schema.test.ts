@@ -266,9 +266,7 @@ describe('inventory_items table', () => {
 
       for (const dimension of UNIT_DIMENSIONS) {
         for (const unit of UNITS_BY_DIMENSION[dimension]) {
-          const clause = definition
-            .split(' OR ')
-            .find((part) => part.includes(`'${unit}'::inventory_unit`));
+          const clause = definition.split(' OR ').find((part) => part.includes(`'${unit}'::text`));
 
           expect(clause).toContain(`'${dimension}'::unit_dimension`);
         }

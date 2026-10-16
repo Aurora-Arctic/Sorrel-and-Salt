@@ -10,11 +10,12 @@ import type { ingredientDeities } from '../../modules/ingredients/schema/ingredi
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
+import type { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
-import type { SiteAdmin } from '@/modules/identity';
+import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
@@ -40,7 +41,8 @@ export type Unscoped = { workspaceId?: never };
 
 // A scoped table whose `workspace_id` is nullable has a second tier, the
 // compendium, where it is null — `ingredients` and `retired_ingredient_slugs`.
-// Only such a table takes the compendium-tier writes, under a `SiteAdmin`.
+// Only such a table takes the compendium-tier writes, under a `Curator`
+// (which an admin's `SiteAdmin` is too, M11.20).
 export type TwoTier = { workspaceId: AnyPgColumn<{ notNull: false }> };
 
 // And once more for visibility (M10.3), so that a table goes through exactly
@@ -341,7 +343,7 @@ export interface AuditWriter {
    * `insertInWorkspace`, under its proof.
    */
   insertInCompendium<TTable extends PgTable & TwoTier & Generic>(
-    admin: SiteAdmin,
+    curator: Curator,
     table: TTable,
     values: WritableInWorkspace<TTable>,
   ): Promise<TTable['$inferSelect'][]>;
@@ -351,7 +353,7 @@ export interface AuditWriter {
    * written and nothing returned.
    */
   updateByIdInCompendium<TTable extends PgTable & TwoTier & Generic & Identified>(
-    admin: SiteAdmin,
+    curator: Curator,
     table: TTable,
     id: string,
     values: Partial<WritableInWorkspace<TTable>>,
@@ -360,7 +362,7 @@ export interface AuditWriter {
   softDeleteByIdInCompendium<
     TTable extends PgTable & TwoTier & SoftDeletable & Generic & Identified,
   >(
-    admin: SiteAdmin,
+    curator: Curator,
     table: TTable,
     id: string,
   ): Promise<TTable['$inferSelect'][]>;
@@ -371,7 +373,7 @@ export interface AuditWriter {
    * provisional-account delete is, because the table carries `deleted_at`.
    */
   deleteLapsedSlugRetirements(
-    admin: SiteAdmin,
+    curator: Curator,
     at: Date,
   ): Promise<(typeof retiredIngredientSlugs.$inferSelect)[]>;
   /**
@@ -384,7 +386,7 @@ export interface AuditWriter {
    * tables, since the vocabulary module that renames a form may not name them.
    */
   carryFormRename(
-    admin: SiteAdmin,
+    curator: Curator,
     formId: string,
     form: string,
   ): Promise<(typeof ingredientVariants.$inferSelect)[]>;
@@ -398,7 +400,7 @@ export interface AuditWriter {
    * `carryFormRename` is.
    */
   carryAstrologyRename(
-    admin: SiteAdmin,
+    curator: Curator,
     list: AstrologyList,
     from: string,
     to: string,
@@ -413,7 +415,7 @@ export interface AuditWriter {
    * tables, as `carryFormRename` is.
    */
   carryDeityRename(
-    admin: SiteAdmin,
+    curator: Curator,
     deityId: string,
     name: string,
   ): Promise<(typeof ingredientDeities.$inferSelect)[]>;
@@ -510,9 +512,9 @@ export interface AuditWriter {
     values: WorkspaceInvitationValues,
   ): Promise<InvitationRow[]>;
   /**
-   * Invite an address to become an admin, on the site tier, where the
-   * workspace and the role are both null (MB.69; MB.202). On the same terms
-   * otherwise.
+   * Invite an address to the site role it names, curator or admin, on the
+   * site tier, where the workspace and the coven role are both null (MB.69;
+   * MB.202; M11.20). On the same terms otherwise.
    */
   insertInvitation(admin: SiteAdmin, values: SiteInvitationValues): Promise<InvitationRow[]>;
   /**
@@ -594,8 +596,12 @@ export interface IngredientFilter {
   query?: string;
   /** Every one of these, not any: an entry must carry each id listed. */
   categoryIds?: readonly string[];
-  /** The form, trimmed and lower-cased on both sides. */
-  form?: string;
+  /**
+   * Any of these forms, not every one: an entry matches when one of its live
+   * variants has a form in the list, both sides trimmed and lower-cased
+   * (M11.22). Blank entries are skipped, and an empty list is no filter.
+   */
+  forms?: readonly string[];
   /**
    * The curated form one of an entry's live variants picked, by its `form_id`
    * (MB.167, MB.220): how a form's delete finds the entries holding it
@@ -603,19 +609,28 @@ export interface IngredientFilter {
    */
   formId?: string;
   /**
-   * A celestial body the entry's `celestialBodies` list holds, an entry at a time under the
-   * suggestions' fold (MB.162): how a celestial body's delete and rename find the
-   * entries holding it (MB.95). Blank means no filter.
+   * Any of these celestial bodies: an entry matches when its
+   * `celestialBodies` list holds one of them, compared under the
+   * suggestions' fold (MB.162). How a celestial body's delete and rename find
+   * the entries holding it (MB.95), with a one-item list. Blank entries are
+   * skipped, and an empty list is no filter (M11.22).
    */
-  celestialBody?: string;
-  /** A sign the entry's `zodiacSigns` list holds, as `celestialBody` reads the celestial bodies. */
-  zodiacSign?: string;
+  celestialBodies?: readonly string[];
+  /** Any of these signs, read from the entry's `zodiacSigns` as `celestialBodies` reads its list. */
+  zodiacSigns?: readonly string[];
   /**
-   * A curated deity the entry holds a live link to, by `ingredient_deities.deity_id`
-   * (MB.167): how a deity's delete finds the entries holding it (MB.132). A
-   * uuid; the caller checks one first.
+   * Any of these curated deities: an entry matches when it holds a live link
+   * to one of them, by `ingredient_deities.deity_id` (MB.167, M11.22). How a
+   * deity's delete finds the entries holding it (MB.132), with a one-item
+   * list. Uuids; the caller checks them first. An empty list is no filter.
    */
-  deityId?: string;
+  deityIds?: readonly string[];
+  /**
+   * `toxic`: the entry's own flag is on, or a live variant's is. `not_toxic`:
+   * neither is. A soft-deleted variant's flag counts for nothing either way.
+   * Absent means any (M11.22).
+   */
+  toxic?: 'toxic' | 'not_toxic';
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
@@ -730,6 +745,9 @@ export interface CitingLink {
 /** An `ingredients` row, compendium entry or coven's, as a finder returns it. */
 export type IngredientRow = typeof ingredients.$inferSelect;
 
+/** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
+export type StockRow = typeof inventoryItems.$inferSelect;
+
 /** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {
   entry: IngredientRow;
@@ -758,26 +776,35 @@ export interface ReceivedInvitationInviter {
   name: string;
 }
 
+/** A site role an invitation may grant: `curator` or `admin`, as the CHECK has it (M11.20). */
+export type InvitableSiteRole = Exclude<NonNullable<InvitationRow['siteRole']>, 'user'>;
+
 /**
- * A site-tier invitation, which grants admin: the workspace and the role both
- * null, as the `invitations_tier` CHECK makes them together (MB.201).
+ * A site-tier invitation, which grants the site role it names: the workspace
+ * and the coven role both null, as the `invitations_tier` CHECK makes them
+ * together (MB.201), and the site role set, as `invitations_site_role_tier`
+ * makes it (M11.20).
  */
-export type SiteInvitationRow = InvitationRow & { workspaceId: null; role: null };
+export type SiteInvitationRow = InvitationRow & {
+  workspaceId: null;
+  role: null;
+  siteRole: InvitableSiteRole;
+};
 
 /** A role an invitation may grant: every workspace role but `owner`, as the CHECK has it. */
 export type InvitableRole = Exclude<NonNullable<InvitationRow['role']>, 'owner'>;
 
-/** What a site-tier invitation starts with; the expiry defaults to seven days out. */
-export type SiteInvitationValues = Pick<
-  typeof invitations.$inferInsert,
-  'email' | 'expiresAt' | 'note'
-> & {
+/** What an invitation on either tier starts with; the expiry defaults to seven days out. */
+type InvitationValues = Pick<typeof invitations.$inferInsert, 'email' | 'expiresAt' | 'note'> & {
   /** The link's token, never stored: the writer stores its hash. */
   token: string;
 };
 
-/** What a workspace invitation starts with: the same, and the role it grants. */
-export type WorkspaceInvitationValues = SiteInvitationValues & { role: InvitableRole };
+/** What a site-tier invitation starts with: the same, and the site role it grants. */
+export type SiteInvitationValues = InvitationValues & { siteRole: InvitableSiteRole };
+
+/** What a workspace invitation starts with: the same, and the coven role it grants. */
+export type WorkspaceInvitationValues = InvitationValues & { role: InvitableRole };
 
 /** What the admin invitation list is narrowed by (MB.115). Each part is optional, and absent means no filter. */
 export interface SiteInvitationFilter {

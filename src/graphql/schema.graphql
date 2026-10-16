@@ -80,6 +80,11 @@ input CompendiumIngredientInput {
   substitutes: [SubstituteInput!]
 
   """
+  Whether the ingredient is toxic, off when left out; each form's flag is its own.
+  """
+  toxic: Boolean
+
+  """
   Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
   """
   variants: [IngredientVariantInput!]!
@@ -105,6 +110,9 @@ input CompendiumIngredientUpdateInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """Whether the ingredient is toxic; each form's flag is its own."""
+  toxic: Boolean!
 
   """
   Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
@@ -192,7 +200,15 @@ type Ingredient {
   references: [ReferenceLink!]!
   safetyNotes: String
   slug: String!
+
+  """
+  The coven's jars of this entry, one per form it holds; empty for an entry it holds unstocked.
+  """
+  stock(workspaceId: ID!): [InventoryItem!]!
   substitutes: [Substitute!]!
+
+  """Whether the ingredient is toxic. Each form carries its own flag."""
+  toxic: Boolean!
   variants: [IngredientVariant!]!
   zodiacSigns: [String!]
 }
@@ -270,6 +286,11 @@ input IngredientInput {
   substitutes: [SubstituteInput!]
 
   """
+  Whether the ingredient is toxic, off when left out; each form's flag is its own.
+  """
+  toxic: Boolean
+
+  """
   Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
   """
   variants: [IngredientVariantInput!]!
@@ -295,6 +316,9 @@ input IngredientUpdateInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """Whether the ingredient is toxic; each form's flag is its own."""
+  toxic: Boolean!
 
   """
   Its forms, each replacing the one it names; a form not listed is removed, and [] is none.
@@ -323,6 +347,9 @@ type IngredientVariant {
   references: [ReferenceLink!]!
   safetyNotes: String
   substitutes: [Substitute!]!
+
+  """Whether this form is toxic: its own flag, never its ingredient's."""
+  toxic: Boolean!
   zodiacSigns: [String!]
 }
 
@@ -348,12 +375,61 @@ input IngredientVariantInput {
   references: [ReferenceLinkInput!]!
   safetyNotes: String!
   substitutes: [SubstituteInput!]!
+
+  """
+  Whether this form is toxic: its own flag, whatever the ingredient's says.
+  """
+  toxic: Boolean!
   zodiacSigns: [String!]!
+}
+
+"""A coven's jar of one form of an ingredient."""
+type InventoryItem {
+  acquiredDate: LocalDate
+  audit: AuditInfo!
+  id: ID!
+  ingredient: Ingredient!
+  lowStockThreshold: Float
+
+  """Null is "held, unweighed"; 0 is out of stock."""
+  quantityOnHand: Float
+  source: String
+  unit: InventoryUnit
+
+  """The unit's, derived on write and never input."""
+  unitDimension: UnitDimension
+  variant: IngredientVariant!
+}
+
+enum InventoryUnit {
+  cup
+  drop
+  fl_oz_uk
+  fl_oz_us
+  g
+  kg
+  l
+  lb
+  mg
+  ml
+  oz
+  piece
+  pinch
+  tbsp
+  tsp
 }
 
 enum InvitableRole {
   member
   viewer
+}
+
+"""
+A site role an invitation may grant: never `user`, which every account holds.
+"""
+enum InvitableSiteRole {
+  admin
+  curator
 }
 
 """
@@ -378,6 +454,9 @@ type Invitation {
   """The role acceptance grants in the coven; none for an admin invitation."""
   role: InvitableRole
 
+  """The site role a site invitation grants; none on a coven invitation."""
+  siteRole: InvitableSiteRole
+
   """
   The coven invited into, where the caller is a member of it; none for an admin invitation.
   """
@@ -401,9 +480,14 @@ type Mutation {
   acceptInvitationById(id: ID!): Invitation!
 
   """
-  Invites an address to become an admin, mailing it the link; answers the invitation, never the link. Refused while admin changes are paused, but to the primary admin.
+  Starts the coven's jar of one form; a form it already holds is refused beside variantId.
   """
-  createAdminInvitation(email: String!, note: String): Invitation!
+  addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
+
+  """
+  Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.
+  """
+  createAdminInvitation(email: String!, note: String, siteRole: InvitableSiteRole!): Invitation!
   createCategory(input: CategoryInput!): Category!
   createCategoryGroup(input: CategoryGroupInput!): CategoryGroup!
   createCelestialBody(input: CelestialBodyInput!): CelestialBody!
@@ -478,6 +562,9 @@ type Mutation {
   """
   deleteIngredientFormValue(id: ID!): ID!
 
+  """A soft delete of the jar; the entry stays."""
+  deleteStock(id: ID!, workspaceId: ID!): ID!
+
   """
   Deletes a coven, which no member can reach afterwards. Owners only; nothing is destroyed, so it can be restored by hand.
   """
@@ -500,6 +587,11 @@ type Mutation {
   Pauses admin grants and revokes for every admin but the primary one; answers true, paused. The primary admin alone may.
   """
   pauseAdminRoleChanges: Boolean!
+
+  """
+  Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
+  """
+  promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
 
   """
   Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.
@@ -529,7 +621,7 @@ type Mutation {
   setName(name: String!): User!
 
   """
-  Makes a user an admin, or stops an admin being one, with an optional reason for the record. Refused for a role already held, for the primary admin, and for the last admin.
+  Gives a user a site role, user, curator or admin, with an optional reason for the record. Refused for a role already held, for moving the primary admin or the last admin off admin, and for a curator.
   """
   setUserRole(note: String, role: UserRole!, userId: ID!): User!
 
@@ -584,6 +676,9 @@ type Mutation {
 
   """Reaches every row citing it; nothing deletes a reference in v1."""
   updateReference(id: ID!, input: ReferenceInput!, workspaceId: ID): Reference!
+
+  """Changes a jar: a field left out keeps its value, and null clears it."""
+  updateStock(id: ID!, input: StockInput!, workspaceId: ID!): InventoryItem!
 
   """
   Replaces the sign; the slug follows the name. A rename is carried onto every live compendium entry listing it.
@@ -651,7 +746,37 @@ type Query {
   celestialBodies(after: String, before: String, first: Int, last: Int, query: String): QueryCelestialBodiesConnection!
   celestialBodySuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCelestialBodySuggestionsConnection!
   commonNameSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryCommonNameSuggestionsConnection!
-  compendium(after: String, before: String, categoryIds: [ID!], first: Int, form: String, last: Int, nomenclature: Nomenclature, query: String, withoutReferences: Boolean): QueryCompendiumConnection!
+  compendium(
+    after: String
+    before: String
+    categoryIds: [ID!]
+
+    """
+    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    """
+    celestialBodies: [String!]
+
+    """Keeps entries linked to any one of these curated deities, by id."""
+    deityIds: [ID!]
+    first: Int
+
+    """
+    Keeps entries with a live form named any one of these, ignoring case and outer spaces.
+    """
+    forms: [String!]
+    last: Int
+    nomenclature: Nomenclature
+    query: String
+
+    """
+    Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
+    """
+    toxic: ToxicFilter
+    withoutReferences: Boolean
+
+    """Keeps entries listing any one of these zodiac signs, ignoring case."""
+    zodiacSigns: [String!]
+  ): QueryCompendiumConnection!
 
   """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
@@ -675,7 +800,7 @@ type Query {
   The curated forms by name, each under a live group: those whose name holds `query`, case-insensitively, and those filed under `groupId`, when given.
   """
   ingredientFormValues(after: String, before: String, first: Int, groupId: ID, last: Int, query: String): QueryIngredientFormValuesConnection!
-  ingredientSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
+  ingredientSuggestions(after: String, before: String, first: Int, form: String, last: Int, query: String, workspaceId: ID!): QueryIngredientSuggestionsConnection!
   me: User!
   ok: Boolean!
   possibleDuplicates(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID): QueryPossibleDuplicatesConnection!
@@ -701,6 +826,36 @@ type Query {
   reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
+  workspaceIngredients(
+    after: String
+    before: String
+    categoryIds: [ID!]
+
+    """
+    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    """
+    celestialBodies: [String!]
+
+    """Keeps entries linked to any one of these curated deities, by id."""
+    deityIds: [ID!]
+    first: Int
+
+    """
+    Keeps entries with a live form named any one of these, ignoring case and outer spaces.
+    """
+    forms: [String!]
+    last: Int
+    query: String
+
+    """
+    Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
+    """
+    toxic: ToxicFilter
+    workspaceId: ID!
+
+    """Keeps entries listing any one of these zodiac signs, ignoring case."""
+    zodiacSigns: [String!]
+  ): QueryWorkspaceIngredientsConnection!
 
   """
   The curated zodiac signs by name: those whose name holds `query`, case-insensitively, when given.
@@ -914,6 +1069,16 @@ type QueryUsersConnectionEdge {
   node: User!
 }
 
+type QueryWorkspaceIngredientsConnection {
+  edges: [QueryWorkspaceIngredientsConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryWorkspaceIngredientsConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+}
+
 type QueryZodiacSignsConnection {
   """
   How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
@@ -1019,6 +1184,16 @@ input ReferenceLinkInput {
   referenceId: ID!
 }
 
+input StockInput {
+  acquiredDate: LocalDate
+
+  """A missing threshold takes the unit dimension's default on add."""
+  lowStockThreshold: Float
+  quantityOnHand: Float
+  source: String
+  unit: InventoryUnit
+}
+
 """
 Another ingredient to use in its place: a link to one, or the name of one not entered.
 """
@@ -1057,6 +1232,22 @@ type SuggestionClaimant {
   name: String!
 }
 
+"""
+Which entries a search keeps by toxicity: any (no filter); toxic, flagged on the entry or on any live form; or not_toxic, flagged on neither.
+"""
+enum ToxicFilter {
+  any
+  not_toxic
+  toxic
+}
+
+"""What a unit measures; conversion stays inside one."""
+enum UnitDimension {
+  count
+  volume
+  weight
+}
+
 type User {
   audit: AuditInfo!
   canCreateWorkspace: Boolean!
@@ -1073,15 +1264,17 @@ type User {
 }
 
 """
-A privilege on `users`: `admin` is the site role, `create_workspace` the flag.
+A privilege on `users`: `admin` and `curator` are site roles, `create_workspace` the flag.
 """
 enum UserPrivilege {
   admin
   create_workspace
+  curator
 }
 
 enum UserRole {
   admin
+  curator
   user
 }
 
@@ -1099,6 +1292,11 @@ type Workspace {
 
 type WorkspaceMember {
   audit: AuditInfo!
+
+  """
+  The member's address, as their own account holds it now. Owners only; null for someone the coven no longer seats.
+  """
+  email: String
   invitedBy: CoMember
   joinedAt: DateTime!
   role: WorkspaceRole!

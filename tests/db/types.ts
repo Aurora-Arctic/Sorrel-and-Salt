@@ -44,7 +44,7 @@ export type Governed =
   | 'deities'
   | 'deity traditions'
   | 'workspace creation'
-  | 'admin role';
+  | 'site role';
 
 /**
  * A `Mutation` field only a site admin's scope admits. `probe` stands in for

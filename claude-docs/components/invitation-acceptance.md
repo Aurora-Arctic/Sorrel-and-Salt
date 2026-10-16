@@ -18,9 +18,10 @@ and sends the accept. The rules it shows are
   page with the link as its `next`, offered as **Confirm Your Email**. No
   message names a workspace.
 - **`acceptable`** — what the invitation grants, by tier, and **Accept
-  Invitation**. The click sends `acceptInvitation`, which checks everything
+  Invitation**. A site invitation names its role, `siteRole`, curator or
+  admin (M11.20). The click sends `acceptInvitation`, which checks everything
   again and decides; the button stays busy, with a spinner, until
-  `router.push` reaches `landing` (`/admin` for an admin invitation,
+  `router.push` reaches `landing` (`/admin` for a site invitation,
   `/coven/[slug]` for a coven's, the slug coming from the standing; the
   sentence names the coven, `covenName`, which only this state carries: the
   standing reaches it after the address checks, so no refusal can say it). A
@@ -68,7 +69,7 @@ buttons and the spinner are the primitives', Accept drawn through
 `Pages / Invitation Acceptance`, each inside the page's own
 `main.page-frame.page-frame--narrow`, so the workshop shows what the page shows. Render-only.
 
-- **The states:** `SignedOut`, `Acceptable`, `AcceptableCoven`, `Unverified`, and one for each other
+- **The states:** `SignedOut`, `Acceptable`, `AcceptableCurator`, `AcceptableCoven`, `Unverified`, and one for each other
   refusal: `Invalid`, `Accepted`, `Revoked`, `Expired`, `Declined`, `DeletedCoven`,
   `DifferentAddress` and `Paused`. The refusal sentences are copied from the service's `MESSAGES`,
   as a story cannot import a server-only module.
@@ -80,7 +81,7 @@ buttons and the spinner are the primitives', Accept drawn through
 
 `tests/components/InvitationAcceptance/index.test.tsx` renders each state,
 sends the accept against MSW with the token as its variable and checks the
-landing, and shows a refusal. `tests/e2e/invite.spec.ts` follows a mailed
+landing, names the role a site invitation grants, and shows a refusal. `tests/e2e/invite.spec.ts` follows a mailed
 link signed out and signed in against the built server, with axe.
 `tests/e2e/workspace-invitation.spec.ts` walks a coven's invitation (M7.7):
 the owner invites by mail, the invited account accepts and lands in the

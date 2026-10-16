@@ -68,3 +68,11 @@ admin holds it:
   admin") sets `can_create_workspace` with `role`, or the CHECK refuses it.
 - **Test rows that insert an admin set the flag**, through the raw client as
   every setup row is.
+
+**Superseded in part by M11.20 (2026-10-16):** the CHECK now covers curators
+too. Its migration replaced `users_admin_can_create_workspace` with
+`users_privileged_can_create_workspace`, `role = 'user' or can_create_workspace`,
+so every admin and every curator holds the flag and the gate still reads the
+flag alone. The reasoning above stands for both roles; what changed is the
+name the CHECK uses, `user` in place of `admin`
+([`m11.20-curator-role.md`](m11.20-curator-role.md)).
