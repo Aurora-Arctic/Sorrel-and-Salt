@@ -58,6 +58,8 @@ export const CategoryGroups: Story = () => (
         ...group,
         id: slug,
         slug,
+        updatedBy: 'Fixture Editor',
+        updatedAt: new Date('2026-05-06T10:00:00Z'),
         editHref: groupsHref('category', {}, { edit: slug }),
         editHeading: { eyebrow: 'Edit Category Group', title: group.name },
       };
@@ -90,6 +92,8 @@ export const FormGroups: Story = () => (
         name,
         slug,
         description: 'An invented group, for the workshop.',
+        updatedBy: 'Fixture Editor',
+        updatedAt: new Date('2026-05-06T10:00:00Z'),
         editHref: groupsHref('form', {}, { edit: slug }),
         editHeading: { eyebrow: 'Edit Form Group', title: name },
       };
@@ -108,6 +112,8 @@ const traditions = (names: readonly string[], query = '') =>
       name,
       slug,
       description: 'An invented tradition, for the workshop.',
+      updatedBy: 'Fixture Editor',
+      updatedAt: new Date('2026-05-06T10:00:00Z'),
       editHref: groupsHref('tradition', { query }, { edit: slug }),
       editHeading: { eyebrow: 'Edit Tradition', title: name },
     };

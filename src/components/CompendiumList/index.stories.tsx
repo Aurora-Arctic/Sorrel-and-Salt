@@ -62,6 +62,8 @@ const entry = (
     nomenclature,
     canonicalName,
     forms,
+    updatedBy: 'Fixture Editor',
+    updatedAt: new Date('2026-05-06T10:00:00Z'),
     editHref: compendiumHref({}, { edit: slug }),
     editHeading: { eyebrow: 'Edit Ingredient', title: name, qualifier: canonicalName ?? undefined },
   };

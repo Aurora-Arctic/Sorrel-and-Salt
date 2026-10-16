@@ -48,3 +48,13 @@ export interface GroupChipProps {
   /** The group's chip pair; without both, the name is drawn plain. */
   colors?: Partial<GroupColors>;
 }
+
+/**
+ * Who last changed a row and when, as the Updated column shows it. Both are
+ * null together where the editor's name is withheld.
+ */
+export interface UpdatedStamp {
+  /** The editor's display name. */
+  updatedBy: string | null;
+  updatedAt: Date | null;
+}

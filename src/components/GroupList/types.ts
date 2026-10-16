@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import type { ModalHeading } from '../Modal/types';
 import type { GroupColors, PagePosition, PagerHrefs } from '../../lib/types';
+import type { UpdatedStamp } from '../DataTable/types';
 import type { GroupKind } from '../GroupForm/types';
 
 /**
@@ -8,7 +9,7 @@ import type { GroupKind } from '../GroupForm/types';
  * category group with its chip pair, which its name is drawn in, a form
  * group or a tradition with none.
  */
-export interface GroupListEntry extends Partial<GroupColors> {
+export interface GroupListEntry extends Partial<GroupColors>, UpdatedStamp {
   id: string;
   name: string;
   slug: string;
