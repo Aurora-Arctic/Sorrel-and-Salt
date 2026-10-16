@@ -189,7 +189,7 @@ while the table was empty.
 ### The stock service
 
 `src/modules/ingredients/services/stock.ts` (M9.3) is how anything reads or
-writes a coven's stock. It has four functions, each taking the coven's id and
+writes a coven's stock. It has five functions, each taking the coven's id and
 checking membership first:
 
 | Function                                              | Checks              | What it does                                                      |
@@ -198,6 +198,7 @@ checking membership first:
 | `updateStock(session, workspaceId, id, input)`        | `inventory: update` | Changes a jar: a field left out keeps its value, `null` clears it |
 | `deleteStock(session, workspaceId, id)`               | `inventory: update` | Soft-deletes a jar: marks it deleted, leaving the row in place    |
 | `getStock(session, workspaceId, id)`                  | `inventory: read`   | One jar, for any member of the coven, viewers included            |
+| `stockOf(session, refs)`                              | `inventory: read`   | The jars of many ingredients at once, for `Ingredient.stock`      |
 
 The permission is the `inventory` statement in
 `src/modules/coven/services/access-control.ts`: viewers hold `read`, members
@@ -212,8 +213,11 @@ stock.
   compendium or this coven. A deleted ingredient's jar is then in no read, and
   an update or delete of it answers `NotFound`. The writes read the jar first
   for this reason: the writer's by-id methods see the jar's own tombstone, not
-  its ingredient's. `findStockOfIngredients` is the batch read M9.4's
-  `Ingredient.stock` loader calls.
+  its ingredient's. `findStockOfIngredients` is the batch read behind
+  `stockOf`, which M9.4's `Ingredient.stock` loader calls. `stockOf` takes
+  each ingredient with the coven it was asked about, checks each coven once and
+  reads each coven's jars in one call, so a coven the caller is not in refuses
+  its own entries and no others.
 - **The form must be one the coven may read.** `createStock` looks the variant up
   with `findReadableVariant` under the coven's proof, so another coven's form,
   a deleted form, or a form of a deleted ingredient is `NotFound`. The
@@ -238,3 +242,37 @@ stock.
   volume: 10 g is 0.01 in kilograms and 15 ml is 3 in teaspoons. A threshold the
   input states, `0` included, is kept. A jar with no unit gets none, and
   `updateStock` never applies the default.
+
+### The workspace ingredient list
+
+`listWorkspaceIngredients(session, workspaceId, filter, page)`
+(`src/modules/ingredients/services/workspace-ingredient-list.ts`, M9.4) is
+the list on the coven's Ingredients page. It checks `ingredient: read`, so any
+member of the coven, viewers included, may read it, and answers one page from
+`findWorkspaceIngredientPage` in `src/db/repository/ingredients.ts`.
+
+A coven's ingredients are two kinds of row, in one query:
+
+- **The coven's own entries**, live.
+- **The compendium entries it holds a jar of.** The jar must be live and of a
+  live form; a deleted jar, or a jar of a deleted form, does not put its entry
+  in the list. An entry is listed once however many of its forms the coven
+  holds. Another coven's jar of a compendium entry never puts it here.
+
+Both kinds pass `notHiddenByLocal`, the same anti-join `ingredientSuggestions`
+uses: a compendium entry the coven has its own version of (same formal name, or
+the same label when the local entry declares no formal name) is left out, and
+the local entry shows in its place.
+
+The search, category and form filters are the compendium's own, from
+`compendiumList`, so the list matches, ranks and pages exactly as the
+compendium does. They run under the coven's proof rather than the compendium
+tier, so a filter never reaches another coven's rows.
+
+**A jar a local entry hides stays where it is.** If a coven holds a jar of a
+compendium entry and later adds its own version of that entry, the compendium
+entry leaves the list and its jar reaches no read, since `Ingredient.stock` is
+asked about the local entry. Nothing moves the jar to the local entry or
+deletes it: either would change the coven's stock behind the member's back.
+The jar comes back if the local entry is deleted, or relabelled so it no longer
+matches.

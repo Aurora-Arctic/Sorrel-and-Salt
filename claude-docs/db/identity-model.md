@@ -438,8 +438,9 @@ column is null, so a CHECK closes the gap wherever the ingredient may be null.
 - `reference_links.ingredient_variant_id`, one entry in the `SOURCED` registry
   ([References](references.md)).
 
-Nothing writes `variant_id` on stock yet (M9.4), nor on layers but the demo
-seed and the test fixtures (the grimoire tasks); MB.219 writes a form's
+The stock service writes `variant_id` on stock (M9.3, over the wire M9.4);
+nothing writes it on layers but the demo seed and the test fixtures (the
+grimoire tasks); MB.219 writes a form's
 categories, substitutes and references. `tests/db/migrations/0063-variant-children.test.ts`
 re-runs the fill and the guard, and retires once `0063` is in production's
 journal (claude-docs/testing/layer-ownership.md, "What a test may assert",

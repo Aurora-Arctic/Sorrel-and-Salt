@@ -44,3 +44,13 @@ export const CompendiumFilter = z.object({
 
 export type CompendiumFilterInput = z.input<typeof CompendiumFilter>;
 export type CompendiumFilter = z.output<typeof CompendiumFilter>;
+
+// The coven's ingredient list takes the compendium's search, category and form
+// arms and nothing else (M9.4), so it parses them exactly as the compendium does.
+export const WorkspaceIngredientFilter = CompendiumFilter.pick({
+  query: true,
+  categoryIds: true,
+  form: true,
+});
+
+export type WorkspaceIngredientFilterInput = z.input<typeof WorkspaceIngredientFilter>;

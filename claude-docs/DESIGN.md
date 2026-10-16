@@ -868,7 +868,7 @@ type Mutation {
   createReference(workspaceId: ID, input: ReferenceInput!): Reference! # a null workspaceId writes the compendium tier, under the admin proof (§5)
   updateReference(workspaceId: ID, id: ID!, input: ReferenceInput!): Reference! # reaches every row linking it; nothing deletes one in v1
   addIngredientToWorkspace(workspaceId: ID!, variantId: ID!, input: StockInput!): InventoryItem! # stock is of one form (MB.215); refused beside variantId when the coven holds that form already (M9.3)
-  updateStock(workspaceId: ID!, id: ID!, input: StockInput!): InventoryItem! # replaces the jar's fields (M9.4)
+  updateStock(workspaceId: ID!, id: ID!, input: StockInput!): InventoryItem! # a field left out keeps its value, null clears it (M9.3)
   deleteStock(workspaceId: ID!, id: ID!): ID! # a soft delete of the jar; the entry stays (M9.4)
   createSpell(workspaceId: ID!, input: SpellInput!): Spell!
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace only
