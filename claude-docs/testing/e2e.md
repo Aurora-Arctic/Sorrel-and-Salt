@@ -393,3 +393,89 @@ invisible to `ps`. So a run from a session is
 `npm run e2e:audit` takes the lock itself, and the path is fixed so that
 every session takes the same one. Vitest's `db` project does the same on
 `/tmp/sorrel-vitest.lock`, for the same reason.
+
+### Where a run's time goes (M11.18)
+
+The gate suite, `npm run e2e`, measured in the devcontainer on 16 October
+2026: 12 cores, 32 GB, the browser on the `playwright-server` service, 62
+tests on 6 workers, from a checkout of `staging` at 2e6be8ba, with no other
+test run on the machine (the lock was held for the whole series). A run's
+wall time is the time its tests need only when every worker stays busy; this
+one takes the time its longest file needs, because that file is serial.
+
+| Measure, median of three runs                              | Cold: the run starts the servers | Warm: the servers are already up |
+| ---------------------------------------------------------- | -------------------------------- | -------------------------------- |
+| Wall time                                                  | 34.4 s (36.3, 34.4, 33.7)        | 27.3 s (29.5, 27.3, 26.4)        |
+| Sum of every test's duration                               | 74 s                             | 73 s                             |
+| That work spread evenly over 6 workers                     | 12.4 s                           | 12.2 s                           |
+| Longest file, `shell.spec.ts` (17 tests, serial, 1 worker) | 18.4 s                           | 18.4 s                           |
+| `next build` with its cache and eight `next start`s        | about 10 s                       | 0 s                              |
+
+"Cold" is the ordinary run: slot 0's `webServer` entry builds, every entry
+starts, and the readiness polls pass. The build and the eight servers came
+to 10.6 s when started by hand over the cached `.next-e2e`; a first run in a
+fresh checkout, with no cache to build from, took 82 s. "Warm" attaches to
+servers left running, which `reuseExistingServer: !CI` allows and nothing in
+the repo yet provides (the plan's lever 5). The warm run's 27 s is 18 s of
+`shell.spec.ts` on one worker, with the other five idle behind it, and
+about 9 s of startup and teardown: the template seed (1.4 s) and its
+eight clones (0.9 s together), Playwright's own start and the worker
+processes, and the coverage report at teardown.
+
+What the rest of the suite costs, warm, per file: `admin-compendium.spec.ts`
+11.4 s over 5 tests, `account.spec.ts` 10.6 s over 5, `workspace-invitation.spec.ts`
+8.1 s over 4, `admin.spec.ts` 7.4 s over 5, and the other eight files 18 s
+together. The longest single test is 3.5 s (`account.spec.ts`'s four-section
+scan), so once no file is pinned to a worker, no run can be shorter than
+startup plus about 4 s, and the even spread above is the floor to aim at.
+
+Three settings were each turned off for one warm run, to see what every
+test pays for them:
+
+| Change, one warm run each                           | Wall time | Sum of test durations |
+| --------------------------------------------------- | --------- | --------------------- |
+| None (the warm median above)                        | 27.3 s    | 73 s                  |
+| `video: 'off'`                                      | 25.2 s    | 67 s                  |
+| No JS coverage (the `coverageAutoFixture` skipped)  | 23.4 s    | 65 s                  |
+| Both                                                | 19.4 s    | 54 s                  |
+| `E2E_WORKERS=12`, servers up, everything else as is | 29.8 s    | 104 s                 |
+
+Recording a video of every test and collecting JS coverage after every test
+cost about a quarter of the summed test time between them, and the video is
+encoded on the browser server, which shares these cores. Twelve workers
+bought nothing while one serial file sets the span: every test ran slower
+under the extra servers' load, and the critical path is unchanged. CI's side of this is
+[`ci/runner-budget.md`](../ci/runner-budget.md), "Where a gate run's time
+goes". The levers that shorten the run, one PR each and in order, are the
+task's plan,
+[`design-decisions/m11.18-plan.md`](../design-decisions/m11.18-plan.md).
+
+**Measuring it again.** Take the lock first and time the run inside it, so
+another session's run waits rather than inflating the figure; then read the
+per-file sums off the HTML report's embedded JSON (every number above came
+from it) with `fflate`, already in `node_modules` as a dependency of the Vitest UI. Three runs, the
+median, and say whether the servers were already up.
+
+```sh
+cd /app  # or the worktree
+(
+  flock 9
+  time env ENABLE_IMPERSONATION= BETTER_AUTH_SECRET="$(grep -m1 '^BETTER_AUTH_SECRET=' .env.local | cut -d= -f2-)" npx playwright test
+) 9>/tmp/sorrel-e2e.lock
+
+node -e '
+const fs = require("fs"); const { unzipSync, strFromU8 } = require("fflate");
+const html = fs.readFileSync(".reports/playwright-report/index.html", "utf8");
+const b64 = html.match(/id="playwrightReportBase64"[^>]*>data:application\/zip;base64,([^<]+)</)[1];
+const rep = JSON.parse(strFromU8(unzipSync(Buffer.from(b64, "base64"))["report.json"]));
+console.log("wall ms", rep.duration, "tests", rep.stats.total);
+for (const f of rep.files.map((f) => [f.fileName, f.tests.length, f.tests.reduce((a, t) => a + t.duration, 0)]).sort((a, b) => b[2] - a[2])) console.log(f.join("\t"));'
+```
+
+The story suite (`npm run test:stories`) is the same shape, further along:
+one cold run the same day took 99 s for 50 stories (15 more are `fixme`),
+233 s of test work whose even spread on 6 workers would be 39 s, with
+`07-admin.spec.ts` 78 s on one worker and `08-email-and-admin.spec.ts` 60 s
+on another. It writes no HTML report locally, so its per-file sums are read
+from the list reporter's `(2.6s)` suffixes instead; CI's figures for it are
+the runner budget's `stories` row.
