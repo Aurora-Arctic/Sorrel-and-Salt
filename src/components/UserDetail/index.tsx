@@ -75,15 +75,15 @@ const UserDetail = ({
           <dt>Role</dt>
           <dd className="user-detail__value">
             <span className="user-detail__role">
-              {user.role === 'admin' ? (
+              {user.role !== 'user' ? (
                 <strong>{roleLabel(user.role)}</strong>
               ) : (
                 roleLabel(user.role)
               )}
               {user.primaryAdmin && <PrimaryAdminMark />}
             </span>
-            {/* Keyed by the action, as on the row: the refresh after a change
-                mounts a fresh control for the other one. */}
+            {/* Keyed by the role, as on the row: the refresh after a change
+                mounts a fresh control offering the others. */}
             <RoleControl
               key={user.role}
               userId={user.id}
@@ -91,7 +91,7 @@ const UserDetail = ({
               emailVerified={user.emailVerified}
               primaryAdmin={user.primaryAdmin}
               paused={changesPaused}
-              action={user.role === 'admin' ? 'revoke' : 'grant'}
+              role={user.role}
               inModal
             />
           </dd>
@@ -102,8 +102,9 @@ const UserDetail = ({
             <Answer value={user.canCreateWorkspace}>
               {user.canCreateWorkspace ? 'Yes' : 'No'}
             </Answer>
-            {/* None for an admin, whom the users CHECK holds to the flag (MB.177). */}
-            {user.role !== 'admin' && (
+            {/* None for an admin or a curator, whom the users CHECK holds to the
+                flag (MB.177, M11.20). */}
+            {user.role === 'user' && (
               <CreationControl
                 key={user.canCreateWorkspace ? 'revoke' : 'approve'}
                 userId={user.id}

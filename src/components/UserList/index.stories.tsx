@@ -170,9 +170,11 @@ export const UnverifiedApproval: Story = () => (
   </AdminTabbedFrame>
 );
 
-// MB.59: the primary admin, labelled, its Revoke in view but unusable with the
-// reason beside it; a second admin's Revoke and each user's Grant open their
-// confirmations, Grant warning on Bo's unverified address.
+// MB.59, M11.20: the primary admin, labelled, its Change Role in view but
+// unusable with the reason beside it; every other row's Change Role opens its
+// choice of the roles the user does not hold, a promotion warning on Bo's
+// unverified address. Dee is a curator, in bold as an admin is, with no
+// coven-creation control, since every curator holds it.
 export const AdminRoles: Story = () => (
   <AdminTabbedFrame page="people">
     <UserList
@@ -186,6 +188,17 @@ export const AdminRoles: Story = () => (
           canCreateWorkspace: true,
           createdAt: new Date('2026-08-09T10:11:12Z'),
           providers: ['google'],
+          emailVerified: true,
+          primaryAdmin: false,
+        }),
+        listed({
+          id: 'u-dee',
+          name: 'Dee Fixturewort',
+          email: 'dee@users.test',
+          role: 'curator',
+          canCreateWorkspace: true,
+          createdAt: new Date('2026-08-10T11:12:13Z'),
+          providers: ['discord'],
           emailVerified: true,
           primaryAdmin: false,
         }),
@@ -211,7 +224,7 @@ export const AdminChangesPaused: Story = () => (
 );
 
 // Paused, to another admin: the warning, Resume locked with its reason in a
-// tip, and every Grant, Revoke, Approve and coven-creation Revoke locked with
+// tip, and every Change Role, Approve and coven-creation Revoke locked with
 // the pause's reason.
 export const AdminChangesNotPrimary: Story = () => (
   <AdminTabbedFrame page="people" action={<PauseControl paused canToggle={false} />}>

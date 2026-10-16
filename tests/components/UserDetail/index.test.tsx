@@ -55,6 +55,15 @@ const ADA: UserDetailUser = {
   email: 'ada@fixture.test',
   role: 'admin',
 };
+// A curator (M11.20), who holds the creation flag as every curator must.
+const CY: UserDetailUser = {
+  ...FACTS,
+  id: '8b3c4d5e-6f7a-4b2c-8d9e-0f1a2b3c4d5e',
+  name: 'Cy Fixturewort',
+  email: 'cy@fixture.test',
+  role: 'curator',
+  canCreateWorkspace: true,
+};
 
 const coven = (name: string, role: UserCoven['role']): UserCoven => ({
   workspaceId: `w-${name}`,
@@ -127,35 +136,39 @@ describe('UserDetail', () => {
     expect(screen.getByText('No')).toBeInTheDocument();
   });
 
-  it('offers Promote and Approve beside the facts they change, and no creation control on an admin', () => {
+  it('offers Change Role and Approve beside the facts they change, and no creation control on an admin or a curator', () => {
     const { unmount } = renderDetail();
-    expect(screen.getByRole('button', { name: 'Promote Bo Fixturewort to admin' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Change Role for Bo Fixturewort' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Approve Bo Fixturewort' })).toBeEnabled();
     unmount();
 
-    renderDetail({ user: ADA });
-    expect(screen.getByRole('button', { name: 'Revoke admin from Ada Fixturewort' })).toBeEnabled();
-    expect(
-      screen.queryByRole('button', { name: /Approve|Revoke approval/ }),
-    ).not.toBeInTheDocument();
+    for (const user of [ADA, CY]) {
+      const { unmount: next } = renderDetail({ user });
+      expect(screen.getByRole('button', { name: `Change Role for ${user.name}` })).toBeEnabled();
+      expect(
+        screen.queryByRole('button', { name: /Approve|Revoke approval/ }),
+      ).not.toBeInTheDocument();
+      next();
+    }
   });
 
-  it('asks inside this modal, opening no second one, then grants admin and reads the page again', async () => {
+  it('asks inside this modal, opening no second one, then makes a user a curator and reads the page again', async () => {
     const calls: unknown[] = [];
     mockGraphQLMutation('SetUserRole', (variables) => {
       calls.push(variables);
-      return { setUserRole: { id: BO.id, role: 'admin', canCreateWorkspace: true } };
+      return { setUserRole: { id: BO.id, role: 'curator', canCreateWorkspace: true } };
     });
     renderDetail();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Promote Bo Fixturewort to admin' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Change Role for Bo Fixturewort' }));
 
     expect(screen.getAllByRole('dialog')).toHaveLength(1);
     expect(calls).toEqual([]);
+    fireEvent.click(screen.getByRole('radio', { name: /^Curator/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Promote' }));
 
     await waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
-    expect(calls).toEqual([{ userId: BO.id, role: 'admin' }]);
+    expect(calls).toEqual([{ userId: BO.id, role: 'curator' }]);
   });
 
   it('approves coven creation from the modal, asking first', async () => {
@@ -177,7 +190,7 @@ describe('UserDetail', () => {
   it('locks both controls while admin changes are paused for this admin', () => {
     renderDetail({ changesPaused: true });
 
-    for (const name of ['Promote Bo Fixturewort to admin', 'Approve Bo Fixturewort'])
+    for (const name of ['Change Role for Bo Fixturewort', 'Approve Bo Fixturewort'])
       expect(screen.getByRole('button', { name })).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -212,10 +225,13 @@ describe('UserDetail', () => {
     expect(screen.queryByRole('list', { name: 'Covens' })).not.toBeInTheDocument();
   });
 
-  it('offers Impersonate on a user’s modal where impersonation is registered', () => {
-    renderDetail({ canImpersonate: true });
-
+  it('offers Impersonate on a user’s modal, and a curator’s, where impersonation is registered', () => {
+    const { unmount } = renderDetail({ canImpersonate: true });
     expect(screen.getByRole('button', { name: 'Impersonate Bo Fixturewort' })).toBeEnabled();
+    unmount();
+
+    renderDetail({ user: CY, canImpersonate: true });
+    expect(screen.getByRole('button', { name: 'Impersonate Cy Fixturewort' })).toBeEnabled();
   });
 
   it('offers no Impersonate on an admin, or where it is not registered', () => {
