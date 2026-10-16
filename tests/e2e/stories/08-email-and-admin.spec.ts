@@ -181,7 +181,8 @@ async function chooseRole(
 ) {
   await row.getByRole('button', { name: `Change Role for ${name}` }).click();
   const dialog = page.getByRole('dialog', { name: 'Change Role' });
-  await dialog.getByRole('radio', { name: role, exact: true }).check();
+  // The radio's name opens with the role, its description following.
+  await dialog.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
   return dialog;
 }
 

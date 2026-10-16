@@ -228,7 +228,7 @@ test('an admin makes a user a curator from the user screen, then takes the role 
   await row.getByRole('button', { name: 'Change Role for Fixture Person' }).click();
   const granting = page.getByRole('dialog', { name: 'Change Role' });
   await expect(granting).toContainText('Fixture Person');
-  await granting.getByRole('radio', { name: 'Curator', exact: true }).check();
+  await granting.getByRole('radio', { name: /^Curator\b/ }).check();
   await granting.getByRole('textbox', { name: 'Reason' }).fill('Keeps the herbals');
   await assertNoAccessibilityViolations(page);
   await granting.getByRole('button', { name: 'Promote' }).click();
@@ -245,7 +245,7 @@ test('an admin makes a user a curator from the user screen, then takes the role 
   // Taken back to a user, the flag staying.
   await row.getByRole('button', { name: 'Change Role for Fixture Person' }).click();
   const demoting = page.getByRole('dialog', { name: 'Change Role' });
-  await demoting.getByRole('radio', { name: 'User', exact: true }).check();
+  await demoting.getByRole('radio', { name: /^User\b/ }).check();
   await demoting.getByRole('button', { name: 'Demote' }).click();
   await expect(demoting).toHaveCount(0);
 
