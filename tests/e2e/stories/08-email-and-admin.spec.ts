@@ -597,7 +597,10 @@ test(
     const history = listed.getByRole('link', { name: 'Privilege changes for Ledger Fixturewort' });
     await history.hover();
     await expect(page.getByRole('tooltip')).toBeVisible();
-    await assertNoAccessibilityViolations(page);
+    for (const colorScheme of ['dark', 'light'] as const) {
+      await page.emulateMedia({ colorScheme });
+      await assertNoAccessibilityViolations(page);
+    }
     await history.click();
     await expect(page).toHaveURL(
       `/admin/privilege-changes?query=${encodeURIComponent(subjectEmail)}`,
