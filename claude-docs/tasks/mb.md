@@ -1042,6 +1042,8 @@ Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-
 
 The lane brief is the README's: every field value traces to a source read during the task, the owner's book by page or a fetched page by URL; a claim with no source is left out; no page, URL, edition or year is invented; `accessed` is the real fetch date; no prose is copied from any source; descriptions are 100 to 250 words, in British spelling, written fresh; shared works are named by their `works.ts` handle; a substitute links only an identity in this shard or an earlier one; every formal name is checked against POWO or Mindat as the entry is written, since the candidate list's are Wikipedia's. Every entry carries at least its primary form; a further form only where a source attaches something to it. An entry that cannot be sourced at depth goes to the doc's "What is left out, and why".
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1050,6 +1052,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1059,6 +1062,8 @@ _Story:_ As a reader, I want the plants from Co to K in the compendium with thei
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the second content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-co-k.ts` and `claude-docs/db/compendium-seed/plants-co-k.md`, 116 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1067,6 +1072,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1076,6 +1082,8 @@ _Story:_ As a reader, I want the plants from L to Q in the compendium with their
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the third content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-l-q.ts` and `claude-docs/db/compendium-seed/plants-l-q.md`, 104 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1084,6 +1092,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1093,6 +1102,8 @@ _Story:_ As a reader, I want the plants from R to Z in the compendium with their
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the fourth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/plants-r-z.ts` and `claude-docs/db/compendium-seed/plants-r-z.md`, 98 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. The 6 hours are an estimate on MB.243's calibration.
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1101,6 +1112,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1127,6 +1139,8 @@ _Story:_ As a reader, I want the stones, crystals and metals in the compendium w
 
 Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the sixth content shard, built beside MB.243 by its own research lane after MB.242 and merged after MB.243. It writes `src/db/seed/compendium/stones-and-metals.ts` and `claude-docs/db/compendium-seed/stones-and-metals.md`, 136 entries, the rows `candidates.md` gives this shard, under MB.243's lane brief. A mineral variety is `<Species> var. <variety>` as `standard` writes `Quartz var. amethyst`, with Mindat as the reference for names, and a metal is `chemical`. The 8 hours are an estimate on MB.243's calibration, scaled to the shard's size.
 
+**It sets the toxic flags as it seeds** (M14.1, the owner's call on 2026-10-16). Each entry it writes after M14.1's mechanism lands is flagged `toxic: true` where a source read during the task says any part of it is poisonous, and each form where a source says that form is, cited with `toxic` in `supports`, under M14.1's rule. The entries of a part merged before then are flagged by M14.1.
+
 No test is added: the guard and the `SEED_ENTRIES` sweeps run over the real list.
 
 _Acceptance criteria:_
@@ -1135,6 +1149,7 @@ _Acceptance criteria:_
 - Every entry cites at least one reference of its own and every form at least one of its own, and every populated field is covered by a citation's `supports`
 - The doc has its bibliography in Chicago form and one source line per entry, and records the shard's form count
 - The guard is green, and `npm run db:seed:compendium` is idempotent from empty and after `standard`
+- Every entry and form a source read during the task calls poisonous is flagged `toxic`, cited with `toxic` in `supports`; a part merged before M14.1's mechanism is left to M14.1
 - The pull request body states that every cited page or URL was read during the task
 - Per-file coverage of the touched `src/` directories not below the previous run's `.reports/coverage/coverage-summary.json`, or the exception named in the PR body
 
@@ -1142,7 +1157,7 @@ _Acceptance criteria:_
 
 _Story:_ As the owner, I want the seeded compendium counted against the candidate list and every entry shown to be sourced, so that I know what the 614 became and what was left out.
 
-Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten. It starts after each shard's final part has merged, not merely after each shard's first PR: five shards, `plants-a-cn`, `plants-co-k`, `plants-l-q`, `plants-r-z` and `stones-and-metals`, merged as part 1 only, as each one's doc under `claude-docs/db/compendium-seed/` says, and only `resins-woods-and-other` is whole. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner.
+Minted on 2026-10-11 with MB.240 ([`design-decisions/mb.240-plan.md`](../design-decisions/mb.240-plan.md)), the last of the ten. It starts after each shard's final part has merged, not merely after each shard's first PR: five shards, `plants-a-cn`, `plants-co-k`, `plants-l-q`, `plants-r-z` and `stones-and-metals`, merged as part 1 only, as each one's doc under `claude-docs/db/compendium-seed/` says, and only `resins-woods-and-other` is whole. It also starts after M14.1, which flags the entries a source calls poisonous, and counts the flagged entries and forms beside the seeded totals. It reconciles the seeded totals against `candidates.md`; gathers the six shards' "What is left out" sections into one view in the README; records the final count in DESIGN.md §14 and the wave file; confirms on staging that the admin compendium page's unsourced filter lists no seeded entry; and adds a note to the `SEED_SCENARIO` and `db:reset` docs that `npm run db:seed:compendium` populates a local compendium. Whether it stays separate or folds into MB.248 is open with the owner.
 
 **Staging is brought back in line with the literal.** The seed writes an entry once and skips it, with everything beneath it, on every later run (`claude-docs/db/compendium-seed/README.md`, "Write-once, and how a correction lands"). So an edit to a shard's literal made after a deploy seeded that entry never reaches staging. Two edits made during MB.115 are of that kind: commit `2aa282b5` rewrote 1,078 seed locator lines from "s.v." to "under", and `f007a51b` relinked Almond's Nut form from Apricot as a whole to Apricot's Seed form, since a form's linked substitute now names a form ([`design-decisions/mb.115-variant-substitutes-name-a-form.md`](../design-decisions/mb.115-variant-substitutes-name-a-form.md)). Any entry staging seeded before those commits still holds the old locators and the whole-ingredient link. This task lists what differs on staging and repairs it, by one of two routes, chosen and argued in the PR body: a correction list an admin works through on staging's compendium page, which is the README's own rule for a correction, or a one-off step that re-applies those two edits to entries already present. Staging's database has not been read for this entry, so the size of the drift is unknown until the task lists it.
 
@@ -1159,6 +1174,7 @@ Tests are written first:
 _Acceptance criteria:_
 
 - The seeded, left-out and candidate counts are recorded and reconcile
+- The entries and forms flagged toxic are counted beside them
 - The tests above are green over the full `COMPENDIUM`
 - On staging, the admin compendium page's unsourced filter shows no seeded entry
 - On staging, every entry seeded before MB.115's two edits carries the literal's locators and links, and the PR body names the route taken
