@@ -1,7 +1,7 @@
 import type { Locator, Page, Request, Route as PlaywrightRoute } from '@playwright/test';
 import postgres from 'postgres';
-import { slugify } from '@/lib/slugify';
-import { insertIngredient } from '../../support/db/insert-ingredient';
+import { deitySlug, formSlug, slugify } from '@/lib/slugify';
+import { insertDeityLink, insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from '../axe';
 import { e2eDatabaseUrl, recreateE2eDatabase } from '../database';
@@ -623,6 +623,412 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
           name: 'Cleansing & Release',
         }),
       ).toBeVisible();
+    },
+  );
+
+  test(
+    'an admin adds a form, renames it and moves it to another group, and deletes it',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      await signInAs(page, 'forms@story-18.test', ['discord'], 'admin');
+      expect((await page.goto('/admin/forms'))?.status()).toBe(200);
+      await expect(page.getByRole('table', { name: 'Forms' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+
+      await page.getByRole('link', { name: 'Add Form' }).click();
+      const adding = page.getByRole('dialog', { name: 'Add Form' });
+      await expect(adding).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/forms\?new$/);
+      await expect(adding.getByRole('button', { name: 'Save Form' })).toBeDisabled();
+      await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Shard');
+      await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
+      await adding.getByRole('combobox', { name: 'Group' }).click();
+      await adding.getByRole('option', { name: 'Mineral', exact: true }).click();
+      await assertNoAccessibilityViolations(page);
+      await adding.getByRole('button', { name: 'Save Form' }).click();
+      await expect(adding).toHaveCount(0);
+      // First by name, so on the first page, with its group and description beside it.
+      const row = rowOf(page, 'Forms', 'Aaa Testwort Shard');
+      await expect(row.getByRole('cell', { name: 'Mineral', exact: true })).toBeVisible();
+      await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
+
+      // A form's address is its name and its group's (MB.132).
+      await row.getByRole('link', { name: 'Edit Aaa Testwort Shard' }).click();
+      const editing = page.getByRole('dialog', {
+        name: 'Edit Form, Aaa Testwort Shard',
+        exact: true,
+      });
+      await expect(editing).toBeVisible();
+      await expect(page).toHaveURL(
+        `/admin/forms?edit=${formSlug('Aaa Testwort Shard', 'Mineral')}`,
+      );
+      // A rename carries onto the compendium, and Save says so before it is pressed.
+      const save = editing.getByRole('button', { name: 'Save Form' });
+      await expect(save).toHaveAccessibleDescription('');
+      await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testwort Sliver');
+      await expect(save).toHaveAccessibleDescription(/\S/);
+      await editing.getByRole('combobox', { name: 'Group' }).click();
+      await editing.getByRole('option', { name: 'Substance', exact: true }).click();
+      await assertNoAccessibilityViolations(page);
+      await save.click();
+      await expect(editing).toHaveCount(0);
+      await expect(rowOf(page, 'Forms', 'Aaa Testwort Shard')).toHaveCount(0);
+      const renamed = rowOf(page, 'Forms', 'Aaa Testwort Sliver');
+      await expect(renamed.getByRole('cell', { name: 'Substance', exact: true })).toBeVisible();
+
+      // Its Edit follows it to the address the new name and group make.
+      await renamed.getByRole('link', { name: 'Edit Aaa Testwort Sliver' }).click();
+      await expect(page).toHaveURL(
+        `/admin/forms?edit=${formSlug('Aaa Testwort Sliver', 'Substance')}`,
+      );
+      const sliver = page.getByRole('dialog', {
+        name: 'Edit Form, Aaa Testwort Sliver',
+        exact: true,
+      });
+      await deleteFrom(sliver, 'Form');
+      await expect(sliver).toHaveCount(0);
+      await expect(page.getByRole('table', { name: 'Forms' })).toBeVisible();
+      await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
+    },
+  );
+
+  test(
+    'an admin adds a form group, renames it, and moves its form before deleting it',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      const { userId } = await signInAs(page, 'form-groups@story-18.test', ['discord'], 'admin');
+      expect((await page.goto('/admin/form-groups'))?.status()).toBe(200);
+      await expect(page.getByRole('table', { name: 'Form Groups' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+
+      await page.getByRole('link', { name: 'Add Group' }).click();
+      const adding = page.getByRole('dialog', { name: 'Add Form Group' });
+      await expect(adding).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/form-groups\?new$/);
+      // A form group carries no colours: only a category's chip is drawn in one.
+      await expect(
+        adding.getByRole('textbox', { name: 'Dark Theme Colour', exact: true }),
+      ).toHaveCount(0);
+      await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixture Matter');
+      await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
+      const save = adding.getByRole('button', { name: 'Save Group' });
+      await expect(save).toBeEnabled();
+      await assertNoAccessibilityViolations(page);
+      await save.click();
+      await expect(adding).toHaveCount(0);
+      const row = rowOf(page, 'Form Groups', 'Aaa Fixture Matter');
+      await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
+
+      // A form filed under it, so its rename and its delete have something to carry.
+      await withSql(
+        (sql) => sql`
+          insert into ingredient_forms (name, slug, description, group_id, created_by, updated_by)
+          select 'Aaa Testwort Grit', ${formSlug('Aaa Testwort Grit', 'Aaa Fixture Matter')},
+            'Filed under the group', id, ${userId}, ${userId}
+          from ingredient_form_groups where name = 'Aaa Fixture Matter' and deleted_at is null`,
+      );
+
+      await row.getByRole('link', { name: 'Edit Aaa Fixture Matter' }).click();
+      const editing = page.getByRole('dialog', {
+        name: 'Edit Form Group, Aaa Fixture Matter',
+        exact: true,
+      });
+      await expect(editing).toBeVisible();
+      await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixture Stuff');
+      await assertNoAccessibilityViolations(page);
+      await editing.getByRole('button', { name: 'Save Group' }).click();
+      await expect(editing).toHaveCount(0);
+      await expect(rowOf(page, 'Form Groups', 'Aaa Fixture Stuff')).toBeVisible();
+      await expect(rowOf(page, 'Form Groups', 'Aaa Fixture Matter')).toHaveCount(0);
+      // The form is listed under the group's new name.
+      await page.goto('/admin/forms');
+      const grit = rowOf(page, 'Forms', 'Aaa Testwort Grit');
+      await expect(
+        grit.getByRole('cell', { name: 'Aaa Fixture Stuff', exact: true }),
+      ).toBeVisible();
+
+      await page.goto('/admin/form-groups?edit=aaa-fixture-stuff');
+      const renamed = page.getByRole('dialog', {
+        name: 'Edit Form Group, Aaa Fixture Stuff',
+        exact: true,
+      });
+      await expect(renamed).toBeVisible();
+      await moveAndDelete(page, renamed, 'Move Its 1 Form To', 'Substance');
+      await expect(renamed).toHaveCount(0);
+      await expect(page.getByRole('table', { name: 'Form Groups' })).toBeVisible();
+      await expect(page.getByRole('row', { name: /Aaa Fixture/ })).toHaveCount(0);
+
+      // The form lives on, in the group the admin picked.
+      await page.goto('/admin/forms');
+      await expect(grit.getByRole('cell', { name: 'Substance', exact: true })).toBeVisible();
+    },
+  );
+
+  // The two flat vocabularies share one modal and differ only in their nouns,
+  // so each walks the same flow rather than one standing in for the other.
+  for (const { path, title, label, added, renamedTo } of [
+    {
+      path: '/admin/celestial-bodies',
+      title: 'Celestial Bodies',
+      label: 'Celestial Body',
+      added: 'Aaa Testwort Star',
+      renamedTo: 'Aaa Testwort Comet',
+    },
+    {
+      path: '/admin/zodiac-signs',
+      title: 'Zodiac Signs',
+      label: 'Zodiac Sign',
+      added: 'Aaa Testwort Sign',
+      renamedTo: 'Aaa Testwort Omen',
+    },
+  ]) {
+    test(
+      `an admin adds a ${label.toLowerCase()}, renames it, and deletes it`,
+      { tag: '@story-18' },
+      async ({ page }) => {
+        await signInAs(page, `${slugify(label)}@story-18.test`, ['discord'], 'admin');
+        expect((await page.goto(path))?.status()).toBe(200);
+        await expect(page.getByRole('table', { name: title })).toBeVisible();
+        await assertNoAccessibilityViolations(page);
+
+        await page.getByRole('link', { name: `Add ${label}` }).click();
+        const adding = page.getByRole('dialog', { name: `Add ${label}` });
+        await expect(adding).toBeVisible();
+        await expect(page).toHaveURL(`${path}?new`);
+        await expect(adding.getByRole('button', { name: `Save ${label}` })).toBeDisabled();
+        await adding.getByRole('textbox', { name: 'Name' }).fill(added);
+        await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
+        await assertNoAccessibilityViolations(page);
+        await adding.getByRole('button', { name: `Save ${label}` }).click();
+        await expect(adding).toHaveCount(0);
+        const row = rowOf(page, title, added);
+        await expect(
+          row.getByRole('cell', { name: 'Made by the story', exact: true }),
+        ).toBeVisible();
+
+        await row.getByRole('link', { name: `Edit ${added}` }).click();
+        const editing = page.getByRole('dialog', { name: `Edit ${label}, ${added}`, exact: true });
+        await expect(editing).toBeVisible();
+        await expect(page).toHaveURL(`${path}?edit=${slugify(added)}`);
+        // A rename carries onto the compendium, and Save says so before it is pressed.
+        const save = editing.getByRole('button', { name: `Save ${label}` });
+        await expect(save).toHaveAccessibleDescription('');
+        await editing.getByRole('textbox', { name: 'Name' }).fill(renamedTo);
+        await editing.getByRole('textbox', { name: 'Description' }).fill('Rewritten by the story');
+        await expect(save).toHaveAccessibleDescription(/\S/);
+        await assertNoAccessibilityViolations(page);
+        await save.click();
+        await expect(editing).toHaveCount(0);
+        const renamed = rowOf(page, title, renamedTo);
+        await expect(
+          renamed.getByRole('cell', { name: 'Rewritten by the story', exact: true }),
+        ).toBeVisible();
+        await expect(rowOf(page, title, added)).toHaveCount(0);
+
+        await renamed.getByRole('link', { name: `Edit ${renamedTo}` }).click();
+        await expect(page).toHaveURL(`${path}?edit=${slugify(renamedTo)}`);
+        const reopened = page.getByRole('dialog', {
+          name: `Edit ${label}, ${renamedTo}`,
+          exact: true,
+        });
+        await deleteFrom(reopened, label);
+        await expect(reopened).toHaveCount(0);
+        await expect(page.getByRole('table', { name: title })).toBeVisible();
+        await expect(page.getByRole('row', { name: /Aaa Testwort/ })).toHaveCount(0);
+      },
+    );
+  }
+
+  test(
+    'an admin adds a deity tradition, renames it, and moves its deity before deleting it',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      const { userId } = await signInAs(page, 'traditions@story-18.test', ['discord'], 'admin');
+      expect((await page.goto('/admin/deity-traditions'))?.status()).toBe(200);
+      await expect(page.getByRole('table', { name: 'Deity Traditions' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+
+      await page.getByRole('link', { name: 'Add Tradition' }).click();
+      const adding = page.getByRole('dialog', { name: 'Add Tradition' });
+      await expect(adding).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/deity-traditions\?new$/);
+      await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Fixtural');
+      await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
+      const saveNew = adding.getByRole('button', { name: 'Save Tradition' });
+      await expect(saveNew).toBeEnabled();
+      await assertNoAccessibilityViolations(page);
+      await saveNew.click();
+      await expect(adding).toHaveCount(0);
+      const row = rowOf(page, 'Deity Traditions', 'Aaa Fixtural');
+      await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
+
+      // A deity filed under it, so its rename and its delete have something to carry.
+      await withSql(
+        (sql) => sql`
+          insert into deities (name, slug, description, tradition_id, created_by, updated_by)
+          select 'Aaa Testra', ${deitySlug('Aaa Testra', 'Aaa Fixtural')},
+            'Filed under the tradition', id, ${userId}, ${userId}
+          from deity_traditions where name = 'Aaa Fixtural' and deleted_at is null`,
+      );
+
+      await row.getByRole('link', { name: 'Edit Aaa Fixtural' }).click();
+      const editing = page.getByRole('dialog', {
+        name: 'Edit Tradition, Aaa Fixtural',
+        exact: true,
+      });
+      await expect(editing).toBeVisible();
+      await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Mockish');
+      await assertNoAccessibilityViolations(page);
+      await editing.getByRole('button', { name: 'Save Tradition' }).click();
+      await expect(editing).toHaveCount(0);
+      await expect(rowOf(page, 'Deity Traditions', 'Aaa Mockish')).toBeVisible();
+      await expect(rowOf(page, 'Deity Traditions', 'Aaa Fixtural')).toHaveCount(0);
+      // The deity is listed under its tradition's new name, at the address that name makes.
+      await page.goto('/admin/deities');
+      const testra = rowOf(page, 'Deities', 'Aaa Testra');
+      await expect(testra.getByRole('cell', { name: 'Aaa Mockish', exact: true })).toBeVisible();
+      await testra.getByRole('link', { name: 'Edit Aaa Testra' }).click();
+      await expect(page).toHaveURL(`/admin/deities?edit=${deitySlug('Aaa Testra', 'Aaa Mockish')}`);
+      await expect(
+        page.getByRole('dialog', { name: 'Edit Deity, Aaa Testra, Aaa Mockish', exact: true }),
+      ).toBeVisible();
+
+      await page.goto('/admin/deity-traditions?edit=aaa-mockish');
+      const renamed = page.getByRole('dialog', {
+        name: 'Edit Tradition, Aaa Mockish',
+        exact: true,
+      });
+      await expect(renamed).toBeVisible();
+      await moveAndDelete(page, renamed, 'Move Its 1 Deity To', 'Greek');
+      await expect(renamed).toHaveCount(0);
+      await expect(page.getByRole('table', { name: 'Deity Traditions' })).toBeVisible();
+      await expect(page.getByRole('row', { name: /Aaa Mockish/ })).toHaveCount(0);
+
+      // The deity lives on, under the tradition the admin picked.
+      // Filtered by name: the list runs by tradition, so Greek is pages on.
+      await page.goto('/admin/deities?query=Aaa+Testra');
+      await expect(testra.getByRole('cell', { name: 'Greek', exact: true })).toBeVisible();
+      await testra.getByRole('link', { name: 'Edit Aaa Testra' }).click();
+      // The filter rides along in the address, beside the deity's new slug.
+      await expect(page).toHaveURL(new RegExp(`[?&]edit=${deitySlug('Aaa Testra', 'Greek')}$`));
+      await expect(
+        page.getByRole('dialog', { name: 'Edit Deity, Aaa Testra, Greek', exact: true }),
+      ).toBeVisible();
+    },
+  );
+
+  test(
+    'an admin adds and renames a deity, is refused its delete while an entry holds it, and deletes it once freed',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      const { userId } = await signInAs(page, 'deities@story-18.test', ['discord'], 'admin');
+      expect((await page.goto('/admin/deities'))?.status()).toBe(200);
+      await expect(page.getByRole('table', { name: 'Deities' })).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      // Narrowed to the name it will add: the list runs by tradition, then name,
+      // so a deity under Greek sits pages in.
+      await page.goto('/admin/deities?query=Aaa+Testri');
+
+      await page.getByRole('link', { name: 'Add Deity' }).click();
+      const adding = page.getByRole('dialog', { name: 'Add Deity' });
+      await expect(adding).toBeVisible();
+      await expect(page).toHaveURL(/\/admin\/deities\?query=Aaa\+Testri&new$/);
+      await adding.getByRole('textbox', { name: 'Name' }).fill('Aaa Testris');
+      await adding.getByRole('textbox', { name: 'Description' }).fill('Made by the story');
+      const tradition = adding.getByRole('combobox', { name: 'Tradition' });
+      await tradition.click();
+      await adding.getByRole('option', { name: 'Greek', exact: true }).click();
+      // A type-ahead box: the pick is its text.
+      await expect(tradition).toHaveValue('Greek');
+      await assertNoAccessibilityViolations(page);
+      await adding.getByRole('button', { name: 'Save Deity' }).click();
+      await expect(adding).toHaveCount(0);
+      const row = rowOf(page, 'Deities', 'Aaa Testris');
+      await expect(row.getByRole('cell', { name: 'Greek', exact: true })).toBeVisible();
+      await expect(row.getByRole('cell', { name: 'Made by the story', exact: true })).toBeVisible();
+
+      // An edit dialog names the tradition too: two deities may share a name.
+      await row.getByRole('link', { name: 'Edit Aaa Testris' }).click();
+      const editing = page.getByRole('dialog', {
+        name: 'Edit Deity, Aaa Testris, Greek',
+        exact: true,
+      });
+      await expect(editing).toBeVisible();
+      await expect(page).toHaveURL(
+        `/admin/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testris', 'Greek')}`,
+      );
+      await editing.getByRole('textbox', { name: 'Name' }).fill('Aaa Testrix');
+      await assertNoAccessibilityViolations(page);
+      await editing.getByRole('button', { name: 'Save Deity' }).click();
+      await expect(editing).toHaveCount(0);
+      const renamed = rowOf(page, 'Deities', 'Aaa Testrix');
+      await expect(renamed.getByRole('cell', { name: 'Greek', exact: true })).toBeVisible();
+      await expect(rowOf(page, 'Deities', 'Aaa Testris')).toHaveCount(0);
+
+      // A compendium entry that lists it among its deities.
+      const entry = 'Aaa Testwort Hallowed';
+      await withSql(async (sql) => {
+        // Linked to the curated form's row: the compendium saves a picked form
+        // and no other, and the admin saves this entry below.
+        const [herb] = await sql<{ id: string }[]>`
+          select id from ingredient_forms where name = 'Herb' and deleted_at is null`;
+        const ingredientId = await insertIngredient(
+          sql,
+          makeIngredient({
+            name: entry,
+            nomenclature: 'none',
+            variants: [makeVariant({ form: 'Herb', formId: herb.id })],
+          }),
+          userId,
+        );
+        const [deity] = await sql<{ id: string }[]>`
+          select id from deities where name = 'Aaa Testrix' and deleted_at is null`;
+        await insertDeityLink(sql, ingredientId, deity.id, 0, userId);
+      });
+
+      // Refused while the entry holds it, naming the entry; nothing leaves.
+      await renamed.getByRole('link', { name: 'Edit Aaa Testrix' }).click();
+      const held = page.getByRole('dialog', {
+        name: 'Edit Deity, Aaa Testrix, Greek',
+        exact: true,
+      });
+      await expect(held).toBeVisible();
+      await deleteFrom(held, 'Deity');
+      await expect(held.getByRole('alert')).toContainText(entry);
+      await expect(held).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      await held.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(held).toHaveCount(0);
+      await expect(renamed).toBeVisible();
+
+      // Freed: taken off the entry's deities, as the refusal's remedy says.
+      await page.goto(`/admin/compendium?edit=${slugify(entry)}`);
+      const entryDialog = page.getByRole('dialog', {
+        name: `Edit Ingredient, ${entry}`,
+        exact: true,
+      });
+      await expect(entryDialog).toBeVisible();
+      await entryDialog.getByRole('button', { name: 'Open All' }).click();
+      // A curated deity's chip carries its tradition, as two may share a name.
+      const remove = entryDialog
+        .getByRole('group', { name: 'Deities', exact: true })
+        .getByRole('button', { name: 'Remove Aaa Testrix (Greek)', exact: true });
+      await remove.click();
+      await expect(remove).toHaveCount(0);
+      const saveEntry = entryDialog.getByRole('button', { name: 'Save Ingredient' });
+      await saveEntry.click();
+      await expect(entryDialog.getByRole('status').filter({ hasText: entry })).toBeVisible();
+      await expect(saveEntry).toBeDisabled();
+
+      // Now it goes, and the list no longer holds it.
+      await page.goto(`/admin/deities?query=Aaa+Testri&edit=${deitySlug('Aaa Testrix', 'Greek')}`);
+      await expect(held).toBeVisible();
+      await deleteFrom(held, 'Deity');
+      await expect(held).toHaveCount(0);
+      // Back on the list narrowed to its name, which no longer finds it.
+      await expect(page).toHaveURL(/\/admin\/deities\?query=Aaa\+Testri$/);
+      await expect(page.getByRole('link', { name: 'Add Deity' })).toBeVisible();
+      await expect(page.getByRole('row', { name: /Aaa Testri/ })).toHaveCount(0);
     },
   );
 });
