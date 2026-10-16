@@ -10,6 +10,9 @@
       It should open a modal.
 - [x] Define password policies and create enforcement.
 - [x] Icons for forms?
+      Yes, one per form group, with a generic salt spoon for a form no group
+      covers. The spoon also replaces the flask as the Forms tab mark. Minted
+      as M12.6 (the column) and M12.7 (the glyphs and where they show).
 
 ### Feature Additions
 
