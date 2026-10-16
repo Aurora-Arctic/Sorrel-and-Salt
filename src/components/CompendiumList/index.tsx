@@ -5,8 +5,7 @@ import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
 import { NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
-import ListFrame, { ListBody } from '../ListFrame';
-import Pager from '../Pager';
+import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
 import type {
   CompendiumListEntry,
@@ -20,8 +19,9 @@ import './index.scss';
 // address's filter through the service and hands it here. The filter is a GET
 // form to the page itself, so a filtered page — the unknown kind, the
 // unsourced — is an address. Each Edit is an address too, the page opening its
-// modal from the URL, so a modal can be linked to and Back closes it
-// (claude-docs/components/compendium-list.md).
+// modal from the URL, so a modal can be linked to and Back closes it. The
+// frame, filter row and pager are IngredientSearch's (M8.10); this list gives
+// it the filter and the table (claude-docs/components/compendium-list.md).
 
 // None, rather than an empty cell: the to-do list tells an unconfirmed formal
 // name from no formal name by this column.
@@ -100,25 +100,26 @@ const CompendiumList = ({
   nextHref,
   position,
 }: CompendiumListProps): ReactElement => (
-  <ListFrame>
-    {/* Keyed by the filter shown, so another one starts the form again from it. */}
-    <CompendiumListFilter
-      key={`${filter.query}\n${filter.form}\n${filter.nomenclature}\n${filter.withoutReferences}`}
-      filter={filter}
-      forms={forms}
-    />
-
-    <ListBody>
-      <StackTable
-        columns={COLUMNS}
-        rows={entries}
-        rowKey={(entry) => entry.id}
-        empty={emptyText(filter)}
+  <IngredientSearch
+    search={
+      // Keyed by the filter shown, so another one starts the form again from it.
+      <CompendiumListFilter
+        key={`${filter.query}\n${filter.form}\n${filter.nomenclature}\n${filter.withoutReferences}`}
+        filter={filter}
+        forms={forms}
       />
-
-      <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
-    </ListBody>
-  </ListFrame>
+    }
+    previousHref={previousHref}
+    nextHref={nextHref}
+    position={position}
+  >
+    <StackTable
+      columns={COLUMNS}
+      rows={entries}
+      rowKey={(entry) => entry.id}
+      empty={emptyText(filter)}
+    />
+  </IngredientSearch>
 );
 
 export default CompendiumList;

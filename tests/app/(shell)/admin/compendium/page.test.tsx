@@ -251,7 +251,7 @@ describe('the /admin/compendium filter', () => {
       nomenclature: 'unknown',
       withoutReferences: true,
     });
-    expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('test wort');
+    expect(screen.getByRole('combobox', { name: 'Name' })).toHaveValue('test wort');
     expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('Fixture Oil');
     expect(filterSends('nomenclature')).toBe('unknown');
     expect(screen.getByRole('switch', { name: 'No Refs' })).toBeChecked();
@@ -262,7 +262,7 @@ describe('the /admin/compendium filter', () => {
     await renderPage({ query: '   ', form: '  ', nomenclature: '' });
 
     expect(lastFilter()).toEqual(NO_FILTER);
-    expect(screen.getByRole('searchbox', { name: 'Name' })).toHaveValue('');
+    expect(screen.getByRole('combobox', { name: 'Name' })).toHaveValue('');
     expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
   });
 
