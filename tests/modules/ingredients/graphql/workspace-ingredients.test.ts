@@ -104,6 +104,7 @@ function wholeInput(fixture: IngredientFixture): Record<string, unknown> {
     deities: fixture.deities.map((name) => ({ name })),
     colors: fixture.colors ?? [],
     safetyNotes: fixture.safetyNotes ?? '',
+    toxic: fixture.toxic,
     substitutes: fixture.substitutes.map((name) => ({ name })),
     folkNames: fixture.folkNames,
     references: [],

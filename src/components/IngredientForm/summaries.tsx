@@ -78,9 +78,9 @@ function IdentitySummary(): ReactNode {
   ]);
 }
 
-/** Details & Care's line: the description's first words, then the safety notes'. */
-const detailsLine = (description: string, safetyNotes: string): ReactNode =>
-  joined([oneLine(description), oneLine(safetyNotes)]);
+/** Details & Care's line: the description's first words, then the safety notes', then Toxic when flagged. */
+const detailsLine = (description: string, safetyNotes: string, toxic: boolean): ReactNode =>
+  joined([oneLine(description), oneLine(safetyNotes), toxic && 'Toxic']);
 
 /** Correspondences' line, a variant's having no deities, which are the ingredient's alone. */
 function correspondencesLine(
@@ -148,6 +148,7 @@ export function variantSummary(variant: VariantFormValues): ReactNode {
     variant.description.trim() !== '' && 'description',
     ...CARD_COUNTED.map((field) => countedIn(variant, field)),
     variant.safetyNotes.trim() !== '' && 'safety note',
+    variant.toxic && 'toxic',
     countedIn(variant, 'references'),
   ].filter((part): part is string => typeof part === 'string');
   // A line of its own, so it opens on a capital: "1 celestial body · Safety note".
@@ -156,8 +157,11 @@ export function variantSummary(variant: VariantFormValues): ReactNode {
 
 function DetailsSummary(): ReactNode {
   const { control } = useFormContext<IngredientFormValues>();
-  const [description, safetyNotes] = useWatch({ control, name: ['description', 'safetyNotes'] });
-  return detailsLine(description, safetyNotes);
+  const [description, safetyNotes, toxic] = useWatch({
+    control,
+    name: ['description', 'safetyNotes', 'toxic'],
+  });
+  return detailsLine(description, safetyNotes, toxic);
 }
 
 function CorrespondencesSummary(): ReactNode {
@@ -224,7 +228,7 @@ export function variantSectionSummary(
       return group ? `${form} (${group})` : form;
     }
     case 'details':
-      return detailsLine(variant.description, variant.safetyNotes);
+      return detailsLine(variant.description, variant.safetyNotes, variant.toxic);
     case 'correspondences':
       return correspondencesLine(
         variant.elements,

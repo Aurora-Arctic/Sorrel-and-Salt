@@ -170,7 +170,7 @@ function asEntries<
 /**
  * One form the ingredient comes in (DESIGN.md §5, `ingredient_variants`;
  * MB.215): its text, never blank, and its pick, its own description, safety
- * note and lists, and its own substitutes, references and categories, each
+ * note, toxic flag and lists, and its own substitutes, references and categories, each
  * held to the ingredient's own rules and pathed beneath the variant. `id`
  * names a form the ingredient already holds, so a save keeps that row across
  * a respelling; whether it is this ingredient's is the service's to read.
@@ -187,6 +187,8 @@ const variant = z
     formId: z.string().trim(),
     description: z.string().trim(),
     safetyNotes: z.string().trim(),
+    // Its own flag, never its ingredient's (M11.21): sent whole, as the rest is.
+    toxic: z.boolean(),
     elements: elementArray,
     celestialBodies: z.array(z.string().trim()),
     zodiacSigns: z.array(z.string().trim()),
@@ -234,6 +236,9 @@ const fields = {
   deities: z.array(deity).nullish(),
   colors: textList,
   safetyNotes: optionalText(),
+  // The ingredient's own flag, independent of each form's (M11.21). Absent
+  // on a create is off.
+  toxic: z.boolean().nullish(),
   substitutes: z.array(substitute).nullish(),
   references: z.array(referenceLink).nullish(),
   folkNames: textList,

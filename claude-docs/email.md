@@ -85,11 +85,54 @@ does it, so each piece has an email-safe stand-in.
   with the class `ss-page`, and every other light rule is scoped beneath it
   (`.ss-page .ss-text`, `.ss-page .ss-button`, …), so a client applies all
   of them or none. Written as a bare class per element, iOS Mail, iCloud,
-  Yahoo, AOL, Zoho, o2.pl, Seznam and Outlook.com each kept the text rules
-  and dropped the page rule, leaving dark text on the dark page. `Body`
-  carries `ss-body` and its own light rule for the surround, which is
-  readable whichever way it goes. `tests/emails/verify-email.test.tsx` pins
-  the shape.
+  Yahoo, AOL, o2.pl, Seznam and Outlook.com each kept the text rules and
+  dropped the page rule, leaving dark text on the dark page. (A preview tool
+  put Zoho Mail on that list too; measured, it reads no stylesheet at all —
+  the next point.) `Body` carries `ss-body` and its own light rule for the
+  surround, which is readable whichever way it goes.
+  `tests/emails/verify-email.test.tsx` pins the shape.
+- **Zoho Mail inverts every colour it can see, so the dark is written in the
+  two forms it leaves alone** (MB.262). Measured on 2026-10-16 in Zoho Mail's
+  web client, by reading the DOM it builds from four probe mails; the Android
+  app shows the same result. In its Night mode Zoho drops `<style>` whole, and
+  in its Day mode it keeps plain rules but drops every `@media` block, so the
+  light override reaches it in neither. Night then rewrites every inline
+  `color` and `background-color` to an inverted `!important` value, keeping
+  the original in a `data-ogsc` or `data-ogsb` attribute; writes a default
+  dark text colour onto every element that has none; strips
+  `-webkit-text-fill-color`; reads neither `hsl()` nor `rgba()`; and darkens a
+  hex colour continuously, so no lightness is safe. It expands a `background`
+  shorthand into longhands and inverts the colour, but **keeps a gradient or
+  `background-image`**, and it leaves an `<a>` whose background is an image of
+  any kind — a page-coloured gradient, a transparent one or a `url()`, with or
+  without an `href` — entirely alone, text and all, while still rewriting any
+  element nested inside it. So the frame writes its dark the way Zoho reads
+  it, and the regression test in `tests/emails/parts/layout.test.tsx` holds
+  every mail to the shape:
+  - The body and the page cell are painted by
+    `background: <colour> linear-gradient(<colour>,<colour>)`: the gradient is
+    what Zoho keeps, the colour before it is for Word, which draws no gradient.
+  - Every heading and paragraph's text sits directly inside an anchor (`Ink`
+    in the layout), with the text colour on the anchor and a transparent
+    gradient as its background, and nothing nested inside it. An anchor cannot
+    hold an anchor, so a paragraph with a link in it is `Action`'s.
+  - The button is an anchor of our own painted by a gradient alone, not React
+    Email's `Button`, whose label sits in a nested span Zoho would recolour.
+    Its cell carries `bgcolor` for Word; everywhere else the anchor covers it.
+  - The light block overrides with the `background` shorthand, which also
+    clears the gradient, so a client that honours the media query still goes
+    light. Gmail Android renders the gradient-only shorthand as before; an
+    inline `background-image` on its own it mangles ([email-bugs
+    #135](https://github.com/hteumeuleu/email-bugs/issues/135)), which is why
+    the gradient is always written through the shorthand.
+    The one-colour gradient is an established dark-mode technique (Rémi
+    Parmentier's email-bugs and talks); the anchor is Zoho's own exception.
+
+  The result is that Zoho shows the dark theme in both of its modes, as Gmail
+  does: with the stylesheet gone there is no light theme for it to show. The
+  probe mails and DOM dumps are not committed; the measurements above are the
+  record.
+
 - **The palette is copied.** A client reads neither Sass nor custom
   properties, so `src/emails/theme.ts` carries each theme's hexes by hand,
   and a palette change edits it in the same PR. No test compares the two: a

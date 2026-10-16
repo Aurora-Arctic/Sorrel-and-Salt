@@ -185,15 +185,19 @@ describe('IngredientForm’s variants', () => {
     expect(control(oil, 'Form')).toHaveValue('Oil');
     expect(newForm()).toHaveValue('');
     type(oil, 'Safety Notes', 'Dilute before use.');
+    fireEvent.click(within(oil).getByRole('switch', { name: 'Toxic' }));
     save();
 
     await waitFor(() => expect(calls).toHaveLength(1));
+    // The form's own flag, the ingredient's left off beside it (M11.21).
+    expect(calls[0].input.toxic).toBe(false);
     expect(calls[0].input.variants).toEqual([
       {
         form: 'Oil',
         formId: '',
         description: '',
         safetyNotes: 'Dilute before use.',
+        toxic: true,
         elements: [],
         celestialBodies: [],
         zodiacSigns: [],

@@ -150,6 +150,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
           : null,
         description: variant.description ?? '',
         safetyNotes: variant.safetyNotes ?? '',
+        toxic: variant.toxic,
         elements: variant.elements ?? [],
         celestialBodies: entries(variant.celestialBodies),
         zodiacSigns: entries(variant.zodiacSigns),
@@ -179,6 +180,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
     ),
     substitutes: substitutes.map(toSubstitute),
     safetyNotes: entry.safetyNotes ?? '',
+    toxic: entry.toxic,
     references: references.map(referenceEntry),
     categoryIds: categories.map((category) => category.id),
   };

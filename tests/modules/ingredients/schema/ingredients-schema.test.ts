@@ -30,6 +30,7 @@ const COLUMNS = [
   'zodiac_signs',
   'colors',
   'safety_notes',
+  'toxic',
   'slug',
   'seed_key',
   ...AUDIT_COLUMNS,

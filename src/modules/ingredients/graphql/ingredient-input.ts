@@ -59,6 +59,10 @@ const IngredientVariantInput = builder.inputType('IngredientVariantInput', {
     }),
     description: t.string({ required: true }),
     safetyNotes: t.string({ required: true }),
+    toxic: t.boolean({
+      required: true,
+      description: "Whether this form is toxic: its own flag, whatever the ingredient's says.",
+    }),
     elements: t.field({ type: [IngredientElementEnum], required: true }),
     celestialBodies: t.stringList({ required: true }),
     zodiacSigns: t.stringList({ required: true }),
@@ -104,6 +108,12 @@ export function ingredientInputFields<T extends Tier, Whole extends boolean>(
     deities: t.field({ type: [IngredientDeityInput], required: whole }),
     colors: t.stringList({ required: whole }),
     safetyNotes: t.string({ required: whole }),
+    toxic: t.boolean({
+      required: whole,
+      description: whole
+        ? "Whether the ingredient is toxic; each form's flag is its own."
+        : "Whether the ingredient is toxic, off when left out; each form's flag is its own.",
+    }),
     substitutes: t.field({ type: [SubstituteInput], required: whole }),
     references: t.field({ type: [ReferenceLinkInput], required: whole }),
     folkNames: t.stringList({ required: whole }),

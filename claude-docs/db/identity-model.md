@@ -18,7 +18,9 @@ What follows describes all three as built.
   tier, non-null is a workspace's own ingredient), `name`, `slug` (MB.81;
   ["Ingredient slugs"](ingredient-slugs.md)), `canonicalName`, `nomenclature`, the generated `identityKey` (MB.216; below), the correspondence
   columns (`description`, `elements[]`, `celestialBodies[]`, `zodiacSigns[]`,
-  `colors[]`, `safetyNotes`), `seedKey` (MB.241), + audit. `seedKey` is the
+  `colors[]`, `safetyNotes`), `toxic` (M11.21; a yes/no, default no, and
+  each form carries its own, which never unions with this one — DESIGN.md
+  §5), `seedKey` (MB.241), + audit. `seedKey` is the
   key the compendium seed (MB.242) gives an entry it writes, so an entry an
   admin renames is not seeded again beside itself; it is null on every other
   row, the `standard` fixture's included (DESIGN.md §5, "`seedKey`"). `name` is the display label —

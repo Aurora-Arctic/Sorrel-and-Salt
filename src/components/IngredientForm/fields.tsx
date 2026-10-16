@@ -9,7 +9,7 @@ import {
 } from 'react-hook-form';
 import Combobox, { ComboboxEntry, ComboboxMultiSelect, ComboboxSortableEntries } from '../Combobox';
 import type { ComboboxOption } from '../Combobox/types';
-import { FieldError, FieldShell, useField } from '../Field';
+import { FieldError, FieldShell, SwitchField, useField } from '../Field';
 import InfoTip from '../InfoTip';
 import { substituteSummary } from './substitute-summary';
 import type {
@@ -20,6 +20,7 @@ import type {
   MultiSelectFieldProps,
   SubstituteListEntry,
   SuggestFieldProps,
+  ToggleFieldProps,
 } from './types';
 import {
   NAME_ONLY,
@@ -123,6 +124,27 @@ export function MultiSelectField({
         {...aria}
       />
     </FieldShell>
+  );
+}
+
+/**
+ * An on-or-off flag held in the form: the shared slide toggle, bound to the
+ * form state rather than submitting by itself, since the form sends its
+ * values as one input (M11.21). It cannot be wrong, so it has no error.
+ */
+export function ToggleField({ name, label, hint }: ToggleFieldProps): ReactElement {
+  const { control } = useFormContext<IngredientFormValues>();
+  const { field } = useController({ control, name });
+  return (
+    <SwitchField
+      label={label}
+      name={field.name}
+      value="1"
+      checked={field.value}
+      onChange={field.onChange}
+      disabled={field.disabled}
+      hint={hint}
+    />
   );
 }
 

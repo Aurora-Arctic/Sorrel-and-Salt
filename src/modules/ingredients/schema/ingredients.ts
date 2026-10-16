@@ -1,5 +1,14 @@
 import { type SQL, type SQLWrapper, sql } from 'drizzle-orm';
-import { check, index, pgEnum, pgTable, text, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  index,
+  pgEnum,
+  pgTable,
+  text,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS } from './ingredient-enums';
 import { auditColumns } from '../../identity/schema/users';
 import { workspaces } from '../../coven/schema/workspaces';
@@ -78,6 +87,11 @@ export const ingredients = pgTable(
     zodiacSigns: text('zodiac_signs').array(),
     colors: text('colors').array(),
     safetyNotes: text('safety_notes'),
+    // Whether the ingredient as a whole is dangerous (M11.21). Its own, and
+    // never read into a form or out of one: each form carries a flag of its
+    // own, so this is the one property the union rule does not cover
+    // (DESIGN.md §5, "The toxic flag is the one exception").
+    toxic: boolean('toxic').notNull().default(false),
     // Substitutes are the child table `ingredient_substitutes`, not the
     // `substitutes text[]` MB.141 dropped: a list of text cannot hold a link
     // (MB.138). Deities are `ingredient_deities` for the same reason: MB.167
