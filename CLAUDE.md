@@ -24,18 +24,18 @@ The schema entity is `workspaces` and the URL prefix `/coven/`, a deliberate div
 
 The devcontainer has no `make`, no `docker` and **no Python**: run the npm scripts, and script with `node -e`, `jq`, `grep` or `sed`. `make help` lists the host's targets; claude-docs/commands.md is the full table.
 
-| Command                         | Purpose                                                 |
-| ------------------------------- | ------------------------------------------------------- |
-| `npm run dev`                   | Dev server on **8000**, with Altair at `/api/graphql`   |
-| `npm run build` / `start`       | Production build; e2e serves it on **8001** and up      |
-| `npm run pre-commit`            | `lint`, `format:check`, `typecheck` — test-free (MB.38) |
-| `npm run test:coverage`         | Vitest's five projects, 80% threshold                   |
-| `npm run test:stories`          | The story suite (Playwright), one line per v1 story     |
-| `npm run e2e`                   | Playwright, a database and a server per worker          |
-| `npm run codegen`               | `src/gql/` from the committed SDL; commit the output    |
-| `npm run db:migrate`            | Applies migrations; `db:generate` writes one            |
-| `npm run db:seed` / `db:reset`  | Seeds `SEED_SCENARIO`; reset drops, migrates and seeds  |
-| `npm run check:destructive-ddl` | Flags destructive DDL in the branch's new migrations    |
+| Command                         | Purpose                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `npm run dev`                   | Dev server on **8000**, with Altair at `/api/graphql`                    |
+| `npm run build` / `start`       | Production build; e2e serves it on **8001** and up                       |
+| `npm run pre-commit`            | `lint`, `format:check`, `typecheck` on changed files — test-free (MB.38) |
+| `npm run test:coverage`         | Vitest's five projects, 80% threshold                                    |
+| `npm run test:stories`          | The story suite (Playwright), one line per v1 story                      |
+| `npm run e2e`                   | Playwright, a database and a server per worker                           |
+| `npm run codegen`               | `src/gql/` from the committed SDL; commit the output                     |
+| `npm run db:migrate`            | Applies migrations; `db:generate` writes one                             |
+| `npm run db:seed` / `db:reset`  | Seeds `SEED_SCENARIO`; reset drops, migrates and seeds                   |
+| `npm run check:destructive-ddl` | Flags destructive DDL in the branch's new migrations                     |
 
 **Verify with `test:coverage`, not `test`**: a plain pass can still fail CI on the 80% threshold alone. **Deploys are CI-only** (M0.26), through `.github/workflows/deploy.yml`.
 
