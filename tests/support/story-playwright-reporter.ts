@@ -46,8 +46,8 @@ export default class StoryPlaywrightReporter implements Reporter {
     }
 
     const checklist = buildChecklist(observations);
-    console.log(`\n${formatChecklist(checklist)}`);
-    for (const name of untagged) console.log(`No story tag: ${name}`);
+    process.stdout.write(`\n${formatChecklist(checklist)}\n`);
+    for (const name of untagged) process.stdout.write(`No story tag: ${name}\n`);
 
     const { outputFile } = this.options;
     if (outputFile) {
