@@ -645,3 +645,9 @@ the host load at 19; nothing else failed in any run. Memory was not the limit
 and nothing swapped; the cores and the browser server were. The default stays
 at 6. Whether 9 would win on a quiet machine this series does not settle. It
 changes only the local default: CI sets `E2E_WORKERS` itself.
+
+Merged staging, default 6: `npm run e2e` on the merged branch took 41.3 s wall
+from holding the lock, with a load average of 6.7 at the start, and passed
+all 64 tests (staging had grown since the 62 above). It ran with coverage off,
+since the merged harness has coverage behind `E2E_COVERAGE=1`, so it is not
+comparable with the 6, 9 and 12 table, which ran with coverage on under load.
