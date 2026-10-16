@@ -120,3 +120,59 @@ test('the compendium form lines its controls up and keeps its pickers inside the
   await expect(adding.getByRole('listbox', { name: 'Celestial Body suggestions' })).toBeVisible();
   await assertNoAccessibilityViolations(page);
 });
+
+// MB.258: opening Edit Source scrolled the dialog itself, which `overflow:
+// hidden` let a script do, so its header left the top and blank space showed
+// beneath the body; and the panel had no close at its top.
+test('the edit source panel leaves the dialog in place and closes from its top by keyboard', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await signInAs(page, 'source-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?new');
+  const adding = page.getByRole('dialog', { name: 'Add Ingredient' });
+  await expect(adding).toBeVisible();
+
+  // A source to edit: a new one, written through the panel.
+  await adding.getByRole('combobox', { name: 'Reference' }).click();
+  await page.getByRole('option', { name: 'New Reference…' }).click();
+  const creating = adding.getByRole('group', { name: 'New Reference' });
+  await creating.getByRole('combobox', { name: 'Kind' }).click();
+  await page
+    .getByRole('listbox', { name: 'Kind choices' })
+    .getByRole('option', { name: 'Book', exact: true })
+    .click();
+  await creating.getByRole('textbox', { name: /^Title/ }).fill('Mockleaf Herbal');
+  await creating.getByRole('textbox', { name: /^Published/ }).fill('1901');
+  await creating.getByRole('button', { name: 'Save Reference' }).click();
+  await expect(creating).toHaveCount(0);
+
+  const pencil = adding.getByRole('button', { name: 'Edit Mockleaf Herbal', exact: true });
+  await expect(pencil).toBeVisible();
+  if ((await pencil.getAttribute('aria-expanded')) !== 'true') await pencil.click();
+  await adding.getByRole('button', { name: 'Edit Source Mockleaf Herbal' }).click();
+  const editing = adding.getByRole('group', { name: 'Edit Source' });
+  const kind = editing.getByRole('combobox', { name: 'Kind' });
+  await expect(kind).toBeFocused();
+
+  // The precondition: the body scrolled to bring the panel up, which is
+  // what scrolled the dialog with it.
+  const body = adding.locator('.modal-dialog__body');
+  expect(await body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  // The dialog itself holds still, its own Close in view at its top.
+  expect(await adding.evaluate((element) => element.scrollTop)).toBe(0);
+  await expect(adding.getByRole('button', { name: 'Close', exact: true })).toBeInViewport();
+  await assertNoAccessibilityViolations(page);
+
+  // The panel's × is the one stop before Kind, and Enter on it closes the
+  // panel, saving nothing, the focus back on the row's Edit Source.
+  await editing.getByRole('textbox', { name: /^Title/ }).fill('Fixtureleaf Herbal');
+  await kind.focus();
+  await page.keyboard.press('Shift+Tab');
+  const close = editing.getByRole('button', { name: 'Close Edit Source' });
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Enter');
+
+  await expect(editing).toHaveCount(0);
+  await expect(adding.getByRole('button', { name: 'Edit Source Mockleaf Herbal' })).toBeFocused();
+});
