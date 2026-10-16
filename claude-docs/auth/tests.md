@@ -177,7 +177,7 @@
   of return paths through `signInPath()` and `safeReturnPath()`, and pins
   `postSignInLanding()` and `socialSignInTarget()`;
   `tests/db/sign-in-landing.test.ts` drives the callback's landing by role
-  (MB.113).
+  (MB.113) and by membership, through `signedInLanding` (MB.257).
   `tests/e2e/route-protection.spec.ts` runs the whole thing against the built
   server: a signed-out visit to a protected route lands on `/sign-in` with
   its `next`; `tests/e2e/invite.spec.ts` renders `/invite/*` signed out, not

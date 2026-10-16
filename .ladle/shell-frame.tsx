@@ -59,7 +59,7 @@ export const ShellFrame = ({
     workspaces.find((workspace) => workspace.slug === OPEN_COVEN)?.canReadMembers ?? true;
   return (
     <WorkshopPathname.Provider value={open}>
-      <AppShell viewer={who}>
+      <AppShell viewer={who} workspaces={workspaces}>
         {area === 'coven' && (
           <>
             <ContextRow

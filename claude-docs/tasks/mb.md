@@ -265,6 +265,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.260 | Admin Curated Lists Show No Updated Column                                                                               | Bugfixes | —                      |
 | MB.261 | The No Refs Switch Cannot Be Toggled With Enter                                                                          | Bugfixes | —                      |
 | MB.262 | Mail Shows Its Light Colours in Zoho Mail's Dark Mode                                                                    | Bugfixes | —                      |
+| MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1438,6 +1439,30 @@ _Acceptance criteria:_
 - Each of the three mails shows its dark theme in the Zoho Mail app with dark mode on, and its light theme with dark mode off; the check is recorded on the issue
 - Clients that already render correctly (those that honour `prefers-color-scheme`, and Gmail, which takes the inline dark) are unchanged, and the every-mail test still passes
 - `email.md`, "Design", records what Zoho Mail does with dark mode and why the frame is written the way it is
+
+**MB.263 — The Coven Links Still Stop on a Blank Page Before the Coven** · 2h
+
+_Story:_ As a signed-in member or admin, I want Your Coven, the brand and Continue to take me straight to my coven, so that I don't see a blank page on the way.
+
+Found on 2026-10-16, on the local dev server. MB.257 sent sign-in straight to the first coven, but four other links still point at `/coven`: the admin's Your Coven link, the brand for a non-admin, Continue on `/`, and Continue in the email form (the email page and the account page). `/coven` then redirects the browser to `/coven/[slug]`, leaving a blank stop on the way. It happens every time and is cosmetic.
+
+Steps to reproduce:
+
+1. Run the dev server locally.
+2. Sign in as a site admin who belongs to a coven.
+3. On `/admin`, click Your Coven in the bar.
+
+Actual: the browser stops on `/coven` and shows a blank page for a moment, then redirects to `/coven/[slug]`.
+Expected: Your Coven goes straight to `/coven/[slug]`.
+
+_Acceptance criteria:_
+
+- Regression tests that fail before the fix check that the admin's Your Coven link, a member's brand link, Continue on `/` and Continue on the email page each point at the viewer's first coven, `/coven/[slug]`
+- Someone in no coven still gets `/coven` from each of these links, and still sees the landing's three states (M2.8, MB.57)
+- An admin's brand still goes to `/admin`; only Your Coven goes into the coven
+- The sign-in callback and every Continue choose the landing through one helper, and the shell's links read the coven list the shell already loads, so they add no lookup
+- `/coven` still redirects a member who opens it directly, from a bookmark or after leaving a coven
+- `app-shell.md`, `welcome.md`, `email-form.md`, `route-protection.md`, `admin-bootstrap.md`, `auth/tests.md` and the MB.57 decision record are corrected
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 

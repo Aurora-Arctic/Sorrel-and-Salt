@@ -24,7 +24,8 @@ import { toUserRole } from './session-role';
 import { requiredInProduction } from './env';
 import { send } from './mail';
 import { emailPagePath, returnPathOf, verifiedLanding } from './account-email';
-import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH, postSignInLanding } from './sign-in';
+import { LAST_USED_PROVIDER_COOKIE, SIGN_IN_TO_VERIFY_PATH } from './sign-in';
+import { signedInLanding } from './landing';
 import { plainSessionCookie } from './e2e-session-cookie';
 import { impersonation, impersonationEnabled } from './impersonation';
 import { primaryAdminEmail } from './primary-admin';
@@ -483,10 +484,13 @@ export const auth = betterAuth({
 
       // With no return path, the landing is the role's as it stands after any
       // promotion just now; otherwise the endpoint's redirect already goes
-      // where the sign-in asked, `/coven` included.
+      // where the sign-in asked, `/coven` included. A member goes into their
+      // first coven (`signedInLanding`, MB.257).
       if (noReturnPath) {
         const role = outcome === 'promoted' ? 'admin' : toUserRole(user.role);
-        throw new APIError('FOUND', undefined, { Location: postSignInLanding(role) });
+        throw new APIError('FOUND', undefined, {
+          Location: await signedInLanding({ userId: user.id, role }),
+        });
       }
     }),
   },

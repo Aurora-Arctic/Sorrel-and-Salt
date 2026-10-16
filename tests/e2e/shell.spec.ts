@@ -91,10 +91,11 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
 
   const banner = page.getByRole('banner');
   await expect(banner).toBeVisible();
-  // The brand leads to the /coven landing (shellHome), which sends a member in.
+  // The brand leads straight into the member's coven (shellHome), never via the
+  // /coven landing's redirect (MB.257).
   await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute(
     'href',
-    '/coven',
+    `/coven/${ALPHA.slug}`,
   );
   // A non-admin has no site links yet, so the Site nav is not drawn at all.
   await expect(page.getByRole('navigation', { name: 'Site' })).toHaveCount(0);

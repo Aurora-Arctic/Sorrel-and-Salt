@@ -12,17 +12,20 @@ The page reads the session with **`getSession()`, never `requireSession()`**.
 `/` is in the proxy's `PUBLIC_ROUTES` and must stay reachable signed out;
 `requireSession()` would redirect exactly the visitors the page exists for.
 The session decides one thing: a signed-out visitor is offered **Sign In**
-(`/sign-in`), a signed-in one **Continue** to the landing for their role —
-`postSignInLanding` (`src/lib/sign-in.ts`), the rule a sign-in with no return
-path lands by: `/admin` for an admin (MB.113), and `/coven`, the post-sign-in
-landing (M2.8), for anyone else. The page computes it and passes it as
+(`/sign-in`), a signed-in one **Continue** to where they belong —
+`signedInLanding(session)` (`src/lib/landing.ts`), the rule a sign-in with no
+return path lands by: `/admin` for an admin (MB.113), the first coven the
+switcher lists for a member, and `/coven`, the post-sign-in landing (M2.8),
+for someone in none. A member goes into the coven directly rather than via
+`/coven`, whose redirect would leave the browser a stop with nothing on it
+(MB.257). The page computes it and passes it as
 `landing`, absent while signed out; the component never sees a role.
 Nothing else on the page depends on who is looking, and the page never
 redirects. Where the landing lives, and why it is not `/`, is
 [`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md).
 
 **Both links are `next/link`.** `landing` is typed as Next's `Route`
-(`postSignInLanding` returns one), so `typedRoutes` checks it, now that
+(`signedInLanding` returns one), so `typedRoutes` checks it, now that
 `/coven` has a page. In the workshop, `next/link`
 is aliased to a plain anchor (`.ladle/UnoptimizedLink.tsx`), as Ladle's
 Next.js guide prescribes.
