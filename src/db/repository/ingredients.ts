@@ -351,19 +351,31 @@ export function notHiddenByLocal(membership: Membership): SQL {
   return not(
     existsIn(
       local,
-      and(
-        scopedTo(membership, local),
-        inCompendium(ingredients),
-        or(
-          eq(local.identityKey, ingredients.identityKey),
-          and(
-            isNull(local.canonicalName),
-            eq(sql`lower(${local.name})`, sql`lower(${ingredients.name})`),
-          ),
-        ),
-      ),
+      and(scopedTo(membership, local), inCompendium(ingredients), hides(local, ingredients)),
     ),
   );
+}
+
+/** The columns of an `ingredients` row `hides` compares, whatever alias the row is read under. */
+interface HidingColumns {
+  identityKey: AnyPgColumn;
+  canonicalName: AnyPgColumn;
+  name: AnyPgColumn;
+}
+
+/**
+ * `local` hides the compendium entry `entry` (DESIGN.md §5, "Local beats
+ * compendium"): they share an `identity_key`, or `local` declares no formal
+ * name and shares the entry's label, folded. The one spelling of the match, so
+ * the lists that drop a hidden entry (`notHiddenByLocal`) and the save that
+ * moves a coven's jars off it (M12.8) cannot disagree. The tiers are the
+ * caller's to test.
+ */
+export function hides(local: HidingColumns, entry: HidingColumns): SQL {
+  return or(
+    eq(local.identityKey, entry.identityKey),
+    and(isNull(local.canonicalName), eq(sql`lower(${local.name})`, sql`lower(${entry.name})`)),
+  ) as SQL;
 }
 
 /**

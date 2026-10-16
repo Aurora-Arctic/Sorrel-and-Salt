@@ -501,6 +501,37 @@ export interface AuditWriter {
    */
   lockLiveMembers(membership: Membership): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
+   * Takes the proof's coven's stock lock until the transaction ends (M12.8): a
+   * save that moves jars onto a local and a create that adds a jar queue on it,
+   * so neither misses the other's write. Taken first, before any read or write.
+   * Per coven: another coven's call is not held up.
+   */
+  lockCovenStock(membership: Membership): Promise<void>;
+  /**
+   * The proof's coven's live jars of live forms of the compendium entries its
+   * ingredient `localId` hides (M12.8), each with its form and entry, locked
+   * `for update` in jar-id order until the transaction ends: what a local
+   * entry's save moves onto its own forms. A read, and in the writer because
+   * the move must hold the jars it decided on. Another coven's jars are never
+   * read, and neither is a jar of a deleted form.
+   */
+  lockJarsOnHiddenEntries(membership: Membership, localId: string): Promise<HiddenJar[]>;
+  /**
+   * The live forms of the proof's coven's ingredient `ingredientId`, locked in
+   * form-id order, read in the transaction so they include the ones this write
+   * has just made. None for an ingredient that is not the coven's.
+   */
+  lockLiveVariants(membership: Membership, ingredientId: string): Promise<VariantRow[]>;
+  /** The proof's coven's live jars of its ingredient `ingredientId`, locked in jar-id order. */
+  lockJarsOfIngredient(membership: Membership, ingredientId: string): Promise<StockRow[]>;
+  /**
+   * The proof's coven's live ingredients that hide the compendium entry
+   * `entryId`, locked in id order; the caller ranks them by
+   * identity match and age, which a lock order cannot. Empty for an id that is not a
+   * compendium entry.
+   */
+  lockLocalsHiding(membership: Membership, entryId: string): Promise<IngredientRow[]>;
+  /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
    * never the values'. The token is hashed here and only the hash is stored.
@@ -747,6 +778,19 @@ export type IngredientRow = typeof ingredients.$inferSelect;
 
 /** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
 export type StockRow = typeof inventoryItems.$inferSelect;
+
+/** A form of an ingredient, as a finder or a write returns it. */
+export type VariantRow = typeof ingredientVariants.$inferSelect;
+
+/**
+ * A jar a coven holds on a compendium entry its own ingredient hides (M12.8),
+ * with the form it sits on and the entry that form belongs to.
+ */
+export interface HiddenJar {
+  jar: StockRow;
+  variant: VariantRow;
+  entry: IngredientRow;
+}
 
 /** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {
