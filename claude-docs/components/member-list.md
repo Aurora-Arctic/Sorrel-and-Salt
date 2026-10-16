@@ -10,12 +10,13 @@ through `Workspace.members`.
 
 `MemberListProps` (`types.ts`):
 
-| Prop            | What it is                                                                                                               |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `members`       | `MemberListEntry` rows: `userId`, `name`, `role`, `joinedAt`, `updatedBy`, `updatedAt`, `invitedBy`, in the page's order |
-| `currentUserId` | The signed-in user; their row's name is followed by "You"                                                                |
-| `roleAction`    | `(member) => ReactNode`, drawn beside the role (Change Role); absent, the role alone                                     |
-| `removeAction`  | `(member) => ReactNode`, drawn in a Remove column at the end; absent, no column                                          |
+| Prop            | What it is                                                                                                                                                       |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `members`       | `MemberListEntry` rows: `userId`, `name`, `role`, `joinedAt`, `updatedBy`, `updatedAt`, `invitedBy`, and `email` (the address, owners only), in the page's order |
+| `showEmail`     | Set for owners alone (M11.19): adds the Email column after Name; absent, no column                                                                               |
+| `currentUserId` | The signed-in user; their row's name is followed by "You"                                                                                                        |
+| `roleAction`    | `(member) => ReactNode`, drawn beside the role (Change Role); absent, the role alone                                                                             |
+| `removeAction`  | `(member) => ReactNode`, drawn in a Remove column at the end; absent, no column                                                                                  |
 
 ## Contracts
 
@@ -43,6 +44,12 @@ through `Workspace.members`.
   "by **Fixture A** on 2026-10-12", the name in bold. Where the service withholds the editor's name the cell is
   empty, date included. A role change moves it; the joined date stays. A muted
   fact like Joined.
+- **Email is the owner's** (M11.19). The page sets `showEmail`
+  only for a caller holding `member: readEmail` and fills each entry's `email`
+  from the members service's `memberEmails`. The cell is the address alone,
+  with no verified mark as the admin user list draws, since every member's address is verified. A seat is taken only by accepting an invitation, which matches a verified address, or by creating a coven, which an unverified account cannot reach, and an address changes only at verification. Without `showEmail` the column
+  does not exist, so a member's table has no
+  empty Email column to give the feature away.
 - **The own row is marked in text** ("You"), not by colour or a test id.
 - **The sole-owner note is the page's**, not this component's: a quiet warning
   drawn inside the page's `ListFrame`, ahead of the list, so the frame's gap
@@ -88,7 +95,7 @@ used: `space()`, `type-size('caption')`, `$text-muted`, `$table-stack-width`.
 [`index.stories.tsx`](../../src/components/MemberList/index.stories.tsx),
 `Coven / Member List`: `ReadOnly`, a member's view with no controls;
 `WithActions`, an owner's, with plain buttons standing in for the page's
-controls; and `SoleOwner`, the page's composition with the sole-owner note
+controls and the Email column; and `SoleOwner`, the owner's page composition, addresses included, with the sole-owner note
 inside a `ListFrame` ahead of the list, with `SoleOwnerPhoneDark` and
 `SoleOwnerPhoneLight` at 375px.
 
@@ -96,7 +103,8 @@ inside a `ListFrame` ahead of the list, with `SoleOwnerPhoneDark` and
 
 `tests/components/MemberList/index.test.tsx`, by role and label queries: all
 three roles with their dates, the role controls beside each role, no Remove
-column without `removeAction`, each control given its row's member, and "You"
-on the own row only. `tests/components/MemberList/remove-control.test.tsx`
+column without `removeAction`, each control given its row's member, "You"
+on the own row only, and the address only under
+`showEmail`. `tests/components/MemberList/remove-control.test.tsx`
 and `role-control.test.tsx` hold each control's refusal: said above through an
 `ActionFailure`, and beside the control when it stands outside one.

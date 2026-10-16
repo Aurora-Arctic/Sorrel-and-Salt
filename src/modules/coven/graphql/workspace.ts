@@ -40,6 +40,20 @@ export const WorkspaceMemberRef = builder
         nullable: true,
         resolve: (member) => (member.invitedBy ? { id: member.invitedBy } : null),
       }),
+      // The owner's alone (M11.19), on a field of its own rather than on
+      // `user`, a `CoMember` every member reads. Through `memberEmailsByMember`,
+      // one read per page of members; anyone else gets `FORBIDDEN`.
+      email: t.field({
+        type: 'String',
+        nullable: true,
+        description:
+          "The member's address, as their own account holds it now. Owners only; null for someone the coven no longer seats.",
+        resolve: (member, _args, { loaders }) =>
+          loaders.memberEmailsByMember.load({
+            workspaceId: member.workspaceId,
+            userId: member.userId,
+          }),
+      }),
       audit: t.field({ type: AuditInfo, resolve: (member) => member }),
     }),
   });

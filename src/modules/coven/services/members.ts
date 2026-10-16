@@ -1,10 +1,11 @@
 import 'server-only';
-import { findMemberPage } from '../../../db/repository';
+import { findMemberEmails, findMemberPage } from '../../../db/repository';
+import { Forbidden } from '../../../lib/errors';
 import { allPages } from '../../../lib/pagination';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { assertMembership } from './membership';
-import type { MembershipWithWorkspace, WorkspaceRow } from '../types';
+import type { MemberEmail, MemberKey, MembershipWithWorkspace, WorkspaceRow } from '../types';
 
 /**
  * One page of a coven's live members, in the order they joined, each carrying
@@ -40,4 +41,60 @@ export async function memberRoster(
 ): Promise<Pick<MembershipWithWorkspace, 'userId' | 'role'>[]> {
   const members = await allPages((request) => listMembers(session, workspace, request));
   return members.map(({ userId, role }) => ({ userId, role }));
+}
+
+/**
+ * The address of each of these users who sits in the coven, read off their
+ * own user row so a changed address shows at once:
+ * the owner's Email column on the members page (M11.19). A
+ * separate read rather than a wider `CoMember`, which every member reads.
+ * Users outside the coven are left out, not refused. One read for the check
+ * and one for the addresses.
+ *
+ * @throws {Forbidden} the caller holds no live seat in the coven, or holds one
+ * without `member: readEmail`, which only owners hold.
+ */
+export async function memberEmails(
+  session: Session,
+  workspaceId: string,
+  userIds: readonly string[],
+): Promise<MemberEmail[]> {
+  const membership = await assertMembership(session, workspaceId, { member: ['readEmail'] });
+  const rows = await findMemberEmails(membership, userIds);
+  return rows.map(({ id, email }) => ({ userId: id, address: email }));
+}
+
+/**
+ * `memberEmails` for a batch of members across covens, one answer per key:
+ * the address, null for someone the coven no longer seats, or the
+ * `Forbidden` the coven's check gave, so one coven refused leaves another
+ * answered. One check and one read per coven named.
+ */
+export async function emailsOfMembers(
+  session: Session,
+  keys: readonly MemberKey[],
+): Promise<(string | null | Forbidden)[]> {
+  const covens = new Map<string, string[]>();
+  for (const { workspaceId, userId } of keys)
+    covens.set(workspaceId, [...(covens.get(workspaceId) ?? []), userId]);
+  const answers = new Map<string, Map<string, string> | Forbidden>(
+    await Promise.all(
+      [...covens].map(async ([workspaceId, userIds]) => {
+        try {
+          const emails = await memberEmails(session, workspaceId, userIds);
+          return [
+            workspaceId,
+            new Map(emails.map(({ userId, address }) => [userId, address])),
+          ] as const;
+        } catch (error) {
+          if (error instanceof Forbidden) return [workspaceId, error] as const;
+          throw error;
+        }
+      }),
+    ),
+  );
+  return keys.map(({ workspaceId, userId }) => {
+    const answer = answers.get(workspaceId)!;
+    return answer instanceof Forbidden ? answer : (answer.get(userId) ?? null);
+  });
 }
