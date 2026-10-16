@@ -126,6 +126,62 @@ describe.each(MAILS)('$name, once rendered', ({ message }) => {
   });
 });
 
+// Zoho Mail drops the stylesheet and, in its Night mode, rewrites every inline
+// `color` and `background-color` to an inverted `!important` value — except on
+// an <a> whose background is an image, which it leaves alone (MB.262, measured;
+// claude-docs/email.md, "Design"). So the page is painted by a gradient as well
+// as a colour, and every run of text sits directly inside an anchor that
+// carries a gradient of its own.
+describe.each(MAILS)('$name, in Zoho Mail', ({ message }) => {
+  const PAGE_PAINT = 'background:#14120e linear-gradient(#14120e,#14120e)';
+
+  it('paints the page and the surround by a gradient Zoho keeps, not a colour alone', async () => {
+    const { html } = await message();
+
+    expect(html).toMatch(
+      new RegExp(`<body class="ss-body" [^>]*style="[^"]*${escape(PAGE_PAINT)}`),
+    );
+    expect(html).toMatch(new RegExp(`<td class="ss-page" style="[^"]*${escape(PAGE_PAINT)}`));
+  });
+
+  it('gives every anchor a gradient background and no background colour', async () => {
+    const { html } = await message();
+    const anchors = html.match(/<a\b[^>]*>/g) ?? [];
+
+    expect(anchors.length).toBeGreaterThan(3);
+    for (const anchor of anchors) {
+      expect(anchor).toMatch(/style="[^"]*linear-gradient\(/);
+      expect(anchor).not.toMatch(/background-color:/);
+    }
+  });
+
+  it('sets every heading and paragraph directly inside an anchor, with no text outside one', async () => {
+    const { html } = await message();
+    const blocks = [...html.matchAll(/<(h1|p)\b[^>]*>(.*?)<\/\1>/gs)].map(([, , inner]) => inner);
+
+    expect(blocks.length).toBeGreaterThan(2);
+    for (const inner of blocks) {
+      const outside = inner.replace(/<a\b[^>]*>.*?<\/a>/gs, '').replace(/<[^>]*>/g, '');
+      expect(outside).not.toMatch(/\S/);
+    }
+  });
+
+  it('resets the gradients in the light theme, so a client that honours it still goes light', async () => {
+    const { html } = await message();
+
+    expect(html).toContain('.ss-page{background:#efe9da!important;color:#23201a!important;}');
+    expect(html).toContain(
+      '.ss-page .ss-button{background:#397511!important;color:#efe9da!important;}',
+    );
+    expect(html).toContain('.ss-body{background:#efe9da!important;}');
+  });
+});
+
+/** `value` as a literal inside a RegExp. */
+function escape(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 describe('the templates', () => {
   // A new template cannot ship without a row above.
   it('are all covered by a row', () => {
