@@ -35,6 +35,7 @@ movable, on dnd-kit.
 | `suggestions`      | `{ options, pending }` for the text as it stands. Left out for a box with no source, which never opens, has no chevron and no status region.                                                                                                                                                   |
 | `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                                                                                                                                 |
 | `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                                                                                                                                 |
+| `icon`             | A mark drawn before the text, `aria-hidden`: the type-ahead box's chosen icon, there while the box reads the chosen label (M12.7).                                                                                                                                                             |
 | `clear`            | `{ label, onClear, empty }`: a control that empties the box, "Clear Folk Names"; `empty` while there is nothing to clear, when it is hidden but keeps its room.                                                                                                                                |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
 | `create`           | `{ label, onCreate }`: a last row that makes something new, "New Reference…", with no typed row, there with a blank box too. See "The create row".                                                                                                                                             |
@@ -46,7 +47,7 @@ movable, on dnd-kit.
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                             |
 
-A `ComboboxOption` is `{ value, label?, note?, curated?, heading?, key? }`: the text a
+A `ComboboxOption` is `{ value, label?, icon?, note?, curated?, heading?, key? }`: the text a
 pick writes, the row's text when it is more than the value ("Wax (Animal)"), a
 second line, which bucket it is in — `curated` for the two source buckets, or
 `heading` for a bucket the source names itself, a category's group (MB.126) —
@@ -57,6 +58,15 @@ can share all three, a compendium entry and the coven's own copy of it, and
 only the ingredient's id tells them apart (MB.131). The row's accessible name is its
 label and its note, so two same-named forms are told apart by a screen
 reader as well as by the eye, and so is who claims a value.
+
+An option's `icon` (M12.7) is a `ReactNode`, not a typed name: the box has no
+icon vocabulary of its own, and the caller, which knows its domain's, hands in
+the finished element (the Form box passes `<FormIcon>`). It is drawn before the
+label in a `combobox__icon` span that is `aria-hidden`, so it adds nothing to the
+row's name. `ComboboxProps.typedIcon` does the same for the typed-text row, and
+`ComboboxProps.icon` for the box's text: the Form box passes the picked form's
+icon there, before the name, while it holds the pick (the owner's call, M12.7).
+A qualifier carries no icon of its own.
 
 An option may also carry `colors`, a group row's `{ colorDark, colorLight }`,
 which a category's row does (the owner's call, M5.6b). The row then takes the pair inline through
@@ -222,15 +232,21 @@ changed form to discard (MB.115). With the list shut, Escape reaches the
 modal as ever. The Modal workshop's `WithPickers` story holds both pickers
 in a modal to try it.
 
-| Prop                 | Meaning                                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.           |
-| `label`              | What the box is called, and its list's name, "Classification choices".                          |
-| `value`/`onChange`   | The chosen value, held by the caller.                                                           |
-| `choices`            | `{ value, label }` in order. One whose value is `''` is the choice that clears the set: "None". |
-| `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                        |
-| `required`           | `aria-required`, as the field marks it.                                                         |
-| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                              |
+| Prop                 | Meaning                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                  |
+| `label`              | What the box is called, and its list's name, "Classification choices".                                 |
+| `value`/`onChange`   | The chosen value, held by the caller.                                                                  |
+| `choices`            | `{ value, label, icon? }` in order. One whose value is `''` is the choice that clears the set: "None". |
+| `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                               |
+| `required`           | `aria-required`, as the field marks it.                                                                |
+| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                     |
+
+A choice's `icon` (M12.7), a drawn, decorative node such as a form group's
+[`FormIcon`](form-icon.md), shows before its label in its row and in the closed
+value, in the same `combobox__icon` span the suggesting box uses: `aria-hidden`
+and outside the accessible name. The type-ahead box passes it on to its rows
+too; the combobox knows no icon set.
 
 The chevron is drawn inside the control and hidden from assistive
 technology, since the whole control is the one target. The control takes the
@@ -274,6 +290,11 @@ folder's index and the lint refuses an import cycle.
   and typing matches the label alone, never the qualifier. The qualifier
   shows while the box reads the chosen label as written; typed over in
   another case, the box is being typed in and shows none.
+- **A choice may carry an `icon`** (M12.7, a form group's icon): drawn
+  before its label in its row, and once chosen ahead of the text in the box,
+  in the `combobox__icon` span, `aria-hidden`, through the suggesting
+  box's `icon` prop. It shows under the qualifier's reading: while the
+  box reads the chosen label as written, and not while it is typed in.
 - **With `clearable`, a clear** sits on the control's right before the
   chevron, as a list's does, offered while the box holds text or a choice and
   hidden in its place while it does not, so the box keeps one width: it
@@ -287,17 +308,17 @@ folder's index and the lint refuses an import cycle.
   [`filter-form.md`](filter-form.md)). `onChange` still hears every change,
   typing included, for the caller's own state.
 
-| Prop                 | Meaning                                                                                                                      |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                            |
-| `label`              | What the box is called, and its list's name, "Tradition choices".                                                            |
-| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                                   |
-| `onSettle`           | Optional: the value on a pick, the clear (`''`) or leaving the box (the choice the text names, or `''`); never on typing.    |
-| `choices`            | `{ value, label, qualifier? }` in order; typing narrows them by label. A qualifier reads in the row and, chosen, in the box. |
-| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                                     |
-| `required`           | `aria-required`, as the field marks it.                                                                                      |
-| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both.       |
-| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                           |
+| Prop                 | Meaning                                                                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                                              |
+| `label`              | What the box is called, and its list's name, "Tradition choices".                                                                              |
+| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                                                     |
+| `onSettle`           | Optional: the value on a pick, the clear (`''`) or leaving the box (the choice the text names, or `''`); never on typing.                      |
+| `choices`            | `{ value, label, qualifier?, icon? }` in order; typing narrows them by label. A qualifier and an icon read in the row and, chosen, in the box. |
+| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                                                       |
+| `required`           | `aria-required`, as the field marks it.                                                                                                        |
+| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both.                         |
+| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                                             |
 
 ## The multi-select box
 
@@ -627,7 +648,7 @@ tooltip on a cut-off entry stops at `$tip-width`, capped at the window, as
 InfoTip's does (MB.115). The lengths left raw are the control's own geometry
 and say so in a comment: the 6rem the text keeps before it wraps onto a row
 of its own (beside entries, the placeholder's width instead, `--combobox-room` from `room.ts`, in `ch` and never past the row, so the prompt shows whole or wraps under the chips), the list's 20rem height, the category bar's 3px and 5px, the
-grip's half-glyph width, and the 1px edges.
+grip's half-icon width, and the 1px edges.
 
 ## Stories
 
@@ -637,7 +658,7 @@ grip's half-glyph width, and the 1px edges.
 `Sortable`, seven celestial bodies wrapping onto a second row, each moved by its grip
 and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
-an edit; `SelectOnly`, the select-only box; `Typeahead`, the type-ahead box over five
+an edit; `SelectOnly`, the select-only box; `SelectWithIcons`, the same with an icon on each choice; `Typeahead`, the type-ahead box over five
 traditions, the value shown beneath it; and
 `MultiSelect`, the multi-select box with two elements chosen;
 `CreateRow`, its list open on "New Reference…" last whatever is typed, saying beneath the

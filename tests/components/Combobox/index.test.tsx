@@ -144,6 +144,23 @@ describe('Combobox', () => {
     expect(within(inUse).queryByRole('option', { name: /typed/ })).not.toBeInTheDocument();
   });
 
+  // M12.7: an option's icon is decoration, drawn before the label and left
+  // out of the name a screen reader gets.
+  it('draws an option icon before its label without adding it to the name', () => {
+    const suggestions: Suggestions = {
+      options: [{ value: 'Wax', icon: <svg /> }, { value: 'Rhizomes' }],
+      pending: false,
+    };
+    render(<Harness suggestions={suggestions} />);
+    type('x');
+
+    const withIcon = screen.getByRole('option', { name: 'Wax' });
+    const mark = withIcon.querySelector('svg')!;
+    expect(mark.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(withIcon.firstElementChild).toContainElement(mark);
+    expect(screen.getByRole('option', { name: 'Rhizomes' }).querySelector('svg')).toBeNull();
+  });
+
   it('lists a source with one bucket without groups', () => {
     render(<Harness suggestions={ONE_BUCKET} />);
 
@@ -1069,6 +1086,35 @@ describe('Combobox', () => {
 
       expect(element()).toHaveTextContent('Air');
       expect(element()).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('draws the icon of a choice in its row and in the closed value, outside the accessible name', () => {
+      const choices = [
+        { value: 'earth', label: 'Earth', icon: <svg data-mark="earth" /> },
+        { value: 'air', label: 'Air' },
+      ];
+      function Harness() {
+        const [value, setValue] = useState('');
+        return (
+          <ComboboxSelect
+            id="element"
+            label="Element"
+            value={value}
+            onChange={setValue}
+            choices={choices}
+          />
+        );
+      }
+      render(<Harness />);
+
+      fireEvent.click(element());
+      const earth = screen.getByRole('option', { name: 'Earth' });
+      const mark = earth.querySelector('[aria-hidden="true"] svg');
+      expect(mark).not.toBeNull();
+      expect(screen.getByRole('option', { name: 'Air' }).querySelector('svg')).toBeNull();
+
+      fireEvent.click(earth);
+      expect(element().querySelector('[aria-hidden="true"] svg')).not.toBeNull();
     });
 
     it('chooses None, the choice whose value is blank, like any other', () => {
