@@ -48,6 +48,22 @@ async function setSentAt(id: string, at: string | null): Promise<void> {
   await sql`update users set verification_sent_at = ${at === null ? null : sql`now() - ${at}::interval`} where id = ${id}`;
 }
 
+/**
+ * Moves the row's last touch back by `by`. The `set_updated_at` trigger
+ * overwrites any `updated_at` an UPDATE supplies, so it is switched off for
+ * this one statement (as tests/modules/identity/services/provisional-accounts.test.ts
+ * does; the worker's database is its own clone). Without it, the row's last
+ * touch is the beforeEach write a moment ago, and a JS `Date` holds whole
+ * milliseconds, so "later than before" could compare equal.
+ */
+async function backdateTouch(id: string, by: string): Promise<void> {
+  await sql.begin(async (tx) => {
+    await tx`alter table users disable trigger set_updated_at`;
+    await tx`update users set updated_at = now() - ${by}::interval where id = ${id}`;
+    await tx`alter table users enable trigger set_updated_at`;
+  });
+}
+
 /** The seed leaves every fixture unverified; a test says which state it is about. */
 async function setVerified(id: string, verified: boolean): Promise<void> {
   await sql`update users set email_verified = ${verified} where id = ${id}`;
@@ -118,6 +134,8 @@ describe('setEmail', () => {
   });
 
   it("restarts a provisional caller's window, stamped as them, and mails the new address — the row's own stays", async () => {
+    // The window can only be seen to restart from a last touch that is not a moment ago.
+    await backdateTouch(B.id, '1 hour');
     const before = await userRow(B.id);
     expect(before).toMatchObject({ email_verified: false, updated_by: A.id });
 
