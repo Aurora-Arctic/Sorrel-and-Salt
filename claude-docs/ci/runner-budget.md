@@ -49,23 +49,32 @@ build, the servers and the template seed, and the rest is the tests.
 | ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `playwright`                  | 139s   | pull 40s · cache restore 6s · Run Playwright tests 81s (`next build`, 8 servers and the seed 33s · 62 tests on 4 workers 53s) · coverage upload 2s                       |
 | `stories`                     | 166s   | pull 46s · cache restore 5s · Run Playwright tests 104s (build, 6 servers and the seed 21s · 50 stories on 4 workers 64s in that run, and the step 85–131s over the six) |
-| `vitest` (Blacksmith, 8 vCPU) | 68s    | measured on Blacksmith before M11.24: pull 8–11s · Run vitest 44–62s · stories 3s                                                                                        |
+| `vitest` (GitHub, 4 vCPU)     | 337s   | run 38877563430, the first after the move: pull 27s · Run vitest 300s. On Blacksmith (8 vCPU), before M11.24, it was 68s: pull 8–11s · Run vitest 44–62s · stories 3s    |
 | `checks / build`              | 71s    | pull 28s · build 30–47s · cache save 4s                                                                                                                                  |
 | the other seven `checks` legs | 25–49s | pull 22–28s, then the tool                                                                                                                                               |
 | the three image builds        | 16–30s | finding the content-hash tag already published, and skipping the build                                                                                                   |
 | `changes`                     | ~8s    | the path filters                                                                                                                                                         |
 
-<!-- M11.24: fill in the vitest job time from this PR's gate run before merge -->
-
-The `vitest` row above was measured on Blacksmith, before M11.24. On GitHub's
-4-vCPU runner the job is expected to take about the 2m14s MB.96 measured there
-before the move (#527, in the MB.96 table below) — an earlier measurement, not a
-new one. It stays off the critical path.
+The `vitest` row above is the first run on GitHub's 4-vCPU runner after
+M11.24 moved the job, with the Blacksmith figure kept beside it as history. That
+run (PR #1024's run 38877563430, job 116896363786) took **5m37s**: "Initialize containers" 27s,
+"Run vitest" 300s. Vitest's own line was `Duration 298.51s (tests 54%, import
+17%, environment 13%, setup 10%, transform 6%, worker 1%)` over 344 files and
+4,320 tests. That is about four times the Blacksmith job and well past the 2m14s
+MB.96 measured on the same runner size, so the earlier expectation did not hold.
+Two tests in `tests/components/IngredientForm/variants.test.tsx` failed on
+Vitest's default 5,000 ms `testTimeout`: that file took 79.2s for its 35 tests,
+and the two run in 1.2s and 0.9s on an idle 12-core devcontainer, so three
+workers sharing four vCPUs made them more than four times slower.
+`vitest.config.mts` now sets `testTimeout` to 20,000 ms, since the timeout
+guards against a hang and is not a speed assertion.
 
 Of the Blacksmith run's 47s of Vitest wall time, its own breakdown gives 38% to the
 tests, 30% to imports, 13% to transforms, 10% to setup files and 8% to test
-environments. The critical path to the required checks is `changes` →
-`build-e2e-image` → `playwright`, about 3 minutes warm; `stories` runs
+environments. The critical path to the required checks is now `changes` →
+`vitest`, 5m37s on GitHub's runner and longer than `playwright` (about
+143s), so the Vitest speed work under M11.24 is what shortens it. Before the
+move it was `changes` → `build-e2e-image` → `playwright`, about 3 minutes warm; `stories` runs
 beside it on the same image and finishes about half a minute later, but is
 never a required check (M9.1). In both Playwright jobs the test span is set
 by the longest serial spec file rather than by the work: `shell.spec.ts` is

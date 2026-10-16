@@ -341,3 +341,38 @@ for (const width of [642, 768, 882]) {
     expect(fits).toBe(true);
   });
 }
+
+// MB.264: the server cannot know the window's width, so it draws the phone's
+// four tabs and More. Wider than the phone the stylesheet must show every tab
+// from the first paint, before the script has measured; the script's chunks
+// (not the stylesheets, which block the first paint) are held here so the
+// page never hydrates during the assertions.
+test('before the script runs, a desktop admin row shows every tab and no More', async ({
+  page,
+}) => {
+  await signInAgainAs(page, users.admin.id);
+  await page.setViewportSize(DESKTOP);
+
+  let release: () => void = () => undefined;
+  const held = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/_next/static/chunks/**/*.js', async (route) => {
+    await held;
+    await route.continue().catch(() => undefined);
+  });
+  await page.goto('/admin', { waitUntil: 'commit' });
+
+  const admin = page.getByRole('navigation', { name: 'Admin' });
+  await expect(admin).toBeVisible();
+  await expect(admin.getByRole('link')).toHaveCount(6);
+  for (const link of await admin.getByRole('link').all()) await expect(link).toBeVisible();
+  await expect(admin.getByRole('button')).toHaveCount(0);
+
+  // The server's markup still names every section, each tab once.
+  const hrefs = await admin
+    .getByRole('link')
+    .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+  expect(new Set(hrefs).size).toBe(6);
+  release();
+});
