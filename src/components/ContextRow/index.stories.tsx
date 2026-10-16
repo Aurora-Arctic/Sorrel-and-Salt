@@ -18,7 +18,7 @@ const WORKSPACES = [
 // The admin area's row: the word "Admin" in the display face, the nav beside it.
 export const Admin: Story = () => (
   <ContextRow lead={<span className="context-row__name">Admin</span>}>
-    <AdminNav />
+    <AdminNav managesPeople />
   </ContextRow>
 );
 

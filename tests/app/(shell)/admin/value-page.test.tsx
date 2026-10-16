@@ -20,8 +20,8 @@ import type { GroupedValueKind } from '@/components/GroupedValueForm/types';
 // list and the form behave given those props is their own tests'
 // (claude-docs/testing/layer-ownership.md, "The owning layer").
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+const requireCuratorSession = vi.fn();
+vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
 
 // The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
@@ -121,8 +121,8 @@ function lastFilter(): unknown {
 const NO_FILTER = { query: undefined, groupId: undefined };
 
 beforeEach(() => {
-  requireAdminSession.mockReset();
-  requireAdminSession.mockResolvedValue(ADMIN);
+  requireCuratorSession.mockReset();
+  requireCuratorSession.mockResolvedValue(ADMIN);
   listCategories.mockReset();
   listCategories.mockResolvedValue([entry(TESTCRAFT)]);
   listCategoryGroups.mockReset();
@@ -135,7 +135,7 @@ beforeEach(() => {
 
 describe('a curated value page, on the categories', () => {
   it('renders nothing, and reads nothing, when the guard refuses', async () => {
-    requireAdminSession.mockRejectedValue(new Error('forbidden'));
+    requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
     await expect(renderPage()).rejects.toThrow('forbidden');
     expect(listCategories).not.toHaveBeenCalled();

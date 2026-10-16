@@ -229,8 +229,8 @@ export interface PagerHrefs<Href extends string = string> {
 export interface ShellViewer {
   /** The name the site shows for them; the account button's text and its initials. */
   name: string;
-  /** A site admin: the shell adds the Admin and Your Coven links. */
-  isAdmin: boolean;
+  /** A curator or a site admin (M11.20): the shell adds the Admin and Your Coven links. */
+  canCurate: boolean;
   /** Holds `canCreateWorkspace`, read from the user row, never the session. */
   canCreate: boolean;
   /** Their address is verified. Until it is, the shell offers an account menu with Sign Out and nothing else. */

@@ -67,6 +67,10 @@ cannot:
   two exemption-count pins, six files and one, plus one probe each that the
   ban still fires.
 - `test-location.test.ts` — above.
+- `e2e-serial-chains.test.ts` — a Playwright spec whose tests chain, one
+  assigning a variable declared outside it for a later test to read, is
+  serial, since a file's tests otherwise spread across workers with their own
+  databases (M11.18; claude-docs/testing/e2e.md, "E2E").
 - `migration-order-check.test.ts` and `destructive-ddl-check.test.ts` — the
   rules of the two CI scripts that guard production's migrations.
 - `pulled-env-assertion.test.ts` — no value of a pulled Vercel environment

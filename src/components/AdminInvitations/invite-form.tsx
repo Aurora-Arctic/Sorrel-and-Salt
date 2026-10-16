@@ -5,22 +5,24 @@ import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import type { Failure } from '../../lib/types';
-import { FieldShell, FormActions, ReasonField, fieldDescription } from '../Field';
+import { FieldShell, FormActions, RadioGroupField, ReasonField, fieldDescription } from '../Field';
 import { DiscardQuestion, RouteModal, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import type { InviteFieldsProps, InviteFormProps } from './types';
+import { roleLabel, SITE_ROLE_ACCESS } from '../UserList/roles';
+import type { InvitableSiteRole, InviteFieldsProps, InviteFormProps } from './types';
 
-// The modal Invite Admin opens, by the tab's address, `?invite`, as a value
-// page's `?new` opens its own (MB.115: Invite Admin moved beside the page's
-// heading, out of this component's reach): an address and an optional
-// reason, sent as `createAdminInvitation`, which mails the link and answers
+// The modal New Invitation opens, by the tab's address, `?invite`, as a value
+// page's `?new` opens its own (MB.115: New Invitation moved beside the page's
+// heading, out of this component's reach): an address, the site role it is
+// invited to (M11.20), and an optional reason, sent as
+// `createAdminInvitation`, which mails the link and answers
 // no link (MB.70). Closing goes back to the tab and re-reads it, so the new
 // invitation is listed. The service is the guard; a refused address is said
 // beside the field (claude-docs/components/admin-invitations.md).
 
 const CreateAdminInvitationDocument = graphql(`
-  mutation CreateAdminInvitation($email: String!, $note: String) {
-    createAdminInvitation(email: $email, note: $note) {
+  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {
+    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {
       id
     }
   }
@@ -35,6 +37,12 @@ const NOTE_HINT =
   'Kept with the invitation, and in the record of who changed what once it is accepted.';
 
 /**
+ * The roles an invitation offers, the lesser first and chosen to begin with,
+ * so granting the people page is a choice the admin makes (M11.20).
+ */
+const SITE_ROLES: readonly InvitableSiteRole[] = ['curator', 'admin'];
+
+/**
  * The form inside the modal, so its guard over unsaved changes reaches the
  * modal's Close button, Escape and backdrop (claude-docs/components/modal.md,
  * "Unsaved changes").
@@ -43,6 +51,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
   const emailId = useId();
 
   const [email, setEmail] = useState('');
+  const [siteRole, setSiteRole] = useState<InvitableSiteRole>(SITE_ROLES[0]);
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<Failure>({});
@@ -53,7 +62,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
 
   // Anything typed is a change: Cancel, and every other way out, asks first
   // (MB.115, the owner's call); a sent invitation does not.
-  const discard = useDiscardGuard(email !== '' || note !== '');
+  const discard = useDiscardGuard(email !== '' || siteRole !== SITE_ROLES[0] || note !== '');
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,6 +72,7 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
     try {
       await graphqlRequest(CreateAdminInvitationDocument, {
         email: address,
+        siteRole,
         note: note.trim() || undefined,
       });
       setSending(false);
@@ -95,6 +105,18 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
           onChange={(event) => setEmail(event.target.value)}
         />
       </FieldShell>
+      <RadioGroupField
+        legend="Role"
+        name="invite-site-role"
+        options={SITE_ROLES.map((role) => ({
+          value: role,
+          label: roleLabel(role),
+          description: SITE_ROLE_ACCESS[role],
+        }))}
+        value={siteRole}
+        onChange={setSiteRole}
+        disabled={sending}
+      />
       <ReasonField
         className="user-list__note"
         hint={NOTE_HINT}
@@ -118,10 +140,10 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
 };
 
 /** The modal's head, and the tab's action that opens it. */
-export const INVITE_TITLE = 'Invite Admin';
+export const INVITE_TITLE = 'New Invitation';
 
 // The tab's one modal place, rendered whether or not `?invite` is open, so
-// Invite Admin's press shows it at once over a skeleton and the form
+// New Invitation's press shows it at once over a skeleton and the form
 // arrives in the same dialog (M9.18).
 const InviteForm = ({ open, onSent, closeHref }: InviteFormProps): ReactElement => (
   <RouteModal

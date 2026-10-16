@@ -52,26 +52,38 @@ follows is enough to redo the sum.
 
 ### Where a gate run's time goes
 
-Means over six successful gate runs on 10–11 October 2026 (38104708609,
-38108699654, 38109769274, 38109934658, 38110758509, 38111170609), every
-image already built and cached. "Pull" is "Initialize containers": pulling
-the job's image and starting its services.
+Means over six successful gate runs on 16 October 2026 (38862331956,
+38857677987, 38856311496, 38855372361, 38855033330, 38854652905), every
+image already built and cached; the two Playwright rows were re-measured for
+M11.18, the rest are the 10–11 October means (38104708609, 38108699654,
+38109769274, 38109934658, 38110758509, 38111170609). "Pull" is "Initialize
+containers": pulling the job's image and starting its services. The
+Playwright steps' breakdown is read off run 38862331956's logs: the gap
+from the step's start to the list reporter's `Running N tests` line is the
+build, the servers and the template seed, and the rest is the tests.
 
-| Job                           | Time   | Where it goes                                                                                          |
-| ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------ |
-| `playwright`                  | 143s   | pull 48s · cache restore 3s · `next build` and server start 29s · 56 tests on 2 workers 55s · save 15s |
-| `vitest` (Blacksmith, 8 vCPU) | 68s    | pull 8–11s · Run vitest 44–62s · stories 3s                                                            |
-| `checks / build`              | 71s    | pull 28s · build 30–47s · cache save 4s                                                                |
-| the other seven `checks` legs | 25–49s | pull 22–28s, then the tool                                                                             |
-| the three image builds        | 16–30s | finding the content-hash tag already published, and skipping the build                                 |
-| `changes`                     | ~8s    | the path filters                                                                                       |
+| Job                           | Time   | Where it goes                                                                                                                                                            |
+| ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `playwright`                  | 139s   | pull 40s · cache restore 6s · Run Playwright tests 81s (`next build`, 8 servers and the seed 33s · 62 tests on 4 workers 53s) · coverage upload 2s                       |
+| `stories`                     | 166s   | pull 46s · cache restore 5s · Run Playwright tests 104s (build, 6 servers and the seed 21s · 50 stories on 4 workers 64s in that run, and the step 85–131s over the six) |
+| `vitest` (Blacksmith, 8 vCPU) | 68s    | pull 8–11s · Run vitest 44–62s · stories 3s                                                                                                                              |
+| `checks / build`              | 71s    | pull 28s · build 30–47s · cache save 4s                                                                                                                                  |
+| the other seven `checks` legs | 25–49s | pull 22–28s, then the tool                                                                                                                                               |
+| the three image builds        | 16–30s | finding the content-hash tag already published, and skipping the build                                                                                                   |
+| `changes`                     | ~8s    | the path filters                                                                                                                                                         |
 
 Of `vitest`'s 47s of Vitest wall time, its own breakdown gives 38% to the
 tests, 30% to imports, 13% to transforms, 10% to setup files and 8% to test
-environments. The critical path is `changes` → `build-e2e-image` →
-`playwright`, about 3 minutes warm; every other job finishes inside it. Both
-saves in the table are gone since MB.235: Playwright's ran after the tests,
-on that path, and the build leg's never restored.
+environments. The critical path to the required checks is `changes` →
+`build-e2e-image` → `playwright`, about 3 minutes warm; `stories` runs
+beside it on the same image and finishes about half a minute later, but is
+never a required check (M9.1). In both Playwright jobs the test span is set
+by the longest serial spec file rather than by the work: `shell.spec.ts` is
+34 s of the e2e job's 53 s, and `07-admin.spec.ts` 62 s of the stories
+job's 64 s, each on one worker while the other three wait — M11.18's plan,
+[`design-decisions/m11.18-plan.md`](../design-decisions/m11.18-plan.md),
+is what shortens them. Neither job saves a cache since MB.235: Playwright's
+save ran after the tests, on that path, and the build leg's never restored.
 
 ### The draw on the free tier
 

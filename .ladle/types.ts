@@ -2,6 +2,15 @@ import type { ReactNode } from 'react';
 import type { ShellViewer, ShellWorkspace } from '../src/lib/types';
 import type { ADMIN_PAGES } from '../src/components/AdminNav/sections';
 
+/** What `AdminFrame` draws a story inside (./admin-frame.tsx). */
+export interface AdminFrameProps {
+  /** The address the workshop pretends to be on, which decides the nav's current page. */
+  open?: string;
+  /** False for a curator's nav, without People (M11.20); true by default. */
+  managesPeople?: boolean;
+  children?: ReactNode;
+}
+
 /** What `AdminTabbedFrame` draws a story inside (./admin-frame.tsx). */
 export interface AdminTabbedFrameProps {
   /** The admin page, by its key in `ADMIN_PAGES`: its heading and its tabs. */

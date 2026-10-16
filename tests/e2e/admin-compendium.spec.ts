@@ -8,8 +8,6 @@ import { signInAs } from './session';
 // the compendium, which carries the form's first axe scans in a browser,
 // the Combobox's among them (claude-docs/components/ingredient-form.md,
 // "Testing").
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });

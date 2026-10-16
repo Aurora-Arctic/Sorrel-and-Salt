@@ -124,13 +124,13 @@ describe('PrivilegeLedger', () => {
         within(served)
           .getAllByRole('option')
           .map((option) => option.getAttribute('value')),
-      ).toEqual(['', 'admin', 'create_workspace']);
+      ).toEqual(['', 'admin', 'curator', 'create_workspace']);
 
       await hydrate();
       fireEvent.click(within(container).getByRole('combobox', { name: 'Privilege' }));
       expect(
         within(screen.getByRole('listbox', { name: 'Privilege choices' })).getAllByRole('option'),
-      ).toHaveLength(3);
+      ).toHaveLength(4);
     });
 
     it('opens a new privilege from the first page the moment it changes', async () => {

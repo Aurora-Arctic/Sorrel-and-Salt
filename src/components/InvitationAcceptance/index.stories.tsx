@@ -41,7 +41,11 @@ const PAUSED =
 export const SignedOut: Story = () => <Page status="signed-out" signInHref={SIGN_IN} />;
 
 export const Acceptable: Story = () => (
-  <Page status="acceptable" token="workshop" tier="site" landing="/admin" />
+  <Page status="acceptable" token="workshop" tier="site" siteRole="admin" landing="/admin" />
+);
+
+export const AcceptableCurator: Story = () => (
+  <Page status="acceptable" token="workshop" tier="site" siteRole="curator" landing="/admin" />
 );
 
 export const AcceptableCoven: Story = () => (

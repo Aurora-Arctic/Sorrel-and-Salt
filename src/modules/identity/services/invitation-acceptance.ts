@@ -13,9 +13,10 @@ import { Forbidden, NotFound } from '../../../lib/errors';
 import { RowId } from '../../../lib/validation';
 import { sameAddress } from '../../../lib/primary-admin';
 import type { Session } from '../../../lib/session';
+import { outranks } from '../../../lib/site-roles';
 import { users } from '../schema/users';
 import { isPrimaryAdmin } from './primary-admin';
-import { writeAdminGrant } from './user-role';
+import { writeSiteRoleGrant } from './user-role';
 import type {
   InvitationCheck,
   InvitationRefusal,
@@ -152,7 +153,7 @@ export async function invitationStanding(
   const standing = await standingOf(session, token);
   if (standing.refusal) return refused(standing.refusal);
   return standing.tier === 'site'
-    ? { acceptable: true, tier: 'site' }
+    ? { acceptable: true, tier: 'site', siteRole: standing.invitation.siteRole }
     : { acceptable: true, tier: 'workspace', slug: standing.coven.slug, name: standing.coven.name };
 }
 
@@ -166,12 +167,14 @@ function refusalError(reason: InvitationRefusal, byId = false): Error {
 
 /**
  * Accepts the invitation `token` names as the session's user, and answers
- * it as stamped; `/invite/[token]` lands by its tier. On the site tier it is an admin grant, with the creation
- * flag the users CHECK holds every admin to, declared `via: 'invitation'`
- * with the invitation's note so the trigger on `users` records it as the
- * accepting user's act; the invitation is stamped `acceptedAt` and
- * `acceptedBy` in the same transaction. An account already an admin has the
- * invitation stamped and nothing granted, so nothing is recorded.
+ * it as stamped; `/invite/[token]` lands by its tier. On the site tier it
+ * grants the site role the invitation names, curator or admin (M11.20), with
+ * the creation flag the users CHECK holds both to, declared
+ * `via: 'invitation'` with the invitation's note so the trigger on `users`
+ * records it as the accepting user's act; the invitation is stamped
+ * `acceptedAt` and `acceptedBy` in the same transaction. An account already
+ * holding that role or a higher one has the invitation stamped and nothing
+ * granted, so nothing is recorded: an invitation never lowers a role.
  *
  * On the workspace tier it seats the person at the invited role: a removed
  * member's row is revived, since the pair `(workspace_id, user_id)` is the
@@ -273,8 +276,11 @@ async function acceptChecked(
       const [stamped] = await stamp(write);
       if (!stamped) return undefined;
       if (standing.tier === 'site') {
-        if (user.role !== 'admin') {
-          const [granted] = await writeAdminGrant(write, user.id);
+        // Only upwards: an account holding the role, or one above it, is
+        // stamped alone, so an invitation never lowers a role (M11.20).
+        const { siteRole } = standing.invitation;
+        if (outranks(siteRole, user.role)) {
+          const [granted] = await writeSiteRoleGrant(write, user.id, siteRole);
           // Soft-deleted since the read: roll the stamp back with it.
           if (!granted) throw new NotFound('No such user');
         }

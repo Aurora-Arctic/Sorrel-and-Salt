@@ -2,7 +2,7 @@
 
 `src/components/AdminInvitations/` — the People page's Invitations tab,
 `/admin/invitations` (MB.70; a section beneath the user list until MB.115
-gave it a tab of its own): **Invite Admin**, a filter row, a page of the pending
+gave it a tab of its own): **New Invitation**, a filter row, a page of the pending
 invitations it leaves, each with its address, its reason, when it expires and
 **Revoke**, and the pager beneath them. Render-only: the page reads the
 filter and the cursor off its address (`invitations/filter.ts`), one page of
@@ -43,11 +43,11 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   `src/lib/list-href.ts`'s `pagerHrefs`, and a cursor that names no row of this list
   (one copied from another list) reads the first page, through
   `readNumberedPage`. A list of one page shows no pager.
-- **Invite Admin is the tab's action, beside the page's heading** (MB.115,
+- **New Invitation is the tab's action, beside the page's heading** (MB.115,
   on the owner's call), exported as `InviteAdmin` and drawn by
   `src/app/(shell)/admin/(people)/@action/invitations/page.tsx`. The heading line
   and the list are rendered apart, so the button can no longer hold the
-  form's state: Invite Admin is a link to `/admin/invitations?invite`
+  form's state: New Invitation is a link to `/admin/invitations?invite`
   (`href.ts`), and the page opens the form over the list by that address,
   as a value page's `?new` opens its own. A plain press opens the modal at
   once instead (M9.18; [`modal.md`](modal.md), "Opening at once"): `InviteAdmin`
@@ -57,7 +57,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   `?email=fern&expiring&after=…&invite`, and the form closes back to the
   tab at that page, as a value page's Add does. While locked it is the locked control instead, and `?invite`
   opens nothing.
-- **Props.** `invitations`, this page, newest first, each `{ id, email, note, expiresAt }`;
+- **Props.** `invitations`, this page, newest first, each `{ id, email, siteRole, note, expiresAt }`;
   `filter`, the filter shown, `{ email, expiringSoon }`, none when left out;
   `cursor`, the page shown, `{ after?, before? }`, the first when left out;
   `previousHref` and `nextHref`, the pager's ends, each absent where there
@@ -76,8 +76,12 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   click. Each brings its own rules (`UserList/controls.scss`), so the section
   stands on its own in the workshop without the list's stylesheet (MB.115).
 - **The invite form** (`invite-form.tsx`) is a `RouteModal` titled
-  "Invite Admin", the link's own name ([`modal.md`](modal.md)), with the **Email Address**, required and marked
-  with the shared red asterisk, and a **Reason**, labelled plainly: a field
+  "New Invitation", the link's own name ([`modal.md`](modal.md)), with the **Email Address**, required and marked
+  with the shared red asterisk; a **Role** (M11.20), the shared
+  `RadioGroupField` ([`field.md`](field.md)) offering Curator and Admin,
+  each with the line Change Role shows beside it (`UserList/roles.ts`'s
+  `SITE_ROLE_ACCESS`), Curator chosen to begin with so that granting the
+  People page is a choice the admin makes; and a **Reason**, labelled plainly: a field
   is optional unless it carries the required mark, so no label says
   "(Optional)". What it is for, "Kept with the invitation, and in the record
   of who changed what once it is accepted.", is its hint, behind an
@@ -87,7 +91,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   there is an address, and is a `BusyButton` ([`busy-button.md`](busy-button.md)),
   a spinner and "Sending" while the request is out; Cancel is quiet, waits
   while the request is out, and closes back to the tab. The row is the
-  shared `FormActions`, its submit renamed ([`field.md`](field.md#formactions); MB.119). With anything typed in either field, Cancel asks
+  shared `FormActions`, its submit renamed ([`field.md`](field.md#formactions); MB.119). With anything typed in either field, or Admin chosen, Cancel asks
   first (MB.115, the owner's call; [`modal.md`](modal.md#unsaved-changes));
   Discard Changes closes. The form is
   `invite-form.tsx`'s `InviteFields`, rendered inside the modal so its
@@ -103,7 +107,7 @@ the pause (`invitations/lock.ts`), and hands them down. The rules are
   and the compendium's do, through the one wording `noMatchText`
   (`src/lib/text.ts`): "No invitations match “fern” and Expires in 24 Hrs.
   Change or clear the filter to see more."
-- **Four columns**: Email, Reason, Expires and Revoke, drawn by
+- **Five columns**: Email, Role (Curator or Admin, M11.20), Reason, Expires and Revoke, drawn by
   [`StackTable`](data-table.md), which gives each cell its heading as its
   card label and writes the table's roles out so it can stack into cards at
   phone width. Revoke is a `'foot'` action, across the card's foot.
@@ -142,7 +146,7 @@ alert (MB.116).
 
 [`index.stories.tsx`](../../src/components/AdminInvitations/index.stories.tsx),
 `Admin / Admin Invitations`, inside the admin layout's frame (the nav in its context row above the column) and the People
-page with its Invitations tab open and Invite Admin beside the heading:
+page with its Invitations tab open and New Invitation beside the heading:
 `Pending`, `NoneWaiting`, `Filtered` (an Email and Expires in 24 Hrs
 applied, Clear offered, one invitation left), `NoMatch` (the
 empty state naming the filter), `OnePageOfSeveral` (a middle page of 25,
@@ -150,30 +154,31 @@ both pager ends live and "Page 2 of 3" between them) with its phone pair
 `OnePageOfSeveralPhoneDark`/`OnePageOfSeveralPhoneLight`, where the pager's
 row wraps Next beneath Prev and the position, `Inviting` (the form open, its Reason's
 hint in a tip), `Paused` (both controls locked with the pause's reason),
-`PhoneDark`/`PhoneLight`, Invite Admin across the line beneath the
+`PhoneDark`/`PhoneLight`, New Invitation across the line beneath the
 heading, the filter row stacked and the invitations as cards at 375px, and
 `FilteredPhoneDark`/`FilteredPhoneLight`, the filter applied at 375px. Invite and Revoke reach the network only when sent, so a send in the workshop
 fails into its alert. Render-only, no test ids, no snapshots.
 
 ## Tests
 
-`tests/components/AdminInvitations/index.test.tsx` covers the list and the
-empty state; Invite Admin a link to `?invite`; sending, with Send disabled
-until there is an address, the trimmed variables, the close back to the tab
+`tests/components/AdminInvitations/index.test.tsx` covers the list, each
+row's role included, and the empty state; New Invitation a link to `?invite`;
+sending, with Send disabled until there is an address, Curator chosen to
+begin with and Admin sent when chosen, the trimmed variables, the close back to the tab
 and its refresh, and the notice outlasting the form; Cancel and Escape
 asking once something is typed, Discard Changes closing, and Cancel closing
 at once with nothing typed; a refused address beside its field;
 Revoke after its confirmation; both controls locked with the pause's
 reason; and the filter: the address a change or the magnifier opens, from the first
 page whatever page is shown, the email trimmed and the switch a bare flag,
-which values offer Clear, the row starting again from a filter shown anew, and Invite Admin and
+which values offer Clear, the row starting again from a filter shown anew, and New Invitation and
 the form's close keeping the filter and the page. The cards at phone width are presentation.
 `tests/app/(shell)/admin/(people)/invitations/page.test.tsx` covers the tab's page:
 the guard first, the hash never rendered, the filter read off the address
 and handed to the service, the first page of 25 and its count, `after` and
 `before` read off the address, a cursor of another list reading the first
 page, the pager's ends carrying the filter with "Page X of Y" between them,
-Invite Admin keeping the page, the form opened by `?invite`,
+New Invitation keeping the page, the form opened by `?invite`,
 and the pause locking both controls and opening nothing.
 The filters' SQL and the paging are `tests/modules/identity/services/admin-invitations.test.ts`'s:
 a fragment in any case, the 24-hour window's edges against expired,

@@ -6,9 +6,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 // would render for whoever reached it that way (claude-docs/auth/admin-guard.md, "The
 // admin guard"). What the guard decides is tests/lib/request-session.test.ts's;
 // here it is mocked, to prove each route awaits it before rendering anything.
+// It is the curation guard, which a curator passes too (M11.20); the people
+// pages beneath call the admin one.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+const requireCuratorSession = vi.fn();
+vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
 // AdminNav marks the page you are on from the address, which Next reads from
 // the App Router's state; a test mounts no router, so the address is given,
 // and the route-modal provider's router is a stand-in that goes nowhere.
@@ -18,24 +20,41 @@ const { default: AdminLayout } = await import('@/app/(shell)/admin/layout');
 const { default: AdminPage } = await import('@/app/(shell)/admin/page');
 
 const ADMIN = { userId: '6f1c2d4e-9b8a-4c3d-8e7f-0a1b2c3d4e5f', role: 'admin' } as const;
+const CURATOR = { ...ADMIN, role: 'curator' } as const;
+
+const hrefs = (links: HTMLElement[]) => links.map((link) => link.getAttribute('href'));
+const navHrefs = () =>
+  hrefs(within(screen.getByRole('navigation', { name: 'Admin' })).getAllByRole('link'));
 
 beforeEach(() => {
-  requireAdminSession.mockReset();
+  requireCuratorSession.mockReset();
 });
 
 describe('the /admin layout', () => {
   it('shows an admin the admin nav around the page', async () => {
-    requireAdminSession.mockResolvedValue(ADMIN);
+    requireCuratorSession.mockResolvedValue(ADMIN);
 
     render(await AdminLayout({ children: <p>The page itself</p> }));
 
-    expect(requireAdminSession).toHaveBeenCalledOnce();
+    expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(screen.getByRole('navigation', { name: 'Admin' })).toBeInTheDocument();
     expect(screen.getByText('The page itself')).toBeInTheDocument();
   });
 
+  it('shows a curator the nav without People, and an admin with it', async () => {
+    requireCuratorSession.mockResolvedValue(CURATOR);
+    const { unmount } = render(await AdminLayout({ children: <p>The page itself</p> }));
+    expect(navHrefs()).not.toContain('/admin/users');
+    expect(navHrefs()).toContain('/admin/compendium');
+    unmount();
+
+    requireCuratorSession.mockResolvedValue(ADMIN);
+    render(await AdminLayout({ children: <p>The page itself</p> }));
+    expect(navHrefs()).toContain('/admin/users');
+  });
+
   it('renders nothing when the guard refuses', async () => {
-    requireAdminSession.mockRejectedValue(new Error('forbidden'));
+    requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
     await expect(AdminLayout({ children: <p>The page itself</p> })).rejects.toThrow('forbidden');
   });
@@ -43,19 +62,18 @@ describe('the /admin layout', () => {
 
 describe('the /admin page', () => {
   it('renders for an admin', async () => {
-    requireAdminSession.mockResolvedValue(ADMIN);
+    requireCuratorSession.mockResolvedValue(ADMIN);
 
     render(await AdminPage());
 
-    expect(requireAdminSession).toHaveBeenCalledOnce();
+    expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   });
 
   // MB.115: the index is a table of contents read from the nav's own list,
   // so the two name the same pages in the same order.
   it('links every page the admin nav does, in its order', async () => {
-    requireAdminSession.mockResolvedValue(ADMIN);
-    const hrefs = (links: HTMLElement[]) => links.map((link) => link.getAttribute('href'));
+    requireCuratorSession.mockResolvedValue(ADMIN);
 
     render(await AdminLayout({ children: await AdminPage() }));
 
@@ -65,8 +83,18 @@ describe('the /admin page', () => {
     expect(hrefs(within(screen.getByRole('main')).getAllByRole('link'))).toEqual(hrefs(row));
   });
 
+  it('links a curator to the curation pages and not to People', async () => {
+    requireCuratorSession.mockResolvedValue(CURATOR);
+
+    render(await AdminPage());
+
+    const links = hrefs(within(screen.getByRole('main')).getAllByRole('link'));
+    expect(links).toContain('/admin/compendium');
+    expect(links).not.toContain('/admin/users');
+  });
+
   it('renders nothing when the guard refuses, without the layout having run', async () => {
-    requireAdminSession.mockRejectedValue(new Error('forbidden'));
+    requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
     await expect(AdminPage()).rejects.toThrow('forbidden');
   });

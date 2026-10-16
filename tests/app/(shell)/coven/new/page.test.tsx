@@ -29,7 +29,12 @@ async function renderPage(
 ) {
   requireSession.mockResolvedValue(SESSION);
   viewerOf.mockResolvedValue({
-    viewer: { name: 'Ada Fixture', isAdmin: false, canCreate: canCreateWorkspace, verified: true },
+    viewer: {
+      name: 'Ada Fixture',
+      canCurate: false,
+      canCreate: canCreateWorkspace,
+      verified: true,
+    },
     workspaces,
   });
   getMe.mockResolvedValue({ name: 'Ada Fixture', canCreateWorkspace });

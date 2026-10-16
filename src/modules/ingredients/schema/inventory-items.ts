@@ -21,12 +21,15 @@ export const unitDimension = pgEnum('unit_dimension', UNIT_DIMENSIONS);
 // this module's constants are interpolated. The first conjunct is not optional:
 // a CHECK passes on NULL, so without the `is null` biconditional a half-null
 // row would slip through (claude-docs/db/stock.md, "The dimension stored beside the unit").
+// `unit::text`, not `unit`: compared as the enum, each literal is cast to
+// `inventory_unit`, and Postgres refuses a value added in the same transaction
+// (55P04), which is how migration 0072 adds `fl_oz_us`.
 const UNIT_MATCHES_DIMENSION = sql.raw(
   [
     '(unit is null) = (unit_dimension is null)',
     `(unit is null or (${UNIT_DIMENSIONS.map((dimension) => {
       const units = UNITS_BY_DIMENSION[dimension].map((unit) => `'${unit}'`).join(', ');
-      return `(unit_dimension = '${dimension}' and unit in (${units}))`;
+      return `(unit_dimension = '${dimension}' and unit::text in (${units}))`;
     }).join(' or ')}))`,
   ].join(' and '),
 );

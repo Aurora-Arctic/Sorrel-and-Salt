@@ -1,5 +1,6 @@
 import { expect, type Page } from '@playwright/test';
 import postgres from 'postgres';
+import type { UserRole } from '@/lib/session';
 import { slugify } from '@/lib/slugify';
 import { e2eDatabaseUrl } from '../database';
 import { signInAs } from '../session';
@@ -26,14 +27,14 @@ export async function withSql<T>(fn: (sql: postgres.Sql) => Promise<T>): Promise
 /**
  * A verified user signed in on `page`, renamed from `signInAs`'s shared
  * "Fixture Person" so the members table can tell each row apart, and holding
- * the right to create a coven when `canCreate` says so. An admin holds that
- * right already, by the database's own check.
+ * the right to create a coven when `canCreate` says so. A curator or an
+ * admin holds that right already, by the database's own check.
  */
 export async function makeUser(
   page: Page,
   email: string,
   name: string,
-  { role = 'user', canCreate = false }: { role?: 'user' | 'admin'; canCreate?: boolean } = {},
+  { role = 'user', canCreate = false }: { role?: UserRole; canCreate?: boolean } = {},
 ): Promise<string> {
   const { userId } = await signInAs(page, email, ['discord'], role);
   await withSql((sql) =>

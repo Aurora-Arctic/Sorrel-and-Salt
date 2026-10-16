@@ -795,8 +795,8 @@ gives them. Everything the workspace mutations above say of the inputs'
 lists, the answer and a refusal holds here, bar the tier and MB.162's
 curated values.
 
-- **The site admin's alone, twice.** Each carries `authScopes: { admin: true }`,
-  and the service's `assertSiteAdmin` refuses again; a coven's owner is
+- **A curator's or the site admin's, twice.** Each carries `authScopes: { curator: true }`,
+  and the service's `assertCurator` refuses again (M11.20); a coven's owner is
   refused as its viewer is. No coven is an argument, and neither input
   declares a tier or a stamp.
 - **`CompendiumIngredientInput` is the create's**: `IngredientInput`'s
@@ -832,7 +832,7 @@ service refuses, and every collision, are `services/compendium-entries.test.ts`'
 (M8.3a) swaps an ingredient's display name with one of its common names
 ([`db/workspace-ingredients.md`](../db/workspace-ingredients.md), "Workspace
 ingredients"). It takes `createReference`'s shape: a null `workspaceId` names a
-compendium entry and carries the `admin` scope, anything else the `signedIn`
+compendium entry and carries the `curator` scope, anything else the `signedIn`
 scope with the membership check deciding. It answers the swapped entity, and
 clears the child loaders as `updateIngredient` does. A common name that is not
 live on that ingredient answers `NOT_FOUND`.
@@ -1124,22 +1124,23 @@ role and rule is `services/deities.test.ts`'s and
 
 ### Auth scopes: the second check
 
-`@pothos/plugin-scope-auth` gives the schema three scopes, all read off the
+`@pothos/plugin-scope-auth` gives the schema four scopes, all read off the
 context without a query:
 
-| Scope      | Holds when                                   |
-| ---------- | -------------------------------------------- |
-| `signedIn` | the request has a session                    |
-| `admin`    | the session's role is admin                  |
-| `self`     | the user id it is given is the session's own |
+| Scope      | Holds when                                      |
+| ---------- | ----------------------------------------------- |
+| `signedIn` | the request has a session                       |
+| `curator`  | the session's role is curator or admin (M11.20) |
+| `admin`    | the session's role is admin                     |
+| `self`     | the user id it is given is the session's own    |
 
 A scope is the second check, never the first. The service's own check is the
 gate (CLAUDE.md rule 1), and a scope on a field is a cheap early refusal in
 front of it: `me` carries `signedIn`; `User.email`, `role` and
 `canCreateWorkspace` carry `{ self: user.id, admin: true }`, which holds if
-either does; every admin mutation carries `admin`, each from the task that
-built it, M5.8's two creation writes included, and `createReference` and
-`updateReference` carry it when their `workspaceId` is null, the compendium's
+either does; every people mutation (roles, creation approval, pause, admin invitations) carries `admin`, each from the task that
+built it, M5.8's two creation writes included, and every compendium and vocabulary write carries `curator`, which an admin holds too (M11.20); `createReference` and
+`updateReference` carry `curator` when their `workspaceId` is null, the compendium's
 tier, and `signedIn` otherwise. `ok` and the
 compendium's queries, `categories` among them, carry no scope at all, and the sweep above names
 them so. The private fields'

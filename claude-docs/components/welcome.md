@@ -14,7 +14,7 @@ The page reads the session with **`getSession()`, never `requireSession()`**.
 The session decides one thing: a signed-out visitor is offered **Sign In**
 (`/sign-in`), a signed-in one **Continue** to where they belong —
 `signedInLanding(session)` (`src/lib/landing.ts`), the rule a sign-in with no
-return path lands by: `/admin` for an admin (MB.113), the first coven the
+return path lands by: `/admin` for a curator or an admin (MB.113, M11.20), the first coven the
 switcher lists for a member, and `/coven`, the post-sign-in landing (M2.8),
 for someone in none. A member goes into the coven directly rather than via
 `/coven`, whose redirect would leave the browser a stop with nothing on it

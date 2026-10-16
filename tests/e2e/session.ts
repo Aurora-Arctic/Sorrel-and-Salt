@@ -1,6 +1,7 @@
 import { createHmac, randomBytes, randomUUID } from 'node:crypto';
 import type { Page } from '@playwright/test';
 import postgres from 'postgres';
+import type { UserRole } from '@/lib/session';
 import { e2eDatabaseUrl } from './database';
 import { browserUrl, plainSessionCookie } from './slots';
 
@@ -71,7 +72,7 @@ export async function signInAs(
   page: Page,
   email: string,
   providers: readonly string[] = ['discord'],
-  role: 'user' | 'admin' = 'user',
+  role: UserRole = 'user',
   { emailVerified = true, database }: { emailVerified?: boolean; database?: string } = {},
 ): Promise<{ userId: string }> {
   const secret = process.env.BETTER_AUTH_SECRET;
@@ -87,10 +88,11 @@ export async function signInAs(
       // privilege trigger refuses an undeclared change to `role` or
       // `can_create_workspace` (claude-docs/db/write-path.md, "app.current_user_id, published per transaction").
       await tx`select set_config('app.privilege_route', 'manual', true)`;
-      // Stamped as its own creator, as the sign-up hook stamps one.
+      // Stamped as its own creator, as the sign-up hook stamps one. A curator
+      // or an admin holds the creation flag, as the users CHECK asks (M11.20).
       await tx`
         insert into users (id, name, email, email_verified, role, can_create_workspace, created_by, updated_by)
-        values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role === 'admin'}, ${userId}, ${userId})
+        values (${userId}, 'Fixture Person', ${email}, ${emailVerified}, ${role}, ${role !== 'user'}, ${userId}, ${userId})
       `;
       for (const [index, providerId] of providers.entries()) {
         await tx`

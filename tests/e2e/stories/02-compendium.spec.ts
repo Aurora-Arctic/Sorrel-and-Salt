@@ -24,7 +24,6 @@ import {
 // name resembles one already there. Scaffolds: /compendium (M8.18), its entry
 // page (M8.19) and the add modal (M8.16) are not built yet, and the task in
 // each annotation turns its `fixme` into `test`.
-test.describe.configure({ mode: 'serial' });
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();

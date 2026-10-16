@@ -11,7 +11,7 @@ import type {
 import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
-import { requireAdminSession } from '../../../../lib/request-session';
+import { requireCuratorSession } from '../../../../lib/request-session';
 import { oneOf, single, trimmed } from '../../../../lib/search-params';
 import {
   countCompendium,
@@ -159,7 +159,7 @@ function editHeading({
 // Unknown is the curation to-do list — and to the entries citing nothing, the
 // second.
 export default async function AdminCompendiumPage({ searchParams }: AdminCompendiumPageProps) {
-  const session = await requireAdminSession();
+  const session = await requireCuratorSession();
   const params: CompendiumSearchParams = await searchParams;
   const place = readListPlace(params);
   const { query, after, before, adding } = place;

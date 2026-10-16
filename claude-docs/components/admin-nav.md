@@ -1,7 +1,7 @@
 # AdminNav
 
 `src/components/AdminNav/` — the `/admin` layout's nav, a `<nav>` labelled
-"Admin" linking every admin page, in two sections, in the context row beside
+"Admin" linking every admin page, in two sections (a curator sees the first only), in the context row beside
 the word Admin and, on a phone, along the foot of the window. A thin wrapper:
 the tabs, the bar and the More button are [`SectionNav`](section-nav.md)'s. The same sections are the
 `/admin` index's table of contents, which this component also draws
@@ -18,17 +18,17 @@ tabs, each tab at its own address, and the nav links a page at its first tab
 |            | Astrology  | Celestial Bodies `/admin/celestial-bodies` · Zodiac Signs `/admin/zodiac-signs`                        | MB.95                |
 | People     | People     | Users `/admin/users` · Invitations `/admin/invitations` · Privilege Changes `/admin/privilege-changes` | MB.52, MB.70, MB.200 |
 
-It takes no props. The list is in `sections.ts`: `ADMIN_PAGES`, each page
+It takes one prop, `managesPeople` (M11.20): true for an admin, false for a curator, whom the People section leaves out. It is display only; the pages' guards refuse a curator whatever the nav shows ([`auth/admin-guard.md`](../auth/admin-guard.md), "The curator guard (M11.20)"). The list is in `sections.ts`: `ADMIN_PAGES`, each page
 a label, its icon (`SectionNav/icons.tsx`), the one line the index says about it and its tabs, each a route and
-a short label; and `ADMIN_SECTIONS`, each section a name and its pages.
+a short label; and `ADMIN_SECTIONS`, each section a name, its pages and, for People, `adminOnly: true`; `adminSections(managesPeople)` drops the `adminOnly` ones.
 Each tabbed page's layout reads its tabs from `ADMIN_PAGES` too, and a vocabulary's tabs take their address and label from its kind table (`GroupList/kinds.ts`, `GroupedValueList/kinds.ts`). `index.tsx`
 turns the sections into `SectionNav` items (a page at its first tab, its other
 tabs as `matches`, the first page of each later section `apart`) and stays a
 server component; the links are `SectionNav`'s one client part.
 `src/app/(shell)/admin/layout.tsx` renders the nav above the page, after the guard
-has passed, so it appears for admins only
-([`auth/admin-guard.md`](../auth/admin-guard.md), "The admin guard"). The
-site-wide nav's own Admin entry is AppShell's (MB.7), and is shown to admins
+has passed, so it appears for curators and admins only, with `managesPeople` set from the session's role
+([`auth/admin-guard.md`](../auth/admin-guard.md), "The curator guard (M11.20)"). The
+site-wide nav's own Admin entry is AppShell's (MB.7), and is shown to curators and admins
 only too.
 
 ## Contracts
@@ -59,6 +59,7 @@ only too.
   from marking it. `/admin` itself, the index, is in no section and marks
   none. `usePathname()` reads the address, which is why the links are a
   client component (MB.115).
+- **A curator sees five tabs, not six** (M11.20). `AdminNav` and `AdminContents` both take `managesPeople`, so the nav and the index leave People out together. The rule below describes the admin's six.
 - **Six tabs, then More, then a bar** (MB.7, the owner's call at the
   navigation review, over the earlier wrapping row and `<details>` jump
   menu). Wider than a tablet all six pages are tabs along the context row,
@@ -102,7 +103,7 @@ frame, the `.admin-layout` primitive (`styling.md`, "The admin layout").
 [`index.stories.tsx`](../../src/components/AdminNav/index.stories.tsx),
 `Admin / Admin Nav`: `Default`, the row; `Phone` at 375px, the bottom bar; and
 `IndexPage` with `IndexPagePhone`, the `/admin` index under the nav, its
-heading and lede copied from the page and `AdminContents` real. Each sits in
+heading and lede copied from the page and `AdminContents` real. `Curator` and `IndexPageCurator` show the same for a curator, with no People (M11.20). Each sits in
 the admin layout as it is, through the workshop's `AdminFrame`
 ([`workshop.md`](../workshop.md), ".ladle/"): the context row led by "Admin"
 with the nav in it, above the `.admin-layout` column that holds the page. The
@@ -118,9 +119,8 @@ snapshots.
 order, inside the landmark named Admin; which link is current for a given
 address: none on the index, its own on a page's first tab and on its other
 tabs, and a page's on an address beneath it; and More listing the last two
-pages and naming the current one when it is among them. Which tabs show at
+pages and naming the current one when it is among them. A curator's nav and index leave People out (`managesPeople` false), and an admin's list it. Which tabs show at
 which width is presentation, the workshop's and the browser's.
 `tests/app/(shell)/admin/layout.test.tsx` checks the layout renders the nav only
-once the guard resolves, and that the index links every page the nav does,
-in its order. `tests/e2e/admin.spec.ts` checks that an admin sees the nav
-and a non-admin's 403 page carries none of it.
+once the curator guard resolves, and sets `managesPeople` by role, and that the index links every page the nav does,
+in its order. `tests/e2e/admin.spec.ts` checks that an admin sees the nav, a curator sees it without People, and a non-admin's 403 page carries none of it.

@@ -67,7 +67,15 @@ describe('InvitationAcceptance', () => {
         return { acceptInvitation: { id: 'i1' } };
       },
     );
-    render(<InvitationAcceptance status="acceptable" token="abc" tier="site" landing="/admin" />);
+    render(
+      <InvitationAcceptance
+        status="acceptable"
+        token="abc"
+        tier="site"
+        siteRole="admin"
+        landing="/admin"
+      />,
+    );
     const button = accept();
 
     fireEvent.click(button);
@@ -99,12 +107,35 @@ describe('InvitationAcceptance', () => {
     await waitFor(() => expect(router.push).toHaveBeenCalledWith('/coven/fixture-coven'));
   });
 
+  // M11.20: the role is the invitation's data, as a coven's name is.
+  it('names the site role a site invitation grants', () => {
+    render(
+      <InvitationAcceptance
+        status="acceptable"
+        token="abc"
+        tier="site"
+        siteRole="curator"
+        landing="/admin"
+      />,
+    );
+
+    expect(screen.getByText(/curator/i)).toBeVisible();
+  });
+
   it('says the service’s refusal and offers Accept again', async () => {
     mockGraphQLError('AcceptInvitation', {
       code: 'FORBIDDEN',
       message: 'This invitation was withdrawn. Ask whoever sent it for a new one.',
     });
-    render(<InvitationAcceptance status="acceptable" token="abc" tier="site" landing="/admin" />);
+    render(
+      <InvitationAcceptance
+        status="acceptable"
+        token="abc"
+        tier="site"
+        siteRole="admin"
+        landing="/admin"
+      />,
+    );
 
     fireEvent.click(accept());
 

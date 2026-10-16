@@ -85,5 +85,13 @@ export const ADMIN_SECTIONS: readonly AdminSection[] = [
       ADMIN_PAGES.astrology,
     ],
   },
-  { name: 'People', pages: [ADMIN_PAGES.people] },
+  { name: 'People', pages: [ADMIN_PAGES.people], adminOnly: true },
 ];
+
+/**
+ * The sections a viewer is shown: every one to an admin, and a curator all but
+ * People (M11.20). Only what the nav lists; each people page refuses a
+ * curator itself (claude-docs/auth/admin-guard.md, "The curator guard").
+ */
+export const adminSections = (managesPeople: boolean): readonly AdminSection[] =>
+  ADMIN_SECTIONS.filter(({ adminOnly }) => managesPeople || !adminOnly);

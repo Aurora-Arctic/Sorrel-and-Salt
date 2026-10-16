@@ -33,9 +33,17 @@ beforeEach(() => {
 
 describe('AdminNav', () => {
   it('links every admin page in a row, in its sections’ order', () => {
-    render(<AdminNav />);
+    render(<AdminNav managesPeople />);
 
     expect(hrefs(row())).toEqual(PAGES);
+  });
+
+  // M11.20: a curator is shown the curation pages and not People, which every
+  // page beneath refuses them anyway (claude-docs/auth/admin-guard.md).
+  it('leaves People out for a curator, who manages no one', () => {
+    render(<AdminNav managesPeople={false} />);
+
+    expect(hrefs(row())).toEqual(PAGES.filter((href) => href !== '/admin/users'));
   });
 
   it.each([
@@ -49,14 +57,14 @@ describe('AdminNav', () => {
   ])('marks only the page you are on at %s as current', (path, expected) => {
     pathname.mockReturnValue(path);
 
-    render(<AdminNav />);
+    render(<AdminNav managesPeople />);
 
     expect(currentHrefs(row())).toEqual(expected);
   });
 
   it('lists the last two pages behind More, which names the page you are on when it is one of them', () => {
     pathname.mockReturnValue('/admin/invitations');
-    render(<AdminNav />);
+    render(<AdminNav managesPeople />);
     const more = within(nav()).getByRole('button', { name: 'More: People' });
 
     fireEvent.click(more);

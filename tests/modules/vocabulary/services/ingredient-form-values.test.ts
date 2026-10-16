@@ -15,7 +15,7 @@ import {
 } from '@/modules/vocabulary';
 import type { IngredientFormValueFilter } from '@/modules/vocabulary';
 import type { IngredientFormValueInput } from '@/modules/vocabulary/validation/ingredient-form-value';
-import { A, E, asUser } from '../../../support/as-user';
+import { A, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient, insertVariant } from '../../../support/db/insert-ingredient';
 import { makeIngredient, makeVariant } from '../../../support/fixtures';
@@ -74,10 +74,15 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
+const CURATORS = [
+  ['the site admin', E],
+  ['a curator', F],
+] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
   expect(admin.role).toBe('admin');
+  expect(asUser(F).role).toBe('curator');
 });
 
 function input(overrides: Partial<IngredientFormValueInput> = {}): IngredientFormValueInput {
@@ -307,20 +312,26 @@ describe('getIngredientFormValueBySlug', () => {
 });
 
 describe('createIngredientFormValue', () => {
-  it('lets the site admin create one, its slug from the name and the group, stamped by them', async () => {
-    const created = await createIngredientFormValue(admin, input({ name: 'Fixture Made' }));
+  it.each(CURATORS)(
+    'lets %s create one, its slug from the name and the group, stamped by them',
+    async (_who, user) => {
+      const created = await createIngredientFormValue(
+        asUser(user),
+        input({ name: 'Fixture Made' }),
+      );
 
-    expect(await formOf(created.id)).toMatchObject({
-      name: 'Fixture Made',
-      slug: 'fixture-made-substance',
-      description: 'A form this test made',
-      group_id: group('Substance'),
-      seed_key: null,
-      created_by: E.id,
-      updated_by: E.id,
-      deleted_at: null,
-    });
-  });
+      expect(await formOf(created.id)).toMatchObject({
+        name: 'Fixture Made',
+        slug: 'fixture-made-substance',
+        description: 'A form this test made',
+        group_id: group('Substance'),
+        seed_key: null,
+        created_by: user.id,
+        updated_by: user.id,
+        deleted_at: null,
+      });
+    },
+  );
 
   // DESIGN.md §5: two live forms may share a name, told apart by the group.
   it('holds two forms of one name under two groups', async () => {
@@ -386,24 +397,27 @@ describe('createIngredientFormValue', () => {
 });
 
 describe('updateIngredientFormValue', () => {
-  it('lets the site admin rewrite it, group included, the slug following both, created_by kept', async () => {
-    const id = await seed('Fixture Old');
+  it.each(CURATORS)(
+    'lets %s rewrite it, group included, the slug following both, created_by kept',
+    async (_who, user) => {
+      const id = await seed('Fixture Old');
 
-    await updateIngredientFormValue(admin, id, {
-      name: 'Fixture New',
-      description: 'Rewritten',
-      groupId: group('Animal'),
-    });
+      await updateIngredientFormValue(asUser(user), id, {
+        name: 'Fixture New',
+        description: 'Rewritten',
+        groupId: group('Animal'),
+      });
 
-    expect(await formOf(id)).toMatchObject({
-      name: 'Fixture New',
-      slug: 'fixture-new-animal',
-      description: 'Rewritten',
-      group_id: group('Animal'),
-      created_by: A.id,
-      updated_by: E.id,
-    });
-  });
+      expect(await formOf(id)).toMatchObject({
+        name: 'Fixture New',
+        slug: 'fixture-new-animal',
+        description: 'Rewritten',
+        group_id: group('Animal'),
+        created_by: A.id,
+        updated_by: user.id,
+      });
+    },
+  );
 
   // MB.171: the seed recognises its own rows by the key, so a renamed seeded
   // row must keep it or the next deploy reinserts the original beside it.
@@ -631,15 +645,18 @@ describe('updateIngredientFormValue', () => {
 });
 
 describe('deleteIngredientFormValue', () => {
-  it('lets the site admin soft-delete one no entry picked, keeping the row', async () => {
-    const id = await seed('Fixture Unused');
+  it.each(CURATORS)(
+    'lets %s soft-delete one no entry picked, keeping the row',
+    async (_who, user) => {
+      const id = await seed('Fixture Unused');
 
-    await deleteIngredientFormValue(admin, id);
+      await deleteIngredientFormValue(asUser(user), id);
 
-    const row = await formOf(id);
-    expect(row).toMatchObject({ deleted_by: E.id, created_by: A.id });
-    expect(row.deleted_at).toBeInstanceOf(Date);
-  });
+      const row = await formOf(id);
+      expect(row).toMatchObject({ deleted_by: user.id, created_by: A.id });
+      expect(row.deleted_at).toBeInstanceOf(Date);
+    },
+  );
 
   it.each(NON_ADMINS)('refuses %s and leaves the row as it was', async (_who, user) => {
     const id = await seed('Fixture Standing');

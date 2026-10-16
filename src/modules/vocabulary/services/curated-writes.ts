@@ -21,7 +21,7 @@ import type {
 // that how a slug collision, a missing row or a group's move is refused is one
 // edit across the seven services (MB.210). Shared steps rather than a
 // descriptor factory, on the owner's call: each service keeps its own exported
-// functions and JSDoc, and its own `assertSiteAdmin(` and `expireCompendium()`,
+// functions and JSDoc, and its own `assertCurator(` and `expireCompendium()`,
 // so the check and the expiry are read together. Internal to the module; the
 // index exports no part of it.
 

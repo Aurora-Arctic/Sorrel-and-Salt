@@ -200,6 +200,79 @@ describe('a change through withAudit', () => {
     ]);
   });
 
+  // M11.20: each of `admin` and `curator` is a privilege of its own, so a move
+  // between the two is a revoke of one and a grant of the other.
+  describe('the curator role', () => {
+    const roleChange = (role: 'user' | 'curator' | 'admin') =>
+      withAudit(
+        { userId: ADMIN },
+        (write) => write.updateById(users, SUBJECT, { role, canCreateWorkspace: true }),
+        { via: 'admin' },
+      );
+    const changes = async () =>
+      (await ledger()).map(({ privilege, change }) => [privilege, change]);
+
+    it('records a user made curator as a curator grant and a flag grant, at one instant', async () => {
+      await roleChange('curator');
+
+      const rows = await ledger();
+      expect(rows.map(({ privilege, change, via }) => [privilege, change, via])).toEqual([
+        ['create_workspace', 'grant', 'admin'],
+        ['curator', 'grant', 'admin'],
+      ]);
+      expect(rows[0].created_at).toEqual(rows[1].created_at);
+    });
+
+    it('records curator to admin as a curator revoke and an admin grant', async () => {
+      await roleChange('curator');
+      await sql`truncate user_privilege_changes`;
+
+      await roleChange('admin');
+
+      expect(await changes()).toEqual([
+        ['admin', 'grant'],
+        ['curator', 'revoke'],
+      ]);
+    });
+
+    it('records admin to curator as an admin revoke and a curator grant', async () => {
+      await roleChange('admin');
+      await sql`truncate user_privilege_changes`;
+
+      await roleChange('curator');
+
+      expect(await changes()).toEqual([
+        ['admin', 'revoke'],
+        ['curator', 'grant'],
+      ]);
+    });
+
+    it('records curator to user as a curator revoke alone, leaving the flag', async () => {
+      await roleChange('curator');
+      await sql`truncate user_privilege_changes`;
+
+      await roleChange('user');
+
+      expect(await changes()).toEqual([['curator', 'revoke']]);
+      expect(await privilegesOf(SUBJECT)).toEqual({ role: 'user', can_create_workspace: true });
+    });
+
+    it('records a curator inserted holding the flag as both grants', async () => {
+      await asManualFix(sql, async (tx) => {
+        await tx`
+          insert into users (id, name, email, role, can_create_workspace, created_by, updated_by)
+          values (${NEWCOMER}, 'Newcomer Fixturewort', 'newcomer@privilege-trigger.test',
+                  'curator', true, ${ADMIN}, ${ADMIN})
+        `;
+      });
+
+      expect(await changes()).toEqual([
+        ['create_workspace', 'grant'],
+        ['curator', 'grant'],
+      ]);
+    });
+  });
+
   it('stores an empty note as no note', async () => {
     await withAudit(
       { userId: ADMIN },

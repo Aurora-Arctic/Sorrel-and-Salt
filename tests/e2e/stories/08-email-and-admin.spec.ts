@@ -15,8 +15,6 @@ import { PRIMARY_ADMIN_EMAIL, signInAgainAs, signInAs } from '../session';
 // Accounts are made by `signInAs` and rows a flow needs in place by raw SQL
 // (MB.101); the story's own step goes through the page, and a mailed link is
 // read from Mailpit and followed.
-test.describe.configure({ mode: 'serial' });
-
 test.beforeAll(async () => {
   await recreateE2eDatabase();
 });
@@ -169,24 +167,45 @@ async function userRow(page: Page, email: string) {
 /** The role cell, the third: its text opens with the role. */
 const roleCell = (row: ReturnType<Page['getByRole']>) => row.getByRole('cell').nth(2);
 
-/** Invites `email` from /admin/invitations as the signed-in admin, and answers the mailed link's path. */
+/**
+ * Opens `name`'s Change Role dialog from `row` and picks `role` in it,
+ * answering the dialog for the caller to confirm (M11.20).
+ */
+async function chooseRole(
+  page: Page,
+  row: ReturnType<Page['getByRole']>,
+  name: string,
+  role: 'User' | 'Curator' | 'Admin',
+) {
+  await row.getByRole('button', { name: `Change Role for ${name}` }).click();
+  const dialog = page.getByRole('dialog', { name: 'Change Role' });
+  // The radio's name opens with the role, its description following.
+  await dialog.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
+  return dialog;
+}
+
+/**
+ * Invites `email` from /admin/invitations as the signed-in admin, to the
+ * admin role unless told otherwise, and answers the mailed link's path.
+ */
 async function inviteAdmin(
   page: Page,
   email: string,
-  reason?: string,
-  seen: readonly string[] = [],
+  { reason, role = 'Admin' }: { reason?: string; role?: 'Curator' | 'Admin' } = {},
 ): Promise<string> {
   await visit(page, '/admin/invitations');
-  await page.getByRole('link', { name: 'Invite Admin' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Invite Admin' });
+  await page.getByRole('link', { name: 'New Invitation' }).click();
+  const dialog = page.getByRole('dialog', { name: 'New Invitation' });
   await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
+  // The radio's name opens with the role, its description following.
+  await dialog.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
   // By role: "Reason" also names its info tip's button.
   if (reason) await dialog.getByRole('textbox', { name: 'Reason' }).fill(reason);
   await dialog.getByRole('button', { name: 'Send Invitation' }).click();
   await expect(
     page.getByRole('region', { name: 'Admin Invitations' }).getByRole('status'),
   ).toContainText(email);
-  return mailedPath(email, INVITE_LINK, seen);
+  return mailedPath(email, INVITE_LINK);
 }
 
 /** The refusal an invitation link shows: its alert, and no Accept beside it. */
@@ -330,10 +349,8 @@ test(
     await expect(roleCell(row)).toHaveText(/^User/);
     await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-    await row.getByRole('button', { name: 'Promote Fixture Person to admin' }).click();
-    const granting = page.getByRole('dialog', { name: 'Promote to Admin' });
+    const granting = await chooseRole(page, row, 'Fixture Person', 'Admin');
     await expect(granting).toContainText('Fixture Person');
-    await expect(granting.getByRole('button', { name: 'Promote' })).toBeFocused();
     await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
     await assertNoAccessibilityViolations(page);
     await granting.getByRole('button', { name: 'Promote' }).click();
@@ -349,16 +366,15 @@ test(
     // Revoked again, behind its own modal; the creation flag stays.
     await signInAgainAs(page, admin);
     const again = await userRow(page, granteeEmail);
-    await again.getByRole('button', { name: 'Revoke admin from Fixture Person' }).click();
-    const revoking = page.getByRole('dialog', { name: 'Revoke Admin' });
+    const revoking = await chooseRole(page, again, 'Fixture Person', 'User');
     await expect(revoking).toContainText('Fixture Person');
     await assertNoAccessibilityViolations(page);
-    await revoking.getByRole('button', { name: 'Revoke' }).click();
+    await revoking.getByRole('button', { name: 'Demote' }).click();
     await expect(revoking).toHaveCount(0);
     await expect(roleCell(again)).toHaveText(/^User/);
     await expect(again.getByRole('cell').nth(3)).toHaveText(/^Yes/);
     await expect(
-      again.getByRole('button', { name: 'Promote Fixture Person to admin' }),
+      again.getByRole('button', { name: 'Change Role for Fixture Person' }),
     ).toBeVisible();
 
     await signInAgainAs(page, grantee);
@@ -366,171 +382,176 @@ test(
   },
 );
 
-test(
-  'another admin cannot revoke the primary admin: its Revoke is locked with the reason, and the server refuses the revoke sent directly',
-  { tag: '@story-60' },
-  async ({ page }) => {
-    const primary = await primaryAdminId(page);
-    const peerEmail = address('peer-admin');
-    await signInAs(page, peerEmail, ['discord'], 'admin');
-    await signInAs(page, address('acting-admin'), ['discord'], 'admin');
+// Story 60's three tests on the primary admin share one worker, in this order,
+// because the last demotes every other admin in the worker's database, the
+// primary included, which the two before it need in place. Serial inside this
+// block alone: the tests after it make their own admins.
+test.describe('the primary admin', () => {
+  test.describe.configure({ mode: 'serial' });
 
-    // Another admin's Revoke is there to be used: the guard is about the primary admin alone.
-    const peer = await userRow(page, peerEmail);
-    const usable = peer.getByRole('button', { name: 'Revoke admin from Fixture Person' });
-    await expect(usable).toBeVisible();
-    await expect(usable).not.toHaveAttribute('aria-disabled', 'true');
+  test(
+    'another admin cannot revoke the primary admin: its Change Role is locked with the reason, and the server refuses the revoke sent directly',
+    { tag: '@story-60' },
+    async ({ page }) => {
+      const primary = await primaryAdminId(page);
+      const peerEmail = address('peer-admin');
+      await signInAs(page, peerEmail, ['discord'], 'admin');
+      await signInAs(page, address('acting-admin'), ['discord'], 'admin');
 
-    // The primary admin's row: marked, its Revoke in view but locked, saying why.
-    const row = await userRow(page, PRIMARY_ADMIN_EMAIL);
-    await expect(row.getByRole('button', { name: 'Primary Admin' })).toBeVisible();
-    await expect(roleCell(row)).toHaveText(/^Admin/);
-    const locked = row.getByRole('button', { name: 'Revoke admin from Fixture Person' });
-    await expect(locked).toHaveAttribute('aria-disabled', 'true');
-    await expect(locked).toHaveAccessibleDescription(/\S/);
+      // Another admin's Change Role is there to be used: the guard is about the primary admin alone.
+      const peer = await userRow(page, peerEmail);
+      const usable = peer.getByRole('button', { name: 'Change Role for Fixture Person' });
+      await expect(usable).toBeVisible();
+      await expect(usable).not.toHaveAttribute('aria-disabled', 'true');
 
-    // Pressed anyway, from the keyboard since a pointer click waits for an
-    // enabled control, it says why again and opens nothing.
-    await locked.focus();
-    await page.keyboard.press('Enter');
-    await expect(row.getByRole('alert')).toBeVisible();
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    await assertNoAccessibilityViolations(page);
+      // The primary admin's row: marked, its Change Role in view but locked, saying why.
+      const row = await userRow(page, PRIMARY_ADMIN_EMAIL);
+      await expect(row.getByRole('button', { name: 'Primary Admin' })).toBeVisible();
+      await expect(roleCell(row)).toHaveText(/^Admin/);
+      const locked = row.getByRole('button', { name: 'Change Role for Fixture Person' });
+      await expect(locked).toHaveAttribute('aria-disabled', 'true');
+      await expect(locked).toHaveAccessibleDescription(/\S/);
 
-    // Sent straight to the server, the revoke is refused there too.
-    const result = await sendFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
-    expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      // Pressed anyway, from the keyboard since a pointer click waits for an
+      // enabled control, it says why again and opens nothing.
+      await locked.focus();
+      await page.keyboard.press('Enter');
+      await expect(row.getByRole('alert')).toBeVisible();
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
 
-    // Read afresh, the primary admin is an admin still, and reaches the admin area.
-    const reread = await userRow(page, PRIMARY_ADMIN_EMAIL);
-    await expect(roleCell(reread)).toHaveText(/^Admin/);
-    await signInAgainAs(page, primary);
-    await expectAdminArea(page, true);
-  },
-);
+      // Sent straight to the server, the revoke is refused there too.
+      const result = await sendFromPage(page, SET_USER_ROLE, { userId: primary, role: 'user' });
+      expect(result.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
 
-test(
-  "the primary admin pauses admin changes: another admin's grant is refused while the primary's works, and resuming restores it",
-  { tag: '@story-60' },
-  async ({ page }) => {
-    const primary = await primaryAdminId(page);
-    const granteeEmail = address('paused-grantee');
-    const { userId: grantee } = await signInAs(page, granteeEmail);
-    const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
-    const list = `/admin/users?query=${encodeURIComponent(granteeEmail)}`;
-    // The page's statement while paused, and none while open (the owner's call).
-    const status = page.getByRole('main').getByRole('status');
+      // Read afresh, the primary admin is an admin still, and reaches the admin area.
+      const reread = await userRow(page, PRIMARY_ADMIN_EMAIL);
+      await expect(roleCell(reread)).toHaveText(/^Admin/);
+      await signInAgainAs(page, primary);
+      await expectAdminArea(page, true);
+    },
+  );
 
-    // Another admin sees the switch, unusable, and why.
-    await visit(page, list);
-    const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
-    await expect(unusable).toHaveAttribute('aria-disabled', 'true');
-    await expect(unusable).toHaveAccessibleDescription(/\S/);
-    await expect(status).toHaveCount(0);
+  test(
+    "the primary admin pauses admin changes: another admin's grant is refused while the primary's works, and resuming restores it",
+    { tag: '@story-60' },
+    async ({ page }) => {
+      const primary = await primaryAdminId(page);
+      const granteeEmail = address('paused-grantee');
+      const { userId: grantee } = await signInAs(page, granteeEmail);
+      const { userId: other } = await signInAs(page, address('other-admin'), ['discord'], 'admin');
+      const list = `/admin/users?query=${encodeURIComponent(granteeEmail)}`;
+      // The page's statement while paused, and none while open (the owner's call).
+      const status = page.getByRole('main').getByRole('status');
 
-    // The primary admin pauses, behind a modal asking first. Scoped to it:
-    // the button that opens it has the same name.
-    await signInAgainAs(page, primary);
-    await visit(page, list);
-    await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
-    const pausing = page.getByRole('dialog', { name: 'Pause Admin Changes' });
-    await pausing.getByRole('button', { name: 'Pause Admin Changes' }).click();
-    await expect(pausing).toHaveCount(0);
-    await expect(status).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
-    await assertNoAccessibilityViolations(page);
+      // Another admin sees the switch, unusable, and why.
+      await visit(page, list);
+      const unusable = page.getByRole('button', { name: 'Pause Admin Changes' });
+      await expect(unusable).toHaveAttribute('aria-disabled', 'true');
+      await expect(unusable).toHaveAccessibleDescription(/\S/);
+      await expect(status).toHaveCount(0);
 
-    // The other admin's Promote is locked; tried from the keyboard, it says
-    // why and opens nothing, and Approve is locked the same way.
-    await signInAgainAs(page, other);
-    await visit(page, list);
-    await expect(status).toBeVisible();
-    const row = page.getByRole('row', { name: new RegExp(granteeEmail.replace(/[.]/g, '\\.')) });
-    const grant = row.getByRole('button', { name: 'Promote Fixture Person to admin' });
-    await expect(grant).toHaveAttribute('aria-disabled', 'true');
-    await expect(grant).toHaveAccessibleDescription(/\S/);
-    await grant.focus();
-    await page.keyboard.press('Enter');
-    await expect(row.getByRole('alert')).toBeVisible();
-    await assertNoAccessibilityViolations(page);
-    await expect(page.getByRole('dialog')).toHaveCount(0);
-    const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
-    await expect(approve).toHaveAttribute('aria-disabled', 'true');
-    await expect(approve).toHaveAccessibleDescription(/\S/);
-    // Sent straight to the server, the grant is refused there too.
-    const refused = await sendFromPage(page, SET_USER_ROLE, { userId: grantee, role: 'admin' });
-    expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
-    await visit(page, list);
-    await expect(roleCell(row)).toHaveText(/^User/);
-    await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
+      // The primary admin pauses, behind a modal asking first. Scoped to it:
+      // the button that opens it has the same name.
+      await signInAgainAs(page, primary);
+      await visit(page, list);
+      await page.getByRole('button', { name: 'Pause Admin Changes' }).click();
+      const pausing = page.getByRole('dialog', { name: 'Pause Admin Changes' });
+      await pausing.getByRole('button', { name: 'Pause Admin Changes' }).click();
+      await expect(pausing).toHaveCount(0);
+      await expect(status).toBeVisible();
+      await expect(page.getByRole('button', { name: 'Resume Admin Changes' })).toBeEnabled();
+      await assertNoAccessibilityViolations(page);
 
-    // The primary admin, whom the pause does not bind, still promotes.
-    await signInAgainAs(page, primary);
-    await visit(page, list);
-    await row.getByRole('button', { name: 'Promote Fixture Person to admin' }).click();
-    const granting = page.getByRole('dialog', { name: 'Promote to Admin' });
-    await granting.getByRole('button', { name: 'Promote' }).click();
-    await expect(granting).toHaveCount(0);
-    await expect(roleCell(row)).toHaveText(/^Admin/);
+      // The other admin's Change Role is locked; tried from the keyboard, it says
+      // why and opens nothing, and Approve is locked the same way.
+      await signInAgainAs(page, other);
+      await visit(page, list);
+      await expect(status).toBeVisible();
+      const row = page.getByRole('row', { name: new RegExp(granteeEmail.replace(/[.]/g, '\\.')) });
+      const grant = row.getByRole('button', { name: 'Change Role for Fixture Person' });
+      await expect(grant).toHaveAttribute('aria-disabled', 'true');
+      await expect(grant).toHaveAccessibleDescription(/\S/);
+      await grant.focus();
+      await page.keyboard.press('Enter');
+      await expect(row.getByRole('alert')).toBeVisible();
+      await assertNoAccessibilityViolations(page);
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      const approve = row.getByRole('button', { name: 'Approve Fixture Person' });
+      await expect(approve).toHaveAttribute('aria-disabled', 'true');
+      await expect(approve).toHaveAccessibleDescription(/\S/);
+      // Sent straight to the server, the grant is refused there too.
+      const refused = await sendFromPage(page, SET_USER_ROLE, { userId: grantee, role: 'admin' });
+      expect(refused.errors?.[0]?.extensions?.code).toBe('FORBIDDEN');
+      await visit(page, list);
+      await expect(roleCell(row)).toHaveText(/^User/);
+      await expect(row.getByRole('cell').nth(3)).toHaveText(/^No/);
 
-    // And resumes.
-    await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
-    await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
-    await expect(status).toHaveCount(0);
+      // The primary admin, whom the pause does not bind, still promotes.
+      await signInAgainAs(page, primary);
+      await visit(page, list);
+      const granting = await chooseRole(page, row, 'Fixture Person', 'Admin');
+      await granting.getByRole('button', { name: 'Promote' }).click();
+      await expect(granting).toHaveCount(0);
+      await expect(roleCell(row)).toHaveText(/^Admin/);
 
-    // The other admin's controls work again: the revoke goes through.
-    await signInAgainAs(page, other);
-    await visit(page, list);
-    await expect(status).toHaveCount(0);
-    await row.getByRole('button', { name: 'Revoke admin from Fixture Person' }).click();
-    const revoking = page.getByRole('dialog', { name: 'Revoke Admin' });
-    await revoking.getByRole('button', { name: 'Revoke' }).click();
-    await expect(revoking).toHaveCount(0);
-    await expect(roleCell(row)).toHaveText(/^User/);
-  },
-);
+      // And resumes.
+      await page.getByRole('button', { name: 'Resume Admin Changes' }).click();
+      await expect(page.getByRole('button', { name: 'Pause Admin Changes' })).toBeEnabled();
+      await expect(status).toHaveCount(0);
 
-// Last of story 60's tests: it leaves one admin, the primary admin demoted
-// with the rest, so it must follow every test that needs the primary admin.
-test(
-  'the last admin is refused revoking their own admin, and stays an admin',
-  { tag: '@story-60' },
-  async ({ page }) => {
-    const loneEmail = address('last-admin');
-    const { userId: lone } = await signInAs(page, loneEmail, ['discord'], 'admin');
-    // Every other admin demoted as a `psql` fix would, so this one is the last.
-    const demoted = await withSql((sql) =>
-      sql.begin(async (tx) => {
-        await tx`select set_config('app.privilege_route', 'manual', true)`;
-        return tx`
+      // The other admin's controls work again: the revoke goes through.
+      await signInAgainAs(page, other);
+      await visit(page, list);
+      await expect(status).toHaveCount(0);
+      const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
+      await revoking.getByRole('button', { name: 'Demote' }).click();
+      await expect(revoking).toHaveCount(0);
+      await expect(roleCell(row)).toHaveText(/^User/);
+    },
+  );
+
+  // Last of the three, and it must stay so: it demotes every other admin in the
+  // worker's database, the primary admin included.
+  test(
+    'the last admin is refused revoking their own admin, and stays an admin',
+    { tag: '@story-60' },
+    async ({ page }) => {
+      const loneEmail = address('last-admin');
+      const { userId: lone } = await signInAs(page, loneEmail, ['discord'], 'admin');
+      // Every other admin demoted as a `psql` fix would, so this one is the last.
+      const demoted = await withSql((sql) =>
+        sql.begin(async (tx) => {
+          await tx`select set_config('app.privilege_route', 'manual', true)`;
+          return tx`
           update users set role = 'user', updated_by = ${lone}
           where role = 'admin' and deleted_at is null and id <> ${lone}
           returning id
         `;
-      }),
-    );
-    expect(demoted.length).toBeGreaterThan(0);
+        }),
+      );
+      expect(demoted.length).toBeGreaterThan(0);
 
-    const response = await visit(page, '/admin/users?role=admin');
-    expect(response.status()).toBe(200);
-    const admins = page.getByRole('row').filter({ has: page.getByRole('cell') });
-    await expect(admins).toHaveCount(1);
-    const row = await userRow(page, loneEmail);
+      const response = await visit(page, '/admin/users?role=admin');
+      expect(response.status()).toBe(200);
+      const admins = page.getByRole('row').filter({ has: page.getByRole('cell') });
+      await expect(admins).toHaveCount(1);
+      const row = await userRow(page, loneEmail);
 
-    // The control is offered, since the list cannot know the count stays
-    // above one; pressed, the server refuses and the row says why.
-    await row.getByRole('button', { name: 'Revoke admin from Fixture Person' }).click();
-    const revoking = page.getByRole('dialog', { name: 'Revoke Admin' });
-    await revoking.getByRole('button', { name: 'Revoke' }).click();
-    await expect(revoking).toHaveCount(0);
-    await expect(row.getByRole('alert')).toBeVisible();
-    await assertNoAccessibilityViolations(page);
+      // The control is offered, since the list cannot know the count stays
+      // above one; pressed, the server refuses and the row says why.
+      const revoking = await chooseRole(page, row, 'Fixture Person', 'User');
+      await revoking.getByRole('button', { name: 'Demote' }).click();
+      await expect(revoking).toHaveCount(0);
+      await expect(row.getByRole('alert')).toBeVisible();
+      await assertNoAccessibilityViolations(page);
 
-    const reread = await userRow(page, loneEmail);
-    await expect(roleCell(reread)).toHaveText(/^Admin/);
-    await expectAdminArea(page, true);
-  },
-);
+      const reread = await userRow(page, loneEmail);
+      await expect(roleCell(reread)).toHaveText(/^Admin/);
+      await expectAdminArea(page, true);
+    },
+  );
+});
 
 test(
   'an admin reads every privilege change newest first, with who, how, when and why, narrows it to one user, and a user meets the 403',
@@ -554,8 +575,7 @@ test(
     await approving.getByRole('button', { name: 'Approve' }).click();
     await expect(approving).toHaveCount(0);
     await expect(row.getByRole('cell').nth(3)).toHaveText(/^Yes/);
-    await row.getByRole('button', { name: 'Promote Ledger Fixturewort to admin' }).click();
-    const granting = page.getByRole('dialog', { name: 'Promote to Admin' });
+    const granting = await chooseRole(page, row, 'Ledger Fixturewort', 'Admin');
     await granting.getByRole('textbox', { name: 'Reason' }).fill('Curates the celestial bodies');
     await granting.getByRole('button', { name: 'Promote' }).click();
     await expect(granting).toHaveCount(0);
@@ -706,9 +726,9 @@ test(
     await visit(page, '/admin/invitations');
 
     const section = page.getByRole('region', { name: 'Admin Invitations' });
-    // Invite Admin is the tab's action, beside the page's heading (MB.115).
-    await page.getByRole('link', { name: 'Invite Admin' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Invite Admin' });
+    // New Invitation is the tab's action, beside the page's heading (MB.115).
+    await page.getByRole('link', { name: 'New Invitation' }).click();
+    const dialog = page.getByRole('dialog', { name: 'New Invitation' });
     const send = dialog.getByRole('button', { name: 'Send Invitation' });
     const email = dialog.getByRole('textbox', { name: 'Email Address' });
     // It opens on its first field (MB.115), with nothing to send yet.
@@ -723,6 +743,8 @@ test(
     await expect(section.getByRole('status')).toContainText(invited);
     const row = section.getByRole('row', { name: new RegExp(invited.replace(/[.]/g, '\\.')) });
     await expect(row).toContainText('Curates the resins');
+    // The role the form starts on, the lesser one (M11.20).
+    await expect(row).toContainText('Curator');
     // Mailed to the invited address alone, and the page answers no link:
     // the mail is the only place the token is.
     const path = await mailedPath(invited, INVITE_LINK);
@@ -750,7 +772,7 @@ test(
   async ({ page, browser, baseURL }) => {
     const invited = address('invitee');
     await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
-    const path = await inviteAdmin(page, invited, 'Curates the resins');
+    const path = await inviteAdmin(page, invited, { reason: 'Curates the resins' });
 
     // Signed out: asked to sign in and brought back, shown nothing of the invitation.
     const visitor = await signedOutPage(browser, baseURL);
@@ -838,6 +860,58 @@ test(
         'Invitation accepted',
         'Invited Fixturewort',
         'Curates the resins',
+      ],
+    ]);
+  },
+);
+
+// M11.20: the same invitation, to the curator role. The acceptance is the
+// admin's above; this proves what accepting it grants, and what it does not.
+test(
+  'an invitation to the curator role lands its invitee on /admin with the curation pages and no People, both grants in the ledger',
+  { tag: '@story-62' },
+  async ({ page }) => {
+    const invited = address('curator-invitee');
+    const { userId: admin } = await signInAs(page, address('inviting-admin'), ['discord'], 'admin');
+    const path = await inviteAdmin(page, invited, { reason: 'Keeps the herbals', role: 'Curator' });
+
+    const { userId: invitee } = await signInAs(page, invited, ['google']);
+    await rename(invitee, 'Curator Fixturewort');
+    await visit(page, path);
+    await page.getByRole('button', { name: 'Accept Invitation' }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+    await expectAdminArea(page, true);
+    const nav = page.getByRole('navigation', { name: 'Admin' });
+    await expect(nav.getByRole('link', { name: 'Compendium', exact: true })).toBeVisible();
+    await expect(page.getByRole('main').getByRole('link', { name: 'People' })).toHaveCount(0);
+    expect((await visit(page, '/admin/users')).status()).toBe(403);
+
+    // The ledger is People's, so the inviting admin reads it.
+    await signInAgainAs(page, admin);
+    await visit(page, `/admin/privilege-changes?query=${encodeURIComponent(invited)}`);
+    const rows = page.getByRole('row').filter({ has: page.getByRole('cell') });
+    await expect(rows).toHaveCount(2);
+    const changes = await Promise.all(
+      [0, 1].map(async (index) =>
+        (await rows.nth(index).getByRole('cell').allTextContents()).slice(1),
+      ),
+    );
+    expect([...changes].sort((a, b) => a[1].localeCompare(b[1]))).toEqual([
+      [
+        'Curator Fixturewort',
+        'Coven Creation',
+        'Granted',
+        'Invitation accepted',
+        'Curator Fixturewort',
+        'Keeps the herbals',
+      ],
+      [
+        'Curator Fixturewort',
+        'Curator',
+        'Granted',
+        'Invitation accepted',
+        'Curator Fixturewort',
+        'Keeps the herbals',
       ],
     ]);
   },

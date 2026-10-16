@@ -31,10 +31,12 @@ export interface SchemaTypes {
   DefaultEdgesNullability: { list: false; items: false };
   DefaultNodeNullability: false;
   // The schema's second check, behind the service layer's (DESIGN.md §7).
-  // `self` takes a user id and holds when it is the session's own.
+  // `self` takes a user id and holds when it is the session's own; `curator`
+  // holds for a curator and an admin, `admin` for an admin alone (M11.20).
   AuthScopes: {
     signedIn: boolean;
     admin: boolean;
+    curator: boolean;
     self: string;
   };
   Scalars: {

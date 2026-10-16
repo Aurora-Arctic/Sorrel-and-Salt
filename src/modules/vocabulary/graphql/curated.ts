@@ -70,7 +70,7 @@ export function curatedVocabularyWrites<
     t.field({
       type: ref,
       args: { input: t.arg({ type: input, required: true }) },
-      authScopes: { admin: true },
+      authScopes: { curator: true },
       resolve: (_root, args, context) => services.create(sessionOf(context), inputOf(args)),
     }),
   );
@@ -83,7 +83,7 @@ export function curatedVocabularyWrites<
         id: t.arg.id({ required: true }),
         input: t.arg({ type: input, required: true }),
       },
-      authScopes: { admin: true },
+      authScopes: { curator: true },
       resolve: async (_root, args, context) => {
         const row = await services.update(sessionOf(context), args.id, inputOf(args));
         clear(context.loaders, clears);
@@ -99,7 +99,7 @@ export function curatedVocabularyWrites<
         id: t.arg.id({ required: true }),
         ...(moveTo && { moveTo: t.arg.id({ required: false }) }),
       },
-      authScopes: { admin: true },
+      authScopes: { curator: true },
       resolve: async (_root, { id, moveTo: target }, context) => {
         await services.delete(sessionOf(context), id, target ?? undefined);
         clear(context.loaders, [...clears, ...(moveTo ?? [])]);

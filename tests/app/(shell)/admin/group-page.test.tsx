@@ -17,8 +17,8 @@ import type { GroupKind } from '@/components/GroupForm/types';
 // are mocked: what they decide is tests/lib/request-session.test.ts's and
 // tests/modules/vocabulary's.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+const requireCuratorSession = vi.fn();
+vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
 
 // The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
@@ -97,8 +97,8 @@ async function renderPage(params: Record<string, string> = {}, kind: GroupKind =
 }
 
 beforeEach(() => {
-  requireAdminSession.mockReset();
-  requireAdminSession.mockResolvedValue(ADMIN);
+  requireCuratorSession.mockReset();
+  requireCuratorSession.mockResolvedValue(ADMIN);
   listCategoryGroups.mockReset();
   countCategoryGroups.mockReset();
   countCategoryGroups.mockResolvedValue({ totalCount: 2, countBefore: 0 });
@@ -113,7 +113,7 @@ beforeEach(() => {
 
 describe('a group page, on the category groups', () => {
   it('renders nothing, and reads nothing, when the guard refuses', async () => {
-    requireAdminSession.mockRejectedValue(new Error('forbidden'));
+    requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
     await expect(renderPage({ edit: 'fixture-wards' })).rejects.toThrow('forbidden');
     expect(listCategoryGroups).not.toHaveBeenCalled();

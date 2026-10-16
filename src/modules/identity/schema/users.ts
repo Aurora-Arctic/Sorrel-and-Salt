@@ -15,8 +15,10 @@ export const auditStampColumns = auditStampColumnsReferencing(usersId);
 // set has one definition and the two cannot drift (CLAUDE.md rule 3).
 export const auditColumns = { ...auditStampColumns, ...deletionColumnsReferencing(usersId) };
 
-// Admins curate the global vocabularies and nothing else, so a column is enough.
-export const userRole = pgEnum('user_role', ['user', 'admin']);
+// Admins curate the global vocabularies and manage the people page; curators
+// curate the same vocabularies and reach no people page (M11.20). A closed set
+// of site roles, so a column is enough.
+export const userRole = pgEnum('user_role', ['user', 'curator', 'admin']);
 
 // Better Auth's adapter table plus the app columns. `name`/`image` keep Better
 // Auth's names (DESIGN.md was corrected, not the fields). `created_by`
@@ -44,13 +46,15 @@ export const users = pgTable(
     // the same, so the unique index above is case-insensitive in effect and at
     // most one live row can match ADMIN_BOOTSTRAP_EMAIL.
     check('users_email_lower_case', sql`${table.email} = lower(${table.email})`),
-    // The flag is what lets anyone create a workspace, admins included, so every
-    // admin holds it and the gate never reads `role` beside it. Not partial: it
-    // states a fact about the row, deleted or not
-    // (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md).
+    // The flag is what lets anyone create a workspace, admins and curators
+    // included, so every role but `user` holds it and the gate never reads
+    // `role` beside it. Not partial: it states a fact about the row, deleted or
+    // not (claude-docs/design-decisions/mb.177-admins-hold-workspace-creation.md,
+    // m11.20-curator-role.md). It names `user` rather than the privileged roles
+    // so the migration adding `curator` need not use the new value it adds.
     check(
-      'users_admin_can_create_workspace',
-      sql`${table.role} <> 'admin' or ${table.canCreateWorkspace}`,
+      'users_privileged_can_create_workspace',
+      sql`${table.role} = 'user' or ${table.canCreateWorkspace}`,
     ),
     // The provisional-account sweep's two halves, the window and the cap, run
     // on every OAuth callback and almost always empty: only unverified rows are

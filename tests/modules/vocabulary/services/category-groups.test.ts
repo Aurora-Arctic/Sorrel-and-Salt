@@ -14,7 +14,7 @@ import {
   updateCategoryGroup,
 } from '@/modules/vocabulary';
 import type { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
-import { A, B, E, asUser } from '../../../support/as-user';
+import { A, B, E, F, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -53,10 +53,15 @@ const admin = asUser(E);
 // stands for every one (claude-docs/testing/acting-as-fixture-users.md): an
 // owner, whose workspace role is the highest and is still no site role.
 const NON_ADMINS = [['an owner of a coven', A]] as const;
+const CURATORS = [
+  ['the site admin', E],
+  ['a curator', F],
+] as const;
 
 it('is testing sessions whose site role is `user`, beside an admin', () => {
   for (const [, user] of NON_ADMINS) expect(asUser(user).role).toBe('user');
   expect(admin.role).toBe('admin');
+  expect(asUser(F).role).toBe('curator');
 });
 
 function input(overrides: Partial<CategoryGroupInput> = {}): CategoryGroupInput {
@@ -168,21 +173,24 @@ describe('getCategoryGroupBySlug', () => {
 });
 
 describe('createCategoryGroup', () => {
-  it('lets the site admin create one, its slug from the name, stamped by them', async () => {
-    const created = await createCategoryGroup(admin, input({ colorDark: '#4E8BC2' }));
+  it.each(CURATORS)(
+    'lets %s create one, its slug from the name, stamped by them',
+    async (_who, user) => {
+      const created = await createCategoryGroup(asUser(user), input({ colorDark: '#4E8BC2' }));
 
-    expect(await groupOf(created.id)).toMatchObject({
-      name: 'Fixture Wards',
-      slug: 'fixture-wards',
-      description: 'A group this test made',
-      color_dark: '#4e8bc2',
-      color_light: '#0c5393',
-      seed_key: null,
-      created_by: E.id,
-      updated_by: E.id,
-      deleted_at: null,
-    });
-  });
+      expect(await groupOf(created.id)).toMatchObject({
+        name: 'Fixture Wards',
+        slug: 'fixture-wards',
+        description: 'A group this test made',
+        color_dark: '#4e8bc2',
+        color_light: '#0c5393',
+        seed_key: null,
+        created_by: user.id,
+        updated_by: user.id,
+        deleted_at: null,
+      });
+    },
+  );
 
   it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
     await expect(createCategoryGroup(asUser(user), input())).rejects.toThrow(Forbidden);
@@ -232,24 +240,27 @@ describe('createCategoryGroup', () => {
 });
 
 describe('updateCategoryGroup', () => {
-  it('lets the site admin rewrite it, the slug following the name, created_by kept', async () => {
-    const id = await seedGroup('Fixture Wards');
+  it.each(CURATORS)(
+    'lets %s rewrite it, the slug following the name, created_by kept',
+    async (_who, user) => {
+      const id = await seedGroup('Fixture Wards');
 
-    await updateCategoryGroup(
-      admin,
-      id,
-      input({ name: 'Fixture Shields', colorDark: '#35987d', colorLight: '#097255' }),
-    );
+      await updateCategoryGroup(
+        asUser(user),
+        id,
+        input({ name: 'Fixture Shields', colorDark: '#35987d', colorLight: '#097255' }),
+      );
 
-    expect(await groupOf(id)).toMatchObject({
-      name: 'Fixture Shields',
-      slug: 'fixture-shields',
-      color_dark: '#35987d',
-      color_light: '#097255',
-      created_by: A.id,
-      updated_by: E.id,
-    });
-  });
+      expect(await groupOf(id)).toMatchObject({
+        name: 'Fixture Shields',
+        slug: 'fixture-shields',
+        color_dark: '#35987d',
+        color_light: '#097255',
+        created_by: A.id,
+        updated_by: user.id,
+      });
+    },
+  );
 
   // A category's slug is its name alone, so a group's rename moves nothing else.
   it('rewrites none of its categories', async () => {
@@ -330,16 +341,19 @@ describe('updateCategoryGroup', () => {
 });
 
 describe('deleteCategoryGroup', () => {
-  it('lets the site admin soft-delete one with no categories, keeping the row', async () => {
-    const id = await seedGroup('Fixture Wards');
+  it.each(CURATORS)(
+    'lets %s soft-delete one with no categories, keeping the row',
+    async (_who, user) => {
+      const id = await seedGroup('Fixture Wards');
 
-    await deleteCategoryGroup(admin, id);
+      await deleteCategoryGroup(asUser(user), id);
 
-    expect(await groupOf(id)).toMatchObject({
-      deleted_by: E.id,
-      deleted_at: expect.any(Date),
-    });
-  });
+      expect(await groupOf(id)).toMatchObject({
+        deleted_by: user.id,
+        deleted_at: expect.any(Date),
+      });
+    },
+  );
 
   it('moves its live categories to the group named, in the same write, then deletes it', async () => {
     const id = await seedGroup('Fixture Wards');

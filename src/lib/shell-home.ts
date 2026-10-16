@@ -9,16 +9,16 @@ import type { ShellViewer, ShellWorkspace } from './types';
 // invitation to anyone else. The list is the one `viewerOf` sorts, so the
 // link and the switcher agree on which coven is first.
 
-/** The viewer's first coven, or the landing for someone in none: an admin's Your Coven link, and anyone else's brand. */
+/** The viewer's first coven, or the landing for someone in none: a curator's or an admin's Your Coven link, and anyone else's brand. */
 export function covenHome(workspaces: readonly Pick<ShellWorkspace, 'slug'>[]): Route {
   const [first] = workspaces;
   return first ? (`/coven/${first.slug}` as Route) : '/coven';
 }
 
-/** Where the brand goes: an admin's home is `/admin`, anyone else's is their coven. */
+/** Where the brand goes: a curator's or an admin's home is `/admin` (M11.20), anyone else's is their coven. */
 export function shellHome(
-  { isAdmin }: Pick<ShellViewer, 'isAdmin'>,
+  { canCurate }: Pick<ShellViewer, 'canCurate'>,
   workspaces: readonly Pick<ShellWorkspace, 'slug'>[],
 ): Route {
-  return isAdmin ? '/admin' : covenHome(workspaces);
+  return canCurate ? '/admin' : covenHome(workspaces);
 }

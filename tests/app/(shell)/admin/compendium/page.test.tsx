@@ -18,8 +18,8 @@ import { sent } from '../../../../support/filter-form';
 // tests/lib/request-session.test.ts's, the compendium services' tests', and
 // tests/db/admin-compendium-entry-values.test.ts's.
 
-const requireAdminSession = vi.fn();
-vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
+const requireCuratorSession = vi.fn();
+vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
 
 // The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
 const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
@@ -130,8 +130,8 @@ const curatedForm = (name: string, index: number) =>
   entry({ id: `form-${index}`, name, slug: name.toLowerCase().replace(/ /g, '-') });
 
 beforeEach(() => {
-  requireAdminSession.mockReset();
-  requireAdminSession.mockResolvedValue(ADMIN);
+  requireCuratorSession.mockReset();
+  requireCuratorSession.mockResolvedValue(ADMIN);
   listCompendium.mockReset();
   listCompendium.mockResolvedValue([entry(TESTWORT)]);
   countCompendium.mockReset();
@@ -156,10 +156,10 @@ beforeEach(() => {
 
 describe('the /admin/compendium page', () => {
   it('asks the admin guard, and reads nothing when it refuses', async () => {
-    requireAdminSession.mockRejectedValue(new Error('forbidden'));
+    requireCuratorSession.mockRejectedValue(new Error('forbidden'));
 
     await expect(renderPage()).rejects.toThrow('forbidden');
-    expect(requireAdminSession).toHaveBeenCalledOnce();
+    expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(listCompendium).not.toHaveBeenCalled();
     expect(countCompendium).not.toHaveBeenCalled();
   });
@@ -167,7 +167,7 @@ describe('the /admin/compendium page', () => {
   it('lists the first page of 25, each entry with its formal name and its forms, and no modal', async () => {
     await renderPage();
 
-    expect(requireAdminSession).toHaveBeenCalledOnce();
+    expect(requireCuratorSession).toHaveBeenCalledOnce();
     expect(lastRequest()).toEqual({ limit: 26, inverted: false });
     expect(lastFilter()).toEqual(NO_FILTER);
     // The page's forms, read in one batch for the entries it lists.
