@@ -7,7 +7,10 @@
   `checks.yml` flips the lint, typecheck, build, destructive-ddl and migration-order
   filters together, which is what sharing one workflow costs. `vitest`/`playwright`
   (M1.14) are `workflow_call` jobs under the job names the M0-era stubs used,
-  so no required-status-check rename was ever needed.
+  so no required-status-check rename was ever needed. `stories` (M9.1) calls
+  `playwright.yml` again with `suite: stories`, on `playwright`'s two images
+  and under its own path filter, and is never a required check
+  ([Reusable checks](reusable-checks.md)).
 - **One concurrency group per PR, and every job in it cancellable.**
   `pr-gate.yml`'s workflow-level group is `PR Gate-<pr number>` with
   `cancel-in-progress: ${{ github.event.action != 'edited' }}`, so a push, a

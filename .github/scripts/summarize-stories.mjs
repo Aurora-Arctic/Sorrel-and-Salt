@@ -1,5 +1,6 @@
-// The story checklist tests/support/story-reporter.ts writes as JSON, into
-// the same two outputs summarize-vitest.mjs produces.
+// The story checklist tests/support/story-playwright-reporter.ts writes as
+// JSON (STORIES_JSON), into the same two outputs summarize-playwright.mjs
+// produces.
 import fs from 'node:fs';
 
 const RESULTS_PATH = '/app/stories.json';
@@ -16,15 +17,18 @@ if (!fs.existsSync(RESULTS_PATH)) {
   process.exit(0);
 }
 
-const { stories, unknown, unknownTags, counts, browserFlows, total } = JSON.parse(
-  fs.readFileSync(RESULTS_PATH, 'utf8'),
-);
+const {
+  stories,
+  unknown,
+  untagged = [],
+  counts,
+  total,
+} = JSON.parse(fs.readFileSync(RESULTS_PATH, 'utf8'));
 
 const parts = [`${counts.passed} of ${total} stories passing`];
 if (counts.failed) parts.push(`${counts.failed} failing`);
 if (counts.skipped) parts.push(`${counts.skipped} skipped`);
 if (counts.untested) parts.push(`${counts.untested} without a test`);
-if (browserFlows) parts.push(`${browserFlows} with a browser flow`);
 const summary = parts.join(', ');
 
 const SUFFIX = {
@@ -35,19 +39,19 @@ const SUFFIX = {
 };
 
 const lines = ['<details><summary>Story checklist</summary>', ''];
-for (const { id, title, status, browser } of stories) {
+for (const { id, title, status, flaky } of stories) {
   const box = status === 'passed' ? 'x' : ' ';
-  const flow = browser.length > 0 ? ' · browser' : '';
-  lines.push(`- [${box}] Story ${id}: ${title}${SUFFIX[status]}${flow}`);
+  const suffix = status === 'failed' && flaky ? ' — **failing** (flaky)' : SUFFIX[status];
+  lines.push(`- [${box}] Story ${id}: ${title}${suffix}`);
 }
-if (unknown.length > 0 || unknownTags.length > 0) {
+if (unknown.length > 0 || untagged.length > 0) {
   lines.push('', '**Not a v1 story:**', '');
-  for (const { name, module } of unknown) {
-    lines.push(`- \`${module}\` › ${name}`);
-  }
   // In code formatting, or GitHub would read the tag as a mention of a user.
-  for (const { id, file } of unknownTags) {
+  for (const { id, file } of unknown) {
     lines.push(`- \`${file}\` › \`@story-${id}\``);
+  }
+  for (const name of untagged) {
+    lines.push(`- No story tag: \`${name}\``);
   }
 }
 lines.push('', '</details>');

@@ -22,8 +22,7 @@ shortcut could take:
   through a `lib` module in between, and wherever the `'use client'` file
   lives. Lint cannot do this, because it scopes a rule by path and a client
   component is marked by a directive, not by its folder. The package is not
-  installed: Next ships and resolves it itself. `vitest.config.mts` and
-  `vitest.stories.config.mts` alias it to Next's empty stub, since a test is
+  installed: Next ships and resolves it itself. `vitest.config.mts` aliases it to Next's empty stub, since a test is
   not a client bundle.
 
 A runtime import of the client from those directories draws two diagnostics,

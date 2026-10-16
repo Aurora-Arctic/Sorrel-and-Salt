@@ -151,28 +151,6 @@ test('the account page is in the shell, with no coven nav and no switcher', asyn
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
 });
 
-test(
-  'a user in two covens switches between them, and one with the right reaches the create page',
-  { tag: '@story-3' },
-  async ({ page }) => {
-    await signInAgainAs(page, users.multi.id);
-    await page.setViewportSize(DESKTOP);
-    await page.goto(`/coven/${ALPHA.slug}`);
-
-    const switcher = page.getByRole('combobox', { name: 'Coven' });
-    await expect(switcher).toHaveText(ALPHA.name);
-    await switcher.click();
-    await page.getByRole('option', { name: BETA.name, exact: true }).click();
-    await expect(page).toHaveURL(new RegExp(`/coven/${BETA.slug}$`));
-    await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(BETA.name);
-
-    await page.getByRole('combobox', { name: 'Coven' }).click();
-    await page.getByRole('option', { name: 'Create Coven', exact: true }).click();
-    await expect(page).toHaveURL(/\/coven\/new$/);
-    await expect(page.getByRole('textbox', { name: 'Name' })).toBeVisible();
-  },
-);
-
 test('an admin sees both site links, the admin nav and no switcher', async ({ page }) => {
   await signInAgainAs(page, users.admin.id);
   await page.setViewportSize(DESKTOP);
