@@ -1,6 +1,6 @@
 name: Vitest
 
-# The Vitest suite with coverage, then the acceptance story checklist.
+# The Vitest suite with coverage. The story checklist runs in stories.yml.
 # workflow_call only, from pr-gate. claude-docs/ci/reusable-checks.md, "Reusable checks" is
 # the walkthrough. `services: postgres:` is why the `db` project can run; the
 # image is built once by the caller and shared with playwright.yml.
@@ -106,27 +106,6 @@ jobs:
         if: always() && inputs.should-run
         run: node .github/scripts/summarize-vitest.mjs
 
-      # Its own config and no `--coverage`: a story never moves the 80%
-      # threshold. `always()` because the checklist is a progress report.
-      # `continue-on-error`: M2.1 lands the first acceptance file
-      # deliberately red (claude-docs/tasks/m2.md, M2 sequencing), so a failing story cannot
-      # fail this job until M2 closes — `steps.stories.outcome` below still
-      # reads the real result, only `conclusion` (what gates the job) is
-      # affected. Revert once every M2 story is green (claude-docs/testing/acceptance.md,
-      # "Acceptance").
-      - name: Run acceptance stories
-        id: stories
-        if: always() && inputs.should-run
-        continue-on-error: true
-        run: |
-          set -o pipefail
-          npm run test:stories -- --outputFile=/app/stories.json 2>&1 | tee /app/stories.log
-
-      - name: Summarize stories
-        id: summarize-stories
-        if: always() && inputs.should-run
-        run: node .github/scripts/summarize-stories.mjs
-
       # Not failure-only: a coverage report on every run.
       - name: Upload coverage artifact
         if: always() && inputs.should-run
@@ -146,17 +125,6 @@ jobs:
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
 
-      # Its own section and thread, so the checklist reads on its own.
-      - name: Write stories job summary
-        if: always() && inputs.should-run
-        uses: ./.github/actions/job-summary
-        with:
-          check-name: Stories
-          outcome: ${{ steps.stories.outcome }}
-          log-file: /app/stories.log
-          summary: ${{ steps.summarize-stories.outputs.summary }}
-          details: ${{ steps.summarize-stories.outputs.details }}
-
       # .github/actions/pr-comment has the modes.
       - name: Comment on PR
         if: ${{ !cancelled() && inputs.pr-number && inputs.should-run }}
@@ -171,17 +139,3 @@ jobs:
           success-mode: comment
           summary: ${{ steps.summarize.outputs.summary }}
           details: ${{ steps.summarize.outputs.details }}
-
-      - name: Comment stories on PR
-        if: ${{ !cancelled() && inputs.pr-number && inputs.should-run }}
-        uses: ./.github/actions/pr-comment
-        with:
-          check-name: Stories
-          marker-slug: stories
-          pr-number: ${{ inputs.pr-number }}
-          merge-queue: ${{ inputs.merge-queue }}
-          outcome: ${{ steps.stories.outcome }}
-          log-file: /app/stories.log
-          success-mode: comment
-          summary: ${{ steps.summarize-stories.outputs.summary }}
-          details: ${{ steps.summarize-stories.outputs.details }}

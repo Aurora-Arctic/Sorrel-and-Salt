@@ -46,6 +46,14 @@ on:
         required: false
         type: boolean
         default: false
+      suite:
+        description: >-
+          Which suite to run: `e2e` (the gate suite, the default) or `stories`
+          (the story suite under tests/e2e/stories/, run by stories.yml, never a
+          required check). claude-docs/testing/acceptance.md.
+        required: false
+        type: string
+        default: e2e
 
 permissions:
   contents: read
@@ -150,15 +158,26 @@ jobs:
       # output folder. Under build-only every title matches `.`, so no spec
       # runs, but Playwright starts the webServers, and so the build, before
       # it loads a spec.
-      - name: Run Playwright e2e tests
+      #
+      # `suite: stories` runs the story suite instead. `continue-on-error`
+      # there because red scaffolds land on purpose and a story must never
+      # fail the job; `steps.run.outcome` below still reads the real result.
+      # It sits on the step because a job that calls a workflow cannot carry it.
+      - name: Run Playwright tests
         id: run
         if: inputs.should-run
+        continue-on-error: ${{ inputs.suite == 'stories' }}
         env:
           E2E_ARGS: ${{ inputs.build-only && '--grep-invert . --pass-with-no-tests' || '' }}
+          SUITE: ${{ inputs.suite }}
         run: |
           set -o pipefail
-          # Unquoted on purpose: two flags, or nothing.
-          npm run e2e -- $E2E_ARGS 2>&1 | tee /app/output.log
+          if [ "$SUITE" = stories ]; then
+            STORIES_JSON=/app/stories.json npm run test:stories 2>&1 | tee /app/output.log
+          else
+            # Unquoted on purpose: two flags, or nothing.
+            npm run e2e -- $E2E_ARGS 2>&1 | tee /app/output.log
+          fi
 
       # Only e2e-cache.yml's run on staging saves, and only after a build that
       # succeeded: no always(), since a failed build's cache is not one to
@@ -183,7 +202,7 @@ jobs:
 
       # Not failure-only: a coverage report on every run that ran a spec.
       - name: Upload coverage artifact
-        if: always() && inputs.should-run && !inputs.build-only
+        if: always() && inputs.should-run && !inputs.build-only && inputs.suite != 'stories'
         uses: actions/upload-artifact@v7
         with:
           name: playwright-coverage
@@ -193,13 +212,20 @@ jobs:
       - name: Summarize output
         id: summarize
         if: always() && inputs.should-run
-        run: node .github/scripts/summarize-playwright.mjs
+        env:
+          SUITE: ${{ inputs.suite }}
+        run: |
+          if [ "$SUITE" = stories ]; then
+            node .github/scripts/summarize-stories.mjs
+          else
+            node .github/scripts/summarize-playwright.mjs
+          fi
 
       - name: Write job summary
         if: always() && inputs.should-run
         uses: ./.github/actions/job-summary
         with:
-          check-name: Playwright E2E
+          check-name: ${{ inputs.suite == 'stories' && 'Stories' || 'Playwright E2E' }}
           outcome: ${{ steps.run.outcome }}
           log-file: /app/output.log
           summary: ${{ steps.summarize.outputs.summary }}
@@ -210,8 +236,8 @@ jobs:
         if: ${{ !cancelled() && inputs.pr-number && inputs.should-run }}
         uses: ./.github/actions/pr-comment
         with:
-          check-name: Playwright E2E
-          marker-slug: playwright
+          check-name: ${{ inputs.suite == 'stories' && 'Stories' || 'Playwright E2E' }}
+          marker-slug: ${{ inputs.suite == 'stories' && 'stories' || 'playwright' }}
           pr-number: ${{ inputs.pr-number }}
           merge-queue: ${{ inputs.merge-queue }}
           outcome: ${{ steps.run.outcome }}
