@@ -84,6 +84,18 @@ job's 64 s, each on one worker while the other three wait — M11.18's plan,
 is what shortens them. Neither job saves a cache since MB.235: Playwright's
 save ran after the tests, on that path, and the build leg's never restored.
 
+`vitest.config.mts` runs every project in worker threads (`pool: 'threads'`)
+rather than Vitest's default forked processes. M11.24 measured it at three
+workers with coverage, on the 12-core arm64 devcontainer with the core count
+patched to four: about 94s wall and 284 CPU-seconds on forks over three runs,
+and about 85s and 247 over six on threads. A file's fresh worker started in
+about 145ms rather than 175ms, and the run starts 226 of them. The host had no
+real four-core limit, so the figure to trust is the gate's own `vitest` job.
+Tried and left out: unisolated `dom` (about 3–4% of the suite, and
+`tests/app/pre-paint-scripts.test.tsx` failed), a cached
+`node_modules/.vitest-cache` (1–2s), the `FILE_COPY` clone strategy (slower
+than the default) and a fourth worker (no spare core on the runner).
+
 ### Why Blacksmith was dropped
 
 M11.24, 16 October 2026: the owner decided to leave Blacksmith on cost. This

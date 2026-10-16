@@ -137,6 +137,10 @@ export default defineConfig({
     // runs at the top of a setup file, not in a hook
     // (claude-docs/ci/runner-budget.md, "Where a gate run's time goes").
     testTimeout: 20_000,
+    // Worker threads rather than Vitest's default forked processes: a file
+    // that is given a fresh worker pays a thread's start-up, not a process's
+    // (about 5 to 10% of a coverage run at three workers, measured on M11.24).
+    pool: 'threads',
     // Quiet under Claude Code, which sets `CLAUDECODE=1` in its shell and
     // nothing else does: a session reads the per-file coverage table and the
     // per-file test lines, ~400 lines a run, and needs neither — a failure
