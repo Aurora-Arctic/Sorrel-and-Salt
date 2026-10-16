@@ -22,13 +22,19 @@ action used, and never a page title, a heading on a plain load or a
 sentence. A level-1 heading stays where it identifies the destination a
 navigation reached, or the 403 page.
 
-**A test tags the stories it walks** (M9.17), with Playwright's tag option:
-`test('…', { tag: '@story-6' }, …)`, or an array for several. Tag a test only
-when its own steps are the story's flow; visiting a story's page is not
-walking it. `npx playwright test --grep @story-6` runs one story's tests. The
-stories checklist (`npm run test:stories`) and the Playwright CI summary's
-"Stories walked" both read the tags
-([`acceptance.md`](acceptance.md)).
+**Two suites share this harness** (M9.1). The story suite, `tests/e2e/stories/`,
+is one browser flow per v1 story, run by `npm run test:stories` on
+`playwright.stories.config.ts` and in its own CI workflow, `stories.yml`. The
+gate suite, `tests/e2e/*.spec.ts`, is `npm run e2e`, and the root config ignores
+`stories/`. A story's test names it with Playwright's tag option,
+`test('…', { tag: '@story-6' }, …)`, or an array for several; the tag alone
+decides which story a test counts for, and the checklist reads it
+([`acceptance.md`](acceptance.md)). Tag a test only when its own steps are the
+story's flow; visiting a story's page is not walking it.
+`npx playwright test --grep @story-6` runs one story's tests. A gate spec that a
+story flow proves is deleted, not kept beside it. The story suite shares the
+gate suite's ports (8001 and up) and its lock, `/tmp/sorrel-e2e.lock`, so the
+two never run at once on one machine.
 
 **`assertNoAccessibilityViolations(page)` does not wait** (`tests/e2e/axe.ts`):
 it scans whatever the page holds at that instant. So the last web-first

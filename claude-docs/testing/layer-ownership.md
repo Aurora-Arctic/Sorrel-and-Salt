@@ -103,11 +103,16 @@ cited by number in the PR table of the task that applies it.
    soft-delete, the audit columns, the `updated_at` trigger, the partial
    unique indexes, the two exemption-count pins, and the test-location check
    ([`where-tests-live.md`](where-tests-live.md), "Where tests live").
-9. **e2e proves what only a real server can:** navigation, server render,
-   cookies, mail, the cache, the production build's config, and one axe scan
-   per page. A spec never re-runs a flow a component or service test proves
-   wholesale; each admin page keeps its 403 and one flow, and a spec tags the stories it
-   walks (`@story-N`) so the checklist shows which have a browser flow (M9.17).
+9. **A user story is proved by a browser flow** (M9.1, replacing M9.17's
+   browser column and the old "never re-runs a flow" half of this rule): the
+   story suite in `tests/e2e/stories/` walks each story as a user would and
+   tags it `@story-N`. The gate suite (`tests/e2e/*.spec.ts`) keeps only what
+   no story walks and only a real server can prove: cookies, mail, the cache,
+   the production build's config, the GraphQL route, and one axe scan per
+   page. A gate spec a story flow proves is deleted. A service rule keeps its
+   own Vitest test, with its direct-id refusal; a story flow does not replace
+   it, because a flow shows the control is absent and the rule shows the
+   service refuses.
 10. **SQL text appears only as the precondition of an EXPLAIN plan test**, and
     a plan test keeps its row counts.
 
@@ -132,7 +137,7 @@ Never deleted, whatever the table says:
   the constraint the rest of the suite is organised around.
 - **A DB CHECK or index test** — the second gate behind a zod rule, there
   because the two can disagree.
-- **`tests/acceptance/`** — a deliverable of its own, measured apart from the
+- **`tests/e2e/stories/`** — a deliverable of its own, measured apart from the
   80 % line ([`acceptance.md`](acceptance.md)).
 - **Plan-test row counts** — load-bearing for the index each EXPLAIN plan
   proves ([`db/fuzzy-matching.md`](../db/fuzzy-matching.md),
@@ -208,7 +213,7 @@ Each later task corrects the doc that names what it changes, in its own PR
 - [`graphql/schema.md`](../graphql/schema.md)'s per-field sentences on what
   each GraphQL test file holds — MB.185 for the ingredients files, MB.186 for
   the vocabulary, identity and coven ones.
-- `tests/acceptance/README.md`'s Story 19 pointer at the workspace-isolation
+- `tests/e2e/stories/README.md`'s Story 19 pointer at the workspace-isolation
   suite — MB.187, which rewrites that file's header and keeps it as the
   per-entity sweep.
 

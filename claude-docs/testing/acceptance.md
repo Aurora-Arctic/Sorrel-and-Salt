@@ -1,99 +1,91 @@
-## Acceptance — `make test-stories` (M1.28)
+## Acceptance — `npm run test:stories` (M9.1)
 
-`npm run test:stories` (`make test-stories`) runs `tests/acceptance/` alone —
-`vitest run --config vitest.stories.config.mts` — and prints a checklist of
-the v1 user stories, one line each:
+A user story is proved by a browser flow a user could walk, never by a service
+call or a GraphQL response (M9.1; `design-decisions/m9.1-stories-are-browser-flows.md`).
+The story suite lives in `tests/e2e/stories/`, and `npm run test:stories`
+(`make test-stories`) runs it with `playwright.stories.config.ts` and prints a
+checklist of the v1 user stories, one line each:
 
 ```
-[x] Story 1: Sign in with an account I already have, so I don't manage another password. · browser
+[x] Story 1: Sign in with an account I already have, so I don't manage another password.
 [ ] Story 2: As a newly signed-in user, be told plainly what I can do next, … — FAILING
-[ ] Story 3: Create a workspace once I hold creation rights, … — skipped
-[ ] Story 4: Mail an invitation with a chosen role … — no test yet
+[ ] Story 3: Create a workspace once I hold creation rights, … — FAILING (flaky)
+[-] Story 12: View my stock … — skipped
+[ ] Story 28: … — no test yet
 
-1 of 51 stories passing · 1 failing · 1 skipped · 48 without a test · 1 with a browser flow
+1 of 52 stories passing · 2 failing · 1 skipped · 48 without a test
 ```
 
 That is DESIGN.md §11's "live progress report against §10 rather than a
-coverage percentage", and it is the whole of what "acceptance coverage"
-means here — a count of stories, never a percentage of lines. Five decisions
-make it hold:
+coverage percentage": a count of stories, never a percentage of lines. These
+decisions make it hold:
 
-- **A config of its own, not a third project.** `npm run test` and
-  `npm run test:coverage` never see `tests/acceptance/` — `unit` and `dom`
-  exclude it, and `vitest.stories.config.mts` is the only include —
-  so a scaffold that lands deliberately red (M2.1 is the first) cannot fail
-  the unit run, and a story that passes cannot lift the 80% threshold. The
-  stories run carries no `--coverage` at all.
+- **A story is named by a tag, nothing else.** A test walks a story with
+  Playwright's own option, `test('…', { tag: '@story-6' }, …)`, or an array of
+  tags when one flow proves several. The title and the file name carry no
+  meaning to the checklist. `tests/e2e/stories/README.md` has the file table.
 - **The story list is read out of DESIGN.md §10, not copied.**
   `tests/support/stories.ts` parses the numbered list between
-  "## 10. User stories" and the next section — 52 today, 1–34 and 47–64 — so
-  the spec is the one place a story is written down and a story added to §10
-  joins the checklist without a harness edit. The harness has no tests of its
-  own (MB.224): a broken checklist is seen by whoever runs it.
-- **A story's status is the state of every suite naming it.** A suite names
-  its story in its describe — `describe('Story 12: …')`, at any depth, from
-  any file — and `tests/support/story-checklist.ts` folds those states: any
-  failure is _failing_; otherwise any skip is _skipped_ (M2.1's
-  skipped-with-reason option); otherwise _passing_. `pending`, what an
-  interrupted run leaves, reads as failing so it can never look green. A
-  suite naming a number §10 does not list is set aside under "Not a v1
-  story" rather than counted.
-- **Naming is held by review.** Every top-level `describe` in
-  `tests/acceptance/` names a v1 story and no top-level `it` stands outside
-  one: a story with a test that names it wrongly shows as "no test yet" while
-  that test fails. MB.224 retired the guard, with the rest of the harness's
-  tests.
-- **A browser flow is traced, not duplicated (M9.17).** A Playwright test that
-  walks a story in the browser tags itself with Playwright's own option,
-  `test('…', { tag: '@story-6' }, …)`, or an array of tags for several. The
-  checklist scans `tests/e2e/**/*.spec.ts` for those tags and ends the line of
-  each story that has one with ` · browser`, with a tally line
-  `N with a browser flow`. The column reports that a tagged spec exists on disk, not that a
-  Playwright run passed; the Playwright job's own summary ("Stories walked")
-  carries that. A tag naming a number §10 does not list is set aside under "Not
-  a v1 story", like a stray `describe`. The scan is a text scan, so a tag in a
-  comment would count, and review holds that. The owner's reason: the suite
-  here stays the definition of done, and Wave 15's flows (M11.1 to M11.7) can
-  then be aimed at the stories with no browser proof.
+  "## 10. User stories" and the next section (52 today, 1–34 and 47–64), so a
+  story added to §10 joins the checklist without a harness edit. The harness
+  has no tests of its own (MB.224): a broken checklist is seen by whoever runs
+  it.
+- **A story's status is the state of every test tagged with it.** Any failure
+  is _failing_; otherwise any skip is _skipped_; otherwise _passing_. An
+  interrupted test reads as failing, so it can never look green.
+- **A flaky story is a failing story.** Retries stay on in CI (one) so the run
+  completes, but a test that passed only on its retry counts as failed, and its
+  line ends ` — FAILING (flaky)`. A flake is a bug to fix, not to tolerate.
+- **A test with no tag fails the run.** A test under `stories/` without an
+  `@story-N` tag is listed under "No story tag" and the reporter makes the
+  run fail. This replaces review of `describe` names. A tag naming a number
+  §10 does not list is set aside under "Not a v1 story" and not counted.
+- **A scaffold is a `test.fixme`.** A story whose page does not exist yet is
+  written as `test.fixme('…', { tag: '@story-20', annotation: { type: 'fixme', description: 'M9.6 builds /coven/[slug]/ingredients' } }, async ({ page }) => { … })`.
+  The body typechecks (it uses role and label locators) and never runs; the
+  checklist reads it as _skipped_ and the annotation names the task that builds
+  the page. That task unskips its story in its own PR: `fixme` becomes `test`
+  and the annotation goes. The scaffold lands red-free on purpose, because a
+  skip is not a failure.
+- **Setup follows the gate specs.** `signInAs` for users, the raw `postgres`
+  client for covens and rows (MB.101), the Mailpit inbox for mail. The UI is
+  used for the step the story is about. A refusal is proved by the control
+  being absent and by the direct URL or action being refused, since "no rows"
+  alone proves nothing.
 
-**A scaffold names only what typechecks.** A scaffold lands before the thing
-it tests exists, and `npm run typecheck` runs over `tests/` too, so an import
-of a page or a service that is not there yet would fail `tsc` rather than the
-story. `01-accounts.test.ts` (M2.1) therefore reads an unbuilt page's source
-with `existsSync` and `readFileSync` instead of rendering it, and
-`07-admin.test.ts` (M5.1) looked each unbuilt service up on its module's
-surface at runtime — `await import('@/modules/ingredients')` cast to an
-interface stating the signature the story expects, each name checked with
-`toBeTypeOf('function')` so the failure named the task it waited on, until
-M5.6 imported the last of them. That lookup is now `surface()` in
-`tests/support/unbuilt.ts`, shared since M6.1 put stories 3–13 on it. The task
-that builds the page or the service replaces the workaround with the import
-and drops the stated signature; the story's `describe` and its assertions
-stay.
+## The reporter
 
-The suite runs on the same harness as `tests/db/` — node, one seeded
-`sorrel_test_<slot>` clone per worker, re-cloned before every file — because
-an acceptance test calls a service against the seeded world. A file that
-needs a DOM (`04-modals.test.tsx`, M8.9) declares
-`// @vitest-environment jsdom` in its own docblock. `passWithNoTests` is on:
-the directory holds only its README until M2.1, and 51 stories with no test
-is a true report rather than an error.
+`tests/support/story-playwright-reporter.ts` is a Playwright reporter named in
+`playwright.stories.config.ts` by path. It collects each test in `onTestEnd`
+and decides in `onEnd` from `test.outcome()` (`expected`, `unexpected`,
+`flaky` or `skipped`), folds the states per tag with
+`tests/support/story-checklist.ts`, prints the checklist, and returns
+`{ status: 'failed' }` when a test has no tag. With `STORIES_JSON=<path>` it
+also writes the checklist as JSON, which is how CI gets it. The config shares
+the gate config's `baseConfig` and `slotServers`, so a story runs against the
+same per-worker database and production server as a gate spec, on ports 8001
+and up. It takes the same lock, `/tmp/sorrel-e2e.lock`, so the two suites
+never run at once on one machine. `npm run e2e` ignores `tests/e2e/stories/`.
 
-`tests/support/story-reporter.ts` is the Vitest reporter behind it, listed
-by path after `default` in the config — so a failing story still prints its
-assertion — and given by path rather than imported, since a config's imports
-run at config-load time. With `--outputFile=<path>` (or
-`--outputFile.stories=<path>`, the way the built-in `json` reporter is
-addressed) it also writes the checklist as JSON, which is how CI gets it.
+## Its own CI workflow
 
-**Wired into CI (M1.28).** `vitest.yml` runs `npm run test:stories` as a
-second step of the same job, after the coverage run and with `always()` so
-the checklist is written even when that run is red;
-`.github/scripts/summarize-stories.mjs` turns the JSON into a "3 of 45
-stories passing" stat and a collapsible markdown checklist for its own job
-summary section and its own PR comment thread (marker `stories`). The step
-fails the job when a story fails — except across M2 (M2.1): that step carries
-`continue-on-error: true` so a story still red while the rest of Wave 6 lands
-cannot block a PR, while `steps.stories.outcome` (read by the summarize and
-comment steps below it) still carries the real pass/fail, unaffected by
-`continue-on-error`. Revert once every M2 story is green.
+`.github/workflows/stories.yml` runs on a pull request into `staging` or
+`main`, on a push to `staging`, and by hand. It calls `playwright.yml` with
+`suite: stories`, which switches the run command, the summariser
+(`.github/scripts/summarize-stories.mjs`), the check name and the comment
+thread (marker `stories`), and skips the coverage artifact. It is never a
+required check, and the run step carries `continue-on-error: true` (a job that
+calls a workflow cannot carry it), so a red scaffold or an unfinished story
+shows in the PR's Stories comment, read from `steps.run.outcome`, without
+blocking a merge. It has its own workflow so that the merge gate's time does
+not grow with the suite.
+
+## The two suites
+
+| Suite                      | Lives in              | Proves                                               | Gate |
+| -------------------------- | --------------------- | ---------------------------------------------------- | ---- |
+| Story suite                | `tests/e2e/stories/`  | A v1 story, by a flow a user could walk              | No   |
+| Gate suite (`npm run e2e`) | `tests/e2e/*.spec.ts` | What no story walks and only a real server can prove | Yes  |
+
+A gate spec that a story flow now proves is deleted, not kept as a duplicate
+(`layer-ownership.md`, rule 9).

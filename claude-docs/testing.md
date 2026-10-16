@@ -4,8 +4,8 @@ Vitest 5, configured as five projects in `vitest.config.mts` (`.mts`, not
 `.ts` — the root `package.json` deliberately carries no `"type"` field per
 `MODULE_TYPELESS_PACKAGE_JSON`, so an explicit `.mts` extension is what tells
 Vite's native config loader this file is ESM instead of warning about it), plus
-the acceptance suite on a config of its own, `vitest.stories.config.mts` (M1.28,
-below). `db`, `db-mocking` and the acceptance config share the Postgres harness through
+the story suite, which is Playwright, not Vitest (M9.1; "Acceptance" below).
+`db` and `db-mocking` share the Postgres harness through
 `tests/support/db-project.mts` — `.mts` and imported with its extension for the
 same reason, since a config's imports run at config-load time.
 
@@ -29,9 +29,9 @@ Every Vitest file sits under `tests/` mirroring `src/`, a path glob assigns it t
 
 A full run holds at most 97 connections — twelve workers at most, each an app client and a test-file client capped at four by `tests/support/db/bounded-postgres.ts`, plus global setup's one — against the image's `max_connections=200`, so the limit holds with half left for a second run or the e2e servers; measured, a run peaks at 28 where it held 59 before; a change to any of the three numbers redoes the arithmetic. [`testing/db-harness.md`](testing/db-harness.md#connections-per-run-mb179)
 
-## Acceptance — `make test-stories` (M1.28)
+## Acceptance — `npm run test:stories` (M9.1)
 
-`npm run test:stories` runs `tests/acceptance/` on its own `vitest.stories.config.mts`, outside coverage, and prints a checklist of the v1 stories read from DESIGN.md §10, each status folded from every suite whose `describe` names the story. [`testing/acceptance.md`](testing/acceptance.md)
+`npm run test:stories` runs the browser flows in `tests/e2e/stories/` on `playwright.stories.config.ts`, outside coverage, and prints a checklist of the v1 stories read from DESIGN.md §10, each status folded from the `@story-N` tags of the tests that walk it; a flaky story reads as failing, and the suite runs in its own CI workflow. [`testing/acceptance.md`](testing/acceptance.md)
 
 ## Acting as a fixture user, and asserting a refusal (M1.26)
 

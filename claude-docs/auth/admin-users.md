@@ -475,7 +475,7 @@ succeeds; each dead link, the two-state links, a second use, a hashed token
 and a workspace invitation; and the pause, by whom the invitation was sent.
 `tests/modules/identity/graphql/admin-invitations.test.ts` is the
 transport's half, the scope is `tests/db/graphql-query-scopes.test.ts`'s, and
-story 62's acceptance test is in `tests/acceptance/08-email-and-admin.test.ts`.
+story 62's browser flow is in `tests/e2e/stories/08-email-and-admin.spec.ts`.
 
 ## The privilege ledger (MB.199, MB.200)
 
@@ -542,6 +542,6 @@ transport's half: every field, the filters reaching the service, subject and
 actor in one user read per page by query count, and the scope's own refusal.
 A signed-out caller is `tests/db/graphql-query-scopes.test.ts`'s. The page's
 half is `tests/app/admin/(people)/privilege-changes/page.test.tsx`, story 61's
-acceptance test is `tests/acceptance/08-email-and-admin.test.ts`'s, and
+browser flow is `tests/e2e/stories/08-email-and-admin.spec.ts`'s, and
 `tests/e2e/admin/privilege-changes.spec.ts` reads the page, its filters and
 the history icon link against the built server, with axe.

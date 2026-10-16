@@ -1494,52 +1494,40 @@ The production compendium is not a scenario. Its starting entries are reference 
 
 ### Acceptance tests — story traceability
 
-Every story gets a test that names it. The suite is written first, all failing, and becomes the definition of done.
+Every story gets a browser flow that names it. A story is proved by a flow a user could walk, never by a service call or a GraphQL response (M9.1). The suite is written first, red or skipped, and becomes the definition of done.
 
 ```
-tests/acceptance/
-  01-accounts.test.ts       # stories 1-13
-  02-compendium.test.ts     # stories 14-16
-  03-ingredients.test.ts    # stories 20-27
-  04-modals.test.tsx        # stories 28-34
-  06-grimoire.test.ts       # stories 47-57
-  07-admin.test.ts          # stories 17-18  (story 19 via the workspace-isolation suite)
-  08-email-and-admin.test.ts # stories 58-62
+tests/e2e/stories/
+  01-accounts.spec.ts        # stories 1-3, 8
+  01-members.spec.ts         # stories 9-11
+  01-invitations.spec.ts     # stories 4-7
+  01-viewer.spec.ts          # stories 12-13
+  02-compendium.spec.ts      # stories 14-16
+  03-ingredients.spec.ts     # stories 20-27
+  04-modals.spec.ts          # stories 28-34
+  06-grimoire.spec.ts        # stories 47-57
+  07-admin.spec.ts           # stories 17-19
+  08-email-and-admin.spec.ts # stories 58-62
 ```
 
-Each test carries its story id, so a failure points at a requirement rather than an implementation detail:
+A test names its story with Playwright's own tag, so a failure points at a requirement rather than an implementation detail:
 
 ```ts
-describe('Story 12: a viewer reads everything and writes nothing', () => {
-  it('lets a viewer read the workspace grimoire', async () => {
-    const spell = await spells.create(asUser(A), {
-      workspaceId: W.id,
-      title: 'Hearth blessing',
-      visibility: 'workspace',
-    });
-    expect(await spells.findById(asUser(C), spell.id)).toBeDefined();
-  });
-
-  it('rejects a viewer write with Forbidden, not a silent no-op', async () => {
-    await expect(spells.create(asUser(C), { workspaceId: W.id, title: 'x' })).rejects.toThrow(
-      Forbidden,
-    );
-  });
-
-  it('hides one workspace from a member of another, even by direct id', async () => {
-    const spell = await spells.create(asUser(A), {
-      workspaceId: W.id,
-      title: 'Warding jar',
-      visibility: 'workspace',
-    });
-    await expect(spells.findById(asUser(D), spell.id)).rejects.toThrow(Forbidden);
-  });
-});
+test(
+  'a viewer reads the grimoire and finds nothing to change',
+  { tag: '@story-12' },
+  async ({ page }) => {
+    await signInAs(page, viewerOfW);
+    await page.goto(`/coven/${W.slug}/grimoire`);
+    await expect(page.getByRole('link', { name: 'Hearth blessing' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'New Spell' })).toHaveCount(0);
+  },
+);
 ```
 
-`make test-stories` runs only this suite and prints a checklist of which stories pass — a live progress report against §10 rather than a coverage percentage.
+A story whose page does not exist yet is a `test.fixme` whose body is the intended flow; the task that builds the page unskips it. `npm run test:stories` runs only this suite and prints a checklist of which stories pass, read from the tags — a live progress report against §10 rather than a coverage percentage. A flaky story reads as failing. The suite runs in its own CI workflow, `stories.yml`, and is never a required check.
 
-Acceptance coverage is tracked separately from the 80% line threshold, because they measure different things: one asks whether the code is exercised, the other whether the product does what was specified.
+Story coverage is tracked separately from the 80% line threshold, because they measure different things: one asks whether the code is exercised, the other whether the product does what was specified. Service rules keep their own Vitest tests (direct-id refusals with their preconditions); a story test proves the flow, not the rule.
 
 ### Unit — Vitest, no DOM
 
@@ -1646,7 +1634,7 @@ MSW mocks `/api/graphql`. `tests/support/setup.ts` — since MB.97 `setup-msw.ts
 
 Specs: admin adds a compendium entry; A adds it to W's ingredients with a quantity; A builds a spell and checks the category comparison; A invites B by mail; B accepts from the link, signs in, and lands in W seeing everything; C reads but cannot edit; D reaches for W's routes by URL and gets 404 throughout; A soft-deletes an item and confirms it's gone and the name can be reused.
 
-Each spec tags the stories it walks (`@story-N`), and the stories checklist reports them beside each story's service-layer result, so the launch wave can aim its flows at the stories with no browser proof. The acceptance suite stays the definition of done (M9.17).
+There are two suites. The story suite (`tests/e2e/stories/`, `npm run test:stories`) is the definition of done: each flow carries `@story-N` tags, and the checklist reads them. The gate suite (`tests/e2e/*.spec.ts`, `npm run e2e`) proves what no story walks and only a real server can: the providers server, the compendium cache server, the GraphQL route, the proxy, the smoke test and the axe sweep. A gate spec that a story flow now proves is deleted, not kept as a duplicate.
 
 `@axe-core/playwright` scans each page and each open modal. Accessibility is asserted here, matching the `resume-2026` pattern — no `vitest-axe`.
 

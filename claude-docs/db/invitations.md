@@ -280,8 +280,8 @@ re-invite. The test for it runs the real `send` over a `fetch` that answers
 
 **The mail** is `src/emails/coven-invitation.tsx`, rendered twice by
 `renderParts` as HTML and plain text. The plain-text part carries the
-`/invite/<token>` link, because story 4's acceptance test reads the token from
-it. `InvitationSender` (`identity/types.ts`) gained
+`/invite/<token>` link, because story 4's browser flow reads the token from
+the mailed message. `InvitationSender` (`identity/types.ts`) gained
 `workspaceInvitation(to, token, { name, role, inviterName })` beside
 `siteInvitation(to, token, { name })`; the
 real one is built in `src/lib/invitation-mail.ts` and shares the admin one's
@@ -296,8 +296,7 @@ invitation answers none for both. No field carries the token, its hash or a
 link; the existing field-list test in
 `tests/modules/identity/graphql/admin-invitations.test.ts` pins that.
 
-Story 4's acceptance test passes `createInvitation` now and stops at
-`acceptInvitation`, whose workspace branch M7.5 added.
+Story 4's flow walks sending an invitation; accepting it is story 6's, whose workspace branch M7.5 added.
 
 ### Listing and revoking in a coven (M7.6)
 
