@@ -1,6 +1,6 @@
 # Wave 11 — Ingredient services
 
-M9's data layer moves ahead of M8's UI, once M4's ingredients and M6's workspaces exist. The order is **M9.1 · M11.23 · M11.24 · M11.10 · M8.3 · M8.3a · M11.17 · M9.5 · MB.9 · M9.3 · M9.4 · M11.19 · M11.20 · M11.21 · M11.22 · M11.18**, and each step has a reason:
+M9's data layer moves ahead of M8's UI, once M4's ingredients and M6's workspaces exist. The order is **M9.1 · M11.23 · M11.10 · M8.3 · M8.3a · M11.17 · M9.5 · MB.9 · M9.3 · M9.4 · M11.19 · M11.20 · M11.21 · M11.22 · M11.18 · M11.24**, and each step has a reason:
 
 - **M9.1 opens the wave** as its red scaffold (a set of acceptance tests written to fail first). M8.1 is retired: the three story tests it would have written were already written green by M8.2, M8.5 and M5.10.
 - **M8.3 and M8.3a need no stock**, so they sit here only to keep the identity work together. M8.3a promotes a folk name to the display name, which is safe because of the identity rule MB.215 and MB.223 settled: an ingredient's identity is `identity_key` (its formal name alone), and that column is already in the schema. The old text named `canonical_key`, which MB.223 dropped. The order is grouping, not dependency.
@@ -22,8 +22,8 @@ Of Wave 12's tasks, only M8.14 needs stock data from this wave. The old text als
 
 **M11.23 narrows pre-commit to the files a commit changes** (minted 2026-10-16 on the owner's request, placed in Wave 11 on their call). It touches only the hook, its config and their docs, and nothing else in the wave depends on it. On 2026-10-16 the owner moved it up to follow M9.1, so every later task in the wave commits through the faster hook.
 
-**M11.24 moves the `vitest` job off Blacksmith and back to GitHub's free runner** (minted 2026-10-16 on the owner's request, placed in Wave 11 on their call). The job has been the one metered leg of the gate since MB.96, and `ci/runner-budget.md` puts it at or over Blacksmith's shared free tier at the current run rate. It touches only CI and its docs, and nothing in the wave depends on it, so it follows M11.23 to stop the draw soonest; it also looks at where the Vitest run's time goes on the smaller runner and applies what fits.
-
 **M11.10 builds the error boundaries and the styled 404 and 500 pages** (moved from Wave 15 to follow M11.23 on the owner's call, 2026-10-16). The site still answers an unknown URL with Next's default 404, and the 403 page (`src/app/(shell)/forbidden.tsx` and its `NotAuthorized` body) is the pattern to follow. Moving it means it now lands before two things it used to follow in Wave 15: M11.16's illustrations, and the report form from MB.176's build, which the 500 page links. Either can be added to the pages when it lands.
 
 **M11.18 closes the wave** because it touches only the e2e harness and the specs' serial mode, which nothing here depends on; it is the measured plan in [`design-decisions/m11.18-plan.md`](../design-decisions/m11.18-plan.md) for a suite that finishes in the time its work needs rather than the time its longest file needs.
+
+**M11.24 moves the `vitest` job off Blacksmith and back to GitHub's free runner** (minted 2026-10-16 on the owner's request, placed in Wave 11 on their call). The job had been the one metered leg of the gate since MB.96, and `ci/runner-budget.md` put it at or over Blacksmith's shared free tier at the current run rate. It was minted once every other task in the wave had landed, so it sits last, after M11.18; it touches only CI and its docs, and it also looks at where the Vitest run's time goes on the smaller runner and applies what fits.
