@@ -10,18 +10,24 @@ import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
+import { ingredientSlug } from '../../../lib/slugify';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
   ingredientColumns,
+  readPromotedFolkName,
   resolvePicks,
   softDeleteIngredient,
   splitChildren,
+  swapFolkName,
   writeChildren,
 } from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { describeEntry } from '@/modules/vocabulary';
 import type { IngredientFields, IngredientRow, IngredientValues } from '../types';
+
+/** What a collision is reported from: the label and the formal name alone. */
+type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
 
 // Story 15: a coven's own ingredients. Every read and write is under the
 // proof, so the tier is the proof's — `workspace_id` is never read from the
@@ -108,6 +114,45 @@ export async function updateWorkspaceIngredient(
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, id));
 }
+/**
+ * Swaps the display name of an ingredient of this coven with one of its folk
+ * names, in one transaction: the folk name becomes the display name and the
+ * old display name becomes a folk name, kept once whatever its case. The slug
+ * follows the label, and nothing redirects from the old one (as in
+ * `updateWorkspaceIngredient`). A row with a formal name keeps its identity
+ * key; one without moves it, and may meet another entry's.
+ *
+ * @throws {Forbidden} the caller may not write this coven's ingredients.
+ * @throws {ValidationError} the new display name collides with another of the
+ * coven's ingredients.
+ * @throws {NotFound} no such ingredient in this coven, or no such live folk
+ * name on it.
+ */
+export async function promoteWorkspaceFolkName(
+  session: Session,
+  workspaceId: string,
+  id: string,
+  folkNameId: string,
+): Promise<IngredientRow> {
+  const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
+  if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
+  const current = await findOneByIdInWorkspace(membership, ingredients, id);
+  if (!current) throw new NotFound('No such ingredient in this coven');
+  const { promoted, others } = await readPromotedFolkName([membership], id, folkNameId);
+
+  const fields = { name: promoted.name, canonicalName: current.canonicalName };
+  const slug = ingredientSlug(fields.name, fields.canonicalName);
+
+  return withAudit(session, async (write) => {
+    await swapFolkName(write, id, promoted.id, current.name, others);
+    const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, {
+      name: fields.name,
+      slug,
+    });
+    if (!row) throw new NotFound('No such ingredient in this coven');
+    return row;
+  }).catch((error: unknown) => refuseCollision(error, membership, fields, slug, id));
+}
 
 /**
  * Soft-deletes an ingredient of this coven, stamping who deleted it. Its folk
@@ -164,7 +209,7 @@ export async function getWorkspaceIngredient(
 async function refuseCollision(
   error: unknown,
   membership: Membership,
-  fields: IngredientFields,
+  fields: NameFields,
   slug: string,
   id: string | undefined,
 ): Promise<never> {

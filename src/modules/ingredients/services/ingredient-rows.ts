@@ -916,3 +916,47 @@ async function writeVariant(
   if (differs) await write.updateById(ingredientVariants, row.id, columns).catch(refuse);
   return row.id;
 }
+
+/**
+ * The folk name `folkNameId` of ingredient `ingredientId`, and the names the
+ * ingredient's other live folk names hold — the two things a promotion reads
+ * before it writes. `memberships` is the tier the parent is read in, as
+ * `findManyOfIngredients` takes it: none for a compendium entry.
+ *
+ * @throws {NotFound} the ingredient holds no live folk name with this id —
+ * another ingredient's included, and an id that is not one.
+ */
+export async function readPromotedFolkName(
+  memberships: readonly Membership[],
+  ingredientId: string,
+  folkNameId: string,
+): Promise<{ promoted: { id: string; name: string }; others: string[] }> {
+  const notFound = () => new NotFound('No such common name on this ingredient');
+  if (!RowId.safeParse(folkNameId).success) throw notFound();
+  const live = await findManyOfIngredients(memberships, ingredientFolkNames, [ingredientId]);
+  const promoted = live.find((row) => row.id === folkNameId);
+  if (!promoted) throw notFound();
+  return {
+    promoted,
+    others: live.filter((row) => row.id !== folkNameId).map((row) => row.name),
+  };
+}
+
+/**
+ * The folk-name half of a promotion, in the caller's `withAudit`: the promoted
+ * row is soft-deleted first, so the case-folded unique index is clear, and then
+ * the old display name is written as a folk name — unless another live folk
+ * name already matches it in any case, which keeps it once.
+ */
+export async function swapFolkName(
+  write: AuditWriter,
+  ingredientId: string,
+  promotedId: string,
+  previousName: string,
+  others: readonly string[],
+) {
+  await write.softDeleteByIds(ingredientFolkNames, [promotedId]);
+  const folded = previousName.toLowerCase();
+  if (others.some((name) => name.toLowerCase() === folded)) return;
+  await write.insert(ingredientFolkNames, { ingredientId, name: previousName });
+}

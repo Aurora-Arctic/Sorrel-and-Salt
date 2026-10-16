@@ -334,6 +334,9 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   createReference: write(
     `mutation { createReference(workspaceId: "${WORKSPACE_W_ID}", input: ${REFERENCE}) { id } }`,
   ),
+  promoteFolkName: write(
+    `mutation { promoteFolkName(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", folkNameId: "${NOWHERE}") { id } }`,
+  ),
   updateReference: write(
     `mutation { updateReference(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}", input: ${REFERENCE}) { id } }`,
   ),
@@ -410,6 +413,14 @@ const ADMIN_WRITES: Record<string, AdminWrite> = {
     governs: 'references',
     probe: write(`mutation { createReference(input: ${REFERENCE}) { id } }`),
   },
+  // A null `workspaceId` is the compendium's tier (M8.3a); a coven's is the
+  // member's, below.
+  promoteFolkName: {
+    governs: 'compendium',
+    probe: write(
+      `mutation { promoteFolkName(workspaceId: null, id: "${NOWHERE}", folkNameId: "${NOWHERE}") { id } }`,
+    ),
+  },
   updateReference: {
     governs: 'references',
     probe: write(
@@ -481,6 +492,7 @@ const OPEN_WRITES = [
   'deleteIngredient',
   'createReference',
   'updateReference',
+  'promoteFolkName',
 ];
 
 const adminProbe = (field: string): ScopeProbe =>

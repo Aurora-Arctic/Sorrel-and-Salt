@@ -502,6 +502,11 @@ type Mutation {
   pauseAdminRoleChanges: Boolean!
 
   """
+  Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
+  """
+  promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+
+  """
   Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.
   """
   removeMember(userId: ID!, workspaceId: ID!): Boolean!

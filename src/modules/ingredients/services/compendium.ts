@@ -12,6 +12,7 @@ import {
 import { cachedCompendiumRead, expireCompendium } from '../../../lib/compendium-cache';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
@@ -22,9 +23,11 @@ import { CompendiumIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
   ingredientColumns,
+  readPromotedFolkName,
   resolvePicks,
   softDeleteIngredient,
   splitChildren,
+  swapFolkName,
   writeChildren,
 } from './ingredient-rows';
 import { readersOf } from '@/modules/coven';
@@ -235,6 +238,60 @@ export async function updateCompendiumEntry(
 }
 
 /**
+ * Swaps the display name of a compendium entry with one of its folk names, in
+ * one transaction, as `promoteWorkspaceFolkName` does for a coven's: the folk
+ * name becomes the display name and the old one a folk name, kept once
+ * whatever its case. The change is global — every coven sees the entry's new
+ * name. The slug follows the label, so when it moves the old one is retired and
+ * redirects for 180 days, as in `updateCompendiumEntry`; a slug another
+ * entry's redirect still runs from refuses the promotion, since this write
+ * has no way to confirm ending it.
+ *
+ * @throws {Forbidden} the caller is not a site admin.
+ * @throws {ValidationError} the new display name collides with another entry,
+ * or its address is one another entry's redirect runs from.
+ * @throws {NotFound} no live compendium entry has this id — a coven's
+ * ingredient included — or it holds no such live folk name.
+ */
+export async function promoteCompendiumFolkName(
+  session: Session,
+  id: string,
+  folkNameId: string,
+): Promise<IngredientRow> {
+  const admin = assertSiteAdmin(session);
+  if (!RowId.safeParse(id).success) throw new NotFound('No such compendium entry');
+  const current = await findOneIngredient([], id);
+  if (!current) throw new NotFound('No such compendium entry');
+  const { promoted, others } = await readPromotedFolkName([], id, folkNameId);
+
+  const fields = { name: promoted.name, canonicalName: current.canonicalName };
+  const slug = ingredientSlug(fields.name, fields.canonicalName);
+  const at = new Date();
+  const moves = slug !== current.slug;
+  if (moves) await refuseEndingARedirect(slug, at, undefined, id);
+
+  const written = await withAudit(session, async (write) => {
+    await write.deleteLapsedSlugRetirements(admin, at);
+    await swapFolkName(write, id, promoted.id, current.name, others);
+    const [row] = await write.updateByIdInCompendium(admin, ingredients, id, {
+      name: fields.name,
+      slug,
+    });
+    if (!row) throw new NotFound('No such compendium entry');
+    if (moves) {
+      await write.insertInCompendium(admin, retiredIngredientSlugs, {
+        ingredientId: id,
+        slug: current.slug,
+        retiredAt: at,
+      });
+    }
+    return row;
+  }).catch((error: unknown) => refuseCollision(error, fields, slug, id));
+  expireCompendium();
+  return written;
+}
+
+/**
  * The public route's one read of an address, taking no session: the live
  * entry holding `slug`, naming an entry that moved off it while that entry's
  * window is open; else the current slug of the entry whose redirect from
@@ -403,7 +460,7 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
  */
 async function refuseCollision(
   error: unknown,
-  fields: IngredientFields,
+  fields: Pick<IngredientFields, 'name' | 'canonicalName'>,
   slug: string,
   id: string | undefined,
 ): Promise<never> {
