@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotFound } from '@/lib/errors';
 import { makeQueryClient } from '@/lib/graphql-client';
@@ -216,7 +216,7 @@ describe('a curated value page, on the categories', () => {
   it('closes the modal back to the filtered page it opened over', async () => {
     await renderPage({ query: 'test', group: 'fixture-healing', edit: 'testcraft' });
 
-    within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }).click();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
     expect(router.replace).toHaveBeenCalledWith(
       '/admin/categories?query=test&group=fixture-healing',

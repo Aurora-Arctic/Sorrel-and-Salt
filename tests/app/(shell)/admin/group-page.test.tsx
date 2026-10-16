@@ -209,7 +209,7 @@ describe('a group page, on the category groups', () => {
     const after = encodeCursor({ key: ['Fixture Mending'], id: MENDING.id });
     await renderPage({ after, edit: 'fixture-wards' });
 
-    within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }).click();
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }));
 
     expect(router.replace).toHaveBeenCalledWith(
       `/admin/category-groups?after=${encodeURIComponent(after)}`,

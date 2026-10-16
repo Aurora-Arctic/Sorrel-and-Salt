@@ -514,7 +514,9 @@ describe('IngredientForm on the compendium', () => {
         message: 'No such compendium entry',
       });
       fireEvent.click(button('Delete Ingredient'));
-      fireEvent.click(button('Delete'));
+      await act(async () => {
+        fireEvent.click(button('Delete'));
+      });
 
       expect(await screen.findByRole('alert')).toBeVisible();
       expect(onDeleted).not.toHaveBeenCalled();

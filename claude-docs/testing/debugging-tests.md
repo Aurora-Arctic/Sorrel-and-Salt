@@ -13,3 +13,5 @@ selects it — is scoped to the `devcontainer` compose service alone, so
 `make docker-e2e` and CI keep launching Chromium locally. That mechanism,
 its trade-offs, and the full setup including VS Code attach configs:
 `claude-docs/debugging.md`.
+
+React's "not wrapped in act(...)" warning means a test asserted before an update it caused had landed (M11.24). Under Claude Code Vitest hides a passing test's output, so run `env -u CLAUDECODE npx vitest run --project dom` to see them. The fix is to wait for that update and assert the same state: an action that sends a request is pressed inside `await act(async () => …)`, a native `.focus()` or `.click()` goes through `act` or `fireEvent`, and `waitFor` in `tests/support/ingredient-form.tsx` settles first. Never set `IS_REACT_ACT_ENVIRONMENT` or silence the warning.

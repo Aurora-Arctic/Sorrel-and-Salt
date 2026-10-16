@@ -109,7 +109,7 @@ The `## M… —` sections that followed the execution order moved to [`tasks/`]
 | [`tasks/m8.md`](tasks/m8.md)   | M8 — Compendium browsing and local ingredients · _19 live tasks · 40 hours · 2 retired (M8.1, M8.4)_ |
 | [`tasks/m9.md`](tasks/m9.md)   | M9 — Workspace ingredients · _18 tasks · 39.5 hours_                                                 |
 | [`tasks/m10.md`](tasks/m10.md) | M10 — Grimoire · _33 tasks · 76 hours_                                                               |
-| [`tasks/m11.md`](tasks/m11.md) | M11 — Hardening and launch · _21 tasks · 46.5 hours_                                                 |
+| [`tasks/m11.md`](tasks/m11.md) | M11 — Hardening and launch · _21 tasks · 48 hours_                                                   |
 | [`tasks/m12.md`](tasks/m12.md) | M12 — Ingredient UI additions · _7 tasks · 27.5 hours_                                               |
 | [`tasks/m13.md`](tasks/m13.md) | M13 — Grimoire additions · _9 tasks · 22 hours_                                                      |
 | [`tasks/m14.md`](tasks/m14.md) | M14 — Sweep close-out additions · _1 task · 6 hours_                                                 |
