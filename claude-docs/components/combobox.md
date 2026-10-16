@@ -92,6 +92,9 @@ colour is never the only cue.
 - **Escape on a closed box is left to the dialog.** Downshift would prevent
   the key whenever the box holds text, which stops a modal around it hearing
   its `cancel` event; the box marks it `preventDownshiftDefault` instead.
+  The one exception is the empty message: it is open content Downshift does not
+  know of, so Escape closes it alone and is prevented, as on an open list, and
+  the next Escape reaches the dialog.
 - **Leaving the box shuts its list for good.** The list is open only while
   it is wanted and has rows, so a box left while its lookup had none to show
   still wanted it, and the answer arriving later opened it, which Downshift
@@ -745,7 +748,7 @@ suggestions still shown, Enter still handed to `onCommit`, and the list shut
 when it would have been the only row; Enter handed to `onCommit` with the
 list open or closed, and otherwise closing the list or reaching the form;
 Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape,
-blur and a pick keeping the text, Escape prevented on the open list and not on a closed box
+blur and a pick keeping the text, Escape prevented on the open list and on the empty message, and not on a closed box
 holding text; a box with no source never opening; the
 status region's count, and its busy and empty states; the qualifier read as
 the box's description after the field's own, a press on it putting the caret

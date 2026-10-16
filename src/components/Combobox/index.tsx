@@ -326,10 +326,19 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     if (event.nativeEvent.isComposing) return;
     // A printable key is one character long; a shortcut is not typing.
     if (event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) hideTip();
-    // Escape on a closed box is the dialog's. Downshift prevents the key
-    // whenever the box holds text; the reducer keeps that text but cannot undo
-    // the preventDefault, which would stop the dialog's own cancel event.
+    // Escape on a box with no open list is the dialog's, unless the "no
+    // matches" message is showing. That message is open content that Downshift
+    // does not know of (it has no rows, so its isOpen is false), so Escape
+    // closes it alone and goes no further, as it does on an open list (MB.115).
+    // Otherwise Downshift prevents the key whenever the box holds text; the
+    // reducer keeps that text but cannot undo the preventDefault, which would
+    // stop the dialog's own cancel event.
     if (event.key === 'Escape' && !isOpen) {
+      if (showEmpty) {
+        setWantsOpen(false);
+        event.preventDefault();
+        return;
+      }
       (
         event as KeyboardEvent<HTMLInputElement> & { preventDownshiftDefault?: boolean }
       ).preventDownshiftDefault = true;
