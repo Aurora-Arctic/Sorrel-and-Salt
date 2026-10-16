@@ -21,7 +21,7 @@ Edit link.
 | ----------- | -------------------------------------------------------------------------------------------- |
 | `tip`       | The word or two shown: "Edit", "Edit Source". Shown only, never read (see "Accessibility").  |
 | `children`  | The one icon control, a `<button>` or a link, which keeps its own name, role and attributes. |
-| `placement` | `'side'` (the default) or `'below'`: where the tip stands (see "Placement").                 |
+| `placement` | `'side'` (the default), `'below'` or `'above'`: where the tip stands (see "Placement").      |
 
 `EditLink`:
 
@@ -48,6 +48,12 @@ follows `href` as before.
   which draws a page with a pencil (`SourceEditIcon`, in the form's own
   `icons.tsx`) so that it does not look like the row's pencil beside it
   ([`ingredient-form.md`](ingredient-form.md), "Editing a source").
+- **Each segment of a radio strip** (`RadioGroupField`'s `layout="strip"`,
+  M12.7), named by its option's label, above it: the form group's Icon picker
+  draws icons alone, and the owner asked for each one's name on hover
+  (2026-10-16). The segment is a `label` round a hidden native radio, which
+  keeps its own name, so the tip stays decoration here too
+  ([`field.md`](field.md)).
 
 ## Behaviour
 
@@ -113,6 +119,12 @@ tip can hang past the panel's edge. It fades in from, and out to, two pixels abo
 its place. It is the one placement chosen by a prop; the others follow from
 where the control sits.
 
+**Centred above the control** (`placement="above"`,
+`.icon-tip__bubble--above`), for a control in a row of its kind, a segment
+of the radio strip (M12.7): a tip to the side would cover the next segment,
+and one below the chosen name printed under the bar. It fades in from, and out
+to, two pixels below its place.
+
 **Over the Add's plus, above it and right-aligned** to the plus's right edge, so it stays inside the window at the line's end, at `layer('floating')`. The action's wrapper carries no `translate` (it is brought down to the heading's letters with `position: relative; top` instead): a `translate` makes the wrapper a stacking context, which would rank the tip's layer only inside it and hold the tip under the shell's bar once the page is scrolled.
 
 ## Styling
@@ -129,7 +141,7 @@ Tokens and three mixins in `_mixins.scss`, so every Edit matches:
   remove icons wear.
 - **`icon-button-edit`**: the pencil's ink, `$accent`, and, pointed at,
   focused or open (`aria-expanded`), a tint of it 20% into the card.
-- **Sizes**: the ingredient form keeps the 24px box and 1rem glyph beside
+- **Sizes**: the ingredient form keeps the 24px box and 1rem icon beside
   its fields' text; a list row's `EditLink` (`.icon-tip__edit`) takes
   `$icon-size-large` around `$glyph-size-large`, 2rem around 1.25rem.
 - **Contrast**: the accent on the page, on the card (banded rows, stacked
