@@ -54,7 +54,9 @@ prose still say _workspace_.
 It reads `getSession()` — never `requireSession()`, which would protect it
 again — for exactly one decision: whether the way in is "Sign in" (to
 `/sign-in`) or "Continue" (to `/coven`, or since MB.113 `/admin` for an
-admin, the landing a sign-in with no return path gets). Everything else on
+admin, the landing a sign-in with no return path gets; since MB.257 the callback sends
+a member of a coven straight into it, so `/coven` is only the stop for someone
+in none). Everything else on
 the page is the same for both. `/` stays in `PUBLIC_ROUTES`.
 
 ## What this rules out

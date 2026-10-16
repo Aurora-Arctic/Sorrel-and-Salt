@@ -120,6 +120,14 @@ answer.
   sign-in lands on `/admin`. The flag is client-supplied, as every
   `additionalData` key is, and trusted accordingly: it chooses between two
   landings the account may open anyway, and `/admin`'s guard is the role.
+  A non-admin who is already in a coven is sent into its page directly
+  (`firstCovenSlugOf`, the first coven the switcher lists), not to `/coven`
+  (MB.257): `/coven` answers such a visitor with a redirect to that page, and
+  the dev server compiles both routes on the way, which showed as a blank page.
+  A production build answers `/coven` with a bodiless 307 in about 60 ms, so
+  the stop was the dev server's alone; the hop is gone from both. Someone in no
+  coven still lands on `/coven`, and `/coven` itself still redirects a
+  member who opens it (the brand link, a bookmark).
   An unverified account goes to the email page first as ever, bare
   (`/account/email`) with no return path, and the sign-up mail's link lands
   bare on the confirmed view: its Continue takes the role's landing too, read

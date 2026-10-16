@@ -9,13 +9,15 @@ import {
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
+import { slugify } from '@/lib/slugify';
 import { importAuth } from '../support/auth-module';
 import { asManualFix } from '../support/db/privileges';
 import type { AuthInstance, Profile } from '../support/types';
 
 // Where the callback lands a sign-in (MB.113): a return path wins, `/coven`
 // included; with none, an admin — by the role held once any promotion at this
-// sign-in has run — lands on /admin, and everyone else on /coven. An
+// sign-in has run — lands on /admin, a member of a coven goes straight into the
+// first one the switcher lists (MB.257), and everyone else on /coven. An
 // unverified account lands on the email page first, whatever its role. Driven
 // through Better Auth's real endpoints, as SignInPanel starts them
 // (claude-docs/auth/route-protection.md, "Route protection").
@@ -27,6 +29,7 @@ const DOMAIN = '@sign-in-landing.test';
 const PRIMARY = `primary${DOMAIN}`;
 const ADMIN = `admin${DOMAIN}`;
 const MEMBER = `member${DOMAIN}`;
+const COVEN_PREFIX = 'Fixture Landing ';
 
 let sql: ReturnType<typeof postgres>;
 
@@ -58,6 +61,11 @@ afterAll(() => {
 
 // The harness re-clones per file, not per test; every user here is on this domain.
 beforeEach(async () => {
+  // A coven's rows first: they name the users deleted below.
+  await sql`
+    delete from workspace_members
+    where workspace_id in (select id from workspaces where name like ${`${COVEN_PREFIX}%`})`;
+  await sql`delete from workspaces where name like ${`${COVEN_PREFIX}%`}`;
   // The ledger first: a promotion's rows name the users deleted below, and
   // only a truncate empties it.
   await sql`truncate user_privilege_changes`;
@@ -98,6 +106,20 @@ async function insertVerified(email: string, role: 'user' | 'admin'): Promise<vo
   );
 }
 
+/** A coven named `COVEN_PREFIX + name`, with the account at `email` seated in it. */
+async function seat(email: string, name: string, role: 'member' | 'viewer' = 'member') {
+  const covenName = `${COVEN_PREFIX}${name}`;
+  const [coven] = await sql`
+    insert into workspaces (name, slug, created_by, updated_by)
+    values (${covenName}, ${slugify(covenName)}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID})
+    returning id`;
+  await sql`
+    insert into workspace_members (workspace_id, user_id, role, created_by, updated_by)
+    select ${coven.id}, id, ${role}, ${BOOTSTRAP_USER_ID}, ${BOOTSTRAP_USER_ID}
+    from users where email = ${email}`;
+  return `/coven/${slugify(covenName)}`;
+}
+
 /** The link in the one verification mail sent so far. */
 function mailedLink(): string {
   expect(send).toHaveBeenCalledTimes(1);
@@ -130,6 +152,37 @@ describe('a sign-in with no return path', () => {
     expect(await roleOf(MEMBER)).toBe('user');
   });
 
+  // The landing exists for someone with no coven to enter. A member has one,
+  // so the sign-in goes there itself and the browser makes no stop at /coven.
+  it('lands a member straight in the first coven the switcher lists', async () => {
+    await insertVerified(MEMBER, 'user');
+    await seat(MEMBER, 'Zephyr');
+    const first = await seat(MEMBER, 'Aster', 'viewer');
+
+    const response = await signIn('google', { sub: 'g-member', email: MEMBER, verified: true });
+
+    expect(landingOf(response)).toBe(first);
+  });
+
+  it('lands a member whose only coven is gone on /coven', async () => {
+    await insertVerified(MEMBER, 'user');
+    await seat(MEMBER, 'Vanished');
+    await sql`update workspaces set deleted_at = now(), deleted_by = ${BOOTSTRAP_USER_ID} where name like ${`${COVEN_PREFIX}%`}`;
+
+    const response = await signIn('google', { sub: 'g-member', email: MEMBER, verified: true });
+
+    expect(landingOf(response)).toBe('/coven');
+  });
+
+  it('lands an admin who is in a coven on the admin area all the same', async () => {
+    await insertVerified(ADMIN, 'admin');
+    await seat(ADMIN, 'Adminhold');
+
+    const response = await signIn('google', { sub: 'g-admin', email: ADMIN, verified: true });
+
+    expect(landingOf(response)).toBe('/admin');
+  });
+
   it('sends an unverified admin to the bare email page first, and the mailed link lands there bare too', async () => {
     const first = await signIn('microsoft', { sub: 'ms-admin', email: ADMIN, verified: true });
     expect(landingOf(first)).toBe('/account/email');
@@ -155,6 +208,19 @@ describe('a sign-in with no return path', () => {
 });
 
 describe('a sign-in with a return path', () => {
+  it('lands a member in a coven on the path asked for, not the coven', async () => {
+    await insertVerified(MEMBER, 'user');
+    await seat(MEMBER, 'Aster');
+
+    const response = await signIn(
+      'google',
+      { sub: 'g-member', email: MEMBER, verified: true },
+      '/compendium?q=rue',
+    );
+
+    expect(landingOf(response)).toBe('/compendium?q=rue');
+  });
+
   it('lands an admin on it, /coven included', async () => {
     await insertVerified(ADMIN, 'admin');
     const admin = { sub: 'g-admin', email: ADMIN, verified: true };

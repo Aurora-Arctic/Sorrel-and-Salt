@@ -13,7 +13,9 @@ const membershipsOf = vi.fn();
 const rolePermits = vi.fn((role: string) => role !== 'viewer');
 vi.mock('@/lib/request-session', () => ({ requireSignedIn }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
-vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits }));
+// The switcher's order is the coven module's too; stood in for by the rule it states.
+const byCovenName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
+vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits, byCovenName }));
 
 const { viewerOf } = await import('@/lib/viewer');
 
