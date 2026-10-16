@@ -114,4 +114,34 @@ describe('MemberList', () => {
     expect(within(rowOf(OWNER.name)).queryByText('You')).toBeNull();
     expect(within(rowOf(VIEWER.name)).queryByText('You')).toBeNull();
   });
+
+  // M11.19: the page passes `showEmail` to owners alone.
+  it("shows each member's address, where the page asks", () => {
+    render(
+      <MemberList
+        members={[
+          { ...OWNER, email: 'owner@testwort.test' },
+          { ...MEMBER, email: 'member@testwort.test' },
+        ]}
+        currentUserId={OWNER.userId}
+        showEmail
+      />,
+    );
+    for (const [member, address] of [
+      [OWNER, 'owner@testwort.test'],
+      [MEMBER, 'member@testwort.test'],
+    ] as const) {
+      expect(within(rowOf(member.name)).getAllByRole('cell')[1]).toHaveTextContent(address);
+    }
+  });
+
+  it('draws no address where the page does not ask, though the rows carry one', () => {
+    render(
+      <MemberList
+        members={[{ ...MEMBER, email: 'member@testwort.test' }]}
+        currentUserId={OWNER.userId}
+      />,
+    );
+    expect(screen.getByRole('table')).not.toHaveTextContent('member@testwort.test');
+  });
 });

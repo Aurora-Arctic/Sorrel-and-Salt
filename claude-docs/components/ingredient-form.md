@@ -638,7 +638,14 @@ provides them, and its errors render through `FieldError`.
   cached searches are dropped so the new source is found next time.
 - **Enter in one of its fields saves the source**, not the ingredient, as
   Enter in a form of its own would. Cancel closes it, the box taking the
-  focus. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
+  focus.
+- **A × at its top closes it too** (MB.258), so a panel taller than the
+  dialog can be left without scrolling to its foot. It does exactly what
+  Cancel does, saving nothing and asking nothing, and is held with Cancel
+  while a save is in flight. It shares the note's line, at its right end,
+  and is named for the panel, "Close New Reference" or "Close Edit Source",
+  since the modal's own × is "Close". It comes before Kind in Tab order, as
+  it does on screen. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
   holds `referencePanelOpen: false`.
 - **Asked for again while open, it takes you back**, the owner's call:
   "New Reference…" scrolls the panel's top into view, its
@@ -693,7 +700,7 @@ the source, not the row's link to it, so it reaches every entry citing it.
   The cached searches are dropped, so the picker shows the new text; rows on
   other ingredients read it on their next load, which the page's refresh
   after the modal closes gives them.
-- **Cancel closes it without saving**, the focus back on the row's Edit
+- **Cancel, or the × at its top, closes it without saving**, the focus back on the row's Edit
   Source. The panel's edits live in its own form, never the ingredient's,
   so closing it discards only them and never asks the unsaved-changes
   question. New Reference while an edit is open, or Edit Source on another

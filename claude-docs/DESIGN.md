@@ -252,7 +252,7 @@ Code, schema, and prose use _workspace_. The URL segment says _coven_, and the s
 
 There is no `kind` column and no automatically created workspace. Every workspace behaves identically: it can take members and be deleted by an owner. A newly signed-in user has no workspace until they accept an invitation or, holding creation rights, make one.
 
-**`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, `invitedBy` (nullable), + audit. PK on the pair. `invitedBy` is the sender of the invitation that seated the person, written once at acceptance and overwritten if they are removed and invited back. It is not `created_by`, which is whoever accepted. A coven's creator keeps null (M10.26).
+**`workspace_members`** — `workspaceId`, `userId`, `role`, `joinedAt`, `invitedBy` (nullable), + audit. PK on the pair. `invitedBy` is the sender of the invitation that seated the person, written once at acceptance and overwritten if they are removed and invited back. It is not `created_by`, which is whoever accepted. A coven's creator keeps null (M10.26). No address is stored here: an owner sees each member's `email` read off their `users` row when the members page is drawn, so a changed address shows at once, and no other role sees it (M11.19). No verified state is shown beside it, since every member's address is verified. A seat is taken only by accepting an invitation, which matches a verified address, or by creating a coven, which an unverified account cannot reach, and an address changes only at verification.
 
 | Role     | Can                                                                                  |
 | -------- | ------------------------------------------------------------------------------------ |
@@ -868,7 +868,7 @@ type Mutation {
   createReference(workspaceId: ID, input: ReferenceInput!): Reference! # a null workspaceId writes the compendium tier, under the admin proof (§5)
   updateReference(workspaceId: ID, id: ID!, input: ReferenceInput!): Reference! # reaches every row linking it; nothing deletes one in v1
   addIngredientToWorkspace(workspaceId: ID!, variantId: ID!, input: StockInput!): InventoryItem! # stock is of one form (MB.215); refused beside variantId when the coven holds that form already (M9.3)
-  updateStock(workspaceId: ID!, id: ID!, input: StockInput!): InventoryItem! # replaces the jar's fields (M9.4)
+  updateStock(workspaceId: ID!, id: ID!, input: StockInput!): InventoryItem! # a field left out keeps its value, null clears it (M9.3)
   deleteStock(workspaceId: ID!, id: ID!): ID! # a soft delete of the jar; the entry stays (M9.4)
   createSpell(workspaceId: ID!, input: SpellInput!): Spell!
   setSpellVisibility(id: ID!, visibility: SpellVisibility!): Spell! # private -> workspace only
@@ -1143,6 +1143,7 @@ type WorkspaceMember {
   joinedAt: DateTime!
   workspace: Workspace!
   user: CoMember! # the name through usersById (MB.10), one read per page of members
+  email: String # owners only, holding member: readEmail (M11.19), through a loader; FORBIDDEN to anyone else. Read off the member's users row now, never copied onto workspace_members
   audit: AuditInfo!
 }
 

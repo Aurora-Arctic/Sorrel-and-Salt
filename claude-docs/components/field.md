@@ -190,7 +190,10 @@ each marked `data-pressed` while a pointer holds them
 (`src/lib/press-feedback.ts`). It writes no `aria-checked`: the native
 checked state is the switch's, and one written beside it would go stale on
 a press before hydration, so the lint rule asking for it is switched off on
-that line with the reason.
+that line with the reason. Space is the platform's. Enter, which on a native
+checkbox would only submit the form around it, is cancelled and answered with
+a click, so it turns the switch exactly as a press does and submits nothing
+(MB.261).
 
 `SearchField` (`SearchFieldProps`) takes `label`, `name` (the parameter
 the text submits under, `query`), `placeholder`, `value` and
@@ -293,7 +296,9 @@ checks by the button's accessible name; `ReasonField` by the UserList and AdminI
 `SwitchField`, found by its `switch` role: turned by a click, sent with the
 form, the server's before hydration included, applying the filter on its change, and
 `aria-disabled` while a list is on its way. Space is the platform's and
-jsdom does not run it, so it was checked in the workshop's Chromium. The
+jsdom does not run it, so it was checked in the workshop's Chromium; Enter is
+asserted in `tests/components/Field/switch-field.test.tsx` and walked in
+Playwright on `/admin/compendium`. The
 lists' tests cover `SearchField` too, found by its `searchbox` role and its
 `Search` button: the submit applying the search, and the button in the
 server's markup. They cover `FilterSelectField` by the address each

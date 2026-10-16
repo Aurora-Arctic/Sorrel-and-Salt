@@ -40,6 +40,17 @@ export type IngredientVariantRow = typeof ingredientVariants.$inferSelect &
  */
 export type VariantKey = Pick<IngredientVariantRow, 'id' | 'ingredientId' | 'workspaceId'>;
 
+/**
+ * An ingredient's stock as `Ingredient.stock`'s loader keys it (M9.4): the
+ * ingredient, and the coven whose jars of it are asked for. Unlike
+ * `IngredientKey`'s, `workspaceId` is the argument the caller named, never
+ * the row's own tier, and is always a coven: the compendium holds no stock.
+ */
+export interface StockKey {
+  ingredientId: string;
+  workspaceId: string;
+}
+
 /** One `ingredient_variants` row as the table holds it. */
 export type VariantRecord = typeof ingredientVariants.$inferSelect;
 

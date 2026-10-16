@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { WORKSPACE_W_ID } from '@/db/seed/standard';
+import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
-import { assertMembership, listMembers, type WorkspaceRow } from '@/modules/coven';
+import { assertMembership, listMembers, memberEmails, type WorkspaceRow } from '@/modules/coven';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { sql, useRawClient } from '../../../support/db/probe-tables';
 import { makeWorkspace, workspaceColumns } from '../../../support/fixtures';
@@ -127,5 +127,87 @@ describe('listMembers', () => {
     expect(asUser(E).role).toBe('admin');
 
     await expect(listMembers(asUser(E), coven, FIRST_PAGE)).rejects.toBeInstanceOf(Forbidden);
+  });
+});
+
+// The roll's addresses (M11.19): read from each member's own user row, so a
+// changed address shows at once, and to owners alone, through a statement
+// only they hold. Each refusal names the coven directly.
+describe('memberEmails', () => {
+  const ROLL = () => [A.id, B.id, C.id];
+
+  it("answers an owner each member's address", async () => {
+    const emails = await memberEmails(asUser(A), coven.id, ROLL());
+
+    expect(emails).toEqual(
+      expect.arrayContaining([
+        { userId: A.id, address: A.email },
+        { userId: B.id, address: B.email },
+        { userId: C.id, address: C.email },
+      ]),
+    );
+    expect(emails).toHaveLength(3);
+  });
+
+  it('reads the address off the user row as it stands now', async () => {
+    await sql`update users set email = ${'changed-' + C.email} where id = ${C.id}`;
+    try {
+      const emails = await memberEmails(asUser(A), coven.id, [C.id]);
+      expect(emails.map(({ address }) => address)).toEqual([`changed-${C.email}`]);
+    } finally {
+      await sql`update users set email = ${C.email} where id = ${C.id}`;
+    }
+  });
+
+  it('answers no address for anyone outside the coven, or removed from it', async () => {
+    // Why either could have been answered: E holds a user row with an
+    // address, and D held a seat here, which is still a row.
+    const [seat] = await sql`
+      select role from workspace_members where workspace_id = ${coven.id} and user_id = ${D.id}`;
+    expect(seat.role).toBe('member');
+
+    const emails = await memberEmails(asUser(A), coven.id, [A.id, D.id, E.id]);
+
+    expect(emails.map(({ userId }) => userId)).toEqual([A.id]);
+  });
+
+  it('asks nothing of the database for no ids', async () => {
+    await expect(memberEmails(asUser(A), coven.id, [])).resolves.toEqual([]);
+  });
+
+  it('refuses a member, who may read the roll itself', async () => {
+    // Why this could have been answered: B holds `member: read` and is
+    // listed the roll, so only the owner-only statement refuses it.
+    await expect(
+      assertMembership(asUser(B), coven.id, { member: ['read'] }),
+    ).resolves.toMatchObject({ role: 'member' });
+    await expect(listMembers(asUser(B), coven, FIRST_PAGE)).resolves.toHaveLength(3);
+
+    await expect(memberEmails(asUser(B), coven.id, ROLL())).rejects.toBeInstanceOf(Forbidden);
+  });
+
+  it('refuses a viewer, a member of another coven, and a site admin in none', async () => {
+    // Why each could have been answered: C sits here, D is a member of X,
+    // and E's session carries the site role.
+    await expect(
+      assertMembership(asUser(C), coven.id, { workspace: ['read'] }),
+    ).resolves.toMatchObject({ role: 'viewer' });
+    await expect(
+      assertMembership(asUser(D), WORKSPACE_X_ID, { member: ['read'] }),
+    ).resolves.toMatchObject({ role: 'member' });
+    expect(asUser(E).role).toBe('admin');
+
+    for (const caller of [C, D, E])
+      await expect(memberEmails(asUser(caller), coven.id, ROLL())).rejects.toBeInstanceOf(
+        Forbidden,
+      );
+  });
+
+  it("gives an owner no other coven's addresses, under either coven's id", async () => {
+    // Why this could have been answered: A owns W, and D is a live member of X.
+    await expect(memberEmails(asUser(A), WORKSPACE_W_ID, [A.id])).resolves.toHaveLength(1);
+
+    await expect(memberEmails(asUser(A), WORKSPACE_X_ID, [D.id])).rejects.toBeInstanceOf(Forbidden);
+    await expect(memberEmails(asUser(A), WORKSPACE_W_ID, [D.id])).resolves.toEqual([]);
   });
 });

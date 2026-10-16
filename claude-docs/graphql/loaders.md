@@ -15,6 +15,9 @@ merely absent:
   the name a resolver reads it by. `createLoaders(session)` calls every factory
   and is called only by `createContext`. Each loader arrives with the schema it
   loads: `membershipsByUser` (`coven`, for `User.memberships`),
+  `memberEmailsByMember` (`coven`, for the owner-only `WorkspaceMember.email`,
+  M11.19: keyed `{ workspaceId, userId }`, one check and one read per coven a
+  batch names, a `Forbidden` per key to anyone but an owner),
   `providersByUser` (`identity`, for `User.providers`, MB.52),
   `usersByIdForAdmin` (`identity`, for `PrivilegeChange.subject` and
   `.actor`, MB.199), `usersById` (`identity`, a co-member's display name, MB.10,
@@ -34,7 +37,11 @@ merely absent:
   and `categoryGroupsById`, `ingredientFormGroupsById`, `deityTraditionsById`
   and `ingredientFormsById` (`vocabulary`, for `Category.group`,
   `IngredientFormValue.group`, `Deity.tradition` and `IngredientVariant.formChoice`;
-  the last two MB.167's); MB.9 `ingredientsById` follows in Wave 11, keyed by workspace, for `InventoryItem.ingredient`. M6.11 adds no
+  the last two MB.167's), and `stockByIngredient` (`ingredients`, for
+  `Ingredient.stock`, M9.4: keyed `{ ingredientId, workspaceId }`, cached by
+  `workspaceId:ingredientId`, a refused coven a `Forbidden` in its own slots;
+  `clearStock` drops one key after an add or update, and `deleteStock` clears
+  it whole). M6.11 adds no
   `membersByWorkspace`: `Workspace.members` reads a coven at a time
   ([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)). A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the

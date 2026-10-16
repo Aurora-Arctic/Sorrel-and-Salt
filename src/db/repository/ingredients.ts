@@ -6,6 +6,7 @@ import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { identityKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
+import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
   ingredientFormGroups,
@@ -267,6 +268,48 @@ export function findCompendiumCount(
 }
 
 /**
+ * One page of a coven's ingredients under `filter` (M9.4): its own live
+ * entries, and every live compendium entry it holds a live jar of, minus any
+ * a local entry hides. Matched, ordered and keyed as the compendium is, by
+ * the same arms, but under the proof rather than the compendium tier
+ * (claude-docs/db/stock.md, "The workspace ingredient list").
+ */
+export function findWorkspaceIngredientPage(
+  membership: Membership,
+  filter: IngredientFilter,
+  page: PageRequest,
+): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
+  const list = compendiumList(filter);
+  return findPageInTiers(
+    [membership],
+    ingredients,
+    list.order,
+    page,
+    and(
+      list.arms,
+      notHiddenByLocal(membership),
+      or(scopedTo(membership, ingredients), heldBy(membership)),
+    ),
+  );
+}
+
+/**
+ * The coven holds a live jar of the row, of a live form. The row is already
+ * the readable ingredient, so a plain live-variant `EXISTS` rather than
+ * `readableVariantParent`'s tier check, as `categoryArms` reads it.
+ */
+function heldBy(membership: Membership): SQL {
+  return existsIn(
+    inventoryItems,
+    and(
+      eq(inventoryItems.ingredientId, ingredients.id),
+      scopedTo(membership, inventoryItems),
+      existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
+    ),
+  );
+}
+
+/**
  * One page of the live ingredients a coven's substitute may link — the
  * compendium's and the proof's workspace's (MB.138) — matched and ordered as
  * the compendium search is, best match first, so a typed prefix finds its
@@ -298,8 +341,7 @@ export function findIngredientSuggestions(
  * database (DESIGN.md §5). A local row hides an entry sharing its `identity_key`
  * (the formal name, whatever forms either holds), and, only when the local row
  * declares no formal name, one sharing its label, folded. A coven row passes.
- * `ingredientSuggestions` applies it now, and the workspace ingredient list
- * will (M9.4).
+ * `ingredientSuggestions` and the workspace ingredient list (M9.4) apply it.
  */
 export function notHiddenByLocal(membership: Membership): SQL {
   const local = alias(ingredients, 'local');

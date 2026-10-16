@@ -116,6 +116,33 @@ export function findMemberByEmail(
 }
 
 /**
+ * The address of each of these users who holds a live seat in the proof's
+ * coven, read off their own `users` row: the
+ * owner's Email column (M11.19). Nothing else of the row leaves
+ * the repository. A user outside the coven, or removed from it, is left out
+ * in SQL, so another coven's address is never fetched to be dropped. The
+ * caller has checked `member: readEmail`, which only owners hold.
+ */
+export async function findMemberEmails(
+  membership: Membership,
+  userIds: readonly string[],
+): Promise<Pick<(typeof users)['$inferSelect'], 'id' | 'email'>[]> {
+  if (userIds.length === 0) return [];
+  const rows = await selectFrom(
+    users,
+    and(
+      notSoftDeleted(users),
+      inArray(users.id, [...userIds]),
+      existsIn(
+        workspaceMembers,
+        and(eq(workspaceMembers.userId, users.id), scopedTo(membership, workspaceMembers)),
+      ),
+    ),
+  );
+  return rows.map(({ id, email }) => ({ id, email }));
+}
+
+/**
  * Soft-deletes the workspace the proof names (M6.14). Its own writer rather
  * than `softDeleteInWorkspace`, which scopes on a `workspace_id` column that
  * `workspaces` does not have: its own `id` is the workspace. The membership

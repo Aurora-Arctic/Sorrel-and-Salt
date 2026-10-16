@@ -13,6 +13,8 @@ export interface MemberListEntry extends UpdatedStamp {
   // `updatedBy` is who last changed the membership, `updatedAt` when: a role change moves it, the joining date does not.
   /** Who invited them, by display name; null for a coven's creator, or when the name is withheld. */
   invitedBy: string | null;
+  /** Their address, which the page reads for an owner alone (M11.19). */
+  email?: string | null;
 }
 
 export interface MemberListProps {
@@ -20,6 +22,12 @@ export interface MemberListProps {
   members: readonly MemberListEntry[];
   /** The signed-in user, whose own row is marked "You". */
   currentUserId: string;
+  /**
+   * Whether to draw the Email column, which the page sets for an owner alone
+   * (M11.19). When absent, the list
+   * has no such column.
+   */
+  showEmail?: boolean;
   /**
    * The role change beside each role — Change Role — given the member it
    * is for; it may return nothing for a row with none. When absent, the Role

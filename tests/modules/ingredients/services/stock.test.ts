@@ -7,6 +7,7 @@ import {
   createStock,
   deleteStock,
   getStock,
+  stockOf,
   updateStock,
 } from '@/modules/ingredients';
 import type { Unit } from '@/modules/ingredients/schema/units';
@@ -424,5 +425,67 @@ describe('getStock', () => {
 
   it('finds no id that is not one', async () => {
     await expect(getStock(asUser(A), WORKSPACE_W_ID, 'not-a-uuid')).rejects.toThrow(NotFound);
+  });
+});
+
+describe('stockOf', () => {
+  it("answers each ingredient with the coven's live jars of it, one per form", async () => {
+    const oilForm = await insertVariant(sql, ownIngredient, makeVariant({ form: 'Oil' }), A.id);
+    const ofCompendium = await seedJar();
+    const ofOwn = await seedJar({ ingredientId: ownIngredient, variantId: ownForm });
+    const ofOil = await seedJar({ ingredientId: ownIngredient, variantId: oilForm });
+    // A thrown-out jar, and X's jar of the same compendium form, are in no answer.
+    await seedJar({ ingredientId: ownIngredient, variantId: oilForm, deleted: true });
+    await insertStock(
+      sql,
+      {
+        workspaceId: WORKSPACE_X_ID,
+        ingredientId: compendiumIngredient,
+        variantId: compendiumForm,
+      },
+      D.id,
+    );
+    const unstocked = await insertIngredient(
+      sql,
+      makeIngredient({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none', name: 'Barewort' }),
+      A.id,
+    );
+
+    const answers = await stockOf(asUser(C), [
+      { ingredientId: compendiumIngredient, workspaceId: WORKSPACE_W_ID },
+      { ingredientId: ownIngredient, workspaceId: WORKSPACE_W_ID },
+      { ingredientId: unstocked, workspaceId: WORKSPACE_W_ID },
+    ]);
+
+    const ids = answers.map((answer) =>
+      answer instanceof Error ? answer : answer.map((jar) => jar.id).sort(),
+    );
+    expect(ids).toEqual([[ofCompendium], [ofOwn, ofOil].sort(), []]);
+  });
+
+  it('answers Forbidden for a coven the caller is not in, and the rest of the batch still', async () => {
+    const id = await seedJar();
+    const theirs = await createStock(asUser(D), WORKSPACE_X_ID, otherCovenForm, {});
+
+    const [inW, inX] = await stockOf(asUser(D), [
+      { ingredientId: compendiumIngredient, workspaceId: WORKSPACE_W_ID },
+      { ingredientId: otherCovenIngredient, workspaceId: WORKSPACE_X_ID },
+    ]);
+
+    // Why W's could have answered: the jar is there, and B reads it.
+    const [asB] = await stockOf(asUser(B), [
+      { ingredientId: compendiumIngredient, workspaceId: WORKSPACE_W_ID },
+    ]);
+    expect(asB).toMatchObject([{ id }]);
+    expect(inW).toBeInstanceOf(Forbidden);
+    expect(inX).toMatchObject([{ id: theirs.id }]);
+  });
+
+  it('answers the site admin Forbidden', async () => {
+    await seedJar();
+    const [answer] = await stockOf(asUser(E), [
+      { ingredientId: compendiumIngredient, workspaceId: WORKSPACE_W_ID },
+    ]);
+    expect(answer).toBeInstanceOf(Forbidden);
   });
 });
