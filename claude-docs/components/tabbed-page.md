@@ -48,7 +48,7 @@ it renders.
 - **The action belongs to the tab, at the end of the page's heading line** (the owner's
   call): Add Category on Categories, Add Group on its Groups tab, Add Form,
   Add Deity, Add Tradition, Add Celestial Body, Add Zodiac Sign, Pause Admin Changes
-  on Users, Invite Admin on Invitations, and nothing on Privilege Changes.
+  on Users, New Invitation on Invitations, and nothing on Privilege Changes.
   The heading is drawn by `PageHeader` ([`page-header.md`](page-header.md));
   the pills and the action are handed to it together as its trailing
   children, a fragment, so the header needs no slot of its own and its API
@@ -70,7 +70,7 @@ it renders.
   address the same way, so the Add keeps the list's filter and cursor. Pause
   Admin Changes reads the pause through a per-request cache the Users page
   shares (`src/app/(shell)/admin/(people)/pause-state.ts`), so it is read once.
-  Invite Admin is a link to `?invite`, which opens its form over the list
+  New Invitation is a link to `?invite`, which opens its form over the list
   ([`admin-invitations.md`](admin-invitations.md)).
 - **A direct request renders the whole page on the server** (the owner's
   call): a typed address, a bookmark, a refresh or a link from outside the
@@ -246,9 +246,9 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 
 [`index.stories.tsx`](../../src/components/TabbedPage/index.stories.tsx),
 `Layout / Tabbed Page`: the People page in the admin layout's frame, the nav in
-its context row above, with its Invitations tab open and the pills beside the heading, Invite Admin at the
+its context row above, with its Invitations tab open and the pills beside the heading, New Invitation at the
 end of the line, as `/admin/invitations` draws it. `Default`; `PhoneDark` and
-`PhoneLight` at 375px, the pills under the heading and Invite Admin at its own width at the line's start; `AddAsPlus` in a frame 600px wide, the Add as a plus at the heading's end with the pills on the line; `AddBeneathAtThreeFifty` in a frame 382px wide, the Add labelled again beneath the heading with the pills beneath it; `PhoneScrolled` at 375px, on Privilege Changes, the last
+`PhoneLight` at 375px, the pills under the heading and New Invitation at its own width at the line's start; `AddAsPlus` in a frame 600px wide, the Add as a plus at the heading's end with the pills on the line; `AddBeneathAtThreeFifty` in a frame 382px wide, the Add labelled again beneath the heading with the pills beneath it; `PhoneScrolled` at 375px, on Privilege Changes, the last
 tab, with no action; and `LoadingState` with `LoadingPhoneDark` and
 `LoadingPhoneLight`, Users on its way: the action and the row greyed out, the
 pill moved to Users in its pending look, over its skeleton with the filter row,
@@ -283,6 +283,6 @@ is current on each of its tabs. The page tests render each tab's slot page
 beside its page, as the layout does: `tests/app/(shell)/admin/value-page.test.tsx`
 and `group-page.test.tsx` find the Add keeping the filter and cursor,
 `(people)/users/page.test.tsx` the switch, and
-`(people)/invitations/page.test.tsx` Invite Admin and its `?invite`. How
+`(people)/invitations/page.test.tsx` New Invitation and its `?invite`. How
 the layout keeps the heading in place and swaps the slot is Next's, and is
 the e2e suite's to see.

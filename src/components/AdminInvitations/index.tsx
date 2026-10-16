@@ -29,7 +29,7 @@ import './index.scss';
 // its own since MB.115): a filter by address and by expiry within 24 hours,
 // a page of the pending invitations it leaves, each with its address, the
 // site role it grants (M11.20), reason and expiry, and Revoke, the pager beneath them, and the invite form
-// `?invite` opens over them. Invite Admin is the tab's action, beside the page's heading. While
+// `?invite` opens over them. New Invitation is the tab's action, beside the page's heading. While
 // admin changes are paused both are in view but locked for any admin but the
 // primary one, with the pause as the reason, as the role controls are. The
 // confirmation and the locked control are the user list's own, so the page
@@ -91,7 +91,7 @@ const Revoke = ({ invitation, locked }: RevokeInvitationProps): ReactElement => 
 };
 
 /**
- * Invite Admin, the Invitations tab's action beside the page's heading: a
+ * New Invitation, the Invitations tab's action beside the page's heading: a
  * link to `?invite`, which opens the form over the list, or locked with the
  * pause as its reason. A link rather than a button holding the form, since
  * the heading line and the list are rendered apart (MB.115). It keeps the

@@ -49,7 +49,7 @@ export interface AdminInvitationsProps extends Partial<PagerHrefs<Route>> {
 }
 
 export interface InviteAdminProps {
-  /** Why Invite Admin is locked, while admin changes are paused; absent when it is not. */
+  /** Why New Invitation is locked, while admin changes are paused; absent when it is not. */
   locked?: string;
   /** The filter the tab shows, which the form opens over; none when left out. */
   filter?: AdminInvitationsFilter;

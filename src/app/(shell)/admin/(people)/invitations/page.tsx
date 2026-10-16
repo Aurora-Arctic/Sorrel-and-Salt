@@ -49,7 +49,7 @@ const readInvitations = cache(
 // address's filter in the service's SQL and paged by its cursor (MB.115), and
 // the invite form `?invite` opens over them: the People page's Invitations
 // tab, a tab of its own since MB.115 rather than a section beneath the user
-// list. Invite Admin is the tab's action, beside the heading
+// list. New Invitation is the tab's action, beside the heading
 // (`../@action/invitations`). The page and GraphQL end at the same identity
 // services (CLAUDE.md rule 1), which are the guard
 // (claude-docs/auth/admin-users.md, "Inviting an admin").

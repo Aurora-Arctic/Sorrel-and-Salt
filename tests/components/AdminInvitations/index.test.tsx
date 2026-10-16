@@ -15,7 +15,7 @@ import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql
 import type { FilterFormSubject } from '../../support/types';
 
 // The Invitations tab (MB.70; MB.115): render-only, so the page owns the read
-// and this owns what an admin sees of it and sends, Invite Admin beside the
+// and this owns what an admin sees of it and sends, New Invitation beside the
 // heading included (claude-docs/components/admin-invitations.md).
 
 const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
@@ -47,7 +47,7 @@ beforeEach(() => {
   router.refresh.mockClear();
 });
 
-const dialog = () => screen.getByRole('dialog', { name: 'Invite Admin' });
+const dialog = () => screen.getByRole('dialog', { name: 'New Invitation' });
 const send = () => within(dialog()).getByRole('button', { name: 'Send Invitation' });
 /** A role's radio, by the start of its name: its description is read after it. */
 const roleRadio = (role: 'Curator' | 'Admin') =>
@@ -75,7 +75,7 @@ describe('AdminInvitations', () => {
   it('opens the invite form by the address, from a link', () => {
     render(<InviteAdmin />);
 
-    expect(screen.getByRole('link', { name: 'Invite Admin' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'New Invitation' })).toHaveAttribute(
       'href',
       '/admin/invitations?invite',
     );
@@ -223,7 +223,7 @@ describe('AdminInvitations', () => {
 
     // Not opened even by the form's address.
     expect(screen.queryByRole('dialog')).toBeNull();
-    const invite = screen.getByRole('button', { name: 'Invite Admin' });
+    const invite = screen.getByRole('button', { name: 'New Invitation' });
     expect(invite).toHaveAttribute('aria-disabled', 'true');
     expect(invite).toHaveAccessibleDescription(PAUSED);
     const revoke = screen.getByRole('button', {
@@ -301,7 +301,7 @@ describe('AdminInvitations filter', () => {
     expect(router.push).toHaveBeenCalledWith('/admin/invitations?email=Fern&expiring');
   });
 
-  it('keeps the filter and the page shown in Invite Admin and in the invite form’s close', () => {
+  it('keeps the filter and the page shown in New Invitation and in the invite form’s close', () => {
     const cursor = { after: 'c25' };
     render(
       <>
@@ -310,7 +310,7 @@ describe('AdminInvitations filter', () => {
       </>,
     );
 
-    expect(screen.getByRole('link', { name: 'Invite Admin' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'New Invitation' })).toHaveAttribute(
       'href',
       '/admin/invitations?email=fern&expiring&after=c25&invite',
     );

@@ -11,8 +11,8 @@ import Notice from '../Notice';
 import { roleLabel, SITE_ROLE_ACCESS } from '../UserList/roles';
 import type { InvitableSiteRole, InviteFieldsProps, InviteFormProps } from './types';
 
-// The modal Invite Admin opens, by the tab's address, `?invite`, as a value
-// page's `?new` opens its own (MB.115: Invite Admin moved beside the page's
+// The modal New Invitation opens, by the tab's address, `?invite`, as a value
+// page's `?new` opens its own (MB.115: New Invitation moved beside the page's
 // heading, out of this component's reach): an address, the site role it is
 // invited to (M11.20), and an optional reason, sent as
 // `createAdminInvitation`, which mails the link and answers
@@ -140,10 +140,10 @@ const InviteFields = ({ onSent, close }: InviteFieldsProps): ReactElement => {
 };
 
 /** The modal's head, and the tab's action that opens it. */
-export const INVITE_TITLE = 'Invite Admin';
+export const INVITE_TITLE = 'New Invitation';
 
 // The tab's one modal place, rendered whether or not `?invite` is open, so
-// Invite Admin's press shows it at once over a skeleton and the form
+// New Invitation's press shows it at once over a skeleton and the form
 // arrives in the same dialog (M9.18).
 const InviteForm = ({ open, onSent, closeHref }: InviteFormProps): ReactElement => (
   <RouteModal

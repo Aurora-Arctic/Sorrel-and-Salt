@@ -196,8 +196,8 @@ async function inviteAdmin(
   { reason, role = 'Admin' }: { reason?: string; role?: 'Curator' | 'Admin' } = {},
 ): Promise<string> {
   await visit(page, '/admin/invitations');
-  await page.getByRole('link', { name: 'Invite Admin' }).click();
-  const dialog = page.getByRole('dialog', { name: 'Invite Admin' });
+  await page.getByRole('link', { name: 'New Invitation' }).click();
+  const dialog = page.getByRole('dialog', { name: 'New Invitation' });
   await dialog.getByRole('textbox', { name: 'Email Address' }).fill(email);
   // The radio's name opens with the role, its description following.
   await dialog.getByRole('radio', { name: new RegExp(`^${role}\\b`) }).check();
@@ -720,9 +720,9 @@ test(
     await visit(page, '/admin/invitations');
 
     const section = page.getByRole('region', { name: 'Admin Invitations' });
-    // Invite Admin is the tab's action, beside the page's heading (MB.115).
-    await page.getByRole('link', { name: 'Invite Admin' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Invite Admin' });
+    // New Invitation is the tab's action, beside the page's heading (MB.115).
+    await page.getByRole('link', { name: 'New Invitation' }).click();
+    const dialog = page.getByRole('dialog', { name: 'New Invitation' });
     const send = dialog.getByRole('button', { name: 'Send Invitation' });
     const email = dialog.getByRole('textbox', { name: 'Email Address' });
     // It opens on its first field (MB.115), with nothing to send yet.

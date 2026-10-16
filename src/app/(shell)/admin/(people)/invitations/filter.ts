@@ -4,7 +4,7 @@ import type { InvitationsPlace, InvitationsSearchParams } from './types';
 
 /**
  * The tab's filter and page off its address (MB.115), which the page and
- * Invite Admin beside the heading both read: `email` trimmed, blank as none,
+ * New Invitation beside the heading both read: `email` trimmed, blank as none,
  * as a native submit sends `email=`; `expiring` by its presence, a native
  * submit's `expiring=` read the same as the bare flag; and at most one
  * cursor, read as every admin list reads one (`readListPlace`).
