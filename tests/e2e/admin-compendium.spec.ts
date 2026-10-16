@@ -150,6 +150,28 @@ test('Enter turns the No Refs switch and applies the filter, as Space does', asy
   await assertNoAccessibilityViolations(page);
 });
 
+// M11.22: the read takes a list of forms, and the Form box sends its one
+// choice as a list of one, so the box still narrows the list by its form.
+test('the Form box keeps only the entries holding the form chosen', async ({ page }) => {
+  await signInAs(page, 'form-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  // Hydrated first: before it, the box is a native select rather than a type-ahead.
+  await page.waitForLoadState('networkidle');
+  const editOf = (formalName: string) =>
+    page.getByRole('link', { name: `Edit Cat's Claw, ${formalName}` });
+  // Why the filter could have kept it: the thorn Cat's Claw is listed beside the bark ones.
+  await expect(editOf('Senegalia greggii')).toBeVisible();
+  await expect(editOf('Uncaria tomentosa')).toBeVisible();
+
+  await page.getByRole('combobox', { name: 'Form' }).fill('bark');
+  await page.getByRole('option', { name: /^Bark/ }).click();
+
+  await expect(page).toHaveURL(/[?&]form=Bark(&|$)/);
+  await expect(editOf('Uncaria tomentosa')).toBeVisible();
+  await expect(editOf('Uncaria guianensis')).toBeVisible();
+  await expect(editOf('Senegalia greggii')).toHaveCount(0);
+});
+
 // MB.258: opening Edit Source scrolled the dialog itself, which `overflow:
 // hidden` let a script do, so its header left the top and blank space showed
 // beneath the body; and the panel had no close at its top.

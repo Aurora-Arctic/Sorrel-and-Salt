@@ -53,7 +53,8 @@ const readCompendium = cache(
   ) => {
     const filter = {
       query: query || undefined,
-      form: form || undefined,
+      // The Form box names one form; the read takes a list (M11.22).
+      forms: form ? [form] : undefined,
       nomenclature,
       withoutReferences,
     };

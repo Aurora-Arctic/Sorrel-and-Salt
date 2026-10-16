@@ -70,12 +70,13 @@ const cachedCount = cachedCompendiumRead('compendium-count', findCompendiumCount
 /**
  * One page of the compendium under `filter`, best match first on a search,
  * each entry carrying its score. Parsed here because the browser is not the
- * only caller, and because a category id reaches a `uuid` comparison inside
+ * only caller, and because a category or deity id reaches a `uuid` comparison inside
  * the keyset query, whose one client text was the cursor: unchecked, a
  * malformed id would come back as "Invalid cursor". A query shorter than
  * `MIN_QUERY_LENGTH` is no search.
  *
- * @throws {ValidationError} a category id is not a uuid.
+ * @throws {ValidationError} a category or deity id is not a uuid, or the
+ * toxic setting is not one of `TOXIC_FILTERS`.
  */
 export async function listCompendium(
   filter: CompendiumFilterInput,
@@ -89,7 +90,8 @@ export async function listCompendium(
  * before `start` — a page's first row, none on an empty page. Parsed as
  * `listCompendium` parses, so it counts the rows that list's pages hold.
  *
- * @throws {ValidationError} a category id is not a uuid.
+ * @throws {ValidationError} a category or deity id is not a uuid, or the
+ * toxic setting is not one of `TOXIC_FILTERS`.
  */
 export async function countCompendium(
   filter: CompendiumFilterInput,
