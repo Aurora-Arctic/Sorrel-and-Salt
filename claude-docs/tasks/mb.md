@@ -261,7 +261,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.256 | An unverified account loops on the email page after a link into the shell                                                | Wave 10  | —                      |
 | MB.257 | The Coven Landing Shows a Blank Page Before Redirecting                                                                  | Bugfixes | —                      |
 | MB.258 | The Edit Source Form Leaves Blank Space and Has No Close Button                                                          | Bugfixes | —                      |
-| MB.259 | Category Chips Sometimes Show a UUID Instead of the Name                                                                 | Bugfixes | —                      |
+| MB.259 | ~~Category Chips Sometimes Show a UUID Instead of the Name~~ — **retired, not done**                                     | —        | —                      |
 | MB.260 | Admin Curated Lists Show No Updated Column                                                                               | Bugfixes | —                      |
 | MB.261 | The No Refs Switch Cannot Be Toggled With Enter                                                                          | Bugfixes | —                      |
 | MB.262 | Mail Shows Its Light Colours in Zoho Mail's Dark Mode                                                                    | Bugfixes | —                      |
@@ -1357,7 +1357,26 @@ _Acceptance criteria:_
 - Closing the form saves nothing, and the form keeps the form save rules (Cancel stays quiet)
 - The component's doc and story are corrected if the fix changes them
 
-**MB.259 — Category Chips Sometimes Show a UUID Instead of the Name** · 3h
+**MB.259 — ~~Category Chips Sometimes Show a UUID Instead of the Name~~** · **RETIRED 2026-10-16, not done**
+
+> **Retired without being done.** The ID is kept because task IDs are immutable
+> and the analysis below is the record of why the glitch is tolerated.
+>
+> **Why.** The cause was found and reproduced on a production build. The
+> Categories picker names a chip only from the `categories` list, which
+> `listCategories` serves from the compendium data cache for up to an hour
+> (`COMPENDIUM_REVALIDATE_SECONDS`), while the ingredient's picked categories
+> are read live. A category written outside the app, as `db:reset` does by
+> minting new ids, is missing from the cached list, so its chip shows its id
+> until the cache refreshes or an admin edit expires the `compendium` tag.
+> In production that needs a deploy whose reference seed adds a new category
+> and files an entry under it, then an admin opening that entry's form within
+> the hour. The seed only inserts missing rows, so existing categories keep
+> their ids, and the category vocabulary rarely changes. The chip holds a real,
+> live id, so saving is unaffected; the glitch is cosmetic and clears itself.
+> The owner judged it not worth a fix (2026-10-16). The cause is
+> local-development resets, which a `db:reset` that clears the dev data cache
+> would cure if it ever becomes a nuisance.
 
 _Story:_ As a site admin, I want the categories input on an ingredient's edit form to always show category names, so that I can tell which categories an ingredient has and edit them.
 
