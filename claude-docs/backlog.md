@@ -13,7 +13,7 @@
 
 ### Feature Additions
 
-- [ ] When a ingredient name is clicked in the list it should open a modal with the ingredient details. If this is by an admin with a compendium entry or by a coven memember/owner with a coven entry it should have an edit button so they can modify it in a modal there. This can be added across the site in the milestone that handles coven ingredients.
+- [ ]
 
 ### Launch - PUBLIC
 
