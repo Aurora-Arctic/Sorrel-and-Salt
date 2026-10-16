@@ -28,6 +28,7 @@ import InfoTip from '../InfoTip';
 import { FieldError } from '../Field';
 import { EditIcon, RemoveIcon, SourceEditIcon } from './icons';
 import ReferencePanel from './reference-panel';
+import { RemoveQuestion } from './remove-question';
 import { useLookup } from './suggestions';
 import type {
   IngredientFormValues,
@@ -222,6 +223,12 @@ export function ReferencesField({
     remove(index);
     revalidate();
   };
+  // The row whose × asks, by its id rather than its place, which a pick
+  // while asking would move.
+  const [removing, setRemoving] = useState<string | null>(null);
+  const removingAt = fields.findIndex((row) => row.id === removing);
+  const removingLink =
+    removingAt === -1 ? null : (rowValues[removingAt] ?? fields[removingAt]).link;
 
   // Counted, so a request while the panel is open still takes you to it.
   const [summons, setSummons] = useState(0);
@@ -304,9 +311,9 @@ export function ReferencesField({
           onBlur={field.onBlur}
           onPick={pick}
           onCommit={IGNORE_ENTER}
-          onRemoveLast={() => {
-            if (fields.length > 0) removeAt(fields.length - 1);
-          }}
+          // No onRemoveLast: Backspace and Delete in the empty box take no
+          // row, unlike the chip lists; only a row's ×, which asks (the
+          // owner's call, 2026-10-16).
           suggestions={suggestions}
           listAnchor={boxRow}
           create={{ label: 'New Reference…', onCreate: openPanel }}
@@ -389,16 +396,14 @@ export function ReferencesField({
                     <EditIcon />
                   </button>
                 </IconTip>
-                {/* The focus goes back to the box, since the pressed × goes. */}
+                {/* It asks first; once removed, the focus goes back to
+                    the box, since the pressed × goes with its row. */}
                 <button
                   type="button"
                   className="ingredient-form__icon-button ingredient-form__remove"
                   aria-label={`Remove ${name}`}
                   aria-describedby={[citationId, invalid && errorId].filter(Boolean).join(' ')}
-                  onClick={() => {
-                    removeAt(index);
-                    focusBox();
-                  }}
+                  onClick={() => setRemoving(row.id)}
                 >
                   <RemoveIcon />
                 </button>
@@ -480,6 +485,25 @@ export function ReferencesField({
           onCancel={closePanel}
         />
       )}
+      <RemoveQuestion
+        asked={removingLink !== null}
+        question={
+          <>
+            Remove{' '}
+            {removingLink &&
+              renderShortCitation(removingLink, false).map((part, at) =>
+                part.italic ? <i key={at}>{part.text}</i> : part.text,
+              )}
+            ? The source stays, to cite again; only this citation goes, once saved.
+          </>
+        }
+        onRemove={() => {
+          removeAt(removingAt);
+          setRemoving(null);
+        }}
+        afterRemove={focusBox}
+        onKeep={() => setRemoving(null)}
+      />
       {/* Labelled, so that it is told from the box's own status region. */}
       <output className="visually-hidden" aria-label="References changes">
         {announcement}

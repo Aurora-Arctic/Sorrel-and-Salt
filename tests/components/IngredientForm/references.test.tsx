@@ -289,30 +289,53 @@ describe('ReferencesField', () => {
       expect(inRow.getByRole('button', { name: 'About Locator' })).toBeInTheDocument();
     });
 
-    it('removes a row by its ×, keeping the focus in the box, and says so', async () => {
+    // Its × asks first, as a variant's does (the owner's call, 2026-10-16).
+    it('removes a row by its × once confirmed, keeping the focus in the box, and says so', async () => {
       renderField();
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
       press(within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }));
 
+      expect(rows()).toHaveLength(2);
+      expect(screen.getByRole('button', { name: 'Keep It' })).toHaveFocus();
+      press(screen.getByRole('button', { name: 'Remove' }));
+
       expect(rows()).toHaveLength(1);
       expect(row(NOTES.citation)).toBeInTheDocument();
       expect(changes()).toHaveTextContent(HERBAL_SHORT);
+      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
       expect(box()).toHaveFocus();
     });
 
-    it('takes the last row on Backspace in the empty box, as every list does', async () => {
+    it('keeps a row, and the focus on its ×, when its removal is answered Keep It', async () => {
+      renderField();
+      const calls = offerReferences([HERBAL, NOTES]);
+
+      await pickBoth(calls);
+      const remove = within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` });
+      press(remove);
+      press(screen.getByRole('button', { name: 'Keep It' }));
+
+      expect(rows()).toHaveLength(2);
+      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+      expect(remove).toHaveFocus();
+    });
+
+    // Unlike the chip lists, the keys never take a row, asked or not: only
+    // its ×, which asks (the owner's call, 2026-10-16).
+    it('keeps every row on Backspace or Delete in the empty box, and asks nothing', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
 
       await pick(calls, 'testwort', HERBAL.citation);
-      const added = changes().textContent ?? '';
+      const said = changes().textContent;
       fireEvent.keyDown(box(), { key: 'Backspace' });
+      fireEvent.keyDown(box(), { key: 'Delete' });
 
-      expect(rows()).toHaveLength(0);
-      expect(changes()).not.toHaveTextContent(added);
-      expect(changes()).toHaveTextContent(HERBAL_SHORT);
+      expect(rows()).toHaveLength(1);
+      expect(changes()).toHaveTextContent(said ?? '');
+      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
     });
 
     it('never submits the ingredient on Enter in the box with nothing picked', async () => {

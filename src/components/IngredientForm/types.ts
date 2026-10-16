@@ -511,7 +511,8 @@ export interface VariantFieldsetProps extends LookupFieldProps {
   open: boolean;
   /** Opens it, closing any other, or closes it. */
   onToggle: (open: boolean) => void;
-  onRemove: (index: number) => void;
+  /** Asks whether to remove it; its × does nothing else (the owner's call, 2026-10-16). */
+  onRemove: () => void;
   /** Which of its sections are open, by its place in the list. */
   folds: VariantFolds;
 }
@@ -725,4 +726,18 @@ export interface SkippedNoticeProps {
   onDone: () => void;
   /** The variant's Copy From Ingredient, which takes the focus when the notice goes. */
   copyButton: RefObject<HTMLButtonElement | null>;
+}
+
+/** A variant's or a reference row's removal, asked before it goes. */
+export interface RemoveQuestionProps {
+  /** A removal is waiting on the answer. */
+  asked: boolean;
+  /** "Remove "Oil"? …", naming the row. */
+  question: ReactNode;
+  /** Removes the row and stops asking, both in the one commit. */
+  onRemove: () => void;
+  /** Where the focus goes once the row and the question have gone. */
+  afterRemove: () => void;
+  /** Stops asking, the row kept. */
+  onKeep: () => void;
 }

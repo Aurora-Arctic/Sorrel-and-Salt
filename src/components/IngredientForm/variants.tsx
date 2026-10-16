@@ -21,6 +21,7 @@ import { FieldError, TextField } from '../Field';
 import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
+import { RemoveQuestion } from './remove-question';
 import { CollapsibleSection, FoldFlag, useFoldIds } from './section';
 import { variantSectionSummary, variantSummary } from './summaries';
 import {
@@ -207,8 +208,11 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
       if (current === null || current === index) return null;
       return current > index ? current - 1 : current;
     });
-    focusBox();
   };
+  // The variant whose × asks, by its row id rather than its place, which an
+  // add while asking would move. Until the answer it stays, open or closed.
+  const [removing, setRemoving] = useState<string | null>(null);
+  const removingAt = fields.findIndex((row) => row.id === removing);
 
   return (
     // The last of the ingredient's folding sections, its ⓘ beside the
@@ -286,10 +290,27 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
             workspaceId={workspaceId}
             open={open === index}
             onToggle={(opening) => setOpen(opening ? index : null)}
-            onRemove={removeAt}
+            onRemove={() => setRemoving(row.id)}
             folds={folds}
           />
         ))}
+        <RemoveQuestion
+          asked={removingAt !== -1}
+          question={
+            <>
+              Remove &quot;
+              {(removingAt === -1 ? '' : getValues(`variants.${removingAt}.form`)).trim() ||
+                UNNAMED_FORM}
+              &quot;? What it holds goes with it once saved.
+            </>
+          }
+          onRemove={() => {
+            removeAt(removingAt);
+            setRemoving(null);
+          }}
+          afterRemove={focusBox}
+          onKeep={() => setRemoving(null)}
+        />
         {/* Labelled, so that it is told from the box's own status region. */}
         <output className="visually-hidden" aria-label="Variants changes">
           {announcement}
@@ -410,7 +431,7 @@ function VariantFieldset({
             type="button"
             className="ingredient-form__icon-button ingredient-form__remove"
             aria-label={`Remove ${legend}`}
-            onClick={() => onRemove(index)}
+            onClick={onRemove}
           >
             <RemoveIcon />
           </button>
