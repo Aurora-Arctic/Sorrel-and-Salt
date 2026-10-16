@@ -14,7 +14,7 @@ Of Wave 12's tasks, only M8.14 needs stock data from this wave. The old text als
 
 **M11.19 shows owners each member’s email and whether it is verified** on the coven members table. It reads two `users` columns and needs nothing else in the wave, so it sits just before M11.18, which stays last.
 
-**M11.20 gives admins an editor role to hand out** (minted 2026-10-15 on the owner’s backlog, placed in Wave 11 on their call). It touches only the site role, the admin checks and the admin navigation, and nothing else in the wave depends on it, so it sits before M11.18, which stays last.
+**M11.20 gives admins a curator role to hand out** (minted 2026-10-15 on the owner’s backlog, placed in Wave 11 on their call). It touches only the site role, the admin checks and the admin navigation, and nothing else in the wave depends on it, so it sits before M11.18, which stays last.
 
 **M11.21 puts a toxic flag on ingredients and their forms** (minted 2026-10-15 on the owner’s request, placed in Wave 11 on their call). It adds two columns and the writers behind them, plus the toggles on the admin Compendium editor; it needs nothing else in the wave, so it sits before M11.18, which stays last. The badge on search results and detail pages is Wave 12’s, beside M8.13a.
 

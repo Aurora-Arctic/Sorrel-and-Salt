@@ -39,7 +39,7 @@
 - [ ] Ethical warnings around ingredients.
 - [ ] Draft and approval ingredients process.
 - [ ] Versioning and history tracking for items.
-- [ ] Allow editors to view some of other editors/admins info so they can collaborate.
+- [ ] Allow curators to view some of other curators/admins info so they can collaborate.
 - [ ] Swap the email page's address validation for my personal email
       validation library. v1's rule is `validateEmailAddress` in
       `src/modules/identity/services/email.ts` (MB.54), one deliberately
