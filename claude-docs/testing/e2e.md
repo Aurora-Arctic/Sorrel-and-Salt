@@ -83,7 +83,9 @@ worker starts for itself, and one server picking a database per request.
 - **The worker count is `E2E_WORKERS`, not `--workers`**, because the servers
   are declared up front, one per slot. `playwright.config.ts` sets `workers`
   to `E2E_SLOTS`: `E2E_WORKERS` if it is set, otherwise half the CPUs floored
-  at one — Playwright's own default, which serves local runs.
+  at one — Playwright's own default, which serves local runs (6 on 12 cores;
+  9 and 12 were measured and did not beat it, see "Where a run's time goes").
+  This is the local default; CI sets `E2E_WORKERS` itself.
   Anything but a whole number from 1 to `MAX_SLOTS` (99) throws, naming the
   variable. A `--workers` above the count would put a worker on a slot with
   no server, so `tests/e2e/fixtures.ts`'s worker-scoped auto fixture `slot`
@@ -605,3 +607,47 @@ started fast enough to hit a dead one. The slot-databases bullet near the top
 of this file explains the warm-up that now follows each reclone.
 `.reports/coverage-e2e/` is written only under `E2E_COVERAGE=1`, which
 `.github/workflows/playwright.yml` sets.
+
+**After the worker count changed** (lever 6): the gate suite (`npm run e2e`,
+62 tests) and the story suite (`npm run test:stories`, 51 run, 15 `fixme`)
+at `E2E_WORKERS` 6, 9 and 12, three runs each, interleaved (6, 9, 12, 6, 9,
+12, ...), on the lever 3 harness (video off, coverage still always on). Each
+run took the lock first and was timed from holding it; every run is a cold
+start, since the server count changes between runs. Two other sessions ran
+Vitest and Playwright on the same 12 cores throughout, so the load average at
+the start of a run was 11 to 24 and the figures sit well above the earlier
+tables; the spread inside one count is as large as the gap between counts, so
+read the medians with that in mind. Free memory never fell below 14.6 GB. Wall
+times and sums of test durations are from the JSON reporter, which carries
+the same figures as the HTML report's embedded JSON.
+
+| Suite, workers | Wall time, median (runs 1, 2, 3) | Sum of test durations, median (runs) | Load at start, runs 1-3 | Failures               |
+| -------------- | -------------------------------- | ------------------------------------ | ----------------------- | ---------------------- |
+| Gate, 6        | 41.5 s (50.3, 41.5, 38.8)        | 107 s (107, 113, 104)                | 11.1, 15.3, 24.2        | none                   |
+| Gate, 9        | 43.1 s (43.1, 43.5, 40.9)        | 141 s (151, 141, 130)                | 15.6, 17.0, 17.0        | none                   |
+| Gate, 12       | 50.3 s (46.7, 59.3, 50.3)        | 229 s (176, 337, 229)                | 11.3, 19.4, 15.8        | none                   |
+| Stories, 6     | 58.0 s (58.0, 67.1, 47.2)        | 201 s (201, 301, 179)                | 16.0, 13.7, 20.2        | none                   |
+| Stories, 9     | 49.8 s (58.0, 49.8, 46.3)        | 263 s (322, 263, 221)                | 14.3, 14.8, 15.7        | none                   |
+| Stories, 12    | 64.7 s (64.7, 63.9, 86.4)        | 344 s (344, 332, 665)                | 11.5, 23.0, 19.2        | run 3: 2 failed, below |
+
+Lock waits before the runs ranged from 0 to 202 s and are not in the times.
+
+What it shows. Summed test time rises with the worker count (gate 107 s,
+141 s, 229 s), so each test gets slower as slots are added: the cores, or the
+browser server sharing them, are the limit, not the number of servers or free
+memory. The gate suite gained nothing from 9 (43 s against 41.5 s) and lost
+9 s at 12. The story suite was 8 s faster at 9 by median, but its 6 and 9
+ranges overlap (47 to 67 s against 46 to 58 s) under this load, so that is
+not a difference worth a default. At 12 workers, run 3 of the story suite
+timed out two `07-admin.spec.ts` story-18 tests at the 30 s limit (the
+compendium entry and the category flows), with a summed test time of 665 s and
+the host load at 19; nothing else failed in any run. Memory was not the limit
+and nothing swapped; the cores and the browser server were. The default stays
+at 6. Whether 9 would win on a quiet machine this series does not settle. It
+changes only the local default: CI sets `E2E_WORKERS` itself.
+
+Merged staging, default 6: `npm run e2e` on the merged branch took 41.3 s wall
+from holding the lock, with a load average of 6.7 at the start, and passed
+all 64 tests (staging had grown since the 62 above). It ran with coverage off,
+since the merged harness has coverage behind `E2E_COVERAGE=1`, so it is not
+comparable with the 6, 9 and 12 table, which ran with coverage on under load.
