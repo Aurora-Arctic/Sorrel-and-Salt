@@ -166,17 +166,32 @@ describe('IngredientSearch', () => {
     expect(asked).toHaveLength(0);
   });
 
-  it('asks nothing while the text is under two characters, and offers no empty message', async () => {
+  it('asks nothing while the text is under two characters, and announces the floor at once instead of rows', async () => {
     offer([match(1)]);
     renderSearch();
 
     typeName('w');
+    // At once, with no debounce to wait for: nothing is being asked.
+    expect(status().textContent).not.toBe('');
+    expect(screen.getByText(status().textContent ?? '', { selector: 'div' })).toBeVisible();
     await act(async () => {
       await vi.advanceTimersByTimeAsync(DEBOUNCE_MS * 2);
     });
     expect(asked).toHaveLength(0);
     expect(screen.queryAllByRole('option')).toHaveLength(0);
-    expect(screen.queryByText('No Matches')).not.toBeInTheDocument();
+  });
+
+  it('drops the last rows at once when the text falls back under two characters', async () => {
+    offer([match(1), match(2)]);
+    renderSearch();
+
+    typeName('wo');
+    await settle();
+    await waitFor(() => expect(screen.getAllByRole('option')).toHaveLength(2));
+
+    typeName('w');
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    expect(status().textContent).not.toBe('');
   });
 
   it('asks for the first 25 and never a cursor, offering the rows in the server order, at most 25', async () => {

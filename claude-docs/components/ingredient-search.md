@@ -61,8 +61,10 @@ in the filter slot to carry.
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
   by `src/modules/ingredients/validation/compendium-filter.ts`, a zod-only file
   safe to load in the browser; both count composed code points. Under the
-  floor the dropdown offers no rows and no empty message, so stale rows from
-  the last lookup never show.
+  floor the dropdown offers no rows, so stale rows from the last lookup never
+  show; once anything is typed it says "Keep typing to search" instead, at once
+  and announced by the status region, so one character is not met by silence
+  (the owner, 2026-10-16). It is a message rather than a label, so sentence case.
 - **The dropdown shows at most 25 rows, the first page, in the server's
   order.** It never asks for a second. When there is another page, See All
   Results sits beneath the rows and applies the debounced text to the list;

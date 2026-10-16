@@ -67,6 +67,9 @@ const IngredientSearchBox = ({
 
   const query = useDebouncedValue(text.trim());
   const searchesNow = searchable(query);
+  // Typed text under the floor is never asked about, so it waits on nothing:
+  // the dropdown says to keep typing at once rather than staying shut.
+  const belowFloor = text.trim() !== '' && !searchable(text.trim());
   const { data, isFetching } = useQuery({
     ...graphqlQuery(IngredientSearchMatchesDocument, { query, first: MATCH_ROWS }),
     enabled: active && searchesNow,
@@ -79,7 +82,7 @@ const IngredientSearchBox = ({
   // shown either.
   const options = useMemo(
     (): IngredientSearchOption[] =>
-      searchesNow && data
+      searchesNow && !belowFloor && data
         ? data.compendium.edges.map(({ node }) => ({
             key: node.id,
             value: node.name,
@@ -87,9 +90,9 @@ const IngredientSearchBox = ({
             match: node,
           }))
         : [],
-    [data, searchesNow],
+    [data, searchesNow, belowFloor],
   );
-  const hasMore = searchesNow && data?.compendium.pageInfo.hasNextPage === true;
+  const hasMore = searchesNow && !belowFloor && data?.compendium.pageInfo.hasNextPage === true;
   const seeAllHref = searchHref(query);
 
   // A pick opens the entry over the list as it stands, so the list is
@@ -125,8 +128,11 @@ const IngredientSearchBox = ({
         // Enter with the dropdown open and no row highlighted would only
         // close it; it applies the text, as a closed box does through the form.
         onCommit={(value) => apply(searchHref(value.trim()))}
-        suggestions={{ options, pending: text.trim() !== query || isFetching }}
-        empty={searchesNow ? 'No Matches' : undefined}
+        suggestions={{
+          options,
+          pending: !belowFloor && (text.trim() !== query || isFetching),
+        }}
+        empty={belowFloor ? 'Keep typing to search' : searchesNow ? 'No Matches' : undefined}
         footer={
           hasMore ? (
             <a href={seeAllHref} onClick={seeAll}>
