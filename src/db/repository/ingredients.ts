@@ -7,6 +7,10 @@ import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredie
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { identityKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
 import { deities } from '../../modules/vocabulary/schema/deities';
+import {
+  ingredientFormGroups,
+  ingredientForms,
+} from '../../modules/vocabulary/schema/ingredient-forms';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInTiers, findPageInTiers } from './finders';
@@ -34,6 +38,7 @@ import type {
   ListOrder,
   NotSpellScoped,
   SimilarityScore,
+  SortPart,
   Unscoped,
   VariantScoped,
 } from './types';
@@ -254,9 +259,96 @@ export function findIngredientSuggestions(
   membership: Membership,
   query: string,
   page: PageRequest,
+  form?: string,
 ): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
   const list = compendiumList({ query });
-  return findPageInTiers([membership], ingredients, list.order, page, list.arms);
+  const ranked = formRank(form);
+  const order = ranked ? { ...list.order, sort: [ranked, ...list.order.sort] } : list.order;
+  return findPageInTiers(
+    [membership],
+    ingredients,
+    order,
+    page,
+    and(list.arms, notHiddenByLocal(membership)),
+  );
+}
+
+/**
+ * The row is not a compendium entry the proof's coven already has its own of:
+ * one anti-join over the coven's live rows, so a hidden entry never leaves the
+ * database (DESIGN.md §5). A local row hides an entry sharing its `identity_key`
+ * (the formal name, whatever forms either holds), and, only when the local row
+ * declares no formal name, one sharing its label, folded. A coven row passes.
+ * `ingredientSuggestions` applies it now, and the workspace ingredient list
+ * will (M9.4).
+ */
+export function notHiddenByLocal(membership: Membership): SQL {
+  const local = alias(ingredients, 'local');
+  // The compendium test sits inside the subquery, not beside it as an `OR`: a
+  // bare `NOT EXISTS` is what Postgres can plan as an anti-join, and an `OR`
+  // around it would make it a per-row subplan.
+  return not(
+    existsIn(
+      local,
+      and(
+        scopedTo(membership, local),
+        inCompendium(ingredients),
+        or(
+          eq(local.identityKey, ingredients.identityKey),
+          and(
+            isNull(local.canonicalName),
+            eq(sql`lower(${local.name})`, sql`lower(${ingredients.name})`),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Where an entry stands for the form a picker was asked about: 0 holding that
+ * form, 1 holding another form of the same curated group, 2 otherwise. None
+ * for a blank form, which leaves the order alone.
+ */
+function formRank(form: string | undefined): SortPart | undefined {
+  const wanted = form?.trim();
+  if (!wanted) return undefined;
+  const named = alias(ingredientForms, 'named');
+  const holdsForm = existsIn(
+    ingredientVariants,
+    and(
+      eq(ingredientVariants.ingredientId, ingredients.id),
+      eq(fold(ingredientVariants.form), fold(wanted)),
+    ),
+  );
+  const holdsGroupMate = existsIn(
+    ingredientVariants,
+    and(
+      eq(ingredientVariants.ingredientId, ingredients.id),
+      existsIn(
+        ingredientForms,
+        and(
+          curated(ingredientForms),
+          or(
+            eq(ingredientForms.id, ingredientVariants.formId),
+            eq(fold(ingredientForms.name), fold(ingredientVariants.form)),
+          ),
+          existsIn(
+            named,
+            and(
+              eq(fold(named.name), fold(wanted)),
+              eq(named.groupId, ingredientForms.groupId),
+              existsIn(ingredientFormGroups, eq(ingredientFormGroups.id, named.groupId)),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  return {
+    expression: sql`case when ${holdsForm} then 0 when ${holdsGroupMate} then 1 else 2 end`,
+    type: 'integer',
+  };
 }
 
 /**

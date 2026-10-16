@@ -13,8 +13,9 @@ builder.queryField('ingredientSuggestions', (t) =>
     args: {
       workspaceId: t.arg.id({ required: true }),
       query: t.arg.string({ required: false }),
+      form: t.arg.string({ required: false }),
     },
-    resolve: (_root, { workspaceId, query }, page, context) =>
-      suggestIngredients(sessionOf(context), workspaceId, query ?? '', page),
+    resolve: (_root, { workspaceId, query, form }, page, context) =>
+      suggestIngredients(sessionOf(context), workspaceId, query ?? '', page, form ?? undefined),
   }),
 );

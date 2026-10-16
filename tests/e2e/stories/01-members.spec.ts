@@ -116,9 +116,7 @@ test.describe('who is in a coven', () => {
         await expect(page.getByRole('table', { name: 'Members' })).toHaveCount(0);
       }
       expect((await page.goto('/coven/no-such-coven'))?.status()).toBe(404);
-      // Not scanned: the not-found page is Next's default, with no main
-      // landmark, which axe flags (landmark-one-main). Reported with M9.1 for a
-      // task of its own rather than left red here.
+      await assertNoAccessibilityViolations(page);
     },
   );
 });

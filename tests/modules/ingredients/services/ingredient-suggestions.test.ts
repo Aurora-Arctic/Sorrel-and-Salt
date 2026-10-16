@@ -104,14 +104,19 @@ describe('suggestIngredients', () => {
   // MB.131's picker shows which plant a suggestion is, and whose.
   it('carries each entry’s formal name and tier', async () => {
     await addIngredient({ name: "Cat's Claw", canonicalName: 'Uncaria tomentosa' });
-    await addIngredient({ name: "Cat's Claw", workspaceId: WORKSPACE_W_ID });
+    // A coven entry naming another species, so it hides nothing (M8.3).
+    await addIngredient({
+      name: "Cat's Claw",
+      canonicalName: 'Acacia greggii',
+      workspaceId: WORKSPACE_W_ID,
+    });
 
     const rows = await suggestionsFor(B, "cat's claw");
 
     expect(rows.map(({ canonicalName, workspaceId }) => ({ canonicalName, workspaceId }))).toEqual(
       expect.arrayContaining([
         { canonicalName: 'Uncaria tomentosa', workspaceId: null },
-        { canonicalName: null, workspaceId: WORKSPACE_W_ID },
+        { canonicalName: 'Acacia greggii', workspaceId: WORKSPACE_W_ID },
       ]),
     );
   });

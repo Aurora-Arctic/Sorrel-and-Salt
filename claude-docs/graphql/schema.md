@@ -393,7 +393,7 @@ The substitute picker's search (MB.138), registered by `ingredients` over
 `suggestIngredients` and the finder `findIngredientSuggestions`
 ([`db/compendium-read.md`](../db/compendium-read.md), "The ingredient
 picker's search"). MB.131's combobox calls it as a substitute is typed, with
-`workspaceId`, `query` and the connection arguments, and picking a node
+`workspaceId`, `query`, an optional `form` and the connection arguments, and picking a node
 writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
 
 - **A node is an `Ingredient`**, as on `possibleDuplicates`, because a pick
@@ -410,6 +410,10 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
   `mu` is under 0.4 similar to Mugwort and 0.67 word-similar. Best match
   first, under the compendium's weights, with no score on the edge, since a picker ranks rather than reports.
   A blank `query` lists both tiers by name, so an opened box lists something.
+- **Local beats compendium, and `form` ranks (M8.3).** A coven's own ingredient
+  hides the compendium entry it names, and a `form` lists entries holding it
+  first, then those holding a form of its curated group
+  ([`db/compendium-read.md`](../db/compendium-read.md)).
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
   A viewer is answered, a coven the caller is not in is refused, and so is a
