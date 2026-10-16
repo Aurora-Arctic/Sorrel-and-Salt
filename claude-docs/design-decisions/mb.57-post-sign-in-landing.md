@@ -54,8 +54,8 @@ prose still say _workspace_.
 It reads `getSession()` — never `requireSession()`, which would protect it
 again — for exactly one decision: whether the way in is "Sign in" (to
 `/sign-in`) or "Continue" (to `/coven`, or since MB.113 `/admin` for an
-admin, the landing a sign-in with no return path gets; since MB.257 the callback sends
-a member of a coven straight into it, so `/coven` is only the stop for someone
+admin, the landing a sign-in with no return path gets; since MB.257 the callback and
+Continue send a member of a coven straight into it, so `/coven` is only the stop for someone
 in none). Everything else on
 the page is the same for both. `/` stays in `PUBLIC_ROUTES`.
 
@@ -73,7 +73,8 @@ the page is the same for both. `/` stays in `PUBLIC_ROUTES`.
 redirected into the first coven the switcher lists; someone with none who may
 create one is offered the create page; anyone else reads that the site is
 invite-only and how to get in. "Continue" on the front door and on the email
-page are `<Link>`s, typed by `postSignInLanding` returning Next's `Route`.
+page are `<Link>`s, typed by `postSignInLanding` returning Next's `Route`
+(since MB.257, `signedInLanding`, which also sends a member into their coven).
 
 Since M10.32, both non-member states tell the account, in a notice, how many
 pending coven invitations wait for its verified email and link to the account

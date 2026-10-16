@@ -456,11 +456,12 @@ the tests [`tests.md`](tests.md).
   and `getMe`, and passes the form `''` for a placeholder, `next` through
   `safeReturnPath`, the seconds left on the mail clock, `?error=` through
   `src/lib/account-email.ts`'s `verifyErrorMessage` (one sentence per code
-  Better Auth or the gate appends, never the code), and the session role's
-  `postSignInLanding` as `landing`, which Continue takes when there is no
+  Better Auth or the gate appends, never the code), and the session's
+  `signedInLanding` as `landing`, which Continue takes when there is no
   `next`. That is `/admin` for an admin, a primary admin a followed link
   has just promoted included, since the page reads the role after the
-  link's write. `EmailForm` has two views: `?verified` on a verified row is
+  link's write; a member's first coven; or `/coven` for someone in none
+  (MB.257). `EmailForm` has two views: `?verified` on a verified row is
   the confirmed one, the address and Continue with nothing to edit;
   otherwise the field, prefilled and always editable, which is how any
   account changes its address later. Its success message names the typed

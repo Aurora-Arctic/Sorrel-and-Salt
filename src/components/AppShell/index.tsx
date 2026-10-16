@@ -10,21 +10,21 @@ import './index.scss';
 // The frame around every signed-in page (MB.7): a skip link, the global bar,
 // and the page. The context row (the coven's switcher or "Admin", beside the
 // section nav) is the layouts' to render, since only they know which area the
-// page is in. A server component: it reads nothing itself, the viewer comes
-// in as props from `src/app/(shell)/layout.tsx`, and only the account menu and
-// the current-page marking are client code.
+// page is in. A server component: it reads nothing itself, the viewer and
+// their covens come in as props from `src/app/(shell)/layout.tsx`, and only
+// the account menu and the current-page marking are client code.
 // See claude-docs/components/app-shell.md.
 
 const BRAND = 'Sorrel & Salt';
 
-const AppShell = ({ viewer, children }: AppShellProps): ReactElement => {
+const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
   // No Compendium link yet: its public route is MB.80's. When it lands it is
   // the first entry here, for everyone, and the nav stops being admin-only.
   const links: SiteLink[] = viewer.isAdmin
     ? [
         {
           label: 'Your Coven',
-          href: covenHome(),
+          href: covenHome(workspaces),
           base: '/coven',
         },
         { label: 'Admin', href: '/admin', base: '/admin' },
@@ -51,7 +51,7 @@ const AppShell = ({ viewer, children }: AppShellProps): ReactElement => {
           {/* Plain text while the address is unverified: every page the
               brand could lead to would send the viewer back to the email page. */}
           {viewer.verified ? (
-            <Link href={shellHome(viewer)} className="app-shell__brand">
+            <Link href={shellHome(viewer, workspaces)} className="app-shell__brand">
               {brand}
             </Link>
           ) : (

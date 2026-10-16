@@ -15,6 +15,9 @@ import type { Session } from '@/lib/session';
 const requireSession = vi.fn<() => Promise<Session>>();
 vi.mock('@/lib/request-session', () => ({ requireSession }));
 
+const firstCovenSlugOf = vi.fn<() => Promise<string | undefined>>();
+vi.mock('@/modules/coven', () => ({ firstCovenSlugOf }));
+
 const getMe = vi.fn();
 vi.mock('@/modules/identity', () => ({
   getMe,
@@ -37,6 +40,8 @@ const continueLink = () => screen.getByRole('link', { name: 'Continue' });
 beforeEach(() => {
   requireSession.mockReset();
   getMe.mockReset();
+  firstCovenSlugOf.mockReset();
+  firstCovenSlugOf.mockResolvedValue(undefined);
   getMe.mockResolvedValue({
     email: 'ada@example.test',
     emailVerified: true,
@@ -56,6 +61,14 @@ describe('the /account/email page', () => {
     await renderPage('admin', { verified: '', next: '/coven' });
 
     expect(continueLink()).toHaveAttribute('href', '/coven');
+  });
+
+  // Into the coven itself, never via the /coven landing's redirect (MB.257).
+  it("continues a member's confirmed address straight into their first coven", async () => {
+    firstCovenSlugOf.mockResolvedValue('fixture-coven');
+    await renderPage('user', { verified: '' });
+
+    expect(continueLink()).toHaveAttribute('href', '/coven/fixture-coven');
   });
 
   // Its own way across, offered to a verified account (MB.88).
