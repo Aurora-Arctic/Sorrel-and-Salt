@@ -153,3 +153,24 @@ export function shellEditControls(page: Page): Locator {
     .getByRole('button', { name: /^Edit\b/ })
     .or(shell.getByRole('link', { name: /^Edit\b/ }));
 }
+
+/**
+ * The add dialog's Coven select, for someone in more than one coven (M8.16):
+ * a combobox named "Coven" showing the chosen coven's name, its covens
+ * offered in the list "Coven choices", as the form's Classification offers
+ * its kinds in "Classification choices". The names are this file's choice,
+ * after the form's own pickers; M8.16 may build it as a native select, whose
+ * role is a combobox too but whose value is the option's, and corrects
+ * `choice` here if so.
+ */
+export function covenSelect(dialog: Locator) {
+  const box = dialog.getByRole('combobox', { name: 'Coven', exact: true });
+  return {
+    box,
+    choice: (name: string) =>
+      dialog
+        .page()
+        .getByRole('listbox', { name: 'Coven choices', exact: true })
+        .getByRole('option', { name, exact: true }),
+  };
+}
