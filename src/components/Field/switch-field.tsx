@@ -1,6 +1,7 @@
 'use client';
 
 import { type ReactElement, useId } from 'react';
+import InfoTip from '../InfoTip';
 import { pressFeedback } from '../../lib/press-feedback';
 import type { SwitchFieldProps } from './types';
 
@@ -19,6 +20,8 @@ import type { SwitchFieldProps } from './types';
  * alone and Enter would only submit the form around it, so the key press is
  * cancelled and answered with a click, which flips the checkbox and fires its
  * change whether it is controlled or not, the one path a press takes.
+ * A `hint` stands in an InfoTip beside the label, read with the toggle, as
+ * `FieldShell` draws one; a filter switch takes none.
  */
 export function SwitchField({
   label,
@@ -28,13 +31,27 @@ export function SwitchField({
   defaultChecked,
   onChange,
   disabled,
+  hint,
 }: SwitchFieldProps): ReactElement {
   const id = useId();
+  const hintId = `${id}-hint`;
+  const labelElement = (
+    <label className="field__label" htmlFor={id} {...pressFeedback}>
+      {label}
+    </label>
+  );
   return (
     <div className="field switch">
-      <label className="field__label" htmlFor={id} {...pressFeedback}>
-        {label}
-      </label>
+      {hint ? (
+        <div className="field__label-row">
+          {labelElement}
+          <InfoTip id={hintId} label={label}>
+            {hint}
+          </InfoTip>
+        </div>
+      ) : (
+        labelElement
+      )}
       <div className="switch__control">
         {/* No `aria-checked`: a native checkbox's own checked state is the
             switch's, and one written beside it would go stale on a press
@@ -49,6 +66,7 @@ export function SwitchField({
           checked={checked}
           defaultChecked={defaultChecked}
           disabled={disabled}
+          aria-describedby={hint ? hintId : undefined}
           onChange={(event) => onChange(event.target.checked)}
           onKeyDown={(event) => {
             if (event.key !== 'Enter') return;

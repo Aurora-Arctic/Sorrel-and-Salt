@@ -85,6 +85,7 @@ export function ingredientColumns(fields: IngredientFields) {
     zodiacSigns: fields.zodiacSigns ?? null,
     colors: fields.colors ?? null,
     safetyNotes: fields.safetyNotes ?? null,
+    toxic: fields.toxic ?? false,
     slug: ingredientSlug(fields.name, fields.canonicalName),
   };
 }
@@ -901,13 +902,23 @@ async function writeVariant(
   variant: PickedVariant,
   row?: VariantRecord,
 ): Promise<string> {
-  const { form, formId, description, safetyNotes, elements, celestialBodies, zodiacSigns, colors } =
-    variant;
+  const {
+    form,
+    formId,
+    description,
+    safetyNotes,
+    toxic,
+    elements,
+    celestialBodies,
+    zodiacSigns,
+    colors,
+  } = variant;
   const columns = {
     form,
     formId,
     description,
     safetyNotes,
+    toxic,
     elements,
     celestialBodies,
     zodiacSigns,

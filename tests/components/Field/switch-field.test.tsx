@@ -43,6 +43,24 @@ describe('SwitchField', () => {
     expect(onChange).not.toHaveBeenCalled();
   });
 
+  it('is described by its hint, when it has one, and by nothing when it has none', () => {
+    render(
+      <>
+        <SwitchField
+          label="Toxic"
+          name="toxic"
+          value="1"
+          onChange={vi.fn()}
+          hint="What it is for."
+        />
+        <SwitchField label="No Refs" name="x" value="1" onChange={vi.fn()} />
+      </>,
+    );
+
+    expect(screen.getByRole('switch', { name: 'Toxic' })).toHaveAccessibleDescription();
+    expect(screen.getByRole('switch', { name: 'No Refs' })).not.toHaveAccessibleDescription();
+  });
+
   it('does not turn while disabled', () => {
     const onChange = vi.fn();
     render(<SwitchField label="No Refs" name="x" value="1" onChange={onChange} disabled />);

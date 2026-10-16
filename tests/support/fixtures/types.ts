@@ -51,6 +51,7 @@ export interface IngredientFixture extends Required<
     | 'zodiacSigns'
     | 'colors'
     | 'safetyNotes'
+    | 'toxic'
   >
 > {
   /**
@@ -78,6 +79,7 @@ export type VariantFixture = Pick<typeof ingredientVariants.$inferInsert, 'form'
       | 'formId'
       | 'description'
       | 'safetyNotes'
+      | 'toxic'
       | 'elements'
       | 'celestialBodies'
       | 'zodiacSigns'

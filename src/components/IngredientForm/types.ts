@@ -209,6 +209,8 @@ export interface IngredientFormValues {
   /** The ids of the categories picked, in the order picked (MB.126). */
   categoryIds: string[];
   safetyNotes: string;
+  /** Whether the ingredient is toxic: its own flag, never read from a form (M11.21). */
+  toxic: boolean;
   /** Picked from the search, never typed, so not one of the lists (MB.154). */
   references: ReferenceListEntry[];
   /** The new reference panel is open: a save waits until it is saved or cancelled. */
@@ -241,6 +243,8 @@ export interface VariantFormValues {
   formLink: FormLink | null;
   description: string;
   safetyNotes: string;
+  /** Whether this form is toxic: its own flag, never the ingredient's (M11.21). */
+  toxic: boolean;
   elements: IngredientElement[];
   celestialBodies: ListEntry[];
   zodiacSigns: ListEntry[];
@@ -288,6 +292,16 @@ export type TextFieldName =
   | 'description'
   | 'safetyNotes'
   | `${VariantPath}.${'form' | 'description' | 'safetyNotes'}`;
+
+/** An on-or-off flag: the ingredient's toxic flag, or a variant's (M11.21). */
+export type ToggleFieldName = 'toxic' | `${VariantPath}.toxic`;
+
+export interface ToggleFieldProps {
+  name: ToggleFieldName;
+  label: string;
+  /** What the switch is for, behind an info tip beside the label. */
+  hint?: string;
+}
 
 /** A closed set holding several values: an entry's elements, or a variant's. */
 export type MultiSelectFieldName = 'elements' | `${VariantPath}.elements`;
