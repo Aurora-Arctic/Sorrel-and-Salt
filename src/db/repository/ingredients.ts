@@ -74,6 +74,25 @@ export function findManyOfIngredients<
 }
 
 /**
+ * The live variant with this id, while its ingredient is live and in the
+ * compendium or a coven one of `memberships` proves: the form a jar may name
+ * (M9.3), so another coven's form is no form at all here.
+ */
+export function findReadableVariant(
+  memberships: readonly Membership[],
+  id: string,
+): Promise<typeof ingredientVariants.$inferSelect | undefined> {
+  return selectOne(
+    ingredientVariants,
+    and(
+      notSoftDeleted(ingredientVariants),
+      eq(ingredientVariants.id, id),
+      readableIngredientParent(memberships, ingredientVariants.ingredientId),
+    ),
+  );
+}
+
+/**
  * The live rows these variants own — one form's categories, say — readable
  * exactly when the variant and its ingredient are: the variant live, and its
  * ingredient live and in the compendium or a coven one of `memberships`

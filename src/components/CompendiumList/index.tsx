@@ -1,6 +1,6 @@
 import { EditLink } from '../IconTip';
 import type { ReactElement } from 'react';
-import StackTable from '../DataTable';
+import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
 import { NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
@@ -34,6 +34,7 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     cell: (entry) => labelOf(NOMENCLATURE_OPTIONS, entry.nomenclature),
   },
   { heading: 'Form', cell: (entry) => (entry.forms.length ? entry.forms.join(', ') : NONE) },
+  updatedColumn(),
   {
     heading: 'Edit',
     hiddenHeading: true,

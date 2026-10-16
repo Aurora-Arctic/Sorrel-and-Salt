@@ -21,6 +21,12 @@ import { sent } from '../../../../support/filter-form';
 const requireAdminSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireAdminSession }));
 
+// The editors' names are `editorStamps`'s, tested in tests/app/(shell)/admin/editors.test.ts.
+const editorStamps = vi.fn(async (_session: unknown, rows: readonly unknown[]) =>
+  rows.map(() => ({ updatedBy: 'Fixture Editor', updatedAt: new Date('2026-05-06T10:00:00Z') })),
+);
+vi.mock('@/app/(shell)/admin/editors', () => ({ editorStamps }));
+
 const listCompendium = vi.fn();
 const countCompendium = vi.fn();
 const resolveCompendiumSlug = vi.fn();

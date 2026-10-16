@@ -39,10 +39,12 @@ export {
   findManyOfIngredients,
   findManyOfVariants,
   findOneIngredient,
+  findReadableVariant,
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByIdentity,
 } from './ingredients';
+export { findStockById, findStockOfIngredients } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
   findAstrologyValueCount,
@@ -128,6 +130,7 @@ export type {
   SiteInvitationValues,
   SlugRedirect,
   SortPart,
+  StockRow,
   SuggestingVocabulary,
   UserFilter,
   VocabularySuggestion,

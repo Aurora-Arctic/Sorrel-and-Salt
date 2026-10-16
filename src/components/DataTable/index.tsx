@@ -78,3 +78,4 @@ function StackTable<Row>({
 
 export default StackTable;
 export { default as GroupChip } from './group-chip';
+export { updatedColumn } from './updated-column';

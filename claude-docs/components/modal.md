@@ -437,6 +437,21 @@ it, the owner's call at MB.115, without being `position: sticky`, and a
 question's layer can lie over exactly the part of the body in view. The body
 is isolated, so nothing in it raised by a `z-index` rises over the layer.
 
+**The dialog clips, so nothing can scroll it** (MB.258). Its overflow is
+`clip`, not `hidden`. A `hidden` box is still a scroll container that a
+script or a focus change may scroll, and the dialog had plenty to scroll:
+the body is not positioned, so the form's absolutely positioned
+screen-reader text (`.visually-hidden` live regions) is placed against the
+dialog, at where it would sit in the unscrolled form, far below the
+dialog's foot. The reference panel's `scrollIntoView` then scrolled the
+dialog as well as the body, lifting the header out of view and leaving
+blank space beneath the body. It shows only when such text lies below the
+dialog's foot, which turns on how long the form is at that moment, and
+whether the body could bring the panel up on its own; on a short form
+there is nothing to scroll.
+`clip` makes the dialog no scroll container at all, so the header holds
+whatever a field does; `tests/e2e/admin-compendium.spec.ts` checks it.
+
 **The page stays in view around it** (M5.5, the owner's call): a gap of
 `clamp(space(4), 5vmin, space(7))` on every side, 1rem at a phone's edge
 rising to 3rem on a wide screen, takes the width and the height down from

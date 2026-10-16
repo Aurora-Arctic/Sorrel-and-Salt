@@ -10,6 +10,7 @@ import type { ingredientDeities } from '../../modules/ingredients/schema/ingredi
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
+import type { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
@@ -729,6 +730,9 @@ export interface CitingLink {
 
 /** An `ingredients` row, compendium entry or coven's, as a finder returns it. */
 export type IngredientRow = typeof ingredients.$inferSelect;
+
+/** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
+export type StockRow = typeof inventoryItems.$inferSelect;
 
 /** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {

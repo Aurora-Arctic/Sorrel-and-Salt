@@ -19,8 +19,9 @@ imports nothing.
   MB.217: a row names the form the jar holds through `variant_id`, NOT NULL,
   held to its `ingredient_id` by the composite key
   `inventory_items_variant_fk`, so Rosemary herb and Rosemary oil are two
-  rows of one coven. It is what "already added" _means_: M9.4's `addIngredientToWorkspace` is
-  idempotent against it rather than defining the notion again. The predicate is
+  rows of one coven. It is what "already added" _means_: M9.3's `createStock`, which M9.4's
+  `addIngredientToWorkspace` calls, refuses a held form on it rather than
+  defining the notion again. The predicate is
   load-bearing rather than ceremonial here — story 25 soft-deletes a row and
   calls it recoverable, so without it, throwing a jar out would reserve that
   ingredient against ever being stocked again. Verified by rebuilding the
@@ -160,8 +161,8 @@ test: `0.000` and `NULL` are asserted to be distinguishable on the row.
   also gives `StockInput` its ceiling of 999,999,999.999, so an amount the
   column cannot hold is a field error rather than a raw overflow
   ([`validation.md`](../validation.md)).
-- `lowStockThreshold` carries **no database default**. M9.8 writes §5's
-  dimension-appropriate value onto the row at creation rather than applying
+- `lowStockThreshold` carries **no database default**. M9.3's `createStock` writes §5's
+  dimension-appropriate value onto the row at creation (M9.8 shows it) rather than applying
   a constant at read time, so it stays visible and editable and changing the
   constant later does not silently reinterpret every existing row. A column
   default could not do it anyway: the value depends on the row's own unit,
@@ -181,6 +182,59 @@ against hooks the design doc does not name applies to CHECKs as readily as to
 columns. A negative quantity is a validation error with something to say, which
 makes it the service and Zod layers' job rather than a constraint's.
 
-The table is inert at Wave 3: nothing queries it until M9.3's service and
-M9.4's mutations land in Wave 11, which is the table-task-then-behaviour-task
-rule and the reason the DDL can be constrained now, while the table is empty.
+The table was inert from Wave 3 until M9.3's service in Wave 11, which is the
+table-task-then-behaviour-task rule and the reason the DDL could be constrained
+while the table was empty.
+
+### The stock service
+
+`src/modules/ingredients/services/stock.ts` (M9.3) is how anything reads or
+writes a coven's stock. It has four functions, each taking the coven's id and
+checking membership first:
+
+| Function                                              | Checks              | What it does                                                      |
+| ----------------------------------------------------- | ------------------- | ----------------------------------------------------------------- |
+| `createStock(session, workspaceId, variantId, input)` | `inventory: update` | Starts a jar of one form the coven does not hold yet              |
+| `updateStock(session, workspaceId, id, input)`        | `inventory: update` | Changes a jar: a field left out keeps its value, `null` clears it |
+| `deleteStock(session, workspaceId, id)`               | `inventory: update` | Soft-deletes a jar: marks it deleted, leaving the row in place    |
+| `getStock(session, workspaceId, id)`                  | `inventory: read`   | One jar, for any member of the coven, viewers included            |
+
+The permission is the `inventory` statement in
+`src/modules/coven/services/access-control.ts`: viewers hold `read`, members
+and owners `read` and `update`. The statement has no `create` or `delete`,
+so all three writes check `update`; the `ingredient` statement is not used for
+stock.
+
+- **A jar is read through a live form of a live ingredient.** M5.3's ingredient
+  delete leaves the jar in place, so the repository's stock finders
+  (`src/db/repository/stock.ts`) add `readableVariantParent` to the proof's
+  own scope: the form must be live, and its ingredient live and in the
+  compendium or this coven. A deleted ingredient's jar is then in no read, and
+  an update or delete of it answers `NotFound`. The writes read the jar first
+  for this reason: the writer's by-id methods see the jar's own tombstone, not
+  its ingredient's. `findStockOfIngredients` is the batch read M9.4's
+  `Ingredient.stock` loader calls.
+- **The form must be one the coven may read.** `createStock` looks the variant up
+  with `findReadableVariant` under the coven's proof, so another coven's form,
+  a deleted form, or a form of a deleted ingredient is `NotFound`. The
+  composite foreign key alone would accept another coven's form, since it holds
+  only the variant to its ingredient.
+- **A form the coven holds is refused.** `createStock` throws a
+  `ValidationError` beside `variantId` and writes nothing. It neither
+  returns the held jar nor adds the input's amount to it: either would
+  report success for a write that did not happen as asked, and someone
+  sending 10 g to a jar of 5 g could not tell whether they now hold 5 g or
+  15 g. Changing a jar is `updateStock`'s. The check is the insert breaking
+  `inventory_items_workspace_id_variant_id_unique`, with no read before it,
+  so two creates racing for one form are refused alike. After a soft delete
+  there is no live jar, so the create inserts a new row and the old one stays
+  as it was ([`design-decisions/m9.3-create-stock-refuses-held-form.md`](../design-decisions/m9.3-create-stock-refuses-held-form.md)).
+- **The dimension is never input.** `StockInput` has no `unitDimension`
+  field, so one sent anyway is dropped while parsing, and the service writes
+  `dimensionOf(unit)` wherever it writes a unit.
+- **A new jar gets the default threshold.** When the input names a unit and no
+  threshold, `createStock` writes 3 for a count unit, and 10 g or 15 ml
+  converted into the jar's own unit with `unitConvert` for a weight or a
+  volume: 10 g is 0.01 in kilograms and 15 ml is 3 in teaspoons. A threshold the
+  input states, `0` included, is kept. A jar with no unit gets none, and
+  `updateStock` never applies the default.

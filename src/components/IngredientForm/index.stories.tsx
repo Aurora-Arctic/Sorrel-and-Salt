@@ -716,7 +716,8 @@ function WhatToTry() {
           Locator to fill in; its &times; takes it out. A picked source is not offered again. An
           open row of this coven&rsquo;s own source has Edit Source, which opens the panel filled in
           with the whole source; Save Source changes it for every entry citing it, and the row reads
-          the new short form. A compendium source has none here: it is the admins&rsquo; to change.
+          the new short form, while Cancel or the &times; at the panel&rsquo;s top closes it
+          unchanged. A compendium source has none here: it is the admins&rsquo; to change.
         </li>
         <li>
           <strong>A new reference:</strong> pick &ldquo;New Reference&hellip;&rdquo;, the

@@ -79,6 +79,9 @@ export interface ValueRow {
   description: string;
   /** The group it is filed under; none for a flat kind. */
   groupId?: string;
+  /** Its audit stamps, which the Updated column reads (MB.260). */
+  updatedBy: string;
+  updatedAt: Date;
 }
 
 /** A group as the value page reads it: the filter's slug, the form's id, and a category group's chip pair. */
@@ -148,6 +151,9 @@ export interface GroupRow {
   description: string;
   colorDark?: string;
   colorLight?: string;
+  /** Its audit stamps, which the Updated column reads (MB.260). */
+  updatedBy: string;
+  updatedAt: Date;
 }
 
 /** One group vocabulary's page readers, from `@/modules/vocabulary`; its copy is the kind table's (`GroupList/kinds.ts`). */
