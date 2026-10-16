@@ -29,7 +29,7 @@ Three consequences worth knowing before writing a test:
 - **The project split is a path glob**, so where a file sits — and what it is
   called — decides how it runs. A test that touches Postgres and is not under
   `tests/db/` or `tests/modules/` lands in `unit` or `dom`, against the
-  plain `sorrel` database; of those two, a `.tsx` file gets jsdom and a
+  plain `sorrel` database; of those two, a `.tsx` file gets happy-dom and a
   `.ts` file gets plain node unless the config's `DOM_TS` names it (MB.97).
   The one exception runs the other way: a file under those two trees that
   never reaches the database is named in the config's `DB_FREE` and runs in
@@ -116,16 +116,16 @@ what it scans — an empty listing satisfies every `toEqual([])`.
     made a `POST /api/auth/sign-in/social` test pass locally (a hand-run
     `drizzle-kit migrate` had left `sorrel` migrated) and fail in CI, where
     `sorrel` was empty. Keep database-touching tests in the `db` project.
-- **`dom`** — `environment: 'jsdom'`, `globals: true` (enables
+- **`dom`** — `environment: 'happy-dom'`, `globals: true` (enables
   `@testing-library/react`'s automatic post-test `cleanup()`, which hooks
   itself onto the global `afterEach` at import time). `include`s
-  `tests/**/*.test.tsx` plus `DOM_TS`, the `.ts` tests that need jsdom's
+  `tests/**/*.test.tsx` plus `DOM_TS`, the `.ts` tests that need a browser's
   `location` all the same — `tests/lib/auth-client.test.ts`, because Better
   Auth's client reads `window.location.origin` and `document.cookie`, and
   `tests/support/msw/graphql.test.ts`, which fetches the relative
   `/api/graphql` the helpers match — with `unit`'s excludes. The extension
   is the rule (MB.97): a `.tsx` test renders and a `.ts` test does not, and
-  jsdom, jest-dom and React Testing Library together cost a `.ts` guard more
+  happy-dom, jest-dom and React Testing Library together cost a `.ts` guard more
   than its own assertions do — `environment` was a third of CI's worker time
   while every unit file paid it. `tests/guards/test-location.test.ts` holds
   every test file to exactly one project (above).
@@ -134,12 +134,12 @@ what it scans — an empty listing satisfies every `toEqual([])`.
     (`/// <reference types="@testing-library/jest-dom/vitest" />`) gives `tsc`
     the same augmentation, since a `setupFiles` entry only affects the Vitest
     runtime, not the separate `typecheck` pass.
-  - **Vitest's jsdom environment resolves `import.meta.url` against the
-    mocked browser `location`, not a real `file://` URL** — matching real
-    browser semantics (a bundled ES module's `import.meta.url` is an `http(s)`
-    URL there too), not a bug. So a `dom` test cannot reach its own path that
-    way. `tests/support/paths.ts` is built on `import.meta.dirname`, which is
-    a real path in every project, which is why one helper serves them all; the
+  - **`import.meta.url` is a real `file://` URL under happy-dom but was not
+    under jsdom**, which the `dom` project used before M11.25: Vitest's jsdom
+    environment resolved it against the mocked browser `location`, as a bundled
+    browser module's is. `tests/support/paths.ts` is still built on
+    `import.meta.dirname`, a real path in every project, so one helper serves
+    them all whichever environment a project runs; the
     one place still reading a file by convention is `ThemeToggle`'s test,
     which uses `path.join(process.cwd(), …)` to reach the component's
     `index.scss` now that the two no longer sit in the same directory.
@@ -153,12 +153,48 @@ what it scans — an empty listing satisfies every `toEqual([])`.
       does and it's harmless to call twice;
     - a `localStorage` polyfill (`Object.defineProperty(window,
 'localStorage', …)` with a minimal in-memory `Storage` class),
-      because Node's own native `localStorage` global shadows jsdom's once
-      Vitest merges jsdom's `window` into the global scope;
+      because Node's own native `localStorage` global shadows the DOM
+      library's once Vitest merges its `window` into the global scope;
     - an `afterEach` emptying that `localStorage` (MB.189), as `cleanup()`
       empties the document, so nothing one test stores is there for the next.
     - Untested since MB.224: the harness is not a functional requirement, and
       a broken hook fails the component tests that rely on it.
+    - a stand-in for `<dialog>`'s `showModal` and `close` that sets and clears
+      `open`, so a change in the library's own version cannot reach a test.
+    - **two declarations that say what this environment is**, which
+      `tests/support/setup-dom.test.tsx` pins, so removing either fails there
+      first rather than in thirty component tests:
+      - a `matchMedia` reporting `prefers-reduced-motion: reduce` and nothing
+        else. It is true of an environment that draws no CSS transitions, and
+        it makes `Modal` close at once instead of waiting for a
+        `transitionend` event nothing here can fire (jsdom has no
+        `matchMedia`, which gave the same result by accident; happy-dom
+        answers "no preference" and hung the modal). A test of the fade or of
+        a system theme stubs `matchMedia` itself over it.
+      - a default stylesheet, `:where(a, abbr, b, …, span, strong, …) { display:
+inline; }`, for the HTML rendering section's inline elements.
+        happy-dom leaves their computed `display` empty (its issue #2467, open
+        at the time of M11.25), and the accessible-name library puts a space
+        between the parts of a name whose `display` is not `inline`, so a
+        dialog's name came out with spaces inside words. `:where` gives it
+        zero specificity, so a test's own styles still win, and a happy-dom
+        release that fixes the bug leaves it redundant and harmless.
+  - **Why happy-dom (M11.25).** The `dom` project's 94 files and 1,049 tests
+    took 46.3 s of wall time and 168 CPU-seconds under jsdom, three workers,
+    coverage on, and 28.2 s and 95 CPU-seconds under happy-dom on the same
+    tree (39% and 43% less), every test passing. The cost is that happy-dom has
+    one maintainer and a long list of open issues, mostly gaps in computed
+    style; the version is pinned exactly in `package.json`, so an upgrade is a
+    reviewed pull request that runs the whole project, and the setup test
+    above is what fails first if a release changes what the environment
+    reports. The measurements, the alternatives ruled out and the stability
+    assessment are in
+    [`design-decisions/m11.25-plan.md`](../design-decisions/m11.25-plan.md).
+  - **A test that stubs `location` uses `stubLocationAssign(assign)`**
+    (`tests/support/location.ts`), never `{ ...window.location }`. A spread
+    copies the fields only where they are own properties, which is jsdom's
+    doing; under happy-dom they are getters on the prototype and the spread is
+    empty, and the GraphQL client needs `origin`.
   - **`tests/support/msw/graphql.ts`** (M1.10) scopes MSW's `graphql` helper to
     `/api/graphql` with `graphql.link('/api/graphql')`, and exports
     `mockGraphQLQuery(operationName, resolveData)` /
@@ -176,12 +212,12 @@ what it scans — an empty listing satisfies every `toEqual([])`.
     A component test wraps its tree in a `QueryClientProvider` holding
     `makeQueryClient()`, a fresh client per test — `Providers` keeps one for the
     tab, which would carry one test's cache into the next — and
-    the client wrapper resolves `/api/graphql` against jsdom's location, which
+    the client wrapper resolves `/api/graphql` against happy-dom's location, which
     the link matches. A test with no client posts a plain `fetch` of
     `JSON.stringify({ query })` to `/api/graphql`; msw's graphql matcher parses
     the operation name out of the `query` document itself, no explicit
     `operationName` field required. A request against `http://localhost/...`
-    rather than the relative `/api/graphql` will not match, since jsdom's
+    rather than the relative `/api/graphql` will not match, since happy-dom's
     default location is `http://localhost:3000`.
     Because no base handler answers an un-overridden operation, it falls
     through to `onUnhandledRequest: 'error'` and fails loudly instead of

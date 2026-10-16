@@ -132,7 +132,7 @@ preview's corners rather than in the story frame.
 
 ## Testing
 
-A decoration has no behaviour for a jsdom test to prove, so it has none. The
+A decoration has no behaviour for a happy-dom test to prove, so it has none. The
 scroll fix that came with it — the page frames' `box-sizing` — is asserted by
 the smoke spec's check that `/` does not scroll at the default viewport.
 The visual result is checked by eye in the workshop and against the script's

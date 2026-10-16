@@ -32,7 +32,7 @@ import './index.scss';
  */
 const FADE_LIMIT_MS = 400;
 
-/** Motion turned down, or no way to ask — jsdom — so a close is not held for a fade. */
+/** Motion turned down, or no way to ask, so a close is not held for a fade. */
 const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;

@@ -238,10 +238,10 @@ test ids, no snapshots.
 
 `tests/components/SignInPanel/index.test.tsx` mocks `signIn` from
 `src/lib/auth-client.ts` — Better Auth's client performs the OAuth hop by
-assigning `window.location.href`, which jsdom cannot follow
+assigning `window.location.href`, which happy-dom cannot follow
 (`tests/lib/auth-client.test.ts` stubs `fetch` instead and calls the real
 client). The rest of the module is the real one, so the last-used read is the
-client plugin's own, against jsdom's `document.cookie`. Covers: every roster
+client plugin's own, against happy-dom's `document.cookie`. Covers: every roster
 provider offered by accessible name; a click calls
 `signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`,
 with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
@@ -253,10 +253,10 @@ described by its note, still lacks `disabled`, and its click never reaches
 accessible name, and no cookie or an unknown provider marks none; and
 `renderToString` carries no mark while `hydrateRoot` adds it without a
 recoverable error. That last test fails with the client read as the server
-snapshot, since jsdom has a `document` even under `renderToString`. Role and
+snapshot, since happy-dom has a `document` even under `renderToString`. Role and
 label queries only.
 
-Runs in the `dom` (jsdom) Vitest project — `npm run test:coverage`. Real
+Runs in the `dom` (happy-dom) Vitest project — `npm run test:coverage`. Real
 keyboard reachability and the axe scans are asserted in Playwright, per
 CLAUDE.md's "Accessibility is asserted in Playwright", once per provider
 state — each state has a surface the other lacks, so neither scan stands in
