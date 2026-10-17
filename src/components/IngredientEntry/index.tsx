@@ -389,15 +389,6 @@ const IngredientEntry = ({
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}
-        {canonical && (
-          <p className="ingredient-entry__canonical">
-            <Link href={canonical}>
-              Compendium Entry
-              <LinkIcon />
-              <LinkHint />
-            </Link>
-          </p>
-        )}
         {movedAway && (
           // Quiet: on the page from the start, so a status, never an alert.
           <Notice kind="warn" quiet>
@@ -438,6 +429,15 @@ const IngredientEntry = ({
         {/* A plain div, not an aside: one complementary landmark per section
             would be noise, and each block is already headed and labelled. */}
         <div className="ingredient-entry__side">
+          {canonical && (
+            <p className="ingredient-entry__canonical">
+              <Link href={canonical}>
+                Compendium Entry
+                <LinkIcon />
+                <LinkHint />
+              </Link>
+            </p>
+          )}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
             rows={correspondences(entry, deities)}
