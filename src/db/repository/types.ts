@@ -9,10 +9,10 @@ import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type {
+  CategoryMode,
   IngredientElement,
   NomenclatureKind,
 } from '../../modules/ingredients/schema/ingredient-enums';
-import type { CategoryMode } from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
