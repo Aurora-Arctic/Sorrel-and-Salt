@@ -117,7 +117,7 @@
 
   // The group's own vertical margin (set for a group among prose) would push the strip
   // below its neighbour's label; the row's gap is the spacing.
-  > .fieldset.radio-group {
+  .fieldset.radio-group {
     margin-block: 0;
   }
 
@@ -125,7 +125,7 @@
   // stood 6px taller than Categories' and its strip sat lower. The label row is held to one
   // line (the button overflows it, centred) and the gap is Categories' own (space 3), so the
   // two fields share a label and a control top.
-  > .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
+  .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
     margin-bottom: space(3);
 
     .field__label-row {
@@ -155,6 +155,18 @@
       flex: 1 1 0;
       min-width: 0;
     }
+  }
+}
+
+// Match and No Refs share one line on the phone sheet, tops level, instead of stacking full
+// width; from the tablet width the row is already a row, so the pair dissolves into it.
+.facet-panel__pair {
+  display: flex;
+  gap: space(4);
+  align-items: flex-start;
+
+  @media (min-width: $shell-tablet-width) {
+    display: contents;
   }
 }
 
@@ -213,8 +225,39 @@
   overflow-y: auto;
   scroll-padding-block-end: 6rem;
 
+  // It fades in and out, sheet and backdrop together, as a Modal does (M5.5): in is CSS alone,
+  // from `@starting-style` as `showModal()` shows it; out is `.is-closing`, which the
+  // component sets and waits on before it closes the dialog.
+  opacity: 1;
+  transition: opacity $modal-fade;
+
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without fading in
+  @starting-style {
+    opacity: 0;
+  }
+
   &::backdrop {
-    background-color: color-mix(in srgb, $surface-page 75%, transparent);
+    background-color: $modal-scrim;
+    opacity: 1;
+    transition: opacity $modal-fade;
+
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the backdrop appears without fading in
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  &.is-closing,
+  &.is-closing::backdrop {
+    opacity: 0;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    &::backdrop {
+      transition: none;
+    }
   }
 
   .facet-panel__clip {

@@ -5,10 +5,13 @@ import {
   type MouseEvent,
   type PointerEvent as ReactPointerEvent,
   type ReactElement,
+  type SyntheticEvent,
+  type TransitionEvent,
   type UIEvent,
   useEffect,
   useId,
   useRef,
+  useState,
 } from 'react';
 import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
 import { useHydrated } from '../../lib/hydrated';
@@ -33,6 +36,17 @@ import './index.scss';
 // claude-docs/components/facet-panel.md.
 
 /** The shell's tablet width (`$shell-tablet-width`), where the panel stops being a sheet. */
+/**
+ * How long a leaving sheet waits for its fade to end before it closes anyway: longer than the
+ * fade (`$modal-fade`), for a browser that never reports its end. Modal waits the same.
+ */
+const FADE_LIMIT_MS = 400;
+
+/** Motion turned down, or no way to ask, so a close is not held for a fade. */
+const fadesAreOff = (): boolean =>
+  typeof window.matchMedia !== 'function' ||
+  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 const WIDE = '(min-width: 56rem)';
 
 const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
@@ -104,6 +118,8 @@ export default function FacetPanel({
   // Whether this opening is the modal sheet, fixed when it opens.
   const modal = useRef(false);
   const slide = useSlide('facet-panel__clip');
+  // The sheet fading out: it stays open, with `is-closing` on it, until the fade ends.
+  const [leaving, setLeaving] = useState(false);
 
   // Every chosen value counts, so two categories and two forms read 4. Match is a mode
   // of the categories, not a filter, and counts nothing.
@@ -130,18 +146,40 @@ export default function FacetPanel({
   // The panel shuts, and what was changed in it is applied once: whichever way it shuts, the
   // Filters button, Escape, Close, the sheet's own Escape or the width changing under it.
   // Nothing happens when it is already shut, so a close that follows a close applies nothing twice.
-  const shut = (instant: boolean) => {
+  // `snap` shuts with no motion at all; otherwise the sheet fades out and the panel slides up.
+  // The sheet fades out before it closes, as a Modal does; the panel slides, and motion turned
+  // down, or no way to ask, closes either at once.
+  const leave = () => {
+    if (!modal.current || fadesAreOff()) {
+      slide.close(modal.current);
+      return;
+    }
+    setLeaving(true);
+  };
+  const finishLeaving = () => {
+    setLeaving(false);
+    slide.close(true);
+  };
+  const shut = (snap: boolean) => {
     if (!slide.shown) return;
+    if (snap) {
+      setLeaving(false);
+      onApply?.();
+      returnFocus();
+      slide.close(true);
+      return;
+    }
+    if (leaving) return;
     onApply?.();
     returnFocus();
-    slide.close(instant);
+    leave();
   };
-  const dismiss = () => shut(modal.current);
+  const dismiss = () => shut(false);
   // Apply Filters submits the form around the panel, which applies everything held, so
   // the panel only has to shut.
   const closeOnSubmit = () => {
     returnFocus();
-    slide.close(modal.current);
+    leave();
   };
   // Clear All empties what is held and applies at once; a panel left open shuts with it.
   const clear = (event: MouseEvent<HTMLAnchorElement>) => {
@@ -163,6 +201,13 @@ export default function FacetPanel({
       returnFocus();
       dialog.close();
     }
+  });
+
+  // The net for a fade whose end the browser never reports.
+  useEffect(() => {
+    if (!leaving) return undefined;
+    const limit = setTimeout(finishLeaving, FADE_LIMIT_MS);
+    return () => clearTimeout(limit);
   });
 
   // A press outside the open panel shuts it, applying what was held, as Escape does. The Filters
@@ -188,6 +233,19 @@ export default function FacetPanel({
 
   // The sheet's backdrop belongs to the dialog itself, so a press that lands on the dialog and
   // not on anything in it is a press on the backdrop.
+  // The sheet's own Escape would close it at once; it goes through the fade instead.
+  const onCancel = (event: SyntheticEvent<HTMLDialogElement>) => {
+    if (!modal.current) return;
+    event.preventDefault();
+    dismiss();
+  };
+
+  const onFadeEnd = (event: TransitionEvent<HTMLDialogElement>) => {
+    if (leaving && event.target === event.currentTarget && event.propertyName === 'opacity') {
+      finishLeaving();
+    }
+  };
+
   const onPointerDown = (event: ReactPointerEvent<HTMLDialogElement>) => {
     if (modal.current && event.target === event.currentTarget) dismiss();
   };
@@ -254,6 +312,7 @@ export default function FacetPanel({
         id={id}
         className={
           `facet-panel${hydrated ? '' : ' facet-panel--static'}` +
+          (leaving ? ' is-closing' : '') +
           (className ? ` ${className}` : '')
         }
         tabIndex={-1}
@@ -261,6 +320,8 @@ export default function FacetPanel({
         open={!hydrated}
         onKeyDown={onKeyDown}
         onPointerDown={onPointerDown}
+        onCancel={onCancel}
+        onTransitionEnd={onFadeEnd}
         onClose={() => shut(true)}
       >
         <div
@@ -314,31 +375,33 @@ export default function FacetPanel({
                 {/* Match stays below two categories so the row does not shift as categories are
                     picked: it rests on All, disabled, and says when it applies. The held mode is
                     kept (it still reads All here, and the address drops it, M8.12). */}
-                <RadioGroupField
-                  legend="Match"
-                  name="categoryMode"
-                  layout="segmented"
-                  hint={
-                    matchStuck
-                      ? 'Match applies once two or more categories are chosen.'
-                      : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
-                  }
-                  options={MATCH_OPTIONS}
-                  value={matchStuck ? 'all' : filter.categoryMode}
-                  disabled={matchStuck}
-                  onChange={(categoryMode) => onChange({ categoryMode })}
-                />
-                {admin && (
-                  <div className="facet-panel__no-refs">
-                    <SwitchField
-                      label={`No Refs (${facets.withoutReferences})`}
-                      name="withoutReferences"
-                      value="1"
-                      checked={filter.withoutReferences}
-                      onChange={(withoutReferences) => onChange({ withoutReferences })}
-                    />
-                  </div>
-                )}
+                <div className="facet-panel__pair">
+                  <RadioGroupField
+                    legend="Match"
+                    name="categoryMode"
+                    layout="segmented"
+                    hint={
+                      matchStuck
+                        ? 'Match applies once two or more categories are chosen.'
+                        : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
+                    }
+                    options={MATCH_OPTIONS}
+                    value={matchStuck ? 'all' : filter.categoryMode}
+                    disabled={matchStuck}
+                    onChange={(categoryMode) => onChange({ categoryMode })}
+                  />
+                  {admin && (
+                    <div className="facet-panel__no-refs">
+                      <SwitchField
+                        label={`No Refs (${facets.withoutReferences})`}
+                        name="withoutReferences"
+                        value="1"
+                        checked={filter.withoutReferences}
+                        onChange={(withoutReferences) => onChange({ withoutReferences })}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="facet-panel__line facet-panel__line--forms">

@@ -393,3 +393,118 @@ describe('FacetPanel', () => {
     expect(panel.querySelector('input[name="toxic"]')).not.toBeNull();
   });
 });
+
+// The phone sheet fades in and out as every dialog does, and waits out the fade before it
+// closes; the desktop slide and reduced motion are untouched.
+describe('FacetPanel phone sheet fade', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const fadeEnd = () => {
+    const end = new Event('transitionend', { bubbles: true });
+    Object.defineProperty(end, 'propertyName', { value: 'opacity' });
+    fireEvent(dialog(), end);
+  };
+  const closeButton = () => screen.getAllByRole('button', { name: 'Close' })[0]!;
+
+  it('holds the sheet open, leaving, until the fade ends, then closes and applies once', () => {
+    stubViewport(false, false);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+    expect(dialog()).not.toHaveClass('is-closing');
+
+    fireEvent.click(closeButton());
+
+    expect(dialog()).toHaveClass('is-closing');
+    expect(dialog()).toHaveAttribute('open');
+    expect(onApply).toHaveBeenCalledTimes(1);
+
+    fadeEnd();
+
+    expect(dialog()).not.toHaveAttribute('open');
+    expect(dialog()).not.toHaveClass('is-closing');
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies once however many times it is asked to shut during the fade', () => {
+    stubViewport(false, false);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(closeButton());
+    fireEvent.pointerDown(dialog());
+    fireEvent.click(closeButton());
+    fadeEnd();
+    fireEvent(dialog(), new Event('close'));
+
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes after a limit when the browser never reports the end of the fade', () => {
+    vi.useFakeTimers();
+    stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+    fireEvent.click(closeButton());
+    expect(dialog()).toHaveAttribute('open');
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(dialog()).not.toHaveAttribute('open');
+  });
+
+  it('takes the sheet own Escape through the fade rather than closing at once', () => {
+    stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    const cancel = new Event('cancel', { cancelable: true });
+    fireEvent(dialog(), cancel);
+
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(dialog()).toHaveClass('is-closing');
+    fadeEnd();
+    expect(dialog()).not.toHaveAttribute('open');
+  });
+
+  it('closes at once under reduced motion', () => {
+    stubViewport(false, true);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(closeButton());
+
+    expect(dialog()).not.toHaveAttribute('open');
+    expect(dialog()).not.toHaveClass('is-closing');
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('snaps shut with no fade when the width crosses the tablet width', () => {
+    const listeners = stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    act(() => listeners.forEach((listener) => listener()));
+
+    expect(dialog()).not.toHaveAttribute('open');
+  });
+
+  it('leaves the desktop panel on its slide, never the sheet fade', () => {
+    stubViewport(true, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(filtersButton());
+
+    expect(dialog()).not.toHaveClass('is-closing');
+  });
+});
