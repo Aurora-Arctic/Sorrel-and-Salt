@@ -289,6 +289,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   z-index: 1;
   display: none;
   box-sizing: border-box;
+  // The popup's rounded edge clips what it holds: a row highlighted at a
+  // corner, or the listbox's own ground, would otherwise paint over the
+  // border there. The listbox inside scrolls as before.
+  overflow: hidden;
 
   @include floating-panel;
 
@@ -297,9 +301,13 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// Inside the popup the listbox is no panel of its own: the popup draws the
+// edge, the ground, the corners and the shadow, once.
 .combobox__list.is-inset {
   display: block;
+  background: transparent;
   border: 0;
+  border-radius: 0;
   box-shadow: none;
 }
 

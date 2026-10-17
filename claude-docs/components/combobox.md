@@ -46,7 +46,7 @@ movable, on dnd-kit.
 | `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                      |
 | `required`         | `aria-required`, as the field marks it.                                                                                                                                                                                                                                                        |
 | `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Enter with nothing highlighted still reaches `onCommit`.                                                                                                              |
-| `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank, "No Matches". Outside the listbox, and read by the status. See "The empty message".                                                                                                          |
+| `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank; the default is No match for “text”, and `false` says nothing. Outside the listbox, and read by the status. See "The empty message".                                                          |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                             |
 
@@ -200,8 +200,16 @@ chips theirs.
 
 ## The empty message
 
-An optional prop (M8.10), for a lookup that searches rather than completes.
-A box that omits it renders exactly what it did before.
+**The rule: a typed box never closes for having nothing to show; it says so.**
+The message is part of the Combobox, not something a caller must remember. A
+caller that passes no `empty` gets the default, "No match for “text”" (the
+typed text in curly quotes, from `noMatch` in `popup.tsx`, the one place it
+is worded). A caller may pass a more specific sentence ("Keep typing to
+search" in the ingredient search), or `false` where saying nothing is right
+(the ingredient search before it has searched). The multi-select box says
+"Every option is already chosen" when its list is opened with nothing left to
+offer; it takes no typed text, so it has no "no match". Both draw the same
+`combobox__empty` row from `popup.tsx`, inside the same placed popup.
 
 - **`empty`** opens the popup once the lookup has settled (`pending` is
   false), the text is not blank, the person wants the list open, and there
@@ -215,7 +223,7 @@ A box that omits it renders exactly what it did before.
   wrapper takes the place of the `<ul>` as the floating element (see "Where
   the list opens"), so the listbox and message move together,
   beneath the box or above it. The `<ul>` keeps Downshift's `getMenuProps`,
-  so its `id` and the input's `aria-controls` still agree. Without it the `<ul>` is placed itself.
+  so its `id` and the input's `aria-controls` still agree. Every box has the popup now (only `empty={false}` goes without), and the multi-select's list sits in one too.
   The popup is a panel and does not scroll; the `<ul>` does, in both cases,
   because Downshift scrolls the highlighted row into view within the menu
   element, and a scroller outside it is never moved (the Name box on

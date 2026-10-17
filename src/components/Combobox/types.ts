@@ -63,12 +63,14 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   suggestions?: Suggestions<O>;
   /**
    * What an open list says once its lookup has settled with no rows and the
-   * text is not blank: "No Matches". Drawn in the popup outside the listbox (it
-   * is no option), and read by the status. The typed row counts as a row, so
-   * a caller wanting the message passes `offerTyped={false}`. Without it a
-   * list with no rows stays closed.
+   * text is not blank. Left out, the default: No match for “text”. Pass a
+   * more specific sentence where the caller knows more ("Keep typing to
+   * search"), or `false` where saying nothing is right. Drawn in the popup
+   * outside the listbox (it is no option), and read by the status. The typed
+   * row counts as a row, so a caller wanting the message passes
+   * `offerTyped={false}`. A typed box never closes for having nothing to show.
    */
-  empty?: string;
+  empty?: string | false;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
   /**
