@@ -1,0 +1,342 @@
+'use client';
+
+import {
+  type KeyboardEvent,
+  type ReactElement,
+  type UIEvent,
+  useEffect,
+  useId,
+  useRef,
+} from 'react';
+import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
+import { useHydrated } from '../../lib/hydrated';
+import { useSlide } from '../../lib/use-slide';
+import CategoryPicker from '../CategoryPicker';
+import FacetCombobox from '../FacetCombobox';
+import { RadioGroupField } from '../Field/radio-group-field';
+import { SwitchField } from '../Field/switch-field';
+import FormIcon from '../FormIcon';
+import type { FacetPanelProps } from './types';
+import './index.scss';
+
+// The Filters button and the panel it opens (M12.4). The panel is a native `<dialog>`:
+// from the tablet width up `show()` opens it over the results, sliding down without moving
+// them, with no scrim and no inert page; below it `showModal()` opens it as a drawer sheet,
+// and the browser supplies the backdrop, the inert page and Escape. Before the script runs
+// nothing can open it, so it is drawn inline and open, and every control submits through
+// the GET form around it; the Filters control is a link to it until then. See
+// claude-docs/components/facet-panel.md.
+
+/** The shell's tablet width (`$shell-tablet-width`), where the panel stops being a sheet. */
+const WIDE = '(min-width: 56rem)';
+
+const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
+  { value: 'all', label: 'All' },
+  { value: 'any', label: 'Any' },
+];
+
+export default function FacetPanel({
+  facets,
+  filter,
+  onChange,
+  admin = false,
+  loading = false,
+  clearHref,
+  className,
+}: FacetPanelProps): ReactElement {
+  const hydrated = useHydrated();
+  const id = useId();
+  const titleId = `${id}-title`;
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  // Whether this opening is the modal sheet, fixed when it opens.
+  const modal = useRef(false);
+  const slide = useSlide('facet-panel__clip');
+
+  const chosen = [
+    filter.categories,
+    filter.forms,
+    filter.deities,
+    filter.zodiac,
+    filter.planets,
+    filter.elements,
+  ].filter((list) => list.length > 0).length;
+  const count =
+    chosen + (filter.toxic === '' ? 0 : 1) + (admin && filter.withoutReferences ? 1 : 0);
+
+  // Focus goes back to the button when it was inside the panel, so that a closing panel
+  // never leaves it on a control that is about to disappear.
+  const returnFocus = () => {
+    const dialog = dialogRef.current;
+    if (dialog && dialog.contains(document.activeElement)) buttonRef.current?.focus();
+  };
+  const dismiss = () => {
+    returnFocus();
+    slide.close(modal.current);
+  };
+
+  // The dialog follows the slide: opened on its way open, closed once the slide has ended.
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog || !hydrated) return;
+    if (slide.shown && !dialog.open) {
+      if (modal.current) dialog.showModal();
+      else dialog.show();
+      dialog.focus({ preventScroll: true });
+    } else if (slide.state === 'closed' && dialog.open) {
+      returnFocus();
+      dialog.close();
+    }
+  });
+
+  // Crossing the tablet width swaps the panel's kind (an overlay for a sheet), so it shuts.
+  useEffect(() => {
+    const query = window.matchMedia(WIDE);
+    const snap = () => slide.close(true);
+    query.addEventListener('change', snap);
+    return () => query.removeEventListener('change', snap);
+  });
+
+  const toggle = () => {
+    if (slide.shown) {
+      dismiss();
+      return;
+    }
+    modal.current = !window.matchMedia(WIDE).matches;
+    slide.open();
+  };
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDialogElement>) => {
+    // An Escape a combobox popup used to close itself is not the panel's; a modal sheet's
+    // own Escape is the browser's, which ends in `onClose`.
+    if (event.key !== 'Escape' || event.defaultPrevented || modal.current) return;
+    event.preventDefault();
+    dismiss();
+  };
+
+  // The clip never scrolls: a focus moving into a hidden part of it would otherwise shift
+  // the panel out of its slide.
+  const onScroll = (event: UIEvent<HTMLElement>) => {
+    event.currentTarget.scrollTop = 0;
+  };
+
+  const filtersLabel = count > 0 ? `Filters (${count})` : 'Filters';
+  const clip = hydrated ? slide.className : 'facet-panel__clip facet-panel__clip--open';
+
+  return (
+    <>
+      {hydrated ? (
+        <button
+          ref={buttonRef}
+          type="button"
+          className="btn facet-panel__button"
+          aria-expanded={slide.shown}
+          aria-controls={id}
+          onClick={toggle}
+        >
+          {filtersLabel}
+        </button>
+      ) : (
+        <a className="btn facet-panel__button" href={`#${id}`}>
+          {filtersLabel}
+        </a>
+      )}
+      {count > 0 && (
+        <a href={clearHref} className="facet-panel__clear">
+          Clear All
+        </a>
+      )}
+      <dialog
+        ref={dialogRef}
+        id={id}
+        className={
+          `facet-panel${hydrated ? '' : ' facet-panel--static'}` +
+          (className ? ` ${className}` : '')
+        }
+        tabIndex={-1}
+        aria-labelledby={titleId}
+        open={!hydrated}
+        onKeyDown={onKeyDown}
+        onClose={() => slide.close(true)}
+      >
+        <div
+          className={clip}
+          style={slide.style}
+          onTransitionEnd={slide.onTransitionEnd}
+          onScroll={onScroll}
+        >
+          <div className="facet-panel__inner">
+            <div className="facet-panel__pad">
+              <div className="facet-panel__head">
+                <h2 id={titleId} className="facet-panel__title">
+                  Filters
+                </h2>
+                <button
+                  type="button"
+                  className="btn btn--quiet facet-panel__phone-only"
+                  onClick={dismiss}
+                >
+                  Close
+                </button>
+              </div>
+
+              <div className="facet-panel__line">
+                <div className="facet-panel__grow">
+                  <CategoryPicker
+                    legend="Categories"
+                    entry="Category"
+                    placeholder="Add Category"
+                    removeNoun="Category"
+                    loading={loading}
+                    categories={facets.categories.map((category) => ({
+                      id: category.value,
+                      name: category.label,
+                      group: category.group,
+                      count: category.count,
+                    }))}
+                    value={filter.categories}
+                    onChange={(categories) => onChange({ categories })}
+                  />
+                  {filter.categories.map((slug) => (
+                    <input key={slug} type="hidden" name="categories" value={slug} />
+                  ))}
+                </div>
+                {filter.categories.length >= 2 && (
+                  <RadioGroupField
+                    legend="Match"
+                    name="categoryMode"
+                    layout="segmented"
+                    options={MATCH_OPTIONS}
+                    value={filter.categoryMode}
+                    onChange={(categoryMode) => onChange({ categoryMode })}
+                  />
+                )}
+                {admin && (
+                  <div className="facet-panel__no-refs">
+                    <SwitchField
+                      label={`No Refs (${facets.withoutReferences})`}
+                      name="withoutReferences"
+                      value="true"
+                      checked={filter.withoutReferences}
+                      onChange={(withoutReferences) => onChange({ withoutReferences })}
+                    />
+                  </div>
+                )}
+              </div>
+
+              <div className="facet-panel__line">
+                <div className="facet-panel__grow">
+                  <FacetCombobox
+                    label="Forms"
+                    name="forms"
+                    typeahead
+                    placeholder="Add Form"
+                    removeNoun="Form"
+                    loading={loading}
+                    choices={facets.forms.map((form) => ({
+                      value: form.value,
+                      label: form.label,
+                      count: form.count,
+                      icon: <FormIcon name={form.icon} />,
+                    }))}
+                    values={filter.forms}
+                    onChange={(forms) => onChange({ forms })}
+                  />
+                </div>
+                <RadioGroupField
+                  legend="Toxic"
+                  name="toxic"
+                  layout="segmented"
+                  options={[
+                    { value: '', label: 'Any' },
+                    ...facets.toxic.map((choice) => ({
+                      value: choice.value,
+                      label: choice.label,
+                      count: choice.count,
+                    })),
+                  ]}
+                  value={filter.toxic}
+                  onChange={(toxic) => onChange({ toxic })}
+                />
+              </div>
+
+              <div className="facet-panel__line">
+                <div className="facet-panel__grow">
+                  <FacetCombobox
+                    label="Planets"
+                    name="planets"
+                    placeholder="Add Planet"
+                    removeNoun="Planet"
+                    loading={loading}
+                    choices={facets.planets}
+                    values={filter.planets}
+                    onChange={(planets) => onChange({ planets })}
+                  />
+                </div>
+                <div className="facet-panel__grow">
+                  <FacetCombobox
+                    label="Zodiac"
+                    name="zodiac"
+                    placeholder="Add Sign"
+                    removeNoun="Sign"
+                    loading={loading}
+                    choices={facets.zodiac}
+                    values={filter.zodiac}
+                    onChange={(zodiac) => onChange({ zodiac })}
+                  />
+                </div>
+              </div>
+
+              <div className="facet-panel__line">
+                <div className="facet-panel__grow">
+                  <FacetCombobox
+                    label="Deities"
+                    name="deities"
+                    typeahead
+                    placeholder="Add Deity"
+                    removeNoun="Deity"
+                    loading={loading}
+                    choices={facets.deities.map((deity) => ({
+                      value: deity.value,
+                      label: deity.label,
+                      count: deity.count,
+                      group: deity.tradition,
+                    }))}
+                    values={filter.deities}
+                    onChange={(deities) => onChange({ deities })}
+                  />
+                </div>
+                <div className="facet-panel__grow">
+                  <FacetCombobox
+                    label="Elements"
+                    name="elements"
+                    placeholder="Add Element"
+                    removeNoun="Element"
+                    loading={loading}
+                    choices={facets.elements}
+                    values={filter.elements}
+                    onChange={(elements) => onChange({ elements })}
+                  />
+                </div>
+              </div>
+
+              <div className="facet-panel__foot">
+                <button type="submit" className="btn btn--solid">
+                  Apply Filters
+                </button>
+                <button
+                  type="button"
+                  className="btn btn--quiet facet-panel__phone-only"
+                  onClick={dismiss}
+                >
+                  Close
+                </button>
+                <a href={clearHref}>Clear All</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </dialog>
+    </>
+  );
+}

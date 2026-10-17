@@ -1,0 +1,218 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The Filters button and its panel (claude-docs/components/facet-panel.md). The panel
+// positions itself against the nearest positioned ancestor, which is the filter form
+// (`position: relative` there), so that it opens just under the search row.
+
+// The Filters button keeps to one line: a count in it does not wrap on a phone.
+.facet-panel__button {
+  flex: none;
+  white-space: nowrap;
+}
+
+// Clear All beside the button: a quiet link on the controls' line.
+.facet-panel__clear {
+  display: flex;
+  flex: none;
+  align-items: center;
+  min-height: $control-height;
+  white-space: nowrap;
+}
+
+// The dialog is an overlay that slides down over the results, so they never move. It is
+// opened by script: show() from the tablet width up (no scrim, no inert page), showModal()
+// below it. The slide is grid rows 0fr to 1fr on the clip inside it; the dialog stays open
+// until the transition ends, so the content is whole, never faded, until it is gone.
+.facet-panel {
+  box-sizing: border-box;
+  position: absolute;
+  inset: auto;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  z-index: layer('floating');
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  margin: space(2) 0 0;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  overflow: visible;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Before the script runs the panel is an ordinary block above the results at every width.
+.facet-panel--static {
+  position: static;
+  margin: space(4) 0;
+}
+
+.facet-panel__clip {
+  display: grid;
+  grid-template-rows: 0fr;
+  border-radius: radius('surface');
+  box-shadow: $shadow-elevated;
+  transition: grid-template-rows var(--slide-ms, 350ms) ease;
+
+  &--open {
+    grid-template-rows: 1fr;
+  }
+}
+
+.facet-panel--static .facet-panel__clip {
+  box-shadow: none;
+}
+
+.facet-panel__inner {
+  min-height: 0;
+  overflow: hidden;
+  border-radius: radius('surface');
+}
+
+.facet-panel__pad {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+  padding: space(4);
+  background-color: $surface-page;
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+}
+
+.facet-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.facet-panel__title {
+  margin: 0;
+}
+
+// One row per pair of facets: a combobox takes the spare width and the compact control
+// beside it (Match, No Refs, the Toxic strip) keeps its own. Below the tablet width every
+// control stacks, in the same order as the source.
+.facet-panel__line {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+
+  // Stacked, a combobox is as tall as it is, not the row-wise basis.
+  > .facet-panel__grow {
+    flex: none;
+  }
+
+  @media (min-width: $shell-tablet-width) {
+    flex-direction: row;
+    // The top, so that when one control wraps to two lines (many chips) its neighbours stay
+    // level with its label instead of dropping to its bottom edge.
+    align-items: flex-start;
+
+    > .facet-panel__grow {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+}
+
+// The switch sits centred under its label.
+.facet-panel__no-refs {
+  width: fit-content;
+
+  .field__label {
+    text-align: center;
+  }
+
+  .switch__control {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.facet-panel__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+  align-items: center;
+}
+
+// Wide: the title and Close go (the dialog is still named by the title, which stays for
+// assistive technology; the Filters button and Escape close it).
+@media (min-width: $shell-tablet-width) {
+  .facet-panel:not(.facet-panel--static) {
+    .facet-panel__head {
+      @include visually-hidden;
+    }
+
+    .facet-panel__phone-only {
+      display: none;
+    }
+  }
+}
+
+// Before the script: nothing can close it, so there is no Close and the title is plain.
+.facet-panel--static .facet-panel__phone-only {
+  display: none;
+}
+
+// The modal sheet below the tablet width: a full-height drawer with no slide. Its foot
+// sticks to the bottom, and the sheet scrolls with room kept above it so that a focused
+// control is never hidden behind it (WCAG 2.4.11).
+.facet-panel:modal {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(32rem, 100%);
+  height: 100%;
+  margin: 0 0 0 auto;
+  background-color: $surface-page;
+  border-left: 1px solid $hairline;
+  overflow-y: auto;
+  scroll-padding-block-end: 6rem;
+
+  &::backdrop {
+    background-color: color-mix(in srgb, $surface-page 75%, transparent);
+  }
+
+  .facet-panel__clip {
+    display: flex;
+    flex: 1;
+    border-radius: 0;
+    box-shadow: none;
+    transition: none;
+  }
+
+  .facet-panel__inner {
+    display: flex;
+    flex: 1;
+    overflow: visible;
+    border-radius: 0;
+  }
+
+  .facet-panel__pad {
+    flex: 1;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .facet-panel__foot {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    padding: space(3) 0;
+    background-color: $surface-page;
+    border-top: 1px solid $hairline;
+  }
+}
+
+@include reduced-motion {
+  .facet-panel__clip {
+    transition: none;
+  }
+}
