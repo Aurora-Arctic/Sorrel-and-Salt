@@ -219,26 +219,6 @@ const IngredientForm = ({
         return next;
       }),
   });
-  // Open All / Close All: Close All while any section is open, so a press
-  // from any mix folds the form to its summary lines, the view the sections
-  // are for, and a new entry, all open, offers it at once. It reaches every
-  // variant's sections too; a variant's are in view only while Variants is
-  // open, which already reads Close All.
-  const anyOpen = open.size > 0;
-  const headerSlot = useModalHeaderSlot();
-  const foldAll = (
-    <button
-      type="button"
-      className="btn btn--small btn--quiet"
-      onClick={() => {
-        setOpen(new Set(anyOpen ? [] : SECTION_KEYS));
-        variantFolds.setAll(!anyOpen, getValues('variants').length);
-      }}
-    >
-      {anyOpen ? 'Close All' : 'Open All'}
-    </button>
-  );
-
   // The first field marked invalid, in page order, takes the focus once a
   // save's errors are all drawn.
   useFocusFirstInvalid(form, submitCount);
@@ -278,6 +258,29 @@ const IngredientForm = ({
   // they are in a form of their own, which `isDirty` never sees.
   const panels = usePanelChanges();
   const discard = useDiscardGuard(isDirty || panels.changed);
+
+  // Open All / Close All: Close All while any section is open, so a press
+  // from any mix folds the form to its summary lines, the view the sections
+  // are for, and a new entry, all open, offers it at once. It reaches every
+  // variant's sections too; a variant's are in view only while Variants is
+  // open, which already reads Close All. Off while the form asks a question
+  // over itself, as Undo and Redo are then, the owner's call: a control that
+  // cannot be used reads as one, rather than faded with the form behind.
+  const anyOpen = open.size > 0;
+  const headerSlot = useModalHeaderSlot();
+  const foldAll = (
+    <button
+      type="button"
+      className="btn btn--small btn--quiet"
+      disabled={discard.asking || deleting || question !== null}
+      onClick={() => {
+        setOpen(new Set(anyOpen ? [] : SECTION_KEYS));
+        variantFolds.setAll(!anyOpen, getValues('variants').length);
+      }}
+    >
+      {anyOpen ? 'Close All' : 'Open All'}
+    </button>
+  );
 
   // Undo and redo (M12.9, adopted here by M12.10), off while a save is in
   // flight (its success handler resets over the values) or a question is up

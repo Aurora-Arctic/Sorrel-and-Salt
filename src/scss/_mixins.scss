@@ -104,6 +104,33 @@
   filter: grayscale(1);
 }
 
+// A button that is off: dashed and faded, the same as a disabled field, so it
+// reads as a button that is off rather than a quiet one. The `.btn` primitive's
+// disabled state, and a modal header's controls while a question holds them
+// (Modal/index.scss). `:hover`/`:focus-visible` restate every property, so
+// no colour modifier's own can compete (_primitives.scss, `.btn:disabled`).
+@mixin btn-disabled {
+  background-color: transparent;
+  border-color: $text-muted;
+  border-style: dashed;
+  color: $text-muted;
+  opacity: $opacity-disabled;
+  cursor: not-allowed;
+  box-shadow: none;
+
+  &:hover,
+  &:focus-visible {
+    background-color: transparent;
+    border-color: $text-muted;
+    color: $text-muted;
+    box-shadow: none;
+  }
+
+  svg {
+    opacity: 0.5;
+  }
+}
+
 // Defaults to the body ink, so the ring re-colours with the theme.
 @mixin focus-ring($color: $text-primary) {
   outline: 2px solid $color;

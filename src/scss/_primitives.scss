@@ -247,25 +247,7 @@
   // disabled button at all.
   .btn:disabled,
   .btn[aria-disabled='true'] {
-    background-color: transparent;
-    border-color: $text-muted;
-    border-style: dashed;
-    color: $text-muted;
-    opacity: $opacity-disabled;
-    cursor: not-allowed;
-    box-shadow: none;
-
-    &:hover,
-    &:focus-visible {
-      background-color: transparent;
-      border-color: $text-muted;
-      color: $text-muted;
-      box-shadow: none;
-    }
-
-    svg {
-      opacity: 0.5;
-    }
+    @include btn-disabled;
   }
 
   // The one filled button in a view: its primary action. Its hover is a

@@ -115,6 +115,25 @@ describe('IngredientForm’s sections', () => {
     expect(openSections()).toEqual(SECTIONS);
   });
 
+  // The owner's call: a control the question holds is off, not merely faded.
+  it('turns Close All off while the unsaved changes are asked about, and on again on Keep Editing', () => {
+    offerNothing();
+    renderInModal((done) => <IngredientForm workspaceId={null} onCancel={done} />);
+    const closeAll = screen.getByRole('button', { name: 'Close All' });
+    type('Name', 'Testwort');
+    expect(closeAll).toBeEnabled();
+
+    press('Cancel');
+
+    expect(screen.getByRole('button', { name: 'Keep Editing' })).toBeInTheDocument();
+    expect(closeAll).toBeDisabled();
+
+    press('Keep Editing');
+
+    expect(screen.queryByRole('button', { name: 'Keep Editing' })).not.toBeInTheDocument();
+    expect(closeAll).toBeEnabled();
+  });
+
   it('opens every section with Open All, and closes every one with Close All while any is open', () => {
     renderForm(TESTWORT);
 

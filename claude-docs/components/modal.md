@@ -185,7 +185,7 @@ form's Delete question are drawn through it.
 - **The form behind is held.** As the card comes, the modal sets `inert` on
   its body and on the control beside its title, so Tab, a click and typing
   cannot reach the form until the question is answered; the scrim, the
-  page's ground at 75% as the backdrop is, dims both. The title and the Close
+  page's ground at 75% as the backdrop is, dims the body. The title and the Close
   button are not held, so Close, Escape and a click outside go through the
   form's guard as before: closing with nothing changed, asking about a change,
   or flashing a question already asked. The attribute is set on the elements
@@ -328,8 +328,11 @@ out of the header (M12.10). A slot, as the guard is, since the form sits
 inside the modal's render prop, out of its owner's reach. Outside a modal the
 hook answers null and the form keeps the controls in its own flow. Tab order
 follows the page: the ×, then the controls, then the form. While a question is
-asked over the form, the row is held and dimmed with it
-(["Asking over the form"](#asking-over-the-form)).
+asked over the form, the row is held with it
+(["Asking over the form"](#asking-over-the-form)), and its buttons take the
+`.btn` disabled look (the `btn-disabled` mixin) rather than a fade or the
+scrim, the owner's call at M8.16; the ingredient form's Close All is
+`disabled` then too, as a form's Undo and Redo already are.
 
 ## ModalButton
 
