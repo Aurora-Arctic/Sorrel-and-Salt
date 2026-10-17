@@ -12,6 +12,7 @@ export * from './services/promote-folk-name';
 export * from './services/stock';
 export * from './services/jar-merge-needed';
 export * from './services/workspace-ingredient-list';
+export * from './services/ingredient-facets';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
 export * from './loaders/stock';
@@ -32,7 +33,10 @@ export type {
   CategoryRow,
   CitedReference,
   CompendiumAddress,
+  CompendiumFacets,
+  FacetCount,
   IngredientDeityRow,
+  IngredientFacets,
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,

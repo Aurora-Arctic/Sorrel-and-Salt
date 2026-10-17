@@ -4,8 +4,13 @@ import { revalidateTag } from 'next/cache';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { COMPENDIUM_TAG } from '@/lib/compendium-cache';
 import type { PageRequest } from '@/lib/types';
-import { countCompendium, listCompendium } from '@/modules/ingredients';
-import { A } from '../../../support/as-user';
+import {
+  compendiumFacets,
+  countCompendium,
+  deleteCompendiumEntry,
+  listCompendium,
+} from '@/modules/ingredients';
+import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
@@ -91,5 +96,24 @@ describe('M8.6: the compendium read is cached under the compendium tag', () => {
     await seed('Fixture Alpha');
 
     expect(await names()).toEqual(['Fixture Alpha']);
+  });
+});
+
+describe('M12.3: the compendium facets are cached under the compendium tag', () => {
+  const forms = async () => (await compendiumFacets({})).forms;
+
+  it('answers a repeat read from the cache, and reads Postgres again after an admin delete', async () => {
+    const deleting = await seed('Fixture Alpha');
+    expect(await forms()).toEqual([{ value: 'Testform', count: 1 }]);
+
+    await seed('Fixture Beta');
+    await seed('Fixture Gamma');
+
+    // Postgres holds three entries of the form now; the cache still answers one.
+    expect(await forms()).toEqual([{ value: 'Testform', count: 1 }]);
+
+    await deleteCompendiumEntry(asUser(E), deleting);
+
+    expect(await forms()).toEqual([{ value: 'Testform', count: 2 }]);
   });
 });
