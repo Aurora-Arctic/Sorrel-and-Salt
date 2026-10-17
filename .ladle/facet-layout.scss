@@ -206,6 +206,18 @@
   }
 }
 
+@mixin outlined-chip {
+  background-color: transparent;
+  color: $text-primary;
+  border: 1px solid $text-primary;
+
+  &:hover,
+  &:focus-within,
+  &:focus-visible {
+    background-color: $fill-quiet;
+  }
+}
+
 .facet-layout__chosen {
   @include list-reset;
   display: flex;
@@ -213,11 +225,39 @@
   gap: space(2);
   margin-top: space(4);
 
+  // Outlined, not filled: the search section has enough green. A category keeps its group's
+  // colours (M8.11), which are the category's own.
   button {
-    @include chip($dark: $accent, $light: $accent, $state: selected);
+    @include chip($dark: $accent, $light: $accent, $state: unselected);
+    @include outlined-chip;
     gap: space(2);
     cursor: pointer;
+
+    &.is-coloured {
+      @include chip(var(--chip-dark), var(--chip-light), $state: selected);
+      gap: space(2);
+    }
   }
+}
+
+// In-control chips in the panel read the same way: no fill, an ink border, and the count and
+// cross in the same ink. Hover and focus tint the surface, not green. A category's entry
+// (`.is-coloured`) keeps its group fill.
+.facet-layout__drop .combobox__entry:not(.is-coloured) {
+  @include outlined-chip;
+  border-radius: radius('sharp');
+
+  .combobox__entry-remove {
+    color: inherit;
+  }
+}
+
+// The selected Match and Toxic segment as an outline, for comparison with the filled block.
+.facet-layout--outlined-strip .facet-strip label:has(input:checked) {
+  background-color: transparent;
+  color: $text-primary;
+  border-color: $text-primary;
+  box-shadow: inset 0 0 0 1px $text-primary;
 }
 
 .facet-layout__tray {
@@ -276,132 +316,156 @@
   }
 }
 
-// Alternative F: B's left column from the tablet width up, D's tray below it, on a
-// native <dialog>. The dialog is never given `open` for the column: from the tablet
-// width up the rules below lay it out in place whether or not it is open, so
-// nothing takes the focus on load. Below it, script opens it with showModal()
-// (the top layer), which is why the results never stack over it.
-.facet-layout__side {
-  min-width: 0;
+// Alternative F, "grid-tray": the Filters button opens E's grid as a panel that slides down
+// over the results, anchored under the search row, so the results never move. It is a native
+// <dialog> that script opens: show() from the tablet width up (no scrim, no inert page),
+// showModal() below it (the top layer and the backdrop are the browser's). The slide is
+// grid rows 0fr to 1fr on the clip inside it; the dialog stays open until the transition
+// ends, so the panel's content is whole, never faded, until it is gone.
+.facet-layout__drop-anchor {
+  position: relative;
 }
 
-.facet-layout__split--tray {
-  @media (min-width: $shell-tablet-width) {
-    // Wide enough for Match and Toxic (with its counts) to share a row.
-    grid-template-columns: minmax(18rem, 28rem) minmax(0, 1fr);
+.facet-layout__drop {
+  box-sizing: border-box;
+  position: absolute;
+  inset: auto;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  z-index: layer('floating');
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  margin: space(2) 0 0;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  overflow: visible;
+
+  &:focus {
+    outline: none;
   }
 }
 
-.facet-layout__sheet {
-  box-sizing: border-box;
+.facet-layout__drop-clip {
+  display: grid;
+  grid-template-rows: 0fr;
+  border-radius: radius('surface');
+  box-shadow: $shadow-elevated;
+  transition: grid-template-rows var(--tail-ms, 350ms) ease;
+
+  &--open {
+    grid-template-rows: 1fr;
+  }
+}
+
+.facet-layout__drop-inner {
+  min-height: 0;
+  overflow: hidden;
+  border-radius: radius('surface');
+}
+
+.facet-layout__drop-pad {
   display: flex;
   flex-direction: column;
   gap: space(4);
-  min-width: 0;
-  margin: 0;
   padding: space(4);
-  border: 0;
   background-color: $surface-page;
-  color: inherit;
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+}
 
-  // The modal sheet: a full-height drawer, a full-width one on a phone.
-  &:modal {
-    width: min(32rem, 100%);
-    max-width: none;
-    height: 100%;
-    max-height: none;
-    margin-left: auto;
-    overflow-y: auto;
-    border-left: 1px solid $hairline;
+// The expanded panel, one row per pair of facets: a combobox takes the spare width and the compact
+// control beside it (Match, No Refs, the Toxic strip) keeps its own. Below the tablet width every
+// control stacks in the same order.
+.facet-layout__line {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+
+  // Stacked, a combobox is as tall as it is, not the 20rem basis the row-wise rule gives it.
+  > .facet-layout__grow {
+    flex: none;
   }
 
-  // Closed below the tablet width until a script opens it as a modal.
-  &:not([open]) {
-    display: none;
+  @media (min-width: $shell-tablet-width) {
+    flex-direction: row;
+    align-items: flex-end;
+
+    > .facet-layout__grow {
+      flex: 1 1 0;
+      min-width: 0;
+    }
   }
+}
+
+// Wide: no title (the dialog is still named by it), no Close (the Filters button and Escape
+// close it), and the foot is an ordinary row at the panel's end.
+@media (min-width: $shell-tablet-width) {
+  .facet-layout__drop {
+    .facet-layout__tray-head,
+    .facet-layout__phone-only {
+      display: none;
+    }
+
+    .facet-layout__tray-foot {
+      position: static;
+      margin-top: 0;
+      padding: 0;
+      border-top: 0;
+    }
+  }
+}
+
+// The modal sheet below the tablet width: a full-height drawer with no slide.
+.facet-layout__drop:modal {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(32rem, 100%);
+  height: 100%;
+  margin: 0 0 0 auto;
+  background-color: $surface-page;
+  border-left: 1px solid $hairline;
+  overflow-y: auto;
 
   &::backdrop {
     background-color: color-mix(in srgb, $surface-page 75%, transparent);
   }
 
-  // The column. The UA's styles float a dialog (absolute, shrunk to its content);
-  // here it is an ordinary block, shown without `open`.
-  @media (min-width: $shell-tablet-width) {
-    &:not([open]) {
-      display: flex;
-    }
+  .facet-layout__drop-clip {
+    display: flex;
+    flex: 1;
+    border-radius: 0;
+    box-shadow: none;
+    transition: none;
+  }
 
-    position: static;
-    inline-size: auto;
-    max-inline-size: none;
-    padding: 0;
-    background-color: transparent;
+  .facet-layout__drop-inner {
+    display: flex;
+    flex: 1;
+    overflow: visible;
+    border-radius: 0;
+  }
+
+  .facet-layout__drop-pad {
+    flex: 1;
+    border: 0;
+    border-radius: 0;
   }
 }
 
-// The column folded: no column, the Filters button and the chips take its place.
-.facet-layout__split--collapsed {
-  @media (min-width: $shell-tablet-width) {
-    grid-template-columns: minmax(0, 1fr);
-
-    .facet-layout__side .facet-layout__sheet {
-      display: none;
-    }
-
-    .facet-layout__bar > .facet-layout__grow {
-      flex: 0 1 32rem;
-    }
-  }
-}
-
-// What exists only for the sheet: the Filters button, its Close buttons and the chips.
-// The open column hides them (it shows its chosen values in the controls); the folded
-// one keeps the button and the chips, since it has nothing else to say what is chosen.
-.facet-layout__split:not(.facet-layout__split--collapsed) {
-  .facet-layout__sheet-open,
-  .facet-layout__sheet-only {
-    @media (min-width: $shell-tablet-width) {
-      display: none;
-    }
-  }
-}
-
-// What exists only in the open column: Hide Filters.
-.facet-layout__column-only {
-  @media not all and (min-width: $shell-tablet-width) {
-    display: none;
-  }
-}
-
-// The split's own rule makes every apply row static, so the sheet's foot asks for
-// its sticky place back below the tablet width.
-.facet-layout__side .facet-layout__sheet .facet-layout__tray-foot {
-  position: sticky;
-  padding: space(3) 0;
-  border-top: 1px solid $hairline;
-
-  @media (min-width: $shell-tablet-width) {
-    position: static;
-    padding: 0;
-    border-top: 0;
-  }
-}
-
-// The primitive centres a switch; in the column No Refs sits at the left like the fields above it.
-.facet-layout__panel .field.switch {
+// The primitive centres a switch; in the panel No Refs sits at the left like the fields above it.
+.facet-layout__panel .field.switch,
+.facet-layout__grid .field.switch,
+.facet-layout__line .field.switch {
   align-items: flex-start;
 
   .field__label {
     text-align: start;
   }
-}
-
-// Match and Toxic on one row, wrapping where the column is too narrow for both.
-.facet-layout__pair {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(4);
-  align-items: flex-start;
 }
 
 // Clear All ends the chip row.
@@ -429,7 +493,7 @@
     margin-block: space(2) 0;
   }
 
-  &[open] .facet-layout__chevron {
+  &:not(.facet-layout__disclosure--typed)[open] .facet-layout__chevron {
     display: inline-block;
     rotate: 180deg;
   }
@@ -456,30 +520,37 @@
   margin-block-end: space(3);
 }
 
-.facet-layout__swap {
+// The first line is the summary (disclosure) or a paragraph; the tail beneath it opens and
+// closes by height. Grid rows 0fr to 1fr is the Baseline way to animate an auto height.
+.facet-layout__first {
+  margin: 0;
+}
+
+.facet-layout__tail {
   display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--tail-ms, 350ms) ease;
 
-  > * {
-    grid-area: 1 / 1;
-    margin: 0;
+  &--open {
+    grid-template-rows: 1fr;
   }
 }
 
-.facet-layout__swap-count {
-  opacity: 1;
-  transition: opacity 400ms ease;
+.facet-layout__tail-inner {
+  min-height: 0;
+  overflow: hidden;
 
-  &--off {
-    opacity: 0;
+  > p {
+    margin-block: space(2) 0;
   }
 }
 
-.facet-layout__typed {
-  opacity: 1;
-  transition: opacity 400ms ease;
+.facet-layout__chevron {
+  display: inline-block;
+  transition: rotate var(--tail-ms, 350ms) ease;
 
-  &--out {
-    opacity: 0;
+  &--up {
+    rotate: 180deg;
   }
 }
 
@@ -508,14 +579,44 @@
     animation: none;
   }
 
-  .facet-layout__swap-count,
-  .facet-layout__typed {
+  .facet-layout__tail,
+  .facet-layout__drop-clip,
+  .facet-layout__chevron {
     transition: none;
   }
 }
 
 // The Filters button keeps to one line: a count in it does not wrap on a phone.
-.facet-layout__sheet-open {
+.facet-layout__filters-button {
   flex: none;
   white-space: nowrap;
+}
+
+// The values the sentence names are set in the type scale's next weight above the default
+// `strong` (400, over the 300 body): there is no weight token, the scale is raw numbers.
+.facet-layout__sentence strong {
+  font-weight: 500;
+}
+
+// Where a chip's count will be while the results are on their way. The shape and the
+// shimmer are the list skeleton's (`skeleton-shape`, `skeleton-shimmer`); the fill is the
+// chip's own ink at low strength, since a chip is a solid colour the quiet fill would vanish on.
+.facet-layout__count-pending {
+  display: inline-block;
+  width: 1.75ch;
+  height: 0.8em;
+  vertical-align: -0.05em;
+  border-radius: radius('control');
+  background-image: linear-gradient(
+    90deg,
+    color-mix(in srgb, currentcolor 22%, transparent) 0%,
+    color-mix(in srgb, currentcolor 42%, transparent) 50%,
+    color-mix(in srgb, currentcolor 22%, transparent) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+
+  @include reduced-motion {
+    animation: none;
+  }
 }
