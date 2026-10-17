@@ -25,6 +25,11 @@ export interface FacetComboboxProps {
   typeahead?: boolean;
   /** A short action shown, muted, while nothing is chosen and after the chips: "Add an element". */
   placeholder?: string;
+  /**
+   * Shown in place of the placeholder when nothing is chosen and no value is left to offer
+   * (every count 0): "No Elements". Defaults to "No" and the label.
+   */
+  emptyPlaceholder?: string;
   /** What a value is of, for its cross's name: "Remove Element: Water". The bare value when left out. */
   removeNoun?: string;
   /** A search is running: every chip holds a placeholder where its count will be. */

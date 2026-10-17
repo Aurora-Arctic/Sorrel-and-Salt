@@ -70,6 +70,31 @@ describe('FacetCombobox', () => {
     );
   });
 
+  it('shows its empty placeholder, not a blank, when every value is zero', () => {
+    const choices = PROPS.choices.map((choice) => ({ ...choice, count: 0 }));
+    const { unmount } = render(
+      <FacetCombobox {...PROPS} choices={choices} emptyPlaceholder="Testnone" />,
+    );
+    expect(screen.getByText('Testnone')).toBeInTheDocument();
+    expect(screen.queryByText(PROPS.placeholder as string)).not.toBeInTheDocument();
+    unmount();
+
+    // Left out, it is derived from the label.
+    render(<FacetCombobox {...PROPS} choices={choices} />);
+    expect(screen.getByText('No Elements')).toBeInTheDocument();
+  });
+
+  it('shows its empty placeholder in the typing form too', () => {
+    const choices = PROPS.choices.map((choice) => ({ ...choice, count: 0 }));
+    render(<FacetCombobox {...PROPS} typeahead choices={choices} emptyPlaceholder="Testnone" />);
+    expect(box()).toHaveAttribute('placeholder', 'Testnone');
+  });
+
+  it('keeps its ordinary placeholder while a value is left', () => {
+    render(<FacetCombobox {...PROPS} />);
+    expect(screen.getByText(PROPS.placeholder as string)).toBeInTheDocument();
+  });
+
   it('keeps the field, with nothing to offer, when every value is zero', () => {
     const choices = PROPS.choices.map((choice) => ({ ...choice, count: 0 }));
     render(<FacetCombobox {...PROPS} choices={choices} />);

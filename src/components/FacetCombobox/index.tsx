@@ -25,6 +25,7 @@ export default function FacetCombobox({
   onChange,
   typeahead,
   placeholder,
+  emptyPlaceholder = `No ${label}`,
   removeNoun,
   loading,
   hideZeros = true,
@@ -49,6 +50,7 @@ export default function FacetCombobox({
             values={values}
             onChange={onChange}
             placeholder={placeholder}
+            emptyPlaceholder={emptyPlaceholder}
             removeNoun={removeNoun}
             loading={loading}
             hideZeros={hideZeros}
@@ -63,6 +65,7 @@ export default function FacetCombobox({
             onChange={onChange}
             choices={choices}
             placeholder={placeholder}
+            emptyPlaceholder={emptyPlaceholder}
             hideZeros={hideZeros}
             loading={loading}
             chipsOutlined
