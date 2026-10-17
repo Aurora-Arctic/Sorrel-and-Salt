@@ -401,19 +401,19 @@ test(
     });
     await page.goto(`/coven/${coven.slug}`);
 
-    await test.step('leaving Name blank marks it, linking its error, and filling it clears the mark', async () => {
+    await test.step('leaving Name blank once edited marks it, linking its error, and filling it clears the mark', async () => {
       const dialog = await openAddIngredient(page);
       const name = nameField(dialog);
       // What Name describes while valid, so the error is what the mark adds.
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
       const valid = await describedIds(name);
 
-      // Left empty, Name is marked: an error shows once the field is left,
-      // whether or not it was edited, or once the form is submitted (M8.16,
-      // the owner's call).
+      // Left untouched, Name stays quiet: an error shows only once the field
+      // is both edited and left, or the form submitted (M8.16, the owner's
+      // call).
       await name.focus();
       await page.keyboard.press('Tab');
-      await expectFieldError(name, valid);
+      await expect(name).not.toHaveAttribute('aria-invalid', 'true');
 
       // Edited to a blank, which the schema trims to nothing, and left.
       await name.fill('   ');

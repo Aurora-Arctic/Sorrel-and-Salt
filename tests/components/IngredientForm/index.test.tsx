@@ -360,8 +360,8 @@ describe('IngredientForm', () => {
 
     // Story 31: errors show on leaving a field, not only on submit.
     describe('on leaving a field', () => {
-      // A whitespace-only Name is an edit the person made, which the schema
-      // refuses; emptying a field back to its default is not an edit.
+      // A field's error waits for it to be left after the person has edited it,
+      // even if the edit put it back to its default.
       it('flags an edited value that is invalid once the field is left, before any submit', async () => {
         const calls = acceptCreate();
         renderForm();
@@ -384,13 +384,25 @@ describe('IngredientForm', () => {
         await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
       });
 
-      it('flags a required field left empty on leaving it, before any submit', async () => {
+      it('flags a required field typed into, emptied and left, before any submit', async () => {
+        renderForm();
+
+        fireEvent.focus(textbox('Name'));
+        type('Name', 'Testwort');
+        type('Name', '');
+        fireEvent.blur(textbox('Name'));
+
+        await waitFor(() => expectErrorOn(textbox('Name')));
+      });
+
+      it('leaves a required field quiet when it is left without an edit', async () => {
         renderForm();
 
         fireEvent.focus(textbox('Name'));
         fireEvent.blur(textbox('Name'));
+        await settle();
 
-        await waitFor(() => expectErrorOn(textbox('Name')));
+        expect(textbox('Name')).not.toBeInvalid();
       });
 
       it('flags the formal name once it is left, after the classification asked for one', async () => {
@@ -403,6 +415,8 @@ describe('IngredientForm', () => {
         expect(textbox('Formal Name')).not.toBeInvalid();
 
         fireEvent.focus(textbox('Formal Name'));
+        type('Formal Name', 'x');
+        type('Formal Name', '');
         fireEvent.blur(textbox('Formal Name'));
 
         await waitFor(() => expectErrorOn(textbox('Formal Name')));

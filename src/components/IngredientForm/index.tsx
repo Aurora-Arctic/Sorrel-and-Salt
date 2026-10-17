@@ -27,7 +27,9 @@ import {
   FormHistoryContext,
   SelectField,
   TextField,
+  EditedFieldsContext,
   errorShown,
+  useEditedFields,
   useFormHistory,
   useSettledWhilePressed,
 } from '../Field';
@@ -169,7 +171,8 @@ const IngredientForm = ({
   } = methods;
   // Which errors are drawn, the fields' one rule, so a section is flagged
   // only for an error a field in it shows.
-  const shown = (path: string) => errorShown({ isSubmitted, touchedFields }, path);
+  const { edited, clear: clearEdited } = useEditedFields(methods.subscribe);
+  const shown = (path: string) => errorShown({ isSubmitted, touchedFields, edited }, path);
   const form = useRef<HTMLFormElement>(null);
   const createAnyway = useRef<HTMLButtonElement>(null);
   const duplicates = useDuplicateWarning(
@@ -326,9 +329,10 @@ const IngredientForm = ({
   useEffect(() => {
     if (saves === 0) return;
     reset(EMPTY_VALUES);
+    clearEdited();
     clearHistory();
     form.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
-  }, [saves, reset, clearHistory]);
+  }, [saves, reset, clearHistory, clearEdited]);
 
   const mutation = useMutation({
     mutationFn: async ({ input, endRedirect }: IngredientSend): Promise<SavedIngredient> => {
@@ -379,6 +383,7 @@ const IngredientForm = ({
         variantFolds.setAll(true, 0);
       } else if (entry) {
         reset(getValues());
+        clearEdited();
         clearHistory();
       }
     } catch (error) {
@@ -418,58 +423,59 @@ const IngredientForm = ({
 
   return (
     <FormProvider {...methods}>
-      <FormHistoryContext.Provider value={history}>
-        <PanelChangesContext.Provider value={panels.context}>
-          {/* A variant's or a reference's removal question steps aside while
+      <EditedFieldsContext.Provider value={edited}>
+        <FormHistoryContext.Provider value={history}>
+          <PanelChangesContext.Provider value={panels.context}>
+            {/* A variant's or a reference's removal question steps aside while
           the unsaved changes' asks, drawn in the same place. */}
-          <DiscardAskingContext.Provider value={discard.asking}>
-            {/* Where each linked substitute's summary links its entry, read by
+            <DiscardAskingContext.Provider value={discard.asking}>
+              {/* Where each linked substitute's summary links its entry, read by
           the chips however deep their list sits (MB.115). */}
-            <EntryHrefContext.Provider value={entryHref}>
-              {/* `noValidate`: every refusal is the schema's, worded and placed like
+              <EntryHrefContext.Provider value={entryHref}>
+                {/* `noValidate`: every refusal is the schema's, worded and placed like
           the rest, rather than the browser's own bubble. */}
-              <form
-                ref={form}
-                className="form ingredient-form"
-                // Built in the event rather than in render: `save` reads a ref.
-                // Which button was pressed is the event's submitter; a submit with
-                // none, Enter in a field, is Save Ingredient's, the form's default.
-                onSubmit={(event) => {
-                  const submitter = (event.nativeEvent as SubmitEvent).submitter;
-                  next.current =
-                    submitter?.getAttribute('value') === 'another' ? 'another' : 'open';
-                  setPressed(next.current);
-                  setSaved(null);
-                  setRefusal(undefined);
-                  return handleSubmit(save)(event);
-                }}
-                noValidate
-              >
-                {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
-                {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
-                {refusal && <Notice kind="error">{refusal}</Notice>}
-                {/* The sections flush, between hairlines. The one control that
+                <form
+                  ref={form}
+                  className="form ingredient-form"
+                  // Built in the event rather than in render: `save` reads a ref.
+                  // Which button was pressed is the event's submitter; a submit with
+                  // none, Enter in a field, is Save Ingredient's, the form's default.
+                  onSubmit={(event) => {
+                    const submitter = (event.nativeEvent as SubmitEvent).submitter;
+                    next.current =
+                      submitter?.getAttribute('value') === 'another' ? 'another' : 'open';
+                    setPressed(next.current);
+                    setSaved(null);
+                    setRefusal(undefined);
+                    return handleSubmit(save)(event);
+                  }}
+                  noValidate
+                >
+                  {saved !== null && <Notice kind="success">Saved {saved}.</Notice>}
+                  {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
+                  {refusal && <Notice kind="error">{refusal}</Notice>}
+                  {/* The sections flush, between hairlines. The one control that
               opens or closes them all sits beside the modal's title, the
               owner's call (MB.115); outside a modal, at the end of the line
               above the first section. */}
-                <div className="ingredient-form__folds">
-                  {headerSlot ? (
-                    createPortal(foldAll, headerSlot)
-                  ) : (
-                    <div className="ingredient-form__fold-all">{foldAll}</div>
-                  )}
-                  {/* After Open All, so the header reads Open All, Undo, Redo. */}
-                  <FormHistoryButtons />
-                  <CollapsibleSection title="Identity" section="identity" fold={fold('identity')}>
-                    {/* Warns beneath it of the entries its name resembles (story 16),
+                  <div className="ingredient-form__folds">
+                    {headerSlot ? (
+                      createPortal(foldAll, headerSlot)
+                    ) : (
+                      <div className="ingredient-form__fold-all">{foldAll}</div>
+                    )}
+                    {/* After Open All, so the header reads Open All, Undo, Redo. */}
+                    <FormHistoryButtons />
+                    <CollapsibleSection title="Identity" section="identity" fold={fold('identity')}>
+                      {/* Warns beneath it of the entries its name resembles (story 16),
             and a save stops on the warning until it is answered. */}
-                    <NameField
-                      warning={duplicates}
-                      hrefOf={duplicateHref}
-                      holds={!editing}
-                      ref={createAnyway}
-                    />
-                    {/* The kind decides the formal name's error, so a change to it
+                      <NameField
+                        warning={duplicates}
+                        hrefOf={duplicateHref}
+                        holds={!editing}
+                        ref={createAnyway}
+                      />
+                      {/* The kind decides the formal name's error, so a change to it
             revalidates the formal name. A named kind marks it required;
             Unknown leaves it open and optional. A coven's formal name with no
             kind saves as unknown, so nothing marks the kind there (MB.161);
@@ -477,84 +483,84 @@ const IngredientForm = ({
             name at all, so choosing it empties the field and shuts it, with
             the reason in view rather than in a tip: a shut field that does
             not say why reads as broken. */}
-                    <SelectField<IngredientFormValues>
-                      name="nomenclature"
-                      label="Classification"
-                      hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
-                      placeholder="Choose a classification"
-                      options={NOMENCLATURE_OPTIONS}
-                      required={compendium}
-                      deps={['canonicalName']}
-                      onChange={(value) => {
-                        if (value === NAMELESS_KIND) setValue('canonicalName', '');
-                      }}
-                    />
-                    <TextField<IngredientFormValues>
-                      name="canonicalName"
-                      label="Formal Name"
-                      hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
-                      placeholder="Add formal name"
-                      note={
-                        kind === NAMELESS_KIND
-                          ? 'A "none" entry records no formal name.'
-                          : undefined
-                      }
-                      disabled={kind === NAMELESS_KIND}
-                      required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
-                    />
-                    {/* Suggests from this coven and the compendium (M4.7a): the folk
+                      <SelectField<IngredientFormValues>
+                        name="nomenclature"
+                        label="Classification"
+                        hint='Botanical for a plant, mineral for a stone, and so on. "Unknown" if you are not sure which, with or without a formal name. "None" takes no formal name.'
+                        placeholder="Choose a classification"
+                        options={NOMENCLATURE_OPTIONS}
+                        required={compendium}
+                        deps={['canonicalName']}
+                        onChange={(value) => {
+                          if (value === NAMELESS_KIND) setValue('canonicalName', '');
+                        }}
+                      />
+                      <TextField<IngredientFormValues>
+                        name="canonicalName"
+                        label="Formal Name"
+                        hint="Its name in the classification's own system: Lavandula angustifolia, Quartz var. amethyst, Sodium chloride."
+                        placeholder="Add formal name"
+                        note={
+                          kind === NAMELESS_KIND
+                            ? 'A "none" entry records no formal name.'
+                            : undefined
+                        }
+                        disabled={kind === NAMELESS_KIND}
+                        required={kind !== '' && kind !== NAMELESS_KIND && kind !== UNSETTLED_KIND}
+                      />
+                      {/* Suggests from this coven and the compendium (M4.7a): the folk
             names in use. The form is each variant's, beneath (MB.221). */}
-                    <LookupListField
-                      workspaceId={workspaceId}
-                      useSuggestions={useCommonNameSuggestions}
-                      name="folkNames"
-                      legend="Folk Names"
-                      entry="Folk Name"
-                      hint="Other names it goes by. A search finds it by any of them."
-                      placeholder="Add a folk name"
-                    />
-                  </CollapsibleSection>
-                  <CollapsibleSection
-                    title="Details & Care"
-                    section="details"
-                    fold={fold('details')}
-                  >
-                    <TextField<IngredientFormValues>
-                      name="description"
-                      label="Description"
-                      placeholder="What it is, where it comes from and how it is used"
-                      multiline
-                      // Seven lines, as each variant's Description (MB.115, the owner's call).
-                      rows={7}
-                    />
-                    <TextField<IngredientFormValues>
-                      name="safetyNotes"
-                      label="Safety Notes"
-                      hint="Toxicity, allergies, and anything to take care over when handling or burning it."
-                      placeholder="Add safety notes"
-                      multiline
-                    />
-                    {/* Its own flag: a toxic form says so on its own (M11.21). */}
-                    <ToggleField
-                      name="toxic"
-                      label="Toxic"
-                      hint="On if any part of it is poisonous."
-                    />
-                  </CollapsibleSection>
-                  <CollapsibleSection
-                    title="Correspondences"
-                    section="correspondences"
-                    fold={fold('correspondences')}
-                  >
-                    {/* Several at once, in the order chosen (MB.159); none chosen is
+                      <LookupListField
+                        workspaceId={workspaceId}
+                        useSuggestions={useCommonNameSuggestions}
+                        name="folkNames"
+                        legend="Folk Names"
+                        entry="Folk Name"
+                        hint="Other names it goes by. A search finds it by any of them."
+                        placeholder="Add a folk name"
+                      />
+                    </CollapsibleSection>
+                    <CollapsibleSection
+                      title="Details & Care"
+                      section="details"
+                      fold={fold('details')}
+                    >
+                      <TextField<IngredientFormValues>
+                        name="description"
+                        label="Description"
+                        placeholder="What it is, where it comes from and how it is used"
+                        multiline
+                        // Seven lines, as each variant's Description (MB.115, the owner's call).
+                        rows={7}
+                      />
+                      <TextField<IngredientFormValues>
+                        name="safetyNotes"
+                        label="Safety Notes"
+                        hint="Toxicity, allergies, and anything to take care over when handling or burning it."
+                        placeholder="Add safety notes"
+                        multiline
+                      />
+                      {/* Its own flag: a toxic form says so on its own (M11.21). */}
+                      <ToggleField
+                        name="toxic"
+                        label="Toxic"
+                        hint="On if any part of it is poisonous."
+                      />
+                    </CollapsibleSection>
+                    <CollapsibleSection
+                      title="Correspondences"
+                      section="correspondences"
+                      fold={fold('correspondences')}
+                    >
+                      {/* Several at once, in the order chosen (MB.159); none chosen is
             the answer "none", so there is no None to choose. */}
-                    <MultiSelectField
-                      name="elements"
-                      label="Element"
-                      placeholder="Add an element"
-                      options={ELEMENT_OPTIONS}
-                    />
-                    {/* Each list but the colours suggests (MB.131): celestial bodies, signs and
+                      <MultiSelectField
+                        name="elements"
+                        label="Element"
+                        placeholder="Add an element"
+                        options={ELEMENT_OPTIONS}
+                      />
+                      {/* Each list but the colours suggests (MB.131): celestial bodies, signs and
             deities from their curated vocabularies and the values in use, a
             pick adding the text, and a curated deity's a link to it as well
             (MB.169); substitutes from the compendium and this coven, a pick
@@ -564,163 +570,164 @@ const IngredientForm = ({
             colours and deities keep the order entered, so their entries move
             (MB.170); folk names and substitutes read alphabetically, so
             theirs do not. */}
-                    <LookupListField
-                      workspaceId={workspaceId}
-                      useSuggestions={useCelestialBodySuggestions}
-                      name="celestialBodies"
-                      ordered
-                      pickOnly={compendium}
-                      legend="Celestial Bodies"
-                      entry="Celestial Body"
-                      hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
-                      placeholder="Add a body"
-                    />
-                    <LookupListField
-                      workspaceId={workspaceId}
-                      useSuggestions={useZodiacSuggestions}
-                      name="zodiacSigns"
-                      ordered
-                      pickOnly={compendium}
-                      legend="Zodiac Signs"
-                      entry="Zodiac Sign"
-                      hint="The signs it answers to."
-                      placeholder="Add a sign"
-                    />
-                    <ListField
-                      name="colors"
-                      ordered
-                      legend="Colours"
-                      entry="Colour"
-                      hint="The colours it corresponds to in a working, not the colour it is."
-                      placeholder="Add a colour"
-                    />
-                    <LookupListField
-                      workspaceId={workspaceId}
-                      useSuggestions={useDeitySuggestions}
-                      name="deities"
-                      ordered
-                      pickOnly={compendium}
-                      legend="Deities"
-                      entry="Deity"
-                      hint="The gods and spirits it is sacred to."
-                      placeholder="Add a deity"
-                    />
-                  </CollapsibleSection>
-                  <CollapsibleSection
-                    title="Relations"
-                    section="relations"
-                    fold={fold('relations')}
-                  >
-                    {/* First in Relations, on the owner's call at MB.115 (MB.126 had put it
+                      <LookupListField
+                        workspaceId={workspaceId}
+                        useSuggestions={useCelestialBodySuggestions}
+                        name="celestialBodies"
+                        ordered
+                        pickOnly={compendium}
+                        legend="Celestial Bodies"
+                        entry="Celestial Body"
+                        hint="The heavenly bodies it answers to: the planets, the Sun and the Moon."
+                        placeholder="Add a body"
+                      />
+                      <LookupListField
+                        workspaceId={workspaceId}
+                        useSuggestions={useZodiacSuggestions}
+                        name="zodiacSigns"
+                        ordered
+                        pickOnly={compendium}
+                        legend="Zodiac Signs"
+                        entry="Zodiac Sign"
+                        hint="The signs it answers to."
+                        placeholder="Add a sign"
+                      />
+                      <ListField
+                        name="colors"
+                        ordered
+                        legend="Colours"
+                        entry="Colour"
+                        hint="The colours it corresponds to in a working, not the colour it is."
+                        placeholder="Add a colour"
+                      />
+                      <LookupListField
+                        workspaceId={workspaceId}
+                        useSuggestions={useDeitySuggestions}
+                        name="deities"
+                        ordered
+                        pickOnly={compendium}
+                        legend="Deities"
+                        entry="Deity"
+                        hint="The gods and spirits it is sacred to."
+                        placeholder="Add a deity"
+                      />
+                    </CollapsibleSection>
+                    <CollapsibleSection
+                      title="Relations"
+                      section="relations"
+                      fold={fold('relations')}
+                    >
+                      {/* First in Relations, on the owner's call at MB.115 (MB.126 had put it
             after the lists): every live category, picked from chips grouped by
             category group. */}
-                    <CategoryField />
-                    <LookupListField
-                      workspaceId={workspaceId}
-                      // Fixed for the form's life, since its tier is, so the hook called is always the same.
-                      useSuggestions={
-                        compendium ? useCompendiumSubstitutes : useSubstituteSuggestions
-                      }
-                      omit={entry?.id}
-                      name="substitutes"
-                      legend="Substitute Ingredients"
-                      entry="Substitute Ingredient"
-                      hint="Other ingredients to use in its place when this one is not to hand."
-                      placeholder="Add a substitute"
-                    />
-                    {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
-                    <SubstituteForms name="substitutes" />
-                  </CollapsibleSection>
-                  <CollapsibleSection title="Sources" section="sources" fold={fold('sources')}>
-                    {/* Last, as a bibliography is (MB.154): the sources picked, each
+                      <CategoryField />
+                      <LookupListField
+                        workspaceId={workspaceId}
+                        // Fixed for the form's life, since its tier is, so the hook called is always the same.
+                        useSuggestions={
+                          compendium ? useCompendiumSubstitutes : useSubstituteSuggestions
+                        }
+                        omit={entry?.id}
+                        name="substitutes"
+                        legend="Substitute Ingredients"
+                        entry="Substitute Ingredient"
+                        hint="Other ingredients to use in its place when this one is not to hand."
+                        placeholder="Add a substitute"
+                      />
+                      {/* Which form of each linked ingredient, when it comes in several (MB.215). */}
+                      <SubstituteForms name="substitutes" />
+                    </CollapsibleSection>
+                    <CollapsibleSection title="Sources" section="sources" fold={fold('sources')}>
+                      {/* Last, as a bibliography is (MB.154): the sources picked, each
             with its locator, and a panel for a new one. */}
-                    <ReferencesField workspaceId={workspaceId} />
-                  </CollapsibleSection>
-                  {/* After the ingredient's own fields, as the page shows its forms
+                      <ReferencesField workspaceId={workspaceId} />
+                    </CollapsibleSection>
+                    {/* After the ingredient's own fields, as the page shows its forms
             after it (MB.215): each form, and what it adds. */}
-                  <VariantsField
-                    workspaceId={workspaceId}
-                    fold={fold('variants')}
-                    folds={variantFolds}
-                  />
-                </div>
-                {/* Two saves, both held down from the press to the answer, the
+                    <VariantsField
+                      workspaceId={workspaceId}
+                      fold={fold('variants')}
+                      folds={variantFolds}
+                    />
+                  </div>
+                  {/* Two saves, both held down from the press to the answer, the
               duplicate check included: Save Ingredient, first and so the
               default Enter presses, opens what it made; Save & Add Another
               clears the form for the next. The one pressed says so, the
               owner's call during MB.131. An edit has the first alone, and
               Delete apart at the far end. */}
-                <FormActions
-                  noun="Ingredient"
-                  dirty={isDirty}
-                  submitting={isSubmitting}
-                  busy={busy('open')}
-                  saveValue="open"
-                  onCancel={onCancel && (() => discard.request(onCancel))}
-                  onDelete={
-                    editing
-                      ? () => {
-                          setRefusal(undefined);
-                          setDeleting(true);
-                        }
-                      : undefined
-                  }
-                >
-                  {!editing && (
-                    <BusyButton
-                      type="submit"
-                      value="another"
-                      disabled={!isDirty || isSubmitting}
-                      busy={busy('another')}
-                      busyLabel="Saving Ingredient"
-                    >
-                      Save & Add Another
-                    </BusyButton>
-                  )}
-                </FormActions>
-                {/* A question is asked over the form, centred in view however far
+                  <FormActions
+                    noun="Ingredient"
+                    dirty={isDirty}
+                    submitting={isSubmitting}
+                    busy={busy('open')}
+                    saveValue="open"
+                    onCancel={onCancel && (() => discard.request(onCancel))}
+                    onDelete={
+                      editing
+                        ? () => {
+                            setRefusal(undefined);
+                            setDeleting(true);
+                          }
+                        : undefined
+                    }
+                  >
+                    {!editing && (
+                      <BusyButton
+                        type="submit"
+                        value="another"
+                        disabled={!isDirty || isSubmitting}
+                        busy={busy('another')}
+                        busyLabel="Saving Ingredient"
+                      >
+                        Save & Add Another
+                      </BusyButton>
+                    )}
+                  </FormActions>
+                  {/* A question is asked over the form, centred in view however far
               the form is scrolled, the focus on Keep It (MB.115, the owner's
               call): the unsaved changes' first, then MB.82's, then Delete's. */}
-                {question ? (
-                  // MB.82: the address this save takes is another entry's redirect.
-                  // Asked before anything else is pressed; Keep It leaves the entry
-                  // as typed, unsaved.
-                  <ConfirmQuestion
-                    key="redirect"
-                    guard={discard}
-                    question={question.message}
-                    tone="solid"
-                    confirmLabel="End Redirect & Save"
-                    busyLabel="Saving Ingredient"
-                    busy={mutation.isPending}
-                    onConfirm={endRedirect}
-                    onKeep={() => setQuestion(null)}
-                  />
-                ) : (
-                  <ConfirmQuestion
-                    key="delete"
-                    guard={discard}
-                    asked={deleting}
-                    question={
-                      <>
-                        Delete &quot;{entry?.values.name}&quot;? It leaves the compendium, but any
-                        spell that uses it keeps it.
-                      </>
-                    }
-                    busy={remove.isPending}
-                    onConfirm={confirmDelete}
-                    onKeep={() => setDeleting(false)}
-                    onRefused={(message) => {
-                      setDeleting(false);
-                      setRefusal(message);
-                    }}
-                  />
-                )}
-              </form>
-            </EntryHrefContext.Provider>
-          </DiscardAskingContext.Provider>
-        </PanelChangesContext.Provider>
-      </FormHistoryContext.Provider>
+                  {question ? (
+                    // MB.82: the address this save takes is another entry's redirect.
+                    // Asked before anything else is pressed; Keep It leaves the entry
+                    // as typed, unsaved.
+                    <ConfirmQuestion
+                      key="redirect"
+                      guard={discard}
+                      question={question.message}
+                      tone="solid"
+                      confirmLabel="End Redirect & Save"
+                      busyLabel="Saving Ingredient"
+                      busy={mutation.isPending}
+                      onConfirm={endRedirect}
+                      onKeep={() => setQuestion(null)}
+                    />
+                  ) : (
+                    <ConfirmQuestion
+                      key="delete"
+                      guard={discard}
+                      asked={deleting}
+                      question={
+                        <>
+                          Delete &quot;{entry?.values.name}&quot;? It leaves the compendium, but any
+                          spell that uses it keeps it.
+                        </>
+                      }
+                      busy={remove.isPending}
+                      onConfirm={confirmDelete}
+                      onKeep={() => setDeleting(false)}
+                      onRefused={(message) => {
+                        setDeleting(false);
+                        setRefusal(message);
+                      }}
+                    />
+                  )}
+                </form>
+              </EntryHrefContext.Provider>
+            </DiscardAskingContext.Provider>
+          </PanelChangesContext.Provider>
+        </FormHistoryContext.Provider>
+      </EditedFieldsContext.Provider>
     </FormProvider>
   );
 };

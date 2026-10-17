@@ -174,6 +174,8 @@ describe('IngredientForm’s sections', () => {
     expect(toggle('Identity')).not.toHaveAttribute('aria-describedby');
 
     fireEvent.focus(control('Formal Name'));
+    type('Formal Name', 'x');
+    type('Formal Name', '');
     fireEvent.blur(control('Formal Name'));
 
     await waitFor(() => expect(control('Formal Name')).toBeInvalid());

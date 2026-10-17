@@ -16,7 +16,13 @@ import { CategoryField } from './categories';
 import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
 import FormIcon from '../FormIcon';
 import { EditIcon, RemoveIcon } from './icons';
-import { FieldError, TextField, errorShown, useSettledWhilePressed } from '../Field';
+import {
+  FieldError,
+  TextField,
+  errorShown,
+  useEditedFieldsContext,
+  useSettledWhilePressed,
+} from '../Field';
 import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
@@ -371,6 +377,7 @@ function VariantFieldset({
   const { control } = useFormContext<IngredientFormValues>();
   const variant = useWatch({ control, name: at });
   const { errors, isSubmitted, touchedFields } = useFormState({ control, name: at });
+  const edited = useEditedFieldsContext();
   const form = variant.form;
   const group = variant.formLink?.group ?? null;
   // Its form, as typed; a form emptied in its box still names the group.
@@ -391,7 +398,7 @@ function VariantFieldset({
   const erring = useSettledWhilePressed(
     variantSectionsWithErrors(
       get(errors, at),
-      (path) => errorShown({ isSubmitted, touchedFields }, path),
+      (path) => errorShown({ isSubmitted, touchedFields, edited }, path),
       `${at}.`,
     ),
   );
