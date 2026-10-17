@@ -139,7 +139,7 @@ export async function ingredientDetailOf(
 
   return {
     entry,
-    folkNames,
+    folkNames: folkNames.map(({ name }) => name),
     categories: withGroup(categories),
     deities: deities.map(({ name, deity }): DeityDetail => ({
       name,

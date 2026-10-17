@@ -9,6 +9,7 @@ import {
 import { ReferenceLinkRef } from './references';
 import { CategoryRef, DeityRef, IngredientFormValueRef } from '@/modules/vocabulary';
 import type {
+  FolkNameRow,
   IngredientDeityRow,
   IngredientRow,
   IngredientVariantRow,
@@ -76,6 +77,18 @@ export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').impl
         return variants.find((variant) => variant.id === variantId) ?? null;
       },
     }),
+  }),
+});
+
+/**
+ * One of an ingredient's alternative names. Its id is what promoting it
+ * names. No `audit`.
+ */
+export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement({
+  description: 'An alternative name for an ingredient.',
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    name: t.exposeString('name'),
   }),
 });
 
@@ -174,7 +187,8 @@ IngredientRef.implement({
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
     // The row is the loaders' key: they read `workspaceId` off it to know
     // which coven to check, and cache by `id`.
-    folkNames: t.stringList({
+    folkNames: t.field({
+      type: [FolkNameRef],
       resolve: (row, _args, { loaders }) => loaders.folkNamesByIngredient.load(row),
     }),
     categories: t.field({

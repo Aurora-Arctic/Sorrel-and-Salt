@@ -161,6 +161,12 @@ export interface IngredientChildren extends Pick<
  * and the curated deity picked, null on a typed name and once that deity or
  * its tradition is retired, when the row reads as its name.
  */
+/** One live folk name as `Ingredient.folkNames` reads it: the row's id, so it can be promoted, and its text. */
+export interface FolkNameRow {
+  id: string;
+  name: string;
+}
+
 export interface IngredientDeityRow {
   name: string;
   deity: DeityRow | null;
@@ -265,6 +271,7 @@ export interface VariantDetail {
  */
 export interface IngredientDetail {
   entry: IngredientRow;
+  /** Names only: the page displays them and promotes none. */
   folkNames: string[];
   categories: CategoryDetail[];
   deities: DeityDetail[];

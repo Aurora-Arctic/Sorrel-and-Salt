@@ -11,6 +11,7 @@ import {
 import { A, E, asUser } from '../support/as-user';
 import { curatedDeityId, curatedFormId } from '../support/db/curated-ids';
 import { useTestDatabase } from '../support/db/database';
+import { liveFolkNames } from '../support/db/folk-names';
 import { insertIngredient, insertVariant } from '../support/db/insert-ingredient';
 import { insertReference } from '../support/db/insert-reference';
 import { makeIngredient } from '../support/fixtures';
@@ -244,7 +245,10 @@ describe('entryValues', () => {
       ],
       description: 'An invented herb.',
       toxic: true,
-      folkNames: expect.arrayContaining([{ value: 'Test Root' }, { value: 'Fixture Leaf' }]),
+      folkNames: expect.arrayContaining([
+        { value: 'Test Root', id: expect.any(String) },
+        { value: 'Fixture Leaf', id: expect.any(String) },
+      ]),
       elements: ['spirit', 'air'],
       celestialBodies: [{ value: 'Venus' }, { value: 'Moon' }],
       zodiacSigns: [{ value: 'Taurus' }],
@@ -278,6 +282,11 @@ describe('entryValues', () => {
       categoryIds: [healing],
     });
     expect(values.folkNames).toHaveLength(2);
+    // Each carries the id of its live row, which promoting it names.
+    const live = await liveFolkNames(sql, created.id);
+    expect(values.folkNames).toEqual(
+      expect.arrayContaining(live.map(({ id, name }) => ({ value: name, id }))),
+    );
     expect(values.substitutes).toHaveLength(2);
     expect(values.variants[0]?.substitutes).toHaveLength(2);
   });

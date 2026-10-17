@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
+import { liveFolkNames } from '../../../support/db/folk-names';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { run as runOperation } from '../../../support/graphql/run';
 import {
@@ -48,7 +49,7 @@ const run = (
     session,
     `query ($workspaceId: ID!, $query: String, $form: String, $first: Int, $after: String) {
       ingredientSuggestions(workspaceId: $workspaceId, query: $query, form: $form, first: $first, after: $after) {
-        edges { cursor node { id name canonicalName isGlobal folkNames } }
+        edges { cursor node { id name canonicalName isGlobal folkNames { id name } } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
@@ -66,7 +67,7 @@ async function nodesFor(
 
 describe('ingredientSuggestions', () => {
   it('answers a member with ingredients, each carrying its formal name and tier', async () => {
-    await addIngredient({
+    const mugwort = await addIngredient({
       name: 'Mugwort',
       canonicalName: 'Artemisia vulgaris',
       folkNames: ['Cronewort'],
@@ -78,7 +79,7 @@ describe('ingredientSuggestions', () => {
         name: 'Mugwort',
         canonicalName: 'Artemisia vulgaris',
         isGlobal: true,
-        folkNames: ['Cronewort'],
+        folkNames: await liveFolkNames(sql, mugwort),
       }),
       expect.objectContaining({
         name: 'Mugwort Root',

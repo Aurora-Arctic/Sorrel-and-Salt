@@ -168,7 +168,7 @@ export async function entryValues(entry: IngredientRow): Promise<IngredientFormV
         references: only([variantReferences[i]]).map(referenceEntry),
       };
     }),
-    folkNames: folkNames.map((value) => ({ value })),
+    folkNames: folkNames.map(({ id, name }) => ({ value: name, id })),
     description: entry.description ?? '',
     elements: entry.elements ?? [],
     celestialBodies: entries(entry.celestialBodies),

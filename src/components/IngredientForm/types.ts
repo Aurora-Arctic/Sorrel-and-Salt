@@ -82,6 +82,14 @@ export interface ListEntry {
 }
 
 /**
+ * One folk name. `id` is the saved row's, which promoting it names; a name
+ * typed and not yet saved has none. Only the text is sent.
+ */
+export interface FolkNameListEntry extends ListEntry {
+  id?: string;
+}
+
+/**
  * The ingredient a substitute links, with the formal name its pill reads
  * beside the label, and what its tooltip adds: its form, its tier and its
  * description (MB.164). Only the id is sent.
@@ -207,7 +215,7 @@ export interface IngredientFormValues {
   name: string;
   nomenclature: NomenclatureKind | '';
   canonicalName: string;
-  folkNames: ListEntry[];
+  folkNames: FolkNameListEntry[];
   description: string;
   /** In the order chosen; none chosen is the answer "none". */
   elements: IngredientElement[];
