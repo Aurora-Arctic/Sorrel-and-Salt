@@ -1289,18 +1289,20 @@ test('a value with nothing behind it is left out of its facet, a chosen one keep
   await page.goto('/admin/compendium?query=Facetwort&forms=Facetform+Gamma');
   const panel = await openFilters(page);
   const toxic = panel.getByRole('group', { name: 'Toxic' });
-  // Why the segment could be missing for another reason: Not Toxic is there beside Any.
-  await expect(toxic.getByRole('radio', { name: 'Any' })).toBeVisible();
+  // Toxic is the exception: all three segments stay, and with one at zero the group rests on Any, disabled.
+  await expect(toxic.getByRole('radio', { name: /^Toxic \(0\)/ })).toBeVisible();
   await expect(toxic.getByRole('radio', { name: /^Not Toxic \(/ })).toBeVisible();
-  await expect(toxic.getByRole('radio', { name: /^Toxic \(/ })).toHaveCount(0);
+  await expect(toxic.getByRole('radio', { name: 'Any' })).toBeChecked();
+  await expect(toxic.getByRole('radio', { name: 'Any' })).toBeDisabled();
 
   // Toxic chosen, with Beta chosen before its count fell to zero: Beta keeps its chip,
   // Gamma (also zero now) is not offered, and Alpha (one toxic entry) is.
   await page.goto('/admin/compendium?query=Facetwort&forms=Facetform+Beta&toxic=toxic');
   await openFilters(page);
   await expect(page.getByRole('button', { name: 'Remove Form: Facetform Beta' })).toBeVisible();
+  // Beta holds no toxic entry, so Toxic reads zero and the group rests on Any, disabled.
   await expect(
-    page.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Toxic \(/ }),
+    page.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: 'Any' }),
   ).toBeChecked();
   await page.getByRole('combobox', { name: 'Forms', exact: true }).fill('Facetform');
   await expect(page.getByRole('option', { name: /^Facetform Alpha/ })).toHaveCount(1);

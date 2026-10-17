@@ -311,6 +311,48 @@ describe('FacetPanel', () => {
     rerender(<FacetPanel {...props({}, { admin: true })} />);
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
   });
+  describe('the Toxic field when a count is zero', () => {
+    const withToxic = (
+      toxic: CompendiumFacetCounts['toxic'],
+      filter: Partial<FacetPanelFilter> = {},
+    ) => {
+      stubViewport(true);
+      render(<FacetPanel {...props(filter, { facets: { ...FACETS, toxic } })} />);
+      fireEvent.click(filtersButton());
+    };
+    const group = () => screen.getByRole('group', { name: /^Toxic/ });
+
+    it('keeps all three segments, disables the group on Any and carries a hint when Toxic is zero', () => {
+      withToxic([
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not_toxic', label: 'Not Toxic', count: 9 },
+      ]);
+      expect(screen.getAllByRole('radio', { name: /^(Any|Toxic|Not Toxic)/ })).toHaveLength(3);
+      expect(screen.getByRole('radio', { name: /^Toxic \(0\)/ })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: /^Any/ })).toBeChecked();
+      expect(group()).toBeDisabled();
+      expect(group()).toHaveAccessibleDescription();
+    });
+
+    it('does the same when Not Toxic is zero, even if it was the chosen value', () => {
+      withToxic(
+        [
+          { value: 'toxic', label: 'Toxic', count: 4 },
+          { value: 'not_toxic', label: 'Not Toxic', count: 0 },
+        ],
+        { toxic: 'not_toxic' },
+      );
+      expect(screen.getByRole('radio', { name: /^Not Toxic \(0\)/ })).toBeInTheDocument();
+      expect(screen.getByRole('radio', { name: /^Any/ })).toBeChecked();
+      expect(group()).toBeDisabled();
+    });
+
+    it('is enabled, with no hint, when both counts are above zero', () => {
+      withToxic(FACETS.toxic);
+      expect(group()).toBeEnabled();
+      expect(group()).not.toHaveAccessibleDescription();
+    });
+  });
 
   it('reports a changed Toxic choice and No Refs as a patch of only that part', () => {
     stubViewport(true);

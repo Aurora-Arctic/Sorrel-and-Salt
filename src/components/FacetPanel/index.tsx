@@ -118,6 +118,8 @@ export default function FacetPanel({
   const count =
     chosen + (filter.toxic === '' ? 0 : 1) + (admin && filter.withoutReferences ? 1 : 0);
 
+  const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
+
   // Focus goes back to the button when it was inside the panel, so that a closing panel
   // never leaves it on a control that is about to disappear.
   const returnFocus = () => {
@@ -357,17 +359,22 @@ export default function FacetPanel({
                   layout="segmented"
                   options={[
                     { value: '', label: 'Any' },
-                    // A segment with nothing behind it is left out, unless chosen; with
-                    // none left, Any stands alone.
-                    ...facets.toxic
-                      .filter((choice) => choice.count > 0 || choice.value === filter.toxic)
-                      .map((choice) => ({
-                        value: choice.value,
-                        label: choice.label,
-                        count: choice.count,
-                      })),
+                    ...facets.toxic.map((choice) => ({
+                      value: choice.value,
+                      label: choice.label,
+                      count: choice.count,
+                    })),
                   ]}
-                  value={filter.toxic}
+                  // Toxic is the one facet that keeps a zero-count value: all three
+                  // segments always show. With either side empty, every matching entry
+                  // shares one toxicity, so the field rests on Any and cannot narrow.
+                  value={toxicStuck ? '' : filter.toxic}
+                  disabled={toxicStuck}
+                  hint={
+                    toxicStuck
+                      ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
+                      : undefined
+                  }
                   onChange={(toxic) => onChange({ toxic })}
                 />
               </div>
