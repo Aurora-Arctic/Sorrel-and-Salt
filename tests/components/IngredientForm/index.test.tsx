@@ -18,8 +18,15 @@ import type {
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { box, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
-import { choose, press, type } from '../../support/interact';
+import {
+  box,
+  chooseKind,
+  inPanel,
+  renderWithClient,
+  textbox,
+  waitFor,
+} from '../../support/ingredient-form';
+import { choose, press, redo, type, typeIn, undo } from '../../support/interact';
 import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import {
   WORKSPACE_ID,
@@ -75,6 +82,9 @@ const addEntry = (entry: string, value: string) => {
 };
 const removeButton = (value: string) =>
   screen.getByLabelText(`Remove ${value}`, { selector: 'button' });
+
+/** Lets the step a change opened close, as the gap between two real actions does. */
+const settle = () => act(async () => {});
 
 /** The control is flagged invalid and described, the error read with it. */
 function expectErrorOn(control: HTMLElement) {
@@ -707,6 +717,84 @@ describe('IngredientForm', () => {
       choose('Classification', 'Unknown');
       type('Formal Name', 'Fixtura testalis');
       expect(select('Classification')).not.toBeRequired();
+    });
+  });
+
+  // Undo and redo (M12.10): the hook is tested in tests/components/Field; this
+  // is its wiring in the form.
+  describe('its undo and redo', () => {
+    it('undoes a classification pick together with the formal name it emptied, focusing Classification, and redoes both', async () => {
+      renderForm();
+      type('Name', 'Testwort');
+      type('Formal Name', 'Fixtura testalis');
+      await settle();
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).toHaveValue('');
+      act(() => textbox('Name').focus());
+
+      undo();
+
+      expect(textbox('Formal Name')).toHaveValue('Fixtura testalis');
+      expect(textbox('Formal Name')).toBeEnabled();
+      expect(select('Classification')).not.toHaveTextContent('None');
+      expect(select('Classification')).toHaveFocus();
+
+      redo();
+
+      expect(select('Classification')).toHaveTextContent('None');
+      expect(textbox('Formal Name')).toHaveValue('');
+      expect(textbox('Formal Name')).toBeDisabled();
+    });
+
+    it('undoes a chip removal and redoes it', async () => {
+      renderForm();
+      addEntry('Celestial Body', 'Mercury');
+      addEntry('Celestial Body', 'Venus');
+      await settle();
+      fireEvent.click(removeButton('Mercury'));
+      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
+
+      undo();
+
+      expect(removeButton('Mercury')).toBeInTheDocument();
+      expect(removeButton('Venus')).toBeInTheDocument();
+
+      redo();
+
+      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
+      expect(removeButton('Venus')).toBeInTheDocument();
+    });
+
+    it('undoes nothing after Save & Add Another has cleared the form', async () => {
+      acceptCreate();
+      const onSaved = renderForm();
+      type('Name', 'Testwort');
+      saveAnother();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
+
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      undo();
+
+      expect(textbox('Name')).toHaveValue('');
+    });
+
+    it('reads a chord inside the new reference panel as the panel\u2019s own, leaving the form\u2019s history alone', async () => {
+      renderForm();
+      type('Name', 'Testwort');
+      await settle();
+      fireEvent.click(box('Reference'));
+      fireEvent.click(await screen.findByRole('option', { name: 'New Reference\u2026' }));
+      chooseKind('Book');
+      const title = inPanel('Title');
+      act(() => title.focus());
+      typeIn(title, 'Fixture Notes');
+      expect(title).toHaveValue('Fixture Notes');
+
+      undo();
+
+      expect(inPanel('Title')).toHaveValue('');
+      expect(textbox('Name')).toHaveValue('Testwort');
     });
   });
 
