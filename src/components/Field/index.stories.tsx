@@ -227,6 +227,27 @@ export const RadioSegmented: Story = () => {
   );
 };
 
+// A segmented group disabled as a whole, as the compendium filter's Toxic is when every
+// matching entry shares one toxicity: dashed borders, no hover, Any selected, a hint why.
+export const RadioSegmentedDisabled: Story = () => (
+  <div className="form" style={{ maxWidth: '24rem' }}>
+    <RadioGroupField<string>
+      legend="Toxic"
+      name="toxic-disabled"
+      layout="segmented"
+      disabled
+      hint="Every matching entry shares the same toxicity, so this filter cannot narrow further."
+      value="any"
+      onChange={() => {}}
+      options={[
+        { value: 'any', label: 'Any' },
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not-toxic', label: 'Not Toxic', count: 8 },
+      ]}
+    />
+  </div>
+);
+
 // A form's row of actions: Save off until there is something to save, then
 // on, then busy; Cancel quiet; Delete apart at the far end on an edit; and a
 // form that sends rather than saves, its submit renamed.

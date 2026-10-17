@@ -1787,6 +1787,26 @@
     }
   }
 
+  // A disabled segmented group (the filter's Toxic when every matching entry shares one
+  // toxicity) reads as settled, not merely dimmed: dashed borders and dividers say "not a
+  // control right now", and hover gives no hint that a segment can be pressed. Keyed on the
+  // fieldset's own disabled state, so a group disabled by its caller gets it too.
+  .fieldset.radio-group--segmented:disabled .radio-strip--text {
+    border-style: dashed;
+
+    > .radio--segment {
+      cursor: default;
+
+      &:not(:first-child) {
+        border-inline-start-style: dashed;
+      }
+
+      &:hover:not(:has(input:checked)) {
+        background-color: transparent;
+      }
+    }
+  }
+
   .radio--text {
     inline-size: auto;
     // Inside the bar's own 1px border, so the bar stands a control's height.
