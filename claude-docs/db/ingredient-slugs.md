@@ -84,8 +84,9 @@ follows is what exists.
   through `existsIn`, so a soft-deleted one answers nothing. `excluding`
   leaves one entry out on both sides, as the one that moved and as the one
   holding the slug.
-- **`resolveCompendiumSlug(slug)` is the public route's one read,** taking no
-  session: the live entry at `slug` (`findCompendiumEntryBySlug`), with
+- **`resolveCompendiumSlug(slug)` answers the public route's address,** taking no
+  session, beneath `readCompendiumEntry` (M8.19), the cached read the page
+  makes: the live entry at `slug` (`findCompendiumEntryBySlug`), with
   `movedAway` naming an entry whose redirect from it would still be running
   but for this one, else `{ kind: 'moved', slug }` for a 308 to the current
   slug, else `NotFound` — a coven's slug included, since a coven entry's
