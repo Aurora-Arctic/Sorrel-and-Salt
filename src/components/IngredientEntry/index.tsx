@@ -294,23 +294,24 @@ const IngredientEntry = ({
       }
     >
       <header className="ingredient-entry__head">
-        <PageHeader
-          title={entry.name}
-          action={
-            edit && (
-              <Link className="btn" href={edit.href}>
-                Edit
-              </Link>
-            )
-          }
-        />
+        {/* The formal name to the right of the heading, and Edit at the far
+            end of the line, after it (the owner's calls), so Edit is this
+            row's and not the header's action. */}
+        <div className="ingredient-entry__title">
+          <PageHeader title={entry.name} />
+          <FormalName entry={entry} />
+          {edit && (
+            <Link className="btn" href={edit.href}>
+              Edit
+            </Link>
+          )}
+        </div>
         {(local || toxic) && (
           <div className="badges">
             {local && <span className="badge badge--local">Local</span>}
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}
-        <FormalName entry={entry} />
         {canonical && (
           <p className="ingredient-entry__canonical">
             <Link href={canonical}>View in the Compendium</Link>

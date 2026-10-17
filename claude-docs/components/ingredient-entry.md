@@ -14,7 +14,7 @@ The route gives the page's `<main>`. The component's root is an `<article class=
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `detail`    | The entry, its folk names, categories with their groups, deities, substitutes, and one `VariantDetail` per live form in form order                         |
 | `hrefOf`    | `(ingredient: { id, slug, workspaceId }) => Route \| undefined`: where a linked substitute's page is. `undefined` sets the name as text                    |
-| `edit`      | `{ href: Route }`: an Edit link, as the page header's action. Left out, no Edit. There is never a Delete here: M8.15, folded into M8.19, offers it nowhere |
+| `edit`      | `{ href: Route }`: an Edit link, at the end of the title row. Left out, no Edit. There is never a Delete here: M8.15, folded into M8.19, offers it nowhere |
 | `movedAway` | `{ name, href: Route }`: the entry that moved off this address while its redirect is still served (MB.82), linked at its page now                          |
 | `canonical` | `Route`: the public page of a compendium entry, shown as a "View in the Compendium" link. The coven route passes it for a compendium entry                 |
 
@@ -25,9 +25,8 @@ Every address is typed as Next's `Route`, as other components' `href` props are,
 In page order, with the accessible names a test or a story walk finds them by:
 
 1. **The head**, a `<header>` inside the article:
-   - `PageHeader`: the `h1` is `entry.name`; `edit` puts a `.btn` link named **Edit** at the end of its line.
+   - The title row (`__title`): `PageHeader`, whose `h1` is `entry.name`, then the formal name (below) right-aligned with its bottom on the heading's, then `edit`'s `.btn` link named **Edit** at the far end of the line — the row's own, not the header's action, so it stays after the formal name. From the tablet width up the head keeps to the text column (the section grid's first column), so the formal name ends where the description's text does.
    - A `.badges` row, drawn only when it holds something: **Local** (`.badge--local`) when `entry.workspaceId` is set, then `ToxicMark` for the entry and every form, so a toxic form marks the entry though the ingredient is not.
-   - The formal name (below).
    - `canonical`: a link named **View in the Compendium**.
    - `movedAway`: a quiet warning `Notice`, a `status`, holding a link named after the moved entry.
 2. **The jump menu**: `PageNav`, a `navigation` named **On this page**, with **Details** (`#details`) at the top level, then the forms grouped under a **Forms** label: a nested `list` named **Forms**, one entry per form, labelled with the form capitalised (`#form-oil`). The grouping is `PageNav`'s `group` ([`page-nav.md`](page-nav.md)), so the ingredient reads apart from its forms. Drawn only when there is a form: with none there is nowhere to jump.

@@ -54,8 +54,22 @@ $side-column: calc(#{space(8)} * 5);
   @include stack(3);
 }
 
-.ingredient-entry__head .page-header {
-  margin: 0;
+// The heading, then the formal name and Edit at the line's end; the
+// header's row is contained for size, so it is told to take the room.
+.ingredient-entry__title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(3) space(5);
+  align-items: end;
+
+  > .page-header {
+    flex: 1 1 0;
+    margin: 0;
+  }
+}
+
+.ingredient-entry__formal {
+  text-align: end;
 }
 
 // A section: its heading, its text (description and caution), then its side
@@ -111,6 +125,18 @@ $side-column: calc(#{space(8)} * 5);
   .ingredient-entry__side {
     grid-column: 2;
     margin-block-start: 0;
+  }
+
+  // The head keeps to the text column, so the formal name's right edge is
+  // the text's, not the side column's.
+  .ingredient-entry__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    column-gap: space(8);
+
+    > * {
+      grid-column: 1;
+    }
   }
 }
 

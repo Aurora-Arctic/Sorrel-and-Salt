@@ -48,8 +48,10 @@
     // the menu and does not read as the last entry's caption.
     margin-block-start: space(5);
     padding: space(1) space(4);
-    font-size: type-size('overline');
-    font-weight: 500;
+    // A size above the eyebrow's and the body's thin weight, not the
+    // eyebrow's medium: a label over the entries, lighter than any of them.
+    font-size: type-size('small');
+    font-weight: 300;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: $text-muted;
