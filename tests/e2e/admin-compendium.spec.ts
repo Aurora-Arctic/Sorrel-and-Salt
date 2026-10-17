@@ -999,10 +999,6 @@ async function seedFacetworts(userId: string) {
   }
 }
 
-const facetRow = (page: Page, letter: string) =>
-  page.getByRole('link', { name: `Edit Facetwort ${letter}` });
-
-/** The letters of the Facetworts listed, in the order shown. */
 /** Picks a segmented choice by clicking its label: the native radio under a segment is drawn invisible, so a click on the input itself finds the label in the way. */
 async function choose(radio: Locator): Promise<void> {
   await radio.locator('xpath=ancestor::label[1]').click();
@@ -1273,6 +1269,66 @@ test('the sentence is a status region that follows each change without links', a
   await expect(sentence.getByRole('link')).toHaveCount(0);
 });
 
+// Zero-count values are left out of every facet, and a value chosen before its count fell to
+// zero keeps its chip. Beta is held by B alone and Gamma by C alone; only D is toxic.
+test('a value with nothing behind it is left out of its facet, a chosen one keeping its chip', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'facet-zeros@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  await seedFacetworts(userId);
+
+  // Gamma chosen: no toxic entry holds it, so the Toxic segment has nothing behind it.
+  await page.goto('/admin/compendium?query=Facetwort&forms=Facetform+Gamma');
+  const panel = await openFilters(page);
+  const toxic = panel.getByRole('group', { name: 'Toxic' });
+  // Why the segment could be missing for another reason: Not Toxic is there beside Any.
+  await expect(toxic.getByRole('radio', { name: 'Any' })).toBeVisible();
+  await expect(toxic.getByRole('radio', { name: /^Not Toxic \(/ })).toBeVisible();
+  await expect(toxic.getByRole('radio', { name: /^Toxic \(/ })).toHaveCount(0);
+
+  // Toxic chosen, with Beta chosen before its count fell to zero: Beta keeps its chip,
+  // Gamma (also zero now) is not offered, and Alpha (one toxic entry) is.
+  await page.goto('/admin/compendium?query=Facetwort&forms=Facetform+Beta&toxic=toxic');
+  await openFilters(page);
+  await expect(page.getByRole('button', { name: 'Remove Form: Facetform Beta' })).toBeVisible();
+  await expect(
+    page.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Toxic \(/ }),
+  ).toBeChecked();
+  await page.getByRole('combobox', { name: 'Forms', exact: true }).fill('Facetform');
+  await expect(page.getByRole('option', { name: /^Facetform Alpha/ })).toHaveCount(1);
+  await expect(page.getByRole('option', { name: /^Facetform Gamma/ })).toHaveCount(0);
+});
+
+test('Filters counts every chosen value', async ({ page }) => {
+  const { userId } = await signInAs(
+    page,
+    'facet-tally@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  await seedFacetworts(userId);
+  await page.goto('/admin/compendium?query=Facetwort');
+  const panel = await openFilters(page);
+  // Two chosen values of one facet, each applied before the next so the second is still offered.
+  await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
+  await applyFilters(page);
+  await openFilters(page);
+  await pick(page, 'Forms', 'Facetform Beta', /^Facetform Beta/);
+  await choose(
+    panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Not Toxic \(/ }),
+  );
+  await applyFilters(page);
+  // Why two forms and a Toxic choice could be counted as two: the address holds both forms.
+  await expect(page).toHaveURL(/forms=Facetform(\+|%20)Alpha&forms=Facetform(\+|%20)Beta/);
+  await expect(page).toHaveURL(/toxic=not_toxic/);
+  await expect(page.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters (3)');
+});
+
 test('Clear All resets the filter, the name included', async ({ page }) => {
   const { userId } = await signInAs(
     page,
@@ -1283,7 +1339,7 @@ test('Clear All resets the filter, the name included', async ({ page }) => {
   await seedFacetworts(userId);
   await page.goto('/admin/compendium?query=Facetwort&forms=Facetform+Alpha&toxic=toxic');
   const button = page.getByRole('button', { name: /^Filters/ });
-  // Two facets in use; the name is not counted.
+  // Two chosen values in use (a form and Toxic); the name is not counted.
   await expect(button).toHaveAccessibleName('Filters (2)');
   await expect.poll(() => listed(page)).toBe('D');
 
