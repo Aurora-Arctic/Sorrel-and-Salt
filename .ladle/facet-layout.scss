@@ -1,0 +1,144 @@
+@use '../src/scss/variables' as *;
+@use '../src/scss/mixins' as *;
+
+// A mock-up for the owner's sign-off of M12.4's filter layout (layout C in
+// claude-docs/design-decisions/m12.4-filter-layout.md). Layout only, tokens
+// only: it is replaced by the real build once the layout is agreed.
+
+.facet-layout {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+}
+
+.facet-layout__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+  align-items: flex-start;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.facet-layout__grow {
+  flex: 1 1 20rem;
+}
+
+.facet-layout__toxic {
+  display: flex;
+  gap: space(4);
+
+  .radio {
+    white-space: nowrap;
+  }
+}
+
+.facet-layout__more {
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+  padding: space(3) space(4);
+
+  > summary {
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  &[open] > summary {
+    margin-bottom: space(4);
+  }
+}
+
+.facet-layout__panel {
+  display: grid;
+  gap: space(4);
+  grid-template-columns: 1fr;
+
+  @media (min-width: $shell-tablet-width) {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.facet-layout__wide {
+  @media (min-width: $shell-tablet-width) {
+    grid-column: 1 / -1;
+  }
+}
+
+.facet-layout__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+// A chip that is a native checkbox: the box stays, so the keyboard and a
+// screen reader get the real control, and the chip fills while it is on.
+.facet-layout__chip {
+  @include chip($dark: $accent, $light: $accent);
+  gap: space(2);
+  cursor: pointer;
+
+  &:has(input:checked) {
+    @include chip($dark: $accent, $light: $accent, $state: selected);
+    gap: space(2);
+  }
+
+  &:has(input:disabled) {
+    opacity: 0.5;
+    border-style: dashed;
+    cursor: default;
+  }
+}
+
+.facet-layout__count {
+  color: $text-muted;
+}
+
+.facet-layout__apply {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+  align-items: center;
+
+  @media (max-width: $shell-tablet-width) {
+    position: sticky;
+    bottom: 0;
+    padding: space(3) 0;
+    background-color: $surface-page;
+    border-top: 1px solid $hairline;
+  }
+}
+
+.facet-layout__sentence {
+  margin: 0;
+}
+
+.facet-layout__results {
+  @include list-reset;
+  display: flex;
+  flex-direction: column;
+  gap: space(3);
+}
+
+.facet-layout__result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2) space(4);
+  align-items: baseline;
+  padding: space(3);
+  background-color: $surface-card;
+  border-radius: radius('surface');
+}
+
+// A count on a filled chip keeps the chip's own label colour, not the muted one.
+.facet-layout__chip:has(input:checked) .facet-layout__count {
+  color: inherit;
+}
+
+.facet-layout__sentence {
+  margin-block: space(4);
+}
