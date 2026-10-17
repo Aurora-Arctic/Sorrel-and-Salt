@@ -493,7 +493,8 @@ test('?elements= in the address filters the list, survives the pager and another
     await sql.end();
   }
 
-  const row = (n: number) => page.getByRole('link', { name: `Edit Elementwort ${n}` });
+  const row = (n: number) =>
+    page.getByRole('link', { name: `Edit Elementwort ${String(n).padStart(2, '0')}` });
   const main = page.getByRole('main');
 
   // One element finds an entry holding it among others; two find either.
