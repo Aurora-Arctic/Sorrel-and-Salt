@@ -277,10 +277,19 @@
 }
 
 // Alternative F: B's left column from the tablet width up, D's tray below it, on a
-// native <dialog>. Rendered open in place (the column, and the no-JavaScript page);
-// the script then closes it below the tablet width and opens it as a modal sheet.
+// native <dialog>. The dialog is never given `open` for the column: from the tablet
+// width up the rules below lay it out in place whether or not it is open, so
+// nothing takes the focus on load. Below it, script opens it with showModal()
+// (the top layer), which is why the results never stack over it.
 .facet-layout__side {
   min-width: 0;
+}
+
+.facet-layout__split--tray {
+  @media (min-width: $shell-tablet-width) {
+    // Wide enough for Match and Toxic (with its counts) to share a row.
+    grid-template-columns: minmax(18rem, 28rem) minmax(0, 1fr);
+  }
 }
 
 .facet-layout__sheet {
@@ -306,6 +315,7 @@
     border-left: 1px solid $hairline;
   }
 
+  // Closed below the tablet width until a script opens it as a modal.
   &:not([open]) {
     display: none;
   }
@@ -314,9 +324,13 @@
     background-color: color-mix(in srgb, $surface-page 75%, transparent);
   }
 
-  // The open dialog's built-in styles float it (absolute, shrunk to its content);
-  // in the column it is an ordinary block.
+  // The column. The UA's styles float a dialog (absolute, shrunk to its content);
+  // here it is an ordinary block, shown without `open`.
   @media (min-width: $shell-tablet-width) {
+    &:not([open]) {
+      display: flex;
+    }
+
     position: static;
     inline-size: auto;
     max-inline-size: none;
@@ -325,11 +339,36 @@
   }
 }
 
-// What exists only for the sheet: the title and Close, and the chips (the column
-// shows its chosen values in the controls and the sentence).
-.facet-layout__sheet-open,
-.facet-layout__sheet-only {
+// The column folded: no column, the Filters button and the chips take its place.
+.facet-layout__split--collapsed {
   @media (min-width: $shell-tablet-width) {
+    grid-template-columns: minmax(0, 1fr);
+
+    .facet-layout__side .facet-layout__sheet {
+      display: none;
+    }
+
+    .facet-layout__bar > .facet-layout__grow {
+      flex: 0 1 32rem;
+    }
+  }
+}
+
+// What exists only for the sheet: the Filters button, its Close buttons and the chips.
+// The open column hides them (it shows its chosen values in the controls); the folded
+// one keeps the button and the chips, since it has nothing else to say what is chosen.
+.facet-layout__split:not(.facet-layout__split--collapsed) {
+  .facet-layout__sheet-open,
+  .facet-layout__sheet-only {
+    @media (min-width: $shell-tablet-width) {
+      display: none;
+    }
+  }
+}
+
+// What exists only in the open column: Hide Filters.
+.facet-layout__column-only {
+  @media not all and (min-width: $shell-tablet-width) {
     display: none;
   }
 }
@@ -346,4 +385,137 @@
     padding: 0;
     border-top: 0;
   }
+}
+
+// The primitive centres a switch; in the column No Refs sits at the left like the fields above it.
+.facet-layout__panel .field.switch {
+  align-items: flex-start;
+
+  .field__label {
+    text-align: start;
+  }
+}
+
+// Match and Toxic on one row, wrapping where the column is too narrow for both.
+.facet-layout__pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+  align-items: flex-start;
+}
+
+// Clear All ends the chip row.
+.facet-layout__chosen-clear {
+  align-self: center;
+  margin-inline-start: space(2);
+}
+
+// The compact sentences. The visually hidden one is still the status region.
+.facet-layout__sr {
+  @include visually-hidden;
+}
+
+.facet-layout__count-line {
+  margin: 0;
+}
+
+.facet-layout__disclosure {
+  > summary {
+    cursor: pointer;
+    width: fit-content;
+  }
+
+  > p {
+    margin-block: space(2) 0;
+  }
+
+  &[open] .facet-layout__chevron {
+    display: inline-block;
+    rotate: 180deg;
+  }
+}
+
+.facet-layout__sentence--tip {
+  position: relative;
+
+  // The sentence is longer than a hint: wider than the primitive's default.
+  .info-tip__bubble {
+    box-sizing: border-box;
+    max-width: min(30rem, 100%);
+    white-space: normal;
+  }
+}
+
+// The typed sentence. The count line and the typed text share one grid cell so the
+// fade is a crossfade; the untyped rest of the sentence keeps its place, invisible,
+// so the lines do not reflow as it types.
+.facet-layout__mock-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  margin-block-end: space(3);
+}
+
+.facet-layout__swap {
+  display: grid;
+
+  > * {
+    grid-area: 1 / 1;
+    margin: 0;
+  }
+}
+
+.facet-layout__swap-count {
+  opacity: 1;
+  transition: opacity 400ms ease;
+
+  &--off {
+    opacity: 0;
+  }
+}
+
+.facet-layout__typed {
+  opacity: 1;
+  transition: opacity 400ms ease;
+
+  &--out {
+    opacity: 0;
+  }
+}
+
+.facet-layout__untyped {
+  visibility: hidden;
+}
+
+.facet-layout__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-inline: 1px;
+  vertical-align: text-bottom;
+  background-color: currentcolor;
+  animation: facet-layout-caret 1s steps(1) infinite;
+}
+
+@keyframes facet-layout-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+@include reduced-motion {
+  .facet-layout__caret {
+    animation: none;
+  }
+
+  .facet-layout__swap-count,
+  .facet-layout__typed {
+    transition: none;
+  }
+}
+
+// The Filters button keeps to one line: a count in it does not wrap on a phone.
+.facet-layout__sheet-open {
+  flex: none;
+  white-space: nowrap;
 }

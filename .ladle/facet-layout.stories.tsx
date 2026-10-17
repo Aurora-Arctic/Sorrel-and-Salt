@@ -3,7 +3,7 @@ import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState }
 import { AdminFrame } from './admin-frame';
 import CategoryPicker from '../src/components/CategoryPicker';
 import type { PickerCategory } from '../src/components/CategoryPicker/types';
-import Combobox from '../src/components/Combobox';
+import Combobox, { ComboboxEntry } from '../src/components/Combobox';
 import type { ComboboxOption } from '../src/components/Combobox/types';
 import {
   FieldShell,
@@ -13,6 +13,7 @@ import {
   SwitchField,
 } from '../src/components/Field';
 import FormIcon from '../src/components/FormIcon';
+import InfoTip from '../src/components/InfoTip';
 import PageHeader from '../src/components/PageHeader';
 import { COMPENDIUM_PATH } from '../src/components/CompendiumList/href';
 import { NOMENCLATURE_OPTIONS } from '../src/components/IngredientForm/options';
@@ -116,6 +117,7 @@ function Typeahead({
   chosen,
   onChange,
   iconOf,
+  countChips = false,
 }: {
   label: string;
   placeholder: string;
@@ -123,6 +125,8 @@ function Typeahead({
   chosen: string[];
   onChange: (next: string[]) => void;
   iconOf?: (value: string) => ReactNode;
+  /** Layout F: each chip reads its count too, "Oil (12)", as its option did. */
+  countChips?: boolean;
 }): ReactElement {
   const [text, setText] = useState('');
   const field = fieldDescription({ id: useId() });
@@ -161,7 +165,11 @@ function Typeahead({
                 <li key={value} className="combobox__entry">
                   <span className="combobox__entry-label">
                     {iconOf?.(value)}
-                    <span className="combobox__entry-text">{value}</span>
+                    <span className="combobox__entry-text">
+                      {countChips
+                        ? `${value} (${options.find((option) => option.value === value)?.count ?? 0})`
+                        : value}
+                    </span>
                   </span>
                   <button
                     type="button"
@@ -184,6 +192,90 @@ function Typeahead({
         }}
       />
     </FieldShell>
+  );
+}
+
+const CATEGORY_COUNTS: Record<string, number> = { 'c-1': 14, 'c-2': 9, 'c-3': 11 };
+const TOXIC_COUNTS = { toxic: 4, 'not-toxic': 8 };
+
+type CountedCategory = ComboboxOption & { category: PickerCategory };
+
+/**
+ * Layout F's Categories box: the real CategoryPicker with a count after each name,
+ * in the options and on the chips. The picker takes no counts yet, so the mock
+ * composes the same Combobox and entries rather than change the component.
+ */
+function CountedCategories({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (next: string[]) => void;
+}): ReactElement {
+  const id = useId();
+  const [text, setText] = useState('');
+  const withCount = (category: PickerCategory) =>
+    `${category.name} (${CATEGORY_COUNTS[category.id] ?? 0})`;
+  const options: CountedCategory[] = CATEGORIES.filter(
+    (category) =>
+      !value.includes(category.id) &&
+      category.name.toLowerCase().includes(text.trim().toLowerCase()),
+  )
+    .sort((a, b) => a.group.name.localeCompare(b.group.name) || a.name.localeCompare(b.name))
+    .map((category) => ({
+      value: category.name,
+      label: withCount(category),
+      key: category.id,
+      heading: category.group.name,
+      colors: category.group,
+      category,
+    }));
+  const add = (category: PickerCategory) => {
+    onChange([...value, category.id]);
+    setText('');
+  };
+  return (
+    <fieldset className="fieldset category-picker" aria-labelledby={`${id}-legend`}>
+      <legend className="fieldset__legend category-picker__legend">
+        <span id={`${id}-legend`}>Categories</span>
+      </legend>
+      <Combobox<CountedCategory>
+        id={`${id}-box`}
+        label="Category"
+        value={text}
+        onChange={setText}
+        onPick={(_, option) => {
+          if (option) add(option.category);
+        }}
+        onRemoveLast={() => onChange(value.slice(0, -1))}
+        suggestions={{ options, pending: false }}
+        offerTyped={false}
+        placeholder="Add Category"
+        entries={
+          value.length > 0 && (
+            <ul className="combobox__entries">
+              {value.map((categoryId) => {
+                const category = CATEGORIES.find((other) => other.id === categoryId);
+                return (
+                  <ComboboxEntry
+                    key={categoryId}
+                    value={category ? withCount(category) : categoryId}
+                    qualifier={category?.group.name}
+                    colors={category?.group}
+                    onRemove={() => onChange(value.filter((other) => other !== categoryId))}
+                  />
+                );
+              })}
+            </ul>
+          )
+        }
+        clear={{
+          label: 'Clear Categories',
+          empty: value.length === 0,
+          onClear: () => onChange([]),
+        }}
+      />
+    </fieldset>
   );
 }
 
@@ -226,6 +318,186 @@ function Strip<T extends string>({
   );
 }
 
+// The sentence-typed mock: while a search runs the sentence types itself out as the
+// loading animation, then finishes quickly on return, holds, and fades into the
+// count line. The typed element is aria-hidden; the real status region (visually
+// hidden) is given the finished sentence once, on return. The search is faked with
+// two buttons, so the owner can see a slow one (the typing finishes first and waits)
+// and a fast one (the typing speeds up to finish).
+const SEARCHING = 'Searching for ingredients';
+const COUNT_LEAD = '12 ingredients';
+const TYPED_REST: { text: string; strong?: boolean }[] = [
+  { text: ' matching “' },
+  { text: 'rue', strong: true },
+  { text: '”, in the ' },
+  { text: 'Protection', strong: true },
+  { text: ' and ' },
+  { text: 'Healing', strong: true },
+  { text: ' categories, as ' },
+  { text: 'Oil', strong: true },
+  { text: ' or ' },
+  { text: 'Tincture', strong: true },
+  { text: ', of ' },
+  { text: 'Hecate', strong: true },
+  { text: ', under ' },
+  { text: 'Scorpio', strong: true },
+  { text: ', ruled by the ' },
+  { text: 'Sun', strong: true },
+  { text: ' or ' },
+  { text: 'Mars', strong: true },
+  { text: ', in the ' },
+  { text: 'Water', strong: true },
+  { text: ' element, that are ' },
+  { text: 'not toxic', strong: true },
+  { text: '.' },
+];
+const REST_LENGTH = TYPED_REST.reduce((sum, part) => sum + part.text.length, 0);
+const typedTotal = (lead: string) => lead.length + REST_LENGTH;
+/** Typing speed: one character a tick; a tick is about a frame. */
+const TICK_MS = 16;
+/** On return the remaining characters finish in about this long. */
+const FINISH_MS = 300;
+const HOLD_MS = 1000;
+const FADE_MS = 400;
+const REDUCED_QUERY = '(prefers-reduced-motion: reduce)';
+
+/** The sentence as far as `shown` characters, the rest kept in place but invisible so the lines do not reflow. */
+function typedText(lead: string, shown: number): ReactNode {
+  let left = shown;
+  let placed = false;
+  return [{ text: lead } as { text: string; strong?: boolean }, ...TYPED_REST].map(
+    (part, index) => {
+      let visible = part.text;
+      let rest = '';
+      let caret: ReactNode = null;
+      if (!placed && left <= part.text.length) {
+        placed = true;
+        visible = part.text.slice(0, Math.max(left, 0));
+        rest = part.text.slice(Math.max(left, 0));
+        caret = <span className="facet-layout__caret" />;
+      } else if (placed) {
+        visible = '';
+        rest = part.text;
+      }
+      left -= part.text.length;
+      const inner = (
+        <>
+          {visible}
+          {caret}
+          {rest && <span className="facet-layout__untyped">{rest}</span>}
+        </>
+      );
+      return part.strong ? <strong key={index}>{inner}</strong> : <span key={index}>{inner}</span>;
+    },
+  );
+}
+
+type TypedPhase = 'idle' | 'typing' | 'holding' | 'fading';
+
+function TypedSentence({ sentence, chips }: { sentence: ReactNode; chips: ReactNode }) {
+  const [phase, setPhase] = useState<TypedPhase>('idle');
+  const [returned, setReturned] = useState(false);
+  const [shown, setShown] = useState(0);
+  const [run, setRun] = useState<{ id: number; delay: number } | null>(null);
+  // The position is kept in a ref too, so the timers read the latest without re-running.
+  const shownRef = useRef(0);
+  const reduced = () => window.matchMedia(REDUCED_QUERY).matches;
+  const lead = returned ? COUNT_LEAD : SEARCHING;
+  const total = typedTotal(lead);
+  const moveTo = (next: number) => {
+    shownRef.current = next;
+    setShown(next);
+  };
+
+  const start = (delay: number) => {
+    setReturned(false);
+    // Reduced motion: no typing, the whole sentence is there at once.
+    moveTo(reduced() ? typedTotal(SEARCHING) : 0);
+    setPhase('typing');
+    setRun((previous) => ({ id: (previous?.id ?? 0) + 1, delay }));
+  };
+
+  // The fake search: the results come back after `delay`. The lead swaps to the count,
+  // carrying the typed position over so the characters already shown stay shown. If the
+  // typing had already finished (the slow search), it is done and the hold begins.
+  useEffect(() => {
+    if (!run) return undefined;
+    const timer = window.setTimeout(() => {
+      const position = shownRef.current;
+      const carried =
+        position >= SEARCHING.length
+          ? position - SEARCHING.length + COUNT_LEAD.length
+          : Math.min(position, COUNT_LEAD.length);
+      moveTo(carried);
+      setReturned(true);
+      if (carried >= typedTotal(COUNT_LEAD)) setPhase('holding');
+    }, run.delay);
+    return () => window.clearTimeout(timer);
+  }, [run]);
+
+  // The typing: a character a tick, or on return the rest spread over FINISH_MS.
+  useEffect(() => {
+    if (phase !== 'typing') return undefined;
+    const step = returned
+      ? Math.max(1, Math.ceil((total - shownRef.current) / (FINISH_MS / TICK_MS)))
+      : 1;
+    const timer = window.setInterval(() => {
+      const next = Math.min(shownRef.current + step, total);
+      moveTo(next);
+      if (returned && next >= total) setPhase('holding');
+    }, TICK_MS);
+    return () => window.clearInterval(timer);
+  }, [phase, returned, total]);
+
+  // Held for a moment, then faded (at once under reduced motion), then back to rest.
+  useEffect(() => {
+    if (phase !== 'holding' && phase !== 'fading') return undefined;
+    const timer = window.setTimeout(
+      () => setPhase(phase === 'holding' && !reduced() ? 'fading' : 'idle'),
+      phase === 'holding' ? HOLD_MS : FADE_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [phase]);
+
+  const searching = phase !== 'idle';
+  const announced = phase === 'idle' || returned;
+  return (
+    <div className="facet-layout__sentence">
+      <div className="facet-layout__mock-controls">
+        <button type="button" className="btn" disabled={searching} onClick={() => start(4000)}>
+          Slow Search
+        </button>
+        <button type="button" className="btn" disabled={searching} onClick={() => start(600)}>
+          Fast Search
+        </button>
+      </div>
+      <div className="facet-layout__swap">
+        <p
+          className={`facet-layout__count-line facet-layout__swap-count${
+            phase === 'typing' || phase === 'holding' ? ' facet-layout__swap-count--off' : ''
+          }`}
+          aria-hidden={searching}
+        >
+          {COUNT_LEAD}
+        </p>
+        {searching && (
+          <p
+            className={`facet-layout__typed${phase === 'fading' ? ' facet-layout__typed--out' : ''}`}
+            aria-hidden="true"
+          >
+            {typedText(lead, shown)}
+          </p>
+        )}
+      </div>
+      {chips}
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
+      <p role="status" className="facet-layout__sr">
+        {announced ? sentence : null}
+      </p>
+    </div>
+  );
+}
+
 type Variant = 'disclosure' | 'open' | 'sidebar' | 'tray' | 'grid' | 'sidebar-tray';
 
 // `$shell-tablet-width` (48rem) in pixels, for the one place a script needs it.
@@ -244,6 +516,10 @@ interface LayoutProps {
   toxic?: 'any' | 'toxic' | 'not-toxic';
   query?: string;
   sentence: ReactNode;
+  /** Layout F, from the tablet width up: the column folded to a Filters button. */
+  collapsed?: boolean;
+  /** Layout F: how the search sentence is set. */
+  sentenceMode?: 'full' | 'disclosure' | 'tip' | 'chips' | 'typed';
 }
 
 /** The proposal and its alternatives, interactive enough to open, pick and clear. */
@@ -260,6 +536,8 @@ function Layout({
   toxic: initialToxic = 'any',
   query: initialQuery = 'rue',
   sentence,
+  collapsed: initialCollapsed = false,
+  sentenceMode = 'full',
 }: LayoutProps): ReactElement {
   const [query, setQuery] = useState(initialQuery);
   const [categories, setCategories] = useState(initialCategories);
@@ -272,6 +550,11 @@ function Layout({
   const [elements, setElements] = useState(initialElements);
   const [nomenclature, setNomenclature] = useState('');
   const [tray, setTray] = useState(open);
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const [sentenceOpen, setSentenceOpen] = useState(false);
+  // Layout F: the counts, the paired Match and Toxic row, no Classification.
+  const fx = variant === 'sidebar-tray';
+  const tipId = useId();
   const sheetRef = useRef<HTMLDialogElement>(null);
   const sheetTitle = useId();
   const hidden = forms.length + deities.length + zodiac.length + planets.length + elements.length;
@@ -293,6 +576,19 @@ function Layout({
     />
   );
 
+  const matchStrip = categories.length >= 2 && (
+    <Strip
+      legend="Match"
+      name="categoryMode"
+      options={[
+        { value: 'all', label: 'All' },
+        { value: 'any', label: 'Any' },
+      ]}
+      value={mode}
+      onChange={setMode}
+    />
+  );
+
   const categoriesBlock = (
     <div className="facet-layout__grow">
       <CategoryPicker
@@ -303,18 +599,7 @@ function Layout({
         value={categories}
         onChange={setCategories}
       />
-      {categories.length >= 2 && (
-        <Strip
-          legend="Match"
-          name="categoryMode"
-          options={[
-            { value: 'all', label: 'All' },
-            { value: 'any', label: 'Any' },
-          ]}
-          value={mode}
-          onChange={setMode}
-        />
-      )}
+      {matchStrip}
     </div>
   );
 
@@ -325,8 +610,11 @@ function Layout({
         name="toxic"
         options={[
           { value: 'any', label: 'Any' },
-          { value: 'toxic', label: 'Toxic' },
-          { value: 'not-toxic', label: 'Not Toxic' },
+          { value: 'toxic', label: fx ? `Toxic (${TOXIC_COUNTS.toxic})` : 'Toxic' },
+          {
+            value: 'not-toxic',
+            label: fx ? `Not Toxic (${TOXIC_COUNTS['not-toxic']})` : 'Not Toxic',
+          },
         ]}
         value={toxic}
         onChange={setToxic}
@@ -341,10 +629,22 @@ function Layout({
     </div>
   );
 
+  // Layout F: the picker, then Match and Toxic on one row that wraps in a narrow column.
+  const primaryF = (
+    <>
+      <CountedCategories value={categories} onChange={setCategories} />
+      <div className="facet-layout__pair">
+        {matchStrip}
+        {toxicBlock}
+      </div>
+    </>
+  );
+
   const panelItems = (
     <>
       <Typeahead
         label="Forms"
+        countChips={fx}
         placeholder="Add Form"
         chosen={forms}
         onChange={setForms}
@@ -358,6 +658,7 @@ function Layout({
       />
       <Typeahead
         label="Deities"
+        countChips={fx}
         placeholder="Add Deity"
         chosen={deities}
         onChange={setDeities}
@@ -370,6 +671,7 @@ function Layout({
       />
       <Typeahead
         label="Zodiac"
+        countChips={fx}
         placeholder="Add Sign"
         chosen={zodiac}
         onChange={setZodiac}
@@ -377,6 +679,7 @@ function Layout({
       />
       <Typeahead
         label="Planets"
+        countChips={fx}
         placeholder="Add Planet"
         chosen={planets}
         onChange={setPlanets}
@@ -384,19 +687,22 @@ function Layout({
       />
       <Typeahead
         label="Elements"
+        countChips={fx}
         placeholder="Add Element"
         chosen={elements}
         onChange={setElements}
         options={counted(ELEMENTS)}
       />
-      <FilterSelectField
-        label="Classification"
-        name="nomenclature"
-        all="Any"
-        options={NOMENCLATURE_OPTIONS}
-        defaultValue={nomenclature}
-        onChange={setNomenclature}
-      />
+      {!fx && (
+        <FilterSelectField
+          label="Classification"
+          name="nomenclature"
+          all="Any"
+          options={NOMENCLATURE_OPTIONS}
+          defaultValue={nomenclature}
+          onChange={setNomenclature}
+        />
+      )}
       <SwitchField label="No Refs" name="withoutReferences" value="1" onChange={() => {}} />
     </>
   );
@@ -415,24 +721,6 @@ function Layout({
     </div>
   );
 
-  const results = (
-    <>
-      {/* The record names a role="status" paragraph, as the real sentence will be. */}
-      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-      <p role="status" className="facet-layout__sentence">
-        {sentence}
-      </p>
-      <ul className="facet-layout__results">
-        {RESULTS.map((name) => (
-          <li key={name} className="facet-layout__result">
-            <strong>{name}</strong>
-            <span className="facet-layout__count">Fixtura testalis</span>
-          </li>
-        ))}
-      </ul>
-    </>
-  );
-
   const formProps = {
     method: 'get',
     action: COMPENDIUM_PATH,
@@ -440,31 +728,42 @@ function Layout({
     'aria-label': 'Filter the Compendium',
   };
 
-  const chosen: { key: string; label: string; remove: () => void }[] = [
+  const countOf = (list: Counted[], name: string) => list.find((i) => i.name === name)?.count ?? 0;
+  const chosen: { key: string; label: string; count: number; remove: () => void }[] = [
     ...categories.map((id) => ({
       key: `c-${id}`,
       label: categoryName(id),
+      count: CATEGORY_COUNTS[id] ?? 0,
       remove: () => without(categories, setCategories, id),
     })),
-    ...forms.map((v) => ({ key: `f-${v}`, label: v, remove: () => without(forms, setForms, v) })),
+    ...forms.map((v) => ({
+      key: `f-${v}`,
+      label: v,
+      count: countOf(FORMS, v),
+      remove: () => without(forms, setForms, v),
+    })),
     ...deities.map((v) => ({
       key: `d-${v}`,
       label: v,
+      count: countOf(DEITIES, v),
       remove: () => without(deities, setDeities, v),
     })),
     ...zodiac.map((v) => ({
       key: `z-${v}`,
       label: v,
+      count: countOf(ZODIAC, v),
       remove: () => without(zodiac, setZodiac, v),
     })),
     ...planets.map((v) => ({
       key: `p-${v}`,
       label: v,
+      count: countOf(PLANETS, v),
       remove: () => without(planets, setPlanets, v),
     })),
     ...elements.map((v) => ({
       key: `e-${v}`,
       label: v,
+      count: countOf(ELEMENTS, v),
       remove: () => without(elements, setElements, v),
     })),
     ...(toxic === 'any'
@@ -473,6 +772,7 @@ function Layout({
           {
             key: 'toxic',
             label: toxic === 'toxic' ? 'Toxic' : 'Not Toxic',
+            count: TOXIC_COUNTS[toxic],
             remove: () => setToxic('any'),
           },
         ]),
@@ -484,38 +784,109 @@ function Layout({
         {chosen.map((item) => (
           <li key={item.key}>
             <button type="button" onClick={item.remove} aria-label={`Remove ${item.label}`}>
-              {item.label}
+              {fx ? `${item.label} (${item.count})` : item.label}
               <span aria-hidden="true">×</span>
             </button>
           </li>
         ))}
+        {/* Layout F: Clear All is not in the sentence; it ends the chip row. */}
+        {fx && (
+          <li className="facet-layout__chosen-clear">
+            <a href={COMPENDIUM_PATH}>Clear All</a>
+          </li>
+        )}
       </ul>
     ) : null;
 
-  // The sheet is a native <dialog>. From the tablet width up it is shown in place
-  // as the left column (show(), not modal); below it, it is closed, or a modal
-  // sheet (showModal()) when the Filters button opens it. Escape and the focus
-  // return to the button are the browser's.
+  const countLine = '12 ingredients';
+  let sentenceNode: ReactNode;
+  if (fx && sentenceMode === 'disclosure') {
+    // A native <details>: the status region wraps it, so the count line is always read
+    // and the full sentence once it is open.
+    sentenceNode = (
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a <details> is not phrasing content, so not an <output>.
+      <div role="status" className="facet-layout__sentence">
+        <details
+          className="facet-layout__disclosure"
+          onToggle={(event) => setSentenceOpen(event.currentTarget.open)}
+        >
+          <summary>
+            {countLine} · {sentenceOpen ? 'Hide Search' : 'Show Search'}{' '}
+            <span aria-hidden="true" className="facet-layout__chevron">
+              ▾
+            </span>
+          </summary>
+          <p>{sentence}</p>
+        </details>
+      </div>
+    );
+  } else if (fx && sentenceMode === 'tip') {
+    // The count line and an info button; the sentence is the tip's text, in the status region.
+    sentenceNode = (
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
+      <p role="status" className="facet-layout__sentence facet-layout__sentence--tip">
+        {countLine}{' '}
+        <InfoTip id={tipId} label="the search">
+          {sentence}
+        </InfoTip>
+      </p>
+    );
+  } else if (fx && sentenceMode === 'chips') {
+    // The chip row does the on-screen job; the full sentence is there for assistive technology.
+    sentenceNode = (
+      <div className="facet-layout__sentence">
+        <p className="facet-layout__count-line">{countLine}</p>
+        {chosenChips}
+        {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
+        <p role="status" className="facet-layout__sr">
+          {sentence}
+        </p>
+      </div>
+    );
+  } else if (fx && sentenceMode === 'typed') {
+    sentenceNode = <TypedSentence sentence={sentence} chips={chosenChips} />;
+  } else {
+    sentenceNode = (
+      // The record names a role="status" paragraph, as the real sentence will be.
+      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
+      <p role="status" className="facet-layout__sentence">
+        {sentence}
+      </p>
+    );
+  }
+
+  const results = (
+    <>
+      {sentenceNode}
+      <ul className="facet-layout__results">
+        {RESULTS.map((name) => (
+          <li key={name} className="facet-layout__result">
+            <strong>{name}</strong>
+            <span className="facet-layout__count">Fixtura testalis</span>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+
+  // The sheet is a native <dialog>. From the tablet width up it is never opened: CSS
+  // lays it out in place as the left column, so nothing takes the focus on load.
+  // Below it, the Filters button (or `open`, for these stories) opens it with
+  // showModal(): the top layer, the backdrop, the focus inside, Escape to close and the
+  // focus back on the button are the browser's. A resize up to the column closes the modal.
   useEffect(() => {
-    if (variant !== 'sidebar-tray') return undefined;
+    if (!fx) return undefined;
     const dialog = sheetRef.current;
-    const media = window.matchMedia(TABLET_QUERY);
     if (!dialog) return undefined;
-    const place = () => {
-      if (media.matches) {
-        // Open in place without show(), which would also move focus into the column.
-        if (dialog.matches(':modal')) dialog.close();
-        dialog.setAttribute('open', '');
-      } else {
-        dialog.close();
-        if (tray) dialog.showModal();
-      }
+    const media = window.matchMedia(TABLET_QUERY);
+    if (!media.matches && open && !dialog.open) dialog.showModal();
+    const widen = () => {
+      if (media.matches && dialog.open) dialog.close();
     };
-    place();
-    media.addEventListener('change', place);
-    return () => media.removeEventListener('change', place);
+    media.addEventListener('change', widen);
+    return () => media.removeEventListener('change', widen);
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- the initial state only; the button opens it after.
-  }, [variant]);
+  }, [fx]);
 
   let body: ReactElement;
   if (variant === 'grid') {
@@ -534,37 +905,48 @@ function Layout({
       </>
     );
   } else if (variant === 'sidebar-tray') {
+    const showFilters = () => {
+      // The column's own button, folded: unfold it. Below the tablet width: the sheet.
+      if (window.matchMedia(TABLET_QUERY).matches) setCollapsed(false);
+      else sheetRef.current?.showModal();
+    };
     body = (
-      <div className="facet-layout__split">
+      <div
+        className={`facet-layout__split facet-layout__split--tray${collapsed ? ' facet-layout__split--collapsed' : ''}`}
+      >
         <form {...formProps} className="form facet-layout facet-layout__side">
           <div className="facet-layout__bar">
             <div className="facet-layout__grow">{search}</div>
-            <button
-              type="button"
-              className="btn facet-layout__sheet-open"
-              onClick={() => sheetRef.current?.showModal()}
-            >
+            <button type="button" className="btn facet-layout__sheet-open" onClick={showFilters}>
               {filterCount > 0 ? `Filters (${filterCount})` : 'Filters'}
             </button>
           </div>
-          <div className="facet-layout__sheet-only">{chosenChips}</div>
-          {/* Rendered open, in place: before hydration it is the column (or, on a phone, a
-              panel above the results), and in the build the Filters control is then a plain
-              link to it. Hydrated, the effect above takes it from there. This mock shows
-              the hydrated state, so the control is a button. */}
-          <dialog
-            ref={sheetRef}
-            open
-            className="facet-layout__sheet"
-            aria-labelledby={`${sheetTitle}`}
-          >
-            <div className="facet-layout__tray-head facet-layout__sheet-only">
+          {sentenceMode !== 'chips' && sentenceMode !== 'typed' && (
+            <div className="facet-layout__sheet-only">{chosenChips}</div>
+          )}
+          {/* No `open` attribute: from the tablet width up CSS lays it out as the column
+              (open or not), below it the effect above or the Filters button calls
+              showModal(). A dialog opened by the attribute is not in the top layer, and the
+              results would stack over it. */}
+          <dialog ref={sheetRef} className="facet-layout__sheet" aria-labelledby={sheetTitle}>
+            <div className="facet-layout__tray-head">
               <strong id={sheetTitle}>Filters</strong>
-              <button type="button" className="btn" onClick={() => sheetRef.current?.close()}>
+              <button
+                type="button"
+                className="btn facet-layout__sheet-only"
+                onClick={() => sheetRef.current?.close()}
+              >
                 Close
               </button>
+              <button
+                type="button"
+                className="btn facet-layout__column-only"
+                onClick={() => setCollapsed(true)}
+              >
+                Hide Filters
+              </button>
             </div>
-            {primary}
+            {primaryF}
             {panel}
             <div className="facet-layout__apply facet-layout__tray-foot">
               <button type="submit" className="btn btn--solid">
@@ -765,11 +1147,26 @@ export const GridPhoneDark: Story = () => <Grid />;
 GridPhoneDark.meta = { theme: 'dark', width: 375 };
 
 // Alternative F, the owner's call that the inline layouts take too much room: B's
-// left column from the tablet width up, always open; below it, D's tray as a
-// full-height sheet on the native <dialog> (showModal(): backdrop, Escape and focus
-// return are the browser's), opened by Filters (n), the chosen values as chips
-// under the search box, and the sentence above the results at every width.
-export const SidebarTray: Story = () => <Layout {...OPEN_PROPS} variant="sidebar-tray" />;
+// left column from the tablet width up, open or folded to a Filters button; below it,
+// D's tray as a full-height sheet on the native <dialog> (showModal(): backdrop,
+// Escape and focus return are the browser's), opened by Filters (n), the chosen values
+// as chips under the search box. The sentence above the results is plain text with no
+// links: values are set in bold, Clear All sits with the filters and ends the chip row,
+// and a value is taken out only by its chip's cross. Counts follow every name.
+const F_SENTENCE = (
+  <>
+    12 ingredients matching “<strong>rue</strong>”, in the <strong>Protection</strong> and{' '}
+    <strong>Healing</strong> categories, as <strong>Oil</strong> or <strong>Tincture</strong>, of{' '}
+    <strong>Hecate</strong>, under <strong>Scorpio</strong>, ruled by the <strong>Sun</strong> or{' '}
+    <strong>Mars</strong>, in the <strong>Water</strong> element, that are{' '}
+    <strong>not toxic</strong>.
+  </>
+);
+
+const F_PROPS: LayoutProps = { ...OPEN_PROPS, sentence: F_SENTENCE, variant: 'sidebar-tray' };
+
+// The column open, the state the page loads in at the tablet width and up.
+export const SidebarTray: Story = () => <Layout {...F_PROPS} />;
 
 export const SidebarTrayPhoneLight: Story = () => <SidebarTray />;
 SidebarTrayPhoneLight.meta = { theme: 'light', width: 375 };
@@ -778,7 +1175,53 @@ export const SidebarTrayPhoneDark: Story = () => <SidebarTray />;
 SidebarTrayPhoneDark.meta = { theme: 'dark', width: 375 };
 
 // The sheet closed: the chips and the sentence say what is chosen.
-export const SidebarTrayPhoneClosed: Story = () => (
-  <Layout {...OPEN_PROPS} variant="sidebar-tray" open={false} />
-);
+export const SidebarTrayPhoneClosed: Story = () => <Layout {...F_PROPS} open={false} />;
 SidebarTrayPhoneClosed.meta = { theme: 'light', width: 375 };
+
+// The column folded by Hide Filters: a Filters (7) button beside the search box, the
+// chosen values as chips under it, the results the full width.
+export const SidebarTrayCollapsed: Story = () => <Layout {...F_PROPS} collapsed />;
+
+// Three more compact sentences, each on F: the desktop story with the column open
+// (the sentence sits above the results) and the phone with the sheet closed.
+export const SentenceDisclosure: Story = () => <Layout {...F_PROPS} sentenceMode="disclosure" />;
+
+export const SentenceDisclosurePhoneClosed: Story = () => (
+  <Layout {...F_PROPS} sentenceMode="disclosure" open={false} />
+);
+SentenceDisclosurePhoneClosed.meta = { theme: 'light', width: 375 };
+
+export const SentenceDisclosurePhoneClosedDark: Story = () => <SentenceDisclosurePhoneClosed />;
+SentenceDisclosurePhoneClosedDark.meta = { theme: 'dark', width: 375 };
+
+export const SentenceTip: Story = () => <Layout {...F_PROPS} sentenceMode="tip" />;
+
+export const SentenceTipPhoneClosed: Story = () => (
+  <Layout {...F_PROPS} sentenceMode="tip" open={false} />
+);
+SentenceTipPhoneClosed.meta = { theme: 'light', width: 375 };
+
+export const SentenceTipPhoneClosedDark: Story = () => <SentenceTipPhoneClosed />;
+SentenceTipPhoneClosedDark.meta = { theme: 'dark', width: 375 };
+
+export const SentenceChips: Story = () => <Layout {...F_PROPS} sentenceMode="chips" />;
+
+export const SentenceChipsPhoneClosed: Story = () => (
+  <Layout {...F_PROPS} sentenceMode="chips" open={false} />
+);
+SentenceChipsPhoneClosed.meta = { theme: 'light', width: 375 };
+
+export const SentenceChipsPhoneClosedDark: Story = () => <SentenceChipsPhoneClosed />;
+SentenceChipsPhoneClosedDark.meta = { theme: 'dark', width: 375 };
+
+// The chips design with the sentence typed out as the loading animation. Press Slow
+// Search (results after four seconds) or Fast Search (after 0.6 seconds).
+export const SentenceTyped: Story = () => <Layout {...F_PROPS} sentenceMode="typed" />;
+
+export const SentenceTypedPhoneClosed: Story = () => (
+  <Layout {...F_PROPS} sentenceMode="typed" open={false} />
+);
+SentenceTypedPhoneClosed.meta = { theme: 'light', width: 375 };
+
+export const SentenceTypedPhoneClosedDark: Story = () => <SentenceTypedPhoneClosed />;
+SentenceTypedPhoneClosedDark.meta = { theme: 'dark', width: 375 };
