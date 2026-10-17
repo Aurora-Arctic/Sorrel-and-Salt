@@ -948,6 +948,90 @@ describe('findCompendiumPage', () => {
     });
   });
 
+  // M8.13: the element filter. An entry's `elements` holds any of the five,
+  // alone or among others; any one listed matches, by array overlap.
+  describe('elements', () => {
+    beforeEach(async () => {
+      await add('Fixture Fiery', { elements: ['fire'] });
+      await add('Fixture Wet', { elements: ['water', 'fire'] });
+      await add('Fixture Airy', { elements: ['air'] });
+      await add('Fixture Bare');
+      await add('Fixture Coven', { elements: ['fire'], workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { elements: ['fire'] });
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    });
+
+    it('lists the live compendium entries holding the element, alone or among others', async () => {
+      // Why the others could have been listed: the coven's and the retired row hold fire too.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredients where 'fire' = any(elements)`;
+      expect(count).toBe(4);
+
+      expect(await namesOf({ elements: ['fire'] })).toEqual(['Fixture Fiery', 'Fixture Wet']);
+      await expect(findCompendiumCount({ elements: ['fire'] }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+    });
+
+    it('lists an entry holding either of two elements once', async () => {
+      expect(await namesOf({ elements: ['air', 'fire'] })).toEqual([
+        'Fixture Airy',
+        'Fixture Fiery',
+        'Fixture Wet',
+      ]);
+      expect(await namesOf({ elements: ['water', 'fire'] })).toEqual([
+        'Fixture Fiery',
+        'Fixture Wet',
+      ]);
+    });
+
+    // MB.215: a property true of only some forms lives on those forms, so a live
+    // form holding the element makes the entry hold it (the toxic filter's reading).
+    describe('held on a form', () => {
+      beforeEach(async () => {
+        await add('Fixture Form Fire', {
+          variants: [makeVariant(), makeVariant({ form: 'Fixture Oil', elements: ['fire'] })],
+        });
+        const retired = await add('Fixture Retired Fire', {
+          variants: [makeVariant(), makeVariant({ form: 'Fixture Oil', elements: ['fire'] })],
+        });
+        await sql`
+          update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+          where ingredient_id = ${retired} and form = 'Fixture Oil'`;
+        await add('Fixture Triple Fire', {
+          elements: ['fire'],
+          variants: [
+            makeVariant({ form: 'Fixture Oil', elements: ['fire'] }),
+            makeVariant({ form: 'Fixture Resin', elements: ['fire', 'air'] }),
+          ],
+        });
+      });
+
+      it('lists an entry whose live form holds the element, once, and not one whose retired form does', async () => {
+        // Why the retired entry could have been listed: its deleted form really holds fire.
+        const [{ count }] = await sql`
+          select count(*)::int as count from ingredient_variants v
+          join ingredients i on i.id = v.ingredient_id
+          where i.name = 'Fixture Retired Fire' and 'fire' = any(v.elements)
+            and v.deleted_at is not null`;
+        expect(count).toBe(1);
+
+        const listed = ['Fixture Fiery', 'Fixture Form Fire', 'Fixture Triple Fire', 'Fixture Wet'];
+        expect(await namesOf({ elements: ['fire'] })).toEqual(listed);
+        await expect(findCompendiumCount({ elements: ['fire'] }, undefined)).resolves.toEqual({
+          totalCount: listed.length,
+          countBefore: null,
+        });
+      });
+    });
+
+    it('combines with another filter, and an empty list is no filter', async () => {
+      expect(await namesOf({ elements: ['fire'], query: 'Wet' })).toEqual(['Fixture Wet']);
+      expect(await namesOf({ elements: [] })).toHaveLength(4);
+    });
+  });
+
   // The lists hold spellings, not picks (MB.162): what a celestial body's or a sign's
   // delete and rename read (MB.95), matched entry by entry under the
   // suggestions' fold, any listed value (M11.22).

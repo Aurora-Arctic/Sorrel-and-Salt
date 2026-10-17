@@ -2,6 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import postgres from 'postgres';
+import type { IngredientElement } from '@/modules/ingredients/schema/ingredient-enums';
 import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
@@ -695,4 +696,169 @@ test('undo and redo carry a chip, a reorder, a folded section, a variant and a s
     await expect(dialog.getByRole('button', { name: 'Undo', exact: true }).first()).toBeDisabled();
     await expect(dialog.getByRole('button', { name: 'Redo', exact: true }).first()).toBeDisabled();
   });
+});
+
+// M8.13: the elements filter is in the address, as repeated parameters, and
+// the address is the whole state: loaded directly (no control draws it yet,
+// M12.4), it lists the entries holding any element named, the pager keeps it,
+// another control's change keeps it and opens the first page, and a reload
+// and Back show the same list.
+test('?elements= in the address filters the list, survives the pager and another filter, and drops the page', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'element-filter-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  // 28 entries holding fire among others, one earth, one water: thirty in
+  // all, so the name alone spans two pages of 25.
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    for (let i = 1; i <= 30; i++) {
+      const elements: IngredientElement[] =
+        i <= 28 ? ['fire', 'air'] : i === 29 ? ['earth'] : ['water'];
+      await insertIngredient(
+        sql,
+        makeIngredient({
+          name: `Elementwort ${String(i).padStart(2, '0')}`,
+          nomenclature: 'none',
+          elements,
+        }),
+        userId,
+      );
+    }
+  } finally {
+    await sql.end();
+  }
+
+  const row = (n: number) =>
+    page.getByRole('link', { name: `Edit Elementwort ${String(n).padStart(2, '0')}` });
+  const main = page.getByRole('main');
+
+  // One element finds an entry holding it among others; two find either.
+  await page.goto('/admin/compendium?query=Elementwort&elements=earth');
+  await expect(row(29)).toBeVisible();
+  await expect(row(30)).toHaveCount(0);
+  await expect(row(1)).toHaveCount(0);
+  await page.goto('/admin/compendium?query=Elementwort&elements=earth&elements=water');
+  await expect(row(29)).toBeVisible();
+  await expect(row(30)).toBeVisible();
+  await expect(row(1)).toHaveCount(0);
+
+  // 28 hold fire: two pages, and the pager carries the filter to the second.
+  await page.goto('/admin/compendium?query=Elementwort&elements=fire');
+  await expect(row(1)).toBeVisible();
+  await main.getByRole('link', { name: 'Next' }).click();
+  // Why the cursor below could have survived the change: this page holds one.
+  await expect(page).toHaveURL(/[?&]after=/);
+  await expect(page).toHaveURL(/[?&]elements=fire(&|$)/);
+  await expect(row(28)).toBeVisible();
+  await expect(row(1)).toHaveCount(0);
+
+  await page.reload();
+  await expect(page).toHaveURL(/[?&]elements=fire(&|$)/);
+  await expect(row(28)).toBeVisible();
+
+  // Another filter changing keeps the elements and opens the first page.
+  await page.waitForLoadState('networkidle');
+  await main.getByRole('switch', { name: 'No Refs' }).click();
+  await expect(page).toHaveURL(/[?&]withoutReferences=1(&|$)/);
+  await expect(page).toHaveURL(/[?&]elements=fire(&|$)/);
+  await expect(page).not.toHaveURL(/[?&](after|before)=/);
+  await expect(row(1)).toBeVisible();
+
+  await page.goBack();
+  await expect(page).toHaveURL(/[?&]after=/);
+  await expect(page).not.toHaveURL(/withoutReferences/);
+  await expect(row(28)).toBeVisible();
+});
+
+// M8.11: the Categories picker (MB.126's CategoryPicker) in the filter row.
+// The address holds the slugs, repeated; two picks combine with AND; a reload
+// restores the chips; a pick is announced by the picker's own region.
+test('the Categories picker filters by AND, writes repeated slugs, restores on reload and focuses back', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'category-filter-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    const add = (name: string, categories: string[]) =>
+      insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', categories }), userId);
+    await add('Categorywort Both', ['Protection', 'Cleansing']);
+    await add('Categorywort One', ['Protection']);
+    await add('Categorywort None', []);
+  } finally {
+    await sql.end();
+  }
+
+  const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
+  await page.goto('/admin/compendium?query=Categorywort');
+  await page.waitForLoadState('networkidle');
+  // Why the filter could have dropped them: all three are listed unfiltered.
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toBeVisible();
+
+  const box = page.getByRole('combobox', { name: 'Category' });
+  const announcer = page.getByRole('status', { name: 'Categories changes' });
+
+  await box.fill('protection');
+  await page.getByRole('option', { name: /^Protection/ }).click();
+  await expect(page).toHaveURL(/[?&]categories=protection(&|$)/);
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toHaveCount(0);
+  await expect(box).toBeFocused();
+  await expect(announcer).not.toBeEmpty();
+
+  await box.fill('cleansing');
+  await page.getByRole('option', { name: /^Cleansing/ }).click();
+  await expect(page).toHaveURL(/[?&]categories=protection(&|.*&)categories=cleansing(&|$)/);
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toHaveCount(0);
+  await expect(box).toBeFocused();
+
+  // The selected state is programmatic: the picked option is no longer offered.
+  await box.fill('cleansing');
+  await expect(page.getByRole('option', { name: /^Cleansing/ })).toHaveCount(0);
+  await box.fill('');
+
+  await page.reload();
+  await expect(page).toHaveURL(/[?&]categories=cleansing(&|$)/);
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toHaveCount(0);
+
+  // An unknown slug is dropped and the rest still filter.
+  await page.goto(
+    '/admin/compendium?query=Categorywort&categories=nosuchslug&categories=protection',
+  );
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toHaveCount(0);
+});
+
+test('the Categories picker is usable at 375px and has no accessibility violations', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await signInAs(page, 'category-axe-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?categories=protection');
+  await page.waitForLoadState('networkidle');
+
+  const box = page.getByRole('combobox', { name: 'Category' });
+  await box.scrollIntoViewIfNeeded();
+  await expect(box).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(false);
+
+  await box.fill('cl');
+  await expect(page.getByRole('option').first()).toBeVisible();
+  await assertNoAccessibilityViolations(page);
 });

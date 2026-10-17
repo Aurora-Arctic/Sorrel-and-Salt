@@ -17,14 +17,15 @@ resolves through, rather than one read per row.
 
 `CompendiumListProps` (`types.ts`):
 
-| Prop           | What it is                                                              |
-| -------------- | ----------------------------------------------------------------------- |
-| `entries`      | This page's `CompendiumListEntry` rows, in the service's order          |
-| `filter`       | `{ query, form, nomenclature, withoutReferences }`, the filter as asked |
-| `forms`        | The curated forms the Form box offers, `{ name }` each, in name order   |
-| `previousHref` | The page before this one, absent on the first                           |
-| `nextHref`     | The page after this one, absent on the last                             |
-| `position`     | `{ page, pages }`, the pager's "Page X of Y"                            |
+| Prop           | What it is                                                                         |
+| -------------- | ---------------------------------------------------------------------------------- |
+| `entries`      | This page's `CompendiumListEntry` rows, in the service's order                     |
+| `filter`       | `{ query, form, nomenclature, categories, withoutReferences }`, as asked           |
+| `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each |
+| `forms`        | The curated forms the Form box offers, `{ name }` each, in name order              |
+| `previousHref` | The page before this one, absent on the first                                      |
+| `nextHref`     | The page after this one, absent on the last                                        |
+| `position`     | `{ page, pages }`, the pager's "Page X of Y"                                       |
 
 A `CompendiumListEntry` is the entry's id, name and slug, its
 `canonicalName`, `null` for none, its `forms` (`CompendiumListForm[]`, `{ name, icon }` for each of the entry's live
@@ -192,4 +193,4 @@ loading state, its focus, its
 reset and Clear; paging is Pager's. `tests/app/(shell)/admin/compendium/page.test.tsx`
 covers the page's side: `?form=` read trimmed into the list and its count,
 blank as none, kept on every Edit, the pager, Add Ingredient and the
-redirect, and the forms read past their first page, each name once.
+redirect, and the forms read past their first page, each name once. The Categories picker (M8.11) is covered in the component test (entries shown, an unknown slug not shown, hidden inputs, repeated slugs applied and removed, the typed name carried, other controls keeping the categories, one announcement, focus kept) and, on the page, by slugs mapped to ids, an unknown slug dropped, and the categories read past their first page.

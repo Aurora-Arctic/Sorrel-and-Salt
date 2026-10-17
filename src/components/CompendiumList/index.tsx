@@ -4,10 +4,11 @@ import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
-import { NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
+import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
 import type {
+  CompendiumCategoryChoice,
   CompendiumListEntry,
   CompendiumListFilter as Filter,
   CompendiumListProps,
@@ -85,12 +86,21 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
  * the classification Botanical. Change or clear the filter to see more." With no
  * filter, the compendium itself is empty, and says how to begin it.
  */
-function emptyText({ query, form, nomenclature, withoutReferences }: Filter): string {
+function emptyText(
+  { query, form, nomenclature, withoutReferences, elements, categories }: Filter,
+  known: readonly CompendiumCategoryChoice[],
+): string {
+  // By name, the ones the page knows; a slug it does not is not filtering anything.
+  const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
   const filters = [
     query && `“${query}”`,
     form && `the form “${form}”`,
     nomenclature && `the classification ${labelOf(NOMENCLATURE_OPTIONS, nomenclature)}`,
     withoutReferences && 'No Refs',
+    elements.length > 0 &&
+      `the ${elements.length === 1 ? 'element' : 'elements'} ${elements.map((each) => labelOf(ELEMENT_OPTIONS, each)).join(' or ')}`,
+    named.length > 0 &&
+      `the ${named.length === 1 ? 'category' : 'categories'} ${named.join(' and ')}`,
   ].filter((filter): filter is string => Boolean(filter));
   return noMatchText(
     'entries',
@@ -103,17 +113,21 @@ const CompendiumList = ({
   entries,
   filter,
   forms,
+  categories,
   previousHref,
   nextHref,
   position,
 }: CompendiumListProps): ReactElement => (
   <IngredientSearch
     search={
-      // Keyed by the filter shown, so another one starts the form again from it.
+      // Keyed by the filter shown, so another one starts the form again from
+      // it; but not by its categories, which the picker follows itself, so a
+      // pick does not draw the picker afresh and lose its announcement.
       <CompendiumListFilter
-        key={`${filter.query}\n${filter.form}\n${filter.nomenclature}\n${filter.withoutReferences}`}
+        key={JSON.stringify({ ...filter, categories: [] })}
         filter={filter}
         forms={forms}
+        categories={categories}
       />
     }
     previousHref={previousHref}
@@ -124,7 +138,7 @@ const CompendiumList = ({
       columns={COLUMNS}
       rows={entries}
       rowKey={(entry) => entry.id}
-      empty={emptyText(filter)}
+      empty={emptyText(filter, categories)}
     />
   </IngredientSearch>
 );

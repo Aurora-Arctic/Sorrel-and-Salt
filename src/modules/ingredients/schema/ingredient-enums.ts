@@ -27,6 +27,7 @@ export const NAMELESS_KIND = 'none' satisfies NomenclatureKind;
 export const UNSETTLED_KIND = 'unknown' satisfies NomenclatureKind;
 
 export const INGREDIENT_ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
+export type IngredientElement = (typeof INGREDIENT_ELEMENTS)[number];
 
 // How Chicago renders a source (MB.151): the kind decides the punctuation and
 // the default italics, and which fields a row needs. `entry` is a

@@ -217,6 +217,7 @@ describe('listWorkspaceIngredients', () => {
         toxic: true,
         celestialBodies: ['Fixture Sun'],
         zodiacSigns: ['Fixture Ram'],
+        elements: ['fire', 'air'] as ('fire' | 'air')[],
         variants: [makeVariant({ form: 'Fixture Oil' })],
       };
       covenRow = await add('Facetfixture', { ...matching, workspaceId: WORKSPACE_W_ID });
@@ -236,6 +237,7 @@ describe('listWorkspaceIngredients', () => {
       ['deityIds', () => ({ deityIds: [hecate] })],
       ['zodiacSigns', () => ({ zodiacSigns: ['fixture ram'] })],
       ['celestialBodies', () => ({ celestialBodies: ['fixture sun'] })],
+      ['elements', () => ({ elements: ['air', 'water'] })],
       ['toxic', () => ({ toxic: 'toxic' })],
     ];
 

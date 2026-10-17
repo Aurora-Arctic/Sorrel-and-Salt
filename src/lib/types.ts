@@ -193,10 +193,13 @@ export interface CitationPart {
 }
 
 /**
- * A list address's query, for `listHref`: a string is a pair, `true` a bare
- * flag (`new`, `awaiting`), and `undefined`, `false` or `''` is left out.
+ * A list address's query, for `listHref`: a string is a pair, a list one pair
+ * per value (`forms=Herb&forms=Oil`), `true` a bare flag (`new`, `awaiting`), and
+ * `undefined`, `false`, `''` or an empty list is left out.
  */
-export type ListHrefParams = Readonly<Record<string, string | boolean | undefined>>;
+export type ListHrefParams = Readonly<
+  Record<string, string | readonly string[] | boolean | undefined>
+>;
 
 /**
  * The modal a list page has open over it, by its address: `'new'` for the

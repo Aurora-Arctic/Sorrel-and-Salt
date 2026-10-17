@@ -82,6 +82,80 @@ in the filter slot to carry.
   (M8.18) does not show a loading modal.
 - **The source is the compendium only.** M9.6 adds the workspace source.
 
+## The parameter table
+
+A search's whole state is its address (M8.13), and the address is written
+and read through one typed table, [`defineSearchParams`](../../src/lib/search-param-table.ts),
+so a filter is never listed by hand in five places. Each entry is one
+parameter: the name the address carries, a reader that turns what the address
+held into a value (a hand-edited value reads as no filter, never an error),
+a writer that turns a value back, and the GraphQL variable it becomes. The
+compendium's table is
+[`CompendiumList/params.ts`](../../src/components/CompendiumList/params.ts);
+the helpers `textParam`, `choiceParam` and `listParam` cover the
+usual shapes, and `searchParam` takes any other.
+
+The table gives four functions, and every caller uses only these:
+
+- `read(params)`: the filter an address holds. The page calls it.
+- `href(path, filter, extra)`: the address of a filter, in table order, then
+  `extra` for the cursor and the modal. Every link, the pager and the filter
+  form's applies call it, through the list's `compendiumHref`.
+- `variables(filter, lookups?)`: the query's variables, a blank as `undefined`. The page
+  keys its cached read by them, so adding a filter changes nothing there.
+  `lookups` is the optional map a slug list needs to become ids (below).
+- `changed(place, change)`: the place with a change applied and the cursor
+  dropped.
+
+**Adding a filter is one new entry** and touches none of those callers;
+`tests/lib/search-param-table.test.ts` proves it by adding one. The pieces
+that do change are the filter's own control, the service and the GraphQL
+argument it reaches.
+
+**A list is a repeated parameter**, `?elements=fire&elements=earth`:
+`listHref` writes one pair per value and `list`
+([`search-params.ts`](../../src/lib/search-params.ts)) reads them back, with
+`someOf` dropping any value outside the set. An empty list is left out.
+It is repeated rather than comma-joined (`?elements=fire,earth`) because a
+GET form's checkboxes write repeated names themselves, so a facet filters
+before hydration and without JavaScript, and because a form's free text may
+hold a comma. A single-value parameter given twice by hand reads its first.
+
+**The address names a value the way a reader would**, and the table maps it
+to whatever the query takes: a deity is its slug, `hecate-greek`, while the
+query takes `deityIds`, since an id would outweigh the rest of the address
+(M12.4).
+
+**The cursor rule.** A cursor names a place in one filter's results, so it
+belongs to the filter it was read under. Any change to the filter opens the
+first page: the filter's controls build their address from `filter` alone,
+never from the cursor, and `changed` drops `after` and `before`. Only the pager
+and a modal's way back write a cursor, through `extra`. Reload and Back need
+nothing built for them: the address is the state, so a reload reads it again
+and Back steps through the filters one change at a time. The e2e spec in
+`tests/e2e/admin-compendium.spec.ts` asserts both.
+
+**A slug list** (`slugListParam`) is a repeated parameter whose values the address
+spells as slugs and the query takes as ids. `read` drops repeats; `variables`
+maps each slug through `lookups[lookupKey]` (a `Map` of slug to id the page
+builds), dropping a slug the map does not hold, and gives `undefined` when none
+are known. The table holds nothing category-specific. The compendium's
+`categories` entry is `slugListParam('categories', 'categoryIds', 'categories')`; its
+page reads the cached `listCategories` (every page, through `allPages`) for the
+map, and the Categories picker (`CategoryPicker`, M8.11) after Form in the filter
+row draws the choice. A pick applies the whole slug list at once. The picker
+keeps its own chosen state while the address catches up, and the filter row is
+keyed by the other filters only, so a pick does not remount it: its status
+region announces the pick once and the list's own status does not. Hidden
+inputs repeat the slugs so a native GET submit before hydration keeps them. A
+match is the union of an entry's categories and its forms' (MB.215), by the
+finder's category arm, ANDed across the categories chosen.
+
+The `elements` filter is the first list filter: an `elements` argument on
+`compendium` and `workspaceIngredients` matching an entry that holds any element
+listed on the entry or on any of its live forms, by array overlap in SQL and ANDed with the other filters. It is read
+from the address and has no control yet; the facet screen (M12.4) draws one.
+
 ## Styling
 
 Tokens only, until the section's design review: the box's submit is drawn

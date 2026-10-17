@@ -65,6 +65,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $deityIds: [ID!]
       $zodiacSigns: [String!]
       $celestialBodies: [String!]
+      $elements: [IngredientElement!]
       $toxic: ToxicFilter
       $nomenclature: Nomenclature
       $first: Int
@@ -77,6 +78,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         deityIds: $deityIds
         zodiacSigns: $zodiacSigns
         celestialBodies: $celestialBodies
+        elements: $elements
         toxic: $toxic
         nomenclature: $nomenclature
         first: $first
@@ -203,6 +205,21 @@ describe('compendium', () => {
       },
       {},
     ]);
+  });
+
+  // M8.13: the element list is a typed enum list, and reaches the read as the service parses it.
+  it('passes the elements argument to the read, and refuses a name that is no element', async () => {
+    await nodesOf({ elements: ['fire', 'water'] });
+    await nodesOf({ elements: [] });
+
+    expect(repository.findCompendiumPage.mock.calls.map(([filter]) => filter)).toEqual([
+      { elements: ['fire', 'water'] },
+      {},
+    ]);
+
+    const refused = await run(null, { elements: ['fixture'] });
+    expect(refused.errors).toHaveLength(1);
+    expect(repository.findCompendiumPage).toHaveBeenCalledTimes(2);
   });
 
   it('no longer takes the single form argument, which forms replaced', async () => {

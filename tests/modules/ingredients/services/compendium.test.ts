@@ -152,6 +152,7 @@ describe('listCompendium, under the facets', () => {
       variants: [makeVariant({ form: 'Fixture Herb' })],
       celestialBodies: ['Fixture Sun'],
       zodiacSigns: ['Fixture Ram'],
+      elements: ['fire'],
     });
     await insertDeityLink(sql, herbed, hecate, 0, A.id);
     // Flagged toxic only on its form.
@@ -159,6 +160,7 @@ describe('listCompendium, under the facets', () => {
       variants: [makeVariant({ form: 'Fixture Oil', toxic: true })],
       celestialBodies: ['Fixture Moon'],
       zodiacSigns: ['Fixture Bull'],
+      elements: ['water'],
     });
     // Holds both of every pair below, and is flagged toxic itself.
     const both = await add('Fixture Both', {
@@ -166,6 +168,7 @@ describe('listCompendium, under the facets', () => {
       variants: [makeVariant({ form: 'Fixture Herb' }), makeVariant({ form: 'Fixture Oil' })],
       celestialBodies: ['Fixture Sun', 'Fixture Moon'],
       zodiacSigns: ['Fixture Ram', 'Fixture Bull'],
+      elements: ['fire', 'water'],
     });
     await insertDeityLink(sql, both, hecate, 0, A.id);
     await insertDeityLink(sql, both, hermes, 1, A.id);
@@ -203,6 +206,44 @@ describe('listCompendium, under the facets', () => {
     expect(await names({ deityIds: [hecate, hermes] })).toEqual(['Fixture Both', 'Fixture Herbed']);
   });
 
+  // M8.13: any listed element matches an entry holding it among others.
+  it('lists an entry holding any one of the elements, once, and ANDs them with the other kinds', async () => {
+    expect(await names({ elements: ['fire'] })).toEqual(['Fixture Both', 'Fixture Herbed']);
+    expect(await names({ elements: ['fire', 'water'] })).toEqual([
+      'Fixture Both',
+      'Fixture Herbed',
+      'Fixture Oiled',
+    ]);
+    expect(await names({ elements: ['water'], forms: ['Fixture Oil'], toxic: 'toxic' })).toEqual([
+      'Fixture Both',
+      'Fixture Oiled',
+    ]);
+    expect(await names({ elements: ['fire'], zodiacSigns: ['Fixture Bull'] })).toEqual([
+      'Fixture Both',
+    ]);
+    // A value that is no element is refused rather than matched.
+    await expect(names({ elements: ['fixture'] as never })).rejects.toThrow();
+  });
+
+  // M8.13, MB.215: a form's element counts for its entry, a retired form's does not.
+  it('lists an entry holding the element only on a live form', async () => {
+    await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Formfire',
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'Fixture Oil', elements: ['air'] })],
+      }),
+      A.id,
+    );
+    expect(await names({ elements: ['air'] })).toEqual(['Fixture Formfire']);
+    expect(await names({ elements: ['air', 'water'] })).toEqual([
+      'Fixture Both',
+      'Fixture Formfire',
+      'Fixture Oiled',
+    ]);
+  });
+
   it('narrows to the entries matching every kind chosen together', async () => {
     expect(await names({ forms: ['Fixture Oil'], zodiacSigns: ['Fixture Ram'] })).toEqual([
       'Fixture Both',
@@ -229,7 +270,15 @@ describe('listCompendium, under the facets', () => {
       { zodiacSigns: [] },
       { deityIds: [] },
       { toxic: 'any' },
-      { forms: null, deityIds: null, zodiacSigns: null, celestialBodies: null, toxic: null },
+      { elements: [] },
+      {
+        forms: null,
+        deityIds: null,
+        zodiacSigns: null,
+        celestialBodies: null,
+        toxic: null,
+        elements: null,
+      },
     ] satisfies Filter[]) {
       expect(await names(filter)).toEqual(everything);
     }

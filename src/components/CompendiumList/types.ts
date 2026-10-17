@@ -1,6 +1,9 @@
 import type { Route } from 'next';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+import type { PickerCategory } from '../CategoryPicker/types';
+import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
+import type { COMPENDIUM_PARAMS } from './params';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading } from '../Modal/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
@@ -36,8 +39,19 @@ export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   filter: CompendiumListFilter;
   /** The curated forms, in name order, which the Form box offers. */
   forms: readonly CompendiumFormChoice[];
+  /** Every live category, which the Categories box offers and the address names by slug. */
+  categories: readonly CompendiumCategoryChoice[];
   /** Where this page stands among them all, for the pager. */
   position?: PagePosition;
+}
+
+/**
+ * One category the Categories box offers: the picker's own, with the slug
+ * the address carries, `?categories=protection`, since the address names a
+ * category by it and the page turns it into the id the compendium filters by.
+ */
+export interface CompendiumCategoryChoice extends PickerCategory {
+  slug: string;
 }
 
 /**
@@ -51,25 +65,18 @@ export interface CompendiumFormChoice {
 
 /**
  * The list's filter as asked: the name query, a form and a classification,
- * each blank for none, and whether to show only the entries that cite no
- * reference.
+ * each blank for none, whether to show only the entries that cite no
+ * reference, the elements an entry may hold, and the categories it must all
+ * be filed under, by slug. Read from the address by the
+ * parameter table (./params.ts), whose entries it is made of.
  */
-export interface CompendiumListFilter {
-  query: string;
-  form: string;
-  nomenclature: NomenclatureKind | '';
-  withoutReferences: boolean;
-}
+export type CompendiumListFilter = SearchFilter<typeof COMPENDIUM_PARAMS.entries>;
 
 /** Where the list stands: its filter, and the cursor of the page a modal opens over. */
-export interface CompendiumPlace {
-  query?: string;
-  form?: string;
-  nomenclature?: NomenclatureKind | '';
-  withoutReferences?: boolean;
-  after?: string;
-  before?: string;
-}
+export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor;
 
-/** What the filter form starts from: the page's filter, and the forms it offers. */
-export type CompendiumListFilterProps = Pick<CompendiumListProps, 'filter' | 'forms'>;
+/** What the filter form starts from: the page's filter, and the forms and categories it offers. */
+export type CompendiumListFilterProps = Pick<
+  CompendiumListProps,
+  'filter' | 'forms' | 'categories'
+>;
