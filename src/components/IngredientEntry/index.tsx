@@ -8,6 +8,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
+import LinkHint from '../LinkHint';
 import SafetyNote, { ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
@@ -244,7 +245,15 @@ function substituteItems(
     const label = substituteLabel(substitute);
     return (
       // A typed name may repeat, so its place keys it.
-      <li key={`${at}-${label}`}>{href ? <Link href={href}>{label}</Link> : label}</li>
+      <li key={`${at}-${label}`}>
+        {href ? (
+          <Link href={href}>
+            {label} <LinkHint />
+          </Link>
+        ) : (
+          label
+        )}
+      </li>
     );
   });
 }
@@ -370,14 +379,19 @@ const IngredientEntry = ({
         )}
         {canonical && (
           <p className="ingredient-entry__canonical">
-            <Link href={canonical}>View in the Compendium</Link>
+            <Link href={canonical}>
+              View in the Compendium <LinkHint />
+            </Link>
           </p>
         )}
         {movedAway && (
           // Quiet: on the page from the start, so a status, never an alert.
           <Notice kind="warn" quiet>
-            Looking for <Link href={movedAway.href}>{movedAway.name}</Link>? It used to be at this
-            address, and has its own page now.
+            Looking for{' '}
+            <Link href={movedAway.href}>
+              {movedAway.name} <LinkHint />
+            </Link>
+            ? It used to be at this address, and has its own page now.
           </Notice>
         )}
       </header>
