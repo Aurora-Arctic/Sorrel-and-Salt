@@ -229,6 +229,35 @@ describe('useFormHistory', () => {
     });
   });
 
+  it('records a pointer drag as one step, and a change after it as another', async () => {
+    const { values } = mount();
+    const slider = screen.getByRole('slider', { name: 'Level' });
+    const tick = () => act(() => new Promise<void>((resolve) => setTimeout(resolve)));
+
+    fireEvent.pointerDown(slider);
+    fireEvent.pointerMove(slider);
+    await tick();
+    fireEvent.pointerMove(slider);
+    await tick();
+    fireEvent.pointerMove(slider);
+    await tick();
+    fireEvent.pointerUp(document);
+    expect(values().level).toBe(3);
+
+    // A change after the hold is a step of its own.
+    choose('Kind', 'Two');
+    expect(values().kind).toBe('two');
+
+    focusIn('Title');
+    undo();
+    expect(values().kind).toBe('one');
+    expect(values().level).toBe(3);
+    undo();
+    expect(values().level).toBe(0);
+    redo();
+    expect(values().level).toBe(3);
+  });
+
   it('subscribes once under StrictMode, and one keypress undoes one step', () => {
     const observers = (handles: { current: ProbeHandles | null }) =>
       (

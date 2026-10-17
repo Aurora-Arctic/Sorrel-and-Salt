@@ -1,5 +1,6 @@
 import { type ReactElement, useRef, useState } from 'react';
 import {
+  Controller,
   FormProvider,
   type ResolverResult,
   type UseFormReturn,
@@ -26,6 +27,7 @@ export interface ProbeValues {
   kind: string;
   items: { value: string }[];
   note: string;
+  level: number;
 }
 
 const START: ProbeValues = {
@@ -33,6 +35,7 @@ const START: ProbeValues = {
   kind: 'one',
   items: [{ value: 'first' }, { value: 'second' }],
   note: '',
+  level: 0,
 };
 
 const KINDS = [
@@ -138,6 +141,22 @@ export function HistoryProbe({
               <datalist id="open-box-list" aria-label="Open Box Options" />
             </>
           )}
+          {/* A slider-like control: every pointer move raises the value, as the colour picker reports each move of a drag. */}
+          <Controller
+            control={control}
+            name="level"
+            render={({ field }) => (
+              <div
+                role="slider"
+                aria-label="Level"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={field.value}
+                tabIndex={0}
+                onPointerMove={() => field.onChange(field.value + 1)}
+              />
+            )}
+          />
           <button type="button" onClick={() => methods.reset({ ...START, title: 'Reset' })}>
             Start Over
           </button>

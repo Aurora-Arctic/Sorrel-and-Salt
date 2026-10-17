@@ -683,6 +683,20 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
       await expect(save).toBeDisabled();
       await assertNoAccessibilityViolations(page);
 
+      // A drag on the hue slider is one step: the picker reports every pointer
+      // move, and one chord still takes the whole drag back.
+      const thumb = group.getByRole('slider', { name: 'Dark Theme Colour hue' });
+      await thumb.hover();
+      const at = (await thumb.boundingBox())!;
+      await page.mouse.down();
+      await page.mouse.move(at.x + at.width / 2 + 40, at.y + at.height / 2, { steps: 6 });
+      await page.mouse.up();
+      await expect(dark).not.toHaveValue(savedDark);
+      await expect(save).toBeEnabled();
+      await page.keyboard.press('ControlOrMeta+z');
+      await expect(dark).toHaveValue(savedDark);
+      await expect(save).toBeDisabled();
+
       // Back at its starting values, closing asks nothing.
       await group.getByRole('button', { name: 'Close', exact: true }).click();
       await expect(group).toHaveCount(0);

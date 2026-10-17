@@ -291,6 +291,8 @@ export interface HistoryMergeInput {
   pauseMs: number;
   /** The newest step was recorded in the event or microtask still running. */
   sameTick: boolean;
+  /** The change comes while a pointer is held down, and the hold has already recorded a step. */
+  held: boolean;
   /** Focus left a field, or a step was undone, since the newest step. */
   sealed: boolean;
 }

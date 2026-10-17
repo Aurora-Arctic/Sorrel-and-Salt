@@ -100,11 +100,22 @@ describe('decideMerge', () => {
     now: 1200,
     pauseMs: 500,
     sameTick: false,
+    held: false,
     sealed: false,
   };
 
   it('starts a step when there is none', () => {
     expect(decideMerge({ ...base, newest: undefined })).toBe('new');
+  });
+
+  it('joins a later change of a pointer hold, whatever the field and the pause', () => {
+    expect(
+      decideMerge({ ...base, name: 'other', typing: false, now: 9000, held: true, sealed: true }),
+    ).toBe('join');
+  });
+
+  it('starts a step for the first change of a hold, which has no step yet', () => {
+    expect(decideMerge({ ...base, name: 'other', typing: false })).toBe('new');
   });
 
   it('joins a change in the same tick', () => {

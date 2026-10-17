@@ -65,7 +65,8 @@ export function historyReducer(state: HistoryState, action: HistoryAction): Hist
  * What a change does to the newest step. In the same tick it joins it: one
  * action that sets several fields is one step. Typing in the one box that
  * the step is typing in, within the pause and with nothing in between,
- * extends it. Anything else, a select pick included, starts a step.
+ * extends it. Every change after the first of one pointer hold, a drag on a
+ * slider, joins that step too: the picker reports each pointer move. Anything else, a select pick included, starts a step.
  */
 export function decideMerge({
   newest,
@@ -74,10 +75,11 @@ export function decideMerge({
   now,
   pauseMs,
   sameTick,
+  held,
   sealed,
 }: HistoryMergeInput): HistoryMerge {
   if (!newest) return 'new';
-  if (sameTick) return 'join';
+  if (sameTick || held) return 'join';
   if (
     typing &&
     newest.typing &&

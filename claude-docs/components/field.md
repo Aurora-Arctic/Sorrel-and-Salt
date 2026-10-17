@@ -306,6 +306,12 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   moment, such as a pick that empties another field, are one step. Typing in
   one text box joins into one step until a pause of half a second (`pauseMs`)
   or until the focus leaves the box; a pick from a list never joins typing.
+  A drag is one step too: every change made while a pointer is held down joins
+  the first, because a picker such as the colour field reports each pointer
+  move, and one undo would otherwise undo a pixel of it. The hold ends on
+  `pointerup` or `pointercancel` on the document, so a drag that leaves the
+  form still counts. A change that lands on `click`, after the pointer is up,
+  is a step of its own.
   The list keeps the last 100 steps (`limit`). A new edit after an undo drops
   what could have been redone.
 - **Undo takes the newest step first**, and redo puts back the one undone last.

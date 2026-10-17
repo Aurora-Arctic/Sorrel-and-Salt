@@ -108,6 +108,9 @@ export function useFormHistory<V extends FieldValues>(
   const tickScheduled = useRef(false);
   // The text box the running action typed into.
   const typedInto = useRef<string | null>(null);
+  // A pointer is held down, and the hold has already recorded its step.
+  const holding = useRef(false);
+  const holdRecorded = useRef(false);
   const blurs = useRef(0);
   const stepBlurs = useRef(0);
   const sealed = useRef(false);
@@ -131,6 +134,10 @@ export function useFormHistory<V extends FieldValues>(
     };
     const noticeEdit = (event: Event) => {
       closeAction();
+      if (event.type === 'pointerdown') {
+        holding.current = true;
+        holdRecorded.current = false;
+      }
       const name = textBoxName(event.target);
       if (name !== null && (event.type === 'input' || event.type === 'change'))
         typedInto.current = name;
@@ -138,9 +145,18 @@ export function useFormHistory<V extends FieldValues>(
     const noticeBlur = () => {
       blurs.current += 1;
     };
+    // The hold ends on the document, not the form: a drag often leaves the
+    // form's box, and the colour picker follows the pointer on the document too.
+    const endHold = () => {
+      holding.current = false;
+      holdRecorded.current = false;
+    };
     const element = root.current;
+    const doc = element?.ownerDocument;
     for (const type of ACTION_EVENTS) element?.addEventListener(type, noticeEdit, true);
     element?.addEventListener('focusout', noticeBlur, true);
+    doc?.addEventListener('pointerup', endHold, true);
+    doc?.addEventListener('pointercancel', endHold, true);
 
     const unsubscribe = subscribe({
       formState: { values: true },
@@ -176,6 +192,7 @@ export function useFormHistory<V extends FieldValues>(
           now,
           pauseMs,
           sameTick: tickOpen.current,
+          held: holding.current && holdRecorded.current,
           sealed: sealed.current || blurs.current !== stepBlurs.current,
         });
         const diff = { name, before, after };
@@ -186,6 +203,9 @@ export function useFormHistory<V extends FieldValues>(
         }
         sealed.current = false;
         stepBlurs.current = blurs.current;
+        // A change that lands on `click`, after `pointerup`, finds no hold here
+        // and so starts its own step, as a checkbox or a button should.
+        if (holding.current) holdRecorded.current = true;
         tickOpen.current = true;
         if (!tickScheduled.current) {
           tickScheduled.current = true;
@@ -201,6 +221,9 @@ export function useFormHistory<V extends FieldValues>(
       unsubscribe();
       for (const type of ACTION_EVENTS) element?.removeEventListener(type, noticeEdit, true);
       element?.removeEventListener('focusout', noticeBlur, true);
+      doc?.removeEventListener('pointerup', endHold, true);
+      doc?.removeEventListener('pointercancel', endHold, true);
+      endHold();
     };
   }, [subscribe, getValues, root, commit, pauseMs, limit]);
 
