@@ -1,5 +1,7 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { StrictMode } from 'react';
+import { StrictMode, useRef } from 'react';
+import { useForm } from 'react-hook-form';
+import { useFormHistory } from '@/components/Field';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { byLabel, choose, press, redo, type, typeIn, undo } from '../../support/interact';
 import { HistoryProbe, type ProbeHandles } from '../../support/form-history';
@@ -449,5 +451,162 @@ describe('useFormHistory', () => {
 
       expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Undo' }));
     });
+  });
+});
+
+describe('where chords are heard', () => {
+  it('undoes with focus on a select that is open', () => {
+    const { values } = mount();
+    type('Title', 'Changed');
+    const toggle = byLabel('Kind', '[role="combobox"]');
+    fireEvent.click(toggle);
+    act(() => toggle.focus());
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+    expect(undo({ meta: true })).toBe(false);
+    expect(values().title).toBe('Fixture');
+  });
+
+  it('undoes with focus on the page, after the form held it', () => {
+    const { values } = mount();
+    focusIn('Title');
+    type('Title', 'Changed');
+    act(() => byLabel('Title', 'input').blur());
+    expect(document.activeElement).toBe(document.body);
+
+    undo({ meta: true });
+
+    expect(values().title).toBe('Fixture');
+  });
+
+  it('does nothing on the page after another element outside the form held focus', () => {
+    const { values } = mount();
+    const outside = document.createElement('button');
+    document.body.append(outside);
+    focusIn('Title');
+    type('Title', 'Changed');
+    act(() => outside.focus());
+    act(() => outside.blur());
+
+    undo({ meta: true });
+
+    expect(values().title).toBe('Changed');
+    outside.remove();
+  });
+
+  it('gives a page chord to the nested form that held focus, not the one around it', () => {
+    function Nested() {
+      const outer = useRef<HTMLDivElement>(null);
+      const inner = useRef<HTMLDivElement>(null);
+      const a = useForm({ defaultValues: { a: 'A', b: 'B' } });
+      const b = useForm({ defaultValues: { c: 'C' } });
+      useFormHistory(a, {
+        root: outer,
+        ignore: (target) => !!inner.current?.contains(target),
+      });
+      useFormHistory(b, { root: inner });
+      (Nested as unknown as { forms: unknown }).forms = { a, b };
+      return (
+        <div ref={outer}>
+          <input aria-label="Outer" {...a.register('a')} />
+          <div ref={inner}>
+            <input aria-label="Inner" {...b.register('c')} />
+          </div>
+        </div>
+      );
+    }
+    render(<Nested />);
+    const { a, b } = (
+      Nested as unknown as {
+        forms: {
+          a: { getValues: () => { a: string } };
+          b: { getValues: () => { c: string } };
+        };
+      }
+    ).forms;
+    focusIn('Outer');
+    type('Outer', 'Outer changed');
+    focusIn('Inner');
+    type('Inner', 'Inner changed');
+    act(() => byLabel('Inner', 'input').blur());
+
+    undo({ meta: true });
+
+    expect(b.getValues().c).toBe('C');
+    expect(a.getValues().a).toBe('Outer changed');
+  });
+});
+
+describe('who owns a chord', () => {
+  type Pair = {
+    a: { getValues: () => { a: string } };
+    b: { getValues: () => { c: string } };
+  };
+  const seen: { current: Pair | null } = { current: null };
+
+  /** An outer and an inner root, neither passing `ignore`. */
+  function Bare() {
+    const outer = useRef<HTMLDivElement>(null);
+    const inner = useRef<HTMLDivElement>(null);
+    const a = useForm({ defaultValues: { a: 'A' } });
+    const b = useForm({ defaultValues: { c: 'C' } });
+    useFormHistory(a, { root: outer });
+    useFormHistory(b, { root: inner });
+    seen.current = { a, b };
+    return (
+      <div ref={outer}>
+        <input aria-label="Outer" {...a.register('a')} />
+        <div ref={inner}>
+          <input aria-label="Inner" {...b.register('c')} />
+        </div>
+      </div>
+    );
+  }
+
+  it('undoes only the inner of two nested forms, for a chord on the page or inside it', () => {
+    render(<Bare />);
+    const { a, b } = seen.current!;
+    focusIn('Outer');
+    type('Outer', 'Outer changed');
+    focusIn('Inner');
+    type('Inner', 'Inner changed');
+
+    undo({ meta: true });
+    expect(b.getValues().c).toBe('C');
+    expect(a.getValues().a).toBe('Outer changed');
+
+    type('Inner', 'Again');
+    act(() => byLabel('Inner', 'input').blur());
+    undo({ meta: true });
+    expect(b.getValues().c).toBe('C');
+    expect(a.getValues().a).toBe('Outer changed');
+  });
+
+  it('keeps undoing the same form with focus on its Undo button outside the root', () => {
+    function Outside() {
+      const root = useRef<HTMLFormElement>(null);
+      const methods = useForm({ defaultValues: { title: 'Fixture' } });
+      const history = useFormHistory(methods, { root });
+      (seen as { current: unknown }).current = methods;
+      return (
+        <>
+          <button type="button" ref={history.undoButton}>
+            Undo
+          </button>
+          <form ref={root}>
+            <input aria-label="Title" {...methods.register('title')} />
+          </form>
+        </>
+      );
+    }
+    render(<Outside />);
+    const methods = seen.current as unknown as { getValues: () => { title: string } };
+    focusIn('Title');
+    type('Title', 'One');
+    act(() => screen.getByRole('button', { name: 'Undo' }).focus());
+
+    undo({ meta: true });
+
+    expect(methods.getValues().title).toBe('Fixture');
   });
 });

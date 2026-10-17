@@ -724,6 +724,34 @@ describe('IngredientForm', () => {
   // Undo and redo (M12.10): the hook is tested in tests/components/Field; this
   // is its wiring in the form.
   describe('its undo and redo', () => {
+    it('undoes the text typed in Folk Names after a click on Classification, then on a blank spot', async () => {
+      renderForm();
+      addEntry('Folk Name', 'Hedge Fixture');
+      await settle();
+      act(() => box('Folk Name').focus());
+      type('Folk Name', 'Lane Fixt');
+      await settle();
+      expect(box('Folk Name')).toHaveValue('Lane Fixt');
+
+      act(() => select('Classification').focus());
+      fireEvent.click(select('Classification'));
+      expect(select('Classification')).toHaveAttribute('aria-expanded', 'true');
+      undo({ meta: true });
+
+      expect(box('Folk Name')).toHaveValue('');
+      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
+
+      // And from a blank spot of the dialog, where the focus is on the page itself.
+      act(() => box('Folk Name').focus());
+      type('Folk Name', 'Fixture Bane');
+      await settle();
+      act(() => box('Folk Name').blur());
+      expect(document.body).toHaveFocus();
+      undo({ meta: true });
+
+      expect(box('Folk Name')).toHaveValue('');
+    });
+
     it('undoes a classification pick together with the formal name it emptied, focusing Classification, and redoes both', async () => {
       renderForm();
       type('Name', 'Testwort');

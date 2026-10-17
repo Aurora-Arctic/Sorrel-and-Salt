@@ -590,6 +590,27 @@ test('undo and redo carry a chip, a reorder, a folded section, a variant and a s
     await expect(folkBox).toBeFocused();
   });
 
+  await test.step('a chord is heard from a select and from a blank spot of the dialog', async () => {
+    const folk = dialog.getByRole('group', { name: 'Folk Names', exact: true });
+    const folkBox = folk.getByRole('combobox', { name: 'Folk Name', exact: true });
+    await folkBox.click();
+    await folkBox.fill('Draft Fixture');
+    await expect(folkBox).toHaveValue('Draft Fixture');
+    // Classification is a select whose open list highlights a choice: it must not swallow the chord.
+    await dialog.getByRole('combobox', { name: 'Classification', exact: true }).click();
+    await page.keyboard.press('Meta+z');
+    await expect(folkBox).toHaveValue('');
+    await page.keyboard.press('Escape');
+
+    await folkBox.click();
+    await folkBox.fill('Second Draft');
+    await expect(folkBox).toHaveValue('Second Draft');
+    // The dialog's heading takes no focus, so the focus falls to the page itself.
+    await dialog.getByRole('heading').first().click();
+    await page.keyboard.press('Meta+z');
+    await expect(folkBox).toHaveValue('');
+  });
+
   await test.step('a keyboard reorder of Colours is undone and redone', async () => {
     const colours = dialog.getByRole('group', { name: 'Colours', exact: true });
     const order = () =>

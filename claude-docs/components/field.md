@@ -302,6 +302,13 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
     ...
 ```
 
+- **Chords are heard at the document**, not on the form: after a click on a
+  blank spot the focus is on the page, outside the form, and a listener on the
+  form never sees the key. A chord is taken when its target is inside the form,
+  or outside it while this form was the last to hold focus (a nested form that
+  `ignore` refuses takes the page's chords itself). Only a text box that is a
+  combobox steps aside while an option is highlighted; a select's toggle never
+  does, so Ctrl+Z always works with the focus on one.
 - **A step is what one action changed.** Several fields changed in the same
   moment, such as a pick that empties another field, are one step. Typing in
   one text box joins into one step until a pause of half a second (`pauseMs`)
