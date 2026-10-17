@@ -57,7 +57,7 @@ interface ProbeProps {
   /** Handed the form and its history on every render. */
   onHandles?: (handles: ProbeHandles) => void;
   /** Draws a combobox that is open, for a chord inside one. */
-  openCombobox?: boolean;
+  openCombobox?: boolean | 'highlighted';
   /** Draws the Undo and Redo buttons. */
   buttons?: boolean;
   /** The rows the list starts with. */
@@ -138,6 +138,7 @@ export function HistoryProbe({
                 role="combobox"
                 aria-expanded="true"
                 aria-controls="open-box-list"
+                aria-activedescendant={openCombobox === 'highlighted' ? 'open-box-option' : ''}
                 aria-label="Open Box"
                 readOnly
               />

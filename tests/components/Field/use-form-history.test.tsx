@@ -126,8 +126,17 @@ describe('useFormHistory', () => {
     expect(handles.current!.history.canRedo).toBe(true);
   });
 
-  it('skips a chord inside an open combobox, and does nothing when not enabled', () => {
-    const { values, rerender, handles } = mount({ openCombobox: true });
+  it('lets a chord through an open combobox with nothing highlighted', () => {
+    const { values } = mount({ openCombobox: true });
+    choose('Kind', 'Two');
+    act(() => byLabel('Open Box', 'input').focus());
+
+    expect(undo()).toBe(false);
+    expect(values().kind).toBe('one');
+  });
+
+  it('skips a chord while a combobox option is highlighted, and when not enabled', () => {
+    const { values, rerender, handles } = mount({ openCombobox: 'highlighted' });
     choose('Kind', 'Two');
     act(() => byLabel('Open Box', 'input').focus());
 

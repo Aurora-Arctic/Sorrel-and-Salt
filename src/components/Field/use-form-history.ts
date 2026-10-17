@@ -363,8 +363,14 @@ export function useFormHistory<V extends FieldValues>(
     const onKeyDown = (event: KeyboardEvent) => {
       if (!enabled || event.defaultPrevented || event.isComposing || event.altKey) return;
       const target = event.target as HTMLElement;
-      // A combobox's list owns its keys.
-      if (target.closest('[role="combobox"][aria-expanded="true"], [role="listbox"]')) return;
+      // A combobox's list owns its keys only while a person is arrowing
+      // through it: Downshift sets a non-empty `aria-activedescendant` on the
+      // input while an option is highlighted, and an empty one otherwise. An
+      // open list with nothing highlighted (a click into the box opens it) lets
+      // the chord through. Anything inside the listbox itself is still left alone.
+      if (target.closest('[role="listbox"]')) return;
+      const box = target.closest('[role="combobox"][aria-expanded="true"]');
+      if (box?.getAttribute('aria-activedescendant')) return;
       if (ignore?.(target)) return;
       const key = event.key.toLowerCase();
       const mod = event.ctrlKey || event.metaKey;

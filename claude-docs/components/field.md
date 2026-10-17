@@ -329,8 +329,10 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   it reads the DOM rather than waiting for an inner handler to mark a key
   handled. A nested form that wants its own chords passes `ignore`, or listens
   natively itself. It stands aside for a key already handled, one composing text (an input method),
-  one with Alt, one inside an open combobox or its list (Downshift owns those
-  keys), and anything `ignore(target)` says is not this form's, such as a
+  one with Alt, one inside a listbox, or in a combobox while an option is highlighted (its
+  `aria-activedescendant` is not empty: the person is arrowing through the
+  list, and Downshift owns those keys; an open list with nothing highlighted,
+  as a click into the box leaves it, lets the chord through), and anything `ignore(target)` says is not this form's, such as a
   panel with a history of its own. A closed select would take Ctrl+Z as a
   letter to search for; see [`combobox.md`](combobox.md#the-select-only-box).
 - **It always calls `preventDefault` on the chord**, even with nothing to
