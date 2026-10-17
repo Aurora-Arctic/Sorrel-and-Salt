@@ -1,0 +1,164 @@
+import 'server-only';
+import type { Session } from '../../../lib/session';
+import {
+  categoriesOf,
+  categoriesOfVariants,
+  deitiesOf,
+  folkNamesOf,
+  substitutesOf,
+  substitutesOfVariants,
+  variantsOf,
+} from './ingredient-children';
+import {
+  categoryGroupsOf,
+  deityTraditionsOf,
+  formChoicesOf,
+  formGroupsOf,
+} from '@/modules/vocabulary';
+import type {
+  CategoryDetail,
+  CategoryRow,
+  DeityDetail,
+  IngredientDetail,
+  IngredientRow,
+  SubstituteDetail,
+  SubstituteRow,
+  VariantDetail,
+} from '../types';
+
+// An ingredient as its page shows it: the one assembly both routes end in, the
+// public compendium page and a coven's own. Each child kind is read once for
+// every ref that needs it, through the readers the GraphQL `Ingredient`
+// resolves through, so the page needs no browser read and no per-form query.
+// The session is the caller's, and a coven entry's children answer `Forbidden`
+// to anyone outside it; the compendium's answer anyone, a null session included.
+
+/** A batch answer for one ref, which a refusal turns into the error it is. */
+function only<T>([answer]: readonly (T | Error)[]): T {
+  if (answer === undefined || answer instanceof Error) throw answer ?? new Error('No answer');
+  return answer;
+}
+
+/**
+ * `entry` with everything its page lists beneath it: folk names, categories
+ * with their groups, deities with their traditions, substitutes, and one
+ * detail per live form in form order. References are not read here (MB.155).
+ *
+ * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven.
+ */
+export async function ingredientDetailOf(
+  session: Session | null,
+  entry: IngredientRow,
+): Promise<IngredientDetail> {
+  const refs = [{ id: entry.id, workspaceId: entry.workspaceId }];
+  const [folkNames, categories, deities, substitutes, variants] = await Promise.all([
+    folkNamesOf(session, refs).then(only),
+    categoriesOf(session, refs).then(only),
+    deitiesOf(session, refs).then(only),
+    substitutesOf(session, refs).then(only),
+    variantsOf(session, refs).then(only),
+  ]);
+
+  // Each form's own children, one batch over the forms.
+  const variantRefs = variants.map(({ id, ingredientId, workspaceId }) => ({
+    id,
+    ingredientId,
+    workspaceId,
+  }));
+  const picked = deities.flatMap(({ deity }) => deity ?? []);
+  const [variantCategories, variantSubstitutes, traditions, forms] = await Promise.all([
+    categoriesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
+    substitutesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
+    deityTraditionsOf(picked.map((deity) => deity.traditionId)),
+    formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
+  ]);
+
+  // What the second batch names: the groups of every category and of every
+  // curated form, and the forms of every ingredient a substitute links.
+  const filed = [categories, ...variantCategories].flat();
+  const live = forms.flatMap((form) => form ?? []);
+  const linked = [
+    ...new Map(
+      [...substitutes, ...variantSubstitutes.flat()]
+        .flatMap(({ ingredient }) => ingredient ?? [])
+        .map((ingredient) => [ingredient.id, ingredient]),
+    ).values(),
+  ];
+  const [categoryGroups, formGroups, linkedForms] = await Promise.all([
+    categoryGroupsOf([...new Set(filed.map(({ groupId }) => groupId))]),
+    formGroupsOf([...new Set(live.map(({ groupId }) => groupId))]),
+    variantsOf(session, linked),
+  ]);
+
+  const groupOf = new Map(
+    [...new Set(filed.map(({ groupId }) => groupId))].flatMap((id, i) => {
+      const group = categoryGroups[i];
+      // A group retired between the two reads: its category shows nowhere
+      // rather than with a chip that has no colours.
+      return group instanceof Error ? [] : [[id, group] as const];
+    }),
+  );
+  const withGroup = (rows: readonly CategoryRow[]): CategoryDetail[] =>
+    rows.flatMap((category) => {
+      const group = groupOf.get(category.groupId);
+      return group ? [{ category, group }] : [];
+    });
+
+  const traditionOf = new Map(picked.map((deity, i) => [deity.id, nameOf(traditions[i])]));
+
+  // A form's icon is its curated form's group's; an uncurated form has none,
+  // and neither does one whose form or group has since been retired.
+  const iconGroupOf = new Map(
+    [...new Set(live.map(({ groupId }) => groupId))].flatMap((id, i) => {
+      const group = formGroups[i];
+      return group instanceof Error ? [] : [[id, group] as const];
+    }),
+  );
+  const formOf = new Map(live.map((form) => [form.id, form]));
+
+  // The name of the form a link names, read beneath the ingredient it links
+  // and never by the form's id alone (MB.218). A link the reader may not
+  // follow shows no form.
+  const formsOfLinked = new Map(
+    linked.map(({ id }, i) => {
+      const forms = linkedForms[i];
+      return [id, forms instanceof Error ? [] : forms] as const;
+    }),
+  );
+  const toSubstitute = ({ name, ingredient, variantId }: SubstituteRow): SubstituteDetail => ({
+    name,
+    ingredient: ingredient
+      ? { id: ingredient.id, slug: ingredient.slug, workspaceId: ingredient.workspaceId }
+      : null,
+    form:
+      (ingredient &&
+        variantId &&
+        formsOfLinked.get(ingredient.id)?.find((variant) => variant.id === variantId)?.form) ||
+      null,
+  });
+
+  return {
+    entry,
+    folkNames,
+    categories: withGroup(categories),
+    deities: deities.map(({ name, deity }): DeityDetail => ({
+      name,
+      tradition: deity ? (traditionOf.get(deity.id) ?? null) : null,
+    })),
+    substitutes: substitutes.map(toSubstitute),
+    variants: variants.map((variant, i): VariantDetail => {
+      const curated = variant.formId ? formOf.get(variant.formId) : undefined;
+      return {
+        variant,
+        icon: (curated && iconGroupOf.get(curated.groupId)?.icon) || null,
+        categories: withGroup(variantCategories[i]),
+        substitutes: variantSubstitutes[i].map(toSubstitute),
+      };
+    }),
+  };
+}
+
+/** The name of a group or tradition, or null once it is gone. */
+function nameOf(group: { name: string } | Error | undefined): string | null {
+  return group === undefined || group instanceof Error ? null : group.name;
+}

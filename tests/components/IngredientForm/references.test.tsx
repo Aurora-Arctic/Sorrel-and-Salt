@@ -18,6 +18,7 @@ import {
   referencePanel,
   renderWithClient,
   waitFor,
+  duplicateHref,
 } from '../../support/ingredient-form';
 import { press, redo, typeIn, undo } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
@@ -94,7 +95,9 @@ function renderField() {
 function renderForm() {
   const onSaved = vi.fn();
   offerNothing();
-  renderWithClient(<IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />);
+  renderWithClient(
+    <IngredientForm duplicateHref={duplicateHref} workspaceId={WORKSPACE_ID} onSaved={onSaved} />,
+  );
   return onSaved;
 }
 

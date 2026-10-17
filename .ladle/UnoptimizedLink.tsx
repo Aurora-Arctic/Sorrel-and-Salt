@@ -10,3 +10,9 @@ const UnoptimizedLink = ({
 }: AnchorHTMLAttributes<HTMLAnchorElement>): ReactElement => <a {...props}>{children}</a>;
 
 export default UnoptimizedLink;
+
+// `useLinkStatus` has no router to read in the workshop, so no link is ever
+// pending; the link-hint story draws the pending markup directly.
+export function useLinkStatus(): { pending: boolean } {
+  return { pending: false };
+}

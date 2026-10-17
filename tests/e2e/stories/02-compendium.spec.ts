@@ -22,9 +22,9 @@ import { openAddIngredient } from './ingredient-dialogs';
 
 // Stories 14, 15 and 16: the compendium as anyone browses it, an entry added
 // from it to a coven, a coven's own ingredient, and the warning that a new
-// name resembles one already there. Scaffolds: /compendium (M8.18), its entry
-// page (M8.19) and the add modal (M8.16) are not built yet, and the task in
-// each annotation turns its `fixme` into `test`.
+// name resembles one already there. Scaffolds: /compendium (M8.18) and the add
+// modal (M8.16) are not built yet, and the task in each annotation turns its
+// `fixme` into `test`. The entry pages (M8.19) are built.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -51,7 +51,7 @@ test.fixme(
     tag: '@story-14',
     annotation: {
       type: 'fixme',
-      description: 'M8.18 builds /compendium and M8.19 /compendium/ingredients/[slug]',
+      description: 'M8.18 builds /compendium',
     },
   },
   async ({ page }) => {
@@ -165,8 +165,7 @@ test.fixme(
     tag: '@story-14',
     annotation: {
       type: 'fixme',
-      description:
-        'M8.18 builds /compendium, M8.19 /compendium/ingredients/[slug] and M9.6 /coven/[slug]/ingredients',
+      description: 'M8.18 builds /compendium and M9.6 /coven/[slug]/ingredients',
     },
   },
   async ({ page, browser, baseURL }) => {
@@ -320,7 +319,7 @@ test.fixme(
     annotation: {
       type: 'fixme',
       description:
-        'M8.16 opens the Add Ingredient modal from the shell, M9.6 builds /coven/[slug]/ingredients and M8.19 the entry page Save Ingredient opens',
+        'M8.16 opens the Add Ingredient modal from the shell and M9.6 builds /coven/[slug]/ingredients',
     },
   },
   async ({ page }) => {

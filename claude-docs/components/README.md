@@ -35,9 +35,16 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | [`context-row.md`](context-row.md)   | The row under the bar: the coven switcher or "Admin" at the left, the section nav beside it                                       |
 | [`section-nav.md`](section-nav.md)   | The one section nav for the coven and admin areas: icon tabs in the context row, a bottom bar on a phone                          |
 | [`page-nav.md`](page-nav.md)         | A page's own menu of jump links to its sections, marking the one in view                                                          |
+| [`link-hint.md`](link-hint.md)       | A dot inside a link that shows the click took while the next page loads                                                           |
 
 ## Lists
 
 | Doc                                            | Component                                                                                    |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | [`ingredient-search.md`](ingredient-search.md) | The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager |
+
+## Pages
+
+| Doc                                          | Component                                                                                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`ingredient-entry.md`](ingredient-entry.md) | An ingredient's page body on both entry routes: its own fields, then one section per form |

@@ -16,6 +16,7 @@ import { ingredientSlug } from '../../../lib/slugify';
 import { addressTaken } from '../../../lib/text';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
+import { ingredientDetailOf } from './ingredient-detail';
 import { ingredients } from '../schema/ingredients';
 import { retiredIngredientSlugs } from '../schema/retired-ingredient-slugs';
 import { CompendiumFilter, type CompendiumFilterInput } from '../validation/compendium-filter';
@@ -48,6 +49,7 @@ import type {
 } from '../../../lib/types';
 import type {
   CompendiumAddress,
+  CompendiumEntryPage,
   CompendiumWrite,
   DeityRecord,
   IngredientFields,
@@ -312,6 +314,36 @@ export async function resolveCompendiumSlug(slug: string): Promise<CompendiumAdd
   const redirect = await findCompendiumSlugRedirect(slug, at);
   if (redirect) return { kind: 'moved', slug: redirect.entry.slug };
   throw new NotFound('No such compendium entry');
+}
+
+// The public entry route's read, held in the data cache beside the list's
+// (claude-docs/db/compendium-cache.md). Cached whole: the address, the entry
+// and everything its page lists, so a hit reaches Postgres for none of it.
+const cachedEntry = cachedCompendiumRead('compendium-entry', async (slug: string) => {
+  const address = await resolveCompendiumSlug(slug);
+  if (address.kind === 'moved') return address satisfies CompendiumEntryPage;
+  const { entry, movedAway } = address;
+  return {
+    kind: 'entry',
+    detail: await ingredientDetailOf(null, entry),
+    movedAway: movedAway ? { name: movedAway.name, slug: movedAway.slug } : null,
+  } satisfies CompendiumEntryPage;
+});
+
+/**
+ * What the public entry page reads for an address: the entry there with all
+ * it lists, or the slug it moved to. It is not `getIngredient` and
+ * `ingredientDetailOf` called in turn because it takes no session: every
+ * viewer sees the compendium alike, so the whole read can be cached under the
+ * `compendium` tag, which a coven's route cannot do with the same assembly.
+ * That route reads `getIngredient` and `ingredientDetailOf` uncached, per viewer.
+ *
+ * @throws {NotFound} nothing is at `slug` and nothing redirects from it — a
+ * coven's slug included, since a coven entry's existence is private. A refusal is
+ * never cached.
+ */
+export function readCompendiumEntry(slug: string): Promise<CompendiumEntryPage> {
+  return cachedEntry(slug);
 }
 
 /** What each field named by spelling is called in a refusal. */

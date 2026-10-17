@@ -34,8 +34,8 @@ interface IngredientFormCallbacks {
   onDeleted?: () => void;
   /** Cancel, offered beside the saves when given: the page the form sits in closes it. */
   onCancel?: () => void;
-  /** Where a near match the duplicate warning names links, when not a coven's ingredient page. */
-  duplicateHref?: (match: Duplicate) => string;
+  /** Where a near match the duplicate warning names links: a coven's ingredient page, or the admin's compendium modal. */
+  duplicateHref: (match: Duplicate) => string;
   /**
    * Where a linked substitute's summary links its entry, opened in a new tab;
    * undefined for an entry with no page to open. Left out, a summary links
@@ -567,8 +567,8 @@ export interface DuplicateWarning {
 
 export interface NameFieldProps {
   warning: DuplicateWarning;
-  /** Where a match links: by default a coven's ingredient page; the admin's compendium page opens its own modal. */
-  hrefOf?: (match: Duplicate) => string;
+  /** Where a match links: a coven's ingredient page, or the admin's compendium modal. */
+  hrefOf: (match: Duplicate) => string;
   /** Whether a match holds a save, offering Create Anyway: a new entry's; an edit's only names its matches. True by default. */
   holds?: boolean;
   /** Create Anyway, while the warning shows, and null otherwise: a held save focuses it. */

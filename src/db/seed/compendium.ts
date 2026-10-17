@@ -41,6 +41,14 @@ import type {
 /** A curated row a literal names, by the key its seed gave it: its id and current spelling, or `null` once retired. */
 type CuratedPick = { id: string; name: string } | null;
 
+/** Throws, listing every issue, when `shards` fail the guard; writes nothing. */
+export function assertCompendiumValid(shards: readonly SeedCompendiumShard[]): void {
+  const issues = checkCompendium(shards);
+  if (issues.length > 0) {
+    throw new Error(`The compendium seed fails its guard:\n- ${issues.join('\n- ')}`);
+  }
+}
+
 /**
  * Checks `shards` against the guard, then seeds them in a transaction of its
  * own. An issue throws before the transaction opens, so an invalid literal
@@ -50,10 +58,7 @@ export async function seedCompendium(
   db: SeedDatabase,
   shards: readonly SeedCompendiumShard[] = COMPENDIUM,
 ): Promise<void> {
-  const issues = checkCompendium(shards);
-  if (issues.length > 0) {
-    throw new Error(`The compendium seed fails its guard:\n- ${issues.join('\n- ')}`);
-  }
+  assertCompendiumValid(shards);
   await beginSeedTransaction(db, (tx) => seedCompendiumContent(tx, shards));
 }
 

@@ -17,6 +17,9 @@ import { byLabel } from './interact';
 // `press`, `choose`, `type` — is tests/support/interact.tsx's, and the
 // lookups and saves answered are tests/support/msw/ingredient-lookups.ts's.
 
+/** Where a near match links in these tests: the form requires one, and none of them follows it. */
+export const duplicateHref = ({ id }: { id: string }): string => `/fixture/ingredients/${id}`;
+
 /** Renders `ui` — the form, or a field in a form of its own — under a query client of its own. */
 export function renderWithClient(ui: ReactElement) {
   return render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);

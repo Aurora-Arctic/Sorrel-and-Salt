@@ -774,11 +774,15 @@ export const Blank: Story = () => {
   // 'open', and the workshop has no page to go to, so it says so instead.
   const [opens, setOpens] = useState<string | null>(null);
   const onSaved = ({ id }: SavedIngredient, next: AfterSave) =>
-    setOpens(next === 'open' ? `/ingredients/${id}` : null);
+    setOpens(next === 'open' ? `/coven/fixture-coven/ingredients/${id}` : null);
   return (
     <>
       <WhatToTry />
-      <IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />
+      <IngredientForm
+        workspaceId={WORKSPACE_ID}
+        duplicateHref={covenDuplicateHref}
+        onSaved={onSaved}
+      />
       {opens !== null && (
         // `output` carries the status role itself, so no `role` attribute.
         <output className="story-note">
@@ -804,6 +808,10 @@ const linkOf = ({
   forms: variants.map(({ form }) => form),
   variants: variants.map(({ id: variantId, form }) => ({ id: variantId, form, group: null })),
 });
+
+/** Where a near match links: a coven's entry page, or on the admin's page that entry's modal. */
+const covenDuplicateHref = ({ id }: { id: string }) => `/coven/fixture-coven/ingredients/${id}`;
+const compendiumDuplicateHref = ({ slug }: { slug: string }) => `/admin/compendium?edit=${slug}`;
 
 /** Where a summary links its entry on the admin's page: that entry's modal. */
 const entryHref = ({ slug }: { slug: string }) => `/admin/compendium?edit=${slug}`;
@@ -961,7 +969,11 @@ export const Compendium: Story = () => {
   return (
     <>
       <WhatToTryOnTheCompendium editing={false} />
-      <IngredientForm workspaceId={null} onCancel={() => undefined} />
+      <IngredientForm
+        workspaceId={null}
+        duplicateHref={compendiumDuplicateHref}
+        onCancel={() => undefined}
+      />
     </>
   );
 };
@@ -974,6 +986,7 @@ export const CompendiumEntry: Story = () => {
       <WhatToTryOnTheCompendium editing />
       <IngredientForm
         workspaceId={null}
+        duplicateHref={compendiumDuplicateHref}
         entry={ENTRY}
         entryHref={entryHref}
         onCancel={() => undefined}
@@ -986,7 +999,14 @@ export const CompendiumEntry: Story = () => {
 export const CompendiumEntrySectionOpen: Story = () => {
   useCannedApi();
   useEffect(() => openSection('Correspondences'), []);
-  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={ENTRY}
+      onCancel={() => undefined}
+    />
+  );
 };
 
 /**
@@ -1002,6 +1022,7 @@ export const CompendiumEntrySaveError: Story = () => {
   return (
     <IngredientForm
       workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
       entry={{
         ...ENTRY,
         // Without its links: the stand-in's ids are no ids the schema
@@ -1035,7 +1056,14 @@ export const CompendiumEntryVariantOpen: Story = () => {
     openSection('Variants');
     openDriedLeaf();
   }, []);
-  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={ENTRY}
+      onCancel={() => undefined}
+    />
+  );
 };
 
 // The open form at a phone's width, in each theme.
@@ -1053,7 +1081,14 @@ export const CompendiumEntryVariantSectionOpen: Story = () => {
     const card = openDriedLeaf();
     if (card) openSection('Correspondences', card);
   }, []);
-  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={ENTRY}
+      onCancel={() => undefined}
+    />
+  );
 };
 
 /**
@@ -1075,7 +1110,7 @@ export const VariantAdded: Story = () => {
     );
     return () => clearTimeout(timer);
   }, []);
-  return <IngredientForm workspaceId={WORKSPACE_ID} />;
+  return <IngredientForm workspaceId={WORKSPACE_ID} duplicateHref={covenDuplicateHref} />;
 };
 
 /**
@@ -1105,7 +1140,12 @@ export const CompendiumEntryCopySkipped: Story = () => {
     substitutes: [...ENTRY.values.substitutes, { value: 'Mockleaf', link: linkOf(INGREDIENTS[3]) }],
   };
   return (
-    <IngredientForm workspaceId={null} entry={{ ...ENTRY, values }} onCancel={() => undefined} />
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={{ ...ENTRY, values }}
+      onCancel={() => undefined}
+    />
   );
 };
 
@@ -1134,7 +1174,14 @@ export const CompendiumEntryEditSource: Story = () => {
     );
     return () => clearTimeout(timer);
   }, []);
-  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={ENTRY}
+      onCancel={() => undefined}
+    />
+  );
 };
 
 // The edit panel at a phone's width, in each theme.
@@ -1159,6 +1206,7 @@ export const CompendiumEntrySubstituteSummary: Story = () => {
   return (
     <IngredientForm
       workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
       entry={ENTRY}
       entryHref={entryHref}
       onCancel={() => undefined}
@@ -1185,6 +1233,7 @@ export const CompendiumEntryInModal: Story = () => {
         >
           <IngredientForm
             workspaceId={null}
+            duplicateHref={compendiumDuplicateHref}
             entry={ENTRY}
             entryHref={entryHref}
             onCancel={() => undefined}

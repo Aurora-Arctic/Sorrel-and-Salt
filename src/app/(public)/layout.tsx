@@ -7,9 +7,9 @@ import { viewerIfSignedIn } from '../../lib/viewer';
 // MB.83). A route group, so the URLs are unchanged. It reads the session when
 // there is one, with `viewerIfSignedIn()`, never a guard that redirects: a
 // signed-in visitor gets the application shell, a signed-out one the public
-// frame, both drawn on the server with no script needed. The pages beneath
-// read no session, so a private value cannot reach the cached compendium
-// reads. An unverified account gets the shell too, as it is signed in: the
+// frame, both drawn on the server with no script needed. A page beneath may
+// read the viewer the same way, to offer a curator Edit; the cached compendium
+// reads take no session, so a private value cannot reach them. An unverified account gets the shell too, as it is signed in: the
 // shell offers it Sign Out and the Compendium link, which is as public as
 // any page here.
 //

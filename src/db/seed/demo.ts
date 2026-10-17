@@ -6,6 +6,8 @@ import { spells } from '../../modules/grimoire/schema/spells';
 import { spellCategories } from '../../modules/grimoire/schema/spell-categories';
 import { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import { categoryIdByName } from './categories';
+import { assertCompendiumValid, seedCompendiumContent } from './compendium';
+import { COMPENDIUM } from './compendium/index';
 import { ingredientSlug } from '../../lib/slugify';
 import {
   COMPENDIUM_INGREDIENTS,
@@ -206,10 +208,17 @@ export const DEMO_SPELLS: SeedSpell[] = [
 ];
 
 export async function seedDemo(db: SeedDatabase): Promise<void> {
+  // Before the transaction opens, as seedCompendium does: an invalid literal writes nothing.
+  assertCompendiumValid(COMPENDIUM);
   await beginSeedTransaction(db, async (tx) => {
     // Inside the same transaction: every spell points at rows `standard` writes.
     // A deity pick someone deleted stays deleted, as a spell does.
     await seedStandardContent(tx, { restoreDeletedDeityPicks: false });
+    // The curated compendium, after standard so its fixture entries keep their
+    // rows and a curated entry of the same identity is skipped. Demo is for a
+    // person exploring the app; standard stays the test fixture cast
+    // (claude-docs/db/demo-scenario.md).
+    await seedCompendiumContent(tx, COMPENDIUM);
 
     await insertMissingWorkspaceIngredients(tx);
     const own = await workspaceIngredientIds(tx);

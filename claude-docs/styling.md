@@ -229,7 +229,7 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Four palettes, deliberately not equals. Two appear on an IngredientCard.
+Five palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
@@ -247,6 +247,15 @@ contrast-checked for its label and a second red would spend a hue. Both
 palettes read the same two tokens, `$wax-badge-dark` and `$wax-badge-light`
 in `_variables.scss`, so they cannot drift apart. They stay separate palettes
 so that a count is not named after a hazard in the code.
+
+**Local** (M8.19) marks a coven's own entry, as against the compendium's, on
+the ingredient page. It says where the row lives, not that anything is wrong,
+so it is tinted, in the accent's inks, a hue already reserved; tinted rather
+than solid, so it never reads as last-used's pointer. Dark takes
+`$sorrel-bright`; light takes `$sorrel-deep`, the light accent's hover ink,
+because `$sorrel-vivid` on its own tint measured 4.42:1, under 4.5. As drawn,
+its label on its tint is 5.60:1 dark and 6.98:1 light, and its edge 4.23:1 and
+4.66:1 on the dark card and page, 4.46:1 and 4.01:1 on the light ones.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:
