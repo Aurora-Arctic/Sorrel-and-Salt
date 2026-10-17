@@ -118,6 +118,7 @@ export default function FacetPanel({
   const count =
     chosen + (filter.toxic === '' ? 0 : 1) + (admin && filter.withoutReferences ? 1 : 0);
 
+  const matchStuck = filter.categories.length < 2;
   const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
 
   // Focus goes back to the button when it was inside the panel, so that a closing panel
@@ -310,17 +311,23 @@ export default function FacetPanel({
                       <input key={slug} type="hidden" name="categories" value={slug} />
                     ))}
                 </div>
-                {filter.categories.length >= 2 && (
-                  <RadioGroupField
-                    legend="Match"
-                    name="categoryMode"
-                    layout="segmented"
-                    hint="All: an ingredient must be in every chosen category. Any: in at least one of them."
-                    options={MATCH_OPTIONS}
-                    value={filter.categoryMode}
-                    onChange={(categoryMode) => onChange({ categoryMode })}
-                  />
-                )}
+                {/* Match stays below two categories so the row does not shift as categories are
+                    picked: it rests on All, disabled, and says when it applies. The held mode is
+                    kept (it still reads All here, and the address drops it, M8.12). */}
+                <RadioGroupField
+                  legend="Match"
+                  name="categoryMode"
+                  layout="segmented"
+                  hint={
+                    matchStuck
+                      ? 'Match applies once two or more categories are chosen.'
+                      : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
+                  }
+                  options={MATCH_OPTIONS}
+                  value={matchStuck ? 'all' : filter.categoryMode}
+                  disabled={matchStuck}
+                  onChange={(categoryMode) => onChange({ categoryMode })}
+                />
                 {admin && (
                   <div className="facet-panel__no-refs">
                     <SwitchField

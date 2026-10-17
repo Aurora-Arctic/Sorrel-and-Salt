@@ -908,13 +908,13 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   const match = page.getByRole('group', { name: 'Match' });
   await page.goto('/admin/compendium?query=Modewort&categories=protection');
   await openFilters(page);
-  // One category: no mode is offered.
-  await expect(match).toHaveCount(0);
+  // One category: the mode stays, on All, and cannot be changed.
+  await expect(match.getByRole('radio', { name: 'All' })).toBeDisabled();
 
   const box = page.getByRole('combobox', { name: 'Category' });
   await box.fill('cleansing');
   await page.getByRole('option', { name: /^Cleansing/ }).click();
-  await expect(match).toBeVisible();
+  await expect(match.getByRole('radio', { name: 'All' })).toBeEnabled();
   await expect(match.getByRole('radio', { name: 'All' })).toBeChecked();
   await applyFilters(page);
   // Why Any could differ: under All, the entry with one category is out.
@@ -935,9 +935,9 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await expect(match.getByRole('radio', { name: 'Any' })).toBeChecked();
   await expect(edit('Modewort One')).toBeVisible();
 
-  // Back to one category: the mode goes from the address and the group from the page.
+  // Back to one category: the mode goes from the address and the group rests on All, disabled.
   await page.getByRole('button', { name: 'Remove Category: Cleansing' }).click();
-  await expect(match).toHaveCount(0);
+  await expect(match.getByRole('radio', { name: 'All' })).toBeDisabled();
   await applyFilters(page);
   await expect(page).not.toHaveURL(/categoryMode/);
 

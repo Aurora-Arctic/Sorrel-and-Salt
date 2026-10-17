@@ -146,6 +146,10 @@ export const AllZeroFacet: Story = () => (
   />
 );
 
+// Fewer than two categories: Match stays, on All, disabled and dashed, its hint saying when it
+// applies.
+export const MatchStuck: Story = () => <Panel start={{ ...NONE, categories: ['warding'] }} />;
+
 // Either Toxic value counting nothing: every matching entry shares one toxicity, so the
 // group rests on Any, is disabled, and says why in its hint.
 export const ToxicStuck: Story = () => (

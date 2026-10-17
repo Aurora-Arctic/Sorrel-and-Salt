@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { renderToString } from 'react-dom/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import FacetPanel from '@/components/FacetPanel';
@@ -292,14 +292,23 @@ describe('FacetPanel', () => {
     expect(sent('categoryMode')).toEqual(['any']);
   });
 
-  it('shows Match only once two categories are chosen', () => {
+  it('keeps Match below two categories, on All, disabled and with a hint, and enables it at two', () => {
     stubViewport(true);
-    const { rerender } = render(<FacetPanel {...props({ categories: ['warding'] })} />);
+    const { rerender } = render(
+      <FacetPanel {...props({ categories: ['warding'], categoryMode: 'any' })} />,
+    );
     fireEvent.click(filtersButton());
-    expect(screen.queryByRole('group', { name: 'Match' })).toBeNull();
+    const match = () => screen.getByRole('group', { name: 'Match' });
+    // The held mode is Any, so All being checked is the stuck state and not the stored value.
+    expect(within(match()).getByRole('radio', { name: 'All' })).toBeChecked();
+    expect(match()).toBeDisabled();
+    expect(match()).toHaveAccessibleDescription();
 
-    rerender(<FacetPanel {...props({ categories: ['warding', 'mending'] })} />);
-    expect(screen.getByRole('group', { name: 'Match' })).toBeInTheDocument();
+    rerender(
+      <FacetPanel {...props({ categories: ['warding', 'mending'], categoryMode: 'any' })} />,
+    );
+    expect(match()).toBeEnabled();
+    expect(within(match()).getByRole('radio', { name: 'Any' })).toBeChecked();
   });
 
   it('shows No Refs to an admin only', () => {
@@ -327,9 +336,9 @@ describe('FacetPanel', () => {
         { value: 'toxic', label: 'Toxic', count: 0 },
         { value: 'not_toxic', label: 'Not Toxic', count: 9 },
       ]);
-      expect(screen.getAllByRole('radio', { name: /^(Any|Toxic|Not Toxic)/ })).toHaveLength(3);
+      expect(within(group()).getAllByRole('radio')).toHaveLength(3);
       expect(screen.getByRole('radio', { name: /^Toxic \(0\)/ })).toBeInTheDocument();
-      expect(screen.getByRole('radio', { name: /^Any/ })).toBeChecked();
+      expect(within(group()).getByRole('radio', { name: /^Any/ })).toBeChecked();
       expect(group()).toBeDisabled();
       expect(group()).toHaveAccessibleDescription();
     });
@@ -343,7 +352,7 @@ describe('FacetPanel', () => {
         { toxic: 'not_toxic' },
       );
       expect(screen.getByRole('radio', { name: /^Not Toxic \(0\)/ })).toBeInTheDocument();
-      expect(screen.getByRole('radio', { name: /^Any/ })).toBeChecked();
+      expect(within(group()).getByRole('radio', { name: /^Any/ })).toBeChecked();
       expect(group()).toBeDisabled();
     });
 
