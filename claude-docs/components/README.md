@@ -41,3 +41,9 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | Doc                                            | Component                                                                                    |
 | ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | [`ingredient-search.md`](ingredient-search.md) | The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager |
+
+## Pages
+
+| Doc                                          | Component                                                                                 |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| [`ingredient-entry.md`](ingredient-entry.md) | An ingredient's page body on both entry routes: its own fields, then one section per form |

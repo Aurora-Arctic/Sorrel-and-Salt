@@ -1,0 +1,99 @@
+# IngredientEntry
+
+`src/components/IngredientEntry/` — the body of an ingredient's page, the same on the public compendium route and a coven's (M8.19): the entry's own fields, then one section for each form it comes in.
+
+Two routes render it: `/compendium/ingredients/[slug]`, which anyone can read, signed out included, and `/coven/[slug]/ingredients/[id]`, which a coven's members read. Each route reads an `IngredientDetail` (`src/modules/ingredients/types.ts`) through `ingredientDetailOf` and hands it over; the component reads nothing itself. It is a server component: no hook and no `'use client'`, so either page renders it directly. `PageNav` inside it is a client component, which a server component may render.
+
+The route gives the page's `<main>`. The component's root is an `<article>` carrying `.page-with-nav`, the class that sets the jump menu beside the sections ([`page-nav.md`](page-nav.md), "Where it stands").
+
+## Props
+
+`IngredientEntryProps` (`types.ts`):
+
+| Prop        | What it is                                                                                                                                                 |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `detail`    | The entry, its folk names, categories with their groups, deities, substitutes, and one `VariantDetail` per live form in form order                         |
+| `hrefOf`    | `(ingredient: { id, slug, workspaceId }) => Route \| undefined`: where a linked substitute's page is. `undefined` sets the name as text                    |
+| `edit`      | `{ href: Route }`: an Edit link, as the page header's action. Left out, no Edit. There is never a Delete here: M8.15, folded into M8.19, offers it nowhere |
+| `movedAway` | `{ name, href: Route }`: the entry that moved off this address while its redirect is still served (MB.82), linked at its page now                          |
+| `canonical` | `Route`: the public page of a compendium entry, shown as a "View in the Compendium" link. The coven route passes it for a compendium entry                 |
+
+Every address is typed as Next's `Route`, as other components' `href` props are, so the caller casts a built string once (`as Route`) where typed routes cannot check it.
+
+## Structure
+
+In page order, with the accessible names a test or a story walk finds them by:
+
+1. **The head**, a `<header>` inside the article:
+   - `PageHeader`: the `h1` is `entry.name`; `edit` puts a `.btn` link named **Edit** at the end of its line.
+   - A `.badges` row, drawn only when it holds something: **Local** (`.badge--local`) when `entry.workspaceId` is set, then `ToxicMark` for the entry and every form, so a toxic form marks the entry though the ingredient is not.
+   - The formal name (below).
+   - `canonical`: a link named **View in the Compendium**.
+   - `movedAway`: a quiet warning `Notice`, a `status`, holding a link named after the moved entry.
+2. **The jump menu**: `PageNav`, a `navigation` named **On this page**, with **Details** (`#details`) and then one entry per form, labelled with the form capitalised (`#form-oil`). Drawn only when there is a form: with none there is nowhere to jump.
+3. **Details**: `<section id="details">`, a `region` named **Details** by its visible `h2`. In order:
+   - The description, or "No description recorded."
+   - `SafetyNote` with the ingredient's own notes only, at `level={3}` (a `region` named **Caution**; nothing when there are none).
+   - **Correspondences**, an `h3` over a `<dl>`: Elements, Planets (`celestialBodies`), Zodiac Signs, Colours, Deities (a deity's tradition in parentheses when known). Every row is always there; an empty one says "None recorded".
+   - **Folk Names**, **Categories** and **Substitutes**: each an `h3` over a `<ul>` named by it, so `getByRole('list', { name: 'Folk Names' })` finds it. Categories are `.chip`s in their group's colours (`chipColors(group)`), the same markup as the category picker's. An empty list is replaced by a muted sentence in the same block, so the heading never stands over nothing.
+4. **The forms**: one wrapper `<div class="ingredient-entry__forms">`, the **last** thing the component renders, holding one `<section id="form-<slug>">` per form, in the order given. Each is a `region` named by the form's capitalised name alone, and its `h2` reads the `FormIcon`, the name, then `ToxicMark` for that form. The body is only what the form adds: its description, its own `SafetyNote`, the correspondence rows it carries (non-empty ones only), its categories and its substitutes. A form that adds none of these still gets its section, with one line saying so, so its anchor and jump link always exist.
+
+Inside a form, the lists are named by the form's name and then the heading — "Oil Categories", "Oil Substitutes", "Oil Correspondences" — so the ingredient's own **Categories** and **Substitutes** stay the only lists with exactly those names. Playwright's `name` matches a substring unless `exact: true` is passed, so a walk looking for the ingredient's own list passes `exact: true` or looks inside the **Details** region.
+
+## Contracts
+
+- **The formal name is never blank** (MB.161). It is a one-pair `<dl>`: the term says the nomenclature in words, the definition holds the name.
+
+  | Nomenclature                        | Term                                 | Definition                                    |
+  | ----------------------------------- | ------------------------------------ | --------------------------------------------- |
+  | `botanical`, `fungal`, `zoological` | Botanical / Fungal / Zoological Name | The name in `<i class="binomial">`            |
+  | `mineral`, `chemical`               | Mineral / Chemical Name              | The name, upright                             |
+  | `unknown` with a name               | Formal Name                          | The name, upright, then "(unconfirmed)" muted |
+  | `unknown` with none                 | Formal Name                          | "Not yet looked up", muted                    |
+  | `none`                              | Formal Name                          | "None — no naming system names it", muted     |
+
+  A `<dl>` rather than a labelled `<p>`: a screen reader announces the label as the term and the name as its value, the same way it reads the Correspondences list beneath, rather than running label and name together as one sentence. Italics only for a binomial, since they follow a settled classification: the kinds are `BINOMIAL_KINDS` in `src/modules/ingredients/schema/ingredient-enums.ts`, shared with the compendium list's edit-dialog heading. `<i>` rather than `<em>`, because a taxonomic name is set apart, not stressed.
+
+- **A form's anchor is `form-` and the form's name through `slugify`** (DESIGN.md §9), so `#form-oil` opens on the oil. Two forms are unique by their trimmed, lower-cased names, which can still slug alike ("oil" and "oil."); the second then takes `-2`.
+- **The ids are built from the data, not `useId`**: `details-heading`, `details-folk-names`, `form-oil-name`, `form-oil-categories`, and so on. A page holds one entry, so they cannot collide, and a server component has no hook.
+- **A substitute links only to a page the caller names.** One with an ingredient is a `Link` to `hrefOf(ingredient)`; a typed name, a link whose ingredient was deleted (its last name kept, MB.138), and one `hrefOf` answers `undefined` for are plain text. A substitute that names a form reads "Name (form)".
+- **Safety is drawn by `SafetyNote` and `ToxicMark` only** (M8.13a). The ingredient's note sits in Details; each form's sits in its own section, given that form's notes as `safetyNotes`, since the section's heading already names the form.
+- **The notes slot.** The forms' wrapper is the article's last child, and v2's notes section is appended after it, so adding it moves nothing above. MB.155's references go in Details, beneath the substitutes, where a comment marks the place.
+- **Meaning never by colour alone.** Local and Toxic carry their words; a category chip carries its name, its colour repeating its group.
+
+## Styling
+
+`index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` badge palette is new here, in `_variables.scss` (`styling.md`, "Badge palettes").
+
+Running text stops at `$measure`: the description is a `<p>`, which `typography-base` caps, and a `dd` or list item takes `max-width: $measure` itself. A description keeps the line breaks typed into its textarea (`white-space: pre-line`).
+
+## Stories
+
+[`index.stories.tsx`](../../src/components/IngredientEntry/index.stories.tsx), under `Pages / Ingredient Entry`, each in a `main.page-column` as a route gives it:
+
+- `CompendiumEntry`: two forms, a toxic oil with its own caution and a typed bundle drawing the spoon.
+- `NoFormalName`, `UnknownWithName`, `UnknownWithoutName`: the formal-name line's three sentences.
+- `NothingRecorded`: every empty state, and a form that adds nothing.
+- `CovenEntry`: a coven's own entry, badged Local.
+- `CompendiumEntryForCurator`: Edit, and the link to the public page.
+- `MovedAway`: the notice for the entry that left this address.
+- `FormAddsNothing`: two forms adding nothing, one of them toxic.
+- `PhoneDark`, `PhoneLight`: the full entry at 375px.
+
+## Testing
+
+`tests/components/IngredientEntry/index.test.tsx` checks, by what renders rather than by its words:
+
+- the `h1` is the entry's name;
+- the formal name is a labelled, non-empty value for all eight cases (the seven kinds, `unknown` with and without a name), in italics for the three binomial kinds only, and an unconfirmed name has more than the name beside it;
+- Local is there for a coven's entry and not for a compendium one;
+- a toxic form marks the entry Toxic though the ingredient is not;
+- Folk Names, Categories and Substitutes are lists of that name in Details, with one item each;
+- a linked substitute links to `hrefOf`'s address, a typed one and one `hrefOf` has no page for are text;
+- each form's section is a region at `#form-<slug>`, headed by its form, with its own caution and mark, after Details and inside the last element;
+- a form that adds nothing still says something, and a form's section holds only the rows and lists it carries;
+- the jump menu links to Details and each form, and is absent with no forms;
+- Edit is there only with `edit`, and Delete never;
+- `canonical` and `movedAway` link where they say.
+
+**Not yet checked in a real browser:** axe. The entry routes' Playwright specs, added with the pages in M8.19, scan it.

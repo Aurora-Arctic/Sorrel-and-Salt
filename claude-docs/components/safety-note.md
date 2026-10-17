@@ -42,7 +42,8 @@ rather than naming a GraphQL type, so a card's or the entry page's
 - **The consumer chooses which forms are shown** (MB.215). A card passes the
   ingredient together with the forms it lists. The entry page uses the note
   once for the ingredient, in its own place, and once under each variant's
-  heading with that variant alone (`safetyNotes={null} variants={[variant]}`).
+  heading with that variant's notes as its own (`safetyNotes={variant.safetyNotes}`),
+  since the heading above already names the form.
   A form's notes are listed under its name, after the ingredient's own. The name is capitalised (`capitalise`, as the form pickers label a form) and led by its group's `FormIcon`, so it reads as a form; a typed form, with no `formChoice`, gets the spoon. A form
   with no notes gets no line.
 - **A form's toxic flag belongs to that form**, never to its ingredient, so the
