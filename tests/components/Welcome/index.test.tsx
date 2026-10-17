@@ -28,4 +28,18 @@ describe('Welcome', () => {
 
     expect(screen.getByRole('link', { name: 'Continue' })).toHaveAttribute('href', '/admin');
   });
+
+  // The compendium is the one public surface (MB.80), so the front door
+  // reaches it for everyone, whichever way in they are offered.
+  it.each([
+    ['a signed-out visitor', undefined],
+    ['a signed-in visitor', '/coven' as const],
+  ])('links %s to the compendium', (_, landing) => {
+    render(<Welcome landing={landing} />);
+
+    expect(screen.getByRole('link', { name: 'Browse the Compendium' })).toHaveAttribute(
+      'href',
+      '/compendium',
+    );
+  });
 });
