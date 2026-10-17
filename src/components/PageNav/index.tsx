@@ -52,7 +52,7 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
   }, [entries]);
 
   const link = (entry: PageNavEntry) => (
-    <li key={entry.href}>
+    <li key={entry.href} className={entry.apart ? 'page-nav__apart' : undefined}>
       <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
         {entry.label}
       </a>

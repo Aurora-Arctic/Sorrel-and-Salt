@@ -15,7 +15,10 @@ The account page's sections are panels; the coven index's are plain
 ## Props
 
 - `label`: the landmark's accessible name ("On this page").
-- `entries`: `{ href: '#id', label, group? }[]`, one per section, in page order.
+- `entries`: `{ href: '#id', label, group?, apart? }[]`, one per section, in page order.
+  `apart` (MB.155) sets a top-level entry off from those above it: a group
+  entry's size and the break a group label takes (`space(5)` above), for an
+  ingredient's closing References entry, with or without forms before it.
   `group` is optional and the account page and coven index leave it out.
   Consecutive entries naming the same `group` are drawn as one nested list
   under a label: `<li><span class="page-nav__group">Forms</span><ul>…</ul></li>`.

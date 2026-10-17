@@ -313,7 +313,7 @@ function FormSection({
               : 'This form adds nothing to what the ingredient says.'}
           </p>
         )}
-        <NoteMarks numbers={numbers} />
+        <NoteMarks section={anchor} numbers={numbers} />
       </div>
       {hasLists && (
         <div className="ingredient-entry__side">
@@ -416,7 +416,7 @@ const IngredientEntry = ({
               label: capitalise(variant.form),
               group: 'Forms',
             })),
-            { href: '#references', label: 'References' },
+            { href: '#references', label: 'References', apart: true },
           ]}
         />
       )}
@@ -430,7 +430,7 @@ const IngredientEntry = ({
             <p className="ingredient-entry__empty">No description recorded.</p>
           )}
           <SafetyNote safetyNotes={entry.safetyNotes} level={3} />
-          <NoteMarks numbers={notes.numbersOf(DETAILS)} />
+          <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
         </div>
         {/* A plain div, not an aside: one complementary landmark per section
             would be noise, and each block is already headed and labelled. */}

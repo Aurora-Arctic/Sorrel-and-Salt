@@ -518,6 +518,21 @@ describe('IngredientEntry references', () => {
     }
   });
 
+  it('groups a section\x27s numbers under a References label that is not a heading', () => {
+    sample();
+    const details = screen.getByRole('region', { name: 'Details' });
+
+    const group = within(details).getByRole('group', { name: 'References' });
+    expect(within(group).getAllByRole('link')).toHaveLength(2);
+    expect(within(details).queryByRole('heading', { name: 'References' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'References' })).toHaveLength(1);
+    expect(
+      within(screen.getByRole('region', { name: /testoil/i })).getByRole('group', {
+        name: 'References',
+      }),
+    ).toBeInTheDocument();
+  });
+
   it('puts the numbers after the text of their section', () => {
     sample();
     const details = screen.getByRole('region', { name: 'Details' });

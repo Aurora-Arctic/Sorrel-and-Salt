@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from 'react';
+import { Fragment, type ReactElement, type ReactNode } from 'react';
 import { citationText, byCitation, renderCitation } from '../../lib/citation';
 import { renderShortCitation } from '../../lib/short-citation';
 import type { CitationPart } from '../../lib/types';
@@ -108,22 +108,39 @@ const noteId = (number: number) => `note-${number}`;
 const entryId = (reference: ReferenceRow) => `ref-${reference.id}`;
 
 /**
- * A section's note numbers, after its text: each a superscript link to its
- * note. Nothing when the section cites nothing.
+ * A section's note numbers, on a line of their own at the end of its text,
+ * under a small "References" label: each a superscript link to its note. The
+ * label is not a heading, so the page keeps its one References heading; it
+ * names the group the numbers sit in. Nothing when the section cites nothing.
+ * `section` keeps the label's id unique on the page.
  */
-export function NoteMarks({ numbers }: { numbers: readonly number[] }): ReactElement | null {
+export function NoteMarks({
+  section,
+  numbers,
+}: {
+  section: string;
+  numbers: readonly number[];
+}): ReactElement | null {
   if (numbers.length === 0) return null;
+  const labelId = `${section}-marks`;
   return (
-    <p className="ingredient-entry__marks">
-      {numbers.map((number, at) => (
-        <sup key={number}>
-          {at > 0 && ' '}
-          <a id={markId(number)} href={`#${noteId(number)}`} aria-label={`Note ${number}`}>
-            {number}
-          </a>
+    <div className="ingredient-entry__marks" role="group" aria-labelledby={labelId}>
+      <p id={labelId} className="eyebrow">
+        References
+      </p>
+      <p>
+        <sup>
+          {numbers.map((number, at) => (
+            <Fragment key={number}>
+              {at > 0 && ', '}
+              <a id={markId(number)} href={`#${noteId(number)}`} aria-label={`Note ${number}`}>
+                {number}
+              </a>
+            </Fragment>
+          ))}
         </sup>
-      ))}
-    </p>
+      </p>
+    </div>
   );
 }
 

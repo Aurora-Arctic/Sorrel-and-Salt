@@ -260,10 +260,10 @@ $side-column: calc(#{space(8)} * 5);
 // fill, so a reader sees where the jump arrived (and, with the back link,
 // where to return to).
 .ingredient-entry__marks {
-  margin: 0;
+  @include stack(1);
 
-  sup a {
-    padding-inline: space(1);
+  p {
+    margin: 0;
   }
 }
 
@@ -328,4 +328,38 @@ $side-column: calc(#{space(8)} * 5);
 
 .ingredient-entry__canonical {
   margin: 0;
+}
+
+// Every link in the References section (a note's way on to its entry, an
+// entry's source and its ways back, a note's way back) and the note numbers
+// ending each section rest in the body ink, and pointed at or focused fade to
+// the link colour, as the admin compendium's name links do (the owner's
+// call). The underline is left as the page gives it, since it is what marks
+// them as links without the colour.
+.ingredient-entry__marks a,
+.ingredient-entry__references a {
+  color: $text-primary;
+  @include theme-transition(color);
+
+  &:hover,
+  &:focus-visible {
+    color: $accent;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:where(:visited) {
+    color: $text-primary;
+  }
+
+  &:hover:where(:visited),
+  &:focus-visible:where(:visited) {
+    color: $accent;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
 }

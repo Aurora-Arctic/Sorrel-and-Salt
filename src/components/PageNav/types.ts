@@ -8,6 +8,12 @@ export type PageNavEntry = {
    * link. Left out, the entry stands at the top level.
    */
   group?: string;
+  /**
+   * A top-level entry set apart from the ones above it: the size of a
+   * group's entries and the clear break a group label takes, for a closing
+   * entry such as an ingredient's References.
+   */
+  apart?: boolean;
 };
 
 export type PageNavProps = {

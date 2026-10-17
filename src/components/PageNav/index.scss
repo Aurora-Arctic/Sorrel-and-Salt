@@ -74,6 +74,17 @@
     font-size: 1.125rem;
   }
 
+  // An entry set apart (an ingredient's References) reads as a group's entries
+  // do, and takes the break a group label takes: the same token, so the gap
+  // is the one between Details and Forms whether or not forms follow.
+  .page-nav__apart {
+    margin-block-start: space(5);
+
+    > a {
+      font-size: inherit;
+    }
+  }
+
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
     a {
       justify-content: flex-end;
