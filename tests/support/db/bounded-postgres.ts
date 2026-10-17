@@ -19,7 +19,13 @@ export const TEST_POOL_MAX = 4;
 
 function bounded(first?: string | ClientOptions, second?: ClientOptions) {
   const [url, options] = typeof first === 'string' ? [first, second] : [undefined, first];
-  const capped = { ...options, max: Math.min(options?.max ?? TEST_POOL_MAX, TEST_POOL_MAX) };
+  // Notices are dropped unless a caller passes its own handler: a truncate that
+  // cascades prints one per table, ~3,000 lines a run.
+  const capped = {
+    onnotice: () => undefined,
+    ...options,
+    max: Math.min(options?.max ?? TEST_POOL_MAX, TEST_POOL_MAX),
+  };
   return url === undefined ? postgres(capped) : postgres(url, capped);
 }
 
