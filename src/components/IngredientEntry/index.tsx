@@ -228,12 +228,8 @@ function FormSection({
   // Only what the form adds: the ingredient's own fields stand above, and a
   // form inherits them by the union rule (DESIGN.md §5).
   const rows = correspondences(variant).filter((row) => row.values.length > 0);
-  const addsNothing =
-    !said(variant.description) &&
-    !said(variant.safetyNotes) &&
-    rows.length === 0 &&
-    categories.length === 0 &&
-    substitutes.length === 0;
+  const hasLists = rows.length > 0 || categories.length > 0 || substitutes.length > 0;
+  const addsNothing = !said(variant.description) && !said(variant.safetyNotes) && !hasLists;
 
   return (
     <section id={anchor} className="ingredient-entry__section" aria-labelledby={nameId}>
@@ -241,33 +237,39 @@ function FormSection({
         <FormIcon name={icon} /> <span id={nameId}>{capitalise(variant.form)}</span>{' '}
         <ToxicMark toxic={variant.toxic} />
       </h2>
-      {said(variant.description) && (
-        <p className="ingredient-entry__description">{variant.description}</p>
-      )}
-      <SafetyNote safetyNotes={variant.safetyNotes} level={3} />
-      {rows.length > 0 && (
-        <CorrespondenceBlock block={blockOf(anchor, 'correspondences', nameId)} rows={rows} />
-      )}
-      {categories.length > 0 && (
-        <ListBlock
-          block={blockOf(anchor, 'categories', nameId)}
-          title="Categories"
-          className="ingredient-entry__chips"
-        >
-          {categoryItems(categories)}
-        </ListBlock>
-      )}
-      {substitutes.length > 0 && (
-        <ListBlock block={blockOf(anchor, 'substitutes', nameId)} title="Substitutes">
-          {substituteItems(substitutes, hrefOf)}
-        </ListBlock>
-      )}
-      {addsNothing && (
-        <p className="ingredient-entry__empty">
-          {variant.toxic
-            ? 'This form adds only its Toxic mark to what the ingredient says.'
-            : 'This form adds nothing to what the ingredient says.'}
-        </p>
+      <div className="ingredient-entry__text">
+        {said(variant.description) && (
+          <p className="ingredient-entry__description">{variant.description}</p>
+        )}
+        <SafetyNote safetyNotes={variant.safetyNotes} level={3} />
+        {addsNothing && (
+          <p className="ingredient-entry__empty">
+            {variant.toxic
+              ? 'This form adds only its Toxic mark to what the ingredient says.'
+              : 'This form adds nothing to what the ingredient says.'}
+          </p>
+        )}
+      </div>
+      {hasLists && (
+        <div className="ingredient-entry__side">
+          {rows.length > 0 && (
+            <CorrespondenceBlock block={blockOf(anchor, 'correspondences', nameId)} rows={rows} />
+          )}
+          {categories.length > 0 && (
+            <ListBlock
+              block={blockOf(anchor, 'categories', nameId)}
+              title="Categories"
+              className="ingredient-entry__chips"
+            >
+              {categoryItems(categories)}
+            </ListBlock>
+          )}
+          {substitutes.length > 0 && (
+            <ListBlock block={blockOf(anchor, 'substitutes', nameId)} title="Substitutes">
+              {substituteItems(substitutes, hrefOf)}
+            </ListBlock>
+          )}
+        </div>
       )}
     </section>
   );
@@ -286,7 +288,11 @@ const IngredientEntry = ({
   const anchors = formAnchors(variants);
 
   return (
-    <article className="ingredient-entry page-with-nav">
+    <article
+      className={
+        variants.length > 0 ? 'ingredient-entry ingredient-entry--with-nav' : 'ingredient-entry'
+      }
+    >
       <header className="ingredient-entry__head">
         <PageHeader
           title={entry.name}
@@ -327,6 +333,7 @@ const IngredientEntry = ({
             ...variants.map(({ variant }, at) => ({
               href: `#${anchors[at]}` as const,
               label: capitalise(variant.form),
+              group: 'Forms',
             })),
           ]}
         />
@@ -334,41 +341,47 @@ const IngredientEntry = ({
 
       <section id="details" className="ingredient-entry__section" aria-labelledby="details-heading">
         <h2 id="details-heading">Details</h2>
-        {said(entry.description) ? (
-          <p className="ingredient-entry__description">{entry.description}</p>
-        ) : (
-          <p className="ingredient-entry__empty">No description recorded.</p>
-        )}
-        <SafetyNote safetyNotes={entry.safetyNotes} level={3} />
-        <CorrespondenceBlock
-          block={blockOf('details', 'correspondences')}
-          rows={correspondences(entry, deities)}
-        />
-        <ListBlock
-          block={blockOf('details', 'folk-names')}
-          title="Folk Names"
-          empty="No folk names recorded."
-        >
-          {folkNames.map((name) => (
-            <li key={name}>{name}</li>
-          ))}
-        </ListBlock>
-        <ListBlock
-          block={blockOf('details', 'categories')}
-          title="Categories"
-          empty="No categories recorded."
-          className="ingredient-entry__chips"
-        >
-          {categoryItems(categories)}
-        </ListBlock>
-        <ListBlock
-          block={blockOf('details', 'substitutes')}
-          title="Substitutes"
-          empty="No substitutes recorded."
-        >
-          {substituteItems(substitutes, hrefOf)}
-        </ListBlock>
-        {/* MB.155's references go here, beneath the substitutes. */}
+        <div className="ingredient-entry__text">
+          {said(entry.description) ? (
+            <p className="ingredient-entry__description">{entry.description}</p>
+          ) : (
+            <p className="ingredient-entry__empty">No description recorded.</p>
+          )}
+          <SafetyNote safetyNotes={entry.safetyNotes} level={3} />
+        </div>
+        {/* A plain div, not an aside: one complementary landmark per section
+            would be noise, and each block is already headed and labelled. */}
+        <div className="ingredient-entry__side">
+          <CorrespondenceBlock
+            block={blockOf('details', 'correspondences')}
+            rows={correspondences(entry, deities)}
+          />
+          <ListBlock
+            block={blockOf('details', 'folk-names')}
+            title="Folk Names"
+            empty="No folk names recorded."
+          >
+            {folkNames.map((name) => (
+              <li key={name}>{name}</li>
+            ))}
+          </ListBlock>
+          <ListBlock
+            block={blockOf('details', 'categories')}
+            title="Categories"
+            empty="No categories recorded."
+            className="ingredient-entry__chips"
+          >
+            {categoryItems(categories)}
+          </ListBlock>
+          <ListBlock
+            block={blockOf('details', 'substitutes')}
+            title="Substitutes"
+            empty="No substitutes recorded."
+          >
+            {substituteItems(substitutes, hrefOf)}
+          </ListBlock>
+          {/* MB.155's references go here, beneath the substitutes. */}
+        </div>
       </section>
 
       {/* The forms, the last thing drawn: v2's notes section is appended

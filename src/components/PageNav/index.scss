@@ -40,6 +40,24 @@
     }
   }
 
+  // A group's label: a heading over its entries, not a link, in the
+  // eyebrow's small capitals so it reads as a heading and not as an entry.
+  .page-nav__group {
+    display: block;
+    margin-block-start: space(2);
+    padding: space(1) space(4);
+    font-size: type-size('overline');
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  // A group's entries, a step in from its label.
+  ul ul a {
+    padding-inline-start: space(6);
+  }
+
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
     a {
       justify-content: flex-end;
@@ -50,6 +68,15 @@
       &[aria-current='location'] {
         box-shadow: inset (-$rule-heavy) 0 0 0 var(--page-nav-bar);
       }
+    }
+
+    // Right-aligned here, so the step in is from the right edge.
+    .page-nav__group {
+      text-align: end;
+    }
+
+    ul ul a {
+      padding-inline: space(4) space(6);
     }
   }
 }

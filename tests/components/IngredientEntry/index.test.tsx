@@ -143,6 +143,16 @@ function formalValue(): HTMLElement {
   return definition;
 }
 
+/** The innermost element holding every one of these: the column they share. */
+function sharedColumn(elements: HTMLElement[]): HTMLElement {
+  let column = elements[0]!.parentElement!;
+  while (!elements.every((el) => column.contains(el))) column = column.parentElement!;
+  return column;
+}
+
+const precedes = (a: Node, b: Node): boolean =>
+  (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+
 describe('IngredientEntry', () => {
   it('heads the page with the entry name', () => {
     renderEntry();
@@ -249,6 +259,31 @@ describe('IngredientEntry', () => {
     ).toHaveLength(3);
   });
 
+  it('sets the correspondences and the three lists in a column of their own, after the text', () => {
+    renderEntry({ detail: detail({ entry: entryRow({ safetyNotes: 'A fixture caution.' }) }) });
+    const details = screen.getByRole('region', { name: 'Details' });
+    const caution = within(details).getByRole('region', { name: 'Caution' });
+    const description = within(details).getByText(detail().entry.description!);
+
+    const side = sharedColumn([
+      within(details).getByRole('heading', { name: 'Correspondences', level: 3 }),
+      within(details).getByRole('list', { name: 'Folk Names' }),
+      within(details).getByRole('list', { name: 'Categories' }),
+      within(details).getByRole('list', { name: 'Substitutes' }),
+    ]);
+    // A column inside the section, not the section itself, holding none of the text.
+    expect(details).toContainElement(side);
+    expect(side).not.toBe(details);
+    expect(side).not.toContainElement(caution);
+    expect(side).not.toContainElement(description);
+    expect(side).not.toContainElement(within(details).getByRole('heading', { level: 2 }));
+    // Not a complementary landmark: one per section would be noise.
+    expect(screen.queryByRole('complementary')).not.toBeInTheDocument();
+    // Read after the text.
+    expect(precedes(description, side)).toBe(true);
+    expect(precedes(caution, side)).toBe(true);
+  });
+
   it('links a linked substitute to its page, naming the form a form link names, and leaves a typed one as text', () => {
     renderEntry();
     const substitutes = screen.getByRole('list', { name: 'Substitutes' });
@@ -317,6 +352,13 @@ describe('IngredientEntry', () => {
     expect(within(oil).getByRole('definition')).toHaveTextContent('Fixture Sign');
     expect(within(oil).getAllByRole('list')).toHaveLength(1);
     expect(within(within(oil).getByRole('list')).getAllByRole('listitem')).toHaveLength(1);
+    // The form's rows and list share a column apart from its heading.
+    const side = sharedColumn([
+      within(oil).getByRole('heading', { name: 'Correspondences', level: 3 }),
+      within(oil).getByRole('list'),
+    ]);
+    expect(side).not.toBe(oil);
+    expect(side).not.toContainElement(within(oil).getByRole('heading', { level: 2 }));
   });
 
   it('jumps to the details and to each form from the page nav', () => {
@@ -328,6 +370,14 @@ describe('IngredientEntry', () => {
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
     ).toEqual(['#details', '#form-testroot', '#form-testoil']);
+    // The forms are grouped apart from the ingredient's own Details.
+    const forms = within(nav).getByRole('list', { name: 'Forms' });
+    expect(
+      within(forms)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual(['#form-testroot', '#form-testoil']);
+    expect(forms).not.toContainElement(within(nav).getByRole('link', { name: 'Details' }));
   });
 
   it('draws no page nav when there is no form to jump to', () => {

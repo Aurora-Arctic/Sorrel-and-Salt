@@ -3,7 +3,52 @@
 
 // The entry page's body. Spacing and the existing inks only: the section's
 // look is MB.120's design review (claude-docs/styling.md, "Designing a
-// section"). The column and the jump menu beside it are `.page-with-nav`'s.
+// section"); the layout is the owner's, given at M8.19.
+// claude-docs/components/ingredient-entry.md, "Layout".
+
+// The width a section's side column takes beside its text: room for a row
+// of two or three category chips and a correspondence's list of colours.
+$side-column: calc(#{space(8)} * 5);
+
+// The article fills the frame's wide column, not `.page-with-nav`'s narrow
+// one: an entry is read, not filled in, and its sections hold a side column.
+.ingredient-entry {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: space(6);
+
+  > * {
+    box-sizing: border-box;
+    margin-block: 0;
+  }
+}
+
+// From a tablet up, the jump menu stands in a sticky column to the left of
+// the content, which takes the rest of the frame. The menu's width, the
+// breakpoint and the sticky offset are `.page-with-nav`'s
+// (`_primitives.scss`), so the two layouts' menus agree. The children are
+// the head, the menu, Details and the forms; the menu spans the last two
+// rows, so it sticks for the length of the page.
+@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  .ingredient-entry--with-nav {
+    display: grid;
+    grid-template-columns: calc(#{space(8)} * 3) minmax(0, 1fr);
+    align-content: start;
+
+    > :not(.page-nav) {
+      grid-column: 2;
+    }
+
+    > .page-nav {
+      position: sticky;
+      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      grid-column: 1;
+      grid-row: 2 / span 2;
+      align-self: start;
+    }
+  }
+}
 
 .ingredient-entry__head {
   @include stack(3);
@@ -13,12 +58,47 @@
   margin: 0;
 }
 
+// A section: its heading, its text (description and caution), then its side
+// column (the correspondences and lists), one under the other on a phone.
 .ingredient-entry__section {
   @include stack(4);
+
+  // A jump from the menu lands clear of the top inset, and of the shell's
+  // sticky bar where there is one, as `.page-frame__section` does.
+  scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+}
+
+.app-shell .ingredient-entry__section {
+  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
 }
 
 .ingredient-entry__section > h2 {
   margin: 0;
+}
+
+.ingredient-entry__text,
+.ingredient-entry__side {
+  @include stack(4);
+}
+
+// Past a tablet's width the side column stands to the right of the text,
+// the heading across both. Not from the menu's breakpoint: there the text
+// beside a side column would be a few words wide.
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .ingredient-entry__section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    gap: space(4) space(6);
+    align-items: start;
+
+    > h2 {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .ingredient-entry__side {
+    grid-column: 2;
+  }
 }
 
 .ingredient-entry__forms {

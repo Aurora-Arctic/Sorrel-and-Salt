@@ -4,7 +4,7 @@
 
 Two routes render it: `/compendium/ingredients/[slug]`, which anyone can read, signed out included, and `/coven/[slug]/ingredients/[id]`, which a coven's members read. Each route reads an `IngredientDetail` (`src/modules/ingredients/types.ts`) through `ingredientDetailOf` and hands it over; the component reads nothing itself. It is a server component: no hook and no `'use client'`, so either page renders it directly. `PageNav` inside it is a client component, which a server component may render.
 
-The route gives the page's `<main>`. The component's root is an `<article>` carrying `.page-with-nav`, the class that sets the jump menu beside the sections ([`page-nav.md`](page-nav.md), "Where it stands").
+The route gives the page's `<main>`. The component's root is an `<article class="ingredient-entry">`, laid out by its own stylesheet ("Layout", below) rather than by `.page-with-nav`, whose content column is the narrow one.
 
 ## Props
 
@@ -30,13 +30,13 @@ In page order, with the accessible names a test or a story walk finds them by:
    - The formal name (below).
    - `canonical`: a link named **View in the Compendium**.
    - `movedAway`: a quiet warning `Notice`, a `status`, holding a link named after the moved entry.
-2. **The jump menu**: `PageNav`, a `navigation` named **On this page**, with **Details** (`#details`) and then one entry per form, labelled with the form capitalised (`#form-oil`). Drawn only when there is a form: with none there is nowhere to jump.
-3. **Details**: `<section id="details">`, a `region` named **Details** by its visible `h2`. In order:
-   - The description, or "No description recorded."
-   - `SafetyNote` with the ingredient's own notes only, at `level={3}` (a `region` named **Caution**; nothing when there are none).
-   - **Correspondences**, an `h3` over a `<dl>`: Elements, Planets (`celestialBodies`), Zodiac Signs, Colours, Deities (a deity's tradition in parentheses when known). Every row is always there; an empty one says "None recorded".
+2. **The jump menu**: `PageNav`, a `navigation` named **On this page**, with **Details** (`#details`) at the top level, then the forms grouped under a **Forms** label: a nested `list` named **Forms**, one entry per form, labelled with the form capitalised (`#form-oil`). The grouping is `PageNav`'s `group` ([`page-nav.md`](page-nav.md)), so the ingredient reads apart from its forms. Drawn only when there is a form: with none there is nowhere to jump.
+3. **Details**: `<section id="details">`, a `region` named **Details** by its visible `h2`, then two plain `<div>`s: the text (`__text`) and the side column (`__side`). The side column is not an `<aside>`: a `complementary` landmark per section would be eight on a page like the rose's, noise to a screen reader, and each block in it is already headed and labelled. In order:
+   - The text: the description, or "No description recorded."
+   - Then in the text, `SafetyNote` with the ingredient's own notes only, at `level={3}` (a `region` named **Caution**; nothing when there are none).
+   - The side column: **Correspondences**, an `h3` over a `<dl>`: Elements, Planets (`celestialBodies`), Zodiac Signs, Colours, Deities (a deity's tradition in parentheses when known). Every row is always there; an empty one says "None recorded".
    - **Folk Names**, **Categories** and **Substitutes**: each an `h3` over a `<ul>` named by it, so `getByRole('list', { name: 'Folk Names' })` finds it. Categories are `.chip`s in their group's colours (`chipColors(group)`), the same markup as the category picker's. An empty list is replaced by a muted sentence in the same block, so the heading never stands over nothing.
-4. **The forms**: one wrapper `<div class="ingredient-entry__forms">`, the **last** thing the component renders, holding one `<section id="form-<slug>">` per form, in the order given. Each is a `region` named by the form's capitalised name alone, and its `h2` reads the `FormIcon`, the name, then `ToxicMark` for that form. The body is only what the form adds: its description, its own `SafetyNote`, the correspondence rows it carries (non-empty ones only), its categories and its substitutes. A form that adds none of these still gets its section, with one line saying so, so its anchor and jump link always exist.
+4. **The forms**: one wrapper `<div class="ingredient-entry__forms">`, the **last** thing the component renders, holding one `<section id="form-<slug>">` per form, in the order given. Each is a `region` named by the form's capitalised name alone, and its `h2` reads the `FormIcon`, the name, then `ToxicMark` for that form. The body is only what the form adds, split the way Details is: its description and its own `SafetyNote` in the text, the correspondence rows it carries (non-empty ones only), its categories and its substitutes in the side column, which is left out when the form carries none of them. A form that adds nothing still gets its section, with one line in its text saying so, so its anchor and jump link always exist.
 
 Inside a form, the lists are named by the form's name and then the heading — "Oil Categories", "Oil Substitutes", "Oil Correspondences" — so the ingredient's own **Categories** and **Substitutes** stay the only lists with exactly those names. Playwright's `name` matches a substring unless `exact: true` is passed, so a walk looking for the ingredient's own list passes `exact: true` or looks inside the **Details** region.
 
@@ -58,14 +58,22 @@ Inside a form, the lists are named by the form's name and then the heading — "
 - **The ids are built from the data, not `useId`**: `details-heading`, `details-folk-names`, `form-oil-name`, `form-oil-categories`, and so on. A page holds one entry, so they cannot collide, and a server component has no hook.
 - **A substitute links only to a page the caller names.** One with an ingredient is a `Link` to `hrefOf(ingredient)`; a typed name, a link whose ingredient was deleted (its last name kept, MB.138), and one `hrefOf` answers `undefined` for are plain text. A substitute that names a form reads "Name (form)".
 - **Safety is drawn by `SafetyNote` and `ToxicMark` only** (M8.13a). The ingredient's note sits in Details; each form's sits in its own section, given that form's notes as `safetyNotes`, since the section's heading already names the form.
-- **The notes slot.** The forms' wrapper is the article's last child, and v2's notes section is appended after it, so adding it moves nothing above. MB.155's references go in Details, beneath the substitutes, where a comment marks the place.
+- **The notes slot.** The forms' wrapper is the article's last child, and v2's notes section is appended after it, so adding it moves nothing above. MB.155's references go in Details' side column, beneath the substitutes, where a comment marks the place.
 - **Meaning never by colour alone.** Local and Toxic carry their words; a category chip carries its name, its colour repeating its group.
 
 ## Styling
 
-`index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` badge palette is new here, in `_variables.scss` (`styling.md`, "Badge palettes").
+`index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), the shell's breakpoints and offsets, `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` badge palette is new here, in `_variables.scss` (`styling.md`, "Badge palettes").
 
 Running text stops at `$measure`: the description is a `<p>`, which `typography-base` caps, and a `dd` or list item takes `max-width: $measure` itself. A description keeps the line breaks typed into its textarea (`white-space: pre-line`).
+
+### Layout
+
+The owner's, from seeing the page in a browser at M8.19: the entry is read rather than filled in, so it takes the frame's wide column (`$wide-column`, which `.page-column` and `.coven-layout` allow), and lays its lists beside its text.
+
+- **The article.** A column of its parts, `space(6)` apart. With a jump menu (`.ingredient-entry--with-nav`, set when there is a form), from above `$shell-phone-width` it is a grid: the menu in a sticky column on the left, the head, Details and the forms on the right taking the rest. The menu's width (`space(8) * 3`), the breakpoint and the sticky `top` are `.page-with-nav`'s, so the two layouts' menus agree; the menu spans the rows of Details and the forms, so it sticks for the page's length. At a phone's width the menu stands above Details.
+- **A section.** From above `$shell-tablet-width` a grid of the text (`minmax(0, 1fr)`) and the side column (`space(8) * 5`, 20rem), the `h2` across both. 20rem, judged in screenshots at 1440px and 1024px wide: it holds a row of two or three category chips and a short list of colours on a line. Between the phone and tablet widths, and on a phone, the side column runs under the text: with the menu beside them there, the text beside a side column would be a few words wide. The DOM order is the text first, then the side column, at every width.
+- **Jumps** land clear of the top inset, and of the shell's sticky bar inside `.app-shell`, as `.page-frame__section` does.
 
 ## Stories
 
@@ -92,7 +100,8 @@ Running text stops at `$measure`: the description is a `<p>`, which `typography-
 - a linked substitute links to `hrefOf`'s address, a typed one and one `hrefOf` has no page for are text;
 - each form's section is a region at `#form-<slug>`, headed by its form, with its own caution and mark, after Details and inside the last element;
 - a form that adds nothing still says something, and a form's section holds only the rows and lists it carries;
-- the jump menu links to Details and each form, and is absent with no forms;
+- the jump menu links to Details and each form, the forms in a list named Forms apart from Details, and is absent with no forms;
+- the correspondences and the three lists share a column inside Details, after the description and caution and holding neither, and no `complementary` landmark is drawn; a form's rows and list do likewise;
 - Edit is there only with `edit`, and Delete never;
 - `canonical` and `movedAway` link where they say.
 
