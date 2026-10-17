@@ -9,21 +9,21 @@ import type { FieldDescription } from './types';
  * The part of a react-hook-form field's state that decides whether its error
  * is drawn.
  */
-type ShownState = {
+export type ShownState = {
   isSubmitted: boolean;
   touchedFields: unknown;
-  dirtyFields: unknown;
 };
 
 /**
  * Whether the error on `name` is shown. After a submit, every error is. Before
- * one, only a field the person has both left and changed: a field left empty,
- * or one whose error came from another field's change (a cross-field rule),
- * stays quiet rather than flagging what nobody has edited. The one rule, so no
- * field repeats it.
+ * one, only a field the person has left (story 31, the owner's call): a
+ * required field left empty is flagged as they move on, while one whose error
+ * came from another field's change (a classification pick raising the
+ * formal-name rule) stays quiet until it is left itself. The one rule, so no
+ * field and no section flag repeats it.
  */
-export function errorShown({ isSubmitted, touchedFields, dirtyFields }: ShownState, name: string) {
-  return isSubmitted || (Boolean(get(touchedFields, name)) && Boolean(get(dirtyFields, name)));
+export function errorShown({ isSubmitted, touchedFields }: ShownState, name: string): boolean {
+  return isSubmitted || Boolean(get(touchedFields, name));
 }
 
 /**

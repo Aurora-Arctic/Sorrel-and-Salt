@@ -384,30 +384,28 @@ describe('IngredientForm', () => {
         await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
       });
 
-      it('says nothing of a field entered and left with nothing typed', async () => {
+      it('flags a required field left empty on leaving it, before any submit', async () => {
         renderForm();
 
         fireEvent.focus(textbox('Name'));
         fireEvent.blur(textbox('Name'));
-        await settle();
 
-        expect(textbox('Name')).not.toBeInvalid();
+        await waitFor(() => expectErrorOn(textbox('Name')));
       });
 
-      it('says nothing of a field typed in and emptied again, until a submit', async () => {
-        acceptCreate();
+      it('flags the formal name once it is left, after the classification asked for one', async () => {
         renderForm();
 
         type('Name', 'Testwort');
-        type('Name', '');
-        fireEvent.blur(textbox('Name'));
+        choose('Classification', 'Botanical');
+        fireEvent.blur(select('Classification'));
         await settle();
-        expect(textbox('Name')).not.toBeInvalid();
+        expect(textbox('Formal Name')).not.toBeInvalid();
 
-        // Save stays shut until something differs, so edit another field.
-        type('Description', 'An entry with no name.');
-        save();
-        await waitFor(() => expectErrorOn(textbox('Name')));
+        fireEvent.focus(textbox('Formal Name'));
+        fireEvent.blur(textbox('Formal Name'));
+
+        await waitFor(() => expectErrorOn(textbox('Formal Name')));
       });
 
       it('does not flag the formal name when only the classification changed', async () => {
@@ -845,6 +843,8 @@ describe('IngredientForm', () => {
       choose('Classification', 'None');
       expect(textbox('Formal Name')).toHaveValue('');
       act(() => textbox('Name').focus());
+      // Leaving Formal Name validates it.
+      await settle();
 
       undo();
 
@@ -856,6 +856,8 @@ describe('IngredientForm', () => {
 
       expect(textbox('Formal Name')).toHaveValue('');
       expect(textbox('Formal Name')).toBeDisabled();
+      // Leaving a field validates it; let that land inside the test.
+      await settle();
     });
 
     it('undoes a chip removal and redoes it', async () => {

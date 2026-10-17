@@ -27,6 +27,7 @@ import {
   FormHistoryContext,
   SelectField,
   TextField,
+  errorShown,
   useFormHistory,
 } from '../Field';
 import { ListField, MultiSelectField, ToggleField } from './fields';
@@ -163,8 +164,11 @@ const IngredientForm = ({
     setError,
     setValue,
     reset,
-    formState: { errors, isSubmitting, isDirty, submitCount },
+    formState: { errors, isSubmitting, isDirty, submitCount, isSubmitted, touchedFields },
   } = methods;
+  // Which errors are drawn, the fields' one rule, so a section is flagged
+  // only for an error a field in it shows.
+  const shown = (path: string) => errorShown({ isSubmitted, touchedFields }, path);
   const form = useRef<HTMLFormElement>(null);
   const createAnyway = useRef<HTMLButtonElement>(null);
   const duplicates = useDuplicateWarning(
@@ -190,7 +194,7 @@ const IngredientForm = ({
   // Each variant's own sections, which fold the same way (MB.115): one added
   // here opens with every one open, one an edit opened with, every one closed.
   const variantFolds = useVariantFolds();
-  const erring = sectionsWithErrors(errors);
+  const erring = sectionsWithErrors(errors, shown);
   // A save held on the duplicate warning is the name's to answer.
   if (blocking) erring.add('identity');
   // A save that finds an error in a closed section opens it, every such
@@ -199,7 +203,7 @@ const IngredientForm = ({
   useOnEachSubmit(submitCount, () => {
     if ([...erring].some((key) => !open.has(key))) setOpen(new Set([...open, ...erring]));
     // A variant's too, inside it: the Variants section opens the card.
-    variantFolds.openErring(variantsWithErrors(errors));
+    variantFolds.openErring(variantsWithErrors(errors, shown));
     // The card of the first variant holding any error opens, unless the one
     // open errs too, so the focus on the first field marked invalid can reach it.
     const first = Object.keys(errors.variants ?? {})

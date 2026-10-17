@@ -267,13 +267,15 @@ describe('IngredientForm on the compendium', () => {
 
     // Every way out asks first while the form has changes (MB.115): the
     // guard's shape is tests/components/Modal's, and this its wiring.
-    it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
+    it('asks before Cancel or Escape discards a change, and closes on Discard Changes', async () => {
       offerNothing();
       const onClose = renderInModal((done) => (
         <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
       ));
 
       expectGuardedWaysOut(onClose, () => type('Name', 'Testwort'));
+      // Each way out leaves Name, which validates it after the press.
+      await act(async () => {});
     });
 
     // A reference panel's edits are in a form of their own, which the

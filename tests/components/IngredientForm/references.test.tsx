@@ -699,6 +699,8 @@ describe('ReferencesField', () => {
 
       expect(rows()).toHaveLength(1);
       expect(box()).toHaveValue('');
+      // Leaving a field validates it; let that land inside the test.
+      await act(async () => {});
     });
 
     it('sends each source by its id with its locator as typed, and no citation text, clearing them after Save & Add Another', async () => {
