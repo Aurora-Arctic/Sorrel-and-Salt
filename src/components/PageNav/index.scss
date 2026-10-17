@@ -86,12 +86,9 @@
     margin-block-start: space(5);
 
     &::before {
-      content: '';
-      position: absolute;
+      @include short-hairline;
       inset-block-start: calc(#{space(5)} / -4);
       inset-inline-start: space(4);
-      inline-size: space(5);
-      border-block-start: 1px solid $hairline;
     }
 
     > a {

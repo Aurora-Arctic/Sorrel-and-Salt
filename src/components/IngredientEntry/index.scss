@@ -331,8 +331,17 @@ $side-column: calc(#{space(8)} * 5);
   color: $text-muted;
 }
 
+// A short hairline midway in the side column's gap (`stack(6)`) between the
+// link and the Correspondences heading under it, at the column's start edge.
 .ingredient-entry__canonical {
+  position: relative;
   margin: 0;
+
+  &::after {
+    @include short-hairline;
+    inset-block-end: calc(#{space(6)} / -2);
+    inset-inline-start: 0;
+  }
 
   a {
     @include icon-link;
