@@ -2,9 +2,12 @@
 
 import { type ReactElement, useMemo, useState } from 'react';
 import { oneOf } from '@/lib/search-params';
-import { NOMENCLATURE_KINDS } from '@/modules/ingredients/schema/ingredient-enums';
+import {
+  type CategoryMode,
+  NOMENCLATURE_KINDS,
+} from '@/modules/ingredients/schema/ingredient-enums';
 import CategoryPicker from '../CategoryPicker';
-import { FilterSelectField, SwitchField } from '../Field';
+import { FilterSelectField, RadioGroupField, SwitchField } from '../Field';
 import { useApplyFilter } from '../FilterForm';
 import { IngredientSearchForm, useSearchText } from '../IngredientSearch';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
@@ -12,6 +15,12 @@ import { editHeading } from './heading';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
 import { COMPENDIUM_PARAMS } from './params';
 import type { CompendiumListFilter, CompendiumListFilterProps } from './types';
+
+/** How two or more categories combine: the radios' labels, in title case. */
+const CATEGORY_MODE_OPTIONS = [
+  { value: 'all', label: 'All' },
+  { value: 'any', label: 'Any' },
+] as const;
 
 // The compendium's filter, on IngredientSearchForm (M8.10, MB.178, MB.115): a
 // name search that is a type-ahead once hydrated, then a form, a
@@ -65,14 +74,34 @@ const CompendiumFilterFields = ({
     setChosen(shownIds);
   }
 
-  /** The filter shown with one field changed, the name typed carried, from the first page. */
-  const hrefWith = (change: Partial<CompendiumListFilter>) =>
-    compendiumHref(
+  // The mode as the radios show it, held and followed as the picks are, for
+  // the same reason: choosing one must not draw the form afresh and lose the focus.
+  const [mode, setMode] = useState<CategoryMode>(filter.categoryMode);
+  const [seenMode, setSeenMode] = useState(filter.categoryMode);
+  if (seenMode !== filter.categoryMode) {
+    setSeenMode(filter.categoryMode);
+    setMode(filter.categoryMode);
+  }
+
+  /**
+   * The filter shown with one field changed, the name typed carried, from the
+   * first page. The categories and mode are the box's own, ahead of the page's
+   * when a change is still on its way.
+   */
+  const hrefWith = (change: Partial<CompendiumListFilter>) => {
+    const slugOf = new Map(categories.map(({ id, slug }) => [id, slug]));
+    return compendiumHref(
       COMPENDIUM_PARAMS.changed(
-        { ...filter, query: text.trim(), categories: shown.map(({ slug }) => slug) },
+        {
+          ...filter,
+          query: text.trim(),
+          categories: chosen.flatMap((id) => slugOf.get(id) ?? []),
+          categoryMode: mode,
+        },
         change,
       ),
     );
+  };
 
   return (
     <>
@@ -110,10 +139,27 @@ const CompendiumFilterFields = ({
         value={chosen}
         onChange={(ids) => {
           const slugOf = new Map(categories.map(({ id, slug }) => [id, slug]));
+          const categorySlugs = ids.flatMap((id) => slugOf.get(id) ?? []);
           setChosen(ids);
-          apply(hrefWith({ categories: ids.flatMap((id) => slugOf.get(id) ?? []) }));
+          // Below two the mode means nothing, so it goes with them: the address
+          // holds only what is filtering, and a second pick starts at All.
+          const kept = categorySlugs.length >= 2 ? mode : 'all';
+          setMode(kept);
+          apply(hrefWith({ categories: categorySlugs, categoryMode: kept }));
         }}
       />
+      {chosen.length >= 2 && (
+        <RadioGroupField
+          legend="Match"
+          name="categoryMode"
+          options={CATEGORY_MODE_OPTIONS}
+          value={mode}
+          onChange={(next) => {
+            setMode(next);
+            apply(hrefWith({ categoryMode: next }));
+          }}
+        />
+      )}
       {/* The picker has no native input, so a submit before hydration sends these. */}
       {shown.map(({ id, slug }) => (
         <input key={id} type="hidden" name="categories" value={slug} />
@@ -126,19 +172,23 @@ const CompendiumListFilter = ({
   filter,
   forms,
   categories,
-}: CompendiumListFilterProps): ReactElement => (
-  <IngredientSearchForm
-    label="Filter the Compendium"
-    action={COMPENDIUM_PATH}
-    query={filter.query}
-    shown={Object.values(filter)}
-    searchHref={(query) => compendiumHref({ ...filter, query })}
-    // The list as shown, the typed text not applied: the modal opens over it.
-    pickHref={(match) => compendiumHref(filter, { edit: match.slug })}
-    pickHeading={editHeading}
-  >
-    <CompendiumFilterFields filter={filter} forms={forms} categories={categories} />
-  </IngredientSearchForm>
-);
+}: CompendiumListFilterProps): ReactElement => {
+  // The mode filters nothing without categories, so it does not make the list "filtered".
+  const { categoryMode: _mode, ...shownFilter } = filter;
+  return (
+    <IngredientSearchForm
+      label="Filter the Compendium"
+      action={COMPENDIUM_PATH}
+      query={filter.query}
+      shown={Object.values(shownFilter)}
+      searchHref={(query) => compendiumHref({ ...filter, query })}
+      // The list as shown, the typed text not applied: the modal opens over it.
+      pickHref={(match) => compendiumHref(filter, { edit: match.slug })}
+      pickHeading={editHeading}
+    >
+      <CompendiumFilterFields filter={filter} forms={forms} categories={categories} />
+    </IngredientSearchForm>
+  );
+};
 
 export default CompendiumListFilter;

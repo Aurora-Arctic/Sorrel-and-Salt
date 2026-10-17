@@ -158,7 +158,9 @@ precision`, and while the keyset casts its sort back to `real`, the score
   branch. `tests/db/repository/ingredients.test.ts` proves it by the rows
   found: a typo scoring exactly 0.5, below pg_trgm's own 0.6, is matched.
 - **`categoryIds`** is AND: one correlated `existsIn(ingredient_categories, …)`
-  per id, so an entry must carry every one. OR is M8.12's argument to add. A
+  per id, so an entry must carry every one. `categoryMode: 'any'` (M8.12) swaps
+  the per-id arms for one `inArray` arm, so an entry carrying any of them
+  matches; an empty list is no filter in either mode. A
   pair counts on the entry itself, `variant_id IS NULL`, or on a live form: a
   form's pair carries the `ingredient_id` too (MB.217), so the arm matches the
   union, and since the table is hard-deleted a soft-deleted form's pairs stay

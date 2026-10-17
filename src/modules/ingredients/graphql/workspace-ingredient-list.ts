@@ -1,7 +1,7 @@
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import { listWorkspaceIngredients } from '../services/workspace-ingredient-list';
-import { facetArgs } from './compendium';
+import { categoryArgs, facetArgs } from './compendium';
 import { IngredientRef } from './ingredient';
 
 // Story 14's list (M9.4): a coven's own entries and the compendium entries it
@@ -15,7 +15,7 @@ builder.queryField('workspaceIngredients', (t) =>
     args: {
       workspaceId: t.arg.id({ required: true }),
       query: t.arg.string({ required: false }),
-      categoryIds: t.arg.idList({ required: false }),
+      ...categoryArgs,
       // Filtering as the compendium's do, under the coven's membership check.
       ...facetArgs,
     },
@@ -25,6 +25,7 @@ builder.queryField('workspaceIngredients', (t) =>
         workspaceId,
         query,
         categoryIds,
+        categoryMode,
         forms,
         deityIds,
         zodiacSigns,
@@ -38,7 +39,17 @@ builder.queryField('workspaceIngredients', (t) =>
       listWorkspaceIngredients(
         sessionOf(context),
         workspaceId,
-        { query, categoryIds, forms, deityIds, zodiacSigns, celestialBodies, elements, toxic },
+        {
+          query,
+          categoryIds,
+          categoryMode,
+          forms,
+          deityIds,
+          zodiacSigns,
+          celestialBodies,
+          elements,
+          toxic,
+        },
         page,
       ),
   }),

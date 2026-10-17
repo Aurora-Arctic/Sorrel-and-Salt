@@ -342,6 +342,20 @@ describe('the /admin/compendium filter', () => {
     );
   });
 
+  it('reads ?categoryMode=any into the read, and checks Any', async () => {
+    await renderPage({ categories: ['testward', 'testcraft'], categoryMode: 'any' });
+
+    expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'], categoryMode: 'any' });
+    expect(screen.getByRole('radio', { name: 'Any' })).toBeChecked();
+  });
+
+  it('reads any other ?categoryMode= as all, which sends nothing', async () => {
+    await renderPage({ categories: ['testward', 'testcraft'], categoryMode: 'both' });
+
+    expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'] });
+    expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
+  });
+
   it('drops a ?categories= slug no live category holds, and the known one still filters', async () => {
     await renderPage({ categories: ['renamed-away', 'testcraft'] });
 

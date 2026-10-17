@@ -35,6 +35,14 @@ input CategoryInput {
   name: String!
 }
 
+"""
+How a search combines the categories it is given: all (the default), an entry must carry every one; or any, at least one. A category counts when it is filed on the entry or on any live form.
+"""
+enum CategoryMode {
+  all
+  any
+}
+
 type CelestialBody {
   description: String!
   id: ID!
@@ -764,6 +772,11 @@ type Query {
     categoryIds: [ID!]
 
     """
+    With categoryIds: all (the default) keeps entries carrying every one of them; any keeps entries carrying at least one. A category counts when it is filed on the entry or on any live form.
+    """
+    categoryMode: CategoryMode = all
+
+    """
     Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
     """
     celestialBodies: [String!]
@@ -847,6 +860,11 @@ type Query {
     after: String
     before: String
     categoryIds: [ID!]
+
+    """
+    With categoryIds: all (the default) keeps entries carrying every one of them; any keeps entries carrying at least one. A category counts when it is filed on the entry or on any live form.
+    """
+    categoryMode: CategoryMode = all
 
     """
     Keeps entries listing any one of these planets or other celestial bodies, ignoring case.

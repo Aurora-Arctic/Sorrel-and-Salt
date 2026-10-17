@@ -658,6 +658,10 @@ signatures DESIGN.md §7's sketch gives them.
   one the ingredient already holds is kept once retired, sent back by id or
   by name. The list replaces the live rows in the order sent
   ([`db/ingredient-children.md`](../db/ingredient-children.md)).
+- **`categoryMode`** (M8.12): a `CategoryMode` enum, `all` or `any`, beside
+  `categoryIds` on `compendium` and `workspaceIngredients`, defaulting to `all`.
+  `any` matches an entry holding any of the ids; it changes nothing with fewer
+  than two.
 - **The categories are `categoryIds`** (MB.125, story 30): `[ID!]` on the
   create, `[ID!]!` on the update where `[]` clears, as every list there is.
   Each must name a live category — an id naming none, or a soft-deleted one,

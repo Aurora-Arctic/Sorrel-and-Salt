@@ -9,6 +9,7 @@ import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import type {
+  CategoryMode,
   IngredientElement,
   NomenclatureKind,
 } from '../../modules/ingredients/schema/ingredient-enums';
@@ -629,8 +630,10 @@ export interface SimilarityScore {
 export interface IngredientFilter {
   /** Word-similar (`<%`, at 0.5) to the label, the formal name or a live folk name, case- and accent-folded. */
   query?: string;
-  /** Every one of these, not any: an entry must carry each id listed. */
+  /** Categories an entry carries, on itself or on a live form; `categoryMode` says how many of them. */
   categoryIds?: readonly string[];
+  /** `all` (the default) needs every id in `categoryIds`; `any` needs at least one (M8.12). */
+  categoryMode?: CategoryMode;
   /**
    * Any of these forms, not every one: an entry matches when one of its live
    * variants has a form in the list, both sides trimmed and lower-cased

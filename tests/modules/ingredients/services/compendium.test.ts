@@ -129,6 +129,28 @@ describe('listCompendium', () => {
     });
     expect(repository.findCompendiumPage).not.toHaveBeenCalled();
   });
+
+  // M8.12: `all` is the default, so it parses to no setting and only `any`
+  // reaches the read; a mode that is neither is refused rather than read as all.
+  it('hands the read only categoryMode any, and refuses a mode that is neither', async () => {
+    const categoryIds = ['3d6b0d1a-0000-4000-8000-000000000001'];
+    await listCompendium({ categoryIds, categoryMode: 'any' }, PAGE);
+    await listCompendium({ categoryIds, categoryMode: 'all' }, PAGE);
+    await listCompendium({ categoryIds, categoryMode: null }, PAGE);
+
+    expect(repository.findCompendiumPage.mock.calls.map(([filter]) => filter)).toEqual([
+      { categoryIds, categoryMode: 'any' },
+      { categoryIds },
+      { categoryIds },
+    ]);
+
+    const attempt = listCompendium({ categoryIds, categoryMode: 'some' as 'any' }, PAGE);
+    await expect(attempt).rejects.toBeInstanceOf(ValidationError);
+    await attempt.catch((error: ValidationError) => {
+      expect(error.issues[0].path).toEqual(['categoryMode']);
+    });
+    expect(repository.findCompendiumPage).toHaveBeenCalledTimes(3);
+  });
 });
 
 // M11.22's facets (claude-docs/design-decisions/m11.22-search-facets.md): four

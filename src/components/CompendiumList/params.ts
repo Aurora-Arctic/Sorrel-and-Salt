@@ -8,6 +8,7 @@ import {
 } from '../../lib/search-param-table';
 import { single, trimmed } from '../../lib/search-params';
 import {
+  type CategoryMode,
   INGREDIENT_ELEMENTS,
   NOMENCLATURE_KINDS,
 } from '@/modules/ingredients/schema/ingredient-enums';
@@ -42,8 +43,17 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   }),
   // Entries holding any of these, `?elements=fire&elements=earth`.
   elements: listParam('elements', INGREDIENT_ELEMENTS, 'elements'),
-  // Entries filed under all of these categories, `?categories=protection&categories=cleansing`:
-  // slugs in the address, the ids `categoryIds` takes through the page's
-  // `categories` lookup (M8.11).
+  // Entries filed under all of these categories, or any of them under
+  // `categoryMode`: `?categories=protection&categories=cleansing`. Slugs in the
+  // address, the ids `categoryIds` takes through the page's `categories` lookup (M8.11).
   categories: slugListParam('categories', 'categoryIds', 'categories'),
+  // Written only for `any`, `?categoryMode=any`: all is the default, so it
+  // leaves the address as it was, and a junk value reads as all (M8.12).
+  categoryMode: searchParam({
+    name: 'categoryMode',
+    variable: 'categoryMode',
+    read: (raw): CategoryMode => (single(raw) === 'any' ? 'any' : 'all'),
+    write: (mode: CategoryMode) => (mode === 'any' ? 'any' : undefined),
+    toVariable: (mode) => (mode === 'any' ? 'any' : undefined),
+  }),
 });
