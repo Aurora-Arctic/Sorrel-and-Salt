@@ -6,6 +6,7 @@ import { makeIngredient } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { ingredientSlug } from '@/lib/slugify';
 
 // M5.5: the admin's compendium form's presentation — IngredientForm on
 // the compendium, which carries the form's first axe scans in a browser,
@@ -65,6 +66,7 @@ test('the compendium form keeps a margin of the page in view on a phone', async 
   await page.goto('/admin/compendium?new');
 
   await expectMarginAround(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
+  await assertNoAccessibilityViolations(page);
 });
 
 // The compendium form's presentation in the app, which no story checks: the
@@ -455,4 +457,73 @@ test('the open Name dropdown has no accessibility violations', async ({ page }) 
   await expect(page.getByRole('option', { name: CATS_CLAW }).first()).toBeVisible();
 
   await assertNoAccessibilityViolations(page);
+});
+
+// M12.10: the ingredient form's undo and redo in the app, which no story walks.
+// A nameless classification empties the formal name in the same step, so one
+// chord brings the name back and focus goes to the pick the user made; the
+// reference panel keeps a history of its own, so its chord leaves the form's.
+test('undo puts a formal name back with focus on Classification, and the reference panel keeps its own history', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'undo-admin@admin-compendium.test', ['discord'], 'admin');
+  const fixture = makeIngredient({ name: 'Fixture Undowort' });
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    await insertIngredient(sql, fixture, userId);
+  } finally {
+    await sql.end();
+  }
+  await page.goto(`/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`);
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Undowort/ });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Open All' }).click();
+  const formal = dialog.getByRole('textbox', { name: 'Formal Name', exact: true });
+  const classification = dialog.getByRole('combobox', { name: 'Classification' });
+  // The outer buttons come first in the dialog; the panel's sit in its body.
+  const undo = dialog.getByRole('button', { name: 'Undo', exact: true }).first();
+  const redo = dialog.getByRole('button', { name: 'Redo', exact: true }).first();
+  const savedName = await formal.inputValue();
+  // The precondition: there is a formal name to lose, and nothing to undo yet.
+  expect(savedName).not.toBe('');
+  await expect(undo).toBeDisabled();
+
+  await classification.click();
+  await dialog
+    .getByRole('listbox', { name: 'Classification choices' })
+    .getByRole('option', { name: 'None' })
+    .click();
+  await expect(formal).toHaveValue('');
+  await expect(undo).toBeEnabled();
+
+  // The select is closed, so the chord is the form's and not a search letter.
+  await expect(classification).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(formal).toHaveValue(savedName);
+  await expect(classification).toBeFocused();
+  await expect(redo).toBeEnabled();
+  await expect(undo).toBeDisabled();
+
+  // Redo, so the form has a step to lose; then an open panel with its own.
+  await redo.click();
+  await expect(formal).toHaveValue('');
+  await expect(undo).toBeEnabled();
+  await dialog.getByRole('combobox', { name: 'Reference' }).click();
+  await page.getByRole('option', { name: 'New Reference…' }).click();
+  const panel = dialog.getByRole('group', { name: 'New Reference' });
+  await panel.getByRole('combobox', { name: 'Kind' }).click();
+  await page
+    .getByRole('listbox', { name: 'Kind choices' })
+    .getByRole('option', { name: 'Book', exact: true })
+    .click();
+  const title = panel.getByRole('textbox', { name: /^Title/ });
+  await title.fill('Fixtureleaf Herbal');
+  await expect(panel.getByRole('button', { name: 'Undo', exact: true })).toBeEnabled();
+
+  await page.keyboard.press('ControlOrMeta+z');
+  // The panel's step went, and none of the form's did.
+  await expect(title).toHaveValue('');
+  await expect(formal).toHaveValue('');
+  await expect(undo).toBeEnabled();
+  await expect(redo).toBeDisabled();
 });
