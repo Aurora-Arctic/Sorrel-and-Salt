@@ -69,7 +69,25 @@ $side-column: calc(#{space(8)} * 5);
 }
 
 .ingredient-entry__formal {
+  // The tip is placed against the nearest positioned ancestor: this.
+  position: relative;
   text-align: end;
+
+  dt {
+    display: flex;
+    gap: space(1);
+    align-items: center;
+    justify-content: end;
+  }
+
+  // Below the label rather than above it, where the shell's sticky bar
+  // would cover it at the top of the page, and from the right edge, which is
+  // the text column's, so it opens over the text and never past it.
+  .info-tip__bubble {
+    inset: 100% 0 auto auto;
+    margin: space(1) 0 0;
+    text-align: start;
+  }
 }
 
 // A section: its heading, its text (description and caution), then its side
@@ -161,6 +179,11 @@ $side-column: calc(#{space(8)} * 5);
 
   dt {
     font-weight: 500;
+  }
+
+  // The eyebrow sets its own weight; a dt holding one keeps out of its way.
+  dt:has(> .eyebrow) {
+    font-weight: inherit;
   }
 
   dd {

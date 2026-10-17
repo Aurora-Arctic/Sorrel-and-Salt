@@ -41,7 +41,7 @@ Inside a form, the lists are named by the form's name and then the heading — "
 
 ## Contracts
 
-- **The formal name is never blank** (MB.161). It is a one-pair `<dl>`: the term says the nomenclature in words, the definition holds the name.
+- **The formal name is never blank** (MB.161). It is a one-pair `<dl>`: the term says the nomenclature in words as an `.eyebrow`, with an `InfoTip` beside it (id `formal-name-tip`) saying what a name in that system is, and the definition holds the name.
 
   | Nomenclature                        | Term                                 | Definition                                    |
   | ----------------------------------- | ------------------------------------ | --------------------------------------------- |

@@ -4,6 +4,7 @@ import FormIcon from '../FormIcon';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
+import InfoTip from '../InfoTip';
 import SafetyNote, { ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
@@ -44,6 +45,26 @@ const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
   chemical: 'Chemical Name',
 };
 
+/**
+ * What each kind's formal name is, said in the tip beside its label: the
+ * eyebrow names the system, and the tip says what a name in it is.
+ */
+const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
+  botanical:
+    'The plant\u2019s scientific name in Latin form, the genus then the species, as botanists record it. A plant has one botanical name however many common names it goes by.',
+  fungal:
+    'The fungus\u2019s scientific name in Latin form, the genus then the species, as mycologists record it.',
+  zoological:
+    'The animal\u2019s scientific name in Latin form, the genus then the species, as zoologists record it.',
+  mineral:
+    'The mineral\u2019s name as mineralogists record it, with its variety where there is one: Quartz var. amethyst.',
+  chemical: 'The substance\u2019s name as chemists record it: sodium chloride for table salt.',
+};
+const FORMAL_NAME_TIP =
+  'Its name in a scientific naming system: botanical, mineral, chemical and so on. Which system names this one is not settled.';
+const NO_FORMAL_NAME_TIP =
+  'A name in a scientific naming system, botanical, mineral, chemical and so on. No such system names this one.';
+
 /** One correspondence row: its label and what it lists, possibly nothing. */
 interface Row {
   label: string;
@@ -79,6 +100,10 @@ function correspondences(source: Correspondences, deities?: readonly DeityDetail
 function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
   const formal = (entry.canonicalName ?? '').trim();
   const label = NAME_LABELS[entry.nomenclature] ?? 'Formal Name';
+  const tip =
+    entry.nomenclature === NAMELESS_KIND
+      ? NO_FORMAL_NAME_TIP
+      : (NAME_TIPS[entry.nomenclature] ?? FORMAL_NAME_TIP);
   let value: ReactNode;
   if (entry.nomenclature === NAMELESS_KIND) {
     value = <span className="ingredient-entry__empty">None — no naming system names it</span>;
@@ -97,9 +122,16 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
     );
   }
   return (
+    // An eyebrow over the name, with what the name is in a tip beside it (the
+    // owner's call). Still a term and its definition, so it is read as a pair.
     <dl className="ingredient-entry__formal">
       <div>
-        <dt>{label}</dt>
+        <dt>
+          <span className="eyebrow">{label}</span>{' '}
+          <InfoTip id="formal-name-tip" label={label}>
+            {tip}
+          </InfoTip>
+        </dt>
         <dd>{value}</dd>
       </div>
     </dl>
