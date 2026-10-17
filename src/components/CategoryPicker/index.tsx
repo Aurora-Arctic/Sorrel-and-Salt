@@ -29,18 +29,26 @@ function optionsFor(
   categories: readonly PickerCategory[],
   picked: ReadonlySet<string>,
   text: string,
+  disableZeros: boolean,
 ): CategoryOption[] {
   return categories
     .filter((category) => !picked.has(category.id) && matches(category.name, text))
     .sort((a, b) => byName(a.group, b.group) || byName(a, b))
-    .map((category) => ({
-      value: category.name,
-      note: category.description ?? undefined,
-      key: category.id,
-      heading: category.group.name,
-      colors: category.group,
-      category,
-    }));
+    .map((category) => {
+      // A count of nothing, when asked, is a row that cannot be chosen and
+      // says so in place of its description (M12.4).
+      const empty = disableZeros && category.count === 0;
+      return {
+        value: category.name,
+        note: empty ? 'Nothing Matches' : (category.description ?? undefined),
+        count: category.count,
+        disabled: empty || undefined,
+        key: category.id,
+        heading: category.group.name,
+        colors: category.group,
+        category,
+      };
+    });
 }
 
 const CategoryPicker = ({
@@ -58,6 +66,9 @@ const CategoryPicker = ({
   status,
   action,
   boxName,
+  loading = false,
+  removeNoun,
+  disableZeros = false,
 }: CategoryPickerProps): ReactElement => {
   const id = useId();
   const legendId = `${id}-legend`;
@@ -80,7 +91,10 @@ const CategoryPicker = ({
     () => new Map(categories.map((category) => [category.id, category])),
     [categories],
   );
-  const options = useMemo(() => optionsFor(categories, picked, text), [categories, picked, text]);
+  const options = useMemo(
+    () => optionsFor(categories, picked, text, disableZeros),
+    [categories, picked, text, disableZeros],
+  );
 
   const add = (category: PickerCategory) => {
     onChange([...value, category.id]);
@@ -112,6 +126,9 @@ const CategoryPicker = ({
           <ComboboxEntry
             key={categoryId}
             value={category?.name ?? categoryId}
+            count={category?.count}
+            loading={loading}
+            removeNoun={removeNoun}
             // Its group after the name on the tooltip's first line, the
             // owner's call, since the colour alone cannot name it, and the
             // description beneath; both read as its x's description.
