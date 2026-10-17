@@ -391,7 +391,7 @@ const IngredientEntry = ({
             <Link href={movedAway.href}>
               {movedAway.name} <LinkHint />
             </Link>
-            ? It used to be at this address, and has its own page now.
+            ? It used to be at this address but has been moved.
           </Notice>
         )}
       </header>
