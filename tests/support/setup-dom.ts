@@ -1,5 +1,7 @@
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import HTMLElementConfig from 'happy-dom/lib/config/HTMLElementConfig.js';
+import HTMLElementConfigContentModelEnum from 'happy-dom/lib/config/HTMLElementConfigContentModelEnum.js';
 
 // The `dom` project's half of the setup; setup-msw.ts is the half both
 // projects share.
@@ -63,3 +65,14 @@ defaults.setAttribute('data-test-default-styles', '');
 defaults.textContent =
   ':where(a, abbr, b, bdi, bdo, cite, code, data, dfn, em, i, kbd, mark, q, s, samp, small, span, strong, sub, sup, time, u, var, label) { display: inline; }';
 document.head.append(defaults);
+
+// happy-dom 21 has no `<search>` (a Baseline Widely Available element, used by
+// FilterForm), so `createElement('search')` gave an `HTMLUnknownElement` and
+// React warned "The tag <search> is unrecognized". The library builds elements
+// from this one table of tag name to class, so the entry a browser has is
+// added to it: `<search>` is a plain `HTMLElement`, as the spec has it. A
+// custom element cannot stand in, since its name needs a hyphen.
+HTMLElementConfig.search = {
+  className: 'HTMLElement',
+  contentModel: HTMLElementConfigContentModelEnum.anyDescendants,
+};
