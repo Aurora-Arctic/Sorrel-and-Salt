@@ -44,3 +44,10 @@ export type ReferenceKind = (typeof REFERENCE_KINDS)[number];
 export const TOXIC_FILTERS = ['any', 'toxic', 'not_toxic'] as const;
 
 export type ToxicFilter = (typeof TOXIC_FILTERS)[number];
+
+// Not a column: how a search combines the categories it is given (M8.12), kept
+// here so the GraphQL enum, the filter's Zod schema and the repository read
+// one list. `all` needs every category, `any` at least one.
+export const CATEGORY_MODES = ['all', 'any'] as const;
+
+export type CategoryMode = (typeof CATEGORY_MODES)[number];

@@ -17,7 +17,10 @@ import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { identityKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
-import type { IngredientElement } from '../../modules/ingredients/schema/ingredient-enums';
+import type {
+  CategoryMode,
+  IngredientElement,
+} from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
@@ -523,7 +526,7 @@ function compendiumList(filter: IngredientFilter): {
   const match = searchMatch(filter.query);
   return {
     arms: and(
-      ...categoryArms(filter.categoryIds ?? []),
+      ...categoryArms(filter.categoryIds ?? [], filter.categoryMode),
       formArm(filter.forms),
       pickedFormArm(filter.formId),
       listArm(ingredients.celestialBodies, filter.celestialBodies),
@@ -658,27 +661,33 @@ function citesNowhere(): SQL | undefined {
 }
 
 /**
- * One correlated `EXISTS` per id, so an entry must carry every one of them,
- * on itself or on a live form: a variant's pair names the ingredient too
+ * The category filter. Under `all` it is one correlated `EXISTS` per id, so
+ * an entry must carry every one of them; under `any` it is a single
+ * `EXISTS` over the whole list, which also keeps an entry holding two of
+ * them from being found twice. Either way the category may be filed on the
+ * entry or on a live form: a variant's pair names the ingredient too
  * (MB.217), so the union comes for free, but the table is hard-deleted and
  * its pairs outlive a soft-deleted variant, so the variant's liveness is read
  * here. Inside the compendium's own list the parent is already the row, so a
  * plain live-variant `EXISTS` rather than `readableVariantParent`'s tier check.
  */
-function categoryArms(categoryIds: readonly string[]): SQL[] {
-  return categoryIds.map((categoryId) =>
+function categoryArms(categoryIds: readonly string[], mode: CategoryMode = 'all'): SQL[] {
+  if (categoryIds.length === 0) return [];
+  const carries = (category: SQL | undefined) =>
     existsIn(
       ingredientCategories,
       and(
         eq(ingredientCategories.ingredientId, ingredients.id),
-        eq(ingredientCategories.categoryId, categoryId),
+        category,
         or(
           isNull(ingredientCategories.variantId),
           existsIn(ingredientVariants, eq(ingredientVariants.id, ingredientCategories.variantId)),
         ),
       ),
-    ),
-  );
+    );
+  return mode === 'any'
+    ? [carries(inArray(ingredientCategories.categoryId, [...categoryIds]))]
+    : categoryIds.map((categoryId) => carries(eq(ingredientCategories.categoryId, categoryId)));
 }
 
 /**

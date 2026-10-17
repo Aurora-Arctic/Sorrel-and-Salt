@@ -2,6 +2,7 @@ import { builder } from '../../../graphql/builder';
 import { countCompendium, getIngredient, listCompendium } from '../services/compendium';
 import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import {
+  CategoryModeEnum,
   IngredientElementEnum,
   IngredientRef,
   NomenclatureEnum,
@@ -52,12 +53,27 @@ export const facetArgs = builder.args((t) => ({
   }),
 }));
 
+/**
+ * The category arguments the compendium and a coven's ingredient list share:
+ * the ids, and how many of them an entry needs (M8.12).
+ */
+export const categoryArgs = builder.args((t) => ({
+  categoryIds: t.idList({ required: false }),
+  categoryMode: t.field({
+    type: CategoryModeEnum,
+    required: false,
+    defaultValue: 'all',
+    description:
+      'With categoryIds: all (the default) keeps entries carrying every one of them; any keeps entries carrying at least one. A category counts when it is filed on the entry or on any live form.',
+  }),
+}));
+
 builder.queryField('compendium', (t) =>
   t.pagedConnection({
     type: IngredientRef,
     args: {
       query: t.arg.string({ required: false }),
-      categoryIds: t.arg.idList({ required: false }),
+      ...categoryArgs,
       ...facetArgs,
       // The admin's to-do list: live entries citing no live reference (M5.5).
       withoutReferences: t.arg.boolean({ required: false }),
@@ -95,6 +111,7 @@ builder.queryField('ingredient', (t) =>
 function filterOf({
   query,
   categoryIds,
+  categoryMode,
   forms,
   deityIds,
   zodiacSigns,
@@ -107,6 +124,7 @@ function filterOf({
   return {
     query,
     categoryIds,
+    categoryMode,
     forms,
     deityIds,
     zodiacSigns,

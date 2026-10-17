@@ -160,6 +160,16 @@ describe('listWorkspaceIngredients', () => {
       'Oilfixture',
     ]);
     expect(await listed(asUser(B), WORKSPACE_W_ID, { forms: ['oil'] })).toEqual(['Oilfixture']);
+
+    // M8.12: Mugfixture and Oilfixture hold Protection and neither holds
+    // Cleansing, so only the mode decides whether the pair lists them.
+    const [cleansing] = await sql`
+      select id from categories where name = 'Cleansing' and deleted_at is null`;
+    const pair = [protection.id, cleansing.id];
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { categoryIds: pair })).toEqual([]);
+    expect(
+      await listed(asUser(B), WORKSPACE_W_ID, { categoryIds: pair, categoryMode: 'any' }),
+    ).toEqual(['Mugfixture', 'Oilfixture']);
   });
 
   it.each([

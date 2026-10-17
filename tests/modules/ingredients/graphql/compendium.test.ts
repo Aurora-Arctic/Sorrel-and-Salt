@@ -61,6 +61,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
     `query (
       $query: String
       $categoryIds: [ID!]
+      $categoryMode: CategoryMode
       $forms: [String!]
       $deityIds: [ID!]
       $zodiacSigns: [String!]
@@ -74,6 +75,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       compendium(
         query: $query
         categoryIds: $categoryIds
+        categoryMode: $categoryMode
         forms: $forms
         deityIds: $deityIds
         zodiacSigns: $zodiacSigns
@@ -205,6 +207,24 @@ describe('compendium', () => {
       },
       {},
     ]);
+  });
+
+  // M8.12: `all` is the default and no change, so only `any` reaches the read.
+  it('passes categoryMode any to the read, takes all as the default, and refuses another mode', async () => {
+    const ids = [category('Protection'), category('Cleansing')];
+    await nodesOf({ categoryIds: ids, categoryMode: 'any' });
+    await nodesOf({ categoryIds: ids, categoryMode: 'all' });
+    await nodesOf({ categoryIds: ids });
+
+    expect(repository.findCompendiumPage.mock.calls.map(([filter]) => filter)).toEqual([
+      { categoryIds: ids, categoryMode: 'any' },
+      { categoryIds: ids },
+      { categoryIds: ids },
+    ]);
+
+    const refused = await run(null, { categoryIds: ids, categoryMode: 'some' });
+    expect(refused.errors).toHaveLength(1);
+    expect(repository.findCompendiumPage).toHaveBeenCalledTimes(3);
   });
 
   // M8.13: the element list is a typed enum list, and reaches the read as the service parses it.

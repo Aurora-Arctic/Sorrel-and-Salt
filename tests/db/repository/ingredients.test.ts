@@ -728,6 +728,60 @@ describe('findCompendiumPage', () => {
     });
   });
 
+  // Any (M8.12) reads the same pairs as one set: an entry matches a category
+  // filed on it or on a live form, and the mode alone changes the result.
+  describe('categoryMode', () => {
+    let protection: string;
+    let cleansing: string;
+
+    beforeAll(async () => {
+      const rows = await sql`
+        select id, name from categories
+        where name in ('Protection', 'Cleansing') and deleted_at is null`;
+      const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+      protection = byName.get('Protection') as string;
+      cleansing = byName.get('Cleansing') as string;
+    });
+
+    beforeEach(async () => {
+      await add('Fixture Both', { categories: ['Protection', 'Cleansing'] });
+      await add('Fixture First', { categories: ['Protection'] });
+      await add('Fixture Neither');
+      const onForm = await add('Fixture On Form');
+      await insertVariant(sql, onForm, { form: 'Fixture Oil', categories: ['Cleansing'] }, A.id);
+      const dropped = await add('Fixture Dropped Form');
+      const droppedForm = await insertVariant(
+        sql,
+        dropped,
+        { form: 'Fixture Oil', categories: ['Cleansing'] },
+        A.id,
+      );
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+        where id = ${droppedForm}`;
+    });
+
+    it('keeps an entry holding either, on itself or on a live form, once each', async () => {
+      expect(await namesOf({ categoryIds: [protection, cleansing], categoryMode: 'any' })).toEqual([
+        'Fixture Both',
+        'Fixture First',
+        'Fixture On Form',
+      ]);
+    });
+
+    it('keeps only the entry holding both under all, for the same categories', async () => {
+      const both = ['Fixture Both'];
+      expect(await namesOf({ categoryIds: [protection, cleansing], categoryMode: 'all' })).toEqual(
+        both,
+      );
+      expect(await namesOf({ categoryIds: [protection, cleansing] })).toEqual(both);
+    });
+
+    it('is no filter when empty, as under all', async () => {
+      expect(await namesOf({ categoryIds: [], categoryMode: 'any' })).toHaveLength(5);
+    });
+  });
+
   // The text, on any of an entry's live forms (MB.222), any of the listed
   // forms (M11.22): an entry holding two of them is found once.
   describe('forms', () => {
@@ -1339,6 +1393,13 @@ describe('findCompendiumCount', () => {
 
   it('counts by category', async () => {
     await expectCountsToMatchTheWalk({ categoryIds: [protection] }, 4);
+  });
+
+  it('counts by any of several categories', async () => {
+    await expectCountsToMatchTheWalk(
+      { categoryIds: [protection, '00000000-0000-4000-8000-000000000000'], categoryMode: 'any' },
+      4,
+    );
   });
 
   it('counts by any of several forms', async () => {

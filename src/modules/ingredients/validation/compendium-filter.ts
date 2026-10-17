@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { RowId, optionalText } from '../../../lib/validation';
-import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS, TOXIC_FILTERS } from '../schema/ingredient-enums';
+import {
+  CATEGORY_MODES,
+  INGREDIENT_ELEMENTS,
+  NOMENCLATURE_KINDS,
+  TOXIC_FILTERS,
+} from '../schema/ingredient-enums';
 
 // The compendium list's filter as the `compendium` query receives it, parsed
 // by the service because the browser is not the only caller. Zod only, like
@@ -59,8 +64,12 @@ export const CompendiumFilter = z.object({
   query: filterText.transform((query) =>
     query && Array.from(query.normalize('NFC')).length >= MIN_QUERY_LENGTH ? query : undefined,
   ),
-  // Every listed category, not any (M8.12 adds a mode).
   categoryIds: filterIds,
+  // `all`, like null or missing, is no change: every listed category (M8.12).
+  categoryMode: z
+    .enum(CATEGORY_MODES)
+    .nullish()
+    .transform((mode) => (mode === 'any' ? mode : undefined)),
   // M11.22's facets: within each list any value matches, and the lists AND.
   // Text is folded by the read, so `Oil` and ` oil ` are one form.
   forms: filterTexts,
@@ -95,6 +104,7 @@ export type CompendiumFilter = z.output<typeof CompendiumFilter>;
 export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   query: true,
   categoryIds: true,
+  categoryMode: true,
   forms: true,
   deityIds: true,
   zodiacSigns: true,
