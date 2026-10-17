@@ -335,17 +335,39 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
 });
 
 // Regression: a curator opening a curated list got a 500, as the Updated
-// column read its editors' names through a site admin's read. Each list must
-// render its table, not the error boundary.
-test('a curator opens the compendium and a vocabulary list and sees their tables', async ({
+// column read its editors' names through a site admin's read. A list with no
+// rows names no editor and never reached that read, so the rows here are
+// stamped with the curator as their last editor first.
+test('a curator opens the compendium and a vocabulary list with edited rows and sees their stamps', async ({
   page,
 }) => {
-  await signInAs(page, 'list-curator@admin-curator.test', ['discord'], 'curator');
+  const { userId } = await signInAs(
+    page,
+    'list-curator@admin-curator.test',
+    ['discord'],
+    'curator',
+  );
+
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  let name: string;
+  try {
+    [{ name }] = await sql`select name from users where id = ${userId}`;
+    const entries = await sql`
+      update ingredients set updated_by = ${userId} where workspace_id is null and deleted_at is null returning id`;
+    const forms = await sql`
+      update ingredient_forms set updated_by = ${userId} where deleted_at is null returning id`;
+    // Without rows the pages name no editor, so the case would prove nothing.
+    expect(entries.length).toBeGreaterThan(0);
+    expect(forms.length).toBeGreaterThan(0);
+  } finally {
+    await sql.end();
+  }
 
   for (const path of ['/admin/compendium', '/admin/forms']) {
     const response = await page.goto(path);
     expect(response?.status(), path).toBe(200);
     await expect(page.getByRole('main').getByRole('table').first(), path).toBeVisible();
     await expect(page.getByRole('alert'), path).toHaveCount(0);
+    await expect(page.getByRole('main').getByText(name).first(), path).toBeVisible();
   }
 });

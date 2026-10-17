@@ -1,3 +1,4 @@
+import type postgres from 'postgres';
 import { describe, expect, it } from 'vitest';
 import { editorStamps } from '@/app/(shell)/admin/editors';
 import { Forbidden } from '@/lib/errors';
@@ -9,7 +10,10 @@ import { useTestDatabase } from '../../../support/db/database';
 // got a 500. The stamps are called as the pages call them, against the
 // seeded users, for each role that may open a curation screen.
 
-useTestDatabase(() => {});
+let sql: postgres.Sql;
+useTestDatabase((client) => {
+  sql = client;
+});
 
 const AT = new Date('2026-05-06T10:00:00Z');
 const ROWS = [
@@ -18,6 +22,13 @@ const ROWS = [
 ];
 
 describe('editorStamps', () => {
+  it('is given rows last edited by real users, so an empty batch cannot pass it', async () => {
+    expect(ROWS.length).toBeGreaterThan(0);
+    const [found] =
+      await sql`select count(*)::int as n from users where id in ${sql(ROWS.map((r) => r.updatedBy))} and deleted_at is null`;
+    expect(found.n).toBe(ROWS.length);
+  });
+
   it('names each row’s editor for a curator', async () => {
     expect(asUser(F).role).toBe('curator');
     expect(await editorStamps(asUser(F), ROWS)).toEqual([
