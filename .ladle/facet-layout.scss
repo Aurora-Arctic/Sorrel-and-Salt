@@ -275,3 +275,75 @@
     min-width: 0;
   }
 }
+
+// Alternative F: B's left column from the tablet width up, D's tray below it, on a
+// native <dialog>. Rendered open in place (the column, and the no-JavaScript page);
+// the script then closes it below the tablet width and opens it as a modal sheet.
+.facet-layout__side {
+  min-width: 0;
+}
+
+.facet-layout__sheet {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+  min-width: 0;
+  margin: 0;
+  padding: space(4);
+  border: 0;
+  background-color: $surface-page;
+  color: inherit;
+
+  // The modal sheet: a full-height drawer, a full-width one on a phone.
+  &:modal {
+    width: min(32rem, 100%);
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    margin-left: auto;
+    overflow-y: auto;
+    border-left: 1px solid $hairline;
+  }
+
+  &:not([open]) {
+    display: none;
+  }
+
+  &::backdrop {
+    background-color: color-mix(in srgb, $surface-page 75%, transparent);
+  }
+
+  // The open dialog's built-in styles float it (absolute, shrunk to its content);
+  // in the column it is an ordinary block.
+  @media (min-width: $shell-tablet-width) {
+    position: static;
+    inline-size: auto;
+    max-inline-size: none;
+    padding: 0;
+    background-color: transparent;
+  }
+}
+
+// What exists only for the sheet: the title and Close, and the chips (the column
+// shows its chosen values in the controls and the sentence).
+.facet-layout__sheet-open,
+.facet-layout__sheet-only {
+  @media (min-width: $shell-tablet-width) {
+    display: none;
+  }
+}
+
+// The split's own rule makes every apply row static, so the sheet's foot asks for
+// its sticky place back below the tablet width.
+.facet-layout__side .facet-layout__sheet .facet-layout__tray-foot {
+  position: sticky;
+  padding: space(3) 0;
+  border-top: 1px solid $hairline;
+
+  @media (min-width: $shell-tablet-width) {
+    position: static;
+    padding: 0;
+    border-top: 0;
+  }
+}

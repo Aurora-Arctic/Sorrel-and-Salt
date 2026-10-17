@@ -1,5 +1,5 @@
 import type { Story } from '@ladle/react';
-import { type ReactElement, type ReactNode, useId, useState } from 'react';
+import { type ReactElement, type ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { AdminFrame } from './admin-frame';
 import CategoryPicker from '../src/components/CategoryPicker';
 import type { PickerCategory } from '../src/components/CategoryPicker/types';
@@ -226,7 +226,10 @@ function Strip<T extends string>({
   );
 }
 
-type Variant = 'disclosure' | 'open' | 'sidebar' | 'tray' | 'grid';
+type Variant = 'disclosure' | 'open' | 'sidebar' | 'tray' | 'grid' | 'sidebar-tray';
+
+// `$shell-tablet-width` (48rem) in pixels, for the one place a script needs it.
+const TABLET_QUERY = '(min-width: 768px)';
 
 interface LayoutProps {
   variant?: Variant;
@@ -269,6 +272,8 @@ function Layout({
   const [elements, setElements] = useState(initialElements);
   const [nomenclature, setNomenclature] = useState('');
   const [tray, setTray] = useState(open);
+  const sheetRef = useRef<HTMLDialogElement>(null);
+  const sheetTitle = useId();
   const hidden = forms.length + deities.length + zodiac.length + planets.length + elements.length;
   const facets = [categories, forms, deities, zodiac, planets, elements].filter(
     (l) => l.length > 0,
@@ -435,6 +440,83 @@ function Layout({
     'aria-label': 'Filter the Compendium',
   };
 
+  const chosen: { key: string; label: string; remove: () => void }[] = [
+    ...categories.map((id) => ({
+      key: `c-${id}`,
+      label: categoryName(id),
+      remove: () => without(categories, setCategories, id),
+    })),
+    ...forms.map((v) => ({ key: `f-${v}`, label: v, remove: () => without(forms, setForms, v) })),
+    ...deities.map((v) => ({
+      key: `d-${v}`,
+      label: v,
+      remove: () => without(deities, setDeities, v),
+    })),
+    ...zodiac.map((v) => ({
+      key: `z-${v}`,
+      label: v,
+      remove: () => without(zodiac, setZodiac, v),
+    })),
+    ...planets.map((v) => ({
+      key: `p-${v}`,
+      label: v,
+      remove: () => without(planets, setPlanets, v),
+    })),
+    ...elements.map((v) => ({
+      key: `e-${v}`,
+      label: v,
+      remove: () => without(elements, setElements, v),
+    })),
+    ...(toxic === 'any'
+      ? []
+      : [
+          {
+            key: 'toxic',
+            label: toxic === 'toxic' ? 'Toxic' : 'Not Toxic',
+            remove: () => setToxic('any'),
+          },
+        ]),
+  ];
+
+  const chosenChips =
+    chosen.length > 0 ? (
+      <ul className="facet-layout__chosen" aria-label="Chosen filters">
+        {chosen.map((item) => (
+          <li key={item.key}>
+            <button type="button" onClick={item.remove} aria-label={`Remove ${item.label}`}>
+              {item.label}
+              <span aria-hidden="true">×</span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    ) : null;
+
+  // The sheet is a native <dialog>. From the tablet width up it is shown in place
+  // as the left column (show(), not modal); below it, it is closed, or a modal
+  // sheet (showModal()) when the Filters button opens it. Escape and the focus
+  // return to the button are the browser's.
+  useEffect(() => {
+    if (variant !== 'sidebar-tray') return undefined;
+    const dialog = sheetRef.current;
+    const media = window.matchMedia(TABLET_QUERY);
+    if (!dialog) return undefined;
+    const place = () => {
+      if (media.matches) {
+        // Open in place without show(), which would also move focus into the column.
+        if (dialog.matches(':modal')) dialog.close();
+        dialog.setAttribute('open', '');
+      } else {
+        dialog.close();
+        if (tray) dialog.showModal();
+      }
+    };
+    place();
+    media.addEventListener('change', place);
+    return () => media.removeEventListener('change', place);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- the initial state only; the button opens it after.
+  }, [variant]);
+
   let body: ReactElement;
   if (variant === 'grid') {
     body = (
@@ -451,6 +533,57 @@ function Layout({
         {results}
       </>
     );
+  } else if (variant === 'sidebar-tray') {
+    body = (
+      <div className="facet-layout__split">
+        <form {...formProps} className="form facet-layout facet-layout__side">
+          <div className="facet-layout__bar">
+            <div className="facet-layout__grow">{search}</div>
+            <button
+              type="button"
+              className="btn facet-layout__sheet-open"
+              onClick={() => sheetRef.current?.showModal()}
+            >
+              {filterCount > 0 ? `Filters (${filterCount})` : 'Filters'}
+            </button>
+          </div>
+          <div className="facet-layout__sheet-only">{chosenChips}</div>
+          {/* Rendered open, in place: before hydration it is the column (or, on a phone, a
+              panel above the results), and in the build the Filters control is then a plain
+              link to it. Hydrated, the effect above takes it from there. This mock shows
+              the hydrated state, so the control is a button. */}
+          <dialog
+            ref={sheetRef}
+            open
+            className="facet-layout__sheet"
+            aria-labelledby={`${sheetTitle}`}
+          >
+            <div className="facet-layout__tray-head facet-layout__sheet-only">
+              <strong id={sheetTitle}>Filters</strong>
+              <button type="button" className="btn" onClick={() => sheetRef.current?.close()}>
+                Close
+              </button>
+            </div>
+            {primary}
+            {panel}
+            <div className="facet-layout__apply facet-layout__tray-foot">
+              <button type="submit" className="btn btn--solid">
+                Apply Filters
+              </button>
+              <button
+                type="button"
+                className="btn facet-layout__sheet-only"
+                onClick={() => sheetRef.current?.close()}
+              >
+                Close
+              </button>
+              <a href={COMPENDIUM_PATH}>Clear All</a>
+            </div>
+          </dialog>
+        </form>
+        <div className="facet-layout__main">{results}</div>
+      </div>
+    );
   } else if (variant === 'sidebar') {
     body = (
       <div className="facet-layout__split">
@@ -464,43 +597,6 @@ function Layout({
       </div>
     );
   } else if (variant === 'tray') {
-    const chosen: { key: string; label: string; remove: () => void }[] = [
-      ...categories.map((id) => ({
-        key: `c-${id}`,
-        label: categoryName(id),
-        remove: () => without(categories, setCategories, id),
-      })),
-      ...forms.map((v) => ({ key: `f-${v}`, label: v, remove: () => without(forms, setForms, v) })),
-      ...deities.map((v) => ({
-        key: `d-${v}`,
-        label: v,
-        remove: () => without(deities, setDeities, v),
-      })),
-      ...zodiac.map((v) => ({
-        key: `z-${v}`,
-        label: v,
-        remove: () => without(zodiac, setZodiac, v),
-      })),
-      ...planets.map((v) => ({
-        key: `p-${v}`,
-        label: v,
-        remove: () => without(planets, setPlanets, v),
-      })),
-      ...elements.map((v) => ({
-        key: `e-${v}`,
-        label: v,
-        remove: () => without(elements, setElements, v),
-      })),
-      ...(toxic === 'any'
-        ? []
-        : [
-            {
-              key: 'toxic',
-              label: toxic === 'toxic' ? 'Toxic' : 'Not Toxic',
-              remove: () => setToxic('any'),
-            },
-          ]),
-    ];
     body = (
       <>
         <div className="facet-layout__bar">
@@ -509,18 +605,7 @@ function Layout({
             {filterCount > 0 ? `Filters (${filterCount})` : 'Filters'}
           </button>
         </div>
-        {chosen.length > 0 && (
-          <ul className="facet-layout__chosen" aria-label="Chosen filters">
-            {chosen.map((item) => (
-              <li key={item.key}>
-                <button type="button" onClick={item.remove} aria-label={`Remove ${item.label}`}>
-                  {item.label}
-                  <span aria-hidden="true">×</span>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
+        {chosenChips}
         {results}
         {tray && (
           <form {...formProps} className="form facet-layout facet-layout__tray">
@@ -678,3 +763,22 @@ GridPhoneLight.meta = { theme: 'light', width: 375 };
 
 export const GridPhoneDark: Story = () => <Grid />;
 GridPhoneDark.meta = { theme: 'dark', width: 375 };
+
+// Alternative F, the owner's call that the inline layouts take too much room: B's
+// left column from the tablet width up, always open; below it, D's tray as a
+// full-height sheet on the native <dialog> (showModal(): backdrop, Escape and focus
+// return are the browser's), opened by Filters (n), the chosen values as chips
+// under the search box, and the sentence above the results at every width.
+export const SidebarTray: Story = () => <Layout {...OPEN_PROPS} variant="sidebar-tray" />;
+
+export const SidebarTrayPhoneLight: Story = () => <SidebarTray />;
+SidebarTrayPhoneLight.meta = { theme: 'light', width: 375 };
+
+export const SidebarTrayPhoneDark: Story = () => <SidebarTray />;
+SidebarTrayPhoneDark.meta = { theme: 'dark', width: 375 };
+
+// The sheet closed: the chips and the sentence say what is chosen.
+export const SidebarTrayPhoneClosed: Story = () => (
+  <Layout {...OPEN_PROPS} variant="sidebar-tray" open={false} />
+);
+SidebarTrayPhoneClosed.meta = { theme: 'light', width: 375 };
