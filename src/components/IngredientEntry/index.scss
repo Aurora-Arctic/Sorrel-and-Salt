@@ -120,7 +120,9 @@ $side-column: calc(#{space(8)} * 5);
   scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
 }
 
-.ingredient-entry__section > h2 {
+// Details' h2, or a form's h3.
+.ingredient-entry__section > h2,
+.ingredient-entry__section > h3 {
   margin: 0;
 }
 
@@ -151,7 +153,8 @@ $side-column: calc(#{space(8)} * 5);
     gap: space(4) space(8);
     align-items: start;
 
-    > h2 {
+    > h2,
+    > h3 {
       grid-column: 1 / -1;
     }
   }
