@@ -601,7 +601,8 @@ test('undo and redo carry a chip, a reorder, a folded section, a variant and a s
     await dialog.getByRole('combobox', { name: 'Classification', exact: true }).click();
     await page.keyboard.press('Meta+z');
     await expect(folkBox).toHaveValue('');
-    await page.keyboard.press('Escape');
+    // The undo puts focus back on Folk Name, which closes the list: an Escape now would close the dialog.
+    await expect(folkBox).toBeFocused();
 
     await folkBox.click();
     await folkBox.fill('Second Draft');
