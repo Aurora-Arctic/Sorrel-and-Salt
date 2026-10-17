@@ -43,7 +43,7 @@ so the union cannot say one yet.
 | `onSaved`       | Called with the saved row (`id`, `name`, `slug`, and for a coven’s new ingredient `stock`, the jars it holds, which are the ones M12.8 moved onto it, each with its form, quantity and unit; a compendium save carries none) once the server has accepted it, and which save was pressed: `'open'`, Save Ingredient, for the page to open the ingredient, or `'another'`, Save & Add Another, after which the form clears (MB.131). An edit's one save is `'open'`. |
 | `onDeleted`     | Called once the `entry` given has been deleted.                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                                                                                                                                                 |
-| `duplicateHref` | Where the duplicate warning links a near match. Left out, a coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                                                                                                          |
+| `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                            |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                          |
 
 ## The fields
@@ -476,9 +476,10 @@ links. In both substitute lists, the ingredient's and each variant's:
 - **It links the entry's page where the form is given one** (`entryHref`),
   in a new tab, so the form and its unsaved changes stay where they are. The
   admin's compendium page gives the entry's own modal,
-  `/admin/compendium?edit=<slug>`. No other page fits yet: a coven's
-  ingredient page and the public compendium's entry page are not built, so
-  a coven's form links nothing.
+  `/admin/compendium?edit=<slug>`. The shell's add button gives the public
+  compendium's entry page, `/compendium/ingredients/[slug]`, for a compendium
+  substitute and nothing for a coven's own, since the summary is given a slug
+  and not an id and a coven's page is addressed by id.
 
 ### The categories
 
@@ -1003,15 +1004,14 @@ Create Anyway button, quiet and small (`.btn--quiet.btn--small`, the
 owner's call at MB.115), since it sets a question aside rather than acting. Each match is a link named by its label and its formal
 name, since the label alone can name five plants; one with no formal name
 shows its label. Each links where `duplicateHref` says — the admin's
-compendium page opens the match's own modal, `?edit=<slug>` — and by
-default to `/coven/[slug]/ingredients/[id]`, DESIGN.md §9's coven page, which
+compendium page opens the match's own modal, `?edit=<slug>` — and the shell's add button to
+`/coven/[slug]/ingredients/[id]`, DESIGN.md §9's coven page, which
 reaches compendium and coven entries alike. It opens in a new tab, so the
 form and what is typed in it stay where they are (the owner's call at
 MB.115's review), and its name ends "(opens in a new tab)" for a screen
 reader, as the substitute summary's Open Entry does. It is a plain anchor,
-as [`AdminNav`](admin-nav.md)'s were until each of their pages had landed,
-since typed routes refuse a page the build does not contain; M8.19 builds the page, and the link becomes a
-`<Link>`. Nothing refuses the create on the server: the warning is the
+since the caller hands back a plain string, where a typed `<Link>` wants a route
+the build contains. Nothing refuses the create on the server: the warning is the
 form's alone.
 
 **An edit's warning holds nothing** (MB.115, the owner's call). Renaming an
@@ -1143,8 +1143,10 @@ primary, a `.btn--solid`, and first, so it is the form's default: Enter in a
 field presses it. It saves and asks the page to open what it made, passing
 `'open'` to `onSaved`. The form navigates nowhere itself: the page that
 holds it does, M5.5's admin page and M8.16's modal, so the form never leads
-to a page that does not exist yet (`/coven/[slug]/ingredients/[id]` is M8.19's), and the
-workshop needs no router. Its form is about to go, so it keeps its values.
+to a page of its own, and the
+workshop needs no router. The shell's add button pushes
+`/coven/[slug]/ingredients/[id]` (M8.19) for the saved ingredient on Save Ingredient, and
+not on Save & Add Another. Its form is about to go, so it keeps its values.
 **Save & Add Another** is the secondary, a plain `.btn` beside it: it saves,
 passes `'another'`, and leaves the form blank for the next ingredient. Which
 was pressed is the submit event's `submitter`, read by its `value`; a submit
