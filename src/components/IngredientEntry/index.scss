@@ -265,6 +265,11 @@ $side-column: calc(#{space(8)} * 5);
   p {
     margin: 0;
   }
+
+  // Spacing alone sets the numbers apart, each its own link to hit.
+  sup a {
+    padding-inline: space(1);
+  }
 }
 
 // The References section, at the foot of the page: its notes numbered, its

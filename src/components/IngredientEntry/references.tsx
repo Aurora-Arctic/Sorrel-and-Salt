@@ -1,4 +1,4 @@
-import { Fragment, type ReactElement, type ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 import { citationText, byCitation, renderCitation } from '../../lib/citation';
 import { renderShortCitation } from '../../lib/short-citation';
 import type { CitationPart } from '../../lib/types';
@@ -130,13 +130,15 @@ export function NoteMarks({
       </p>
       <p>
         <sup>
-          {numbers.map((number, at) => (
-            <Fragment key={number}>
-              {at > 0 && ', '}
-              <a id={markId(number)} href={`#${noteId(number)}`} aria-label={`Note ${number}`}>
-                {number}
-              </a>
-            </Fragment>
+          {numbers.map((number) => (
+            <a
+              key={number}
+              id={markId(number)}
+              href={`#${noteId(number)}`}
+              aria-label={`Note ${number}`}
+            >
+              {number}
+            </a>
           ))}
         </sup>
       </p>
