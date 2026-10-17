@@ -367,7 +367,8 @@ test('a curator opens the compendium and a vocabulary list with edited rows and 
     const response = await page.goto(path);
     expect(response?.status(), path).toBe(200);
     await expect(page.getByRole('main').getByRole('table').first(), path).toBeVisible();
-    await expect(page.getByRole('alert'), path).toHaveCount(0);
+    // In the page's main: Next puts its route announcer, an empty alert, in <body>.
+    await expect(page.getByRole('main').getByRole('alert'), path).toHaveCount(0);
     await expect(page.getByRole('main').getByText(name).first(), path).toBeVisible();
   }
 });
