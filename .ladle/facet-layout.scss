@@ -60,40 +60,6 @@
   }
 }
 
-.facet-layout__wide {
-  @media (min-width: $shell-tablet-width) {
-    grid-column: 1 / -1;
-  }
-}
-
-.facet-layout__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(2);
-  margin: 0;
-  padding: 0;
-  border: 0;
-}
-
-// A chip that is a native checkbox: the box stays, so the keyboard and a
-// screen reader get the real control, and the chip fills while it is on.
-.facet-layout__chip {
-  @include chip($dark: $accent, $light: $accent);
-  gap: space(2);
-  cursor: pointer;
-
-  &:has(input:checked) {
-    @include chip($dark: $accent, $light: $accent, $state: selected);
-    gap: space(2);
-  }
-
-  &:has(input:disabled) {
-    opacity: 0.5;
-    border-style: dashed;
-    cursor: default;
-  }
-}
-
 .facet-layout__count {
   color: $text-muted;
 }
@@ -132,11 +98,6 @@
   padding: space(3);
   background-color: $surface-card;
   border-radius: radius('surface');
-}
-
-// A count on a filled chip keeps the chip's own label colour, not the muted one.
-.facet-layout__chip:has(input:checked) .facet-layout__count {
-  color: inherit;
 }
 
 .facet-layout__sentence {
@@ -284,4 +245,33 @@
   padding: space(3) 0;
   background-color: $surface-page;
   border-top: 1px solid $hairline;
+}
+
+// A zero-count option in a typeahead reads as unavailable: only those rows carry a note here.
+.facet-layout .combobox__option:has(.combobox__note) {
+  opacity: 0.55;
+}
+
+// Alternative E: every facet visible as a one-line control in a compact grid.
+.facet-layout__grid {
+  display: grid;
+  gap: space(4);
+  grid-template-columns: minmax(0, 1fr);
+
+  @media (min-width: $shell-tablet-width) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+// Categories and Match on one line: the picker takes the spare width.
+.facet-layout__beside .facet-layout__grow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+  align-items: flex-end;
+
+  > :first-child {
+    flex: 1 1 20rem;
+    min-width: 0;
+  }
 }

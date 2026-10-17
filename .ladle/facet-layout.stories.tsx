@@ -88,43 +88,25 @@ const PLANETS: Counted[] = [
   ['Saturn', 0],
 ].map(([name, count]) => ({ name: name as string, count: count as number }));
 
-const RESULTS = ['Rue', 'Wormwood', 'Mugwort', 'Fixture Salt'];
+const ELEMENTS: Counted[] = [
+  ['Fire', 7],
+  ['Water', 9],
+  ['Earth', 6],
+  ['Air', 4],
+  ['Spirit', 0],
+].map(([name, count]) => ({ name: name as string, count: count as number }));
 
-/** A row of checkbox chips, each a native checkbox in a label; a zero is disabled, not hidden. */
-function ChipRow({
-  legend,
-  name,
-  items,
-  chosen,
-  onToggle,
-}: {
-  legend: string;
-  name: string;
-  items: Counted[];
-  chosen: string[];
-  onToggle: (value: string) => void;
-}): ReactElement {
-  return (
-    <fieldset className="fieldset">
-      <legend className="fieldset__legend">{legend}</legend>
-      <div className="facet-layout__chips">
-        {items.map(({ name: value, count }) => (
-          <label key={value} className="facet-layout__chip">
-            <input
-              type="checkbox"
-              name={name}
-              value={value}
-              checked={chosen.includes(value)}
-              disabled={count === 0 && !chosen.includes(value)}
-              onChange={() => onToggle(value)}
-            />
-            {value} <span className="facet-layout__count">({count})</span>
-          </label>
-        ))}
-      </div>
-    </fieldset>
-  );
-}
+// A fixed vocabulary as combobox options: a zero stays in the list, last, saying so,
+// and picking it does nothing (the real build disables the row).
+const counted = (items: Counted[]) =>
+  items.map(({ name, count }) => ({
+    value: name,
+    label: `${name} (${count})`,
+    count,
+    ...(count === 0 ? { note: 'Nothing Matches' } : {}),
+  }));
+
+const RESULTS = ['Rue', 'Wormwood', 'Mugwort', 'Fixture Salt'];
 
 /** A typeahead with its chosen values as chips inside the control, an icon beside each if it has one. */
 function Typeahead({
@@ -162,6 +144,7 @@ function Typeahead({
         value={text}
         onChange={setText}
         onPick={(value) => {
+          if (options.find((option) => option.value === value)?.count === 0) return;
           onChange([...chosen, value]);
           setText('');
         }}
@@ -243,7 +226,7 @@ function Strip<T extends string>({
   );
 }
 
-type Variant = 'disclosure' | 'open' | 'sidebar' | 'tray';
+type Variant = 'disclosure' | 'open' | 'sidebar' | 'tray' | 'grid';
 
 interface LayoutProps {
   variant?: Variant;
@@ -253,6 +236,7 @@ interface LayoutProps {
   deities?: string[];
   zodiac?: string[];
   planets?: string[];
+  elements?: string[];
   categories?: string[];
   toxic?: 'any' | 'toxic' | 'not-toxic';
   query?: string;
@@ -268,6 +252,7 @@ function Layout({
   deities: initialDeities = [],
   zodiac: initialZodiac = [],
   planets: initialPlanets = [],
+  elements: initialElements = [],
   categories: initialCategories = ['c-1', 'c-3'],
   toxic: initialToxic = 'any',
   query: initialQuery = 'rue',
@@ -281,12 +266,13 @@ function Layout({
   const [deities, setDeities] = useState(initialDeities);
   const [zodiac, setZodiac] = useState(initialZodiac);
   const [planets, setPlanets] = useState(initialPlanets);
+  const [elements, setElements] = useState(initialElements);
   const [nomenclature, setNomenclature] = useState('');
   const [tray, setTray] = useState(open);
-  const toggle = (list: string[], set: (next: string[]) => void) => (value: string) =>
-    set(list.includes(value) ? list.filter((other) => other !== value) : [...list, value]);
-  const hidden = forms.length + deities.length + zodiac.length + planets.length;
-  const facets = [categories, forms, deities, zodiac, planets].filter((l) => l.length > 0).length;
+  const hidden = forms.length + deities.length + zodiac.length + planets.length + elements.length;
+  const facets = [categories, forms, deities, zodiac, planets, elements].filter(
+    (l) => l.length > 0,
+  ).length;
   const filterCount = facets + (toxic === 'any' ? 0 : 1);
   const without = (list: string[], set: (next: string[]) => void, value: string) =>
     set(list.filter((other) => other !== value));
@@ -302,48 +288,56 @@ function Layout({
     />
   );
 
-  const primary = (
-    <div className="facet-layout__row">
-      <div className="facet-layout__grow">
-        <CategoryPicker
-          legend="Categories"
-          entry="Category"
-          placeholder="Add Category"
-          categories={CATEGORIES}
-          value={categories}
-          onChange={setCategories}
-        />
-        {categories.length >= 2 && (
-          <Strip
-            legend="Match"
-            name="categoryMode"
-            options={[
-              { value: 'all', label: 'All' },
-              { value: 'any', label: 'Any' },
-            ]}
-            value={mode}
-            onChange={setMode}
-          />
-        )}
-      </div>
-      <div className="facet-layout__toxic">
+  const categoriesBlock = (
+    <div className="facet-layout__grow">
+      <CategoryPicker
+        legend="Categories"
+        entry="Category"
+        placeholder="Add Category"
+        categories={CATEGORIES}
+        value={categories}
+        onChange={setCategories}
+      />
+      {categories.length >= 2 && (
         <Strip
-          legend="Toxic"
-          name="toxic"
+          legend="Match"
+          name="categoryMode"
           options={[
+            { value: 'all', label: 'All' },
             { value: 'any', label: 'Any' },
-            { value: 'toxic', label: 'Toxic' },
-            { value: 'not-toxic', label: 'Not Toxic' },
           ]}
-          value={toxic}
-          onChange={setToxic}
+          value={mode}
+          onChange={setMode}
         />
-      </div>
+      )}
     </div>
   );
 
-  const panel = (
-    <div className="facet-layout__panel">
+  const toxicBlock = (
+    <div className="facet-layout__toxic">
+      <Strip
+        legend="Toxic"
+        name="toxic"
+        options={[
+          { value: 'any', label: 'Any' },
+          { value: 'toxic', label: 'Toxic' },
+          { value: 'not-toxic', label: 'Not Toxic' },
+        ]}
+        value={toxic}
+        onChange={setToxic}
+      />
+    </div>
+  );
+
+  const primary = (
+    <div className="facet-layout__row">
+      {categoriesBlock}
+      {toxicBlock}
+    </div>
+  );
+
+  const panelItems = (
+    <>
       <Typeahead
         label="Forms"
         placeholder="Add Form"
@@ -369,24 +363,27 @@ function Layout({
           count: deity.count,
         }))}
       />
-      <div className="facet-layout__wide">
-        <ChipRow
-          legend="Zodiac"
-          name="zodiac"
-          items={ZODIAC}
-          chosen={zodiac}
-          onToggle={toggle(zodiac, setZodiac)}
-        />
-      </div>
-      <div className="facet-layout__wide">
-        <ChipRow
-          legend="Planets"
-          name="planets"
-          items={PLANETS}
-          chosen={planets}
-          onToggle={toggle(planets, setPlanets)}
-        />
-      </div>
+      <Typeahead
+        label="Zodiac"
+        placeholder="Add Sign"
+        chosen={zodiac}
+        onChange={setZodiac}
+        options={counted(ZODIAC)}
+      />
+      <Typeahead
+        label="Planets"
+        placeholder="Add Planet"
+        chosen={planets}
+        onChange={setPlanets}
+        options={counted(PLANETS)}
+      />
+      <Typeahead
+        label="Elements"
+        placeholder="Add Element"
+        chosen={elements}
+        onChange={setElements}
+        options={counted(ELEMENTS)}
+      />
       <FilterSelectField
         label="Classification"
         name="nomenclature"
@@ -396,8 +393,10 @@ function Layout({
         onChange={setNomenclature}
       />
       <SwitchField label="No Refs" name="withoutReferences" value="1" onChange={() => {}} />
-    </div>
+    </>
   );
+
+  const panel = <div className="facet-layout__panel">{panelItems}</div>;
 
   const apply = (
     <div className="facet-layout__apply">
@@ -437,7 +436,22 @@ function Layout({
   };
 
   let body: ReactElement;
-  if (variant === 'sidebar') {
+  if (variant === 'grid') {
+    body = (
+      <>
+        <form {...formProps}>
+          {search}
+          <div className="facet-layout__row facet-layout__beside">{categoriesBlock}</div>
+          <div className="facet-layout__grid">
+            {toxicBlock}
+            {panelItems}
+          </div>
+          {apply}
+        </form>
+        {results}
+      </>
+    );
+  } else if (variant === 'sidebar') {
     body = (
       <div className="facet-layout__split">
         <form {...formProps}>
@@ -471,6 +485,11 @@ function Layout({
         key: `p-${v}`,
         label: v,
         remove: () => without(planets, setPlanets, v),
+      })),
+      ...elements.map((v) => ({
+        key: `e-${v}`,
+        label: v,
+        remove: () => without(elements, setElements, v),
       })),
       ...(toxic === 'any'
         ? []
@@ -564,7 +583,8 @@ const FULL_SENTENCE = (
     12 ingredients matching “<Link>rue</Link>”, in the <Link>Protection</Link> and{' '}
     <Link>Healing</Link> categories, as <Link>Oil</Link> or <Link>Tincture</Link>, of{' '}
     <Link>Hecate</Link>, under <Link>Scorpio</Link>, ruled by the <Link>Sun</Link> or{' '}
-    <Link>Mars</Link>, that are <Link>not toxic</Link>. <Link>Clear All</Link>
+    <Link>Mars</Link>, in the <Link>Water</Link> element, that are <Link>not toxic</Link>.{' '}
+    <Link>Clear All</Link>
   </>
 );
 
@@ -574,6 +594,7 @@ const OPEN_PROPS: LayoutProps = {
   deities: ['Hecate'],
   zodiac: ['Scorpio'],
   planets: ['Sun', 'Mars'],
+  elements: ['Water'],
   toxic: 'not-toxic',
   sentence: FULL_SENTENCE,
 };
@@ -647,3 +668,13 @@ FiltersTrayPhoneLight.meta = { theme: 'light', width: 375 };
 
 export const FiltersTrayPhoneDark: Story = () => <FiltersTray />;
 FiltersTrayPhoneDark.meta = { theme: 'dark', width: 375 };
+
+// Alternative E: every facet always visible as a one-line control in a compact grid
+// (three columns wide, a plain stack on a phone), no disclosure.
+export const Grid: Story = () => <Layout {...OPEN_PROPS} variant="grid" />;
+
+export const GridPhoneLight: Story = () => <Grid />;
+GridPhoneLight.meta = { theme: 'light', width: 375 };
+
+export const GridPhoneDark: Story = () => <Grid />;
+GridPhoneDark.meta = { theme: 'dark', width: 375 };
