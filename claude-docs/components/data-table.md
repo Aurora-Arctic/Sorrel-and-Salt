@@ -80,7 +80,7 @@ Name cell and the value lists' group cell draw it.
 
 ## updatedColumn
 
-`updatedColumn(className?)` (`updated-column.tsx`) is the Updated column every audited list shares (MB.260): "by **Fixture A** on 2026-10-12", who last changed the row and when, the name in bold and the date in a `<time>`. A row passes an `UpdatedStamp` (`updatedBy`, `updatedAt`); the cell is empty when either is null, since a date with no one to ask about it says little. The member list, the compendium list, the value lists and the group list draw it. The admin lists' names come from `editorStamps` (`src/app/(shell)/admin/editors.ts`), which reads them through `usersForAdmin` in one lookup per page and shows an editor whose account is gone as Unknown.
+`updatedColumn(className?)` (`updated-column.tsx`) is the Updated column every audited list shares (MB.260): "by **Fixture A** on 2026-10-12", who last changed the row and when, the name in bold and the date in a `<time>`. A row passes an `UpdatedStamp` (`updatedBy`, `updatedAt`); the cell is empty when either is null, since a date with no one to ask about it says little. The member list, the compendium list, the value lists and the group list draw it. The admin lists' names come from `editorStamps` (`src/app/(shell)/admin/editors.ts`), which reads them through `editorNamesForCurator` in one lookup per page, so a curator's screens render and shows an editor whose account is gone as Unknown.
 
 ## Stories
 

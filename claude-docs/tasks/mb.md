@@ -268,6 +268,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
 | MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
 | MB.265 | The Zodiac Signs Filter Test Fails Axe's Title Check Under Load                                                          | Bugfixes | —                      |
+| MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1531,6 +1532,28 @@ _Acceptance criteria:_
 - Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass
 - `claude-docs/testing/e2e.md`'s "Where a run's time goes (M11.18)" section stops calling this failure unexplained once it is explained
 
+**MB.266 — Curators Reach the Admin Curated Lists Again** · 2h
+
+_Story:_ As a site curator, I want the Compendium and vocabulary pages to open, so that I can curate what the role exists for.
+
+Found on 2026-10-17, locally, during M8.16's review; the code shipped in v0.9.0 (MB.260, PR #1005), so production has it. Every admin curated-list page shows who last edited each row through `editorStamps` (`src/app/(shell)/admin/editors.ts`), which reads the names through `usersForAdmin` in the identity module. That read refuses anyone but a site admin, since it also serves the privilege ledger, so a curator — the role M11.20 added so that someone other than an admin can curate — gets a 500 on all nine curated pages: compendium, categories, category groups, forms, form groups, deities, traditions, celestial bodies and zodiac signs. The stamps need only a name, so they read through a curator-reachable `editorNamesForCurator`, guarded by `assertCurator` and returning id and name alone; `usersForAdmin` and the People pages stay admin-only. A hotfix, since it is live.
+
+Steps to reproduce:
+
+1. Sign in as a site curator (fixture F).
+2. Open `/admin/compendium`, or any admin vocabulary page, with at least one row in its list.
+
+Actual: a 500, "Runtime Forbidden — Only a site admin may read the privilege ledger", thrown from the last-edited stamps.
+Expected: the list renders, with who last edited each row.
+
+_Acceptance criteria:_
+
+- A regression test on `editorStamps` as fixture F fails before the fix and passes after, with a non-empty batch of real editor ids
+- A browser test seeds a row and opens `/admin/compendium` and `/admin/forms` as a curator: 200, the list and the stamp present
+- The name read is guarded by `assertCurator`, returns id and name only, and refuses a coven owner (A) by direct id
+- `usersForAdmin` and the People pages stay admin-only
+- Docs: `claude-docs/components/data-table.md` names the curator-safe read
+
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
 Merged before this file carried per-task hours; sized after the fact from the merged diff. The reduced-motion swap of the toggle's facets, and the workshop story that simulates the preference.
@@ -2631,16 +2654,16 @@ No error, no code, no message — `drizzle-kit migrate` catches whatever postgre
 
 **It validates the _resolved_ URL, which is the gap MB.47 reopened.** MB.46's validator only ever saw the file `vercel pull` wrote; MB.47 then took `DATABASE_URL` from a GitHub secret and handed it straight to drizzle-kit, so a malformed secret failed exactly as silently as a malformed pull used to — one task after the gap was closed, by its own successor. `Resolve DATABASE_URL` now writes whichever value won to `$RUNNER_TEMP/resolved.env` under `umask 077`, and the probe reads that. A file path rather than argv or a step `env:`, for MB.46's reasons.
 
-**`channel_binding` gets a named rule rather than a note.** It is a libpq _client-side_ option that postgres.js passes through to the server, which answers `42704` ([`ci/deploy.md`](../ci/deploy.md) has the mechanism). Neon's console adds it by default, so it will recur — and it is cheaper to reject in the validator, before a connection is attempted, than to diagnose from a 42704 afterwards.
+**`channel_binding` is stripped rather than rejected.** It is a libpq _client-side_ option that postgres.js passes through to the server, which answers `42704` ([`ci/deploy.md`](../ci/deploy.md) has the mechanism). The task first rejected it in the validator, but a hotfix's URL is written by Neon's Vercel integration, which adds the parameter and rewrites the variable, so nobody can delete it by hand. `withoutClientOnlyParams` (`src/db/connection-url.ts`) now removes it wherever a connection opens; postgres.js never enforced channel binding, so nothing is lost.
 
 _Acceptance criteria:_
 
 - Tests written first and watched fail — the `channel_binding` rule against `validateDatabaseUrl`, the probe's error-description and scrubbing helpers, and the workflow sweep
 - The probe runs in `migrate.yml` before `Apply pending migrations` and in `deploy.yml` before `Build`, fatal in the first and advisory in the second, asserted apart
 - Its output names the driver's error code and message and **never** the URL — asserted against a realistic connection string rather than intended, including errors that quote the URL, the password and the userinfo back at it. The hostname is deliberately kept: `ENOTFOUND` without the name it failed to resolve is the same silence this task exists to end
-- `validateDatabaseUrl` gains the client-only-parameter rule, with a green case for a Neon pooled URL carrying `sslmode=require` alone — postgres.js consumes that one, and rejecting it would break every working string in the project
+- Client-only parameters are removed from the URL where a connection opens, with a green case for a Neon pooled URL carrying `sslmode=require` alone — postgres.js consumes that one, and removing it would break every working string in the project. (Originally a `validateDatabaseUrl` rejection; see above.)
 - The resolved `DATABASE_URL` is validated whatever its source, secret or pulled `POSTGRES_URL`, pinned by a guard — the point is that the gap cannot reopen a second time
-- Docs corrected: `ci.md` and `db.md` on what a failed migration now tells you, `secrets.md` on deleting `channel_binding` from what the Neon console hands you
+- Docs corrected: `ci.md` and `db.md` on what a failed migration now tells you, `secrets.md` on `channel_binding` in what the Neon console hands you
 - **Not done when CI is green** — done when a live staging push either migrates, or fails with a named cause somebody can act on
 
 **MB.50 — Make code comments concise; move the arguments into `claude-docs/`** · 6h
