@@ -543,7 +543,7 @@ Four variants:
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
-**Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant: half
+**Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant. `.btn--small` has half
 the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
 in place of `.btn`'s 1.6px, which reads heavy at this size, the `caption`
 type size, and a `space(2)` gap. It is for a compact strip that the full button would make taller, such
