@@ -354,20 +354,16 @@ describe('Combobox', () => {
   });
 
   describe('an action row', () => {
-    const action = (onSelect = vi.fn()) => ({ label: 'New Reference…', onSelect });
+    const action = (onSelect = vi.fn()) => ({ label: 'New Reference', onSelect });
 
     it('is the last row, with no typed one, there with a blank box too', () => {
       render(<Harness suggestions={ONE_BUCKET} action={action()} />);
 
       key('ArrowDown');
-      expect(options()).toEqual([
-        'Hedge FixtureUsed by Testwort',
-        'Fixture Bane',
-        'New Reference…',
-      ]);
+      expect(options()).toEqual(['Hedge FixtureUsed by Testwort', 'Fixture Bane', 'New Reference']);
 
       type('fix');
-      expect(options()[options().length - 1]).toBe('New Reference…');
+      expect(options()[options().length - 1]).toBe('New Reference');
       expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
     });
 
@@ -377,7 +373,7 @@ describe('Combobox', () => {
       key('ArrowDown');
 
       expect(box()).toHaveAttribute('aria-expanded', 'true');
-      expect(options()).toEqual(['New Reference…']);
+      expect(options()).toEqual(['New Reference']);
     });
 
     it('calls its own callback when picked, by click or by keyboard, and never onPick', () => {
@@ -386,12 +382,12 @@ describe('Combobox', () => {
       render(<Harness suggestions={ONE_BUCKET} action={action(onSelect)} onPick={onPick} />);
 
       type('fix');
-      fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+      fireEvent.click(screen.getByRole('option', { name: 'New Reference' }));
       // The click closed the list; ArrowUp opens it on its last row.
       key('ArrowUp');
       expect(box()).toHaveAttribute(
         'aria-activedescendant',
-        screen.getByRole('option', { name: 'New Reference…' }).id,
+        screen.getByRole('option', { name: 'New Reference' }).id,
       );
       key('Enter');
 

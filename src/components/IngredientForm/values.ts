@@ -24,6 +24,7 @@ import type {
   NounedField,
   ReferenceLink,
   ReferenceListEntry,
+  RestoredSections,
   SectionKey,
   SubstituteForm,
   SubstituteLink,
@@ -800,6 +801,55 @@ export function variantsWithErrors(
     const index = Number(key);
     const sections = variantSectionsWithErrors(error);
     if (Number.isInteger(index) && sections.size > 0) found.set(index, sections);
+  }
+  return found;
+}
+
+/** The lists whose rows are chips or entries, not inputs: the ingredient's, and the variant's. */
+const BOXED_LISTS = new Set<string>([
+  ...LIST_FIELDS,
+  ...VARIANT_LISTS,
+  'references',
+  'categoryIds',
+]);
+
+/**
+ * The box to focus after a restore wrote the list `name`, or undefined when
+ * `name` is not a whole list (or one entry's place in it). A list's entries
+ * are not inputs, only its typing box is, named by `draftOf` — `drafts.colors`,
+ * `variants.1.drafts.colors`; the category picker's box is named
+ * `drafts.categoryIds` the same way, though that draft holds no value.
+ */
+export function listBoxOf(name: string): string | undefined {
+  const keys = name.replace(/\.\d+$/, '').split('.');
+  const list = keys.pop() ?? '';
+  const inVariant = keys.length === 2 && keys[0] === 'variants' && /^\d+$/.test(keys[1]);
+  if (!BOXED_LISTS.has(list) || (keys.length > 0 && !inVariant)) return undefined;
+  return [...keys, 'drafts', list].join('.');
+}
+
+/**
+ * The sections holding the fields a restore wrote, from their form paths, as
+ * `sectionsWithErrors` reads an error's. A box's draft is its list's
+ * (`drafts.colors`, `variants.1.drafts.colors`); a variant's value opens the
+ * Variants section and, inside it, the variant's own section; the variants
+ * list itself opens Variants alone.
+ */
+export function sectionsRestored(names: readonly string[]): RestoredSections {
+  const found: RestoredSections = { sections: new Set(), variants: new Map() };
+  for (const name of names) {
+    const keys = name.split('.');
+    const inVariant = keys[0] === 'variants' && /^\d+$/.test(keys[1] ?? '');
+    if (!inVariant) {
+      const section = SECTION_OF[keys[0] === 'drafts' ? (keys[1] ?? '') : keys[0]];
+      if (section) found.sections.add(section);
+      continue;
+    }
+    found.sections.add('variants');
+    const section = VARIANT_SECTION_OF[keys[2] === 'drafts' ? (keys[3] ?? '') : (keys[2] ?? '')];
+    if (!section) continue;
+    const index = Number(keys[1]);
+    found.variants.set(index, (found.variants.get(index) ?? new Set()).add(section));
   }
   return found;
 }

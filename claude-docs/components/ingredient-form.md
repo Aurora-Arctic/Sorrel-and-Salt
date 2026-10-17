@@ -15,7 +15,7 @@ compendium page wrap it rather than containing their own form.
 | `fields.tsx`             | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`                                                                                    |
 | `suggestions.tsx`        | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                                                                                                         |
 | `duplicates.tsx`         | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                                                                                                         |
-| `references.tsx`         | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators                                                                                     |
+| `references.tsx`         | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference, the one-line rows beneath, their edit and remove, and their locators                                                                                      |
 | `categories.tsx`         | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                                                                              |
 | `reference-panel.tsx`    | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                                                                                             |
 | `variants.tsx`           | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, `variantSummary`, and `useVariantFolds`, which of each variant's sections are open                                     |
@@ -533,7 +533,7 @@ legend as a list's is.
   note, in the search's ranked order, so the tier is a note rather than a
   heading. A source already listed is not offered again. Typed text is a
   search and never a source, so the list has no "Use what you typed" row:
-  its last row is "New Reference…", the combobox's create row
+  its last row is "New Reference", the combobox's create row
   ([`combobox.md`](combobox.md), "The create row"), which opens the panel.
   It replaced MB.154's first row, "Add a reference", and the New Reference
   button that stood beside the box where a list has Add (MB.115, the owner's
@@ -652,7 +652,7 @@ provides them, and its errors render through `FieldError`.
   it does on screen. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
   holds `referencePanelOpen: false`.
 - **Asked for again while open, it takes you back**, the owner's call:
-  "New Reference…" scrolls the panel's top into view, its
+  "New Reference" scrolls the panel's top into view, its
   legend clear of the edge, and focuses Kind again, keeping everything
   typed. The field counts each request and the panel focuses on each new
   count, as it does when it opens.
@@ -1165,6 +1165,80 @@ and it comes after react-hook-form's own end-of-submit update. The focus
 finds Name in the page, as the error focus does: `setFocus` reads a ref the
 reset has just dropped. An edit's save is
 ["On the compendium"](#on-the-compendium)'s.
+
+## Undo and redo
+
+The form has an undo and a redo (M12.10), the same `useFormHistory` that
+[`field.md`](field.md#undo-and-redo) describes. It is wired on the form's own
+`<form>` ref and switched off, as the chords and buttons are, while a question
+is asked over the form (the discard guard, a delete, or the form's own
+`question`). The modal's header row holds Open All at its start and the joined Undo and
+Redo pair at its end: `FormHistoryButtons` is drawn just after the Open All
+portal, and the pair's own `margin-inline-start: auto` carries it to the end.
+
+**An add and its draft clear are one step.** Adding a variant or picking a reference clears its typing box first and then adds the row, because the field array reports its new row to the form's history in an effect while `setValue` reports at once; clearing second would hide the row from undo. One undo takes the row out and gives back the typed text.
+
+**Two resets clear the history.** A step that leads back past a save would
+undo what the server now holds. After Save & Add Another's `reset(EMPTY_VALUES)`
+the form calls `history.clear()`, and so it does after an edit's save, where
+the form resets to its own values (`reset(getValues())`) so the saved values
+become the new start. The first undo after either has nothing to undo.
+
+**A restore opens what holds the field it wrote.** Undo can change a field
+that sits in a closed section, so `onRestored` turns the changed paths into
+sections with `sectionsRestored(names)` in `values.ts`, the way
+`sectionsWithErrors` does for an error: a box's draft counts as its list
+(`drafts.colors` is Colours), and a path under `variants.N` opens Variants and
+then that variant's own section. The ingredient's sections open through the
+form's `open` set. A variant's open state lives in `useVariantFolds`
+(`variants.tsx`), which also holds the open card, so the form can reach it:
+`reveal(index, sections)` opens the card at that place and those sections of
+it.
+
+**A restored variants list is reconciled with the folds.** Adding, removing or
+reordering a variant changes the list, and the folds are held by place, so a
+restore would leave each fold on the wrong card. `reconcile(from, to)` matches
+each row of the list being restored to a row of the list as it stood, by
+`variantId`, else by its form text folded, and carries that row's open
+sections across; an old row is matched at most once, so two unsaved
+rows with the same form text are told apart by their order. A row that is not matched is one returning from a removal: it
+opens fully and becomes the open card. If nothing returns, the open card stays
+on the same variant, or none if that variant is gone. The step's `before` and
+`after` are swapped on a redo so `from` is always the list as it stood.
+
+**Focus after a classification pick.** Picking a classification can empty the
+formal name in the same step, so the first changed field is not the one the
+user acted on. `onRestored` returns `'nomenclature'` when it is among the
+changed names, and the hook focuses Classification.
+
+**Focus after an undo lands on a list's box or the returned variant.** A chip
+list has no control of its own to name, only its typing box (`drafts.<list>`,
+or `variants.N.drafts.<list>`), so `onRestored` maps a changed list to its box
+with `listBoxOf` in `values.ts`, and the hook focuses it. A step on the
+variants list is the exception: `reconcile` returns the index of a row that
+came back, and focus goes to `variants.<i>.form`; a step that only removed a
+row focuses `drafts.variants`, the New Form box. The categories picker names
+its box the same way (`boxName`). A step that changes a plain field keeps
+the hook's own order, the field itself.
+
+**The reference panel has a history of its own.** The panel is a second form
+inside this one, so the two must not share a list:
+
+- The outer hook's `skip: isPanelState` keeps the `referencePanelOpen` paths
+  (the form's note that a panel is open, which would otherwise be a step) out
+  of its history.
+- The outer `ignore` is `inReferencePanel`, a target inside
+  `.ingredient-form__panel`. The panel's own listener runs first and calls
+  `preventDefault`, and the outer one stands aside for a key already handled;
+  `ignore` is the backstop for the moment the panel's loading shell is up and
+  has no listener yet.
+- `PanelForm` (`reference-panel.tsx`) runs its own `useFormHistory`,
+  provider and `FormHistoryButtons`, in `PanelHead` beside Close. They sit
+  under a `HeaderSlotContext` set to `null`, so they draw there and never
+  portal into the modal's header, which is the ingredient's.
+
+So Ctrl+Z inside the open panel undoes a panel edit and leaves the ingredient's
+Undo exactly as it was. `Modal` exports `HeaderSlotContext` for this.
 
 ## On the compendium
 
@@ -1750,7 +1824,7 @@ fake timers would couple to the dnd sensor.
 renders a list's box, and reads what the field sends from what the resolver
 hands the submit: the search asking about this coven only once the box is
 used; each source by its citation and tier, none already listed and no typed
-row, then "New Reference…" last; a pick adding a row
+row, then "New Reference" last; a pick adding a row
 beneath the box showing its short form, announced, the box emptied and
 focused; a row's title in real italics, its buttons named by its short form
 and described by its whole citation, and, closed, its locator after the
@@ -1761,7 +1835,7 @@ labelled and read with its citation and its tip, and tidied as it is left; the
 × removing a row once confirmed and keeping it on Keep It; Backspace and
 Delete in the empty box taking none; Enter with nothing picked submitting nothing;
 a search left in the box, and an open panel, each stopping the save. The panel
-from the field: opened by the create row, "New Reference…", taking you to
+from the field: opened by the create row, "New Reference", taking you to
 Kind, and again while it is open; a source it saves listed by its id and
 shown by its short form,
 the panel closed, the new row open on its Locator, and sent with the ingredient; and Cancel
@@ -1775,7 +1849,7 @@ references branch and the form's focus, which no list entry's test reaches.
 
 `tests/components/IngredientForm/reference-panel.test.tsx` renders
 `ReferencePanel` alone, asked for again by a rerender that raises its
-`summons`, as "New Reference…" does: Kind focused and nothing else shown as it
+`summons`, as "New Reference" does: Kind focused and nothing else shown as it
 opens, and Kind focused again, what was typed kept, when it is asked for
 again; each of the five kinds showing exactly its fields in order, the
 required ones marked; a resolver error beside its field, focused, with nothing

@@ -96,7 +96,7 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   /**
    * A last row that does something rather than picking a suggestion, there
    * whatever is typed and in place of the typed row, set off in italics as the
-   * typed row is. Two callers use it: "New Reference…" makes something new for
+   * typed row is. Two callers use it: "New Reference" makes something new for
    * a list whose entries can only be picked (MB.154; last since MB.115), and
    * "See all results." applies the search to the list (M8.10). Reached by the
    * arrow keys and picked by Enter or a click, which call `onSelect`; it is

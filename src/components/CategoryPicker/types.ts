@@ -23,6 +23,8 @@ export interface CategoryOption extends ComboboxOption {
 }
 
 export interface CategoryPickerProps {
+  /** The box's `name` attribute, which a form that moves focus by field name (an undo) finds it by. */
+  boxName?: string;
   /** The fieldset's name, "Categories". */
   legend: string;
   /** What the legend's tip says, if anything. */

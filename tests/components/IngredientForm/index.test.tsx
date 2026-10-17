@@ -18,8 +18,16 @@ import type {
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { box, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
-import { choose, press, type } from '../../support/interact';
+import {
+  box,
+  chooseKind,
+  inPanel,
+  renderWithClient,
+  textbox,
+  waitFor,
+} from '../../support/ingredient-form';
+import { layOutChips, moveByKeyboard } from '../../support/sortable';
+import { choose, press, redo, type, typeIn, undo } from '../../support/interact';
 import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import {
   WORKSPACE_ID,
@@ -75,6 +83,9 @@ const addEntry = (entry: string, value: string) => {
 };
 const removeButton = (value: string) =>
   screen.getByLabelText(`Remove ${value}`, { selector: 'button' });
+
+/** Lets the step a change opened close, as the gap between two real actions does. */
+const settle = () => act(async () => {});
 
 /** The control is flagged invalid and described, the error read with it. */
 function expectErrorOn(control: HTMLElement) {
@@ -710,6 +721,190 @@ describe('IngredientForm', () => {
     });
   });
 
+  // Undo and redo (M12.10): the hook is tested in tests/components/Field; this
+  // is its wiring in the form.
+  describe('its undo and redo', () => {
+    it('undoes the text typed in Folk Names after a click on Classification, then on a blank spot', async () => {
+      renderForm();
+      addEntry('Folk Name', 'Hedge Fixture');
+      await settle();
+      act(() => box('Folk Name').focus());
+      type('Folk Name', 'Lane Fixt');
+      await settle();
+      expect(box('Folk Name')).toHaveValue('Lane Fixt');
+
+      act(() => select('Classification').focus());
+      fireEvent.click(select('Classification'));
+      expect(select('Classification')).toHaveAttribute('aria-expanded', 'true');
+      undo({ meta: true });
+
+      expect(box('Folk Name')).toHaveValue('');
+      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
+
+      // And from a blank spot of the dialog, where the focus is on the page itself.
+      act(() => box('Folk Name').focus());
+      type('Folk Name', 'Fixture Bane');
+      await settle();
+      act(() => box('Folk Name').blur());
+      expect(document.body).toHaveFocus();
+      undo({ meta: true });
+
+      expect(box('Folk Name')).toHaveValue('');
+    });
+
+    it('undoes a classification pick together with the formal name it emptied, focusing Classification, and redoes both', async () => {
+      renderForm();
+      type('Name', 'Testwort');
+      type('Formal Name', 'Fixtura testalis');
+      await settle();
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).toHaveValue('');
+      act(() => textbox('Name').focus());
+
+      undo();
+
+      expect(textbox('Formal Name')).toHaveValue('Fixtura testalis');
+      expect(textbox('Formal Name')).toBeEnabled();
+      expect(select('Classification')).toHaveFocus();
+
+      redo();
+
+      expect(textbox('Formal Name')).toHaveValue('');
+      expect(textbox('Formal Name')).toBeDisabled();
+    });
+
+    it('undoes a chip removal and redoes it', async () => {
+      renderForm();
+      addEntry('Celestial Body', 'Mercury');
+      addEntry('Celestial Body', 'Venus');
+      await settle();
+      fireEvent.click(removeButton('Mercury'));
+      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
+
+      undo();
+
+      expect(removeButton('Mercury')).toBeInTheDocument();
+      expect(removeButton('Venus')).toBeInTheDocument();
+
+      redo();
+
+      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
+      expect(removeButton('Venus')).toBeInTheDocument();
+    });
+
+    it('undoes a keyboard reorder of an ordered list and redoes it', async () => {
+      layOutChips();
+      renderForm();
+      for (const colour of ['Silver', 'Green', 'Amber']) addEntry('Colour', colour);
+      await settle();
+      const order = () =>
+        within(screen.getByRole('group', { name: 'Colours' }))
+          .getAllByRole('button', { name: /^Remove / })
+          .map((button) => button.getAttribute('aria-label'));
+      const inOrder = ['Remove Silver', 'Remove Green', 'Remove Amber'];
+      await moveByKeyboard(
+        screen.getByRole('button', { name: 'Move Amber' }),
+        'ArrowLeft',
+        'ArrowLeft',
+      );
+      const moved = ['Remove Amber', 'Remove Silver', 'Remove Green'];
+      expect(order()).toEqual(moved);
+
+      undo();
+      expect(order()).toEqual(inOrder);
+
+      redo();
+      expect(order()).toEqual(moved);
+      vi.restoreAllMocks();
+    });
+
+    it('undoes a folk name removed by its x and redoes it', async () => {
+      renderForm();
+      addEntry('Folk Name', 'Hedge Fixture');
+      addEntry('Folk Name', 'Lane Fixture');
+      await settle();
+      fireEvent.click(removeButton('Hedge Fixture'));
+
+      undo();
+
+      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
+      expect(removeButton('Lane Fixture')).toBeInTheDocument();
+
+      redo();
+
+      expect(screen.queryByRole('button', { name: 'Remove Hedge Fixture' })).toBeNull();
+    });
+
+    it('undoes nothing after Save & Add Another has cleared the form', async () => {
+      acceptCreate();
+      const onSaved = renderForm();
+      type('Name', 'Testwort');
+      saveAnother();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
+
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      undo();
+
+      expect(textbox('Name')).toHaveValue('');
+    });
+
+    it('changes nothing while a save is in flight, and has nothing to undo once it lands', async () => {
+      let finish: () => void = () => {};
+      const gate = new Promise<void>((resolve) => (finish = resolve));
+      server.use(
+        graphqlLink.mutation('CreateWorkspaceIngredient', async ({ variables }) => {
+          await gate;
+          const { name } = (variables as { input: { name: string } }).input;
+          return HttpResponse.json({
+            data: { createWorkspaceIngredient: { id: 'saved-1', name, slug: 'saved' } },
+          });
+        }),
+      );
+      const onSaved = renderForm();
+      type('Name', 'Testwort');
+      await settle();
+      type('Name', 'Testwort Two');
+      await settle();
+      saveAnother();
+      // The mutation is held, so the form stays mid-save.
+      await settle();
+      act(() => textbox('Name').focus());
+
+      undo();
+      fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+
+      expect(textbox('Name')).toHaveValue('Testwort Two');
+
+      finish();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      await settle();
+      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      undo();
+
+      expect(textbox('Name')).toHaveValue('');
+    });
+
+    it('reads a chord inside the new reference panel as the panel\u2019s own, leaving the form\u2019s history alone', async () => {
+      renderForm();
+      type('Name', 'Testwort');
+      await settle();
+      fireEvent.click(box('Reference'));
+      fireEvent.click(await screen.findByRole('option', { name: 'New Reference' }));
+      chooseKind('Book');
+      const title = inPanel('Title');
+      act(() => title.focus());
+      typeIn(title, 'Fixture Notes');
+      expect(title).toHaveValue('Fixture Notes');
+
+      undo();
+
+      expect(inPanel('Title')).toHaveValue('');
+      expect(textbox('Name')).toHaveValue('Testwort');
+    });
+  });
+
   // Story 16's warning, as only the whole form holds it: the form asks its
   // `check` before it sends and moves the focus to Create Anyway. What the
   // warning says and when it asks is duplicates.test.tsx's.
@@ -1023,4 +1218,39 @@ describe('IngredientForm', () => {
       expect(submit).not.toHaveAttribute('aria-busy');
     },
   );
+});
+
+// Where the focus lands after an undo (M12.10): a list's rows are not inputs,
+// only its typing box is, so the box is where a change to the list is shown.
+describe('IngredientForm undo focus', () => {
+  const undoFrom = (from: HTMLElement) => {
+    act(() => from.focus());
+    fireEvent.keyDown(from, { key: 'z', ctrlKey: true });
+  };
+
+  it('lands on a list’s box after undoing an entry added to it', () => {
+    renderForm();
+    addEntry('Folk Name', 'Hedge Fixture');
+    expect(screen.getByLabelText('Remove Hedge Fixture')).toBeInTheDocument();
+
+    undoFrom(textbox('Name'));
+
+    expect(screen.queryByLabelText('Remove Hedge Fixture')).toBeNull();
+    expect(box('Folk Name')).toHaveFocus();
+  });
+
+  it('lands on a list’s box after undoing the removal of an entry, and after redoing it', () => {
+    renderForm();
+    addEntry('Colour', 'Silver');
+    fireEvent.click(removeButton('Silver'));
+
+    undoFrom(textbox('Name'));
+    expect(removeButton('Silver')).toBeInTheDocument();
+    expect(box('Colour')).toHaveFocus();
+
+    act(() => textbox('Name').focus());
+    fireEvent.keyDown(textbox('Name'), { key: 'z', ctrlKey: true, shiftKey: true });
+    expect(screen.queryByLabelText('Remove Silver')).toBeNull();
+    expect(box('Colour')).toHaveFocus();
+  });
 });

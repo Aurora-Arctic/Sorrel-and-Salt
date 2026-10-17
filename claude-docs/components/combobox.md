@@ -40,7 +40,7 @@ movable, on dnd-kit.
 | `leading`          | A caller's own control drawn inside the control box before the text and any entries: a form's submit, say. A slot rather than a built-in, as Combobox knows nothing about forms.                                                                                                               |
 | `toggle`           | Whether a box with `suggestions` draws its chevron button; `true` unless said. Leave it out (`false`) for a free-text search that opens as you type.                                                                                                                                           |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
-| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference…" makes something new (no typed row, there with a blank box too), "See all results." applies a search to its list. See "The action row".                                    |
+| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference" makes something new (no typed row, there with a blank box too), "See all results." applies a search to its list. See "The action row".                                     |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                     |
 | `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                             |
 | `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                      |
@@ -720,7 +720,7 @@ Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; `SelectWithIcons`, the same with an icon on each choice; `Typeahead`, the type-ahead box over five
 traditions, the value shown beneath it; and
 `MultiSelect`, the multi-select box with two elements chosen;
-`CreateRow`, its list open on "New Reference…" last whatever is typed, saying beneath the
+`CreateRow`, its list open on "New Reference" last whatever is typed, saying beneath the
 box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
 375px; and `QualifierInForm`, the ingredient form's Form box under a Name
 field, "Wax" picked under Substance with a detail long enough to wrap, whose

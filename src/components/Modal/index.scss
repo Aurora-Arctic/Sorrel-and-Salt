@@ -152,11 +152,10 @@ $modal-fade: 150ms ease-out;
 // the body, which is what scrolls, the gap beneath it padding rather than
 // margin so it belongs to the header.
 //
-// A control the contents put in the header sits under the ×, its foot level
-// with the heading's, or on a phone on a line of its own under the heading,
-// at its start (the owner's calls at MB.115): between the title and the ×
-// it squeezed a phone's heading until a name broke mid-word. A heading
-// shorter than the two sinks to meet it.
+// A control the contents put in the header goes in a row of its own under the
+// heading, at every width (the owner's call at M12.10, over MB.115's place
+// under the ×): between the title and the × it squeezed a phone's heading
+// until a name broke mid-word.
 .modal-dialog__header {
   display: grid;
   flex: none;
@@ -171,15 +170,10 @@ $modal-fade: 150ms ease-out;
 // than pushing the × out, and a name with no break in it breaks anywhere
 // rather than overflow.
 .modal-dialog__heading {
-  grid-row: 1 / -1;
-  align-self: end;
+  grid-row: 1;
+  align-self: start;
   gap: space(1);
   min-width: 0;
-
-  @container modal (max-width: #{$narrow-column + $modal-padding}) {
-    grid-row: 1;
-    align-self: start;
-  }
 }
 
 .modal-dialog__title {
@@ -198,23 +192,25 @@ $modal-fade: 150ms ease-out;
   color: $text-muted;
 }
 
-// Under the ×, a control the contents put there, its foot on the heading's.
+// A toolbar row under the heading at every width, for the controls the
+// contents put in the header (the owner's call at M12.10, replacing the
+// under-the-× place MB.115 gave them): the first control at its start, a
+// form's Undo and Redo pair at its end. Stretched, so every button in it is
+// as tall as the tallest. Hidden while nothing is in it.
 .modal-dialog__header-slot {
   display: flex;
-  grid-column: 2;
-  place-self: end end;
+  grid-column: 1 / -1;
+  align-items: stretch;
+  gap: space(3);
+  margin-top: space(2);
   white-space: nowrap;
 
-  // At the width a form stacks its own row, under the heading at its start,
-  // where the column beside the name stays the ×'s alone.
-  @container modal (max-width: #{$narrow-column + $modal-padding}) {
-    grid-column: 1 / -1;
-    justify-self: start;
-    margin-top: space(2);
+  &:empty {
+    display: none;
+  }
 
-    &:empty {
-      display: none;
-    }
+  .form-history {
+    align-self: stretch;
   }
 
   // Held while a question is asked, as the form is, and greyed by the same

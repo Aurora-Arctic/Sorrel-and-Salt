@@ -21,7 +21,15 @@ import { RemoveIcon } from './icons';
 import { REFERENCE_KINDS, type ReferenceKind } from '@/modules/ingredients/schema/ingredient-enums';
 import { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import { FORMAT_OF } from '@/modules/ingredients/validation/reference-format';
-import { FormActions, SelectField, TextField } from '../Field';
+import {
+  FormActions,
+  FormHistoryButtons,
+  FormHistoryContext,
+  SelectField,
+  TextField,
+  useFormHistory,
+} from '../Field';
+import { HeaderSlotContext } from '../Modal';
 import type { ReferenceQuery } from '../../gql/graphql';
 import type {
   EditSourcePanelProps,
@@ -452,6 +460,9 @@ function PanelForm({
   // Told to the ingredient form, so closing its modal over them asks first.
   useReportPanelChanges(isDirty);
   const panel = useRef<HTMLFieldSetElement>(null);
+  // The panel saves itself, so it keeps a history of its own; the ingredient
+  // form's ignores keys pressed in here.
+  const history = useFormHistory(methods, { root: panel });
   const legendId = useId();
   const noteId = useId();
   const kind = useWatch({ control, name: 'kind' });
@@ -514,55 +525,65 @@ function PanelForm({
   const legend = editing ? 'Edit Source' : 'New Reference';
   return (
     <FormProvider {...methods}>
-      {/* A group, named by its legend, holding its own save: a save with
+      <FormHistoryContext.Provider value={history}>
+        {/* A group, named by its legend, holding its own save: a save with
           nothing chosen asks for the kind first. Its keydown is the fields'
           Enter, heard as it bubbles, not a control of its own. An edit is
           described by what it will reach. */}
-      {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
-      <fieldset
-        ref={panel}
-        className="fieldset ingredient-form__panel"
-        aria-labelledby={legendId}
-        aria-describedby={editing ? noteId : undefined}
-        onKeyDown={onKeyDown}
-      >
-        <legend className="fieldset__legend" id={legendId}>
-          {legend}
-        </legend>
-        <PanelHead legend={legend} held={isSubmitting} onClose={onCancel}>
-          {editing && (
-            <p className="ingredient-form__panel-note" id={noteId}>
-              A change here reaches every entry citing this source.
-            </p>
-          )}
-        </PanelHead>
-        {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
-        <SelectField<ReferenceFormValues>
-          name="kind"
-          label="Kind"
-          placeholder="Choose a kind"
-          options={KIND_OPTIONS}
-          required
-          // A kind decides which fields are refused, so a change revalidates them.
-          deps={FIELD_NAMES}
-        />
-        {shown.map((spec) => (
-          <TextField<ReferenceFormValues> key={spec.name} {...spec} format={FORMAT_OF[spec.name]} />
-        ))}
-        {/* Held down from the press to the answer, as the ingredient's saves
+        {/* oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions */}
+        <fieldset
+          ref={panel}
+          className="fieldset ingredient-form__panel"
+          aria-labelledby={legendId}
+          aria-describedby={editing ? noteId : undefined}
+          onKeyDown={onKeyDown}
+        >
+          <legend className="fieldset__legend" id={legendId}>
+            {legend}
+          </legend>
+          <PanelHead legend={legend} held={isSubmitting} onClose={onCancel}>
+            {editing && (
+              <p className="ingredient-form__panel-note" id={noteId}>
+                A change here reaches every entry citing this source.
+              </p>
+            )}
+            {/* Never the modal's header: that is the ingredient form's history. */}
+            <HeaderSlotContext.Provider value={null}>
+              <FormHistoryButtons />
+            </HeaderSlotContext.Provider>
+          </PanelHead>
+          {errors.root && <Notice kind="error">{errors.root.message}</Notice>}
+          <SelectField<ReferenceFormValues>
+            name="kind"
+            label="Kind"
+            placeholder="Choose a kind"
+            options={KIND_OPTIONS}
+            required
+            // A kind decides which fields are refused, so a change revalidates them.
+            deps={FIELD_NAMES}
+          />
+          {shown.map((spec) => (
+            <TextField<ReferenceFormValues>
+              key={spec.name}
+              {...spec}
+              format={FORMAT_OF[spec.name]}
+            />
+          ))}
+          {/* Held down from the press to the answer, as the ingredient's saves
             are: Save Reference says so with the same spinner, and Cancel
             waits, so a source being written is never left half-added. Save
             is off until something is entered or changed, and Cancel is quiet,
             the owner's rules for every form (M5.6). */}
-        <FormActions
-          noun={noun}
-          dirty={isDirty}
-          submitting={isSubmitting}
-          onSave={submit}
-          onCancel={onCancel}
-          holdCancel
-        />
-      </fieldset>
+          <FormActions
+            noun={noun}
+            dirty={isDirty}
+            submitting={isSubmitting}
+            onSave={submit}
+            onCancel={onCancel}
+            holdCancel
+          />
+        </fieldset>
+      </FormHistoryContext.Provider>
     </FormProvider>
   );
 }

@@ -84,6 +84,7 @@ export function useFormHistory<V extends FieldValues>(
     root,
     enabled = true,
     ignore,
+    skip,
     onRestored,
     pauseMs = TYPING_PAUSE_MS,
     limit = HISTORY_LIMIT,
@@ -162,6 +163,11 @@ export function useFormHistory<V extends FieldValues>(
       formState: { values: true },
       callback: ({ name, values, defaultValues }) => {
         if (restoring.current) return;
+        if (name !== undefined && skip?.(name)) {
+          // Interface state: kept current so the next diff starts from it, but never a step.
+          present.current = cloneValues(values);
+          return;
+        }
         const previous = present.current;
         const defaultsChanged =
           defaultsSeen.current !== undefined && defaultsSeen.current !== defaultValues;
@@ -225,7 +231,7 @@ export function useFormHistory<V extends FieldValues>(
       doc?.removeEventListener('pointercancel', endHold, true);
       endHold();
     };
-  }, [subscribe, getValues, root, commit, pauseMs, limit]);
+  }, [subscribe, getValues, root, commit, pauseMs, limit, skip]);
 
   /** Writes a step's values back, `before` newest-first for an undo, `after` oldest-first for a redo. */
   const restore = useCallback(
@@ -249,8 +255,12 @@ export function useFormHistory<V extends FieldValues>(
       }
       present.current = cloneValues(getValues());
       sealed.current = true;
-      onRestored?.(step.diffs.map((diff) => diff.name));
-      pendingFocus.current = [step.diffs[0].name];
+      const focusOn = onRestored?.(
+        step.diffs.map((diff) => diff.name),
+        step.diffs,
+        direction,
+      );
+      pendingFocus.current = [focusOn || step.diffs[0].name];
     },
     [setValue, getValues, isSubmitted, onRestored],
   );
@@ -332,30 +342,85 @@ export function useFormHistory<V extends FieldValues>(
     }
   });
 
-  // The chords, heard by a native listener on the form itself rather than a
-  // React `onKeyDown` prop on it: a key handler on a non-interactive element is
-  // what the a11y lint refuses, and the form is already held through `root`.
-  // Bubble phase, so an inner element's own native listener runs first.
+  // The chords, heard by native listeners on the document rather than a React
+  // `onKeyDown` prop on the form: a key handler on a non-interactive element
+  // is what the a11y lint refuses. Bubble phase, so an inner element's own
+  // native listener runs first.
+  //
+  // Why the document and not the form: after a click on a blank part of a
+  // dialog, focus sits on the page itself, outside the form, and a listener on
+  // the form never hears the key. So a chord is accepted when this form owns
+  // its target, or when the target is outside every form and this form was the
+  // last to hold focus (`held`, a ref so a re-registered listener keeps it,
+  // kept by a `focusin` listener).
+  //
+  // Owning is exclusive, so a chord can never undo twice: each root carries a
+  // `data-form-history` mark, and an element belongs only to the hook whose
+  // root is its nearest marked ancestor, so a nested form (a panel) takes its
+  // own chords and the form around it never hears them, whether or not it
+  // passes `ignore`. The form's own Undo and Redo buttons sit outside the
+  // root, so they count as owned too. `ignore` keeps its job: a target the
+  // form owns but does not govern is left alone.
   //
   // Ordering: React dispatches its synthetic handlers from the root container,
-  // so this listener runs BEFORE any React `onKeyDown` inside the form
+  // so these listeners run BEFORE any React `onKeyDown` inside the form
   // (Downshift's, a panel's). That is why the target checks read the DOM
   // (`aria-expanded`) and do not wait for an inner React handler to set
-  // `defaultPrevented`. A nested form that wants its own chords uses the
-  // `ignore` option, or a native listener of its own.
+  // `defaultPrevented`.
   //
   // The current `enabled`, `ignore`, `undo` and `redo` are effect
-  // dependencies, so the listener is registered again when one changes and
-  // never sees a stale one.
+  // dependencies, so the listeners are registered again when one changes and
+  // never see a stale one.
+  const held = useRef(false);
   useEffect(() => {
     const element = root.current;
     if (!element) return;
+    element.dataset.formHistory = '';
+    return () => {
+      delete element.dataset.formHistory;
+    };
+  }, [root]);
+  useEffect(() => {
+    const element = root.current;
+    if (!element) return;
+    const doc = element.ownerDocument;
+    const owns = (target: HTMLElement) =>
+      target.closest('[data-form-history]') === element ||
+      target === undoButton.current ||
+      target === redoButton.current;
+    if (doc.activeElement instanceof HTMLElement) {
+      held.current ||= owns(doc.activeElement) && !ignore?.(doc.activeElement);
+    }
+    const onFocusIn = (event: FocusEvent) => {
+      const target = event.target as HTMLElement;
+      // Focus on an element around the form — the dialog itself, after a click
+      // on its blank space — is focus on nothing in particular, and keeps the
+      // claim; focus on anything else outside gives it up.
+      if (target.contains(element) && !owns(target)) return;
+      held.current = owns(target) && !ignore?.(target);
+    };
     const onKeyDown = (event: KeyboardEvent) => {
       if (!enabled || event.defaultPrevented || event.isComposing || event.altKey) return;
       const target = event.target as HTMLElement;
-      // A combobox's list owns its keys.
-      if (target.closest('[role="combobox"][aria-expanded="true"], [role="listbox"]')) return;
-      if (ignore?.(target)) return;
+      const inside = owns(target);
+      if (!inside && !(held.current && !target.closest('[data-form-history]'))) return;
+      // A text box that is a combobox owns its keys only while a person is
+      // arrowing through its list: Downshift sets a non-empty
+      // `aria-activedescendant` on the input while an option is highlighted,
+      // and an empty one otherwise. An open list with nothing highlighted (a
+      // click into the box opens it) lets the chord through. A select's toggle
+      // is a combobox but not a text box, and never owns Ctrl+Z: it highlights
+      // an item the moment it opens. Anything inside the listbox itself is
+      // still left alone.
+      if (target.closest('[role="listbox"]')) return;
+      const box = target.closest('[role="combobox"][aria-expanded="true"]');
+      if (
+        box?.getAttribute('aria-activedescendant') &&
+        (box instanceof HTMLInputElement || box instanceof HTMLTextAreaElement)
+      ) {
+        return;
+      }
+      if (inside && ignore?.(target)) return;
       const key = event.key.toLowerCase();
       const mod = event.ctrlKey || event.metaKey;
       if (key === 'z' && mod) {
@@ -369,8 +434,12 @@ export function useFormHistory<V extends FieldValues>(
         redo();
       }
     };
-    element.addEventListener('keydown', onKeyDown);
-    return () => element.removeEventListener('keydown', onKeyDown);
+    doc.addEventListener('focusin', onFocusIn);
+    doc.addEventListener('keydown', onKeyDown);
+    return () => {
+      doc.removeEventListener('focusin', onFocusIn);
+      doc.removeEventListener('keydown', onKeyDown);
+    };
   }, [root, enabled, ignore, undo, redo]);
 
   // A live region speaks only a change, so a repeat alternates a no-break space.

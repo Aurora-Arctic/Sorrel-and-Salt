@@ -14,7 +14,6 @@ import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
 import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
-import { useOnEachSubmit } from './on-submit';
 import FormIcon from '../FormIcon';
 import { EditIcon, RemoveIcon } from './icons';
 import { FieldError, TextField } from '../Field';
@@ -39,6 +38,7 @@ import type {
   FormOption,
   IngredientFormValues,
   ListOption,
+  RestoredVariant,
   SectionFold,
   VariantFieldsetProps,
   VariantFoldList,
@@ -50,6 +50,7 @@ import {
   EMPTY_VARIANT,
   UNNAMED_FORM,
   VARIANT_SECTION_KEYS,
+  fold as folded,
   formRows,
   rankForForm,
   repeatedForm,
@@ -77,6 +78,10 @@ const NONE_OPEN: ReadonlySet<VariantSectionKey> = new Set();
 const padded = (folds: VariantFoldList, length: number): ReadonlySet<VariantSectionKey>[] =>
   Array.from({ length: Math.max(folds.length, length) }, (_, at) => folds[at] ?? NONE_OPEN);
 
+/** The same variant on both sides of a restore: by kept id, else by form, folded as the repeat check folds it. */
+const sameVariant = (a: RestoredVariant, b: RestoredVariant): boolean =>
+  a.variantId && b.variantId ? a.variantId === b.variantId : folded(a.form) === folded(b.form);
+
 /**
  * Which of each variant's own sections are open (MB.115): a list beside the
  * variants, by place, kept in step as the New Form box adds one first and a
@@ -88,7 +93,10 @@ const padded = (folds: VariantFoldList, length: number): ReadonlySet<VariantSect
  */
 export function useVariantFolds(): VariantFolds {
   const [folds, setFolds] = useState<VariantFoldList>([]);
+  const [card, setCard] = useState<number | null>(null);
   return {
+    card,
+    setCard,
     isOpen: (index, section) => (folds[index] ?? NONE_OPEN).has(section),
     toggle: (index, section) =>
       setFolds((now) => {
@@ -105,6 +113,36 @@ export function useVariantFolds(): VariantFolds {
       setFolds(
         Array.from({ length: count }, () => (open ? new Set(VARIANT_SECTION_KEYS) : NONE_OPEN)),
       ),
+    reveal: (index, sections) => {
+      setCard(index);
+      setFolds((now) => {
+        const next = padded(now, index + 1);
+        next[index] = new Set([...next[index], ...sections]);
+        return next;
+      });
+    },
+    reconcile: (from, to) => {
+      // Each old row is matched at most once: two unsaved rows with the same
+      // (or no) form text would otherwise both take the first one's folds.
+      const used = new Set<number>();
+      const matched = to.map((row) => {
+        const at = from.findIndex((old, place) => !used.has(place) && sameVariant(old, row));
+        if (at !== -1) used.add(at);
+        return at;
+      });
+      const returning = matched.indexOf(-1);
+      setFolds((now) =>
+        matched.map((was) =>
+          was === -1 ? new Set(VARIANT_SECTION_KEYS) : (now[was] ?? NONE_OPEN),
+        ),
+      );
+      setCard((now) => {
+        if (returning !== -1) return returning;
+        const kept = now === null ? -1 : matched.indexOf(now);
+        return kept === -1 ? null : kept;
+      });
+      return returning;
+    },
     openErring: (erring) => {
       if (erring.size === 0) return;
       setFolds((now) =>
@@ -125,7 +163,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     useFormContext<IngredientFormValues>();
   const { fields, prepend, remove } = useFieldArray({ control, name: 'variants' });
   const { field } = useController({ control, name: BOX });
-  const { errors, isSubmitted, submitCount } = useFormState({ control, name: [BOX, 'variants'] });
+  const { errors, isSubmitted } = useFormState({ control, name: [BOX, 'variants'] });
   const listed = useWatch({ control, name: 'variants' });
   const [active, setActive] = useState(false);
   const found = curatedOnly(useFormSuggestions(workspaceId, field.value, active), compendium);
@@ -151,16 +189,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   const focusBox = () => boxElement.current?.focus();
 
   // The one variant open, by its place in the list; the rest are a line each.
-  const [open, setOpen] = useState<number | null>(null);
-  const erring = (index: number) => get(errors, `variants.${index}`) !== undefined;
-  // A save that finds an error in a closed variant opens it, the first such,
-  // unless the one open errs too, so the form's focus on the first field
-  // marked invalid can reach it.
-  useOnEachSubmit(submitCount, () => {
-    const first = fields.findIndex((_, index) => erring(index));
-    if (first !== -1 && (open === null || !erring(open))) setOpen(first);
-  });
-
+  const { card: open, setCard: setOpen } = folds;
   const error: string | undefined = get(errors, BOX)?.message;
   // Shown while a compendium entry has no form: it saves, but as information
   // only, which nothing can stock or lay in a spell (MB.215).
@@ -187,6 +216,11 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
       refuse('repeat', why);
       return;
     }
+    // Cleared before the prepend, not after: the field array tells the form's
+    // history of its new row in an effect, later, while setValue tells it at
+    // once, so clearing second would fold the row into the clear's step and
+    // hide it from undo.
+    setValue(BOX, '');
     // Not focused by the field array, which would take the new Form box: the
     // New Form box keeps it, ready for the next. The new variant goes first,
     // just beneath the box, and opens, the owner's call, closing whichever was.
@@ -194,7 +228,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     setOpen(0);
     // Every section open, as a new entry opens (MB.115).
     folds.added();
-    setValue(BOX, '');
     clearErrors(BOX);
     setAnnouncement(`Added ${form}`);
     if (isSubmitted) void trigger(BOX);

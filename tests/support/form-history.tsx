@@ -14,7 +14,7 @@ import {
   TextField,
   useFormHistory,
 } from '@/components/Field';
-import type { FormHistory } from '@/components/Field/types';
+import type { FormHistory, UseFormHistoryOptions } from '@/components/Field/types';
 
 // A small react-hook-form form for the undo and redo tests (M12.9): a text
 // field, a select, a list of rows in a fieldset with a legend, and a field
@@ -52,11 +52,12 @@ export interface ProbeHandles {
 interface ProbeProps {
   enabled?: boolean;
   ignore?: (target: HTMLElement) => boolean;
-  onRestored?: (names: string[]) => void;
+  onRestored?: UseFormHistoryOptions['onRestored'];
+  skip?: (name: string) => boolean;
   /** Handed the form and its history on every render. */
   onHandles?: (handles: ProbeHandles) => void;
   /** Draws a combobox that is open, for a chord inside one. */
-  openCombobox?: boolean;
+  openCombobox?: boolean | 'highlighted';
   /** Draws the Undo and Redo buttons. */
   buttons?: boolean;
   /** The rows the list starts with. */
@@ -66,6 +67,7 @@ interface ProbeProps {
 export function HistoryProbe({
   enabled,
   ignore,
+  skip,
   onRestored,
   onHandles,
   openCombobox,
@@ -87,9 +89,10 @@ export function HistoryProbe({
     root,
     enabled,
     ignore,
-    onRestored: (names) => {
+    skip,
+    onRestored: (names, diffs, direction) => {
       if (names.includes('note')) setFolded(true);
-      onRestored?.(names);
+      return onRestored?.(names, diffs, direction);
     },
   });
   const list = useFieldArray({ control, name: 'items' });
@@ -135,6 +138,7 @@ export function HistoryProbe({
                 role="combobox"
                 aria-expanded="true"
                 aria-controls="open-box-list"
+                aria-activedescendant={openCombobox === 'highlighted' ? 'open-box-option' : ''}
                 aria-label="Open Box"
                 readOnly
               />

@@ -302,6 +302,13 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
     ...
 ```
 
+- **Chords are heard at the document**, not on the form: after a click on a
+  blank spot the focus is on the page, outside the form, and a listener on the
+  form never sees the key. A chord is taken when its target is inside the form,
+  or outside it while this form was the last to hold focus (a nested form that
+  `ignore` refuses takes the page's chords itself). Only a text box that is a
+  combobox steps aside while an option is highlighted; a select's toggle never
+  does, so Ctrl+Z always works with the focus on one.
 - **A step is what one action changed.** Several fields changed in the same
   moment, such as a pick that empties another field, are one step. Typing in
   one text box joins into one step until a pause of half a second (`pauseMs`)
@@ -329,8 +336,10 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   it reads the DOM rather than waiting for an inner handler to mark a key
   handled. A nested form that wants its own chords passes `ignore`, or listens
   natively itself. It stands aside for a key already handled, one composing text (an input method),
-  one with Alt, one inside an open combobox or its list (Downshift owns those
-  keys), and anything `ignore(target)` says is not this form's, such as a
+  one with Alt, one inside a listbox, or in a combobox while an option is highlighted (its
+  `aria-activedescendant` is not empty: the person is arrowing through the
+  list, and Downshift owns those keys; an open list with nothing highlighted,
+  as a click into the box leaves it, lets the chord through), and anything `ignore(target)` says is not this form's, such as a
   panel with a history of its own. A closed select would take Ctrl+Z as a
   letter to search for; see [`combobox.md`](combobox.md#the-select-only-box).
 - **It always calls `preventDefault` on the chord**, even with nothing to
@@ -339,14 +348,18 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   a box behind the form's back. Calling it every time keeps the form's list
   the only one in play; with nothing to do, the live region says so.
 - **Focus follows the undo.** After a step is applied the hook calls
-  `onRestored(names)` first, so a form can open whatever holds those fields,
-  then focuses the first field changed. A list field has no single control, so
+  `onRestored(names, diffs, direction)` first, so a form can open whatever
+  holds those fields (`diffs` carries each field's `before` and `after`;
+  `direction` is `'undo'` or `'redo'`). If it returns a field name, that field
+  takes the focus; otherwise the first field changed does. A list field has no single control, so
   focus goes to the first control in its fieldset, else the fieldset. If
   nothing can take it, the Undo button does, never the page.
 - **The live region** is an `<output>` named "Edit History", in
   `FormHistoryButtons`. It says "Undid change to Name", "Redid change to Light
   Theme Colour" or "Nothing to undo". The field's name is read from the page at
   undo time: its label, else its `aria-label`, else the legend of its fieldset.
+- **`skip(name)` keeps a name out of the history**, for state that is not an
+  edit, such as the ingredient form's note that its reference panel is open.
 - **A `reset` clears the history.** The hook sees the form's defaults change
   and starts over. A form that makes its saved values the new start another
   way calls `history.clear()`. `enabled: false` makes the chords, the buttons
@@ -358,14 +371,16 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   for the fall-back to the Undo button. The test for a single subscription
   reads `control._subjects`. A react-hook-form upgrade re-checks both.
 - **The buttons** are small quiet icon buttons in an `IconTip`, labelled Undo and
-  Redo and disabled while there is nothing to do. In a modal they portal into
-  the header slot beside the title ([`modal.md`](modal.md#a-control-in-the-header));
+  Redo and disabled while there is nothing to do, joined as one pair: no gap,
+  one shared border, the inner corners square. In a modal they portal into the
+  header slot's toolbar row, at its end ([`modal.md`](modal.md#a-control-in-the-header));
   elsewhere they sit at the start of the form. `FormHistoryButtons` draws nothing
   without a `FormHistoryContext`. Their `.form-history` row is styled in
   `src/scss/_primitives.scss`.
 
 Wired in [`GroupedValueForm`](grouped-value-form.md) and
-[`GroupForm`](group-form.md); the ingredient form follows in M12.10.
+[`GroupForm`](group-form.md), and in
+[`IngredientForm`](ingredient-form.md#undo-and-redo) (M12.10).
 `tests/components/Field/` covers the reducer, the hook (on a probe form in
 `tests/support/form-history.tsx`) and the buttons.
 

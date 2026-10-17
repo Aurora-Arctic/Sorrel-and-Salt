@@ -117,7 +117,7 @@ different groups, so the page offers each name once, whatever its case.
 - **`next/link`, not a plain anchor**, as the category list's Edit: opening
   the modal is a soft navigation, and the page calls the admin guard on every
   render.
-- **The Form column lists the entry's forms**, joined: "Herb, Oil". Each form is one unit, its icon then its name with the comma after it, held on one line (`.compendium-list__form`): the icon sits a quarter of an em from its own name and a wider gap, `space(2)`, sets it apart from the form before, so an icon never reads as the previous form's (the owner's call, 2026-10-16).
+- **The Form column lists the entry's forms**, joined: "Herb, Oil". Each form is one unit, its icon then its name with the comma after it, held on one line (`.compendium-list__form`): the icon sits a quarter of an em from its own name, and the forms sit in a wrapping flex row (`.compendium-list__forms`) with a wider gap, `space(2)`, between them, so an icon never reads as the previous form's (the owner's call, 2026-10-16). The gap is the row's, not a margin on each form, so a form that wraps onto a new line starts at the cell's edge like the first (the owner's call, 2026-10-17).
 - **None is an em dash.** A null formal name, or an entry with no form, shows
   "—" rather than an empty cell: the Unknown list tells an entry with an
   unconfirmed formal name from one with none by this column.
