@@ -264,7 +264,7 @@ export const Sortable: Story = () => {
 
 /**
  * A list whose entries can only be picked, the references' (MB.154): its last
- * row makes something new, "New Reference…", whatever is typed, in place of
+ * row makes something new, "New Reference", whatever is typed, in place of
  * the typed row. Picking it says so beneath the box.
  */
 export const CreateRow: Story = () => {
@@ -283,10 +283,10 @@ export const CreateRow: Story = () => {
             onChange={setValue}
             onPick={setValue}
             suggestions={{ options: NAMES, pending: false }}
-            action={{ label: 'New Reference…', onSelect: () => setMade((count) => count + 1) }}
+            action={{ label: 'New Reference', onSelect: () => setMade((count) => count + 1) }}
             placeholder="Search references"
           />
-          {made > 0 && <output className="story-note">New Reference… picked {made}×.</output>}
+          {made > 0 && <output className="story-note">New Reference picked {made}×.</output>}
         </>
       )}
     </Labelled>

@@ -189,7 +189,7 @@ test('the edit source panel leaves the dialog in place and closes from its top b
 
   // A source to edit: a new one, written through the panel.
   await adding.getByRole('combobox', { name: 'Reference' }).click();
-  await page.getByRole('option', { name: 'New Reference…' }).click();
+  await page.getByRole('option', { name: 'New Reference' }).click();
   const creating = adding.getByRole('group', { name: 'New Reference' });
   await creating.getByRole('combobox', { name: 'Kind' }).click();
   await page
@@ -509,7 +509,7 @@ test('undo puts a formal name back with focus on Classification, and the referen
   await expect(formal).toHaveValue('');
   await expect(undo).toBeEnabled();
   await dialog.getByRole('combobox', { name: 'Reference' }).click();
-  await page.getByRole('option', { name: 'New Reference…' }).click();
+  await page.getByRole('option', { name: 'New Reference' }).click();
   const panel = dialog.getByRole('group', { name: 'New Reference' });
   await panel.getByRole('combobox', { name: 'Kind' }).click();
   await page

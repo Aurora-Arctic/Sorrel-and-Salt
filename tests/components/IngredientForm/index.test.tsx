@@ -863,7 +863,7 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
       await settle();
       fireEvent.click(box('Reference'));
-      fireEvent.click(await screen.findByRole('option', { name: 'New Reference\u2026' }));
+      fireEvent.click(await screen.findByRole('option', { name: 'New Reference' }));
       chooseKind('Book');
       const title = inPanel('Title');
       act(() => title.focus());

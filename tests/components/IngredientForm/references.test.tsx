@@ -132,10 +132,10 @@ const nameBox = () => screen.getByLabelText(labelled('Name'), { selector: 'input
 /** The harness's save, or the form's, by name. */
 const saveButton = (name = 'Save Ingredient') => screen.getByRole('button', { name });
 const save = () => press(saveButton());
-/** Opens the box's list and picks its last row, New Reference…, which opens the panel. */
+/** Opens the box's list and picks its last row, New Reference, which opens the panel. */
 const newReference = () => {
   fireEvent.keyDown(box(), { key: 'ArrowDown' });
-  fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+  fireEvent.click(screen.getByRole('option', { name: 'New Reference' }));
 };
 /** The row's Locator, once its edit has opened the row; `short` names the row's source. */
 const locatorOf = (short: string) => {
@@ -190,7 +190,7 @@ describe('ReferencesField', () => {
       expect(calls[1]).toMatchObject({ workspaceId: WORKSPACE_ID, query: 'testwort' });
     });
 
-    it('offers each source by its citation and whose it is, in the order found, then "New Reference…" last', async () => {
+    it('offers each source by its citation and whose it is, in the order found, then "New Reference" last', async () => {
       renderField();
       const calls = offerReferences([NOTES, HERBAL]);
 
@@ -200,7 +200,7 @@ describe('ReferencesField', () => {
       expect(screen.getAllByRole('option').map((item) => item.textContent)).toEqual([
         `${NOTES.citation}This coven’s source`,
         `${HERBAL.citation}Compendium source`,
-        'New Reference…',
+        'New Reference',
       ]);
       expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
     });
@@ -392,7 +392,7 @@ describe('ReferencesField', () => {
     // The owner's call: asking again for a panel already open takes you
     // back to it, rather than doing nothing; that the panel then focuses
     // Kind and keeps what was typed is reference-panel.test.tsx's.
-    it('opens from the list’s last row, "New Reference…", taking you to Kind, and again while open', async () => {
+    it('opens from the list’s last row, "New Reference", taking you to Kind, and again while open', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
       noPanel();
@@ -402,7 +402,7 @@ describe('ReferencesField', () => {
       expect(kindBox()).toHaveFocus();
 
       await lookUp(calls, 'testwort');
-      fireEvent.click(await screen.findByRole('option', { name: 'New Reference…' }));
+      fireEvent.click(await screen.findByRole('option', { name: 'New Reference' }));
       expect(kindBox()).toHaveFocus();
     });
 

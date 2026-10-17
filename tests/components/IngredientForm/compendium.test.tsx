@@ -275,7 +275,7 @@ describe('IngredientForm on the compendium', () => {
         onClose,
         () => {
           fireEvent.keyDown(box('Reference'), { key: 'ArrowDown' });
-          fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+          fireEvent.click(screen.getByRole('option', { name: 'New Reference' }));
           chooseKind('Book');
           typeIn(title(), 'A Fixture Grimoire');
         },

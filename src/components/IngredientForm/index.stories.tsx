@@ -725,13 +725,12 @@ function WhatToTry() {
           unchanged. A compendium source has none here: it is the admins&rsquo; to change.
         </li>
         <li>
-          <strong>A new reference:</strong> pick &ldquo;New Reference&hellip;&rdquo;, the
-          list&rsquo;s last row, and choose a Kind: each shows only its own fields, the required
-          ones starred. Save Reference with a Chapter&rsquo;s Book empty, or a Web Page&rsquo;s
-          Address, to see them refused; a Title with &ldquo;taken&rdquo; in it is refused by the
-          server beside Title, and one with &ldquo;refuse&rdquo; in it above the panel&rsquo;s
-          fields. Enter in a field saves the reference, not the ingredient. Save the ingredient with
-          the panel open to see it held.
+          <strong>A new reference:</strong> pick &ldquo;New Reference&rdquo;, the list&rsquo;s last
+          row, and choose a Kind: each shows only its own fields, the required ones starred. Save
+          Reference with a Chapter&rsquo;s Book empty, or a Web Page&rsquo;s Address, to see them
+          refused; a Title with &ldquo;taken&rdquo; in it is refused by the server beside Title, and
+          one with &ldquo;refuse&rdquo; in it above the panel&rsquo;s fields. Enter in a field saves
+          the reference, not the ingredient. Save the ingredient with the panel open to see it held.
         </li>
         <li>
           <strong>Tidied as you go:</strong> in a new reference, type a Title in quotation marks, an

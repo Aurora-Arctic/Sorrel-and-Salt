@@ -45,7 +45,7 @@ import { draftOf, sourceTierOf } from './values';
 // Chicago short form and its locator, described by its whole citation —
 // which its edit opens to the citation whole, its tier and the Locator box; and a panel for a source not
 // yet written. Typed text is a search and never an entry, so the list's last
-// row is "New Reference…", which opens the panel, rather than what was typed
+// row is "New Reference", which opens the panel, rather than what was typed
 // (MB.115, the owner's call). An open row's Edit Source opens the same panel
 // on that source, where the form may change it (MB.115). Only each source's
 // id and locator are sent (claude-docs/components/ingredient-form.md, "The
@@ -316,7 +316,7 @@ export function ReferencesField({
           // owner's call, 2026-10-16).
           suggestions={suggestions}
           listAnchor={boxRow}
-          action={{ label: 'New Reference…', onSelect: openPanel }}
+          action={{ label: 'New Reference', onSelect: openPanel }}
           inputRef={(element) => {
             field.ref(element);
             boxElement.current = element;

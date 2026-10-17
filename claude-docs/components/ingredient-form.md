@@ -15,7 +15,7 @@ compendium page wrap it rather than containing their own form.
 | `fields.tsx`             | `TextField`, `SuggestField`, `SelectField`, `MultiSelectField`, `ListField` and `FieldError`, the element every field's error renders through, with each hint behind an `InfoTip`                                                                                    |
 | `suggestions.tsx`        | The lookups (M5.10a, MB.131): the queries, `useLookup`, which debounces each, the shapes, and `FormField` and `LookupListField`, which wire one to its field                                                                                                         |
 | `duplicates.tsx`         | The duplicate warning (M5.10): its query, `useDuplicateWarning`, and `NameField`, the name field with the warning beneath it                                                                                                                                         |
-| `references.tsx`         | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference…, the one-line rows beneath, their edit and remove, and their locators                                                                                     |
+| `references.tsx`         | The References field (MB.154): its search's query, and `ReferencesField`, the box ending in New Reference, the one-line rows beneath, their edit and remove, and their locators                                                                                      |
 | `categories.tsx`         | The Categories field (MB.126): its query, and `CategoryField`, which holds [`CategoryPicker`](category-picker.md) on `categoryIds` and names a pick's error by its chip                                                                                              |
 | `reference-panel.tsx`    | The new reference panel (MB.154): `createReference`, each kind's fields, `toReferenceInput`, and its own react-hook-form                                                                                                                                             |
 | `variants.tsx`           | The Variants section (MB.221): `VariantsField`, the New Form box that adds a form, each variant's summary line and the fields that form adds, `variantSummary`, and `useVariantFolds`, which of each variant's sections are open                                     |
@@ -533,7 +533,7 @@ legend as a list's is.
   note, in the search's ranked order, so the tier is a note rather than a
   heading. A source already listed is not offered again. Typed text is a
   search and never a source, so the list has no "Use what you typed" row:
-  its last row is "New Reference…", the combobox's create row
+  its last row is "New Reference", the combobox's create row
   ([`combobox.md`](combobox.md), "The create row"), which opens the panel.
   It replaced MB.154's first row, "Add a reference", and the New Reference
   button that stood beside the box where a list has Add (MB.115, the owner's
@@ -652,7 +652,7 @@ provides them, and its errors render through `FieldError`.
   it does on screen. Save & Add Another closes it with the rest, since `EMPTY_VALUES`
   holds `referencePanelOpen: false`.
 - **Asked for again while open, it takes you back**, the owner's call:
-  "New Reference…" scrolls the panel's top into view, its
+  "New Reference" scrolls the panel's top into view, its
   legend clear of the edge, and focuses Kind again, keeping everything
   typed. The field counts each request and the panel focuses on each new
   count, as it does when it opens.
@@ -1822,7 +1822,7 @@ fake timers would couple to the dnd sensor.
 renders a list's box, and reads what the field sends from what the resolver
 hands the submit: the search asking about this coven only once the box is
 used; each source by its citation and tier, none already listed and no typed
-row, then "New Reference…" last; a pick adding a row
+row, then "New Reference" last; a pick adding a row
 beneath the box showing its short form, announced, the box emptied and
 focused; a row's title in real italics, its buttons named by its short form
 and described by its whole citation, and, closed, its locator after the
@@ -1833,7 +1833,7 @@ labelled and read with its citation and its tip, and tidied as it is left; the
 × removing a row once confirmed and keeping it on Keep It; Backspace and
 Delete in the empty box taking none; Enter with nothing picked submitting nothing;
 a search left in the box, and an open panel, each stopping the save. The panel
-from the field: opened by the create row, "New Reference…", taking you to
+from the field: opened by the create row, "New Reference", taking you to
 Kind, and again while it is open; a source it saves listed by its id and
 shown by its short form,
 the panel closed, the new row open on its Locator, and sent with the ingredient; and Cancel
@@ -1847,7 +1847,7 @@ references branch and the form's focus, which no list entry's test reaches.
 
 `tests/components/IngredientForm/reference-panel.test.tsx` renders
 `ReferencePanel` alone, asked for again by a rerender that raises its
-`summons`, as "New Reference…" does: Kind focused and nothing else shown as it
+`summons`, as "New Reference" does: Kind focused and nothing else shown as it
 opens, and Kind focused again, what was typed kept, when it is asked for
 again; each of the five kinds showing exactly its fields in order, the
 required ones marked; a resolver error beside its field, focused, with nothing
