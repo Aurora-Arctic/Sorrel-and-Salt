@@ -66,7 +66,8 @@ export function historyReducer(state: HistoryState, action: HistoryAction): Hist
  * action that sets several fields is one step. Typing in the one box that
  * the step is typing in, within the pause and with nothing in between,
  * extends it. Every change after the first of one pointer hold, a drag on a
- * slider, joins that step too: the picker reports each pointer move. Anything else, a select pick included, starts a step.
+ * slider, joins that step too: the picker reports each pointer move.
+ * Anything else, a select pick included, starts a step.
  */
 export function decideMerge({
   newest,
