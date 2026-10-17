@@ -13,9 +13,9 @@ import { expect } from '../fixtures';
  * The shell's Add Ingredient, in the bar: the one global action
  * (claude-docs/components/app-shell.md; design-decisions/mb.7-navigation.md).
  * Found inside the banner, the bar's `header`, so the empty list's own Add
- * Ingredient (M9.11) is never taken for it. A button that opens the dialog,
- * or on an admin page, for a curator, a link to the admin Compendium's
- * `?new` (M8.16), so "none" means neither.
+ * Ingredient (M9.11) is never taken for it. Its main part, a button that
+ * opens a coven's dialog or, for the compendium, goes to the admin
+ * Compendium's `?new` (M8.16); a link is matched too, so "none" means neither.
  */
 export function shellAddIngredient(page: Page): Locator {
   const banner = page.getByRole('banner');
@@ -160,16 +160,19 @@ export function shellEditControls(page: Page): Locator {
 }
 
 /**
- * The add dialog's Coven select, for someone in more than one coven (M8.16):
- * a native `<select>` named "Coven", so its role is a combobox, its value the
- * chosen coven's id, and each coven an `option` inside it, a view-only one
- * disabled. Read in the DOM rather than by opening the list, which a native
- * select draws outside the page.
+ * The menu of places Add Ingredient can go, for someone with more than one
+ * (M8.16; claude-docs/components/modal.md, "Add Ingredient"): the chevron
+ * beside the bar's button, named "Choose Where to Add", opens a `menu`
+ * listing each destination by name as a `menuitem`, the compendium first.
+ * With one destination the chevron is not drawn.
  */
-export function covenSelect(dialog: Locator) {
-  const box = dialog.getByRole('combobox', { name: 'Coven', exact: true });
+export function destinationMenu(page: Page) {
+  const banner = page.getByRole('banner');
+  const menu = banner.getByRole('menu');
   return {
-    box,
-    choice: (name: string) => box.getByRole('option', { name, exact: true }),
+    toggle: banner.getByRole('button', { name: 'Choose Where to Add', exact: true }),
+    menu,
+    choices: menu.getByRole('menuitem'),
+    choice: (name: string) => menu.getByRole('menuitem', { name, exact: true }),
   };
 }

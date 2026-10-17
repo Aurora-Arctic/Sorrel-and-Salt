@@ -21,8 +21,8 @@ import {
 } from './coven-ingredients';
 import {
   categoryChip,
-  covenSelect,
   describedIds,
+  destinationMenu,
   discardQuestion,
   editIngredientControl,
   expectFieldError,
@@ -116,13 +116,27 @@ const CREATE = `mutation ($w: ID!, $name: String!) {
   createWorkspaceIngredient(workspaceId: $w, input: { name: $name, variants: [] }) { id }
 }`;
 
+// Story 28's covens: B writes to the first two and only views the third.
+const FIRST = 'Fixture Coven Story 28';
+const SECOND = 'Fixture Second Coven Story 28';
+const VIEWED = 'Fixture Viewed Coven Story 28';
+
+/**
+ * An add dialog's accessible name when its eyebrow is `coven`: the eyebrow
+ * and the title, in that order (Modal's `aria-labelledby`). Matched on the
+ * coven's name alone, which is data, not on the title's words.
+ */
+function namesCoven(coven: string): RegExp {
+  return new RegExp(`^${coven.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?!\\w)`);
+}
+
 test(
   'a member opens Add Ingredient from the shell, adding to the coven it is on',
   {
     tag: '@story-28',
   },
   async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Story 28', 'story-28.test', {
+    const coven = await seedCoven(page, FIRST, 'story-28.test', {
       A: 'owner',
       C: 'viewer',
       B: 'member',
@@ -134,8 +148,10 @@ test(
         await page.goto(path);
         await expect(shellAddIngredient(page)).toBeEnabled();
         const dialog = await openAddIngredient(page);
-        // In one coven, so there is nothing to choose.
-        await expect(covenSelect(dialog).box).toHaveCount(0);
+        // In one coven, so there is nothing to choose: no chevron, and the
+        // dialog names the coven it adds to.
+        await expect(destinationMenu(page).toggle).toHaveCount(0);
+        await expect(dialog).toHaveAccessibleName(namesCoven(FIRST));
         await expect(nameField(dialog)).toBeVisible();
         if (path === '/account') await assertNoAccessibilityViolations(page);
 
@@ -166,25 +182,31 @@ test(
       expect(await savedRows(coven.id, 'Vorpelleaf')).toHaveLength(1);
     });
 
-    const second = await seedCoven(page, 'Fixture Second Coven Story 28', 'story-28-second.test', {
+    const second = await seedCoven(page, SECOND, 'story-28-second.test', {
       G: 'owner',
     });
-    const viewed = await seedCoven(page, 'Fixture Viewed Coven Story 28', 'story-28-viewed.test', {
+    const viewed = await seedCoven(page, VIEWED, 'story-28-viewed.test', {
       H: 'owner',
     });
     await joinCoven(second, coven.users.B, 'member');
     await joinCoven(viewed, coven.users.B, 'viewer');
     await signInAgainAs(page, coven.users.B);
 
-    await test.step('in more than one coven, a Coven select is set to the current one, with a viewed coven disabled', async () => {
-      await page.goto(`/coven/${second.slug}`);
-      const dialog = await openAddIngredient(page);
-      const select = covenSelect(dialog);
-      // A native select's value is the chosen option's, the coven's id.
-      await expect(select.box).toHaveValue(second.id);
-      await expect(select.choice('Fixture Coven Story 28')).toBeEnabled();
-      await expect(select.choice('Fixture Second Coven Story 28')).toBeEnabled();
-      await expect(select.choice('Fixture Viewed Coven Story 28')).toBeDisabled();
+    await test.step('in more than one coven, the chevron lists the covens written to and a choice opens its dialog', async () => {
+      await page.goto(`/coven/${coven.slug}`);
+      const destinations = destinationMenu(page);
+      await destinations.toggle.click();
+      await expect(destinations.toggle).toHaveAttribute('aria-expanded', 'true');
+      // The covens B writes to, in order; the one B only views is not a destination.
+      await expect(destinations.choices).toHaveText([FIRST, SECOND]);
+      await expect(destinations.choice(VIEWED)).toHaveCount(0);
+
+      // On the first coven's page, choosing the second adds to the second.
+      await destinations.choice(SECOND).click();
+      await expect(destinations.menu).toHaveCount(0);
+      const dialog = page.getByRole('dialog', { name: 'Add Ingredient' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog).toHaveAccessibleName(namesCoven(SECOND));
 
       await nameField(dialog).fill('Wexilroot');
       await saveIngredient(dialog).click();
@@ -193,11 +215,17 @@ test(
       expect(await savedRows(coven.id, 'Wexilroot')).toHaveLength(0);
     });
 
-    await test.step('on a coven the member only views, the select is never set to it', async () => {
+    await test.step('the main part adds to the coven the address names, and never to one the member only views', async () => {
+      await page.goto(`/coven/${second.slug}`);
+      let dialog = await openAddIngredient(page);
+      await expect(dialog).toHaveAccessibleName(namesCoven(SECOND));
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+
       // B reads the viewed coven: the page is theirs to see, not to write to.
       expect((await page.goto(`/coven/${viewed.slug}`))?.status()).toBe(200);
-      const dialog = await openAddIngredient(page);
-      await expect(covenSelect(dialog).box).not.toHaveValue(viewed.id);
+      dialog = await openAddIngredient(page);
+      await expect(dialog).not.toHaveAccessibleName(namesCoven(VIEWED));
       await page.keyboard.press('Escape');
     });
 
@@ -213,16 +241,16 @@ test(
       expect(await savedRows(coven.id, 'Quorrelbud')).toHaveLength(0);
     });
 
-    await test.step("an admin in no coven has none off the admin pages, and on them it opens the compendium's", async () => {
+    await test.step("an admin in no coven has the compendium alone, on every page, and it opens the compendium's dialog", async () => {
       await signInAs(page, 'e@story-28-admin.test', ['discord'], 'admin');
-      await page.goto('/account');
-      await expect(page.getByRole('banner')).toBeVisible();
-      await expect(shellAddIngredient(page)).toHaveCount(0);
-
-      await page.goto('/admin/categories');
-      await shellAddIngredient(page).click();
-      await expect(page).toHaveURL(/\/admin\/compendium\?new(?:[=&]|$)/);
-      await expect(page.getByRole('dialog', { name: 'Add Ingredient' })).toBeVisible();
+      for (const path of ['/account', '/admin/categories']) {
+        await page.goto(path);
+        // One destination, so a plain button with nothing to choose.
+        await expect(destinationMenu(page).toggle).toHaveCount(0);
+        await shellAddIngredient(page).click();
+        await expect(page).toHaveURL(/\/admin\/compendium\?new(?:[=&]|$)/);
+        await expect(page.getByRole('dialog', { name: 'Add Ingredient' })).toBeVisible();
+      }
     });
   },
 );
@@ -374,15 +402,21 @@ test(
     });
     await page.goto(`/coven/${coven.slug}`);
 
-    await test.step('leaving Name empty marks it, linking its error, and filling it clears the mark', async () => {
+    await test.step('leaving Name blank once edited marks it, linking its error, and filling it clears the mark', async () => {
       const dialog = await openAddIngredient(page);
       const name = nameField(dialog);
       // What Name describes while valid, so the error is what the mark adds.
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
       const valid = await describedIds(name);
 
-      await name.fill('D');
-      await name.fill('');
+      // Left untouched, Name stays quiet: an error shows only once the field
+      // is both edited and left, or the form submitted (M8.16).
+      await name.focus();
+      await page.keyboard.press('Tab');
+      await expect(name).not.toHaveAttribute('aria-invalid', 'true');
+
+      // Edited to a blank, which the schema trims to nothing, and left.
+      await name.fill('   ');
       await page.keyboard.press('Tab');
       await expectFieldError(name, valid);
 
