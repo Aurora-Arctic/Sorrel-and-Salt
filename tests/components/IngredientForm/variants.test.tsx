@@ -1,8 +1,13 @@
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, renderHook, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
-import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
+import { useVariantFolds } from '@/components/IngredientForm/variants';
+import {
+  EMPTY_VALUES,
+  EMPTY_VARIANT,
+  VARIANT_SECTION_KEYS,
+} from '@/components/IngredientForm/values';
 import { VARIANT_SECTIONS, openSections, openSectionsIn } from '../../support/ingredient-sections';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { press, redo, undo } from '../../support/interact';
@@ -1180,5 +1185,60 @@ describe('IngredientForm’s variants', () => {
 
       expect(control(variant('Oil'), 'Description')).toHaveValue('Pressed from the fixture.');
     });
+  });
+});
+
+// `reconcile` re-keys the folds to a restored list. The form has no control
+// that reorders variants, so the hook is driven directly here.
+describe('useVariantFolds reconcile', () => {
+  const [FIRST] = VARIANT_SECTION_KEYS;
+  const [, SECOND] = VARIANT_SECTION_KEYS;
+  const withIds = (...pairs: [string, string][]) =>
+    pairs.map(([form, variantId]) => ({ form, variantId }));
+
+  it("carries each row's folds with it when a restore only reorders", () => {
+    const { result } = renderHook(() => useVariantFolds());
+    const before = withIds(['Oil', 'a'], ['Herb', 'b']);
+    act(() => result.current.toggle(0, FIRST));
+    act(() => result.current.setCard(0));
+
+    act(() => result.current.reconcile(before, withIds(['Herb', 'b'], ['Oil', 'a'])));
+
+    expect(result.current.isOpen(1, FIRST)).toBe(true);
+    expect(result.current.isOpen(0, FIRST)).toBe(false);
+    expect(result.current.card).toBe(1);
+  });
+
+  it('closes the open card when the restore drops its row', () => {
+    const { result } = renderHook(() => useVariantFolds());
+    const before = withIds(['Oil', 'a'], ['Herb', 'b']);
+    act(() => result.current.setCard(1));
+
+    act(() => result.current.reconcile(before, withIds(['Oil', 'a'])));
+
+    expect(result.current.card).toBeNull();
+  });
+
+  it("matches two unsaved blank-form rows one to one, so the second is not given the first's folds", () => {
+    const { result } = renderHook(() => useVariantFolds());
+    const before = [{ form: '' }, { form: '' }];
+    act(() => result.current.toggle(0, FIRST));
+    act(() => result.current.toggle(1, SECOND));
+
+    act(() => result.current.reconcile(before, [{ form: '' }, { form: '' }]));
+
+    expect(result.current.isOpen(0, FIRST)).toBe(true);
+    expect(result.current.isOpen(1, FIRST)).toBe(false);
+    expect(result.current.isOpen(1, SECOND)).toBe(true);
+    expect(result.current.card).toBeNull();
+  });
+
+  it('opens the one row with no old match when its twin is matched', () => {
+    const { result } = renderHook(() => useVariantFolds());
+    act(() => result.current.reconcile([{ form: '' }], [{ form: '' }, { form: '' }]));
+
+    expect(result.current.card).toBe(1);
+    expect(result.current.isOpen(0, FIRST)).toBe(false);
+    expect(result.current.isOpen(1, FIRST)).toBe(true);
   });
 });

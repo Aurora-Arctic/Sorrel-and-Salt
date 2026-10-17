@@ -122,7 +122,14 @@ export function useVariantFolds(): VariantFolds {
       });
     },
     reconcile: (from, to) => {
-      const matched = to.map((row) => from.findIndex((old) => sameVariant(old, row)));
+      // Each old row is matched at most once: two unsaved rows with the same
+      // (or no) form text would otherwise both take the first one's folds.
+      const used = new Set<number>();
+      const matched = to.map((row) => {
+        const at = from.findIndex((old, place) => !used.has(place) && sameVariant(old, row));
+        if (at !== -1) used.add(at);
+        return at;
+      });
       const returning = matched.indexOf(-1);
       setFolds((now) =>
         matched.map((was) =>

@@ -1197,7 +1197,8 @@ reordering a variant changes the list, and the folds are held by place, so a
 restore would leave each fold on the wrong card. `reconcile(from, to)` matches
 each row of the list being restored to a row of the list as it stood, by
 `variantId`, else by its form text folded, and carries that row's open
-sections across. A row that is not matched is one returning from a removal: it
+sections across; an old row is matched at most once, so two unsaved
+rows with the same form text are told apart by their order. A row that is not matched is one returning from a removal: it
 opens fully and becomes the open card. If nothing returns, the open card stays
 on the same variant, or none if that variant is gone. The step's `before` and
 `after` are swapped on a redo so `from` is always the list as it stood.
