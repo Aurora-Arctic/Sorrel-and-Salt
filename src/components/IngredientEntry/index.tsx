@@ -26,6 +26,7 @@ import type {
   VariantDetail,
 } from '@/modules/ingredients';
 import EditButton from './edit-button';
+import { referenceItems } from './references';
 import EntryDialog from './entry-dialog';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
@@ -282,12 +283,13 @@ function FormSection({
   anchor: string;
   hrefOf: IngredientEntryProps['hrefOf'];
 }): ReactElement {
-  const { variant, icon, categories, substitutes } = detail;
+  const { variant, icon, categories, substitutes, references } = detail;
   const nameId = `${anchor}-name`;
   // Only what the form adds: the ingredient's own fields stand above, and a
   // form inherits them by the union rule (DESIGN.md §5).
   const rows = correspondences(variant).filter((row) => row.values.length > 0);
-  const hasLists = rows.length > 0 || categories.length > 0 || substitutes.length > 0;
+  const hasLists =
+    rows.length > 0 || categories.length > 0 || substitutes.length > 0 || references.length > 0;
   const addsNothing = !said(variant.description) && !said(variant.safetyNotes) && !hasLists;
 
   return (
@@ -333,6 +335,11 @@ function FormSection({
               {substituteItems(substitutes, hrefOf)}
             </ListBlock>
           )}
+          {references.length > 0 && (
+            <ListBlock block={blockOf(anchor, 'references', nameId)} title="References" level={4}>
+              {referenceItems(references)}
+            </ListBlock>
+          )}
         </div>
       )}
     </section>
@@ -346,7 +353,7 @@ const IngredientEntry = ({
   movedAway,
   canonical,
 }: IngredientEntryProps): ReactElement => {
-  const { entry, folkNames, categories, deities, substitutes, variants } = detail;
+  const { entry, folkNames, categories, deities, substitutes, references, variants } = detail;
   const local = entry.workspaceId !== null;
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   const anchors = formAnchors(variants);
@@ -454,7 +461,14 @@ const IngredientEntry = ({
           >
             {substituteItems(substitutes, hrefOf)}
           </ListBlock>
-          {/* MB.155's references go here, beneath the substitutes. */}
+          <ListBlock
+            block={blockOf('details', 'references')}
+            title="References"
+            level={3}
+            empty="No sources recorded."
+          >
+            {referenceItems(references)}
+          </ListBlock>
         </div>
       </section>
 

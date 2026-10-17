@@ -39,6 +39,7 @@ export function entryDetail(overrides: Partial<IngredientRow> = {}): IngredientD
     categories: [],
     deities: [],
     substitutes: [],
+    references: [],
     variants: [],
   };
 }

@@ -255,6 +255,11 @@ $side-column: calc(#{space(8)} * 5);
   }
 }
 
+// A locator beside its citation, in the muted ink: it says where in the work.
+.ingredient-entry__locator {
+  color: $text-muted;
+}
+
 .ingredient-entry__chips {
   flex-flow: row wrap;
   gap: space(2);

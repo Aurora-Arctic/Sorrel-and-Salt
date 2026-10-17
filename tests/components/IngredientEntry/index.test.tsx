@@ -9,6 +9,7 @@ import { Navigating } from '../../support/navigating';
 import type {
   IngredientRow,
   CategoryDetail,
+  CitedReference,
   IngredientDetail,
   IngredientVariantRow,
   VariantDetail,
@@ -106,6 +107,42 @@ function variantRow(form: string, overrides: Partial<IngredientVariantRow> = {})
     icon: null,
     categories: [],
     substitutes: [],
+    references: [],
+  };
+}
+
+/** A web page or book as the loader returns it: invented title, optional locator and url. */
+function cited(
+  title: string,
+  locator: string | null = null,
+  url: string | null = null,
+): CitedReference {
+  return {
+    reference: {
+      id: nextId(),
+      workspaceId: null,
+      kind: url ? 'web_page' : 'book',
+      title,
+      authors: 'Fixture, Ada',
+      container: url ? 'Fixture Site' : null,
+      contributors: null,
+      edition: null,
+      volume: null,
+      issue: null,
+      series: null,
+      place: null,
+      publisher: null,
+      published: '1988',
+      pages: null,
+      host: null,
+      url,
+      modified: null,
+      accessed: url ? '2026-01-01' : null,
+      note: null,
+      seedKey: null,
+      ...STAMPS,
+    },
+    locator,
   };
 }
 
@@ -152,6 +189,7 @@ function detail(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
       { name: 'Typed Testleaf', ingredient: null, form: null },
       { name: 'Fixture Mockroot', ingredient: LINKED, form: 'testoil' },
     ],
+    references: [],
     variants: [
       variantRow('testroot'),
       variantRow('testoil', { toxic: true, safetyNotes: 'Fixture oil caution.' }),
@@ -443,6 +481,116 @@ describe('IngredientEntry', () => {
       'href',
       href,
     );
+  });
+});
+
+describe('IngredientEntry references', () => {
+  it('lists each reference in the order given, as an item with its title in a cite', () => {
+    renderEntry({
+      detail: detail({
+        references: [cited('A Herbal of Testing'), cited('Zeta Fixtures'), cited('Mid Fixtures')],
+      }),
+    });
+
+    const items = within(screen.getByRole('list', { name: 'References' })).getAllByRole('listitem');
+    expect(items.map((item) => item.querySelector('cite')?.textContent)).toEqual([
+      'A Herbal of Testing',
+      'Zeta Fixtures',
+      'Mid Fixtures',
+    ]);
+  });
+
+  it('sets only the italic parts in cite', () => {
+    renderEntry({ detail: detail({ references: [cited('A Herbal of Testing')] }) });
+
+    const item = within(screen.getByRole('list', { name: 'References' })).getByRole('listitem');
+    expect(item.querySelectorAll('cite')).toHaveLength(1);
+    expect(item.textContent).toContain('Fixture, Ada');
+    expect(item.querySelector('cite')?.textContent).not.toContain('Fixture, Ada');
+  });
+
+  it('sets a locator beside its citation, and none where there is none', () => {
+    renderEntry({
+      detail: detail({
+        references: [cited('Located Fixtures', 'p. 112'), cited('Plain Fixtures')],
+      }),
+    });
+
+    const [located, plain] = within(screen.getByRole('list', { name: 'References' })).getAllByRole(
+      'listitem',
+    );
+    expect(located).toHaveTextContent('p. 112');
+    expect(located!.querySelector('.ingredient-entry__locator')).not.toBeNull();
+    expect(plain!.querySelector('.ingredient-entry__locator')).toBeNull();
+  });
+
+  it('links a url to its source, opened with rel noopener', () => {
+    renderEntry({
+      detail: detail({
+        references: [cited('Linked Fixtures', null, 'https://fixtures.example/testwort')],
+      }),
+    });
+
+    const link = within(screen.getByRole('list', { name: 'References' })).getByRole('link');
+    expect(link).toHaveAttribute('href', 'https://fixtures.example/testwort');
+    expect(link.getAttribute('rel')?.split(' ')).toContain('noopener');
+  });
+
+  it('links nothing for a reference with no url', () => {
+    renderEntry({ detail: detail({ references: [cited('Printed Fixtures')] }) });
+
+    expect(
+      within(screen.getByRole('list', { name: 'References' })).queryByRole('link'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('says so in place of the list when the entry cites nothing', () => {
+    renderEntry();
+    const details = screen.getByRole('region', { name: 'Details' });
+
+    expect(within(details).queryByRole('list', { name: 'References' })).not.toBeInTheDocument();
+    const heading = within(details).getByRole('heading', { name: 'References', level: 3 });
+    expect(heading.parentElement!.querySelector('.ingredient-entry__empty')).not.toBeNull();
+  });
+
+  it("sits in Details' side column beneath the substitutes", () => {
+    renderEntry({ detail: detail({ references: [cited('A Herbal of Testing')] }) });
+    const details = screen.getByRole('region', { name: 'Details' });
+    const substitutes = within(details).getByRole('list', { name: 'Substitutes' });
+    const references = within(details).getByRole('list', { name: 'References' });
+
+    expect(precedes(substitutes, references)).toBe(true);
+    expect(sharedColumn([substitutes, references])).not.toBe(details);
+  });
+
+  it("lists a form's own references in its section, and a form with none lists none", () => {
+    renderEntry({
+      detail: detail({
+        references: [cited('Whole Fixtures')],
+        variants: [
+          { ...variantRow('testoil'), references: [cited('Oil Fixtures')] },
+          variantRow('testroot'),
+        ],
+      }),
+    });
+
+    const oil = screen.getByRole('region', { name: /testoil/i });
+    const listed = within(oil).getByRole('list', { name: /References/ });
+    expect(within(listed).getAllByRole('listitem')).toHaveLength(1);
+    expect(listed.querySelector('cite')?.textContent).toBe('Oil Fixtures');
+    expect(
+      within(screen.getByRole('region', { name: /testroot/i })).queryByRole('list'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('draws no jump entry of its own', () => {
+    renderEntry({ detail: detail({ references: [cited('A Herbal of Testing')] }) });
+
+    expect(
+      within(screen.getByRole('navigation', { name: 'On this page' })).queryByRole('link', {
+        name: /references/i,
+      }),
+    ).not.toBeInTheDocument();
   });
 });
 
