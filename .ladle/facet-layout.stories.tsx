@@ -12,6 +12,7 @@ import {
 import { AdminFrame } from './admin-frame';
 import type { PickerCategory } from '../src/components/CategoryPicker/types';
 import Combobox, { ComboboxEntry } from '../src/components/Combobox';
+import { ChevronIcon } from '../src/components/Combobox/icons';
 import type { ComboboxOption } from '../src/components/Combobox/types';
 import { FieldShell, fieldDescription, SearchField, SwitchField } from '../src/components/Field';
 import FormIcon from '../src/components/FormIcon';
@@ -750,13 +751,17 @@ function TypedSentence({
           {firstLine}
           {!searching && (
             <>
-              {' · '}
-              {tail === 'open' || tail === 'opening' ? 'Hide Search' : 'Show Search'}{' '}
+              {/* The chevron is icon-only, so the visually hidden label names the button. */}{' '}
+              <span className="facet-layout__sr">
+                {tail === 'open' || tail === 'opening'
+                  ? 'Hide search details'
+                  : 'Show search details'}
+              </span>
               <span
                 aria-hidden="true"
-                className={`facet-layout__chevron${tail === 'open' ? ' facet-layout__chevron--up' : ''}`}
+                className={`facet-layout__chevron${tail === 'open' || tail === 'opening' ? ' facet-layout__chevron--up' : ''}`}
               >
-                ▾
+                <ChevronIcon />
               </span>
             </>
           )}
@@ -783,8 +788,6 @@ const PENDING_MS = 1200;
 const TABLET_QUERY = '(min-width: 768px)';
 
 interface LayoutProps {
-  /** The selected Match and Toxic segment drawn as an outline, not a green block. */
-  outlinedStrip?: boolean;
   open?: boolean;
   forms?: string[];
   deities?: string[];
@@ -801,7 +804,6 @@ interface LayoutProps {
 
 /** The chosen layout, interactive enough to open, pick and clear. */
 function Layout({
-  outlinedStrip = false,
   open = false,
   forms: initialForms = [],
   deities: initialDeities = [],
@@ -1127,7 +1129,7 @@ function Layout({
         method="get"
         action={COMPENDIUM_PATH}
         aria-label="Filter the Compendium"
-        className={`form facet-layout facet-layout__drop-anchor${outlinedStrip ? ' facet-layout--outlined-strip' : ''}`}
+        className="form facet-layout facet-layout__drop-anchor"
       >
         <div className="facet-layout__bar">
           <div className="facet-layout__grow">{search}</div>
@@ -1275,9 +1277,6 @@ export const GridTray: Story = () => <Layout {...F_CLOSED} />;
 
 // The panel open over the results (press Filters; here it starts open).
 export const GridTrayOpen: Story = () => <Layout {...F_PROPS} />;
-
-// The same panel with the selected Match and Toxic segment as an outline, to compare.
-export const GridTrayOpenOutlined: Story = () => <Layout {...F_PROPS} outlinedStrip />;
 
 // The phone: the panel is a modal sheet; open in these two, shut in the third.
 export const GridTrayPhoneLight: Story = () => <Layout {...F_PROPS} />;

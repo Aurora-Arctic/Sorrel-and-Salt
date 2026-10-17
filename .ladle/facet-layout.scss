@@ -186,14 +186,6 @@
   }
 }
 
-// The selected Match and Toxic segment as an outline, for comparison with the filled block.
-.facet-layout--outlined-strip .facet-strip label:has(input:checked) {
-  background-color: transparent;
-  color: $text-primary;
-  border-color: $text-primary;
-  box-shadow: inset 0 0 0 1px $text-primary;
-}
-
 .facet-layout__tray-head {
   display: flex;
   justify-content: space-between;
@@ -379,6 +371,12 @@
   > summary {
     cursor: pointer;
     width: fit-content;
+    // No native marker: the chevron at the end of the line is the only one.
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
   }
 }
 
@@ -418,7 +416,17 @@
 
 .facet-layout__chevron {
   display: inline-block;
+  width: 1.25em;
+  height: 1em;
+  margin-inline-start: space(1);
+  vertical-align: text-bottom;
   transition: rotate var(--tail-ms, 350ms) ease;
+
+  svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
 
   &--up {
     rotate: 180deg;
@@ -463,10 +471,10 @@
   white-space: nowrap;
 }
 
-// The values the sentence names are set in the type scale's next weight above the default
-// `strong` (400, over the 300 body): there is no weight token, the scale is raw numbers.
+// The values the sentence names are bold (700), the owner's call: there is no weight token,
+// the scale is raw numbers.
 .facet-layout__sentence strong {
-  font-weight: 500;
+  font-weight: 700;
 }
 
 // Where a chip's count will be while the results are on their way. The shape and the
