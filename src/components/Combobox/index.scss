@@ -51,8 +51,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The select-only box: the control itself takes the focus and the press,
-// so it draws its own ring, and points rather than shows a caret.
-.combobox__control--select {
+// so it draws its own ring, and points rather than shows a caret. Weighted
+// with `.input` as the control above is, or that rule's caret wins over the
+// whole box, text and padding alike.
+.input.combobox__control--select {
   cursor: pointer;
 
   &:focus-visible {
