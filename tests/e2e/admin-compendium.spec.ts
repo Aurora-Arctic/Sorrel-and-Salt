@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
 import postgres from 'postgres';
-import { makeIngredient } from '../support/fixtures/ingredient';
+import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { insertIngredient } from '../support/db/insert-ingredient';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
@@ -526,4 +526,140 @@ test('undo puts a formal name back with focus on Classification, and the referen
   await expect(formal).toHaveValue('');
   await expect(undo).toBeEnabled();
   await expect(redo).toBeDisabled();
+});
+
+// M12.10: one edit dialog walked through the form's undo and redo: a chip, a
+// keyboard reorder, a field in a section that was then folded, a removed
+// variant and a save, which no story walks.
+test('undo and redo carry a chip, a reorder, a folded section, a variant and a save', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'undo-walk@admin-compendium.test', ['discord'], 'admin');
+  const fixture = makeIngredient({
+    name: 'Fixture Undoherb',
+    canonicalName: 'Fixtura undoherba',
+    folkNames: ['Hedge Fixture', 'Lane Fixture'],
+    colors: ['Silver', 'Green'],
+  });
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    // The compendium takes a form as a pick, so each variant links a curated one.
+    const forms =
+      await sql`select id, name from ingredient_forms where name in ('Herb', 'Root') and deleted_at is null`;
+    expect(forms).toHaveLength(2);
+    fixture.variants = forms.map((form) => makeVariant({ form: form.name, formId: form.id }));
+    await insertIngredient(sql, fixture, userId);
+  } finally {
+    await sql.end();
+  }
+  const editUrl = `/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`;
+  await page.goto(editUrl);
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Undoherb/ });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Open All' }).click();
+  const undo = dialog.getByRole('button', { name: 'Undo', exact: true }).first();
+  const redo = dialog.getByRole('button', { name: 'Redo', exact: true }).first();
+  const name = dialog.getByRole('textbox', { name: 'Name', exact: true });
+  // The precondition: both seeded lists and variants are on screen, nothing to undo.
+  await expect(undo).toBeDisabled();
+  await expect(redo).toBeDisabled();
+
+  await test.step('a removed chip comes back and goes again', async () => {
+    const folk = dialog.getByRole('group', { name: 'Folk Names', exact: true });
+    const hedge = folk.getByRole('button', { name: 'Remove Hedge Fixture', exact: true });
+    await expect(hedge).toBeVisible();
+    await hedge.click();
+    await expect(hedge).toHaveCount(0);
+    await expect(undo).toBeEnabled();
+    // Focus is in the form but not in the chip box, whose chords are the box's own.
+    await name.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(hedge).toBeVisible();
+    await expect(folk.getByRole('button', { name: 'Remove Lane Fixture' })).toBeVisible();
+    await expect(redo).toBeEnabled();
+    await expect(undo).toBeDisabled();
+    await redo.click();
+    await expect(hedge).toHaveCount(0);
+    await expect(undo).toBeEnabled();
+    await name.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(hedge).toBeVisible();
+  });
+
+  await test.step('a keyboard reorder of Colours is undone and redone', async () => {
+    const colours = dialog.getByRole('group', { name: 'Colours', exact: true });
+    const order = () =>
+      colours
+        .getByRole('button', { name: /^Remove / })
+        .evaluateAll((buttons) => buttons.map((button) => button.getAttribute('aria-label')));
+    const original = ['Remove Silver', 'Remove Green'];
+    const moved = ['Remove Green', 'Remove Silver'];
+    await expect.poll(order).toEqual(original);
+    // Lift, step right, drop: the sensor reads each key a moment after the last.
+    await colours.getByRole('button', { name: 'Move Silver', exact: true }).focus();
+    for (const key of ['Space', 'ArrowRight', 'Space']) {
+      await page.keyboard.press(key);
+      await page.waitForTimeout(150);
+    }
+    await expect.poll(order).toEqual(moved);
+
+    await name.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect.poll(order).toEqual(original);
+    await name.click();
+    await page.keyboard.press('ControlOrMeta+Shift+z');
+    await expect.poll(order).toEqual(moved);
+    await name.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect.poll(order).toEqual(original);
+  });
+
+  await test.step('undo opens a folded section and focuses the field it changed', async () => {
+    const details = dialog.getByRole('button', { name: 'Details & Care', exact: true });
+    // The ingredient's own comes first; the variants' cards are shut and hidden.
+    const description = dialog.getByRole('textbox', { name: 'Description' }).first();
+    await expect(details).toHaveAttribute('aria-expanded', 'true');
+    await description.fill('Typed before folding');
+    await details.click();
+    await expect(details).toHaveAttribute('aria-expanded', 'false');
+    // Focus is on the heading's button, outside the folded fields.
+    await expect(details).toBeFocused();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(details).toHaveAttribute('aria-expanded', 'true');
+    await expect(description).toHaveValue('');
+    await expect(description).toBeFocused();
+    await page.keyboard.press('ControlOrMeta+Shift+z');
+    await expect(description).toHaveValue('Typed before folding');
+  });
+
+  await test.step('a removed variant returns open, and the other card is as it was', async () => {
+    const herb = dialog.getByRole('button', { name: 'Edit Herb', exact: true });
+    const root = dialog.getByRole('button', { name: 'Edit Root', exact: true });
+    await expect(herb).toHaveAttribute('aria-expanded', 'false');
+    await expect(root).toHaveAttribute('aria-expanded', 'false');
+    await dialog.getByRole('button', { name: 'Remove Root', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(root).toHaveCount(0);
+    await expect(herb).toBeVisible();
+
+    await name.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(root).toBeVisible();
+    await expect(root).toHaveAttribute('aria-expanded', 'true');
+    await expect(herb).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  await test.step('a save leaves nothing to undo, here or after a reopen', async () => {
+    const save = dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(save).toBeDisabled();
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+
+    await page.goto(editUrl);
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Undo', exact: true }).first()).toBeDisabled();
+    await expect(dialog.getByRole('button', { name: 'Redo', exact: true }).first()).toBeDisabled();
+  });
 });
