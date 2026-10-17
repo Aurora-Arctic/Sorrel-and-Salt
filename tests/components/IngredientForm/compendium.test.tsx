@@ -341,9 +341,14 @@ describe('IngredientForm on the compendium', () => {
 
       type('Name', 'Testwort');
       await search('New Form', 'ro');
-      // A form is the compendium's pick, as the harness below has it.
+      // A form is the compendium's pick, as the harness below has it. The
+      // list is in the document only once the lookup has settled (its "no
+      // matches" message), a tick after the debounce, so it is awaited.
       expect(
-        within(suggestions('New Form')).queryByRole('option', { name: /Use what you typed/ }),
+        within(await screen.findByRole('listbox', { name: 'New Form suggestions' })).queryByRole(
+          'option',
+          { name: /Use what you typed/ },
+        ),
       ).toBeNull();
       await search('Folk Name', 'mo');
       await search('Reference', 'fi');
