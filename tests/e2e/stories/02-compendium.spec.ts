@@ -593,45 +593,61 @@ test(
       );
     });
 
-    await test.step('an entry with sources lists them alphabetically, each with its locator and link', async () => {
+    await test.step('a section’s note number leads to its note, the note to its entry, and each links back', async () => {
       await page.goto(`/compendium/ingredients/${slugify(cited)}`);
       const details = page.getByRole('region', { name: 'Details' });
-      const list = details.getByRole('list', { name: 'References' });
-      const items = list.getByRole('listitem');
+      const notes = page.getByRole('list', { name: 'Notes' });
+      const bibliography = page.getByRole('list', { name: 'Bibliography' });
 
-      await expect(items).toHaveCount(2);
-      // A web page's title is quoted, not italic, so only the book is a <cite>.
-      await expect(items.nth(0)).toContainText('Alpha Fixtures');
-      await expect(items.nth(1).locator('cite')).toHaveText('Zeta Fixtures');
-      await expect(items.nth(0)).toContainText('p. 112');
-      const link = items.nth(0).getByRole('link');
-      await expect(link).toHaveAttribute('href', 'https://fixtures.example/alpha');
-      await expect(link).toHaveAttribute('rel', /noopener/);
-      await expect(items.nth(1).getByRole('link')).toHaveCount(0);
-      await assertNoAccessibilityViolations(page);
+      // The loader's order, not insertion order: Alpha before Zeta.
+      await expect(details.getByRole('link', { name: /^Note \d+$/ })).toHaveCount(2);
+      await details.getByRole('link', { name: 'Note 1' }).click();
+      await expect(page).toHaveURL(/#note-1$/);
+      const note = notes.getByRole('listitem').nth(0);
+      await expect(note).toContainText('Alpha Fixtures');
+      await expect(note).toContainText('p. 112');
+
+      await note.getByRole('link', { name: /Alpha/ }).click();
+      await expect(page).toHaveURL(/#ref-/);
+      const entry = bibliography.getByRole('listitem').filter({ hasText: 'Alpha Fixtures' });
+      await expect(entry).toBeVisible();
+
+      await entry.getByRole('link', { name: 'Back to Note 1' }).click();
+      await expect(page).toHaveURL(/#note-1$/);
+      await note.getByRole('link', { name: 'Back to Details' }).click();
+      await expect(page).toHaveURL(/#note-ref-1$/);
+      await expect(details.getByRole('link', { name: 'Note 1' })).toBeInViewport();
     });
 
-    await test.step('a form lists its own sources in its own section, and not the ingredient’s', async () => {
+    await test.step('a form’s own source is noted at the end of its section, and the bibliography holds each once, alphabetically', async () => {
       const section = page.locator(`#form-${slugify(form)}`);
-      const own = section.getByRole('list', { name: /References/ });
+      await expect(section.getByRole('list', { name: /References/ })).toHaveCount(0);
+      await section.getByRole('link', { name: 'Note 3' }).click();
+      await expect(page).toHaveURL(/#note-3$/);
+      await expect(
+        page.getByRole('list', { name: 'Notes' }).getByRole('link', { name: 'Back to ' + form }),
+      ).toBeVisible();
 
-      await expect(own.getByRole('listitem')).toHaveCount(1);
-      await expect(own.locator('cite')).toHaveText('Oil Fixtures');
+      const entries = page.getByRole('list', { name: 'Bibliography' }).getByRole('listitem');
+      await expect(entries).toHaveCount(3);
+      await expect(entries.nth(0)).toContainText('Alpha Fixtures');
+      await expect(entries.nth(1).locator('cite')).toHaveText('Oil Fixtures');
+      await expect(entries.nth(2).locator('cite')).toHaveText('Zeta Fixtures');
+      // A web page’s title is quoted, not italic; its url is a link out.
+      const link = entries.nth(0).getByRole('link', { name: /source/i });
+      await expect(link).toHaveAttribute('href', 'https://fixtures.example/alpha');
+      await expect(link).toHaveAttribute('rel', /noopener/);
+      await expect(entries.nth(2).getByRole('link', { name: /source/i })).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
     });
 
     await test.step('an entry with none shows an empty state rather than nothing', async () => {
       await page.goto(`/compendium/ingredients/${slugify(bare)}`);
-      const details = page.getByRole('region', { name: 'Details' });
+      const section = page.getByRole('region', { name: 'References' });
 
-      await expect(details.getByRole('heading', { name: 'References', level: 3 })).toBeVisible();
-      await expect(details.getByRole('list', { name: 'References' })).toHaveCount(0);
-      await expect(
-        details
-          .locator('.ingredient-entry__block', {
-            has: page.getByRole('heading', { name: 'References' }),
-          })
-          .locator('.ingredient-entry__empty'),
-      ).toBeVisible();
+      await expect(section).toBeVisible();
+      await expect(section.getByRole('list')).toHaveCount(0);
+      await expect(section.locator('p')).toBeVisible();
       await assertNoAccessibilityViolations(page);
     });
   },
