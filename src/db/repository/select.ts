@@ -19,6 +19,7 @@ import { InvalidCursor } from '../../lib/errors';
 import type { Cursor, PageCount, PageEntry } from '../../lib/types';
 import { notSoftDeleted } from './predicates';
 import type {
+  Aggregate,
   Derived,
   JoinedRow,
   KeyOrder,
@@ -93,42 +94,57 @@ export function selectFrom<TTable extends PgTable>(
   where: SQL | undefined,
   locked: Locked,
 ): Promise<TTable['$inferSelect'][]>;
+export function selectFrom<TTable extends PgTable, TRow extends Record<string, unknown>>(
+  table: TTable,
+  where: SQL | undefined,
+  aggregate: Aggregate<TRow>,
+): Promise<TRow[]>;
 export async function selectFrom(
   relation: PgTable | Derived<Record<string, unknown>>,
   where: SQL | undefined,
-  order?: Keyset<object> | Similarity | KeysetCount | LeftJoin<PgTable> | Locked,
+  order?:
+    | Keyset<object>
+    | Similarity
+    | KeysetCount
+    | LeftJoin<PgTable>
+    | Locked
+    | Aggregate<Record<string, unknown>>,
 ): Promise<unknown> {
   const keyset = order && 'sort' in order ? order : undefined;
   const tally = order && 'count' in order ? order : undefined;
   const joined = order && 'leftJoin' in order ? order : undefined;
-  const keyed = keyset ?? tally?.count;
+  const aggregated = order && 'aggregate' in order ? order : undefined;
+  const keyed = keyset ?? tally?.count ?? aggregated?.over;
   // A table is read whole, and a page adds its key — each part read as
   // Postgres prints it: a `timestamptz` read into a Date loses its
   // microseconds, and a cursor built from it would replay rows. A count reads
-  // its two numbers instead, and a left join both rows, which Drizzle reads as
-  // null where every joined column is. A derived relation names its own columns.
+  // its two numbers instead, a tally its aggregates, and a left join both
+  // rows, which Drizzle reads as null where every joined column is. A derived
+  // relation names its own columns.
   const [source, selection] = is(relation, PgTable)
     ? [
         relation,
         tally
           ? countsOf(tally)
-          : keyset
-            ? {
-                ...carried(keyset.carry),
-                row: getTableColumns(relation),
-                key: sql<string[]>`array[${sql.join(
-                  keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
-                  sql`, `,
-                )}]`,
-                // The tiebreak, read as text beside the key rather than off
-                // the row: a table keyed on a pair breaks ties on one of its
-                // columns, not on an `id` it does not have.
-                keyId: sql<string>`cast(${keyset.id} as text)`,
-              }
-            : joined && {
-                row: getTableColumns(relation),
-                joined: getTableColumns(joined.leftJoin),
-              },
+          : aggregated
+            ? carried(aggregated.aggregate)
+            : keyset
+              ? {
+                  ...carried(keyset.carry),
+                  row: getTableColumns(relation),
+                  key: sql<string[]>`array[${sql.join(
+                    keyset.sort.map((part) => sql`cast(${expressionOf(part)} as text)`),
+                    sql`, `,
+                  )}]`,
+                  // The tiebreak, read as text beside the key rather than off
+                  // the row: a table keyed on a pair breaks ties on one of its
+                  // columns, not on an `id` it does not have.
+                  keyId: sql<string>`cast(${keyset.id} as text)`,
+                }
+              : joined && {
+                  row: getTableColumns(relation),
+                  joined: getTableColumns(joined.leftJoin),
+                },
       ]
     : [relation.source, relation.fields];
   // Same cast as `write.ts`'s `writerFor`: `.from()` is typed against the table's own
@@ -140,6 +156,12 @@ export async function selectFrom(
       .$dynamic();
     if (keyed?.join) query.innerJoin(keyed.join.source, keyed.join.on);
     if (joined) query.leftJoin(joined.leftJoin, joined.on);
+    for (const { type, table, on } of aggregated?.joins ?? []) {
+      const live = and(on, notSoftDeleted(table));
+      if (type === 'inner') query.innerJoin(table, live);
+      else if (type === 'left') query.leftJoin(table, live);
+      else query.rightJoin(table, live);
+    }
     return query.where(where);
   };
 
@@ -149,7 +171,7 @@ export async function selectFrom(
       .for('update');
   }
 
-  if (order && 'orderBy' in order) {
+  if (order && 'limit' in order) {
     return readUnder({ similarity: SIMILARITY_THRESHOLD, word: WORD_SIMILARITY_THRESHOLD }, (tx) =>
       build(tx)
         .orderBy(...order.orderBy)
@@ -163,6 +185,16 @@ export async function selectFrom(
       (executor) => build(executor) as unknown as Promise<PageCount[]>,
     );
     return counted;
+  }
+
+  if (aggregated) {
+    const { groupBy = [], orderBy = [] } = aggregated;
+    return readKeyed(aggregated.over, (executor) => {
+      const query = build(executor);
+      if (groupBy.length > 0) query.groupBy(...groupBy);
+      if (orderBy.length > 0) query.orderBy(...orderBy);
+      return query;
+    });
   }
 
   if (!keyset) return build(db);
@@ -209,7 +241,7 @@ export async function selectOne<TTable extends PgTable>(
  * itself. It unqualifies only the expression's own top-level columns, so one
  * wrapper keeps every name.
  */
-function carried(carry: Keyset<object>['carry']): Record<string, SQL> {
+function carried(carry: object | undefined): Record<string, SQL> {
   return Object.fromEntries(
     Object.entries(carry ?? {}).map(([name, value]: [string, SQL]) => [name, sql`${value}`]),
   );
@@ -234,11 +266,11 @@ function countsOf({ count: order, start }: KeysetCount) {
  * Runs a keyset read, in a transaction under the thresholds its key says its
  * `where` reads: the search's word threshold for `wordMatch`, the similarity
  * threshold for `similarityMatch`. A page and its count both come through
- * here, so both read the same rows: at the server's 0.6 a count would miss
- * rows the pages hold.
+ * here, and so does a tally over a list (M12.3), so all three read the same
+ * rows: at the server's 0.6 a count would miss rows the pages hold.
  */
 function readKeyed<T>(
-  { wordMatch, similarityMatch }: KeyOrder,
+  { wordMatch, similarityMatch }: Pick<KeyOrder, 'wordMatch' | 'similarityMatch'>,
   run: (executor: Executor) => Promise<T>,
 ): Promise<T> {
   return readUnder(
