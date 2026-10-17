@@ -18,8 +18,10 @@ import type { AddDestination, AddIngredientButtonProps } from './types';
 // claude-docs/components/modal.md, "Add Ingredient".
 
 const LABEL = 'Add Ingredient';
-const CLASSES = 'btn app-shell__add';
-const MORE_CLASSES = 'btn app-shell__add app-shell__add--more';
+// The solid green at the medium size (the owner's call, M8.16): the bar's one
+// action, taller than a small button and shorter than a field.
+const CLASSES = 'btn btn--solid btn--medium app-shell__add';
+const MORE_CLASSES = `${CLASSES} app-shell__add--more`;
 
 /**
  * A sentence for what a save left behind. The form's own Saved notice goes

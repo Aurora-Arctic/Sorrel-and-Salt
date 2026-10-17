@@ -543,12 +543,12 @@ Four variants:
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
-**One size modifier, `.btn--small`**, which composes with any variant: half
+**Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant: half
 the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
 in place of `.btn`'s 1.6px, which reads heavy at this size, the `caption`
 type size, and a `space(2)` gap. It is for a compact strip that the full button would make taller, such
 as a banner or a table row. The impersonation banner's Stop is the first
-(MB.53).
+(MB.53). `.btn--medium` sits between it and the full button: the same label size and edge as `.btn`, no `$control-height` minimum, and `space(1) space(4)` of padding. The shell's Add Ingredient wears it with `.btn--solid` (M8.16).
 
 **A save in flight is `aria-busy` with a `.spinner`** (M5.6, the owner's call
 for every Save button). The spinner is a 1em ring in the button's own ink,

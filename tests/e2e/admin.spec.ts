@@ -333,3 +333,19 @@ test('an admin filters the zodiac signs by part of a name', async ({ page }) => 
   await expect(page).toHaveURL(/\/admin\/zodiac-signs\?query=no\+such\+sign$/);
   await expect(page.getByRole('table')).toHaveCount(0);
 });
+
+// Regression: a curator opening a curated list got a 500, as the Updated
+// column read its editors' names through a site admin's read. Each list must
+// render its table, not the error boundary.
+test('a curator opens the compendium and a vocabulary list and sees their tables', async ({
+  page,
+}) => {
+  await signInAs(page, 'list-curator@admin-curator.test', ['discord'], 'curator');
+
+  for (const path of ['/admin/compendium', '/admin/forms']) {
+    const response = await page.goto(path);
+    expect(response?.status(), path).toBe(200);
+    await expect(page.getByRole('main').getByRole('table').first(), path).toBeVisible();
+    await expect(page.getByRole('alert'), path).toHaveCount(0);
+  }
+});
