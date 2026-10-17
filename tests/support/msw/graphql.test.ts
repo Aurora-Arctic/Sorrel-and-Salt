@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { expectConsole } from '../console-guard';
 
 // The harness's one test (claude-docs/testing/layer-ownership.md, "What a test
 // may assert", rule 1): a component test that forgets to register an
@@ -6,6 +7,8 @@ import { describe, expect, it } from 'vitest';
 
 describe('MSW GraphQL handler stub', () => {
   it('fails loudly on an operation with no override, rather than hitting the network', async () => {
+    // MSW prints its refusal through console.error.
+    expectConsole('error', /\[MSW\]/);
     await expect(
       fetch('/api/graphql', {
         method: 'POST',

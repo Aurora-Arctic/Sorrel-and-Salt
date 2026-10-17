@@ -1,5 +1,13 @@
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { installConsoleGuard } from './console-guard';
+import HTMLElementConfig from 'happy-dom/lib/config/HTMLElementConfig.js';
+import HTMLElementConfigContentModelEnum from 'happy-dom/lib/config/HTMLElementConfigContentModelEnum.js';
+
+// Registered first, so its afterEach runs last: after RTL has unmounted, which
+// can itself log. A test that logs a console error or warning without declaring
+// it (`expectConsole`, tests/support/console-guard.ts) fails.
+installConsoleGuard();
 
 // The `dom` project's half of the setup; setup-msw.ts is the half both
 // projects share.
@@ -8,44 +16,6 @@ import { cleanup } from '@testing-library/react';
 // global `afterEach`); the explicit call is a harmless duplicate from the port.
 afterEach(() => {
   cleanup();
-});
-
-// Node's own `localStorage` global shadows the DOM library's once Vitest
-// merges its window into the global scope. Replaced without reading it first: merely
-// reading `window.localStorage` to check invokes Node's getter and prints its
-// ExperimentalWarning.
-class MemoryStorage implements Storage {
-  private store = new Map<string, string>();
-
-  get length(): number {
-    return this.store.size;
-  }
-
-  clear(): void {
-    this.store.clear();
-  }
-
-  getItem(key: string): string | null {
-    return this.store.has(key) ? (this.store.get(key) ?? null) : null;
-  }
-
-  key(index: number): string | null {
-    return Array.from(this.store.keys())[index] ?? null;
-  }
-
-  removeItem(key: string): void {
-    this.store.delete(key);
-  }
-
-  setItem(key: string, value: string): void {
-    this.store.set(key, String(value));
-  }
-}
-
-Object.defineProperty(window, 'localStorage', {
-  value: new MemoryStorage(),
-  writable: true,
-  configurable: true,
 });
 
 // Emptied after every test, as the render is: what one test stores — a theme,
@@ -101,3 +71,14 @@ defaults.setAttribute('data-test-default-styles', '');
 defaults.textContent =
   ':where(a, abbr, b, bdi, bdo, cite, code, data, dfn, em, i, kbd, mark, q, s, samp, small, span, strong, sub, sup, time, u, var, label) { display: inline; }';
 document.head.append(defaults);
+
+// happy-dom 21 has no `<search>` (a Baseline Widely Available element, used by
+// FilterForm), so `createElement('search')` gave an `HTMLUnknownElement` and
+// React warned "The tag <search> is unrecognized". The library builds elements
+// from this one table of tag name to class, so the entry a browser has is
+// added to it: `<search>` is a plain `HTMLElement`, as the spec has it. A
+// custom element cannot stand in, since its name needs a hyphen.
+HTMLElementConfig.search = {
+  className: 'HTMLElement',
+  contentModel: HTMLElementConfigContentModelEnum.anyDescendants,
+};

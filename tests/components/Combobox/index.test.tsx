@@ -1337,6 +1337,13 @@ describe('Combobox', () => {
       expect(elements()).toHaveTextContent('Choose elements');
     });
 
+    it('lists a value chosen twice as two chips, without React finding two with one key', () => {
+      // A form can load a repeat and refuse it only on save (the ingredient form).
+      render(<MultiHarness initial={['fire', 'fire']} />);
+
+      expect(screen.getAllByRole('button', { name: 'Remove Fire' })).toHaveLength(2);
+    });
+
     it('removes one chip by its x, and every chip by the clear, leaving the focus in the box', () => {
       render(<MultiHarness initial={['earth', 'air', 'fire']} />);
 
