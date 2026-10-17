@@ -40,11 +40,15 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     // Each form led by its group's icon, the generic where it has none, the
     // two held together as one unit that never wraps apart: the icon close
     // to its name and the next form farther off (the owner's call,
-    // 2026-10-16). The comma stays, on the name before it, so a screen
-    // reader hears a list; a space after it lets the line break there.
+    // 2026-10-16). The forms sit in one wrapping row whose gap sets them
+    // apart, so a form that wraps starts its line at the cell's edge. The
+    // comma stays, on the name before it, so a screen reader hears a list; the
+    // space between two forms draws nothing in a flex row, and keeps the
+    // cell's name reading "Herb, Oil" and not "Herb,Oil".
     cell: (entry) =>
-      entry.forms.length
-        ? entry.forms.map(({ name, icon }, i) => (
+      entry.forms.length ? (
+        <span className="compendium-list__forms">
+          {entry.forms.map(({ name, icon }, i) => (
             <Fragment key={name}>
               {i > 0 && ' '}
               <span className="compendium-list__form">
@@ -52,8 +56,11 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
                 {i < entry.forms.length - 1 ? `${name},` : name}
               </span>
             </Fragment>
-          ))
-        : NONE,
+          ))}
+        </span>
+      ) : (
+        NONE
+      ),
   },
   updatedColumn(),
   {
