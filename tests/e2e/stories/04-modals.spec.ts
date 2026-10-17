@@ -499,6 +499,9 @@ test(
     await test.step('the Close button asks the same question', async () => {
       await close.click();
       await expect(question.keep).toBeFocused();
+      // Its ring drawn too: after a pointer press the browser drew none for a
+      // scripted focus, so the focus was there and could not be seen (M8.16).
+      await expect(question.keep).toHaveCSS('outline-style', 'solid');
       await question.keep.click();
       await expect(close).toBeFocused();
       await expect(name).toHaveValue('Halvenseed');

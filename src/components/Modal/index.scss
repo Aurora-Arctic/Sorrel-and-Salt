@@ -296,6 +296,19 @@ $modal-fade: 150ms ease-out;
   margin: 0;
 }
 
+// The safe answer takes the focus by script as the card comes, and a browser
+// draws a scripted focus's ring only when the focus it replaced had one: after
+// a pointer press on Close, Cancel or the backdrop it held the focus unseen.
+// So in the card a quiet answer shows its keyboard look on any focus, not
+// `:focus-visible` alone. A click on it answers and takes the card away, so
+// the ring never lingers under the pointer (claude-docs/components/modal.md,
+// "Unsaved changes").
+.confirm-overlay__card .btn--quiet:focus {
+  background-color: $text-primary;
+  color: $text-on-color;
+  @include focus-ring;
+}
+
 // Its row stacks, full width and in order, at the width a form's own does:
 // a form stacks under 28rem of its own width, the body's padding outside it.
 @container modal-main (max-width: #{$narrow-column + $modal-padding}) {

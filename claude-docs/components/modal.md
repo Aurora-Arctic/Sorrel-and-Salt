@@ -132,7 +132,11 @@ each form.
   as the forms' Delete questions do. Keep Editing puts it away with nothing
   lost and the focus back where it was: Cancel, which stays beneath the
   question now, the field Escape was pressed in, or the Close button. If
-  that has gone, the focus goes to the form's first field.
+  that has gone, the focus goes to the form's first field. The focus was
+  always there, but after a pointer press (Close, Cancel, the backdrop) the
+  browser drew no ring for it, since it draws a scripted focus's ring only when
+  the focus it replaced had one, so the card's quiet answer shows its keyboard
+  look on any `:focus` (M8.16, measured in Chromium).
 - **Tried again while asking, it flashes** (MB.115, the owner's call), so
   the person sees why nothing closed. Each try by Close, Escape or the
   backdrop counts in `guard.flashes`, which the card carries as
