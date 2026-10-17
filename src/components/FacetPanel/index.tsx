@@ -397,6 +397,7 @@ export default function FacetPanel({
                     label="Zodiac"
                     name="zodiac"
                     placeholder="Add Sign"
+                    emptyPlaceholder="No Signs"
                     removeNoun="Sign"
                     loading={loading}
                     choices={facets.zodiac}
