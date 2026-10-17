@@ -51,10 +51,11 @@ The account page's sections are panels; the coven index's are plain
   uppercase, letter-spaced) but in the body ink, `$text-primary`, darker
   than the muted entries under it, padded as an entry is, a `space(5)` step
   below the entry above and `space(2)` above its first entry (the owner's
-  calls at M8.19). On a phone its entries
-  step in by `space(5)` rather than `space(4)`; on a wide screen, where the
-  text is right-aligned, they keep the entries' padding, since a step in from
-  the right pushed them off the column's edge (the owner's call at M8.19).
+  calls at M8.19). Its entries are not stepped
+  in from it at any width: the label alone sets them apart (the owner's call
+  at M8.19: a step in read as too much room to their left on a phone, and on
+  a wide screen, where the text is right-aligned, pushed them off the
+  column's edge).
 - When any entry has a group the nav carries `.page-nav--grouped`, and its
   top-level entries are set at 1.125rem, a step above body copy, so the page's
   own section reads apart from the grouped ones. A nav without groups is
