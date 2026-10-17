@@ -387,7 +387,7 @@ const IngredientEntry = ({
         {movedAway && (
           // Quiet: on the page from the start, so a status, never an alert.
           <Notice kind="warn" quiet>
-            The entry that used to be at this address has been moved to{' '}
+            The ingredient that was at this address has been moved to{' '}
             <Link href={movedAway.href}>
               {movedAway.name} <LinkHint />
             </Link>
