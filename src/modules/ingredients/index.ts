@@ -5,6 +5,7 @@ export * from './services/duplicates';
 export * from './services/common-names';
 export * from './services/ingredient-suggestions';
 export * from './services/ingredient-children';
+export * from './services/ingredient-detail';
 export * from './services/workspace-ingredients';
 export * from './services/compendium';
 export * from './services/references';
@@ -30,12 +31,16 @@ export * from './graphql/stock';
 export { unitConvert } from './units/convert';
 export type { ConversionRefusal, UnitConversion } from './units/types';
 export type {
+  CategoryDetail,
   CategoryRow,
   CitedReference,
   CompendiumAddress,
+  CompendiumEntryPage,
   CompendiumFacets,
+  DeityDetail,
   FacetCount,
   IngredientDeityRow,
+  IngredientDetail,
   IngredientFacets,
   IngredientKey,
   IngredientRow,
@@ -45,6 +50,8 @@ export type {
   StockKey,
   StockRow,
   StockValues,
+  SubstituteDetail,
   SubstituteRow,
+  VariantDetail,
   VariantKey,
 } from './types';
