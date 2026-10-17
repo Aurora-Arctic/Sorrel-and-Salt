@@ -453,8 +453,8 @@ type QueryCompendiumConnectionEdge {
   adds a mode); and four lists and a toxic setting (M11.22, [`../design-decisions/m11.22-search-facets.md`](../design-decisions/m11.22-search-facets.md)). `forms` keeps an entry holding a live variant whose form, trimmed and lower-cased, is any one of the list, so an entry with two forms is found under either, once (MB.222). `deityIds` keeps an entry with a live link to any one of the listed curated deities. `zodiacSigns` and `celestialBodies` keep an entry whose own list holds any one of the values, folded on both sides. `toxic` is the `ToxicFilter` enum, `any`, `toxic` or `not_toxic` (lower case, as `Nomenclature` is): `toxic` keeps an entry flagged on itself or on any live form, `not_toxic` one where neither holds, a retired form's flag counts for nothing, and `any` or leaving it out is no filter. Within one kind the chosen values OR; across kinds the filters AND. An empty list, a blank entry, or a value matching nothing is no filter rather than an error. The single `form: String` argument is gone; the admin list sends a one-item `forms`. The facet screen and its counts are M12.3 and M12.4. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
   `filterIngredients()` was retired (DESIGN.md §14). `elements` (M8.13, `[IngredientElement!]`, lower case) matches an entry whose
-  `elements` holds any one listed, among others or alone, by array overlap
-  in SQL (MB.157). On `workspaceIngredients` too. The admin's two to-do lists, which M5.5
+  `elements`, or those of any live variant, hold any one listed, among others or alone, by array overlap
+  in SQL (MB.157, MB.215). On `workspaceIngredients` too. The admin's two to-do lists, which M5.5
   puts on `/admin/compendium`: `withoutReferences: true` (MB.153), only the
   entries citing no live compendium reference, so an entry whose one link is
   unlinked, or cites a soft-deleted reference, is on it, as its bibliography

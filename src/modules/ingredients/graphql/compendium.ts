@@ -41,7 +41,8 @@ export const facetArgs = builder.args((t) => ({
   elements: t.field({
     type: [IngredientElementEnum],
     required: false,
-    description: 'Keeps entries whose elements include any one of these, alone or among others.',
+    description:
+      'Keeps entries whose elements, or those of any of their live forms, include any one of these, alone or among others.',
   }),
   toxic: t.field({
     type: ToxicFilterEnum,

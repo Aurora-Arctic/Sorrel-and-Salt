@@ -654,9 +654,10 @@ export interface IngredientFilter {
   /** Any of these signs, read from the entry's `zodiacSigns` as `celestialBodies` reads its list. */
   zodiacSigns?: readonly string[];
   /**
-   * Any of these elements: an entry matches when its own `elements` list
-   * holds one of them, alone or among others (M8.13, MB.157). The entry's
-   * list, not its variants'. An empty list is no filter.
+   * Any of these elements: an entry matches when its own `elements` list, or
+   * a live variant's, holds one of them, alone or among others (M8.13, MB.157,
+   * MB.215). A soft-deleted variant's list counts for nothing. An empty list
+   * is no filter.
    */
   elements?: readonly IngredientElement[];
   /**

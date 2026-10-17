@@ -127,7 +127,7 @@ and Back steps through the filters one change at a time. The e2e spec in
 
 The `elements` filter is the first list filter: an `elements` argument on
 `compendium` and `workspaceIngredients` matching an entry that holds any element
-listed, by array overlap in SQL and ANDed with the other filters. It is read
+listed on the entry or on any of its live forms, by array overlap in SQL and ANDed with the other filters. It is read
 from the address and has no control yet; the facet screen (M12.4) draws one.
 
 ## Styling

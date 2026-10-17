@@ -225,6 +225,25 @@ describe('listCompendium, under the facets', () => {
     await expect(names({ elements: ['fixture'] as never })).rejects.toThrow();
   });
 
+  // M8.13, MB.215: a form's element counts for its entry, a retired form's does not.
+  it('lists an entry holding the element only on a live form', async () => {
+    await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Fixture Formfire',
+        nomenclature: 'none',
+        variants: [makeVariant({ form: 'Fixture Oil', elements: ['air'] })],
+      }),
+      A.id,
+    );
+    expect(await names({ elements: ['air'] })).toEqual(['Fixture Formfire']);
+    expect(await names({ elements: ['air', 'water'] })).toEqual([
+      'Fixture Both',
+      'Fixture Formfire',
+      'Fixture Oiled',
+    ]);
+  });
+
   it('narrows to the entries matching every kind chosen together', async () => {
     expect(await names({ forms: ['Fixture Oil'], zodiacSigns: ['Fixture Ram'] })).toEqual([
       'Fixture Both',

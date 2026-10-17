@@ -704,14 +704,26 @@ function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL 
 }
 
 /**
- * The entry's `elements` list holds any of `elements` (M8.13): an array
- * overlap, answered from the one column, so an entry is one row however many
- * of them it holds. Elements are a closed set, so there is nothing to fold.
- * Empty means no filter.
+ * The entry's own `elements` list, or a live variant's, holds any of
+ * `elements` (M8.13, MB.215): an array overlap on each side, the variant's a
+ * correlated `EXISTS` that skips a soft-deleted form, so an entry is one row
+ * however many of them it holds and a retired form's element counts for
+ * nothing. The toxic filter's reading. Elements are a closed set, so there is
+ * nothing to fold. Empty means no filter.
  */
 function elementArm(elements: readonly IngredientElement[] | undefined): SQL | undefined {
   if (!elements?.length) return undefined;
-  return arrayOverlaps(ingredients.elements, [...elements]);
+  const wanted = [...elements];
+  return or(
+    arrayOverlaps(ingredients.elements, wanted),
+    existsIn(
+      ingredientVariants,
+      and(
+        eq(ingredientVariants.ingredientId, ingredients.id),
+        arrayOverlaps(ingredientVariants.elements, wanted),
+      ),
+    ),
+  );
 }
 
 /**

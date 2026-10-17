@@ -772,7 +772,7 @@ type Query {
     deityIds: [ID!]
 
     """
-    Keeps entries whose elements include any one of these, alone or among others.
+    Keeps entries whose elements, or those of any of their live forms, include any one of these, alone or among others.
     """
     elements: [IngredientElement!]
     first: Int
@@ -857,7 +857,7 @@ type Query {
     deityIds: [ID!]
 
     """
-    Keeps entries whose elements include any one of these, alone or among others.
+    Keeps entries whose elements, or those of any of their live forms, include any one of these, alone or among others.
     """
     elements: [IngredientElement!]
     first: Int
