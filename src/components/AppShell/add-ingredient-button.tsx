@@ -26,8 +26,17 @@ const CLASSES = 'btn app-shell__add';
  * with the form when the modal closes, so the button announces the save.
  */
 function savedMessage(saved: SavedIngredient): string {
-  // M8.16 Lane B: jars
-  return `Saved ${saved.name}`;
+  const jars = (saved.stock ?? []).map(
+    ({ variant, quantityOnHand, unit }) =>
+      `the jar of ${variant.form} holding ${
+        quantityOnHand === null ? 'an unmeasured amount' : `${quantityOnHand} ${unit ?? ''}`.trim()
+      }`,
+  );
+  if (jars.length === 0) return `Saved ${saved.name}`;
+  // Plain joining: the compiler’s library has no Intl.ListFormat.
+  const list =
+    jars.length > 1 ? `${jars.slice(0, -1).join(', ')} and ${jars[jars.length - 1]}` : jars[0];
+  return `Saved ${saved.name}, with ${list}`;
 }
 
 /** The Coven choice, native so a view-only coven is a disabled option. */

@@ -12,11 +12,32 @@ vi.mock('@/components/IngredientForm', () => ({
     onSaved,
   }: {
     workspaceId: string | null;
-    onSaved: (saved: { name: string; slug: string }, next: 'open' | 'another') => void;
+    onSaved: (
+      saved: { name: string; slug: string; stock?: unknown[] },
+      next: 'open' | 'another',
+    ) => void;
   }) => (
     <form aria-label="Ingredient Form" data-workspace={workspaceId}>
       <button type="button" onClick={() => onSaved({ name: 'Testwort', slug: 'testwort' }, 'open')}>
         Save Ingredient
+      </button>
+      <button
+        type="button"
+        onClick={() =>
+          onSaved(
+            {
+              name: 'Testwort',
+              slug: 'testwort',
+              stock: [
+                { quantityOnHand: 5, unit: 'g', variant: { form: 'Dried' } },
+                { quantityOnHand: null, unit: null, variant: { form: 'Fresh' } },
+              ],
+            },
+            'open',
+          )
+        }
+      >
+        Save With Jars
       </button>
       <button
         type="button"
@@ -157,6 +178,16 @@ describe('AddIngredientButton', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
+  it('names the jars that came with the new entry in its status', async () => {
+    draw(MEMBER, [FIXTURE]);
+    open();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save With Jars' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(screen.getByRole('status')).toHaveTextContent(/Dried.*Fresh/);
   });
 
   it('keeps the dialog open after Save & Add Another', () => {
