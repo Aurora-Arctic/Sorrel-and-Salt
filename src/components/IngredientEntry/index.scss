@@ -289,6 +289,12 @@ $side-column: calc(#{space(8)} * 5);
   scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
 }
 
+// Bibliography entries run to two or three lines, so they stand a clear step
+// apart where the page's short lists (folk names, substitutes) sit close.
+.ingredient-entry__references .ingredient-entry__list {
+  gap: space(3);
+}
+
 // The notes keep their numbers (the list reset would drop them). A long
 // citation wraps under its text, not under the number.
 .ingredient-entry__notes {
