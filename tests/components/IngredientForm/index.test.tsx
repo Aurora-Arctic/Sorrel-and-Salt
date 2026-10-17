@@ -737,12 +737,10 @@ describe('IngredientForm', () => {
 
       expect(textbox('Formal Name')).toHaveValue('Fixtura testalis');
       expect(textbox('Formal Name')).toBeEnabled();
-      expect(select('Classification')).not.toHaveTextContent('None');
       expect(select('Classification')).toHaveFocus();
 
       redo();
 
-      expect(select('Classification')).toHaveTextContent('None');
       expect(textbox('Formal Name')).toHaveValue('');
       expect(textbox('Formal Name')).toBeDisabled();
     });

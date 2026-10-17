@@ -658,6 +658,14 @@ export interface VariantFolds {
   reconcile: (from: readonly RestoredVariant[], to: readonly RestoredVariant[]) => void;
 }
 
+/** What a restore (M12.10) has to open to show the fields it changed. */
+export interface RestoredSections {
+  /** The ingredient's own sections, Variants among them when a variant changed. */
+  sections: Set<SectionKey>;
+  /** Each changed variant, by its place, and the sections of it that hold a change. */
+  variants: Map<number, Set<VariantSectionKey>>;
+}
+
 /** What a restore needs to tell one variant from another. */
 export interface RestoredVariant {
   variantId?: string;

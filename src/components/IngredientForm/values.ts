@@ -24,6 +24,7 @@ import type {
   NounedField,
   ReferenceLink,
   ReferenceListEntry,
+  RestoredSections,
   SectionKey,
   SubstituteForm,
   SubstituteLink,
@@ -802,14 +803,6 @@ export function variantsWithErrors(
     if (Number.isInteger(index) && sections.size > 0) found.set(index, sections);
   }
   return found;
-}
-
-/** What a restore (M12.10) has to open to show the fields it changed. */
-export interface RestoredSections {
-  /** The ingredient's own sections, Variants among them when a variant changed. */
-  sections: Set<SectionKey>;
-  /** Each changed variant, by its place, and the sections of it that hold a change. */
-  variants: Map<number, Set<VariantSectionKey>>;
 }
 
 /**
