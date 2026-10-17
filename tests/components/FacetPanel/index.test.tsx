@@ -94,13 +94,23 @@ describe('FacetPanel', () => {
     vi.restoreAllMocks();
   });
 
-  it('counts the facets with a chosen value on the Filters button, Toxic included', () => {
+  it('counts every chosen value on the Filters button, Toxic included and Match not', () => {
     stubViewport(true);
     const { rerender } = render(<FacetPanel {...props()} />);
     expect(filtersButton()).toHaveAccessibleName('Filters');
 
-    rerender(<FacetPanel {...props({ forms: ['test-oil', 'test-leaf'], toxic: 'toxic' })} />);
-    expect(filtersButton()).toHaveAccessibleName('Filters (2)');
+    rerender(
+      <FacetPanel
+        {...props({
+          forms: ['test-oil', 'test-leaf'],
+          categories: ['warding', 'mending'],
+          categoryMode: 'any',
+          toxic: 'toxic',
+        })}
+      />,
+    );
+    // Two forms, two categories and a Toxic setting; the Match mode adds none.
+    expect(filtersButton()).toHaveAccessibleName('Filters (5)');
   });
 
   it('offers Clear All beside the button only while something is chosen', () => {

@@ -105,6 +105,8 @@ export default function FacetPanel({
   const modal = useRef(false);
   const slide = useSlide('facet-panel__clip');
 
+  // Every chosen value counts, so two categories and two forms read 4. Match is a mode
+  // of the categories, not a filter, and counts nothing.
   const chosen = [
     filter.categories,
     filter.forms,
@@ -112,7 +114,7 @@ export default function FacetPanel({
     filter.zodiac,
     filter.planets,
     filter.elements,
-  ].filter((list) => list.length > 0).length;
+  ].reduce((total, list) => total + list.length, 0);
   const count =
     chosen + (filter.toxic === '' ? 0 : 1) + (admin && filter.withoutReferences ? 1 : 0);
 

@@ -30,10 +30,10 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
 
 ## Contracts
 
-- **Count.** `n` is the number of facets holding a value (categories, forms, deities,
-  zodiac, planets, elements), plus one for a Toxic choice and one for No Refs when on.
-  This follows the signed-off prototype's `filterCount`: the number of facets in use, a facet
-  with several values counting once.
+- **Count.** `n` is the number of chosen values: every category, form, deity, zodiac
+  sign, planet and element counts one, plus one for a Toxic setting other than Any and
+  one for No Refs when on. Two categories and two forms read 4. Match counts nothing:
+  it is a mode of the categories, not a filter (owner, 2026-10-17).
 - **Two ways to open.** The width is read when the button is pressed, against the
   shell's tablet width (`56rem`, the same as `$shell-tablet-width`). At that width and
   up it opens with `show()`: over the results, no scrim, the page still usable, sliding

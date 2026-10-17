@@ -316,7 +316,7 @@ describe('CompendiumList filter', () => {
     }));
   beforeEach(() => answerCounts(0));
 
-  it('counts the facets in use on the Filters button, not the name typed', () => {
+  it('counts the chosen values on the Filters button, not the name typed', () => {
     const { rerender } = render(
       <CompendiumList {...props({ filter: { ...NO_FILTER, query: 'x' } })} />,
     );
@@ -333,7 +333,7 @@ describe('CompendiumList filter', () => {
         })}
       />,
     );
-    expect(screen.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters (2)');
+    expect(screen.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters (3)');
   });
 
   it('offers Clear All, a link to the unfiltered list, only while a facet is in use', () => {
