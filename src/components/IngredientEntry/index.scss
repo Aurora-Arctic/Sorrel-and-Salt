@@ -222,10 +222,13 @@ $side-column: calc(#{space(8)} * 5);
   }
 }
 
+// A block's heading: an h3 under Details, an h4 under a form; either
+// way the stack's gap is the space to its list, not the heading's own.
 .ingredient-entry__block {
   @include stack(2);
 
-  > h3 {
+  > h3,
+  > h4 {
     margin: 0;
   }
 }
