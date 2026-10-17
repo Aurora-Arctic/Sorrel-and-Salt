@@ -10,6 +10,9 @@ import type { Route } from 'next';
 // one new entry and none of those change. Before this, each of them listed
 // the parameters by hand and a filter was added in five places.
 
+/** Slug to id, per lookup name: what a page reads once to turn the address's slugs into ids. */
+export type SearchLookups = Readonly<Record<string, ReadonlyMap<string, string>>>;
+
 type Raw = string | string[] | undefined;
 type Written = string | readonly string[] | boolean | undefined;
 
@@ -26,8 +29,12 @@ export interface SearchParam<Value> {
   read(raw: Raw): Value;
   /** The value as `listHref` writes it; a blank one is left out of the address. */
   write(value: Value): Written;
-  /** The value as the variable's value; `undefined` for no filter. */
-  toVariable(value: Value): unknown;
+  /**
+   * The value as the variable's value; `undefined` for no filter. `lookups`
+   * are what the page read to translate with, such as a slug's id; an entry
+   * that needs none ignores them.
+   */
+  toVariable(value: Value, lookups?: SearchLookups): unknown;
 }
 
 export function searchParam<Value>(entry: SearchParam<Value>): SearchParam<Value> {
@@ -69,6 +76,30 @@ export const listParam = <T extends string>(
   toVariable: (value) => (value.length > 0 ? value : undefined),
 });
 
+/**
+ * Any number of slugs, written as repeated parameters, `?categories=a&categories=b`,
+ * each trimmed and a repeat dropped; empty is no filter. The variable is the
+ * ids of the slugs the page's lookup `lookupKey` holds: a slug it does not
+ * hold, such as one a rename has since changed, is dropped and the rest still
+ * filter, as `listParam` drops a hand-edited value. Why slugs: the address
+ * is read and shared, and a slug survives where an id would mean nothing
+ * to the reader.
+ */
+export const slugListParam = (
+  name: string,
+  variable: string,
+  lookupKey: string,
+): SearchParam<string[]> => ({
+  name,
+  variable,
+  read: (raw) => [...new Set(list(raw))],
+  write: (value) => value,
+  toVariable: (value, lookups) => {
+    const ids = value.flatMap((slug) => lookups?.[lookupKey]?.get(slug) ?? []);
+    return ids.length > 0 ? ids : undefined;
+  },
+});
+
 type Entries = Record<string, SearchParam<unknown>>;
 
 /** The filter a table reads: one field per entry, of that entry's value. */
@@ -107,10 +138,13 @@ export function defineSearchParams<E extends Entries>(entries: E) {
       return listHref(path, { ...written, ...extra });
     },
 
-    /** The variables for a query: a blank is `undefined`, so it is left out. */
-    variables(filter: SearchFilter<E>): Record<string, unknown> {
+    /**
+     * The variables for a query: a blank is `undefined`, so it is left out.
+     * `lookups` go to every entry; only a slug entry reads them.
+     */
+    variables(filter: SearchFilter<E>, lookups?: SearchLookups): Record<string, unknown> {
       return Object.fromEntries(
-        keys.map((key) => [entry(key).variable, entry(key).toVariable(filter[key])]),
+        keys.map((key) => [entry(key).variable, entry(key).toVariable(filter[key], lookups)]),
       );
     },
 
