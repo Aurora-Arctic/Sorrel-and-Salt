@@ -82,8 +82,8 @@ edition of the _Chicago Manual of Style_ (2024, 14.130) no longer recommends
 the Latin "s.v." the 17th used and allows "under" for clarity; the project
 always writes it, in the locator and in an `entry`'s citation alike, so the
 two never differ. The renderer leaves the locator out of the citation, since
-a bibliography entry names the work, and the page shows it beside the
-citation.
+a bibliography entry names the work, and the page shows it in the note that
+cites the work (MB.155).
 
 **The tier rule is the service's.** A compendium entry's or a vocabulary
 row's link names a compendium reference; a coven ingredient's names the
