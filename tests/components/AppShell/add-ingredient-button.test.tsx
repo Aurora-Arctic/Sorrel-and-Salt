@@ -135,7 +135,9 @@ describe('AddIngredientButton', () => {
 
       fireEvent.click(items[1]!);
       expect(screen.queryByRole('menu')).toBeNull();
-      expect(screen.getByRole('dialog', { name: /Fixture Coven/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole('dialog', { name: 'Add Ingredient to Fixture Coven' }),
+      ).toBeInTheDocument();
       expect(target()).toBe('id-fixture-coven');
       expect(push).not.toHaveBeenCalled();
     });

@@ -365,8 +365,11 @@ admin layout’s route-modal provider sits below the shell, so the button cannot
 open that dialog itself, and the page draws it for a direct request); choosing
 a coven opens the modal.
 
-The modal’s head is the coven’s name as the eyebrow over the title “Add
-Ingredient”, so the person always sees where the ingredient goes. The
+The modal’s title is the whole phrase, “Add Ingredient to Whitethorn Coven”,
+so the person always sees where the ingredient goes, and a screen reader
+hears the same words as the dialog’s name. It is one title rather than an
+eyebrow over “Add Ingredient”: an eyebrow comes first in the name (“Whitethorn
+Coven, Add Ingredient”), and a qualifier is joined to the title by a comma. The
 destination is fixed once the dialog opens: there is no Coven select. With
 nowhere to write the control is not drawn. After Save Ingredient the modal
 closes and the control leaves a status beside it, since the form’s own Saved

@@ -122,12 +122,11 @@ const SECOND = 'Fixture Second Coven Story 28';
 const VIEWED = 'Fixture Viewed Coven Story 28';
 
 /**
- * An add dialog's accessible name when its eyebrow is `coven`: the eyebrow
- * and the title, in that order (Modal's `aria-labelledby`). Matched on the
- * coven's name alone, which is data, not on the title's words.
+ * An add dialog's accessible name for `coven`: the whole phrase, "Add
+ * Ingredient to <coven>". The coven's name is data, so it is escaped.
  */
 function namesCoven(coven: string): RegExp {
-  return new RegExp(`^${coven.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?!\\w)`);
+  return new RegExp(`^Add Ingredient to ${coven.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
 }
 
 test(
