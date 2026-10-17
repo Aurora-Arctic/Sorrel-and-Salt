@@ -339,14 +339,18 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   a box behind the form's back. Calling it every time keeps the form's list
   the only one in play; with nothing to do, the live region says so.
 - **Focus follows the undo.** After a step is applied the hook calls
-  `onRestored(names)` first, so a form can open whatever holds those fields,
-  then focuses the first field changed. A list field has no single control, so
+  `onRestored(names, diffs, direction)` first, so a form can open whatever
+  holds those fields (`diffs` carries each field's `before` and `after`;
+  `direction` is `'undo'` or `'redo'`). If it returns a field name, that field
+  takes the focus; otherwise the first field changed does. A list field has no single control, so
   focus goes to the first control in its fieldset, else the fieldset. If
   nothing can take it, the Undo button does, never the page.
 - **The live region** is an `<output>` named "Edit History", in
   `FormHistoryButtons`. It says "Undid change to Name", "Redid change to Light
   Theme Colour" or "Nothing to undo". The field's name is read from the page at
   undo time: its label, else its `aria-label`, else the legend of its fieldset.
+- **`skip(name)` keeps a name out of the history**, for state that is not an
+  edit, such as the ingredient form's note that its reference panel is open.
 - **A `reset` clears the history.** The hook sees the form's defaults change
   and starts over. A form that makes its saved values the new start another
   way calls `history.clear()`. `enabled: false` makes the chords, the buttons
@@ -365,7 +369,8 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   `src/scss/_primitives.scss`.
 
 Wired in [`GroupedValueForm`](grouped-value-form.md) and
-[`GroupForm`](group-form.md); the ingredient form follows in M12.10.
+[`GroupForm`](group-form.md), and in
+[`IngredientForm`](ingredient-form.md#undo-and-redo) (M12.10).
 `tests/components/Field/` covers the reducer, the hook (on a probe form in
 `tests/support/form-history.tsx`) and the buttons.
 

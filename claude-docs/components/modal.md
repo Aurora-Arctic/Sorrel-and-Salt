@@ -310,7 +310,7 @@ under the heading, at its start, and empty it takes no line. The
 modal hands that place down as an element (`HeaderSlotContext`), and its
 contents may portal one control of their own into it through
 `useModalHeaderSlot()`: the ingredient form's Open All / Close All, the
-owner's call at MB.115, and a form's Undo and Redo buttons (`FormHistoryButtons`, M12.9). A slot, as the guard is, since the form sits inside
+owner's call at MB.115, and a form's Undo and Redo buttons (`FormHistoryButtons`, M12.9). The context is exported from the barrel too, so a panel inside the form can set it to `null` and keep its own undo buttons out of the header (M12.10). A slot, as the guard is, since the form sits inside
 the modal's render prop, out of its owner's reach. Outside a modal the hook
 answers null and the form keeps the control in its own flow. The place sat
 between the title and the × until the owner moved it, at MB.115: there it

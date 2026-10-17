@@ -1166,6 +1166,66 @@ finds Name in the page, as the error focus does: `setFocus` reads a ref the
 reset has just dropped. An edit's save is
 ["On the compendium"](#on-the-compendium)'s.
 
+## Undo and redo
+
+The form has an undo and a redo (M12.10), the same `useFormHistory` that
+[`field.md`](field.md#undo-and-redo) describes. It is wired on the form's own
+`<form>` ref and switched off, as the chords and buttons are, while a question
+is asked over the form (the discard guard, a delete, or the form's own
+`question`). Undo and Redo sit in the modal's header beside Open All, in that
+order: `FormHistoryButtons` is drawn just after the Open All portal.
+
+**Two resets clear the history.** A step that leads back past a save would
+undo what the server now holds. After Save & Add Another's `reset(EMPTY_VALUES)`
+the form calls `history.clear()`, and so it does after an edit's save, where
+the form resets to its own values (`reset(getValues())`) so the saved values
+become the new start. The first undo after either has nothing to undo.
+
+**A restore opens what holds the field it wrote.** Undo can change a field
+that sits in a closed section, so `onRestored` turns the changed paths into
+sections with `sectionsRestored(names)` in `values.ts`, the way
+`sectionsWithErrors` does for an error: a box's draft counts as its list
+(`drafts.colors` is Colours), and a path under `variants.N` opens Variants and
+then that variant's own section. The ingredient's sections open through the
+form's `open` set. A variant's open state lives in `useVariantFolds`
+(`variants.tsx`), which also holds the open card, so the form can reach it:
+`reveal(index, sections)` opens the card at that place and those sections of
+it.
+
+**A restored variants list is reconciled with the folds.** Adding, removing or
+reordering a variant changes the list, and the folds are held by place, so a
+restore would leave each fold on the wrong card. `reconcile(from, to)` matches
+each row of the list being restored to a row of the list as it stood, by
+`variantId`, else by its form text folded, and carries that row's open
+sections across. A row that is not matched is one returning from a removal: it
+opens fully and becomes the open card. If nothing returns, the open card stays
+on the same variant, or none if that variant is gone. The step's `before` and
+`after` are swapped on a redo so `from` is always the list as it stood.
+
+**Focus after a classification pick.** Picking a classification can empty the
+formal name in the same step, so the first changed field is not the one the
+user acted on. `onRestored` returns `'nomenclature'` when it is among the
+changed names, and the hook focuses Classification.
+
+**The reference panel has a history of its own.** The panel is a second form
+inside this one, so the two must not share a list:
+
+- The outer hook's `skip: isPanelState` keeps the `referencePanelOpen` paths
+  (the form's note that a panel is open, which would otherwise be a step) out
+  of its history.
+- The outer `ignore` is `inReferencePanel`, a target inside
+  `.ingredient-form__panel`. The panel's own listener runs first and calls
+  `preventDefault`, and the outer one stands aside for a key already handled;
+  `ignore` is the backstop for the moment the panel's loading shell is up and
+  has no listener yet.
+- `PanelForm` (`reference-panel.tsx`) runs its own `useFormHistory`,
+  provider and `FormHistoryButtons`, in `PanelHead` beside Close. They sit
+  under a `HeaderSlotContext` set to `null`, so they draw there and never
+  portal into the modal's header, which is the ingredient's.
+
+So Ctrl+Z inside the open panel undoes a panel edit and leaves the ingredient's
+Undo exactly as it was. `Modal` exports `HeaderSlotContext` for this.
+
 ## On the compendium
 
 With a null `workspaceId` the form writes a compendium entry (M5.5), the
