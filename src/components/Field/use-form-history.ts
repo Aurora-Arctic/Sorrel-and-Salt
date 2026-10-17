@@ -393,6 +393,10 @@ export function useFormHistory<V extends FieldValues>(
     }
     const onFocusIn = (event: FocusEvent) => {
       const target = event.target as HTMLElement;
+      // Focus on an element around the form — the dialog itself, after a click
+      // on its blank space — is focus on nothing in particular, and keeps the
+      // claim; focus on anything else outside gives it up.
+      if (target.contains(element) && !owns(target)) return;
       held.current = owns(target) && !ignore?.(target);
     };
     const onKeyDown = (event: KeyboardEvent) => {

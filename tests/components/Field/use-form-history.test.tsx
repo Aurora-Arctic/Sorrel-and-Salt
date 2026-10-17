@@ -9,7 +9,10 @@ import { HistoryProbe, type ProbeHandles } from '../../support/form-history';
 // Undo and redo for a react-hook-form form (M12.9): what a chord, a pause and
 // a reset do to the history, and where the focus goes after a restore.
 
-function mount(props: Parameters<typeof HistoryProbe>[0] = {}) {
+function mount(
+  props: Parameters<typeof HistoryProbe>[0] = {},
+  options: Parameters<typeof render>[1] = {},
+) {
   const handles: { current: ProbeHandles | null } = { current: null };
   const view = render(
     <HistoryProbe
@@ -18,6 +21,7 @@ function mount(props: Parameters<typeof HistoryProbe>[0] = {}) {
         handles.current = next;
       }}
     />,
+    options,
   );
   const values = () => handles.current!.methods.getValues();
   return { ...view, handles, values };
@@ -477,6 +481,24 @@ describe('where chords are heard', () => {
     undo({ meta: true });
 
     expect(values().title).toBe('Fixture');
+  });
+
+  it('keeps undoing after focus lands on the dialog around the form', () => {
+    // A native modal dialog takes the focus itself after a click on its blank
+    // space; an element around the form is nobody else's.
+    const dialog = document.createElement('div');
+    dialog.tabIndex = -1;
+    document.body.append(dialog);
+    const { values } = mount({}, { container: dialog });
+    focusIn('Title');
+    type('Title', 'Changed');
+    act(() => dialog.focus());
+    expect(document.activeElement).toBe(dialog);
+
+    undo({ meta: true });
+
+    expect(values().title).toBe('Fixture');
+    dialog.remove();
   });
 
   it('does nothing on the page after another element outside the form held focus', () => {
