@@ -689,7 +689,9 @@ function TypedSentence({
   const caret = searching ? <span className="facet-layout__caret" /> : null;
   const firstLine = (
     <>
-      {line.lead}
+      {/* The term brings its own leading space, so a lead typed or backspaced through a
+          trailing space ("12 ") is trimmed while a term follows: one space, never two. */}
+      {line.term ? line.lead.trimEnd() : line.lead}
       {line.caret === 'lead' && caret}
       {termNode(line.term)}
       {line.caret === 'term' && caret}

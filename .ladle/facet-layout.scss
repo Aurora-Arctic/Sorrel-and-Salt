@@ -260,7 +260,9 @@
 
   @media (min-width: $shell-tablet-width) {
     flex-direction: row;
-    align-items: flex-end;
+    // The top, so that when one control wraps to two lines (many chips) its neighbours stay
+    // level with its label instead of dropping to its bottom edge.
+    align-items: flex-start;
 
     > .facet-layout__grow {
       flex: 1 1 0;
@@ -322,15 +324,6 @@
     flex: 1;
     border: 0;
     border-radius: 0;
-  }
-}
-
-// The primitive centres a switch; in the panel No Refs sits at the left like the fields above it.
-.facet-layout__line .field.switch {
-  align-items: flex-start;
-
-  .field__label {
-    text-align: start;
   }
 }
 
@@ -421,7 +414,10 @@
   display: inline-block;
   width: 2px;
   height: 1em;
-  margin-inline: 1px;
+  // Drawn over the edge between two characters and taking no room, so the text beside it
+  // never shifts as the caret comes and goes (a gap that closes at the end of a settle
+  // reads as a double space).
+  margin-inline: -1px;
   vertical-align: text-bottom;
   background-color: currentcolor;
   animation: facet-layout-caret 1s steps(1) infinite;
