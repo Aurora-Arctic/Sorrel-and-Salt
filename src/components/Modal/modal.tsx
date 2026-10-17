@@ -74,8 +74,11 @@ const Modal = ({
       // development React unmounts and remounts, and closing the dialog blurs
       // a field already focused, which a form reads as touched, so its
       // required error showed on a direct load (a blur cannot be undone).
+      // Contents that put the focus somewhere in the body themselves meanwhile,
+      // as a confirmation puts it on its action, keep it there.
       queueMicrotask(() => {
-        if (!cancelled) (firstShownField(body.current ?? dialog) ?? dialog).focus();
+        if (cancelled || body.current?.contains(document.activeElement)) return;
+        (firstShownField(body.current ?? dialog) ?? dialog).focus();
       });
     }
     return () => {
