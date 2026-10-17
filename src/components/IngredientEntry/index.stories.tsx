@@ -5,6 +5,7 @@ import IngredientEntry from '.';
 import type { IngredientEntryProps } from './types';
 import type {
   CategoryDetail,
+  CitedReference,
   IngredientDetail,
   IngredientRow,
   IngredientVariantRow,
@@ -78,7 +79,42 @@ function variant(
     icon: null,
     categories: [],
     substitutes: [],
+    references: [],
     ...extra,
+  };
+}
+
+function cited(
+  title: string,
+  locator: string | null = null,
+  url: string | null = null,
+): CitedReference {
+  return {
+    reference: {
+      id: nextId(),
+      workspaceId: null,
+      kind: url ? 'web_page' : 'book',
+      title,
+      authors: 'Fixture, Ada',
+      container: url ? 'Fixture Herbal Online' : null,
+      contributors: null,
+      edition: null,
+      volume: null,
+      issue: null,
+      series: null,
+      place: null,
+      publisher: null,
+      published: '1988',
+      pages: null,
+      host: null,
+      url,
+      modified: null,
+      accessed: url ? '2026-01-01' : null,
+      note: null,
+      seedKey: null,
+      ...STAMPS,
+    },
+    locator,
   };
 }
 
@@ -125,6 +161,10 @@ const FULL: IngredientDetail = {
     { name: 'Fixture Mockroot', ingredient: MOCKROOT, form: 'oil' },
     { name: 'a pinch of grey ash', ingredient: null, form: null },
   ],
+  references: [
+    cited('A Herbal of Fixture Covens', 'p. 112'),
+    cited('Testwort in the Dry Bank', null, 'https://fixtures.example/testwort'),
+  ],
   variants: [
     variant(
       'oil',
@@ -134,7 +174,11 @@ const FULL: IngredientDetail = {
         toxic: true,
         colors: ['Gold'],
       },
-      { icon: 'fluid', categories: [DREAMS] },
+      {
+        icon: 'fluid',
+        categories: [DREAMS],
+        references: [cited('The Oils of Fixtura', 'ch. 3')],
+      },
     ),
     // Typed rather than curated, so it has no group's icon and draws the spoon.
     variant('smoke bundle', { description: 'Stems bound with fixture thread.' }),
@@ -213,6 +257,7 @@ export const NothingRecorded: Story = () => (
       categories: [],
       deities: [],
       substitutes: [],
+      references: [],
       variants: [variant('chip')],
     }}
   />

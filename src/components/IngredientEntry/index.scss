@@ -33,8 +33,8 @@ $side-column: calc(#{space(8)} * 5);
 // on a smaller desktop the menu gives way first rather than holding its
 // width while the text alone narrows (the owner's call, M8.19); it never
 // goes narrower than its longest label. The children are the head,
-// the menu, Details and the forms; the menu spans the last two rows, so it
-// sticks for the length of the page.
+// the menu, Details, the forms and References; the menu spans the last
+// three rows, so it sticks for the length of the page.
 @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
   .ingredient-entry--with-nav {
     display: grid;
@@ -51,7 +51,7 @@ $side-column: calc(#{space(8)} * 5);
       position: sticky;
       top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
       grid-column: 1;
-      grid-row: 2 / span 2;
+      grid-row: 2 / span 3;
       align-self: start;
     }
   }
@@ -255,6 +255,76 @@ $side-column: calc(#{space(8)} * 5);
   }
 }
 
+// The note numbers ending a section's text: a superscript link each. The
+// number a jump lands on, or its note, is marked by `:target`, in the quiet
+// fill, so a reader sees where the jump arrived (and, with the back link,
+// where to return to).
+.ingredient-entry__marks {
+  @include stack(1);
+
+  p {
+    margin: 0;
+  }
+
+  // Spacing alone sets the numbers apart, each its own link to hit.
+  sup a {
+    padding-inline: space(1);
+  }
+}
+
+// The References section, at the foot of the page: its notes numbered, its
+// bibliography beneath. It takes the same clearance under the top inset as a
+// section does when a jump lands on it.
+.ingredient-entry__references {
+  @include stack(4);
+
+  scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+
+  > h2 {
+    margin: 0;
+  }
+}
+
+.app-shell .ingredient-entry__references {
+  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+}
+
+// Bibliography entries run to two or three lines, so they stand a clear step
+// apart where the page's short lists (folk names, substitutes) sit close.
+.ingredient-entry__references .ingredient-entry__list {
+  gap: space(4);
+}
+
+// The notes keep their numbers (the list reset would drop them). A long
+// citation wraps under its text, not under the number.
+.ingredient-entry__notes {
+  @include stack(2);
+
+  margin: 0;
+  padding-inline-start: space(6);
+
+  > li {
+    max-width: $measure;
+  }
+}
+
+.ingredient-entry__back {
+  white-space: nowrap;
+}
+
+.ingredient-entry__marks a:target,
+.ingredient-entry__note:target,
+.ingredient-entry__reference:target {
+  background-color: $fill-quiet;
+}
+
+// A jump to a note or an entry lands clear of the top inset, as a section does.
+.ingredient-entry__marks a,
+.ingredient-entry__note,
+.ingredient-entry__reference {
+  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(8)});
+}
+
 .ingredient-entry__chips {
   flex-flow: row wrap;
   gap: space(2);
@@ -267,6 +337,61 @@ $side-column: calc(#{space(8)} * 5);
   color: $text-muted;
 }
 
+// A short hairline midway in the side column's gap (`stack(6)`) between the
+// link and the Correspondences heading under it, at the column's start edge.
 .ingredient-entry__canonical {
+  position: relative;
   margin: 0;
+
+  &::after {
+    @include short-hairline;
+    inset-block-end: calc(#{space(6)} / -2);
+    inset-inline-start: 0;
+  }
+
+  a {
+    @include icon-link;
+  }
+}
+
+// Every link in the References section (a note's way on to its entry, an
+// entry's source and its ways back, a note's way back) and the note numbers
+// ending each section rest in the body ink, and pointed at or focused fade to
+// the darker link colour, `$accent-hover` (the owner's call; `$accent` is 3.96:1
+// on the `:target` highlight, `$accent-hover` is above 6:1), as the admin
+// compendium's name links do. The underline stays, since it is what marks
+// them as links without the colour, but faded: 55% of the link's own colour at
+// rest and 65% pointed at or focused, so it follows the colour to a faded green.
+// Those are the lowest mixes that hold 3:1 against the page and the `:target`
+// fill in both themes. No token holds a faded underline, so it is a `color-mix`,
+// as `$fill-quiet` is.
+.ingredient-entry__marks a,
+.ingredient-entry__references a {
+  color: $text-primary;
+  text-decoration-color: color-mix(in srgb, currentcolor 55%, transparent);
+  @include theme-transition(color);
+
+  &:hover,
+  &:focus-visible {
+    color: $accent-hover;
+    text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:where(:visited) {
+    color: $text-primary;
+  }
+
+  &:hover:where(:visited),
+  &:focus-visible:where(:visited) {
+    color: $accent-hover;
+    text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
 }

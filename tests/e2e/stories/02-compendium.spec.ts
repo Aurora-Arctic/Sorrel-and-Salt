@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
-import { signInAgainAs } from '../session';
+import { signInAgainAs, signInAs } from '../session';
 import {
   compendiumList,
   compendiumVariant,
@@ -19,6 +19,14 @@ import {
   withSql,
 } from './coven-ingredients';
 import { openAddIngredient } from './ingredient-dialogs';
+import { insertIngredient } from '../../support/db/insert-ingredient';
+import {
+  insertReference,
+  insertReferenceLink,
+  insertVariantReferenceLink,
+} from '../../support/db/insert-reference';
+import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
+import { slugify } from '@/lib/slugify';
 
 // Stories 14, 15 and 16: the compendium as anyone browses it, an entry added
 // from it to a coven, a coven's own ingredient, and the warning that a new
@@ -528,6 +536,119 @@ test.fixme(
       expect(created).toEqual([
         { id: expect.any(String), name: "Cat's Claw", canonical_name: 'Fixtura felina' },
       ]);
+    });
+  },
+);
+
+test(
+  'a reader sees where an entry’s information came from, and an entry with no sources says so',
+  { tag: '@story-64' },
+  async ({ page, browser, baseURL }) => {
+    // The rows are written by a user made on a page of its own; the reader is
+    // the signed-out `page`.
+    const maker = await browser.newPage({ baseURL });
+    const author = await (async () => {
+      try {
+        return (await signInAs(maker, 'author@story-64.test', ['discord'], 'admin')).userId;
+      } finally {
+        await maker.close();
+      }
+    })();
+    const cited = 'Fixture Bramble Sourced';
+    const bare = 'Fixture Bramble Unsourced';
+    const form = 'Fixture Oil';
+    await withSql(async (sql) => {
+      const id = await insertIngredient(
+        sql,
+        makeIngredient({
+          name: cited,
+          nomenclature: 'none',
+          variants: [makeVariant({ form })],
+        }),
+        author,
+      );
+      const [variant] = await sql<{ id: string }[]>`
+        select id from ingredient_variants where ingredient_id = ${id}`;
+      // Written out of order, so the page's order is the loader's and not insertion.
+      const zeta = await insertReference(sql, { title: 'Zeta Fixtures' }, author);
+      const alpha = await insertReference(
+        sql,
+        {
+          kind: 'web_page',
+          title: 'Alpha Fixtures',
+          container: 'Fixture Site',
+          url: 'https://fixtures.example/alpha',
+          accessed: '2026-01-01',
+        },
+        author,
+      );
+      const oil = await insertReference(sql, { title: 'Oil Fixtures' }, author);
+      await insertReferenceLink(sql, id, zeta, author);
+      await insertReferenceLink(sql, id, alpha, author, 'p. 112');
+      await insertVariantReferenceLink(sql, variant!.id, oil, author);
+      await insertIngredient(
+        sql,
+        makeIngredient({ name: bare, nomenclature: 'none', variants: [] }),
+        author,
+      );
+    });
+
+    await test.step('a section’s note number leads to its note, the note to its entry, and each links back', async () => {
+      await page.goto(`/compendium/ingredients/${slugify(cited)}`);
+      const details = page.getByRole('region', { name: 'Details' });
+      const notes = page.getByRole('list', { name: 'Notes' });
+      const bibliography = page.getByRole('list', { name: 'Bibliography' });
+
+      // The loader's order, not insertion order: Alpha before Zeta.
+      await expect(details.getByRole('link', { name: /^Note \d+$/ })).toHaveCount(2);
+      await details.getByRole('link', { name: 'Note 1' }).click();
+      await expect(page).toHaveURL(/#note-1$/);
+      const note = notes.getByRole('listitem').nth(0);
+      await expect(note).toContainText('Alpha Fixtures');
+      await expect(note).toContainText('p. 112');
+
+      await note.getByRole('link', { name: /Alpha/ }).click();
+      await expect(page).toHaveURL(/#ref-/);
+      const entry = bibliography.getByRole('listitem').filter({ hasText: 'Alpha Fixtures' });
+      await expect(entry).toBeVisible();
+
+      await entry.getByRole('link', { name: 'Back to Note 1' }).click();
+      await expect(page).toHaveURL(/#note-1$/);
+      await note.getByRole('link', { name: 'Back to Details' }).click();
+      await expect(page).toHaveURL(/#note-ref-1$/);
+      await expect(details.getByRole('link', { name: 'Note 1' })).toBeInViewport();
+    });
+
+    await test.step('a form’s own source is noted at the end of its section, and the bibliography holds each once, alphabetically', async () => {
+      const section = page.locator(`#form-${slugify(form)}`);
+      await expect(section.getByRole('list', { name: /References/ })).toHaveCount(0);
+      await section.getByRole('link', { name: 'Note 3' }).click();
+      await expect(page).toHaveURL(/#note-3$/);
+      await expect(
+        page.getByRole('list', { name: 'Notes' }).getByRole('link', { name: 'Back to ' + form }),
+      ).toBeVisible();
+
+      const entries = page.getByRole('list', { name: 'Bibliography' }).getByRole('listitem');
+      await expect(entries).toHaveCount(3);
+      await expect(entries.nth(0)).toContainText('Alpha Fixtures');
+      await expect(entries.nth(1).locator('cite')).toHaveText('Oil Fixtures');
+      await expect(entries.nth(2).locator('cite')).toHaveText('Zeta Fixtures');
+      // A web page’s title is quoted, not italic; its url is a link out.
+      const link = entries.nth(0).getByRole('link', { name: /source/i });
+      await expect(link).toHaveAttribute('href', 'https://fixtures.example/alpha');
+      await expect(link).toHaveAttribute('rel', /noopener/);
+      await expect(entries.nth(2).getByRole('link', { name: /source/i })).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
+    });
+
+    await test.step('an entry with none shows an empty state rather than nothing', async () => {
+      await page.goto(`/compendium/ingredients/${slugify(bare)}`);
+      const section = page.getByRole('region', { name: 'References' });
+
+      await expect(section).toBeVisible();
+      await expect(section.getByRole('list')).toHaveCount(0);
+      await expect(section.locator('p')).toBeVisible();
+      await assertNoAccessibilityViolations(page);
     });
   },
 );

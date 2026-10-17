@@ -8,6 +8,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
+import { LinkIcon } from '../IconTip';
 import LinkHint from '../LinkHint';
 import SafetyNote, { ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
@@ -26,6 +27,7 @@ import type {
   VariantDetail,
 } from '@/modules/ingredients';
 import EditButton from './edit-button';
+import { DETAILS, NoteMarks, ReferencesSection, referenceNotes } from './references';
 import EntryDialog from './entry-dialog';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
@@ -276,10 +278,13 @@ function formAnchors(variants: readonly VariantDetail[]): string[] {
 function FormSection({
   detail,
   anchor,
+  numbers,
   hrefOf,
 }: {
   detail: VariantDetail;
   anchor: string;
+  /** The note numbers its own sources take, which end its text. */
+  numbers: readonly number[];
   hrefOf: IngredientEntryProps['hrefOf'];
 }): ReactElement {
   const { variant, icon, categories, substitutes } = detail;
@@ -288,7 +293,8 @@ function FormSection({
   // form inherits them by the union rule (DESIGN.md §5).
   const rows = correspondences(variant).filter((row) => row.values.length > 0);
   const hasLists = rows.length > 0 || categories.length > 0 || substitutes.length > 0;
-  const addsNothing = !said(variant.description) && !said(variant.safetyNotes) && !hasLists;
+  const addsNothing =
+    !said(variant.description) && !said(variant.safetyNotes) && !hasLists && numbers.length === 0;
 
   return (
     <section id={anchor} className="ingredient-entry__section" aria-labelledby={nameId}>
@@ -308,6 +314,7 @@ function FormSection({
               : 'This form adds nothing to what the ingredient says.'}
           </p>
         )}
+        <NoteMarks section={anchor} numbers={numbers} />
       </div>
       {hasLists && (
         <div className="ingredient-entry__side">
@@ -350,6 +357,11 @@ const IngredientEntry = ({
   const local = entry.workspaceId !== null;
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   const anchors = formAnchors(variants);
+  const notes = referenceNotes(
+    detail,
+    anchors,
+    variants.map(({ variant }) => capitalise(variant.form)),
+  );
 
   // Only the fields the client parts use cross to them, not the whole row.
   const editable = {
@@ -377,13 +389,6 @@ const IngredientEntry = ({
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}
-        {canonical && (
-          <p className="ingredient-entry__canonical">
-            <Link href={canonical}>
-              View in the Compendium <LinkHint />
-            </Link>
-          </p>
-        )}
         {movedAway && (
           // Quiet: on the page from the start, so a status, never an alert.
           <Notice kind="warn" quiet>
@@ -405,6 +410,7 @@ const IngredientEntry = ({
               label: capitalise(variant.form),
               group: 'Forms',
             })),
+            { href: '#references', label: 'References', apart: true },
           ]}
         />
       )}
@@ -418,10 +424,20 @@ const IngredientEntry = ({
             <p className="ingredient-entry__empty">No description recorded.</p>
           )}
           <SafetyNote safetyNotes={entry.safetyNotes} level={3} />
+          <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
         </div>
         {/* A plain div, not an aside: one complementary landmark per section
             would be noise, and each block is already headed and labelled. */}
         <div className="ingredient-entry__side">
+          {canonical && (
+            <p className="ingredient-entry__canonical">
+              <Link href={canonical}>
+                Compendium Entry
+                <LinkIcon />
+                <LinkHint />
+              </Link>
+            </p>
+          )}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
             rows={correspondences(entry, deities)}
@@ -454,12 +470,10 @@ const IngredientEntry = ({
           >
             {substituteItems(substitutes, hrefOf)}
           </ListBlock>
-          {/* MB.155's references go here, beneath the substitutes. */}
         </div>
       </section>
 
-      {/* The forms, the last thing drawn: v2's notes section is appended
-          after this wrapper, so adding it moves nothing above. Headed, so
+      {/* The forms, headed so
           the forms read as one part of the page (the owner's call), each
           form a level beneath. */}
       {variants.length > 0 && (
@@ -470,11 +484,15 @@ const IngredientEntry = ({
               key={variant.variant.id}
               detail={variant}
               anchor={anchors[at]!}
+              numbers={notes.numbersOf(anchors[at]!)}
               hrefOf={hrefOf}
             />
           ))}
         </section>
       )}
+
+      {/* Last, so v2's notes section, appended beneath it, moves nothing. */}
+      <ReferencesSection model={notes} />
     </article>
   );
 

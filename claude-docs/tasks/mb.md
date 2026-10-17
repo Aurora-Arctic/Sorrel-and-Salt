@@ -3340,6 +3340,8 @@ Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` 
 
 **Amended by the Wave 12 review (2026-10-16):** four changes. (1) The sitemap needs a read of every current slug, and none is cached today: `src/modules/ingredients/services/compendium.ts` wraps only the page and count reads. This task adds a sessionless one, `cachedCompendiumRead('compendium-slugs', …)` from `src/lib/compendium-cache.ts`, which M12.2's `llms.txt` reuses. (2) `lastModified` comes from MB.106's one definition of "changed", so the sitemap does not report a no-op save. MB.106 therefore lands before this task. (3) The title is built from the name and the site, with no form, because the form is a variant beneath the ingredient (MB.215) and a page is the ingredient. Two entries sharing a label are still told apart by the formal name. (4) There is no Open Graph image: M11.16 (Wave 15) adds it, and until then the page carries no `og:image`. `src/app/robots.ts` is written so that M12.2 can add its two paths (`/llms.txt` and `/.well-known/ai-catalog.json`) without restructuring it. Re-estimated from 3h for the new read.
 
+**Amended by MB.155 (2026-10-17), at the owner's ask:** both entry pages already title themselves `Name (Formal Name)` whenever the entry has a formal name that differs from its name, and the name alone otherwise, through `pageTitleOf` in `src/components/IngredientEntry/page-title.ts`. That meets the criterion that two entries sharing a label are told apart by the formal name. This task adds the site to that title and keeps the helper, rather than building the title again.
+
 _Acceptance criteria:_
 
 - `/robots.txt` and `/sitemap.xml` answer 200 with the shapes above; the sitemap carries every current slug and no retired one
@@ -4554,7 +4556,7 @@ _Acceptance criteria:_
 - A Locator's tip says what a locator is and that several places go in one
 - The field's story and `claude-docs/components/ingredient-form.md` cover it
 
-**MB.155 — References section on the ingredient page** · 1.5h
+**MB.155 — References section on the ingredient page** · 4h
 
 _Story 64 — As a reader of the compendium, I want to see where an entry's information came from, so that I can judge a claim and read further._
 
@@ -4564,15 +4566,19 @@ A References section on M8.19's page, on both its routes: beneath the substitute
 
 **Amended by MB.215 (2026-10-11):** a form's own references are listed in its section of the page, beneath the ingredient's, in the same Chicago form ([`design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
+**Amended by the owner (2026-10-17), after a first build:** the references move out of the side column and out of each form into one section of their own at the very bottom of the centre column, beneath the forms and above the notes slot, in Chicago's notes-and-bibliography form rather than a bibliography alone. Each section the entry's references support (the ingredient's details, and each form with references of its own) ends with its superscript note numbers on a line of their own beneath a small References label, each number a link to its note (the label the owner's addition, 2026-10-17; a label rather than a heading, so the page keeps one References heading). The References section holds **Notes**, numbered in order of first appearance down the page, one per link (a reference and its locator in one section), each in Chicago short form from `renderShortCitation` (`src/lib/short-citation.ts`) with its locator, a link back to the number it answers and a link on to its full entry; and beneath them the **Bibliography**, every reference once, alphabetical, in full form from `renderCitation`, each entry linking back to the notes that cite it. A number marks a section rather than a sentence, because a reference links an ingredient or a variant, not a claim. The jump menu gains References beside Details and Forms. DESIGN.md §5 and the routes table are corrected in this PR, recorded in `design-decisions/mb.155-notes-and-bibliography.md`. Re-estimated from 1.5h.
+
 _Acceptance criteria:_
 
-- Every reference renders in Chicago form through MB.153's one renderer, `renderCitation`, on `/compendium/ingredients/[slug]` and `/coven/[slug]/ingredients/[id]` alike (the coven route since the Wave 12 review, 2026-10-16)
-- The order is alphabetical, which holds from the loader already (it sorts with `byCitation`), asserted here
-- A locator renders beside its citation and a `url` as a link to the source
-- The empty state reads as intentional, not broken
-- The section sits above the notes slot and the page's structure is unchanged for it
-- axe clean; the `@story-64` flow in `02-compendium.spec.ts` passes
-- A variant's own references are listed in its section, beneath the ingredient's (MB.215)
+- One References section at the bottom of the centre column on `/compendium/ingredients/[slug]` and `/coven/[slug]/ingredients/[id]` alike, beneath the forms and above the notes slot; no references remain in the side column or inside a form's section
+- Each section with references ends with its superscript note numbers beneath a small References label, each linking to its note, and each note links back to its number
+- Notes are numbered in page order, one per link, in Chicago short form through `renderShortCitation`, each with its locator where one was given
+- Each note links to its reference's entry in the Bibliography, and each Bibliography entry links back to every note citing it
+- The Bibliography lists each reference once, in full Chicago form through `renderCitation`, alphabetical (the loader's `byCitation` order, asserted), italic parts in `<cite>` and a `url` a link to the source, `rel="noopener"`
+- An entry with no references shows a deliberate empty state in the section
+- The jump menu lists References
+- DESIGN.md §5 and the routes table corrected, with the decision recorded
+- axe clean; the `@story-64` flow in `02-compendium.spec.ts` walks a number to its note, the note to its entry and back, and passes
 
 **MB.156 — Seed the curated vocabularies' sources** · 6h
 

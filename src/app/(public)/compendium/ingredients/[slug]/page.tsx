@@ -1,6 +1,7 @@
 import type { Metadata, Route } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import IngredientEntry from '../../../../../components/IngredientEntry';
+import { pageTitleOf } from '../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../components/IngredientEntry/types';
 import { NotFound } from '../../../../../lib/errors';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
@@ -38,7 +39,7 @@ async function entryAt(slug: string) {
 // page. A missing or moved address gets none, as it renders no page.
 export async function generateMetadata({ params }: CompendiumEntryParams): Promise<Metadata> {
   const found = await entryAt((await params).slug);
-  return found?.kind === 'entry' ? { title: found.detail.entry.name } : {};
+  return found?.kind === 'entry' ? { title: pageTitleOf(found.detail.entry) } : {};
 }
 
 // A coven entry cannot be read here, so a link to one has no page to go to.

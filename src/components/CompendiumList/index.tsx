@@ -1,4 +1,7 @@
-import { EditLink } from '../IconTip';
+import Link from 'next/link';
+import type { Route } from 'next';
+import { EditLink, LinkIcon } from '../IconTip';
+import LinkHint from '../LinkHint';
 import { Fragment, type ReactElement } from 'react';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
@@ -30,7 +33,21 @@ const NONE = '—';
 
 /** The columns; Edit's pencil stands at a card's top right on a phone. */
 const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
-  { heading: 'Name', cell: (entry) => entry.name },
+  {
+    heading: 'Name',
+    // The entry's own public page, by its stored slug (M8.19), which offers a
+    // curator Edit; the pencil still opens the modal from here.
+    cell: (entry) => (
+      <Link
+        className="compendium-list__name"
+        href={`/compendium/ingredients/${entry.slug}` as Route}
+      >
+        {entry.name}
+        <LinkIcon />
+        <LinkHint />
+      </Link>
+    ),
+  },
   { heading: 'Formal Name', cell: (entry) => entry.canonicalName ?? NONE },
   {
     heading: 'Classification',

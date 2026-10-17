@@ -18,6 +18,11 @@ import {
   insertVariant,
 } from '../../../support/db/insert-ingredient';
 import {
+  insertReference,
+  insertReferenceLink,
+  insertVariantReferenceLink,
+} from '../../../support/db/insert-reference';
+import {
   type IngredientFixture,
   type Overrides,
   makeIngredient,
@@ -243,8 +248,30 @@ describe('ingredientDetailOf', () => {
       categories: [],
       deities: [],
       substitutes: [],
+      references: [],
       variants: [],
     });
+  });
+
+  it('reads the references the entry and each form cite, alphabetical by citation, with their locators', async () => {
+    const id = await seed({ variants: [] });
+    const herb = await insertVariant(sql, id, makeVariant({ form: 'Fixtureform' }), A.id);
+    const zeta = await insertReference(sql, { title: 'Zeta Fixtures' }, A.id);
+    const alpha = await insertReference(sql, { title: 'Alpha Fixtures' }, A.id);
+    const formOnly = await insertReference(sql, { title: 'Form Fixtures' }, A.id);
+    await insertReferenceLink(sql, id, zeta, A.id);
+    await insertReferenceLink(sql, id, alpha, A.id, 'p. 7');
+    await insertVariantReferenceLink(sql, herb, formOnly, A.id, 'ch. 2');
+
+    const detail = await ingredientDetailOf(null, await entryOf(id));
+
+    expect(detail.references.map(({ reference, locator }) => [reference.title, locator])).toEqual([
+      ['Alpha Fixtures', 'p. 7'],
+      ['Zeta Fixtures', null],
+    ]);
+    expect(
+      detail.variants[0]!.references.map(({ reference, locator }) => [reference.title, locator]),
+    ).toEqual([['Form Fixtures', 'ch. 2']]);
   });
 
   it("reads a coven's own entry for a member, and refuses a member of an unrelated coven", async () => {

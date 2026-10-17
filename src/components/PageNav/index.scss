@@ -74,6 +74,28 @@
     font-size: 1.125rem;
   }
 
+  // An entry set apart (an ingredient's References) reads as a group's entries
+  // do, and takes the break a group label takes: the same token, so the gap
+  // is the one between Details and Forms whether or not forms follow.
+  //
+  // A short hairline sits a quarter of that gap above the entry, drawn by a
+  // pseudo-element so the list gains no element: it starts at the entries' own
+  // inset and, where the menu is right-aligned, ends there.
+  .page-nav__apart {
+    position: relative;
+    margin-block-start: space(5);
+
+    &::before {
+      @include short-hairline;
+      inset-block-start: calc(#{space(5)} / -4);
+      inset-inline-start: space(4);
+    }
+
+    > a {
+      font-size: inherit;
+    }
+  }
+
   @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
     a {
       justify-content: flex-end;
@@ -88,6 +110,10 @@
 
     .page-nav__group {
       text-align: end;
+    }
+
+    .page-nav__apart::before {
+      inset-inline: auto space(4);
     }
   }
 }
