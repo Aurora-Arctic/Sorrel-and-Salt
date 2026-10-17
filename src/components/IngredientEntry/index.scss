@@ -50,8 +50,17 @@ $side-column: calc(#{space(8)} * 5);
   }
 }
 
+// Clear of the top of the frame, and the eyebrow close over its heading:
+// the heading's line box carries its own air above the letters, so the
+// stack's gap is taken back and a little more (the owner's call).
 .ingredient-entry__head {
   @include stack(3);
+
+  padding-block-start: space(4);
+}
+
+.ingredient-entry__formal + .page-header {
+  margin-block-start: calc(-1 * #{space(4)});
 }
 
 .ingredient-entry__head .page-header {

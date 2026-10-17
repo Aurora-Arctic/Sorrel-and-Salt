@@ -52,27 +52,14 @@
     font-weight: 500;
     letter-spacing: 0.16em;
     text-transform: uppercase;
-    color: $text-muted;
-    // The hairline every rule here is (a table head's), as wide as the
-    // group: the item below shrinks to its widest entry. The label's padding
-    // on the text's side is a margin instead, so the line stops at the text.
-    border-block-end: 1px solid $text-muted;
-    padding-inline-start: 0;
-    margin-inline-start: space(4);
+    // The body ink, not the eyebrow's muted one: the entries under it are
+    // muted, and the label stands apart by being darker (the owner's call).
+    color: $text-primary;
   }
 
-  // A step of air between the label's rule and its first entry.
+  // A step of air between the label and its first entry.
   .page-nav__group + ul {
     margin-block-start: space(2);
-  }
-
-  // A group is as wide as its label or its widest entry, not the column, so
-  // the label's rule spans the entries and no more. At the column's start on
-  // a phone, its end on a wide screen, where the text is right-aligned.
-  > ul > li:has(> .page-nav__group) {
-    display: grid;
-    grid-template-columns: max-content;
-    justify-content: start;
   }
 
   // A group's entries, a step in from its label on a phone, where the text
@@ -103,13 +90,7 @@
     }
 
     .page-nav__group {
-      padding-inline: space(4) 0;
-      margin-inline: 0 space(4);
       text-align: end;
-    }
-
-    > ul > li:has(> .page-nav__group) {
-      justify-content: end;
     }
 
     ul ul a {
