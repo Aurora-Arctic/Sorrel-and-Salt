@@ -453,6 +453,33 @@ describe('CompendiumList filter', () => {
     expect(router.push).not.toHaveBeenCalled();
   });
 
+  // The server counts forms with the forms chosen left out of the filter, so the other forms
+  // keep their counts; the open panel must offer them while one is held.
+  it('still offers the other forms, with their counts, after one is picked before Apply', async () => {
+    mockGraphQLQuery('CompendiumFacetCounts', () => ({
+      compendiumFacets: {
+        forms: FORMS.map(({ value, count }) => ({ value, count })),
+        deities: [],
+        categories: [],
+        zodiacSigns: [],
+        celestialBodies: [],
+        elements: [],
+        toxic: [],
+        withoutReferences: 5,
+      },
+    }));
+    render(<CompendiumList {...props()} />);
+    openPanel();
+    const forms = within(panel()).getByRole('combobox', { name: 'Forms' });
+
+    fireEvent.click(forms);
+    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil (3)' }));
+    await screen.findByRole('switch', { name: 'No Refs (5)' });
+
+    fireEvent.change(forms, { target: { value: 'Fixture Pow' } });
+    expect(await screen.findByRole('option', { name: 'Fixture Powder (2)' })).toBeInTheDocument();
+  });
+
   it('applies Clear All beside the Filters button at once, and Clear All in the panel too', () => {
     const { unmount } = render(<CompendiumList {...props({ filter: SHOWN })} />);
     fireEvent.click(screen.getAllByRole('link', { name: 'Clear All' })[0]);
