@@ -71,7 +71,8 @@ in the filter slot to carry.
   any result (arrow keys, then Enter or a click), set in italics, and
   sentence case with a full stop because it is a message, not a label (the
   owner, 2026-10-16); it is not counted in the status. When nothing matches,
-  "No Matches" sits in the dropdown. They are the combobox's `action` and
+  "No Matches" sits in the dropdown, and Escape closes it without closing the
+  modal around the box. They are the combobox's `action` and
   `empty` ([`combobox.md`](combobox.md)).
 - **A pick opens the match.** With `pickHeading`, through the route modal
   opener, so the modal shows its heading at once while its page loads, as the

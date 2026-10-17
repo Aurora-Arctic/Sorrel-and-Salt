@@ -11,6 +11,7 @@ A story with no test reads "no test yet". CI runs it as the `stories` job of
 `.github/workflows/pr-gate.yml`, never a required check, so a red scaffold is
 never on the merge path.
 `npm run e2e` (the gate suite) skips this directory.
+`npm run test:stories:audit` runs the same stories in WebKit, Firefox and as a phone (claude-docs/testing/e2e.md, "The audit"); a story passes only if it passes in all.
 
 ## Naming a story
 

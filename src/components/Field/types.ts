@@ -1,4 +1,4 @@
-import type { HTMLInputTypeAttribute, ReactNode } from 'react';
+import type { HTMLInputTypeAttribute, ReactNode, RefObject } from 'react';
 import type { FieldPath, FieldValues } from 'react-hook-form';
 
 /** What every field shares: what it is called, and what it is told about it. */
@@ -247,4 +247,83 @@ export interface FilterSelectFieldProps {
   onChange: (value: string) => void;
   /** Typed into once hydrated, its list narrowing to the choices holding the text. */
   typeahead?: boolean;
+}
+
+/** One field an action changed: what it held before, and what it holds now. */
+export interface HistoryDiff {
+  /** The form path: `name`, `variants.0.form`, or an array's own path, `variants`. */
+  name: string;
+  before: unknown;
+  after: unknown;
+}
+
+/** What one action changed: the fields it touched, when, and whether it was typing. */
+export interface HistoryStep {
+  diffs: HistoryDiff[];
+  /** The time of the newest change in the step, from `Date.now()`. */
+  at: number;
+  /** Typed into one text box, so that the next key within the pause may extend it. */
+  typing: boolean;
+}
+
+/** The two stacks: `past` oldest first, `future` the steps undone, next redo last. */
+export interface HistoryState {
+  past: HistoryStep[];
+  future: HistoryStep[];
+}
+
+export type HistoryAction =
+  | { type: 'recorded'; step: HistoryStep; limit: number }
+  | { type: 'extended'; diffs: HistoryDiff[]; at: number }
+  | { type: 'undone' }
+  | { type: 'redone' }
+  | { type: 'cleared' };
+
+/** What a new change is to the newest step: its own step, part of it, or more of its typing. */
+export type HistoryMerge = 'new' | 'join' | 'extend';
+
+/** What `decideMerge` weighs. */
+export interface HistoryMergeInput {
+  newest: HistoryStep | undefined;
+  name: string;
+  typing: boolean;
+  now: number;
+  pauseMs: number;
+  /** The newest step was recorded in the event or microtask still running. */
+  sameTick: boolean;
+  /** The change comes while a pointer is held down, and the hold has already recorded a step. */
+  held: boolean;
+  /** Focus left a field, or a step was undone, since the newest step. */
+  sealed: boolean;
+}
+
+/** What `useFormHistory` is given besides the form. */
+export interface UseFormHistoryOptions {
+  /** The form's element: where the hook looks for the fields it restores, and listens for focus leaving. */
+  root: RefObject<HTMLElement | null>;
+  /** False while a question is up over the form: nothing is undone, and both buttons are off. */
+  enabled?: boolean;
+  /** True for a target whose chords the form leaves alone: a panel with a history of its own. */
+  ignore?: (target: HTMLElement) => boolean;
+  /** Told the field names a step restored, before focus moves, so a folded section holding one can open. */
+  onRestored?: (names: string[]) => void;
+  /** How long a pause in typing ends its step. */
+  pauseMs?: number;
+  /** How many steps are kept. */
+  limit?: number;
+}
+
+/** What `useFormHistory` returns, and `FormHistoryContext` carries to the buttons. */
+export interface FormHistory {
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  /** Forgets every step: after a save, or whatever else starts the form over. */
+  clear: () => void;
+  /** What the live region says; it differs from the last even when the words are the same. */
+  announcement: string;
+  /** The buttons register themselves here: the last place focus may land. */
+  undoButton: RefObject<HTMLButtonElement | null>;
+  redoButton: RefObject<HTMLButtonElement | null>;
 }

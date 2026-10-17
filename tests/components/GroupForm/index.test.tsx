@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import GroupForm from '@/components/GroupForm';
@@ -26,7 +26,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { pairedColor } from '@/lib/group-colors';
 import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { choose, press, typeIn } from '../../support/interact';
+import { choose, press, redo, typeIn, undo } from '../../support/interact';
 import {
   expectAnswered,
   expectAskingOver,
@@ -260,7 +260,10 @@ describe('GroupForm, for a category group', () => {
       typeIn(name(), 'Fixture Near');
       typeIn(dark(), '#5a87ae');
 
-      expect(screen.getAllByRole('status')[0]).toHaveTextContent('Fixture Mineral');
+      expect(
+        // Not the Edit History region, which every form with undo has.
+        screen.getAllByRole('status').filter((status) => !status.hasAttribute('aria-label'))[0],
+      ).toHaveTextContent('Fixture Mineral');
       expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
     });
 
@@ -640,5 +643,85 @@ describe('GroupForm, for a deity tradition', () => {
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ id: MATTER.id, moveTo: GROUPS[1].id }]);
+  });
+});
+
+// Undo and redo (M12.9): the hook is tested in tests/components/Field; this
+// is its wiring, and where it is switched off.
+describe('GroupForm, its undo and redo', () => {
+  const save = () => screen.getByRole('button', { name: 'Save Group' });
+
+  it('undoes a colour change, the hex box taking the saved colour back, and redoes it', () => {
+    renderForm({ group: WARDS });
+    expect(save()).toBeDisabled();
+    act(() => dark().focus());
+    typeIn(dark(), '#35987d');
+    expect(dark()).toHaveValue('#35987d');
+
+    undo();
+
+    expect(dark()).toHaveValue(WARDS.colorDark);
+    expect(light()).toHaveValue(WARDS.colorLight);
+    expect(save()).toBeDisabled();
+
+    redo();
+    expect(dark()).toHaveValue('#35987d');
+  });
+
+  it('undoes a name change', () => {
+    renderForm({ group: WARDS });
+    act(() => name().focus());
+    typeIn(name(), 'Fixture Shields');
+
+    undo();
+
+    expect(name()).toHaveValue(WARDS.name);
+    expect(save()).toBeDisabled();
+  });
+
+  it('undoes nothing through the steps of a delete', () => {
+    renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
+    ));
+    typeIn(name(), 'Fixture Shields');
+    press('Delete Group');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    undo();
+    expect(name()).toHaveValue('Fixture Shields');
+
+    choose('Move Its 3 Categories To', 'Fixture Mineral');
+    press('Continue');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Back' }));
+    undo();
+    expect(name()).toHaveValue('Fixture Shields');
+
+    press('Back');
+    press('Keep It');
+    undo();
+    expect(name()).toHaveValue(WARDS.name);
+  });
+
+  it('undoes nothing while the unsaved changes question is up', () => {
+    renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} onDone={done} />
+    ));
+    typeIn(name(), 'Fixture Shields');
+    press('Cancel');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep Editing' }));
+
+    undo();
+
+    expect(name()).toHaveValue('Fixture Shields');
+  });
+
+  it('has Undo and Redo buttons, off with nothing to do, that act on a click', () => {
+    renderForm({ group: WARDS });
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    typeIn(name(), 'Fixture Shields');
+
+    press('Undo');
+
+    expect(name()).toHaveValue(WARDS.name);
+    expect(screen.getByRole('button', { name: 'Redo' })).toBeEnabled();
   });
 });

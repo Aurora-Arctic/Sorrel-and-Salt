@@ -478,12 +478,14 @@ describe('Combobox', () => {
     render(<Harness suggestions={TWO_BUCKETS} />);
 
     type('wax');
-    key('Escape');
+    // On the open list the key is the list's, so a modal around it stays.
+    expect(key('Escape')).toBe(false);
     expect(box()).toHaveAttribute('aria-expanded', 'false');
     expect(box()).toHaveValue('wax');
 
-    // Escape on a closed box, which Downshift would otherwise empty.
-    key('Escape');
+    // Escape on a closed box, which Downshift would otherwise empty, and
+    // would stop the dialog around it from hearing.
+    expect(key('Escape')).toBe(true);
     expect(box()).toHaveValue('wax');
 
     key('ArrowDown');
@@ -1427,6 +1429,27 @@ describe('Combobox empty message', () => {
     rerender(<Harness offerTyped={false} suggestions={NONE} />);
     type('zzz');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+  });
+
+  it('closes the message on Escape alone, then leaves the next Escape to the dialog', () => {
+    render(<Harness offerTyped={false} suggestions={NONE} empty="Nothing Found" />);
+
+    type('zzz');
+    expect(screen.getByText('Nothing Found', { selector: 'div' })).toBeVisible();
+
+    // The message is open content, so Escape closes it and goes no further.
+    expect(key('Escape')).toBe(false);
+    expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+    expect(status()).not.toHaveTextContent('Nothing Found');
+    expect(box()).toHaveValue('zzz');
+
+    // Nothing shown, text in the box: the key is the dialog's.
+    expect(key('Escape')).toBe(true);
+    expect(box()).toHaveValue('zzz');
+
+    // Typing again asks for the message again.
+    type('zzzz');
+    expect(screen.getByText('Nothing Found', { selector: 'div' })).toBeVisible();
   });
 
   it('keeps the count in the status, and no message, once rows arrive', () => {

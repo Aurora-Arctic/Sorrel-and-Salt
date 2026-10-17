@@ -16,7 +16,16 @@ import { ComboboxSelect } from '../Combobox';
 import FormIcon from '../FormIcon';
 import { KINDS as VALUE_LIST_KINDS } from '../GroupedValueList/kinds';
 import { KINDS as GROUP_LIST_KINDS } from '../GroupList/kinds';
-import { FieldShell, FormActions, RadioGroupField, TextField, fieldDescription } from '../Field';
+import {
+  FieldShell,
+  FormActions,
+  FormHistoryButtons,
+  FormHistoryContext,
+  RadioGroupField,
+  TextField,
+  fieldDescription,
+  useFormHistory,
+} from '../Field';
 import type { RadioOption } from '../Field/types';
 import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
@@ -277,6 +286,13 @@ const GroupForm = ({
   // Cancel, and every other way out of the modal, asks first while the form
   // has changes (MB.115, the owner's call); a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
+  // Undo and redo (M12.9), off while a question is up over the form: the
+  // unsaved changes', or a step of the delete.
+  const root = useRef<HTMLFormElement>(null);
+  const history = useFormHistory(methods, {
+    root,
+    enabled: !discard.asking && step.at === 'idle',
+  });
   const [moveTo, setMoveTo] = useState('');
   const [moveError, setMoveError] = useState<string>();
   const [alert, setAlert] = useState<string>();
@@ -457,106 +473,114 @@ const GroupForm = ({
 
   return (
     <FormProvider {...methods}>
-      <form className="form" onSubmit={handleSubmit((input) => send(input))} noValidate>
-        {rootError && <Notice kind="error">{rootError}</Notice>}
-        <TextField<GroupValues>
-          name="name"
-          label="Name"
-          placeholder="Add a name"
-          autoComplete="off"
-          required
-        />
-        <TextField<GroupValues>
-          name="description"
-          label="Description"
-          placeholder={spec.describe}
-          multiline
-          required
-        />
-        {kind === 'category' &&
-          COLORS.map(({ column, label, hint }) => {
-            const { aria, ...shell } = fieldDescription({
-              id: `${id}-${column}`,
-              hint,
-              error: errors[column]?.message,
-            });
-            // The shell draws the label and its mark, naming the hex box by
-            // `controlId`, but not the error: ChipColorField places that
-            // itself, between its ratio and its near-colour warning, so the
-            // shell's own would show it twice.
-            return (
-              <FieldShell
-                key={column}
-                label={label}
-                hint={hint}
-                required
-                {...shell}
-                error={undefined}
-              >
-                <Controller
-                  control={control}
-                  name={column}
-                  render={({ field }) => (
-                    <ChipColorField
-                      id={shell.controlId}
-                      label={label}
-                      column={column}
-                      placeholder="Add hex"
-                      value={field.value}
-                      onChange={(value) => {
-                        field.onChange(value);
-                        fillPartner(column, value);
-                      }}
-                      onBlur={field.onBlur}
-                      sample={typedName.trim() || 'Sample'}
-                      partner={typed[PARTNER[column]]}
-                      others={groups.flatMap((each) => {
-                        const hex = each[column];
-                        return each.id !== group?.id && hex ? [{ name: each.name, hex }] : [];
-                      })}
-                      inputRef={field.ref}
-                      error={shell.error}
-                      errorId={shell.errorId}
-                      aria-required
-                      {...aria}
-                    />
-                  )}
-                />
-              </FieldShell>
-            );
-          })}
-        {kind === 'form' && (
-          <Controller
-            control={control}
-            name="icon"
-            render={({ field }) => (
-              <RadioGroupField<FormGroupIcon | ''>
-                legend="Icon"
-                layout="strip"
-                name={`${id}-icon`}
-                options={ICONS}
-                value={field.value}
-                onChange={field.onChange}
-                note="The icon drawn beside each form in this group. None draws the generic one."
-              />
-            )}
+      <FormHistoryContext.Provider value={history}>
+        <form
+          ref={root}
+          className="form"
+          onSubmit={handleSubmit((input) => send(input))}
+          noValidate
+        >
+          <FormHistoryButtons />
+          {rootError && <Notice kind="error">{rootError}</Notice>}
+          <TextField<GroupValues>
+            name="name"
+            label="Name"
+            placeholder="Add a name"
+            autoComplete="off"
+            required
           />
-        )}
-        <FormActions
-          noun={title}
-          dirty={isDirty}
-          submitting={isSubmitting}
-          onCancel={() => discard.request(onDone)}
-          onDelete={
-            group &&
-            (() => {
-              setAlert(undefined);
-              setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
-            })
-          }
-        />
-        {question()}
-      </form>
+          <TextField<GroupValues>
+            name="description"
+            label="Description"
+            placeholder={spec.describe}
+            multiline
+            required
+          />
+          {kind === 'category' &&
+            COLORS.map(({ column, label, hint }) => {
+              const { aria, ...shell } = fieldDescription({
+                id: `${id}-${column}`,
+                hint,
+                error: errors[column]?.message,
+              });
+              // The shell draws the label and its mark, naming the hex box by
+              // `controlId`, but not the error: ChipColorField places that
+              // itself, between its ratio and its near-colour warning, so the
+              // shell's own would show it twice.
+              return (
+                <FieldShell
+                  key={column}
+                  label={label}
+                  hint={hint}
+                  required
+                  {...shell}
+                  error={undefined}
+                >
+                  <Controller
+                    control={control}
+                    name={column}
+                    render={({ field }) => (
+                      <ChipColorField
+                        id={shell.controlId}
+                        label={label}
+                        column={column}
+                        placeholder="Add hex"
+                        value={field.value}
+                        onChange={(value) => {
+                          field.onChange(value);
+                          fillPartner(column, value);
+                        }}
+                        onBlur={field.onBlur}
+                        sample={typedName.trim() || 'Sample'}
+                        partner={typed[PARTNER[column]]}
+                        others={groups.flatMap((each) => {
+                          const hex = each[column];
+                          return each.id !== group?.id && hex ? [{ name: each.name, hex }] : [];
+                        })}
+                        inputRef={field.ref}
+                        error={shell.error}
+                        errorId={shell.errorId}
+                        aria-required
+                        {...aria}
+                      />
+                    )}
+                  />
+                </FieldShell>
+              );
+            })}
+          {kind === 'form' && (
+            <Controller
+              control={control}
+              name="icon"
+              render={({ field }) => (
+                <RadioGroupField<FormGroupIcon | ''>
+                  legend="Icon"
+                  layout="strip"
+                  name={`${id}-icon`}
+                  options={ICONS}
+                  value={field.value}
+                  onChange={field.onChange}
+                  note="The icon drawn beside each form in this group. None draws the generic one."
+                />
+              )}
+            />
+          )}
+          <FormActions
+            noun={title}
+            dirty={isDirty}
+            submitting={isSubmitting}
+            onCancel={() => discard.request(onDone)}
+            onDelete={
+              group &&
+              (() => {
+                setAlert(undefined);
+                setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
+              })
+            }
+          />
+          {question()}
+        </form>
+      </FormHistoryContext.Provider>
     </FormProvider>
   );
 };

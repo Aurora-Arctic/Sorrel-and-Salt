@@ -24,6 +24,7 @@
     "test:ui": "vitest --ui",
     "e2e": "playwright test",
     "e2e:audit": "E2E_AUDIT=1 flock /tmp/sorrel-e2e.lock playwright test --project webkit --project firefox --project phone",
+    "test:stories:audit": "E2E_AUDIT=1 flock /tmp/sorrel-e2e.lock playwright test --config playwright.stories.config.ts --project webkit --project firefox --project phone",
     "e2e:servers": "tsx scripts/e2e-servers.ts",
     "e2e:ui": "playwright test --ui --ui-host 0.0.0.0 --ui-port 9324",
     "e2e:debug": "playwright test --debug",

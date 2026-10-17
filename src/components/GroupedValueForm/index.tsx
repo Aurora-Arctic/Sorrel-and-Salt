@@ -3,7 +3,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 
 import { useMutation } from '@tanstack/react-query';
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useId, useRef, useState } from 'react';
 import { FormProvider, type Resolver, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest, saveRequest } from '../../lib/graphql-client';
@@ -11,7 +11,14 @@ import { placeServerIssues } from '../../lib/graphql-failure';
 import { KINDS as LIST_KINDS } from '../GroupedValueList/kinds';
 import { ConfirmQuestion, useDiscardGuard } from '../Modal';
 import FormIcon from '../FormIcon';
-import { FormActions, SelectField, TextField } from '../Field';
+import {
+  FormActions,
+  FormHistoryButtons,
+  FormHistoryContext,
+  SelectField,
+  TextField,
+  useFormHistory,
+} from '../Field';
 import Notice from '../Notice';
 import {
   CelestialBodyInput,
@@ -343,6 +350,9 @@ const GroupedValueForm = ({
   // Cancel, and every other way out of the modal, asks first while the form
   // has changes (MB.115, the owner's call); a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
+  // Undo and redo (M12.9), off while a question is up over the form.
+  const root = useRef<HTMLFormElement>(null);
+  const history = useFormHistory(methods, { root, enabled: !discard.asking && !confirming });
   const [alert, setAlert] = useState<string>();
   const name = useWatch({ control, name: 'name' });
   // Trimmed, as the schema trims: a space added to the end renames nothing.
@@ -412,61 +422,65 @@ const GroupedValueForm = ({
 
   return (
     <FormProvider {...methods}>
-      <form
-        className="form grouped-value-form"
-        onSubmit={handleSubmit((input) => send(input))}
-        noValidate
-      >
-        {rootError && <Notice kind="error">{rootError}</Notice>}
-        {/* Autofill off: Chrome takes a field named "name" for a person's and
+      <FormHistoryContext.Provider value={history}>
+        <form
+          ref={root}
+          className="form grouped-value-form"
+          onSubmit={handleSubmit((input) => send(input))}
+          noValidate
+        >
+          <FormHistoryButtons />
+          {rootError && <Notice kind="error">{rootError}</Notice>}
+          {/* Autofill off: Chrome takes a field named "name" for a person's and
             offers the user's own. */}
-        <TextField<GroupedValueValues>
-          name="name"
-          label="Name"
-          placeholder="Add a name"
-          autoComplete="off"
-          required
-        />
-        <TextField<GroupedValueValues>
-          name="description"
-          label="Description"
-          hint={spec.descriptionHint}
-          placeholder={spec.describe}
-          multiline
-          required
-        />
-        {group && (
-          <SelectField<GroupedValueValues>
-            name="groupId"
-            label={group.label}
-            hint={group.hint}
-            placeholder={group.placeholder}
-            options={choices}
-            // Typed into to narrow the groups, the owner's call (MB.115).
-            typeahead
+          <TextField<GroupedValueValues>
+            name="name"
+            label="Name"
+            placeholder="Add a name"
+            autoComplete="off"
             required
           />
-        )}
-        {actions()}
-        {/* A question over the form, its buttons left beneath it (MB.115,
+          <TextField<GroupedValueValues>
+            name="description"
+            label="Description"
+            hint={spec.descriptionHint}
+            placeholder={spec.describe}
+            multiline
+            required
+          />
+          {group && (
+            <SelectField<GroupedValueValues>
+              name="groupId"
+              label={group.label}
+              hint={group.hint}
+              placeholder={group.placeholder}
+              options={choices}
+              // Typed into to narrow the groups, the owner's call (MB.115).
+              typeahead
+              required
+            />
+          )}
+          {actions()}
+          {/* A question over the form, its buttons left beneath it (MB.115,
             the owner's call): the unsaved changes' first, then the delete's. */}
-        <ConfirmQuestion
-          guard={discard}
-          asked={confirming}
-          question={
-            <>
-              Delete &quot;{value?.name}&quot;? {deleteNote}
-            </>
-          }
-          busy={remove.isPending}
-          onConfirm={confirmDelete}
-          onKeep={() => setConfirming(false)}
-          onRefused={(refusal) => {
-            setConfirming(false);
-            setAlert(refusal);
-          }}
-        />
-      </form>
+          <ConfirmQuestion
+            guard={discard}
+            asked={confirming}
+            question={
+              <>
+                Delete &quot;{value?.name}&quot;? {deleteNote}
+              </>
+            }
+            busy={remove.isPending}
+            onConfirm={confirmDelete}
+            onKeep={() => setConfirming(false)}
+            onRefused={(refusal) => {
+              setConfirming(false);
+              setAlert(refusal);
+            }}
+          />
+        </form>
+      </FormHistoryContext.Provider>
     </FormProvider>
   );
 };

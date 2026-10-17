@@ -2,7 +2,7 @@
 
 import { useSelect } from 'downshift';
 import { keepEscapeInList } from './escape';
-import type { ReactElement } from 'react';
+import type { KeyboardEvent, ReactElement } from 'react';
 import { ChevronIcon, PlusIcon } from './icons';
 import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
@@ -57,7 +57,16 @@ export function ComboboxSelect({
         {...getToggleButtonProps({
           ref: inputRef,
           onBlur,
-          onKeyDown: keepEscapeInList(isOpen),
+          onKeyDown: (event: KeyboardEvent<HTMLElement>) => {
+            keepEscapeInList(isOpen)(event);
+            // Ctrl+Z is the form's undo (M12.9), not a letter to search the
+            // list for; Downshift would take it and open the list.
+            if (event.ctrlKey || event.metaKey) {
+              (
+                event as KeyboardEvent<HTMLElement> & { preventDownshiftDefault?: boolean }
+              ).preventDownshiftDefault = true;
+            }
+          },
           'aria-label': labelId ? undefined : label,
           'aria-describedby': describedBy,
           'aria-invalid': invalid,

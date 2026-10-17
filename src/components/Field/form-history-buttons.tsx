@@ -1,0 +1,62 @@
+'use client';
+
+import { type ReactElement } from 'react';
+import { createPortal } from 'react-dom';
+import IconTip from '../IconTip';
+import { useModalHeaderSlot } from '../Modal/header-slot';
+import { useFormHistoryContext } from './form-history-context';
+import { RedoIcon, UndoIcon } from './icons';
+
+/**
+ * A form's Undo and Redo buttons, and the live region that says what each
+ * did. They read the surrounding form's history from `FormHistoryContext`
+ * and draw nothing without one. Small and quiet icon buttons, off while
+ * there is nothing to do. In a modal they go into the header, beside its
+ * title, as the ingredient form's Open All does; elsewhere they sit in the
+ * form's own flow (claude-docs/components/field.md, "Undo and redo").
+ */
+export function FormHistoryButtons(): ReactElement | null {
+  const history = useFormHistoryContext();
+  const headerSlot = useModalHeaderSlot();
+  if (!history) return null;
+  const { undo, redo, canUndo, canRedo, announcement, undoButton, redoButton } = history;
+
+  const buttons = (
+    <span className="form-history">
+      <IconTip tip="Undo">
+        <button
+          ref={undoButton}
+          type="button"
+          className="btn btn--small btn--quiet"
+          aria-label="Undo"
+          disabled={!canUndo}
+          onClick={undo}
+        >
+          <UndoIcon />
+        </button>
+      </IconTip>
+      <IconTip tip="Redo">
+        <button
+          ref={redoButton}
+          type="button"
+          className="btn btn--small btn--quiet"
+          aria-label="Redo"
+          disabled={!canRedo}
+          onClick={redo}
+        >
+          <RedoIcon />
+        </button>
+      </IconTip>
+    </span>
+  );
+
+  return (
+    <>
+      {headerSlot ? createPortal(buttons, headerSlot) : buttons}
+      {/* Labelled, so that it is told from the list fields' own regions. */}
+      <output className="visually-hidden" aria-label="Edit History">
+        {announcement}
+      </output>
+    </>
+  );
+}

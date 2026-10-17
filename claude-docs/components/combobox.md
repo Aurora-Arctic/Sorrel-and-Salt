@@ -89,6 +89,12 @@ colour is never the only cue.
   pick through `onPick`; Downshift's own fill-on-select is turned off in the
   state reducer, as are its select-on-blur and its emptying of a closed box on
   Escape. So a blur, Escape and Enter all keep what was typed.
+- **Escape on a closed box is left to the dialog.** Downshift would prevent
+  the key whenever the box holds text, which stops a modal around it hearing
+  its `cancel` event; the box marks it `preventDownshiftDefault` instead.
+  The one exception is the empty message: it is open content Downshift does not
+  know of, so Escape closes it alone and is prevented, as on an open list, and
+  the next Escape reaches the dialog.
 - **Leaving the box shuts its list for good.** The list is open only while
   it is wanted and has rows, so a box left while its lookup had none to show
   still wanted it, and the answer arriving later opened it, which Downshift
@@ -295,6 +301,11 @@ A choice's `icon` (M12.7), a drawn, decorative node such as a form group's
 value, in the same `combobox__icon` span the suggesting box uses: `aria-hidden`
 and outside the accessible name. The type-ahead box passes it on to its rows
 too; the combobox knows no icon set.
+
+A Ctrl or Cmd keydown on the closed select is not Downshift's to take: its
+handler sets `preventDownshiftDefault`, so Ctrl+Z, the form's undo
+([`field.md`](field.md#undo-and-redo)), is not read as a letter to search for
+that opens the list.
 
 The chevron is drawn inside the control and hidden from assistive
 technology, since the whole control is the one target. The control takes the
@@ -737,7 +748,8 @@ suggestions still shown, Enter still handed to `onCommit`, and the list shut
 when it would have been the only row; Enter handed to `onCommit` with the
 list open or closed, and otherwise closing the list or reaching the form;
 Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape,
-blur and a pick keeping the text; a box with no source never opening; the
+blur and a pick keeping the text, Escape prevented on the open list and on the empty message, and not on a closed box
+holding text; a box with no source never opening; the
 status region's count, and its busy and empty states; the qualifier read as
 the box's description after the field's own, a press on it putting the caret
 in the text, its detail's tooltip on hover
