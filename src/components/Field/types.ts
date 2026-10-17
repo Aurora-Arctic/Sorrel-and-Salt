@@ -305,8 +305,17 @@ export interface UseFormHistoryOptions {
   enabled?: boolean;
   /** True for a target whose chords the form leaves alone: a panel with a history of its own. */
   ignore?: (target: HTMLElement) => boolean;
-  /** Told the field names a step restored, before focus moves, so a folded section holding one can open. */
-  onRestored?: (names: string[]) => void;
+  /**
+   * Told the field names a step restored, with its diffs and the direction, before focus moves, so a
+   * folded section holding one can open. It may return a field name to focus instead of the first.
+   */
+  onRestored?: (
+    names: string[],
+    diffs: readonly HistoryDiff[],
+    direction: 'undo' | 'redo',
+  ) => string | void;
+  /** True for a name the history leaves out: interface state kept among the values. */
+  skip?: (name: string) => boolean;
   /** How long a pause in typing ends its step. */
   pauseMs?: number;
   /** How many steps are kept. */

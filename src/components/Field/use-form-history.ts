@@ -84,6 +84,7 @@ export function useFormHistory<V extends FieldValues>(
     root,
     enabled = true,
     ignore,
+    skip,
     onRestored,
     pauseMs = TYPING_PAUSE_MS,
     limit = HISTORY_LIMIT,
@@ -162,6 +163,11 @@ export function useFormHistory<V extends FieldValues>(
       formState: { values: true },
       callback: ({ name, values, defaultValues }) => {
         if (restoring.current) return;
+        if (name !== undefined && skip?.(name)) {
+          // Interface state: kept current so the next diff starts from it, but never a step.
+          present.current = cloneValues(values);
+          return;
+        }
         const previous = present.current;
         const defaultsChanged =
           defaultsSeen.current !== undefined && defaultsSeen.current !== defaultValues;
@@ -225,7 +231,7 @@ export function useFormHistory<V extends FieldValues>(
       doc?.removeEventListener('pointercancel', endHold, true);
       endHold();
     };
-  }, [subscribe, getValues, root, commit, pauseMs, limit]);
+  }, [subscribe, getValues, root, commit, pauseMs, limit, skip]);
 
   /** Writes a step's values back, `before` newest-first for an undo, `after` oldest-first for a redo. */
   const restore = useCallback(
@@ -249,8 +255,12 @@ export function useFormHistory<V extends FieldValues>(
       }
       present.current = cloneValues(getValues());
       sealed.current = true;
-      onRestored?.(step.diffs.map((diff) => diff.name));
-      pendingFocus.current = [step.diffs[0].name];
+      const focusOn = onRestored?.(
+        step.diffs.map((diff) => diff.name),
+        step.diffs,
+        direction,
+      );
+      pendingFocus.current = [focusOn || step.diffs[0].name];
     },
     [setValue, getValues, isSubmitted, onRestored],
   );

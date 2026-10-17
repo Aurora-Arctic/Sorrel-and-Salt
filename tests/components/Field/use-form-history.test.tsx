@@ -149,6 +149,19 @@ describe('useFormHistory', () => {
     expect(handles.current!.history.canUndo).toBe(false);
   });
 
+  it('keeps the names skip matches out of the history', () => {
+    const { values } = mount({ skip: (name) => name === 'note' });
+    typeIn(byLabel('Note', 'input, textarea'), 'x');
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+
+    choose('Kind', 'Two');
+    focusIn('Title');
+    undo();
+    expect(values().kind).toBe('one');
+    expect(values().note).toBe('x');
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+  });
+
   it('skips a target the form says to ignore', () => {
     const { values } = mount({ ignore: (target) => target.getAttribute('name') === 'title' });
     choose('Kind', 'Two');
@@ -389,9 +402,31 @@ describe('useFormHistory', () => {
 
       undo();
 
-      expect(onRestored).toHaveBeenCalledWith(['note']);
+      expect(onRestored).toHaveBeenCalledWith(['note'], expect.anything(), 'undo');
       expect(screen.getByText('More').closest('details')).toHaveAttribute('open');
       expect(document.activeElement).toBe(byLabel('Note', 'input, textarea'));
+    });
+
+    it('tells onRestored the diffs and the direction, and lands where it names', () => {
+      const onRestored = vi.fn(() => 'kind');
+      mount({ onRestored });
+      typeIn(byLabel('Note', 'input, textarea'), 'x');
+      focusIn('Title');
+
+      undo();
+      expect(onRestored).toHaveBeenLastCalledWith(
+        ['note'],
+        [{ name: 'note', before: '', after: 'x' }],
+        'undo',
+      );
+      expect(document.activeElement).toBe(byLabel('Kind', '[role="combobox"]'));
+
+      redo();
+      expect(onRestored).toHaveBeenLastCalledWith(
+        ['note'],
+        [{ name: 'note', before: '', after: 'x' }],
+        'redo',
+      );
     });
 
     it('falls back to the Undo button when there is nothing to land on', () => {
