@@ -292,7 +292,7 @@ $side-column: calc(#{space(8)} * 5);
 // Bibliography entries run to two or three lines, so they stand a clear step
 // apart where the page's short lists (folk names, substitutes) sit close.
 .ingredient-entry__references .ingredient-entry__list {
-  gap: space(3);
+  gap: space(4);
 }
 
 // The notes keep their numbers (the list reset would drop them). A long
