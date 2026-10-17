@@ -10,35 +10,22 @@ import {
   useState,
 } from 'react';
 import { AdminFrame } from './admin-frame';
-import CategoryPicker from '../src/components/CategoryPicker';
 import type { PickerCategory } from '../src/components/CategoryPicker/types';
 import Combobox, { ComboboxEntry } from '../src/components/Combobox';
 import type { ComboboxOption } from '../src/components/Combobox/types';
-import {
-  FieldShell,
-  fieldDescription,
-  FilterSelectField,
-  SearchField,
-  SwitchField,
-} from '../src/components/Field';
+import { FieldShell, fieldDescription, SearchField, SwitchField } from '../src/components/Field';
 import FormIcon from '../src/components/FormIcon';
-import InfoTip from '../src/components/InfoTip';
 import PageHeader from '../src/components/PageHeader';
 import { chipColors } from '../src/lib/chip-colors';
 import { COMPENDIUM_PATH } from '../src/components/CompendiumList/href';
-import { NOMENCLATURE_OPTIONS } from '../src/components/IngredientForm/options';
 import type { FormGroupIcon } from '../src/modules/vocabulary/schema/form-group-icons';
 import './facet-layout.scss';
 
-// A mock-up for the owner's sign-off of M12.4's filter layout, the layout C
-// of claude-docs/design-decisions/m12.4-filter-layout.md: a primary row, one
-// native disclosure for the rest, an Apply row, then the search sentence above
-// the results. Composed from the existing primitives with fixed counts and a
-// static sentence; nothing here is the real build and none of it is tested.
-// `ApplyOnChange` is the variant the coordinator recommends: no Apply button
-// once hydrated (the submit stays for the form before hydration).
-// Toxic and Match are a text segmented control in every variant (`.facet-strip`),
-// so the variants differ only in layout. All, sidebar and tray are the record's A, B and D.
+// A mock-up of M12.4's filter layout as the owner chose it (layout F of
+// claude-docs/design-decisions/m12.4-filter-layout.md): a search box with a Filters
+// button, the chosen values as chips, a sentence above the results. Composed from the
+// existing primitives with fixed counts and a static sentence; nothing here is the real
+// build and none of it is tested. The other layouts the record weighed are in git history.
 export default {
   title: 'Admin / Compendium List / Facet Layout',
 };
@@ -119,7 +106,7 @@ const counted = (items: Counted[]) =>
 
 const RESULTS = ['Rue', 'Wormwood', 'Mugwort', 'Fixture Salt'];
 
-/** A typeahead with its chosen values as chips inside the control, an icon beside each if it has one. */
+/** A typeahead with its chosen values as chips inside the control, each reading its count ("Oil (12)", as its option did), an icon beside it if it has one. */
 function Typeahead({
   label,
   placeholder,
@@ -127,7 +114,6 @@ function Typeahead({
   chosen,
   onChange,
   iconOf,
-  countChips = false,
   loading,
 }: {
   label: string;
@@ -136,9 +122,7 @@ function Typeahead({
   chosen: string[];
   onChange: (next: string[]) => void;
   iconOf?: (value: string) => ReactNode;
-  /** Layout F: each chip reads its count too, "Oil (12)", as its option did. */
-  countChips?: boolean;
-  /** Layout F: a chip whose count has not arrived yet shows a placeholder where it sits. */
+  /** A chip whose count has not arrived yet shows a placeholder where it sits. */
   loading?: (value: string) => boolean;
 }): ReactElement {
   const [text, setText] = useState('');
@@ -179,14 +163,12 @@ function Typeahead({
                   <span className="combobox__entry-label">
                     {iconOf?.(value)}
                     <span className="combobox__entry-text">
-                      {countChips && loading?.(value) ? (
+                      {loading?.(value) ? (
                         <>
                           {value} <CountPending />
                         </>
-                      ) : countChips ? (
-                        `${value} (${options.find((option) => option.value === value)?.count ?? 0})`
                       ) : (
-                        value
+                        `${value} (${options.find((option) => option.value === value)?.count ?? 0})`
                       )}
                     </span>
                   </span>
@@ -229,7 +211,7 @@ const TOXIC_COUNTS = { toxic: 4, 'not-toxic': 8 };
 type CountedCategory = ComboboxOption & { category: PickerCategory };
 
 /**
- * Layout F's Categories box: the real CategoryPicker with a count after each name,
+ * The Categories box: the real CategoryPicker with a count after each name,
  * in the options and on the chips. The picker takes no counts yet, so the mock
  * composes the same Combobox and entries rather than change the component.
  */
@@ -579,59 +561,14 @@ function useSlide(
   };
 }
 
-/** sentence-disclosure: the count line as a summary, the sentence sliding open beneath it. */
-function SlideDisclosure({ line, sentence }: { line: string; sentence: ReactNode }): ReactElement {
-  const slide = useSlide();
-  const shown = slide.state === 'open' || slide.state === 'opening';
-  return (
-    // A <details> is not phrasing content, so not an <output>.
-    // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
-    <div role="status" className="facet-layout__sentence">
-      <details
-        className="facet-layout__disclosure facet-layout__disclosure--typed"
-        open={slide.state !== 'closed'}
-      >
-        <summary
-          onClick={(event) => {
-            event.preventDefault();
-            if (slide.state === 'opening' || slide.state === 'closing') return;
-            if (shown) slide.close();
-            else slide.open();
-          }}
-        >
-          {line} · {shown ? 'Hide Search' : 'Show Search'}{' '}
-          <span
-            aria-hidden="true"
-            className={`facet-layout__chevron${slide.state === 'open' ? ' facet-layout__chevron--up' : ''}`}
-          >
-            ▾
-          </span>
-        </summary>
-        <div
-          className={slide.className}
-          style={slide.style}
-          onTransitionEnd={slide.onTransitionEnd}
-        >
-          <div className="facet-layout__tail-inner">
-            <p>{sentence}</p>
-          </div>
-        </div>
-      </details>
-    </div>
-  );
-}
-
+/** The count and term typed out as the loading animation, the clauses sliding open beneath. */
 function TypedSentence({
   query,
   onQuery,
-  chips,
-  disclosure,
   onLoading,
 }: {
   query: string;
   onQuery: (term: string) => void;
-  chips: ReactNode;
-  disclosure: boolean;
   /** True from the press of a search button until its results land: the chips' counts wait. */
   onLoading: (loading: boolean) => void;
 }) {
@@ -797,45 +734,35 @@ function TypedSentence({
           Re-Search Same Term
         </button>
       </div>
-      {disclosure ? (
-        <details
-          className="facet-layout__disclosure facet-layout__disclosure--typed"
-          open={tail !== 'closed'}
-          inert={searching}
-          aria-hidden={searching || undefined}
+      <details
+        className="facet-layout__disclosure"
+        open={tail !== 'closed'}
+        inert={searching}
+        aria-hidden={searching || undefined}
+      >
+        <summary
+          className="facet-layout__first"
+          onClick={(event) => {
+            event.preventDefault();
+            toggleTail();
+          }}
         >
-          <summary
-            className="facet-layout__first"
-            onClick={(event) => {
-              event.preventDefault();
-              toggleTail();
-            }}
-          >
-            {firstLine}
-            {!searching && (
-              <>
-                {' · '}
-                {tail === 'open' || tail === 'opening' ? 'Hide Search' : 'Show Search'}{' '}
-                <span
-                  aria-hidden="true"
-                  className={`facet-layout__chevron${tail === 'open' ? ' facet-layout__chevron--up' : ''}`}
-                >
-                  ▾
-                </span>
-              </>
-            )}
-          </summary>
-          {tailBlock}
-        </details>
-      ) : (
-        <>
-          <p className="facet-layout__first" aria-hidden={searching || undefined}>
-            {firstLine}
-          </p>
-          {tailBlock}
-        </>
-      )}
-      {chips}
+          {firstLine}
+          {!searching && (
+            <>
+              {' · '}
+              {tail === 'open' || tail === 'opening' ? 'Hide Search' : 'Show Search'}{' '}
+              <span
+                aria-hidden="true"
+                className={`facet-layout__chevron${tail === 'open' ? ' facet-layout__chevron--up' : ''}`}
+              >
+                ▾
+              </span>
+            </>
+          )}
+        </summary>
+        {tailBlock}
+      </details>
       {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
       <p role="status" className="facet-layout__sr">
         {announced ? (
@@ -849,8 +776,6 @@ function TypedSentence({
   );
 }
 
-type Variant = 'disclosure' | 'open' | 'sidebar' | 'tray' | 'grid' | 'grid-tray';
-
 /** How long a chip added from the panel waits for its count (the mock's stand-in for a search). */
 const PENDING_MS = 1200;
 
@@ -858,11 +783,9 @@ const PENDING_MS = 1200;
 const TABLET_QUERY = '(min-width: 768px)';
 
 interface LayoutProps {
-  variant?: Variant;
   /** The selected Match and Toxic segment drawn as an outline, not a green block. */
   outlinedStrip?: boolean;
   open?: boolean;
-  onChange?: boolean;
   forms?: string[];
   deities?: string[];
   zodiac?: string[];
@@ -872,16 +795,14 @@ interface LayoutProps {
   toxic?: 'any' | 'toxic' | 'not-toxic';
   query?: string;
   sentence: ReactNode;
-  /** Layout F: how the search sentence is set. */
-  sentenceMode?: 'full' | 'disclosure' | 'tip' | 'chips' | 'typed' | 'disclosure-typed';
+  /** How the search sentence is set: plain text, or typed out inside a disclosure. */
+  sentenceMode?: 'full' | 'disclosure-typed';
 }
 
-/** The proposal and its alternatives, interactive enough to open, pick and clear. */
+/** The chosen layout, interactive enough to open, pick and clear. */
 function Layout({
-  variant = 'disclosure',
   outlinedStrip = false,
   open = false,
-  onChange = false,
   forms: initialForms = [],
   deities: initialDeities = [],
   zodiac: initialZodiac = [],
@@ -902,18 +823,13 @@ function Layout({
   const [zodiac, setZodiac] = useState(initialZodiac);
   const [planets, setPlanets] = useState(initialPlanets);
   const [elements, setElements] = useState(initialElements);
-  const [nomenclature, setNomenclature] = useState('');
-  const [tray, setTray] = useState(open);
-  // Layout F: the counts, the paired Match and Toxic row, no Classification.
-  const fx = variant === 'grid-tray';
-  const tipId = useId();
   const dropRef = useRef<HTMLDialogElement>(null);
   const filtersRef = useRef<HTMLButtonElement>(null);
   const dropTitle = useId();
   const dropId = useId();
-  // Layout F: the panel slides down over the results. `open` is only these stories'
+  // The panel slides down over the results. `open` is only these stories'
   // starting state; the page itself never opens it on load.
-  const drop = useSlide('facet-layout__drop-clip', open && fx ? 'open' : 'closed');
+  const drop = useSlide('facet-layout__drop-clip', open ? 'open' : 'closed');
   const dropShown = drop.state === 'open' || drop.state === 'opening';
   const closeDrop = () => drop.close(dropRef.current?.matches(':modal') ?? false);
   // The dialog follows the slide's state: show() from the tablet width up (no scrim,
@@ -950,7 +866,7 @@ function Layout({
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, []);
   const markPending = (keys: string[]) => {
-    if (!fx || keys.length === 0) return;
+    if (keys.length === 0) return;
     setPending((now) => [...now, ...keys]);
     pendingTimers.current.push(
       window.setTimeout(
@@ -968,7 +884,6 @@ function Layout({
       );
       set(next);
     };
-  const hidden = forms.length + deities.length + zodiac.length + planets.length + elements.length;
   const facets = [categories, forms, deities, zodiac, planets, elements].filter(
     (l) => l.length > 0,
   ).length;
@@ -1000,20 +915,6 @@ function Layout({
     />
   );
 
-  const categoriesBlock = (
-    <div className="facet-layout__grow">
-      <CategoryPicker
-        legend="Categories"
-        entry="Category"
-        placeholder="Add Category"
-        categories={CATEGORIES}
-        value={categories}
-        onChange={setCategories}
-      />
-      {matchStrip}
-    </div>
-  );
-
   const toxicBlock = (
     <div className="facet-layout__toxic">
       <Strip
@@ -1021,11 +922,8 @@ function Layout({
         name="toxic"
         options={[
           { value: 'any', label: 'Any' },
-          { value: 'toxic', label: fx ? `Toxic (${TOXIC_COUNTS.toxic})` : 'Toxic' },
-          {
-            value: 'not-toxic',
-            label: fx ? `Not Toxic (${TOXIC_COUNTS['not-toxic']})` : 'Not Toxic',
-          },
+          { value: 'toxic', label: `Toxic (${TOXIC_COUNTS.toxic})` },
+          { value: 'not-toxic', label: `Not Toxic (${TOXIC_COUNTS['not-toxic']})` },
         ]}
         value={toxic}
         onChange={(next) => {
@@ -1036,17 +934,9 @@ function Layout({
     </div>
   );
 
-  const primary = (
-    <div className="facet-layout__row">
-      {categoriesBlock}
-      {toxicBlock}
-    </div>
-  );
-
   const formsField = (
     <Typeahead
       label="Forms"
-      countChips={fx}
       loading={(value) => isPending('f-' + value)}
       placeholder="Add Form"
       chosen={forms}
@@ -1064,7 +954,6 @@ function Layout({
   const deitiesField = (
     <Typeahead
       label="Deities"
-      countChips={fx}
       loading={(value) => isPending('d-' + value)}
       placeholder="Add Deity"
       chosen={deities}
@@ -1081,7 +970,6 @@ function Layout({
   const zodiacField = (
     <Typeahead
       label="Zodiac"
-      countChips={fx}
       loading={(value) => isPending('z-' + value)}
       placeholder="Add Sign"
       chosen={zodiac}
@@ -1093,7 +981,6 @@ function Layout({
   const planetsField = (
     <Typeahead
       label="Planets"
-      countChips={fx}
       loading={(value) => isPending('p-' + value)}
       placeholder="Add Planet"
       chosen={planets}
@@ -1105,7 +992,6 @@ function Layout({
   const elementsField = (
     <Typeahead
       label="Elements"
-      countChips={fx}
       loading={(value) => isPending('e-' + value)}
       placeholder="Add Element"
       chosen={elements}
@@ -1114,53 +1000,9 @@ function Layout({
     />
   );
 
-  const classificationField = !fx && (
-    <FilterSelectField
-      label="Classification"
-      name="nomenclature"
-      all="Any"
-      options={NOMENCLATURE_OPTIONS}
-      defaultValue={nomenclature}
-      onChange={setNomenclature}
-    />
-  );
-
   const noRefsField = (
     <SwitchField label="No Refs" name="withoutReferences" value="1" onChange={() => {}} />
   );
-
-  const panelItems = (
-    <>
-      {formsField}
-      {deitiesField}
-      {zodiacField}
-      {planetsField}
-      {elementsField}
-      {classificationField}
-      {noRefsField}
-    </>
-  );
-
-  const panel = <div className="facet-layout__panel">{panelItems}</div>;
-
-  const apply = (
-    <div className="facet-layout__apply">
-      {/* Once hydrated, ApplyOnChange drops this; the submit stays for the form before hydration. */}
-      {!onChange && (
-        <button type="submit" className="btn btn--solid">
-          Apply Filters
-        </button>
-      )}
-      <a href={COMPENDIUM_PATH}>Clear All</a>
-    </div>
-  );
-
-  const formProps = {
-    method: 'get',
-    action: COMPENDIUM_PATH,
-    className: 'form facet-layout',
-    'aria-label': 'Filter the Compendium',
-  };
 
   const countOf = (list: Counted[], name: string) => list.find((i) => i.name === name)?.count ?? 0;
   const chosen: {
@@ -1235,76 +1077,34 @@ function Layout({
               onClick={item.remove}
               aria-label={`Remove ${item.label}`}
             >
-              {fx ? (
-                isPending(item.key) ? (
-                  <>
-                    {item.label} <CountPending />
-                  </>
-                ) : (
-                  `${item.label} (${item.count})`
-                )
+              {isPending(item.key) ? (
+                <>
+                  {item.label} <CountPending />
+                </>
               ) : (
-                item.label
+                `${item.label} (${item.count})`
               )}
               <span aria-hidden="true">×</span>
             </button>
           </li>
         ))}
-        {/* Layout F: Clear All is not in the sentence; it ends the chip row. */}
-        {fx && (
-          <li className="facet-layout__chosen-clear">
-            <a href={COMPENDIUM_PATH}>Clear All</a>
-          </li>
-        )}
+        {/* Clear All is not in the sentence; it ends the chip row. */}
+        <li className="facet-layout__chosen-clear">
+          <a href={COMPENDIUM_PATH}>Clear All</a>
+        </li>
       </ul>
     ) : null;
 
-  const countLine = '12 ingredients';
-  let sentenceNode: ReactNode;
-  if (fx && sentenceMode === 'disclosure') {
-    sentenceNode = <SlideDisclosure line={countLine} sentence={sentence} />;
-  } else if (fx && sentenceMode === 'tip') {
-    // The count line and an info button; the sentence is the tip's text, in the status region.
-    sentenceNode = (
-      // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
-      <p role="status" className="facet-layout__sentence facet-layout__sentence--tip">
-        {countLine}{' '}
-        <InfoTip id={tipId} label="the search">
-          {sentence}
-        </InfoTip>
-      </p>
-    );
-  } else if (fx && sentenceMode === 'chips') {
-    // The chip row does the on-screen job; the full sentence is there for assistive technology.
-    sentenceNode = (
-      <div className="facet-layout__sentence">
-        <p className="facet-layout__count-line">{countLine}</p>
-        {chosenChips}
-        {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-        <p role="status" className="facet-layout__sr">
-          {sentence}
-        </p>
-      </div>
-    );
-  } else if (fx && (sentenceMode === 'typed' || sentenceMode === 'disclosure-typed')) {
-    sentenceNode = (
-      <TypedSentence
-        query={query}
-        onQuery={setQuery}
-        chips={sentenceMode === 'typed' ? chosenChips : null}
-        disclosure={sentenceMode === 'disclosure-typed'}
-        onLoading={setSearching}
-      />
-    );
-  } else {
-    sentenceNode = (
+  const sentenceNode: ReactNode =
+    sentenceMode === 'disclosure-typed' ? (
+      <TypedSentence query={query} onQuery={setQuery} onLoading={setSearching} />
+    ) : (
       // The record names a role="status" paragraph, as the real sentence will be.
       // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role
       <p role="status" className="facet-layout__sentence">
         {sentence}
       </p>
     );
-  }
 
   const results = (
     <>
@@ -1320,196 +1120,111 @@ function Layout({
     </>
   );
 
-  let body: ReactElement;
-  if (variant === 'grid') {
-    body = (
-      <>
-        <form {...formProps}>
-          {search}
-          <div className="facet-layout__row facet-layout__beside">{categoriesBlock}</div>
-          <div className="facet-layout__grid">
-            {toxicBlock}
-            {panelItems}
-          </div>
-          {apply}
-        </form>
-        {results}
-      </>
-    );
-  } else if (variant === 'grid-tray') {
-    // The bar's Filters button opens the panel; below the tablet width it is a modal sheet.
-    body = (
-      <>
-        <form
-          {...formProps}
-          className={`form facet-layout facet-layout__drop-anchor${outlinedStrip ? ' facet-layout--outlined-strip' : ''}`}
-        >
-          <div className="facet-layout__bar">
-            <div className="facet-layout__grow">{search}</div>
-            <button
-              ref={filtersRef}
-              type="button"
-              className="btn facet-layout__filters-button"
-              aria-expanded={dropShown}
-              aria-controls={dropId}
-              onClick={() => (dropShown ? closeDrop() : drop.open())}
-            >
-              {filterCount > 0 ? `Filters (${filterCount})` : 'Filters'}
-            </button>
-          </div>
-          {/* No `open` attribute: the state above calls show() or showModal() after a press,
-              never on load. (The page itself renders this panel inline and open until
-              JavaScript takes over, so the form works without it; the mock does not.) */}
-          <dialog
-            ref={dropRef}
-            id={dropId}
-            className="facet-layout__drop"
-            tabIndex={-1}
-            aria-labelledby={dropTitle}
-            onKeyDown={(event) => {
-              // A non-modal dialog does not close on Escape by itself; the combobox keeps
-              // the key for its own open list.
-              if (event.key === 'Escape' && !event.defaultPrevented) {
-                event.preventDefault();
-                closeDrop();
-              }
-            }}
-            onClose={() => drop.close(true)}
-          >
-            <div
-              className={drop.className}
-              style={drop.style}
-              onTransitionEnd={drop.onTransitionEnd}
-            >
-              {/* A focused control inside the clipped box would scroll it: hold it still. */}
-              <div
-                className="facet-layout__drop-inner"
-                onScroll={(event) => {
-                  event.currentTarget.scrollTop = 0;
-                }}
-              >
-                <div className="facet-layout__drop-pad">
-                  <div className="facet-layout__tray-head">
-                    <strong id={dropTitle}>Filters</strong>
-                    <button
-                      type="button"
-                      className="btn facet-layout__phone-only"
-                      onClick={closeDrop}
-                    >
-                      Close
-                    </button>
-                  </div>
-                  <div className="facet-layout__line">
-                    <div className="facet-layout__grow">
-                      <CountedCategories
-                        value={categories}
-                        onChange={tracked('c', categories, setCategories)}
-                        loading={(id) => isPending(`c-${id}`)}
-                      />
-                    </div>
-                    {matchStrip}
-                    {noRefsField}
-                  </div>
-                  <div className="facet-layout__line">
-                    <div className="facet-layout__grow">{formsField}</div>
-                    {toxicBlock}
-                  </div>
-                  <div className="facet-layout__line">
-                    <div className="facet-layout__grow">{planetsField}</div>
-                    <div className="facet-layout__grow">{zodiacField}</div>
-                  </div>
-                  <div className="facet-layout__line">
-                    <div className="facet-layout__grow">{deitiesField}</div>
-                    <div className="facet-layout__grow">{elementsField}</div>
-                  </div>
-                  <div className="facet-layout__apply facet-layout__tray-foot">
-                    <button type="submit" className="btn btn--solid">
-                      Apply Filters
-                    </button>
-                    <button
-                      type="button"
-                      className="btn facet-layout__phone-only"
-                      onClick={closeDrop}
-                    >
-                      Close
-                    </button>
-                    <a href={COMPENDIUM_PATH}>Clear All</a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </dialog>
-        </form>
-        {sentenceMode !== 'chips' && sentenceMode !== 'typed' && chosenChips}
-        {results}
-      </>
-    );
-  } else if (variant === 'sidebar') {
-    body = (
-      <div className="facet-layout__split">
-        <form {...formProps}>
-          {search}
-          {primary}
-          {panel}
-          {apply}
-        </form>
-        <div className="facet-layout__main">{results}</div>
-      </div>
-    );
-  } else if (variant === 'tray') {
-    body = (
-      <>
+  // The bar's Filters button opens the panel; below the tablet width it is a modal sheet.
+  const body = (
+    <>
+      <form
+        method="get"
+        action={COMPENDIUM_PATH}
+        aria-label="Filter the Compendium"
+        className={`form facet-layout facet-layout__drop-anchor${outlinedStrip ? ' facet-layout--outlined-strip' : ''}`}
+      >
         <div className="facet-layout__bar">
           <div className="facet-layout__grow">{search}</div>
-          <button type="button" className="btn" onClick={() => setTray(true)}>
+          <button
+            ref={filtersRef}
+            type="button"
+            className="btn facet-layout__filters-button"
+            aria-expanded={dropShown}
+            aria-controls={dropId}
+            onClick={() => (dropShown ? closeDrop() : drop.open())}
+          >
             {filterCount > 0 ? `Filters (${filterCount})` : 'Filters'}
           </button>
         </div>
-        {chosenChips}
-        {results}
-        {tray && (
-          <form {...formProps} className="form facet-layout facet-layout__tray">
-            <div className="facet-layout__tray-head">
-              <strong>Filters</strong>
-              <button type="button" className="btn" onClick={() => setTray(false)}>
-                Close
-              </button>
+        {/* No `open` attribute: the state above calls show() or showModal() after a press,
+              never on load. (The page itself renders this panel inline and open until
+              JavaScript takes over, so the form works without it; the mock does not.) */}
+        <dialog
+          ref={dropRef}
+          id={dropId}
+          className="facet-layout__drop"
+          tabIndex={-1}
+          aria-labelledby={dropTitle}
+          onKeyDown={(event) => {
+            // A non-modal dialog does not close on Escape by itself; the combobox keeps
+            // the key for its own open list.
+            if (event.key === 'Escape' && !event.defaultPrevented) {
+              event.preventDefault();
+              closeDrop();
+            }
+          }}
+          onClose={() => drop.close(true)}
+        >
+          <div className={drop.className} style={drop.style} onTransitionEnd={drop.onTransitionEnd}>
+            {/* A focused control inside the clipped box would scroll it: hold it still. */}
+            <div
+              className="facet-layout__drop-inner"
+              onScroll={(event) => {
+                event.currentTarget.scrollTop = 0;
+              }}
+            >
+              <div className="facet-layout__drop-pad">
+                <div className="facet-layout__tray-head">
+                  <strong id={dropTitle}>Filters</strong>
+                  <button
+                    type="button"
+                    className="btn facet-layout__phone-only"
+                    onClick={closeDrop}
+                  >
+                    Close
+                  </button>
+                </div>
+                <div className="facet-layout__line">
+                  <div className="facet-layout__grow">
+                    <CountedCategories
+                      value={categories}
+                      onChange={tracked('c', categories, setCategories)}
+                      loading={(id) => isPending(`c-${id}`)}
+                    />
+                  </div>
+                  {matchStrip}
+                  {noRefsField}
+                </div>
+                <div className="facet-layout__line">
+                  <div className="facet-layout__grow">{formsField}</div>
+                  {toxicBlock}
+                </div>
+                <div className="facet-layout__line">
+                  <div className="facet-layout__grow">{planetsField}</div>
+                  <div className="facet-layout__grow">{zodiacField}</div>
+                </div>
+                <div className="facet-layout__line">
+                  <div className="facet-layout__grow">{deitiesField}</div>
+                  <div className="facet-layout__grow">{elementsField}</div>
+                </div>
+                <div className="facet-layout__apply facet-layout__tray-foot">
+                  <button type="submit" className="btn btn--solid">
+                    Apply Filters
+                  </button>
+                  <button
+                    type="button"
+                    className="btn facet-layout__phone-only"
+                    onClick={closeDrop}
+                  >
+                    Close
+                  </button>
+                  <a href={COMPENDIUM_PATH}>Clear All</a>
+                </div>
+              </div>
             </div>
-            {primary}
-            {panel}
-            <div className="facet-layout__apply facet-layout__tray-foot">
-              <button type="submit" className="btn btn--solid">
-                Apply Filters
-              </button>
-              <button type="button" className="btn" onClick={() => setTray(false)}>
-                Close
-              </button>
-              <a href={COMPENDIUM_PATH}>Clear All</a>
-            </div>
-          </form>
-        )}
-      </>
-    );
-  } else {
-    body = (
-      <>
-        <form {...formProps}>
-          {search}
-          {primary}
-          {variant === 'open' ? (
-            panel
-          ) : (
-            <details className="facet-layout__more" open={open || undefined}>
-              <summary>{hidden > 0 ? `More Filters (${hidden})` : 'More Filters'}</summary>
-              {panel}
-            </details>
-          )}
-          {apply}
-        </form>
-        {results}
-      </>
-    );
-  }
+          </div>
+        </dialog>
+      </form>
+      {chosenChips}
+      {results}
+    </>
+  );
 
   return (
     <AdminFrame open={COMPENDIUM_PATH}>
@@ -1521,118 +1236,15 @@ function Layout({
   );
 }
 
-const Link = ({ children }: { children: ReactNode }) => <a href={COMPENDIUM_PATH}>{children}</a>;
-
-const FULL_SENTENCE = (
-  <>
-    12 ingredients matching “<Link>rue</Link>”, in the <Link>Protection</Link> and{' '}
-    <Link>Healing</Link> categories, as <Link>Oil</Link> or <Link>Tincture</Link>, of{' '}
-    <Link>Hecate</Link>, under <Link>Scorpio</Link>, ruled by the <Link>Sun</Link> or{' '}
-    <Link>Mars</Link>, in the <Link>Water</Link> element, that are <Link>not toxic</Link>.{' '}
-    <Link>Clear All</Link>
-  </>
-);
-
-const OPEN_PROPS: LayoutProps = {
-  open: true,
-  forms: ['Oil', 'Tincture'],
-  deities: ['Hecate'],
-  zodiac: ['Scorpio'],
-  planets: ['Sun', 'Mars'],
-  elements: ['Water'],
-  toxic: 'not-toxic',
-  sentence: FULL_SENTENCE,
-};
-
-// The page as first loaded for the search "rue" and two categories, the
-// disclosure closed and nothing hidden chosen.
-export const Proposed: Story = () => (
-  <Layout
-    sentence={
-      <>
-        12 ingredients matching “<Link>rue</Link>”, in the <Link>Protection</Link> and{' '}
-        <Link>Healing</Link> categories. <Link>Clear All</Link>
-      </>
-    }
-  />
-);
-
-export const ProposedPhoneLight: Story = () => <Proposed />;
-ProposedPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const ProposedPhoneDark: Story = () => <Proposed />;
-ProposedPhoneDark.meta = { theme: 'dark', width: 375 };
-
-// Disclosure open, a value chosen in each hidden facet: the button counts them
-// and the sentence names every one. Wax, Thoth, Gemini and Saturn have a count
-// of zero: the chips are disabled but stay, the typeahead lists them last.
-export const MoreFiltersOpen: Story = () => <Layout {...OPEN_PROPS} />;
-
-export const MoreFiltersOpenPhoneLight: Story = () => <Layout {...OPEN_PROPS} />;
-MoreFiltersOpenPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const MoreFiltersOpenPhoneDark: Story = () => <Layout {...OPEN_PROPS} />;
-MoreFiltersOpenPhoneDark.meta = { theme: 'dark', width: 375 };
-
-// The disclosure closed with hidden values chosen: only the button's count and
-// the sentence say so.
-export const MoreFiltersClosed: Story = () => <Layout {...OPEN_PROPS} open={false} />;
-
-// The variant: the same panel with no Apply Filters button, each change applying as
-// the Categories picker already does.
-export const ApplyOnChange: Story = () => <Layout {...OPEN_PROPS} onChange />;
-
-export const NothingChosen: Story = () => (
-  <Layout categories={[]} query="" sentence={<>214 ingredients.</>} />
-);
-
-// Alternative A from the record: every facet as a plain open row, no disclosure.
-export const AllOpen: Story = () => <Layout {...OPEN_PROPS} variant="open" />;
-
-export const AllOpenPhoneLight: Story = () => <AllOpen />;
-AllOpenPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const AllOpenPhoneDark: Story = () => <AllOpen />;
-AllOpenPhoneDark.meta = { theme: 'dark', width: 375 };
-
-// Alternative B: the filters in a left column beside the results, stacking on a phone.
-export const Sidebar: Story = () => <Layout {...OPEN_PROPS} variant="sidebar" />;
-
-export const SidebarPhoneLight: Story = () => <Sidebar />;
-SidebarPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const SidebarPhoneDark: Story = () => <Sidebar />;
-SidebarPhoneDark.meta = { theme: 'dark', width: 375 };
-
-// Alternative D: a Filters button, the chosen values as removable chips, and the
-// filters in a tray (a right-hand drawer on desktop, a full-height sheet on a phone).
-export const FiltersTray: Story = () => <Layout {...OPEN_PROPS} variant="tray" />;
-
-export const FiltersTrayPhoneLight: Story = () => <FiltersTray />;
-FiltersTrayPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const FiltersTrayPhoneDark: Story = () => <FiltersTray />;
-FiltersTrayPhoneDark.meta = { theme: 'dark', width: 375 };
-
-// Alternative E: every facet always visible as a one-line control in a compact grid
-// (three columns wide, a plain stack on a phone), no disclosure.
-export const Grid: Story = () => <Layout {...OPEN_PROPS} variant="grid" />;
-
-export const GridPhoneLight: Story = () => <Grid />;
-GridPhoneLight.meta = { theme: 'light', width: 375 };
-
-export const GridPhoneDark: Story = () => <Grid />;
-GridPhoneDark.meta = { theme: 'dark', width: 375 };
-
-// Alternative F, "grid-tray", after the owner dropped the sidebar: the search box with a
-// Filters (n) button beside it, the chosen values as chips, the sentence and the results the
-// full width. Filters opens E's three-column grid as a panel that slides down over the
-// results from under the search row (the results never move); non-modal from the tablet
-// width up (no scrim; the focus goes in and returns to the button; Escape closes), and
-// below it D's full-height sheet on showModal(). The sentence above the results is plain
-// text with no links: values are set in a heavier weight, Clear All sits with the filters
-// and ends the chip row, and a value is taken out only by its chip's cross. Counts follow
-// every name, and show a placeholder while a search is on its way.
+// Layout F, "grid-tray", the layout the owner chose: the search box with a Filters (n)
+// button beside it, the chosen values as chips, the sentence and the results the full
+// width. Filters opens a three-column grid as a panel that slides down over the results
+// from under the search row (the results never move); non-modal from the tablet width up
+// (no scrim; the focus goes in and returns to the button; Escape closes), and below it a
+// full-height sheet on showModal(). The sentence above the results is plain text with no
+// links: values are set in a heavier weight, Clear All sits with the filters and ends the
+// chip row, and a value is taken out only by its chip's cross. Counts follow every name,
+// and show a placeholder while a search is on its way.
 //
 // In the page the panel renders inline and open until JavaScript takes over; the mock
 // starts closed and does not model that.
@@ -1646,7 +1258,16 @@ const F_SENTENCE = (
   </>
 );
 
-const F_PROPS: LayoutProps = { ...OPEN_PROPS, sentence: F_SENTENCE, variant: 'grid-tray' };
+const F_PROPS: LayoutProps = {
+  open: true,
+  forms: ['Oil', 'Tincture'],
+  deities: ['Hecate'],
+  zodiac: ['Scorpio'],
+  planets: ['Sun', 'Mars'],
+  elements: ['Water'],
+  toxic: 'not-toxic',
+  sentence: F_SENTENCE,
+};
 // The panel shut, the state the page loads in.
 const F_CLOSED: LayoutProps = { ...F_PROPS, open: false };
 
@@ -1668,46 +1289,9 @@ GridTrayPhoneDark.meta = { theme: 'dark', width: 375 };
 export const GridTrayPhoneClosed: Story = () => <Layout {...F_CLOSED} />;
 GridTrayPhoneClosed.meta = { theme: 'light', width: 375 };
 
-// Three more compact sentences, each on grid-tray with the panel shut (the sentence sits
-// above the results) and the phone with the sheet shut.
-export const SentenceDisclosure: Story = () => <Layout {...F_CLOSED} sentenceMode="disclosure" />;
-
-export const SentenceDisclosurePhoneClosed: Story = () => (
-  <Layout {...F_CLOSED} sentenceMode="disclosure" />
-);
-SentenceDisclosurePhoneClosed.meta = { theme: 'light', width: 375 };
-
-export const SentenceDisclosurePhoneClosedDark: Story = () => <SentenceDisclosurePhoneClosed />;
-SentenceDisclosurePhoneClosedDark.meta = { theme: 'dark', width: 375 };
-
-export const SentenceTip: Story = () => <Layout {...F_CLOSED} sentenceMode="tip" />;
-
-export const SentenceTipPhoneClosed: Story = () => <Layout {...F_CLOSED} sentenceMode="tip" />;
-SentenceTipPhoneClosed.meta = { theme: 'light', width: 375 };
-
-export const SentenceTipPhoneClosedDark: Story = () => <SentenceTipPhoneClosed />;
-SentenceTipPhoneClosedDark.meta = { theme: 'dark', width: 375 };
-
-export const SentenceChips: Story = () => <Layout {...F_CLOSED} sentenceMode="chips" />;
-
-export const SentenceChipsPhoneClosed: Story = () => <Layout {...F_CLOSED} sentenceMode="chips" />;
-SentenceChipsPhoneClosed.meta = { theme: 'light', width: 375 };
-
-export const SentenceChipsPhoneClosedDark: Story = () => <SentenceChipsPhoneClosed />;
-SentenceChipsPhoneClosedDark.meta = { theme: 'dark', width: 375 };
-
-// The chips design with the sentence typed out as the loading animation. Press Slow
-// Search (results after four seconds) or Fast Search (after 0.6 seconds).
-export const SentenceTyped: Story = () => <Layout {...F_CLOSED} sentenceMode="typed" />;
-
-export const SentenceTypedPhoneClosed: Story = () => <Layout {...F_CLOSED} sentenceMode="typed" />;
-SentenceTypedPhoneClosed.meta = { theme: 'light', width: 375 };
-
-export const SentenceTypedPhoneClosedDark: Story = () => <SentenceTypedPhoneClosed />;
-SentenceTypedPhoneClosedDark.meta = { theme: 'dark', width: 375 };
-
-// sentence-disclosure joined to sentence-typed: the typed first line is the disclosure's
-// summary, and the tail slides open and shut.
+// The sentence typed out as the loading animation, its first line the disclosure's summary
+// and the tail sliding open and shut. Press Slow Search (results after four seconds) or
+// Fast Search (after 0.6 seconds).
 export const SentenceDisclosureTyped: Story = () => (
   <Layout {...F_CLOSED} sentenceMode="disclosure-typed" />
 );

@@ -1,25 +1,14 @@
 @use '../src/scss/variables' as *;
 @use '../src/scss/mixins' as *;
 
-// A mock-up for the owner's sign-off of M12.4's filter layout (layout C in
+// A mock-up of M12.4's filter layout as the owner chose it (layout F in
 // claude-docs/design-decisions/m12.4-filter-layout.md). Layout only, tokens
-// only: it is replaced by the real build once the layout is agreed.
+// only: it is replaced by the real build.
 
 .facet-layout {
   display: flex;
   flex-direction: column;
   gap: space(4);
-}
-
-.facet-layout__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(4);
-  align-items: flex-start;
-
-  > * {
-    min-width: 0;
-  }
 }
 
 .facet-layout__grow {
@@ -29,35 +18,6 @@
 .facet-layout__toxic {
   display: flex;
   gap: space(4);
-
-  .radio {
-    white-space: nowrap;
-  }
-}
-
-.facet-layout__more {
-  border: 1px solid $hairline;
-  border-radius: radius('surface');
-  padding: space(3) space(4);
-
-  > summary {
-    cursor: pointer;
-    font-weight: 500;
-  }
-
-  &[open] > summary {
-    margin-bottom: space(4);
-  }
-}
-
-.facet-layout__panel {
-  display: grid;
-  gap: space(4);
-  grid-template-columns: 1fr;
-
-  @media (min-width: $shell-tablet-width) {
-    grid-template-columns: 1fr 1fr;
-  }
 }
 
 .facet-layout__count {
@@ -169,33 +129,7 @@
   }
 }
 
-// Alternative B: the filters in a left column, the sentence and results beside.
-.facet-layout__split {
-  display: grid;
-  gap: space(6);
-  grid-template-columns: 1fr;
-  align-items: start;
-
-  @media (min-width: $shell-tablet-width) {
-    grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
-  }
-
-  .facet-layout__panel {
-    grid-template-columns: 1fr;
-  }
-
-  .facet-layout__apply {
-    position: static;
-    border-top: 0;
-    padding: 0;
-  }
-}
-
-.facet-layout__main {
-  min-width: 0;
-}
-
-// Alternative D: the Filters button beside the search box, chosen values as chips.
+// The Filters button beside the search box.
 .facet-layout__bar {
   display: flex;
   gap: space(4);
@@ -260,18 +194,6 @@
   box-shadow: inset 0 0 0 1px $text-primary;
 }
 
-.facet-layout__tray {
-  position: fixed;
-  inset: 0 0 0 auto;
-  z-index: 20;
-  width: min(32rem, 100%);
-  overflow-y: auto;
-  padding: space(4);
-  background-color: $surface-page;
-  border-left: 1px solid $hairline;
-  box-sizing: border-box;
-}
-
 .facet-layout__tray-head {
   display: flex;
   justify-content: space-between;
@@ -292,31 +214,7 @@
   opacity: 0.55;
 }
 
-// Alternative E: every facet visible as a one-line control in a compact grid.
-.facet-layout__grid {
-  display: grid;
-  gap: space(4);
-  grid-template-columns: minmax(0, 1fr);
-
-  @media (min-width: $shell-tablet-width) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-// Categories and Match on one line: the picker takes the spare width.
-.facet-layout__beside .facet-layout__grow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(4);
-  align-items: flex-end;
-
-  > :first-child {
-    flex: 1 1 20rem;
-    min-width: 0;
-  }
-}
-
-// Alternative F, "grid-tray": the Filters button opens E's grid as a panel that slides down
+// The Filters button opens the filters as a panel that slides down
 // over the results, anchored under the search row, so the results never move. It is a native
 // <dialog> that script opens: show() from the tablet width up (no scrim, no inert page),
 // showModal() below it (the top layer and the backdrop are the browser's). The slide is
@@ -458,8 +356,6 @@
 }
 
 // The primitive centres a switch; in the panel No Refs sits at the left like the fields above it.
-.facet-layout__panel .field.switch,
-.facet-layout__grid .field.switch,
 .facet-layout__line .field.switch {
   align-items: flex-start;
 
@@ -474,13 +370,9 @@
   margin-inline-start: space(2);
 }
 
-// The compact sentences. The visually hidden one is still the status region.
+// The visually hidden status region: the finished sentence, for assistive technology.
 .facet-layout__sr {
   @include visually-hidden;
-}
-
-.facet-layout__count-line {
-  margin: 0;
 }
 
 .facet-layout__disclosure {
@@ -488,31 +380,10 @@
     cursor: pointer;
     width: fit-content;
   }
-
-  > p {
-    margin-block: space(2) 0;
-  }
-
-  &:not(.facet-layout__disclosure--typed)[open] .facet-layout__chevron {
-    display: inline-block;
-    rotate: 180deg;
-  }
 }
 
-.facet-layout__sentence--tip {
-  position: relative;
-
-  // The sentence is longer than a hint: wider than the primitive's default.
-  .info-tip__bubble {
-    box-sizing: border-box;
-    max-width: min(30rem, 100%);
-    white-space: normal;
-  }
-}
-
-// The typed sentence. The count line and the typed text share one grid cell so the
-// fade is a crossfade; the untyped rest of the sentence keeps its place, invisible,
-// so the lines do not reflow as it types.
+// The typed sentence. The untyped rest of it keeps its place, invisible, so the lines do
+// not reflow as it types.
 .facet-layout__mock-controls {
   display: flex;
   flex-wrap: wrap;
@@ -520,7 +391,7 @@
   margin-block-end: space(3);
 }
 
-// The first line is the summary (disclosure) or a paragraph; the tail beneath it opens and
+// The first line is the disclosure's summary; the tail beneath it opens and
 // closes by height. Grid rows 0fr to 1fr is the Baseline way to animate an auto height.
 .facet-layout__first {
   margin: 0;
