@@ -1,5 +1,12 @@
 import type { z } from 'zod';
-import type { IngredientRow, ReferenceRow, StockRow } from '../../db/repository';
+import type {
+  CompendiumFacets,
+  FacetCount,
+  IngredientFacets,
+  IngredientRow,
+  ReferenceRow,
+  StockRow,
+} from '../../db/repository';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
@@ -10,7 +17,14 @@ import type { ValidationIssue } from '../../lib/types';
 import type { CategoryRow, DeityRow } from '@/modules/vocabulary';
 
 // The repository's own, rather than a second `typeof …$inferSelect`.
-export type { IngredientRow, ReferenceRow, StockRow };
+export type {
+  CompendiumFacets,
+  FacetCount,
+  IngredientFacets,
+  IngredientRow,
+  ReferenceRow,
+  StockRow,
+};
 
 // The vocabulary's own, which a category's loader answers with.
 export type { CategoryRow };

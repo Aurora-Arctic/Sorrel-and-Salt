@@ -45,6 +45,7 @@ export {
   findWorkspaceIngredientByIdentity,
   findWorkspaceIngredientPage,
 } from './ingredients';
+export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
 export { COVEN_STOCK_LOCK_NAMESPACE, findStockById, findStockOfIngredients } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
@@ -107,11 +108,14 @@ export type {
   CitingLink,
   Claimant,
   CommonNameSuggestion,
+  CompendiumFacets,
   CompendiumScore,
   DeityFilter,
   DeitySuggestion,
+  FacetCount,
   FormSuggestion,
   GroupFilter,
+  IngredientFacets,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,

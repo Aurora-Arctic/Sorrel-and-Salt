@@ -192,6 +192,34 @@ export interface Similarity {
 }
 
 /**
+ * How `selectFrom` tallies rows rather than reading them (M12.3): the
+ * `aggregate` values, one row per `groupBy` group, or one row for the whole
+ * read without a group. The read takes a list's search join and threshold
+ * from `over`, as a count does, so it tallies the rows that list's pages
+ * hold. Each value is read as the driver returns it, as a carried value is,
+ * so a count is cast in SQL rather than mapped.
+ */
+export interface Aggregate<TRow extends Record<string, unknown>> {
+  aggregate: { [K in keyof TRow]: SQL<TRow[K]> };
+  over: Pick<KeyOrder, 'join' | 'wordMatch'>;
+  /**
+   * Tables joined after the search join, in order, each ANDing its own
+   * `deleted_at IS NULL` into `on`. A right join keeps every row of its table
+   * whatever `on` says, so the `where` is where that table's own filter goes.
+   */
+  joins?: readonly AggregateJoin[];
+  groupBy?: readonly (SQL | AnyPgColumn)[];
+  orderBy?: readonly (SQL | AnyPgColumn)[];
+}
+
+/** One table an `Aggregate` read joins, and how. Alias it when the `where` reads the table too. */
+export interface AggregateJoin {
+  type: 'inner' | 'left' | 'right';
+  table: PgTable;
+  on: SQL | undefined;
+}
+
+/**
  * How `selectFrom` reads a table beside a second one left-joined to it: each
  * row with the joined row, or null where `on` matched none. Alias the joined
  * table when the `where` reads the table itself too, in a correlated
@@ -680,6 +708,37 @@ export interface IngredientFilter {
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
   nomenclature?: NomenclatureKind;
+}
+
+/** One facet value and how many entries the list would hold with it chosen (M12.3). */
+export interface FacetCount<TValue extends string = string> {
+  value: TValue;
+  count: number;
+}
+
+/**
+ * How many entries each value of each filter kind would list, under the rest
+ * of the filter (M12.3). Forms are spelled as shown, deities and categories
+ * are row ids, and the astrology kinds are the curated rows' names.
+ */
+export interface IngredientFacets {
+  forms: FacetCount[];
+  deities: FacetCount[];
+  categories: FacetCount[];
+  zodiacSigns: FacetCount[];
+  celestialBodies: FacetCount[];
+  elements: FacetCount<IngredientElement>[];
+  toxic: FacetCount<'toxic' | 'not_toxic'>[];
+}
+
+/**
+ * The compendium's facets, and how many entries cite no live reference under
+ * the rest of the filter: the No Refs switch's count (M12.3), the same with
+ * the switch on or off. A coven's list has no such switch, so its facets do
+ * not carry it.
+ */
+export interface CompendiumFacets extends IngredientFacets {
+  withoutReferences: number;
 }
 
 /**

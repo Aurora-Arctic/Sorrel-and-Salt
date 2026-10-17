@@ -269,6 +269,19 @@ The search, category, form, deity, zodiac sign, planet and toxic filters (the fo
 compendium does. They run under the coven's proof rather than the compendium
 tier, so a filter never reaches another coven's rows.
 
+**The coven's facet counts read the same rows.**
+`workspaceIngredientFacets(session, workspaceId, filter)` (M12.3, in
+`services/ingredient-facets.ts`) tells the coven's filter panel how many
+entries each filter value would list, counted by the rules of
+[`findCompendiumFacets`](compendium-read.md). It makes the same
+`ingredient: read` check as the list, then calls
+`findWorkspaceIngredientFacets`, which counts within `workspaceListScope`:
+the condition `findWorkspaceIngredientPage` lists by (the coven's own
+entries, the compendium entries it holds, less those a local entry hides),
+shared rather than copied, so a count and the list cannot disagree on which
+rows are the coven's. Unlike the compendium's, it is never cached: what it
+counts differs from coven to coven (CLAUDE.md rule 6).
+
 **A jar follows a local entry that hides its compendium entry** (M12.8,
 which supersedes M9.4's "stays where it is"). If a coven holds a jar of a
 compendium entry and then saves its own version of that entry (a create, an

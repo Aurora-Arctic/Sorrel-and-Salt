@@ -1,5 +1,6 @@
 import { builder } from '../../../graphql/builder';
 import { countCompendium, getIngredient, listCompendium } from '../services/compendium';
+import { compendiumFacets } from '../services/ingredient-facets';
 import type { CompendiumFilterInput } from '../validation/compendium-filter';
 import {
   CategoryModeEnum,
@@ -8,8 +9,9 @@ import {
   NomenclatureEnum,
   ToxicFilterEnum,
 } from './ingredient';
+import { CompendiumFacetsRef } from './ingredient-facets';
 
-// The compendium's two queries. Public, so neither carries the `signedIn`
+// The compendium's three queries. Public, so none carries the `signedIn`
 // scope (MB.80); tests/db/graphql-query-scopes.test.ts holds every other
 // query to its refusal. The filtering is the service's, in SQL: the browser
 // never holds more than a page, so it cannot be the search
@@ -91,6 +93,24 @@ builder.queryField('compendium', (t) =>
         resolve: (edge) => edge.score,
       }),
     }),
+  }),
+);
+
+// How many entries each filter value would list (M12.3), under the same
+// arguments as `compendium`, so the counts sit beside the page they narrow.
+builder.queryField('compendiumFacets', (t) =>
+  t.field({
+    type: CompendiumFacetsRef,
+    description:
+      'How many compendium entries each search filter value would list under the rest of the filter.',
+    args: {
+      query: t.arg.string({ required: false }),
+      ...categoryArgs,
+      ...facetArgs,
+      withoutReferences: t.arg.boolean({ required: false }),
+      nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
+    },
+    resolve: (_root, args) => compendiumFacets(filterOf(args)),
   }),
 );
 
