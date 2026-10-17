@@ -622,3 +622,65 @@ test('the Categories picker is usable at 375px and has no accessibility violatio
   await expect(page.getByRole('option').first()).toBeVisible();
   await assertNoAccessibilityViolations(page);
 });
+
+// M8.12: the match mode. Two categories show an All and Any choice; Any widens
+// the list to an entry filed under either, writes `categoryMode=any`, and a
+// reload keeps it. Dropping to one category drops the mode from the address.
+test('the match mode widens two categories to Any, is kept in the address, and goes with the second category', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'category-mode-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    const add = (name: string, categories: string[]) =>
+      insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', categories }), userId);
+    await add('Modewort Both', ['Protection', 'Cleansing']);
+    await add('Modewort One', ['Protection']);
+    await add('Modewort None', []);
+  } finally {
+    await sql.end();
+  }
+
+  const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
+  const match = page.getByRole('radiogroup', { name: 'Match' });
+  await page.goto('/admin/compendium?query=Modewort&categories=protection');
+  await page.waitForLoadState('networkidle');
+  // One category: no mode is offered.
+  await expect(match).toHaveCount(0);
+
+  const box = page.getByRole('combobox', { name: 'Category' });
+  await box.fill('cleansing');
+  await page.getByRole('option', { name: /^Cleansing/ }).click();
+  await expect(match).toBeVisible();
+  await expect(match.getByRole('radio', { name: 'All' })).toBeChecked();
+  // Why Any could differ: under All, the entry with one category is out.
+  await expect(edit('Modewort Both')).toBeVisible();
+  await expect(edit('Modewort One')).toHaveCount(0);
+
+  await match.getByRole('radio', { name: 'Any' }).check();
+  await expect(page).toHaveURL(/[?&]categoryMode=any(&|$)/);
+  await expect(edit('Modewort One')).toBeVisible();
+  await expect(edit('Modewort Both')).toBeVisible();
+  await expect(edit('Modewort None')).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
+
+  await page.reload();
+  await expect(match.getByRole('radio', { name: 'Any' })).toBeChecked();
+  await expect(edit('Modewort One')).toBeVisible();
+
+  // Back to one category: the mode goes from the address and the group from the page.
+  await page.getByRole('button', { name: 'Remove Cleansing' }).click();
+  await expect(page).not.toHaveURL(/categoryMode/);
+  await expect(match).toHaveCount(0);
+
+  // A second category starts again at All.
+  await box.fill('cleansing');
+  await page.getByRole('option', { name: /^Cleansing/ }).click();
+  await expect(match.getByRole('radio', { name: 'All' })).toBeChecked();
+  await expect(edit('Modewort One')).toHaveCount(0);
+});

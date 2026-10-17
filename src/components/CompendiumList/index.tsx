@@ -80,7 +80,7 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
  * filter, the compendium itself is empty, and says how to begin it.
  */
 function emptyText(
-  { query, form, nomenclature, withoutReferences, elements, categories }: Filter,
+  { query, form, nomenclature, withoutReferences, elements, categories, categoryMode }: Filter,
   known: readonly CompendiumCategoryChoice[],
 ): string {
   // By name, the ones the page knows; a slug it does not is not filtering anything.
@@ -93,7 +93,7 @@ function emptyText(
     elements.length > 0 &&
       `the ${elements.length === 1 ? 'element' : 'elements'} ${elements.map((each) => labelOf(ELEMENT_OPTIONS, each)).join(' or ')}`,
     named.length > 0 &&
-      `the ${named.length === 1 ? 'category' : 'categories'} ${named.join(' and ')}`,
+      `the ${named.length === 1 ? 'category' : 'categories'} ${named.join(categoryMode === 'any' ? ' or ' : ' and ')}`,
   ].filter((filter): filter is string => Boolean(filter));
   return noMatchText(
     'entries',
@@ -114,10 +114,10 @@ const CompendiumList = ({
   <IngredientSearch
     search={
       // Keyed by the filter shown, so another one starts the form again from
-      // it; but not by its categories, which the picker follows itself, so a
-      // pick does not draw the picker afresh and lose its announcement.
+      // it; but not by its categories or their mode, which the form follows
+      // itself, so a pick does not draw the picker afresh and lose its announcement.
       <CompendiumListFilter
-        key={JSON.stringify({ ...filter, categories: [] })}
+        key={JSON.stringify({ ...filter, categories: [], categoryMode: 'all' })}
         filter={filter}
         forms={forms}
         categories={categories}

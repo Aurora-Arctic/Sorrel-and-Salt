@@ -44,6 +44,7 @@ const NO_FILTER: CompendiumListFilter = {
   withoutReferences: false,
   elements: [],
   categories: [],
+  categoryMode: 'all',
 };
 
 // The categories the Categories box offers, under two groups in their colours.
@@ -143,6 +144,7 @@ export const Filtered: Story = () => (
         withoutReferences: true,
         elements: ['fire', 'earth'],
         categories: ['testward', 'testcraft'],
+        categoryMode: 'any',
       }}
       forms={FORMS}
       categories={CATEGORIES}
@@ -161,6 +163,7 @@ export const NoMatch: Story = () => (
         withoutReferences: false,
         elements: [],
         categories: ['testbane'],
+        categoryMode: 'all',
       }}
       forms={FORMS}
       categories={CATEGORIES}

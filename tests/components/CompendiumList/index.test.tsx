@@ -83,6 +83,7 @@ const NO_FILTER: CompendiumListFilter = {
   withoutReferences: false,
   elements: [],
   categories: [],
+  categoryMode: 'all',
 };
 
 /** Every filter in use, as a page shows it. */
@@ -93,6 +94,7 @@ const SHOWN: CompendiumListFilter = {
   withoutReferences: true,
   elements: [],
   categories: [],
+  categoryMode: 'all',
 };
 
 /** The categories the Categories box offers, each with the slug the address carries. */
@@ -242,6 +244,7 @@ function RoutedCompendium(): ReactElement {
       withoutReferences: params.has('withoutReferences'),
       elements: someOf(INGREDIENT_ELEMENTS, params.getAll('elements')),
       categories: params.getAll('categories'),
+      categoryMode: params.get('categoryMode') === 'any' ? 'any' : 'all',
     });
   });
   return <CompendiumList {...props({ filter })} />;
@@ -630,6 +633,75 @@ describe('CompendiumList filter', () => {
         'categories',
       );
     const pushed = () => new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
+
+    describe('the match mode', () => {
+      const twoChosen = { ...NO_FILTER, categories: ['testward', 'testcraft'] };
+      const matchGroup = () => screen.queryByRole('radiogroup', { name: 'Match' });
+
+      it('offers no mode with fewer than two categories', () => {
+        const { rerender } = render(<CompendiumList {...props({ filter: NO_FILTER })} />);
+        expect(matchGroup()).not.toBeInTheDocument();
+
+        rerender(
+          <CompendiumList {...props({ filter: { ...NO_FILTER, categories: ['testward'] } })} />,
+        );
+        expect(matchGroup()).not.toBeInTheDocument();
+      });
+
+      it('offers All and Any from two categories, All the one checked', () => {
+        render(<CompendiumList {...props({ filter: twoChosen })} />);
+
+        expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
+        expect(screen.getByRole('radio', { name: 'Any' })).not.toBeChecked();
+      });
+
+      it('checks Any when the filter holds it', () => {
+        render(<CompendiumList {...props({ filter: { ...twoChosen, categoryMode: 'any' } })} />);
+
+        expect(screen.getByRole('radio', { name: 'Any' })).toBeChecked();
+        expect(screen.getByRole('radio', { name: 'All' })).not.toBeChecked();
+      });
+
+      it('applies Any into the address, keeping the categories, and checks it', () => {
+        render(<CompendiumList {...props({ filter: twoChosen })} />);
+
+        fireEvent.click(screen.getByRole('radio', { name: 'Any' }));
+
+        const address = pushed();
+        expect(address.get('categoryMode')).toBe('any');
+        expect(address.getAll('categories')).toEqual(['testward', 'testcraft']);
+        expect(screen.getByRole('radio', { name: 'Any' })).toBeChecked();
+      });
+
+      it('writes nothing for All', () => {
+        render(<CompendiumList {...props({ filter: { ...twoChosen, categoryMode: 'any' } })} />);
+
+        fireEvent.click(screen.getByRole('radio', { name: 'All' }));
+
+        expect(pushed().has('categoryMode')).toBe(false);
+      });
+
+      it('drops the mode with the second category, and starts again at All', async () => {
+        render(<CompendiumList {...props({ filter: { ...twoChosen, categoryMode: 'any' } })} />);
+
+        remove('Testcraft');
+
+        expect(pushed().has('categoryMode')).toBe(false);
+        expect(pushed().getAll('categories')).toEqual(['testward']);
+        expect(matchGroup()).not.toBeInTheDocument();
+
+        await pick('Testcraft');
+
+        expect(pushed().has('categoryMode')).toBe(false);
+        expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
+      });
+
+      it('does not count All as a filter in use', () => {
+        render(<CompendiumList {...props({ filter: NO_FILTER })} />);
+
+        expect(screen.queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument();
+      });
+    });
 
     it('shows the categories the filter holds as entries in the picker, and not one the page does not know', () => {
       render(
