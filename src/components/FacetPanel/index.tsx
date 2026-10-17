@@ -341,7 +341,7 @@ export default function FacetPanel({
                 )}
               </div>
 
-              <div className="facet-panel__line">
+              <div className="facet-panel__line facet-panel__line--forms">
                 <div className="facet-panel__grow">
                   <FacetCombobox
                     label="Forms"
