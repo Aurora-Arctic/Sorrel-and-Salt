@@ -805,6 +805,29 @@ export function variantsWithErrors(
   return found;
 }
 
+/** The lists whose rows are chips or entries, not inputs: the ingredient's, and the variant's. */
+const BOXED_LISTS = new Set<string>([
+  ...LIST_FIELDS,
+  ...VARIANT_LISTS,
+  'references',
+  'categoryIds',
+]);
+
+/**
+ * The box to focus after a restore wrote the list `name`, or undefined when
+ * `name` is not a whole list (or one entry's place in it). A list's entries
+ * are not inputs, only its typing box is, named by `draftOf` — `drafts.colors`,
+ * `variants.1.drafts.colors`; the category picker's box is named
+ * `drafts.categoryIds` the same way, though that draft holds no value.
+ */
+export function listBoxOf(name: string): string | undefined {
+  const keys = name.replace(/\.\d+$/, '').split('.');
+  const list = keys.pop() ?? '';
+  const inVariant = keys.length === 2 && keys[0] === 'variants' && /^\d+$/.test(keys[1]);
+  if (!BOXED_LISTS.has(list) || (keys.length > 0 && !inVariant)) return undefined;
+  return [...keys, 'drafts', list].join('.');
+}
+
 /**
  * The sections holding the fields a restore wrote, from their form paths, as
  * `sectionsWithErrors` reads an error's. A box's draft is its list's

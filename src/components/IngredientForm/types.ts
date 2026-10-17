@@ -653,9 +653,10 @@ export interface VariantFolds {
   /**
    * Re-keys the folds to a restored list: a row kept keeps its folds, one
    * that returns opens with every section open and takes the card, one gone
-   * is dropped. Rows match by `variantId`, else by their form.
+   * is dropped. Rows match by `variantId`, else by their form. Returns the place
+   * of the first row that returned, or -1 when none did.
    */
-  reconcile: (from: readonly RestoredVariant[], to: readonly RestoredVariant[]) => void;
+  reconcile: (from: readonly RestoredVariant[], to: readonly RestoredVariant[]) => number;
 }
 
 /** What a restore (M12.10) has to open to show the fields it changed. */

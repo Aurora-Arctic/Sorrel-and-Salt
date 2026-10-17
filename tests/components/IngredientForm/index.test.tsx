@@ -1191,3 +1191,38 @@ describe('IngredientForm', () => {
     },
   );
 });
+
+// Where the focus lands after an undo (M12.10): a list's rows are not inputs,
+// only its typing box is, so the box is where a change to the list is shown.
+describe('IngredientForm undo focus', () => {
+  const undoFrom = (from: HTMLElement) => {
+    act(() => from.focus());
+    fireEvent.keyDown(from, { key: 'z', ctrlKey: true });
+  };
+
+  it('lands on a list’s box after undoing an entry added to it', () => {
+    renderForm();
+    addEntry('Folk Name', 'Hedge Fixture');
+    expect(screen.getByLabelText('Remove Hedge Fixture')).toBeInTheDocument();
+
+    undoFrom(textbox('Name'));
+
+    expect(screen.queryByLabelText('Remove Hedge Fixture')).toBeNull();
+    expect(box('Folk Name')).toHaveFocus();
+  });
+
+  it('lands on a list’s box after undoing the removal of an entry, and after redoing it', () => {
+    renderForm();
+    addEntry('Colour', 'Silver');
+    fireEvent.click(removeButton('Silver'));
+
+    undoFrom(textbox('Name'));
+    expect(removeButton('Silver')).toBeInTheDocument();
+    expect(box('Colour')).toHaveFocus();
+
+    act(() => textbox('Name').focus());
+    fireEvent.keyDown(textbox('Name'), { key: 'z', ctrlKey: true, shiftKey: true });
+    expect(screen.queryByLabelText('Remove Silver')).toBeNull();
+    expect(box('Colour')).toHaveFocus();
+  });
+});

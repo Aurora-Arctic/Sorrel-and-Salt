@@ -571,19 +571,23 @@ test('undo and redo carry a chip, a reorder, a folded section, a variant and a s
     await hedge.click();
     await expect(hedge).toHaveCount(0);
     await expect(undo).toBeEnabled();
-    // Focus is in the form but not in the chip box, whose chords are the box's own.
-    await name.click();
+    // A click into the chip box opens its list with nothing highlighted: the chord still counts.
+    const folkBox = folk.getByRole('combobox', { name: 'Folk Name', exact: true });
+    await folkBox.click();
     await page.keyboard.press('ControlOrMeta+z');
     await expect(hedge).toBeVisible();
+    await expect(folkBox).toBeFocused();
     await expect(folk.getByRole('button', { name: 'Remove Lane Fixture' })).toBeVisible();
     await expect(redo).toBeEnabled();
     await expect(undo).toBeDisabled();
     await redo.click();
     await expect(hedge).toHaveCount(0);
+    await expect(folkBox).toBeFocused();
     await expect(undo).toBeEnabled();
-    await name.click();
+    await folkBox.click();
     await page.keyboard.press('ControlOrMeta+z');
     await expect(hedge).toBeVisible();
+    await expect(folkBox).toBeFocused();
   });
 
   await test.step('a keyboard reorder of Colours is undone and redone', async () => {
@@ -603,15 +607,17 @@ test('undo and redo carry a chip, a reorder, a folded section, a variant and a s
     }
     await expect.poll(order).toEqual(moved);
 
-    await name.click();
+    const colourBox = colours.getByRole('combobox', { name: 'Colour', exact: true });
+    await colourBox.click();
     await page.keyboard.press('ControlOrMeta+z');
     await expect.poll(order).toEqual(original);
-    await name.click();
+    await expect(colourBox).toBeFocused();
     await page.keyboard.press('ControlOrMeta+Shift+z');
     await expect.poll(order).toEqual(moved);
-    await name.click();
+    await expect(colourBox).toBeFocused();
     await page.keyboard.press('ControlOrMeta+z');
     await expect.poll(order).toEqual(original);
+    await expect(colourBox).toBeFocused();
   });
 
   await test.step('undo opens a folded section and focuses the field it changed', async () => {
@@ -646,6 +652,12 @@ test('undo and redo carry a chip, a reorder, a folded section, a variant and a s
     await page.keyboard.press('ControlOrMeta+z');
     await expect(root).toBeVisible();
     await expect(root).toHaveAttribute('aria-expanded', 'true');
+    // Focus is on the returned variant's own Form field.
+    await expect(
+      dialog
+        .getByRole('group', { name: 'Root', exact: true })
+        .getByRole('combobox', { name: 'Form', exact: true }),
+    ).toBeFocused();
     await expect(herb).toHaveAttribute('aria-expanded', 'false');
   });
 

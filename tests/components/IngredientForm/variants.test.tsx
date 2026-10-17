@@ -1242,3 +1242,59 @@ describe('useVariantFolds reconcile', () => {
     expect(result.current.isOpen(1, FIRST)).toBe(true);
   });
 });
+
+// Where the focus lands after an undo (M12.10): the variant a restore
+// returned, or the box of the list inside a variant that changed.
+describe('IngredientForm’s variants, undone', () => {
+  const chord = (from: HTMLElement) => {
+    act(() => from.focus());
+    fireEvent.keyDown(from, { key: 'z', ctrlKey: true });
+  };
+  const name = () => control(document.body, 'Name');
+
+  it('lands on the Form field of the variant an undo brought back', () => {
+    renderForm({ workspaceId: WORKSPACE_ID });
+    type(document.body, 'Name', 'Testwort');
+    addVariant('Oil');
+    addVariant('Herb');
+    fireEvent.click(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    noVariant('Oil');
+
+    chord(name());
+
+    expect(control(variant('Oil'), 'Form')).toHaveFocus();
+  });
+
+  it('lands on the New Form box after a redo that only takes a variant out', () => {
+    renderForm({ workspaceId: WORKSPACE_ID });
+    type(document.body, 'Name', 'Testwort');
+    addVariant('Oil');
+    fireEvent.click(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    chord(name());
+    expect(control(variant('Oil'), 'Form')).toHaveFocus();
+
+    act(() => name().focus());
+    fireEvent.keyDown(name(), { key: 'z', ctrlKey: true, shiftKey: true });
+
+    noVariant('Oil');
+    expect(newForm()).toHaveFocus();
+  });
+
+  it('lands on the box of a list inside a variant after undoing an entry added to it', () => {
+    renderForm({ workspaceId: WORKSPACE_ID });
+    type(document.body, 'Name', 'Testwort');
+    addVariant('Oil');
+    addVariant('Herb');
+    const herb = openWhole('Herb');
+    type(herb, 'Colour', 'Silver');
+    fireEvent.click(within(herb).getByLabelText('Add Colour', { selector: 'button' }));
+    expect(within(herb).getByLabelText('Remove Silver')).toBeInTheDocument();
+
+    chord(name());
+
+    expect(within(variant('Herb')).queryByLabelText('Remove Silver')).toBeNull();
+    expect(control(variant('Herb'), 'Colour')).toHaveFocus();
+  });
+});

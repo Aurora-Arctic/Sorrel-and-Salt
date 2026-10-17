@@ -59,6 +59,7 @@ import {
   fieldNameOf,
   ingredientResolver,
   openingValues,
+  listBoxOf,
   sectionsRestored,
   sectionsWithErrors,
   variantsWithErrors,
@@ -280,14 +281,22 @@ const IngredientForm = ({
       const { sections, variants } = sectionsRestored(names);
       if (sections.size > 0) setOpen((now) => new Set([...now, ...sections]));
       const list = diffs.find((diff) => diff.name === 'variants');
+      let returned = -1;
       if (list) {
         // The folds are keyed to the list as it stood: the step's other side.
         const [from, to] =
           direction === 'undo' ? [list.after, list.before] : [list.before, list.after];
-        variantFolds.reconcile(from as RestoredVariant[], to as RestoredVariant[]);
+        returned = variantFolds.reconcile(from as RestoredVariant[], to as RestoredVariant[]);
       }
       for (const [index, inside] of variants) variantFolds.reveal(index, inside);
-      return names.includes('nomenclature') ? 'nomenclature' : undefined;
+      if (names.includes('nomenclature')) return 'nomenclature';
+      // A variant brought back is where the eye should go; with one only taken
+      // out, the New Form box that adds one.
+      if (list && returned !== -1) return `variants.${returned}.form`;
+      if (list && (list.before as unknown[]).length !== (list.after as unknown[]).length)
+        return 'drafts.variants';
+      // A list's entries are not inputs: its typing box is where its change shows.
+      return listBoxOf(names[0]);
     },
   });
   const { clear: clearHistory } = history;

@@ -1209,6 +1209,16 @@ formal name in the same step, so the first changed field is not the one the
 user acted on. `onRestored` returns `'nomenclature'` when it is among the
 changed names, and the hook focuses Classification.
 
+**Focus after an undo lands on a list's box or the returned variant.** A chip
+list has no control of its own to name, only its typing box (`drafts.<list>`,
+or `variants.N.drafts.<list>`), so `onRestored` maps a changed list to its box
+with `listBoxOf` in `values.ts`, and the hook focuses it. A step on the
+variants list is the exception: `reconcile` returns the index of a row that
+came back, and focus goes to `variants.<i>.form`; a step that only removed a
+row focuses `drafts.variants`, the New Form box. The categories picker names
+its box the same way (`boxName`). A step that changes a plain field keeps
+the hook's own order, the field itself.
+
 **The reference panel has a history of its own.** The panel is a second form
 inside this one, so the two must not share a list:
 

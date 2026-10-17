@@ -141,6 +141,7 @@ export function useVariantFolds(): VariantFolds {
         const kept = now === null ? -1 : matched.indexOf(now);
         return kept === -1 ? null : kept;
       });
+      return returning;
     },
     openErring: (erring) => {
       if (erring.size === 0) return;
