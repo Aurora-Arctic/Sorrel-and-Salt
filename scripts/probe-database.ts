@@ -17,6 +17,7 @@ import { readFileSync } from 'node:fs';
 
 import postgres from 'postgres';
 
+import { withoutClientOnlyParams } from '../src/db/connection-url.ts';
 import { parseEnvFile, validateDatabaseUrl } from './assert-pulled-env.ts';
 import type { ProbeResult } from './types.ts';
 
@@ -27,10 +28,10 @@ import type { ProbeResult } from './types.ts';
  */
 export const probeHints: Record<string, string> = {
   '42704':
-    'The server does not recognise a parameter it was sent. postgres.js does not consume ' +
-    'libpq client-side options — it forwards every query parameter it does not recognise as a ' +
-    "Postgres startup parameter. `channel_binding`, which Neon's console adds by default, is " +
-    'the usual one. Delete it from the URL; `sslmode=require` alone still requests TLS.',
+    'The server does not recognise a parameter it was sent. postgres.js forwards every query ' +
+    'parameter it does not recognise as a Postgres startup parameter, so a libpq client-side ' +
+    'option missing from CLIENT_ONLY_PARAMS (src/db/connection-url.ts) reached the server. ' +
+    'Add it to that list.',
   '28P01':
     'The password is wrong for this user. Check the DATABASE_URL_PRODUCTION / ' +
     'DATABASE_URL_STAGING secret against the Neon branch it is meant to name — a ' +
@@ -128,7 +129,7 @@ export async function probe(url: string): Promise<ProbeResult> {
     // `postgres()` parses the URL eagerly, so a malformed value throws here
     // rather than on the query. connect_timeout is short on purpose: a probe
     // hanging for the driver's 30s default replaces a silent failure with a slow one.
-    sql = postgres(url, {
+    sql = postgres(withoutClientOnlyParams(url), {
       max: 1,
       connect_timeout: 10,
       idle_timeout: 1,

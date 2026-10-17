@@ -274,15 +274,14 @@ devcontainer carries isn't scoped to manage Actions secrets/variables
 2. **Neon connection strings**: Neon console → the project → each branch
    (`main`, `staging`) → Connection Details.
 
-   **Delete `channel_binding=require` from whatever the console hands you**
-   (MB.49). The console puts it in by default, and it does not work with
-   this stack: a libpq _client-side_ option that postgres.js hands to the
-   server, which refuses it with `42704` — and `drizzle-kit migrate` swallows
-   that into a silent exit 1 ([`ci/deploy.md`](ci/deploy.md), "Deploy", has
-   the mechanism). Keep `sslmode=require`: that one postgres.js does consume,
-   and it is what actually requests TLS. `scripts/assert-pulled-env.ts`
-   rejects the parameter by name before CI tries to connect, so this is a
-   rule the pipeline enforces rather than one to remember.
+   **`channel_binding=require` can stay** (MB.49). The console puts it in by
+   default, and a hotfix's Neon URL is written by Neon's Vercel integration,
+   which rewrites it, so it cannot be deleted by hand. It is a libpq
+   _client-side_ option that postgres.js would hand to the server, which
+   refuses it with `42704`, so every place a connection opens strips it
+   first (`src/db/connection-url.ts`; [`ci/deploy.md`](ci/deploy.md),
+   "Deploy", has the mechanism). Keep `sslmode=require`: postgres.js
+   consumes that one, and it is what actually requests TLS.
 
 3. **Google OAuth client**: Google Cloud Console → APIs & Services →
    Credentials → Create OAuth client ID (Web application). Authorized
