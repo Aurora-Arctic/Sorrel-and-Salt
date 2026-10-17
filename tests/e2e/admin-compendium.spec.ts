@@ -534,3 +534,91 @@ test('?elements= in the address filters the list, survives the pager and another
   await expect(page).not.toHaveURL(/withoutReferences/);
   await expect(row(28)).toBeVisible();
 });
+
+// M8.11: the Categories picker (MB.126's CategoryPicker) in the filter row.
+// The address holds the slugs, repeated; two picks combine with AND; a reload
+// restores the chips; a pick is announced by the picker's own region.
+test('the Categories picker filters by AND, writes repeated slugs, restores on reload and focuses back', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'category-filter-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    const add = (name: string, categories: string[]) =>
+      insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', categories }), userId);
+    await add('Categorywort Both', ['Protection', 'Cleansing']);
+    await add('Categorywort One', ['Protection']);
+    await add('Categorywort None', []);
+  } finally {
+    await sql.end();
+  }
+
+  const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
+  await page.goto('/admin/compendium?query=Categorywort');
+  await page.waitForLoadState('networkidle');
+  // Why the filter could have dropped them: all three are listed unfiltered.
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toBeVisible();
+
+  const box = page.getByRole('combobox', { name: 'Category' });
+  const announcer = page.getByRole('status', { name: 'Categories changes' });
+
+  await box.fill('protection');
+  await page.getByRole('option', { name: /^Protection/ }).click();
+  await expect(page).toHaveURL(/[?&]categories=protection(&|$)/);
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toHaveCount(0);
+  await expect(box).toBeFocused();
+  await expect(announcer).not.toBeEmpty();
+
+  await box.fill('cleansing');
+  await page.getByRole('option', { name: /^Cleansing/ }).click();
+  await expect(page).toHaveURL(/[?&]categories=protection(&|.*&)categories=cleansing(&|$)/);
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toHaveCount(0);
+  await expect(box).toBeFocused();
+
+  // The selected state is programmatic: the picked option is no longer offered.
+  await box.fill('cleansing');
+  await expect(page.getByRole('option', { name: /^Cleansing/ })).toHaveCount(0);
+  await box.fill('');
+
+  await page.reload();
+  await expect(page).toHaveURL(/[?&]categories=cleansing(&|$)/);
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toHaveCount(0);
+
+  // An unknown slug is dropped and the rest still filter.
+  await page.goto(
+    '/admin/compendium?query=Categorywort&categories=nosuchslug&categories=protection',
+  );
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toHaveCount(0);
+});
+
+test('the Categories picker is usable at 375px and has no accessibility violations', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await signInAs(page, 'category-axe-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?categories=protection');
+  await page.waitForLoadState('networkidle');
+
+  const box = page.getByRole('combobox', { name: 'Category' });
+  await box.scrollIntoViewIfNeeded();
+  await expect(box).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(false);
+
+  await box.fill('cl');
+  await expect(page.getByRole('option').first()).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+});
