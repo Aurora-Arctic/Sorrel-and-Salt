@@ -38,6 +38,7 @@ function Stateful({
   label?: string;
   loading?: boolean;
   typeahead?: boolean;
+  hideZeros?: boolean;
 }) {
   const [values, setValues] = useState(initial);
   return (
@@ -56,9 +57,10 @@ function Stateful({
   );
 }
 
-// Open the list: Testearth, with a count of nothing, is last, disabled and noted.
+// Open the list: Testearth, with a count of nothing, is left out.
 export const NothingChosen: Story = () => <Stateful />;
 
+// Two chosen: their chips with counts, and the list open on the rest, the zero value still out.
 export const SomeChosen: Story = () => <Stateful initial={['fire', 'water']} />;
 
 // Every chip holds a placeholder where its count will be, shimmering unless
@@ -67,6 +69,20 @@ export const CountsLoading: Story = () => <Stateful initial={['fire', 'water']} 
 
 // A chosen value with a count of nothing keeps its chip and its cross.
 export const ChosenWithNothingBehindIt: Story = () => <Stateful initial={['earth']} />;
+
+// Every value counts nothing: the field stays, its list empty, as a facet the search leaves nothing in.
+export const AllZero: Story = () => (
+  <Stateful
+    label="Planets"
+    choices={[
+      { value: 'sun', label: 'Test Sun', count: 0 },
+      { value: 'moon', label: 'Test Moon', count: 0 },
+    ]}
+  />
+);
+
+// hideZeros off: Testearth is listed with its count of nothing, and can be chosen.
+export const ZerosListed: Story = () => <Stateful hideZeros={false} />;
 
 export const WithFormIcons: Story = () => (
   <Stateful label="Forms" choices={FORMS} initial={['leaf', 'oil']} />

@@ -5,9 +5,11 @@ import FacetPanel from '.';
 import type { FacetPanelFilter } from './types';
 
 // Render-only; behaviour is asserted in tests/components/FacetPanel. Invented values (M12.4).
-// A change marks the chips "loading" for a moment, as a search on its way does. The
-// counts do not follow the choices; they are fixed here. Narrow the preview below the
-// tablet width for the modal sheet.
+// A change is held, not applied (the list's page holds it until Apply Filters or a close),
+// and marks the chips "loading" for a moment, as the live counts on their way do. The
+// counts themselves do not follow the choices; they are fixed here. A value counting
+// nothing is left out of its list unless chosen. Narrow the preview below the tablet
+// width for the modal sheet.
 export default {
   title: 'Admin / Facet Panel',
 };
@@ -66,7 +68,15 @@ const NONE: FacetPanelFilter = {
   withoutReferences: false,
 };
 
-function Panel({ start = NONE, admin = false }: { start?: FacetPanelFilter; admin?: boolean }) {
+function Panel({
+  start = NONE,
+  admin = false,
+  facets = FACETS,
+}: {
+  start?: FacetPanelFilter;
+  admin?: boolean;
+  facets?: CompendiumFacetCounts;
+}) {
   const [filter, setFilter] = useState(start);
   const [loading, setLoading] = useState(false);
   const timer = useRef(0);
@@ -79,11 +89,12 @@ function Panel({ start = NONE, admin = false }: { start?: FacetPanelFilter; admi
         style={{ position: 'relative', display: 'flex', gap: '1rem', alignItems: 'center' }}
       >
         <FacetPanel
-          facets={FACETS}
+          facets={facets}
           filter={filter}
           admin={admin}
           loading={loading}
           clearHref="#clear"
+          onClear={() => setFilter(NONE)}
           onChange={(patch) => {
             setFilter((now) => ({ ...now, ...patch }));
             setLoading(true);
@@ -100,7 +111,8 @@ function Panel({ start = NONE, admin = false }: { start?: FacetPanelFilter; admi
 // Nothing chosen: Filters alone, no Clear All.
 export const Empty: Story = () => <Panel />;
 
-// Chosen values: the count on the button, Clear All beside it, Match for two categories.
+// Chosen values: the count on the button (every chosen value, so seven here; Match counts
+// none), Clear All beside it, Match with its hint for two categories.
 export const Chosen: Story = () => (
   <Panel
     start={{
@@ -110,6 +122,26 @@ export const Chosen: Story = () => (
       deities: ['testa-fixtura'],
       elements: ['water'],
       toxic: 'not_toxic',
+    }}
+  />
+);
+
+// Two forms and Toxic: the Filters button reads 3, one for each chosen value.
+export const FormsAndToxic: Story = () => (
+  <Panel start={{ ...NONE, forms: ['test-oil', 'test-resin'], toxic: 'toxic' }} />
+);
+
+// Two categories alone: Match appears, with its hint, and adds nothing to the Filters count.
+export const MatchShown: Story = () => (
+  <Panel start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }} />
+);
+
+// A facet whose every value counts nothing keeps its field, with an empty list.
+export const AllZeroFacet: Story = () => (
+  <Panel
+    facets={{
+      ...FACETS,
+      planets: FACETS.planets.map((choice) => ({ ...choice, count: 0 })),
     }}
   />
 );
