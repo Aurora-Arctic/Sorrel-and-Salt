@@ -203,6 +203,14 @@
   display: inline-flex;
   flex: none;
   align-items: stretch;
+  // One shadow for the pair, cast by the group: each half's own `.btn` shadow
+  // showed on the other half.
+  border-radius: radius('control');
+  box-shadow: $shadow-floating;
+}
+
+.app-shell__add-group .app-shell__add {
+  box-shadow: none;
 }
 
 .app-shell__add-more {
@@ -213,7 +221,10 @@
 // The two parts share one outline: the inner corners square, and a single
 // divider in the bar's own colour between the fills, kept through hover and
 // focus, which the solid variant would otherwise recolour with the fill.
-.app-shell__add-group .app-shell__add:not(:only-child) {
+// A child selector: the chevron is the only child of its own wrapper while
+// the menu is shut, and `:not(:only-child)` squared its outer corners the
+// moment the menu opened.
+.app-shell__add-group > .app-shell__add:not(:only-child) {
   border-start-end-radius: 0;
   border-end-end-radius: 0;
 }
@@ -236,6 +247,8 @@
   right: 0;
   z-index: layer('floating');
   min-width: 13rem;
+  // Clips a hovered first or last item to the rounded corners.
+  overflow: hidden;
   border: 1px solid $text-muted;
   border-radius: radius('surface');
   background-color: $surface-card;
@@ -253,10 +266,15 @@
   font-size: type-size('small');
   text-align: start;
   white-space: nowrap;
+  @include theme-transition(background-color);
 
   &:hover,
   &:focus-visible {
     background-color: $fill-quiet;
+  }
+
+  @include reduced-motion {
+    transition: none;
   }
 
   &:focus-visible {
