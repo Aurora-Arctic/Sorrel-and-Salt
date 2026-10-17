@@ -8,6 +8,7 @@ import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
+import { LinkIcon } from '../IconTip';
 import LinkHint from '../LinkHint';
 import SafetyNote, { ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
@@ -391,7 +392,9 @@ const IngredientEntry = ({
         {canonical && (
           <p className="ingredient-entry__canonical">
             <Link href={canonical}>
-              View in the Compendium <LinkHint />
+              Compendium Entry
+              <LinkIcon />
+              <LinkHint />
             </Link>
           </p>
         )}

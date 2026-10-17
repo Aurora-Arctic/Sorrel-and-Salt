@@ -118,7 +118,7 @@ describe('the coven ingredient page', () => {
   it('gives a compendium entry the link to its public page', async () => {
     await open(compendiumRow());
 
-    expect(screen.getByRole('link', { name: 'View in the Compendium' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Compendium Entry' })).toHaveAttribute(
       'href',
       '/compendium/ingredients/testwort-fixtura-testalis',
     );
@@ -160,7 +160,7 @@ describe('the coven ingredient page', () => {
     await open(covenRow(), true);
 
     expect(screen.getByText('Local')).toBeVisible();
-    expect(screen.queryByRole('link', { name: 'View in the Compendium' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Compendium Entry' })).toBeNull();
     expect(edits()).toHaveLength(0);
   });
 

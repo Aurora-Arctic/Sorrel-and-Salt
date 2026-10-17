@@ -333,6 +333,10 @@ $side-column: calc(#{space(8)} * 5);
 
 .ingredient-entry__canonical {
   margin: 0;
+
+  a {
+    @include icon-link;
+  }
 }
 
 // Every link in the References section (a note's way on to its entry, an
