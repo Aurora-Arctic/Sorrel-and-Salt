@@ -49,9 +49,14 @@ The account page's sections are panels; the coven index's are plain
 - The current entry is also weight 500, so hue is never the only sign.
 - A group's label is set as `.eyebrow` is (`overline` size, weight 500,
   uppercase, letter-spaced, `$text-muted`), padded as an entry is, so it reads as a
-  heading over its entries rather than as one of them. Its entries step in by
-  `space(6)` rather than `space(4)`: from the left on a phone, and from the
-  right on a wide screen, where the text is right-aligned.
+  heading over its entries rather than as one of them. On a phone its entries
+  step in by `space(6)` rather than `space(4)`; on a wide screen, where the
+  text is right-aligned, they keep the entries' padding, since a step in from
+  the right pushed them off the column's edge (the owner's call at M8.19).
+- When any entry has a group the nav carries `.page-nav--grouped`, and its
+  top-level entries are set at 1.125rem, a step above body copy, so the page's
+  own section reads apart from the grouped ones. A nav without groups is
+  unchanged.
 - Where the column goes is the page's. The account page and the coven index take
   it from the one class, `.page-with-nav` in `_primitives.scss` ("Where it
   stands", below); the ingredient page has its own wide layout with the same

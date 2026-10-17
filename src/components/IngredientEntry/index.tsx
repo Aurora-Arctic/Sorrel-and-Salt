@@ -60,7 +60,7 @@ function correspondences(source: Correspondences, deities?: readonly DeityDetail
     { label: 'Elements', values: listed(source.elements).map(capitalise) },
     { label: 'Planets', values: listed(source.celestialBodies) },
     { label: 'Zodiac Signs', values: listed(source.zodiacSigns) },
-    { label: 'Colours', values: listed(source.colors) },
+    { label: 'Colours', values: listed(source.colors).map(capitalise) },
   ];
   if (deities) {
     rows.push({

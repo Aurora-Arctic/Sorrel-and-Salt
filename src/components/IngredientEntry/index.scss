@@ -81,6 +81,12 @@ $side-column: calc(#{space(8)} * 5);
   @include stack(4);
 }
 
+// Under the text, the side column stands a clear step off it, so the
+// details read as a second part of the section and not as its next line.
+.ingredient-entry__side {
+  margin-block-start: space(4);
+}
+
 // Past a tablet's width the side column stands to the right of the text,
 // the heading across both. Not from the menu's breakpoint: there the text
 // beside a side column would be a few words wide.
@@ -88,7 +94,8 @@ $side-column: calc(#{space(8)} * 5);
   .ingredient-entry__section {
     display: grid;
     grid-template-columns: minmax(0, 1fr) $side-column;
-    gap: space(4) space(6);
+    // A wide gutter between the text and its details (the owner's call).
+    gap: space(4) space(8);
     align-items: start;
 
     > h2 {
@@ -98,6 +105,7 @@ $side-column: calc(#{space(8)} * 5);
 
   .ingredient-entry__side {
     grid-column: 2;
+    margin-block-start: 0;
   }
 }
 

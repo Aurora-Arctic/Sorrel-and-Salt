@@ -62,7 +62,14 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
   // The entries stay one flat list for the observer above; only the drawing
   // nests a group, its label naming its list.
   return (
-    <nav className="page-nav" aria-label={label}>
+    <nav
+      className={
+        entries.some((entry) => entry.group !== undefined)
+          ? 'page-nav page-nav--grouped'
+          : 'page-nav'
+      }
+      aria-label={label}
+    >
       <ul>
         {itemsOf(entries).map((item, at) =>
           item.kind === 'entry' ? (
