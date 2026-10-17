@@ -1,10 +1,11 @@
 import {
+  choiceParam,
   defineSearchParams,
   listParam,
   searchParam,
   textParam,
 } from '../../lib/search-param-table';
-import { oneOf, single, trimmed } from '../../lib/search-params';
+import { single, trimmed } from '../../lib/search-params';
 import {
   INGREDIENT_ELEMENTS,
   NOMENCLATURE_KINDS,
@@ -29,13 +30,7 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   }),
   // Blank is no filter: a native submit sends `nomenclature=`, and a kind no
   // classification holds is ignored, as a hand-edited cursor gets the first page.
-  nomenclature: searchParam({
-    name: 'nomenclature',
-    variable: 'nomenclature',
-    read: (raw) => oneOf(NOMENCLATURE_KINDS, single(raw)) ?? '',
-    write: (kind: (typeof NOMENCLATURE_KINDS)[number] | '') => kind,
-    toVariable: (kind) => kind || undefined,
-  }),
+  nomenclature: choiceParam('nomenclature', NOMENCLATURE_KINDS, 'nomenclature'),
   // Written `1`, the value its checkbox submits natively.
   withoutReferences: searchParam({
     name: 'withoutReferences',

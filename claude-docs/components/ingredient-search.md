@@ -92,7 +92,7 @@ held into a value (a hand-edited value reads as no filter, never an error),
 a writer that turns a value back, and the GraphQL variable it becomes. The
 compendium's table is
 [`CompendiumList/params.ts`](../../src/components/CompendiumList/params.ts);
-the helpers `textParam`, `choiceParam`, `flagParam` and `listParam` cover the
+the helpers `textParam`, `choiceParam` and `listParam` cover the
 usual shapes, and `searchParam` takes any other.
 
 The table gives four functions, and every caller uses only these:

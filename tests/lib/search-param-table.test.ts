@@ -3,7 +3,6 @@ import {
   choiceParam,
   defineSearchParams,
   type SearchFilter,
-  flagParam,
   listParam,
   searchParam,
   textParam,
@@ -18,7 +17,14 @@ const KINDS = ['earth', 'fire'] as const;
 const base = {
   query: textParam('query', 'query'),
   kind: choiceParam('kind', ['a', 'b'] as const, 'kind'),
-  only: flagParam('only', 'only'),
+  // Written bare, `?only`, and read by its presence.
+  only: searchParam({
+    name: 'only',
+    variable: 'only',
+    read: (raw) => raw !== undefined,
+    write: (on: boolean) => on,
+    toVariable: (on) => on || undefined,
+  }),
   // The address holds one value; the read takes a list.
   form: searchParam({
     name: 'form',

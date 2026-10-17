@@ -9,7 +9,8 @@ import { IngredientSearchForm, useSearchText } from '../IngredientSearch';
 import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import { editHeading } from './heading';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
-import type { CompendiumListFilterProps, CompendiumPlace } from './types';
+import { COMPENDIUM_PARAMS } from './params';
+import type { CompendiumListFilter, CompendiumListFilterProps } from './types';
 
 // The compendium's filter, on IngredientSearchForm (M8.10, MB.178, MB.115): a
 // name search that is a type-ahead once hydrated, then a form, a
@@ -39,8 +40,8 @@ const CompendiumFilterFields = ({ filter, forms }: CompendiumListFilterProps): R
   const choices = useMemo(() => forms.map(({ name }) => ({ value: name, label: name })), [forms]);
 
   /** The filter shown with one field changed, the name typed carried, from the first page. */
-  const hrefWith = (change: CompendiumPlace) =>
-    compendiumHref({ ...filter, query: text.trim(), ...change });
+  const hrefWith = (change: Partial<CompendiumListFilter>) =>
+    compendiumHref(COMPENDIUM_PARAMS.changed({ ...filter, query: text.trim() }, change));
 
   return (
     <>

@@ -56,15 +56,6 @@ export const choiceParam = <T extends string>(
   toVariable: (value) => value || undefined,
 });
 
-/** A bare flag, read by its presence: `?awaiting`. */
-export const flagParam = (name: string, variable: string): SearchParam<boolean> => ({
-  name,
-  variable,
-  read: (raw) => raw !== undefined,
-  write: (value) => value,
-  toVariable: (value) => value || undefined,
-});
-
 /** Any number of a fixed set, written as repeated parameters; empty is no filter. */
 export const listParam = <T extends string>(
   name: string,
