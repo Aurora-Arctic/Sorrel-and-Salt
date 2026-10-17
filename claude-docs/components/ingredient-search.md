@@ -115,6 +115,15 @@ argument it reaches.
 `listHref` writes one pair per value and `list`
 ([`search-params.ts`](../../src/lib/search-params.ts)) reads them back, with
 `someOf` dropping any value outside the set. An empty list is left out.
+It is repeated rather than comma-joined (`?elements=fire,earth`) because a
+GET form's checkboxes write repeated names themselves, so a facet filters
+before hydration and without JavaScript, and because a form's free text may
+hold a comma. A single-value parameter given twice by hand reads its first.
+
+**The address names a value the way a reader would**, and the table maps it
+to whatever the query takes: a deity is its slug, `hecate-greek`, while the
+query takes `deityIds`, since an id would outweigh the rest of the address
+(M12.4).
 
 **The cursor rule.** A cursor names a place in one filter's results, so it
 belongs to the filter it was read under. Any change to the filter opens the
