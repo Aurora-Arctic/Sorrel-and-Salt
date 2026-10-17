@@ -10,6 +10,7 @@ import { COMPENDIUM_PATH, compendiumHref } from './href';
 import type {
   CompendiumCategoryChoice,
   CompendiumFacetCounts,
+  CompendiumFacetVocabulary,
   CompendiumListEntry,
   CompendiumListFilter,
 } from './types';
@@ -82,16 +83,36 @@ const FACETS: CompendiumFacetCounts = {
     count: 6 - i,
     icon: null,
   })),
-  deities: [],
-  categories: [],
-  zodiac: [],
-  planets: [],
+  deities: [
+    { value: 'hecate-greek', label: 'Hecate', count: 2, tradition: 'Greek' },
+    { value: 'hecate-roman', label: 'Hecate', count: 1, tradition: 'Roman' },
+    { value: 'janus-roman', label: 'Janus', count: 1, tradition: 'Roman' },
+  ],
+  categories: CATEGORIES.map(({ slug, name, group }, i) => ({
+    value: slug,
+    label: name,
+    count: 3 - i,
+    group,
+  })),
+  zodiac: [{ value: 'aries', label: 'Aries', count: 2 }],
+  planets: [{ value: 'mars', label: 'Mars', count: 2 }],
   elements: INGREDIENT_ELEMENTS.map((value) => ({ value, label: capitalise(value), count: 1 })),
   toxic: [
     { value: 'toxic', label: 'Toxic', count: 1 },
     { value: 'not_toxic', label: 'Not Toxic', count: 5 },
   ],
   withoutReferences: 2,
+};
+
+// What the open panel reads its live counts through.
+const VOCABULARY: CompendiumFacetVocabulary = {
+  deities: FACETS.deities.map(({ value, label, tradition }) => ({
+    id: value,
+    slug: value,
+    name: label,
+    tradition,
+  })),
+  formIcons: {},
 };
 
 // The group icon each form wears in the Form column; a form with none wears the spoon.
@@ -137,9 +158,11 @@ const PageOfSeveral = (): ReactElement => (
       filter={NO_FILTER}
       facets={FACETS}
       categories={CATEGORIES}
+      vocabulary={VOCABULARY}
       previousHref={compendiumHref({ before: 'cursor' })}
       nextHref={compendiumHref({ after: 'cursor' })}
       position={{ page: 2, pages: 3 }}
+      total={ENTRIES.length}
     />
   </Page>
 );
@@ -154,13 +177,16 @@ export const FirstPage: Story = () => (
       filter={NO_FILTER}
       facets={FACETS}
       categories={CATEGORIES}
+      vocabulary={VOCABULARY}
       nextHref={compendiumHref({ after: 'cursor' })}
+      total={ENTRIES.length}
     />
   </Page>
 );
 
 // The admin's two to-do lists at once, the unknown kind and the unsourced,
-// narrowed to one form, two elements and two categories.
+// narrowed to one form, a deity, two elements and two categories, the Filters button counting
+// them and the sentence above the results saying so.
 export const Filtered: Story = () => (
   <Page>
     <CompendiumList
@@ -172,13 +198,15 @@ export const Filtered: Story = () => (
         elements: ['fire', 'earth'],
         categories: ['testward', 'testcraft'],
         categoryMode: 'any',
-        deities: [],
+        deities: ['hecate-roman'],
         zodiac: [],
         planets: [],
         toxic: '',
       }}
       facets={FACETS}
       categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={1}
     />
   </Page>
 );
@@ -201,13 +229,22 @@ export const NoMatch: Story = () => (
       }}
       facets={FACETS}
       categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={0}
     />
   </Page>
 );
 
 export const Empty: Story = () => (
   <Page>
-    <CompendiumList entries={[]} filter={NO_FILTER} facets={FACETS} categories={CATEGORIES} />
+    <CompendiumList
+      entries={[]}
+      filter={NO_FILTER}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={0}
+    />
   </Page>
 );
 
@@ -218,7 +255,7 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 export const PhoneLight: Story = () => <PageOfSeveral />;
 PhoneLight.meta = { theme: 'light', width: 375 };
 
-// The filtered list at a phone's width, the row stacked and Clear at its end.
+// The filtered list at a phone's width, the row stacked and Clear All beside the Filters button.
 export const FilteredPhoneDark: Story = () => <Filtered />;
 FilteredPhoneDark.meta = { theme: 'dark', width: 375 };
 

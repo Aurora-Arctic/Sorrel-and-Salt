@@ -23,3 +23,9 @@
   gap: 0.25em;
   white-space: nowrap;
 }
+
+// The filter row is the positioned ancestor the facet panel opens under
+// (claude-docs/components/facet-panel.md).
+.compendium-list__row {
+  position: relative;
+}

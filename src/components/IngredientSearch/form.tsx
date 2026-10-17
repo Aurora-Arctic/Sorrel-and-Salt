@@ -26,6 +26,8 @@ export const IngredientSearchForm = ({
   searchHref,
   pickHref,
   pickHeading,
+  clear,
+  className,
   children,
 }: IngredientSearchFormProps): ReactElement => {
   const [text, setText] = useState(query);
@@ -36,6 +38,8 @@ export const IngredientSearchForm = ({
         action={action}
         searchHref={() => searchHref(text.trim())}
         shown={shown}
+        clear={clear}
+        className={className}
       >
         <IngredientSearchBox
           text={text}

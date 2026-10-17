@@ -55,6 +55,10 @@ export interface IngredientSearchFormProps {
    * over the list as it stands; left out, a pick is a plain navigation.
    */
   pickHeading?: (match: IngredientSearchMatch) => ModalHeading;
+  /** Draw the form's own Clear while a filter is shown. Default true. */
+  clear?: boolean;
+  /** Joins the form's class. */
+  className?: string;
   /** The filter slot: the consumer's other fields, after the search box. */
   children?: ReactNode;
 }

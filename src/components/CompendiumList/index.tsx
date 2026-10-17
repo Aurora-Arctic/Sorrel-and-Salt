@@ -138,20 +138,23 @@ const CompendiumList = ({
   filter,
   facets,
   categories,
+  vocabulary,
   previousHref,
   nextHref,
   position,
+  total,
 }: CompendiumListProps): ReactElement => (
   <IngredientSearch
     search={
-      // Keyed by the filter shown, so another one starts the form again from
-      // it; but not by its categories or their mode, which the form follows
-      // itself, so a pick does not draw the picker afresh and lose its announcement.
+      // Not keyed here: the row inside is keyed by the name searched, and follows the
+      // rest of the filter itself, so a facet's change keeps the open panel and its
+      // focus, and the sentence above the results keeps its typing across a search.
       <CompendiumListFilter
-        key={JSON.stringify({ ...filter, categories: [], categoryMode: 'all' })}
         filter={filter}
         facets={facets}
         categories={categories}
+        vocabulary={vocabulary}
+        total={total}
       />
     }
     previousHref={previousHref}

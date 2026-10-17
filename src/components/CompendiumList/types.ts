@@ -44,8 +44,18 @@ export interface CompendiumListProps extends Partial<PagerHrefs<Route>> {
   facets: CompendiumFacetCounts;
   /** Every live category, which the Categories box offers and the address names by slug. */
   categories: readonly CompendiumCategoryChoice[];
+  /** What the panel needs to read its own live counts, which name a deity by id and a form by spelling. */
+  vocabulary: CompendiumFacetVocabulary;
   /** Where this page stands among them all, for the pager. */
   position?: PagePosition;
+  /** How many entries the filter finds in all, which the search sentence leads with. */
+  total: number;
+}
+
+/** What turns the counts the panel asks for into choices: every live deity, and each curated form's group icon by its name folded to lower case. */
+export interface CompendiumFacetVocabulary {
+  deities: readonly { id: string; slug: string; name: string; tradition: string }[];
+  formIcons: Readonly<Record<string, FormGroupIcon>>;
 }
 
 /**
@@ -127,5 +137,5 @@ export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor;
 /** What the filter form starts from: the page's filter, and the choices it offers. */
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,
-  'filter' | 'facets' | 'categories'
+  'filter' | 'facets' | 'categories' | 'vocabulary'
 >;

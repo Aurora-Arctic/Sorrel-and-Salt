@@ -26,7 +26,7 @@ export interface FacetPanelProps {
   facets: CompendiumFacetCounts;
   /** The chosen values. */
   filter: FacetPanelFilter;
-  /** Called once hydrated, on every change, with only the part that changed. Before hydration the surrounding GET form submits instead. */
+  /** Called once hydrated, on every change, with only the part that changed; the caller holds it, and nothing applies yet. Before hydration the surrounding GET form submits instead. */
   onChange: (patch: Partial<FacetPanelFilter>) => void;
   /** Show the No Refs switch. The public and coven lists leave it off. */
   admin?: boolean;
@@ -34,6 +34,10 @@ export interface FacetPanelProps {
   loading?: boolean;
   /** Where the Clear All links go: the list with no facet chosen. */
   clearHref: string;
+  /** Called once hydrated when the panel shuts, by whatever means other than Apply Filters (which submits the form) or Clear All: the caller applies what it holds. */
+  onApply?: () => void;
+  /** Called once hydrated when either Clear All is pressed: the caller empties what it holds and applies at once. Without it the links are plain. */
+  onClear?: () => void;
   /** Joins the dialog's class. */
   className?: string;
 }

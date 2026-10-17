@@ -277,7 +277,9 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         filter={filter}
         facets={facets}
         categories={categories}
+        vocabulary={{ deities, formIcons: Object.fromEntries(formIcons) }}
         position={page.position}
+        total={page.totalCount}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />
       {/* One dialog in one place for both, so Save Ingredient's move from ?new

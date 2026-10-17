@@ -2,6 +2,7 @@
 
 import {
   type KeyboardEvent,
+  type MouseEvent,
   type ReactElement,
   type UIEvent,
   useEffect,
@@ -10,9 +11,12 @@ import {
 } from 'react';
 import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
 import { useHydrated } from '../../lib/hydrated';
+import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useSlide } from '../../lib/use-slide';
 import CategoryPicker from '../CategoryPicker';
 import FacetCombobox from '../FacetCombobox';
+import { fieldDescription } from '../Field/description';
+import { FieldShell } from '../Field/shell';
 import { RadioGroupField } from '../Field/radio-group-field';
 import { SwitchField } from '../Field/switch-field';
 import FormIcon from '../FormIcon';
@@ -35,6 +39,53 @@ const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
   { value: 'any', label: 'Any' },
 ];
 
+/**
+ * The categories before hydration: a native multiple select, as the other facets draw, whose
+ * options sit under their group's name with their counts, so the GET form sends the choice
+ * (CategoryPicker has no native control). A category with nothing behind it is disabled
+ * unless it is chosen.
+ */
+function NativeCategories({
+  categories,
+  values,
+}: {
+  categories: FacetPanelProps['facets']['categories'];
+  values: readonly string[];
+}): ReactElement {
+  const field = fieldDescription({ id: useId() });
+  const groups = new Map<string, typeof categories>();
+  for (const category of categories) {
+    const name = category.group.name;
+    groups.set(name, [...(groups.get(name) ?? []), category]);
+  }
+  return (
+    <FieldShell label="Categories" className="facet-combobox" {...field}>
+      <select
+        id={field.controlId}
+        className="select facet-combobox__native"
+        name="categories"
+        multiple
+        defaultValue={[...values]}
+        aria-describedby={field.aria['aria-describedby']}
+      >
+        {[...groups].map(([group, rows]) => (
+          <optgroup key={group} label={group}>
+            {rows.map((category) => (
+              <option
+                key={category.value}
+                value={category.value}
+                disabled={category.count === 0 && !values.includes(category.value)}
+              >
+                {category.label} ({category.count})
+              </option>
+            ))}
+          </optgroup>
+        ))}
+      </select>
+    </FieldShell>
+  );
+}
+
 export default function FacetPanel({
   facets,
   filter,
@@ -42,6 +93,8 @@ export default function FacetPanel({
   admin = false,
   loading = false,
   clearHref,
+  onApply,
+  onClear,
   className,
 }: FacetPanelProps): ReactElement {
   const hydrated = useHydrated();
@@ -70,9 +123,28 @@ export default function FacetPanel({
     const dialog = dialogRef.current;
     if (dialog && dialog.contains(document.activeElement)) buttonRef.current?.focus();
   };
-  const dismiss = () => {
+  // The panel shuts, and what was changed in it is applied once: whichever way it shuts, the
+  // Filters button, Escape, Close, the sheet's own Escape or the width changing under it.
+  // Nothing happens when it is already shut, so a close that follows a close applies nothing twice.
+  const shut = (instant: boolean) => {
+    if (!slide.shown) return;
+    onApply?.();
+    returnFocus();
+    slide.close(instant);
+  };
+  const dismiss = () => shut(modal.current);
+  // Apply Filters submits the form around the panel, which applies everything held, so
+  // the panel only has to shut.
+  const closeOnSubmit = () => {
     returnFocus();
     slide.close(modal.current);
+  };
+  // Clear All empties what is held and applies at once; a panel left open shuts with it.
+  const clear = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!onClear || opensElsewhere(event)) return;
+    event.preventDefault();
+    onClear();
+    if (slide.shown) closeOnSubmit();
   };
 
   // The dialog follows the slide: opened on its way open, closed once the slide has ended.
@@ -92,7 +164,7 @@ export default function FacetPanel({
   // Crossing the tablet width swaps the panel's kind (an overlay for a sheet), so it shuts.
   useEffect(() => {
     const query = window.matchMedia(WIDE);
-    const snap = () => slide.close(true);
+    const snap = () => shut(true);
     query.addEventListener('change', snap);
     return () => query.removeEventListener('change', snap);
   });
@@ -142,7 +214,7 @@ export default function FacetPanel({
         </a>
       )}
       {count > 0 && (
-        <a href={clearHref} className="facet-panel__clear">
+        <a href={clearHref} className="facet-panel__clear" onClick={clear}>
           Clear All
         </a>
       )}
@@ -157,7 +229,7 @@ export default function FacetPanel({
         aria-labelledby={titleId}
         open={!hydrated}
         onKeyDown={onKeyDown}
-        onClose={() => slide.close(true)}
+        onClose={() => shut(true)}
       >
         <div
           className={clip}
@@ -182,24 +254,29 @@ export default function FacetPanel({
 
               <div className="facet-panel__line">
                 <div className="facet-panel__grow">
-                  <CategoryPicker
-                    legend="Categories"
-                    entry="Category"
-                    placeholder="Add Category"
-                    removeNoun="Category"
-                    loading={loading}
-                    categories={facets.categories.map((category) => ({
-                      id: category.value,
-                      name: category.label,
-                      group: category.group,
-                      count: category.count,
-                    }))}
-                    value={filter.categories}
-                    onChange={(categories) => onChange({ categories })}
-                  />
-                  {filter.categories.map((slug) => (
-                    <input key={slug} type="hidden" name="categories" value={slug} />
-                  ))}
+                  {!hydrated ? (
+                    <NativeCategories categories={facets.categories} values={filter.categories} />
+                  ) : (
+                    <CategoryPicker
+                      legend="Categories"
+                      entry="Category"
+                      placeholder="Add Category"
+                      removeNoun="Category"
+                      loading={loading}
+                      categories={facets.categories.map((category) => ({
+                        id: category.value,
+                        name: category.label,
+                        group: category.group,
+                        count: category.count,
+                      }))}
+                      value={filter.categories}
+                      onChange={(categories) => onChange({ categories })}
+                    />
+                  )}
+                  {hydrated &&
+                    filter.categories.map((slug) => (
+                      <input key={slug} type="hidden" name="categories" value={slug} />
+                    ))}
                 </div>
                 {filter.categories.length >= 2 && (
                   <RadioGroupField
@@ -216,7 +293,7 @@ export default function FacetPanel({
                     <SwitchField
                       label={`No Refs (${facets.withoutReferences})`}
                       name="withoutReferences"
-                      value="true"
+                      value="1"
                       checked={filter.withoutReferences}
                       onChange={(withoutReferences) => onChange({ withoutReferences })}
                     />
@@ -321,7 +398,7 @@ export default function FacetPanel({
               </div>
 
               <div className="facet-panel__foot">
-                <button type="submit" className="btn btn--solid">
+                <button type="submit" className="btn btn--solid" onClick={closeOnSubmit}>
                   Apply Filters
                 </button>
                 <button
@@ -331,7 +408,9 @@ export default function FacetPanel({
                 >
                   Close
                 </button>
-                <a href={clearHref}>Clear All</a>
+                <a href={clearHref} onClick={clear}>
+                  Clear All
+                </a>
               </div>
             </div>
           </div>

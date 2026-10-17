@@ -50,6 +50,7 @@
 // Before the script runs the panel is an ordinary block above the results at every width.
 .facet-panel--static {
   position: static;
+  flex: 1 1 100%;
   margin: space(4) 0;
 }
 

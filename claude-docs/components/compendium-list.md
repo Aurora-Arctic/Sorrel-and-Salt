@@ -17,15 +17,16 @@ resolves through, rather than one read per row.
 
 `CompendiumListProps` (`types.ts`):
 
-| Prop           | What it is                                                                                                           |
-| -------------- | -------------------------------------------------------------------------------------------------------------------- |
-| `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                       |
-| `filter`       | `{ query, forms, withoutReferences, elements, categories, categoryMode, deities, zodiac, planets, toxic }`, as asked |
-| `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                   |
-| `facets`       | `CompendiumFacetCounts`: each facet's choices as `{ value, label, count }`, under the filter shown (`facets.ts`)     |
-| `previousHref` | The page before this one, absent on the first                                                                        |
-| `nextHref`     | The page after this one, absent on the last                                                                          |
-| `position`     | `{ page, pages }`, the pager's "Page X of Y"                                                                         |
+| Prop           | What it is                                                                                                                                                                                                     |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                                                                                                                 |
+| `filter`       | `{ query, forms, withoutReferences, elements, categories, categoryMode, deities, zodiac, planets, toxic }`, as asked                                                                                           |
+| `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                                                                                                             |
+| `facets`       | `CompendiumFacetCounts`: each facet's choices as `{ value, label, count }`, under the filter shown (`facets.ts`)                                                                                               |
+| `vocabulary`   | `{ deities, formIcons }`: every live deity with its id, slug, name and tradition, and each curated form's group icon by folded name. The open panel needs them to turn a live answer back into labelled counts |
+| `previousHref` | The page before this one, absent on the first                                                                                                                                                                  |
+| `nextHref`     | The page after this one, absent on the last                                                                                                                                                                    |
+| `position`     | `{ page, pages }`, the pager's "Page X of Y"                                                                                                                                                                   |
 
 A `CompendiumListEntry` is the entry's id, name and slug, its
 `canonicalName`, `null` for none, its `forms` (`CompendiumListForm[]`, `{ name, icon }` for each of the entry's live
@@ -44,62 +45,50 @@ different groups, so the page offers each name once, whatever its case.
 
 ## Contracts
 
-- **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178), as the
-  category list's is: named "Filter the Compendium" inside a `<search>`
-  landmark, a type-ahead labelled "Name" (`query`,
-  [`ingredient-search.md`](ingredient-search.md)) with its own submit, a
-  magnifier named Search, inside the box at its start with the clear alone at its end and no chevron, then a type-ahead labelled
-  "Form" (`forms`), a switch labelled "Without
-  References", title case as the owner asked (`withoutReferences`, valued `1`). There is no Filter
-  button: each field applies as it changes (below). The
-  switch is `SwitchField`, a slide toggle with its label above it as the
-  other fields have, over a native checkbox, so it submits the same; it was a
-  checkbox until the owner found it out of place in the row (MB.115;
-  [`field.md`](field.md)). The
-  switch is the admin's to-do list: No Refs (shortened from
-  Without References, the owner's call at MB.115) shows every
-  entry that cites no source yet. The compendium search has no Classification filter (the
-  Classification column stays in the table). A filtered page is an address, and filtering
-  starts again from the first page, since the form carries no cursor. It is
-  `filter.tsx`, the one client file here, its fields inside the shared
-  `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form,
-  the Clear link and the soft navigation; Clear is drawn while the page
-  shows a name, a form or No Refs, and opens
-  `/admin/compendium` with none, and is not drawn while it shows none,
-  whatever the fields hold. The Name box is `IngredientSearch`'s typeahead
-  ([`ingredient-search.md`](ingredient-search.md)): a picked row opens that
-  entry's `?edit=` modal over the filter as shown, without applying the
-  text typed, and Enter or the magnifier applies it. The Form
-  and No Refs fields sit in its slot and carry the typed name through
-  `useSearchText`. The form is still a GET form underneath, so it filters
-  before hydration.
-- **Form is a type-ahead over the curated forms once hydrated**, the
-  curated lists' group filter's pattern
-  ([`grouped-value-list.md`](grouped-value-list.md)), the owner's call in
-  MB.115: `ComboboxTypeahead` ([`combobox.md`](combobox.md), "The type-ahead
-  box"), each choice's value and label the form's name (until the chips land it
-  names one form; further `forms` in the address are carried by hidden inputs), "All Forms" while
-  blank, typing narrowing the list "Form choices", and a clear, "Clear
-  Form", back to blank. A hidden input carries `forms` for a native submit.
-  The server draws it as a native `<select>` instead, "All Forms" valued
-  `""` then one option per form, so the filter works before JavaScript;
-  `FilterSelectField` with `typeahead` draws both ([`field.md`](field.md)),
-  as it does the curated lists' group. The value is the form's text, `?forms=Oil`, which the compendium
-  read matches whatever its case, so the address reads plainly and an
-  uncurated form on a seeded entry is still reachable by typing the address.
-- **The native form submits as `query=&forms=`**, plus `withoutReferences=1` when on.
-  The page reads a blank value as no filter. A leftover `nomenclature` in an old address is ignored.
-- **Each field applies as it changes** (the owner's call at MB.115's
-  review, over a Filter button pressed after them): No Refs on its press, each from the filter shown with that one
-  field changed; Form once a choice settles, a pick, its clear or leaving
-  the box, when the settled form differs from the one shown, never while it
-  is typed; and the name on the magnifier, Enter or its clear. Each carries the name
-  typed but not yet searched, trimmed. Only the name and the Form box's text
-  are state; No Refs
-  takes `defaultChecked`. With JavaScript, each builds the address with
-  `compendiumHref`, and `useApplyFilter` pushes it softly; the loading state,
-  the focus and the form's keying by the filter shown are the shared
-  form's ([`filter-form.md`](filter-form.md#contracts)).
+- **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178),
+  named "Filter the Compendium" inside a `<search>` landmark and `position: relative`
+  (`.compendium-list__row`), because the panel opens just under it. In order: the Name
+  type-ahead (`query`, [`ingredient-search.md`](ingredient-search.md)) with its own Search
+  submit, then [`FacetPanel`](facet-panel.md) (M12.4) with `admin` on: the Filters (n)
+  button, a quiet Clear All link beside it while any facet is in use, and the dialog of
+  facets (categories with Match, No Refs, forms, toxic, planets, zodiac, deities,
+  elements). Above the results, outside the form, sits [`SearchSentence`](search-sentence.md).
+  The compendium search has no Classification filter (the column stays in the table); the
+  `FilterForm` Clear link is turned off (`clear={false}`), since the panel carries Clear
+  All, a plain link to `/admin/compendium`.
+  A filtered page is an address, and filtering starts again from the first page, since the
+  form carries no cursor. `filter.tsx` is the one client file; its fields sit inside the
+  shared `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form, the
+  loading state and the soft navigation.
+- **Every address carries the whole filter.** Apply Filters, a panel close or the Search submit
+  builds the address from the filter shown with the name typed (trimmed) and every facet
+  set over it (`hrefFor`, through `COMPENDIUM_PARAMS.changed`, which drops the cursor).
+  The lists are repeated parameters, categories and deities are slugs, No Refs is
+  `withoutReferences=1`, and `categoryMode` is written only from two categories up.
+  Picking a name in the dropdown instead opens that entry's `?edit=` modal over the filter
+  as shown, the text typed not applied (the owner's call, M8.10).
+- **Before hydration** the dialog is drawn open inside the form, each facet a native
+  control under the name the parameter table reads (forms and the other lists as
+  `<select multiple>`, categories as the native `Categories` select, Match and Toxic as
+  radios, No Refs as a checkbox sent as `1`), and Apply Filters or Enter in the search box
+  submits them all. Once hydrated, a change in the panel is held, since the panel covers the results, and
+  Apply Filters, Escape or any other close applies every held change in one soft
+  navigation (the owner's call, 2026-10-17). Back steps through those and a reload
+  restores the last. A close with nothing changed pushes nothing. Clear All beside the
+  Filters button applies at once; the one at the panel's foot clears what is held, then
+  applies and closes. The typed name applies only through Apply Filters or Enter.
+- **The panel is held ahead of the page.** `CompendiumListFilterRow` keeps the panel's
+  filter in state, the held changes, and takes the page's filter again whenever
+  it changes (Back, Clear All). The row is keyed by the name searched only, so a facet
+  change does not draw it afresh and the open panel and the focus inside survive. The
+  cost is that a new text search does draw it afresh, which closes the panel. While a
+  list is on its way, `FilterForm` marks the controls `aria-disabled` and refuses
+  presses, so a second change goes nowhere.
+- **The sentence** is `buildSearchSentence` over the filter, the total
+  (`resolveNumberedPage` returns `totalCount`, which the page passes down as `total`), and
+  the labels the facets give: a category by its name, a deity by its name with its
+  tradition added when another deity shares the name, an element by its label. It takes
+  `pending` from the list's navigation, so it types itself out while the list loads.
 - **Every action is an address.** Each row's Edit is its `editHref`, and the
   page's Add Ingredient is `?new`. `href.ts`'s `compendiumHref(place, dialog)`
   builds both, the pager's links and the filter's submit too, a typed wrapper
@@ -135,6 +124,21 @@ different groups, so the page offers each name once, whatever its case.
 
 **MB.215: the Form column lists the entry's forms.** Once an entry's forms are its variants (DESIGN.md §5), MB.222 made the Form column list its live forms, "Herb, Oil", with the em dash for an entry with none, and its rows carry their forms rather than one. Each Edit is named for the entry's label and formal name rather than its form, since identity is the formal name alone. An entry with no form is flagged on the admin's to-do list (M8.18; [`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
+## The panel's counts
+
+While something is held, the options, segments and chips show what the filter as held
+would list, not what the page drew. `useLiveFacets` (`live-facets.ts`) asks the
+public `compendiumFacets` query through `/api/graphql` (no session), with the held filter
+as variables, built through `COMPENDIUM_PARAMS.variables` from the `categories` and
+`vocabulary.deities` slug-to-id maps. The ask waits for the clicking to settle
+(`DEBOUNCE_MS`), is keyed by the variables so an answer for a filter since replaced is
+never shown, and keeps the previous answer on screen while the next comes. The chips show
+their placeholder while the ask is out. `compendiumFacetCounts` turns the answer into the
+same labelled counts the page draws, using `vocabulary` for deity names and form icons.
+The ask is off while the held filter equals the applied one, so the page's own counts
+show then. A failed ask leaves the page's counts in place. No resolver needed a
+DataLoader: the query is one request per ask.
+
 ## Styling
 
 None of its own; the stylesheet went in MB.115. The list's root is
@@ -158,7 +162,7 @@ mineral's or a chemical's name is not, and the row does not carry its kind.
 `Admin / Compendium List`: `OnePageOfSeveral`, `FirstPage`, `Filtered`,
 `NoMatch` and `Empty`, and `PhoneDark` and `PhoneLight`, the middle page at
 375px with every row a card, and `FilteredPhoneDark` and `FilteredPhoneLight`,
-`Filtered` at 375px with Clear drawn. Every story is the page as
+`Filtered` at 375px with the Filters button and Clear All. The filter shows a deity, categories, forms and elements. Every story is the page as
 `/admin/compendium` draws it: the admin layout's frame with the Compendium
 page current in its nav, then a `main` holding the page header with Add
 Ingredient, then the list. The filter reaches `/admin/compendium`, which the
@@ -166,25 +170,7 @@ workshop does not serve. Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/CompendiumList/index.test.tsx` covers the rows, the Edit
-links and their names, no table when there are none, through the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filter-form.md)) the filter form's
-action, method, names and kept values, the Form box
-drawn as a native select on the server and as a type-ahead once hydrated,
-No Refs found as a `switch`, sent by the server-drawn form and
-turned by a press before hydration,
-the Search submit in the server's markup, the address each field applies (the
-search on Search, Enter or the Name clear, No Refs on its
-press, the Form box on a pick, its clear and leaving it, never while typed,
-each carrying the name typed), the loading state while the filtered list
-loads (the list's status, the row `aria-busy` and its controls
-`aria-disabled`, a second change and a submit refused, the list back once
-it arrives, and none of it for typing), the focus kept on the field changed
-once the list arrives, the reset to the filter shown,
-Clear (its address with each control set, not drawn while the page shows no
-filter, text typed or not, and the loading state while the unfiltered list
-loads), and `compendiumHref`. It is the one list test of the filter's
-loading state, its focus, its
-reset and Clear; paging is Pager's. `tests/app/(shell)/admin/compendium/page.test.tsx`
+`tests/components/CompendiumList/index.test.tsx` covers the rows, the Edit links and their names, no table when there are none, the Filters count (facets in use, not the name), Clear All only while a facet is in use, the form the server drew sending the name and every facet (categories included), the address a panel change or the Search submit pushes (name typed and every facet carried, No Refs as `1`, Match left out below two categories), a picked name opening its modal over the filter shown, the loading state (list gone, row `aria-busy`, controls `aria-disabled`, a second change refused), a change held until Apply Filters applies them all in one push, Escape applying and a close with no change pushing nothing, a count in the panel updating after a change before Apply, Clear All applying at once, the form kept through a facet change and drawn afresh for a new name, the panel following the address, the sentence naming deities (with the tradition only for a shared name) and categories without links, and `compendiumHref`. The browser flows are `tests/e2e/admin-compendium.spec.ts`. `tests/app/(shell)/admin/compendium/page.test.tsx`
 covers the page's side: `?forms=` read trimmed into the list and its count,
 blank as none, the facet read under the same variables as the list, deities mapped from slugs to ids, zodiac, planets and toxic, kept on every Edit, the pager, Add Ingredient and the
 redirect, and the forms read past their first page, each name once. The Categories picker (M8.11) is covered in the component test (entries shown, an unknown slug not shown, hidden inputs, repeated slugs applied and removed, the typed name carried, other controls keeping the categories, one announcement, focus kept) and, on the page, by slugs mapped to ids, an unknown slug dropped, and the categories read past their first page.
