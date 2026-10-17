@@ -159,7 +159,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
           'open',
         ),
       );
@@ -234,7 +234,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
           'open',
         ),
       );
@@ -278,7 +278,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
           'another',
         ),
       );
@@ -904,7 +904,7 @@ describe('IngredientForm', () => {
           await gate;
           const { name } = (variables as { input: { name: string } }).input;
           return HttpResponse.json({
-            data: { createWorkspaceIngredient: { id: 'saved-1', name, slug: 'saved' } },
+            data: { createWorkspaceIngredient: { id: 'saved-1', name, slug: 'saved', stock: [] } },
           });
         }),
       );
