@@ -428,7 +428,7 @@ const IngredientForm = ({
   const promoteOffered = mayPromote && entry !== undefined;
 
   /**
-   * Save and Promote's first half: the form's own save, validated and drawn as
+   * Save & Promote's first half: the form's own save, validated and drawn as
    * any save is. When it does not land the question closes and the first
    * invalid field takes the focus by hand, since the question's overlay would
    * otherwise hand the focus back to the control that opened it.

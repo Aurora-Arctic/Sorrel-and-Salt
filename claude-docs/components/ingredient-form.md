@@ -884,12 +884,12 @@ server, so it has no arrow.
 - **It always asks first**, in the form's usual card (`PromoteFolkNameQuestion`,
   `promote.tsx`). On the compendium the question says the change is made at
   once, everywhere the compendium shows it. A coven's question leaves that out.
-- **A form with changes** is offered **Save and Promote**, **Discard and
-  Promote** and **Cancel**. Save and Promote runs the form's own save
+- **A form with changes** is offered **Save & Promote**, **Discard &
+  Promote** and **Cancel**. Save & Promote runs the form's own save
   first, with the same validation and errors. If it does not land, nothing is
   promoted: the question closes and the first invalid field takes the focus.
-  Discard and Promote puts the form back to its saved values, then promotes.
-  An open reference panel's own edits survive Save and Promote, and Discard and
+  Discard & Promote puts the form back to its saved values, then promotes.
+  An open reference panel's own edits survive Save & Promote, and Discard &
   Promote closes the panels with the reset.
 - **One round trip.** The mutation answers the new name and the full folk
   name list with ids. The form resets from that answer, clears its edited

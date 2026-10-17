@@ -1409,7 +1409,7 @@ export const PromoteControl: Story = () => <PromotableEntry asking={false} chang
 /** The question over a form with nothing to save: Promote and Cancel. */
 export const PromoteQuestion: Story = () => <PromotableEntry asking changed={false} />;
 
-/** The question over a form with a change: Save and Promote, Discard and Promote, and Cancel. */
+/** The question over a form with a change: Save & Promote, Discard & Promote, and Cancel. */
 export const PromoteQuestionWithChanges: Story = () => <PromotableEntry asking changed />;
 
 export const PromoteQuestionPhoneDark: Story = () => <PromotableEntry asking changed />;

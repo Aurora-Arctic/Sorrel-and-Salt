@@ -88,8 +88,8 @@ type Step = 'confirm' | 'also' | null;
 
 /**
  * Always asks before a folk name becomes the display name. With changes
- * unsaved it offers Save and Promote, which runs the form's own save first
- * and promotes only if that landed, and Discard and Promote, which puts the
+ * unsaved it offers Save & Promote, which runs the form's own save first
+ * and promotes only if that landed, and Discard & Promote, which puts the
  * form back to its saved values; Cancel sends nothing. Steps aside while the
  * form's unsaved-changes question asks, as a removal's does.
  */
@@ -135,7 +135,7 @@ export function PromoteFolkNameQuestion({
       }
       tone="solid"
       keepLabel="Cancel"
-      confirmLabel={dirty ? 'Save and Promote' : 'Promote'}
+      confirmLabel={dirty ? 'Save & Promote' : 'Promote'}
       busyLabel="Promoting"
       busy={step === 'confirm'}
       onConfirm={() =>
@@ -147,7 +147,7 @@ export function PromoteFolkNameQuestion({
       also={
         dirty
           ? {
-              label: 'Discard and Promote',
+              label: 'Discard & Promote',
               busyLabel: 'Promoting',
               busy: step === 'also',
               onClick: () =>

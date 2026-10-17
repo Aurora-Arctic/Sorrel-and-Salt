@@ -221,7 +221,7 @@ export interface ConfirmQuestionProps {
   onConfirm: () => Promise<void>;
   /**
    * A second acting answer beside the first, for a question with two ways
-   * forward: "Discard and Promote" next to "Save and Promote" (M12.1). It is
+   * forward: "Discard & Promote" next to "Save & Promote" (M12.1). It is
    * drawn destructive, being the one that gives something up. While either
    * runs, both are shut and the safe answer with them, so the question cannot
    * be left mid-action.

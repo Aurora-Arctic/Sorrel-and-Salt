@@ -163,7 +163,7 @@ describe('promoting a folk name in the compendium form', () => {
       press(promoteButton('Hedge Fixture') as HTMLElement);
 
       expect(button('Promote')).toBeInTheDocument();
-      noButton('Save and Promote');
+      noButton('Save & Promote');
       expect(button('Cancel')).toHaveFocus();
       press('Cancel');
 
@@ -225,8 +225,8 @@ describe('promoting a folk name in the compendium form', () => {
 
       press(promoteButton('Hedge Fixture') as HTMLElement);
 
-      expect(button('Save and Promote')).toBeInTheDocument();
-      expect(button('Discard and Promote')).toBeInTheDocument();
+      expect(button('Save & Promote')).toBeInTheDocument();
+      expect(button('Discard & Promote')).toBeInTheDocument();
       noButton('Promote');
       press('Cancel');
       await act(async () => {});
@@ -241,7 +241,7 @@ describe('promoting a folk name in the compendium form', () => {
       type('Name', 'Testwort Renamed');
 
       press(promoteButton('Hedge Fixture') as HTMLElement);
-      press('Save and Promote');
+      press('Save & Promote');
 
       await waitFor(() => expect(textbox('Name')).toHaveValue('Hedge Fixture'));
       expect(sent.order).toEqual(['save', 'promote']);
@@ -261,10 +261,10 @@ describe('promoting a folk name in the compendium form', () => {
       type('Name', 'Testwort Renamed');
 
       press(promoteButton('Hedge Fixture') as HTMLElement);
-      press('Save and Promote');
+      press('Save & Promote');
 
       await waitFor(() => expect(textbox('Name')).toBeInvalid());
-      noButton('Save and Promote');
+      noButton('Save & Promote');
       expect(sent.promotes).toHaveLength(0);
       expect(textbox('Name')).toHaveFocus();
       expect(textbox('Name')).toHaveValue('Testwort Renamed');
@@ -276,7 +276,7 @@ describe('promoting a folk name in the compendium form', () => {
       type('Name', '   ');
 
       press(promoteButton('Hedge Fixture') as HTMLElement);
-      press('Save and Promote');
+      press('Save & Promote');
 
       await waitFor(() => expect(textbox('Name')).toBeInvalid());
       expect(sent.order).toEqual([]);
@@ -288,7 +288,7 @@ describe('promoting a folk name in the compendium form', () => {
       type('Name', 'Testwort Renamed');
 
       press(promoteButton('Hedge Fixture') as HTMLElement);
-      press('Discard and Promote');
+      press('Discard & Promote');
 
       await waitFor(() => expect(textbox('Name')).toHaveValue('Hedge Fixture'));
       expect(sent.order).toEqual(['promote']);
