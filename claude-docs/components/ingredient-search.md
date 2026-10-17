@@ -151,6 +151,16 @@ inputs repeat the slugs so a native GET submit before hydration keeps them. A
 match is the union of an entry's categories and its forms' (MB.215), by the
 finder's category arm, ANDed across the categories chosen.
 
+From two categories the filter row also shows a Match radio group, All and Any
+(M8.12), which sets `categoryMode`, an enum argument of `compendium` and
+`workspaceIngredients` defaulting to `all`; `any` matches an entry holding any
+of the categories, filtered in SQL. The table's `categoryMode` entry writes only
+`any` (`?categoryMode=any`) and reads anything else as All, so All leaves the
+address bare. The mode means nothing below two categories, so removing down to
+one drops it from the address and a second pick starts at All. The form holds
+the mode as it holds the picks, and the list's key leaves it out, so choosing a
+radio keeps focus. The mode alone does not make the list count as filtered.
+
 The `elements` filter is the first list filter: an `elements` argument on
 `compendium` and `workspaceIngredients` matching an entry that holds any element
 listed on the entry or on any of its live forms, by array overlap in SQL and ANDed with the other filters. It is read
