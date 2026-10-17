@@ -55,14 +55,14 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
   surrounding GET form: each combobox as its native select, Match and Toxic as radios,
   No Refs as a checkbox valued `1` (the value the parameter table reads), and categories as
   a native `<select multiple name="categories">` in optgroups by group (`NativeCategories`;
-  a zero-count option is disabled unless chosen). Once hydrated, `CategoryPicker` replaces
+  a zero-count option is left out unless chosen). Once hydrated, `CategoryPicker` replaces
   it and a chosen category travels as a hidden `categories` input. Once the script runs, React removes `open`, so the
   panel collapses. It is not seen opening first: the root layout's pre-paint script sets `data-js` on `<html>` before first paint, and `[data-js] .facet-panel--static` is `display: none`. Hidden is not removed, so the controls still submit if the form is sent before hydration. Without JavaScript the attribute never lands and the panel stays. The mark rides in `src/app/pre-paint-scripts.tsx` beside the theme script rather than in a mechanism of its own: it has the same job, setting something on `<html>` that first paint must already see, and the same rule for existing only in the server's HTML.
 - **Source order is visual order**, with no CSS `order`. The rows are Categories with
   Match and No Refs; Forms with Toxic; Planets and Zodiac; Deities and Elements; then
   the foot. Match shows only for two or more categories, and carries an InfoTip saying what All and Any mean. Match and Toxic stand at the top of their neighbour's field and are a control's height: the group's own margin is zeroed in a row, the legend takes the label's weight, and the bar is a control tall. A tip in the panel opens below its label, not above as elsewhere, because the clip ends at the first row and would cut an upward tip; on the wide panel, where Match stands at the row's right-hand end, it also hangs from the icon's right edge and opens leftward. An e2e test checks the open tip lies inside the panel at 1280 and 375.
 - **Counts** show on every option, on the Toxic segments, on each chosen chip and on
-  No Refs' label. A zero is disabled and listed last (`FacetCombobox`).
+  No Refs' label. A value with a count of 0 is hidden in every facet, a Toxic segment included (the Any segment stays, alone if nothing else is left), unless it is chosen: a chosen one stays as a removable chip, and a facet with no value left keeps its field with an empty list (`FacetCombobox`).
 - **The sheet's foot is sticky**, with scroll padding so a focused control is never
   hidden behind it (WCAG 2.4.11).
 - **Chips come out only by their cross**, inside the panel.

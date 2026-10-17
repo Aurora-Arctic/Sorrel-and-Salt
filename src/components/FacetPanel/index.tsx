@@ -71,15 +71,13 @@ function NativeCategories({
       >
         {[...groups].map(([group, rows]) => (
           <optgroup key={group} label={group}>
-            {rows.map((category) => (
-              <option
-                key={category.value}
-                value={category.value}
-                disabled={category.count === 0 && !values.includes(category.value)}
-              >
-                {category.label} ({category.count})
-              </option>
-            ))}
+            {rows
+              .filter((category) => category.count > 0 || values.includes(category.value))
+              .map((category) => (
+                <option key={category.value} value={category.value}>
+                  {category.label} ({category.count})
+                </option>
+              ))}
           </optgroup>
         ))}
       </select>
@@ -291,6 +289,7 @@ export default function FacetPanel({
                       entry="Category"
                       placeholder="Add Category"
                       removeNoun="Category"
+                      hideZeros
                       loading={loading}
                       categories={facets.categories.map((category) => ({
                         id: category.value,
@@ -356,11 +355,15 @@ export default function FacetPanel({
                   layout="segmented"
                   options={[
                     { value: '', label: 'Any' },
-                    ...facets.toxic.map((choice) => ({
-                      value: choice.value,
-                      label: choice.label,
-                      count: choice.count,
-                    })),
+                    // A segment with nothing behind it is left out, unless chosen; with
+                    // none left, Any stands alone.
+                    ...facets.toxic
+                      .filter((choice) => choice.count > 0 || choice.value === filter.toxic)
+                      .map((choice) => ({
+                        value: choice.value,
+                        label: choice.label,
+                        count: choice.count,
+                      })),
                   ]}
                   value={filter.toxic}
                   onChange={(toxic) => onChange({ toxic })}

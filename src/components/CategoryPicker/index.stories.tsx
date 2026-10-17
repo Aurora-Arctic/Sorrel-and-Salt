@@ -83,7 +83,7 @@ export const CouldNotLoad: Story = () => (
 );
 
 // The filter's reading (M12.4): each row and chip carries how many entries it
-// would leave, a zero row is disabled and says so, and a chip whose count is
+// would leave, a zero row is left out, and a chip whose count is
 // still on its way holds a placeholder.
 const counted = CATEGORIES.map((category, index) => ({
   ...category,
@@ -91,7 +91,7 @@ const counted = CATEGORIES.map((category, index) => ({
 }));
 
 export const WithCounts: Story = () => (
-  <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" disableZeros />
+  <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" hideZeros />
 );
 
 export const CountsLoading: Story = () => (

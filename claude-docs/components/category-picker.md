@@ -10,24 +10,24 @@ Categories filter (M8.11, `CompendiumList/filter.tsx`). A client component, for 
 
 `CategoryPickerProps` (`types.ts`):
 
-| Prop           | What it is                                                                                                                             |
-| -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `legend`       | The fieldset's name, "Categories"                                                                                                      |
-| `hint`         | The legend's `InfoTip` text, if any                                                                                                    |
-| `entry`        | The box's name, "Category": what a pick adds                                                                                           |
-| `placeholder`  | A short action shown, muted, while the box is empty: "Add a category"; the box keeps it after the chips ([`combobox.md`](combobox.md)) |
-| `categories`   | Every `PickerCategory` on offer, in any order                                                                                          |
-| `pending`      | The categories are still being read: the box says it is looking                                                                        |
-| `loading`      | The counts are still being read: each chip holds a placeholder where its count will be, its x named as it will be                      |
-| `removeNoun`   | Names a chip's x "Remove {Noun}: {Value}", "Remove Category: Testward"; without it, "Remove Testward"                                  |
-| `disableZeros` | Disables, and notes "Nothing Matches" on, the row of a category whose `count` is zero; a pick is never disabled                        |
-| `value`        | The picked ids, in the order they were picked                                                                                          |
-| `onChange`     | Called with the new id list after a pick is added or taken out                                                                         |
-| `invalid`      | The ids an error names: each entry edged, its x described by the error                                                                 |
-| `errorId`      | The id of the element `error` renders, set only while an error shows                                                                   |
-| `error`        | The one error element, drawn beneath the box: the form's `FieldError`                                                                  |
-| `status`       | Said beneath the box, and read with it: the categories could not be read                                                               |
-| `action`       | A control at the legend's end, handed the picker's announcer (`LegendAction`): an ingredient variant's Copy From Ingredient (MB.115)   |
+| Prop          | What it is                                                                                                                             |
+| ------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `legend`      | The fieldset's name, "Categories"                                                                                                      |
+| `hint`        | The legend's `InfoTip` text, if any                                                                                                    |
+| `entry`       | The box's name, "Category": what a pick adds                                                                                           |
+| `placeholder` | A short action shown, muted, while the box is empty: "Add a category"; the box keeps it after the chips ([`combobox.md`](combobox.md)) |
+| `categories`  | Every `PickerCategory` on offer, in any order                                                                                          |
+| `pending`     | The categories are still being read: the box says it is looking                                                                        |
+| `loading`     | The counts are still being read: each chip holds a placeholder where its count will be, its x named as it will be                      |
+| `removeNoun`  | Names a chip's x "Remove {Noun}: {Value}", "Remove Category: Testward"; without it, "Remove Testward"                                  |
+| `hideZeros`   | Leaves out the row of a category whose `count` is zero; a pick keeps its chip whatever its count                                       |
+| `value`       | The picked ids, in the order they were picked                                                                                          |
+| `onChange`    | Called with the new id list after a pick is added or taken out                                                                         |
+| `invalid`     | The ids an error names: each entry edged, its x described by the error                                                                 |
+| `errorId`     | The id of the element `error` renders, set only while an error shows                                                                   |
+| `error`       | The one error element, drawn beneath the box: the form's `FieldError`                                                                  |
+| `status`      | Said beneath the box, and read with it: the categories could not be read                                                               |
+| `action`      | A control at the legend's end, handed the picker's announcer (`LegendAction`): an ingredient variant's Copy From Ingredient (MB.115)   |
 
 A `PickerCategory` is the category's id, name, optional `description`, optional
 `count` (how many entries picking it would leave) and its
@@ -78,13 +78,12 @@ A `PickerCategory` is the category's id, name, optional `description`, optional
 
 - **Counts are the filter's (M12.4).** A category with a `count` reads
   "Testward (4)" on its row and on its chip, name and count together. With
-  `disableZeros` a zero-count row cannot be chosen (the Combobox's `disabled`
-  option) and its note reads "Nothing Matches" in place of its description; a
-  category already picked is never disabled, so it can always be removed.
+  `hideZeros` a zero-count row is left out of the list; a category already
+  picked keeps its chip, so it can always be removed.
   While `loading`, a chip draws a placeholder in the count's place, hidden
   from assistive technology, and its x is named by `removeNoun` the same
-  whether or not the count has arrived. Zero rows stay under their group, in
-  alphabetical place: the headings already order the list.
+  whether or not the count has arrived. Without `hideZeros`, zero rows stay
+  under their group, in alphabetical place: the headings already order the list.
 
 ## Styling
 
@@ -104,7 +103,7 @@ invented categories: `NothingPicked`, an empty box to focus and type in;
 `AnInvalidEntry`, one entry edged and named by an error beneath the box;
 `Loading`, with no categories yet and the pending state; and `CouldNotLoad`,
 with the status line that says the list failed; `WithCounts`, rows and a chip
-with counts and the zero rows disabled; and `CountsLoading`, the chip's
+with counts and the zero rows left out; and `CountsLoading`, the chip's
 placeholder.
 
 ## Testing
@@ -116,7 +115,7 @@ the box emptied, announced, and the pick offered no more; the picks reported
 in order as one is added, removed, taken by Backspace or cleared; each entry described by its group and description, its tooltip
 naming the group; Enter adding the one category named whole and nothing for
 part of a name; the box and the entries an error names, each described; the
-status read with the box; the counts (name and count read together, a zero row disabled only when asked, the x named by its noun with or without the count, a chosen zero pick still removable); and a pick not yet named held while the read is
+status read with the box; the counts (name and count read together, a zero row left out only when asked, the x named by its noun with or without the count, a chosen zero pick still removable); and a pick not yet named held while the read is
 on, then drawn by its id. The ×, Backspace and Clear themselves are
 Combobox's, the colours presentation. The filter use is proved in
 `tests/components/CompendiumList/index.test.tsx` and, in a browser, in

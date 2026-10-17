@@ -11,8 +11,7 @@ import '../Combobox/index.scss';
 import './index.scss';
 
 // A filter's closed set with how many entries each value would leave (M12.4):
-// the multi-select box with its counts, a value with none listed last and
-// disabled, the chosen values chips inside the control, outlined, and each
+// the multi-select box with its counts, a value with none left out, the chosen values chips inside the control, outlined, and each
 // one a hidden input of the filter's GET form. Before the script loads the
 // server draws a native multiple select instead, so that a press on the
 // search's magnifier sends the choice, as `FilterSelectField` does for a
@@ -28,7 +27,7 @@ export default function FacetCombobox({
   placeholder,
   removeNoun,
   loading,
-  disableZeros = true,
+  hideZeros = true,
   hint,
   className,
 }: FacetComboboxProps): ReactElement {
@@ -52,7 +51,7 @@ export default function FacetCombobox({
             placeholder={placeholder}
             removeNoun={removeNoun}
             loading={loading}
-            disableZeros={disableZeros}
+            hideZeros={hideZeros}
             describedBy={field.aria['aria-describedby']}
           />
         ) : (
@@ -64,7 +63,7 @@ export default function FacetCombobox({
             onChange={onChange}
             choices={choices}
             placeholder={placeholder}
-            disableZeros={disableZeros}
+            hideZeros={hideZeros}
             loading={loading}
             chipsOutlined
             removeNoun={removeNoun}
@@ -79,21 +78,18 @@ export default function FacetCombobox({
   }
 
   const nativeOption = (choice: (typeof choices)[number]) => (
-    <option
-      key={choice.value}
-      value={choice.value}
-      disabled={
-        Boolean(choice.disabled || (disableZeros && choice.count === 0)) &&
-        !values.includes(choice.value)
-      }
-    >
+    <option key={choice.value} value={choice.value} disabled={choice.disabled}>
       {choice.label}
       {choice.count !== undefined && ` (${choice.count})`}
     </option>
   );
+  // Values with nothing behind them are left out, unless chosen, as the box leaves them out.
+  const shown = choices.filter(
+    (choice) => !(hideZeros && choice.count === 0) || values.includes(choice.value),
+  );
   // The choices of one group together, the groups in the order they first appear.
   const groups: { group: string | undefined; rows: (typeof choices)[number][] }[] = [];
-  for (const choice of choices) {
+  for (const choice of shown) {
     const at = groups.find((entry) => entry.group === choice.group);
     if (at) at.rows.push(choice);
     else groups.push({ group: choice.group, rows: [choice] });
@@ -101,7 +97,7 @@ export default function FacetCombobox({
 
   // Before hydration, and in the render that hydrates: a change applies
   // nothing, since no script runs; the search's magnifier sends it. A value
-  // with nothing behind it is disabled as the box disables it, unless chosen.
+  // with nothing behind it is left out as the box leaves it out, unless chosen.
   return (
     <FieldShell label={label} hint={hint} className={shellClass} {...field}>
       <select

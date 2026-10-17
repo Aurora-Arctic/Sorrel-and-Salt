@@ -23,7 +23,7 @@ function Harness({
 }: {
   initial?: string[];
   choices?: ComboboxChoice[];
-  disableZeros?: boolean;
+  hideZeros?: boolean;
   loading?: boolean;
   chipsOutlined?: boolean;
   removeNoun?: string;
@@ -48,7 +48,6 @@ const box = () => screen.getByRole('combobox', { name: 'Element' });
 const chosen = () => screen.getByRole('status', { name: 'Chosen' }).textContent;
 const rows = () => screen.queryAllByRole('option');
 const names = () => rows().map((row) => row.textContent);
-const press = (name: string) => fireEvent.keyDown(box(), { key: name });
 
 describe('the multi-select box with counts', () => {
   it('reads each option as its name and count together', () => {
@@ -75,74 +74,27 @@ describe('the multi-select box with counts', () => {
     expect(chosen()).toBe('air');
   });
 
-  describe('when it disables zero counts', () => {
-    it('lists the zero-count options last, disabled, with the reason beside them', () => {
-      render(<Harness disableZeros />);
+  describe('when it hides zero counts', () => {
+    it('leaves the zero-count options out and keeps the rest in place', () => {
+      render(<Harness hideZeros />);
       fireEvent.click(box());
 
-      expect(names().map((text) => text?.split(' (')[0])).toEqual([
-        'Earth',
-        'Fire',
-        'Spirit',
-        'Air',
-        'Water',
-      ]);
-      const air = screen.getByRole('option', { name: /^Air/ });
-      expect(air).toHaveAttribute('aria-disabled', 'true');
-      // Still read, and still says its count and why it is out.
-      expect(air).toHaveTextContent('Air (0)');
-      expect(air).toHaveTextContent('Nothing Matches');
-      expect(screen.getByRole('option', { name: 'Earth (4)' })).not.toHaveAttribute(
-        'aria-disabled',
-        'true',
-      );
+      // Why they could have been listed: Air and Water are in the choices, at 0.
+      expect(ELEMENTS.filter((choice) => choice.count === 0)).toHaveLength(2);
+      expect(names().map((text) => text?.split(' (')[0])).toEqual(['Earth', 'Fire', 'Spirit']);
+      expect(screen.queryByRole('option', { name: /^Air/ })).not.toBeInTheDocument();
     });
 
-    it('refuses a press on a disabled option, where the same press chooses it unasked', () => {
-      const { unmount } = render(<Harness />);
+    it('lists no option at all when every choice is zero, and the box stays', () => {
+      render(<Harness hideZeros choices={ELEMENTS.map((choice) => ({ ...choice, count: 0 }))} />);
       fireEvent.click(box());
-      fireEvent.click(screen.getByRole('option', { name: /^Air/ }));
-      expect(chosen()).toBe('air');
-      unmount();
 
-      render(<Harness disableZeros />);
-      fireEvent.click(box());
-      fireEvent.click(screen.getByRole('option', { name: /^Air/ }));
-      expect(chosen()).toBe('');
+      expect(rows()).toHaveLength(0);
+      expect(box()).toBeInTheDocument();
     });
 
-    it('steps the arrow keys over disabled options and never chooses one', () => {
-      render(<Harness disableZeros initial={['earth', 'fire']} />);
-      fireEvent.click(box());
-      // Spirit, then the two disabled rows.
-      expect(names().map((text) => text?.split(' (')[0])).toEqual(['Spirit', 'Air', 'Water']);
-
-      press('ArrowDown');
-      expect(box()).toHaveAttribute(
-        'aria-activedescendant',
-        screen.getByRole('option', { name: 'Spirit (2)' }).id,
-      );
-      press('ArrowDown');
-      // Nothing past Spirit is reachable: the highlight stays or wraps to it.
-      expect(box()).toHaveAttribute(
-        'aria-activedescendant',
-        screen.getByRole('option', { name: 'Spirit (2)' }).id,
-      );
-      press('Enter');
-      expect(chosen()).toBe('earth,fire,spirit');
-    });
-
-    it('closes once only disabled options are left, and offers them again when a chip goes', () => {
-      render(<Harness disableZeros initial={['earth', 'fire']} />);
-      fireEvent.click(box());
-      fireEvent.click(screen.getByRole('option', { name: 'Spirit (2)' }));
-
-      expect(chosen()).toBe('earth,fire,spirit');
-      expect(box()).toHaveAttribute('aria-expanded', 'false');
-    });
-
-    it('never disables a zero-count value that is already chosen', () => {
-      render(<Harness disableZeros initial={['air']} />);
+    it('keeps a zero-count value that is already chosen as a removable chip', () => {
+      render(<Harness hideZeros initial={['air']} />);
 
       const remove = screen.getByRole('button', { name: 'Remove Air' });
       expect(remove).toBeEnabled();

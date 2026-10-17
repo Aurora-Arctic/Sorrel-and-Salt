@@ -247,19 +247,17 @@ describe('CategoryPicker', () => {
       expect(screen.getByRole('option', { name: /^Ablefix \(1\)/ })).toBeInTheDocument();
     });
 
-    it('leaves a zero-count row choosable unless asked, and disables it when asked', () => {
+    it('leaves a zero-count row choosable unless asked, and leaves it out when asked', () => {
       const { onChange } = renderPicker({ categories: counted() });
       open();
       fireEvent.click(screen.getByRole('option', { name: /^Testcraft \(0\)/ }));
       expect(onChange).toHaveBeenCalledWith(['c-tc']);
 
       cleanup();
-      const second = renderPicker({ categories: counted(), disableZeros: true });
+      renderPicker({ categories: counted(), hideZeros: true });
       open();
-      const zero = screen.getByRole('option', { name: /^Testcraft \(0\)/ });
-      expect(zero).toHaveAttribute('aria-disabled', 'true');
-      fireEvent.click(zero);
-      expect(second.onChange).not.toHaveBeenCalled();
+      expect(screen.queryByRole('option', { name: /^Testcraft/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /^Ablefix \(1\)/ })).toBeInTheDocument();
     });
 
     it('names a pick for removal by its noun, whether or not its count has arrived', () => {
@@ -276,7 +274,7 @@ describe('CategoryPicker', () => {
     });
 
     it('keeps a chosen zero-count pick removable', () => {
-      renderPicker({ categories: counted(), value: ['c-tc'], disableZeros: true });
+      renderPicker({ categories: counted(), value: ['c-tc'], hideZeros: true });
 
       expect(removeButton('Testcraft')).toBeEnabled();
     });

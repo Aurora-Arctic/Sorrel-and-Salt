@@ -54,20 +54,28 @@ describe('FacetCombobox', () => {
     expect(onChange).toHaveBeenCalledWith(['fire']);
   });
 
-  it('lists a value with nothing behind it last, disabled, unless asked not to', () => {
+  it('leaves out a value with nothing behind it, unless asked not to', () => {
     const { unmount } = render(<FacetCombobox {...PROPS} />);
     open();
-    const rows = screen.getAllByRole('option');
-    expect(rows[rows.length - 1]).toHaveAccessibleName(/^Testearth \(0\)/);
-    expect(rows[rows.length - 1]).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.queryByRole('option', { name: /^Testearth/ })).not.toBeInTheDocument();
+    // Why it could have been there: the choice is in the props with a count of 0.
+    expect(PROPS.choices.find((choice) => choice.value === 'earth')?.count).toBe(0);
     unmount();
 
-    render(<FacetCombobox {...PROPS} disableZeros={false} />);
+    render(<FacetCombobox {...PROPS} hideZeros={false} />);
     open();
     expect(screen.getByRole('option', { name: /^Testearth \(0\)/ })).toHaveAttribute(
       'aria-disabled',
       'false',
     );
+  });
+
+  it('keeps the field, with nothing to offer, when every value is zero', () => {
+    const choices = PROPS.choices.map((choice) => ({ ...choice, count: 0 }));
+    render(<FacetCombobox {...PROPS} choices={choices} />);
+    expect(screen.getByRole('combobox', { name: 'Elements' })).toBeInTheDocument();
+    open();
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
   });
 
   it('submits each chosen value as a hidden input under the name, in the order chosen', () => {
@@ -110,7 +118,7 @@ describe('FacetCombobox', () => {
 
   // Before the script runs, a press on the search's magnifier sends the form,
   // so the server draws a native multiple select that carries the values.
-  it('is drawn by the server as a native multiple select holding the values, zero rows disabled', () => {
+  it('is drawn by the server as a native multiple select holding the values, without zero rows', () => {
     const markup = renderToString(<FacetCombobox {...PROPS} values={['fire']} />);
     const host = document.createElement('div');
     host.innerHTML = markup;
@@ -127,7 +135,7 @@ describe('FacetCombobox', () => {
       'selected',
       false,
     );
-    expect(within(select).getByRole('option', { name: 'Testearth (0)' })).toBeDisabled();
+    expect(within(select).queryByRole('option', { name: 'Testearth (0)' })).not.toBeInTheDocument();
     host.remove();
   });
 
@@ -145,17 +153,13 @@ describe('FacetCombobox', () => {
       expect(box()).toHaveValue('');
     });
 
-    it('lists no chosen value, and a value with nothing behind it last and unchoosable', () => {
-      const { container } = render(<Controlled typeahead initial={['fire']} />);
+    it('lists no chosen value, and no value with nothing behind it', () => {
+      render(<Controlled typeahead initial={['fire']} />);
 
       open();
       const rows = screen.getAllByRole('option');
       expect(rows.map((row) => row.textContent)).not.toContain('Testfire (9)');
-      expect(rows[rows.length - 1]).toHaveAccessibleName(/^Testearth \(0\)/);
-      expect(rows[rows.length - 1]).toHaveAttribute('aria-disabled', 'true');
-      fireEvent.click(rows[rows.length - 1]!);
-
-      expect(hidden(container)).toEqual(['fire']);
+      expect(rows.map((row) => row.textContent).join()).not.toContain('Testearth');
     });
 
     it('draws chips with counts, removes by cross and by clear, and keeps a zero chip removable', () => {

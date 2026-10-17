@@ -43,8 +43,8 @@ export interface CategoryPickerProps {
   loading?: boolean;
   /** Names a pick's x with the noun, "Remove Category: Testward"; without it, "Remove Testward". */
   removeNoun?: string;
-  /** Disables, and says "Nothing Matches" on, the row of a category whose count is zero. A pick is never disabled. */
-  disableZeros?: boolean;
+  /** Leaves out a category whose count is zero. A pick keeps its chip. */
+  hideZeros?: boolean;
   /** The picked categories' ids. */
   value: readonly string[];
   /** Called with the ids picked after one is added or taken out, in the order they were picked. */

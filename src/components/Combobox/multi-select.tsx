@@ -29,7 +29,6 @@ const CHOOSING: readonly string[] = [
 const EVERY_CHOICE = 'Every option is already chosen';
 
 /** What a disabled zero-count row says beside its count (M12.4). */
-const NOTHING_MATCHES = 'Nothing Matches';
 
 export function ComboboxMultiSelect({
   id,
@@ -42,7 +41,7 @@ export function ComboboxMultiSelect({
   placeholder,
   required,
   inputRef,
-  disableZeros,
+  hideZeros,
   loading,
   chipsOutlined,
   removeNoun,
@@ -50,17 +49,13 @@ export function ComboboxMultiSelect({
   'aria-invalid': invalid,
 }: ComboboxMultiSelectProps): ReactElement {
   const chosen = values.flatMap((value) => choices.filter((choice) => choice.value === value));
-  // The rows offered: those not yet chosen, a disabled one (the caller's, or
-  // a zero count when asked) after the rest, the order otherwise kept. Last
-  // so that the arrow keys and the highlight that follows a choice meet every
-  // chooseable row first.
-  const unchosen = choices
-    .filter((choice) => !values.includes(choice.value))
-    .map((choice) =>
-      disableZeros && choice.count === 0
-        ? { ...choice, disabled: true, note: choice.note ?? NOTHING_MATCHES }
-        : choice,
-    );
+  // The rows offered: those not yet chosen, and when asked, only those with something
+  // behind them (a count above 0), a disabled one (the caller's) after the rest, the order
+  // otherwise kept. Last so that the arrow keys and the highlight that follows a choice meet
+  // every chooseable row first.
+  const unchosen = choices.filter(
+    (choice) => !values.includes(choice.value) && !(hideZeros && choice.count === 0),
+  );
   const left = [...unchosen.filter((c) => !c.disabled), ...unchosen.filter((c) => c.disabled)];
   const choosable = left.filter((choice) => !choice.disabled).length;
   // What the last change did, for a screen reader: a chip appears or goes,

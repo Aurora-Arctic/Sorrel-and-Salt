@@ -343,7 +343,7 @@ export interface ComboboxChoice {
   /**
    * The row is shown and read but cannot be chosen (`aria-disabled`, stepped
    * over by the arrow keys). A disabled row is listed after the others. The
-   * multi-select's `disableZeros` sets it on every row whose `count` is 0.
+   * caller sets it by hand.
    * Honoured by the multi-select box only.
    */
   disabled?: boolean;
@@ -445,11 +445,10 @@ export interface ComboboxMultiSelectProps {
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;
   /**
-   * List the choices with a `count` of 0 after the others and disable them,
-   * each with a "Nothing Matches" note (M12.4). A value already chosen keeps
-   * its chip and its cross whatever its count.
+   * Leave out the choices with a `count` of 0 (M12.4). A value already chosen
+   * keeps its chip and its cross whatever its count.
    */
-  disableZeros?: boolean;
+  hideZeros?: boolean;
   /** A search is running: the chips show a count placeholder, as `ComboboxEntry`'s `loading`. */
   loading?: boolean;
   /** Draw the chips outlined, as `ComboboxEntry`'s `outlined`. */

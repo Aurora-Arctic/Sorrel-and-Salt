@@ -442,14 +442,14 @@ a second way through the chips would be a second tab model for one look.
 - **A choice may carry a count and be disabled** (M12.4), for a filter that
   shows how many entries each value would leave. A row reads "Fire (9)": the
   count follows the label in its own span, after a space that is a text node,
-  because an accessible name drops a space a span begins with. `disableZeros`
-  turns a row whose count is 0 into a disabled one, noted "Nothing Matches"
-  under its name unless the choice brings its own `note`, and a choice's own
-  `disabled` does the same. A disabled row is truly disabled (Downshift's
+  because an accessible name drops a space a span begins with. `hideZeros`
+  leaves out a row whose count is 0, and a choice's own `disabled` makes a
+  row that is listed but cannot be chosen. A disabled row is truly disabled (Downshift's
   `isItemDisabled`: `aria-disabled`, skipped by the arrow keys, no choosing
   by click or key), is listed after every row that can be chosen so the keys
   meet those first, and keeps its text's ink rather than being dimmed. The list
-  closes once only disabled rows remain, as it does with none left. A value
+  closes once only disabled rows remain, as it does with none left; with
+  `hideZeros` and every count 0 there is nothing to list. A value
   already chosen is a chip, never a row, so a chosen zero-count value stays
   removable. `count`, `disabled` and `note` are the multi-select's: the
   select-only box ignores them.
@@ -462,7 +462,7 @@ a second way through the chips would be a second tab model for one look.
 | `label`              | What the box is called, its list's name, "Element choices", its clear's and its status's.                                                |
 | `values`/`onChange`  | The values chosen, in order, held by the caller; every change comes as the whole list.                                                   |
 | `choices`            | `ComboboxChoice`s in order: `value`, `label`, and optionally `icon`, `count`, `disabled`, `note`; the list offers those not in `values`. |
-| `disableZeros`       | A choice whose `count` is 0 is disabled and noted "Nothing Matches". Chosen values are never affected.                                   |
+| `hideZeros`          | A choice whose `count` is 0 is left out of the list. Chosen values are never affected.                                                   |
 | `loading`            | The counts are still being read: each chip holds a placeholder where its count will be.                                                  |
 | `chipsOutlined`      | Draws the chips outlined, not filled (see "An entry").                                                                                   |
 | `removeNoun`         | Names each chip's x "Remove {Noun}: {Value}"; without it, "Remove {Value}".                                                              |
@@ -862,7 +862,7 @@ typed. The control's width, which happy-dom does not lay out,
 was measured in the workshop at MB.115: one width empty, mid-typing, chosen
 and cleared.
 
-`tests/components/Combobox/counts.test.tsx` covers M12.4's additions in the multi-select, the typed box and the chip: a row's and a chip's name carrying the count ("Fire (9)"); `disableZeros` disabling a zero-count row and listing it last with its note, a disabled row refusing a click and the arrow keys; a chosen zero-count value staying removable; the list closing once only disabled rows remain; the loading placeholder hidden from a reader and the x's name unchanged when the count arrives; and the icon and the outlined look on a chip.
+`tests/components/Combobox/counts.test.tsx` covers M12.4's additions in the multi-select, the typed box and the chip: a row's and a chip's name carrying the count ("Fire (9)"); `hideZeros` leaving a zero-count row out (and every row, with the box staying, when all are zero); a chosen zero-count value staying removable; the loading placeholder hidden from a reader and the x's name unchanged when the count arrives; and the icon and the outlined look on a chip.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 

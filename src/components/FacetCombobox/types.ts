@@ -29,8 +29,8 @@ export interface FacetComboboxProps {
   removeNoun?: string;
   /** A search is running: every chip holds a placeholder where its count will be. */
   loading?: boolean;
-  /** List a value whose count is 0 last and disabled, noted "Nothing Matches". On unless set to `false`; a value already chosen is never disabled. */
-  disableZeros?: boolean;
+  /** Leave out a value whose count is 0. On unless set to `false`; a value already chosen keeps its chip. */
+  hideZeros?: boolean;
   /** What the label's tip says, if anything. */
   hint?: string;
   /** Joins the field's own class, for the width the filter row gives it. */

@@ -9,10 +9,8 @@ import type { ComboboxChoice, ComboboxOption } from '../Combobox/types';
 // chosen values as chips ahead of the text, for a set long enough to want
 // narrowing (Forms) or sorted under headings (Deities by tradition). The
 // select-style multi-select cannot type or group, so this is not an option on
-// it. It offers only what is not yet chosen, lists a zero last, and ignores a
-// pick of one. See claude-docs/components/facet-combobox.md, "Typeahead".
-
-const NOTHING_MATCHES = 'Nothing Matches';
+// it. It offers only what is not yet chosen and leaves a zero out. See
+// claude-docs/components/facet-combobox.md, "Typeahead".
 
 export function FacetTypeahead({
   id,
@@ -24,7 +22,7 @@ export function FacetTypeahead({
   placeholder,
   removeNoun,
   loading,
-  disableZeros,
+  hideZeros,
   describedBy,
 }: {
   id: string;
@@ -36,17 +34,19 @@ export function FacetTypeahead({
   placeholder?: string;
   removeNoun?: string;
   loading?: boolean;
-  disableZeros: boolean;
+  hideZeros: boolean;
   describedBy?: string;
 }): ReactElement {
   const [text, setText] = useState('');
-  const isOut = (choice: ComboboxChoice) =>
-    Boolean(choice.disabled || (disableZeros && choice.count === 0));
+  const isOut = (choice: ComboboxChoice) => Boolean(choice.disabled);
   const needle = text.trim().toLowerCase();
 
   const options: ComboboxOption[] = choices
     .filter(
-      (choice) => !values.includes(choice.value) && choice.label.toLowerCase().includes(needle),
+      (choice) =>
+        !values.includes(choice.value) &&
+        !(hideZeros && choice.count === 0) &&
+        choice.label.toLowerCase().includes(needle),
     )
     .map((choice) => ({
       value: choice.value,
@@ -55,7 +55,7 @@ export function FacetTypeahead({
       count: choice.count,
       heading: choice.group,
       disabled: isOut(choice) || undefined,
-      note: choice.note ?? (isOut(choice) ? NOTHING_MATCHES : undefined),
+      note: choice.note,
     }))
     // A disabled row lists last, within its heading as the headings are drawn.
     .sort((a, b) => Number(Boolean(a.disabled)) - Number(Boolean(b.disabled)));

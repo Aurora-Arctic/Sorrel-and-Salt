@@ -29,20 +29,21 @@ function optionsFor(
   categories: readonly PickerCategory[],
   picked: ReadonlySet<string>,
   text: string,
-  disableZeros: boolean,
+  hideZeros: boolean,
 ): CategoryOption[] {
   return categories
-    .filter((category) => !picked.has(category.id) && matches(category.name, text))
+    .filter(
+      (category) =>
+        !picked.has(category.id) &&
+        !(hideZeros && category.count === 0) &&
+        matches(category.name, text),
+    )
     .sort((a, b) => byName(a.group, b.group) || byName(a, b))
     .map((category) => {
-      // A count of nothing, when asked, is a row that cannot be chosen and
-      // says so in place of its description (M12.4).
-      const empty = disableZeros && category.count === 0;
       return {
         value: category.name,
-        note: empty ? 'Nothing Matches' : (category.description ?? undefined),
+        note: category.description ?? undefined,
         count: category.count,
-        disabled: empty || undefined,
         key: category.id,
         heading: category.group.name,
         colors: category.group,
@@ -68,7 +69,7 @@ const CategoryPicker = ({
   boxName,
   loading = false,
   removeNoun,
-  disableZeros = false,
+  hideZeros = false,
 }: CategoryPickerProps): ReactElement => {
   const id = useId();
   const legendId = `${id}-legend`;
@@ -92,8 +93,8 @@ const CategoryPicker = ({
     [categories],
   );
   const options = useMemo(
-    () => optionsFor(categories, picked, text, disableZeros),
-    [categories, picked, text, disableZeros],
+    () => optionsFor(categories, picked, text, hideZeros),
+    [categories, picked, text, hideZeros],
   );
 
   const add = (category: PickerCategory) => {
