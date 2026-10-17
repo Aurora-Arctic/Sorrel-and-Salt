@@ -803,3 +803,37 @@ export function variantsWithErrors(
   }
   return found;
 }
+
+/** What a restore (M12.10) has to open to show the fields it changed. */
+export interface RestoredSections {
+  /** The ingredient's own sections, Variants among them when a variant changed. */
+  sections: Set<SectionKey>;
+  /** Each changed variant, by its place, and the sections of it that hold a change. */
+  variants: Map<number, Set<VariantSectionKey>>;
+}
+
+/**
+ * The sections holding the fields a restore wrote, from their form paths, as
+ * `sectionsWithErrors` reads an error's. A box's draft is its list's
+ * (`drafts.colors`, `variants.1.drafts.colors`); a variant's value opens the
+ * Variants section and, inside it, the variant's own section; the variants
+ * list itself opens Variants alone.
+ */
+export function sectionsRestored(names: readonly string[]): RestoredSections {
+  const found: RestoredSections = { sections: new Set(), variants: new Map() };
+  for (const name of names) {
+    const keys = name.split('.');
+    const inVariant = keys[0] === 'variants' && /^\d+$/.test(keys[1] ?? '');
+    if (!inVariant) {
+      const section = SECTION_OF[keys[0] === 'drafts' ? (keys[1] ?? '') : keys[0]];
+      if (section) found.sections.add(section);
+      continue;
+    }
+    found.sections.add('variants');
+    const section = VARIANT_SECTION_OF[keys[2] === 'drafts' ? (keys[3] ?? '') : (keys[2] ?? '')];
+    if (!section) continue;
+    const index = Number(keys[1]);
+    found.variants.set(index, (found.variants.get(index) ?? new Set()).add(section));
+  }
+  return found;
+}

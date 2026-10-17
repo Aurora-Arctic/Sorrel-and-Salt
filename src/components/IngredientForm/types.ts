@@ -636,6 +636,9 @@ export type VariantFoldList = readonly ReadonlySet<VariantSectionKey>[];
  * seen here, as each of an edit's is, has every section closed.
  */
 export interface VariantFolds {
+  /** The one variant card open, by its place; the rest are a line each. The form owns it so a restore can open one. */
+  card: number | null;
+  setCard: (update: number | null | ((now: number | null) => number | null)) => void;
   isOpen: (index: number, section: VariantSectionKey) => boolean;
   toggle: (index: number, section: VariantSectionKey) => void;
   /** A variant added first in the list, as the New Form box adds one, with every section open. */
@@ -645,6 +648,20 @@ export interface VariantFolds {
   setAll: (open: boolean, count: number) => void;
   /** Opens, in each variant, the sections the map names, keyed by its place. */
   openErring: (erring: ReadonlyMap<number, ReadonlySet<VariantSectionKey>>) => void;
+  /** Opens a variant's card and the sections of it a restore changed. */
+  reveal: (index: number, sections: ReadonlySet<VariantSectionKey>) => void;
+  /**
+   * Re-keys the folds to a restored list: a row kept keeps its folds, one
+   * that returns opens with every section open and takes the card, one gone
+   * is dropped. Rows match by `variantId`, else by their form.
+   */
+  reconcile: (from: readonly RestoredVariant[], to: readonly RestoredVariant[]) => void;
+}
+
+/** What a restore needs to tell one variant from another. */
+export interface RestoredVariant {
+  variantId?: string;
+  form: string;
 }
 
 /**
