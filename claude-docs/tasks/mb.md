@@ -268,6 +268,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
 | MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
 | MB.265 | The Zodiac Signs Filter Test Fails Axe's Title Check Under Load                                                          | Bugfixes | —                      |
+| MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1530,6 +1531,28 @@ _Acceptance criteria:_
 - The fix lives where the cause is: the page if the title is missing, `tests/e2e/axe.ts` if the harness ran early, never a retry or a skip
 - Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass
 - `claude-docs/testing/e2e.md`'s "Where a run's time goes (M11.18)" section stops calling this failure unexplained once it is explained
+
+**MB.266 — Curators Reach the Admin Curated Lists Again** · 2h
+
+_Story:_ As a site curator, I want the Compendium and vocabulary pages to open, so that I can curate what the role exists for.
+
+Found on 2026-10-17, locally, during M8.16's review; the code shipped in v0.9.0 (MB.260, PR #1005), so production has it. Every admin curated-list page shows who last edited each row through `editorStamps` (`src/app/(shell)/admin/editors.ts`), which reads the names through `usersForAdmin` in the identity module. That read refuses anyone but a site admin, since it also serves the privilege ledger, so a curator — the role M11.20 added so that someone other than an admin can curate — gets a 500 on all nine curated pages: compendium, categories, category groups, forms, form groups, deities, traditions, celestial bodies and zodiac signs. The stamps need only a name, so they read through a curator-reachable `editorNamesForCurator`, guarded by `assertCurator` and returning id and name alone; `usersForAdmin` and the People pages stay admin-only. A hotfix, since it is live.
+
+Steps to reproduce:
+
+1. Sign in as a site curator (fixture F).
+2. Open `/admin/compendium`, or any admin vocabulary page, with at least one row in its list.
+
+Actual: a 500, "Runtime Forbidden — Only a site admin may read the privilege ledger", thrown from the last-edited stamps.
+Expected: the list renders, with who last edited each row.
+
+_Acceptance criteria:_
+
+- A regression test on `editorStamps` as fixture F fails before the fix and passes after, with a non-empty batch of real editor ids
+- A browser test seeds a row and opens `/admin/compendium` and `/admin/forms` as a curator: 200, the list and the stamp present
+- The name read is guarded by `assertCurator`, returns id and name only, and refuses a coven owner (A) by direct id
+- `usersForAdmin` and the People pages stay admin-only
+- Docs: `claude-docs/components/data-table.md` names the curator-safe read
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
