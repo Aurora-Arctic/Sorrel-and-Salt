@@ -1,11 +1,12 @@
 import 'server-only';
 import type { UpdatedStamp } from '../../../components/DataTable/types';
 import type { Session } from '../../../lib/session';
-import { listedOnUserList, usersForAdmin } from '@/modules/identity';
+import { editorNamesForCurator, listedOnUserList } from '@/modules/identity';
 
 // The Updated column of every admin curated list (MB.260): each row's last
-// editor by name and when. The names are read by `usersForAdmin`, which
-// refuses anyone but a site admin, in one lookup for the whole page.
+// editor by name and when. The names are read by `editorNamesForCurator`, which
+// refuses anyone but a curator or admin and shows no ledger field, in one lookup
+// for the whole page (M11.20: a curator uses every curation screen).
 
 /** What the column says of an editor no live account holds any more: a removed user. */
 const REMOVED_EDITOR = 'Unknown';
@@ -16,18 +17,17 @@ const REMOVED_EDITOR = 'Unknown';
  * seed system user has no stamp at all: the seed is not an editor an admin
  * can ask anything of, so the cell stays empty.
  *
- * @throws {Forbidden} the session's role is not `admin`.
+ * @throws {Forbidden} the session's role is neither `curator` nor `admin`.
  */
 export async function editorStamps(
   session: Session,
   rows: readonly { updatedBy: string; updatedAt: Date }[],
 ): Promise<UpdatedStamp[]> {
   const ids = rows.map(({ updatedBy }) => updatedBy);
-  const found = await usersForAdmin(session, ids);
+  const found = await editorNamesForCurator(session, ids);
   return rows.map(({ updatedBy, updatedAt }, i) => {
     if (!listedOnUserList(updatedBy)) return { updatedBy: null, updatedAt: null };
     const user = found[i];
-    if (user instanceof Error) throw user;
     return { updatedBy: user?.name ?? REMOVED_EDITOR, updatedAt };
   });
 }
