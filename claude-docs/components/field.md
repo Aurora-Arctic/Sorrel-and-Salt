@@ -285,6 +285,10 @@ caller narrowing it to its own type reads it with `oneOf`
 - **`disabled` is the attribute**, not react-hook-form's option, which would
   also drop the value from what is validated and sent.
 
+## Errors wait for the pointer
+
+A field's error is drawn when the field is left (`errorShown`), and pressing another control leaves it on the press. The error line then pushes everything below it down before the button comes up, so the click lands on whatever slid under the pointer: a press on Classification with Name empty never opened it. `useField` therefore keeps what it draws as it stood when the press began (`useSettledWhilePressed`, over `usePointerHeld`: one set of document listeners for `pointerdown`, `pointerup`, `pointercancel` and the window's `blur`) and catches up on the release: an error already showing stays, one just raised waits. Merely hiding errors during a press would take a showing one away and move the controls the other way, which read as errors flickering on every focus change. Tab shows an error at once, as no press is in progress. `errorShown` stays pure, and the IngredientForm section flags stand still the same way, so a fold is not flagged a moment before its field. Reserving room for the error line was the alternative, and it leaves a gap under every field.
+
 ## Undo and redo
 
 `useFormHistory` (M12.9) gives a react-hook-form form an undo and a redo. The

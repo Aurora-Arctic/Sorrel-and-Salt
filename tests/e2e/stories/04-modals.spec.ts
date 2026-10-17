@@ -401,18 +401,19 @@ test(
     });
     await page.goto(`/coven/${coven.slug}`);
 
-    await test.step('leaving Name blank once edited marks it, linking its error, and filling it clears the mark', async () => {
+    await test.step('leaving Name blank marks it, linking its error, and filling it clears the mark', async () => {
       const dialog = await openAddIngredient(page);
       const name = nameField(dialog);
       // What Name describes while valid, so the error is what the mark adds.
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
       const valid = await describedIds(name);
 
-      // Left untouched, Name stays quiet: an error shows only once the field
-      // is both edited and left, or the form submitted (M8.16).
+      // Left empty, Name is marked: an error shows once the field is left,
+      // whether or not it was edited, or once the form is submitted (M8.16,
+      // the owner's call).
       await name.focus();
       await page.keyboard.press('Tab');
-      await expect(name).not.toHaveAttribute('aria-invalid', 'true');
+      await expectFieldError(name, valid);
 
       // Edited to a blank, which the schema trims to nothing, and left.
       await name.fill('   ');
@@ -423,6 +424,26 @@ test(
       await page.keyboard.press('Tab');
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
 
+      await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+      await discardQuestion(dialog).discard.click();
+      await expect(dialog).toHaveCount(0);
+    });
+
+    await test.step('pressing another control while Name is blank still reaches it, the error drawn once the button is up', async () => {
+      const dialog = await openAddIngredient(page);
+      const name = nameField(dialog);
+      await name.fill('   ');
+
+      // The press leaves Name; were its error drawn at once, the controls
+      // below would slide down before the button came up and the click would
+      // miss Classification.
+      await dialog.getByRole('combobox', { name: 'Classification', exact: true }).click();
+      await expect(
+        page.getByRole('listbox', { name: 'Classification choices', exact: true }),
+      ).toBeVisible();
+      await expect(name).toHaveAttribute('aria-invalid', 'true');
+
+      await page.keyboard.press('Escape');
       await dialog.getByRole('button', { name: 'Close', exact: true }).click();
       await discardQuestion(dialog).discard.click();
       await expect(dialog).toHaveCount(0);

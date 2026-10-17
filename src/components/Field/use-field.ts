@@ -3,6 +3,7 @@
 import { useId } from 'react';
 import { type FieldPath, type FieldValues, get, useFormState } from 'react-hook-form';
 import { fieldDescription } from './description';
+import { useSettledWhilePressed } from './pointer-held';
 import type { FieldDescription } from './types';
 
 /**
@@ -30,7 +31,8 @@ export function errorShown({ isSubmitted, touchedFields }: ShownState, name: str
  * A react-hook-form field's description: `fieldDescription` over the field's
  * own error, read from the form state by name, so a field re-renders for its
  * own error and not for every other field's. The error is held back by
- * `errorShown`.
+ * `errorShown`, and stands still while a pointer is pressed
+ * (`useSettledWhilePressed`).
  */
 export function useField<V extends FieldValues>(
   name: FieldPath<V>,
@@ -44,6 +46,6 @@ export function useField<V extends FieldValues>(
   const raw: string | undefined = get(state.errors, name)?.message;
   // The rest of the state is read only for a field in error, so a field with
   // none re-renders for nothing but its error.
-  const error = raw && errorShown(state, name) ? raw : undefined;
+  const error = useSettledWhilePressed(raw && errorShown(state, name) ? raw : undefined);
   return fieldDescription({ id, hint, note, describedBy, error, invalid });
 }

@@ -16,7 +16,7 @@ import { CategoryField } from './categories';
 import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
 import FormIcon from '../FormIcon';
 import { EditIcon, RemoveIcon } from './icons';
-import { FieldError, TextField, errorShown } from '../Field';
+import { FieldError, TextField, errorShown, useSettledWhilePressed } from '../Field';
 import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
@@ -387,10 +387,13 @@ function VariantFieldset({
   // Its own sections, each a disclosure as the ingredient's are (MB.115),
   // flagged while one holds an error a field draws, and opened by a save
   // that finds one.
-  const erring = variantSectionsWithErrors(
-    get(errors, at),
-    (path) => errorShown({ isSubmitted, touchedFields }, path),
-    `${at}.`,
+  // Standing still through a press, as the fields' errors do.
+  const erring = useSettledWhilePressed(
+    variantSectionsWithErrors(
+      get(errors, at),
+      (path) => errorShown({ isSubmitted, touchedFields }, path),
+      `${at}.`,
+    ),
   );
   const invalid = erring.size > 0;
   // Flagged only while closed: open, the fields' own errors say it.

@@ -29,6 +29,7 @@ import {
   TextField,
   errorShown,
   useFormHistory,
+  useSettledWhilePressed,
 } from '../Field';
 import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS } from './options';
@@ -194,7 +195,8 @@ const IngredientForm = ({
   // Each variant's own sections, which fold the same way (MB.115): one added
   // here opens with every one open, one an edit opened with, every one closed.
   const variantFolds = useVariantFolds();
-  const erring = sectionsWithErrors(errors, shown);
+  // Standing still through a press, as the fields' errors do.
+  const erring = useSettledWhilePressed(sectionsWithErrors(errors, shown));
   // A save held on the duplicate warning is the name's to answer.
   if (blocking) erring.add('identity');
   // A save that finds an error in a closed section opens it, every such

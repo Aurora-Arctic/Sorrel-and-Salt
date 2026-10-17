@@ -14,6 +14,7 @@ export { SwitchField } from './switch-field';
 export { SearchField } from './search-field';
 export { FilterSelectField } from './filter-select-field';
 export { errorShown, useField } from './use-field';
+export { usePointerHeld, useSettledWhilePressed } from './pointer-held';
 export { FormActions } from './form-actions';
 export { ReasonField } from './reason-field';
 export { useFormHistory } from './use-form-history';
