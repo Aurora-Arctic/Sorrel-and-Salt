@@ -32,7 +32,7 @@ describe('buildSearchSentence', () => {
 
   it('treats empty lists, a blank query and any toxic as nothing chosen', () => {
     const sentence = buildSearchSentence({
-      filter: { query: '  ', forms: [], toxic: null, categoryMode: 'any' },
+      filter: { query: '  ', forms: [], toxic: 'any', categoryMode: 'any' },
       total: 5,
     });
     expect(sentence.hasFilter).toBe(false);
@@ -81,9 +81,9 @@ describe('buildSearchSentence', () => {
   });
 
   it('says toxic each way and nothing for any', () => {
-    expect(text({ toxic: true }, 2)).toBe('2 ingredients, that are toxic');
-    expect(text({ toxic: false }, 2)).toBe('2 ingredients, that are not toxic');
-    expect(text({ toxic: null }, 2)).toBe('2 ingredients');
+    expect(text({ toxic: 'toxic' }, 2)).toBe('2 ingredients, that are toxic');
+    expect(text({ toxic: 'not_toxic' }, 2)).toBe('2 ingredients, that are not toxic');
+    expect(text({ toxic: 'any' }, 2)).toBe('2 ingredients');
     expect(text({}, 2)).toBe('2 ingredients');
   });
 
@@ -119,7 +119,7 @@ describe('buildSearchSentence', () => {
     };
     const filter: SearchSentenceFilter = {
       // Given out of order on purpose.
-      toxic: false,
+      toxic: 'not_toxic',
       elements: ['fire'],
       planets: ['sun', 'mars'],
       zodiac: ['aries'],
@@ -127,7 +127,7 @@ describe('buildSearchSentence', () => {
       forms: ['oil', 'resin'],
       categories: ['protection', 'healing'],
       query: 'rue',
-      classification: 'botanical',
+      nomenclature: 'botanical',
       withoutReferences: true,
     };
     expect(text(filter, 3, { labels, admin: true })).toBe(
@@ -135,8 +135,8 @@ describe('buildSearchSentence', () => {
     );
   });
 
-  it('names Classification and No Refs only for an admin list', () => {
-    const filter: SearchSentenceFilter = { classification: 'botanical', withoutReferences: true };
+  it('names Nomenclature and No Refs only for an admin list', () => {
+    const filter: SearchSentenceFilter = { nomenclature: 'botanical', withoutReferences: true };
     expect(text(filter, 2)).toBe('2 ingredients');
     expect(buildSearchSentence({ filter, total: 2 }).hasFilter).toBe(false);
     expect(text(filter, 2, { admin: true })).toBe(
@@ -148,7 +148,7 @@ describe('buildSearchSentence', () => {
   it('carries on each value fragment the facet and value that remove it', () => {
     const labels = { forms: { oil: 'Oil' }, planets: { sun: 'Sun' } };
     const { fragments, hasFilter } = buildSearchSentence({
-      filter: { forms: ['oil'], planets: ['sun'], query: 'rue', toxic: true },
+      filter: { forms: ['oil'], planets: ['sun'], query: 'rue', toxic: 'toxic' },
       total: 1,
       labels,
     });
@@ -157,7 +157,7 @@ describe('buildSearchSentence', () => {
       { kind: 'value', text: '“rue”', facet: 'query', value: 'rue' },
       { kind: 'value', text: 'Oil', facet: 'forms', value: 'oil' },
       { kind: 'value', text: 'the Sun', facet: 'planets', value: 'sun' },
-      { kind: 'value', text: 'toxic', facet: 'toxic', value: 'true' },
+      { kind: 'value', text: 'toxic', facet: 'toxic', value: 'toxic' },
     ]);
   });
 });

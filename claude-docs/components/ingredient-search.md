@@ -198,7 +198,7 @@ true. Types are in `types.ts` (`SearchSentenceFilter`, `SearchSentenceFragment`)
 It leads with the count (`No ingredients`, `1 ingredient`, `3 ingredients`; `noun`
 swaps the pair), then one clause per kind, always in this order whatever order
 the address holds them: text query, categories, forms, deities, zodiac, planets,
-elements, toxic, then the admin-only classification and No Refs. Clauses are
+elements, toxic, then the admin-only nomenclature and No Refs. Clauses are
 separated by a comma. An example with every kind:
 
 > 3 ingredients, matching “rue”, in the Protection and Healing categories, in the
@@ -213,8 +213,8 @@ separated by a comma. An example with every kind:
   browser-floor guard needs no line for it.
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
   planets, which belongs to the linked value ("the Sun").
-- **Toxic** says "that are toxic" or "that are not toxic", and nothing for either.
-- **Classification and No Refs** are named only when `admin` is true; otherwise
+- **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
+- **Nomenclature and No Refs** are named only when `admin` is true; otherwise
   they are ignored and do not count as a chosen filter.
 - **A value with no label** is named by its raw value, so a stale link still reads.
   Blank values and empty lists are not chosen.

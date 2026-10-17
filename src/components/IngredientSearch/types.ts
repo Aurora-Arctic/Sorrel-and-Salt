@@ -1,3 +1,4 @@
+import type { ToxicFilter } from '@/modules/ingredients/schema/ingredient-enums';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { FilterValue } from '../FilterForm/types';
@@ -77,7 +78,7 @@ export type SearchSentenceFacet =
   | 'planets'
   | 'elements'
   | 'toxic'
-  | 'classification'
+  | 'nomenclature'
   | 'withoutReferences';
 
 /** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
@@ -93,10 +94,10 @@ export interface SearchSentenceFilter {
   zodiac?: readonly string[];
   planets?: readonly string[];
   elements?: readonly string[];
-  /** `true` toxic only, `false` not toxic only, `null` or left out either. */
-  toxic?: boolean | null;
+  /** The address's own choice: `toxic`, `not_toxic`, or `any` / left out for either. */
+  toxic?: ToxicFilter | null;
   /** Admin lists only. */
-  classification?: string | null;
+  nomenclature?: string | null;
   /** Admin lists only. */
   withoutReferences?: boolean;
 }
@@ -122,7 +123,7 @@ export interface SearchSentenceInput {
   total: number;
   /** The noun for one entry and for any other number. Defaults to ingredient. */
   noun?: { one: string; other: string };
-  /** An admin list: names Classification and No Refs. */
+  /** An admin list: names Nomenclature and No Refs. */
   admin?: boolean;
 }
 

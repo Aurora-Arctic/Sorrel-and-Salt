@@ -11,7 +11,7 @@ import type {
 // component turns each `value` into a link to the same filter without that value.
 // Clauses always come in this order, whatever order the address holds them:
 // text query, categories, forms, deities, zodiac, planets, elements, toxic,
-// then the admin-only classification and No Refs
+// then the admin-only nomenclature and No Refs
 // (claude-docs/components/ingredient-search.md, "The search sentence").
 
 // `Intl.ListFormat` is Baseline Widely Available, so no guard line is needed.
@@ -133,21 +133,21 @@ export function buildSearchSentence({
     );
   }
 
-  if (filter.toxic === true || filter.toxic === false) {
+  if (filter.toxic === 'toxic' || filter.toxic === 'not_toxic') {
     clause(text('that are '), {
       kind: 'value',
-      text: filter.toxic ? 'toxic' : 'not toxic',
+      text: filter.toxic === 'toxic' ? 'toxic' : 'not toxic',
       facet: 'toxic',
-      value: String(filter.toxic),
+      value: filter.toxic,
     });
   }
 
-  if (admin && filter.classification) {
+  if (admin && filter.nomenclature) {
     clause(text('classified as '), {
       kind: 'value',
-      text: filter.classification,
-      facet: 'classification',
-      value: filter.classification,
+      text: filter.nomenclature,
+      facet: 'nomenclature',
+      value: filter.nomenclature,
     });
   }
 
