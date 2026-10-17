@@ -121,6 +121,18 @@
     margin-block: 0;
   }
 
+  // Match's legend carries an InfoTip, whose button is taller than the text, so the legend
+  // stood 6px taller than Categories' and its strip sat lower. The label row is held to one
+  // line (the button overflows it, centred) and the gap is Categories' own (space 3), so the
+  // two fields share a label and a control top.
+  > .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
+    margin-bottom: space(3);
+
+    .field__label-row {
+      block-size: 1lh;
+    }
+  }
+
   // Stacked, a combobox is as tall as it is, not the row-wise basis.
   > .facet-panel__grow {
     flex: none;
