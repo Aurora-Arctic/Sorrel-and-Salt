@@ -5,10 +5,19 @@ import AddAction from '../../app/(shell)/admin/add-action';
 import CompendiumList from '.';
 import PageHeader from '../PageHeader';
 import { slugify } from '../../lib/slugify';
+import { capitalise } from '../../lib/text';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
-import type { CompendiumCategoryChoice, CompendiumListEntry, CompendiumListFilter } from './types';
+import type {
+  CompendiumCategoryChoice,
+  CompendiumFacetCounts,
+  CompendiumListEntry,
+  CompendiumListFilter,
+} from './types';
 import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
-import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+import {
+  INGREDIENT_ELEMENTS,
+  type NomenclatureKind,
+} from '@/modules/ingredients/schema/ingredient-enums';
 
 // Render-only; behaviour is asserted in tests/components/CompendiumList. The
 // filter reaches `/admin/compendium`, which the workshop does not serve. Each
@@ -39,12 +48,15 @@ const Page = ({ children }: { children: ReactNode }): ReactElement => (
 
 const NO_FILTER: CompendiumListFilter = {
   query: '',
-  form: '',
-  nomenclature: '',
+  forms: [],
   withoutReferences: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
+  deities: [],
+  zodiac: [],
+  planets: [],
+  toxic: '',
 };
 
 // The categories the Categories box offers, under two groups in their colours.
@@ -61,10 +73,26 @@ const CATEGORIES: CompendiumCategoryChoice[] = [
   { id: 'c-3', slug: 'testcraft', name: 'Testcraft', group: CRAFTS },
 ];
 
-// The curated forms the Form box offers, in name order.
-const FORMS = ['Dried', 'Essential Oil', 'Oil', 'Powder', 'Resin', 'Tincture'].map((name) => ({
-  name,
-}));
+// The choices each filter offers, with their counts: the forms some entry carries,
+// and every zodiac sign, planet, element and toxic setting.
+const FACETS: CompendiumFacetCounts = {
+  forms: ['Dried', 'Essential Oil', 'Oil', 'Powder', 'Resin', 'Tincture'].map((name, i) => ({
+    value: name,
+    label: name,
+    count: 6 - i,
+    icon: null,
+  })),
+  deities: [],
+  categories: [],
+  zodiac: [],
+  planets: [],
+  elements: INGREDIENT_ELEMENTS.map((value) => ({ value, label: capitalise(value), count: 1 })),
+  toxic: [
+    { value: 'toxic', label: 'Toxic', count: 1 },
+    { value: 'not_toxic', label: 'Not Toxic', count: 5 },
+  ],
+  withoutReferences: 2,
+};
 
 // The group icon each form wears in the Form column; a form with none wears the spoon.
 const ICONS: Record<string, FormGroupIcon> = {
@@ -107,7 +135,7 @@ const PageOfSeveral = (): ReactElement => (
     <CompendiumList
       entries={ENTRIES}
       filter={NO_FILTER}
-      forms={FORMS}
+      facets={FACETS}
       categories={CATEGORIES}
       previousHref={compendiumHref({ before: 'cursor' })}
       nextHref={compendiumHref({ after: 'cursor' })}
@@ -124,7 +152,7 @@ export const FirstPage: Story = () => (
     <CompendiumList
       entries={ENTRIES.slice(0, 2)}
       filter={NO_FILTER}
-      forms={FORMS}
+      facets={FACETS}
       categories={CATEGORIES}
       nextHref={compendiumHref({ after: 'cursor' })}
     />
@@ -139,14 +167,17 @@ export const Filtered: Story = () => (
       entries={[entry('Fixture Salt', 'unknown', null, ['Powder'])]}
       filter={{
         query: '',
-        form: 'Powder',
-        nomenclature: 'unknown',
+        forms: ['Powder'],
         withoutReferences: true,
         elements: ['fire', 'earth'],
         categories: ['testward', 'testcraft'],
         categoryMode: 'any',
+        deities: [],
+        zodiac: [],
+        planets: [],
+        toxic: '',
       }}
-      forms={FORMS}
+      facets={FACETS}
       categories={CATEGORIES}
     />
   </Page>
@@ -158,14 +189,17 @@ export const NoMatch: Story = () => (
       entries={[]}
       filter={{
         query: 'nothing',
-        form: 'Oil',
-        nomenclature: 'mineral',
+        forms: ['Oil'],
         withoutReferences: false,
         elements: [],
         categories: ['testbane'],
         categoryMode: 'all',
+        deities: [],
+        zodiac: [],
+        planets: [],
+        toxic: '',
       }}
-      forms={FORMS}
+      facets={FACETS}
       categories={CATEGORIES}
     />
   </Page>
@@ -173,7 +207,7 @@ export const NoMatch: Story = () => (
 
 export const Empty: Story = () => (
   <Page>
-    <CompendiumList entries={[]} filter={NO_FILTER} forms={FORMS} categories={CATEGORIES} />
+    <CompendiumList entries={[]} filter={NO_FILTER} facets={FACETS} categories={CATEGORIES} />
   </Page>
 );
 

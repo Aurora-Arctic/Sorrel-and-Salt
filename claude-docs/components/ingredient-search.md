@@ -92,8 +92,8 @@ held into a value (a hand-edited value reads as no filter, never an error),
 a writer that turns a value back, and the GraphQL variable it becomes. The
 compendium's table is
 [`CompendiumList/params.ts`](../../src/components/CompendiumList/params.ts);
-the helpers `textParam`, `choiceParam` and `listParam` cover the
-usual shapes, and `searchParam` takes any other.
+the helpers `textParam`, `choiceParam`, `listParam`, `slugListParam` and
+`textListParam` cover the usual shapes, and `searchParam` takes any other.
 
 The table gives four functions, and every caller uses only these:
 
@@ -124,7 +124,49 @@ hold a comma. A single-value parameter given twice by hand reads its first.
 **The address names a value the way a reader would**, and the table maps it
 to whatever the query takes: a deity is its slug, `hecate-greek`, while the
 query takes `deityIds`, since an id would outweigh the rest of the address
-(M12.4).
+(M12.4). A deity's slug is its name with its tradition's, `deitySlug(name,
+traditionName)`, because two traditions can share a name (`hecate-greek`,
+`hecate-roman`).
+
+**Free text in a list** (`textListParam`) is a repeated parameter whose values
+are curated words, not a fixed set: `?forms=Oil&forms=Resin`. Each value is
+trimmed, a blank is dropped, and a repeat that differs only in case is dropped
+too (the first spelling stays). It is used for forms, zodiac signs and
+celestial bodies because those three are admin-curated vocabularies that offer
+suggestions rather than a closed list: a form's text is not a foreign key
+(CLAUDE.md, ingredient identity), so an uncurated value stays writable and the
+address cannot reject it the way `listParam` rejects a word outside its set.
+
+**The compendium's whole table**, in the order the address writes it:
+
+| Address parameter   | Reads as               | GraphQL variable    | Notes                                      |
+| ------------------- | ---------------------- | ------------------- | ------------------------------------------ |
+| `query`             | text                   | `query`             |                                            |
+| `forms`             | text list              | `forms`             | The compendium read folds the case         |
+| `withoutReferences` | on or off              | `withoutReferences` | Written `1`                                |
+| `elements`          | list of elements       | `elements`          | Dropped when outside `INGREDIENT_ELEMENTS` |
+| `categories`        | slug list              | `categoryIds`       | Through the `categories` lookup            |
+| `categoryMode`      | `all` or `any`         | `categoryMode`      | Written only for `any`                     |
+| `deities`           | slug list              | `deityIds`          | Through the `deities` lookup               |
+| `zodiac`            | text list              | `zodiacSigns`       | Sign names                                 |
+| `planets`           | text list              | `celestialBodies`   | Celestial body names                       |
+| `toxic`             | `toxic` or `not_toxic` | `toxic`             | Absent is any                              |
+
+There is no `nomenclature` entry: the compendium search no longer filters by
+classification. The GraphQL query and the service still accept the argument,
+and a `?nomenclature=` left in an old link is ignored.
+
+**One variables string reads the list and its counts.** The page builds
+`JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups))` once, with
+`lookups = { categories, deities }` (slug to id), and gives that same string to
+the cached list read and the cached facet read (`compendiumFacets`). The counts
+beside each facet value are therefore taken under exactly the filter the list is
+under. `compendiumFacetCounts` (`CompendiumList/facets.ts`) turns the counts,
+which are keyed by id for deities and categories and by text for the rest, into
+the props the filter draws: a value, a label and a count, plus a form's icon, a
+deity's tradition or a category's group. It drops an id the vocabulary no longer
+holds, and sorts forms, deities and categories by count, highest first, then
+label.
 
 **The cursor rule.** A cursor names a place in one filter's results, so it
 belongs to the filter it was read under. Any change to the filter opens the

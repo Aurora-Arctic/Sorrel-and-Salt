@@ -170,7 +170,7 @@ test('the Form box keeps only the entries holding the form chosen', async ({ pag
   await page.getByRole('combobox', { name: 'Form' }).fill('bark');
   await page.getByRole('option', { name: /^Bark/ }).click();
 
-  await expect(page).toHaveURL(/[?&]form=Bark(&|$)/);
+  await expect(page).toHaveURL(/[?&]forms=Bark(&|$)/);
   await expect(editOf('Uncaria tomentosa')).toBeVisible();
   await expect(editOf('Uncaria guianensis')).toBeVisible();
   await expect(editOf('Senegalia greggii')).toHaveCount(0);
@@ -313,7 +313,7 @@ test('a name typed shows matching rows, and a pick opens its modal over the list
   page,
 }) => {
   await signInAs(page, 'search-pick-admin@admin-compendium.test', ['discord'], 'admin');
-  await page.goto('/admin/compendium?nomenclature=botanical');
+  await page.goto('/admin/compendium?withoutReferences=1');
   // Hydrated first: before it, the box is a plain text field with no dropdown.
   await page.waitForLoadState('networkidle');
 
@@ -328,7 +328,7 @@ test('a name typed shows matching rows, and a pick opens its modal over the list
 
   const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Cat's Claw/ });
   await expect(dialog).toBeVisible();
-  await expect(page).toHaveURL(/[?&]nomenclature=botanical(&|$)/);
+  await expect(page).toHaveURL(/[?&]withoutReferences=1(&|$)/);
   await expect(page).toHaveURL(/[?&]edit=cat/);
   await expect(page).not.toHaveURL(/query=/);
 });
@@ -387,20 +387,11 @@ test('arrowing down the Name box keeps the highlighted row inside the dropdown',
   expect(inside).toBe(true);
 });
 
-test('Enter in the Name box applies the name, keeping Classification and No Refs', async ({
-  page,
-}) => {
+test('Enter in the Name box applies the name, keeping No Refs', async ({ page }) => {
   await signInAs(page, 'search-enter-admin@admin-compendium.test', ['discord'], 'admin');
   await page.goto('/admin/compendium');
   await page.waitForLoadState('networkidle');
 
-  await page.getByRole('combobox', { name: 'Classification' }).click();
-  await page
-    .getByRole('listbox', { name: 'Classification choices' })
-    .getByRole('option', { name: 'Botanical' })
-    .click();
-  await expect(page).toHaveURL(/nomenclature=botanical/);
-  await page.waitForLoadState('networkidle');
   await page.getByRole('switch', { name: 'No Refs' }).click();
   await expect(page).toHaveURL(/withoutReferences=1/);
   await page.waitForLoadState('networkidle');
@@ -417,7 +408,6 @@ test('Enter in the Name box applies the name, keeping Classification and No Refs
   await name.press('Enter');
 
   await expect(page).toHaveURL(/query=uncaria/);
-  await expect(page).toHaveURL(/nomenclature=botanical/);
   await expect(page).toHaveURL(/withoutReferences=1/);
   await expect(edit('Uncaria tomentosa')).toBeVisible();
   await expect(edit('Senegalia greggii')).toHaveCount(0);

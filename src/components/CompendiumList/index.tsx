@@ -9,6 +9,7 @@ import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
 import type {
   CompendiumCategoryChoice,
+  CompendiumFacetCounts,
   CompendiumListEntry,
   CompendiumListFilter as Filter,
   CompendiumListProps,
@@ -83,19 +84,42 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
 /**
  * The empty list, naming the filters in use (MB.115, on the owner's call), so
  * an admin sees what to change: "No entries match “wort”, the form “Oil” and
- * the classification Botanical. Change or clear the filter to see more." With no
+ * the element Fire. Change or clear the filter to see more." With no
  * filter, the compendium itself is empty, and says how to begin it.
  */
 function emptyText(
-  { query, form, nomenclature, withoutReferences, elements, categories, categoryMode }: Filter,
+  {
+    query,
+    forms,
+    deities,
+    zodiac,
+    planets,
+    toxic,
+    withoutReferences,
+    elements,
+    categories,
+    categoryMode,
+  }: Filter,
   known: readonly CompendiumCategoryChoice[],
+  facets: CompendiumFacetCounts,
 ): string {
+  // A deity by its name and tradition, the pair that tells two of one name apart.
+  const deityNames = deities.flatMap((slug) => {
+    const deity = facets.deities.find(({ value }) => value === slug);
+    return deity ? `${deity.label} (${deity.tradition})` : [];
+  });
+  const toxicLabel = facets.toxic.find(({ value }) => value === toxic)?.label;
+  const quoted = (values: readonly string[]) => values.map((each) => `“${each}”`).join(' or ');
   // By name, the ones the page knows; a slug it does not is not filtering anything.
   const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
   const filters = [
     query && `“${query}”`,
-    form && `the form “${form}”`,
-    nomenclature && `the classification ${labelOf(NOMENCLATURE_OPTIONS, nomenclature)}`,
+    forms.length > 0 && `the ${forms.length === 1 ? 'form' : 'forms'} ${quoted(forms)}`,
+    deityNames.length > 0 &&
+      `the ${deityNames.length === 1 ? 'deity' : 'deities'} ${quoted(deityNames)}`,
+    zodiac.length > 0 && `the ${zodiac.length === 1 ? 'sign' : 'signs'} ${quoted(zodiac)}`,
+    planets.length > 0 && `the ${planets.length === 1 ? 'planet' : 'planets'} ${quoted(planets)}`,
+    toxicLabel && `the toxic setting ${toxicLabel}`,
     withoutReferences && 'No Refs',
     elements.length > 0 &&
       `the ${elements.length === 1 ? 'element' : 'elements'} ${elements.map((each) => labelOf(ELEMENT_OPTIONS, each)).join(' or ')}`,
@@ -112,7 +136,7 @@ function emptyText(
 const CompendiumList = ({
   entries,
   filter,
-  forms,
+  facets,
   categories,
   previousHref,
   nextHref,
@@ -126,7 +150,7 @@ const CompendiumList = ({
       <CompendiumListFilter
         key={JSON.stringify({ ...filter, categories: [], categoryMode: 'all' })}
         filter={filter}
-        forms={forms}
+        facets={facets}
         categories={categories}
       />
     }
@@ -138,7 +162,7 @@ const CompendiumList = ({
       columns={COLUMNS}
       rows={entries}
       rowKey={(entry) => entry.id}
-      empty={emptyText(filter, categories)}
+      empty={emptyText(filter, categories, facets)}
     />
   </IngredientSearch>
 );

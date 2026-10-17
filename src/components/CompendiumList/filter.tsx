@@ -1,16 +1,11 @@
 'use client';
 
 import { type ReactElement, useMemo, useState } from 'react';
-import { oneOf } from '@/lib/search-params';
-import {
-  type CategoryMode,
-  NOMENCLATURE_KINDS,
-} from '@/modules/ingredients/schema/ingredient-enums';
+import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
 import CategoryPicker from '../CategoryPicker';
 import { FilterSelectField, RadioGroupField, SwitchField } from '../Field';
 import { useApplyFilter } from '../FilterForm';
 import { IngredientSearchForm, useSearchText } from '../IngredientSearch';
-import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
 import { editHeading } from './heading';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
 import { COMPENDIUM_PARAMS } from './params';
@@ -23,35 +18,38 @@ const CATEGORY_MODE_OPTIONS = [
 ] as const;
 
 // The compendium's filter, on IngredientSearchForm (M8.10, MB.178, MB.115): a
-// name search that is a type-ahead once hydrated, then a form, a
-// classification and No Refs, each applying as it changes rather than on a
-// Filter button pressed after them, the owner's call at MB.115's review.
-// Classification applies on its pick and No Refs on its press, each carrying
-// the name typed but not yet searched (read from the search form with
-// `useSearchText`); the form once a choice settles, a pick, its clear or
+// name search that is a type-ahead once hydrated, then a form and No Refs,
+// each applying as it changes rather than on a Filter button pressed after
+// them, the owner's call at MB.115's review. No Refs applies on its press,
+// carrying the name typed but not yet searched (read from the search form
+// with `useSearchText`); the form once a choice settles, a pick, its clear or
 // leaving the box, never while it is typed; the name on the magnifier, Enter or its clear.
 // Picking a name in the dropdown opens that entry's modal over the list as it
 // is shown, the typed text not applied (the owner's call, M8.10). Each field
 // but the name is drawn from the filter shown and holds its own value after,
 // since the list keys this by that filter and the new list draws it afresh.
-// Once hydrated the form is typed into, as the curated lists' group is, and
-// Classification is the select-only box, so the row has one dropdown look (the
-// owner's calls, MB.115); the server draws each as a native `<select>`
+// Once hydrated the form is typed into, as the curated lists' group is (the
+// owner's call, MB.115); the server draws it as a native `<select>`
 // (`FilterSelectField`) and No Refs as a switch, a native checkbox valued
 // `1`, so before hydration a press on the magnifier submits natively, as
-// `query=&form=&nomenclature=` plus `withoutReferences=1` when on, which the
-// page reads as the same filter.
+// `query=&forms=` plus `withoutReferences=1` when on, which the page reads
+// as the same filter. The box picks one form for now; the address holds any
+// number (`?forms=Oil&forms=Resin`), and the ones past the first ride along
+// as hidden inputs until the facet chips replace this box (M12.4).
 
 /** The fields after the name box, inside the search form so they can read the name typed. */
 const CompendiumFilterFields = ({
   filter,
-  forms,
+  facets,
   categories,
 }: CompendiumListFilterProps): ReactElement => {
   const text = useSearchText();
   const apply = useApplyFilter();
   // A form's name is its value too: the compendium filters a form by its text.
-  const choices = useMemo(() => forms.map(({ name }) => ({ value: name, label: name })), [forms]);
+  const choices = useMemo(
+    () => facets.forms.map(({ value, label }) => ({ value, label })),
+    [facets.forms],
+  );
 
   // The categories the filter names that the page knows, in the address's
   // order. A slug no live category holds is not shown, and so is not carried
@@ -107,23 +105,16 @@ const CompendiumFilterFields = ({
     <>
       <FilterSelectField
         label="Form"
-        name="form"
+        name="forms"
         all="All Forms"
         options={choices}
-        defaultValue={filter.form}
-        onChange={(form) => apply(hrefWith({ form }))}
+        defaultValue={filter.forms[0] ?? ''}
+        onChange={(form) => apply(hrefWith({ forms: form ? [form] : [] }))}
         typeahead
       />
-      <FilterSelectField
-        label="Classification"
-        name="nomenclature"
-        all="Any"
-        options={NOMENCLATURE_OPTIONS}
-        defaultValue={filter.nomenclature}
-        onChange={(kind) =>
-          apply(hrefWith({ nomenclature: oneOf(NOMENCLATURE_KINDS, kind) ?? '' }))
-        }
-      />
+      {filter.forms.slice(1).map((form) => (
+        <input key={form} type="hidden" name="forms" value={form} />
+      ))}
       <SwitchField
         label="No Refs"
         name="withoutReferences"
@@ -170,7 +161,7 @@ const CompendiumFilterFields = ({
 
 const CompendiumListFilter = ({
   filter,
-  forms,
+  facets,
   categories,
 }: CompendiumListFilterProps): ReactElement => {
   // The mode filters nothing without categories, so it does not make the list "filtered".
@@ -186,7 +177,7 @@ const CompendiumListFilter = ({
       pickHref={(match) => compendiumHref(filter, { edit: match.slug })}
       pickHeading={editHeading}
     >
-      <CompendiumFilterFields filter={filter} forms={forms} categories={categories} />
+      <CompendiumFilterFields filter={filter} facets={facets} categories={categories} />
     </IngredientSearchForm>
   );
 };

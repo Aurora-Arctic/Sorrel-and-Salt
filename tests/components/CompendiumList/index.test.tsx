@@ -6,17 +6,17 @@ import CompendiumListBase from '@/components/CompendiumList';
 import FormIcon from '@/components/FormIcon';
 import { compendiumHref } from '@/components/CompendiumList/href';
 import type {
+  CompendiumFacetCounts,
   CompendiumListEntry,
   CompendiumListFilter,
   CompendiumListProps,
 } from '@/components/CompendiumList/types';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { someOf } from '@/lib/search-params';
-import { INGREDIENT_ELEMENTS } from '@/modules/ingredients/schema/ingredient-enums';
+import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { FILTER_ROWS, drawnOnServer, sent } from '../../support/filter-form';
 import { waitFor } from '../../support/ingredient-form';
-import { choose, typeIn } from '../../support/interact';
+import { typeIn } from '../../support/interact';
 import { mockGraphQLQuery } from '../../support/msw/graphql';
 import { Navigating } from '../../support/navigating';
 import type { FilterFormSubject } from '../../support/types';
@@ -78,23 +78,29 @@ const listStatus = () =>
 
 const NO_FILTER: CompendiumListFilter = {
   query: '',
-  form: '',
-  nomenclature: '',
+  forms: [],
   withoutReferences: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
+  deities: [],
+  zodiac: [],
+  planets: [],
+  toxic: '',
 };
 
 /** Every filter in use, as a page shows it. */
 const SHOWN: CompendiumListFilter = {
   query: 'test',
-  form: 'Fixture Oil',
-  nomenclature: 'unknown',
+  forms: ['Fixture Oil'],
   withoutReferences: true,
   elements: [],
   categories: [],
   categoryMode: 'all',
+  deities: [],
+  zodiac: [],
+  planets: [],
+  toxic: '',
 };
 
 /** The categories the Categories box offers, each with the slug the address carries. */
@@ -110,13 +116,27 @@ const CATEGORIES = [
   { id: 'c-tb', slug: 'testbane', name: 'Testbane', group: WARDS },
 ];
 
-/** The curated forms the Form box offers. */
-const FORMS = [{ name: 'Fixture Oil' }, { name: 'Fixture Powder' }, { name: 'Fixture Resin' }];
+/** The facets the page reads: the curated forms the Form box offers, each with its count. */
+const FORMS = [
+  { value: 'Fixture Oil', label: 'Fixture Oil', count: 3, icon: null },
+  { value: 'Fixture Powder', label: 'Fixture Powder', count: 2, icon: null },
+  { value: 'Fixture Resin', label: 'Fixture Resin', count: 1, icon: null },
+];
+const FACETS: CompendiumFacetCounts = {
+  forms: FORMS,
+  deities: [],
+  categories: [],
+  zodiac: [],
+  planets: [],
+  elements: [],
+  toxic: [],
+  withoutReferences: 0,
+};
 
 const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProps => ({
   entries: ENTRIES,
   filter: NO_FILTER,
-  forms: FORMS,
+  facets: FACETS,
   categories: CATEGORIES,
   ...overrides,
 });
@@ -201,15 +221,14 @@ describe('compendiumHref', () => {
       compendiumHref(
         {
           query: 'test wort',
-          form: 'Fixture Oil',
-          nomenclature: 'unknown',
+          forms: ['Fixture Oil', 'Fixture Resin'],
           withoutReferences: true,
           after: 'a',
         },
         { edit: 'x' },
       ),
     ).toBe(
-      '/admin/compendium?query=test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1&after=a&edit=x',
+      '/admin/compendium?query=test+wort&forms=Fixture+Oil&forms=Fixture+Resin&withoutReferences=1&after=a&edit=x',
     );
     expect(compendiumHref({ elements: ['fire', 'water'], after: 'a' })).toBe(
       '/admin/compendium?elements=fire&elements=water&after=a',
@@ -237,15 +256,12 @@ function RoutedCompendium(): ReactElement {
   const [filter, setFilter] = useState<CompendiumListFilter>(NO_FILTER);
   router.push.mockImplementation((href: string) => {
     const params = new URL(href, 'http://localhost').searchParams;
-    setFilter({
-      query: params.get('query') ?? '',
-      form: params.get('form') ?? '',
-      nomenclature: (params.get('nomenclature') ?? '') as CompendiumListFilter['nomenclature'],
-      withoutReferences: params.has('withoutReferences'),
-      elements: someOf(INGREDIENT_ELEMENTS, params.getAll('elements')),
-      categories: params.getAll('categories'),
-      categoryMode: params.get('categoryMode') === 'any' ? 'any' : 'all',
-    });
+    // The page reads its address through the table; so does this stand-in.
+    setFilter(
+      COMPENDIUM_PARAMS.read(
+        Object.fromEntries([...new Set(params.keys())].map((name) => [name, params.getAll(name)])),
+      ),
+    );
   });
   return <CompendiumList {...props({ filter })} />;
 }
@@ -261,11 +277,10 @@ describe('CompendiumList filter', () => {
   const searchButton = () => screen.getByRole('button', { name: 'Search' });
   const nameBox = () => screen.getByRole('combobox', { name: 'Name' });
   const formBox = () => screen.getByRole('combobox', { name: 'Form' });
-  const kindSelect = () => screen.getByRole('combobox', { name: 'Classification' });
-  /** The classification the form sends: once hydrated, the select-only box's hidden input. */
-  const kindSent = () =>
-    new URLSearchParams(sent(screen.getByRole('form', { name: 'Filter the Compendium' }))).get(
-      'nomenclature',
+  /** The forms the filter sends: once hydrated, the type-ahead's hidden input. */
+  const formsSent = () =>
+    new URLSearchParams(sent(screen.getByRole('form', { name: 'Filter the Compendium' }))).getAll(
+      'forms',
     );
   const unsourcedSwitch = () => screen.getByRole('switch', { name: 'No Refs' });
 
@@ -279,7 +294,7 @@ describe('CompendiumList filter', () => {
     push: router.push,
     none: {
       list: <CompendiumList {...props()} />,
-      sends: 'query=&form=&nomenclature=',
+      sends: 'query=&forms=',
     },
     shown: {
       list: (
@@ -287,56 +302,26 @@ describe('CompendiumList filter', () => {
           {...props({ filter: SHOWN, previousHref: compendiumHref({ ...SHOWN, before: 'b' }) })}
         />
       ),
-      sends: 'query=test&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1',
+      sends: 'query=test&forms=Fixture+Oil&withoutReferences=1',
     },
     alone: [
       {
         list: <CompendiumList {...props({ filter: { ...NO_FILTER, query: 'test' } })} />,
-        sends: 'query=test&form=&nomenclature=',
+        sends: 'query=test&forms=',
       },
       {
-        list: <CompendiumList {...props({ filter: { ...NO_FILTER, form: 'Fixture Oil' } })} />,
-        sends: 'query=&form=Fixture+Oil&nomenclature=',
-      },
-      {
-        list: <CompendiumList {...props({ filter: { ...NO_FILTER, nomenclature: 'unknown' } })} />,
-        sends: 'query=&form=&nomenclature=unknown',
+        list: <CompendiumList {...props({ filter: { ...NO_FILTER, forms: ['Fixture Oil'] } })} />,
+        sends: 'query=&forms=Fixture+Oil',
       },
       {
         list: <CompendiumList {...props({ filter: { ...NO_FILTER, withoutReferences: true } })} />,
-        sends: 'query=&form=&nomenclature=&withoutReferences=1',
+        sends: 'query=&forms=&withoutReferences=1',
       },
     ],
-    searched:
-      '/admin/compendium?query=Two+words&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1',
+    searched: '/admin/compendium?query=Two+words&forms=Fixture+Oil&withoutReferences=1',
   };
 
   it.each(FILTER_ROWS)('%s', (_title, run) => run(SUBJECT));
-
-  // The owner's call (MB.115): every closed set in the row takes one
-  // dropdown look once hydrated, the select-only box, but the server draws a
-  // native select, so the filter works before JavaScript.
-  it('offers every classification, after the option for any, as a native select on the server and a select-only box once hydrated', async () => {
-    const { container, hydrate } = drawnOnServer(<CompendiumList {...props()} />);
-
-    const served = within(container).getByRole('combobox', { name: 'Classification' });
-    expect(
-      within(served)
-        .getAllByRole('option')
-        .map((option) => option.getAttribute('value')),
-    ).toEqual(['', 'botanical', 'fungal', 'zoological', 'mineral', 'chemical', 'unknown', 'none']);
-    expect(served).toHaveValue('');
-    expect(served).toHaveAttribute('name', 'nomenclature');
-
-    await hydrate();
-    fireEvent.click(kindSelect());
-    expect(
-      within(screen.getByRole('listbox', { name: 'Classification choices' })).getAllByRole(
-        'option',
-      ),
-    ).toHaveLength(8);
-    expect(kindSent()).toBe('');
-  });
 
   // The owner's call (MB.115), as the curated lists' group filter: typed
   // into once hydrated, but drawn as a native select by the server, beside
@@ -351,12 +336,12 @@ describe('CompendiumList filter', () => {
     );
     const served = within(search).getByRole('combobox', { name: 'Form' });
     expect(served).toHaveValue('Fixture Oil');
-    expect(served).toHaveAttribute('name', 'form');
+    expect(served).toHaveAttribute('name', 'forms');
     expect(
       within(served)
         .getAllByRole('option')
         .map((option) => option.getAttribute('value')),
-    ).toEqual(['', ...FORMS.map((form) => form.name)]);
+    ).toEqual(['', ...FORMS.map((form) => form.value)]);
     expect(served).not.toHaveAttribute('aria-autocomplete');
 
     await hydrate();
@@ -382,23 +367,22 @@ describe('CompendiumList filter', () => {
     expect(new FormData(search as HTMLFormElement).has('withoutReferences')).toBe(false);
   });
 
-  it('applies a classification on its change, carrying the name typed and the filter shown', () => {
+  it('applies a form on its pick, carrying the name typed and the filter shown', () => {
     render(
       <CompendiumList
         {...props({
-          filter: { ...SHOWN, nomenclature: '' },
+          filter: SHOWN,
           previousHref: compendiumHref({ ...SHOWN, before: 'b' }),
         })}
       />,
     );
 
     fireEvent.change(nameBox(), { target: { value: ' Test wort ' } });
-    choose('Classification', 'Unknown');
+    fireEvent.click(formBox());
+    fireEvent.click(screen.getByRole('option', { name: 'Fixture Powder' }));
 
     expect(router.push.mock.calls).toEqual([
-      [
-        '/admin/compendium?query=Test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1',
-      ],
+      ['/admin/compendium?query=Test+wort&forms=Fixture+Powder&withoutReferences=1'],
     ]);
   });
 
@@ -482,9 +466,7 @@ describe('CompendiumList filter', () => {
 
     render(<CompendiumList {...props({ filter: SHOWN })} />);
     fireEvent.click(unsourcedSwitch());
-    expect(router.push).toHaveBeenLastCalledWith(
-      '/admin/compendium?query=test&form=Fixture+Oil&nomenclature=unknown',
-    );
+    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?query=test&forms=Fixture+Oil');
     expect(router.push).toHaveBeenCalledTimes(2);
   });
 
@@ -500,17 +482,17 @@ describe('CompendiumList filter', () => {
 
     // Left naming a choice in full, it applies that choice.
     act(() => nameBox().focus());
-    expect(router.push.mock.calls).toEqual([['/admin/compendium?query=wort&form=Fixture+Powder']]);
+    expect(router.push.mock.calls).toEqual([['/admin/compendium?query=wort&forms=Fixture+Powder']]);
 
     // A pick applies at once.
     fireEvent.click(formBox());
     fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil' }));
-    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?query=wort&form=Fixture+Oil');
+    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?query=wort&forms=Fixture+Oil');
     unmount();
     router.push.mockReset();
 
     // Left on the form shown, nothing; its clear applies every form.
-    render(<CompendiumList {...props({ filter: { ...NO_FILTER, form: 'Fixture Oil' } })} />);
+    render(<CompendiumList {...props({ filter: { ...NO_FILTER, forms: ['Fixture Oil'] } })} />);
     act(() => formBox().focus());
     act(() => nameBox().focus());
     expect(router.push).not.toHaveBeenCalled();
@@ -533,7 +515,7 @@ describe('CompendiumList filter', () => {
       </Navigating>,
     );
     const row = screen.getByRole('form', { name: 'Filter the Compendium' });
-    const controls = () => [nameBox(), searchButton(), formBox(), kindSelect(), unsourcedSwitch()];
+    const controls = () => [nameBox(), searchButton(), formBox(), unsourcedSwitch()];
     // Before the press: the list shows, and every control can be used.
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(listStatus()).toEqual([]);
@@ -551,8 +533,8 @@ describe('CompendiumList filter', () => {
     for (const control of controls()) expect(control).toHaveAttribute('aria-disabled', 'true');
 
     // A second change, or a submit, while the first is on its way goes nowhere.
-    fireEvent.click(kindSelect());
-    fireEvent.keyDown(kindSelect(), { key: 'ArrowDown' });
+    fireEvent.click(formBox());
+    fireEvent.keyDown(formBox(), { key: 'ArrowDown' });
     fireEvent.submit(row);
     expect(router.push).toHaveBeenCalledTimes(1);
 
@@ -596,13 +578,13 @@ describe('CompendiumList filter', () => {
     expect(unsourcedSwitch()).toBeChecked();
     expect(unsourcedSwitch()).toHaveFocus();
 
-    act(() => kindSelect().focus());
-    fireEvent.click(kindSelect());
+    act(() => formBox().focus());
+    fireEvent.click(formBox());
     await act(async () => {
-      fireEvent.click(screen.getByRole('option', { name: 'Mineral' }));
+      fireEvent.click(screen.getByRole('option', { name: 'Fixture Resin' }));
     });
-    expect(kindSent()).toBe('mineral');
-    expect(kindSelect()).toHaveFocus();
+    expect(formsSent()).toEqual(['Fixture Resin']);
+    expect(formBox()).toHaveFocus();
 
     fireEvent.change(nameBox(), { target: { value: 'test' } });
     act(() => searchButton().focus());
@@ -612,7 +594,7 @@ describe('CompendiumList filter', () => {
     expect(nameBox()).toHaveValue('test');
     expect(searchButton()).toHaveFocus();
     expect(router.push).toHaveBeenLastCalledWith(
-      '/admin/compendium?query=test&nomenclature=mineral&withoutReferences=1',
+      '/admin/compendium?query=test&forms=Fixture+Resin&withoutReferences=1',
     );
   });
 
@@ -819,7 +801,7 @@ describe('CompendiumList filter', () => {
     const { rerender } = render(<CompendiumList {...props()} />);
     fireEvent.change(formBox(), { target: { value: 'Fixture Powder' } });
 
-    rerender(<CompendiumList {...props({ filter: { ...NO_FILTER, form: 'Fixture Oil' } })} />);
+    rerender(<CompendiumList {...props({ filter: { ...NO_FILTER, forms: ['Fixture Oil'] } })} />);
 
     expect(formBox()).toHaveValue('Fixture Oil');
   });

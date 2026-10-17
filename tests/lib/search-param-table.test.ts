@@ -6,6 +6,7 @@ import {
   listParam,
   searchParam,
   slugListParam,
+  textListParam,
   textParam,
 } from '@/lib/search-param-table';
 
@@ -177,5 +178,42 @@ describe('a slug list entry', () => {
   it('leaves the entries that read no lookup as they were', () => {
     expect(slugs.variables({ query: 'wort', categories: [] }, LOOKUP).query).toBe('wort');
     expect(search.variables(search.read({ query: 'wort' }))).toMatchObject({ query: 'wort' });
+  });
+});
+
+// Free text in a list, for a vocabulary that is only an autofill (M12.4): a
+// form, a sign or a planet nobody has curated is still a valid value.
+describe('a text list entry', () => {
+  const texts = defineSearchParams({
+    query: textParam('query', 'query'),
+    forms: textListParam('forms', 'forms'),
+  });
+
+  it('reads the values repeated, trimmed, blanks and case-folded repeats dropped, in order', () => {
+    expect(texts.read({ forms: [' Oil ', '', 'Tincture', 'oil'] }).forms).toEqual([
+      'Oil',
+      'Tincture',
+    ]);
+    expect(texts.read({ forms: 'Oil' }).forms).toEqual(['Oil']);
+    expect(texts.read({}).forms).toEqual([]);
+  });
+
+  it('keeps a value the vocabulary does not hold, and one with a comma', () => {
+    expect(texts.read({ forms: ['Uncurated Powder', 'Resin, hard'] }).forms).toEqual([
+      'Uncurated Powder',
+      'Resin, hard',
+    ]);
+  });
+
+  it('writes the values back as repeated parameters, never comma-joined', () => {
+    expect(texts.href('/x', { forms: ['Oil', 'Resin, hard'] })).toBe(
+      '/x?forms=Oil&forms=Resin%2C+hard',
+    );
+    expect(texts.href('/x', { forms: [] })).toBe('/x');
+  });
+
+  it('becomes the variable as the list itself, and none when empty', () => {
+    expect(texts.variables({ query: '', forms: ['Oil', 'Resin'] }).forms).toEqual(['Oil', 'Resin']);
+    expect(texts.variables({ query: '', forms: [] }).forms).toBeUndefined();
   });
 });

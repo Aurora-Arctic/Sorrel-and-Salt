@@ -17,23 +17,25 @@ resolves through, rather than one read per row.
 
 `CompendiumListProps` (`types.ts`):
 
-| Prop           | What it is                                                                             |
-| -------------- | -------------------------------------------------------------------------------------- |
-| `entries`      | This page's `CompendiumListEntry` rows, in the service's order                         |
-| `filter`       | `{ query, form, nomenclature, categories, categoryMode, withoutReferences }`, as asked |
-| `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each     |
-| `forms`        | The curated forms the Form box offers, `{ name }` each, in name order                  |
-| `previousHref` | The page before this one, absent on the first                                          |
-| `nextHref`     | The page after this one, absent on the last                                            |
-| `position`     | `{ page, pages }`, the pager's "Page X of Y"                                           |
+| Prop           | What it is                                                                                                           |
+| -------------- | -------------------------------------------------------------------------------------------------------------------- |
+| `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                       |
+| `filter`       | `{ query, forms, withoutReferences, elements, categories, categoryMode, deities, zodiac, planets, toxic }`, as asked |
+| `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                   |
+| `facets`       | `CompendiumFacetCounts`: each facet's choices as `{ value, label, count }`, under the filter shown (`facets.ts`)     |
+| `previousHref` | The page before this one, absent on the first                                                                        |
+| `nextHref`     | The page after this one, absent on the last                                                                          |
+| `position`     | `{ page, pages }`, the pager's "Page X of Y"                                                                         |
 
 A `CompendiumListEntry` is the entry's id, name and slug, its
 `canonicalName`, `null` for none, its `forms` (`CompendiumListForm[]`, `{ name, icon }` for each of the entry's live
 forms in form order, `[]` for none; `icon` is the form's group's icon name, `null` for a form with none, and the Form column draws each as `<FormIcon name={icon} />` before its name, M12.7), and `editHref`. In the
-filter, `query`, `form` and `nomenclature` are blank for none, `form` is a
-form's text, and `nomenclature` is otherwise a `NomenclatureKind`.
+filter, `query` is blank for none and `forms`, `zodiac` and `planets` are lists of
+curated text, `[]` for none. `deities` and `categories` hold slugs. The table is
+[`ingredient-search.md`](ingredient-search.md#the-parameter-table)'s.
 
-The page reads `forms` through the vocabulary module's
+The page reads the Form box's choices as `facets.forms`, each with its count, from
+`compendiumFacets`, and each form's icon from the vocabulary module's
 `listIngredientFormValues`, every page of it through `allPages`
 (`src/lib/pagination.ts`), not one page of the maximum as the curated lists
 read their groups: 84 forms are seeded against `MAX_PAGE_SIZE`'s 100, and an
@@ -47,29 +49,27 @@ different groups, so the page offers each name once, whatever its case.
   landmark, a type-ahead labelled "Name" (`query`,
   [`ingredient-search.md`](ingredient-search.md)) with its own submit, a
   magnifier named Search, inside the box at its start with the clear alone at its end and no chevron, then a type-ahead labelled
-  "Form" (`form`), a dropdown labelled "Classification"
-  (`nomenclature`), a native `<select>` from the server and the select-only
-  box once hydrated, as every closed set in the row is, a switch labelled "Without
+  "Form" (`forms`), a switch labelled "Without
   References", title case as the owner asked (`withoutReferences`, valued `1`). There is no Filter
   button: each field applies as it changes (below). The
   switch is `SwitchField`, a slide toggle with its label above it as the
   other fields have, over a native checkbox, so it submits the same; it was a
   checkbox until the owner found it out of place in the row (MB.115;
   [`field.md`](field.md)). The
-  classification and the switch are the admin's two to-do lists: Unknown is
-  every entry whose naming system is unsettled, and No Refs (shortened from
-  Without References, the owner's call at MB.115) every
-  entry that cites no source yet. A filtered page is an address, and filtering
+  switch is the admin's to-do list: No Refs (shortened from
+  Without References, the owner's call at MB.115) shows every
+  entry that cites no source yet. The compendium search has no Classification filter (the
+  Classification column stays in the table). A filtered page is an address, and filtering
   starts again from the first page, since the form carries no cursor. It is
   `filter.tsx`, the one client file here, its fields inside the shared
   `FilterForm` ([`filter-form.md`](filter-form.md)), which holds the form,
   the Clear link and the soft navigation; Clear is drawn while the page
-  shows a name, a form, a classification or No Refs, and opens
+  shows a name, a form or No Refs, and opens
   `/admin/compendium` with none, and is not drawn while it shows none,
   whatever the fields hold. The Name box is `IngredientSearch`'s typeahead
   ([`ingredient-search.md`](ingredient-search.md)): a picked row opens that
   entry's `?edit=` modal over the filter as shown, without applying the
-  text typed, and Enter or the magnifier applies it. The Form, Classification
+  text typed, and Enter or the magnifier applies it. The Form
   and No Refs fields sit in its slot and carry the typed name through
   `useSearchText`. The form is still a GET form underneath, so it filters
   before hydration.
@@ -77,31 +77,25 @@ different groups, so the page offers each name once, whatever its case.
   curated lists' group filter's pattern
   ([`grouped-value-list.md`](grouped-value-list.md)), the owner's call in
   MB.115: `ComboboxTypeahead` ([`combobox.md`](combobox.md), "The type-ahead
-  box"), each choice's value and label the form's name, "All Forms" while
+  box"), each choice's value and label the form's name (until the chips land it
+  names one form; further `forms` in the address are carried by hidden inputs), "All Forms" while
   blank, typing narrowing the list "Form choices", and a clear, "Clear
-  Form", back to blank. A hidden input carries `form` for a native submit.
+  Form", back to blank. A hidden input carries `forms` for a native submit.
   The server draws it as a native `<select>` instead, "All Forms" valued
   `""` then one option per form, so the filter works before JavaScript;
   `FilterSelectField` with `typeahead` draws both ([`field.md`](field.md)),
-  as it does the curated lists' group. The value is the form's text, `?form=Oil`, which the compendium
+  as it does the curated lists' group. The value is the form's text, `?forms=Oil`, which the compendium
   read matches whatever its case, so the address reads plainly and an
   uncurated form on a seeded entry is still reachable by typing the address.
-- **Classification offers "Any", valued `""`, then every kind in
-  `NOMENCLATURE_KINDS`'s order**, labelled by IngredientForm's
-  `NOMENCLATURE_OPTIONS` (`options.ts`), as its Classification select is: the
-  value capitalised. It is a `FilterSelectField`, its change read with
-  `oneOf(NOMENCLATURE_KINDS, …)`. Before hydration every control is native, so the
-  form submits as `query=&form=&nomenclature=`, plus
-  `withoutReferences=1` when on. The page reads a blank value as no filter
-  and ignores a kind it does not know.
+- **The native form submits as `query=&forms=`**, plus `withoutReferences=1` when on.
+  The page reads a blank value as no filter. A leftover `nomenclature` in an old address is ignored.
 - **Each field applies as it changes** (the owner's call at MB.115's
-  review, over a Filter button pressed after them): Classification on its
-  change and No Refs on its press, each from the filter shown with that one
+  review, over a Filter button pressed after them): No Refs on its press, each from the filter shown with that one
   field changed; Form once a choice settles, a pick, its clear or leaving
   the box, when the settled form differs from the one shown, never while it
   is typed; and the name on the magnifier, Enter or its clear. Each carries the name
   typed but not yet searched, trimmed. Only the name and the Form box's text
-  are state; Classification is uncontrolled (`defaultValue`) and No Refs
+  are state; No Refs
   takes `defaultChecked`. With JavaScript, each builds the address with
   `compendiumHref`, and `useApplyFilter` pushes it softly; the loading state,
   the focus and the form's keying by the filter shown are the shared
@@ -110,8 +104,8 @@ different groups, so the page offers each name once, whatever its case.
   page's Add Ingredient is `?new`. `href.ts`'s `compendiumHref(place, dialog)`
   builds both, the pager's links and the filter's submit too, a typed wrapper
   on the shared `listHref` (`src/lib/list-href.ts`). `place` is
-  `{ query, form, nomenclature, withoutReferences, after, before }`, written in that
-  order before the modal, a blank one left out and No Refs as
+  every entry of `COMPENDIUM_PARAMS`, then `after` and `before`, written in the
+  table's order before the modal, a blank one left out and No Refs as
   `withoutReferences=1`. `dialog` is `'new'`, a bare flag, or
   `{ edit: slug }`.
 - **`next/link`, not a plain anchor**, as the category list's Edit: opening
@@ -174,12 +168,12 @@ workshop does not serve. Render-only, no test ids, no snapshots.
 
 `tests/components/CompendiumList/index.test.tsx` covers the rows, the Edit
 links and their names, no table when there are none, through the shared filter rows (`tests/support/filter-form.tsx`, [`filter-form.md`](filter-form.md)) the filter form's
-action, method, names, kept values and classification values, the Form box
+action, method, names and kept values, the Form box
 drawn as a native select on the server and as a type-ahead once hydrated,
 No Refs found as a `switch`, sent by the server-drawn form and
 turned by a press before hydration,
 the Search submit in the server's markup, the address each field applies (the
-search on Search, Enter or the Name clear, Classification on its change, No Refs on its
+search on Search, Enter or the Name clear, No Refs on its
 press, the Form box on a pick, its clear and leaving it, never while typed,
 each carrying the name typed), the loading state while the filtered list
 loads (the list's status, the row `aria-busy` and its controls
@@ -191,6 +185,6 @@ filter, text typed or not, and the loading state while the unfiltered list
 loads), and `compendiumHref`. It is the one list test of the filter's
 loading state, its focus, its
 reset and Clear; paging is Pager's. `tests/app/(shell)/admin/compendium/page.test.tsx`
-covers the page's side: `?form=` read trimmed into the list and its count,
-blank as none, kept on every Edit, the pager, Add Ingredient and the
+covers the page's side: `?forms=` read trimmed into the list and its count,
+blank as none, the facet read under the same variables as the list, deities mapped from slugs to ids, zodiac, planets and toxic, kept on every Edit, the pager, Add Ingredient and the
 redirect, and the forms read past their first page, each name once. The Categories picker (M8.11) is covered in the component test (entries shown, an unknown slug not shown, hidden inputs, repeated slugs applied and removed, the typed name carried, other controls keeping the categories, one announcement, focus kept) and, on the page, by slugs mapped to ids, an unknown slug dropped, and the categories read past their first page.

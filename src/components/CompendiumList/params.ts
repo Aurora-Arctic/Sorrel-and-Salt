@@ -4,14 +4,22 @@ import {
   listParam,
   searchParam,
   slugListParam,
+  textListParam,
   textParam,
 } from '../../lib/search-param-table';
-import { single, trimmed } from '../../lib/search-params';
+import { single } from '../../lib/search-params';
 import {
   type CategoryMode,
   INGREDIENT_ELEMENTS,
-  NOMENCLATURE_KINDS,
+  type ToxicFilter,
 } from '@/modules/ingredients/schema/ingredient-enums';
+
+// The two settings the Toxic strip chooses between. The query's third, `any`,
+// is no filter, so it is the address with no `toxic` in it.
+const TOXIC_SETTINGS = ['toxic', 'not_toxic'] as const satisfies readonly Exclude<
+  ToxicFilter,
+  'any'
+>[];
 
 // The compendium search's parameters, each once (M8.13): the name in the
 // address, how it is read, and the filter variable it becomes. The page reads
@@ -19,21 +27,15 @@ import {
 // theirs through `.href`, and the filter form's fields name the same
 // parameters. A new filter is one more entry here
 // (claude-docs/components/ingredient-search.md, "The parameter table").
+// Every list is a repeated parameter, never comma-joined: a GET form writes
+// repeated names itself, and a form's text may hold a comma.
 export const COMPENDIUM_PARAMS = defineSearchParams({
   query: textParam('query', 'query'),
-  // A form by its text, `?form=Oil`, which the compendium read folds. The
-  // box names one form; the read takes a list (M11.22).
-  form: searchParam({
-    name: 'form',
-    variable: 'forms',
-    read: trimmed,
-    write: (form: string) => form,
-    toVariable: (form) => (form ? [form] : undefined),
-  }),
-  // Blank is no filter: a native submit sends `nomenclature=`, and a kind no
-  // classification holds is ignored, as a hand-edited cursor gets the first page.
-  nomenclature: choiceParam('nomenclature', NOMENCLATURE_KINDS, 'nomenclature'),
-  // Written `1`, the value its checkbox submits natively.
+  // Entries holding any of these forms by their text, `?forms=Oil&forms=Tincture`,
+  // which the compendium read folds. Free text, not a fixed set: the form
+  // vocabulary is only an autofill, so a form no one has curated is still valid.
+  forms: textListParam('forms', 'forms'),
+  // Written `1`, the value its checkbox submits natively. Only the admin list offers it.
   withoutReferences: searchParam({
     name: 'withoutReferences',
     variable: 'withoutReferences',
@@ -56,4 +58,19 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
     write: (mode: CategoryMode) => (mode === 'any' ? 'any' : undefined),
     toVariable: (mode) => (mode === 'any' ? 'any' : undefined),
   }),
+  // Entries linked to any of these deities, `?deities=hecate-greek&deities=hecate-roman`.
+  // The address carries a deity's slug (its name and its tradition's), so two
+  // gods of one name under two traditions stay apart and the address stays
+  // short; the query takes ids, through the page's `deities` lookup (M8.13, M12.4).
+  deities: slugListParam('deities', 'deityIds', 'deities'),
+  // Entries listing any of these zodiac signs, `?zodiac=Aries`, by the sign's
+  // name, which the compendium read folds. Free text like forms: the sign
+  // vocabulary is an autofill, so a name no one has curated is still valid.
+  zodiac: textListParam('zodiac', 'zodiacSigns'),
+  // Entries listing any of these planets or other celestial bodies,
+  // `?planets=Sun`, by name, as zodiac is.
+  planets: textListParam('planets', 'celestialBodies'),
+  // Toxic entries, or entries that are not: `?toxic=not_toxic`. Left out for
+  // either, so `any` and a junk value read as no filter.
+  toxic: choiceParam('toxic', TOXIC_SETTINGS, 'toxic'),
 });
