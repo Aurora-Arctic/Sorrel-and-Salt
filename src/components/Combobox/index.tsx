@@ -2,9 +2,11 @@
 
 import { useCombobox, type UseComboboxStateChangeOptions } from 'downshift';
 import {
+  type CSSProperties,
   type KeyboardEvent,
   type MouseEvent,
   type ReactElement,
+  type ReactNode,
   useEffect,
   useId,
   useLayoutEffect,
@@ -21,7 +23,7 @@ import type {
   Bucket,
   ComboboxOption,
   ComboboxProps,
-  CreateRow,
+  ActionRow,
   Item,
   Suggestions,
   TypedRow,
@@ -42,12 +44,12 @@ export { ComboboxSortableEntries } from './sortable';
 // was typed. See claude-docs/components/combobox.md.
 
 const isTyped = <O extends ComboboxOption>(item: Item<O>): item is TypedRow => 'typed' in item;
-const isCreate = <O extends ComboboxOption>(item: Item<O>): item is CreateRow => 'create' in item;
+const isAction = <O extends ComboboxOption>(item: Item<O>): item is ActionRow => 'action' in item;
 
 /** A row's identity, for React and Downshift: its own key, or else its bucket and what it reads. */
 const keyOf = <O extends ComboboxOption>(item: Item<O>): string => {
   if (isTyped(item)) return 'typed';
-  if (isCreate(item)) return 'create';
+  if (isAction(item)) return 'action';
   return item.key ?? `${item.curated}:${item.heading ?? ''}:${item.label ?? ''}:${item.value}`;
 };
 
@@ -78,7 +80,7 @@ function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
  * owner's call, then curated, then in use — flat for Downshift, which numbers
  * them, and bucketed for the headings. A source with one bucket shows no
  * headings; one whose rows carry a `heading` names its own buckets
- * (bucketByHeading). A caller that can make something new has its create row
+ * (bucketByHeading). A caller with an `action` has its action row
  * last instead of the typed row first, blank box or not, since what it lists
  * can only be picked (MB.154): the sources found are what is looked for, and
  * making one is the way out when none is (MB.115, the owner's call). A caller
@@ -90,13 +92,13 @@ function bucketByHeading<O extends ComboboxOption>(options: O[]): Bucket<O>[] {
 function arrange<O extends ComboboxOption>(
   options: O[],
   typed: string,
-  create: string | undefined,
+  action: string | undefined,
   offerTyped: boolean,
 ): {
   items: Item<O>[];
   buckets: Bucket<O>[];
   firstRow: TypedRow | null;
-  lastRow: CreateRow | null;
+  lastRow: ActionRow | null;
 } {
   const headed = options.some((option) => option.heading !== undefined);
   const bucketed = options.some((option) => option.curated !== undefined);
@@ -116,7 +118,7 @@ function arrange<O extends ComboboxOption>(
           },
         ].filter((bucket) => bucket.rows.length > 0)
       : [{ heading: null, key: 'all', rows: options }];
-  const lastRow: CreateRow | null = create === undefined ? null : { value: create, create: true };
+  const lastRow: ActionRow | null = action === undefined ? null : { value: action, action: true };
   const firstRow: TypedRow | null =
     lastRow === null && typed !== '' && offerTyped ? { value: typed, typed: true } : null;
   const items: Item<O>[] = firstRow ? [firstRow] : [];
@@ -150,11 +152,58 @@ function keepText<O extends ComboboxOption>(
   }
 }
 
-function statusOf(isOpen: boolean, suggestions: Suggestions | undefined, noun: string): string {
-  if (!isOpen || !suggestions) return '';
+function statusOf(
+  isOpen: boolean,
+  suggestions: Suggestions | undefined,
+  noun: string,
+  empty: string | undefined,
+): string {
+  if (!suggestions) return '';
+  if (!isOpen) return empty ?? '';
   const count = suggestions.options.length;
   if (count > 0) return `${count} ${noun}${count === 1 ? '' : 's'}`;
   return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
+}
+
+/**
+ * With an empty message, the popup that holds the listbox and the message
+ * beneath it, and the element that is placed, so they move together.
+ * Without one, just the listbox, which is placed itself (the output is then
+ * as it always was). Downshift counts only the input, the toggle and the
+ * listbox as inside, and closes on a press anywhere else. The popup does not
+ * scroll: Downshift scrolls a highlighted row into view within the listbox
+ * element, so the listbox is the scroller and the popup only the panel.
+ */
+function Popup({
+  wrapped,
+  popupRef,
+  open,
+  style,
+  placement,
+  after,
+  children,
+}: {
+  wrapped: boolean;
+  popupRef: (element: HTMLElement | null) => void;
+  open: boolean;
+  style: CSSProperties;
+  placement: string;
+  after: ReactNode;
+  children: ReactNode;
+}): ReactElement {
+  if (!wrapped) return <>{children}</>;
+  return (
+    <div
+      ref={popupRef}
+      className={open ? 'combobox__popup is-open' : 'combobox__popup'}
+      style={style}
+      data-placement={placement}
+      hidden={!open}
+    >
+      {children}
+      {after}
+    </div>
+  );
 }
 
 function Combobox<O extends ComboboxOption = ComboboxOption>({
@@ -169,9 +218,12 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   onCommit,
   onRemoveLast,
   suggestions,
+  empty,
   entries,
   clear,
-  create,
+  leading,
+  toggle = true,
+  action,
   offerTyped = true,
   highlightFirst = false,
   noun = 'suggestion',
@@ -207,18 +259,30 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
-  const createLabel = create?.label;
+  const actionLabel = action?.label;
   const { items, buckets, firstRow, lastRow } = useMemo(
-    () => arrange(suggestions?.options ?? [], value.trim(), createLabel, offerTyped),
-    [suggestions, value, createLabel, offerTyped],
+    () => arrange(suggestions?.options ?? [], value.trim(), actionLabel, offerTyped),
+    [suggestions, value, actionLabel, offerTyped],
   );
   const isOpen = hasSource && wantsOpen && items.length > 0;
-  const { setControl, setList, listStyle, placement } = useListPosition(isOpen, listAnchor);
+  // A settled lookup with nothing found, said aloud rather than left as a
+  // list that never opens. Not "open" to Downshift, which has no rows to hold.
+  const showEmpty =
+    empty !== undefined &&
+    wantsOpen &&
+    suggestions?.pending === false &&
+    value.trim() !== '' &&
+    items.length === 0;
+  const popupOpen = isOpen || showEmpty;
+  // With an empty message the listbox is one part of a popup, and
+  // the popup is what is placed; otherwise the list is, as it always was.
+  const wrapped = empty !== undefined;
+  const { setControl, setList, listStyle, placement } = useListPosition(popupOpen, listAnchor);
 
   // The list opens where the tip would be read, and is what typing is for.
   useEffect(() => {
-    if (isOpen) hideTip();
-  }, [isOpen, hideTip]);
+    if (popupOpen) hideTip();
+  }, [popupOpen, hideTip]);
 
   const {
     getInputProps,
@@ -248,7 +312,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     onIsOpenChange: ({ isOpen: open }) => setWantsOpen(open),
     onSelectedItemChange: ({ selectedItem }) => {
       if (!selectedItem) return;
-      if (isCreate(selectedItem)) create?.onCreate();
+      if (isAction(selectedItem)) action?.onSelect();
       else if (isTyped(selectedItem)) onPick(selectedItem.value, null);
       else onPick(selectedItem.value, selectedItem);
     },
@@ -286,6 +350,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
       target === event.currentTarget ||
       target.classList.contains('combobox__values') ||
       target.classList.contains('combobox__indicators') ||
+      target.classList.contains('combobox__leading') ||
       target.closest('.combobox__qualifier') ||
       target.closest('.combobox__lead')
     ) {
@@ -298,14 +363,14 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const row = (item: Item<O>) => {
     const at = index++;
     const highlighted = at === highlightedIndex;
-    const colors = isTyped(item) || isCreate(item) ? undefined : item.colors;
+    const colors = isTyped(item) || isAction(item) ? undefined : item.colors;
     return (
       <li
         key={keyOf(item)}
         className={[
           'combobox__option',
-          // The create row is no suggestion either, and reads as the typed row does.
-          (isTyped(item) || isCreate(item)) && 'combobox__option--typed',
+          // The action row is no suggestion either, and reads as the typed row does.
+          (isTyped(item) || isAction(item)) && 'combobox__option--typed',
           colors && 'is-coloured',
           highlighted && 'is-highlighted',
         ]
@@ -314,7 +379,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         style={colors && chipColors(colors)}
         {...getItemProps({ item, index: at })}
       >
-        {isCreate(item) && item.value}
+        {isAction(item) && item.value}
         {isTyped(item) && (
           <span className="combobox__label">
             {typedIcon && (
@@ -325,7 +390,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             {`Use what you typed: ${item.value}`}
           </span>
         )}
-        {!isCreate(item) && !isTyped(item) && (
+        {!isAction(item) && !isTyped(item) && (
           <>
             <span className="combobox__label">
               {item.icon && (
@@ -356,6 +421,11 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         className={invalid ? 'input combobox__control is-invalid' : 'input combobox__control'}
         onMouseDown={focusText}
       >
+        {/* The caller's own control, ahead of the text so the tab order reads
+            as the screen does. Pressing a button in it is not a press on the
+            control's ground, so focusText leaves it alone (its click must
+            still fire), and Downshift sees it inside the box. */}
+        {leading && <div className="combobox__leading">{leading}</div>}
         <div className="combobox__values">
           {entries}
           {/* The chosen choice's mark, ahead of the text as a row's is ahead
@@ -441,7 +511,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             </span>
           )}
         </div>
-        {(clear || hasSource) && (
+        {(clear || (hasSource && toggle)) && (
           <div className="combobox__indicators">
             {/* Always drawn once the caller has a clear, and hidden while
                 there is nothing to clear, rather than left out: its room,
@@ -460,13 +530,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 <ClearIcon />
               </button>
             )}
-            {clear && hasSource && (
+            {clear && hasSource && toggle && (
               <span
                 className={clear.empty ? 'combobox__separator is-empty' : 'combobox__separator'}
                 aria-hidden="true"
               />
             )}
-            {hasSource && (
+            {hasSource && toggle && (
               <button
                 type="button"
                 className="combobox__indicator"
@@ -479,44 +549,67 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         )}
       </div>
       {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
-      <ul
-        className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
-        // Placed beneath or above the box, as there is room (useListPosition).
+      <Popup
+        wrapped={wrapped}
+        popupRef={setList}
+        open={popupOpen}
         style={listStyle}
-        data-placement={placement}
-        {...getMenuProps({ ref: setList, 'aria-label': `${label} ${noun}s` })}
+        placement={placement}
+        after={
+          <>
+            {showEmpty && (
+              // Not an option, so not in the listbox: a reader hears it through
+              // the status, and would count it as a choice inside the list.
+              <div className="combobox__empty">{empty}</div>
+            )}
+          </>
+        }
       >
-        {isOpen && firstRow && row(firstRow)}
-        {isOpen &&
-          buckets.map((bucket) =>
-            bucket.heading === null ? (
-              bucket.rows.map(row)
-            ) : (
-              // A listbox's group is ARIA's own; optgroup belongs to a select.
-              // On a div inside a presentational li, which the tree leaves
-              // out, since ARIA allows no `group` role on an li (axe's
-              // aria-allowed-role, first caught by M5.5's scan in a browser).
-              // oxlint-disable jsx-a11y/prefer-tag-over-role
-              <li key={bucket.key} role="presentation" className="combobox__group">
-                <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
-                  <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
-                    {bucket.heading}
+        <ul
+          className={['combobox__list', isOpen && 'is-open', wrapped && 'is-inset']
+            .filter(Boolean)
+            .join(' ')}
+          // Placed beneath or above the box, as there is room (useListPosition);
+          // inside a popup, the popup is.
+          style={wrapped ? undefined : listStyle}
+          data-placement={wrapped ? undefined : placement}
+          {...getMenuProps({
+            ref: wrapped ? undefined : setList,
+            'aria-label': `${label} ${noun}s`,
+          })}
+        >
+          {isOpen && firstRow && row(firstRow)}
+          {isOpen &&
+            buckets.map((bucket) =>
+              bucket.heading === null ? (
+                bucket.rows.map(row)
+              ) : (
+                // A listbox's group is ARIA's own; optgroup belongs to a select.
+                // On a div inside a presentational li, which the tree leaves
+                // out, since ARIA allows no `group` role on an li (axe's
+                // aria-allowed-role, first caught by M5.5's scan in a browser).
+                // oxlint-disable jsx-a11y/prefer-tag-over-role
+                <li key={bucket.key} role="presentation" className="combobox__group">
+                  <div role="group" aria-labelledby={`${headingId}-${bucket.key}`}>
+                    <div id={`${headingId}-${bucket.key}`} className="combobox__heading">
+                      {bucket.heading}
+                    </div>
+                    <ul role="presentation" className="combobox__rows">
+                      {bucket.rows.map(row)}
+                    </ul>
                   </div>
-                  <ul role="presentation" className="combobox__rows">
-                    {bucket.rows.map(row)}
-                  </ul>
-                </div>
-              </li>
-              // oxlint-enable jsx-a11y/prefer-tag-over-role
-            ),
-          )}
-        {isOpen && lastRow && row(lastRow)}
-      </ul>
+                </li>
+                // oxlint-enable jsx-a11y/prefer-tag-over-role
+              ),
+            )}
+          {isOpen && lastRow && row(lastRow)}
+        </ul>
+      </Popup>
       {/* What the list holds, for a screen reader: the rows arrive after the
           typing, and nothing else says so. */}
       {hasSource && (
         <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
-          {statusOf(isOpen, suggestions, noun)}
+          {statusOf(isOpen, suggestions, noun, showEmpty ? empty : undefined)}
         </output>
       )}
     </div>

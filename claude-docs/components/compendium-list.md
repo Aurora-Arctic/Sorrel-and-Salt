@@ -43,8 +43,9 @@ different groups, so the page offers each name once, whatever its case.
 
 - **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178), as the
   category list's is: named "Filter the Compendium" inside a `<search>`
-  landmark, a search box labelled "Name" (`query`) with its own submit, a
-  magnifier named Search (`SearchField`, [`field.md`](field.md)), a type-ahead labelled
+  landmark, a type-ahead labelled "Name" (`query`,
+  [`ingredient-search.md`](ingredient-search.md)) with its own submit, a
+  magnifier named Search, inside the box at its start with the clear alone at its end and no chevron, then a type-ahead labelled
   "Form" (`form`), a dropdown labelled "Classification"
   (`nomenclature`), a native `<select>` from the server and the select-only
   box once hydrated, as every closed set in the row is, a switch labelled "Without
@@ -64,9 +65,13 @@ different groups, so the page offers each name once, whatever its case.
   the Clear link and the soft navigation; Clear is drawn while the page
   shows a name, a form, a classification or No Refs, and opens
   `/admin/compendium` with none, and is not drawn while it shows none,
-  whatever the fields hold. M8.10 turns the Name box into its
-  typeahead, a picked row opening the entry's `?edit=` modal, with this form
-  kept underneath.
+  whatever the fields hold. The Name box is `IngredientSearch`'s typeahead
+  ([`ingredient-search.md`](ingredient-search.md)): a picked row opens that
+  entry's `?edit=` modal over the filter as shown, without applying the
+  text typed, and Enter or the magnifier applies it. The Form, Classification
+  and No Refs fields sit in its slot and carry the typed name through
+  `useSearchText`. The form is still a GET form underneath, so it filters
+  before hydration.
 - **Form is a type-ahead over the curated forms once hydrated**, the
   curated lists' group filter's pattern
   ([`grouped-value-list.md`](grouped-value-list.md)), the owner's call in
@@ -93,7 +98,7 @@ different groups, so the page offers each name once, whatever its case.
   change and No Refs on its press, each from the filter shown with that one
   field changed; Form once a choice settles, a pick, its clear or leaving
   the box, when the settled form differs from the one shown, never while it
-  is typed; and the name on the magnifier or Enter. Each carries the name
+  is typed; and the name on the magnifier, Enter or its clear. Each carries the name
   typed but not yet searched, trimmed. Only the name and the Form box's text
   are state; Classification is uncontrolled (`defaultValue`) and No Refs
   takes `defaultChecked`. With JavaScript, each builds the address with
@@ -140,7 +145,7 @@ different groups, so the page offers each name once, whatever its case.
 None of its own; the stylesheet went in MB.115. The list's root is
 `.list-frame`, its filter the `.filter-row` `FilterForm` draws, on the
 `.field`, `.input`, `.select` and `.switch` primitives and
-`SearchField`'s `.search-field` ([`styling.md`](../styling.md), "Form fields"). The table is
+the Name box's Combobox ([`styling.md`](../styling.md), "Form fields"). The table is
 [`StackTable`](data-table.md): the `.data-table` primitive with the
 `--stack` modifier, banded on `$surface-card` with a 1px `$text-muted`
 hairline under the header row at desktop width, and each row a card once
@@ -173,7 +178,7 @@ drawn as a native select on the server and as a type-ahead once hydrated,
 No Refs found as a `switch`, sent by the server-drawn form and
 turned by a press before hydration,
 the Search submit in the server's markup, the address each field applies (the
-search on Search or Enter, Classification on its change, No Refs on its
+search on Search, Enter or the Name clear, Classification on its change, No Refs on its
 press, the Form box on a pick, its clear and leaving it, never while typed,
 each carrying the name typed), the loading state while the filtered list
 loads (the list's status, the row `aria-busy` and its controls

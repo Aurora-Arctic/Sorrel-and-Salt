@@ -5,9 +5,12 @@
 // first set off from the comma before it by more than a word space, so an
 // icon reads as its own name's and not the last one's (the owner's call,
 // 2026-10-16). The space between two of these is a text node, which the
-// sibling selector looks past.
+// sibling selector looks past. `vertical-align: bottom` because an
+// inline-flex box sits on its first item's baseline, and the icon's svg has
+// none, so its bottom edge would sit on the line and lift the name 4px.
 .compendium-list__form {
   display: inline-flex;
+  vertical-align: bottom;
   align-items: center;
   gap: 0.25em;
   white-space: nowrap;

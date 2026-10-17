@@ -267,7 +267,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.262 | Mail Shows Its Light Colours in Zoho Mail's Dark Mode                                                                    | Bugfixes | —                      |
 | MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
 | MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
-| MB.265 | The Zodiac Signs Filter Test Fails Axe's Title Check Under Load                                                          | Bugfixes | —                      |
+| MB.265 | Admin Pages Fail Axe's Title Check Under Load                                                                            | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1526,9 +1526,9 @@ _Acceptance criteria:_
 - At a phone width the first four tabs and More show as before
 - The measuring render is never painted: no frame shows the row overflowing
 
-**MB.265 — The Zodiac Signs Filter Test Fails Axe's Title Check Under Load** · 2h
+**MB.265 — Admin Pages Fail Axe's Title Check Under Load** · 3h
 
-_Story:_ As a developer running the gate suite, I want the zodiac signs filter test to pass every time, so that a red run means a real regression and not a busy machine.
+_Story:_ As a developer running the gate and story suites, I want axe's title check to pass every time on the admin pages, so that a red run means a real regression and not a busy machine.
 
 Found on 2026-10-16, locally, during M11.18's measurement runs. The gate test "an admin filters the zodiac signs by part of a name" in `tests/e2e/admin.spec.ts` failed twice with an axe-core accessibility violation, rule `document-title` (the document has no title), on `/admin/zodiac-signs?query=AR` after filtering, and passed on every other run. Both sightings were under a load average of 11 to 24, with several Playwright and Vitest runs sharing twelve cores. The page declares a static `title` in its metadata (`src/app/(shell)/admin/(astrology)/zodiac-signs/page.tsx`), so a document without a title should not be possible. One hypothesis is that under load axe runs against a streamed document whose head has not yet carried the title; that is unproven. It is a flaky test, not a broken page, so it is not a hotfix.
 
@@ -1542,12 +1542,24 @@ Steps to reproduce:
 Actual: sometimes axe reports a `document-title` violation and the test fails; the next run passes.
 Expected: the filtered page always carries its title, so axe passes and the test is stable.
 
+Found again on 2026-10-16, locally, in one full `npm run test:stories` run on M8.10's branch, which changes nothing under `src/app/(shell)/admin/users`. Story 60, "the primary admin pauses admin changes …" in `tests/e2e/stories/08-email-and-admin.spec.ts`, failed at its axe check (line 464) with the same `document-title` violation, on `/admin/users` just after the primary admin paused admin changes. Run alone, it passed. Two pages failing the same way makes a shared cause, in the harness or the shell's head, likelier than one in either page.
+
+Steps to reproduce:
+
+1. Run `npm run test:stories`, the full story suite, locally.
+2. Story 60 signs in as the primary admin and opens `/admin/users` filtered to one user.
+3. It presses Pause Admin Changes and confirms in the dialog.
+4. Once the dialog closes and the paused status shows, it runs the axe check.
+
+Actual: sometimes axe reports a `document-title` violation (the page has no non-empty `<title>`); seen once in a full run, and the story passed when run alone.
+Expected: the page always has its title after pausing, and the story passes every run.
+
 _Acceptance criteria:_
 
 - A regression test that fails before the fix: either a reproduction of the missing title (axe run against the page before hydration or during streaming), or, if the title is proved always present, a test showing the harness ran axe too early
-- The cause is established and recorded, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
+- The cause is established and recorded for both pages, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
 - The fix lives where the cause is: the page if the title is missing, `tests/e2e/axe.ts` if the harness ran early, never a retry or a skip
-- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass
+- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass, and ten consecutive runs of story 60 (`npm run test:stories -- -g "pauses admin changes"`) under load pass
 - `claude-docs/testing/e2e.md`'s "Where a run's time goes (M11.18)" section stops calling this failure unexplained once it is explained
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
