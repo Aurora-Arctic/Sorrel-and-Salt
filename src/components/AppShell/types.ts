@@ -20,3 +20,8 @@ export interface SiteLink {
 export interface SiteNavProps {
   links: readonly SiteLink[];
 }
+
+export interface AddIngredientButtonProps {
+  viewer: ShellViewer;
+  workspaces: readonly ShellWorkspace[];
+}

@@ -184,3 +184,15 @@
     display: inline;
   }
 }
+
+// What an Add Ingredient save left behind, beside the button: a short line,
+// cut off with an ellipsis rather than pushing the bar's controls out at a
+// phone's width.
+.app-shell__saved {
+  min-width: 0;
+  overflow: hidden;
+  color: $text-primary;
+  font-size: 0.875rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

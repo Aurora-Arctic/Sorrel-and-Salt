@@ -64,7 +64,7 @@ one's own id) throws.
   under `$shell-tablet-width` the bar has no room for them beside the brand,
   Add Ingredient, the account button and the disc, so the same links are
   offered in the account panel.
-- **Add Ingredient** is a real `button`, disabled until M8.16 builds the form.
+- **Add Ingredient** is `add-ingredient-button.tsx`, a client part: a modal for a coven, a link to the compendium’s add dialog on an admin page, nothing without a coven to write to (claude-docs/components/modal.md, "Add Ingredient").
   Its target will follow the area: a coven page adds to that coven, an admin
   page to the compendium, anywhere else to the viewer's only coven or a choice.
 - **An unverified viewer** gets the brand as text, the account menu with Sign
@@ -115,7 +115,7 @@ bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`.
 ## Testing
 
 `tests/components/AppShell/index.test.tsx` covers who sees the Admin and Your
-Coven links (a curator or an admin does; a verified member sees the rest of the bar and not these), the brand's target, Add Ingredient being disabled, the unverified
+Coven links (a curator or an admin does; a verified member sees the rest of the bar and not these), the brand's target, Add Ingredient’s target, the unverified
 viewer's bar, the skip link's target, and the viewer's invitation count reaching
 the account menu's link. `tests/lib/shell-home.test.ts` and
 `tests/lib/viewer.test.ts` cover the two helpers, the latter including the count

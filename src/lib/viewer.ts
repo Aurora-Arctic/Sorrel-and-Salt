@@ -40,10 +40,13 @@ export const viewerOf = cache(
       },
       // Alphabetical: the service's order is the database's, which looks random.
       workspaces: memberships
-        .map(({ role, workspace: { slug, name } }) => ({
+        .map(({ role, workspace: { id, slug, name } }) => ({
+          id,
           slug,
           name,
           canReadMembers: rolePermits(role, { member: ['read'] }),
+          // The statement createWorkspaceIngredient asserts, so the button never offers a coven the save would refuse.
+          canWrite: rolePermits(role, { ingredient: ['create'], inventory: ['update'] }),
         }))
         .sort(byCovenName),
     };

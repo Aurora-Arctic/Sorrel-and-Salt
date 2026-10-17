@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { covenHome, shellHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
+import AddIngredientButton from './add-ingredient-button';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
@@ -59,15 +60,8 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           )}
           {viewer.verified && links.length > 0 && <SiteNav links={links} />}
           <div className="app-shell__end">
-            {/* The shell's one global action. Disabled until M8.16 builds the
-                form. Its target follows the area when it does: a coven page adds
-                to that coven, an admin page to the compendium, anywhere else to
-                the viewer's only coven or a choice among them. */}
-            {viewer.verified && (
-              <button type="button" className="btn app-shell__add" disabled>
-                Add Ingredient
-              </button>
-            )}
+            {/* The shell’s one global action; its target follows the area (add-ingredient-button.tsx). */}
+            <AddIngredientButton viewer={viewer} workspaces={workspaces} />
             <AccountMenu
               name={viewer.name}
               verified={viewer.verified}

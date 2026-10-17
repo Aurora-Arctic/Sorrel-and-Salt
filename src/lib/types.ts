@@ -248,7 +248,10 @@ export interface ShellViewer {
 
 /** One coven the viewer belongs to, as the shell's switcher and brand link need it. */
 export interface ShellWorkspace {
+  id: string;
   slug: string;
   name: string;
   canReadMembers: boolean;
+  /** The viewer’s role there may create ingredients: false lists the coven in Add Ingredient, disabled. */
+  canWrite: boolean;
 }

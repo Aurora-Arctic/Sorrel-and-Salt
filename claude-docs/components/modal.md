@@ -347,6 +347,21 @@ Coven. `ModalButtonProps` (`types.ts`):
 The focus moves only after a close, never on the first render, so the page
 loads with the focus where the browser puts it.
 
+### Add Ingredient
+
+The shell’s Add Ingredient button (`AppShell/add-ingredient-button.tsx`, M8.16)
+is a `ModalButton` holding an `IngredientForm` for a coven. Its target
+follows the address: the coven the path names, else the viewer’s only coven
+they may write to. A coven the viewer may only read is never the target; with
+several covens, a native Coven select above the form lists them all, the
+view-only ones disabled, and a change remounts the form, since what was typed
+belonged to the other coven. With nowhere to write the button is not drawn.
+After Save Ingredient the modal closes and the button leaves a status beside
+it, since the form’s own Saved notice goes with the form. On an admin page a
+curator gets a plain link to `/admin/compendium?new` instead: the admin
+layout’s route-modal provider sits below the shell, so the button cannot open
+the dialog at once, and the page draws it for a direct request.
+
 ## RouteModal
 
 A modal opened by its page's address, `?new` or `?edit=<slug>`: the shape

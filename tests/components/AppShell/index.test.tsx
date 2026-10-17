@@ -21,8 +21,14 @@ const MEMBER: ShellViewer = {
 const ADMIN: ShellViewer = { ...MEMBER, name: 'Fixture Admin', canCurate: true };
 const UNVERIFIED: ShellViewer = { ...MEMBER, verified: false };
 const COVENS: ShellWorkspace[] = [
-  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
-  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
+  { id: 'w1', slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canWrite: true },
+  {
+    id: 'w2',
+    slug: 'testwort-circle',
+    name: 'Testwort Circle',
+    canReadMembers: true,
+    canWrite: true,
+  },
 ];
 
 const shell = (viewer: ShellViewer, workspaces: ShellWorkspace[] = COVENS) =>
@@ -103,10 +109,10 @@ describe('AppShell', () => {
     expect(screen.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/coven');
   });
 
-  it('keeps Add Ingredient a real button, disabled until its form exists', () => {
+  it('offers a member of a coven an enabled Add Ingredient button', () => {
     shell(MEMBER);
 
-    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeEnabled();
   });
 
   it('leaves an unverified account the brand as text, the account menu and the theme switch', () => {
