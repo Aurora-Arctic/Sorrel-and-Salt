@@ -137,7 +137,7 @@ export function NoteMarks({
               href={`#${noteId(number)}`}
               aria-label={`Note ${number}`}
             >
-              {number}
+              #{number}
             </a>
           ))}
         </sup>
