@@ -25,15 +25,19 @@ $side-column: calc(#{space(8)} * 5);
 }
 
 // From a tablet up, the jump menu stands in a sticky column to the left of
-// the content, which takes the rest of the frame. The menu's width, the
-// breakpoint and the sticky offset are `.page-with-nav`'s
-// (`_primitives.scss`), so the two layouts' menus agree. The children are
-// the head, the menu, Details and the forms; the menu spans the last two
-// rows, so it sticks for the length of the page.
+// the content, which takes the rest of the frame. The breakpoint and the
+// sticky offset are `.page-with-nav`'s (`_primitives.scss`), so the two
+// layouts' menus agree. The menu's width is that layout's 12rem while the
+// article is wide, and a share of the article below that, so the menu
+// gives up room with the content on a smaller desktop rather than holding
+// its width while the text alone narrows (the owner's call, M8.19); it
+// never goes narrower than its longest label. The children are the head,
+// the menu, Details and the forms; the menu spans the last two rows, so it
+// sticks for the length of the page.
 @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
   .ingredient-entry--with-nav {
     display: grid;
-    grid-template-columns: calc(#{space(8)} * 3) minmax(0, 1fr);
+    grid-template-columns: minmax(min-content, min(calc(#{space(8)} * 3), 16%)) minmax(0, 1fr);
     align-content: start;
 
     > :not(.page-nav) {
