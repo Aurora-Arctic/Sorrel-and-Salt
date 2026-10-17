@@ -144,12 +144,13 @@ export async function ValuePage({ kind, searchParams }: ValuePageProps): Promise
         own?.colorDark && own.colorLight
           ? { colorDark: own.colorDark, colorLight: own.colorLight }
           : undefined,
+      groupIcon: own?.icon,
       editHref: groupedValuesHref(kind, here, { edit: node.slug }),
       editHeading: editHeading(kind, node, groupsById),
     };
   });
   const closeHref = groupedValuesHref(kind, here);
-  const choices = groups.map(({ id, name }) => ({ id, name }));
+  const choices = groups.map(({ id, name, icon }) => ({ id, name, icon }));
 
   return (
     <>

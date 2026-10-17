@@ -208,6 +208,40 @@ describe('ComboboxTypeahead', () => {
     expect(box()).not.toHaveAccessibleDescription(/Fixture Isle/);
   });
 
+  // M12.7: a form group's icon leads the chosen label, as the select-only
+  // box's closed value draws it; typed over, the box is being typed in.
+  it('draws the chosen choice icon before the text once the box reads its label, never while typed', () => {
+    const [marked, ...rest] = TRADITIONS;
+    function Marked() {
+      const [value, setValue] = useState('');
+      return (
+        <ComboboxTypeahead
+          id="tradition"
+          label="Tradition"
+          value={value}
+          onChange={setValue}
+          choices={[{ ...marked, icon: <svg data-mark="fixtural" /> }, ...rest]}
+        />
+      );
+    }
+    render(<Marked />);
+    const control = () => box().closest('.combobox__control') as HTMLElement;
+
+    fireEvent.click(box());
+    const row = screen.getByRole('option', { name: 'Fixtural' });
+    expect(row.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
+    expect(screen.getByRole('option', { name: 'Mockish' }).querySelector('svg')).toBeNull();
+    expect(control().querySelector('[aria-hidden="true"] [data-mark]')).toBeNull();
+
+    fireEvent.click(row);
+    expect(box()).toHaveValue('Fixtural');
+    expect(control().querySelector('[aria-hidden="true"] [data-mark]')).not.toBeNull();
+    expect(box()).toHaveAccessibleName('Tradition');
+
+    type('fixtural');
+    expect(control().querySelector('[aria-hidden="true"] [data-mark]')).toBeNull();
+  });
+
   // A filter applies a choice, not each letter typed (MB.115): it hears the
   // value once a pick, the clear or leaving the box settles it.
   it('settles on a pick, on its clear and on leaving the box, never while typed', () => {

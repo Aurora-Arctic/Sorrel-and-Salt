@@ -56,6 +56,8 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
   onPick,
   onEdit,
   qualifier,
+  icon,
+  typedIcon,
   offerTyped,
 }: SuggestFieldProps<O>): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
@@ -80,6 +82,8 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
         }}
         suggestions={suggestions}
         qualifier={qualifier}
+        icon={icon}
+        typedIcon={typedIcon}
         offerTyped={offerTyped}
         placeholder={placeholder}
         inputRef={field.ref}

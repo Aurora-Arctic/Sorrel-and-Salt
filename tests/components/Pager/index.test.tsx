@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ListFrame, { ListBody } from '@/components/ListFrame';
 import Pager from '@/components/Pager';
 import { Navigating } from '../../support/navigating';
+import { stubLocationAssign } from '../../support/location';
 
 // A soft end navigates through the App Router; Vitest hoists the mock above the imports.
 const router = vi.hoisted(() => ({ push: vi.fn() }));
@@ -128,7 +129,7 @@ describe('Pager, once an end is followed', () => {
   });
 
   it("loads a plain end's page whole, a status in place of the list until the browser leaves, and the list back when Back restores the page from the cache", () => {
-    vi.stubGlobal('location', { ...window.location, assign });
+    stubLocationAssign(assign);
     render(paged(<Pager previousHref="/list?before=b" nextHref="/list?after=a" />));
 
     fireEvent.click(end('Next'));

@@ -23,7 +23,7 @@ const SESSION = { userId: 'u1', role: 'user' } as const;
 const ME = { name: 'Fixture Member', canCreateWorkspace: true, emailVerified: true };
 const membership = (slug: string, name: string, role = 'member') => ({
   role,
-  workspace: { slug, name },
+  workspace: { id: `id-${slug}`, slug, name },
 });
 
 beforeEach(() => {
@@ -98,9 +98,33 @@ describe('viewerOf', () => {
     const { workspaces } = await viewerOf();
 
     expect(workspaces).toEqual([
-      { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
-      { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: false },
+      {
+        id: 'id-fixture-coven',
+        slug: 'fixture-coven',
+        name: 'Fixture Coven',
+        canReadMembers: true,
+        canWrite: true,
+      },
+      {
+        id: 'id-testwort-circle',
+        slug: 'testwort-circle',
+        name: 'Testwort Circle',
+        canReadMembers: false,
+        canWrite: false,
+      },
     ]);
+  });
+
+  it('asks the role for the statement the ingredient save asserts, and reads a viewer as unable to write', async () => {
+    membershipsOf.mockResolvedValue([[membership('testwort-circle', 'Testwort Circle', 'viewer')]]);
+
+    const { workspaces } = await viewerOf();
+
+    expect(rolePermits).toHaveBeenCalledWith('viewer', {
+      ingredient: ['create'],
+      inventory: ['update'],
+    });
+    expect(workspaces[0]?.canWrite).toBe(false);
   });
 
   it('refuses to draw a shell from a refused lookup', async () => {

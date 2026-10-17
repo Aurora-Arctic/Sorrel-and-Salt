@@ -20,3 +20,13 @@ export interface SiteLink {
 export interface SiteNavProps {
   links: readonly SiteLink[];
 }
+
+export interface AddIngredientButtonProps {
+  viewer: ShellViewer;
+  workspaces: readonly ShellWorkspace[];
+}
+
+/** Somewhere a new ingredient can go: the compendium, or a coven the viewer may write to. */
+export type AddDestination =
+  | { kind: 'compendium'; key: string; name: string }
+  | { kind: 'coven'; key: string; name: string; workspace: ShellWorkspace };

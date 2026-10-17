@@ -60,6 +60,7 @@ export function ComboboxTypeahead({
           value: choice.label,
           label: choice.qualifier ? `${choice.label} (${choice.qualifier.text})` : undefined,
           key: choice.value,
+          icon: choice.icon,
         })),
       pending: false,
     }),
@@ -115,6 +116,8 @@ export function ComboboxTypeahead({
       // The chosen choice's qualifier, once the box reads its label as
       // written: mid-typing in another case the box is still being typed in.
       qualifier={selected && text === selected.label ? selected.qualifier : undefined}
+      // And its icon, ahead of the text, under the same reading.
+      icon={selected && text === selected.label ? selected.icon : undefined}
       offerTyped={false}
       highlightFirst
       noun="choice"

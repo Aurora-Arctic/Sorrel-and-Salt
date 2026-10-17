@@ -93,6 +93,7 @@ export function CategoryField({ at, action }: SharedFieldProps): ReactElement {
       error={<FieldError id={errorId} message={message} />}
       status={isError ? 'The categories could not be loaded.' : undefined}
       action={action}
+      boxName={at ? `${at}.drafts.categoryIds` : 'drafts.categoryIds'}
     />
   );
 }

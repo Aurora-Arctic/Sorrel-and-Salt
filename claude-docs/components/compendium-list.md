@@ -17,18 +17,19 @@ resolves through, rather than one read per row.
 
 `CompendiumListProps` (`types.ts`):
 
-| Prop           | What it is                                                              |
-| -------------- | ----------------------------------------------------------------------- |
-| `entries`      | This page's `CompendiumListEntry` rows, in the service's order          |
-| `filter`       | `{ query, form, nomenclature, withoutReferences }`, the filter as asked |
-| `forms`        | The curated forms the Form box offers, `{ name }` each, in name order   |
-| `previousHref` | The page before this one, absent on the first                           |
-| `nextHref`     | The page after this one, absent on the last                             |
-| `position`     | `{ page, pages }`, the pager's "Page X of Y"                            |
+| Prop           | What it is                                                                             |
+| -------------- | -------------------------------------------------------------------------------------- |
+| `entries`      | This page's `CompendiumListEntry` rows, in the service's order                         |
+| `filter`       | `{ query, form, nomenclature, categories, categoryMode, withoutReferences }`, as asked |
+| `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each     |
+| `forms`        | The curated forms the Form box offers, `{ name }` each, in name order                  |
+| `previousHref` | The page before this one, absent on the first                                          |
+| `nextHref`     | The page after this one, absent on the last                                            |
+| `position`     | `{ page, pages }`, the pager's "Page X of Y"                                           |
 
 A `CompendiumListEntry` is the entry's id, name and slug, its
-`canonicalName`, `null` for none, its `forms` (`string[]`, the entry's live
-forms' text in form order, `[]` for none), and `editHref`. In the
+`canonicalName`, `null` for none, its `forms` (`CompendiumListForm[]`, `{ name, icon }` for each of the entry's live
+forms in form order, `[]` for none; `icon` is the form's group's icon name, `null` for a form with none, and the Form column draws each as `<FormIcon name={icon} />` before its name, M12.7), and `editHref`. In the
 filter, `query`, `form` and `nomenclature` are blank for none, `form` is a
 form's text, and `nomenclature` is otherwise a `NomenclatureKind`.
 
@@ -43,8 +44,9 @@ different groups, so the page offers each name once, whatever its case.
 
 - **The filter is a GET form to `/admin/compendium`** (`COMPENDIUM_PATH`, `href.ts`; MB.178), as the
   category list's is: named "Filter the Compendium" inside a `<search>`
-  landmark, a search box labelled "Name" (`query`) with its own submit, a
-  magnifier named Search (`SearchField`, [`field.md`](field.md)), a type-ahead labelled
+  landmark, a type-ahead labelled "Name" (`query`,
+  [`ingredient-search.md`](ingredient-search.md)) with its own submit, a
+  magnifier named Search, inside the box at its start with the clear alone at its end and no chevron, then a type-ahead labelled
   "Form" (`form`), a dropdown labelled "Classification"
   (`nomenclature`), a native `<select>` from the server and the select-only
   box once hydrated, as every closed set in the row is, a switch labelled "Without
@@ -64,9 +66,13 @@ different groups, so the page offers each name once, whatever its case.
   the Clear link and the soft navigation; Clear is drawn while the page
   shows a name, a form, a classification or No Refs, and opens
   `/admin/compendium` with none, and is not drawn while it shows none,
-  whatever the fields hold. M8.10 turns the Name box into its
-  typeahead, a picked row opening the entry's `?edit=` modal, with this form
-  kept underneath.
+  whatever the fields hold. The Name box is `IngredientSearch`'s typeahead
+  ([`ingredient-search.md`](ingredient-search.md)): a picked row opens that
+  entry's `?edit=` modal over the filter as shown, without applying the
+  text typed, and Enter or the magnifier applies it. The Form, Classification
+  and No Refs fields sit in its slot and carry the typed name through
+  `useSearchText`. The form is still a GET form underneath, so it filters
+  before hydration.
 - **Form is a type-ahead over the curated forms once hydrated**, the
   curated lists' group filter's pattern
   ([`grouped-value-list.md`](grouped-value-list.md)), the owner's call in
@@ -93,7 +99,7 @@ different groups, so the page offers each name once, whatever its case.
   change and No Refs on its press, each from the filter shown with that one
   field changed; Form once a choice settles, a pick, its clear or leaving
   the box, when the settled form differs from the one shown, never while it
-  is typed; and the name on the magnifier or Enter. Each carries the name
+  is typed; and the name on the magnifier, Enter or its clear. Each carries the name
   typed but not yet searched, trimmed. Only the name and the Form box's text
   are state; Classification is uncontrolled (`defaultValue`) and No Refs
   takes `defaultChecked`. With JavaScript, each builds the address with
@@ -111,7 +117,7 @@ different groups, so the page offers each name once, whatever its case.
 - **`next/link`, not a plain anchor**, as the category list's Edit: opening
   the modal is a soft navigation, and the page calls the admin guard on every
   render.
-- **The Form column lists the entry's forms**, joined: "Herb, Oil".
+- **The Form column lists the entry's forms**, joined: "Herb, Oil". Each form is one unit, its icon then its name with the comma after it, held on one line (`.compendium-list__form`): the icon sits a quarter of an em from its own name, and the forms sit in a wrapping flex row (`.compendium-list__forms`) with a wider gap, `space(2)`, between them, so an icon never reads as the previous form's (the owner's call, 2026-10-16). The gap is the row's, not a margin on each form, so a form that wraps onto a new line starts at the cell's edge like the first (the owner's call, 2026-10-17).
 - **None is an em dash.** A null formal name, or an entry with no form, shows
   "—" rather than an empty cell: the Unknown list tells an entry with an
   unconfirmed formal name from one with none by this column.
@@ -140,7 +146,7 @@ different groups, so the page offers each name once, whatever its case.
 None of its own; the stylesheet went in MB.115. The list's root is
 `.list-frame`, its filter the `.filter-row` `FilterForm` draws, on the
 `.field`, `.input`, `.select` and `.switch` primitives and
-`SearchField`'s `.search-field` ([`styling.md`](../styling.md), "Form fields"). The table is
+the Name box's Combobox ([`styling.md`](../styling.md), "Form fields"). The table is
 [`StackTable`](data-table.md): the `.data-table` primitive with the
 `--stack` modifier, banded on `$surface-card` with a 1px `$text-muted`
 hairline under the header row at desktop width, and each row a card once
@@ -173,7 +179,7 @@ drawn as a native select on the server and as a type-ahead once hydrated,
 No Refs found as a `switch`, sent by the server-drawn form and
 turned by a press before hydration,
 the Search submit in the server's markup, the address each field applies (the
-search on Search or Enter, Classification on its change, No Refs on its
+search on Search, Enter or the Name clear, Classification on its change, No Refs on its
 press, the Form box on a pick, its clear and leaving it, never while typed,
 each carrying the name typed), the loading state while the filtered list
 loads (the list's status, the row `aria-busy` and its controls
@@ -187,4 +193,4 @@ loading state, its focus, its
 reset and Clear; paging is Pager's. `tests/app/(shell)/admin/compendium/page.test.tsx`
 covers the page's side: `?form=` read trimmed into the list and its count,
 blank as none, kept on every Edit, the pager, Add Ingredient and the
-redirect, and the forms read past their first page, each name once.
+redirect, and the forms read past their first page, each name once. The Categories picker (M8.11) is covered in the component test (entries shown, an unknown slug not shown, hidden inputs, repeated slugs applied and removed, the typed name carried, other controls keeping the categories, one announcement, focus kept) and, on the page, by slugs mapped to ids, an unknown slug dropped, and the categories read past their first page.

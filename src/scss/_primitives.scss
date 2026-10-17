@@ -194,6 +194,15 @@
     font-size: type-size('caption');
   }
 
+  // A size between the full button and `.btn--small` (the owner's call,
+  // M8.16), for the shell's bar, where the full one is too tall and the small
+  // one too slight: the label stays at `.btn`'s size and the edge at its
+  // weight, and only the height comes down, off the field's.
+  .btn--medium {
+    min-height: 0;
+    padding: space(1) space(4);
+  }
+
   // A save in flight, the owner's call for every Save button (M5.6): a ring
   // in the button's ink, open on one side so its turn reads, ahead of the
   // label, the button `aria-busy`. Slowed rather than stopped where motion is
@@ -238,25 +247,7 @@
   // disabled button at all.
   .btn:disabled,
   .btn[aria-disabled='true'] {
-    background-color: transparent;
-    border-color: $text-muted;
-    border-style: dashed;
-    color: $text-muted;
-    opacity: $opacity-disabled;
-    cursor: not-allowed;
-    box-shadow: none;
-
-    &:hover,
-    &:focus-visible {
-      background-color: transparent;
-      border-color: $text-muted;
-      color: $text-muted;
-      box-shadow: none;
-    }
-
-    svg {
-      opacity: 0.5;
-    }
+    @include btn-disabled;
   }
 
   // The one filled button in a view: its primary action. Its hover is a
@@ -1107,6 +1098,41 @@
     margin-inline-start: auto;
   }
 
+  // A form's Undo and Redo (M12.9): two small quiet buttons joined as one pair
+  // (M12.10): no gap, the second laid over the first's border so the seam is
+  // one line, the inner corners square and the outer ones `.btn`'s. In a
+  // modal the pair sits at the end of the header slot's row, stretched to the
+  // row's height so the icon buttons come out as tall as a text button beside
+  // them; elsewhere, at the start of the form. Each button is wrapped in an
+  // `IconTip`, so the rules reach through it.
+  .form-history {
+    display: inline-flex;
+    align-self: flex-start;
+    margin-inline-start: auto;
+
+    .icon-tip + .icon-tip {
+      margin-inline-start: -1px;
+    }
+
+    .icon-tip:not(:last-child) .btn {
+      border-start-end-radius: 0;
+      border-end-end-radius: 0;
+    }
+
+    .icon-tip:not(:first-child) .btn {
+      border-start-start-radius: 0;
+      border-end-start-radius: 0;
+    }
+
+    // A half that is hovered or focused rises over its neighbour, so its
+    // border and focus ring are not cut by the overlap.
+    .btn:hover,
+    .btn:focus-visible {
+      position: relative;
+      z-index: 1;
+    }
+  }
+
   .field {
     display: flex;
     flex-direction: column;
@@ -1631,6 +1657,104 @@
       scale: 0.3;
       background-color: $text-muted;
     }
+  }
+
+  // The strip layout of a radio group (RadioGroupField `layout="strip"`): one
+  // bar of icon-only segments, the chosen one filled with the accent and its
+  // name printed beneath. The native radio stays, visually hidden, so the
+  // arrow keys, the checked state and the label all work as in the list; the
+  // segment carries the state by its fill as well as the name beneath
+  // (WCAG 1.4.1). Both classes, so it outranks `.fieldset`'s own column
+  // direction below.
+  .fieldset.radio-group--strip {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: space(2);
+  }
+
+  // Not `overflow: hidden` for the rounded ends, which would clip each
+  // segment's name tip above the bar: the end segments round their own.
+  .radio-strip {
+    display: inline-flex;
+    border: 1px solid $text-muted;
+    border-radius: radius('control');
+    background-color: $surface-card;
+
+    // Each segment sits in its IconTip's wrapper, so the divider and the
+    // rounded ends are counted on the wrappers.
+    > :not(:first-child) .radio--segment {
+      border-inline-start: 1px solid $text-muted;
+    }
+
+    > :first-child .radio--segment {
+      border-start-start-radius: calc(#{radius('control')} - 1px);
+      border-end-start-radius: calc(#{radius('control')} - 1px);
+    }
+
+    > :last-child .radio--segment {
+      border-start-end-radius: calc(#{radius('control')} - 1px);
+      border-end-end-radius: calc(#{radius('control')} - 1px);
+    }
+  }
+
+  .radio--segment {
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: 3rem;
+    block-size: 3rem;
+    @include theme-transition(background-color, color);
+
+    // Hidden but still focusable and reachable, as a screen-reader-only
+    // control is: its own ring is drawn on the segment by :has below.
+    input {
+      @include visually-hidden;
+
+      inline-size: 1px;
+      block-size: 1px;
+      pointer-events: none;
+    }
+
+    // Half the segment: the icons are a line drawing, so they need the room
+    // to read (the owner's call, 2026-10-16). A form icon is 1.25em of its
+    // line, so this line's size is set to bring it to 1.5rem.
+    .radio__segment-icon {
+      display: flex;
+      font-size: 1.2rem;
+      line-height: 1;
+    }
+
+    &:hover {
+      background-color: color-mix(in srgb, $accent 12%, $surface-card);
+    }
+
+    &:has(input:checked) {
+      background-color: $accent;
+      color: $text-on-color;
+    }
+
+    &:has(input:focus-visible) {
+      @include focus-ring;
+    }
+
+    &:has(input:disabled) {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    @include forced-colors {
+      &:has(input:checked) {
+        background-color: Highlight;
+        color: HighlightText;
+      }
+    }
+  }
+
+  .radio-strip__chosen {
+    margin: 0;
+    color: $text-muted;
+    font-size: type-size('caption');
   }
 
   .radio__text {

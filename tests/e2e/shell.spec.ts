@@ -119,7 +119,8 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
     'page',
   );
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(ALPHA.name);
-  await expect(banner.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeDisabled();
+  // A member writes to the coven, so the bar offers Add Ingredient (M8.16).
+  await expect(banner.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeEnabled();
 
   const account = banner.getByRole('button', { name: 'Fixture Person' });
   await expect(account).toHaveAttribute('aria-expanded', 'false');

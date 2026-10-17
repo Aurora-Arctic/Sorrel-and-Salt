@@ -4,7 +4,10 @@ The compendium is the public surface (MB.80), so its reads take no proof and
 no session. Three services in `ingredients`' `services/compendium.ts` and one
 in `vocabulary`'s `services/ingredient-form-values.ts` sit over four
 finders, the three that read the compendium tier named on
-[the tier seam](../modules.md#the-tier-seam).
+[the tier seam](../modules.md#the-tier-seam). M12.3 adds a fourth
+`ingredients` service, `compendiumFacets` in `services/ingredient-facets.ts`,
+over `findCompendiumFacets` (below), which parses its filter through
+`CompendiumFilter` as `listCompendium` does.
 
 **`findCompendiumPage(filter, page)`** is one keyset page of the compendium
 under an `IngredientFilter`, every part optional and absent meaning no filter.
@@ -158,11 +161,14 @@ precision`, and while the keyset casts its sort back to `real`, the score
   branch. `tests/db/repository/ingredients.test.ts` proves it by the rows
   found: a typo scoring exactly 0.5, below pg_trgm's own 0.6, is matched.
 - **`categoryIds`** is AND: one correlated `existsIn(ingredient_categories, …)`
-  per id, so an entry must carry every one. OR is M8.12's argument to add. A
+  per id, so an entry must carry every one. `categoryMode: 'any'` (M8.12) swaps
+  the per-id arms for one `inArray` arm, so an entry carrying any of them
+  matches; an empty list is no filter in either mode. A
   pair counts on the entry itself, `variant_id IS NULL`, or on a live form: a
   form's pair carries the `ingredient_id` too (MB.217), so the arm matches the
   union, and since the table is hard-deleted a soft-deleted form's pairs stay
   behind, so the arm reads the form's liveness through a nested `EXISTS`.
+  The category itself must be live too, and so must its group (below).
 - **Within one kind of filter, any value matches; across kinds, every kind
   must** (M11.22). The four list filters below, `forms`, `celestialBodies`,
   `zodiacSigns` and `deityIds`, each find an entry holding _any one_ of the
@@ -201,6 +207,13 @@ precision`, and while the keyset casts its sort back to `real`, the score
   correlated `EXISTS`, answered by `ingredient_deities_deity_id_idx`, so an
   entry linking two of them is one row. A deity's delete passes a one-item
   list to find the entries holding it (MB.132).
+- **A deleted deity or category matches nothing** (M12.3). Both filters
+  also check that the deity or category the link points to is live, and so
+  is its group (its tradition, for a deity), through `inLiveGroup`, the same
+  condition the facet counts' join reads. A curator cannot delete one a
+  compendium entry still holds, but a coven's own entry keeps its link
+  through the delete, so without the check the coven's list would still show
+  that entry under a value its facet counts at 0.
 - **`toxic`** reads M11.21's two yes/no flags together (M11.22). `toxic`
   lists an entry whose own `ingredients.toxic` is on, or that has a live
   variant whose `ingredient_variants.toxic` is on; `not_toxic` lists the
@@ -236,6 +249,62 @@ code points). One letter shares a trigram with half the compendium at 0.5, so
 it would filter and rank by noise; below the minimum the list is a browse,
 unfiltered and unranked. The finder takes whatever it is handed, one
 character included.
+
+**`findCompendiumFacets(filter)`** (M12.3) answers "how many entries would I
+see if I picked this value?" for every value of every search filter, so the
+filter panel can show a number beside each choice. It lives in
+`src/db/repository/ingredient-facets.ts` and returns a `CompendiumFacets`: seven
+lists of `{ value, count }`, one per filter kind — forms, deities, categories,
+zodiac signs, celestial bodies, elements and toxic — and the No Refs count. The
+rules:
+
+- **A value's count is what the list would hold with that value as the only
+  choice of its kind**, the rest of the filter unchanged. So with `forms: ['Oil']`
+  and `toxic: 'toxic'` chosen, Resin's count is how many toxic entries come as
+  a resin, not how many come as both an oil and a resin. `tests/db/repository/ingredient-facets.test.ts`
+  checks each count against `findCompendiumCount` under eight filters.
+- **Categories under `categoryMode: all` are the exception.** There an entry
+  needs every chosen category, so each category is counted together with the
+  ones already chosen: it says how many entries picking it as well would leave.
+  Under `any` the categories are counted like every other kind.
+- **The fixed vocabularies come back whole.** Every live curated zodiac sign
+  and celestial body, by name, every element in `INGREDIENT_ELEMENTS`' order,
+  and `toxic` then `not_toxic`, zeros included, so the panel can list them
+  all.
+- **The open-ended kinds list only what counts.** Forms, deities and
+  categories list each value some entry carries, plus every chosen value at
+  zero if nothing carries it, so a choice never vanishes from the panel. They
+  sort most entries first, then by value in character-code order, the same
+  on every server. Deities and categories are named by id.
+- **A form is spelled as its curated row,** when a live curated form folds
+  to the same text, else as most of its counted variants spell it, ties going
+  alphabetically. Forms are grouped by the same case- and space-folding the
+  `forms` filter matches with, so `Oil` and `oil` are one form.
+- **The No Refs switch gets a count too, on the compendium only.**
+  `withoutReferences` is how many entries cite no live reference, on
+  themselves or on a live form, under the rest of the filter. The filter's own
+  `withoutReferences` is set to true for it, so the number is the same
+  whether the switch is on or off, and it reads through `citesNowhere` in
+  `compendiumList` like every other kind. An entry whose only reference has
+  been soft-deleted counts as citing nothing. The result type is
+  `CompendiumFacets`, `IngredientFacets` plus this number; a coven's list
+  has no such switch, so `findWorkspaceIngredientFacets` returns plain
+  `IngredientFacets`. Classification (`nomenclature`) gets no count: it is
+  leaving the search.
+- **Nothing soft-deleted counts** (a soft delete marks a row deleted rather
+  than removing it): not a deleted entry, variant, deity link or category
+  pair, and not a deleted deity, category, sign or body either.
+
+**How it reads.** Each kind is one grouped query (`GROUP BY`), built through
+`selectFrom`'s aggregate form and the list's own conditions from
+`compendiumList`, so a count cannot match differently from the list it sits
+beside. They run at once with `Promise.all`, so a read costs eight
+queries for the compendium (the seven kinds and the No Refs count) and seven
+for a coven, whatever the filter. With a search, each runs in its own transaction
+that sets the 0.5 threshold, as the list does. Signs and bodies use a right
+join from the vocabulary table, with the entries' conditions in the join, so a
+sign no entry lists still comes back at zero. Elements and toxic need no
+join: one query counts every setting at once with `count(*) filter (where …)`.
 
 **`findOneIngredient(memberships, id)`** is one live row in the compendium or
 in a coven one of the proofs names, in the shape of `findManyOfIngredients`. No

@@ -543,12 +543,12 @@ Four variants:
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
-**One size modifier, `.btn--small`**, which composes with any variant: half
+**Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant. `.btn--small` has half
 the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
 in place of `.btn`'s 1.6px, which reads heavy at this size, the `caption`
 type size, and a `space(2)` gap. It is for a compact strip that the full button would make taller, such
 as a banner or a table row. The impersonation banner's Stop is the first
-(MB.53).
+(MB.53). `.btn--medium` sits between it and the full button: the same label size and edge as `.btn`, no `$control-height` minimum, and `space(1) space(4)` of padding. The shell's Add Ingredient wears it with `.btn--solid` (M8.16).
 
 **A save in flight is `aria-busy` with a `.spinner`** (M5.6, the owner's call
 for every Save button). The spinner is a 1em ring in the button's own ink,
@@ -905,7 +905,7 @@ column's cell names its column in a `data-label` attribute:
   `row`, `columnheader` and `cell`. WebKit drops a table's meaning once
   `display` changes on its parts, so a screen reader in Safari would read the
   cards as loose text; the explicit roles put the meaning back. They are the
-  roles the elements have already, so nothing else changes, and a jsdom test's
+  roles the elements have already, so nothing else changes, and a happy-dom test's
   `getByRole('cell')` finds a `td` either way. Every admin list's table is
   [`StackTable`](components/data-table.md), which spreads them from one
   helper, `src/lib/table-roles.ts`: `tableRole('row')` for a part, and
@@ -1071,8 +1071,10 @@ heavier than the reverse; light reverts to the browser default.
   window); `tip-bubble-open` (a bubble's open state alone, for one opened
   by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
   turns `$text-primary` when pointed at or focused), `icon-button-edit`
-  and `icon-button-remove` (the accent and the wax); `disclosure-chevron`
-  (a chevron that turns over while its section is open); `floating-panel`
+  and `icon-button-remove` (the accent and the wax); `chevron-flip` (the
+  account menu's turn-over on open, eased and still under reduced motion,
+  which every chevron shares, M8.16) and `disclosure-chevron` (a section's
+  chevron, sized and inked, with that flip); `floating-panel`
   (the card surface, floating shadow and muted edge a list or summary
   floats on); `field-box` (the edge, ground and height a field and the
   admin menu's summary share); `arrived` (the fade a list or tab's new

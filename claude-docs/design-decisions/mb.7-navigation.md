@@ -82,7 +82,7 @@ Option C's risks were each drawn two ways, and the owner picked one for each.
 11. **Copy says Coven** (below).
 12. **The account menu names the user once,** on its button; its panel opens on Your Account, then Sign Out.
 13. **One section nav component** serves the coven and the admin areas, with an inline stroke icon per section. `AdminNav`'s `<details>` jump menu goes.
-14. **The theme toggle keeps its feel:** the knotwork crescent and sun on the accent disc, as a 32px disc in the bar and a labelled row in the account panel on a phone. Never a plain glyph. _(M10.32, the owner's call, 2026-10-13: the disc stays in the bar at every width and the panel holds no theme row.)_
+14. **The theme toggle keeps its feel:** the knotwork crescent and sun on the accent disc, as a 32px disc in the bar and a labelled row in the account panel on a phone. Never a plain icon. _(M10.32, the owner's call, 2026-10-13: the disc stays in the bar at every width and the panel holds no theme row.)_
 
 ## The Sign-Off Adjustments
 
@@ -97,7 +97,7 @@ On 2026-10-12 the owner signed off Option C with three adjustments and no furthe
 
 §9's `AppShell` paragraph said the shell carries "the global affordances for adding and editing an ingredient from any page". It now says: one global Add Ingredient button whose target follows the area, and editing on the ingredient wherever it is shown, never inside a relational field and never in the shell. For the ingredient tasks this means:
 
-- **M8.16** builds Add Ingredient's modal and enables the shell's button; the button stays disabled until then, as M9.15's disabled buttons did.
+- **M8.16** built Add Ingredient’s modal and enabled the shell button: a modal for a coven (the one the address names, else the only one the viewer may write to), a plain link to the compendium’s add dialog on an admin page, and nothing for a viewer who may write nowhere.
 - **M8.17** builds Edit Ingredient where an ingredient appears (the ingredient detail page, a list row), not in the bar. A field that links to another ingredient never offers an edit of it.
 
 The shell also gains the account menu, the theme toggle in the bar, and the one section nav, recorded in the same paragraph.

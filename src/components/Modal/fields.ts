@@ -9,7 +9,7 @@ export const FIRST_FIELD =
 /**
  * Whether the field is shown: under no `hidden` ancestor, as a closed
  * section of the ingredient form keeps its fields, and laid out where the
- * browser can tell (jsdom cannot, and lays nothing out).
+ * browser can tell (happy-dom cannot, and lays nothing out).
  */
 const isShown = (field: HTMLElement): boolean =>
   field.closest('[hidden]') === null &&

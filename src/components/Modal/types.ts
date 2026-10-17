@@ -19,6 +19,13 @@ export interface ModalHeading {
    */
   eyebrow?: string;
   /**
+   * Where an add lands, "Whitethorn Coven" or "Compendium", drawn in the
+   * eyebrow's place over the title (M8.16, the owner's call). Spoken after the
+   * title and joined to it by a hidden "to", so the dialog's name is the
+   * phrase "Add Ingredient to Whitethorn Coven"; never with an eyebrow.
+   */
+  destination?: string;
+  /**
    * After the title, quieter, and in its accessible name: a second identifier
    * the entry's list shows, an ingredient's formal name or a deity's
    * tradition. The caller sets a binomial's italics, since only it knows the

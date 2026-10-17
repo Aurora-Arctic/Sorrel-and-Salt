@@ -292,16 +292,26 @@ test.describe('creating a coven', () => {
   test(
     'an admin, who holds the right by being one, goes to Your Coven and creates a coven',
     { tag: '@story-3' },
-    async ({ page }) => {
+    async ({ page, isMobile }) => {
       const admin = await makeUser(page, 'admin@accounts-story.test', 'Fixture Admin', {
         role: 'admin',
       });
 
       await page.goto('/admin');
-      await page
-        .getByRole('navigation', { name: 'Site' })
-        .getByRole('link', { name: 'Your Coven', exact: true })
-        .click();
+      // Below the tablet width the bar's site links are hidden and move into
+      // the account menu's panel, so a phone opens the menu to reach Your Coven.
+      if (isMobile) {
+        await page.getByRole('banner').getByRole('button', { name: 'Fixture Admin' }).click();
+        await page
+          .getByRole('banner')
+          .getByRole('link', { name: 'Your Coven', exact: true })
+          .click();
+      } else {
+        await page
+          .getByRole('navigation', { name: 'Site' })
+          .getByRole('link', { name: 'Your Coven', exact: true })
+          .click();
+      }
       await expect(page).toHaveURL(/\/coven$/);
       await page.getByRole('main').getByRole('link', { name: 'Create Coven', exact: true }).click();
       await expect(page).toHaveURL(/\/coven\/new$/);

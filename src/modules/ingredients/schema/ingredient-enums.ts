@@ -27,6 +27,7 @@ export const NAMELESS_KIND = 'none' satisfies NomenclatureKind;
 export const UNSETTLED_KIND = 'unknown' satisfies NomenclatureKind;
 
 export const INGREDIENT_ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
+export type IngredientElement = (typeof INGREDIENT_ELEMENTS)[number];
 
 // How Chicago renders a source (MB.151): the kind decides the punctuation and
 // the default italics, and which fields a row needs. `entry` is a
@@ -43,3 +44,10 @@ export type ReferenceKind = (typeof REFERENCE_KINDS)[number];
 export const TOXIC_FILTERS = ['any', 'toxic', 'not_toxic'] as const;
 
 export type ToxicFilter = (typeof TOXIC_FILTERS)[number];
+
+// Not a column: how a search combines the categories it is given (M8.12), kept
+// here so the GraphQL enum, the filter's Zod schema and the repository read
+// one list. `all` needs every category, `any` at least one.
+export const CATEGORY_MODES = ['all', 'any'] as const;
+
+export type CategoryMode = (typeof CATEGORY_MODES)[number];

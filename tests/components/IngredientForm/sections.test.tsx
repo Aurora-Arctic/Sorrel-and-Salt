@@ -1,11 +1,11 @@
-import { fireEvent, screen } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { renderInModal } from '../../support/discard-guard';
 import { control, renderWithClient, waitFor } from '../../support/ingredient-form';
-import { press, type, typeIn } from '../../support/interact';
+import { choose, press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
 
@@ -115,6 +115,27 @@ describe('IngredientForm’s sections', () => {
     expect(openSections()).toEqual(SECTIONS);
   });
 
+  // The owner's call: a control the question holds is off, not merely faded.
+  it('turns Close All off while the unsaved changes are asked about, and on again on Keep Editing', async () => {
+    offerNothing();
+    renderInModal((done) => <IngredientForm workspaceId={null} onCancel={done} />);
+    const closeAll = screen.getByRole('button', { name: 'Close All' });
+    type('Name', 'Testwort');
+    expect(closeAll).toBeEnabled();
+
+    press('Cancel');
+    // Leaving Name validates it, which lands after the press.
+    await act(async () => {});
+
+    expect(screen.getByRole('button', { name: 'Keep Editing' })).toBeInTheDocument();
+    expect(closeAll).toBeDisabled();
+
+    press('Keep Editing');
+
+    expect(screen.queryByRole('button', { name: 'Keep Editing' })).not.toBeInTheDocument();
+    expect(closeAll).toBeEnabled();
+  });
+
   it('opens every section with Open All, and closes every one with Close All while any is open', () => {
     renderForm(TESTWORT);
 
@@ -139,6 +160,26 @@ describe('IngredientForm’s sections', () => {
     // The same box, never unmounted, still holding the text.
     expect(control('Name')).toBe(name);
     expect(name).toHaveValue('Mockwort');
+  });
+
+  // The flag follows the fields' own rule: a classification pick raises the
+  // formal-name rule, which Formal Name does not draw until it is left.
+  it('flags a section only once a field in it shows its error', async () => {
+    renderForm();
+
+    type('Name', 'Testwort');
+    choose('Classification', 'Botanical');
+    fireEvent.blur(control('Classification'));
+    await waitFor(() => expect(control('Classification')).toHaveTextContent('Botanical'));
+    expect(toggle('Identity')).not.toHaveAttribute('aria-describedby');
+
+    fireEvent.focus(control('Formal Name'));
+    type('Formal Name', 'x');
+    type('Formal Name', '');
+    fireEvent.blur(control('Formal Name'));
+
+    await waitFor(() => expect(control('Formal Name')).toBeInvalid());
+    expect(toggle('Identity')).toHaveAttribute('aria-describedby');
   });
 
   it('opens a closed section a save finds the schema’s error in, its field focused, and sends nothing', async () => {

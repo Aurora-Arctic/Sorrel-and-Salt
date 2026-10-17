@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import FormIcon from '@/components/FormIcon';
 import GroupForm from '@/components/GroupForm';
 import type { GroupFormProps } from '@/components/GroupForm/types';
 import type {
@@ -18,11 +19,14 @@ import type {
   DeleteIngredientFormGroupMutationVariables,
   UpdateCategoryGroupMutation,
   UpdateCategoryGroupMutationVariables,
+  UpdateIngredientFormGroupMutation,
+  UpdateIngredientFormGroupMutationVariables,
 } from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { pairedColor } from '@/lib/group-colors';
+import { FORM_GROUP_ICONS } from '@/modules/vocabulary/schema/form-group-icons';
 import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
-import { choose, press, typeIn } from '../../support/interact';
+import { choose, press, redo, typeIn, undo } from '../../support/interact';
 import {
   expectAnswered,
   expectAskingOver,
@@ -49,6 +53,7 @@ const WARDS = {
   description: 'A group the test holds',
   colorDark: '#4e8bc2',
   colorLight: '#0c5393',
+  icon: '' as const,
 };
 
 const MATTER = { ...WARDS, name: 'Fixture Matter', colorDark: '', colorLight: '' };
@@ -255,7 +260,10 @@ describe('GroupForm, for a category group', () => {
       typeIn(name(), 'Fixture Near');
       typeIn(dark(), '#5a87ae');
 
-      expect(screen.getAllByRole('status')[0]).toHaveTextContent('Fixture Mineral');
+      expect(
+        // Not the Edit History region, which every form with undo has.
+        screen.getAllByRole('status').filter((status) => !status.hasAttribute('aria-label'))[0],
+      ).toHaveTextContent('Fixture Mineral');
       expect(screen.getByRole('button', { name: 'Save Group' })).toBeEnabled();
     });
 
@@ -335,6 +343,17 @@ describe('GroupForm, for a category group', () => {
         'Fixture Substance',
       ]);
       expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    });
+
+    it('draws no icon in the choices', () => {
+      renderForm({ group: WARDS, memberCount: 3 });
+
+      press('Delete Group');
+      fireEvent.click(screen.getByRole('combobox', { name: 'Move Its 3 Categories To' }));
+
+      for (const option of screen.getAllByRole('option')) {
+        expect(option.querySelector('svg')).toBeNull();
+      }
     });
 
     it('asks to confirm the move once a group is chosen, and moves them on confirmation', async () => {
@@ -448,7 +467,7 @@ describe('GroupForm, for a form group', () => {
       CreateIngredientFormGroupMutationVariables
     >('CreateIngredientFormGroup', (variables) => {
       calls.push(variables);
-      return { createIngredientFormGroup: { id: MATTER.id, slug: 'fixture-matter' } };
+      return { createIngredientFormGroup: { id: MATTER.id, slug: 'fixture-matter', icon: null } };
     });
     const onDone = renderForm({ kind: 'form' });
 
@@ -459,8 +478,103 @@ describe('GroupForm, for a form group', () => {
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([
-      { input: { name: 'Fixture Matter', description: 'A group the test made' } },
+      {
+        input: { name: 'Fixture Matter', description: 'A group the test made', icon: null },
+      },
     ]);
+  });
+
+  // M12.7: the icon an admin picks, one of the six or None, the generic.
+  describe('its icon', () => {
+    const icons = () => screen.getByRole('group', { name: 'Icon' });
+
+    it('offers six icons and None as a radio group, for a form group alone', () => {
+      renderForm({ kind: 'form' });
+
+      const radios = within(icons()).getAllByRole('radio');
+      expect(radios).toHaveLength(FORM_GROUP_ICONS.length + 1);
+      expect(within(icons()).getByRole('radio', { name: 'None' })).toBeChecked();
+      expect(radios[radios.length - 1]).toBe(within(icons()).getByRole('radio', { name: 'None' }));
+    });
+
+    it.each(['category', 'tradition'] as const)('is not offered to a %s', (kind) => {
+      renderForm({ kind });
+
+      expect(screen.queryByRole('group', { name: 'Icon' })).not.toBeInTheDocument();
+    });
+
+    it('shows each option its own icon, None the generic', () => {
+      renderForm({ kind: 'form' });
+
+      const drawn = (label: string) =>
+        within(icons()).getByRole('radio', { name: label }).closest('label')!.querySelector('svg')!
+          .innerHTML;
+      const generic = render(<FormIcon name={null} />).container.querySelector('svg')!.innerHTML;
+      const leaf = render(<FormIcon name="botanical" />).container.querySelector('svg')!.innerHTML;
+
+      expect(drawn('None')).toBe(generic);
+      expect(drawn('Botanical')).toBe(leaf);
+      expect(leaf).not.toBe(generic);
+    });
+
+    it('sends the chosen icon, and starts a group from the one it has', async () => {
+      const calls: UpdateIngredientFormGroupMutationVariables[] = [];
+      mockGraphQLMutation<
+        UpdateIngredientFormGroupMutation,
+        UpdateIngredientFormGroupMutationVariables
+      >('UpdateIngredientFormGroup', (variables) => {
+        calls.push(variables);
+        return { updateIngredientFormGroup: { id: MATTER.id, slug: 'fixture-matter', icon: null } };
+      });
+      const onDone = renderForm({ kind: 'form', group: { ...MATTER, icon: 'mineral' } });
+
+      expect(within(icons()).getByRole('radio', { name: 'Mineral' })).toBeChecked();
+      fireEvent.click(within(icons()).getByRole('radio', { name: 'Fluid' }));
+      press('Save Group');
+
+      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+      expect(calls[0].input.icon).toBe('fluid');
+    });
+
+    it('sends null for None, which clears the icon', async () => {
+      const calls: UpdateIngredientFormGroupMutationVariables[] = [];
+      mockGraphQLMutation<
+        UpdateIngredientFormGroupMutation,
+        UpdateIngredientFormGroupMutationVariables
+      >('UpdateIngredientFormGroup', (variables) => {
+        calls.push(variables);
+        return { updateIngredientFormGroup: { id: MATTER.id, slug: 'fixture-matter', icon: null } };
+      });
+      const onDone = renderForm({ kind: 'form', group: { ...MATTER, icon: 'mineral' } });
+
+      fireEvent.click(within(icons()).getByRole('radio', { name: 'None' }));
+      press('Save Group');
+
+      await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+      expect(calls[0].input.icon).toBeNull();
+    });
+  });
+
+  it('draws the icon of each group in the move-to choices, the generic where it has none', () => {
+    const groups = [
+      { id: GROUPS[0].id, name: 'Fixture Mineral', icon: 'mineral' as const },
+      { id: GROUPS[1].id, name: 'Fixture Substance', icon: null },
+      { id: GROUPS[2].id, name: 'Fixture Wards', icon: null },
+    ];
+    renderForm({ kind: 'form', group: { ...MATTER, id: GROUPS[2].id }, groups, memberCount: 2 });
+
+    press('Delete Group');
+    fireEvent.click(screen.getByRole('combobox', { name: 'Move Its 2 Forms To' }));
+
+    const drawn = (label: string) =>
+      screen.getByRole('option', { name: label }).querySelector('[aria-hidden="true"] svg')!
+        .innerHTML;
+    expect(drawn('Fixture Mineral')).toBe(
+      render(<FormIcon name="mineral" />).container.querySelector('svg')!.innerHTML,
+    );
+    expect(drawn('Fixture Substance')).toBe(
+      render(<FormIcon name={null} />).container.querySelector('svg')!.innerHTML,
+    );
   });
 
   it('moves its forms on a confirmed delete', async () => {
@@ -529,5 +643,85 @@ describe('GroupForm, for a deity tradition', () => {
 
     await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
     expect(calls).toEqual([{ id: MATTER.id, moveTo: GROUPS[1].id }]);
+  });
+});
+
+// Undo and redo (M12.9): the hook is tested in tests/components/Field; this
+// is its wiring, and where it is switched off.
+describe('GroupForm, its undo and redo', () => {
+  const save = () => screen.getByRole('button', { name: 'Save Group' });
+
+  it('undoes a colour change, the hex box taking the saved colour back, and redoes it', () => {
+    renderForm({ group: WARDS });
+    expect(save()).toBeDisabled();
+    act(() => dark().focus());
+    typeIn(dark(), '#35987d');
+    expect(dark()).toHaveValue('#35987d');
+
+    undo();
+
+    expect(dark()).toHaveValue(WARDS.colorDark);
+    expect(light()).toHaveValue(WARDS.colorLight);
+    expect(save()).toBeDisabled();
+
+    redo();
+    expect(dark()).toHaveValue('#35987d');
+  });
+
+  it('undoes a name change', () => {
+    renderForm({ group: WARDS });
+    act(() => name().focus());
+    typeIn(name(), 'Fixture Shields');
+
+    undo();
+
+    expect(name()).toHaveValue(WARDS.name);
+    expect(save()).toBeDisabled();
+  });
+
+  it('undoes nothing through the steps of a delete', () => {
+    renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} memberCount={3} onDone={done} />
+    ));
+    typeIn(name(), 'Fixture Shields');
+    press('Delete Group');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep It' }));
+    undo();
+    expect(name()).toHaveValue('Fixture Shields');
+
+    choose('Move Its 3 Categories To', 'Fixture Mineral');
+    press('Continue');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Back' }));
+    undo();
+    expect(name()).toHaveValue('Fixture Shields');
+
+    press('Back');
+    press('Keep It');
+    undo();
+    expect(name()).toHaveValue(WARDS.name);
+  });
+
+  it('undoes nothing while the unsaved changes question is up', () => {
+    renderInModal((done) => (
+      <GroupForm kind="category" group={WARDS} groups={GROUPS} onDone={done} />
+    ));
+    typeIn(name(), 'Fixture Shields');
+    press('Cancel');
+    expectAskingOver(name(), screen.getByRole('button', { name: 'Keep Editing' }));
+
+    undo();
+
+    expect(name()).toHaveValue('Fixture Shields');
+  });
+
+  it('has Undo and Redo buttons, off with nothing to do, that act on a click', () => {
+    renderForm({ group: WARDS });
+    expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+    typeIn(name(), 'Fixture Shields');
+
+    press('Undo');
+
+    expect(name()).toHaveValue(WARDS.name);
+    expect(screen.getByRole('button', { name: 'Redo' })).toBeEnabled();
   });
 });

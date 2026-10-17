@@ -4,7 +4,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import { resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
-import { listWorkspaceIngredients } from '@/modules/ingredients';
+import { listWorkspaceIngredients, workspaceIngredientFacets } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
@@ -160,6 +160,16 @@ describe('listWorkspaceIngredients', () => {
       'Oilfixture',
     ]);
     expect(await listed(asUser(B), WORKSPACE_W_ID, { forms: ['oil'] })).toEqual(['Oilfixture']);
+
+    // M8.12: Mugfixture and Oilfixture hold Protection and neither holds
+    // Cleansing, so only the mode decides whether the pair lists them.
+    const [cleansing] = await sql`
+      select id from categories where name = 'Cleansing' and deleted_at is null`;
+    const pair = [protection.id, cleansing.id];
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { categoryIds: pair })).toEqual([]);
+    expect(
+      await listed(asUser(B), WORKSPACE_W_ID, { categoryIds: pair, categoryMode: 'any' }),
+    ).toEqual(['Mugfixture', 'Oilfixture']);
   });
 
   it.each([
@@ -200,6 +210,42 @@ describe('listWorkspaceIngredients', () => {
     return page.edges.map(({ node }) => node.id);
   }
 
+  // A curator cannot delete a deity or category a compendium entry holds, but
+  // a coven's own entry keeps its link through the delete. The filter reads
+  // the row a link points to as the facets do, so the list and the count
+  // agree that the deleted value matches nothing.
+  it('lists nothing under a deleted deity or category, as the facets count it', async () => {
+    const entry = await add('Linkfixture', { workspaceId: WORKSPACE_W_ID, categories: ['Love'] });
+    const [selene] = await sql`
+      select id from deities where name = 'Selene' and deleted_at is null`;
+    const [love] = await sql`
+      select id from categories where name = 'Love' and deleted_at is null`;
+    await insertDeityLink(sql, entry, selene.id, 0, A.id);
+    const byDeity = { deityIds: [selene.id as string] };
+    const byCategory = { categoryIds: [love.id as string] };
+    const countOf = async (
+      kind: 'deities' | 'categories',
+      filter: typeof byDeity | typeof byCategory,
+      id: string,
+    ) =>
+      (await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, filter))[kind].find(
+        ({ value }) => value === id,
+      )?.count;
+    // Why it could have listed: before the deletes, each filter lists it and counts it.
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, byDeity)).toEqual([entry]);
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, byCategory)).toEqual([entry]);
+    expect(await countOf('deities', byDeity, selene.id)).toBe(1);
+    expect(await countOf('categories', byCategory, love.id)).toBe(1);
+
+    await sql`update deities set deleted_at = now(), deleted_by = ${A.id} where id = ${selene.id}`;
+    await sql`update categories set deleted_at = now(), deleted_by = ${A.id} where id = ${love.id}`;
+
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, byDeity)).toEqual([]);
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, byCategory)).toEqual([]);
+    expect(await countOf('deities', byDeity, selene.id)).toBe(0);
+    expect(await countOf('categories', byCategory, love.id)).toBe(0);
+  });
+
   // M11.22's five facets each sit under the coven's proof: the row in W
   // matches every one of them, and so does X's, so a facet read past the
   // proof would list W's row to D, or X's row to B. Each coven also holds a
@@ -217,6 +263,7 @@ describe('listWorkspaceIngredients', () => {
         toxic: true,
         celestialBodies: ['Fixture Sun'],
         zodiacSigns: ['Fixture Ram'],
+        elements: ['fire', 'air'] as ('fire' | 'air')[],
         variants: [makeVariant({ form: 'Fixture Oil' })],
       };
       covenRow = await add('Facetfixture', { ...matching, workspaceId: WORKSPACE_W_ID });
@@ -236,6 +283,7 @@ describe('listWorkspaceIngredients', () => {
       ['deityIds', () => ({ deityIds: [hecate] })],
       ['zodiacSigns', () => ({ zodiacSigns: ['fixture ram'] })],
       ['celestialBodies', () => ({ celestialBodies: ['fixture sun'] })],
+      ['elements', () => ({ elements: ['air', 'water'] })],
       ['toxic', () => ({ toxic: 'toxic' })],
     ];
 

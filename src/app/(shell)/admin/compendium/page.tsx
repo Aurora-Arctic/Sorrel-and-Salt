@@ -1,10 +1,15 @@
 import type { Metadata } from 'next';
+import type { ModalHeading } from '../../../../components/Modal/types';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import CompendiumList from '../../../../components/CompendiumList';
+import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
+import { editHeading } from '../../../../components/CompendiumList/heading';
 import type {
+  CompendiumCategoryChoice,
   CompendiumFormChoice,
+  CompendiumListForm,
   CompendiumListEntry,
   CompendiumListFilter,
 } from '../../../../components/CompendiumList/types';
@@ -12,7 +17,6 @@ import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
 import { requireCuratorSession } from '../../../../lib/request-session';
-import { oneOf, single, trimmed } from '../../../../lib/search-params';
 import {
   countCompendium,
   listCompendium,
@@ -20,15 +24,15 @@ import {
   variantsOf,
 } from '@/modules/ingredients';
 import {
-  NOMENCLATURE_KINDS,
-  type NomenclatureKind,
-} from '@/modules/ingredients/schema/ingredient-enums';
-import { listIngredientFormValues } from '@/modules/vocabulary';
+  categoryGroupsOf,
+  formChoicesOf,
+  formGroupsOf,
+  listCategories,
+  listIngredientFormValues,
+} from '@/modules/vocabulary';
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
 import { readEditPlace, readListPlace } from '../list-page';
-import type { ModalHeading } from '../../../../components/Modal/types';
-import type { IngredientFormValues } from '../../../../components/IngredientForm/types';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
 import { entryValues } from './entry-values';
@@ -41,23 +45,13 @@ export const metadata: Metadata = {
 // The page and GraphQL's `compendium` end at the same service, paged by the
 // same helper (CLAUDE.md rule 1, rule 8); the writes are the modal's, through
 // the compendium mutations. Cached so a second render in the request reads
-// once, and so keyed by primitives rather than a filter object.
+// once, and so keyed by primitives rather than a filter object: the filter as
+// the parameter table's variables, written as JSON, so a new filter changes
+// no line here (src/components/CompendiumList/params.ts).
 const readCompendium = cache(
-  async (
-    query: string,
-    form: string,
-    nomenclature: NomenclatureKind | undefined,
-    withoutReferences: boolean,
-    after: string | undefined,
-    before: string | undefined,
-  ) => {
-    const filter = {
-      query: query || undefined,
-      // The Form box names one form; the read takes a list (M11.22).
-      forms: form ? [form] : undefined,
-      nomenclature,
-      withoutReferences,
-    };
+  async (variables: string, after: string | undefined, before: string | undefined) => {
+    // Written by this page from the table a few lines below, and checked again by the service.
+    const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
     // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
     const page = await resolveNumberedPage(
       { after, before },
@@ -70,13 +64,31 @@ const readCompendium = cache(
       null,
       page.edges.map(({ node }) => ({ id: node.id, workspaceId: null })),
     );
+    const variants = forms.map((answer) => {
+      // A compendium ref is never refused (MB.80).
+      if (answer instanceof Error) throw answer;
+      return answer;
+    });
+    // Each form's icon is its curated form's group's: two batches for the
+    // page, as `IngredientVariant.formChoice` reads them. A form that is
+    // only text, or whose form or group is retired, has none.
+    const choices = await formChoicesOf(variants.flat().flatMap(({ formId }) => formId ?? []));
+    const live = choices.flatMap((choice) => choice ?? []);
+    const groups = await formGroupsOf(live.map((choice) => choice.groupId));
+    const iconOfForm = new Map(
+      live.map((choice, i) => {
+        const group = groups[i];
+        return [choice.id, group === undefined || group instanceof Error ? null : group.icon];
+      }),
+    );
     return {
       ...page,
-      forms: forms.map((answer) => {
-        // A compendium ref is never refused (MB.80).
-        if (answer instanceof Error) throw answer;
-        return answer.map((variant) => variant.form);
-      }),
+      forms: variants.map((own) =>
+        own.map(({ form, formId }): CompendiumListForm => ({
+          name: form,
+          icon: (formId && iconOfForm.get(formId)) || null,
+        })),
+      ),
     };
   },
 );
@@ -102,6 +114,36 @@ const readForms = cache(async (): Promise<CompendiumFormChoice[]> => {
 });
 
 /**
+ * Every live category with its group's name and colours, for the Categories
+ * box, and the slugs the address names them by. Read page by page, as the
+ * forms are, since one page of the maximum is not guaranteed to hold them all
+ * and an admin adds more. Public reference data, held in the data cache by the
+ * services; `cache` here only keeps the request to one read.
+ */
+const readCategories = cache(async (): Promise<CompendiumCategoryChoice[]> => {
+  const rows = await allPages((page) => listCategories({}, page));
+  const groups = await categoryGroupsOf([...new Set(rows.map(({ groupId }) => groupId))]);
+  const byId = new Map(
+    groups.flatMap((group) => (group instanceof Error ? [] : [[group.id, group]])),
+  );
+  return rows.flatMap(({ id, slug, name, description, groupId }) => {
+    const group = byId.get(groupId);
+    // A category lists only under a live group, so this is a race with a delete.
+    if (!group) return [];
+    const { colorDark, colorLight } = group;
+    return [
+      {
+        id,
+        slug,
+        name,
+        description,
+        group: { id: group.id, name: group.name, colorDark, colorLight },
+      },
+    ];
+  });
+});
+
+/**
  * What `?edit=` names: the entry there, its values read for the form, or the
  * address it moved to while its old one still redirects, or nothing.
  */
@@ -115,42 +157,13 @@ const readEntry = async (slug: string) => {
   };
 };
 
-/** The add dialog's head and the button that opens it. */
+/** The button that opens the add dialog. */
 const ADD_TITLE = 'Add Ingredient';
-
 /**
- * The nomenclatures whose formal name is a binomial, set in italics; a
- * mineral's or a chemical's is set upright (claude-docs/styling.md, "Type").
+ * The add dialog's head: the destination over the action, as the shell's coven
+ * dialog has it (M8.16), named "Add Ingredient to Compendium".
  */
-const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
-  'botanical',
-  'fungal',
-  'zoological',
-]);
-
-/**
- * An entry's edit dialog head (MB.115): the name it was saved under, not the
- * Name field's, and its formal name after it, as the list's rows name it.
- * Its row's Edit opens with the same head (M9.18), so it reads the fields the
- * row and the form's values share; a row's missing formal name is `null`.
- */
-function editHeading({
-  name,
-  canonicalName,
-  nomenclature,
-}: {
-  name: string;
-  canonicalName: string | null;
-  nomenclature: IngredientFormValues['nomenclature'];
-}): ModalHeading {
-  const formal = (canonicalName ?? '').trim();
-  const set = BINOMIAL_KINDS.has(nomenclature) ? (
-    <span className="binomial">{formal}</span>
-  ) : (
-    formal
-  );
-  return { eyebrow: 'Edit Ingredient', title: name, qualifier: formal ? set : undefined };
-}
+const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
 
 // The global compendium, for an admin to add to, edit and retire (M5.5). A
 // wide modal over the list does the writing, opened by the address — `?new`,
@@ -162,26 +175,19 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const session = await requireCuratorSession();
   const params: CompendiumSearchParams = await searchParams;
   const place = readListPlace(params);
-  const { query, after, before, adding } = place;
-  // Blank is no filter: a native submit sends `nomenclature=`; a kind no
-  // classification holds is ignored, as a hand-edited cursor gets the first
-  // page.
-  const nomenclature = oneOf(NOMENCLATURE_KINDS, single(params.nomenclature));
-  const withoutReferences = single(params.withoutReferences) === '1';
-  // A form by its text, `?form=Oil`, which the compendium read folds.
-  const form = trimmed(params.form);
+  const { after, before, adding } = place;
+  // Every filter, read through the parameter table (CompendiumList/params.ts).
+  const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);
+
+  // The address names categories by slug; the compendium filters by id.
+  const categories = await readCategories();
+  const lookups = { categories: new Map(categories.map(({ slug, id }) => [slug, id])) };
 
   const [page, forms, { edited, missing }] = await Promise.all([
-    readCompendium(query, form, nomenclature, withoutReferences, after, before),
+    readCompendium(JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups)), after, before),
     readForms(),
     readEditPlace(place, readEntry),
   ]);
-  const filter: CompendiumListFilter = {
-    query,
-    form,
-    nomenclature: nomenclature ?? '',
-    withoutReferences,
-  };
   const here = { ...filter, after, before };
   // An old address opens the entry at its new one, as the public route's
   // redirect does (MB.82).
@@ -209,7 +215,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       <PageHeader
         title="Compendium"
         action={
-          <AddAction href={compendiumHref(here, 'new')} heading={{ title: ADD_TITLE }}>
+          <AddAction href={compendiumHref(here, 'new')} heading={ADD_HEADING}>
             {ADD_TITLE}
           </AddAction>
         }
@@ -219,6 +225,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         entries={entries}
         filter={filter}
         forms={forms}
+        categories={categories}
         position={page.position}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />
@@ -236,7 +243,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
                 entry: { id: editing.id, values: editing.values },
               }
             : adding
-              ? { heading: { title: ADD_TITLE } }
+              ? { heading: ADD_HEADING }
               : undefined
         }
       />

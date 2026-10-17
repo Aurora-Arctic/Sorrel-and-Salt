@@ -38,18 +38,24 @@ if (AUDIT && !auditWsEndpoint)
     "E2E_AUDIT=1 needs PLAYWRIGHT_AUDIT_WS_ENDPOINT, the playwright-audit service's address: " +
       '.devcontainer/docker-compose.yml sets it, and `make playwright-audit-up` starts the service.',
   );
-const auditProject = (name: string, device: (typeof devices)[string]) => ({
-  name,
-  testIgnore: [CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS],
-  use: { ...device, connectOptions: { wsEndpoint: auditWsEndpoint! } },
-});
-const auditProjects = AUDIT
-  ? [
-      auditProject('webkit', devices['Desktop Safari']),
-      auditProject('firefox', devices['Desktop Firefox']),
-      auditProject('phone', devices['iPhone 15']),
-    ]
-  : [];
+// Shared with the story config (playwright.stories.config.ts), which runs the
+// stories in the same three browsers under the same flag and passes no
+// `testIgnore`, since it has none of the two ports' specs to leave out.
+export const auditProjects = (testIgnore?: RegExp[]) =>
+  AUDIT
+    ? [
+        ['webkit', devices['Desktop Safari']],
+        ['firefox', devices['Desktop Firefox']],
+        ['phone', devices['iPhone 15']],
+      ].map(([name, device]) => ({
+        name: name as string,
+        ...(testIgnore ? { testIgnore } : {}),
+        use: {
+          ...(device as (typeof devices)[string]),
+          connectOptions: { wsEndpoint: auditWsEndpoint! },
+        },
+      }))
+    : [];
 
 // Every output under .reports/ with the rest of the generated files. The
 // reporter list lives here rather than on CI's command line because a CLI
@@ -117,6 +123,6 @@ export default defineConfig({
         baseURL: browserUrl(COMPENDIUM_CACHE_PORT),
       },
     },
-    ...auditProjects,
+    ...auditProjects([CONFIGURED_PROVIDERS_SPEC, COMPENDIUM_CACHE_SPEC, STORIES_SPECS]),
   ],
 });

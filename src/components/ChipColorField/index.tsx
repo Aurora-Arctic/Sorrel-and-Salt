@@ -61,7 +61,7 @@ const FormatIcon = (): ReactElement => (
 );
 
 /**
- * The contrast glyph in the veil's label: a circle half filled, which reads
+ * The contrast icon in the veil's label: a circle half filled, which reads
  * as light against dark.
  */
 const ContrastIcon = (): ReactElement => (

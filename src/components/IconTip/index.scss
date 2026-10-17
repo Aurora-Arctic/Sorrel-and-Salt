@@ -82,6 +82,27 @@
   }
 }
 
+// Centred above the control (`placement="above"`), as the table row has it:
+// for a control in a row of its kind, a segment of the radio strip (M12.7),
+// where a tip to the side would cover the next segment and one below would
+// cover the chosen name printed under the bar.
+.icon-tip__bubble.icon-tip__bubble--above {
+  inset: auto auto 100% 50%;
+  margin: 0 0 space(1);
+  translate: -50% 0;
+
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the element appears without fading in, widely available 2027-02-06
+  @starting-style {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+
+  &.icon-tip__bubble--closing {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+}
+
 @container data-table (max-width: #{$table-stack-width}) {
   .data-table--stack .icon-tip__bubble {
     inset: 50% 100% auto auto;

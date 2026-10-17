@@ -200,6 +200,8 @@ export interface FilterFormSubject {
   path: string;
   /** The search box's label: `Name or Email`. */
   searchLabel: string;
+  /** The search box's role when it is not a plain `searchbox`: the compendium's typeahead is a `combobox`. */
+  searchRole?: 'combobox';
   /** The mocked router's `push`, which every filter applies through. */
   push: Mock;
   /** The list showing no filter. */

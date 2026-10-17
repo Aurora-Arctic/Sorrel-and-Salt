@@ -24,6 +24,12 @@ export interface ComboboxOption {
    * edged in it, so the colour its chip will wear is seen before the pick.
    */
   colors?: GroupColors;
+  /**
+   * A mark drawn before the label, outside the option's accessible name: a
+   * form's group icon. A `ReactNode` rather than a typed name, so the
+   * combobox knows no icon set; the caller hands over a drawn, decorative one.
+   */
+  icon?: ReactNode;
 }
 
 /** What a source has for the text as it stands: the rows, and whether more are on their way. */
@@ -55,6 +61,16 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   onRemoveLast?: () => void;
   /** The suggestions for the text; left out for a box with no source, which never opens. */
   suggestions?: Suggestions<O>;
+  /**
+   * What an open list says once its lookup has settled with no rows and the
+   * text is not blank. Left out, the default: No match for “text”. Pass a
+   * more specific sentence where the caller knows more ("Keep typing to
+   * search"), or `false` where saying nothing is right. Drawn in the popup
+   * outside the listbox (it is no option), and read by the status. The typed
+   * row counts as a row, so a caller wanting the message passes
+   * `offerTyped={false}`. A typed box never closes for having nothing to show.
+   */
+  empty?: string | false;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
   /**
@@ -65,11 +81,30 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    */
   clear?: { label: string; onClear: () => void; empty: boolean };
   /**
-   * A last row that makes something new rather than picking a suggestion,
-   * "New Reference…", there whatever is typed and in place of the typed row:
-   * for a list whose entries can only be picked (MB.154; last since MB.115).
+   * A caller's own control drawn inside the control box, before the text and
+   * before any entries: a form's submit, say. A slot rather than a built-in
+   * because Combobox knows nothing about forms or what the caller wants
+   * pressed. A button given here should be styled `combobox__indicator` to
+   * match the others; a press on it is inside the box, so it neither closes an
+   * open list nor moves the focus.
    */
-  create?: { label: string; onCreate: () => void };
+  leading?: ReactNode;
+  /**
+   * Whether a box with `suggestions` draws its chevron button. Left out
+   * (`false`) for a free-text search that opens as you type, where a chevron
+   * promises a set to browse. Typing still opens the list. Defaults to true.
+   */
+  toggle?: boolean;
+  /**
+   * A last row that does something rather than picking a suggestion, there
+   * whatever is typed and in place of the typed row, set off in italics as the
+   * typed row is. Two callers use it: "New Reference" makes something new for
+   * a list whose entries can only be picked (MB.154; last since MB.115), and
+   * "See all results." applies the search to the list (M8.10). Reached by the
+   * arrow keys and picked by Enter or a click, which call `onSelect`; it is
+   * no result, so the status does not count it.
+   */
+  action?: { label: string; onSelect: () => void };
   /**
    * Whether the typed row is offered: false for text the caller would
    * refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which
@@ -86,6 +121,14 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    * status's count. "suggestion" unless said; a closed set's are "choice"s.
    */
   noun?: string;
+  /** The mark on the typed row, "Use what you typed": the same slot as an option's `icon`. */
+  typedIcon?: ReactNode;
+  /**
+   * A mark drawn before the text, decorative: the type-ahead box's chosen
+   * icon, there while the box reads the chosen label, as the select-only
+   * box's closed value draws its choice's (M12.7).
+   */
+  icon?: ReactNode;
   /** Shown, muted, while the box is empty. */
   placeholder?: string;
   /** `aria-required`, as the field marks it. */
@@ -218,14 +261,14 @@ export interface TypedRow {
   typed: true;
 }
 
-/** The first row of a list whose caller can make something new: its label. */
-export interface CreateRow {
+/** The last row of a list whose caller gave an `action`: its label. */
+export interface ActionRow {
   value: string;
-  create: true;
+  action: true;
 }
 
-/** A row Downshift numbers: a suggestion, the typed row, or the create row. */
-export type Item<O extends ComboboxOption> = O | TypedRow | CreateRow;
+/** A row Downshift numbers: a suggestion, the typed row, or the action row. */
+export type Item<O extends ComboboxOption> = O | TypedRow | ActionRow;
 
 /** A bucket of rows under its heading, or the one unheaded list of a source with one bucket. */
 export interface Bucket<O extends ComboboxOption> {
@@ -252,6 +295,12 @@ export interface ComboboxChoice {
    * plus. The caller decides what choosing it does.
    */
   create?: boolean;
+  /**
+   * A mark drawn before the label, in its row and in the closed value, outside
+   * the accessible name: a form group's icon. Handed over drawn and decorative,
+   * as `ComboboxOption.icon` is.
+   */
+  icon?: ReactNode;
 }
 
 /** The select-only box: a closed set, chosen from the same control and list. */

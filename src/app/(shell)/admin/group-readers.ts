@@ -32,6 +32,7 @@ const allGroups = <T extends ValueGroupRow>(list: (page: PageRequest) => Promise
       name: node.name,
       colorDark: node.colorDark,
       colorLight: node.colorLight,
+      icon: node.icon,
     }));
   });
 

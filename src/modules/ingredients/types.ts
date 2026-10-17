@@ -1,16 +1,30 @@
 import type { z } from 'zod';
-import type { IngredientRow, ReferenceRow, StockRow } from '../../db/repository';
+import type {
+  CompendiumFacets,
+  FacetCount,
+  IngredientFacets,
+  IngredientRow,
+  ReferenceRow,
+  StockRow,
+} from '../../db/repository';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
 import type { ReferenceInput } from './validation/reference';
-import type { StockInput } from './validation/stock';
+import type { JarMerge, StockInput } from './validation/stock';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from './validation/types';
 import type { ValidationIssue } from '../../lib/types';
 import type { CategoryRow, DeityRow } from '@/modules/vocabulary';
 
 // The repository's own, rather than a second `typeof …$inferSelect`.
-export type { IngredientRow, ReferenceRow, StockRow };
+export type {
+  CompendiumFacets,
+  FacetCount,
+  IngredientFacets,
+  IngredientRow,
+  ReferenceRow,
+  StockRow,
+};
 
 // The vocabulary's own, which a category's loader answers with.
 export type { CategoryRow };
@@ -57,7 +71,7 @@ export type VariantRecord = typeof ingredientVariants.$inferSelect;
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
 export type IngredientFields = Omit<
   LocalIngredientInput,
-  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants'
+  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants' | 'jarMerges'
 >;
 
 /** Where in the input an issue lands — `['variants', 1]` — as `ValidationIssue` paths it. */
@@ -200,3 +214,21 @@ export type CompendiumAddress =
       movedAway: IngredientRow | null;
     }
   | { kind: 'moved'; slug: string };
+
+/**
+ * The amount a save chooses for a jar it merges into another (M12.8): the
+ * moving jar's id and the figure the merged jar takes.
+ */
+export type JarMergeChoice = z.output<typeof JarMerge>;
+
+/**
+ * Two jars of one form that cannot be added because their units differ
+ * (M12.8): the jar the coven's local ingredient holds, or is about to, and the
+ * jar of a compendium form that is moving onto it. The whole row of each, so
+ * a caller can show both amounts without a second read.
+ */
+export interface JarConflict {
+  reason: 'units';
+  localJar: StockRow;
+  movingJar: StockRow;
+}

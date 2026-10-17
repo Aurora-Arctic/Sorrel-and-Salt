@@ -54,6 +54,7 @@ const MOCKWORT: IngredientSummaryQuery['ingredient'] = {
     {
       id: DRIED_LEAF_ID,
       form: 'Dried leaf',
+      formChoice: null,
       elements: null,
       celestialBodies: ['Saturn'],
       zodiacSigns: null,

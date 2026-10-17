@@ -24,18 +24,30 @@ import type {
 
 /**
  * §5's six groups in §5's order, which nothing reads — groups list
- * alphabetically — kept so the two compare by eye and by test.
+ * alphabetically — kept so the two compare by eye and by test. Each names the
+ * icon that stands for it (M12.6), written only into a group the seed
+ * inserts, so an admin's later choice survives a reseed; migration 0077
+ * carried them onto databases seeded before.
  */
 export const FORM_GROUPS: SeedIngredientFormGroup[] = [
-  { name: 'Botanical', description: 'Parts of a plant or fungus - grown in the dirt.' },
-  { name: 'Animal', description: 'Parts of a creature - roaming the land.' },
-  { name: 'Mineral', description: 'Stone, salt, earth, metal - dug from the earth.' },
+  {
+    name: 'Botanical',
+    description: 'Parts of a plant or fungus - grown in the dirt.',
+    icon: 'botanical',
+  },
+  { name: 'Animal', description: 'Parts of a creature - roaming the land.', icon: 'animal' },
+  {
+    name: 'Mineral',
+    description: 'Stone, salt, earth, metal - dug from the earth.',
+    icon: 'mineral',
+  },
   {
     name: 'Substance',
     description: 'Powders, waxes and ointments - no shape of its own.',
+    icon: 'substance',
   },
-  { name: 'Fluid', description: 'Anything that pours - waters, oils, spirits.' },
-  { name: 'Curio', description: 'Made or found objects.' },
+  { name: 'Fluid', description: 'Anything that pours - waters, oils, spirits.', icon: 'fluid' },
+  { name: 'Curio', description: 'Made or found objects.', icon: 'curio' },
 ];
 
 /** Every form §5 lists, in §5's order, so forms.test.ts can compare row by row. */

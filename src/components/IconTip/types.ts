@@ -14,9 +14,11 @@ export interface IconTipProps {
    * Where the tip stands: `side`, the default, to the left of the control and
    * level with it; `below`, under it, its right edge on the control's, for a
    * mark at the right end of a row with rows beneath it, such as the account
-   * menu's count of invitations (M10.32).
+   * menu's count of invitations (M10.32); `above`, centred over it, for a
+   * control in a row of its kind with nothing of its own to cover, such as a
+   * segment of the radio strip (M12.7).
    */
-  placement?: 'side' | 'below';
+  placement?: 'side' | 'below' | 'above';
 }
 
 export interface EditLinkProps {

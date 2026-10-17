@@ -1,8 +1,13 @@
 import type { Locator, Page } from '@playwright/test';
 import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations } from './axe';
-import { recreateE2eDatabase } from './database';
+import postgres from 'postgres';
+import type { IngredientElement } from '@/modules/ingredients/schema/ingredient-enums';
+import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { insertIngredient } from '../support/db/insert-ingredient';
+import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { ingredientSlug } from '@/lib/slugify';
 
 // M5.5: the admin's compendium form's presentation — IngredientForm on
 // the compendium, which carries the form's first axe scans in a browser,
@@ -62,6 +67,7 @@ test('the compendium form keeps a margin of the page in view on a phone', async 
   await page.goto('/admin/compendium?new');
 
   await expectMarginAround(page, page.getByRole('dialog', { name: 'Add Ingredient' }));
+  await assertNoAccessibilityViolations(page);
 });
 
 // The compendium form's presentation in the app, which no story checks: the
@@ -184,7 +190,7 @@ test('the edit source panel leaves the dialog in place and closes from its top b
 
   // A source to edit: a new one, written through the panel.
   await adding.getByRole('combobox', { name: 'Reference' }).click();
-  await page.getByRole('option', { name: 'New Reference…' }).click();
+  await page.getByRole('option', { name: 'New Reference' }).click();
   const creating = adding.getByRole('group', { name: 'New Reference' });
   await creating.getByRole('combobox', { name: 'Kind' }).click();
   await page
@@ -295,4 +301,627 @@ test('the toxic toggles start off, save, and read back on reopening, each its ow
     else await expect(toggle).not.toBeChecked();
   }
   await assertNoAccessibilityViolations(page);
+});
+
+// M8.10: the Name box is IngredientSearch's type-ahead. Its matching is the
+// repository's and its states are the component test's; these walk it in a
+// browser, where the dropdown, the modal it opens and the form before
+// JavaScript are real (claude-docs/components/ingredient-search.md).
+const CATS_CLAW = /^Cat's Claw \(Uncaria/;
+
+test('a name typed shows matching rows, and a pick opens its modal over the list as it was shown', async ({
+  page,
+}) => {
+  await signInAs(page, 'search-pick-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?nomenclature=botanical');
+  // Hydrated first: before it, the box is a plain text field with no dropdown.
+  await page.waitForLoadState('networkidle');
+
+  const name = page.getByRole('combobox', { name: 'Name' });
+  await name.fill('cats claw');
+  const rows = page.getByRole('option', { name: CATS_CLAW });
+  await expect(rows.first()).toBeVisible();
+  // Why the URL below could have carried the typed text: it was not applied while typing.
+  await expect(page).not.toHaveURL(/query=/);
+
+  await rows.first().click();
+
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Cat's Claw/ });
+  await expect(dialog).toBeVisible();
+  await expect(page).toHaveURL(/[?&]nomenclature=botanical(&|$)/);
+  await expect(page).toHaveURL(/[?&]edit=cat/);
+  await expect(page).not.toHaveURL(/query=/);
+});
+
+test('arrowing down the Name box keeps the highlighted row inside the dropdown', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'search-scroll-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  // Enough matches to fill the dropdown past its height, which the seed has no one query for.
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    for (let i = 1; i <= 30; i++) {
+      const name = `Scrollwort ${String(i).padStart(2, '0')}`;
+      await insertIngredient(sql, makeIngredient({ name, nomenclature: 'none' }), userId);
+    }
+  } finally {
+    await sql.end();
+  }
+  await page.goto('/admin/compendium');
+  await page.waitForLoadState('networkidle');
+
+  const name = page.getByRole('combobox', { name: 'Name' });
+  await name.fill('scrollwort');
+  const listbox = page.getByRole('listbox').filter({ has: page.getByRole('option') });
+  const options = listbox.getByRole('option');
+  await expect(options.first()).toBeVisible();
+
+  // The panel that clips the rows: the listbox, or the popup around it. Its
+  // box is what a row has to lie inside to be seen.
+  const clip = await listbox.evaluateHandle((el) => {
+    for (let n: Element | null = el; n; n = n.parentElement) {
+      if (n.scrollHeight > n.clientHeight + 1 && getComputedStyle(n).overflowY !== 'visible')
+        return n;
+    }
+    return el;
+  });
+  // Why the check below could fail: the rows fill more than the panel shows.
+  expect(await clip.evaluate((el) => el.scrollHeight > el.clientHeight + 1)).toBe(true);
+
+  // The last row starts below the fold; ArrowDown walks to it from the top.
+  const count = await options.count();
+  for (let i = 0; i < count; i++) await name.press('ArrowDown');
+
+  const active = listbox.locator('[role="option"][aria-selected="true"]');
+  await expect(active).toHaveCount(1);
+  const inside = await active.evaluate((row, panel) => {
+    const r = row.getBoundingClientRect();
+    const p = panel.getBoundingClientRect();
+    return r.top >= p.top - 1 && r.bottom <= p.bottom + 1;
+  }, clip);
+  expect(inside).toBe(true);
+});
+
+test('Enter in the Name box applies the name, keeping Classification and No Refs', async ({
+  page,
+}) => {
+  await signInAs(page, 'search-enter-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  await page.waitForLoadState('networkidle');
+
+  await page.getByRole('combobox', { name: 'Classification' }).click();
+  await page
+    .getByRole('listbox', { name: 'Classification choices' })
+    .getByRole('option', { name: 'Botanical' })
+    .click();
+  await expect(page).toHaveURL(/nomenclature=botanical/);
+  await page.waitForLoadState('networkidle');
+  await page.getByRole('switch', { name: 'No Refs' }).click();
+  await expect(page).toHaveURL(/withoutReferences=1/);
+  await page.waitForLoadState('networkidle');
+
+  const edit = (formalName: string) =>
+    page.getByRole('link', { name: `Edit Cat's Claw, ${formalName}` });
+  // Why the narrowing below proves the name applied: the thorn one is listed first.
+  await expect(edit('Senegalia greggii')).toBeVisible();
+
+  const name = page.getByRole('combobox', { name: 'Name' });
+  await name.fill('uncaria');
+  await expect(page.getByRole('option').first()).toBeVisible();
+  // The dropdown is open; Enter applies the typed text, not the highlighted row.
+  await name.press('Enter');
+
+  await expect(page).toHaveURL(/query=uncaria/);
+  await expect(page).toHaveURL(/nomenclature=botanical/);
+  await expect(page).toHaveURL(/withoutReferences=1/);
+  await expect(edit('Uncaria tomentosa')).toBeVisible();
+  await expect(edit('Senegalia greggii')).toHaveCount(0);
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('the filter form works with JavaScript off: a name and the Search button send query', async ({
+  browser,
+  baseURL,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  try {
+    const page = await context.newPage();
+    await signInAs(page, 'search-nojs-admin@admin-compendium.test', ['discord'], 'admin');
+    await page.goto('/admin/compendium');
+
+    const edit = (formalName: string) =>
+      page.getByRole('link', { name: `Edit Cat's Claw, ${formalName}` });
+    await expect(edit('Senegalia greggii')).toBeVisible();
+
+    await page.getByRole('combobox', { name: 'Name' }).fill('uncaria');
+    await page.getByRole('button', { name: 'Search' }).click();
+
+    await expect(page).toHaveURL(/query=uncaria/);
+    await expect(edit('Uncaria tomentosa')).toBeVisible();
+    await expect(edit('Senegalia greggii')).toHaveCount(0);
+  } finally {
+    await context.close();
+  }
+});
+
+test('the open Name dropdown has no accessibility violations', async ({ page }) => {
+  await signInAs(page, 'search-axe-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  await page.waitForLoadState('networkidle');
+
+  await page.getByRole('combobox', { name: 'Name' }).fill('cats claw');
+  await expect(page.getByRole('option', { name: CATS_CLAW }).first()).toBeVisible();
+
+  await assertNoAccessibilityViolations(page);
+});
+
+// M12.10: the ingredient form's undo and redo in the app, which no story walks.
+// A nameless classification empties the formal name in the same step, so one
+// chord brings the name back and focus goes to the pick the user made; the
+// reference panel keeps a history of its own, so its chord leaves the form's.
+test('undo puts a formal name back with focus on Classification, and the reference panel keeps its own history', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'undo-admin@admin-compendium.test', ['discord'], 'admin');
+  const fixture = makeIngredient({ name: 'Fixture Undowort' });
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    await insertIngredient(sql, fixture, userId);
+  } finally {
+    await sql.end();
+  }
+  await page.goto(`/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`);
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Undowort/ });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Open All' }).click();
+  const formal = dialog.getByRole('textbox', { name: 'Formal Name', exact: true });
+  const classification = dialog.getByRole('combobox', { name: 'Classification' });
+  // The outer buttons come first in the dialog; the panel's sit in its body.
+  const undo = dialog.getByRole('button', { name: 'Undo', exact: true }).first();
+  const redo = dialog.getByRole('button', { name: 'Redo', exact: true }).first();
+  const savedName = await formal.inputValue();
+  // The precondition: there is a formal name to lose, and nothing to undo yet.
+  expect(savedName).not.toBe('');
+  await expect(undo).toBeDisabled();
+
+  await classification.click();
+  await dialog
+    .getByRole('listbox', { name: 'Classification choices' })
+    .getByRole('option', { name: 'None' })
+    .click();
+  await expect(formal).toHaveValue('');
+  await expect(undo).toBeEnabled();
+
+  // The select is closed, so the chord is the form's and not a search letter.
+  await expect(classification).toHaveAttribute('aria-expanded', 'false');
+  await page.keyboard.press('ControlOrMeta+z');
+  await expect(formal).toHaveValue(savedName);
+  await expect(classification).toBeFocused();
+  await expect(redo).toBeEnabled();
+  await expect(undo).toBeDisabled();
+
+  // Redo, so the form has a step to lose; then an open panel with its own.
+  await redo.click();
+  await expect(formal).toHaveValue('');
+  await expect(undo).toBeEnabled();
+  await dialog.getByRole('combobox', { name: 'Reference' }).click();
+  await page.getByRole('option', { name: 'New Reference' }).click();
+  const panel = dialog.getByRole('group', { name: 'New Reference' });
+  await panel.getByRole('combobox', { name: 'Kind' }).click();
+  await page
+    .getByRole('listbox', { name: 'Kind choices' })
+    .getByRole('option', { name: 'Book', exact: true })
+    .click();
+  const title = panel.getByRole('textbox', { name: /^Title/ });
+  await title.fill('Fixtureleaf Herbal');
+  await expect(panel.getByRole('button', { name: 'Undo', exact: true })).toBeEnabled();
+
+  await page.keyboard.press('ControlOrMeta+z');
+  // The panel's step went, and none of the form's did.
+  await expect(title).toHaveValue('');
+  await expect(formal).toHaveValue('');
+  await expect(undo).toBeEnabled();
+  await expect(redo).toBeDisabled();
+});
+
+// M12.10: one edit dialog walked through the form's undo and redo: a chip, a
+// keyboard reorder, a field in a section that was then folded, a removed
+// variant and a save, which no story walks.
+test('undo and redo carry a chip, a reorder, a folded section, a variant and a save', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'undo-walk@admin-compendium.test', ['discord'], 'admin');
+  const fixture = makeIngredient({
+    name: 'Fixture Undoherb',
+    canonicalName: 'Fixtura undoherba',
+    folkNames: ['Hedge Fixture', 'Lane Fixture'],
+    colors: ['Silver', 'Green'],
+  });
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    // The compendium takes a form as a pick, so each variant links a curated one.
+    const forms =
+      await sql`select id, name from ingredient_forms where name in ('Herb', 'Root') and deleted_at is null`;
+    expect(forms).toHaveLength(2);
+    fixture.variants = forms.map((form) => makeVariant({ form: form.name, formId: form.id }));
+    await insertIngredient(sql, fixture, userId);
+  } finally {
+    await sql.end();
+  }
+  const editUrl = `/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`;
+  await page.goto(editUrl);
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Undoherb/ });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Open All' }).click();
+  const undo = dialog.getByRole('button', { name: 'Undo', exact: true }).first();
+  const redo = dialog.getByRole('button', { name: 'Redo', exact: true }).first();
+  const name = dialog.getByRole('textbox', { name: 'Name', exact: true });
+  // The precondition: both seeded lists and variants are on screen, nothing to undo.
+  await expect(undo).toBeDisabled();
+  await expect(redo).toBeDisabled();
+
+  await test.step('a removed chip comes back and goes again', async () => {
+    const folk = dialog.getByRole('group', { name: 'Folk Names', exact: true });
+    const hedge = folk.getByRole('button', { name: 'Remove Hedge Fixture', exact: true });
+    await expect(hedge).toBeVisible();
+    await hedge.click();
+    await expect(hedge).toHaveCount(0);
+    await expect(undo).toBeEnabled();
+    // A click into the chip box opens its list with nothing highlighted: the chord still counts.
+    const folkBox = folk.getByRole('combobox', { name: 'Folk Name', exact: true });
+    await folkBox.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(hedge).toBeVisible();
+    await expect(folkBox).toBeFocused();
+    await expect(folk.getByRole('button', { name: 'Remove Lane Fixture' })).toBeVisible();
+    await expect(redo).toBeEnabled();
+    await expect(undo).toBeDisabled();
+    await redo.click();
+    await expect(hedge).toHaveCount(0);
+    await expect(folkBox).toBeFocused();
+    await expect(undo).toBeEnabled();
+    await folkBox.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(hedge).toBeVisible();
+    await expect(folkBox).toBeFocused();
+  });
+
+  await test.step('a chord is heard from a select and from a blank spot of the dialog', async () => {
+    const folk = dialog.getByRole('group', { name: 'Folk Names', exact: true });
+    const folkBox = folk.getByRole('combobox', { name: 'Folk Name', exact: true });
+    await folkBox.click();
+    await folkBox.fill('Draft Fixture');
+    await expect(folkBox).toHaveValue('Draft Fixture');
+    // Classification is a select whose open list highlights a choice: it must not swallow the chord.
+    await dialog.getByRole('combobox', { name: 'Classification', exact: true }).click();
+    await page.keyboard.press('Meta+z');
+    await expect(folkBox).toHaveValue('');
+    // The undo puts focus back on Folk Name, which closes the list: an Escape now would close the dialog.
+    await expect(folkBox).toBeFocused();
+
+    await folkBox.click();
+    await folkBox.fill('Second Draft');
+    await expect(folkBox).toHaveValue('Second Draft');
+    // The dialog's heading takes no focus, so the focus falls to the page itself.
+    await dialog.getByRole('heading').first().click();
+    await page.keyboard.press('Meta+z');
+    await expect(folkBox).toHaveValue('');
+  });
+
+  await test.step('a keyboard reorder of Colours is undone and redone', async () => {
+    const colours = dialog.getByRole('group', { name: 'Colours', exact: true });
+    const order = () =>
+      colours
+        .getByRole('button', { name: /^Remove / })
+        .evaluateAll((buttons) => buttons.map((button) => button.getAttribute('aria-label')));
+    const original = ['Remove Silver', 'Remove Green'];
+    const moved = ['Remove Green', 'Remove Silver'];
+    await expect.poll(order).toEqual(original);
+    // Lift, step right, drop: the sensor reads each key a moment after the last.
+    await colours.getByRole('button', { name: 'Move Silver', exact: true }).focus();
+    for (const key of ['Space', 'ArrowRight', 'Space']) {
+      await page.keyboard.press(key);
+      await page.waitForTimeout(150);
+    }
+    await expect.poll(order).toEqual(moved);
+
+    const colourBox = colours.getByRole('combobox', { name: 'Colour', exact: true });
+    await colourBox.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect.poll(order).toEqual(original);
+    await expect(colourBox).toBeFocused();
+    await page.keyboard.press('ControlOrMeta+Shift+z');
+    await expect.poll(order).toEqual(moved);
+    await expect(colourBox).toBeFocused();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect.poll(order).toEqual(original);
+    await expect(colourBox).toBeFocused();
+  });
+
+  await test.step('undo opens a folded section and focuses the field it changed', async () => {
+    const details = dialog.getByRole('button', { name: 'Details & Care', exact: true });
+    // The ingredient's own comes first; the variants' cards are shut and hidden.
+    const description = dialog.getByRole('textbox', { name: 'Description' }).first();
+    await expect(details).toHaveAttribute('aria-expanded', 'true');
+    await description.fill('Typed before folding');
+    await details.click();
+    await expect(details).toHaveAttribute('aria-expanded', 'false');
+    // Focus is on the heading's button, outside the folded fields.
+    await expect(details).toBeFocused();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(details).toHaveAttribute('aria-expanded', 'true');
+    await expect(description).toHaveValue('');
+    await expect(description).toBeFocused();
+    await page.keyboard.press('ControlOrMeta+Shift+z');
+    await expect(description).toHaveValue('Typed before folding');
+  });
+
+  await test.step('a removed variant returns open, and the other card is as it was', async () => {
+    const herb = dialog.getByRole('button', { name: 'Edit Herb', exact: true });
+    const root = dialog.getByRole('button', { name: 'Edit Root', exact: true });
+    await expect(herb).toHaveAttribute('aria-expanded', 'false');
+    await expect(root).toHaveAttribute('aria-expanded', 'false');
+    await dialog.getByRole('button', { name: 'Remove Root', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Remove', exact: true }).click();
+    await expect(root).toHaveCount(0);
+    await expect(herb).toBeVisible();
+
+    await name.click();
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(root).toBeVisible();
+    await expect(root).toHaveAttribute('aria-expanded', 'true');
+    // Focus is on the returned variant's own Form field.
+    await expect(
+      dialog
+        .getByRole('group', { name: 'Root', exact: true })
+        .getByRole('combobox', { name: 'Form', exact: true }),
+    ).toBeFocused();
+    await expect(herb).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  await test.step('a save leaves nothing to undo, here or after a reopen', async () => {
+    const save = dialog.getByRole('button', { name: 'Save Ingredient', exact: true });
+    await expect(save).toBeEnabled();
+    await save.click();
+    await expect(save).toBeDisabled();
+    await expect(undo).toBeDisabled();
+    await expect(redo).toBeDisabled();
+
+    await page.goto(editUrl);
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('button', { name: 'Undo', exact: true }).first()).toBeDisabled();
+    await expect(dialog.getByRole('button', { name: 'Redo', exact: true }).first()).toBeDisabled();
+  });
+});
+
+// M8.13: the elements filter is in the address, as repeated parameters, and
+// the address is the whole state: loaded directly (no control draws it yet,
+// M12.4), it lists the entries holding any element named, the pager keeps it,
+// another control's change keeps it and opens the first page, and a reload
+// and Back show the same list.
+test('?elements= in the address filters the list, survives the pager and another filter, and drops the page', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'element-filter-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  // 28 entries holding fire among others, one earth, one water: thirty in
+  // all, so the name alone spans two pages of 25.
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    for (let i = 1; i <= 30; i++) {
+      const elements: IngredientElement[] =
+        i <= 28 ? ['fire', 'air'] : i === 29 ? ['earth'] : ['water'];
+      await insertIngredient(
+        sql,
+        makeIngredient({
+          name: `Elementwort ${String(i).padStart(2, '0')}`,
+          nomenclature: 'none',
+          elements,
+        }),
+        userId,
+      );
+    }
+  } finally {
+    await sql.end();
+  }
+
+  const row = (n: number) =>
+    page.getByRole('link', { name: `Edit Elementwort ${String(n).padStart(2, '0')}` });
+  const main = page.getByRole('main');
+
+  // One element finds an entry holding it among others; two find either.
+  await page.goto('/admin/compendium?query=Elementwort&elements=earth');
+  await expect(row(29)).toBeVisible();
+  await expect(row(30)).toHaveCount(0);
+  await expect(row(1)).toHaveCount(0);
+  await page.goto('/admin/compendium?query=Elementwort&elements=earth&elements=water');
+  await expect(row(29)).toBeVisible();
+  await expect(row(30)).toBeVisible();
+  await expect(row(1)).toHaveCount(0);
+
+  // 28 hold fire: two pages, and the pager carries the filter to the second.
+  await page.goto('/admin/compendium?query=Elementwort&elements=fire');
+  await expect(row(1)).toBeVisible();
+  await main.getByRole('link', { name: 'Next' }).click();
+  // Why the cursor below could have survived the change: this page holds one.
+  await expect(page).toHaveURL(/[?&]after=/);
+  await expect(page).toHaveURL(/[?&]elements=fire(&|$)/);
+  await expect(row(28)).toBeVisible();
+  await expect(row(1)).toHaveCount(0);
+
+  await page.reload();
+  await expect(page).toHaveURL(/[?&]elements=fire(&|$)/);
+  await expect(row(28)).toBeVisible();
+
+  // Another filter changing keeps the elements and opens the first page.
+  await page.waitForLoadState('networkidle');
+  await main.getByRole('switch', { name: 'No Refs' }).click();
+  await expect(page).toHaveURL(/[?&]withoutReferences=1(&|$)/);
+  await expect(page).toHaveURL(/[?&]elements=fire(&|$)/);
+  await expect(page).not.toHaveURL(/[?&](after|before)=/);
+  await expect(row(1)).toBeVisible();
+
+  await page.goBack();
+  await expect(page).toHaveURL(/[?&]after=/);
+  await expect(page).not.toHaveURL(/withoutReferences/);
+  await expect(row(28)).toBeVisible();
+});
+
+// M8.11: the Categories picker (MB.126's CategoryPicker) in the filter row.
+// The address holds the slugs, repeated; two picks combine with AND; a reload
+// restores the chips; a pick is announced by the picker's own region.
+test('the Categories picker filters by AND, writes repeated slugs, restores on reload and focuses back', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'category-filter-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    const add = (name: string, categories: string[]) =>
+      insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', categories }), userId);
+    await add('Categorywort Both', ['Protection', 'Cleansing']);
+    await add('Categorywort One', ['Protection']);
+    await add('Categorywort None', []);
+  } finally {
+    await sql.end();
+  }
+
+  const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
+  await page.goto('/admin/compendium?query=Categorywort');
+  await page.waitForLoadState('networkidle');
+  // Why the filter could have dropped them: all three are listed unfiltered.
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toBeVisible();
+
+  const box = page.getByRole('combobox', { name: 'Category' });
+  const announcer = page.getByRole('status', { name: 'Categories changes' });
+
+  await box.fill('protection');
+  await page.getByRole('option', { name: /^Protection/ }).click();
+  await expect(page).toHaveURL(/[?&]categories=protection(&|$)/);
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toHaveCount(0);
+  await expect(box).toBeFocused();
+  await expect(announcer).not.toBeEmpty();
+
+  await box.fill('cleansing');
+  await page.getByRole('option', { name: /^Cleansing/ }).click();
+  await expect(page).toHaveURL(/[?&]categories=protection(&|.*&)categories=cleansing(&|$)/);
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toHaveCount(0);
+  await expect(box).toBeFocused();
+
+  // The selected state is programmatic: the picked option is no longer offered.
+  await box.fill('cleansing');
+  await expect(page.getByRole('option', { name: /^Cleansing/ })).toHaveCount(0);
+  await box.fill('');
+
+  await page.reload();
+  await expect(page).toHaveURL(/[?&]categories=cleansing(&|$)/);
+  await expect(edit('Categorywort Both')).toBeVisible();
+  await expect(edit('Categorywort One')).toHaveCount(0);
+
+  // An unknown slug is dropped and the rest still filter.
+  await page.goto(
+    '/admin/compendium?query=Categorywort&categories=nosuchslug&categories=protection',
+  );
+  await expect(edit('Categorywort One')).toBeVisible();
+  await expect(edit('Categorywort None')).toHaveCount(0);
+});
+
+test('the Categories picker is usable at 375px and has no accessibility violations', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  await signInAs(page, 'category-axe-admin@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium?categories=protection');
+  await page.waitForLoadState('networkidle');
+
+  const box = page.getByRole('combobox', { name: 'Category' });
+  await box.scrollIntoViewIfNeeded();
+  await expect(box).toBeVisible();
+  const overflow = await page.evaluate(
+    () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+  );
+  expect(overflow).toBe(false);
+
+  await box.fill('cl');
+  await expect(page.getByRole('option').first()).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+});
+
+// M8.12: the match mode. Two categories show an All and Any choice; Any widens
+// the list to an entry filed under either, writes `categoryMode=any`, and a
+// reload keeps it. Dropping to one category drops the mode from the address.
+test('the match mode widens two categories to Any, is kept in the address, and goes with the second category', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'category-mode-admin@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    const add = (name: string, categories: string[]) =>
+      insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', categories }), userId);
+    await add('Modewort Both', ['Protection', 'Cleansing']);
+    await add('Modewort One', ['Protection']);
+    await add('Modewort None', []);
+  } finally {
+    await sql.end();
+  }
+
+  const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
+  const match = page.getByRole('group', { name: 'Match' });
+  await page.goto('/admin/compendium?query=Modewort&categories=protection');
+  await page.waitForLoadState('networkidle');
+  // One category: no mode is offered.
+  await expect(match).toHaveCount(0);
+
+  const box = page.getByRole('combobox', { name: 'Category' });
+  await box.fill('cleansing');
+  await page.getByRole('option', { name: /^Cleansing/ }).click();
+  await expect(match).toBeVisible();
+  await expect(match.getByRole('radio', { name: 'All' })).toBeChecked();
+  // Why Any could differ: under All, the entry with one category is out.
+  await expect(edit('Modewort Both')).toBeVisible();
+  await expect(edit('Modewort One')).toHaveCount(0);
+
+  await match.getByRole('radio', { name: 'Any' }).check();
+  await expect(page).toHaveURL(/[?&]categoryMode=any(&|$)/);
+  await expect(edit('Modewort One')).toBeVisible();
+  await expect(edit('Modewort Both')).toBeVisible();
+  await expect(edit('Modewort None')).toHaveCount(0);
+  await assertNoAccessibilityViolations(page);
+
+  await page.reload();
+  await expect(match.getByRole('radio', { name: 'Any' })).toBeChecked();
+  await expect(edit('Modewort One')).toBeVisible();
+
+  // Back to one category: the mode goes from the address and the group from the page.
+  await page.getByRole('button', { name: 'Remove Cleansing' }).click();
+  await expect(page).not.toHaveURL(/categoryMode/);
+  await expect(match).toHaveCount(0);
+
+  // A second category starts again at All.
+  await box.fill('cleansing');
+  await page.getByRole('option', { name: /^Cleansing/ }).click();
+  await expect(match.getByRole('radio', { name: 'All' })).toBeChecked();
+  await expect(edit('Modewort One')).toHaveCount(0);
 });

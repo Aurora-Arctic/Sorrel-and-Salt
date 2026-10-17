@@ -53,10 +53,12 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $workspaceId: ID!
       $query: String
       $categoryIds: [ID!]
+      $categoryMode: CategoryMode
       $forms: [String!]
       $deityIds: [ID!]
       $zodiacSigns: [String!]
       $celestialBodies: [String!]
+      $elements: [IngredientElement!]
       $toxic: ToxicFilter
       $first: Int
       $after: String
@@ -65,10 +67,12 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         workspaceId: $workspaceId
         query: $query
         categoryIds: $categoryIds
+        categoryMode: $categoryMode
         forms: $forms
         deityIds: $deityIds
         zodiacSigns: $zodiacSigns
         celestialBodies: $celestialBodies
+        elements: $elements
         toxic: $toxic
         first: $first
         after: $after
@@ -116,6 +120,7 @@ beforeEach(async () => {
       categories: ['Protection'],
       zodiacSigns: ['Fixture Ram'],
       celestialBodies: ['Fixture Sun'],
+      elements: ['fire'],
     }),
     A.id,
   );
@@ -166,6 +171,24 @@ describe('workspaceIngredients', () => {
     ]);
   });
 
+  // M8.12: both entries hold Protection and neither Cleansing, so only the
+  // mode decides whether the pair lists them.
+  it('takes a categoryMode, all by default, and refuses a mode that is neither', async () => {
+    const rows = await sql`
+      select id, name from categories where name in ('Protection', 'Cleansing') and deleted_at is null`;
+    const ids = rows.map((row) => row.id);
+    expect(await names({ categoryIds: ids })).toEqual([]);
+
+    expect(await names({ categoryIds: ids, categoryMode: 'all' })).toEqual([]);
+    expect(await names({ categoryIds: ids, categoryMode: 'any' })).toEqual([
+      'Covenwort',
+      'Heldwort',
+    ]);
+
+    const refused = await run(asUser(B), { categoryIds: ids, categoryMode: 'some' });
+    expect(refused.errors).toHaveLength(1);
+  });
+
   it('passes the search, category and facet arguments to the read', async () => {
     const [protection] = await sql`
       select id from categories where name = 'Protection' and deleted_at is null`;
@@ -178,6 +201,8 @@ describe('workspaceIngredients', () => {
     expect(await names({ deityIds: [hecate] })).toEqual(['Covenwort']);
     expect(await names({ zodiacSigns: ['fixture ram'] })).toEqual(['Covenwort']);
     expect(await names({ celestialBodies: ['fixture sun'] })).toEqual(['Covenwort']);
+    expect(await names({ elements: ['fire', 'air'] })).toEqual(['Covenwort']);
+    expect(await names({ elements: ['air'] })).toEqual([]);
     expect(await names({ toxic: 'toxic' })).toEqual(['Heldwort']);
     expect(await names({ toxic: 'not_toxic' })).toEqual(['Covenwort']);
     expect(await names({ toxic: 'any' })).toEqual(['Covenwort', 'Heldwort']);

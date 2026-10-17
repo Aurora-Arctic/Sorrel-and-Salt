@@ -7,7 +7,7 @@
 }
 
 // `$icon-size`: WCAG 2.2's 24px minimum target, around a `$glyph-size`
-// glyph that sits beside a label without raising its line much.
+// icon that sits beside a label without raising its line much.
 .info-tip__button {
   @include icon-button($icon-size, $glyph-size, radius('pill'), help);
 

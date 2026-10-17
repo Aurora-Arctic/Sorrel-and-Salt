@@ -45,7 +45,8 @@ export {
   findWorkspaceIngredientByIdentity,
   findWorkspaceIngredientPage,
 } from './ingredients';
-export { findStockById, findStockOfIngredients } from './stock';
+export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
+export { COVEN_STOCK_LOCK_NAMESPACE, findStockById, findStockOfIngredients } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
 export {
   findAstrologyValueCount,
@@ -107,14 +108,18 @@ export type {
   CitingLink,
   Claimant,
   CommonNameSuggestion,
+  CompendiumFacets,
   CompendiumScore,
   DeityFilter,
   DeitySuggestion,
+  FacetCount,
   FormSuggestion,
   GroupFilter,
+  IngredientFacets,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,
+  HiddenJar,
   IngredientRow,
   InvitableRole,
   InvitableSiteRole,
@@ -134,6 +139,7 @@ export type {
   SlugRedirect,
   SortPart,
   StockRow,
+  VariantRow,
   SuggestingVocabulary,
   UserFilter,
   VocabularySuggestion,

@@ -1,17 +1,13 @@
 import { act } from 'react';
 import { hydrateRoot } from 'react-dom/client';
 import { renderToString } from 'react-dom/server';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import PrePaintScripts from '@/app/pre-paint-scripts';
 
 // The root layout's two pre-paint scripts run from the server's HTML. A
 // document the browser renders itself — Next's recovery when `forbidden()` or
 // `notFound()` is thrown — must not get them: React creates such a script
 // inert and warns (claude-docs/auth/admin-guard.md, "The admin guard").
-
-afterEach(() => {
-  vi.restoreAllMocks();
-});
 
 describe('PrePaintScripts', () => {
   // Hydration starts from the server's snapshot, then re-renders from the
@@ -22,13 +18,12 @@ describe('PrePaintScripts', () => {
     document.body.append(container);
     // Why it could have complained: the scripts are really there to hydrate.
     expect(container.querySelectorAll('script')).toHaveLength(2);
-    const error = vi.spyOn(console, 'error');
 
     await act(async () => {
       hydrateRoot(container, <PrePaintScripts />);
     });
 
-    expect(error).not.toHaveBeenCalled();
+    // Hydration trouble would log, which the dom project fails on (setup-dom.ts).
     container.remove();
   });
 });

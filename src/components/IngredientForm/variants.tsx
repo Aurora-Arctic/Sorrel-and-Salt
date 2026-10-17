@@ -14,12 +14,19 @@ import IconTip from '../IconTip';
 import InfoTip from '../InfoTip';
 import { CategoryField } from './categories';
 import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
-import { useOnEachSubmit } from './on-submit';
+import FormIcon from '../FormIcon';
 import { EditIcon, RemoveIcon } from './icons';
-import { FieldError, TextField } from '../Field';
+import {
+  FieldError,
+  TextField,
+  errorShown,
+  useEditedFieldsContext,
+  useSettledWhilePressed,
+} from '../Field';
 import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
+import { RemoveQuestion } from './remove-question';
 import { CollapsibleSection, FoldFlag, useFoldIds } from './section';
 import { variantSectionSummary, variantSummary } from './summaries';
 import {
@@ -37,6 +44,7 @@ import type {
   FormOption,
   IngredientFormValues,
   ListOption,
+  RestoredVariant,
   SectionFold,
   VariantFieldsetProps,
   VariantFoldList,
@@ -48,6 +56,7 @@ import {
   EMPTY_VARIANT,
   UNNAMED_FORM,
   VARIANT_SECTION_KEYS,
+  fold as folded,
   formRows,
   rankForForm,
   repeatedForm,
@@ -75,6 +84,10 @@ const NONE_OPEN: ReadonlySet<VariantSectionKey> = new Set();
 const padded = (folds: VariantFoldList, length: number): ReadonlySet<VariantSectionKey>[] =>
   Array.from({ length: Math.max(folds.length, length) }, (_, at) => folds[at] ?? NONE_OPEN);
 
+/** The same variant on both sides of a restore: by kept id, else by form, folded as the repeat check folds it. */
+const sameVariant = (a: RestoredVariant, b: RestoredVariant): boolean =>
+  a.variantId && b.variantId ? a.variantId === b.variantId : folded(a.form) === folded(b.form);
+
 /**
  * Which of each variant's own sections are open (MB.115): a list beside the
  * variants, by place, kept in step as the New Form box adds one first and a
@@ -86,7 +99,10 @@ const padded = (folds: VariantFoldList, length: number): ReadonlySet<VariantSect
  */
 export function useVariantFolds(): VariantFolds {
   const [folds, setFolds] = useState<VariantFoldList>([]);
+  const [card, setCard] = useState<number | null>(null);
   return {
+    card,
+    setCard,
     isOpen: (index, section) => (folds[index] ?? NONE_OPEN).has(section),
     toggle: (index, section) =>
       setFolds((now) => {
@@ -103,6 +119,36 @@ export function useVariantFolds(): VariantFolds {
       setFolds(
         Array.from({ length: count }, () => (open ? new Set(VARIANT_SECTION_KEYS) : NONE_OPEN)),
       ),
+    reveal: (index, sections) => {
+      setCard(index);
+      setFolds((now) => {
+        const next = padded(now, index + 1);
+        next[index] = new Set([...next[index], ...sections]);
+        return next;
+      });
+    },
+    reconcile: (from, to) => {
+      // Each old row is matched at most once: two unsaved rows with the same
+      // (or no) form text would otherwise both take the first one's folds.
+      const used = new Set<number>();
+      const matched = to.map((row) => {
+        const at = from.findIndex((old, place) => !used.has(place) && sameVariant(old, row));
+        if (at !== -1) used.add(at);
+        return at;
+      });
+      const returning = matched.indexOf(-1);
+      setFolds((now) =>
+        matched.map((was) =>
+          was === -1 ? new Set(VARIANT_SECTION_KEYS) : (now[was] ?? NONE_OPEN),
+        ),
+      );
+      setCard((now) => {
+        if (returning !== -1) return returning;
+        const kept = now === null ? -1 : matched.indexOf(now);
+        return kept === -1 ? null : kept;
+      });
+      return returning;
+    },
     openErring: (erring) => {
       if (erring.size === 0) return;
       setFolds((now) =>
@@ -123,7 +169,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     useFormContext<IngredientFormValues>();
   const { fields, prepend, remove } = useFieldArray({ control, name: 'variants' });
   const { field } = useController({ control, name: BOX });
-  const { errors, isSubmitted, submitCount } = useFormState({ control, name: [BOX, 'variants'] });
+  const { errors, isSubmitted } = useFormState({ control, name: [BOX, 'variants'] });
   const listed = useWatch({ control, name: 'variants' });
   const [active, setActive] = useState(false);
   const found = curatedOnly(useFormSuggestions(workspaceId, field.value, active), compendium);
@@ -149,16 +195,7 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
   const focusBox = () => boxElement.current?.focus();
 
   // The one variant open, by its place in the list; the rest are a line each.
-  const [open, setOpen] = useState<number | null>(null);
-  const erring = (index: number) => get(errors, `variants.${index}`) !== undefined;
-  // A save that finds an error in a closed variant opens it, the first such,
-  // unless the one open errs too, so the form's focus on the first field
-  // marked invalid can reach it.
-  useOnEachSubmit(submitCount, () => {
-    const first = fields.findIndex((_, index) => erring(index));
-    if (first !== -1 && (open === null || !erring(open))) setOpen(first);
-  });
-
+  const { card: open, setCard: setOpen } = folds;
   const error: string | undefined = get(errors, BOX)?.message;
   // Shown while a compendium entry has no form: it saves, but as information
   // only, which nothing can stock or lay in a spell (MB.215).
@@ -185,6 +222,11 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
       refuse('repeat', why);
       return;
     }
+    // Cleared before the prepend, not after: the field array tells the form's
+    // history of its new row in an effect, later, while setValue tells it at
+    // once, so clearing second would fold the row into the clear's step and
+    // hide it from undo.
+    setValue(BOX, '');
     // Not focused by the field array, which would take the new Form box: the
     // New Form box keeps it, ready for the next. The new variant goes first,
     // just beneath the box, and opens, the owner's call, closing whichever was.
@@ -192,7 +234,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     setOpen(0);
     // Every section open, as a new entry opens (MB.115).
     folds.added();
-    setValue(BOX, '');
     clearErrors(BOX);
     setAnnouncement(`Added ${form}`);
     if (isSubmitted) void trigger(BOX);
@@ -206,8 +247,11 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
       if (current === null || current === index) return null;
       return current > index ? current - 1 : current;
     });
-    focusBox();
   };
+  // The variant whose × asks, by its row id rather than its place, which an
+  // add while asking would move. Until the answer it stays, open or closed.
+  const [removing, setRemoving] = useState<string | null>(null);
+  const removingAt = fields.findIndex((row) => row.id === removing);
 
   return (
     // The last of the ingredient's folding sections, its ⓘ beside the
@@ -285,10 +329,27 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
             workspaceId={workspaceId}
             open={open === index}
             onToggle={(opening) => setOpen(opening ? index : null)}
-            onRemove={removeAt}
+            onRemove={() => setRemoving(row.id)}
             folds={folds}
           />
         ))}
+        <RemoveQuestion
+          asked={removingAt !== -1}
+          question={
+            <>
+              Remove &quot;
+              {(removingAt === -1 ? '' : getValues(`variants.${removingAt}.form`)).trim() ||
+                UNNAMED_FORM}
+              &quot;? What it holds goes with it once saved.
+            </>
+          }
+          onRemove={() => {
+            removeAt(removingAt);
+            setRemoving(null);
+          }}
+          afterRemove={focusBox}
+          onKeep={() => setRemoving(null)}
+        />
         {/* Labelled, so that it is told from the box's own status region. */}
         <output className="visually-hidden" aria-label="Variants changes">
           {announcement}
@@ -315,7 +376,8 @@ function VariantFieldset({
   const at = `variants.${index}` as const;
   const { control } = useFormContext<IngredientFormValues>();
   const variant = useWatch({ control, name: at });
-  const { errors } = useFormState({ control, name: at });
+  const { errors, isSubmitted, touchedFields } = useFormState({ control, name: at });
+  const edited = useEditedFieldsContext();
   const form = variant.form;
   const group = variant.formLink?.group ?? null;
   // Its form, as typed; a form emptied in its box still names the group.
@@ -329,7 +391,18 @@ function VariantFieldset({
   );
   // What a substitute copy skipped, for the notice beneath the list.
   const { onSkip, copyButton, skipped, onDone } = useSkippedCopy(variant.substitutes);
-  const invalid = get(errors, at) !== undefined;
+  // Its own sections, each a disclosure as the ingredient's are (MB.115),
+  // flagged while one holds an error a field draws, and opened by a save
+  // that finds one.
+  // Standing still through a press, as the fields' errors do.
+  const erring = useSettledWhilePressed(
+    variantSectionsWithErrors(
+      get(errors, at),
+      (path) => errorShown({ isSubmitted, touchedFields, edited }, path),
+      `${at}.`,
+    ),
+  );
+  const invalid = erring.size > 0;
   // Flagged only while closed: open, the fields' own errors say it.
   const { id, summaryId, flagId, fieldsId, className, describedBy } = useFoldIds({
     block: 'fieldset ingredient-form__variant',
@@ -338,9 +411,6 @@ function VariantFieldset({
     flagged: invalid && !open,
   });
   const legendId = `${id}-legend`;
-  // Its own sections, each a disclosure as the ingredient's are (MB.115),
-  // flagged while one holds an error and opened by a save that finds one.
-  const erring = variantSectionsWithErrors(get(errors, at));
   const fold = (section: VariantSectionKey): SectionFold => ({
     open: folds.isOpen(index, section),
     invalid: erring.has(section),
@@ -371,6 +441,7 @@ function VariantFieldset({
         <div className="ingredient-form__variant-title">
           {/* The form as the box reads it, its group after it in the muted ink. */}
           <span className="ingredient-form__variant-form">
+            <FormIcon name={variant.formLink?.icon ?? null} />
             <span id={legendId}>{legend}</span>
             {group && <span className="ingredient-form__variant-group"> ({group})</span>}
           </span>
@@ -408,7 +479,7 @@ function VariantFieldset({
             type="button"
             className="ingredient-form__icon-button ingredient-form__remove"
             aria-label={`Remove ${legend}`}
-            onClick={() => onRemove(index)}
+            onClick={onRemove}
           >
             <RemoveIcon />
           </button>

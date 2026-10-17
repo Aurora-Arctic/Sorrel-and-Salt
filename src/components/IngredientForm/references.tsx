@@ -28,6 +28,7 @@ import InfoTip from '../InfoTip';
 import { FieldError } from '../Field';
 import { EditIcon, RemoveIcon, SourceEditIcon } from './icons';
 import ReferencePanel from './reference-panel';
+import { RemoveQuestion } from './remove-question';
 import { useLookup } from './suggestions';
 import type {
   IngredientFormValues,
@@ -44,7 +45,7 @@ import { draftOf, sourceTierOf } from './values';
 // Chicago short form and its locator, described by its whole citation —
 // which its edit opens to the citation whole, its tier and the Locator box; and a panel for a source not
 // yet written. Typed text is a search and never an entry, so the list's last
-// row is "New Reference…", which opens the panel, rather than what was typed
+// row is "New Reference", which opens the panel, rather than what was typed
 // (MB.115, the owner's call). An open row's Edit Source opens the same panel
 // on that source, where the form may change it (MB.115). Only each source's
 // id and locator are sent (claude-docs/components/ingredient-form.md, "The
@@ -213,8 +214,11 @@ export function ReferencesField({
   const pick = (_value: string, option: ReferenceOption | null) => {
     // The list has no typed row, so every pick is a source.
     if (!option) return;
-    add(option.value, option.link);
+    // Cleared before the append, not after: the field array tells the form's
+    // history of its new row in an effect, later, while setValue tells it at
+    // once, so clearing second would hide the row from undo.
     setValue(box, '');
+    add(option.value, option.link);
     revalidate();
   };
   const removeAt = (index: number) => {
@@ -222,6 +226,12 @@ export function ReferencesField({
     remove(index);
     revalidate();
   };
+  // The row whose × asks, by its id rather than its place, which a pick
+  // while asking would move.
+  const [removing, setRemoving] = useState<string | null>(null);
+  const removingAt = fields.findIndex((row) => row.id === removing);
+  const removingLink =
+    removingAt === -1 ? null : (rowValues[removingAt] ?? fields[removingAt]).link;
 
   // Counted, so a request while the panel is open still takes you to it.
   const [summons, setSummons] = useState(0);
@@ -304,12 +314,12 @@ export function ReferencesField({
           onBlur={field.onBlur}
           onPick={pick}
           onCommit={IGNORE_ENTER}
-          onRemoveLast={() => {
-            if (fields.length > 0) removeAt(fields.length - 1);
-          }}
+          // No onRemoveLast: Backspace and Delete in the empty box take no
+          // row, unlike the chip lists; only a row's ×, which asks (the
+          // owner's call, 2026-10-16).
           suggestions={suggestions}
           listAnchor={boxRow}
-          create={{ label: 'New Reference…', onCreate: openPanel }}
+          action={{ label: 'New Reference', onSelect: openPanel }}
           inputRef={(element) => {
             field.ref(element);
             boxElement.current = element;
@@ -389,16 +399,14 @@ export function ReferencesField({
                     <EditIcon />
                   </button>
                 </IconTip>
-                {/* The focus goes back to the box, since the pressed × goes. */}
+                {/* It asks first; once removed, the focus goes back to
+                    the box, since the pressed × goes with its row. */}
                 <button
                   type="button"
                   className="ingredient-form__icon-button ingredient-form__remove"
                   aria-label={`Remove ${name}`}
                   aria-describedby={[citationId, invalid && errorId].filter(Boolean).join(' ')}
-                  onClick={() => {
-                    removeAt(index);
-                    focusBox();
-                  }}
+                  onClick={() => setRemoving(row.id)}
                 >
                   <RemoveIcon />
                 </button>
@@ -480,6 +488,25 @@ export function ReferencesField({
           onCancel={closePanel}
         />
       )}
+      <RemoveQuestion
+        asked={removingLink !== null}
+        question={
+          <>
+            Remove{' '}
+            {removingLink &&
+              renderShortCitation(removingLink, false).map((part, at) =>
+                part.italic ? <i key={at}>{part.text}</i> : part.text,
+              )}
+            ? The source stays, to cite again; only this citation goes, once saved.
+          </>
+        }
+        onRemove={() => {
+          removeAt(removingAt);
+          setRemoving(null);
+        }}
+        afterRemove={focusBox}
+        onKeep={() => setRemoving(null)}
+      />
       {/* Labelled, so that it is told from the box's own status region. */}
       <output className="visually-hidden" aria-label="References changes">
         {announcement}

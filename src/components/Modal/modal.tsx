@@ -32,7 +32,7 @@ import './index.scss';
  */
 const FADE_LIMIT_MS = 400;
 
-/** Motion turned down, or no way to ask — jsdom — so a close is not held for a fade. */
+/** Motion turned down, or no way to ask, so a close is not held for a fade. */
 const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -46,6 +46,7 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
 const Modal = ({
   title,
   eyebrow,
+  destination,
   qualifier,
   onClose,
   size,
@@ -61,6 +62,7 @@ const Modal = ({
     const dialog = ref.current;
     if (!dialog) return;
     // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
+    let cancelled = false;
     if (!dialog.open) {
       dialog.showModal();
       // showModal() puts the focus on the first thing that takes it, which is
@@ -68,9 +70,21 @@ const Modal = ({
       // it goes to the body's first field, or with none to the dialog itself,
       // whose name is read and from which Tab reaches Close. Here, after
       // showModal(), since React's autoFocus runs before it and is overridden.
-      (firstShownField(body.current ?? dialog) ?? dialog).focus();
+      // In a microtask the cleanup below can cancel, not at once: in
+      // development React unmounts and remounts, and closing the dialog blurs
+      // a field already focused, which a form reads as touched, so its
+      // required error showed on a direct load (a blur cannot be undone).
+      // Contents that put the focus somewhere in the body themselves meanwhile,
+      // as a confirmation puts it on its action, keep it there.
+      queueMicrotask(() => {
+        if (cancelled || body.current?.contains(document.activeElement)) return;
+        (firstShownField(body.current ?? dialog) ?? dialog).focus();
+      });
     }
-    return () => dialog.close();
+    return () => {
+      cancelled = true;
+      dialog.close();
+    };
   }, []);
 
   // Contents that arrive after it opened (M9.18), a route modal's form in
@@ -188,8 +202,12 @@ const Modal = ({
         .join(' ')}
       // Focusable by script alone, for a dialog with no field to take the focus.
       tabIndex={-1}
-      // Named by the eyebrow and the heading together: "Edit Ingredient, Mugwort".
-      aria-labelledby={eyebrow ? `${eyebrowId} ${titleId}` : titleId}
+      // Named by the eyebrow and the heading together, "Edit Ingredient,
+      // Mugwort", or by the heading then where it lands, "Add Ingredient to
+      // Whitethorn Coven".
+      aria-labelledby={
+        eyebrow ? `${eyebrowId} ${titleId}` : destination ? `${titleId} ${eyebrowId}` : titleId
+      }
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -207,6 +225,11 @@ const Modal = ({
             <p id={eyebrowId} className="eyebrow">
               {eyebrow}
               <span className="spoken-separator">,</span>
+            </p>
+          )}
+          {destination && !eyebrow && (
+            <p id={eyebrowId} className="eyebrow">
+              <span className="spoken-separator">to</span> {destination}
             </p>
           )}
           <h2 id={titleId} className="modal-dialog__title">

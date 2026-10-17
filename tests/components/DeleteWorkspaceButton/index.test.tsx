@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import DeleteWorkspaceButton from '@/components/DeleteWorkspaceButton';
 
@@ -17,7 +17,10 @@ async function openAndConfirm() {
   render(<DeleteWorkspaceButton workspaceId={ID} name="Fixture Coven" />);
   fireEvent.click(screen.getByRole('button', { name: /^Delete Coven/ }));
   const dialog = await screen.findByRole('dialog');
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Delete Coven' }));
+  // Async, so the request's settling updates land inside act rather than after it.
+  await act(async () => {
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Delete Coven' }));
+  });
 }
 
 describe('DeleteWorkspaceButton', () => {

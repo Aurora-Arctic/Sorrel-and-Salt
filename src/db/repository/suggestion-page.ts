@@ -2,6 +2,7 @@ import { and, asc, desc, gt, lt, sql, type SQL, type SQLWrapper } from 'drizzle-
 import { InvalidCursor } from '../../lib/errors';
 import type { Cursor, PageEntry, PageRequest } from '../../lib/types';
 import { selectFrom } from './select';
+import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 import type { Claimant, SuggestionRow } from './types';
 
 const column = <T = unknown>(name: string) => sql<T>`${sql.identifier(name)}`;
@@ -32,7 +33,7 @@ function position({ key, id }: Cursor): SQL {
 
 /**
  * One page of `source`, a parenthesised, aliased statement whose rows carry
- * `tier`, `id`, `value`, `description`, `group_name`, `fold` and `tiebreak` — and
+ * `tier`, `id`, `value`, `description`, `group_name`, `group_icon`, `fold` and `tiebreak` — and
  * `claimants` when `claimed` — sorted by `(tier, fold, tiebreak)` and cut by
  * cursor as a whole.
  */
@@ -53,6 +54,7 @@ export async function readSuggestionPage(
         value: column<string>('value'),
         description: column<string | null>('description'),
         group: column<string | null>('group_name'),
+        icon: column<FormGroupIcon | null>('group_icon'),
         fold: column<string>('fold'),
         tiebreak: column<string>('tiebreak'),
         claimants: claimed

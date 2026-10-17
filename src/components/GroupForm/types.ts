@@ -1,6 +1,7 @@
 import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 import type { FieldValues, Resolver } from 'react-hook-form';
 import type { z } from 'zod';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { GroupColorColumn, GroupColors } from '../../lib/types';
 
 /**
@@ -56,17 +57,22 @@ export interface GroupKindSpec<Input extends object> extends GroupKindCopy {
 export interface GroupChoice extends Partial<GroupColors> {
   id: string;
   name: string;
+  /** A form group's glyph name, `null` for none; absent for the other kinds. */
+  icon?: FormGroupIcon | null;
 }
 
 /**
  * The fields as typed. A form group has no colours, so its two stay `''` and
- * its schema drops them before the request.
+ * its schema drops them before the request; the other kinds have no glyph, so
+ * their `icon` stays `''` too, and a form group's `''` is None, which its
+ * schema sends as null.
  */
 export interface GroupValues {
   name: string;
   description: string;
   colorDark: string;
   colorLight: string;
+  icon: FormGroupIcon | '';
 }
 
 /** The group being edited, as the form starts from it. */

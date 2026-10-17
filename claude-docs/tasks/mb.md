@@ -261,13 +261,13 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.256 | An unverified account loops on the email page after a link into the shell                                                | Wave 10  | —                      |
 | MB.257 | The Coven Landing Shows a Blank Page Before Redirecting                                                                  | Bugfixes | —                      |
 | MB.258 | The Edit Source Form Leaves Blank Space and Has No Close Button                                                          | Bugfixes | —                      |
-| MB.259 | Category Chips Sometimes Show a UUID Instead of the Name                                                                 | Bugfixes | —                      |
+| MB.259 | ~~Category Chips Sometimes Show a UUID Instead of the Name~~ — **retired, not done**                                     | —        | —                      |
 | MB.260 | Admin Curated Lists Show No Updated Column                                                                               | Bugfixes | —                      |
 | MB.261 | The No Refs Switch Cannot Be Toggled With Enter                                                                          | Bugfixes | —                      |
 | MB.262 | Mail Shows Its Light Colours in Zoho Mail's Dark Mode                                                                    | Bugfixes | —                      |
 | MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
 | MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
-| MB.265 | The Zodiac Signs Filter Test Fails Axe's Title Check Under Load                                                          | Bugfixes | —                      |
+| MB.265 | Admin Pages Fail Axe's Title Check Under Load                                                                            | Bugfixes | —                      |
 | MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
@@ -1358,7 +1358,26 @@ _Acceptance criteria:_
 - Closing the form saves nothing, and the form keeps the form save rules (Cancel stays quiet)
 - The component's doc and story are corrected if the fix changes them
 
-**MB.259 — Category Chips Sometimes Show a UUID Instead of the Name** · 3h
+**MB.259 — ~~Category Chips Sometimes Show a UUID Instead of the Name~~** · **RETIRED 2026-10-16, not done**
+
+> **Retired without being done.** The ID is kept because task IDs are immutable
+> and the analysis below is the record of why the glitch is tolerated.
+>
+> **Why.** The cause was found and reproduced on a production build. The
+> Categories picker names a chip only from the `categories` list, which
+> `listCategories` serves from the compendium data cache for up to an hour
+> (`COMPENDIUM_REVALIDATE_SECONDS`), while the ingredient's picked categories
+> are read live. A category written outside the app, as `db:reset` does by
+> minting new ids, is missing from the cached list, so its chip shows its id
+> until the cache refreshes or an admin edit expires the `compendium` tag.
+> In production that needs a deploy whose reference seed adds a new category
+> and files an entry under it, then an admin opening that entry's form within
+> the hour. The seed only inserts missing rows, so existing categories keep
+> their ids, and the category vocabulary rarely changes. The chip holds a real,
+> live id, so saving is unaffected; the glitch is cosmetic and clears itself.
+> The owner judged it not worth a fix (2026-10-16). The cause is
+> local-development resets, which a `db:reset` that clears the dev data cache
+> would cure if it ever becomes a nuisance.
 
 _Story:_ As a site admin, I want the categories input on an ingredient's edit form to always show category names, so that I can tell which categories an ingredient has and edit them.
 
@@ -1508,9 +1527,9 @@ _Acceptance criteria:_
 - At a phone width the first four tabs and More show as before
 - The measuring render is never painted: no frame shows the row overflowing
 
-**MB.265 — The Zodiac Signs Filter Test Fails Axe's Title Check Under Load** · 2h
+**MB.265 — Admin Pages Fail Axe's Title Check Under Load** · 3h
 
-_Story:_ As a developer running the gate suite, I want the zodiac signs filter test to pass every time, so that a red run means a real regression and not a busy machine.
+_Story:_ As a developer running the gate and story suites, I want axe's title check to pass every time on the admin pages, so that a red run means a real regression and not a busy machine.
 
 Found on 2026-10-16, locally, during M11.18's measurement runs. The gate test "an admin filters the zodiac signs by part of a name" in `tests/e2e/admin.spec.ts` failed twice with an axe-core accessibility violation, rule `document-title` (the document has no title), on `/admin/zodiac-signs?query=AR` after filtering, and passed on every other run. Both sightings were under a load average of 11 to 24, with several Playwright and Vitest runs sharing twelve cores. The page declares a static `title` in its metadata (`src/app/(shell)/admin/(astrology)/zodiac-signs/page.tsx`), so a document without a title should not be possible. One hypothesis is that under load axe runs against a streamed document whose head has not yet carried the title; that is unproven. It is a flaky test, not a broken page, so it is not a hotfix.
 
@@ -1524,12 +1543,24 @@ Steps to reproduce:
 Actual: sometimes axe reports a `document-title` violation and the test fails; the next run passes.
 Expected: the filtered page always carries its title, so axe passes and the test is stable.
 
+Found again on 2026-10-16, locally, in one full `npm run test:stories` run on M8.10's branch, which changes nothing under `src/app/(shell)/admin/users`. Story 60, "the primary admin pauses admin changes …" in `tests/e2e/stories/08-email-and-admin.spec.ts`, failed at its axe check (line 464) with the same `document-title` violation, on `/admin/users` just after the primary admin paused admin changes. Run alone, it passed. Two pages failing the same way makes a shared cause, in the harness or the shell's head, likelier than one in either page.
+
+Steps to reproduce:
+
+1. Run `npm run test:stories`, the full story suite, locally.
+2. Story 60 signs in as the primary admin and opens `/admin/users` filtered to one user.
+3. It presses Pause Admin Changes and confirms in the dialog.
+4. Once the dialog closes and the paused status shows, it runs the axe check.
+
+Actual: sometimes axe reports a `document-title` violation (the page has no non-empty `<title>`); seen once in a full run, and the story passed when run alone.
+Expected: the page always has its title after pausing, and the story passes every run.
+
 _Acceptance criteria:_
 
 - A regression test that fails before the fix: either a reproduction of the missing title (axe run against the page before hydration or during streaming), or, if the title is proved always present, a test showing the harness ran axe too early
-- The cause is established and recorded, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
+- The cause is established and recorded for both pages, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
 - The fix lives where the cause is: the page if the title is missing, `tests/e2e/axe.ts` if the harness ran early, never a retry or a skip
-- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass
+- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass, and ten consecutive runs of story 60 (`npm run test:stories -- -g "pauses admin changes"`) under load pass
 - `claude-docs/testing/e2e.md`'s "Where a run's time goes (M11.18)" section stops calling this failure unexplained once it is explained
 
 **MB.266 — Curators Reach the Admin Curated Lists Again** · 2h
@@ -4001,7 +4032,7 @@ _Story:_ As a coven member, I want the ingredients page to make stock easy to sc
 
 Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — editing a jar from its row (M9.9), last-edited-by on its rows (M6.18, moved here from MB.119 when it moved to Wave 12 on 2026-10-12), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
 
-**Amended by the Wave 12 review (2026-10-16):** the page is a card per ingredient with a jar line per held form (`IngredientCard`, M8.14), not a table, so the list is no longer a `StackTable`. The scope gains the in-stock and low-stock filters and the stock badges (M9.7, M9.8), `StockFields` (M9.9), the edit flow for a local (M8.17), M9.12's add dialog, the Edit control (M12.5), the folk-name control (M12.1), M12.7's glyphs on the jar lines, and the coven home's Contents. Re-estimated from 2h.
+**Amended by the Wave 12 review (2026-10-16):** the page is a card per ingredient with a jar line per held form (`IngredientCard`, M8.14), not a table, so the list is no longer a `StackTable`. The scope gains the in-stock and low-stock filters and the stock badges (M9.7, M9.8), `StockFields` (M9.9), the edit flow for a local (M8.17), M9.12's add dialog, the Edit control (M12.5), the folk-name control (M12.1), M12.7's icons on the jar lines, and the coven home's Contents. Re-estimated from 2h.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 

@@ -57,6 +57,7 @@ const CategoryPicker = ({
   error,
   status,
   action,
+  boxName,
 }: CategoryPickerProps): ReactElement => {
   const id = useId();
   const legendId = `${id}-legend`;
@@ -145,6 +146,7 @@ const CategoryPicker = ({
       </legend>
       <Combobox<CategoryOption>
         id={boxId}
+        name={boxName}
         label={entry}
         value={text}
         onChange={setText}

@@ -53,7 +53,7 @@ describe('RouteModal', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('shows a pressed modal at once over a status, then its form in the same dialog, the focus on its first field', () => {
+  it('shows a pressed modal at once over a status, then its form in the same dialog, the focus on its first field', async () => {
     const { rerender } = render(
       <RouteModalContext.Provider value={opener(HEADING)}>
         <RouteModal closeHref={CLOSE} />
@@ -62,6 +62,7 @@ describe('RouteModal', () => {
     const loading = screen.getByRole('dialog', { name: NAME });
     expect(within(loading).getByRole('status')).toBeInTheDocument();
     expect(within(loading).queryByRole('textbox')).not.toBeInTheDocument();
+    await act(async () => {});
 
     rerender(
       <RouteModalContext.Provider value={opener()}>
@@ -111,12 +112,17 @@ describe('RouteModalProvider', () => {
     );
   const link = () => screen.getByRole('link', { name: 'Edit Testcraft' });
 
-  it('opens the modal on a press of Edit, over a status, while its address is on its way', () => {
+  it('opens the modal on a press of Edit, over a status, while its address is on its way', async () => {
     renderPage();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
 
     // `false`: the link's own navigation was prevented, the provider's taking its place.
-    expect(fireEvent.click(link())).toBe(false);
+    // Awaited, as the close below is: the navigation it starts suspends.
+    let handled = true;
+    await act(async () => {
+      handled = fireEvent.click(link());
+    });
+    expect(handled).toBe(false);
 
     expect(router.push).toHaveBeenCalledWith(EDIT);
     const dialog = screen.getByRole('dialog', { name: NAME });
@@ -125,7 +131,9 @@ describe('RouteModalProvider', () => {
 
   it('closes the pressed modal on Close while it loads, and goes back to its page', async () => {
     renderPage();
-    fireEvent.click(link());
+    await act(async () => {
+      fireEvent.click(link());
+    });
 
     // Awaited: the close renders beside the suspended navigation, which a
     // synchronous act leaves uncommitted.

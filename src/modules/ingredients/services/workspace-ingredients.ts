@@ -11,6 +11,7 @@ import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { ingredientSlug } from '../../../lib/slugify';
+import { carryJarsToLocal } from './carry-stock';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
@@ -39,19 +40,34 @@ type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
  * deities, references, categories and forms, in one transaction. The slug is set here from the
  * label and the formal name.
  *
- * @throws {Forbidden} the caller may not write this coven's ingredients.
+ * Where the ingredient hides a compendium entry the coven holds jars of, they
+ * move onto it (M12.8, `carryJarsToLocal`).
+ *
+ * @throws {Forbidden} the caller may not write this coven's ingredients or
+ * its stock.
+ * @throws {JarMergeNeeded} two jars of one form differ in unit and
+ * `jarMerges` names no amount; nothing is saved.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
  * collides with another of the coven's ingredients, picks a form or deity no
- * curated row holds, files it under no live category, or links a substitute
- * or cites a reference outside the compendium and this coven.
+ * curated row holds, files it under no live category, links a substitute
+ * or cites a reference outside the compendium and this coven, or merges jars
+ * past the largest amount a jar holds.
  */
 export async function createWorkspaceIngredient(
   session: Session,
   workspaceId: string,
   input: IngredientValues,
 ): Promise<IngredientRow> {
-  const membership = await assertMembership(session, workspaceId, { ingredient: ['create'] });
-  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
+  const membership = await assertMembership(session, workspaceId, {
+    ingredient: ['create'],
+    inventory: ['update'],
+  });
+  const {
+    fields: parsed,
+    jarMerges,
+    lists,
+    picked,
+  } = splitChildren(parseInput(LocalIngredientInput, input));
   const picks = await resolvePicks('coven', parsed, picked, []);
   if (picks.issues.length > 0) throw new ValidationError(picks.issues);
   const { fields } = picks;
@@ -59,8 +75,10 @@ export async function createWorkspaceIngredient(
   const columns = ingredientColumns(fields);
 
   return withAudit(session, async (write) => {
+    await write.lockCovenStock(membership);
     const [row] = await write.insertInWorkspace(membership, ingredients, columns);
     await writeChildren(write, [membership], row.id, { ...lists, ...picks.children }, 'add');
+    await carryJarsToLocal(write, membership, row, jarMerges);
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, undefined));
 }
@@ -76,11 +94,18 @@ export async function createWorkspaceIngredient(
  * name, and nothing redirects from the old one: no route reads a coven
  * ingredient's slug.
  *
- * @throws {Forbidden} the caller may not write this coven's ingredients.
+ * Jars the coven holds of a compendium entry the ingredient now hides move
+ * onto it, as in `createWorkspaceIngredient`.
+ *
+ * @throws {Forbidden} the caller may not write this coven's ingredients or
+ * its stock.
+ * @throws {JarMergeNeeded} two jars of one form differ in unit and
+ * `jarMerges` names no amount; nothing is saved.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
  * collides with another of the coven's ingredients, picks a form or deity no
- * curated row holds, files it under no live category, or adds a substitute
- * link or a reference outside the compendium and this coven.
+ * curated row holds, files it under no live category, adds a substitute
+ * link or a reference outside the compendium and this coven, or merges jars
+ * past the largest amount a jar holds.
  * @throws {NotFound} no such ingredient in this coven — the compendium's and
  * other covens' included, and an id that is not one.
  */
@@ -90,8 +115,16 @@ export async function updateWorkspaceIngredient(
   id: string,
   input: IngredientValues,
 ): Promise<IngredientRow> {
-  const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
-  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
+  const membership = await assertMembership(session, workspaceId, {
+    ingredient: ['update'],
+    inventory: ['update'],
+  });
+  const {
+    fields: parsed,
+    jarMerges,
+    lists,
+    picked,
+  } = splitChildren(parseInput(LocalIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
   const held = await heldDeities([membership], id);
@@ -102,6 +135,7 @@ export async function updateWorkspaceIngredient(
   const columns = ingredientColumns(fields);
 
   return withAudit(session, async (write) => {
+    await write.lockCovenStock(membership);
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columns);
     if (!row) throw new NotFound('No such ingredient in this coven');
     await writeChildren(
@@ -111,6 +145,7 @@ export async function updateWorkspaceIngredient(
       { ...lists, ...picks.children, heldDeities: held },
       'replace',
     );
+    await carryJarsToLocal(write, membership, row, jarMerges);
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, columns.slug, id));
 }
@@ -122,7 +157,13 @@ export async function updateWorkspaceIngredient(
  * `updateWorkspaceIngredient`). A row with a formal name keeps its identity
  * key; one without moves it, and may meet another entry's.
  *
- * @throws {Forbidden} the caller may not write this coven's ingredients.
+ * A relabel can make the row hide a compendium entry; its jars then move
+ * onto it, with no `jarMerges` to settle a clash: the refusal then asks for
+ * the two jars to be put in one unit, which the member can do before promoting.
+ *
+ * @throws {Forbidden} the caller may not write this coven's ingredients or
+ * its stock.
+ * @throws {JarMergeNeeded} two jars of one form differ in unit.
  * @throws {ValidationError} the new display name collides with another of the
  * coven's ingredients.
  * @throws {NotFound} no such ingredient in this coven, or no such live folk
@@ -134,7 +175,10 @@ export async function promoteWorkspaceFolkName(
   id: string,
   folkNameId: string,
 ): Promise<IngredientRow> {
-  const membership = await assertMembership(session, workspaceId, { ingredient: ['update'] });
+  const membership = await assertMembership(session, workspaceId, {
+    ingredient: ['update'],
+    inventory: ['update'],
+  });
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
   const current = await findOneByIdInWorkspace(membership, ingredients, id);
   if (!current) throw new NotFound('No such ingredient in this coven');
@@ -144,12 +188,15 @@ export async function promoteWorkspaceFolkName(
   const slug = ingredientSlug(fields.name, fields.canonicalName);
 
   return withAudit(session, async (write) => {
+    await write.lockCovenStock(membership);
     await swapFolkName(write, id, promoted.id, current.name, others);
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, {
       name: fields.name,
       slug,
     });
     if (!row) throw new NotFound('No such ingredient in this coven');
+    // A relabel can make the row hide a compendium entry, so its jars follow.
+    await carryJarsToLocal(write, membership, row, undefined, 'unit');
     return row;
   }).catch((error: unknown) => refuseCollision(error, membership, fields, slug, id));
 }

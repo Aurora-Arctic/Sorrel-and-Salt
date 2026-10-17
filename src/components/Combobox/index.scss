@@ -51,8 +51,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The select-only box: the control itself takes the focus and the press,
-// so it draws its own ring, and points rather than shows a caret.
-.combobox__control--select {
+// so it draws its own ring, and points rather than shows a caret. Weighted
+// with `.input` as the control above is, or that rule's caret wins over the
+// whole box, text and padding alike.
+.input.combobox__control--select {
   cursor: pointer;
 
   &:focus-visible {
@@ -121,6 +123,15 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
     color: $text-placeholder;
   }
+}
+
+// A caller's own control at the start of the control box: a flex item that
+// keeps its own size, and centres its button against the text's line.
+.combobox__leading {
+  display: flex;
+  flex: none;
+  align-items: center;
+  align-self: stretch;
 }
 
 .combobox__indicators {
@@ -232,6 +243,14 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &:focus-visible {
     @include focus-ring;
   }
+
+  // The chevron turns over while the list is open, as the account menu's
+  // does. `aria-expanded` sits on the input, button or control beside the
+  // indicator, never above it, so a selector on it cannot reach the chevron;
+  // the root carries `is-open` while the list is open, and the flip waits on it.
+  .chevron-icon {
+    @include chevron-flip('.combobox.is-open');
+  }
 }
 
 // The list, floating beneath the control at its width, on the card surface
@@ -256,6 +275,50 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &.is-open {
     display: block;
   }
+}
+
+// With an empty message the popup is the placed, bordered panel; the
+// listbox inside it is a plain list with no panel of its own. Without one,
+// the list above is the panel, as it always was. The popup does not scroll:
+// Downshift scrolls the highlighted row into view within the listbox
+// element, so a scroller outside it (the popup) is never moved and an
+// arrowed-to row stays hidden. The listbox is the scroller, as above, and
+// reads `--combobox-list-room`, which the placement sets on the popup and
+// the listbox inherits.
+.combobox__popup {
+  z-index: 1;
+  display: none;
+  box-sizing: border-box;
+  // The popup's rounded edge clips what it holds: a row highlighted at a
+  // corner, or the listbox's own ground, would otherwise paint over the
+  // border there. The listbox inside scrolls as before.
+  overflow: hidden;
+
+  @include floating-panel;
+
+  &.is-open {
+    display: block;
+  }
+}
+
+// Inside the popup the listbox is no panel of its own: the popup draws the
+// edge, the ground, the corners and the shadow, once.
+.combobox__list.is-inset {
+  display: block;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.combobox__list.is-inset:not(.is-open) {
+  display: none;
+}
+
+// The message sits in the popup's surface, set in by a row's padding; the
+// design review styles it.
+.combobox__empty {
+  padding: space(2) space(3);
 }
 
 // A bucket and its rows: no typography-base ◆, no list margins.
@@ -353,6 +416,23 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
 .combobox__option--typed {
   font-style: italic;
+}
+
+// A mark before a row's label or the qualifier: decorative, a little clear of
+// the text, and as tall as the text beside it.
+.combobox__icon {
+  margin-inline-end: space(1);
+}
+
+// The chosen choice's mark ahead of the type-ahead box's text (M12.7):
+// spaced by the values' own gap rather than the row mark's margin, and a
+// press on it is a press on the text, as on the qualifier.
+.combobox__lead {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-inline-end: 0;
+  cursor: text;
 }
 
 // Who claims the value, or what a curated row stands for, beneath its name.
@@ -526,7 +606,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // body ink while it is held.
 .combobox__entry-grip {
   flex: none;
-  // Two columns of dots, half a glyph wide: the mark's own geometry.
+  // Two columns of dots, half an icon wide: the mark's own geometry.
   width: 0.5rem;
   height: $glyph-size;
   color: $text-muted;
@@ -600,7 +680,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// The link mark, a glyph ahead of the text in the button's own ink.
+// The link mark, an icon ahead of the text in the button's own ink.
 .combobox__entry-mark {
   flex: none;
   width: $glyph-size;

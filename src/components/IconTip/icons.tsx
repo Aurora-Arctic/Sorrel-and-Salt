@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-// The pencil every Edit control shows (MB.115): drawn at the glyph size in
+// The pencil every Edit control shows (MB.115): drawn at the icon size in
 // the control's own ink, and hidden from assistive technology, since the
 // control around it is what names it. The ingredient form's rows and the
 // admin lists' rows share it.

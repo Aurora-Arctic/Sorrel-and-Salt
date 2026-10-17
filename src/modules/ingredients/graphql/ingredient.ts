@@ -1,6 +1,11 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS, TOXIC_FILTERS } from '../schema/ingredient-enums';
+import {
+  CATEGORY_MODES,
+  INGREDIENT_ELEMENTS,
+  NOMENCLATURE_KINDS,
+  TOXIC_FILTERS,
+} from '../schema/ingredient-enums';
 import { ReferenceLinkRef } from './references';
 import { CategoryRef, DeityRef, IngredientFormValueRef } from '@/modules/vocabulary';
 import type {
@@ -22,6 +27,12 @@ export const ToxicFilterEnum = builder.enumType('ToxicFilter', {
   values: TOXIC_FILTERS,
   description:
     'Which entries a search keeps by toxicity: any (no filter); toxic, flagged on the entry or on any live form; or not_toxic, flagged on neither.',
+});
+// How a search combines its categories (M8.12), an argument rather than a field.
+export const CategoryModeEnum = builder.enumType('CategoryMode', {
+  values: CATEGORY_MODES,
+  description:
+    'How a search combines the categories it is given: all (the default), an entry must carry every one; or any, at least one. A category counts when it is filed on the entry or on any live form.',
 });
 export const IngredientElementEnum = builder.enumType('IngredientElement', {
   values: INGREDIENT_ELEMENTS,

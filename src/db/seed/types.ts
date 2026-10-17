@@ -167,7 +167,7 @@ export type SeedCategory = Pick<typeof categories.$inferInsert, 'name' | 'descri
 
 export type SeedIngredientFormGroup = Pick<
   typeof ingredientFormGroups.$inferInsert,
-  'name' | 'description'
+  'name' | 'description' | 'icon'
 >;
 
 export type SeedIngredientForm = Pick<

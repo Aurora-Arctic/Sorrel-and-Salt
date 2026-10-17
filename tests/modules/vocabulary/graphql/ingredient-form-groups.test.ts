@@ -33,7 +33,7 @@ beforeEach(async () => {
   await sql`delete from ingredient_form_groups where name like 'Fixture %'`;
 });
 
-const FIELDS = 'id name slug description';
+const FIELDS = 'id name slug description icon';
 const CREATE = `mutation ($input: IngredientFormGroupInput!) {
   createIngredientFormGroup(input: $input) { ${FIELDS} }
 }`;
@@ -89,6 +89,45 @@ describe('createIngredientFormGroup', () => {
     });
     expect(
       await sql`select 1 from ingredient_form_groups where name = 'Fixture-Matter'`,
+    ).toHaveLength(0);
+  });
+});
+
+// The icon standing for the group (M12.6), an enum on the wire as in the
+// table. Which values the service takes, and that an absent one clears, are
+// the service test's; here, that the enum carries them both ways.
+describe('icon', () => {
+  it('is written and read back over the wire, and cleared by a null', async () => {
+    const created = await run<{ createIngredientFormGroup: FormGroupNode }>(asUser(E), CREATE, {
+      input: { ...input(), icon: 'curio' },
+    });
+    const id = created.data?.createIngredientFormGroup.id as string;
+    expect(created.data?.createIngredientFormGroup.icon).toBe('curio');
+
+    const cleared = await run<{ updateIngredientFormGroup: FormGroupNode }>(asUser(E), UPDATE, {
+      id,
+      input: { ...input(), icon: null },
+    });
+
+    expect(cleared.errors).toBeUndefined();
+    expect(cleared.data?.updateIngredientFormGroup.icon).toBeNull();
+    expect((await groupOf(id)).icon).toBeNull();
+  });
+
+  it('refuses a literal that is not one of the six before any resolver runs, writing nothing', async () => {
+    const result = await run(
+      asUser(E),
+      `mutation {
+        createIngredientFormGroup(
+          input: { name: "Fixture Matter", description: "Made over the wire", icon: banana }
+        ) { id }
+      }`,
+    );
+
+    expect(result.data ?? null).toBeNull();
+    expect(result.errors?.[0]?.extensions?.code).toBe('GRAPHQL_VALIDATION_FAILED');
+    expect(
+      await sql`select 1 from ingredient_form_groups where name = 'Fixture Matter'`,
     ).toHaveLength(0);
   });
 });

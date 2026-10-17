@@ -14,6 +14,7 @@ import type {
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
 import type { FieldProps, SelectOption } from '../Field/types';
 import type { Announce, LegendAction } from '../CategoryPicker/types';
@@ -64,7 +65,14 @@ export interface EditedIngredient {
 /** What follows a save: the new ingredient opened, or the form cleared for another. */
 export type AfterSave = 'open' | 'another';
 
-export type SavedIngredient = CreateWorkspaceIngredientMutation['createWorkspaceIngredient'];
+type WorkspaceSaved = CreateWorkspaceIngredientMutation['createWorkspaceIngredient'];
+
+/**
+ * What a save answers: the ingredient, and for a coven’s new one the jars it
+ * holds, which are the ones M12.8 moved onto it. A compendium save carries none.
+ */
+export type SavedIngredient = Omit<WorkspaceSaved, 'stock'> &
+  Partial<Pick<WorkspaceSaved, 'stock'>>;
 
 export type IngredientElement = (typeof INGREDIENT_ELEMENTS)[number];
 
@@ -180,6 +188,8 @@ export interface FormLink {
   id: string;
   name: string;
   group: string | null;
+  /** The group's icon name, or null for a group without one or a form with no group: `FormIcon` draws the generic. */
+  icon: FormGroupIcon | null;
   description: string | null;
 }
 
@@ -339,8 +349,12 @@ export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> ex
   onEdit?: (text: string) => void;
   /** What a pick leaves out of the text, drawn in the box: a picked form's group. */
   qualifier?: ComboboxQualifier;
+  /** A mark drawn before the text, decorative: a picked form's group icon. */
+  icon?: ReactNode;
   /** Whether the typed row is offered: false for a box whose text must be a pick. */
   offerTyped?: boolean;
+  /** The mark on the typed row: a form's is the generic. */
+  typedIcon?: ReactNode;
 }
 
 export interface ListFieldProps {
@@ -504,7 +518,8 @@ export interface VariantFieldsetProps extends LookupFieldProps {
   open: boolean;
   /** Opens it, closing any other, or closes it. */
   onToggle: (open: boolean) => void;
-  onRemove: (index: number) => void;
+  /** Asks whether to remove it; its × does nothing else (the owner's call, 2026-10-16). */
+  onRemove: () => void;
   /** Which of its sections are open, by its place in the list. */
   folds: VariantFolds;
 }
@@ -628,6 +643,9 @@ export type VariantFoldList = readonly ReadonlySet<VariantSectionKey>[];
  * seen here, as each of an edit's is, has every section closed.
  */
 export interface VariantFolds {
+  /** The one variant card open, by its place; the rest are a line each. The form owns it so a restore can open one. */
+  card: number | null;
+  setCard: (update: number | null | ((now: number | null) => number | null)) => void;
   isOpen: (index: number, section: VariantSectionKey) => boolean;
   toggle: (index: number, section: VariantSectionKey) => void;
   /** A variant added first in the list, as the New Form box adds one, with every section open. */
@@ -637,6 +655,29 @@ export interface VariantFolds {
   setAll: (open: boolean, count: number) => void;
   /** Opens, in each variant, the sections the map names, keyed by its place. */
   openErring: (erring: ReadonlyMap<number, ReadonlySet<VariantSectionKey>>) => void;
+  /** Opens a variant's card and the sections of it a restore changed. */
+  reveal: (index: number, sections: ReadonlySet<VariantSectionKey>) => void;
+  /**
+   * Re-keys the folds to a restored list: a row kept keeps its folds, one
+   * that returns opens with every section open and takes the card, one gone
+   * is dropped. Rows match by `variantId`, else by their form. Returns the place
+   * of the first row that returned, or -1 when none did.
+   */
+  reconcile: (from: readonly RestoredVariant[], to: readonly RestoredVariant[]) => number;
+}
+
+/** What a restore (M12.10) has to open to show the fields it changed. */
+export interface RestoredSections {
+  /** The ingredient's own sections, Variants among them when a variant changed. */
+  sections: Set<SectionKey>;
+  /** Each changed variant, by its place, and the sections of it that hold a change. */
+  variants: Map<number, Set<VariantSectionKey>>;
+}
+
+/** What a restore needs to tell one variant from another. */
+export interface RestoredVariant {
+  variantId?: string;
+  form: string;
 }
 
 /**
@@ -718,4 +759,18 @@ export interface SkippedNoticeProps {
   onDone: () => void;
   /** The variant's Copy From Ingredient, which takes the focus when the notice goes. */
   copyButton: RefObject<HTMLButtonElement | null>;
+}
+
+/** A variant's or a reference row's removal, asked before it goes. */
+export interface RemoveQuestionProps {
+  /** A removal is waiting on the answer. */
+  asked: boolean;
+  /** "Remove "Oil"? …", naming the row. */
+  question: ReactNode;
+  /** Removes the row and stops asking, both in the one commit. */
+  onRemove: () => void;
+  /** Where the focus goes once the row and the question have gone. */
+  afterRemove: () => void;
+  /** Stops asking, the row kept. */
+  onKeep: () => void;
 }

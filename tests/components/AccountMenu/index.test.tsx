@@ -18,7 +18,7 @@ const keepPage = (event: Event): void => event.preventDefault();
 
 beforeEach(() => {
   pathname.mockReturnValue('/coven/fixture-coven');
-  // jsdom cannot navigate; a pressed link would only log that it cannot.
+  // happy-dom cannot navigate; a pressed link would only log that it cannot.
   document.addEventListener('click', keepPage);
 });
 

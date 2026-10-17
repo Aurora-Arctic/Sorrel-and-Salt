@@ -192,6 +192,17 @@ describe('createCategoryGroup', () => {
     },
   );
 
+  // An icon is a form group's (M12.6): a category group's input drops one,
+  // even a value a form group would refuse, rather than reading it.
+  it('takes no icon, writing the group as though none were given', async () => {
+    const withIcon = { ...input(), icon: 'banana' } as CategoryGroupInput;
+
+    const created = await createCategoryGroup(admin, withIcon);
+
+    expect(created).not.toHaveProperty('icon');
+    expect(await groupOf(created.id)).toMatchObject({ name: 'Fixture Wards', deleted_at: null });
+  });
+
   it.each(NON_ADMINS)('refuses %s, writing nothing', async (_who, user) => {
     await expect(createCategoryGroup(asUser(user), input())).rejects.toThrow(Forbidden);
     expect(await countNamed('Fixture Wards')).toBe(0);

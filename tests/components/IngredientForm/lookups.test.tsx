@@ -1,4 +1,4 @@
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { FormProvider, useForm } from 'react-hook-form';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -16,8 +16,9 @@ import {
   EMPTY_VARIANT,
   ingredientResolver,
 } from '@/components/IngredientForm/values';
+import FormIcon from '@/components/FormIcon';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { renderWithClient } from '../../support/ingredient-form';
+import { renderWithClient, waitFor } from '../../support/ingredient-form';
 import { press, type } from '../../support/interact';
 import {
   WORKSPACE_ID,
@@ -88,13 +89,14 @@ beforeEach(() => {
 afterEach(() => {
   vi.useRealTimers();
 });
-const settle = () => act(() => vi.advanceTimersByTime(DEBOUNCE_MS));
+/** Lets the typing settle, and what it sets going — an open list's position, a microtask on — land inside `act`. */
+const settle = () => act(async () => void vi.advanceTimersByTime(DEBOUNCE_MS));
 /** Focuses the box, waits for its first, empty ask, then types `text` and lets it settle. */
 const lookUp = async (entry: string, calls: unknown[], text: string) => {
   act(() => box(entry).focus());
   await waitFor(() => expect(calls).toHaveLength(1));
   type(entry, text);
-  settle();
+  await settle();
   await waitFor(() => expect(calls).toHaveLength(2));
 };
 
@@ -106,6 +108,7 @@ describe('FormField', () => {
     value: 'Wax',
     description: null,
     group: 'Animal',
+    icon: null,
     curated: true,
     claimants: [{ name: 'Testwort', canonicalName: 'Fixtura testalis' }],
   };
@@ -114,6 +117,7 @@ describe('FormField', () => {
     value: 'Wax',
     description: 'Candle and poppet wax.',
     group: 'Substance',
+    icon: null,
     curated: true,
     claimants: [],
   };
@@ -123,6 +127,7 @@ describe('FormField', () => {
     value: 'Rhizomes',
     description: null,
     group: null,
+    icon: null,
     curated: false,
     claimants: [{ name: 'Mockleaf', canonicalName: null }],
   };
@@ -151,7 +156,7 @@ describe('FormField', () => {
     renderField();
     const calls = offerForms([WAX_ANIMAL]);
 
-    settle();
+    await settle();
     expect(calls).toHaveLength(0);
 
     act(() => box('Form').focus());
@@ -162,7 +167,7 @@ describe('FormField', () => {
     act(() => vi.advanceTimersByTime(DEBOUNCE_MS - 1));
     expect(calls).toHaveLength(1);
 
-    settle();
+    await settle();
     await waitFor(() => expect(calls).toHaveLength(2));
     expect(calls[1]).toEqual({ workspaceId: WORKSPACE_ID, query: 'wax', first: 10 });
   });
@@ -188,6 +193,36 @@ describe('FormField', () => {
     expect(rows.getAllByRole('option')[0]).toHaveAccessibleName(expect.stringContaining('wax'));
   });
 
+  // M12.7: a curated form wears its group's icon, one only in use the spoon,
+  // and a pick carries its icon into the box, before the form's name (the
+  // owner's call), never into the group's brackets.
+  it('draws each suggestion and the picked form with its group icon, the spoon where there is none', async () => {
+    const { container: animal } = render(<FormIcon name="animal" />);
+    const { container: spoon } = render(<FormIcon name={null} />);
+    const glyph = (el: HTMLElement) => el.querySelector('svg')!.innerHTML;
+    renderField();
+    const calls = offerForms([{ ...WAX_ANIMAL, icon: 'animal' }, RHIZOMES]);
+
+    await lookUp('Form', calls, 'wax');
+
+    const curated = await screen.findByRole('option', { name: /^Wax \(Animal\)/ });
+    expect(glyph(curated)).toBe(glyph(animal));
+    expect(glyph(screen.getByRole('option', { name: /^Rhizomes/ }))).toBe(glyph(spoon));
+
+    fireEvent.click(curated);
+    // The box's own row, its text and what is drawn with it, short of the chevron.
+    const control = box('Form').closest('.combobox__values') as HTMLElement;
+    const marks = control.querySelectorAll('[aria-hidden="true"] svg');
+    expect(marks).toHaveLength(1);
+    expect(marks[0].innerHTML).toBe(glyph(animal));
+    expect(marks[0].compareDocumentPosition(box('Form'))).toBe(Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(box('Form')).toHaveAccessibleName('Form');
+
+    // Typed away from the pick, the box holds text alone and draws no mark.
+    type('Form', 'wa');
+    expect(control.querySelector('svg')).toBeNull();
+  });
+
   // MB.169: the text alone reads the same for both Waxes; the group tells
   // which was picked, and the id records it.
   it('fills the field from a pick, shows its group in the box and sends its id', async () => {
@@ -211,7 +246,7 @@ describe('FormField', () => {
     const calls = offerForms([WAX_ANIMAL, WAX_SUBSTANCE]);
 
     await pickWax(calls, /^Wax \(Substance\)/);
-    settle();
+    await settle();
     fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
     fireEvent.click(await screen.findByRole('option', { name: /^Wax \(Animal\)/ }));
 
@@ -369,7 +404,7 @@ describe('LookupListField', () => {
       renderList(list);
       const calls = offer();
 
-      settle();
+      await settle();
       expect(calls).toHaveLength(0);
 
       await lookUp(list.entry, calls, 'mo');
@@ -434,7 +469,7 @@ describe('LookupListField', () => {
     expect(typedRow('Mo')).toBeInTheDocument();
 
     type('Celestial Body', ' MOON ');
-    settle();
+    await settle();
     await screen.findByRole('option', { name: 'Moonfixture' });
     expect(typedRow('MOON')).not.toBeInTheDocument();
   });
@@ -467,7 +502,7 @@ describe('LookupListField', () => {
     fireEvent.click(await screen.findByRole('option', { name: /^Hecate \(Greek\)/ }));
     expect(changes('Deities')).toHaveTextContent('Hecate (Greek)');
     type('Deity', 'hecate');
-    settle();
+    await settle();
     fireEvent.click(await screen.findByRole('option', { name: 'Hecate (Roman)' }));
 
     // Its description in its tooltip and its x's description, as a linked
@@ -541,7 +576,7 @@ describe('LookupListField', () => {
     await screen.findByRole('option', { name: /^Mockwort/ });
     fireEvent.keyDown(box('Substitute Ingredient'), { key: 'Enter' });
     type('Substitute Ingredient', 'Mockwort Rind');
-    settle();
+    await settle();
     fireEvent.click(
       await screen.findByRole('option', { name: 'Use what you typed: Mockwort Rind' }),
     );

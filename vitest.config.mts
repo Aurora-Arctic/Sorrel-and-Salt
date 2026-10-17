@@ -78,12 +78,12 @@ const DB_MOCKING = DB_FILES.filter(leaksPastItsFile);
 // Playwright's (its specs end `.spec.ts`, but say so).
 export const NOT_UNIT = [...DB_FILES, 'tests/rsc/**', 'tests/e2e/**'];
 
-// The `.ts` tests that need jsdom's `location` all the same: Better Auth's
+// The `.ts` tests that need a browser's `location` all the same: Better Auth's
 // client reads `window.location.origin` and `document.cookie`, and the MSW
 // helpers' test fetches the relative `/api/graphql` the helpers match.
 export const DOM_TS = ['tests/lib/auth-client.test.ts', 'tests/support/msw/graphql.test.ts'];
 
-// Five projects: `unit` in node and `dom` in jsdom, both with MSW refusing any
+// Five projects: `unit` in node and `dom` in happy-dom, both with MSW refusing any
 // request a test did not register; `db` and `db-mocking` against local
 // Postgres through tests/support/db-project.mts's `dbHarness`, split by
 // whether a file mocks (DB_MOCKING above); and `rsc` for what can only be
@@ -91,7 +91,7 @@ export const DOM_TS = ['tests/lib/auth-client.test.ts', 'tests/support/msw/graph
 // Vitest's (tests/e2e/stories/; claude-docs/testing/acceptance.md).
 //
 // `unit` and `dom` split on the file extension: a `.tsx` test renders and gets
-// jsdom, a `.ts` test runs in node unless DOM_TS names it. jsdom, jest-dom and
+// happy-dom, a `.ts` test runs in node unless DOM_TS names it. The DOM library, jest-dom and
 // React Testing Library together cost more per file than most guards take to
 // run, and `environment` was a third of CI's worker time before the split
 // (MB.97). tests/guards/test-location.test.ts holds every test file to exactly
@@ -138,6 +138,10 @@ export default defineConfig({
     // runs at the top of a setup file, not in a hook
     // (claude-docs/ci/runner-budget.md, "Where a gate run's time goes").
     testTimeout: 20_000,
+    // Worker threads rather than Vitest's default forked processes: a file
+    // that is given a fresh worker pays a thread's start-up, not a process's
+    // (about 5 to 10% of a coverage run at three workers, measured on M11.24).
+    pool: 'threads',
     // Quiet under Claude Code, which sets `CLAUDECODE=1` in its shell and
     // nothing else does: a session reads the per-file coverage table and the
     // per-file test lines, ~400 lines a run, and needs neither — a failure
@@ -148,9 +152,12 @@ export default defineConfig({
     // unchanged.
     reporters: process.env.CLAUDECODE ? ['dot'] : ['default'],
     silent: process.env.CLAUDECODE ? 'passed-only' : false,
-    // Node 24 warns from every worker that `localStorage` has no
-    // `--localstorage-file`: two lines a worker, 185 workers a run.
-    execArgv: process.env.CLAUDECODE ? ['--disable-warning=ExperimentalWarning'] : [],
+    // Node 26 ships its own `localStorage` global and warns from every worker
+    // that it has no `--localstorage-file`: two lines a worker, 185 workers a
+    // run. Switching the feature off removes the global (happy-dom supplies the
+    // `dom` project's), where `--disable-warning` would hide every experimental
+    // warning, ours included.
+    execArgv: ['--no-experimental-webstorage'],
     // Both under .reports/ with the rest of the generated output; without
     // `outputFile`, the json and html reporters would write to `.vitest/`.
     // CI's `--outputFile` on the command line still wins.
@@ -160,7 +167,7 @@ export default defineConfig({
     },
     coverage: {
       // Istanbul instruments only the `include` files, at transform time. v8
-      // collected everything a worker ran, jsdom and React's development build
+      // collected everything a worker ran, the DOM library and React's development build
       // included, and remapped it onto src/, which made the coverage run half as
       // long again as the plain one; istanbul's costs it a few seconds
       // (claude-docs/design-decisions/mb.191-coverage-provider.md).
@@ -201,7 +208,9 @@ export default defineConfig({
         extends: true,
         test: {
           name: 'dom',
-          environment: 'jsdom',
+          // happy-dom, chosen over jsdom for speed (M11.25: claude-docs/design-decisions/m11.25-plan.md);
+          // what it leaves out is declared in tests/support/setup-dom.ts.
+          environment: 'happy-dom',
           globals: true,
           include: ['tests/**/*.test.tsx', ...DOM_TS],
           exclude: NOT_UNIT,

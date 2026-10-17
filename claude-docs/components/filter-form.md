@@ -23,13 +23,13 @@ a full page load.
 
 `FilterFormProps` (`types.ts`):
 
-| Prop         | What it is                                                                                                                                            |
-| ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `label`      | The form's accessible name, title case: "Filter Users"                                                                                                |
-| `action`     | The page itself, the path its list's `href.ts` exports: what the form submits to natively before hydration, and the unfiltered first page Clear opens |
-| `searchHref` | Builds the address the search's submit opens: the filter shown with the search box's text, trimmed, from the first page, usually through `listHref`   |
-| `shown`      | Each value of the filter the page shows: Clear is drawn while any is set                                                                              |
-| `children`   | The fields, a `SearchField` first, each with the `name` the page reads                                                                                |
+| Prop         | What it is                                                                                                                                               |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `label`      | The form's accessible name, title case: "Filter Users"                                                                                                   |
+| `action`     | The page itself, the path its list's `href.ts` exports: what the form submits to natively before hydration, and the unfiltered first page Clear opens    |
+| `searchHref` | Builds the address the search's submit opens: the filter shown with the search box's text, trimmed, from the first page, usually through `listHref`      |
+| `shown`      | Each value of the filter the page shows: Clear is drawn while any is set                                                                                 |
+| `children`   | The fields, a `SearchField` first (or `IngredientSearch`'s box, see [`ingredient-search.md`](ingredient-search.md)), each with the `name` the page reads |
 
 Beside the component, `index.tsx` exports `useApplyFilter()`, which returns
 `apply(href)`: it opens `href` softly through the list's `ListFrame` and
@@ -54,7 +54,8 @@ already above them.
   `defaultChecked` ([`field.md`](field.md)), since the new list draws the filter again from
   what it shows.
 - **The search carries its own submit**, `SearchField`'s magnifier named
-  Search ([`field.md`](field.md)). It is the form's one submit button, so
+  Search ([`field.md`](field.md)); `IngredientSearch`'s box draws the same
+  one. It is the form's one submit button, so
   Enter in any text box submits natively, and it is always offered: the
   same text again reads the list again, which is harmless, where a submit
   disabled until something changed read as dead (the owner's call). There

@@ -5,6 +5,7 @@ import { type MouseEvent, type ReactElement, useState } from 'react';
 import { ComboboxEntry } from './entry';
 import { keepEscapeInList } from './escape';
 import { ChevronIcon, ClearIcon } from './icons';
+import { EmptyMessage, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
 import type { ComboboxChoice, ComboboxMultiSelectProps } from './types';
@@ -23,6 +24,9 @@ const CHOOSING: readonly string[] = [
   selectTypes.ToggleButtonKeyDownSpaceButton,
   selectTypes.ItemClick,
 ];
+
+/** What the open list says with every choice made: the one place it is worded. */
+const EVERY_CHOICE = 'Every option is already chosen';
 
 export function ComboboxMultiSelect({
   id,
@@ -67,7 +71,7 @@ export function ComboboxMultiSelect({
 
   // A choice keeps the list open for the next, as Downshift's multi-select
   // does, with the row below it under the highlight; a list with nothing
-  // left to offer never opens.
+  // left to offer opens to say so, as the typed box says it found nothing.
   const keepChoosing = (
     state: { highlightedIndex: number },
     { type, changes }: UseSelectStateChangeOptions<ComboboxChoice>,
@@ -79,7 +83,6 @@ export function ComboboxMultiSelect({
         highlightedIndex: Math.min(state.highlightedIndex, left.length - 2),
       };
     }
-    if (changes.isOpen && left.length === 0) return { ...changes, isOpen: false };
     return changes;
   };
 
@@ -118,7 +121,7 @@ export function ComboboxMultiSelect({
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen);
 
   return (
-    <div className="combobox" ref={setControl}>
+    <div className={isOpen ? 'combobox is-open' : 'combobox'} ref={setControl}>
       {/* Presentational, as the typed box's control is: the box inside is
           what a reader and the keyboard reach, and the chips' x and the
           clear sit beside it rather than inside it, so that a press or a key
@@ -133,9 +136,11 @@ export function ComboboxMultiSelect({
         <div className="combobox__values">
           {chosen.length > 0 && (
             <ul className="combobox__entries">
-              {chosen.map((choice) => (
+              {chosen.map((choice, index) => (
                 <ComboboxEntry
-                  key={choice.value}
+                  // The position joins the value: a repeat can be loaded (the form
+                  // refuses it only on save), and two chips must not share a key.
+                  key={`${index}-${choice.value}`}
                   value={choice.label}
                   onRemove={() => {
                     removeSelectedItem(choice);
@@ -205,30 +210,40 @@ export function ComboboxMultiSelect({
           </span>
         </div>
       </div>
-      {/* Always in the page, as Downshift asks; empty and hidden while closed. */}
-      <ul
-        className={isOpen ? 'combobox__list is-open' : 'combobox__list'}
-        // Placed beneath or above the box, as there is room (useListPosition).
+      {/* Always in the page, as Downshift asks; empty and hidden while closed.
+          The popup is what is placed, so a message beneath the listbox moves
+          with it: the typed box's own markup. */}
+      <Popup
+        wrapped
+        popupRef={setList}
+        open={isOpen}
         style={listStyle}
-        data-placement={placement}
-        {...getMenuProps({ ref: setList, 'aria-label': `${label} choices` })}
+        placement={placement}
+        after={isOpen && left.length === 0 && <EmptyMessage>{EVERY_CHOICE}</EmptyMessage>}
       >
-        {isOpen &&
-          left.map((choice, index) => (
-            <li
-              key={choice.value}
-              className={
-                index === highlightedIndex ? 'combobox__option is-highlighted' : 'combobox__option'
-              }
-              {...getItemProps({ item: choice, index })}
-            >
-              <span className="combobox__label">{choice.label}</span>
-            </li>
-          ))}
-      </ul>
+        <ul
+          className={isOpen ? 'combobox__list is-inset is-open' : 'combobox__list is-inset'}
+          {...getMenuProps({ 'aria-label': `${label} choices` })}
+        >
+          {isOpen &&
+            left.map((choice, index) => (
+              <li
+                key={choice.value}
+                className={
+                  index === highlightedIndex
+                    ? 'combobox__option is-highlighted'
+                    : 'combobox__option'
+                }
+                {...getItemProps({ item: choice, index })}
+              >
+                <span className="combobox__label">{choice.label}</span>
+              </li>
+            ))}
+        </ul>
+      </Popup>
       {/* Labelled, so that it is told from any other status on the page. */}
       <output className="visually-hidden" aria-label={`${label} changes`}>
-        {announcement}
+        {isOpen && left.length === 0 ? EVERY_CHOICE : announcement}
       </output>
     </div>
   );
