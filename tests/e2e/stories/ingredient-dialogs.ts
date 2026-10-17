@@ -13,10 +13,15 @@ import { expect } from '../fixtures';
  * The shell's Add Ingredient, in the bar: the one global action
  * (claude-docs/components/app-shell.md; design-decisions/mb.7-navigation.md).
  * Found inside the banner, the bar's `header`, so the empty list's own Add
- * Ingredient (M9.11) is never taken for it.
+ * Ingredient (M9.11) is never taken for it. A button that opens the dialog,
+ * or on an admin page, for a curator, a link to the admin Compendium's
+ * `?new` (M8.16), so "none" means neither.
  */
 export function shellAddIngredient(page: Page): Locator {
-  return page.getByRole('banner').getByRole('button', { name: 'Add Ingredient', exact: true });
+  const banner = page.getByRole('banner');
+  return banner
+    .getByRole('button', { name: 'Add Ingredient', exact: true })
+    .or(banner.getByRole('link', { name: 'Add Ingredient', exact: true }));
 }
 
 /** The shell's Add Ingredient, which on a coven's page adds to that coven (claude-docs/components/app-shell.md). */
@@ -156,21 +161,15 @@ export function shellEditControls(page: Page): Locator {
 
 /**
  * The add dialog's Coven select, for someone in more than one coven (M8.16):
- * a combobox named "Coven" showing the chosen coven's name, its covens
- * offered in the list "Coven choices", as the form's Classification offers
- * its kinds in "Classification choices". The names are this file's choice,
- * after the form's own pickers; M8.16 may build it as a native select, whose
- * role is a combobox too but whose value is the option's, and corrects
- * `choice` here if so.
+ * a native `<select>` named "Coven", so its role is a combobox, its value the
+ * chosen coven's id, and each coven an `option` inside it, a view-only one
+ * disabled. Read in the DOM rather than by opening the list, which a native
+ * select draws outside the page.
  */
 export function covenSelect(dialog: Locator) {
   const box = dialog.getByRole('combobox', { name: 'Coven', exact: true });
   return {
     box,
-    choice: (name: string) =>
-      dialog
-        .page()
-        .getByRole('listbox', { name: 'Coven choices', exact: true })
-        .getByRole('option', { name, exact: true }),
+    choice: (name: string) => box.getByRole('option', { name, exact: true }),
   };
 }
