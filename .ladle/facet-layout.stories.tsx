@@ -24,7 +24,7 @@ import './facet-layout.scss';
 
 // A mock-up of M12.4's filter layout as the owner chose it (layout F of
 // claude-docs/design-decisions/m12.4-filter-layout.md): a search box with a Filters
-// button, the chosen values as chips, a sentence above the results. Composed from the
+// button, a sentence above the results. Composed from the
 // existing primitives with fixed counts and a static sentence; nothing here is the real
 // build and none of it is tested. The other layouts the record weighed are in git history.
 export default {
@@ -736,7 +736,7 @@ function TypedSentence({
         </button>
       </div>
       <details
-        className="facet-layout__disclosure"
+        className={`facet-layout__disclosure${!searching && (tail === 'open' || tail === 'opening') ? ' is-tail-open' : ''}`}
         open={tail !== 'closed'}
         inert={searching}
         aria-hidden={searching || undefined}
@@ -757,14 +757,15 @@ function TypedSentence({
                   ? 'Hide search details'
                   : 'Show search details'}
               </span>
-              <span
-                aria-hidden="true"
-                className={`facet-layout__chevron${tail === 'open' || tail === 'opening' ? ' facet-layout__chevron--up' : ''}`}
-              >
-                <ChevronIcon />
-              </span>
             </>
           )}
+          {/* Always drawn, and faded by opacity: it settles in when a search ends and out when one starts. */}
+          <span
+            aria-hidden="true"
+            className={`facet-layout__chevron${searching ? ' is-hidden' : ''}`}
+          >
+            <ChevronIcon />
+          </span>
         </summary>
         {tailBlock}
       </details>
@@ -890,9 +891,6 @@ function Layout({
     (l) => l.length > 0,
   ).length;
   const filterCount = facets + (toxic === 'any' ? 0 : 1);
-  const without = (list: string[], set: (next: string[]) => void, value: string) =>
-    set(list.filter((other) => other !== value));
-  const categoryName = (id: string) => CATEGORIES.find((c) => c.id === id)?.name ?? id;
 
   const search = (
     <SearchField
@@ -1006,97 +1004,6 @@ function Layout({
     <SwitchField label="No Refs" name="withoutReferences" value="1" onChange={() => {}} />
   );
 
-  const countOf = (list: Counted[], name: string) => list.find((i) => i.name === name)?.count ?? 0;
-  const chosen: {
-    key: string;
-    label: string;
-    count: number;
-    remove: () => void;
-    group?: PickerCategory['group'];
-  }[] = [
-    ...categories.map((id) => ({
-      key: `c-${id}`,
-      group: CATEGORIES.find((category) => category.id === id)?.group,
-      label: categoryName(id),
-      count: CATEGORY_COUNTS[id] ?? 0,
-      remove: () => without(categories, setCategories, id),
-    })),
-    ...forms.map((v) => ({
-      key: `f-${v}`,
-      label: v,
-      count: countOf(FORMS, v),
-      remove: () => without(forms, setForms, v),
-    })),
-    ...deities.map((v) => ({
-      key: `d-${v}`,
-      label: v,
-      count: countOf(DEITIES, v),
-      remove: () => without(deities, setDeities, v),
-    })),
-    ...zodiac.map((v) => ({
-      key: `z-${v}`,
-      label: v,
-      count: countOf(ZODIAC, v),
-      remove: () => without(zodiac, setZodiac, v),
-    })),
-    ...planets.map((v) => ({
-      key: `p-${v}`,
-      label: v,
-      count: countOf(PLANETS, v),
-      remove: () => without(planets, setPlanets, v),
-    })),
-    ...elements.map((v) => ({
-      key: `e-${v}`,
-      label: v,
-      count: countOf(ELEMENTS, v),
-      remove: () => without(elements, setElements, v),
-    })),
-    ...(toxic === 'any'
-      ? []
-      : [
-          {
-            key: 'toxic',
-            label: toxic === 'toxic' ? 'Toxic' : 'Not Toxic',
-            count: TOXIC_COUNTS[toxic],
-            remove: () => setToxic('any'),
-          },
-        ]),
-  ];
-
-  const chosenChips =
-    chosen.length > 0 ? (
-      <ul
-        className="facet-layout__chosen"
-        aria-label="Chosen filters"
-        aria-busy={chosen.some((item) => isPending(item.key)) || undefined}
-      >
-        {chosen.map((item) => (
-          <li key={item.key}>
-            <button
-              type="button"
-              className={item.group ? 'is-coloured' : undefined}
-              style={item.group ? chipColors(item.group) : undefined}
-              onClick={item.remove}
-              aria-label={`Remove ${item.label}`}
-            >
-              {isPending(item.key) ? (
-                <>
-                  {item.label} <CountPending />
-                </>
-              ) : (
-                `${item.label} (${item.count})`
-              )}
-              <span aria-hidden="true">×</span>
-            </button>
-          </li>
-        ))}
-        {/* Clear All is not in the sentence; it ends the chip row. */}
-        <li className="facet-layout__chosen-clear">
-          <a href={COMPENDIUM_PATH}>Clear All</a>
-        </li>
-      </ul>
-    ) : null;
-
   const sentenceNode: ReactNode =
     sentenceMode === 'disclosure-typed' ? (
       <TypedSentence query={query} onQuery={setQuery} onLoading={setSearching} />
@@ -1143,6 +1050,12 @@ function Layout({
           >
             {filterCount > 0 ? `Filters (${filterCount})` : 'Filters'}
           </button>
+          {/* A quiet link beside the button, only while something is chosen. */}
+          {filterCount > 0 && (
+            <a href={COMPENDIUM_PATH} className="facet-layout__clear">
+              Clear All
+            </a>
+          )}
         </div>
         {/* No `open` attribute: the state above calls show() or showModal() after a press,
               never on load. (The page itself renders this panel inline and open until
@@ -1223,7 +1136,6 @@ function Layout({
           </div>
         </dialog>
       </form>
-      {chosenChips}
       {results}
     </>
   );
@@ -1239,13 +1151,14 @@ function Layout({
 }
 
 // Layout F, "grid-tray", the layout the owner chose: the search box with a Filters (n)
-// button beside it, the chosen values as chips, the sentence and the results the full
+// button beside it, the sentence and the results the full
 // width. Filters opens a three-column grid as a panel that slides down over the results
 // from under the search row (the results never move); non-modal from the tablet width up
 // (no scrim; the focus goes in and returns to the button; Escape closes), and below it a
 // full-height sheet on showModal(). The sentence above the results is plain text with no
-// links: values are set in a heavier weight, Clear All sits with the filters and ends the
-// chip row, and a value is taken out only by its chip's cross. Counts follow every name,
+// links: values are set in a heavier weight. There is no row of chosen chips: Clear All is a
+// quiet link beside the Filters (n) button (only while something is chosen) and at the
+// panel's foot, and a value is taken out only inside the panel. Counts follow every name,
 // and show a placeholder while a search is on its way.
 //
 // In the page the panel renders inline and open until JavaScript takes over; the mock

@@ -152,28 +152,6 @@
   }
 }
 
-.facet-layout__chosen {
-  @include list-reset;
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(2);
-  margin-top: space(4);
-
-  // Outlined, not filled: the search section has enough green. A category keeps its group's
-  // colours (M8.11), which are the category's own.
-  button {
-    @include chip($dark: $accent, $light: $accent, $state: unselected);
-    @include outlined-chip;
-    gap: space(2);
-    cursor: pointer;
-
-    &.is-coloured {
-      @include chip(var(--chip-dark), var(--chip-light), $state: selected);
-      gap: space(2);
-    }
-  }
-}
-
 // In-control chips in the panel read the same way: no fill, an ink border, and the count and
 // cross in the same ink. Hover and focus tint the surface, not green. A category's entry
 // (`.is-coloured`) keeps its group fill.
@@ -356,10 +334,14 @@
   }
 }
 
-// Clear All ends the chip row.
-.facet-layout__chosen-clear {
-  align-self: center;
-  margin-inline-start: space(2);
+// Clear All beside the Filters button: a quiet link, on the controls' line (the bar's other
+// children end at its bottom edge, under their labels).
+.facet-layout__clear {
+  display: flex;
+  flex: none;
+  align-items: center;
+  min-height: $control-height;
+  white-space: nowrap;
 }
 
 // The visually hidden status region: the finished sentence, for assistive technology.
@@ -414,22 +396,20 @@
   }
 }
 
+// The app's disclosure chevron (`disclosure-chevron`, flipped as SectionNav's is), turned
+// over while the tail is open, on the app's theme transition; it also fades by opacity
+// when a search starts and ends, so it never pops in or out.
 .facet-layout__chevron {
-  display: inline-block;
-  width: 1.25em;
-  height: 1em;
+  @include disclosure-chevron('.facet-layout__disclosure.is-tail-open', $flip: true);
+
   margin-inline-start: space(1);
   vertical-align: text-bottom;
-  transition: rotate var(--tail-ms, 350ms) ease;
+  transition:
+    transform $theme-transition-duration $theme-transition-easing,
+    opacity $motion-short ease-out;
 
-  svg {
-    display: block;
-    width: 100%;
-    height: 100%;
-  }
-
-  &--up {
-    rotate: 180deg;
+  &.is-hidden {
+    opacity: 0;
   }
 }
 
@@ -475,6 +455,12 @@
 // the scale is raw numbers.
 .facet-layout__sentence strong {
   font-weight: 700;
+}
+
+// Inside the disclosure (the typed sentence) the values are one step lighter, 600, the
+// owner's call; after the rule above, which it outweighs by coming later.
+.facet-layout__disclosure strong {
+  font-weight: 600;
 }
 
 // Where a chip's count will be while the results are on their way. The shape and the
