@@ -62,6 +62,7 @@ const Modal = ({
     const dialog = ref.current;
     if (!dialog) return;
     // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
+    let cancelled = false;
     if (!dialog.open) {
       dialog.showModal();
       // showModal() puts the focus on the first thing that takes it, which is
@@ -69,9 +70,18 @@ const Modal = ({
       // it goes to the body's first field, or with none to the dialog itself,
       // whose name is read and from which Tab reaches Close. Here, after
       // showModal(), since React's autoFocus runs before it and is overridden.
-      (firstShownField(body.current ?? dialog) ?? dialog).focus();
+      // In a microtask the cleanup below can cancel, not at once: in
+      // development React unmounts and remounts, and closing the dialog blurs
+      // a field already focused, which a form reads as touched, so its
+      // required error showed on a direct load (a blur cannot be undone).
+      queueMicrotask(() => {
+        if (!cancelled) (firstShownField(body.current ?? dialog) ?? dialog).focus();
+      });
     }
-    return () => dialog.close();
+    return () => {
+      cancelled = true;
+      dialog.close();
+    };
   }, []);
 
   // Contents that arrive after it opened (M9.18), a route modal's form in

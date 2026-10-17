@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, StrictMode, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import Modal, { DiscardQuestion, useDiscardGuard, useModalHeaderSlot } from '@/components/Modal';
@@ -23,6 +23,9 @@ beforeEach(() => {
   HTMLDialogElement.prototype.close = close;
 });
 
+// The focus goes in a microtask after the dialog opens.
+const settle = () => act(async () => {});
+
 function renderModal(onClose = vi.fn()) {
   render(
     <Modal title="Edit Category" onClose={onClose}>
@@ -35,6 +38,31 @@ function renderModal(onClose = vi.fn()) {
 }
 
 describe('Modal', () => {
+  // In development React mounts, unmounts and mounts again. A real dialog
+  // blurs what it holds when it closes, so a field focused by the first mount
+  // was left, and a form read that as touched: its required error showed on a
+  // direct load of a route modal. The focus goes in once, after both.
+  it('leaves the first field focused and never blurred through a Strict Mode remount', async () => {
+    close.mockImplementationOnce(function (this: HTMLDialogElement) {
+      this.removeAttribute('open');
+      (document.activeElement as HTMLElement | null)?.blur();
+    });
+    const blurred = vi.fn();
+    render(
+      <StrictMode>
+        <Modal title="Edit Category" onClose={vi.fn()}>
+          <label>
+            Name <input onBlur={blurred} />
+          </label>
+        </Modal>
+      </StrictMode>,
+    );
+
+    await settle();
+    expect(blurred).not.toHaveBeenCalled();
+    expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+  });
+
   it('opens modally on mount, named by its title', () => {
     renderModal();
 
@@ -79,7 +107,7 @@ describe('Modal', () => {
 
   // showModal() alone would put the focus on Close, the first thing it can
   // take in the dialog; the person opened the dialog to fill it in.
-  it('puts the focus on its first field as it opens, past a hidden and a disabled one', () => {
+  it('puts the focus on its first field as it opens, past a hidden and a disabled one', async () => {
     render(
       <Modal title="Add Category" onClose={vi.fn()}>
         <input type="hidden" name="id" />
@@ -98,16 +126,18 @@ describe('Modal', () => {
       </Modal>,
     );
 
+    await settle();
     expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
   });
 
-  it('takes the focus itself as it opens when it holds no field', () => {
+  it('takes the focus itself as it opens when it holds no field', async () => {
     render(
       <Modal title="Revoke Admin" onClose={vi.fn()}>
         <button type="button">Revoke</button>
       </Modal>,
     );
 
+    await settle();
     expect(screen.getByRole('dialog', { name: 'Revoke Admin' })).toHaveFocus();
   });
 

@@ -58,14 +58,14 @@ function expectNothingToCopy() {
 }
 
 describe('InviteDialog', () => {
-  it('is shut until Invite is pressed, and opens a dialog over the page', () => {
+  it('is shut until Invite is pressed, and opens a dialog over the page', async () => {
     render(<InviteDialog workspaceId={WORKSPACE} />);
     expect(screen.queryByRole('dialog')).toBeNull();
 
     fireEvent.click(trigger());
 
     expect(dialog()).toBeInTheDocument();
-    expect(emailField()).toHaveFocus();
+    await waitFor(() => expect(emailField()).toHaveFocus());
   });
 
   it('keeps Send off until an address is typed', () => {
