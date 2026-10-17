@@ -26,7 +26,7 @@ layout, `src/app/(public)/layout.tsx`, reads `viewerIfSignedIn()`: null for a
 signed-out visitor, who gets [`PublicFrame`](public-frame.md); otherwise the
 viewer and covens, drawn in this shell. It never redirects. Because the shell's
 `#main` is a wrapper and `PublicFrame`'s is a `main`, the layout owns the
-plain `<main>` in the signed-in branch (the page in `.admin-layout` inside it, as in the signed-out frame), so a public page
+plain `<main>` in the signed-in branch (the page in `.page-column` inside it, as in the signed-out frame), so a public page
 renders no landmark of its own. An unverified account is shown the shell's
 unverified chrome (brand text, the account menu, the Compendium link) rather
 than being sent to `/account/email`: the compendium is public, and nothing

@@ -96,7 +96,7 @@ component's stylesheet only when it draws the component.
   it is not a `<p>`.
 
 The nav sits in the layout's context row, led by "Admin", above the page's
-frame, the `.admin-layout` primitive (`styling.md`, "The admin layout").
+frame, the `.page-column` primitive (`styling.md`, "The page column").
 
 ## Stories
 
@@ -106,7 +106,7 @@ frame, the `.admin-layout` primitive (`styling.md`, "The admin layout").
 heading and lede copied from the page and `AdminContents` real. `Curator` and `IndexPageCurator` show the same for a curator, with no People (M11.20). Each sits in
 the admin layout as it is, through the workshop's `AdminFrame`
 ([`workshop.md`](../workshop.md), ".ladle/"): the context row led by "Admin"
-with the nav in it, above the `.admin-layout` column that holds the page. The
+with the nav in it, above the `.page-column` column that holds the page. The
 tablet and More shapes are [`SectionNav`](section-nav.md)'s stories. The
 workshop's `usePathname` stub answers `/admin/users`, the People page's Users
 tab, so People is current in every story. Render-only, no test ids, no

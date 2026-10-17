@@ -83,7 +83,7 @@ export const ShellFrame = ({
             <ContextRow lead={<span className="context-row__name">Admin</span>}>
               <AdminNav />
             </ContextRow>
-            <div className="admin-layout">{children}</div>
+            <div className="page-column">{children}</div>
           </>
         )}
         {/* /coven/new: the switcher alone, no section nav, and no wrapper div

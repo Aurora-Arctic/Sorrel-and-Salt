@@ -16,7 +16,7 @@ request and draws [`AppShell`](app-shell.md) instead for a signed-in one, so
   name stays for a screen reader), as the shell's does, so the bar holds at 375px.
 - **`main#main`** round the page. Unlike the shell, whose `#main` is a wrapper,
   the frame owns the `main` landmark, so a public page renders none. It is not a
-  `.page-frame`: the `(public)` layout puts the page in `.admin-layout`, the
+  `.page-frame`: the `(public)` layout puts the page in `.page-column`, the
   top-left wide column `/admin/compendium` uses, so M8.18's page lands in it.
 
 Nothing here is workspace-shaped: no coven link, no Admin, no Add Ingredient.

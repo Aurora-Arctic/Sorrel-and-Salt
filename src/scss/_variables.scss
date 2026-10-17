@@ -391,11 +391,11 @@ $pager-tight-width: 23rem;
 // 44px target. A minimum, so a list's box still grows with its entries.
 $control-height: 2.78125rem;
 
-// The admin area's column (MB.115): wider than the measure, for the tables
-// the admin pages hold, whose prose still stops at it. 80rem, the owner's
+// The wide page column's width (`.page-column`, MB.115): wider than the
+// measure, for the tables the admin pages hold, whose prose still stops at it. 80rem, the owner's
 // call at the design review: the user list's seven columns need about 77rem
 // before they stop scrolling in their frame, and the privilege ledger has
-// seven too. It was `.admin-layout`'s own 64rem in `AdminNav/index.scss`.
+// seven too. It was the admin column's own 64rem in `AdminNav/index.scss`.
 $wide-column: 80rem;
 
 // A dialog's content column, and the wide one for a form with nested panels,

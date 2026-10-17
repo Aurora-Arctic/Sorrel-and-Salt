@@ -13,8 +13,8 @@ import { viewerIfSignedIn } from '../../lib/viewer';
 // shell offers it Sign Out and the Compendium link, which is as public as
 // any page here.
 //
-// Either way the page sits in `.admin-layout`, the column the admin pages use
-// (top-left, wide, not centred), so M8.18's page lands where /admin/compendium does.
+// Either way the page sits in `.page-column`, the top-left wide column the
+// admin pages share, so M8.18's page lands where /admin/compendium does.
 // Either way the layout owns `<main>`, which a page here therefore does not
 // render: PublicFrame draws `main#main`, and AppShell's `#main` wraps this one.
 export default async function PublicLayout({ children }: { children: ReactNode }) {
@@ -23,13 +23,13 @@ export default async function PublicLayout({ children }: { children: ReactNode }
   if (!shell)
     return (
       <PublicFrame>
-        <div className="admin-layout">{children}</div>
+        <div className="page-column">{children}</div>
       </PublicFrame>
     );
   return (
     <AppShell viewer={shell.viewer} workspaces={shell.workspaces}>
       <main>
-        <div className="admin-layout">{children}</div>
+        <div className="page-column">{children}</div>
       </main>
     </AppShell>
   );
