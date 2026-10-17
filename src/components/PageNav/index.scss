@@ -78,9 +78,9 @@
   // do, and takes the break a group label takes: the same token, so the gap
   // is the one between Details and Forms whether or not forms follow.
   //
-  // A short hairline sits midway in that gap, drawn by a pseudo-element so the
-  // list gains no element: it starts at the entries' own inset and, where the
-  // menu is right-aligned, ends there.
+  // A short hairline sits a quarter of that gap above the entry, drawn by a
+  // pseudo-element so the list gains no element: it starts at the entries' own
+  // inset and, where the menu is right-aligned, ends there.
   .page-nav__apart {
     position: relative;
     margin-block-start: space(5);
@@ -88,9 +88,9 @@
     &::before {
       content: '';
       position: absolute;
-      inset-block-start: calc(#{space(5)} / -2);
+      inset-block-start: calc(#{space(5)} / -4);
       inset-inline-start: space(4);
-      inline-size: space(8);
+      inline-size: space(5);
       border-block-start: 1px solid $hairline;
     }
 

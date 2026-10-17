@@ -19,8 +19,8 @@ The account page's sections are panels; the coven index's are plain
   `apart` (MB.155) sets a top-level entry off from those above it: a group
   entry's size and the break a group label takes (`space(5)` above), for an
   ingredient's closing References entry, with or without forms before it, and
-  a short `$hairline` rule (a pseudo-element, not an element) midway in that
-  break, at the entries' inset: on the start edge, the end edge where the menu
+  a short `$hairline` rule (a pseudo-element, not an element) a quarter of that
+  break above the entry, at the entries' inset: on the start edge, the end edge where the menu
   is right-aligned.
   `group` is optional and the account page and coven index leave it out.
   Consecutive entries naming the same `group` are drawn as one nested list
