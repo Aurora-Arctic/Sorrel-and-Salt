@@ -664,3 +664,20 @@
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
 }
+
+// An outlined chip (M12.4): no fill, an ink border, and the text and cross in
+// the same ink; hover and focus tint the surface rather than turning it green.
+// The neutral chips of a faceted filter wear it, so a chosen value reads as
+// an applied filter and not as one of the page's coloured category chips.
+// Nest inside the chip's selector; the shape and size stay the chip's own.
+@mixin outlined-chip {
+  background-color: transparent;
+  color: $text-primary;
+  border: 1px solid $text-primary;
+
+  &:hover,
+  &:focus-within,
+  &:focus-visible {
+    background-color: $fill-quiet;
+  }
+}
