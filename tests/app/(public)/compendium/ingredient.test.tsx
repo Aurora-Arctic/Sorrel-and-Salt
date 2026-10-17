@@ -155,8 +155,10 @@ describe('the compendium entry page', () => {
 });
 
 describe('the compendium entry page title', () => {
-  it('is the entry name alone', async () => {
-    expect(await generateMetadata(params())).toEqual({ title: 'Testwort' });
+  it('is the entry name with its formal name', async () => {
+    const { name, canonicalName } = entryDetail().entry;
+
+    expect(await generateMetadata(params())).toEqual({ title: `${name} (${canonicalName})` });
   });
 
   it('is empty for an address that renders no page', async () => {

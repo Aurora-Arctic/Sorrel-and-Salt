@@ -177,7 +177,7 @@ describe('the coven ingredient page title', () => {
     getIngredient.mockResolvedValue(compendiumRow());
 
     expect(await generateMetadata(params())).toEqual({
-      title: 'Testwort',
+      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
       alternates: { canonical: '/compendium/ingredients/testwort-fixtura-testalis' },
     });
   });
@@ -185,6 +185,8 @@ describe('the coven ingredient page title', () => {
   it("names no canonical for the coven's own entry", async () => {
     getIngredient.mockResolvedValue(covenRow());
 
-    expect(await generateMetadata(params())).toEqual({ title: 'Testwort' });
+    expect(await generateMetadata(params())).toEqual({
+      title: `${covenRow().name} (${covenRow().canonicalName})`,
+    });
   });
 });
