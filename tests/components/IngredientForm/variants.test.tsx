@@ -5,7 +5,7 @@ import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
 import { VARIANT_SECTIONS, openSections, openSectionsIn } from '../../support/ingredient-sections';
 import { renderWithClient, waitFor } from '../../support/ingredient-form';
-import { press } from '../../support/interact';
+import { press, redo, undo } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import {
   ENTRY_ID,
@@ -1088,6 +1088,97 @@ describe('IngredientForm’s variants', () => {
       expect(skippedNotice(oil)).not.toBeEmptyDOMElement();
       fireEvent.click(within(oil).getByRole('button', { name: 'Remove Fixture fern' }));
       expect(skippedNotice(oil)).toBeEmptyDOMElement();
+    });
+  });
+  // Undo and redo (M12.10): the folds follow what a step restores.
+  describe('its undo and redo', () => {
+    const settle = () => act(async () => {});
+    const listedIn = (card: HTMLElement) => openIn(card);
+
+    it('opens the closed section an undone change was made in, and redoes it', async () => {
+      renderForm({
+        workspaceId: null,
+        values: { ...EMPTY_VALUES, name: 'Testwort', nomenclature: 'none' },
+      });
+      openSections('Correspondences');
+      type(document.body, 'Colour', 'Silver');
+      fireEvent.click(screen.getByLabelText('Add Colour', { selector: 'button' }));
+      await settle();
+      const toggle = screen.getByRole('button', { name: 'Correspondences' });
+      fireEvent.click(toggle);
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      act(() => toggle.focus());
+
+      undo();
+
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.queryByRole('button', { name: 'Remove Silver' })).toBeNull();
+
+      redo();
+
+      expect(screen.getByRole('button', { name: 'Remove Silver' })).toBeInTheDocument();
+    });
+
+    it('opens the closed variant, and the closed section in it, that an undone change was made in', async () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+      const oil = openVariant('Oil');
+      openSectionsIn(oil, 'Details & Care');
+      type(oil, 'Description', 'Pressed from the fixture.');
+      await settle();
+      // Closed, Done and the section both, as a person tidies up after.
+      fireEvent.click(sectionOf(oil, 'Details & Care'));
+      fireEvent.click(editOf('Oil'));
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
+      act(() => editOf('Oil').focus());
+
+      undo();
+
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+      expect(listedIn(variant('Oil'))).toEqual(['Details & Care']);
+      expect(control(variant('Oil'), 'Description')).toHaveValue('');
+    });
+
+    it('brings a removed variant back with the other variant/s open sections as they were', async () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+      openWhole('Herb');
+      fireEvent.click(sectionOf(variant('Herb'), 'Relations'));
+      expect(openIn(variant('Herb'))).not.toContain('Relations');
+      await settle();
+      fireEvent.click(within(openVariant('Oil')).getByRole('button', { name: 'Remove Oil' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+      noVariant('Oil');
+      act(() => editOf('Herb').focus());
+
+      undo();
+
+      expect(variant('Oil')).toBeInTheDocument();
+      expect(variant('Herb')).toBeInTheDocument();
+      // The returning form is the one open; Herb keeps the sections it had open.
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+      expect(openIn(openVariant('Herb'))).toEqual(
+        VARIANT_SECTIONS.filter((title) => title !== 'Relations'),
+      );
+
+      redo();
+
+      noVariant('Oil');
+      expect(variant('Herb')).toBeInTheDocument();
+    });
+
+    it('undoes nothing after an edit is saved', async () => {
+      const calls = acceptUpdate();
+      renderForm({ workspaceId: null, values: twoForms() });
+      type(openVariant('Oil'), 'Description', 'Pressed from the fixture.');
+      await settle();
+      save();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      await settle();
+      act(() => editOf('Oil').focus());
+
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      undo();
+
+      expect(control(variant('Oil'), 'Description')).toHaveValue('Pressed from the fixture.');
     });
   });
 });

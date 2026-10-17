@@ -26,6 +26,7 @@ import {
   textbox,
   waitFor,
 } from '../../support/ingredient-form';
+import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import { choose, press, redo, type, typeIn, undo } from '../../support/interact';
 import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
 import {
@@ -763,6 +764,49 @@ describe('IngredientForm', () => {
 
       expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
       expect(removeButton('Venus')).toBeInTheDocument();
+    });
+
+    it('undoes a keyboard reorder of an ordered list and redoes it', async () => {
+      layOutChips();
+      renderForm();
+      for (const colour of ['Silver', 'Green', 'Amber']) addEntry('Colour', colour);
+      await settle();
+      const order = () =>
+        within(screen.getByRole('group', { name: 'Colours' }))
+          .getAllByRole('button', { name: /^Remove / })
+          .map((button) => button.getAttribute('aria-label'));
+      const inOrder = ['Remove Silver', 'Remove Green', 'Remove Amber'];
+      await moveByKeyboard(
+        screen.getByRole('button', { name: 'Move Amber' }),
+        'ArrowLeft',
+        'ArrowLeft',
+      );
+      const moved = ['Remove Amber', 'Remove Silver', 'Remove Green'];
+      expect(order()).toEqual(moved);
+
+      undo();
+      expect(order()).toEqual(inOrder);
+
+      redo();
+      expect(order()).toEqual(moved);
+      vi.restoreAllMocks();
+    });
+
+    it('undoes a folk name removed by its x and redoes it', async () => {
+      renderForm();
+      addEntry('Folk Name', 'Hedge Fixture');
+      addEntry('Folk Name', 'Lane Fixture');
+      await settle();
+      fireEvent.click(removeButton('Hedge Fixture'));
+
+      undo();
+
+      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
+      expect(removeButton('Lane Fixture')).toBeInTheDocument();
+
+      redo();
+
+      expect(screen.queryByRole('button', { name: 'Remove Hedge Fixture' })).toBeNull();
     });
 
     it('undoes nothing after Save & Add Another has cleared the form', async () => {
