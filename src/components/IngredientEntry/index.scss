@@ -54,39 +54,46 @@ $side-column: calc(#{space(8)} * 5);
   @include stack(3);
 }
 
-// The heading, then the formal name and Edit at the line's end; the
-// header's row is contained for size, so it is told to take the room.
-.ingredient-entry__title {
-  display: flex;
-  flex-wrap: wrap;
-  gap: space(3) space(5);
-  align-items: end;
-
-  > .page-header {
-    flex: 1 1 0;
-    margin: 0;
-  }
+.ingredient-entry__head .page-header {
+  margin: 0;
 }
 
+// The formal name over the heading as an eyebrow, its tip beside it; the
+// term ("Botanical Name") is read, not seen (the owner's call).
 .ingredient-entry__formal {
   // The tip is placed against the nearest positioned ancestor: this.
   position: relative;
-  text-align: end;
 
   dt {
+    @include visually-hidden;
+  }
+
+  dd {
     display: flex;
     gap: space(1);
     align-items: center;
-    justify-content: end;
   }
 
-  // Below the label rather than above it, where the shell's sticky bar
-  // would cover it at the top of the page, and from the right edge, which is
-  // the text column's, so it opens over the text and never past it.
+  // Below the name rather than above it, where the shell's sticky bar would
+  // cover it at the top of the page; it covers the heading while open.
   .info-tip__bubble {
-    inset: 100% 0 auto auto;
+    inset: 100% auto auto 0;
     margin: space(1) 0 0;
-    text-align: start;
+  }
+
+  // Beside the mark where there is room, so it covers nothing: anchored on
+  // the mark itself, level with its middle. A phone keeps it below, where
+  // 18rem to the right of the mark would run off the screen.
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    .info-tip {
+      position: relative;
+    }
+
+    .info-tip__bubble {
+      inset: 50% auto auto calc(100% + #{space(2)});
+      margin: 0;
+      translate: 0 -50%;
+    }
   }
 }
 
@@ -144,18 +151,6 @@ $side-column: calc(#{space(8)} * 5);
     grid-column: 2;
     margin-block-start: 0;
   }
-
-  // The head keeps to the text column, so the formal name's right edge is
-  // the text's, not the side column's.
-  .ingredient-entry__head {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) $side-column;
-    column-gap: space(8);
-
-    > * {
-      grid-column: 1;
-    }
-  }
 }
 
 .ingredient-entry__forms {
@@ -179,11 +174,6 @@ $side-column: calc(#{space(8)} * 5);
 
   dt {
     font-weight: 500;
-  }
-
-  // The eyebrow sets its own weight; a dt holding one keeps out of its way.
-  dt:has(> .eyebrow) {
-    font-weight: inherit;
   }
 
   dd {

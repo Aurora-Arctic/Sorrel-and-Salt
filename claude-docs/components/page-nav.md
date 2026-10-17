@@ -52,7 +52,10 @@ The account page's sections are panels; the coven index's are plain
   hairline under it in the same ink. The group's item is a one-column grid of
   `max-content`, so the label and its entries are as wide as the widest of
   them and the hairline spans the entries and no more; it sits at the column's
-  start on a phone and its end on a wide screen (the owner's call at M8.19). On a phone its entries
+  start on a phone and its end on a wide screen. The label's padding on the
+  text's side (the end on a wide screen, the start on a phone) is a margin
+  instead, so the line stops at the entries' text rather than running on under
+  their padding (the owner's calls at M8.19). On a phone its entries
   step in by `space(6)` rather than `space(4)`; on a wide screen, where the
   text is right-aligned, they keep the entries' padding, since a step in from
   the right pushed them off the column's edge (the owner's call at M8.19).

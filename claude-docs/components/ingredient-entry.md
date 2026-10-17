@@ -14,7 +14,7 @@ The route gives the page's `<main>`. The component's root is an `<article class=
 | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `detail`    | The entry, its folk names, categories with their groups, deities, substitutes, and one `VariantDetail` per live form in form order                         |
 | `hrefOf`    | `(ingredient: { id, slug, workspaceId }) => Route \| undefined`: where a linked substitute's page is. `undefined` sets the name as text                    |
-| `edit`      | `{ href: Route }`: an Edit link, at the end of the title row. Left out, no Edit. There is never a Delete here: M8.15, folded into M8.19, offers it nowhere |
+| `edit`      | `{ href: Route }`: an Edit link, as the page header's action. Left out, no Edit. There is never a Delete here: M8.15, folded into M8.19, offers it nowhere |
 | `movedAway` | `{ name, href: Route }`: the entry that moved off this address while its redirect is still served (MB.82), linked at its page now                          |
 | `canonical` | `Route`: the public page of a compendium entry, shown as a "View in the Compendium" link. The coven route passes it for a compendium entry                 |
 
@@ -25,7 +25,8 @@ Every address is typed as Next's `Route`, as other components' `href` props are,
 In page order, with the accessible names a test or a story walk finds them by:
 
 1. **The head**, a `<header>` inside the article:
-   - The title row (`__title`): `PageHeader`, whose `h1` is `entry.name`, then the formal name (below) right-aligned with its bottom on the heading's, then `edit`'s `.btn` link named **Edit** at the far end of the line — the row's own, not the header's action, so it stays after the formal name. From the tablet width up the head keeps to the text column (the section grid's first column), so the formal name ends where the description's text does.
+   - The formal name (below), an eyebrow over the heading.
+   - `PageHeader`: the `h1` is `entry.name`; `edit` puts a `.btn` link named **Edit** at the end of its line. From the tablet width up the head keeps to the text column (the section grid's first column), so the formal name ends where the description's text does.
    - A `.badges` row, drawn only when it holds something: **Local** (`.badge--local`) when `entry.workspaceId` is set, then `ToxicMark` for the entry and every form, so a toxic form marks the entry though the ingredient is not.
    - `canonical`: a link named **View in the Compendium**.
    - `movedAway`: a quiet warning `Notice`, a `status`, holding a link named after the moved entry.
@@ -41,7 +42,7 @@ Inside a form, the lists are named by the form's name and then the heading — "
 
 ## Contracts
 
-- **The formal name is never blank** (MB.161). It is a one-pair `<dl>`: the term says the nomenclature in words as an `.eyebrow`, with an `InfoTip` beside it (id `formal-name-tip`) saying what a name in that system is, and the definition holds the name.
+- **The formal name is never blank** (MB.161). It is a one-pair `<dl>`: the term says the nomenclature in words, hidden from sight (`visually-hidden`) so a screen reader hears it first, and the definition holds the name as an `.eyebrow` over the heading, with an `InfoTip` beside it (id `formal-name-tip`, its button named "About <term>") saying which naming system the name belongs to, in the words of DESIGN.md §5's nomenclature table (the owner's call: the name alone is seen, and the tip says what it is).
 
   | Nomenclature                        | Term                                 | Definition                                    |
   | ----------------------------------- | ------------------------------------ | --------------------------------------------- |

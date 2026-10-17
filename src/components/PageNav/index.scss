@@ -54,8 +54,16 @@
     text-transform: uppercase;
     color: $text-muted;
     // The hairline every rule here is (a table head's), as wide as the
-    // group: the item below shrinks to its widest entry.
+    // group: the item below shrinks to its widest entry. The label's padding
+    // on the text's side is a margin instead, so the line stops at the text.
     border-block-end: 1px solid $text-muted;
+    padding-inline-start: 0;
+    margin-inline-start: space(4);
+  }
+
+  // A step of air between the label's rule and its first entry.
+  .page-nav__group + ul {
+    margin-block-start: space(2);
   }
 
   // A group is as wide as its label or its widest entry, not the column, so
@@ -95,6 +103,8 @@
     }
 
     .page-nav__group {
+      padding-inline: space(4) 0;
+      margin-inline: 0 space(4);
       text-align: end;
     }
 

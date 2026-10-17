@@ -46,24 +46,25 @@ const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
 };
 
 /**
- * What each kind's formal name is, said in the tip beside its label: the
- * eyebrow names the system, and the tip says what a name in it is.
+ * What the formal name is, said in the tip beside it, since the page shows
+ * the name alone (the owner's call): which naming system governs it, as
+ * DESIGN.md §5's nomenclature table states each kind.
  */
 const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
   botanical:
-    'The plant\u2019s scientific name in Latin form, the genus then the species, as botanists record it. A plant has one botanical name however many common names it goes by.',
+    'The botanical name: the name the International Code of Nomenclature for algae, fungi, and plants (ICN) gives the plant.',
   fungal:
-    'The fungus\u2019s scientific name in Latin form, the genus then the species, as mycologists record it.',
+    'The fungal name: the name the International Code of Nomenclature for algae, fungi, and plants (ICN) gives the fungus.',
   zoological:
-    'The animal\u2019s scientific name in Latin form, the genus then the species, as zoologists record it.',
+    'The zoological name: the name the International Code of Zoological Nomenclature (ICZN) gives the animal.',
   mineral:
-    'The mineral\u2019s name as mineralogists record it, with its variety where there is one: Quartz var. amethyst.',
-  chemical: 'The substance\u2019s name as chemists record it: sodium chloride for table salt.',
+    'The mineral name: an International Mineralogical Association (IMA) species or variety, or the accepted name of a rock, mineraloid or natural glass.',
+  chemical:
+    'The chemical name: the name the International Union of Pure and Applied Chemistry (IUPAC) gives the substance, or its accepted chemical name.',
 };
 const FORMAL_NAME_TIP =
-  'Its name in a scientific naming system: botanical, mineral, chemical and so on. Which system names this one is not settled.';
-const NO_FORMAL_NAME_TIP =
-  'A name in a scientific naming system, botanical, mineral, chemical and so on. No such system names this one.';
+  'The formal name: there is one, and which naming system it belongs to is not yet settled.';
+const NO_FORMAL_NAME_TIP = 'The formal name: no naming system names this.';
 
 /** One correspondence row: its label and what it lists, possibly nothing. */
 interface Row {
@@ -122,17 +123,18 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
     );
   }
   return (
-    // An eyebrow over the name, with what the name is in a tip beside it (the
-    // owner's call). Still a term and its definition, so it is read as a pair.
+    // The name alone, as an eyebrow over the heading, with what it is in a
+    // tip beside it (the owner's call). Still a term and its definition, the
+    // term hidden from sight, so a screen reader hears "Botanical Name" first.
     <dl className="ingredient-entry__formal">
       <div>
-        <dt>
-          <span className="eyebrow">{label}</span>{' '}
+        <dt>{label}</dt>
+        <dd>
+          <span className="eyebrow">{value}</span>{' '}
           <InfoTip id="formal-name-tip" label={label}>
             {tip}
           </InfoTip>
-        </dt>
-        <dd>{value}</dd>
+        </dd>
       </div>
     </dl>
   );
@@ -326,18 +328,17 @@ const IngredientEntry = ({
       }
     >
       <header className="ingredient-entry__head">
-        {/* The formal name to the right of the heading, and Edit at the far
-            end of the line, after it (the owner's calls), so Edit is this
-            row's and not the header's action. */}
-        <div className="ingredient-entry__title">
-          <PageHeader title={entry.name} />
-          <FormalName entry={entry} />
-          {edit && (
-            <Link className="btn" href={edit.href}>
-              Edit
-            </Link>
-          )}
-        </div>
+        <FormalName entry={entry} />
+        <PageHeader
+          title={entry.name}
+          action={
+            edit && (
+              <Link className="btn" href={edit.href}>
+                Edit
+              </Link>
+            )
+          }
+        />
         {(local || toxic) && (
           <div className="badges">
             {local && <span className="badge badge--local">Local</span>}
