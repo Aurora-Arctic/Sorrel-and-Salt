@@ -6,6 +6,7 @@ import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params'
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { editHeading } from '../../../../components/CompendiumList/heading';
 import type {
+  CompendiumCategoryChoice,
   CompendiumFormChoice,
   CompendiumListForm,
   CompendiumListEntry,
@@ -21,7 +22,13 @@ import {
   resolveCompendiumSlug,
   variantsOf,
 } from '@/modules/ingredients';
-import { formChoicesOf, formGroupsOf, listIngredientFormValues } from '@/modules/vocabulary';
+import {
+  categoryGroupsOf,
+  formChoicesOf,
+  formGroupsOf,
+  listCategories,
+  listIngredientFormValues,
+} from '@/modules/vocabulary';
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
 import { readEditPlace, readListPlace } from '../list-page';
@@ -106,6 +113,36 @@ const readForms = cache(async (): Promise<CompendiumFormChoice[]> => {
 });
 
 /**
+ * Every live category with its group's name and colours, for the Categories
+ * box, and the slugs the address names them by. Read page by page, as the
+ * forms are, since one page of the maximum is not guaranteed to hold them all
+ * and an admin adds more. Public reference data, held in the data cache by the
+ * services; `cache` here only keeps the request to one read.
+ */
+const readCategories = cache(async (): Promise<CompendiumCategoryChoice[]> => {
+  const rows = await allPages((page) => listCategories({}, page));
+  const groups = await categoryGroupsOf([...new Set(rows.map(({ groupId }) => groupId))]);
+  const byId = new Map(
+    groups.flatMap((group) => (group instanceof Error ? [] : [[group.id, group]])),
+  );
+  return rows.flatMap(({ id, slug, name, description, groupId }) => {
+    const group = byId.get(groupId);
+    // A category lists only under a live group, so this is a race with a delete.
+    if (!group) return [];
+    const { colorDark, colorLight } = group;
+    return [
+      {
+        id,
+        slug,
+        name,
+        description,
+        group: { id: group.id, name: group.name, colorDark, colorLight },
+      },
+    ];
+  });
+});
+
+/**
  * What `?edit=` names: the entry there, its values read for the form, or the
  * address it moved to while its old one still redirects, or nothing.
  */
@@ -136,8 +173,12 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   // Every filter, read through the parameter table (CompendiumList/params.ts).
   const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);
 
+  // The address names categories by slug; the compendium filters by id.
+  const categories = await readCategories();
+  const lookups = { categories: new Map(categories.map(({ slug, id }) => [slug, id])) };
+
   const [page, forms, { edited, missing }] = await Promise.all([
-    readCompendium(JSON.stringify(COMPENDIUM_PARAMS.variables(filter)), after, before),
+    readCompendium(JSON.stringify(COMPENDIUM_PARAMS.variables(filter, lookups)), after, before),
     readForms(),
     readEditPlace(place, readEntry),
   ]);
@@ -178,6 +219,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
         entries={entries}
         filter={filter}
         forms={forms}
+        categories={categories}
         position={page.position}
         {...pagerHrefs(page.pageInfo, (cursor) => compendiumHref({ ...filter, ...cursor }))}
       />

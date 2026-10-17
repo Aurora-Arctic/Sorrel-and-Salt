@@ -6,7 +6,7 @@ import CompendiumList from '.';
 import PageHeader from '../PageHeader';
 import { slugify } from '../../lib/slugify';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
-import type { CompendiumListEntry, CompendiumListFilter } from './types';
+import type { CompendiumCategoryChoice, CompendiumListEntry, CompendiumListFilter } from './types';
 import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
@@ -43,7 +43,22 @@ const NO_FILTER: CompendiumListFilter = {
   nomenclature: '',
   withoutReferences: false,
   elements: [],
+  categories: [],
 };
+
+// The categories the Categories box offers, under two groups in their colours.
+const WARDS = { id: 'g-ward', name: 'Fixture Wards', colorDark: '#4e8bc2', colorLight: '#0c5393' };
+const CRAFTS = {
+  id: 'g-craft',
+  name: 'Fixture Crafts',
+  colorDark: '#35987d',
+  colorLight: '#097255',
+};
+const CATEGORIES: CompendiumCategoryChoice[] = [
+  { id: 'c-1', slug: 'testward', name: 'Testward', group: WARDS },
+  { id: 'c-2', slug: 'testbane', name: 'Testbane', group: WARDS },
+  { id: 'c-3', slug: 'testcraft', name: 'Testcraft', group: CRAFTS },
+];
 
 // The curated forms the Form box offers, in name order.
 const FORMS = ['Dried', 'Essential Oil', 'Oil', 'Powder', 'Resin', 'Tincture'].map((name) => ({
@@ -92,6 +107,7 @@ const PageOfSeveral = (): ReactElement => (
       entries={ENTRIES}
       filter={NO_FILTER}
       forms={FORMS}
+      categories={CATEGORIES}
       previousHref={compendiumHref({ before: 'cursor' })}
       nextHref={compendiumHref({ after: 'cursor' })}
       position={{ page: 2, pages: 3 }}
@@ -108,13 +124,14 @@ export const FirstPage: Story = () => (
       entries={ENTRIES.slice(0, 2)}
       filter={NO_FILTER}
       forms={FORMS}
+      categories={CATEGORIES}
       nextHref={compendiumHref({ after: 'cursor' })}
     />
   </Page>
 );
 
 // The admin's two to-do lists at once, the unknown kind and the unsourced,
-// narrowed to one form.
+// narrowed to one form, two elements and two categories.
 export const Filtered: Story = () => (
   <Page>
     <CompendiumList
@@ -125,8 +142,10 @@ export const Filtered: Story = () => (
         nomenclature: 'unknown',
         withoutReferences: true,
         elements: ['fire', 'earth'],
+        categories: ['testward', 'testcraft'],
       }}
       forms={FORMS}
+      categories={CATEGORIES}
     />
   </Page>
 );
@@ -141,15 +160,17 @@ export const NoMatch: Story = () => (
         nomenclature: 'mineral',
         withoutReferences: false,
         elements: [],
+        categories: ['testbane'],
       }}
       forms={FORMS}
+      categories={CATEGORIES}
     />
   </Page>
 );
 
 export const Empty: Story = () => (
   <Page>
-    <CompendiumList entries={[]} filter={NO_FILTER} forms={FORMS} />
+    <CompendiumList entries={[]} filter={NO_FILTER} forms={FORMS} categories={CATEGORIES} />
   </Page>
 );
 

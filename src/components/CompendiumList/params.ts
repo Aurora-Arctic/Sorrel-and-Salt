@@ -3,6 +3,7 @@ import {
   defineSearchParams,
   listParam,
   searchParam,
+  slugListParam,
   textParam,
 } from '../../lib/search-param-table';
 import { single, trimmed } from '../../lib/search-params';
@@ -41,4 +42,8 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
   }),
   // Entries holding any of these, `?elements=fire&elements=earth`.
   elements: listParam('elements', INGREDIENT_ELEMENTS, 'elements'),
+  // Entries filed under all of these categories, `?categories=protection&categories=cleansing`:
+  // slugs in the address, the ids `categoryIds` takes through the page's
+  // `categories` lookup (M8.11).
+  categories: slugListParam('categories', 'categoryIds', 'categories'),
 });
