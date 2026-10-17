@@ -11,13 +11,15 @@ export interface AdminCompendiumPageProps {
 
 /**
  * The page's address: every list page's name query, cursor and modal
- * (`list-page.ts`), and the compendium's own three filters, a form by its
- * text, a classification and the entries citing nothing.
+ * (`list-page.ts`), and the compendium's own filters (the table in
+ * CompendiumList/params.ts): a form by its text, a classification, the entries
+ * citing nothing and the elements an entry holds.
  */
 export interface CompendiumSearchParams extends ListSearchParams {
   form?: string | string[];
   nomenclature?: string | string[];
   withoutReferences?: string | string[];
+  elements?: string | string[];
 }
 
 /** The entry an edit opens: its id, which the writes name, and its values as the form shows them. */

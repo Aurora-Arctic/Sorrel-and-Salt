@@ -11,6 +11,8 @@ import type {
   CompendiumListProps,
 } from '@/components/CompendiumList/types';
 import { DEBOUNCE_MS } from '@/lib/debounce';
+import { someOf } from '@/lib/search-params';
+import { INGREDIENT_ELEMENTS } from '@/modules/ingredients/schema/ingredient-enums';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { FILTER_ROWS, drawnOnServer, sent } from '../../support/filter-form';
 import { waitFor } from '../../support/ingredient-form';
@@ -74,7 +76,13 @@ const ENTRIES: CompendiumListEntry[] = [
 const listStatus = () =>
   screen.queryAllByRole('status').filter((status) => !status.closest('search'));
 
-const NO_FILTER = { query: '', form: '', nomenclature: '', withoutReferences: false } as const;
+const NO_FILTER: CompendiumListFilter = {
+  query: '',
+  form: '',
+  nomenclature: '',
+  withoutReferences: false,
+  elements: [],
+};
 
 /** Every filter in use, as a page shows it. */
 const SHOWN: CompendiumListFilter = {
@@ -82,6 +90,7 @@ const SHOWN: CompendiumListFilter = {
   form: 'Fixture Oil',
   nomenclature: 'unknown',
   withoutReferences: true,
+  elements: [],
 };
 
 /** The curated forms the Form box offers. */
@@ -184,6 +193,9 @@ describe('compendiumHref', () => {
     ).toBe(
       '/admin/compendium?query=test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1&after=a&edit=x',
     );
+    expect(compendiumHref({ elements: ['fire', 'water'], after: 'a' })).toBe(
+      '/admin/compendium?elements=fire&elements=water&after=a',
+    );
     expect(compendiumHref({ query: 'test', before: 'b' }, 'new')).toBe(
       '/admin/compendium?query=test&before=b&new',
     );
@@ -212,6 +224,7 @@ function RoutedCompendium(): ReactElement {
       form: params.get('form') ?? '',
       nomenclature: (params.get('nomenclature') ?? '') as CompendiumListFilter['nomenclature'],
       withoutReferences: params.has('withoutReferences'),
+      elements: someOf(INGREDIENT_ELEMENTS, params.getAll('elements')),
     });
   });
   return <CompendiumList {...props({ filter })} />;
@@ -367,6 +380,26 @@ describe('CompendiumList filter', () => {
         '/admin/compendium?query=Test+wort&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1',
       ],
     ]);
+  });
+
+  it('keeps the elements the address holds when another control applies, from the first page', () => {
+    render(
+      <CompendiumList
+        {...props({
+          filter: { ...SHOWN, elements: ['fire', 'earth'] },
+          nextHref: compendiumHref({ ...SHOWN, after: 'a' }),
+        })}
+      />,
+    );
+
+    fireEvent.change(nameBox(), { target: { value: ' Test wort ' } });
+    fireEvent.click(unsourcedSwitch());
+
+    expect(router.push).toHaveBeenCalledTimes(1);
+    const sent = new URL(router.push.mock.calls[0][0], 'http://localhost').searchParams;
+    expect(sent.getAll('elements')).toEqual(['fire', 'earth']);
+    expect(sent.get('query')).toBe('Test wort');
+    expect(sent.has('after')).toBe(false);
   });
 
   it('applies No Refs on its press carrying the name typed, trimmed', () => {

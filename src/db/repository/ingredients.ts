@@ -1,4 +1,15 @@
-import { and, eq, inArray, isNull, not, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
+import {
+  and,
+  arrayOverlaps,
+  eq,
+  inArray,
+  isNull,
+  not,
+  or,
+  sql,
+  type SQL,
+  type SQLWrapper,
+} from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -6,6 +17,7 @@ import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { identityKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
+import type { IngredientElement } from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
@@ -516,6 +528,7 @@ function compendiumList(filter: IngredientFilter): {
       pickedFormArm(filter.formId),
       listArm(ingredients.celestialBodies, filter.celestialBodies),
       listArm(ingredients.zodiacSigns, filter.zodiacSigns),
+      elementArm(filter.elements),
       deityArm(filter.deityIds),
       toxicArm(filter.toxic),
       filter.withoutReferences ? citesNowhere() : undefined,
@@ -688,6 +701,29 @@ function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL 
   const wanted = stated(values);
   if (wanted.length === 0) return undefined;
   return or(...wanted.map((value) => inArray(fold(value), listFolds(list))));
+}
+
+/**
+ * The entry's own `elements` list, or a live variant's, holds any of
+ * `elements` (M8.13, MB.215): an array overlap on each side, the variant's a
+ * correlated `EXISTS` that skips a soft-deleted form, so an entry is one row
+ * however many of them it holds and a retired form's element counts for
+ * nothing. The toxic filter's reading. Elements are a closed set, so there is
+ * nothing to fold. Empty means no filter.
+ */
+function elementArm(elements: readonly IngredientElement[] | undefined): SQL | undefined {
+  if (!elements?.length) return undefined;
+  const wanted = [...elements];
+  return or(
+    arrayOverlaps(ingredients.elements, wanted),
+    existsIn(
+      ingredientVariants,
+      and(
+        eq(ingredientVariants.ingredientId, ingredients.id),
+        arrayOverlaps(ingredientVariants.elements, wanted),
+      ),
+    ),
+  );
 }
 
 /**

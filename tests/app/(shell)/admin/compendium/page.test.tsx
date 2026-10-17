@@ -99,7 +99,7 @@ const fullPage = () =>
     }),
   );
 
-async function renderPage(params: Record<string, string> = {}) {
+async function renderPage(params: Record<string, string | string[]> = {}) {
   const page = await AdminCompendiumPage({ searchParams: Promise.resolve(params) });
   render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
 }
@@ -113,12 +113,8 @@ function lastFilter(): unknown {
   return listed;
 }
 
-const NO_FILTER = {
-  query: undefined,
-  forms: undefined,
-  nomenclature: undefined,
-  withoutReferences: false,
-};
+// A blank is left out of the variables, so no filter is no variables.
+const NO_FILTER = {};
 
 /** The filter every link below keeps, as the address spells it. */
 const FILTERED = {
@@ -126,9 +122,11 @@ const FILTERED = {
   form: 'Fixture Oil',
   nomenclature: 'unknown',
   withoutReferences: '1',
+  // Read from the address alone, with no control for it (M8.13).
+  elements: ['fire', 'earth'],
 };
 const FILTERED_HREF =
-  '/admin/compendium?query=test&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1';
+  '/admin/compendium?query=test&form=Fixture+Oil&nomenclature=unknown&withoutReferences=1&elements=fire&elements=earth';
 
 /** A curated form as its service lists it, keyed by name as the finder pages it. */
 const curatedForm = (name: string, index: number) =>
@@ -260,6 +258,23 @@ describe('the /admin/compendium filter', () => {
     expect(screen.getByRole('switch', { name: 'No Refs' })).toBeChecked();
   });
 
+  it('reads a repeated ?elements= into the list and its count, dropping any that is no element, with no control for it', async () => {
+    await renderPage({ query: 'test', elements: ['fire', 'ether', 'earth'] });
+
+    expect(lastFilter()).toEqual({ query: 'test', elements: ['fire', 'earth'] });
+    // A hand-edited address lists the same, and the pager keeps it.
+    expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
+      'href',
+      '/admin/compendium?query=test&elements=fire&elements=earth&new',
+    );
+  });
+
+  it('reads one ?elements= given once, as a string, as a list of one', async () => {
+    await renderPage({ elements: 'water' });
+
+    expect(lastFilter()).toEqual({ elements: ['water'] });
+  });
+
   // A native submit sends every field, blank or not.
   it('reads a blank ?query=, ?form= and ?nomenclature= as no filter', async () => {
     await renderPage({ query: '   ', form: '  ', nomenclature: '' });
@@ -354,10 +369,10 @@ describe('the /admin/compendium filter', () => {
     );
     const pages = screen.getByRole('navigation', { name: 'Pages' });
     expect(within(pages).getByRole('link', { name: 'Prev' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&form=Fixture\+Oil&nomenclature=unknown&withoutReferences=1&before=[^&]+$/,
+      /^\/admin\/compendium\?query=test&form=Fixture\+Oil&nomenclature=unknown&withoutReferences=1&elements=fire&elements=earth&before=[^&]+$/,
     );
     expect(within(pages).getByRole('link', { name: 'Next' }).getAttribute('href')).toMatch(
-      /^\/admin\/compendium\?query=test&form=Fixture\+Oil&nomenclature=unknown&withoutReferences=1&after=[^&]+$/,
+      /^\/admin\/compendium\?query=test&form=Fixture\+Oil&nomenclature=unknown&withoutReferences=1&elements=fire&elements=earth&after=[^&]+$/,
     );
   });
 });

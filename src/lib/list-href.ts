@@ -21,14 +21,16 @@ import type {
 const pair = (name: string, value: string) => new URLSearchParams({ [name]: value }).toString();
 
 /**
- * `path` with `params` as its query, in the order given: a string is a pair,
- * `true` a bare flag, and `undefined`, `false` or `''` is left out, so a blank
+ * `path` with `params` as its query, in the order given: a string is a pair, a
+ * list one pair per value, `true` a bare flag, and `undefined`, `false` or `''` is left out, so a blank
  * filter is written as none.
  */
 export function listHref(path: string, params: ListHrefParams = {}): Route {
   const parts = Object.entries(params).flatMap(([name, value]) => {
     if (value === true) return [encodeURIComponent(name)];
-    return value ? [pair(name, value)] : [];
+    // A list is a repeated parameter, `forms=Herb&forms=Oil`, which `list` reads back.
+    if (Array.isArray(value)) return value.filter(Boolean).map((each) => pair(name, each));
+    return typeof value === 'string' && value ? [pair(name, value)] : [];
   });
   return (parts.length ? `${path}?${parts.join('&')}` : path) as Route;
 }

@@ -21,14 +21,24 @@ builder.queryField('workspaceIngredients', (t) =>
     },
     resolve: (
       _root,
-      { workspaceId, query, categoryIds, forms, deityIds, zodiacSigns, celestialBodies, toxic },
+      {
+        workspaceId,
+        query,
+        categoryIds,
+        forms,
+        deityIds,
+        zodiacSigns,
+        celestialBodies,
+        elements,
+        toxic,
+      },
       page,
       context,
     ) =>
       listWorkspaceIngredients(
         sessionOf(context),
         workspaceId,
-        { query, categoryIds, forms, deityIds, zodiacSigns, celestialBodies, toxic },
+        { query, categoryIds, forms, deityIds, zodiacSigns, celestialBodies, elements, toxic },
         page,
       ),
   }),

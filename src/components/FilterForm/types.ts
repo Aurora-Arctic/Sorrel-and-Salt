@@ -1,8 +1,8 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 
-/** One value of the filter a page shows: a blank string, `false` or none is no filter. */
-export type FilterValue = string | boolean | null | undefined;
+/** One value of the filter a page shows: a blank string, `false`, an empty list or none is no filter. */
+export type FilterValue = string | readonly string[] | boolean | null | undefined;
 
 export interface FilterFormProps {
   /** The form's accessible name: "Filter Users". */
