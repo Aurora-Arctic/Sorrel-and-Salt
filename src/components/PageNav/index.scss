@@ -44,7 +44,9 @@
   // eyebrow's small capitals so it reads as a heading and not as an entry.
   .page-nav__group {
     display: block;
-    margin-block-start: space(2);
+    // A clear break from the entries above it, so the label opens a part of
+    // the menu and does not read as the last entry's caption.
+    margin-block-start: space(5);
     padding: space(1) space(4);
     font-size: type-size('overline');
     font-weight: 500;

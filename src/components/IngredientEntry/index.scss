@@ -76,9 +76,14 @@ $side-column: calc(#{space(8)} * 5);
   margin: 0;
 }
 
-.ingredient-entry__text,
-.ingredient-entry__side {
+.ingredient-entry__text {
   @include stack(4);
+}
+
+// The side column's blocks stand further apart than the text's parts, so
+// each heading reads as its own list and not as the last one's tail.
+.ingredient-entry__side {
+  @include stack(6);
 }
 
 // Under the text, the side column stands a clear step off it, so the
@@ -136,6 +141,17 @@ $side-column: calc(#{space(8)} * 5);
     margin: 0;
     // Not a `<p>`, so it takes the measure itself.
     max-width: $measure;
+  }
+}
+
+// In the side column a row is a term over a list that may wrap to several
+// lines: a step more between the term and its value, and a clear break
+// before the next term, so the rows read apart (the owner's call).
+.ingredient-entry__correspondences {
+  @include stack(3);
+
+  dd + dt {
+    margin-block-start: space(5);
   }
 }
 
