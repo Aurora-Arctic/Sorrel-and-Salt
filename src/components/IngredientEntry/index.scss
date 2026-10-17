@@ -338,17 +338,21 @@ $side-column: calc(#{space(8)} * 5);
 // Every link in the References section (a note's way on to its entry, an
 // entry's source and its ways back, a note's way back) and the note numbers
 // ending each section rest in the body ink, and pointed at or focused fade to
-// the link colour, as the admin compendium's name links do (the owner's
-// call). The underline is left as the page gives it, since it is what marks
-// them as links without the colour.
+// the darker link colour, `$accent-hover` (the owner's call; `$accent` is 3.96:1
+// on the `:target` highlight, `$accent-hover` is above 6:1), as the admin
+// compendium's name links do. The underline stays, since it is what marks
+// them as links without the colour, but faded: 40% of the link's own colour,
+// so it follows the colour to a faded green on hover. No token holds a faded
+// underline, so it is a `color-mix`, as `$fill-quiet` is.
 .ingredient-entry__marks a,
 .ingredient-entry__references a {
   color: $text-primary;
+  text-decoration-color: color-mix(in srgb, currentcolor 40%, transparent);
   @include theme-transition(color);
 
   &:hover,
   &:focus-visible {
-    color: $accent;
+    color: $accent-hover;
   }
 
   &:focus-visible {
@@ -361,7 +365,7 @@ $side-column: calc(#{space(8)} * 5);
 
   &:hover:where(:visited),
   &:focus-visible:where(:visited) {
-    color: $accent;
+    color: $accent-hover;
   }
 
   @include reduced-motion {
