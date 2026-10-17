@@ -380,6 +380,67 @@ describe('Modal', () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
+    // The least destructive answer takes the focus however the question was
+    // reached, each from where a real press leaves it (APG, alertdialog).
+    it.each([
+      [
+        'the Close button',
+        () => {
+          button('Close').focus();
+          fireEvent.click(button('Close'));
+        },
+      ],
+      [
+        'Escape in a field',
+        () => {
+          field('Name').focus();
+          escape();
+        },
+      ],
+      [
+        'Cancel',
+        () => {
+          button('Cancel').focus();
+          fireEvent.click(button('Cancel'));
+        },
+      ],
+      [
+        'a click outside',
+        () => {
+          const at = { clientX: 20, clientY: 150 };
+          screen.getByRole('dialog').focus();
+          fireEvent.mouseDown(screen.getByRole('dialog'), at);
+          fireEvent.click(screen.getByRole('dialog'), at);
+        },
+      ],
+    ])('puts the focus on Keep Editing when asked by %s, and keeps it there', async (_, leave) => {
+      renderGuarded();
+      change('Name', 'Testwort');
+
+      leave();
+      expect(button('Keep Editing')).toHaveFocus();
+      // Still there once the browser has had its turn: no later step takes it.
+      await act(async () => {
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      });
+      expect(button('Keep Editing')).toHaveFocus();
+    });
+
+    // Regression: a real browser can move the focus once the opening event's
+    // handler returns, after the commit; the question takes it back.
+    it('takes the focus back on Keep Editing if it is moved off just after the question opens', async () => {
+      renderGuarded();
+      change('Name', 'Testwort');
+      fireEvent.click(button('Close'));
+      expect(button('Keep Editing')).toHaveFocus();
+
+      screen.getByRole('dialog').focus();
+      await act(async () => {
+        await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+      });
+      expect(button('Keep Editing')).toHaveFocus();
+    });
+
     // The owner's call during MB.115: a way out tried again flashes the
     // question, so the person sees why nothing closed, and each try does.
     it('flashes the question for a way out tried again while asking, the focus back on Keep Editing', () => {

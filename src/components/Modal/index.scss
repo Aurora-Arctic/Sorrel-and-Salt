@@ -213,17 +213,12 @@ $modal-fade: 150ms ease-out;
     align-self: stretch;
   }
 
-  // Held while a question is asked, as the form is, and greyed by the same
-  // scrim, so it does not look pressable while it is not.
-  &[inert] {
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-color: $modal-scrim;
-    }
+  // Held while a question is asked, as the form is, so its controls are
+  // faded and greyed rather than covered. A scrim laid over the whole row
+  // also darkened the gaps between the controls, a strip darker than the
+  // undimmed title above it, which the controls alone do not.
+  &[inert] > * {
+    @include busy-faded;
   }
 }
 
