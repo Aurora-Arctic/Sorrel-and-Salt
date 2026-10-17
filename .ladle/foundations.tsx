@@ -737,7 +737,7 @@ export default function Foundations(): ReactElement {
         <SectionHead eyebrow="_primitives.scss · .page-header" title="The Page Header">
           A page's heading with its one primary action at the line's end, brought down to the
           heading's letters. Under the forms' column of its own width, the action goes beneath the
-          heading, and inside <code>.admin-layout</code> it spans the line, as in the phone-width
+          heading, and inside <code>.page-column</code> it spans the line, as in the phone-width
           box, which carries that class.
         </SectionHead>
         <div className="fd-tables">
@@ -747,7 +747,7 @@ export default function Foundations(): ReactElement {
               Add Category Group
             </a>
           </div>
-          <div className="fd-phone admin-layout">
+          <div className="fd-phone page-column">
             <div className="page-header">
               <h1>Category Groups</h1>
               <a className="btn btn--solid" href="#fd-page-header">

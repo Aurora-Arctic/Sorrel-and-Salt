@@ -53,7 +53,7 @@ describe('RouteModal', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
-  it('shows a pressed modal at once over a status, then its form in the same dialog, the focus on its first field', () => {
+  it('shows a pressed modal at once over a status, then its form in the same dialog, the focus on its first field', async () => {
     const { rerender } = render(
       <RouteModalContext.Provider value={opener(HEADING)}>
         <RouteModal closeHref={CLOSE} />
@@ -62,6 +62,7 @@ describe('RouteModal', () => {
     const loading = screen.getByRole('dialog', { name: NAME });
     expect(within(loading).getByRole('status')).toBeInTheDocument();
     expect(within(loading).queryByRole('textbox')).not.toBeInTheDocument();
+    await act(async () => {});
 
     rerender(
       <RouteModalContext.Provider value={opener()}>

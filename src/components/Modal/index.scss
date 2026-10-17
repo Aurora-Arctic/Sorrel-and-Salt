@@ -213,17 +213,14 @@ $modal-fade: 150ms ease-out;
     align-self: stretch;
   }
 
-  // Held while a question is asked, as the form is, and greyed by the same
-  // scrim, so it does not look pressable while it is not.
-  &[inert] {
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-color: $modal-scrim;
-    }
+  // Held while a question is asked, as the form is, so its buttons take the
+  // disabled look, the owner's call: a control that cannot be used reads as
+  // one, as Undo and Redo do when they are off, rather than faded. Neither a
+  // fade, which doubled on a button already off, nor a scrim over the row,
+  // which darkened the gaps between the controls into a strip under the
+  // undimmed title. The ingredient form also disables its Close All then.
+  &[inert] .btn {
+    @include btn-disabled;
   }
 }
 
@@ -299,6 +296,19 @@ $modal-fade: 150ms ease-out;
 
 .confirm-overlay__question {
   margin: 0;
+}
+
+// The safe answer takes the focus by script as the card comes, and a browser
+// draws a scripted focus's ring only when the focus it replaced had one: after
+// a pointer press on Close, Cancel or the backdrop it held the focus unseen.
+// So in the card a quiet answer shows its keyboard look on any focus, not
+// `:focus-visible` alone. A click on it answers and takes the card away, so
+// the ring never lingers under the pointer (claude-docs/components/modal.md,
+// "Unsaved changes").
+.confirm-overlay__card .btn--quiet:focus {
+  background-color: $text-primary;
+  color: $text-on-color;
+  @include focus-ring;
 }
 
 // Its row stacks, full width and in order, at the width a form's own does:

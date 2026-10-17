@@ -1,0 +1,119 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// A bar with the same measurements as the application shell's (MB.7), so a
+// visitor who signs in meets the same bar; tokens only, until the section's
+// design review. claude-docs/components/public-frame.md.
+
+.public-frame__bar {
+  box-sizing: border-box;
+  height: $shell-bar-height;
+  border-bottom: 1px solid $hairline;
+  background-color: $surface-card;
+}
+
+// The layout layer gives every `header` a bottom margin; the bar is one.
+.public-frame .public-frame__bar {
+  margin-bottom: 0;
+}
+
+.public-frame__bar-inner {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: space(3);
+  max-width: $wide-column;
+  height: 100%;
+  margin-inline: auto;
+  padding-inline: space(4);
+}
+
+.public-frame__brand {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  min-height: $control-height;
+  color: $text-primary;
+  font-family: $font-heading;
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.public-frame__nav {
+  align-self: stretch;
+
+  ul {
+    @include list-reset;
+
+    display: flex;
+    align-items: stretch;
+    height: 100%;
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 space(3);
+    color: $text-primary;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover {
+      background-color: $fill-quiet;
+    }
+
+    &:focus-visible {
+      @include focus-ring;
+
+      outline-offset: -2px;
+    }
+  }
+}
+
+.public-frame__end {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: space(2);
+  margin-left: auto;
+}
+
+.public-frame__brand-short {
+  display: none;
+}
+
+// The brand gives way to its initials as in the shell, so the bar holds at 375px.
+@media (max-width: $shell-phone-width) {
+  .public-frame__bar-inner {
+    gap: space(2);
+    padding-inline: space(2);
+  }
+
+  .public-frame__nav a {
+    padding: 0 space(2);
+  }
+}
+
+@media (max-width: $shell-brand-width) {
+  .public-frame__brand {
+    justify-content: center;
+    min-width: $control-height;
+  }
+
+  .public-frame__brand-full {
+    @include visually-hidden;
+  }
+
+  .public-frame__brand-short {
+    display: inline;
+  }
+}

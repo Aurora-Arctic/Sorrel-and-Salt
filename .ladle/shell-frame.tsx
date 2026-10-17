@@ -27,12 +27,20 @@ export const FIXTURE_VIEWER: ShellViewer = {
 // reads it: a member of the first two, so the nav offers Members; a viewer of
 // the third, so a switch to it from a people page lands on its index.
 export const FIXTURE_WORKSPACES: readonly ShellWorkspace[] = [
-  { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
-  { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: true },
+  { id: 'w1', slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true, canWrite: true },
   {
+    id: 'w2',
+    slug: 'testwort-circle',
+    name: 'Testwort Circle',
+    canReadMembers: true,
+    canWrite: true,
+  },
+  {
+    id: 'w3',
     slug: 'a-long-named-circle-of-fixture-herbalists',
     name: 'A Long Named Circle of Fixture Herbalists',
     canReadMembers: false,
+    canWrite: false,
   },
 ];
 
@@ -75,7 +83,7 @@ export const ShellFrame = ({
             <ContextRow lead={<span className="context-row__name">Admin</span>}>
               <AdminNav />
             </ContextRow>
-            <div className="admin-layout">{children}</div>
+            <div className="page-column">{children}</div>
           </>
         )}
         {/* /coven/new: the switcher alone, no section nav, and no wrapper div

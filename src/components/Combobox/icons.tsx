@@ -8,7 +8,7 @@ import type { ReactElement } from 'react';
 
 export function ChevronIcon(): ReactElement {
   return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+    <svg className="chevron-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false">
       <path
         d="M3.5 6l4.5 4.5L12.5 6"
         fill="none"

@@ -115,13 +115,15 @@
 // The chevron at the line's end, down while closed and turned over while
 // open, as the admin menu's is: at once, so there is no motion to reduce.
 .ingredient-form__fold-chevron {
-  @include disclosure-chevron('.is-open > .ingredient-form__fold-head');
+  // Pointed at, the chevron darkens and grows a quarter (the owner's call),
+  // eased with the flip; `scale` composes with the open state's `transform`.
+  @include disclosure-chevron('.is-open > .ingredient-form__fold-head', color, scale);
 
   margin-inline-start: auto;
-  @include theme-transition(color);
 
   .ingredient-form__fold-head:hover & {
     color: $text-primary;
+    scale: 1.25;
   }
 }
 

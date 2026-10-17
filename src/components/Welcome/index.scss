@@ -20,5 +20,9 @@
 // A step further from the prose than the paragraphs are from each other, so
 // the way in reads as the page's end: `space(6)` in all with the gap.
 .welcome__way-in {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(3);
   margin: space(2) 0 0;
 }

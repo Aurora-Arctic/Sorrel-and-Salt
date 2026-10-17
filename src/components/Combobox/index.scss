@@ -51,8 +51,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The select-only box: the control itself takes the focus and the press,
-// so it draws its own ring, and points rather than shows a caret.
-.combobox__control--select {
+// so it draws its own ring, and points rather than shows a caret. Weighted
+// with `.input` as the control above is, or that rule's caret wins over the
+// whole box, text and padding alike.
+.input.combobox__control--select {
   cursor: pointer;
 
   &:focus-visible {
@@ -241,6 +243,14 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &:focus-visible {
     @include focus-ring;
   }
+
+  // The chevron turns over while the list is open, as the account menu's
+  // does. `aria-expanded` sits on the input, button or control beside the
+  // indicator, never above it, so a selector on it cannot reach the chevron;
+  // the root carries `is-open` while the list is open, and the flip waits on it.
+  .chevron-icon {
+    @include chevron-flip('.combobox.is-open');
+  }
 }
 
 // The list, floating beneath the control at its width, on the card surface
@@ -279,6 +289,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   z-index: 1;
   display: none;
   box-sizing: border-box;
+  // The popup's rounded edge clips what it holds: a row highlighted at a
+  // corner, or the listbox's own ground, would otherwise paint over the
+  // border there. The listbox inside scrolls as before.
+  overflow: hidden;
 
   @include floating-panel;
 
@@ -287,9 +301,13 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// Inside the popup the listbox is no panel of its own: the popup draws the
+// edge, the ground, the corners and the shadow, once.
 .combobox__list.is-inset {
   display: block;
+  background: transparent;
   border: 0;
+  border-radius: 0;
   box-shadow: none;
 }
 

@@ -26,15 +26,16 @@ is the wrapper every admin page opens it through (below).
 
 `ModalProps` (`types.ts`):
 
-| Prop        | What it is                                                                      |
-| ----------- | ------------------------------------------------------------------------------- |
-| `title`     | The heading: what the dialog is for, or the entry an edit dialog edits          |
-| `eyebrow`   | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add |
-| `qualifier` | After the title, quieter: an ingredient's formal name, a deity's tradition      |
-| `onClose`   | Asked for by the Close button, Escape and a click outside                       |
-| `size`      | `'wide'` for a long form; absent, the default width                             |
-| `loading`   | The contents are on the way: the body is marked `aria-busy` (M9.18)             |
-| `children`  | The body: a form, a confirmation, whatever the owner puts here                  |
+| Prop          | What it is                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`       | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
+| `eyebrow`     | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
+| `destination` | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
+| `qualifier`   | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
+| `onClose`     | Asked for by the Close button, Escape and a click outside                                                                               |
+| `size`        | `'wide'` for a long form; absent, the default width                                                                                     |
+| `loading`     | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
+| `children`    | The body: a form, a confirmation, whatever the owner puts here                                                                          |
 
 ## Contracts
 
@@ -132,7 +133,11 @@ each form.
   as the forms' Delete questions do. Keep Editing puts it away with nothing
   lost and the focus back where it was: Cancel, which stays beneath the
   question now, the field Escape was pressed in, or the Close button. If
-  that has gone, the focus goes to the form's first field.
+  that has gone, the focus goes to the form's first field. The focus was
+  always there, but after a pointer press (Close, Cancel, the backdrop) the
+  browser drew no ring for it, since it draws a scripted focus's ring only when
+  the focus it replaced had one, so the card's quiet answer shows its keyboard
+  look on any `:focus` (M8.16, measured in Chromium).
 - **Tried again while asking, it flashes** (MB.115, the owner's call), so
   the person sees why nothing closed. Each try by Close, Escape or the
   backdrop counts in `guard.flashes`, which the card carries as
@@ -181,7 +186,7 @@ form's Delete question are drawn through it.
 - **The form behind is held.** As the card comes, the modal sets `inert` on
   its body and on the control beside its title, so Tab, a click and typing
   cannot reach the form until the question is answered; the scrim, the
-  page's ground at 75% as the backdrop is, dims both. The title and the Close
+  page's ground at 75% as the backdrop is, dims the body. The title and the Close
   button are not held, so Close, Escape and a click outside go through the
   form's guard as before: closing with nothing changed, asking about a change,
   or flashing a question already asked. The attribute is set on the elements
@@ -324,8 +329,11 @@ out of the header (M12.10). A slot, as the guard is, since the form sits
 inside the modal's render prop, out of its owner's reach. Outside a modal the
 hook answers null and the form keeps the controls in its own flow. Tab order
 follows the page: the ×, then the controls, then the form. While a question is
-asked over the form, the row is held and dimmed with it
-(["Asking over the form"](#asking-over-the-form)).
+asked over the form, the row is held with it
+(["Asking over the form"](#asking-over-the-form)), and its buttons take the
+`.btn` disabled look (the `btn-disabled` mixin) rather than a fade or the
+scrim, the owner's call at M8.16; the ingredient form's Close All is
+`disabled` then too, as a form's Undo and Redo already are.
 
 ## ModalButton
 
@@ -346,6 +354,37 @@ Coven. `ModalButtonProps` (`types.ts`):
 
 The focus moves only after a close, never on the first render, so the page
 loads with the focus where the browser puts it.
+
+### Add Ingredient
+
+The shell’s Add Ingredient control (`AppShell/add-ingredient-button.tsx`,
+M8.16) opens a `Modal` holding an `IngredientForm` for one coven. A
+_destination_ is the compendium (for a viewer who can curate) or a coven the
+viewer may write to; a coven they may only read is never one. With one
+destination the control is a plain button. With two or more it is a split
+button: the main part opens the default destination, and a chevron (`Choose
+Where to Add`, `aria-haspopup="menu"`) opens a menu listing every
+destination by name, the compendium first (`add-ingredient-menu.tsx`; the
+repo had no ARIA menu, so it is written there with arrow keys, Escape and a
+press outside). The default is, on `/admin/*`, the compendium for a curator;
+otherwise the coven the address names, else the first coven they may write to.
+Choosing the compendium is a `router.push` to `/admin/compendium?new` (the
+admin layout’s route-modal provider sits below the shell, so the button cannot
+open that dialog itself, and the page draws it for a direct request); choosing
+a coven opens the modal.
+
+The modal’s head is the coven’s name in the eyebrow’s place over the title
+“Add Ingredient”, so the person always sees where the ingredient goes, and a
+screen reader hears one phrase as the dialog’s name, “Add Ingredient to
+Whitethorn Coven”: the `destination` prop is spoken after the title, joined by
+a hidden “to”, where an edit’s eyebrow is spoken before it. The compendium’s
+own add dialog is headed the same way, “Compendium” over “Add Ingredient”. The
+menu names each destination the same way, “to Compendium”, “to Whitethorn
+Coven”. The
+destination is fixed once the dialog opens: there is no Coven select. With
+nowhere to write the control is not drawn. After Save Ingredient the modal
+closes and the control leaves a status beside it, since the form’s own Saved
+notice goes with the form.
 
 ## RouteModal
 

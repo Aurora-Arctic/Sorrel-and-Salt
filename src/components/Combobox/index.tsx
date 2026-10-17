@@ -16,6 +16,7 @@ import {
 } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { ChevronIcon, ClearIcon } from './icons';
+import { EmptyMessage, noMatch, Popup } from './popup';
 import { useListPosition } from './position';
 import { chipsRoom } from './room';
 import { useTip } from '../InfoTip/use-tip';
@@ -165,47 +166,6 @@ function statusOf(
   return suggestions.pending ? `Looking for ${noun}s` : `No ${noun}s`;
 }
 
-/**
- * With an empty message, the popup that holds the listbox and the message
- * beneath it, and the element that is placed, so they move together.
- * Without one, just the listbox, which is placed itself (the output is then
- * as it always was). Downshift counts only the input, the toggle and the
- * listbox as inside, and closes on a press anywhere else. The popup does not
- * scroll: Downshift scrolls a highlighted row into view within the listbox
- * element, so the listbox is the scroller and the popup only the panel.
- */
-function Popup({
-  wrapped,
-  popupRef,
-  open,
-  style,
-  placement,
-  after,
-  children,
-}: {
-  wrapped: boolean;
-  popupRef: (element: HTMLElement | null) => void;
-  open: boolean;
-  style: CSSProperties;
-  placement: string;
-  after: ReactNode;
-  children: ReactNode;
-}): ReactElement {
-  if (!wrapped) return <>{children}</>;
-  return (
-    <div
-      ref={popupRef}
-      className={open ? 'combobox__popup is-open' : 'combobox__popup'}
-      style={style}
-      data-placement={placement}
-      hidden={!open}
-    >
-      {children}
-      {after}
-    </div>
-  );
-}
-
 function Combobox<O extends ComboboxOption = ComboboxOption>({
   id,
   label,
@@ -267,8 +227,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const isOpen = hasSource && wantsOpen && items.length > 0;
   // A settled lookup with nothing found, said aloud rather than left as a
   // list that never opens. Not "open" to Downshift, which has no rows to hold.
+  const message = empty === false ? undefined : (empty ?? noMatch(value));
   const showEmpty =
-    empty !== undefined &&
+    message !== undefined &&
     wantsOpen &&
     suggestions?.pending === false &&
     value.trim() !== '' &&
@@ -276,7 +237,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   const popupOpen = isOpen || showEmpty;
   // With an empty message the listbox is one part of a popup, and
   // the popup is what is placed; otherwise the list is, as it always was.
-  const wrapped = empty !== undefined;
+  const wrapped = message !== undefined;
   const { setControl, setList, listStyle, placement } = useListPosition(popupOpen, listAnchor);
 
   // The list opens where the tip would be read, and is what typing is for.
@@ -426,7 +387,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   };
 
   return (
-    <div className="combobox">
+    <div className={popupOpen ? 'combobox is-open' : 'combobox'}>
       {/* Named by a <label> of its own, hidden, where the caller names none:
           Chrome flags a field no label names, an aria-label notwithstanding.
           Downshift ties the two by id. */}
@@ -578,7 +539,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             {showEmpty && (
               // Not an option, so not in the listbox: a reader hears it through
               // the status, and would count it as a choice inside the list.
-              <div className="combobox__empty">{empty}</div>
+              <EmptyMessage>{message}</EmptyMessage>
             )}
           </>
         }
@@ -627,7 +588,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           typing, and nothing else says so. */}
       {hasSource && (
         <output className="visually-hidden" aria-label={`${label} ${noun}s`}>
-          {statusOf(isOpen, suggestions, noun, showEmpty ? empty : undefined)}
+          {statusOf(isOpen, suggestions, noun, showEmpty ? message : undefined)}
         </output>
       )}
     </div>

@@ -3,9 +3,9 @@ import type { ReactElement } from 'react';
 import type { WelcomeProps } from './types';
 import './index.scss';
 
-// The public front door at `/`: what the site is, that it is invite-only, and
-// the way in. The session changes exactly one thing — that last link — so a
-// signed-in visitor is never asked to sign in again.
+// The public front door at `/`: what the site is, that it is invite-only, the
+// way in, and the way to the public compendium. The session changes exactly one
+// thing, the way in, so a signed-in visitor is never asked to sign in again.
 // See claude-docs/components/welcome.md.
 
 const Welcome = ({ landing }: WelcomeProps): ReactElement => (
@@ -31,6 +31,10 @@ const Welcome = ({ landing }: WelcomeProps): ReactElement => (
           Sign In
         </Link>
       )}
+      {/* The compendium is public (MB.80), so it is offered to everyone. */}
+      <Link className="btn btn--quiet" href="/compendium">
+        Browse the Compendium
+      </Link>
     </p>
   </div>
 );

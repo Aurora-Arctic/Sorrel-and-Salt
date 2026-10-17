@@ -125,7 +125,7 @@ const IngredientSearchBox = ({
           options,
           pending: !belowFloor && (text.trim() !== query || isFetching),
         }}
-        empty={belowFloor ? 'Keep typing to search' : searchesNow ? 'No Matches' : undefined}
+        empty={belowFloor ? 'Keep typing to search' : searchesNow ? undefined : false}
         // The last row of the listbox, reached by the arrows like a result and
         // set in italics so it reads as the message it is, not a match.
         action={

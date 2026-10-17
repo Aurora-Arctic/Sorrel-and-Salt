@@ -97,7 +97,7 @@ On 2026-10-12 the owner signed off Option C with three adjustments and no furthe
 
 §9's `AppShell` paragraph said the shell carries "the global affordances for adding and editing an ingredient from any page". It now says: one global Add Ingredient button whose target follows the area, and editing on the ingredient wherever it is shown, never inside a relational field and never in the shell. For the ingredient tasks this means:
 
-- **M8.16** builds Add Ingredient's modal and enables the shell's button; the button stays disabled until then, as M9.15's disabled buttons did.
+- **M8.16** built Add Ingredient’s modal and enabled the shell button: a modal for a coven (the one the address names, else the only one the viewer may write to), a plain link to the compendium’s add dialog on an admin page, and nothing for a viewer who may write nowhere.
 - **M8.17** builds Edit Ingredient where an ingredient appears (the ingredient detail page, a list row), not in the bar. A field that links to another ingredient never offers an edit of it.
 
 The shell also gains the account menu, the theme toggle in the bar, and the one section nav, recorded in the same paragraph.

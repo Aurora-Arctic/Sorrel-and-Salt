@@ -102,14 +102,12 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
 
   const banner = page.getByRole('banner');
   await expect(banner).toBeVisible();
-  // The brand leads straight into the member's coven (shellHome), never via the
-  // /coven landing's redirect (MB.257).
-  await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute(
-    'href',
-    `/coven/${ALPHA.slug}`,
-  );
-  // A non-admin has no site links yet, so the Site nav is not drawn at all.
-  await expect(page.getByRole('navigation', { name: 'Site' })).toHaveCount(0);
+  // The brand leads to the front page, which redirects no one.
+  await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
+  // A non-admin's Site nav holds the Compendium alone.
+  await expect(
+    page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
+  ).toBeVisible();
   await expect(banner.getByRole('link', { name: 'Admin', exact: true })).toHaveCount(0);
   await expect(banner.getByRole('link', { name: 'Your Coven', exact: true })).toHaveCount(0);
 
@@ -119,7 +117,8 @@ test('a member on the coven page sees the bar, the coven nav and the account pan
     'page',
   );
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveText(ALPHA.name);
-  await expect(banner.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeDisabled();
+  // A member writes to the coven, so the bar offers Add Ingredient (M8.16).
+  await expect(banner.getByRole('button', { name: 'Add Ingredient', exact: true })).toBeEnabled();
 
   const account = banner.getByRole('button', { name: 'Fixture Person' });
   await expect(account).toHaveAttribute('aria-expanded', 'false');
@@ -158,7 +157,9 @@ test('the account page is in the shell, with no coven nav and no switcher', asyn
 
   await expect(page.getByRole('banner')).toBeVisible();
   await expect(page.getByRole('main')).toBeVisible();
-  await expect(page.getByRole('navigation', { name: 'Site' })).toHaveCount(0);
+  await expect(
+    page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
+  ).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Coven' })).toHaveCount(0);
   await expect(page.getByRole('combobox', { name: 'Coven' })).toHaveCount(0);
 });
@@ -169,10 +170,7 @@ test('an admin sees both site links, the admin nav and no switcher', async ({ pa
   await page.goto('/admin/categories');
 
   const banner = page.getByRole('banner');
-  await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute(
-    'href',
-    '/admin',
-  );
+  await expect(banner.getByRole('link', { name: 'Sorrel & Salt' })).toHaveAttribute('href', '/');
   const site = page.getByRole('navigation', { name: 'Site' });
   await expect(site.getByRole('link', { name: 'Your Coven', exact: true })).toBeVisible();
   await expect(site.getByRole('link', { name: 'Admin', exact: true })).toHaveAttribute(
@@ -216,7 +214,9 @@ test('a signed-in non-admin meets the 403 inside the shell', async ({ page }) =>
   expect(response?.status()).toBe(403);
   await expect(page.getByRole('banner')).toBeVisible();
   await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
-  await expect(page.getByRole('navigation', { name: 'Site' })).toHaveCount(0);
+  await expect(
+    page.getByRole('navigation', { name: 'Site' }).getByRole('link', { name: 'Compendium' }),
+  ).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Admin' })).toHaveCount(0);
 });
 

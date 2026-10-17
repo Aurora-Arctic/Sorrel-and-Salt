@@ -16,7 +16,13 @@ import { CategoryField } from './categories';
 import { CopyFromIngredient, SkippedNotice, useSkippedCopy } from './copy';
 import FormIcon from '../FormIcon';
 import { EditIcon, RemoveIcon } from './icons';
-import { FieldError, TextField } from '../Field';
+import {
+  FieldError,
+  TextField,
+  errorShown,
+  useEditedFieldsContext,
+  useSettledWhilePressed,
+} from '../Field';
 import { ListField, MultiSelectField, ToggleField } from './fields';
 import { ELEMENT_OPTIONS } from './options';
 import { ReferencesField } from './references';
@@ -370,7 +376,8 @@ function VariantFieldset({
   const at = `variants.${index}` as const;
   const { control } = useFormContext<IngredientFormValues>();
   const variant = useWatch({ control, name: at });
-  const { errors } = useFormState({ control, name: at });
+  const { errors, isSubmitted, touchedFields } = useFormState({ control, name: at });
+  const edited = useEditedFieldsContext();
   const form = variant.form;
   const group = variant.formLink?.group ?? null;
   // Its form, as typed; a form emptied in its box still names the group.
@@ -384,7 +391,18 @@ function VariantFieldset({
   );
   // What a substitute copy skipped, for the notice beneath the list.
   const { onSkip, copyButton, skipped, onDone } = useSkippedCopy(variant.substitutes);
-  const invalid = get(errors, at) !== undefined;
+  // Its own sections, each a disclosure as the ingredient's are (MB.115),
+  // flagged while one holds an error a field draws, and opened by a save
+  // that finds one.
+  // Standing still through a press, as the fields' errors do.
+  const erring = useSettledWhilePressed(
+    variantSectionsWithErrors(
+      get(errors, at),
+      (path) => errorShown({ isSubmitted, touchedFields, edited }, path),
+      `${at}.`,
+    ),
+  );
+  const invalid = erring.size > 0;
   // Flagged only while closed: open, the fields' own errors say it.
   const { id, summaryId, flagId, fieldsId, className, describedBy } = useFoldIds({
     block: 'fieldset ingredient-form__variant',
@@ -393,9 +411,6 @@ function VariantFieldset({
     flagged: invalid && !open,
   });
   const legendId = `${id}-legend`;
-  // Its own sections, each a disclosure as the ingredient's are (MB.115),
-  // flagged while one holds an error and opened by a save that finds one.
-  const erring = variantSectionsWithErrors(get(errors, at));
   const fold = (section: VariantSectionKey): SectionFold => ({
     open: folds.isOpen(index, section),
     invalid: erring.has(section),

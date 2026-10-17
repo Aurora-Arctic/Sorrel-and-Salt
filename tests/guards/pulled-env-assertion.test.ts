@@ -17,6 +17,14 @@ const NEON =
   'postgresql://sorrel:np_x9Kq2@ep-cool-bird-a1b2c3-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require';
 const LOCAL = 'postgres://sorrel:sorrel@postgres:5432/sorrel';
 
+describe('a client-only parameter is not rejected here', () => {
+  // Stripped where the connection opens instead (src/db/connection-url.ts):
+  // Neon's Vercel integration writes the hotfix URL and rewrites it.
+  it('accepts a URL carrying channel_binding=require', () => {
+    expect(validateDatabaseUrl(`${NEON}&channel_binding=require`).ok).toBe(true);
+  });
+});
+
 describe('no secret reaches the log', () => {
   it.each([
     ['a quoted Neon URL', `"${NEON}"`, 'np_x9Kq2'],
@@ -28,15 +36,6 @@ describe('no secret reaches the log', () => {
     if (verdict.ok) return;
     expect(verdict.message).not.toContain(secret);
     expect(verdict.message).not.toContain(raw);
-  });
-
-  // The parameter name is safe to print; the credentials beside it are not.
-  it('never quotes the credentials beside a client-only parameter it rejected', () => {
-    const verdict = validateDatabaseUrl(`${NEON}&channel_binding=require`);
-    expect(verdict.ok).toBe(false);
-    if (verdict.ok) return;
-    expect(verdict.message).not.toContain('np_x9Kq2');
-    expect(verdict.message).not.toContain('ep-cool-bird');
   });
 
   it('never prints a value in the per-key report', () => {

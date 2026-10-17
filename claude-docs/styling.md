@@ -543,12 +543,12 @@ Four variants:
   `$secondary`, which every error wears too. It was `.btn--secondary`, named
   for the token rather than the job, until M5.6, the owner's call.
 
-**One size modifier, `.btn--small`**, which composes with any variant: half
+**Two size modifiers, `.btn--small` and `.btn--medium`**, which compose with any variant. `.btn--small` has half
 the padding (`space(1) space(3)`), no `$control-height` minimum, a 1px edge
 in place of `.btn`'s 1.6px, which reads heavy at this size, the `caption`
 type size, and a `space(2)` gap. It is for a compact strip that the full button would make taller, such
 as a banner or a table row. The impersonation banner's Stop is the first
-(MB.53).
+(MB.53). `.btn--medium` sits between it and the full button: the same label size and edge as `.btn`, no `$control-height` minimum, and `space(1) space(4)` of padding. The shell's Add Ingredient wears it with `.btn--solid` (M8.16).
 
 **A save in flight is `aria-busy` with a `.spinner`** (M5.6, the owner's call
 for every Save button). The spinner is a 1em ring in the button's own ink,
@@ -812,9 +812,10 @@ height also subtracts `$shell-bar-height`, and a `.page-frame__section`'s
   reads apart from both (the owner's call). It names both classes to outrank
   `.notice`'s zero margin, which comes later in the file.
 
-## The admin layout
+## The page column
 
-`.admin-layout` is the frame every `/admin` page sits in (MB.115): the page's
+`.page-column` is the frame every `/admin` page sits in (MB.115), and the
+(public) layout's compendium pages too (MB.83): the page's
 children a `space(5)` apart. The admin nav is no longer inside it but in the
 shell's context row above it (MB.7). It is a column as wide as
 `$wide-column` (80rem), centred, with `space(6)` above and below and
@@ -824,12 +825,12 @@ down the window, since a list page runs as long as its rows. The width is
 the owner's call at MB.115's review: the user list's seven columns need
 about 77rem before they stop scrolling inside their frame, the privilege
 ledger has seven too, and at the old 64rem the user list's sticky Impersonate
-column sat over Signed Up on a 1280px window. Only `.admin-layout` and
-`.coven-layout` read the token, so nothing outside `/admin` and `/coven/` widens
-with it. Its paragraphs
+column sat over Signed Up on a 1280px window. Only `.page-column` and
+`.coven-layout` read the token, so nothing outside `/admin`, `/coven/` and the
+public compendium widens with it. Its paragraphs
 still stop at the measure. The width and its cap sit inside `:where()`, as
 the page frame's do, so a single class can change them. It is a primitive
-rather than AdminNav's own rule because the admin layout and the admin
+rather than AdminNav's own rule because the admin, public and coven layouts and the admin
 components' stories use the class as their frame. Inside it a page header's
 action, and a tab's, goes beneath the heading at phone width at its natural
 width, at the line's start, except the Add, which is a plus beside the
@@ -847,7 +848,7 @@ its side (`.page-with-nav`, "The page frame", above), and its sections are
 plain `.page-frame__section`s rather than panels, the shape the admin
 index uses. The index's table of contents is the `.admin-contents` list the
 admin index draws, in `_primitives.scss` for both. The admin area's
-page-header rules stay scoped to `.admin-layout`.
+page-header rules stay scoped to `.page-column`.
 
 ## Tables at phone width
 
@@ -1071,8 +1072,10 @@ heavier than the reverse; light reverts to the browser default.
   window); `tip-bubble-open` (a bubble's open state alone, for one opened
   by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
   turns `$text-primary` when pointed at or focused), `icon-button-edit`
-  and `icon-button-remove` (the accent and the wax); `disclosure-chevron`
-  (a chevron that turns over while its section is open); `floating-panel`
+  and `icon-button-remove` (the accent and the wax); `chevron-flip` (the
+  account menu's turn-over on open, eased and still under reduced motion,
+  which every chevron shares, M8.16) and `disclosure-chevron` (a section's
+  chevron, sized and inked, with that flip); `floating-panel`
   (the card surface, floating shadow and muted edge a list or summary
   floats on); `field-box` (the edge, ground and height a field and the
   admin menu's summary share); `arrived` (the fade a list or tab's new

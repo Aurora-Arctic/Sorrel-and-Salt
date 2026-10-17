@@ -194,6 +194,15 @@
     font-size: type-size('caption');
   }
 
+  // A size between the full button and `.btn--small` (the owner's call,
+  // M8.16), for the shell's bar, where the full one is too tall and the small
+  // one too slight: the label stays at `.btn`'s size and the edge at its
+  // weight, and only the height comes down, off the field's.
+  .btn--medium {
+    min-height: 0;
+    padding: space(1) space(4);
+  }
+
   // A save in flight, the owner's call for every Save button (M5.6): a ring
   // in the button's ink, open on one side so its turn reads, ahead of the
   // label, the button `aria-busy`. Slowed rather than stopped where motion is
@@ -238,25 +247,7 @@
   // disabled button at all.
   .btn:disabled,
   .btn[aria-disabled='true'] {
-    background-color: transparent;
-    border-color: $text-muted;
-    border-style: dashed;
-    color: $text-muted;
-    opacity: $opacity-disabled;
-    cursor: not-allowed;
-    box-shadow: none;
-
-    &:hover,
-    &:focus-visible {
-      background-color: transparent;
-      border-color: $text-muted;
-      color: $text-muted;
-      box-shadow: none;
-    }
-
-    svg {
-      opacity: 0.5;
-    }
+    @include btn-disabled;
   }
 
   // The one filled button in a view: its primary action. Its hover is a
@@ -668,20 +659,20 @@
     border-top: 1px solid $text-muted;
   }
 
-  // The admin area's frame (MB.115), around the page: its children a
-  // `space(5)` apart. The nav it once carried is the shell's context row now.
-  // Wider than `.page-frame`, at `$wide-column`, for the tables its pages
-  // hold, and neither full height nor centred down the window, since a list
-  // page runs as long as its rows.
-  // A primitive rather than AdminNav's own rule, since the admin layout and
-  // three stories use the class as their frame. The coven layout (M9.15)
-  // shares the frame, and MB.119's design review kept it so: it asked for no
-  // frame of the coven's own, and its pages hold the member and invitation
-  // tables and will hold the ingredient and grimoire tables, so the wide
-  // column suits them. What a page does inside the frame is the page's: the
-  // coven index sits in the narrow column with a jump menu beside it
-  // (`.page-with-nav`, below), the people pages run the frame's width.
-  .admin-layout,
+  // The page column (MB.115): the frame round the page on the admin pages,
+  // the public compendium pages (MB.83) and the coven pages, its children a
+  // `space(5)` apart. Wider than `.page-frame`, at `$wide-column`, for the
+  // tables its pages hold, and neither full height nor centred down the
+  // window, since a list page runs as long as its rows.
+  // A primitive rather than AdminNav's own rule, since the layouts and the
+  // stories use the class as their frame. The coven layout (M9.15) shares the
+  // frame, and MB.119's design review kept it so: it asked for no frame of the
+  // coven's own, and its pages hold the member and invitation tables and will
+  // hold the ingredient and grimoire tables, so the wide column suits them.
+  // What a page does inside the frame is the page's: the coven index sits in
+  // the narrow column with a jump menu beside it (`.page-with-nav`, below),
+  // the people pages run the frame's width.
+  .page-column,
   .coven-layout {
     box-sizing: border-box;
     display: flex;
@@ -693,7 +684,7 @@
 
   // Inside `:where()`, as `.page-frame`'s width is, so a story or page that
   // wants the frame narrower or wider can say so with a single class.
-  :where(.admin-layout, .coven-layout) {
+  :where(.page-column, .coven-layout) {
     width: 100%;
     max-width: $wide-column;
   }

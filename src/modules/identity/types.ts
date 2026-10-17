@@ -11,6 +11,9 @@ export type { PrivilegeChangeFilter, UserFilter } from '../../db/repository';
 
 export type UserRow = typeof users.$inferSelect;
 
+/** What an Updated stamp shows of an editor: the account and its display name, no ledger field. */
+export type EditorName = Pick<UserRow, 'id' | 'name'>;
+
 /** What `/admin/invitations` is narrowed by (MB.115). Each part is optional, and absent means no filter. */
 export interface AdminInvitationFilter {
   /** A fragment of the invited address, case-insensitive. */

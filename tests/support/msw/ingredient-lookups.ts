@@ -246,7 +246,12 @@ export function acceptCreate() {
   >('CreateWorkspaceIngredient', (variables) => {
     calls.push(variables);
     return {
-      createWorkspaceIngredient: { id: 'saved-1', name: variables.input.name, slug: 'saved' },
+      createWorkspaceIngredient: {
+        id: 'saved-1',
+        name: variables.input.name,
+        slug: 'saved',
+        stock: [],
+      },
     };
   });
   return calls;

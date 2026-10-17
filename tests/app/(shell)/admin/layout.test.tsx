@@ -41,6 +41,17 @@ describe('the /admin layout', () => {
     expect(screen.getByText('The page itself')).toBeInTheDocument();
   });
 
+  // The row's name is the area's home, as the coven row's switcher is.
+  it('leads the row with Admin linking to the admin index', async () => {
+    requireCuratorSession.mockResolvedValue(CURATOR);
+
+    render(await AdminLayout({ children: <p>The page itself</p> }));
+
+    const nav = screen.getByRole('navigation', { name: 'Admin' });
+    const lead = screen.getAllByRole('link', { name: 'Admin' }).find((link) => !nav.contains(link));
+    expect(lead).toHaveAttribute('href', '/admin');
+  });
+
   it('shows a curator the nav without People, and an admin with it', async () => {
     requireCuratorSession.mockResolvedValue(CURATOR);
     const { unmount } = render(await AdminLayout({ children: <p>The page itself</p> }));

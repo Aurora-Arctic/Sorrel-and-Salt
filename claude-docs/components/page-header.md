@@ -47,7 +47,7 @@ button and the tip never draws. The label stays in the page, visually hidden at
 the narrow width, so the link's name is the label at every width. This is the
 owner's call at MB.7's review, 2026-10-12. It reverses MB.115's review, where
 the admin area's actions spanned the line ([`styling.md`](../styling.md),
-"The admin layout").
+"The page column").
 
 ## Stories
 
@@ -56,7 +56,7 @@ the admin area's actions spanned the line ([`styling.md`](../styling.md),
 heading, and `PhoneDark` and
 `PhoneLight` with a longer heading, Deity Traditions, at 375px, the Add as a plus beside it. Each
 sits in the admin layout as it is, through the workshop's `AdminFrame`: the
-context row and nav above the `.admin-layout` column, the header in a `main`
+context row and nav above the `.page-column` column, the header in a `main`
 as the compendium page draws it, with its own Add Ingredient.
 
 ## Testing

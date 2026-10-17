@@ -6,28 +6,30 @@ import { Forbidden } from '@/lib/errors';
 // to test (tests/modules/); here, only how the answers are put together.
 
 const requireSignedIn = vi.fn();
+const getSession = vi.fn();
 const getMe = vi.fn();
 const countReceivedInvitations = vi.fn();
 const membershipsOf = vi.fn();
 // What a role may do is the coven module's to say; here a viewer reads no members.
 const rolePermits = vi.fn((role: string) => role !== 'viewer');
-vi.mock('@/lib/request-session', () => ({ requireSignedIn }));
+vi.mock('@/lib/request-session', () => ({ requireSignedIn, getSession }));
 vi.mock('@/modules/identity', () => ({ getMe, countReceivedInvitations }));
 // The switcher's order is the coven module's too; stood in for by the rule it states.
 const byCovenName = (a: { name: string }, b: { name: string }) => a.name.localeCompare(b.name);
 vi.mock('@/modules/coven', () => ({ membershipsOf, rolePermits, byCovenName }));
 
-const { viewerOf } = await import('@/lib/viewer');
+const { viewerIfSignedIn, viewerOf } = await import('@/lib/viewer');
 
 const SESSION = { userId: 'u1', role: 'user' } as const;
 const ME = { name: 'Fixture Member', canCreateWorkspace: true, emailVerified: true };
 const membership = (slug: string, name: string, role = 'member') => ({
   role,
-  workspace: { slug, name },
+  workspace: { id: `id-${slug}`, slug, name },
 });
 
 beforeEach(() => {
   requireSignedIn.mockResolvedValue(SESSION);
+  getSession.mockResolvedValue(SESSION);
   getMe.mockResolvedValue(ME);
   membershipsOf.mockResolvedValue([[]]);
   countReceivedInvitations.mockReset().mockResolvedValue({ totalCount: 0, countBefore: null });
@@ -98,14 +100,58 @@ describe('viewerOf', () => {
     const { workspaces } = await viewerOf();
 
     expect(workspaces).toEqual([
-      { slug: 'fixture-coven', name: 'Fixture Coven', canReadMembers: true },
-      { slug: 'testwort-circle', name: 'Testwort Circle', canReadMembers: false },
+      {
+        id: 'id-fixture-coven',
+        slug: 'fixture-coven',
+        name: 'Fixture Coven',
+        canReadMembers: true,
+        canWrite: true,
+      },
+      {
+        id: 'id-testwort-circle',
+        slug: 'testwort-circle',
+        name: 'Testwort Circle',
+        canReadMembers: false,
+        canWrite: false,
+      },
     ]);
+  });
+
+  it('asks the role for the statement the ingredient save asserts, and reads a viewer as unable to write', async () => {
+    membershipsOf.mockResolvedValue([[membership('testwort-circle', 'Testwort Circle', 'viewer')]]);
+
+    const { workspaces } = await viewerOf();
+
+    expect(rolePermits).toHaveBeenCalledWith('viewer', {
+      ingredient: ['create'],
+      inventory: ['update'],
+    });
+    expect(workspaces[0]?.canWrite).toBe(false);
   });
 
   it('refuses to draw a shell from a refused lookup', async () => {
     membershipsOf.mockResolvedValue([new Forbidden()]);
 
     await expect(viewerOf()).rejects.toThrow();
+  });
+});
+
+// The public frame's read (MB.83): the same viewer, or nothing, and never a redirect.
+describe('viewerIfSignedIn', () => {
+  it('is null for a signed-out visitor, without asking for the viewer or redirecting', async () => {
+    getSession.mockResolvedValue(null);
+
+    expect(await viewerIfSignedIn()).toBeNull();
+    expect(getMe).not.toHaveBeenCalled();
+    expect(requireSignedIn).not.toHaveBeenCalled();
+  });
+
+  it('is the same viewer and covens viewerOf draws for a signed-in one', async () => {
+    membershipsOf.mockResolvedValue([[membership('fixture-coven', 'Fixture Coven')]]);
+
+    const shell = await viewerIfSignedIn();
+
+    expect(shell).toEqual(await viewerOf());
+    expect(shell?.workspaces).toHaveLength(1);
   });
 });

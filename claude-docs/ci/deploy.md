@@ -177,7 +177,7 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   and exits 1 without printing it: its log stops at `applying migrations...`
   whether the host is unreachable, the password wrong, `sslmode` mismatched or
   a `channel_binding` parameter present — four fixes behind one identical
-  failure (MB.49 has the log and the deploys it cost). In the probe's output
+  failure (the last is now stripped, below) (MB.49 has the log and the deploys it cost). In the probe's output
   `ECONNREFUSED`, `ENOTFOUND`, `28P01`, `3D000` and `42704` each name
   themselves, and the codes worth a sentence carry one.
 
@@ -200,15 +200,20 @@ githubCommitRef=<branch>`** — the deploy-side half of the same fix, and
   to `ps` and echoed by `set -x`, and a step-level `env:` is printed in that
   step's own env block.
 
-  **`channel_binding` has its own rule**, in the validator rather than the
-  probe, so it fails before a connection is even attempted. postgres.js
+  **`channel_binding` is stripped wherever a connection opens**, not rejected
+  (`withoutClientOnlyParams` in `src/db/connection-url.ts`, applied by
+  `src/db/connection.ts`, `drizzle.config.ts` and the probe). postgres.js
   consumes `sslmode` and the keys in its own `defaults`, then forwards every
   remaining query parameter to the server as a **startup parameter** — so a
   libpq _client-side_ option reaches a server that has never heard of it and
-  gets `42704 unrecognized configuration parameter "channel_binding"`. Neon's
-  console puts it in the connection strings it hands you by default, which is
-  why it is worth a named rule rather than a note; `sslmode=require` on its own
-  is fine and is what actually requests TLS.
+  gets `42704 unrecognized configuration parameter "channel_binding"`. A
+  hotfix's URL is the one Neon's Vercel integration writes for a per-preview
+  branch; the integration adds `channel_binding=require` and rewrites the
+  variable itself, so it cannot be deleted by hand, which is why MB.49's
+  validator rule gave way to stripping. Nothing is lost: postgres.js never
+  enforced channel binding, and `sslmode=require` is what requests TLS. A 42704
+  from the probe now means another client-side option missing from
+  `CLIENT_ONLY_PARAMS`; add it there.
 
 - **The reference seeds (M4.3, M4.3a, MB.93, MB.129, MB.156, MB.242) are one step inside
   `migrate.yml`, not a workflow of their own.** After the migrations, `npm run
