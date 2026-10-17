@@ -1028,6 +1028,9 @@ const countIn = (label: string) => Number(/\((\d+)\)\s*$/.exec(label.trim())?.[1
 /** Picks the option of a type-ahead or multi-select by its label. */
 async function pick(page: Page, box: string, typed: string, option: string | RegExp) {
   const field = page.getByRole('combobox', { name: box, exact: true });
+  // The click first: after a pick the field keeps focus with its list closed, and `fill` sets the
+  // value without a focus event, so the list would never reopen.
+  await field.click();
   await field.fill(typed);
   await page.getByRole('option', { name: option }).first().click();
 }
@@ -1304,6 +1307,34 @@ test('a value with nothing behind it is left out of its facet, a chosen one keep
   await expect(page.getByRole('option', { name: /^Facetform Gamma/ })).toHaveCount(0);
 });
 
+test('with one form held, the open panel still offers another form with its count', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'facet-second@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  await seedFacetworts(userId);
+  await page.goto('/admin/compendium?query=Facetwort');
+  await openFilters(page);
+  await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
+
+  const field = page.getByRole('combobox', { name: 'Forms', exact: true });
+  await field.click();
+  await field.fill('Facetform Beta');
+  const beta = page.getByRole('option', { name: /^Facetform Beta/ }).first();
+  // Why Beta could be missing: B alone holds it, so a count of 1 is what keeps it listed.
+  await expect.poll(async () => countIn(await beta.innerText())).toBe(1);
+  await beta.click();
+  // Held, not applied.
+  await expect(page).not.toHaveURL(/forms=/);
+  await expect(page.getByRole('button', { name: 'Remove Form: Facetform Beta' })).toBeVisible();
+  await applyFilters(page);
+  await expect.poll(() => listed(page)).toBe('ABDE');
+});
+
 test('Filters counts every chosen value', async ({ page }) => {
   const { userId } = await signInAs(
     page,
@@ -1314,10 +1345,8 @@ test('Filters counts every chosen value', async ({ page }) => {
   await seedFacetworts(userId);
   await page.goto('/admin/compendium?query=Facetwort');
   const panel = await openFilters(page);
-  // Two chosen values of one facet, each applied before the next so the second is still offered.
+  // Two chosen values of one facet, both held in the panel before Apply.
   await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
-  await applyFilters(page);
-  await openFilters(page);
   await pick(page, 'Forms', 'Facetform Beta', /^Facetform Beta/);
   await choose(
     panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Not Toxic \(/ }),
