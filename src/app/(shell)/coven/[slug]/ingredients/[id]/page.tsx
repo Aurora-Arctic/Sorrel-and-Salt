@@ -2,6 +2,7 @@ import type { Metadata, Route } from 'next';
 import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import IngredientEntry from '../../../../../../components/IngredientEntry';
+import { pageTitleOf } from '../../../../../../components/IngredientEntry/page-title';
 import type { LinkedIngredient } from '../../../../../../components/IngredientEntry/types';
 import { Forbidden, NotFound } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
@@ -44,9 +45,10 @@ const entryOf = cache(async (slug: string, id: string) => {
 export async function generateMetadata({ params }: CovenIngredientParams): Promise<Metadata> {
   const { slug, id } = await params;
   const { entry } = await entryOf(slug, id);
+  const title = pageTitleOf(entry);
   return entry.workspaceId === null
-    ? { title: entry.name, alternates: { canonical: publicAddress(entry.slug) } }
-    : { title: entry.name };
+    ? { title, alternates: { canonical: publicAddress(entry.slug) } }
+    : { title };
 }
 
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {

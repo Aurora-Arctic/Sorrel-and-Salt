@@ -118,7 +118,7 @@ describe('the coven ingredient page', () => {
   it('gives a compendium entry the link to its public page', async () => {
     await open(compendiumRow());
 
-    expect(screen.getByRole('link', { name: 'View in the Compendium' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Compendium Entry' })).toHaveAttribute(
       'href',
       '/compendium/ingredients/testwort-fixtura-testalis',
     );
@@ -160,7 +160,7 @@ describe('the coven ingredient page', () => {
     await open(covenRow(), true);
 
     expect(screen.getByText('Local')).toBeVisible();
-    expect(screen.queryByRole('link', { name: 'View in the Compendium' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Compendium Entry' })).toBeNull();
     expect(edits()).toHaveLength(0);
   });
 
@@ -177,7 +177,7 @@ describe('the coven ingredient page title', () => {
     getIngredient.mockResolvedValue(compendiumRow());
 
     expect(await generateMetadata(params())).toEqual({
-      title: 'Testwort',
+      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
       alternates: { canonical: '/compendium/ingredients/testwort-fixtura-testalis' },
     });
   });
@@ -185,6 +185,8 @@ describe('the coven ingredient page title', () => {
   it("names no canonical for the coven's own entry", async () => {
     getIngredient.mockResolvedValue(covenRow());
 
-    expect(await generateMetadata(params())).toEqual({ title: 'Testwort' });
+    expect(await generateMetadata(params())).toEqual({
+      title: `${covenRow().name} (${covenRow().canonicalName})`,
+    });
   });
 });

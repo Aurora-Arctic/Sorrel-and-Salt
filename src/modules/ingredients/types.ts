@@ -249,13 +249,15 @@ export interface SubstituteDetail {
 /**
  * One form of an ingredient as its page shows it (MB.215): the variant's row,
  * the icon of the curated form's group (null on an uncurated form), and the
- * lists that are the form's own. Its references are MB.155's.
+ * lists that are the form's own, its references included.
  */
 export interface VariantDetail {
   variant: IngredientVariantRow;
   icon: FormGroupIcon | null;
   categories: CategoryDetail[];
   substitutes: SubstituteDetail[];
+  /** The form's own sources, alphabetical by citation; never its ingredient's. */
+  references: CitedReference[];
 }
 
 /**
@@ -269,6 +271,8 @@ export interface IngredientDetail {
   categories: CategoryDetail[];
   deities: DeityDetail[];
   substitutes: SubstituteDetail[];
+  /** The sources the ingredient cites, alphabetical by citation (the loader's sort). */
+  references: CitedReference[];
   variants: VariantDetail[];
 }
 

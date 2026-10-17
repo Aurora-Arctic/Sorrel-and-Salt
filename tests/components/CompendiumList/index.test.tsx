@@ -202,6 +202,20 @@ describe('CompendiumList', () => {
     );
   });
 
+  it("links each name to its entry's public page, by its stored slug", () => {
+    render(<CompendiumList {...props()} />);
+
+    const row = screen.getByRole('row', { name: /Testwort/ });
+    expect(within(row).getByRole('link', { name: 'Testwort' })).toHaveAttribute(
+      'href',
+      '/compendium/ingredients/testwort',
+    );
+    expect(screen.getByRole('link', { name: 'Fixture Salt' })).toHaveAttribute(
+      'href',
+      '/compendium/ingredients/fixture-salt',
+    );
+  });
+
   it('draws no table when there are none, filtered or not', () => {
     const { rerender } = render(<CompendiumList {...props({ entries: [] })} />);
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
