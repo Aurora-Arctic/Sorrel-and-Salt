@@ -1,8 +1,9 @@
 'use client';
 
-import { type ReactElement, useMemo } from 'react';
+import { type ReactElement, useMemo, useState } from 'react';
 import { oneOf } from '@/lib/search-params';
 import { NOMENCLATURE_KINDS } from '@/modules/ingredients/schema/ingredient-enums';
+import CategoryPicker from '../CategoryPicker';
 import { FilterSelectField, SwitchField } from '../Field';
 import { useApplyFilter } from '../FilterForm';
 import { IngredientSearchForm, useSearchText } from '../IngredientSearch';
@@ -33,15 +34,45 @@ import type { CompendiumListFilter, CompendiumListFilterProps } from './types';
 // page reads as the same filter.
 
 /** The fields after the name box, inside the search form so they can read the name typed. */
-const CompendiumFilterFields = ({ filter, forms }: CompendiumListFilterProps): ReactElement => {
+const CompendiumFilterFields = ({
+  filter,
+  forms,
+  categories,
+}: CompendiumListFilterProps): ReactElement => {
   const text = useSearchText();
   const apply = useApplyFilter();
   // A form's name is its value too: the compendium filters a form by its text.
   const choices = useMemo(() => forms.map(({ name }) => ({ value: name, label: name })), [forms]);
 
+  // The categories the filter names that the page knows, in the address's
+  // order. A slug no live category holds is not shown, and so is not carried
+  // into the next address, which is how a stale one leaves it.
+  const shown = useMemo(() => {
+    const bySlug = new Map(categories.map((category) => [category.slug, category]));
+    return filter.categories.flatMap((slug) => bySlug.get(slug) ?? []);
+  }, [categories, filter.categories]);
+
+  // The picks as the box shows them: a pick shows at once, where the page's
+  // filter follows only when the new list arrives, and follows it again then
+  // (a Clear, Back). The list does not draw this form afresh for a change in
+  // categories alone (see the key in ./index.tsx), so the picker keeps its
+  // status region and the focus across a pick.
+  const shownIds = shown.map(({ id }) => id);
+  const [chosen, setChosen] = useState(shownIds);
+  const [seen, setSeen] = useState(shownIds.join());
+  if (seen !== shownIds.join()) {
+    setSeen(shownIds.join());
+    setChosen(shownIds);
+  }
+
   /** The filter shown with one field changed, the name typed carried, from the first page. */
   const hrefWith = (change: Partial<CompendiumListFilter>) =>
-    compendiumHref(COMPENDIUM_PARAMS.changed({ ...filter, query: text.trim() }, change));
+    compendiumHref(
+      COMPENDIUM_PARAMS.changed(
+        { ...filter, query: text.trim(), categories: shown.map(({ slug }) => slug) },
+        change,
+      ),
+    );
 
   return (
     <>
@@ -71,11 +102,31 @@ const CompendiumFilterFields = ({ filter, forms }: CompendiumListFilterProps): R
         defaultChecked={filter.withoutReferences}
         onChange={(withoutReferences) => apply(hrefWith({ withoutReferences }))}
       />
+      <CategoryPicker
+        legend="Categories"
+        entry="Category"
+        placeholder="Add Category"
+        categories={categories}
+        value={chosen}
+        onChange={(ids) => {
+          const slugOf = new Map(categories.map(({ id, slug }) => [id, slug]));
+          setChosen(ids);
+          apply(hrefWith({ categories: ids.flatMap((id) => slugOf.get(id) ?? []) }));
+        }}
+      />
+      {/* The picker has no native input, so a submit before hydration sends these. */}
+      {shown.map(({ id, slug }) => (
+        <input key={id} type="hidden" name="categories" value={slug} />
+      ))}
     </>
   );
 };
 
-const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): ReactElement => (
+const CompendiumListFilter = ({
+  filter,
+  forms,
+  categories,
+}: CompendiumListFilterProps): ReactElement => (
   <IngredientSearchForm
     label="Filter the Compendium"
     action={COMPENDIUM_PATH}
@@ -86,7 +137,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
     pickHref={(match) => compendiumHref(filter, { edit: match.slug })}
     pickHeading={editHeading}
   >
-    <CompendiumFilterFields filter={filter} forms={forms} />
+    <CompendiumFilterFields filter={filter} forms={forms} categories={categories} />
   </IngredientSearchForm>
 );
 

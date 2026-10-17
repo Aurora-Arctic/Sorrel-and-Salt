@@ -5,6 +5,7 @@ import {
   type SearchFilter,
   listParam,
   searchParam,
+  slugListParam,
   textParam,
 } from '@/lib/search-param-table';
 
@@ -125,5 +126,56 @@ describe('the parameter table', () => {
       ...filter,
       source: '',
     });
+  });
+});
+
+// A list of slugs in the address, turned into ids against a lookup the page
+// reads once (M8.11): the address stays readable, and a slug no live row holds
+// is dropped rather than refused.
+describe('a slug list entry', () => {
+  const slugs = defineSearchParams({
+    query: textParam('query', 'query'),
+    categories: slugListParam('categories', 'categoryIds', 'categories'),
+  });
+  const LOOKUP = {
+    categories: new Map([
+      ['protection', 'id-1'],
+      ['cleansing', 'id-2'],
+    ]),
+  };
+
+  it('reads the slugs repeated, trimmed, blanks and repeats dropped, in order', () => {
+    expect(slugs.read({ categories: [' protection ', '', 'cleansing', 'protection'] })).toEqual({
+      query: '',
+      categories: ['protection', 'cleansing'],
+    });
+    expect(slugs.read({ categories: 'cleansing' }).categories).toEqual(['cleansing']);
+    expect(slugs.read({}).categories).toEqual([]);
+  });
+
+  it('writes the slugs back as repeated parameters', () => {
+    expect(slugs.href('/x', { categories: ['protection', 'cleansing'] })).toBe(
+      '/x?categories=protection&categories=cleansing',
+    );
+    expect(slugs.href('/x', { categories: [] })).toBe('/x');
+  });
+
+  it('maps known slugs to ids through the lookup, drops an unknown one and keeps the rest', () => {
+    expect(
+      slugs.variables({ query: '', categories: ['protection', 'gone', 'cleansing'] }, LOOKUP),
+    ).toMatchObject({ categoryIds: ['id-1', 'id-2'] });
+  });
+
+  it('gives no variable when no slug is known, or the lookup is missing', () => {
+    expect(
+      slugs.variables({ query: '', categories: ['gone'] }, LOOKUP).categoryIds,
+    ).toBeUndefined();
+    expect(slugs.variables({ query: '', categories: ['protection'] }).categoryIds).toBeUndefined();
+    expect(slugs.variables({ query: '', categories: [] }, LOOKUP).categoryIds).toBeUndefined();
+  });
+
+  it('leaves the entries that read no lookup as they were', () => {
+    expect(slugs.variables({ query: 'wort', categories: [] }, LOOKUP).query).toBe('wort');
+    expect(search.variables(search.read({ query: 'wort' }))).toMatchObject({ query: 'wort' });
   });
 });

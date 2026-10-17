@@ -45,7 +45,17 @@ vi.mock('@/modules/ingredients', () => ({
 const listIngredientFormValues = vi.fn();
 const formChoicesOf = vi.fn();
 const formGroupsOf = vi.fn();
-vi.mock('@/modules/vocabulary', () => ({ listIngredientFormValues, formChoicesOf, formGroupsOf }));
+// ...and the live categories with their groups, which the Categories box offers
+// and the address's slugs are turned into ids against (M8.11).
+const listCategories = vi.fn();
+const categoryGroupsOf = vi.fn();
+vi.mock('@/modules/vocabulary', () => ({
+  listIngredientFormValues,
+  formChoicesOf,
+  formGroupsOf,
+  listCategories,
+  categoryGroupsOf,
+}));
 
 const entryValues = vi.fn();
 vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
@@ -132,6 +142,17 @@ const FILTERED_HREF =
 const curatedForm = (name: string, index: number) =>
   entry({ id: `form-${index}`, name, slug: name.toLowerCase().replace(/ /g, '-') });
 
+const WARDS = {
+  id: 'g-ward',
+  name: 'Fixture Wards',
+  colorDark: '#4e8bc2',
+  colorLight: '#0c5393',
+};
+const CATEGORY_ROWS = [
+  { id: 'c-tw', slug: 'testward', name: 'Testward', description: null, groupId: WARDS.id },
+  { id: 'c-tc', slug: 'testcraft', name: 'Testcraft', description: null, groupId: WARDS.id },
+];
+
 beforeEach(() => {
   requireCuratorSession.mockReset();
   requireCuratorSession.mockResolvedValue(ADMIN);
@@ -154,6 +175,11 @@ beforeEach(() => {
   // Two curated forms, on one page.
   listIngredientFormValues.mockReset();
   listIngredientFormValues.mockResolvedValue(['Fixture Oil', 'Fixture Powder'].map(curatedForm));
+  // Two live categories, in one group.
+  listCategories.mockReset();
+  listCategories.mockResolvedValue(CATEGORY_ROWS.map(entry));
+  categoryGroupsOf.mockReset();
+  categoryGroupsOf.mockImplementation(async (ids: string[]) => ids.map(() => WARDS));
   entryValues.mockReset();
   entryValues.mockResolvedValue(TESTWORT_VALUES);
   redirect.mockClear();
@@ -302,6 +328,52 @@ describe('the /admin/compendium filter', () => {
 
     expect(lastFilter()).toEqual(NO_FILTER);
     expect(screen.getByRole('switch', { name: 'No Refs' })).not.toBeChecked();
+  });
+
+  it('turns ?categories= slugs into the ids of the live categories, for the list and its count', async () => {
+    await renderPage({ categories: ['testward', 'testcraft'] });
+
+    expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'] });
+    expect(screen.getByRole('button', { name: 'Remove Testward' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove Testcraft' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
+      'href',
+      '/admin/compendium?categories=testward&categories=testcraft&new',
+    );
+  });
+
+  it('drops a ?categories= slug no live category holds, and the known one still filters', async () => {
+    await renderPage({ categories: ['renamed-away', 'testcraft'] });
+
+    expect(lastFilter()).toEqual({ categoryIds: ['c-tc'] });
+    expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(1);
+  });
+
+  it('filters by no category when every slug is unknown', async () => {
+    await renderPage({ categories: 'renamed-away' });
+
+    expect(lastFilter()).toEqual(NO_FILTER);
+  });
+
+  it('reads the categories past their first page, with each one group read once for all', async () => {
+    const many = Array.from({ length: 101 }, (_, index) => ({
+      id: `c-${index}`,
+      slug: `testcat-${index}`,
+      name: `Testcat ${index}`,
+      description: null,
+      groupId: WARDS.id,
+    }));
+    listCategories.mockImplementation(async (_filter: unknown, request: PageRequest) => {
+      const start = request.after
+        ? many.findIndex((row) => row.id === (request.after as { id: string }).id) + 1
+        : 0;
+      return many.slice(start, start + request.limit).map(entry);
+    });
+
+    await renderPage({ categories: 'testcat-100' });
+
+    expect(lastFilter()).toEqual({ categoryIds: ['c-100'] });
+    expect(categoryGroupsOf).toHaveBeenCalledOnce();
   });
 
   it('offers every curated form in the Form box, read once for the request', async () => {

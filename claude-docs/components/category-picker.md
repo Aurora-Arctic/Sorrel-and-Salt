@@ -3,8 +3,8 @@
 `src/components/CategoryPicker/` — the categories picked from one box, as a
 list field's entries are (MB.126): typing narrows the live categories, listed
 under their groups, and a pick is a chip inside the control in its group's
-colour. The ingredient form's Categories field, and M8.11's ingredients
-filter. A client component, for the box's text.
+colour. The ingredient form's Categories field, and the compendium list's
+Categories filter (M8.11, `CompendiumList/filter.tsx`). A client component, for the box's text.
 
 ## Props
 
@@ -102,4 +102,6 @@ naming the group; Enter adding the one category named whole and nothing for
 part of a name; the box and the entries an error names, each described; the
 status read with the box; and a pick not yet named held while the read is
 on, then drawn by its id. The ×, Backspace and Clear themselves are
-Combobox's, the colours presentation.
+Combobox's, the colours presentation. The filter use is proved in
+`tests/components/CompendiumList/index.test.tsx` and, in a browser, in
+`tests/e2e/admin-compendium.spec.ts` (AND, reload, focus, 375px, axe).

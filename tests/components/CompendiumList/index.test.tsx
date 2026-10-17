@@ -82,6 +82,7 @@ const NO_FILTER: CompendiumListFilter = {
   nomenclature: '',
   withoutReferences: false,
   elements: [],
+  categories: [],
 };
 
 /** Every filter in use, as a page shows it. */
@@ -91,7 +92,21 @@ const SHOWN: CompendiumListFilter = {
   nomenclature: 'unknown',
   withoutReferences: true,
   elements: [],
+  categories: [],
 };
+
+/** The categories the Categories box offers, each with the slug the address carries. */
+const WARDS = {
+  id: 'g-ward',
+  name: 'Fixture Wards',
+  colorDark: '#4e8bc2',
+  colorLight: '#0c5393',
+};
+const CATEGORIES = [
+  { id: 'c-tw', slug: 'testward', name: 'Testward', group: WARDS },
+  { id: 'c-tc', slug: 'testcraft', name: 'Testcraft', group: WARDS },
+  { id: 'c-tb', slug: 'testbane', name: 'Testbane', group: WARDS },
+];
 
 /** The curated forms the Form box offers. */
 const FORMS = [{ name: 'Fixture Oil' }, { name: 'Fixture Powder' }, { name: 'Fixture Resin' }];
@@ -100,6 +115,7 @@ const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProp
   entries: ENTRIES,
   filter: NO_FILTER,
   forms: FORMS,
+  categories: CATEGORIES,
   ...overrides,
 });
 
@@ -225,6 +241,7 @@ function RoutedCompendium(): ReactElement {
       nomenclature: (params.get('nomenclature') ?? '') as CompendiumListFilter['nomenclature'],
       withoutReferences: params.has('withoutReferences'),
       elements: someOf(INGREDIENT_ELEMENTS, params.getAll('elements')),
+      categories: params.getAll('categories'),
     });
   });
   return <CompendiumList {...props({ filter })} />;
@@ -594,6 +611,136 @@ describe('CompendiumList filter', () => {
     expect(router.push).toHaveBeenLastCalledWith(
       '/admin/compendium?query=test&nomenclature=mineral&withoutReferences=1',
     );
+  });
+
+  describe('the Categories picker', () => {
+    const categoryBox = () => screen.getByRole('combobox', { name: 'Category' });
+    // Opened, then picked from, as two steps, so the rows are drawn between them.
+    const pick = async (name: string) => {
+      fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+      const row = screen.getByRole('option', { name: new RegExp(`^${name}`) });
+      await act(async () => {
+        fireEvent.click(row);
+      });
+    };
+    const remove = (name: string) =>
+      fireEvent.click(screen.getByRole('button', { name: `Remove ${name}` }));
+    const sentCategories = () =>
+      new URLSearchParams(sent(screen.getByRole('form', { name: 'Filter the Compendium' }))).getAll(
+        'categories',
+      );
+    const pushed = () => new URL(router.push.mock.lastCall![0], 'http://localhost').searchParams;
+
+    it('shows the categories the filter holds as entries in the picker, and not one the page does not know', () => {
+      render(
+        <CompendiumList
+          {...props({ filter: { ...NO_FILTER, categories: ['testcraft', 'gone', 'testward'] } })}
+        />,
+      );
+
+      expect(screen.getByRole('group', { name: 'Categories' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Remove Testcraft' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Remove Testward' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Remove Testbane' })).not.toBeInTheDocument();
+      expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(2);
+    });
+
+    it('sends the slugs it shows from the form itself, so a submit before hydration keeps them', () => {
+      render(
+        <CompendiumList
+          {...props({ filter: { ...NO_FILTER, categories: ['testcraft', 'gone', 'testward'] } })}
+        />,
+      );
+
+      expect(sentCategories()).toEqual(['testcraft', 'testward']);
+    });
+
+    it('applies a pick as repeated slugs, carrying the name typed, from the first page', async () => {
+      render(
+        <CompendiumList
+          {...props({
+            filter: { ...NO_FILTER, categories: ['testward'] },
+            nextHref: compendiumHref({ after: 'a' }),
+          })}
+        />,
+      );
+
+      fireEvent.change(nameBox(), { target: { value: ' Test wort ' } });
+      await pick('Testcraft');
+
+      expect(router.push).toHaveBeenCalledTimes(1);
+      const address = pushed();
+      expect(address.getAll('categories')).toEqual(['testward', 'testcraft']);
+      expect(address.get('query')).toBe('Test wort');
+      expect(address.has('after')).toBe(false);
+    });
+
+    it('applies a removal without the category, and without the parameter once none is left', () => {
+      render(
+        <CompendiumList
+          {...props({ filter: { ...NO_FILTER, categories: ['testward', 'testcraft'] } })}
+        />,
+      );
+
+      remove('Testward');
+      expect(pushed().getAll('categories')).toEqual(['testcraft']);
+    });
+
+    it('applies the last removal with no categories parameter', () => {
+      render(<CompendiumList {...props({ filter: { ...NO_FILTER, categories: ['testward'] } })} />);
+
+      remove('Testward');
+      expect(router.push).toHaveBeenLastCalledWith('/admin/compendium');
+    });
+
+    it('keeps the categories it shows when another control applies, and drops one it does not know', () => {
+      render(
+        <CompendiumList
+          {...props({ filter: { ...NO_FILTER, categories: ['testward', 'gone'] } })}
+        />,
+      );
+
+      fireEvent.click(unsourcedSwitch());
+
+      expect(pushed().getAll('categories')).toEqual(['testward']);
+    });
+
+    it('offers the pick to the box until it is picked, and announces it once, in its own status', async () => {
+      render(<RoutedCompendium />);
+      const before = listStatus();
+
+      await pick('Testward');
+
+      expect(screen.getByRole('button', { name: 'Remove Testward' })).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: 'Show Category suggestions' }));
+      expect(screen.queryByRole('option', { name: /^Testward/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('status', { name: 'Categories changes' })).not.toBeEmptyDOMElement();
+      // The list's own status is the loading skeleton's, gone again with the list.
+      expect(listStatus()).toEqual(before);
+    });
+
+    // The name typed is applied with the pick, so the list draws the form afresh.
+    it('keeps the focus on the Category box when the pick also applies a name typed, and one category stands before it', async () => {
+      render(<RoutedCompendium />);
+      await pick('Testbane');
+
+      fireEvent.change(nameBox(), { target: { value: 'wort' } });
+      await pick('Testward');
+
+      expect(nameBox()).toHaveValue('wort');
+      expect(screen.getByRole('button', { name: 'Remove Testward' })).toBeInTheDocument();
+      expect(categoryBox()).toHaveFocus();
+    });
+
+    it('keeps the focus on the Category box after a pick and after a removal', async () => {
+      render(<RoutedCompendium />);
+
+      await pick('Testward');
+      expect(categoryBox()).toHaveFocus();
+
+      await act(async () => remove('Testward'));
+      expect(categoryBox()).toHaveFocus();
+    });
   });
 
   it('starts again from the form shown when the page shows another form alone', () => {
