@@ -3340,6 +3340,8 @@ Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` 
 
 **Amended by the Wave 12 review (2026-10-16):** four changes. (1) The sitemap needs a read of every current slug, and none is cached today: `src/modules/ingredients/services/compendium.ts` wraps only the page and count reads. This task adds a sessionless one, `cachedCompendiumRead('compendium-slugs', …)` from `src/lib/compendium-cache.ts`, which M12.2's `llms.txt` reuses. (2) `lastModified` comes from MB.106's one definition of "changed", so the sitemap does not report a no-op save. MB.106 therefore lands before this task. (3) The title is built from the name and the site, with no form, because the form is a variant beneath the ingredient (MB.215) and a page is the ingredient. Two entries sharing a label are still told apart by the formal name. (4) There is no Open Graph image: M11.16 (Wave 15) adds it, and until then the page carries no `og:image`. `src/app/robots.ts` is written so that M12.2 can add its two paths (`/llms.txt` and `/.well-known/ai-catalog.json`) without restructuring it. Re-estimated from 3h for the new read.
 
+**Amended by MB.155 (2026-10-17), at the owner's ask:** both entry pages already title themselves `Name (Formal Name)` whenever the entry has a formal name that differs from its name, and the name alone otherwise, through `pageTitleOf` in `src/components/IngredientEntry/page-title.ts`. That meets the criterion that two entries sharing a label are told apart by the formal name. This task adds the site to that title and keeps the helper, rather than building the title again.
+
 _Acceptance criteria:_
 
 - `/robots.txt` and `/sitemap.xml` answer 200 with the shapes above; the sitemap carries every current slug and no retired one
