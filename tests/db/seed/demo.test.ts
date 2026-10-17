@@ -5,6 +5,7 @@ import { truncateAllTables } from '../../support/seeded-database';
 import { seed } from '@/db/seed/index';
 import { WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
 import { COMPENDIUM_INGREDIENTS, identityOf } from '@/db/seed/standard';
+import { COMPENDIUM } from '@/db/seed/compendium/index';
 
 // What running the `demo` scenario, `standard` inside it, leaves between an
 // entry and its forms (MB.216, MB.222): every seeded entry holds exactly the
@@ -66,18 +67,35 @@ describe('seed(db, { scenario: "demo" })', () => {
   it("writes each seeded entry's forms as its live variants: Rosemary's two, and W's uncurated rhizome", async () => {
     const forms = await formsPerEntry();
 
-    expect(forms).toEqual(
-      new Map([
-        ...formsOfLiterals('compendium', COMPENDIUM_INGREDIENTS),
-        ...formsOfLiterals('W', WORKSPACE_W_INGREDIENTS),
-      ]),
-    );
+    // The curated compendium sits beside these rows (its own test below), so
+    // narrow to the entries these literals name.
+    const literals = new Map([
+      ...formsOfLiterals('compendium', COMPENDIUM_INGREDIENTS),
+      ...formsOfLiterals('W', WORKSPACE_W_INGREDIENTS),
+    ]);
+    expect(new Map([...forms].filter(([entry]) => literals.has(entry)))).toEqual(literals);
     expect(forms.get('compendium|salvia rosmarinus')).toEqual(['Herb', 'Oil']);
     expect(forms.get('W|zingiber officinale')).toEqual(['rhizome']);
     const [ginger] = await sql`
       select v.form_id from ingredient_variants v join ingredients i on i.id = v.ingredient_id
       where i.workspace_id is not null and i.name = 'Ginger'`;
     expect(ginger.form_id).toBeNull();
+  });
+
+  it('holds the curated compendium beside the fixtures, and a second run writes no further ingredient', async () => {
+    const curated = COMPENDIUM.flatMap((shard) => shard.entries);
+    const rows = await sql<{ identity_key: string }[]>`
+      select identity_key from ingredients where workspace_id is null and deleted_at is null`;
+    const held = new Set(rows.map((row) => row.identity_key));
+    // Precondition: the curated list reaches past the fixtures, so this proves more than standard does.
+    expect(curated.length).toBeGreaterThan(COMPENDIUM_INGREDIENTS.length);
+    expect(curated.filter((entry) => !held.has(identityOf(entry)))).toEqual([]);
+    const [{ before }] = await sql`select count(*)::int as before from ingredients`;
+
+    await seed(drizzle(sql), { scenario: 'demo' });
+
+    const [{ after }] = await sql`select count(*)::int as after from ingredients`;
+    expect(after).toBe(before);
   });
 
   it('writes no second variant on a second run', async () => {
