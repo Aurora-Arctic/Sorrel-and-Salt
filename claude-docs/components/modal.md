@@ -26,15 +26,16 @@ is the wrapper every admin page opens it through (below).
 
 `ModalProps` (`types.ts`):
 
-| Prop        | What it is                                                                      |
-| ----------- | ------------------------------------------------------------------------------- |
-| `title`     | The heading: what the dialog is for, or the entry an edit dialog edits          |
-| `eyebrow`   | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add |
-| `qualifier` | After the title, quieter: an ingredient's formal name, a deity's tradition      |
-| `onClose`   | Asked for by the Close button, Escape and a click outside                       |
-| `size`      | `'wide'` for a long form; absent, the default width                             |
-| `loading`   | The contents are on the way: the body is marked `aria-busy` (M9.18)             |
-| `children`  | The body: a form, a confirmation, whatever the owner puts here                  |
+| Prop          | What it is                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`       | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
+| `eyebrow`     | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
+| `destination` | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
+| `qualifier`   | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
+| `onClose`     | Asked for by the Close button, Escape and a click outside                                                                               |
+| `size`        | `'wide'` for a long form; absent, the default width                                                                                     |
+| `loading`     | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
+| `children`    | The body: a form, a confirmation, whatever the owner puts here                                                                          |
 
 ## Contracts
 
@@ -372,11 +373,14 @@ admin layout’s route-modal provider sits below the shell, so the button cannot
 open that dialog itself, and the page draws it for a direct request); choosing
 a coven opens the modal.
 
-The modal’s title is the whole phrase, “Add Ingredient to Whitethorn Coven”,
-so the person always sees where the ingredient goes, and a screen reader
-hears the same words as the dialog’s name. It is one title rather than an
-eyebrow over “Add Ingredient”: an eyebrow comes first in the name (“Whitethorn
-Coven, Add Ingredient”), and a qualifier is joined to the title by a comma. The
+The modal’s head is the coven’s name in the eyebrow’s place over the title
+“Add Ingredient”, so the person always sees where the ingredient goes, and a
+screen reader hears one phrase as the dialog’s name, “Add Ingredient to
+Whitethorn Coven”: the `destination` prop is spoken after the title, joined by
+a hidden “to”, where an edit’s eyebrow is spoken before it. The compendium’s
+own add dialog is headed the same way, “Compendium” over “Add Ingredient”. The
+menu names each destination the same way, “to Compendium”, “to Whitethorn
+Coven”. The
 destination is fixed once the dialog opens: there is no Coven select. With
 nowhere to write the control is not drawn. After Save Ingredient the modal
 closes and the control leaves a status beside it, since the form’s own Saved

@@ -108,7 +108,7 @@ export default function AddIngredientMenu({
                 onChoose(destination);
               }}
             >
-              {destination.name}
+              to {destination.name}
             </button>
           ))}
         </div>

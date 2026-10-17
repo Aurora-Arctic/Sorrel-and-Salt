@@ -46,6 +46,7 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
 const Modal = ({
   title,
   eyebrow,
+  destination,
   qualifier,
   onClose,
   size,
@@ -188,8 +189,12 @@ const Modal = ({
         .join(' ')}
       // Focusable by script alone, for a dialog with no field to take the focus.
       tabIndex={-1}
-      // Named by the eyebrow and the heading together: "Edit Ingredient, Mugwort".
-      aria-labelledby={eyebrow ? `${eyebrowId} ${titleId}` : titleId}
+      // Named by the eyebrow and the heading together, "Edit Ingredient,
+      // Mugwort", or by the heading then where it lands, "Add Ingredient to
+      // Whitethorn Coven".
+      aria-labelledby={
+        eyebrow ? `${eyebrowId} ${titleId}` : destination ? `${titleId} ${eyebrowId}` : titleId
+      }
       onCancel={handleCancel}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -207,6 +212,11 @@ const Modal = ({
             <p id={eyebrowId} className="eyebrow">
               {eyebrow}
               <span className="spoken-separator">,</span>
+            </p>
+          )}
+          {destination && !eyebrow && (
+            <p id={eyebrowId} className="eyebrow">
+              <span className="spoken-separator">to</span> {destination}
             </p>
           )}
           <h2 id={titleId} className="modal-dialog__title">

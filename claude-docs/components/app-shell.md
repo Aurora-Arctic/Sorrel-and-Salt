@@ -64,7 +64,7 @@ one's own id) throws.
   under `$shell-tablet-width` the bar has no room for them beside the brand,
   Add Ingredient, the account button and the disc, so the same links are
   offered in the account panel.
-- **Add Ingredient** is `add-ingredient-button.tsx`, a client part: a plain button for one destination (the compendium for a curator, each coven they may write to), a split button with a menu of them all for two or more, and nothing without one. A coven opens a modal titled “Add Ingredient to” and its name; the compendium navigates to `/admin/compendium?new` (claude-docs/components/modal.md, "Add Ingredient").
+- **Add Ingredient** is `add-ingredient-button.tsx`, a client part: a plain button for one destination (the compendium for a curator, each coven they may write to), a split button with a menu of them all, each “to” its name, for two or more, and nothing without one. A coven opens a modal headed by its name over “Add Ingredient”, named “Add Ingredient to” the coven; the compendium navigates to `/admin/compendium?new` (claude-docs/components/modal.md, "Add Ingredient").
   Its target will follow the area: a coven page adds to that coven, an admin
   page to the compendium, anywhere else to the viewer's only coven or a choice.
 - **An unverified viewer** gets the brand as text, the account menu with Sign
@@ -75,7 +75,7 @@ one's own id) throws.
   `#main`, a wrapper around the page's children, since each page owns its own
   `main`.
 - **The context row** is the layouts' to render: the coven layout puts the
-  switcher and `CovenNav` in it, the admin layout the word "Admin" and
+  switcher and `CovenNav` in it, the admin layout "Admin" linking to `/admin` and
   `AdminNav` ([`context-row.md`](context-row.md)).
 
 ## Styling

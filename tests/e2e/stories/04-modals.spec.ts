@@ -197,11 +197,11 @@ test(
       await destinations.toggle.click();
       await expect(destinations.toggle).toHaveAttribute('aria-expanded', 'true');
       // The covens B writes to, in order; the one B only views is not a destination.
-      await expect(destinations.choices).toHaveText([FIRST, SECOND]);
-      await expect(destinations.choice(VIEWED)).toHaveCount(0);
+      await expect(destinations.choices).toHaveText([`to ${FIRST}`, `to ${SECOND}`]);
+      await expect(destinations.choice(`to ${VIEWED}`)).toHaveCount(0);
 
       // On the first coven's page, choosing the second adds to the second.
-      await destinations.choice(SECOND).click();
+      await destinations.choice(`to ${SECOND}`).click();
       await expect(destinations.menu).toHaveCount(0);
       const dialog = page.getByRole('dialog', { name: 'Add Ingredient' });
       await expect(dialog).toBeVisible();

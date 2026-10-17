@@ -63,6 +63,20 @@ describe('Modal', () => {
     ).toBeInTheDocument();
   });
 
+  // An add dialog (M8.16): where it lands over what it does, and a screen
+  // reader hears the action first, then the destination.
+  it('is named by its title, then "to" its destination', () => {
+    render(
+      <Modal destination="Fixture Coven" title="Add Ingredient" onClose={vi.fn()}>
+        <p>Body</p>
+      </Modal>,
+    );
+
+    expect(
+      screen.getByRole('dialog', { name: 'Add Ingredient to Fixture Coven' }),
+    ).toBeInTheDocument();
+  });
+
   // showModal() alone would put the focus on Close, the first thing it can
   // take in the dialog; the person opened the dialog to fill it in.
   it('puts the focus on its first field as it opens, past a hidden and a disabled one', () => {

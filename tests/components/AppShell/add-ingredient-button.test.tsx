@@ -131,7 +131,7 @@ describe('AddIngredientButton', () => {
       fireEvent.click(chevron());
       expect(chevron()).toHaveAttribute('aria-expanded', 'true');
       const items = within(menuOf()).getAllByRole('menuitem');
-      expect(items.map((item) => item.textContent)).toEqual(['Compendium', 'Fixture Coven']);
+      expect(items.map((item) => item.textContent)).toEqual(['to Compendium', 'to Fixture Coven']);
 
       fireEvent.click(items[1]!);
       expect(screen.queryByRole('menu')).toBeNull();
@@ -145,7 +145,7 @@ describe('AddIngredientButton', () => {
     it('sends the compendium choice to its add dialog', () => {
       draw(ADMIN, [FIXTURE]);
       fireEvent.click(chevron());
-      fireEvent.click(within(menuOf()).getByRole('menuitem', { name: 'Compendium' }));
+      fireEvent.click(within(menuOf()).getByRole('menuitem', { name: 'to Compendium' }));
 
       expect(push).toHaveBeenCalledWith('/admin/compendium?new');
       expect(screen.queryByRole('dialog')).toBeNull();
@@ -176,7 +176,7 @@ describe('AddIngredientButton', () => {
         within(menuOf())
           .getAllByRole('menuitem')
           .map((item) => item.textContent),
-      ).toEqual(['Fixture Coven', 'Testwort Circle']);
+      ).toEqual(['to Fixture Coven', 'to Testwort Circle']);
     });
 
     it('roves with the arrow keys', () => {

@@ -141,11 +141,10 @@ const AddIngredientButton = ({
       </span>
       {adding && (
         <Modal
-          // One heading, so the dialog's name is the phrase itself, "Add
-          // Ingredient to Whitethorn Coven": an eyebrow comes first in a
-          // name ("Whitethorn Coven, Add Ingredient"), and a qualifier is
-          // joined to the title by a comma.
-          title={`${LABEL} to ${adding.name}`}
+          // The coven over the action, and named "Add Ingredient to
+          // Whitethorn Coven".
+          destination={adding.name}
+          title={LABEL}
           onClose={() => {
             returning.current = true;
             setAdding(null);
