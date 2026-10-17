@@ -61,6 +61,17 @@ the 26 entries carry §5's own hard cases:
 - **A cultivar beside its species**: `Lavandula angustifolia 'Hidcote'` and
   `Lavandula angustifolia`, two entries because `canonicalName` is the most
   specific accepted name at the granularity the entry exists at.
+- **Two retired slugs, one of each redirect the entry page answers** (MB.82;
+  M8.19). `insertMissingRetiredSlugs` writes them, both derived through
+  `ingredientSlug` from the older name. Rosemary's slug under
+  `Rosmarinus officinalis` is held by no entry, so that address answers a 308
+  to Rosemary's current one. Hidcote Lavender's row carries the species
+  entry's own slug, as if the cultivar had first been entered under the
+  species' name: the species holds it live, so that address shows Lavender with
+  a notice that Hidcote Lavender moved away. Keyed on the entry and slug, so a
+  reseed writes nothing; `retired_at` is the last writing run's, and once the
+  180 days lapse a compendium write deletes the rows and the next reseed
+  writes them again, which fixtures can bear.
 - **Three `none` entries and one `unknown`.** No system names graveyard dirt,
   moon water or black salt; one does name Devil's Shoestring and nobody has
   looked it up, which is the row `where nomenclature = 'unknown'` returns as a

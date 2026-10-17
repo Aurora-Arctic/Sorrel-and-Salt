@@ -104,6 +104,8 @@ describe('seed(db, { scenario: "demo" })', () => {
     await sql`
       update ingredients set slug = slug || '-fixture-form'
       where id in ${sql([compendium.id, coven.id])}`;
+    // Cleared so only this run's retirements count; `standard` writes its two
+    // fixtures again beside the moved slug (retired-slugs.test.ts).
     await sql`delete from retired_ingredient_slugs`;
 
     await seed(drizzle(sql), { scenario: 'demo' });
@@ -116,8 +118,9 @@ describe('seed(db, { scenario: "demo" })', () => {
         [coven.id, coven.slug],
       ]),
     );
-    const retired =
-      await sql`select ingredient_id, workspace_id, slug from retired_ingredient_slugs`;
+    const retired = await sql`
+      select ingredient_id, workspace_id, slug from retired_ingredient_slugs
+      where ingredient_id = ${compendium.id}`;
     expect(retired).toEqual([
       {
         ingredient_id: compendium.id,
@@ -125,5 +128,8 @@ describe('seed(db, { scenario: "demo" })', () => {
         slug: expect.stringMatching(new RegExp(`^${compendium.slug}-`)),
       },
     ]);
+    const all = await sql`select id from retired_ingredient_slugs`;
+    // The moved slug beside the two `standard` seeds as fixtures.
+    expect(all).toHaveLength(3);
   });
 });
