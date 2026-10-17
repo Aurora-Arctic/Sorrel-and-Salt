@@ -19,7 +19,7 @@ import {
 } from '../../../support/oauth';
 import { importAuth } from '../../../support/auth-module';
 import type { AuthInstance, Profile } from '../../../support/types';
-import type { ProviderId } from '@/lib/types';
+import type { Message, ProviderId } from '@/lib/types';
 
 // The primary admin is promoted at a sign-in whose fresh provider profile is
 // Google or Discord and verified —
@@ -27,6 +27,11 @@ import type { ProviderId } from '@/lib/types';
 // The sign-in half drives the real `/api/auth/callback/:id` endpoint with MSW
 // standing in for each provider, so what is under test is Better Auth's own
 // flow with our hooks attached, not a hand-built context.
+
+// Sign-up sends a verification mail; none of these tests is about it, so the
+// sender answers and nothing reaches the network.
+const send = vi.hoisted(() => vi.fn<(message: Message) => Promise<void>>());
+vi.mock('@/lib/mail', () => ({ send }));
 
 const PRIMARY = 'owner@primary-admin.test';
 

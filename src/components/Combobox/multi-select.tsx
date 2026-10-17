@@ -133,9 +133,11 @@ export function ComboboxMultiSelect({
         <div className="combobox__values">
           {chosen.length > 0 && (
             <ul className="combobox__entries">
-              {chosen.map((choice) => (
+              {chosen.map((choice, index) => (
                 <ComboboxEntry
-                  key={choice.value}
+                  // The position joins the value: a repeat can be loaded (the form
+                  // refuses it only on save), and two chips must not share a key.
+                  key={`${index}-${choice.value}`}
                   value={choice.label}
                   onRemove={() => {
                     removeSelectedItem(choice);

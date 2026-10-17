@@ -151,9 +151,12 @@ export default defineConfig({
     // unchanged.
     reporters: process.env.CLAUDECODE ? ['dot'] : ['default'],
     silent: process.env.CLAUDECODE ? 'passed-only' : false,
-    // Node 24 warns from every worker that `localStorage` has no
-    // `--localstorage-file`: two lines a worker, 185 workers a run.
-    execArgv: process.env.CLAUDECODE ? ['--disable-warning=ExperimentalWarning'] : [],
+    // Node 26 ships its own `localStorage` global and warns from every worker
+    // that it has no `--localstorage-file`: two lines a worker, 185 workers a
+    // run. Switching the feature off removes the global (happy-dom supplies the
+    // `dom` project's), where `--disable-warning` would hide every experimental
+    // warning, ours included.
+    execArgv: ['--no-experimental-webstorage'],
     // Both under .reports/ with the rest of the generated output; without
     // `outputFile`, the json and html reporters would write to `.vitest/`.
     // CI's `--outputFile` on the command line still wins.

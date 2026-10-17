@@ -383,6 +383,12 @@ describe('ReferencesField', () => {
   });
 
   describe('the new reference panel', () => {
+    // The panel's own Kind box looks references up as soon as it opens; a
+    // test that cares what comes back overrides this.
+    beforeEach(() => {
+      offerReferences([]);
+    });
+
     // The owner's call: asking again for a panel already open takes you
     // back to it, rather than doing nothing; that the panel then focuses
     // Kind and keeps what was typed is reference-panel.test.tsx's.
