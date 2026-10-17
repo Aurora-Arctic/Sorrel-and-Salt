@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound } from '@/lib/errors';
@@ -10,7 +10,6 @@ import {
   updateCompendiumEntry,
 } from '@/modules/ingredients';
 import { A, B, D, E, asUser } from '../../../support/as-user';
-import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
 import {
   insertDeityLink,
@@ -34,6 +33,90 @@ import {
 let sql: postgres.Sql;
 useTestDatabase((client) => {
   sql = client;
+});
+
+// The curated rows the page reads through, all invented: `truncate ingredients`
+// leaves the vocabulary tables alone, so they are written once for the file.
+let deityId: string;
+let formId: string;
+beforeAll(async () => {
+  const stamps = { created_by: A.id, updated_by: A.id };
+  const colours = { color_dark: '#8b5cf6', color_light: '#5b21b6' };
+  const [wards, bonds] = await sql`
+    insert into category_groups ${sql([
+      {
+        name: 'Fixture Wards',
+        slug: 'fixture-wards',
+        description: 'Invented',
+        ...colours,
+        ...stamps,
+      },
+      {
+        name: 'Fixture Bonds',
+        slug: 'fixture-bonds',
+        description: 'Invented',
+        ...colours,
+        ...stamps,
+      },
+    ])} returning id`;
+  await sql`
+    insert into categories ${sql([
+      {
+        name: 'Fixture Alpha',
+        slug: 'fixture-alpha',
+        description: 'Invented',
+        group_id: bonds.id,
+        ...stamps,
+      },
+      {
+        name: 'Fixture Beta',
+        slug: 'fixture-beta',
+        description: 'Invented',
+        group_id: wards.id,
+        ...stamps,
+      },
+      {
+        name: 'Fixture Gamma',
+        slug: 'fixture-gamma',
+        description: 'Invented',
+        group_id: wards.id,
+        ...stamps,
+      },
+      {
+        name: 'Fixture Delta',
+        slug: 'fixture-delta',
+        description: 'Invented',
+        group_id: wards.id,
+        ...stamps,
+      },
+    ])}`;
+  const [tradition] = await sql`
+    insert into deity_traditions ${sql({ name: 'Fixturan', slug: 'fixturan', description: 'Invented', ...stamps })}
+    returning id`;
+  [{ id: deityId }] = await sql`
+    insert into deities ${sql({
+      name: 'Fixturus',
+      slug: 'fixturus',
+      description: 'Invented',
+      tradition_id: tradition.id,
+      ...stamps,
+    })} returning id`;
+  const [group] = await sql`
+    insert into ingredient_form_groups ${sql({
+      name: 'Fixture Forms',
+      slug: 'fixture-forms',
+      description: 'Invented',
+      icon: 'botanical',
+      ...stamps,
+    })} returning id`;
+  [{ id: formId }] = await sql`
+    insert into ingredient_forms ${sql({
+      name: 'Fixtureform',
+      slug: 'fixtureform',
+      description: 'Invented',
+      group_id: group.id,
+      ...stamps,
+    })} returning id`;
 });
 
 beforeEach(async () => {
@@ -79,23 +162,27 @@ describe('ingredientDetailOf', () => {
     // Created with the uncurated form first, so the order read is the sort's.
     const id = await seed({
       folkNames: ['Testkin', 'Fixture-root'],
-      categories: ['Protection', 'Love'],
+      categories: ['Fixture Beta', 'Fixture Alpha'],
       substitutes: ['Typed stand-in'],
       deities: ['Typed deity'],
       variants: [
-        makeVariant({ form: 'Testform', categories: ['Warding'], substitutes: ['Form typed'] }),
+        makeVariant({
+          form: 'Testform',
+          categories: ['Fixture Gamma'],
+          substitutes: ['Form typed'],
+        }),
       ],
     });
-    await insertDeityLink(sql, id, await curatedDeityId(sql, 'Thor'), 1, A.id);
+    await insertDeityLink(sql, id, deityId, 1, A.id);
     await insertSubstituteLink(sql, id, whole, A.id);
     await insertSubstituteLink(sql, id, withForms, A.id, { substituteVariantId: powderId });
     const herb = await insertVariant(
       sql,
       id,
       makeVariant({
-        form: 'Herb',
-        formId: await curatedFormId(sql, 'Herb'),
-        categories: ['Banishing'],
+        form: 'Fixtureform',
+        formId,
+        categories: ['Fixture Delta'],
       }),
       A.id,
     );
@@ -107,13 +194,13 @@ describe('ingredientDetailOf', () => {
     expect(detail.entry).toEqual(entry);
     expect(detail.folkNames.sort()).toEqual(['Fixture-root', 'Testkin']);
     expect(detail.categories.map(({ category, group }) => [category.name, group.name])).toEqual([
-      ['Love', 'Love & Connection'],
-      ['Protection', 'Protection & Defense'],
+      ['Fixture Alpha', 'Fixture Bonds'],
+      ['Fixture Beta', 'Fixture Wards'],
     ]);
     for (const { category, group } of detail.categories) expect(group.id).toBe(category.groupId);
     expect(detail.deities).toEqual([
       { name: 'Typed deity', tradition: null },
-      { name: 'Thor', tradition: 'Norse' },
+      { name: 'Fixturus', tradition: 'Fixturan' },
     ]);
     expect(detail.substitutes).toEqual([
       {
@@ -132,18 +219,18 @@ describe('ingredientDetailOf', () => {
     ]);
 
     // The forms in the order of their names, not of their creation.
-    expect(detail.variants.map(({ variant }) => variant.form)).toEqual(['Herb', 'Testform']);
+    expect(detail.variants.map(({ variant }) => variant.form)).toEqual(['Fixtureform', 'Testform']);
     const [herbDetail, plainDetail] = detail.variants;
     expect(herbDetail.variant.id).toBe(herb);
     expect(herbDetail.icon).toBe('botanical');
     expect(herbDetail.categories.map(({ category, group }) => [category.name, group.name])).toEqual(
-      [['Banishing', 'Protection & Defense']],
+      [['Fixture Delta', 'Fixture Wards']],
     );
     expect(herbDetail.substitutes).toEqual([
       { name: 'Testleaf', ingredient: expect.objectContaining({ id: whole }), form: null },
     ]);
     expect(plainDetail.icon).toBeNull();
-    expect(plainDetail.categories.map(({ category }) => category.name)).toEqual(['Warding']);
+    expect(plainDetail.categories.map(({ category }) => category.name)).toEqual(['Fixture Gamma']);
     expect(plainDetail.substitutes).toEqual([{ name: 'Form typed', ingredient: null, form: null }]);
   });
 
@@ -164,7 +251,7 @@ describe('ingredientDetailOf', () => {
     const id = await seed({
       workspaceId: WORKSPACE_W_ID,
       folkNames: ['Testkin'],
-      variants: [makeVariant({ form: 'Testform', categories: ['Warding'] })],
+      variants: [makeVariant({ form: 'Testform', categories: ['Fixture Gamma'] })],
     });
     const entry = await getIngredient(asUser(A), id, WORKSPACE_W_ID);
     // Why D's read could have gone through: the entry is there, and a coven's.
@@ -175,7 +262,7 @@ describe('ingredientDetailOf', () => {
       const detail = await ingredientDetailOf(asUser(member), entry);
       expect(detail.folkNames).toEqual(['Testkin']);
       expect(detail.variants[0].categories.map(({ category }) => category.name)).toEqual([
-        'Warding',
+        'Fixture Gamma',
       ]);
     }
     await expect(ingredientDetailOf(asUser(D), entry)).rejects.toThrow(Forbidden);
