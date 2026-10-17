@@ -20,6 +20,7 @@ box's state.
 | `choices`      | The `ComboboxChoice`s on offer: `label`, and `count` where it is known; `icon` and `qualifier` draw as the multi-select draws them  |
 | `values`       | The values chosen, in the order chosen                                                                                              |
 | `onChange`     | Called with the whole new list after a value is added or taken out                                                                  |
+| `typeahead`    | Type to narrow the list: the typed box in place of the select-style one. Also used whenever a choice has a `group`. Off unless set  |
 | `placeholder`  | A short action shown, muted, while a choice is left: "Add an element"                                                               |
 | `removeNoun`   | Names a chip's x "Remove {Noun}: {Value}", "Remove Element: Water"                                                                  |
 | `loading`      | The counts are still being read: each chip holds a placeholder where its count will be                                              |
@@ -51,14 +52,20 @@ box's state.
 - **A chosen value with nothing behind it is never disabled.** It is a chip, so
   it can always be removed, whatever the counts say after another filter
   changed.
-- **Only a select-style multi-select**: nothing is typed and there are no group
-  headings. A filter that needs typing (Forms, with many values) or headings
-  (Deities, grouped by tradition) needs either a typed variant of this
-  component, or `Combobox` with `entries` directly, as `CategoryPicker` does.
-  The workshop's `.ladle/facet-layout.stories.tsx` drew those two with the typed
-  box; this component does not cover them.
-- **`count`, `disabled` and `note` on a choice** are the multi-select's; the
-  select-only box ignores them.
+- **Typeahead and groups are opt-in** (`typeahead`, and `group` on a choice).
+  The default is the select-style multi-select, which cannot type or draw
+  headings. With `typeahead`, or with any choice carrying a `group`, the
+  component draws the typed `Combobox` instead (`typeahead.tsx`), the way the
+  Forms and Deities filters were drawn in the workshop: typing keeps the rows
+  whose label contains the text, a chosen value is not listed again, a pick
+  clears the text, and Backspace on empty text takes the last chip off. Chips,
+  counts, icons, the loading placeholder, `removeNoun`, `disableZeros` (a zero
+  row last, disabled, noted, ignored when picked) and the hidden inputs all
+  behave as in the default form. A row's `group` is its heading in the list,
+  the headings in the order they first appear, ungrouped rows after them. Before
+  hydration the native select makes each group an `optgroup`.
+- **`count`, `disabled` and `note` on a choice** are drawn by both forms; the
+  plain `Combobox` ignores them.
 
 ## Styling
 
@@ -75,7 +82,8 @@ under "Admin / Facet Combobox": `NothingChosen`, its list open with every count;
 `SomeChosen`, two elements chosen, the list open on the rest and the zero row
 last; `CountsLoading`, chips holding the placeholder; `ChosenWithNothingBehindIt`,
 a chosen value with a count of 0, still removable; `WithFormIcons`, icons on
-rows and chips; and `Narrow`, the box in a 16rem column, where chips stack.
+rows and chips; `Narrow`, the box in a 16rem column, where chips stack; `Typeahead`, the Forms
+filter with typing; and `Grouped`, the Deities filter with tradition headings.
 Story ids use a double dash between the group and the name, for example
 `admin--facet-combobox--some-chosen`.
 
@@ -86,6 +94,8 @@ with its count and a choice reaching `onChange`; a zero row last and disabled,
 unless `disableZeros` is false; a hidden input per chosen value under the name,
 in order; a chip carrying its count with its x named by the noun, with or
 without the noun; the x and the clear each reaching the hidden inputs; a chosen
-zero-count value removable; and the server's render being a native multiple
+zero-count value removable; the typing form narrowing, hiding chosen values,
+submitting, drawing chips and ignoring a zero pick; headed groups in the list
+and `optgroup`s in the native select; and the server's render being a native multiple
 select holding the values with zero rows disabled. The layout and the look are
 checked in the workshop at 1280 and 375 in both themes, not in happy-dom.

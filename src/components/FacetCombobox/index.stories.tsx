@@ -37,6 +37,7 @@ function Stateful({
   choices?: ComboboxChoice[];
   label?: string;
   loading?: boolean;
+  typeahead?: boolean;
 }) {
   const [values, setValues] = useState(initial);
   return (
@@ -76,4 +77,23 @@ export const Narrow: Story = () => (
   <div style={{ maxWidth: '16rem' }}>
     <Stateful initial={['air', 'fire', 'spirit', 'water']} />
   </div>
+);
+
+// Typing narrows the list, as the Forms filter does: the typed box, the chosen
+// values still outlined chips with their counts and icons.
+export const Typeahead: Story = () => (
+  <Stateful label="Forms" choices={FORMS} initial={['leaf']} typeahead />
+);
+
+const DEITIES: ComboboxChoice[] = [
+  { value: 'a', label: 'Test Aletheia', count: 4, group: 'Test Tradition One' },
+  { value: 'b', label: 'Test Borros', count: 0, group: 'Test Tradition One' },
+  { value: 'c', label: 'Test Corvane', count: 8, group: 'Test Tradition Two' },
+  { value: 'd', label: 'Test Dessa', count: 2, group: 'Test Tradition Two' },
+  { value: 'e', label: 'Test Elowen', count: 5 },
+];
+
+// Each choice under its group's heading, as the Deities filter groups by tradition.
+export const Grouped: Story = () => (
+  <Stateful label="Deities" choices={DEITIES} initial={['c']} typeahead />
 );

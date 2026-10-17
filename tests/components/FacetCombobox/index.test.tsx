@@ -130,4 +130,85 @@ describe('FacetCombobox', () => {
     expect(within(select).getByRole('option', { name: 'Testearth (0)' })).toBeDisabled();
     host.remove();
   });
+
+  describe('typeahead', () => {
+    const typeInto = (text: string) => fireEvent.change(box(), { target: { value: text } });
+
+    it('narrows the rows to what is typed, and a pick reaches the hidden inputs and clears the text', () => {
+      const { container } = render(<Controlled typeahead />);
+
+      typeInto('wat');
+      expect(screen.getAllByRole('option')).toHaveLength(1);
+      fireEvent.click(screen.getByRole('option', { name: 'Testwater (7)' }));
+
+      expect(hidden(container)).toEqual(['water']);
+      expect(box()).toHaveValue('');
+    });
+
+    it('lists no chosen value, and a value with nothing behind it last and unchoosable', () => {
+      const { container } = render(<Controlled typeahead initial={['fire']} />);
+
+      open();
+      const rows = screen.getAllByRole('option');
+      expect(rows.map((row) => row.textContent)).not.toContain('Testfire (9)');
+      expect(rows[rows.length - 1]).toHaveAccessibleName(/^Testearth \(0\)/);
+      expect(rows[rows.length - 1]).toHaveAttribute('aria-disabled', 'true');
+      fireEvent.click(rows[rows.length - 1]!);
+
+      expect(hidden(container)).toEqual(['fire']);
+    });
+
+    it('draws chips with counts, removes by cross and by clear, and keeps a zero chip removable', () => {
+      const { container } = render(<Controlled typeahead initial={['earth', 'fire', 'water']} />);
+
+      expect(screen.getByRole('button', { name: 'Remove Element: Testearth' })).toBeEnabled();
+      fireEvent.click(screen.getByRole('button', { name: 'Remove Element: Testfire' }));
+      expect(hidden(container)).toEqual(['earth', 'water']);
+      fireEvent.click(screen.getByRole('button', { name: 'Clear Elements' }));
+      expect(hidden(container)).toEqual([]);
+    });
+
+    it("holds a placeholder where a chip's count will be while loading", () => {
+      render(<Controlled typeahead initial={['fire']} loading />);
+
+      expect(
+        screen.getByRole('button', { name: 'Remove Element: Testfire' }).closest('li'),
+      ).not.toHaveTextContent('(9)');
+    });
+  });
+
+  describe('groups', () => {
+    const GROUPED = [
+      { value: 'air', label: 'Testair', count: 3, group: 'Classical' },
+      { value: 'fire', label: 'Testfire', count: 9, group: 'Classical' },
+      { value: 'spirit', label: 'Testspirit', count: 1, group: 'Other' },
+    ];
+
+    it('sets each choice under its group heading in the list, and a pick still submits', () => {
+      const { container } = render(<Controlled typeahead choices={GROUPED} />);
+
+      open();
+      const classical = screen.getByRole('group', { name: 'Classical' });
+      expect(within(classical).getAllByRole('option')).toHaveLength(2);
+      expect(
+        within(screen.getByRole('group', { name: 'Other' })).getByRole('option', {
+          name: 'Testspirit (1)',
+        }),
+      ).toBeInTheDocument();
+      fireEvent.click(screen.getByRole('option', { name: 'Testspirit (1)' }));
+
+      expect(hidden(container)).toEqual(['spirit']);
+    });
+
+    it('draws the native select with the groups as optgroups', () => {
+      const markup = renderToString(<FacetCombobox {...PROPS} typeahead choices={GROUPED} />);
+      const host = document.createElement('div');
+      host.innerHTML = markup;
+
+      expect([...host.querySelectorAll('optgroup')].map((group) => group.label)).toEqual([
+        'Classical',
+        'Other',
+      ]);
+    });
+  });
 });

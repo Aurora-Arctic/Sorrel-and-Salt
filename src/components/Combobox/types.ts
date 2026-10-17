@@ -349,6 +349,12 @@ export interface ComboboxChoice {
   disabled?: boolean;
   /** A second line under the row, also part of its name: why a disabled choice is out. */
   note?: string;
+  /**
+   * The heading its row is listed under, a deity's tradition (M12.4). Drawn by
+   * the facet box's typing form only, which sets the rows of one heading
+   * together; the native select before hydration makes it an `optgroup`.
+   */
+  group?: string;
 }
 
 /** The select-only box: a closed set, chosen from the same control and list. */

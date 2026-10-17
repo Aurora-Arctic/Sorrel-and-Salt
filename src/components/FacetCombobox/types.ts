@@ -16,6 +16,13 @@ export interface FacetComboboxProps {
   values: readonly string[];
   /** Every change, as the whole list. Called once hydrated; before, the form submits the native select. */
   onChange: (values: string[]) => void;
+  /**
+   * Type to narrow the list, as the Forms and Deities filters do: the typed
+   * box in place of the select-style one. A choice with a `group` is listed
+   * under that heading, and the typing form is used whenever any choice has
+   * one, since only it draws headings. Off unless set.
+   */
+  typeahead?: boolean;
   /** A short action shown, muted, while nothing is chosen and after the chips: "Add an element". */
   placeholder?: string;
   /** What a value is of, for its cross's name: "Remove Element: Water". The bare value when left out. */
