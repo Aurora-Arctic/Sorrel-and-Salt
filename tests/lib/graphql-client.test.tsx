@@ -78,7 +78,7 @@ describe('a client component', () => {
   it('surfaces an error to the nearest error boundary, asking once', async () => {
     const calls = refuseOk();
     // React logs the caught error; it is the expected outcome here.
-    expectConsole('error', /./);
+    expectConsole('error', /Forbidden/);
 
     renderWithClient(
       <Boundary>
