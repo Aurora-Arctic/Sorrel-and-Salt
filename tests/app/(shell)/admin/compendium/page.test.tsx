@@ -9,6 +9,7 @@ import { makeQueryClient } from '@/lib/graphql-client';
 import { encodeCursor } from '@/lib/pagination';
 import type { PageRequest } from '@/lib/types';
 import { mockGraphQLQuery } from '../../../../support/msw/graphql';
+import { offerCategories } from '../../../../support/msw/ingredient-lookups';
 import { openSections } from '../../../../support/ingredient-sections';
 import { sent } from '../../../../support/filter-form';
 
@@ -161,6 +162,8 @@ beforeEach(() => {
   router.replace.mockClear();
   // An entry's form asks after near matches of the name it opens with.
   mockGraphQLQuery('PossibleDuplicates', () => ({ possibleDuplicates: { edges: [] } }));
+  // ...and for the categories its Categories field suggests from.
+  offerCategories([]);
 });
 
 describe('the /admin/compendium page', () => {
