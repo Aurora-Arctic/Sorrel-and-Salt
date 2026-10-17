@@ -46,7 +46,7 @@ well would be a second copy to keep equal.
   be noise (WCAG 4.1.3, Status Messages).
 - **Reduced motion** turns the typing and the slide off: the line snaps to the
   finished sentence and shuts, with no hold.
-- The chevron turns with `disclosure-chevron` (`$flip: true`) and fades by opacity
+- The chevron turns with `disclosure-chevron` and fades by opacity
   as a search starts and ends, so it never pops in or out.
 
 ## Files

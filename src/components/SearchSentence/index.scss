@@ -63,7 +63,7 @@
 // The app's disclosure chevron, turned over while the tail is open on the app's theme
 // transition; it also fades by opacity when a search starts and ends, so it never pops.
 .search-sentence__chevron {
-  @include disclosure-chevron('.search-sentence__disclosure.is-tail-open', $flip: true);
+  @include disclosure-chevron('.search-sentence__disclosure.is-tail-open');
 
   margin-inline-start: space(1);
   vertical-align: text-bottom;
@@ -73,6 +73,11 @@
 
   &.is-hidden {
     opacity: 0;
+  }
+
+  // After the transition above, which would otherwise outrank the mixin's own.
+  @include reduced-motion {
+    transition: none;
   }
 }
 

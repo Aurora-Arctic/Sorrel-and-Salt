@@ -34,6 +34,6 @@ export interface FacetPanelProps {
   loading?: boolean;
   /** Where the Clear All links go: the list with no facet chosen. */
   clearHref: string;
-  /** Joins the panel's bar class. */
+  /** Joins the dialog's class. */
   className?: string;
 }
