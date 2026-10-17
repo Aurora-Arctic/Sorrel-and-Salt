@@ -3,6 +3,7 @@
 import {
   type KeyboardEvent,
   type MouseEvent,
+  type PointerEvent as ReactPointerEvent,
   type ReactElement,
   type UIEvent,
   useEffect,
@@ -161,6 +162,33 @@ export default function FacetPanel({
     }
   });
 
+  // A press outside the open panel shuts it, applying what was held, as Escape does. The Filters
+  // button and the bar's Clear All have their own press handlers, so they are left to them. On
+  // the modal sheet the page is inert and the backdrop is the dialog's own box: see onPointerDown.
+  useEffect(() => {
+    if (!slide.shown) return undefined;
+    const outside = (event: PointerEvent) => {
+      const target = event.target;
+      if (modal.current || !(target instanceof Node)) return;
+      if (dialogRef.current?.contains(target)) return;
+      if (
+        target instanceof Element &&
+        target.closest('.facet-panel__button, .facet-panel__clear')
+      ) {
+        return;
+      }
+      dismiss();
+    };
+    document.addEventListener('pointerdown', outside);
+    return () => document.removeEventListener('pointerdown', outside);
+  });
+
+  // The sheet's backdrop belongs to the dialog itself, so a press that lands on the dialog and
+  // not on anything in it is a press on the backdrop.
+  const onPointerDown = (event: ReactPointerEvent<HTMLDialogElement>) => {
+    if (modal.current && event.target === event.currentTarget) dismiss();
+  };
+
   // Crossing the tablet width swaps the panel's kind (an overlay for a sheet), so it shuts.
   useEffect(() => {
     const query = window.matchMedia(WIDE);
@@ -229,6 +257,7 @@ export default function FacetPanel({
         aria-labelledby={titleId}
         open={!hydrated}
         onKeyDown={onKeyDown}
+        onPointerDown={onPointerDown}
         onClose={() => shut(true)}
       >
         <div
@@ -283,6 +312,7 @@ export default function FacetPanel({
                     legend="Match"
                     name="categoryMode"
                     layout="segmented"
+                    hint="All: an ingredient must be in every chosen category. Any: in at least one of them."
                     options={MATCH_OPTIONS}
                     value={filter.categoryMode}
                     onChange={(categoryMode) => onChange({ categoryMode })}

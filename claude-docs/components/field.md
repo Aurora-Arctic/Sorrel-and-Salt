@@ -210,7 +210,7 @@ the label's so that the radio's accessible name keeps it; the count is muted
 while the segment is unchosen. It prints no chosen caption: the name is
 already on the bar. Titles are title case ("Not Toxic"), and the strip is
 still native radios, so the arrow keys, `checked` and a form's GET submission
-before the script loads all come from the browser. Story: `RadioSegmented`.
+before the script loads all come from the browser. Its segments are the bar's own children, so the dividers and rounded ends are counted on them (`.radio-strip--text`), the bar is `$control-height` tall, and the legend takes a field label's weight and gap, so a row of mixed controls shares one top. An optional `hint` on any group draws an InfoTip beside the legend and joins the fieldset's `aria-describedby`. Story: `RadioSegmented`.
 
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),

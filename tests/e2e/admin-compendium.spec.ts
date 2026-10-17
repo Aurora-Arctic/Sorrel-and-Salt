@@ -922,7 +922,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await expect(edit('Modewort One')).toHaveCount(0);
 
   await openFilters(page);
-  await match.getByRole('radio', { name: 'Any' }).check();
+  await choose(match.getByRole('radio', { name: 'Any' }));
   await applyFilters(page);
   await expect(page).toHaveURL(/[?&]categoryMode=any(&|$)/);
   await expect(edit('Modewort One')).toBeVisible();
@@ -961,6 +961,9 @@ const ROMAN_SLUG = deitySlug(FACET_DEITY, 'Roman');
 async function seedFacetworts(userId: string) {
   const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
   try {
+    // Seeded once per database: the specs below share it, and a deity's slug is unique.
+    const [seeded] = await sql`select 1 from ingredients where name = 'Facetwort A' limit 1`;
+    if (seeded) return;
     const deity = async (tradition: string) => {
       const [row] = await sql.begin(async (tx) => {
         await tx`select set_config('app.current_user_id', ${userId}, true)`;
@@ -1000,13 +1003,21 @@ const facetRow = (page: Page, letter: string) =>
   page.getByRole('link', { name: `Edit Facetwort ${letter}` });
 
 /** The letters of the Facetworts listed, in the order shown. */
+/** Picks a segmented choice by clicking its label: the native radio under a segment is drawn invisible, so a click on the input itself finds the label in the way. */
+async function choose(radio: Locator): Promise<void> {
+  await radio.locator('xpath=ancestor::label[1]').click();
+  await expect(radio).toBeChecked();
+}
+
 async function listed(page: Page): Promise<string> {
-  const names = await page.getByRole('link', { name: /^Edit Facetwort / }).allTextContents();
+  // A link is named by its aria-label when it has one, else by its text.
   const labels = await page
     .getByRole('link', { name: /^Edit Facetwort / })
-    .evaluateAll((links) => links.map((link) => link.getAttribute('aria-label') ?? ''));
-  return (labels.length ? labels : names)
-    .map((label) => label.slice(-1))
+    .evaluateAll((links) =>
+      links.map((link) => link.getAttribute('aria-label') ?? link.textContent ?? ''),
+    );
+  return labels
+    .map((label) => label.trim().slice(-1))
     .sort()
     .join('');
 }
@@ -1038,12 +1049,12 @@ test('two forms list the entries holding either, and a form with a deity lists t
   await page.goto('/admin/compendium?query=Facetwort');
   await openFilters(page);
   // Why a filter could drop rows: all five are listed unfiltered.
-  expect(await listed(page)).toBe('ABCDE');
+  await expect.poll(() => listed(page)).toBe('ABCDE');
 
   await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
   // Held in the panel: neither the address nor the list has moved.
   await expect(page).not.toHaveURL(/forms=/);
-  expect(await listed(page)).toBe('ABCDE');
+  await expect.poll(() => listed(page)).toBe('ABCDE');
   await applyFilters(page);
   await expect(page).toHaveURL(/[?&]forms=Facetform(\+|%20)Alpha(&|$)/);
   await expect.poll(() => listed(page)).toBe('ADE');
@@ -1115,21 +1126,21 @@ test('Toxic keeps its three states in the address, and each count is the total o
   expect(toxicCount).toBe(1);
   expect(safeCount).toBe(4);
 
-  await toxic.getByRole('radio', { name: /^Toxic \(/ }).check();
+  await choose(toxic.getByRole('radio', { name: /^Toxic \(/ }));
   await applyFilters(page);
   await expect(page).toHaveURL(/[?&]toxic=toxic(&|$)/);
   await expect.poll(() => listed(page)).toBe('D');
   expect((await listed(page)).length).toBe(toxicCount);
 
   await openFilters(page);
-  await toxic.getByRole('radio', { name: /^Not Toxic \(/ }).check();
+  await choose(toxic.getByRole('radio', { name: /^Not Toxic \(/ }));
   await applyFilters(page);
   await expect(page).toHaveURL(/[?&]toxic=not_toxic(&|$)/);
   await expect.poll(() => listed(page)).toBe('ABCE');
   expect((await listed(page)).length).toBe(safeCount);
 
   await openFilters(page);
-  await toxic.getByRole('radio', { name: 'Any' }).check();
+  await choose(toxic.getByRole('radio', { name: 'Any' }));
   await applyFilters(page);
   await expect(page).not.toHaveURL(/toxic=/);
   await expect.poll(() => listed(page)).toBe('ABCDE');
@@ -1186,17 +1197,18 @@ test('a count in the panel follows a change before Apply, and Escape applies it'
   expect(countIn(await alpha.innerText())).toBe(3);
   await field.fill('');
 
-  await panel
-    .getByRole('group', { name: 'Toxic' })
-    .getByRole('radio', { name: /^Toxic \(/ })
-    .check();
+  await choose(
+    panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Toxic \(/ }),
+  );
   await field.fill('Facetform Alpha');
   await expect.poll(async () => countIn(await alpha.innerText())).toBe(1);
   // Nothing has been applied: the address and the list are as they were.
   await expect(page).not.toHaveURL(/toxic=/);
-  expect(await listed(page)).toBe('ABCDE');
+  await expect.poll(() => listed(page)).toBe('ABCDE');
   await field.fill('');
 
+  // Focus on the panel itself, so that no suggestion list in the field takes the Escape first.
+  await panel.focus();
   await page.keyboard.press('Escape');
   await expect(panel).toBeHidden();
   await expect(page).toHaveURL(/[?&]toxic=toxic(&|$)/);
@@ -1217,10 +1229,9 @@ test('Apply Filters applies every held change in one navigation, a step Back und
   const panel = await openFilters(page);
 
   await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
-  await panel
-    .getByRole('group', { name: 'Toxic' })
-    .getByRole('radio', { name: /^Toxic \(/ })
-    .check();
+  await choose(
+    panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Toxic \(/ }),
+  );
   await expect(page).not.toHaveURL(/forms=|toxic=/);
   await applyFilters(page);
 
@@ -1310,14 +1321,14 @@ test('the panel takes focus in, gives it back on Escape, and a reload and Back b
   await applyFilters(page);
   await expect.poll(() => listed(page)).toBe('ADE');
   await openFilters(page);
-  await page.getByRole('radio', { name: /^Toxic \(/ }).check();
+  await choose(page.getByRole('radio', { name: /^Toxic \(/ }));
   await applyFilters(page);
   await expect.poll(() => listed(page)).toBe('D');
 
   await page.reload();
   await expect(page).toHaveURL(/toxic=toxic/);
   await expect(button).toHaveAccessibleName('Filters (2)');
-  expect(await listed(page)).toBe('D');
+  await expect.poll(() => listed(page)).toBe('D');
   await openFilters(page);
   await expect(page.getByRole('button', { name: 'Remove Form: Facetform Alpha' })).toBeVisible();
   await expect(page.getByRole('radio', { name: /^Toxic \(/ })).toBeChecked();
@@ -1356,3 +1367,142 @@ test('at 375px the panel is a modal sheet that closes on Escape, with no accessi
   await expect(panel).toBeHidden();
   await expect(page.getByRole('button', { name: /^Filters/ })).toBeFocused();
 });
+
+test('a press outside the open panel shuts it and applies what was held, on the page and on the phone sheet', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'facet-outside@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  await seedFacetworts(userId);
+  await page.goto('/admin/compendium?query=Facetwort');
+  await expect.poll(() => listed(page)).toBe('ABCDE');
+
+  // Wide: a press in the search box.
+  let panel = await openFilters(page);
+  await choose(panel.getByRole('radio', { name: /^Toxic \(/ }));
+  // Why it could have applied already: the choice is held, and the address says nothing yet.
+  await expect(page).not.toHaveURL(/toxic=/);
+  await page.getByRole('combobox', { name: 'Name', exact: true }).click();
+  await expect(panel).toBeHidden();
+  await expect(page).toHaveURL(/[?&]toxic=toxic(&|$)/);
+  await expect.poll(() => listed(page)).toBe('D');
+
+  // Wide: a press on the page itself, away from every control.
+  panel = await openFilters(page);
+  await choose(panel.getByRole('radio', { name: 'Any' }).first());
+  await expect(page).toHaveURL(/toxic=toxic/);
+  await page.getByRole('heading', { level: 1 }).click();
+  await expect(panel).toBeHidden();
+  await expect(page).not.toHaveURL(/toxic=/);
+  await expect.poll(() => listed(page)).toBe('ABCDE');
+
+  // The sheet (under 56rem wide): the backdrop beside it, which is the dialog's own box.
+  await page.setViewportSize({ width: 700, height: 800 });
+  panel = await openFilters(page);
+  await choose(panel.getByRole('radio', { name: /^Toxic \(/ }));
+  await expect(page).not.toHaveURL(/toxic=/);
+  await page.mouse.click(5, 400);
+  await expect(panel).toBeHidden();
+  await expect(page).toHaveURL(/[?&]toxic=toxic(&|$)/);
+});
+
+test('the panel opens with its top at its final place from the first frame, and the strips line up with their neighbours', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(
+    page,
+    'facet-layout@admin-compendium.test',
+    ['discord'],
+    'admin',
+  );
+  await seedFacetworts(userId);
+  // The suite runs with reduced motion, which skips the slide this test is about.
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/admin/compendium?query=Facetwort');
+  const button = page.getByRole('button', { name: /^Filters/ });
+  await button.waitFor();
+  // The pre-paint script that hides the open no-script panel until hydration has run.
+  await expect(page.locator('html')).toHaveAttribute('data-js', '');
+  await page.evaluate(() => {
+    const w = window as unknown as { tops: number[] };
+    w.tops = [];
+    const tick = () => {
+      const pad = document.querySelector('.facet-panel__pad');
+      const dialog = document.querySelector('dialog.facet-panel');
+      if (pad && dialog instanceof HTMLDialogElement && dialog.open) {
+        w.tops.push(pad.getBoundingClientRect().top);
+      }
+      requestAnimationFrame(tick);
+    };
+    tick();
+  });
+  const panel = await openFilters(page);
+  await expect(panel.getByRole('button', { name: 'Apply Filters' })).toBeVisible();
+  await page.waitForTimeout(700);
+  const tops = await page.evaluate(() => (window as unknown as { tops: number[] }).tops);
+  // Why it could have moved: the slide ran, so frames were sampled while the height grew.
+  expect(tops.length).toBeGreaterThan(5);
+  expect(Math.max(...tops) - Math.min(...tops)).toBeLessThan(1);
+
+  const top = async (locator: Locator) => (await locator.boundingBox())?.y ?? Number.NaN;
+  const toxic = panel.getByRole('group', { name: 'Toxic' });
+  const forms = panel.getByRole('combobox', { name: 'Forms', exact: true });
+  // The combobox's box is two levels above its input; the strip stands where that box does,
+  // and is as tall.
+  const strip = toxic.locator('.radio-strip');
+  const box = forms.locator('xpath=ancestor::div[2]');
+  expect(await top(strip)).toBeCloseTo(await top(box), 0);
+  expect((await strip.boundingBox())?.height).toBeCloseTo(
+    (await box.boundingBox())?.height ?? 0,
+    0,
+  );
+  expect(await top(toxic.locator('legend'))).toBeCloseTo(
+    await top(panel.locator('label[for]', { hasText: /^Forms$/ })),
+    0,
+  );
+  // A divider between the segments, as Match has.
+  expect(
+    await toxic
+      .locator('.radio--segment:nth-child(2)')
+      .evaluate((el) => getComputedStyle(el).borderInlineStartWidth),
+  ).toBe('1px');
+});
+
+for (const [label, width, height] of [
+  ['1280', 1280, 900],
+  ['375', 375, 800],
+] as const) {
+  test(`the Match tip opens whole inside the panel at ${label}px`, async ({ page }, info) => {
+    await signInAs(page, `match-tip-${label}@admin-compendium.test`, ['discord'], 'admin');
+    await page.setViewportSize({ width, height });
+    await page.goto('/admin/compendium?categories=protection&categories=cleansing');
+    const panel = await openFilters(page);
+    const match = panel.getByRole('group', { name: 'Match' });
+    await expect(match).toBeVisible();
+    await match.getByRole('button', { name: 'About Match' }).click();
+    const tip = panel.getByRole('tooltip');
+    await expect(tip).toBeVisible();
+    // Why it could have been cut: the panel clips to its own box, so a tip opening past the
+    // top edge would lie outside it. Whole means every edge of the tip is inside the panel's.
+    const tipBox = (await tip.boundingBox())!;
+    const panelBox = (await panel.boundingBox())!;
+    expect(tipBox.y).toBeGreaterThanOrEqual(panelBox.y);
+    expect(tipBox.x).toBeGreaterThanOrEqual(panelBox.x);
+    expect(tipBox.x + tipBox.width).toBeLessThanOrEqual(panelBox.x + panelBox.width);
+    expect(tipBox.y + tipBox.height).toBeLessThanOrEqual(panelBox.y + panelBox.height);
+    // The tip is the thing on top at its own centre, so nothing covers or clips it.
+    expect(
+      await tip.evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        return el.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2));
+      }),
+    ).toBe(true);
+    if (process.env.TIP_SHOT_DIR)
+      await page.screenshot({ path: `${process.env.TIP_SHOT_DIR}/match-tip-${label}.png` });
+    void info;
+  });
+}

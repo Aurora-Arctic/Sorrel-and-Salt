@@ -173,6 +173,50 @@ describe('FacetPanel', () => {
     expect(filtersButton()).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('shuts and applies once on a press outside the open panel, and not on one inside it', () => {
+    stubViewport(true);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.pointerDown(screen.getByRole('heading', { name: 'Filters' }));
+    expect(dialog()).toHaveAttribute('open');
+    expect(onApply).not.toHaveBeenCalled();
+
+    fireEvent.pointerDown(document.body);
+
+    expect(dialog()).not.toHaveAttribute('open');
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a press on the Filters button to its own handler, so the panel is applied once', () => {
+    stubViewport(true);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.pointerDown(filtersButton());
+    fireEvent.click(filtersButton());
+
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('shuts the sheet on a press on its backdrop, which is the dialog itself, and not on one inside it', () => {
+    stubViewport(false);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.pointerDown(screen.getByRole('heading', { name: 'Filters' }));
+    expect(onApply).not.toHaveBeenCalled();
+
+    fireEvent.pointerDown(dialog());
+
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
   it('closes at once when the viewport crosses the tablet width', () => {
     const listeners = stubViewport(true, false);
     render(<FacetPanel {...props()} />);
@@ -278,6 +322,8 @@ describe('FacetPanel', () => {
 
     const panel = host.querySelector('dialog') as HTMLDialogElement;
     expect(panel.hasAttribute('open')).toBe(true);
+    // The class the stylesheet hides under the document's script mark until hydration takes over.
+    expect(panel.classList.contains('facet-panel--static')).toBe(true);
     const link = host.querySelector(`a[href="#${panel.id}"]`);
     expect(link).not.toBeNull();
     expect(host.firstElementChild?.tagName).toBe('A');

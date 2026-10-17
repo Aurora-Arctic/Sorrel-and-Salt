@@ -202,6 +202,7 @@ export const RadioSegmented: Story = () => {
       <RadioGroupField<string>
         legend="Match"
         name="categoryMode"
+        hint="All: an ingredient must be in every chosen category. Any: in at least one of them."
         layout="segmented"
         value={match}
         onChange={setMatch}

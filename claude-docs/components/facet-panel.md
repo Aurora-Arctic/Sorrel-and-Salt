@@ -46,10 +46,10 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
   popup used (`defaultPrevented`), which closes only the popup. A modal sheet's Escape
   is the browser's and ends in the dialog's `close` event, which snaps the state shut.
 - **Held, then applied.** A change in the open panel goes to `onChange` and nowhere else, since the panel covers the results. Every shut calls `onApply` once (a shut that follows a shut calls nothing). Apply Filters is the form's submit, which applies everything, so it only shuts the panel without calling `onApply` again. A modified click on a Clear All link (new tab) still follows the link.
+- **A press outside shuts it.** While the non-modal panel is open, a `pointerdown` anywhere outside it (the search box, the page) shuts it and calls `onApply`, the same path as Escape. The Filters button and the bar's Clear All are left to their own handlers, so nothing applies twice. On the modal sheet the page is inert and the backdrop is the dialog's own box, so a press whose target is the dialog itself (not anything in it) shuts it. The sheet fills the screen below 32rem, so there is no backdrop to press on a narrow phone; Close and Escape remain.
 - **Crossing the tablet width** closes the panel at once, since it would otherwise
   change from an overlay to a sheet under the person's hands.
-- **The clip never scrolls** (`onScroll` puts `scrollTop` back to 0), so a focus
-  moving into a part still hidden by the slide cannot shift the panel.
+- **The panel's top never moves while it opens.** Opening a dialog runs the browser's focus step, which scrolls its first control into view, and a box with `overflow: hidden` can be scrolled that way: while the panel was still short, its content slid up and then fell back as it grew. `.facet-panel__inner` is therefore `overflow: clip` (with `hidden` declared just before it as the fallback), which cannot scroll at all; `onScroll` on the clip still puts `scrollTop` back to 0 as a net. `tests/e2e/admin-compendium.spec.ts` samples the top every frame of a real slide.
 - **Before hydration** the dialog renders with `open`, inline, at every width, with
   no Close, and the Filters control is a link to it. The controls submit through the
   surrounding GET form: each combobox as its native select, Match and Toxic as radios,
@@ -57,11 +57,10 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
   a native `<select multiple name="categories">` in optgroups by group (`NativeCategories`;
   a zero-count option is disabled unless chosen). Once hydrated, `CategoryPicker` replaces
   it and a chosen category travels as a hidden `categories` input. Once the script runs, React removes `open`, so the
-  panel collapses; that is a shift above the results, which the caller should keep
-  below the fold of what the visitor is reading.
+  panel collapses. It is not seen opening first: the root layout's pre-paint script sets `data-js` on `<html>` before first paint, and `[data-js] .facet-panel--static` is `display: none`. Hidden is not removed, so the controls still submit if the form is sent before hydration. Without JavaScript the attribute never lands and the panel stays. The mark rides in `src/app/pre-paint-scripts.tsx` beside the theme script rather than in a mechanism of its own: it has the same job, setting something on `<html>` that first paint must already see, and the same rule for existing only in the server's HTML.
 - **Source order is visual order**, with no CSS `order`. The rows are Categories with
   Match and No Refs; Forms with Toxic; Planets and Zodiac; Deities and Elements; then
-  the foot. Match shows only for two or more categories.
+  the foot. Match shows only for two or more categories, and carries an InfoTip saying what All and Any mean. Match and Toxic stand at the top of their neighbour's field and are a control's height: the group's own margin is zeroed in a row, the legend takes the label's weight, and the bar is a control tall. A tip in the panel opens below its label, not above as elsewhere, because the clip ends at the first row and would cut an upward tip; on the wide panel, where Match stands at the row's right-hand end, it also hangs from the icon's right edge and opens leftward. An e2e test checks the open tip lies inside the panel at 1280 and 375.
 - **Counts** show on every option, on the Toxic segments, on each chosen chip and on
   No Refs' label. A zero is disabled and listed last (`FacetCombobox`).
 - **The sheet's foot is sticky**, with scroll padding so a focused control is never

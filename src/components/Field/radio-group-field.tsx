@@ -3,6 +3,7 @@
 import { type ReactElement, useId } from 'react';
 import { pressFeedback } from '../../lib/press-feedback';
 import IconTip from '../IconTip';
+import InfoTip from '../InfoTip';
 import type { RadioGroupFieldProps } from './types';
 
 /**
@@ -26,11 +27,13 @@ export function RadioGroupField<T extends string>({
   disabled,
   note,
   layout = 'list',
+  hint,
 }: RadioGroupFieldProps<T>): ReactElement {
   const id = useId();
   const strip = layout === 'strip';
   const segmented = layout === 'segmented';
   const noteId = `${id}-note`;
+  const hintId = `${id}-hint`;
   return (
     <fieldset
       className={
@@ -41,9 +44,20 @@ export function RadioGroupField<T extends string>({
             : 'fieldset radio-group'
       }
       disabled={disabled}
-      aria-describedby={note ? noteId : undefined}
+      aria-describedby={[note && noteId, hint && hintId].filter(Boolean).join(' ') || undefined}
     >
-      <legend className="fieldset__legend">{legend}</legend>
+      <legend className="fieldset__legend">
+        {hint ? (
+          <span className="field__label-row">
+            {legend}
+            <InfoTip id={hintId} label={legend}>
+              {hint}
+            </InfoTip>
+          </span>
+        ) : (
+          legend
+        )}
+      </legend>
       {strip && (
         <>
           <div className="radio-strip">

@@ -171,6 +171,8 @@ export interface RadioGroupFieldProps<T extends string> {
    * every way.
    */
   layout?: 'list' | 'strip' | 'segmented';
+  /** An InfoTip beside the legend, for what the choices mean. */
+  hint?: string;
 }
 
 /** A form's row of actions: Save, any further saves, Cancel and Delete. */

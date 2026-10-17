@@ -1762,8 +1762,35 @@
   // option's name in text rather than an icon, and its count after it. Wider
   // than the icon segment's square, its height kept, and never wrapped, so a
   // bar of three stays one row.
+  // The segments are the bar's own children here, with no tip wrapper, so the dividers
+  // and rounded ends are counted on them. The legend's gap is the fieldset's alone, as a
+  // field's label has, and the bar is a control's height, so a row of mixed controls
+  // shares one top and one baseline.
+  .fieldset.radio-group--segmented .fieldset__legend {
+    margin-bottom: space(2);
+    font-weight: 400;
+  }
+
+  .radio-strip--text {
+    > .radio--segment:not(:first-child) {
+      border-inline-start: 1px solid $text-muted;
+    }
+
+    > .radio--segment:first-child {
+      border-start-start-radius: calc(#{radius('control')} - 1px);
+      border-end-start-radius: calc(#{radius('control')} - 1px);
+    }
+
+    > .radio--segment:last-child {
+      border-start-end-radius: calc(#{radius('control')} - 1px);
+      border-end-end-radius: calc(#{radius('control')} - 1px);
+    }
+  }
+
   .radio--text {
     inline-size: auto;
+    // Inside the bar's own 1px border, so the bar stands a control's height.
+    block-size: calc(#{$control-height} - 2px);
     padding-inline: space(4);
     white-space: nowrap;
 

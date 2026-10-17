@@ -54,6 +54,12 @@
   margin: space(4) 0;
 }
 
+// With script on its way (the mark the root layout's pre-paint script sets), the open
+// panel waits out hydration unseen instead of flashing; without script it stays.
+[data-js] .facet-panel--static {
+  display: none;
+}
+
 .facet-panel__clip {
   display: grid;
   grid-template-rows: 0fr;
@@ -73,6 +79,11 @@
 .facet-panel__inner {
   min-height: 0;
   overflow: hidden;
+  // Clip, where it is known, rather than hide: a hidden box can still be scrolled by the
+  // browser's focus step, which moves a dialog's first control into view as it opens and
+  // slid the content up inside a still-short panel, so its top rose and then fell back.
+  // A clipped box cannot scroll at all. `hidden` above is the older browsers' fallback.
+  overflow: clip;
   border-radius: radius('surface');
 }
 
@@ -103,6 +114,12 @@
   display: flex;
   flex-direction: column;
   gap: space(4);
+
+  // The group's own vertical margin (set for a group among prose) would push the strip
+  // below its neighbour's label; the row's gap is the spacing.
+  > .fieldset.radio-group {
+    margin-block: 0;
+  }
 
   // Stacked, a combobox is as tall as it is, not the row-wise basis.
   > .facet-panel__grow {
@@ -215,5 +232,24 @@
 @include reduced-motion {
   .facet-panel__clip {
     transition: none;
+  }
+}
+
+// A tip in the panel opens below its label, not above it as everywhere else. The panel's
+// clip (needed for the slide) ends at the first row's top edge, so a tip opening upward
+// from Match, which sits in that row, was cut off. Below there is always room in the panel.
+.facet-panel .info-tip__bubble {
+  top: 100%;
+  bottom: auto;
+  margin-block: space(1) 0;
+}
+
+// On the wide panel Match stands at the right-hand end of its row, so a tip hung from the
+// label's left edge ran past the panel's right edge and was cut. It hangs from the icon's
+// right edge there and opens leftward. On the sheet, Match starts at the left, as the tip does.
+@media (min-width: $shell-tablet-width) {
+  .facet-panel .info-tip__bubble {
+    right: 0;
+    left: auto;
   }
 }
