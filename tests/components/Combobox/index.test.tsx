@@ -79,6 +79,8 @@ describe('Combobox', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
     expect(box()).toHaveAttribute('aria-expanded', 'true');
+    // The root carries the state the chevron's flip waits on.
+    expect(box().closest('.combobox')).toHaveClass('is-open');
     expect(options()).toHaveLength(3);
 
     rerender(<Harness />);

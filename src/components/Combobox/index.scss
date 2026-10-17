@@ -243,10 +243,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 
   // The chevron turns over while the list is open, as the account menu's
-  // does: under the text box's toggle button, or the select's control, each
-  // of which carries `aria-expanded`.
+  // does. `aria-expanded` sits on the input, button or control beside the
+  // indicator, never above it, so a selector on it cannot reach the chevron;
+  // the root carries `is-open` while the list is open, and the flip waits on it.
   .chevron-icon {
-    @include chevron-flip("[aria-expanded='true']");
+    @include chevron-flip('.combobox.is-open');
   }
 }
 

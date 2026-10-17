@@ -118,7 +118,7 @@ export function ComboboxMultiSelect({
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen);
 
   return (
-    <div className="combobox" ref={setControl}>
+    <div className={isOpen ? 'combobox is-open' : 'combobox'} ref={setControl}>
       {/* Presentational, as the typed box's control is: the box inside is
           what a reader and the keyboard reach, and the chips' x and the
           clear sit beside it rather than inside it, so that a press or a key

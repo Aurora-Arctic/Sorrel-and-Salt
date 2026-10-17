@@ -426,7 +426,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   };
 
   return (
-    <div className="combobox">
+    <div className={popupOpen ? 'combobox is-open' : 'combobox'}>
       {/* Named by a <label> of its own, hidden, where the caller names none:
           Chrome flags a field no label names, an aria-label notwithstanding.
           Downshift ties the two by id. */}
