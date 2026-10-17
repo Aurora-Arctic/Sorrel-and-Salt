@@ -266,13 +266,14 @@ const IngredientForm = ({
   const panels = usePanelChanges();
   const discard = useDiscardGuard(isDirty || panels.changed);
 
-  // Undo and redo (M12.9, adopted here by M12.10), off while a question is up
+  // Undo and redo (M12.9, adopted here by M12.10), off while a save is in
+  // flight (its success handler resets over the values) or a question is up
   // over the form. A restore opens whatever folds around the field it wrote,
   // and a classification pick is one step with the formal name it emptied, so
   // focus is named rather than left to the first of the two.
   const history = useFormHistory(methods, {
     root: form,
-    enabled: !discard.asking && !deleting && question === null,
+    enabled: !discard.asking && !deleting && question === null && !isSubmitting,
     ignore: inReferencePanel,
     skip: isPanelState,
     onRestored: (names, diffs, direction) => {

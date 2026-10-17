@@ -823,6 +823,43 @@ describe('IngredientForm', () => {
       expect(textbox('Name')).toHaveValue('');
     });
 
+    it('changes nothing while a save is in flight, and has nothing to undo once it lands', async () => {
+      let finish: () => void = () => {};
+      const gate = new Promise<void>((resolve) => (finish = resolve));
+      server.use(
+        graphqlLink.mutation('CreateWorkspaceIngredient', async ({ variables }) => {
+          await gate;
+          const { name } = (variables as { input: { name: string } }).input;
+          return HttpResponse.json({
+            data: { createWorkspaceIngredient: { id: 'saved-1', name, slug: 'saved' } },
+          });
+        }),
+      );
+      const onSaved = renderForm();
+      type('Name', 'Testwort');
+      await settle();
+      type('Name', 'Testwort Two');
+      await settle();
+      saveAnother();
+      // The mutation is held, so the form stays mid-save.
+      await settle();
+      act(() => textbox('Name').focus());
+
+      undo();
+      fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+
+      expect(textbox('Name')).toHaveValue('Testwort Two');
+
+      finish();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      await settle();
+      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      undo();
+
+      expect(textbox('Name')).toHaveValue('');
+    });
+
     it('reads a chord inside the new reference panel as the panel\u2019s own, leaving the form\u2019s history alone', async () => {
       renderForm();
       type('Name', 'Testwort');
