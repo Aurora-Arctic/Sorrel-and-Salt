@@ -1,5 +1,7 @@
 import { defineConfig } from 'drizzle-kit';
 
+import { withoutClientOnlyParams } from './src/db/connection-url';
+
 if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL is not set');
 }
@@ -9,6 +11,6 @@ export default defineConfig({
   out: './src/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
-    url: process.env.DATABASE_URL,
+    url: withoutClientOnlyParams(process.env.DATABASE_URL),
   },
 });

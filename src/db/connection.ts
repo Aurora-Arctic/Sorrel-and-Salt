@@ -1,5 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { withoutClientOnlyParams } from './connection-url';
 import type { ClientRegistry } from './types';
 
 function databaseUrl(): string {
@@ -7,7 +8,7 @@ function databaseUrl(): string {
   if (!url) {
     throw new Error('DATABASE_URL is not set');
   }
-  return url;
+  return withoutClientOnlyParams(url);
 }
 
 // One client per process per URL, kept on `globalThis` rather than in this
