@@ -185,6 +185,15 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
   stylesheet caps the list at `min(20rem, that)`, which holds the eight
   seeded category groups without a scroll (M5.6, the owner's call). Its side is
   `data-placement`, "bottom-start" or "top-start".
+- **Clear of the phone's bottom bar.** The shell's fixed bottom bar
+  (`.section-nav`, phone width only) sits over the foot of the window, which
+  Floating UI cannot see. `flip`, `shift` and `size` therefore take a
+  `bottom` padding of the edge plus the bar's measured height (its safe
+  area included), read at every placement, so a field near the foot opens its
+  list above rather than behind the bar. The bar is found by its class, as
+  the shell's own stylesheets already do. Without the padding `size` shrinks
+  the list to the sliver left and `flip` then measures that shrunken list,
+  which still "fits" below, so it never flips.
 - **Followed while open, and only then.** `autoUpdate` re-places it on a
   scroll or a resize; a closed list, which Downshift keeps in the page, is
   not followed.

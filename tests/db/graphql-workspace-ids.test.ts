@@ -258,6 +258,11 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       workspaceIngredients(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
     }`,
   },
+  workspaceIngredientFacets: {
+    source: `query ($workspaceId: ID!) {
+      workspaceIngredientFacets(workspaceId: $workspaceId) { forms { value count } }
+    }`,
+  },
   addIngredientToWorkspace: {
     source: `mutation ($workspaceId: ID!, $variantId: ID!) {
       addIngredientToWorkspace(workspaceId: $workspaceId, variantId: $variantId, input: {}) { id }

@@ -746,6 +746,85 @@ transport's half: the page and its cursor, the arguments reaching the read,
 one read each for a page's stock, its categories and its jars' forms, and the
 one refusal. Which rows the list holds is the service test's.
 
+### `compendiumFacets` and `workspaceIngredientFacets`
+
+The numbers beside each choice in the search's filter panel (M12.3): for
+every value of every filter, how many entries the list would hold with that
+value picked. `compendiumFacets` sits in `graphql/compendium.ts` and takes
+exactly `compendium`'s filter arguments (`query`, `categoryIds`,
+`categoryMode`, the six facet arguments, `withoutReferences` and
+`nomenclature`), with no page. `workspaceIngredientFacets` sits in
+`graphql/workspace-ingredient-list.ts` and takes `workspaceIngredients`'
+(`workspaceId`, `query`, the category arguments and the six facet
+arguments). Each resolver hands its arguments to its service,
+`compendiumFacets` or `workspaceIngredientFacets` in
+`services/ingredient-facets.ts`, and checks nothing itself. How each value
+is counted is [`db/compendium-read.md`](../db/compendium-read.md),
+`findCompendiumFacets`, and which rows a coven's counts read is
+[`db/stock.md`](../db/stock.md), "The workspace ingredient list".
+
+`compendiumFacets` answers one `CompendiumFacets` object and
+`workspaceIngredientFacets` one `IngredientFacets`. Neither is a list, so neither is
+a connection (a paged list), and the pagination guard, which fails a bare
+list on `Query`, has nothing to exempt. Its seven lists are bounded by the
+vocabularies and by the forms, deities and categories the counted entries
+carry. Each item's `value` has the type of the argument it would be sent
+back as, so a client can put a picked value straight into the next query.
+`CompendiumFacets` adds `withoutReferences`, how many entries cite no live
+reference under the rest of the filter, the same whether the switch is on or
+off; a coven's list has no such switch. The seven shared fields are written
+once, in `facetFields`, which both types spread.
+
+```graphql
+type CompendiumFacets {
+  # the seven fields of IngredientFacets, then:
+  withoutReferences: Int!
+}
+
+type IngredientFacets {
+  forms: [NameFacetCount!]!
+  deities: [IdFacetCount!]!
+  categories: [IdFacetCount!]!
+  zodiacSigns: [NameFacetCount!]!
+  celestialBodies: [NameFacetCount!]!
+  elements: [ElementFacetCount!]!
+  toxic: [ToxicFacetCount!]!
+}
+
+type NameFacetCount {
+  value: String!
+  count: Int!
+}
+
+type IdFacetCount {
+  value: ID!
+  count: Int!
+}
+
+type ElementFacetCount {
+  value: IngredientElement!
+  count: Int!
+}
+
+type ToxicFacetCount {
+  value: ToxicFilter! # toxic or not_toxic, never any
+  count: Int!
+}
+```
+
+`compendiumFacets` is public like `compendium`: no `signedIn` scope and no
+session, and its service caches the answer under the `compendium` tag
+([`db/compendium-cache.md`](../db/compendium-cache.md)).
+`workspaceIngredientFacets` refuses as `workspaceIngredients` does: a
+signed-out caller and a coven the caller is not in both answer `FORBIDDEN`,
+and any member, viewers included, may read it. It is never cached.
+
+`tests/modules/ingredients/graphql/ingredient-facets.test.ts` holds the
+transport's half: the arguments reaching each service, each value typed as
+its argument, the No Refs count with the switch on and off, and the refusal of a non-member naming a coven by id. The
+signed-out answers are `tests/db/graphql-query-scopes.test.ts`'s, and a
+malformed `workspaceId` is `tests/db/graphql-workspace-ids.test.ts`'s.
+
 ### Stock: `InventoryItem`, `Ingredient.stock` and the three stock writes
 
 Story 14's jars (M9.4), registered by `ingredients` in `graphql/stock.ts` over

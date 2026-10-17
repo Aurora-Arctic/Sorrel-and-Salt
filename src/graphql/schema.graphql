@@ -70,6 +70,43 @@ type CommonNameSuggestion {
   value: String!
 }
 
+"""
+How many compendium entries each search filter value would list. Each kind is counted under the rest of the filter, leaving out that kind’s own choice, except categories under categoryMode all, which are counted with the chosen ones.
+"""
+type CompendiumFacets {
+  """
+  Every category some entry or live form carries, and every chosen one, most entries first, then by id.
+  """
+  categories: [IdFacetCount!]!
+
+  """Every curated celestial body, by name, zeros included."""
+  celestialBodies: [NameFacetCount!]!
+
+  """
+  Every deity some entry is linked to, and every chosen one, most entries first, then by id.
+  """
+  deities: [IdFacetCount!]!
+
+  """Every element, in the enum’s order, zeros included."""
+  elements: [ElementFacetCount!]!
+
+  """
+  Every form some entry comes in, and every chosen form, most entries first, then by name. A form is spelled as its curated row, else as most entries spell it.
+  """
+  forms: [NameFacetCount!]!
+
+  """toxic, then not_toxic, zeros included."""
+  toxic: [ToxicFacetCount!]!
+
+  """
+  How many entries cite no live reference, on themselves or a live form, under the rest of the filter: the same whether withoutReferences is chosen or not.
+  """
+  withoutReferences: Int!
+
+  """Every curated zodiac sign, by name, zeros included."""
+  zodiacSigns: [NameFacetCount!]!
+}
+
 input CompendiumIngredientInput {
   canonicalName: String
 
@@ -176,6 +213,17 @@ input DeityTraditionInput {
   name: String!
 }
 
+"""An element, and how many entries it would list."""
+type ElementFacetCount {
+  """
+  How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
+  """
+  count: Int!
+
+  """The element, as elements takes it."""
+  value: IngredientElement!
+}
+
 enum FormGroupIcon {
   animal
   botanical
@@ -195,6 +243,19 @@ type FormSuggestion {
   """The curated row, which a pick sends; null for a value only in use."""
   id: ID
   value: String!
+}
+
+"""
+A curated deity or category, by id, and how many entries it would list.
+"""
+type IdFacetCount {
+  """
+  How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
+  """
+  count: Int!
+
+  """The curated row’s id, as deityIds or categoryIds takes it."""
+  value: ID!
 }
 
 type Ingredient {
@@ -258,6 +319,38 @@ enum IngredientElement {
   fire
   spirit
   water
+}
+
+"""
+How many of a coven’s ingredients each search filter value would list. Each kind is counted under the rest of the filter, leaving out that kind’s own choice, except categories under categoryMode all, which are counted with the chosen ones.
+"""
+type IngredientFacets {
+  """
+  Every category some entry or live form carries, and every chosen one, most entries first, then by id.
+  """
+  categories: [IdFacetCount!]!
+
+  """Every curated celestial body, by name, zeros included."""
+  celestialBodies: [NameFacetCount!]!
+
+  """
+  Every deity some entry is linked to, and every chosen one, most entries first, then by id.
+  """
+  deities: [IdFacetCount!]!
+
+  """Every element, in the enum’s order, zeros included."""
+  elements: [ElementFacetCount!]!
+
+  """
+  Every form some entry comes in, and every chosen form, most entries first, then by name. A form is spelled as its curated row, else as most entries spell it.
+  """
+  forms: [NameFacetCount!]!
+
+  """toxic, then not_toxic, zeros included."""
+  toxic: [ToxicFacetCount!]!
+
+  """Every curated zodiac sign, by name, zeros included."""
+  zodiacSigns: [NameFacetCount!]!
 }
 
 type IngredientFormGroup {
@@ -706,6 +799,19 @@ type Mutation {
   updateZodiacSign(id: ID!, input: ZodiacSignInput!): ZodiacSign!
 }
 
+"""
+A form, zodiac sign or celestial body, and how many entries it would list.
+"""
+type NameFacetCount {
+  """
+  How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
+  """
+  count: Int!
+
+  """The value as the matching argument takes it."""
+  value: String!
+}
+
 enum Nomenclature {
   botanical
   chemical
@@ -809,6 +915,47 @@ type Query {
   ): QueryCompendiumConnection!
 
   """
+  How many compendium entries each search filter value would list under the rest of the filter.
+  """
+  compendiumFacets(
+    categoryIds: [ID!]
+
+    """
+    With categoryIds: all (the default) keeps entries carrying every one of them; any keeps entries carrying at least one. A category counts when it is filed on the entry or on any live form.
+    """
+    categoryMode: CategoryMode = all
+
+    """
+    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    """
+    celestialBodies: [String!]
+
+    """Keeps entries linked to any one of these curated deities, by id."""
+    deityIds: [ID!]
+
+    """
+    Keeps entries whose elements, or those of any of their live forms, include any one of these, alone or among others.
+    """
+    elements: [IngredientElement!]
+
+    """
+    Keeps entries with a live form named any one of these, ignoring case and outer spaces.
+    """
+    forms: [String!]
+    nomenclature: Nomenclature
+    query: String
+
+    """
+    Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
+    """
+    toxic: ToxicFilter
+    withoutReferences: Boolean
+
+    """Keeps entries listing any one of these zodiac signs, ignoring case."""
+    zodiacSigns: [String!]
+  ): CompendiumFacets!
+
+  """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
   """
   deities(after: String, before: String, first: Int, last: Int, query: String, traditionId: ID): QueryDeitiesConnection!
@@ -856,6 +1003,46 @@ type Query {
   reference(id: ID!, workspaceId: ID): Reference!
   referenceSuggestions(after: String, before: String, first: Int, last: Int, query: String, workspaceId: ID): QueryReferenceSuggestionsConnection!
   users(after: String, awaitingApproval: Boolean, before: String, first: Int, last: Int, query: String, role: UserRole): QueryUsersConnection!
+
+  """
+  How many of a coven's ingredients each search filter value would list under the rest of the filter.
+  """
+  workspaceIngredientFacets(
+    categoryIds: [ID!]
+
+    """
+    With categoryIds: all (the default) keeps entries carrying every one of them; any keeps entries carrying at least one. A category counts when it is filed on the entry or on any live form.
+    """
+    categoryMode: CategoryMode = all
+
+    """
+    Keeps entries listing any one of these planets or other celestial bodies, ignoring case.
+    """
+    celestialBodies: [String!]
+
+    """Keeps entries linked to any one of these curated deities, by id."""
+    deityIds: [ID!]
+
+    """
+    Keeps entries whose elements, or those of any of their live forms, include any one of these, alone or among others.
+    """
+    elements: [IngredientElement!]
+
+    """
+    Keeps entries with a live form named any one of these, ignoring case and outer spaces.
+    """
+    forms: [String!]
+    query: String
+
+    """
+    Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
+    """
+    toxic: ToxicFilter
+    workspaceId: ID!
+
+    """Keeps entries listing any one of these zodiac signs, ignoring case."""
+    zodiacSigns: [String!]
+  ): IngredientFacets!
   workspaceIngredients(
     after: String
     before: String
@@ -1270,6 +1457,17 @@ input SubstituteInput {
 type SuggestionClaimant {
   canonicalName: String
   name: String!
+}
+
+"""A toxic setting other than any, and how many entries it would list."""
+type ToxicFacetCount {
+  """
+  How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
+  """
+  count: Int!
+
+  """toxic or not_toxic, as toxic takes it."""
+  value: ToxicFilter!
 }
 
 """

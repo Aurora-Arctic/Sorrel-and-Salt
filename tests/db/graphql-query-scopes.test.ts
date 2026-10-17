@@ -89,6 +89,10 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ compendium(first: 1) { edges { node { id } } } }',
     outcome: 'answers',
   },
+  compendiumFacets: {
+    source: '{ compendiumFacets { forms { value count } } }',
+    outcome: 'answers',
+  },
   ingredient: {
     source: 'query ($id: ID!) { ingredient(id: $id) { id } }',
     get variables() {
@@ -155,6 +159,13 @@ const PROBES: Record<string, ScopeProbe> = {
   workspaceIngredients: {
     source: `query ($workspaceId: ID!) {
       workspaceIngredients(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
+  workspaceIngredientFacets: {
+    source: `query ($workspaceId: ID!) {
+      workspaceIngredientFacets(workspaceId: $workspaceId) { forms { value count } }
     }`,
     variables: { workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',
@@ -230,6 +241,14 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
   workspaceIngredients: {
     source: `query ($workspaceId: ID!) {
       workspaceIngredients(workspaceId: $workspaceId, first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: null },
+    outcome: 'invalid',
+  },
+  // Counted over the same rows as workspaceIngredients, so always some coven's (M12.3).
+  workspaceIngredientFacets: {
+    source: `query ($workspaceId: ID!) {
+      workspaceIngredientFacets(workspaceId: $workspaceId) { forms { value count } }
     }`,
     variables: { workspaceId: null },
     outcome: 'invalid',

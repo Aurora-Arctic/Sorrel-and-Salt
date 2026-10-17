@@ -22,6 +22,7 @@ import type {
   IngredientElement,
 } from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
+import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
   ingredientFormGroups,
@@ -43,7 +44,7 @@ import {
 } from './predicates';
 import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
-import { curated } from './vocabularies';
+import { curated, inLiveGroup } from './vocabularies';
 import type {
   CompendiumScore,
   IngredientFilter,
@@ -300,11 +301,19 @@ export function findWorkspaceIngredientPage(
     ingredients,
     list.order,
     page,
-    and(
-      list.arms,
-      notHiddenByLocal(membership),
-      or(scopedTo(membership, ingredients), heldBy(membership)),
-    ),
+    and(list.arms, workspaceListScope(membership)),
+  );
+}
+
+/**
+ * Which readable rows a coven's ingredient list holds (M9.4): its own, and
+ * the compendium entries it holds, minus any a local entry hides. The page
+ * and the facets (M12.3) both read it, so they hold the same rows.
+ */
+export function workspaceListScope(membership: Membership): SQL | undefined {
+  return and(
+    notHiddenByLocal(membership),
+    or(scopedTo(membership, ingredients), heldBy(membership)),
   );
 }
 
@@ -519,7 +528,7 @@ function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
  * row comparison bounds it, and the position where its best field holds the
  * query, so Wood Ash leads Sandalwood for `wood`; a browse keys `[name]`.
  */
-function compendiumList(filter: IngredientFilter): {
+export function compendiumList(filter: IngredientFilter): {
   arms: SQL | undefined;
   order: ListOrder<CompendiumScore>;
 } {
@@ -670,6 +679,7 @@ function citesNowhere(): SQL | undefined {
  * its pairs outlive a soft-deleted variant, so the variant's liveness is read
  * here. Inside the compendium's own list the parent is already the row, so a
  * plain live-variant `EXISTS` rather than `readableVariantParent`'s tier check.
+ * The category itself must be live too, through `pointsLive`.
  */
 function categoryArms(categoryIds: readonly string[], mode: CategoryMode = 'all'): SQL[] {
   if (categoryIds.length === 0) return [];
@@ -679,10 +689,8 @@ function categoryArms(categoryIds: readonly string[], mode: CategoryMode = 'all'
       and(
         eq(ingredientCategories.ingredientId, ingredients.id),
         category,
-        or(
-          isNull(ingredientCategories.variantId),
-          existsIn(ingredientVariants, eq(ingredientVariants.id, ingredientCategories.variantId)),
-        ),
+        pairIsLive(ingredientCategories),
+        pointsLive(categories, ingredientCategories.categoryId),
       ),
     );
   return mode === 'any'
@@ -691,11 +699,24 @@ function categoryArms(categoryIds: readonly string[], mode: CategoryMode = 'all'
 }
 
 /**
+ * A category pair counts: it is the entry's own, or its variant is live. The
+ * table is hard-deleted, so a pair outlives the soft-deleted variant it
+ * belongs to, and only this says it no longer counts. Takes the pair's
+ * column, so an aliased read of the table can ask too (M12.3).
+ */
+export function pairIsLive(pair: { variantId: AnyPgColumn }): SQL | undefined {
+  return or(
+    isNull(pair.variantId),
+    existsIn(ingredientVariants, eq(ingredientVariants.id, pair.variantId)),
+  );
+}
+
+/**
  * The values of a list filter that say something, blank ones dropped, so
  * `['', 'Mars']` filters by Mars and `[' ']` by nothing (M11.22). They are
  * not folded here: the fold stays in SQL, beside the column's own.
  */
-function stated(values: readonly string[] | undefined): string[] {
+export function stated(values: readonly string[] | undefined): string[] {
   return (values ?? []).filter((value) => value.trim() !== '');
 }
 
@@ -709,7 +730,15 @@ function stated(values: readonly string[] | undefined): string[] {
 function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL | undefined {
   const wanted = stated(values);
   if (wanted.length === 0) return undefined;
-  return or(...wanted.map((value) => inArray(fold(value), listFolds(list))));
+  return or(...wanted.map((value) => listHolds(list, value)));
+}
+
+/**
+ * `list` holds an entry folding as `value` does: one value of `listArm`, and
+ * how a facet matches a curated row's name to the list (M12.3).
+ */
+export function listHolds(list: AnyPgColumn, value: SQLWrapper | string): SQL {
+  return inArray(fold(value), listFolds(list));
 }
 
 /**
@@ -720,7 +749,7 @@ function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL 
  * nothing. The toxic filter's reading. Elements are a closed set, so there is
  * nothing to fold. Empty means no filter.
  */
-function elementArm(elements: readonly IngredientElement[] | undefined): SQL | undefined {
+export function elementArm(elements: readonly IngredientElement[] | undefined): SQL | undefined {
   if (!elements?.length) return undefined;
   const wanted = [...elements];
   return or(
@@ -755,7 +784,7 @@ function formArm(forms: readonly string[] | undefined): SQL | undefined {
 }
 
 /**
- * The entry holds a live link to any of the curated deities `deityIds`
+ * The entry holds a live link to any of the live curated deities `deityIds`
  * (MB.167, M11.22): a correlated `EXISTS`, so an entry linking two of them is
  * one row, answered by `ingredient_deities_deity_id_idx`. Empty means no
  * filter.
@@ -767,8 +796,19 @@ function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
     and(
       eq(ingredientDeities.ingredientId, ingredients.id),
       inArray(ingredientDeities.deityId, deityIds),
+      pointsLive(deities, ingredientDeities.deityId),
     ),
   );
+}
+
+/**
+ * The curated row a link's `column` names is live, and so is its group:
+ * what the facets' join to the same row reads, so a value the facets count
+ * at nothing lists nothing. A curator cannot delete a row a compendium entry
+ * links, but a coven's own entry keeps its link through the delete.
+ */
+function pointsLive(vocabulary: typeof categories | typeof deities, column: AnyPgColumn): SQL {
+  return existsIn(vocabulary, and(eq(vocabulary.id, column), inLiveGroup(vocabulary)));
 }
 
 /**
@@ -779,7 +819,7 @@ function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
  * negation of the same predicate rather than a second one, so the two
  * settings always split the list between them. Absent means any.
  */
-function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
+export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
   if (!toxic) return undefined;
   const flagged = or(
     eq(ingredients.toxic, true),

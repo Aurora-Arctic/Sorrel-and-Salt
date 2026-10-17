@@ -31,13 +31,15 @@ read, hit or miss, so both answer the same types.
 
 ### What is cached
 
-Ten reads, the list and its count of each of six things, every one taking no
-session and filtering to the compendium tier or a curated vocabulary, which
-are public (MB.80):
+Eleven reads, every one taking no session and filtering to the compendium
+tier or a curated vocabulary, which are public (MB.80): the list and its count
+of each of six things, and the compendium's facet counts, how many entries
+each search filter value would list (M12.3):
 
 | Service file                                                   | Reads                                                   |
 | -------------------------------------------------------------- | ------------------------------------------------------- |
 | `ingredients/services/compendium.ts`                           | `listCompendium`, `countCompendium`                     |
+| `ingredients/services/ingredient-facets.ts`                    | `compendiumFacets`, under the key `compendium-facets`   |
 | `vocabulary/services/categories.ts`                            | `listCategories`, `countCategories`                     |
 | `vocabulary/services/ingredient-form-values.ts`                | `listIngredientFormValues`, `countIngredientFormValues` |
 | `vocabulary/services/astrology.ts`, celestial bodies and signs | `listAstrologyValues`, `countAstrologyValues`           |
@@ -56,6 +58,9 @@ Not cached, deliberately:
 - **One entry by id or by slug** (`getIngredient`, `resolveCompendiumSlug`),
   and an entry's children, which DataLoader batches per request (rule 9).
   `getIngredient` also answers a coven's own row to its members.
+- **A coven's facet counts** (`workspaceIngredientFacets`, M12.3), which
+  count the coven's own entries and the compendium entries it holds, so they
+  differ by viewer.
 - **The group vocabularies** (category groups, form groups, deity
   traditions), which only the admin pages list, and the suggestion reads,
   which draw on the current coven as well as the compendium.
