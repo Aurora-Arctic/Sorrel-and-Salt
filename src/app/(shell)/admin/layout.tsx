@@ -38,7 +38,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
       >
         <AdminNav managesPeople={role === 'admin'} />
       </ContextRow>
-      <div className="admin-layout">{children}</div>
+      <div className="page-column">{children}</div>
     </RouteModalProvider>
   );
 }

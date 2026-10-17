@@ -18,8 +18,14 @@ answer.
   (MB.57); `/sign-in`; `/invite/*`; and `/email/*`, the one prefix under
   `public/`, whose images and fonts a mail client fetches with no cookie
   (MB.66, [`email.md`](../email.md)). MB.83 adds `/compendium`, `/compendium/*`,
-  `/robots.txt` and `/sitemap.xml`: the public compendium's two pages and the
-  two files a crawler reads (MB.80). Everything else redirects, so a
+  `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/.well-known/*`: the public
+  compendium's pages and the files a crawler reads (MB.80), with the icon and
+  manifest files M11.16 will add, listed ahead of it. The `(public)` route
+  group holds these pages, and its layout draws the chrome without redirecting
+  ([`app-shell.md`](../components/app-shell.md), "Why a route group"). Off
+  production (`VERCEL_ENV` not `production`) the proxy also sets
+  `X-Robots-Tag: noindex` on every response it handles, so a preview or the
+  staging site is never indexed. Everything else redirects, so a
   route added without anyone thinking about auth is protected, not open. An
   entry is an exact path, or a path ending `/*` for everything beneath it:
   `/` admits only `/`, `/sign-in` does not admit `/sign-in-help`, and
@@ -29,8 +35,8 @@ answer.
   `/_next/*` assets and `/api/*`. Nothing in `public/` is exempt: a file placed
   there is a protected page to the matcher, redirected to `/sign-in` — HTML
   where the browser asked for an image — until the PR that adds it also adds
-  its entry, and `tests/proxy.test.ts` pins that for `/favicon.ico` and
-  `/robots.txt` — the latter until MB.83 lists it. MB.57 found this with the backdrop's images and answered it
+  its entry, and `tests/proxy.test.ts` pins that for a file with no entry of its own, such as `/robots.txt.bak`, which
+  redirects. MB.57 found this with the backdrop's images and answered it
   by importing them from their stylesheet instead, so they ship under
   `/_next/static/media` with a content hash. Any future exemption is a named
   prefix, never a file-extension pattern, for the same reason `PUBLIC_ROUTES`

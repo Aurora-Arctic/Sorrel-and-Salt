@@ -20,10 +20,13 @@ export const test = base.extend<{ coverageAutoFixture: string }, { slot: number 
   },
 
   coverageAutoFixture: [
-    async ({ context }, use) => {
+    async ({ context, javaScriptEnabled }, use) => {
       // Chromium alone has the coverage API, and only a run that asked for it
-      // pays for it (coverage.config.ts).
-      const collecting = coverageRequested && test.info().project.name === 'chromium';
+      // pays for it (coverage.config.ts). A test that turns script off is
+      // skipped: there is nothing to cover, and the debugger coverage needs
+      // refuses to start on such a page.
+      const collecting =
+        coverageRequested && javaScriptEnabled && test.info().project.name === 'chromium';
 
       // JS only: CSS coverage has no sourcemap path back to Sass.
       // claude-docs/testing/coverage.md, "Coverage".

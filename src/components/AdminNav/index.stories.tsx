@@ -9,7 +9,7 @@ import { AdminContents } from '.';
 // stub answers `/admin/users` (.ladle/navigation.ts), the People page's
 // Users tab, so People is the current page in every story. Each sits in the
 // admin layout as it is (`AdminFrame`): the nav in the context row led by
-// "Admin", above the `.admin-layout` column that holds the page.
+// "Admin", above the `.page-column` column that holds the page.
 export default {
   title: 'Admin / Admin Nav',
 };

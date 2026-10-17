@@ -16,7 +16,7 @@ area's section nav beside it (MB.7). A server component of two slots.
 
 - The layouts render it, not the shell, because only a layout knows the area.
   The coven layout renders it above its `.coven-layout` frame and the admin
-  layout above `.admin-layout` (inside `RouteModalProvider`).
+  layout above `.page-column` (inside `RouteModalProvider`).
 - The section nav leaves the row at a phone's width by its own stylesheet (it
   becomes a bar fixed along the bottom), so there the row shows the lead alone.
   The nav stretches to the row's height, so the row is a flex row with

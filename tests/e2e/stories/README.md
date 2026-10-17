@@ -61,8 +61,9 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 | `06-grimoire.spec.ts`        | 47–57      | M10.1                                     |
 | `07-admin.spec.ts`           | 17–19      | M9.1                                      |
 | `08-email-and-admin.spec.ts` | 58–62      | M9.1                                      |
+| `09-public.spec.ts`          | 63         | MB.83                                     |
 
-Stories 63–64 have no file yet.
+Story 64 has no file yet.
 
 Which old acceptance test each file replaces, and which gate e2e tests it made
 obsolete, is tabled in the decision record's "Mapping" section

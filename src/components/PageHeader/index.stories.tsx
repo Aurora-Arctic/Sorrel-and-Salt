@@ -7,7 +7,7 @@ import PageHeader from '.';
 // Render-only: a heading and its action are the whole component, so the
 // story is for the look, at desktop and at a phone's width, where the action
 // is a plus beside the heading, with its label as a tip. Each sits in the
-// admin layout as it is (`AdminFrame`; claude-docs/styling.md, "The admin layout").
+// admin layout as it is (`AdminFrame`; claude-docs/styling.md, "The page column").
 export default {
   title: 'Layout / Page Header',
 };
