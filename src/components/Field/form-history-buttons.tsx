@@ -11,9 +11,10 @@ import { RedoIcon, UndoIcon } from './icons';
  * A form's Undo and Redo buttons, and the live region that says what each
  * did. They read the surrounding form's history from `FormHistoryContext`
  * and draw nothing without one. Small and quiet icon buttons, off while
- * there is nothing to do. In a modal they go into the header, beside its
- * title, as the ingredient form's Open All does; elsewhere they sit in the
- * form's own flow (claude-docs/components/field.md, "Undo and redo").
+ * there is nothing to do. In a modal they go into the header's toolbar row,
+ * a joined pair at its end, as the ingredient form's Open All goes to its
+ * start; elsewhere they sit in the form's own flow
+ * (claude-docs/components/field.md, "Undo and redo").
  */
 export function FormHistoryButtons(): ReactElement | null {
   const history = useFormHistoryContext();
