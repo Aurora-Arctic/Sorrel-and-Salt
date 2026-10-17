@@ -228,11 +228,16 @@ export const CovenEntry: Story = () => (
   />
 );
 
-// A compendium entry as a curator reads it on a coven's route: Edit to its
-// admin modal, and the link to its public page.
+// A compendium entry as a curator reads it on a coven's route: Edit opens the
+// compendium's edit modal over the page (it has no router here, so a press
+// follows the link), and the link to its public page.
 export const CompendiumEntryForCurator: Story = () => (
   <Entry
-    edit={{ href: '/admin/compendium?edit=testwort-fixtura-testalis' as Route }}
+    edit={{
+      href: '/compendium/ingredients/testwort-fixtura-testalis?edit' as Route,
+      closeHref: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+      deletedHref: '/compendium' as Route,
+    }}
     canonical={'/compendium/ingredients/testwort-fixtura-testalis' as Route}
   />
 );

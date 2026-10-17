@@ -3,10 +3,10 @@ import { notFound } from 'next/navigation';
 import { cache } from 'react';
 import IngredientEntry from '../../../../../../components/IngredientEntry';
 import type { LinkedIngredient } from '../../../../../../components/IngredientEntry/types';
-import { compendiumHref } from '../../../../../../components/CompendiumList/href';
 import { Forbidden, NotFound } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { viewerOf } from '../../../../../../lib/viewer';
+import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import { getIngredient, ingredientDetailOf } from '@/modules/ingredients';
 import type { CovenIngredientParams } from './types';
 
@@ -49,14 +49,23 @@ export async function generateMetadata({ params }: CovenIngredientParams): Promi
     : { title: entry.name };
 }
 
-export default async function CovenIngredientPage({ params }: CovenIngredientParams) {
+export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
   const { slug, id } = await params;
   const { workspace, session, entry } = await entryOf(slug, id);
   const [detail, { viewer }] = await Promise.all([ingredientDetailOf(session, entry), viewerOf()]);
   const inCompendium = entry.workspaceId === null;
 
   // A compendium entry offers its public page's address as canonical, and Edit
-  // to a curator. A coven's own entry gets no Edit until M8.17's modal.
+  // to a curator, opening the compendium's edit modal over this page (M8.19).
+  // A coven's own entry gets no Edit until M8.17's modal. The form's values are
+  // read only for a curator who asks for them with a bare `?edit`.
+  const own = `/coven/${workspace.slug}/ingredients/${entry.id}` as Route;
+  const canEdit = inCompendium && viewer.canCurate;
+  const opened =
+    canEdit && 'edit' in (await searchParams)
+      ? { id: entry.id, values: await entryValues(entry) }
+      : undefined;
+
   const hrefOf = ({ id, slug, workspaceId }: LinkedIngredient): Route | undefined => {
     if (workspaceId === null) return publicAddress(slug);
     if (workspaceId === workspace.id) return `/coven/${workspace.slug}/ingredients/${id}` as Route;
@@ -69,8 +78,17 @@ export default async function CovenIngredientPage({ params }: CovenIngredientPar
         detail={detail}
         hrefOf={hrefOf}
         edit={
-          inCompendium && viewer.canCurate
-            ? { href: compendiumHref({}, { edit: entry.slug }) }
+          canEdit
+            ? {
+                href: `${own}?edit` as Route,
+                closeHref: own,
+                // The coven has no ingredients list yet, and this entry is a
+                // compendium one, so a delete leaves to the compendium's.
+                deletedHref: '/compendium' as Route,
+                // The address names the entry's id, which a save leaves be.
+                savedHref: `${own}?edit` as Route,
+                opened,
+              }
             : undefined
         }
         canonical={inCompendium ? publicAddress(entry.slug) : undefined}

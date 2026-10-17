@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
+import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { entryDetail } from '../../../support/entry-detail';
 
 // A coven's ingredient page (M8.19). The guard and the services are mocked,
@@ -11,7 +12,9 @@ import { entryDetail } from '../../../support/entry-detail';
 const notFound = vi.fn(() => {
   throw new Error('not-found');
 });
-vi.mock('next/navigation', () => ({ notFound }));
+// The edit dialog is a client part, which asks for the router.
+const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
+vi.mock('next/navigation', () => ({ notFound, useRouter: () => router }));
 
 const requireCovenMembership = vi.fn();
 const requireSession = vi.fn();
@@ -24,23 +27,40 @@ const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
 vi.mock('@/modules/ingredients', () => ({ getIngredient, ingredientDetailOf }));
 
+// The form is its own tests'; here only that the dialog holds one.
+vi.mock('@/components/IngredientForm', () => ({
+  default: () => <form aria-label="Fixture Form" />,
+}));
+
+const entryValues = vi.fn();
+vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+
 const { default: Page, generateMetadata } =
   await import('@/app/(shell)/coven/[slug]/ingredients/[id]/page');
 
 const WORKSPACE = { id: 'w-fixture', name: 'Fixture Coven', slug: 'fixture-coven' };
 const SESSION = { userId: 'u-member', role: 'user' };
 const ID = '00000000-0000-4000-8000-000000000001';
-const params = (id = ID) => ({ params: Promise.resolve({ slug: WORKSPACE.slug, id }) });
+const params = (id = ID, search: Record<string, string> = {}) => ({
+  params: Promise.resolve({ slug: WORKSPACE.slug, id }),
+  searchParams: Promise.resolve(search),
+});
 
 const compendiumRow = () => entryDetail().entry;
 const covenRow = () => entryDetail({ workspaceId: WORKSPACE.id, slug: 'testwort-own' }).entry;
 const edits = () => screen.queryAllByRole('link', { name: /edit/i });
 
-const open = async (row: ReturnType<typeof compendiumRow>, canCurate = false) => {
+const dialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+
+const open = async (
+  row: ReturnType<typeof compendiumRow>,
+  canCurate = false,
+  search: Record<string, string> = {},
+) => {
   getIngredient.mockResolvedValue(row);
   ingredientDetailOf.mockResolvedValue({ ...entryDetail(), entry: row });
   viewerOf.mockResolvedValue({ viewer: { name: 'Fixture Member', canCurate }, workspaces: [] });
-  render(await Page(params()));
+  render(await Page(params(ID, search)));
 };
 
 beforeEach(() => {
@@ -50,6 +70,7 @@ beforeEach(() => {
     membership: { workspaceId: WORKSPACE.id, userId: SESSION.userId, role: 'member' },
   });
   requireSession.mockResolvedValue(SESSION);
+  entryValues.mockResolvedValue(EMPTY_VALUES);
 });
 
 describe('the coven ingredient page', () => {
@@ -110,13 +131,29 @@ describe('the coven ingredient page', () => {
     expect(edits()).toHaveLength(0);
   });
 
-  it('gives a curator Edit on a compendium entry, to the admin screen', async () => {
+  it('gives a curator Edit on a compendium entry, on this very page, with no dialog until asked', async () => {
     await open(compendiumRow(), true);
 
     const target = new URL(edits()[0]!.getAttribute('href')!, 'http://fixture.test');
     expect(edits()).toHaveLength(1);
-    expect(target.pathname).toBe('/admin/compendium');
-    expect(target.searchParams.get('edit')).toBe('testwort-fixtura-testalis');
+    expect(target.pathname).toBe(`/coven/${WORKSPACE.slug}/ingredients/${ID}`);
+    expect(target.searchParams.has('edit')).toBe(true);
+    expect(dialog()).not.toBeInTheDocument();
+    expect(entryValues).not.toHaveBeenCalled();
+  });
+
+  it('opens the edit dialog on a curator who asks for it with a bare ?edit', async () => {
+    await open(compendiumRow(), true, { edit: '' });
+
+    expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: ID }));
+    expect(dialog()).toBeInTheDocument();
+  });
+
+  it('opens no dialog, and reads nothing for it, for a member who asks for one', async () => {
+    await open(compendiumRow(), false, { edit: '' });
+
+    expect(dialog()).not.toBeInTheDocument();
+    expect(entryValues).not.toHaveBeenCalled();
   });
 
   it("gives the coven's own entry neither the public link nor Edit, even to a curator", async () => {
@@ -125,6 +162,13 @@ describe('the coven ingredient page', () => {
     expect(screen.getByText('Local')).toBeVisible();
     expect(screen.queryByRole('link', { name: 'View in the Compendium' })).toBeNull();
     expect(edits()).toHaveLength(0);
+  });
+
+  it("opens no dialog on the coven's own entry, even for a curator who asks for one", async () => {
+    await open(covenRow(), true, { edit: '' });
+
+    expect(dialog()).not.toBeInTheDocument();
+    expect(entryValues).not.toHaveBeenCalled();
   });
 });
 

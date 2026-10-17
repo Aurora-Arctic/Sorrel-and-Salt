@@ -2,9 +2,9 @@ import type { Metadata, Route } from 'next';
 import { notFound, permanentRedirect } from 'next/navigation';
 import IngredientEntry from '../../../../../components/IngredientEntry';
 import type { LinkedIngredient } from '../../../../../components/IngredientEntry/types';
-import { compendiumHref } from '../../../../../components/CompendiumList/href';
 import { NotFound } from '../../../../../lib/errors';
 import { viewerIfSignedIn } from '../../../../../lib/viewer';
+import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import { readCompendiumEntry } from '@/modules/ingredients';
 import type { CompendiumEntryParams } from './types';
 
@@ -45,7 +45,7 @@ export async function generateMetadata({ params }: CompendiumEntryParams): Promi
 const hrefOf = ({ slug, workspaceId }: LinkedIngredient): Route | undefined =>
   workspaceId === null ? addressOf(slug) : undefined;
 
-export default async function CompendiumEntryPage({ params }: CompendiumEntryParams) {
+export default async function CompendiumEntryPage({ params, searchParams }: CompendiumEntryParams) {
   const { slug } = await params;
   const found = await entryAt(slug);
   if (!found) notFound();
@@ -53,14 +53,30 @@ export default async function CompendiumEntryPage({ params }: CompendiumEntryPar
 
   const shell = await viewerIfSignedIn();
   const { detail, movedAway } = found;
+  const entry = detail.entry;
+
+  // Edit opens the compendium's edit modal over this page (M8.19), so the
+  // address carries a bare `?edit`. The form's values are read only for a
+  // curator who asks for them, since they are the longest read the page makes.
+  const canEdit = shell?.viewer.canCurate === true;
+  const own = addressOf(entry.slug);
+  const opened =
+    canEdit && 'edit' in (await searchParams)
+      ? { id: entry.id, values: await entryValues(entry) }
+      : undefined;
 
   return (
     <IngredientEntry
       detail={detail}
       hrefOf={hrefOf}
       edit={
-        shell?.viewer.canCurate
-          ? { href: compendiumHref({}, { edit: detail.entry.slug }) }
+        canEdit
+          ? {
+              href: `${own}?edit` as Route,
+              closeHref: own,
+              deletedHref: '/compendium' as Route,
+              opened,
+            }
           : undefined
       }
       movedAway={movedAway ? { name: movedAway.name, href: addressOf(movedAway.slug) } : undefined}

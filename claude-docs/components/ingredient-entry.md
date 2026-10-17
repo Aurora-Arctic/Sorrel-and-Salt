@@ -2,7 +2,7 @@
 
 `src/components/IngredientEntry/` — the body of an ingredient's page, the same on the public compendium route and a coven's (M8.19): the entry's own fields, then one section for each form it comes in.
 
-Two routes render it: `/compendium/ingredients/[slug]`, which anyone can read, signed out included, and `/coven/[slug]/ingredients/[id]`, which a coven's members read. Each route reads an `IngredientDetail` (`src/modules/ingredients/types.ts`) through `ingredientDetailOf` and hands it over; the component reads nothing itself. It is a server component: no hook and no `'use client'`, so either page renders it directly. `PageNav` inside it is a client component, which a server component may render.
+Two routes render it: `/compendium/ingredients/[slug]`, which anyone can read, signed out included, and `/coven/[slug]/ingredients/[id]`, which a coven's members read. Each route reads an `IngredientDetail` (`src/modules/ingredients/types.ts`) through `ingredientDetailOf` and hands it over; the component reads nothing itself. It is a server component: no hook and no `'use client'`, so either page renders it directly. `PageNav` inside it is a client component, which a server component may render, and so are Edit's two parts when `edit` is given: `edit-button.tsx` and `entry-dialog.tsx` ("Edit", below).
 
 The route gives the page's `<main>`. The component's root is an `<article class="ingredient-entry">`, laid out by its own stylesheet ("Layout", below) rather than by `.page-with-nav`, whose content column is the narrow one.
 
@@ -10,13 +10,13 @@ The route gives the page's `<main>`. The component's root is an `<article class=
 
 `IngredientEntryProps` (`types.ts`):
 
-| Prop        | What it is                                                                                                                                                                   |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `detail`    | The entry, its folk names, categories with their groups, deities, substitutes, and one `VariantDetail` per live form in form order                                           |
-| `hrefOf`    | `(ingredient: { id, slug, workspaceId }) => Route \| undefined`: where a linked substitute's page is. `undefined` sets the name as text                                      |
-| `edit`      | `{ href: Route }`: an Edit link, quiet and medium, as the page header's action. Left out, no Edit. There is never a Delete here: M8.15, folded into M8.19, offers it nowhere |
-| `movedAway` | `{ name, href: Route }`: the entry that moved off this address while its redirect is still served (MB.82), linked at its page now                                            |
-| `canonical` | `Route`: the public page of a compendium entry, shown as a "View in the Compendium" link. The coven route passes it for a compendium entry                                   |
+| Prop        | What it is                                                                                                                                                                                                                                                                                 |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `detail`    | The entry, its folk names, categories with their groups, deities, substitutes, and one `VariantDetail` per live form in form order                                                                                                                                                         |
+| `hrefOf`    | `(ingredient: { id, slug, workspaceId }) => Route \| undefined`: where a linked substitute's page is. `undefined` sets the name as text                                                                                                                                                    |
+| `edit`      | `{ href, closeHref, deletedHref, savedHref?, opened? }` (`IngredientEntryEdit`): an Edit link, quiet and medium, as the page header's action, that opens the compendium's edit modal over this page. Left out, no Edit and no provider. There is never a Delete here beyond the form's own |
+| `movedAway` | `{ name, href: Route }`: the entry that moved off this address while its redirect is still served (MB.82), linked at its page now                                                                                                                                                          |
+| `canonical` | `Route`: the public page of a compendium entry, shown as a "View in the Compendium" link. The coven route passes it for a compendium entry                                                                                                                                                 |
 
 Every address is typed as Next's `Route`, as other components' `href` props are, so the caller casts a built string once (`as Route`) where typed routes cannot check it.
 
@@ -26,7 +26,7 @@ In page order, with the accessible names a test or a story walk finds them by:
 
 1. **The head**, a `<header>` inside the article:
    - The formal name (below), an eyebrow over the heading.
-   - `PageHeader`: the `h1` is `entry.name`; `edit` puts a `.btn` link named **Edit** at the end of its line. From the tablet width up the head keeps to the text column (the section grid's first column), so the formal name ends where the description's text does.
+   - `PageHeader`: the `h1` is `entry.name`; `edit` puts a `.btn` link named **Edit** (`EditButton`) at the end of its line. From the tablet width up the head keeps to the text column (the section grid's first column), so the formal name ends where the description's text does.
    - A `.badges` row, drawn only when it holds something: **Local** (`.badge--local`) when `entry.workspaceId` is set, then `ToxicMark` for the entry and every form, so a toxic form marks the entry though the ingredient is not.
    - `canonical`: a link named **View in the Compendium**.
    - `movedAway`: a quiet warning `Notice`, a `status`, holding a link named after the moved entry.
@@ -60,6 +60,15 @@ Inside a form, the lists are named by the form's name and then the heading — "
 - **Safety is drawn by `SafetyNote` and `ToxicMark` only** (M8.13a). The ingredient's note sits in Details; each form's sits in its own section, given that form's notes as `safetyNotes`, since the section's heading already names the form.
 - **The notes slot.** The forms' wrapper is the article's last child, and v2's notes section is appended after it, so adding it moves nothing above. MB.155's references go in Details' side column, beneath the substitutes, where a comment marks the place.
 - **Meaning never by colour alone.** Local and Toxic carry their words; a category chip carries its name, its colour repeating its group.
+
+## Edit
+
+A curator's Edit opens the compendium's edit modal over the entry's own page, not the admin list's (M8.19).
+
+- `edit.href` is the page's own address with a bare `?edit`; `closeHref` is the address without it. The page reads `searchParams` and, for a curator who has `?edit` (and only then), reads the form's values with `entryValues` (`src/app/(shell)/admin/compendium/entry-values.ts`, server-only) and passes them as `opened`. A visitor, a reader who cannot curate, or a page without `?edit` costs no such read.
+- `IngredientEntry` wraps its output in `RouteModalProvider` when `edit` is given, so a press opens the dialog at once over a skeleton while the page loads ([`modal.md`](modal.md), "Opening at once"). `EditButton` is the link with `useOpenModalClick`; `EntryDialog` is the `RouteModal` and, once `opened` is present, `IngredientForm` in it. Only the entry's id, names and nomenclature cross to those two client parts.
+- A save keeps the modal open, as the admin list's does: the page replaces its address (the public route follows a renamed slug; the coven route, which names the id, passes `savedHref`) and refreshes. Cancel closes to `closeHref`. A delete replaces to `deletedHref` rather than going back to a page that is now gone (the compendium's list, from either route).
+- The coven route offers it for a compendium entry only; a coven's own entry still gets no Edit until M8.17.
 
 ## Styling
 
@@ -103,12 +112,12 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - a form that adds nothing still says something, and a form's section holds only the rows and lists it carries;
 - the jump menu links to Details and each form, the forms in a list named Forms apart from Details, and is absent with no forms;
 - the correspondences and the three lists share a column inside Details, after the description and caution and holding neither, and no `complementary` landmark is drawn; a form's rows and list do likewise;
-- Edit is there only with `edit`, and Delete never;
+- Edit is there only with `edit`; a press opens the edit dialog over the page, and the dialog's form is drawn only when `edit.opened` is, which a page gives only for a curator on a bare `?edit`;
 - `canonical` and `movedAway` link where they say.
 
 **Checked in a real browser:** `tests/e2e/compendium-entry.spec.ts` scans the public page with axe and at a phone's width, and story 17 scans it again as a non-admin.
 
 ## The two routes
 
-- **`/compendium/ingredients/[slug]`** (`src/app/(public)/`) reads `readCompendiumEntry(slug)`, which takes no session. An unknown slug and a coven entry's slug both answer 404 (`notFound()`); a slug the entry has moved off answers `permanentRedirect` to its current address, a 308. The page asks `viewerIfSignedIn()` only to offer a curator Edit, `/admin/compendium?edit=<slug>`; a visitor with no session reads the same page. It draws no `<main>`, since the `(public)` layout does. A compendium ingredient it links is `/compendium/ingredients/<slug>`; a coven's own is not linked, as the public page would answer 404. Its title is the entry's name; the description and canonical link are MB.84's.
-- **`/coven/[slug]/ingredients/[id]`** (`src/app/(shell)/`) runs `requireCovenMembership(slug)`, then `requireSession()` (the shell layout skips the email check), then `getIngredient(session, id, workspace.id)`. A non-member, and an id the coven cannot see, answer 404. It draws its own `<main>`. For a compendium entry it passes `canonical` (the public page's path, relative since the origin varies by deployment) and, for a curator, `edit`; it also sets `alternates.canonical` in its metadata. A coven's own entry gets neither, and no Edit until M8.17. It links a compendium ingredient to the public page and the coven's own to `/coven/<slug>/ingredients/<id>`.
+- **`/compendium/ingredients/[slug]`** (`src/app/(public)/`) reads `readCompendiumEntry(slug)`, which takes no session. An unknown slug and a coven entry's slug both answer 404 (`notFound()`); a slug the entry has moved off answers `permanentRedirect` to its current address, a 308. The page asks `viewerIfSignedIn()` only to offer a curator Edit, which opens the edit modal on this same page (`?edit`, "Edit", below); a visitor with no session reads the same page. It draws no `<main>`, since the `(public)` layout does. A compendium ingredient it links is `/compendium/ingredients/<slug>`; a coven's own is not linked, as the public page would answer 404. Its title is the entry's name; the description and canonical link are MB.84's.
+- **`/coven/[slug]/ingredients/[id]`** (`src/app/(shell)/`) runs `requireCovenMembership(slug)`, then `requireSession()` (the shell layout skips the email check), then `getIngredient(session, id, workspace.id)`. A non-member, and an id the coven cannot see, answer 404. It draws its own `<main>`. For a compendium entry it passes `canonical` (the public page's path, relative since the origin varies by deployment) and, for a curator, `edit` (the same modal, at the coven's own address); it also sets `alternates.canonical` in its metadata. A coven's own entry gets neither, and no Edit until M8.17. It links a compendium ingredient to the public page and the coven's own to `/coven/<slug>/ingredients/<id>`.

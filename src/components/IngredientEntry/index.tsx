@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import type { ReactElement, ReactNode } from 'react';
 import FormIcon from '../FormIcon';
+// From its own client file: the Modal index re-exports modules a server
+// component cannot import.
+import { RouteModalProvider } from '../Modal/route-modal-provider';
 import Notice from '../Notice';
 import PageHeader from '../PageHeader';
 import PageNav from '../PageNav';
@@ -21,6 +24,8 @@ import type {
   SubstituteDetail,
   VariantDetail,
 } from '@/modules/ingredients';
+import EditButton from './edit-button';
+import EntryDialog from './entry-dialog';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
 
@@ -28,7 +33,9 @@ import './index.scss';
 // coven's (M8.19): the entry's own fields, then one section per form. No
 // hook and no client directive, so either server page renders it directly;
 // the ids are built from the entry's own data rather than `useId`, since a
-// page holds one entry. claude-docs/components/ingredient-entry.md.
+// page holds one entry. Edit is the exception in kind only: it is two small
+// client parts, a link and the modal it opens, which this server component
+// renders. claude-docs/components/ingredient-entry.md.
 
 /** Blank counts as nothing said, as `SafetyNote` counts it. */
 const said = (text: string | null | undefined): text is string => (text ?? '').trim() !== '';
@@ -335,7 +342,15 @@ const IngredientEntry = ({
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   const anchors = formAnchors(variants);
 
-  return (
+  // Only the fields the client parts use cross to them, not the whole row.
+  const editable = {
+    id: entry.id,
+    name: entry.name,
+    canonicalName: entry.canonicalName,
+    nomenclature: entry.nomenclature,
+  };
+
+  const page = (
     <article
       className={
         variants.length > 0 ? 'ingredient-entry ingredient-entry--with-nav' : 'ingredient-entry'
@@ -345,13 +360,7 @@ const IngredientEntry = ({
         <FormalName entry={entry} />
         <PageHeader
           title={entry.name}
-          action={
-            edit && (
-              <Link className="btn btn--quiet btn--medium" href={edit.href}>
-                Edit
-              </Link>
-            )
-          }
+          action={edit && <EditButton href={edit.href} entry={editable} />}
         />
         {(local || toxic) && (
           <div className="badges">
@@ -454,6 +463,19 @@ const IngredientEntry = ({
         </section>
       )}
     </article>
+  );
+
+  // The provider holds a pressed Edit on its way, shared by the link and the
+  // dialog (M9.18). The admin layout has one above its pages; these two routes
+  // have none, and a provider already above is kept, so this one is safe
+  // beneath any. Only an entry that can be edited needs it.
+  return edit ? (
+    <RouteModalProvider>
+      {page}
+      <EntryDialog entry={editable} edit={edit} />
+    </RouteModalProvider>
+  ) : (
+    page
   );
 };
 

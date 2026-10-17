@@ -1,8 +1,11 @@
-import { render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import type { Route } from 'next';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientEntry from '@/components/IngredientEntry';
 import type { IngredientEntryProps } from '@/components/IngredientEntry/types';
+import type { IngredientFormProps } from '@/components/IngredientForm/types';
+import { EMPTY_VALUES } from '@/components/IngredientForm/values';
+import { Navigating } from '../../support/navigating';
 import type {
   IngredientRow,
   CategoryDetail,
@@ -10,6 +13,34 @@ import type {
   IngredientVariantRow,
   VariantDetail,
 } from '@/modules/ingredients';
+
+const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+
+// The form is its own tests': a stand-in that reports what the dialog hands
+// it, with a button for each way out it can take.
+vi.mock('@/components/IngredientForm', () => ({
+  default: ({ entry, onSaved, onDeleted, duplicateHref, entryHref }: IngredientFormProps) => (
+    <form aria-label="Fixture Form">
+      <output aria-label="Edited">{entry?.id}</output>
+      <output aria-label="Duplicate Address">
+        {duplicateHref({ slug: 'testwort-other' } as never)}
+      </output>
+      <output aria-label="Linked Address">
+        {entryHref?.({ slug: 'testwort-linked', isGlobal: true })}
+      </output>
+      <button
+        type="button"
+        onClick={() => onSaved?.({ slug: 'testwort-renamed' } as never, 'open')}
+      >
+        Fixture Save
+      </button>
+      <button type="button" onClick={() => onDeleted?.()}>
+        Fixture Delete
+      </button>
+    </form>
+  ),
+}));
 
 // The page body both entry routes render (M8.19;
 // claude-docs/components/ingredient-entry.md). Every name and value below is
@@ -386,19 +417,6 @@ describe('IngredientEntry', () => {
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
   });
 
-  it('offers Edit only when given where it goes, and never Delete', () => {
-    const { unmount } = renderEntry();
-    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
-    unmount();
-
-    const href = '/admin/compendium?edit=testwort-fixtura-testalis' as Route;
-    renderEntry({ edit: { href } });
-    expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', href);
-    expect(screen.queryByRole('link', { name: /delete/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
-  });
-
   it('links to the public page when given its address', () => {
     const canonical = '/compendium/ingredients/testwort-fixtura-testalis' as Route;
     const { unmount } = renderEntry();
@@ -425,5 +443,102 @@ describe('IngredientEntry', () => {
       'href',
       href,
     );
+  });
+});
+
+describe('IngredientEntry edit', () => {
+  const PUBLIC = '/compendium/ingredients/testwort-fixtura-testalis';
+  const edit = (overrides: Partial<NonNullable<IngredientEntryProps['edit']>> = {}) => ({
+    href: `${PUBLIC}?edit` as Route,
+    closeHref: PUBLIC as Route,
+    deletedHref: '/compendium' as Route,
+    ...overrides,
+  });
+  const opened = { id: '00000000-0000-4000-8000-000000000001', values: EMPTY_VALUES };
+  const dialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+
+  beforeEach(() => {
+    router.push.mockReset();
+    router.replace.mockReset();
+    router.refresh.mockReset();
+  });
+
+  it('offers Edit only when given where it goes, and never Delete', () => {
+    const { unmount } = renderEntry();
+    expect(screen.queryByRole('link', { name: 'Edit' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Edit' })).not.toBeInTheDocument();
+    unmount();
+
+    renderEntry({ edit: edit() });
+    expect(screen.getByRole('link', { name: 'Edit' })).toHaveAttribute('href', `${PUBLIC}?edit`);
+    expect(screen.queryByRole('link', { name: /delete/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /delete/i })).not.toBeInTheDocument();
+  });
+
+  it('opens the dialog on a press of Edit, over a status, while the page with the form is on its way', async () => {
+    render(
+      <Navigating push={router.push}>
+        <IngredientEntry detail={detail()} hrefOf={hrefOf} edit={edit()} />
+      </Navigating>,
+    );
+    expect(dialog()).not.toBeInTheDocument();
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('link', { name: 'Edit' }));
+    });
+
+    expect(router.push).toHaveBeenCalledWith(`${PUBLIC}?edit`);
+    expect(within(dialog()!).getByRole('status')).toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: 'Fixture Form' })).not.toBeInTheDocument();
+  });
+
+  it('draws the form in a dialog when the page was opened with it, and no dialog otherwise', () => {
+    const { unmount } = renderEntry({ edit: edit() });
+    expect(dialog()).not.toBeInTheDocument();
+    unmount();
+
+    renderEntry({ edit: edit({ opened }) });
+    const open = dialog()!;
+    expect(open).toBeInTheDocument();
+    expect(within(open).getByRole('form', { name: 'Fixture Form' })).toBeInTheDocument();
+    expect(within(open).getByRole('status', { name: 'Edited' })).toHaveTextContent(opened.id);
+  });
+
+  it('links a near match and a linked substitute to their public pages', () => {
+    renderEntry({ edit: edit({ opened }) });
+
+    expect(screen.getByRole('status', { name: 'Duplicate Address' })).toHaveTextContent(
+      '/compendium/ingredients/testwort-other',
+    );
+    expect(screen.getByRole('status', { name: 'Linked Address' })).toHaveTextContent(
+      '/compendium/ingredients/testwort-linked',
+    );
+  });
+
+  it('keeps the dialog open at the address its saved slug now spells', () => {
+    renderEntry({ edit: edit({ opened }) });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fixture Save' }));
+
+    expect(router.replace).toHaveBeenCalledWith('/compendium/ingredients/testwort-renamed?edit');
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps to the page it was given after a save, where the slug is not in the address', () => {
+    const savedHref = '/coven/fixture-coven/ingredients/fixture-id?edit' as Route;
+    renderEntry({ edit: edit({ opened, savedHref }) });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fixture Save' }));
+
+    expect(router.replace).toHaveBeenCalledWith(savedHref);
+    expect(router.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves the page the entry no longer has once it is deleted', () => {
+    renderEntry({ edit: edit({ opened }) });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fixture Delete' }));
+
+    expect(router.replace).toHaveBeenCalledWith('/compendium');
   });
 });
