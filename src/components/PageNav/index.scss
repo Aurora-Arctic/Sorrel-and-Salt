@@ -62,12 +62,13 @@
     margin-block-start: space(2);
   }
 
-  // A group's entries, a step in from its label on a phone, where the text
-  // is left-aligned. Not on a wide screen: there the text is right-aligned,
-  // and a step in from the right pushed the entries off the column's edge
-  // (the owner's call at M8.19); the label alone sets them apart.
+  // A group's entries, a half-step in from its label on a phone, where the
+  // text is left-aligned: a whole step read as too much room to their left
+  // (the owner's call at M8.19). Not on a wide screen: there the text is
+  // right-aligned, and a step in from the right pushed the entries off the
+  // column's edge (the same call); the label alone sets them apart.
   ul ul a {
-    padding-inline-start: space(6);
+    padding-inline-start: space(5);
   }
 
   // Beside a group, a top-level entry is the page's own section and reads a
