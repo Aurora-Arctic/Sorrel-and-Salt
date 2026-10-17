@@ -1100,6 +1100,25 @@ describe('IngredientForm’s variants', () => {
     const settle = () => act(async () => {});
     const listedIn = (card: HTMLElement) => openIn(card);
 
+    it('takes an added variant out, and gives back the form typed for it, on one undo; a redo adds it again', async () => {
+      renderForm({ workspaceId: WORKSPACE_ID });
+      type(document.body, 'Name', 'Testwort');
+      addVariant('Oil');
+      await settle();
+      expect(variant('Oil')).toBeInTheDocument();
+      expect(newForm()).toHaveValue('');
+
+      undo();
+
+      noVariant('Oil');
+      expect(newForm()).toHaveValue('Oil');
+
+      redo();
+
+      expect(variant('Oil')).toBeInTheDocument();
+      expect(newForm()).toHaveValue('');
+    });
+
     it('opens the closed section an undone change was made in, and redoes it', async () => {
       renderForm({
         workspaceId: null,

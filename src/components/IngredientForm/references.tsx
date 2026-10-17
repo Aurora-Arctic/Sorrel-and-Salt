@@ -214,8 +214,11 @@ export function ReferencesField({
   const pick = (_value: string, option: ReferenceOption | null) => {
     // The list has no typed row, so every pick is a source.
     if (!option) return;
-    add(option.value, option.link);
+    // Cleared before the append, not after: the field array tells the form's
+    // history of its new row in an effect, later, while setValue tells it at
+    // once, so clearing second would hide the row from undo.
     setValue(box, '');
+    add(option.value, option.link);
     revalidate();
   };
   const removeAt = (index: number) => {

@@ -216,6 +216,11 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
       refuse('repeat', why);
       return;
     }
+    // Cleared before the prepend, not after: the field array tells the form's
+    // history of its new row in an effect, later, while setValue tells it at
+    // once, so clearing second would fold the row into the clear's step and
+    // hide it from undo.
+    setValue(BOX, '');
     // Not focused by the field array, which would take the new Form box: the
     // New Form box keeps it, ready for the next. The new variant goes first,
     // just beneath the box, and opens, the owner's call, closing whichever was.
@@ -223,7 +228,6 @@ export function VariantsField({ workspaceId, fold, folds }: VariantsFieldProps):
     setOpen(0);
     // Every section open, as a new entry opens (MB.115).
     folds.added();
-    setValue(BOX, '');
     clearErrors(BOX);
     setAnnouncement(`Added ${form}`);
     if (isSubmitted) void trigger(BOX);

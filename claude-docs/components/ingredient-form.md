@@ -1176,6 +1176,8 @@ is asked over the form (the discard guard, a delete, or the form's own
 Redo pair at its end: `FormHistoryButtons` is drawn just after the Open All
 portal, and the pair's own `margin-inline-start: auto` carries it to the end.
 
+**An add and its draft clear are one step.** Adding a variant or picking a reference clears its typing box first and then adds the row, because the field array reports its new row to the form's history in an effect while `setValue` reports at once; clearing second would hide the row from undo. One undo takes the row out and gives back the typed text.
+
 **Two resets clear the history.** A step that leads back past a save would
 undo what the server now holds. After Save & Add Another's `reset(EMPTY_VALUES)`
 the form calls `history.clear()`, and so it does after an edit's save, where

@@ -19,7 +19,7 @@ import {
   renderWithClient,
   waitFor,
 } from '../../support/ingredient-form';
-import { press, typeIn } from '../../support/interact';
+import { press, redo, typeIn, undo } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import {
   NEW_REFERENCE_ID,
@@ -682,6 +682,25 @@ describe('ReferencesField', () => {
   // the mutation and clear them for the next ingredient, and route a
   // server's issue on one source to its row.
   describe('on the whole form', () => {
+    it('takes a picked source out, and gives back the text typed to find it, on one undo; a redo picks it again', async () => {
+      renderForm();
+      const calls = offerReferences([HERBAL]);
+
+      await pick(calls, 'fixture', HERBAL.citation);
+      expect(rows()).toHaveLength(1);
+      expect(box()).toHaveValue('');
+
+      undo();
+
+      expect(rows()).toHaveLength(0);
+      expect(box()).toHaveValue('fixture');
+
+      redo();
+
+      expect(rows()).toHaveLength(1);
+      expect(box()).toHaveValue('');
+    });
+
     it('sends each source by its id with its locator as typed, and no citation text, clearing them after Save & Add Another', async () => {
       const saves = acceptCreate();
       const onSaved = renderForm();
