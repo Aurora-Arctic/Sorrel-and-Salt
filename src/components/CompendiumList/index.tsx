@@ -4,7 +4,7 @@ import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
-import { NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
+import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
 import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
 import type {
@@ -78,12 +78,14 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
  * the classification Botanical. Change or clear the filter to see more." With no
  * filter, the compendium itself is empty, and says how to begin it.
  */
-function emptyText({ query, form, nomenclature, withoutReferences }: Filter): string {
+function emptyText({ query, form, nomenclature, withoutReferences, elements }: Filter): string {
   const filters = [
     query && `“${query}”`,
     form && `the form “${form}”`,
     nomenclature && `the classification ${labelOf(NOMENCLATURE_OPTIONS, nomenclature)}`,
     withoutReferences && 'No Refs',
+    elements.length > 0 &&
+      `the ${elements.length === 1 ? 'element' : 'elements'} ${elements.map((each) => labelOf(ELEMENT_OPTIONS, each)).join(' or ')}`,
   ].filter((filter): filter is string => Boolean(filter));
   return noMatchText(
     'entries',
@@ -103,11 +105,7 @@ const CompendiumList = ({
   <IngredientSearch
     search={
       // Keyed by the filter shown, so another one starts the form again from it.
-      <CompendiumListFilter
-        key={`${filter.query}\n${filter.form}\n${filter.nomenclature}\n${filter.withoutReferences}`}
-        filter={filter}
-        forms={forms}
-      />
+      <CompendiumListFilter key={JSON.stringify(filter)} filter={filter} forms={forms} />
     }
     previousHref={previousHref}
     nextHref={nextHref}

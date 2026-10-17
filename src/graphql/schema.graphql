@@ -770,6 +770,11 @@ type Query {
 
     """Keeps entries linked to any one of these curated deities, by id."""
     deityIds: [ID!]
+
+    """
+    Keeps entries whose elements include any one of these, alone or among others.
+    """
+    elements: [IngredientElement!]
     first: Int
 
     """
@@ -850,6 +855,11 @@ type Query {
 
     """Keeps entries linked to any one of these curated deities, by id."""
     deityIds: [ID!]
+
+    """
+    Keeps entries whose elements include any one of these, alone or among others.
+    """
+    elements: [IngredientElement!]
     first: Int
 
     """

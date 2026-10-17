@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { RowId, optionalText } from '../../../lib/validation';
-import { NOMENCLATURE_KINDS, TOXIC_FILTERS } from '../schema/ingredient-enums';
+import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS, TOXIC_FILTERS } from '../schema/ingredient-enums';
 
 // The compendium list's filter as the `compendium` query receives it, parsed
 // by the service because the browser is not the only caller. Zod only, like
@@ -38,6 +38,16 @@ const filterIds = z
   .transform((ids) => (ids && ids.length > 0 ? ids : undefined));
 
 /**
+ * A list of elements as a filter takes it: a value that is none of the five is
+ * refused rather than matched to nothing, and a list left empty, null or
+ * missing is no filter. Any one of them matches (M8.13).
+ */
+const filterElements = z
+  .array(z.enum(INGREDIENT_ELEMENTS))
+  .nullish()
+  .transform((elements) => (elements && elements.length > 0 ? elements : undefined));
+
+/**
  * The shortest query that searches. One character is a trigram or two that
  * half the compendium shares at the search's threshold, so it filters and
  * ranks by noise; shorter is no search at all.
@@ -57,6 +67,8 @@ export const CompendiumFilter = z.object({
   deityIds: filterIds,
   zodiacSigns: filterTexts,
   celestialBodies: filterTexts,
+  // M8.13: an entry whose own `elements` holds any one listed.
+  elements: filterElements,
   // `any`, like null or missing, is no filter.
   toxic: z
     .enum(TOXIC_FILTERS)
@@ -87,6 +99,7 @@ export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   deityIds: true,
   zodiacSigns: true,
   celestialBodies: true,
+  elements: true,
   toxic: true,
 });
 

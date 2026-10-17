@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import CompendiumList from '../../../../components/CompendiumList';
+import { COMPENDIUM_PARAMS } from '../../../../components/CompendiumList/params';
 import { compendiumHref } from '../../../../components/CompendiumList/href';
 import { editHeading } from '../../../../components/CompendiumList/heading';
 import type {
@@ -14,17 +15,12 @@ import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
 import { requireCuratorSession } from '../../../../lib/request-session';
-import { oneOf, single, trimmed } from '../../../../lib/search-params';
 import {
   countCompendium,
   listCompendium,
   resolveCompendiumSlug,
   variantsOf,
 } from '@/modules/ingredients';
-import {
-  NOMENCLATURE_KINDS,
-  type NomenclatureKind,
-} from '@/modules/ingredients/schema/ingredient-enums';
 import { formChoicesOf, formGroupsOf, listIngredientFormValues } from '@/modules/vocabulary';
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
@@ -41,23 +37,13 @@ export const metadata: Metadata = {
 // The page and GraphQL's `compendium` end at the same service, paged by the
 // same helper (CLAUDE.md rule 1, rule 8); the writes are the modal's, through
 // the compendium mutations. Cached so a second render in the request reads
-// once, and so keyed by primitives rather than a filter object.
+// once, and so keyed by primitives rather than a filter object: the filter as
+// the parameter table's variables, written as JSON, so a new filter changes
+// no line here (src/components/CompendiumList/params.ts).
 const readCompendium = cache(
-  async (
-    query: string,
-    form: string,
-    nomenclature: NomenclatureKind | undefined,
-    withoutReferences: boolean,
-    after: string | undefined,
-    before: string | undefined,
-  ) => {
-    const filter = {
-      query: query || undefined,
-      // The Form box names one form; the read takes a list (M11.22).
-      forms: form ? [form] : undefined,
-      nomenclature,
-      withoutReferences,
-    };
+  async (variables: string, after: string | undefined, before: string | undefined) => {
+    // Written by this page from the table a few lines below, and checked again by the service.
+    const filter: Parameters<typeof listCompendium>[0] = JSON.parse(variables);
     // "Page X of Y", counted from the page's first row (src/lib/pagination.ts).
     const page = await resolveNumberedPage(
       { after, before },
@@ -146,26 +132,15 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
   const session = await requireCuratorSession();
   const params: CompendiumSearchParams = await searchParams;
   const place = readListPlace(params);
-  const { query, after, before, adding } = place;
-  // Blank is no filter: a native submit sends `nomenclature=`; a kind no
-  // classification holds is ignored, as a hand-edited cursor gets the first
-  // page.
-  const nomenclature = oneOf(NOMENCLATURE_KINDS, single(params.nomenclature));
-  const withoutReferences = single(params.withoutReferences) === '1';
-  // A form by its text, `?form=Oil`, which the compendium read folds.
-  const form = trimmed(params.form);
+  const { after, before, adding } = place;
+  // Every filter, read through the parameter table (CompendiumList/params.ts).
+  const filter: CompendiumListFilter = COMPENDIUM_PARAMS.read(params);
 
   const [page, forms, { edited, missing }] = await Promise.all([
-    readCompendium(query, form, nomenclature, withoutReferences, after, before),
+    readCompendium(JSON.stringify(COMPENDIUM_PARAMS.variables(filter)), after, before),
     readForms(),
     readEditPlace(place, readEntry),
   ]);
-  const filter: CompendiumListFilter = {
-    query,
-    form,
-    nomenclature: nomenclature ?? '',
-    withoutReferences,
-  };
   const here = { ...filter, after, before };
   // An old address opens the entry at its new one, as the public route's
   // redirect does (MB.82).

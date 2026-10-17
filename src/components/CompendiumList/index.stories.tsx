@@ -42,6 +42,7 @@ const NO_FILTER: CompendiumListFilter = {
   form: '',
   nomenclature: '',
   withoutReferences: false,
+  elements: [],
 };
 
 // The curated forms the Form box offers, in name order.
@@ -118,7 +119,13 @@ export const Filtered: Story = () => (
   <Page>
     <CompendiumList
       entries={[entry('Fixture Salt', 'unknown', null, ['Powder'])]}
-      filter={{ query: '', form: 'Powder', nomenclature: 'unknown', withoutReferences: true }}
+      filter={{
+        query: '',
+        form: 'Powder',
+        nomenclature: 'unknown',
+        withoutReferences: true,
+        elements: ['fire', 'earth'],
+      }}
       forms={FORMS}
     />
   </Page>
@@ -128,7 +135,13 @@ export const NoMatch: Story = () => (
   <Page>
     <CompendiumList
       entries={[]}
-      filter={{ query: 'nothing', form: 'Oil', nomenclature: 'mineral', withoutReferences: false }}
+      filter={{
+        query: 'nothing',
+        form: 'Oil',
+        nomenclature: 'mineral',
+        withoutReferences: false,
+        elements: [],
+      }}
       forms={FORMS}
     />
   </Page>

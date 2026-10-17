@@ -8,7 +8,10 @@ import type { userPrivilegeChanges } from '../../modules/identity/schema/user-pr
 import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
-import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
+import type {
+  IngredientElement,
+  NomenclatureKind,
+} from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
@@ -650,6 +653,12 @@ export interface IngredientFilter {
   celestialBodies?: readonly string[];
   /** Any of these signs, read from the entry's `zodiacSigns` as `celestialBodies` reads its list. */
   zodiacSigns?: readonly string[];
+  /**
+   * Any of these elements: an entry matches when its own `elements` list
+   * holds one of them, alone or among others (M8.13, MB.157). The entry's
+   * list, not its variants'. An empty list is no filter.
+   */
+  elements?: readonly IngredientElement[];
   /**
    * Any of these curated deities: an entry matches when it holds a live link
    * to one of them, by `ingredient_deities.deity_id` (MB.167, M11.22). How a

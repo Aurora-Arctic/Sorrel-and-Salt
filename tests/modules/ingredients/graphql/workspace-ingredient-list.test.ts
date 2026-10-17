@@ -57,6 +57,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $deityIds: [ID!]
       $zodiacSigns: [String!]
       $celestialBodies: [String!]
+      $elements: [IngredientElement!]
       $toxic: ToxicFilter
       $first: Int
       $after: String
@@ -69,6 +70,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         deityIds: $deityIds
         zodiacSigns: $zodiacSigns
         celestialBodies: $celestialBodies
+        elements: $elements
         toxic: $toxic
         first: $first
         after: $after
@@ -116,6 +118,7 @@ beforeEach(async () => {
       categories: ['Protection'],
       zodiacSigns: ['Fixture Ram'],
       celestialBodies: ['Fixture Sun'],
+      elements: ['fire'],
     }),
     A.id,
   );
@@ -178,6 +181,8 @@ describe('workspaceIngredients', () => {
     expect(await names({ deityIds: [hecate] })).toEqual(['Covenwort']);
     expect(await names({ zodiacSigns: ['fixture ram'] })).toEqual(['Covenwort']);
     expect(await names({ celestialBodies: ['fixture sun'] })).toEqual(['Covenwort']);
+    expect(await names({ elements: ['fire', 'air'] })).toEqual(['Covenwort']);
+    expect(await names({ elements: ['air'] })).toEqual([]);
     expect(await names({ toxic: 'toxic' })).toEqual(['Heldwort']);
     expect(await names({ toxic: 'not_toxic' })).toEqual(['Covenwort']);
     expect(await names({ toxic: 'any' })).toEqual(['Covenwort', 'Heldwort']);

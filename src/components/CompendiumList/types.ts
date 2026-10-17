@@ -1,6 +1,8 @@
 import type { Route } from 'next';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
+import type { COMPENDIUM_PARAMS } from './params';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading } from '../Modal/types';
 import type { PagePosition, PagerHrefs } from '../../lib/types';
@@ -51,25 +53,14 @@ export interface CompendiumFormChoice {
 
 /**
  * The list's filter as asked: the name query, a form and a classification,
- * each blank for none, and whether to show only the entries that cite no
- * reference.
+ * each blank for none, whether to show only the entries that cite no
+ * reference, and the elements an entry may hold. Read from the address by the
+ * parameter table (./params.ts), whose entries it is made of.
  */
-export interface CompendiumListFilter {
-  query: string;
-  form: string;
-  nomenclature: NomenclatureKind | '';
-  withoutReferences: boolean;
-}
+export type CompendiumListFilter = SearchFilter<typeof COMPENDIUM_PARAMS.entries>;
 
 /** Where the list stands: its filter, and the cursor of the page a modal opens over. */
-export interface CompendiumPlace {
-  query?: string;
-  form?: string;
-  nomenclature?: NomenclatureKind | '';
-  withoutReferences?: boolean;
-  after?: string;
-  before?: string;
-}
+export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor;
 
 /** What the filter form starts from: the page's filter, and the forms it offers. */
 export type CompendiumListFilterProps = Pick<CompendiumListProps, 'filter' | 'forms'>;

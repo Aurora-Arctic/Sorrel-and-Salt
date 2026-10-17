@@ -79,7 +79,7 @@ const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): Rea
     label="Filter the Compendium"
     action={COMPENDIUM_PATH}
     query={filter.query}
-    shown={[filter.query, filter.form, filter.nomenclature, filter.withoutReferences]}
+    shown={Object.values(filter)}
     searchHref={(query) => compendiumHref({ ...filter, query })}
     // The list as shown, the typed text not applied: the modal opens over it.
     pickHref={(match) => compendiumHref(filter, { edit: match.slug })}

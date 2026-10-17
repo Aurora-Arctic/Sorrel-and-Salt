@@ -948,6 +948,50 @@ describe('findCompendiumPage', () => {
     });
   });
 
+  // M8.13: the element filter. An entry's `elements` holds any of the five,
+  // alone or among others; any one listed matches, by array overlap.
+  describe('elements', () => {
+    beforeEach(async () => {
+      await add('Fixture Fiery', { elements: ['fire'] });
+      await add('Fixture Wet', { elements: ['water', 'fire'] });
+      await add('Fixture Airy', { elements: ['air'] });
+      await add('Fixture Bare');
+      await add('Fixture Coven', { elements: ['fire'], workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { elements: ['fire'] });
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    });
+
+    it('lists the live compendium entries holding the element, alone or among others', async () => {
+      // Why the others could have been listed: the coven's and the retired row hold fire too.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredients where 'fire' = any(elements)`;
+      expect(count).toBe(4);
+
+      expect(await namesOf({ elements: ['fire'] })).toEqual(['Fixture Fiery', 'Fixture Wet']);
+      await expect(findCompendiumCount({ elements: ['fire'] }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+    });
+
+    it('lists an entry holding either of two elements once', async () => {
+      expect(await namesOf({ elements: ['air', 'fire'] })).toEqual([
+        'Fixture Airy',
+        'Fixture Fiery',
+        'Fixture Wet',
+      ]);
+      expect(await namesOf({ elements: ['water', 'fire'] })).toEqual([
+        'Fixture Fiery',
+        'Fixture Wet',
+      ]);
+    });
+
+    it('combines with another filter, and an empty list is no filter', async () => {
+      expect(await namesOf({ elements: ['fire'], query: 'Wet' })).toEqual(['Fixture Wet']);
+      expect(await namesOf({ elements: [] })).toHaveLength(4);
+    });
+  });
+
   // The lists hold spellings, not picks (MB.162): what a celestial body's or a sign's
   // delete and rename read (MB.95), matched entry by entry under the
   // suggestions' fold, any listed value (M11.22).

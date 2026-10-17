@@ -1,7 +1,12 @@
 import { builder } from '../../../graphql/builder';
 import { countCompendium, getIngredient, listCompendium } from '../services/compendium';
 import type { CompendiumFilterInput } from '../validation/compendium-filter';
-import { IngredientRef, NomenclatureEnum, ToxicFilterEnum } from './ingredient';
+import {
+  IngredientElementEnum,
+  IngredientRef,
+  NomenclatureEnum,
+  ToxicFilterEnum,
+} from './ingredient';
 
 // The compendium's two queries. Public, so neither carries the `signedIn`
 // scope (MB.80); tests/db/graphql-query-scopes.test.ts holds every other
@@ -10,8 +15,8 @@ import { IngredientRef, NomenclatureEnum, ToxicFilterEnum } from './ingredient';
 // (claude-docs/graphql/schema.md, "compendium, ingredient and ingredientFormValues").
 
 /**
- * The five facet arguments the compendium and a coven's ingredient list share
- * (M11.22, claude-docs/design-decisions/m11.22-search-facets.md): within each
+ * The six facet arguments the compendium and a coven's ingredient list share
+ * (M11.22, M8.13, claude-docs/design-decisions/m11.22-search-facets.md): within each
  * list any value matches, and every argument given must match.
  */
 export const facetArgs = builder.args((t) => ({
@@ -32,6 +37,11 @@ export const facetArgs = builder.args((t) => ({
     required: false,
     description:
       'Keeps entries listing any one of these planets or other celestial bodies, ignoring case.',
+  }),
+  elements: t.field({
+    type: [IngredientElementEnum],
+    required: false,
+    description: 'Keeps entries whose elements include any one of these, alone or among others.',
   }),
   toxic: t.field({
     type: ToxicFilterEnum,
@@ -88,6 +98,7 @@ function filterOf({
   deityIds,
   zodiacSigns,
   celestialBodies,
+  elements,
   toxic,
   withoutReferences,
   nomenclature,
@@ -99,6 +110,7 @@ function filterOf({
     deityIds,
     zodiacSigns,
     celestialBodies,
+    elements,
     toxic,
     withoutReferences,
     nomenclature,
