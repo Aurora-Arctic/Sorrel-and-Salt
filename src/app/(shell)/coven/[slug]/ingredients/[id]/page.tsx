@@ -20,7 +20,8 @@ import type { CovenIngredientParams } from './types';
 // reads that take no session (CLAUDE.md rule 6).
 //
 // The shell draws no `<main>`, so the page does. The entry's own article
-// carries the jump-menu layout (`.page-with-nav`), so `<main>` stays plain.
+// carries its own wide layout (the jump menu and the side columns), so
+// `<main>` stays plain.
 
 const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
