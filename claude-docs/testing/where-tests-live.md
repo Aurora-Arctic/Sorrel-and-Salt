@@ -179,6 +179,15 @@ inline; }`, for the HTML rendering section's inline elements.
         dialog's name came out with spaces inside words. `:where` gives it
         zero specificity, so a test's own styles still win, and a happy-dom
         release that fixes the bug leaves it redundant and harmless.
+  - **A log fails the test.** `setup-dom.ts` installs `tests/support/console-guard.ts`, which
+    replaces `console.error` and `console.warn` for each test and, afterwards, fails it with the text
+    of every call it did not expect. A test that means to log declares each call with
+    `expectConsole('error', /pattern/)`; the call is then swallowed, and a declaration that
+    never matches fails too, so a stale one cannot linger. The methods are replaced by hand rather
+    than with `vi.spyOn`, so `restoreMocks` and `vi.restoreAllMocks()` cannot switch the guard
+    off, and a test's own spy would hide the call from it, which is why a `dom` test declares
+    instead of spying. It guards the `dom` project only; MSW's refusal of an unhandled request
+    prints through `console.error`, so a missing handler fails its test here.
   - **Why happy-dom (M11.25).** The `dom` project's 94 files and 1,049 tests
     took 46.3 s of wall time and 168 CPU-seconds under jsdom, three workers,
     coverage on, and 28.2 s and 95 CPU-seconds under happy-dom on the same

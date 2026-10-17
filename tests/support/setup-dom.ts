@@ -1,7 +1,13 @@
 import { afterEach } from 'vitest';
 import { cleanup } from '@testing-library/react';
+import { installConsoleGuard } from './console-guard';
 import HTMLElementConfig from 'happy-dom/lib/config/HTMLElementConfig.js';
 import HTMLElementConfigContentModelEnum from 'happy-dom/lib/config/HTMLElementConfigContentModelEnum.js';
+
+// Registered first, so its afterEach runs last: after RTL has unmounted, which
+// can itself log. A test that logs a console error or warning without declaring
+// it (`expectConsole`, tests/support/console-guard.ts) fails.
+installConsoleGuard();
 
 // The `dom` project's half of the setup; setup-msw.ts is the half both
 // projects share.
