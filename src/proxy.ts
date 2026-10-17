@@ -20,6 +20,20 @@ const PUBLIC_ROUTES = [
   '/sign-in',
   '/invite/*', // accepting an invitation
   '/email/*', // public/email/: a mail client fetches its images and fonts with no cookie
+  '/compendium', // the one public surface (MB.80), read by anyone, indexed by search engines
+  '/compendium/*',
+  // What a crawler or a browser asks for with no cookie and no page to ask it.
+  // The icon and manifest files are M11.16's and do not exist yet: they are listed
+  // ahead of it so the first favicon request is never redirected to sign-in.
+  '/robots.txt',
+  '/sitemap.xml',
+  '/llms.txt',
+  '/.well-known/*',
+  '/favicon.ico',
+  '/icon.png',
+  '/icon.svg',
+  '/apple-icon.png',
+  '/manifest.webmanifest',
 ];
 
 function isPublic(pathname: string): boolean {
@@ -56,7 +70,7 @@ async function refuseWorkshop(request: NextRequest, returnPath: string) {
   }
 }
 
-export async function proxy(request: NextRequest): Promise<NextResponse> {
+async function route(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
   const returnPath = `${pathname}${search}`;
 
@@ -86,6 +100,19 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   // The workshop's scripts run on this origin with an admin's cookie; they
   // fetch nothing, so nothing — /api/graphql included — is reachable from them.
   response.headers.set('Content-Security-Policy', "connect-src 'none'");
+  return response;
+}
+
+/**
+ * Anything but a production deploy tells search engines to index nothing,
+ * because staging is a public URL that would otherwise be indexed as a
+ * duplicate of the compendium (MB.83). `VERCEL_ENV`, not `NODE_ENV`, which is
+ * `production` on every deploy, staging included (the test impersonation
+ * uses, src/lib/impersonation.ts). Unset locally, so a dev server is noindex too.
+ */
+export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const response = await route(request);
+  if (process.env.VERCEL_ENV !== 'production') response.headers.set('X-Robots-Tag', 'noindex');
   return response;
 }
 

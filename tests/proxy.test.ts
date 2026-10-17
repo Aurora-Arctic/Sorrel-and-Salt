@@ -4,7 +4,7 @@ import {
   getRewrittenUrl,
   unstable_doesMiddlewareMatch,
 } from 'next/experimental/testing/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Session } from '@/lib/session';
 import { RETURN_PATH_HEADER } from '@/lib/sign-in';
 
@@ -63,8 +63,8 @@ describe('the proxy matcher', () => {
   // images are imported rather than dropped into public/.
   // Nothing in public/ is exempt: a file placed there is a protected page to
   // the matcher — redirected to /sign-in, HTML where the browser asked for an
-  // image — until the PR that adds it also adds its entry. Pinned so the
-  // first favicon or robots.txt does not ship redirected.
+  // image — until the PR that adds it also adds its entry. Pinned so a file
+  // with none is noticed; the crawler files and the favicon have theirs now.
   it.each(['/favicon.ico', '/robots.txt', '/images/anything.webp'])(
     'still runs on a public-file path with no entry, %s',
     (path) => {
@@ -93,6 +93,16 @@ describe('public routes', () => {
     // A mail client fetches the mail's images and fonts with no cookie.
     '/email/images/salt-dark.png',
     '/email/fonts/lexend-latin.woff2',
+    // The one public surface (MB.80), and the files a crawler or browser asks for.
+    '/compendium',
+    '/compendium?category=herbs',
+    '/compendium/ingredients/x',
+    '/robots.txt',
+    '/sitemap.xml',
+    '/llms.txt',
+    '/.well-known/ai-catalog.json',
+    '/favicon.ico',
+    '/manifest.webmanifest',
   ])('lets a signed-out request to %s through', async (path) => {
     const response = await proxy(request(path));
 
@@ -108,7 +118,13 @@ describe('public routes', () => {
     '/invites',
     '/invite',
     '/emails/x.png',
-    '/compendium',
+    '/compendiums',
+    '/compendium-admin',
+    '/robots.txt.bak',
+    '/llms.txt/x',
+    '/.well-known',
+    '/coven/hearth',
+    '/coven/hearth/ingredients',
   ])('redirects a signed-out request to the lookalike %s', async (path) => {
     expect((await proxy(request(path))).status).toBe(307);
   });
@@ -118,6 +134,35 @@ describe('public routes', () => {
   it('forwards the return path on a public route too', async () => {
     const response = await proxy(request('/invite/2b7c5e2f8a'));
     expect(forwarded(response, RETURN_PATH_HEADER)).toBe('/invite/2b7c5e2f8a');
+  });
+});
+
+// Staging is a public URL, so off production every response asks search
+// engines to index nothing (MB.83). The test is VERCEL_ENV, as impersonation's is.
+describe('X-Robots-Tag', () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it.each(['/', '/compendium', '/robots.txt', '/coven/hearth'])(
+    'is noindex off production on %s, a redirect included',
+    async (path) => {
+      vi.stubEnv('VERCEL_ENV', 'preview');
+
+      expect((await proxy(request(path))).headers.get('x-robots-tag')).toBe('noindex');
+    },
+  );
+
+  it('is noindex when VERCEL_ENV is unset, as on a dev server', async () => {
+    vi.stubEnv('VERCEL_ENV', '');
+
+    expect((await proxy(request('/compendium'))).headers.get('x-robots-tag')).toBe('noindex');
+  });
+
+  it.each(['/', '/compendium', '/coven/hearth'])('is absent on production at %s', async (path) => {
+    vi.stubEnv('VERCEL_ENV', 'production');
+
+    expect((await proxy(request(path))).headers.get('x-robots-tag')).toBeNull();
   });
 });
 
@@ -139,13 +184,13 @@ describe('proxy', () => {
 
   // An unrelated cookie is not a session: the check is for Better Auth's name.
   it('redirects when the only cookie is not a session cookie', async () => {
-    expect((await proxy(request('/compendium', 'theme=dark'))).status).toBe(307);
+    expect((await proxy(request('/coven/hearth', 'theme=dark'))).status).toBe(307);
   });
 
   it.each([SESSION_COOKIE, `__Secure-${SESSION_COOKIE}`])(
     'lets a request carrying %s through to the page',
     async (name) => {
-      const response = await proxy(request('/compendium', `${name}=token.signature`));
+      const response = await proxy(request('/coven/hearth', `${name}=token.signature`));
 
       expect(getRedirectUrl(response)).toBeNull();
       expect(response.headers.get('x-middleware-next')).toBe('1');
@@ -155,15 +200,15 @@ describe('proxy', () => {
   // The page's secure check redirects too, for a cookie the database rejects,
   // and a server component has no other way to learn its own URL.
   it('forwards the return path to the page for its own redirect', async () => {
-    const response = await proxy(request('/compendium?q=salt', `${SESSION_COOKIE}=t.s`));
-    expect(forwarded(response, RETURN_PATH_HEADER)).toBe('/compendium?q=salt');
+    const response = await proxy(request('/coven/hearth?q=salt', `${SESSION_COOKIE}=t.s`));
+    expect(forwarded(response, RETURN_PATH_HEADER)).toBe('/coven/hearth?q=salt');
   });
 
   it('overwrites a return path the client supplied itself', async () => {
     const response = await proxy(
-      request('/compendium', `${SESSION_COOKIE}=t.s`, { [RETURN_PATH_HEADER]: '/admin' }),
+      request('/coven/hearth', `${SESSION_COOKIE}=t.s`, { [RETURN_PATH_HEADER]: '/admin' }),
     );
-    expect(forwarded(response, RETURN_PATH_HEADER)).toBe('/compendium');
+    expect(forwarded(response, RETURN_PATH_HEADER)).toBe('/coven/hearth');
   });
 });
 
