@@ -255,3 +255,9 @@ export interface ShellWorkspace {
   /** The viewer’s role there may create ingredients: false lists the coven in Add Ingredient, disabled. */
   canWrite: boolean;
 }
+
+/** The viewer and their covens together: what the shell is drawn from (`src/lib/viewer.ts`). */
+export interface ShellContext {
+  viewer: ShellViewer;
+  workspaces: ShellWorkspace[];
+}
