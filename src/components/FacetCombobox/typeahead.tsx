@@ -20,6 +20,7 @@ export function FacetTypeahead({
   values,
   onChange,
   placeholder,
+  emptyPlaceholder,
   removeNoun,
   loading,
   hideZeros,
@@ -32,6 +33,7 @@ export function FacetTypeahead({
   values: readonly string[];
   onChange: (values: string[]) => void;
   placeholder?: string;
+  emptyPlaceholder?: string;
   removeNoun?: string;
   loading?: boolean;
   hideZeros: boolean;
@@ -68,7 +70,9 @@ export function FacetTypeahead({
       label={label}
       labelId={labelId}
       aria-describedby={describedBy}
-      placeholder={placeholder}
+      placeholder={
+        chosen.length === 0 && options.length === 0 && !needle ? emptyPlaceholder : placeholder
+      }
       value={text}
       onChange={setText}
       onPick={(value) => {

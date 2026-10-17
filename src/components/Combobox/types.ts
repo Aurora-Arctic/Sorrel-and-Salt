@@ -441,6 +441,8 @@ export interface ComboboxMultiSelectProps {
   choices: readonly ComboboxChoice[];
   /** Shown while nothing is chosen, and not itself a choice. */
   placeholder?: string;
+  /** Shown in place of the placeholder when nothing is chosen and no choice is left to offer. */
+  emptyPlaceholder?: string;
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;

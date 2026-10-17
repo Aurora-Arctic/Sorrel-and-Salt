@@ -39,6 +39,7 @@ export function ComboboxMultiSelect({
   onBlur,
   choices,
   placeholder,
+  emptyPlaceholder,
   required,
   inputRef,
   hideZeros,
@@ -202,6 +203,10 @@ export function ComboboxMultiSelect({
               <span className="is-placeholder" aria-hidden={chosen.length > 0 || undefined}>
                 {placeholder}
               </span>
+            )}
+            {/* Nothing chosen and nothing left to offer: say so, rather than a blank box. */}
+            {left.length === 0 && chosen.length === 0 && emptyPlaceholder && (
+              <span className="is-placeholder">{emptyPlaceholder}</span>
             )}
           </div>
         </div>
