@@ -636,7 +636,7 @@ describe('CompendiumList filter', () => {
 
     describe('the match mode', () => {
       const twoChosen = { ...NO_FILTER, categories: ['testward', 'testcraft'] };
-      const matchGroup = () => screen.queryByRole('radiogroup', { name: 'Match' });
+      const matchGroup = () => screen.queryByRole('group', { name: 'Match' });
 
       it('offers no mode with fewer than two categories', () => {
         const { rerender } = render(<CompendiumList {...props({ filter: NO_FILTER })} />);

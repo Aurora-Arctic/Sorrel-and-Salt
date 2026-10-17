@@ -647,7 +647,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   }
 
   const edit = (name: string) => page.getByRole('link', { name: `Edit ${name}` });
-  const match = page.getByRole('radiogroup', { name: 'Match' });
+  const match = page.getByRole('group', { name: 'Match' });
   await page.goto('/admin/compendium?query=Modewort&categories=protection');
   await page.waitForLoadState('networkidle');
   // One category: no mode is offered.
