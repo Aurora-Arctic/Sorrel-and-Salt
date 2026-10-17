@@ -10,8 +10,7 @@ bar's links are client code.
 
 `(shell)` is a route group: a folder in parentheses that groups routes under a
 shared layout without adding to the URL. The root layout stays free of the
-session so the public pages (sign-in, and the compendium to come, MB.80) can
-be rendered ahead of time. Everything that needs a signed-in viewer sits
+session so a public page can choose its own chrome. Everything that needs a signed-in viewer sits
 under `(shell)`, whose layout calls `viewerOf()`. That sends a signed-out
 visitor to sign in, but never sends an unverified account to the email page:
 the page does that (MB.256, [Route protection](../auth/route-protection.md),
@@ -21,6 +20,17 @@ because a layout does not re-run on a client-side navigation.
 `src/app/(shell)/forbidden.tsx` sits in the group so that a signed-in
 non-admin's 403 draws inside the shell: a segment's `forbidden` boundary sits
 inside that segment's layout. It keeps `NotAuthorized` in a `main.page-frame`.
+
+`(public)` is the sibling group for the public compendium (MB.80, MB.83). Its
+layout, `src/app/(public)/layout.tsx`, reads `viewerIfSignedIn()`: null for a
+signed-out visitor, who gets [`PublicFrame`](public-frame.md); otherwise the
+viewer and covens, drawn in this shell. It never redirects. Because the shell's
+`#main` is a wrapper and `PublicFrame`'s is a `main`, the layout owns the
+plain `<main>` in the signed-in branch (the page in `.admin-layout` inside it, as in the signed-out frame), so a public page
+renders no landmark of its own. An unverified account is shown the shell's
+unverified chrome (brand text, the account menu, the Compendium link) rather
+than being sent to `/account/email`: the compendium is public, and nothing
+there is workspace data.
 
 ## Props
 
@@ -50,8 +60,10 @@ one's own id) throws.
   the account menu and the theme disc. The disc stays in the bar at every
   width, a phone's included (the owner's call, M10.32): the account panel holds
   no theme switch.
-- **The brand** is a link to `shellHome(viewer, workspaces)` and plain text
-  for an unverified viewer. `src/lib/shell-home.ts` holds `shellHome` (a curator or an admin: `/admin`, anyone else `covenHome`) and `covenHome` (their Your Coven link): `/coven/<slug>` of the first coven the switcher lists, or the
+- **The brand** is a link to `/`, the front page, for every verified viewer,
+  now that Your Coven and Admin sit in the site nav; `/` reads the session
+  and offers a signed-in visitor their landing, without redirecting. It is
+  plain text for an unverified viewer. `src/lib/shell-home.ts` holds `covenHome` (the Your Coven link): `/coven/<slug>` of the first coven the switcher lists, or the
   `/coven` landing (M2.8) for someone in none, which offers the create page or
   explains the invitation. The links go into the coven themselves rather than
   to `/coven`, which would only redirect a member there and leave the browser
@@ -59,8 +71,7 @@ one's own id) throws.
   under `$shell-brand-width` (a narrow phone; wider than that the bar has room
   for the name once the site links have gone) the brand reads "S&S"; the full
   name stays in the page, visually hidden, for a screen reader.
-- **The site nav** (`nav` named "Site") lists Your Coven and Admin, **for a curator or an admin only** (`canCurate`), on every shell page. There is no Compendium link until MB.83
-  adds it, with the public route (MB.80). With no links the nav is not rendered. At or
+- **The site nav** (`nav` named "Site") lists the Compendium for every viewer, verified or not, and Your Coven ("Your Covens" when the viewer is in more than one coven) and Admin as well **for a verified curator or admin** (`canCurate`), on every shell page. At or
   under `$shell-tablet-width` the bar has no room for them beside the brand,
   Add Ingredient, the account button and the disc, so the same links are
   offered in the account panel.
@@ -68,7 +79,7 @@ one's own id) throws.
   Its target will follow the area: a coven page adds to that coven, an admin
   page to the compendium, anywhere else to the viewer's only coven or a choice.
 - **An unverified viewer** gets the brand as text, the account menu with Sign
-  Out alone, and the theme disc, and no site nav and no Add Ingredient. (The
+  Out alone, and the theme disc, a site nav holding the Compendium alone, and no Add Ingredient. (The
   theme disc stays because the root's corner toggle is hidden on shell pages;
   without it the viewer could not change the theme.)
 - **The skip link** ("Skip to Content") is the first element and targets
@@ -115,7 +126,7 @@ bar), `Phone`, `PhoneAdmin` and `PhoneCreatePage`.
 ## Testing
 
 `tests/components/AppShell/index.test.tsx` covers who sees the Admin and Your
-Coven links (a curator or an admin does; a verified member sees the rest of the bar and not these), the brand's target, Add Ingredient’s target, the unverified
+Coven links (a curator or an admin does; a verified member sees the rest of the bar and not these), the brand's target (`/`), the Your Coven label for one coven or several, Add Ingredient’s target, the unverified
 viewer's bar, the skip link's target, and the viewer's invitation count reaching
 the account menu's link. `tests/lib/shell-home.test.ts` and
 `tests/lib/viewer.test.ts` cover the two helpers, the latter including the count

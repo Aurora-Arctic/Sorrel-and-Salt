@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { covenHome, shellHome } from '../../lib/shell-home';
+import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
 import AddIngredientButton from './add-ingredient-button';
@@ -19,18 +19,22 @@ import './index.scss';
 const BRAND = 'Sorrel & Salt';
 
 const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement => {
-  // No Compendium link yet: its public route is MB.80's. When it lands it is
-  // the first entry here, for everyone, and the nav stops being admin-only.
-  const links: SiteLink[] = viewer.canCurate
-    ? [
-        {
-          label: 'Your Coven',
-          href: covenHome(workspaces),
-          base: '/coven',
-        },
-        { label: 'Admin', href: '/admin', base: '/admin' },
-      ]
-    : [];
+  // The Compendium is public (MB.80), so its link is everyone's, an
+  // unverified account's included: it leads to no page that sends them to the
+  // email page. The other two are for a verified curator or admin.
+  const compendium: SiteLink = { label: 'Compendium', href: '/compendium', base: '/compendium' };
+  const links: SiteLink[] =
+    viewer.verified && viewer.canCurate
+      ? [
+          compendium,
+          {
+            label: workspaces.length > 1 ? 'Your Covens' : 'Your Coven',
+            href: covenHome(workspaces),
+            base: '/coven',
+          },
+          { label: 'Admin', href: '/admin', base: '/admin' },
+        ]
+      : [compendium];
   const brand = (
     <>
       <span className="app-shell__brand-full">{BRAND}</span>
@@ -52,13 +56,13 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           {/* Plain text while the address is unverified: every page the
               brand could lead to would send the viewer back to the email page. */}
           {viewer.verified ? (
-            <Link href={shellHome(viewer, workspaces)} className="app-shell__brand">
+            <Link href="/" className="app-shell__brand">
               {brand}
             </Link>
           ) : (
             <span className="app-shell__brand">{brand}</span>
           )}
-          {viewer.verified && links.length > 0 && <SiteNav links={links} />}
+          <SiteNav links={links} />
           <div className="app-shell__end">
             {/* The shell’s one global action; its target follows the area (add-ingredient-button.tsx). */}
             <AddIngredientButton viewer={viewer} workspaces={workspaces} />

@@ -497,8 +497,10 @@ $shell-phone-width: $table-stack-width;
 
 // The width at or under which the admin section nav keeps its first pages in
 // view and tucks the rest behind More (Priority+), between the phone shape
-// and a desktop where all six fit the row.
-$shell-tablet-width: 48rem;
+// and a desktop where all six fit the row. Also the width at or under which
+// the site links leave the bar for the account panel: with the Compendium
+// link an admin's bar outran an 882px window.
+$shell-tablet-width: 56rem;
 // Under this the bar's brand is its initials: a narrow phone, since the bar
 // has room for the full name wider than that once the site links have gone.
 $shell-brand-width: 26rem;
