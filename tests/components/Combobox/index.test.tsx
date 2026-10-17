@@ -79,6 +79,8 @@ describe('Combobox', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Show Form suggestions' }));
     expect(box()).toHaveAttribute('aria-expanded', 'true');
+    // The root carries the state the chevron's flip waits on.
+    expect(box().closest('.combobox')).toHaveClass('is-open');
     expect(options()).toHaveLength(3);
 
     rerender(<Harness />);
@@ -323,12 +325,18 @@ describe('Combobox', () => {
         vi.spyOn(HTMLElement.prototype, 'offsetWidth', 'get').mockImplementation(function (
           this: HTMLElement,
         ) {
-          return this.getAttribute('role') === 'listbox' ? list.width : 0;
+          return this.getAttribute('role') === 'listbox' ||
+            this.classList.contains('combobox__popup')
+            ? list.width
+            : 0;
         }),
         vi.spyOn(HTMLElement.prototype, 'offsetHeight', 'get').mockImplementation(function (
           this: HTMLElement,
         ) {
-          return this.getAttribute('role') === 'listbox' ? list.height : 0;
+          return this.getAttribute('role') === 'listbox' ||
+            this.classList.contains('combobox__popup')
+            ? list.height
+            : 0;
         }),
         vi
           .spyOn(
@@ -339,7 +347,9 @@ describe('Combobox', () => {
       ];
       return () => restore.forEach((spy) => spy.mockRestore());
     }
-    const list = () => screen.getByRole('listbox', { name: 'Form suggestions' });
+    // The popup holding the listbox is what is placed (every box has one).
+    const list = () =>
+      screen.getByRole('listbox', { name: 'Form suggestions' }).parentElement as HTMLElement;
 
     it('opens above the box when there is no room beneath it', async () => {
       render(<Harness suggestions={TWO_BUCKETS} />);
@@ -1377,20 +1387,39 @@ describe('Combobox', () => {
       expect(changes()).not.toHaveTextContent('Earth');
     });
 
-    it('has nothing to offer once every choice is made, and does not open', () => {
-      render(<MultiHarness initial={['earth', 'air', 'fire', 'water']} />);
+    it('says every choice is made, in an open list with no options, once there is nothing left to offer', () => {
+      const { container } = render(<MultiHarness initial={['earth', 'air', 'fire', 'water']} />);
+      const message = () => container.querySelector('.combobox__empty');
+      const status = () => screen.getByRole('status', { name: 'Element changes' });
 
       fireEvent.click(elements());
       expect(offered()).toEqual(['Spirit']);
       pick('Spirit');
-
       expect(chosen()).toBe('earth,air,fire,water,spirit');
+
+      // Choosing the last closes the list, as before.
       expect(elements()).toHaveAttribute('aria-expanded', 'false');
+      expect(message()).not.toBeInTheDocument();
+
+      // Asking for it again opens it to say so, rather than going dead.
       fireEvent.click(elements());
-      expect(elements()).toHaveAttribute('aria-expanded', 'false');
-      press('ArrowDown');
-      expect(elements()).toHaveAttribute('aria-expanded', 'false');
+      expect(elements()).toHaveAttribute('aria-expanded', 'true');
+      expect(container.querySelector('.combobox')).toHaveClass('is-open');
+      expect(message()).toBeVisible();
+      expect(message()).toHaveTextContent(/\S/);
+      expect(status()).toHaveTextContent(/\S/);
       expect(screen.queryByRole('option')).not.toBeInTheDocument();
+      expect(screen.getByRole('listbox', { name: 'Element choices' })).not.toContainElement(
+        message() as HTMLElement,
+      );
+
+      // Enter has nothing to take, and Escape closes it.
+      press('Enter');
+      expect(chosen()).toBe('earth,air,fire,water,spirit');
+      press('Escape');
+      expect(elements()).toHaveAttribute('aria-expanded', 'false');
+      expect(container.querySelector('.combobox')).not.toHaveClass('is-open');
+      expect(message()).not.toBeInTheDocument();
     });
   });
 });
@@ -1429,9 +1458,25 @@ describe('Combobox empty message', () => {
     type('   ');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
 
-    rerender(<Harness offerTyped={false} suggestions={NONE} />);
+    // Passing false is the one way to say nothing.
+    rerender(<Harness offerTyped={false} suggestions={NONE} empty={false} />);
     type('zzz');
     expect(screen.queryByText('Nothing Found')).not.toBeInTheDocument();
+    expect(document.querySelector('.combobox__empty')).not.toBeInTheDocument();
+  });
+
+  it('says it found nothing by default, so a box whose caller forgot `empty` never just shuts', () => {
+    render(<Harness offerTyped={false} suggestions={NONE} />);
+
+    type('zzz');
+
+    const message = document.querySelector('.combobox__empty');
+    expect(message).toBeVisible();
+    expect(message).toHaveTextContent('zzz');
+    expect(listbox()).not.toContainElement(message as HTMLElement);
+    expect(status()).toHaveTextContent('zzz');
+    expect(screen.queryAllByRole('option')).toHaveLength(0);
+    expect(document.querySelector('.combobox')).toHaveClass('is-open');
   });
 
   it('closes the message on Escape alone, then leaves the next Escape to the dialog', () => {

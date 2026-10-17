@@ -159,6 +159,20 @@ describe('IngredientForm on the compendium', () => {
   });
 
   describe('a new entry', () => {
+    // Story 31 on the admin tier: the form is shared, so leaving a field
+    // flags it here too.
+    it('flags an edited, invalid value on leaving it, before any submit', async () => {
+      const calls = acceptCompendiumCreate();
+      renderForm();
+
+      type('Name', '   ');
+      fireEvent.blur(textbox('Name'));
+
+      await waitFor(() => expect(textbox('Name')).toBeInvalid());
+      expect(textbox('Name')).toHaveAccessibleDescription(/\S/);
+      expect(calls).toHaveLength(0);
+    });
+
     it('marks the classification required, refusing a save without one, then creates a compendium entry with no categories yet, and opens it', async () => {
       const calls = acceptCompendiumCreate();
       const { onSaved } = renderForm();
@@ -253,18 +267,20 @@ describe('IngredientForm on the compendium', () => {
 
     // Every way out asks first while the form has changes (MB.115): the
     // guard's shape is tests/components/Modal's, and this its wiring.
-    it('asks before Cancel or Escape discards a change, and closes on Discard Changes', () => {
+    it('asks before Cancel or Escape discards a change, and closes on Discard Changes', async () => {
       offerNothing();
       const onClose = renderInModal((done) => (
         <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
       ));
 
       expectGuardedWaysOut(onClose, () => type('Name', 'Testwort'));
+      // Each way out leaves Name, which validates it after the press.
+      await act(async () => {});
     });
 
     // A reference panel's edits are in a form of their own, which the
     // ingredient form's isDirty never sees; they count all the same.
-    it('asks before Escape or Cancel discards what is typed in a reference panel, keeping it on Keep Editing', () => {
+    it('asks before Escape or Cancel discards what is typed in a reference panel, keeping it on Keep Editing', async () => {
       offerNothing();
       const onClose = renderInModal((done) => (
         <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
@@ -288,6 +304,8 @@ describe('IngredientForm on the compendium', () => {
           kept: () => expect(title()).toHaveValue('A Fixture Grimoire'),
         },
       );
+      // Leaving a field validates it, a step that ends after the assertions.
+      await act(async () => {});
     });
   });
 

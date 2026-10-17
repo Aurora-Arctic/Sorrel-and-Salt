@@ -467,7 +467,7 @@ describe('the /admin/compendium modal', () => {
   it('opens the empty form on ?new, with Save & Add Another and nothing to delete', async () => {
     await renderPage({ new: '' });
 
-    const dialog = screen.getByRole('dialog', { name: 'Add Ingredient' });
+    const dialog = screen.getByRole('dialog', { name: 'Add Ingredient to Compendium' });
     expect(within(dialog).getByRole('textbox', { name: 'Name' })).toHaveValue('');
     expect(within(dialog).getByRole('button', { name: 'Save & Add Another' })).toBeInTheDocument();
     expect(
@@ -480,7 +480,9 @@ describe('the /admin/compendium modal', () => {
   it('opens the empty form on ?new beside an ?edit=, reading no entry', async () => {
     await renderPage({ new: '', edit: TESTWORT.slug });
 
-    expect(screen.getByRole('dialog', { name: 'Add Ingredient' })).toBeInTheDocument();
+    expect(
+      screen.getByRole('dialog', { name: 'Add Ingredient to Compendium' }),
+    ).toBeInTheDocument();
     expect(resolveCompendiumSlug).not.toHaveBeenCalled();
     expect(entryValues).not.toHaveBeenCalled();
   });

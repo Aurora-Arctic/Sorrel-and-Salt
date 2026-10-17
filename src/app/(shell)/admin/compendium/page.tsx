@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import type { ModalHeading } from '../../../../components/Modal/types';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import CompendiumList from '../../../../components/CompendiumList';
@@ -156,8 +157,13 @@ const readEntry = async (slug: string) => {
   };
 };
 
-/** The add dialog's head and the button that opens it. */
+/** The button that opens the add dialog. */
 const ADD_TITLE = 'Add Ingredient';
+/**
+ * The add dialog's head: the destination over the action, as the shell's coven
+ * dialog has it (M8.16), named "Add Ingredient to Compendium".
+ */
+const ADD_HEADING: ModalHeading = { destination: 'Compendium', title: ADD_TITLE };
 
 // The global compendium, for an admin to add to, edit and retire (M5.5). A
 // wide modal over the list does the writing, opened by the address — `?new`,
@@ -209,7 +215,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
       <PageHeader
         title="Compendium"
         action={
-          <AddAction href={compendiumHref(here, 'new')} heading={{ title: ADD_TITLE }}>
+          <AddAction href={compendiumHref(here, 'new')} heading={ADD_HEADING}>
             {ADD_TITLE}
           </AddAction>
         }
@@ -237,7 +243,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
                 entry: { id: editing.id, values: editing.values },
               }
             : adding
-              ? { heading: { title: ADD_TITLE } }
+              ? { heading: ADD_HEADING }
               : undefined
         }
       />

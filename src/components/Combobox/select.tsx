@@ -47,7 +47,7 @@ export function ComboboxSelect({
   const { setControl, setList, listStyle, placement } = useListPosition(isOpen);
 
   return (
-    <div className="combobox" ref={setControl}>
+    <div className={isOpen ? 'combobox is-open' : 'combobox'} ref={setControl}>
       {/* The control is the box itself: nothing is typed, so the whole of it
           is the one target, and it takes the focus. */}
       <div

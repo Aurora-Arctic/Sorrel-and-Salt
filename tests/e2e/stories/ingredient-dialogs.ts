@@ -13,10 +13,15 @@ import { expect } from '../fixtures';
  * The shell's Add Ingredient, in the bar: the one global action
  * (claude-docs/components/app-shell.md; design-decisions/mb.7-navigation.md).
  * Found inside the banner, the bar's `header`, so the empty list's own Add
- * Ingredient (M9.11) is never taken for it.
+ * Ingredient (M9.11) is never taken for it. Its main part, a button that
+ * opens a coven's dialog or, for the compendium, goes to the admin
+ * Compendium's `?new` (M8.16); a link is matched too, so "none" means neither.
  */
 export function shellAddIngredient(page: Page): Locator {
-  return page.getByRole('banner').getByRole('button', { name: 'Add Ingredient', exact: true });
+  const banner = page.getByRole('banner');
+  return banner
+    .getByRole('button', { name: 'Add Ingredient', exact: true })
+    .or(banner.getByRole('link', { name: 'Add Ingredient', exact: true }));
 }
 
 /** The shell's Add Ingredient, which on a coven's page adds to that coven (claude-docs/components/app-shell.md). */
@@ -155,22 +160,19 @@ export function shellEditControls(page: Page): Locator {
 }
 
 /**
- * The add dialog's Coven select, for someone in more than one coven (M8.16):
- * a combobox named "Coven" showing the chosen coven's name, its covens
- * offered in the list "Coven choices", as the form's Classification offers
- * its kinds in "Classification choices". The names are this file's choice,
- * after the form's own pickers; M8.16 may build it as a native select, whose
- * role is a combobox too but whose value is the option's, and corrects
- * `choice` here if so.
+ * The menu of places Add Ingredient can go, for someone with more than one
+ * (M8.16; claude-docs/components/modal.md, "Add Ingredient"): the chevron
+ * beside the bar's button, named "Choose Where to Add", opens a `menu`
+ * listing each destination by name as a `menuitem`, the compendium first.
+ * With one destination the chevron is not drawn.
  */
-export function covenSelect(dialog: Locator) {
-  const box = dialog.getByRole('combobox', { name: 'Coven', exact: true });
+export function destinationMenu(page: Page) {
+  const banner = page.getByRole('banner');
+  const menu = banner.getByRole('menu');
   return {
-    box,
-    choice: (name: string) =>
-      dialog
-        .page()
-        .getByRole('listbox', { name: 'Coven choices', exact: true })
-        .getByRole('option', { name, exact: true }),
+    toggle: banner.getByRole('button', { name: 'Choose Where to Add', exact: true }),
+    menu,
+    choices: menu.getByRole('menuitem'),
+    choice: (name: string) => menu.getByRole('menuitem', { name, exact: true }),
   };
 }

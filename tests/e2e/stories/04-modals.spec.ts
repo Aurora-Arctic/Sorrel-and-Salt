@@ -2,11 +2,15 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
+import { insertIngredient } from '../../support/db/insert-ingredient';
+import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { signInAgainAs, signInAs } from '../session';
 import {
   type Coven,
   type Role,
+  compendiumVariant,
   graphqlFromPage,
+  insertStock,
   ingredientList,
   localIngredient,
   markDocument,
@@ -17,8 +21,8 @@ import {
 } from './coven-ingredients';
 import {
   categoryChip,
-  covenSelect,
   describedIds,
+  destinationMenu,
   discardQuestion,
   editIngredientControl,
   expectFieldError,
@@ -112,14 +116,26 @@ const CREATE = `mutation ($w: ID!, $name: String!) {
   createWorkspaceIngredient(workspaceId: $w, input: { name: $name, variants: [] }) { id }
 }`;
 
-test.fixme(
+// Story 28's covens: B writes to the first two and only views the third.
+const FIRST = 'Fixture Coven Story 28';
+const SECOND = 'Fixture Second Coven Story 28';
+const VIEWED = 'Fixture Viewed Coven Story 28';
+
+/**
+ * An add dialog's accessible name for `coven`: the whole phrase, "Add
+ * Ingredient to <coven>". The coven's name is data, so it is escaped.
+ */
+function namesCoven(coven: string): RegExp {
+  return new RegExp(`^Add Ingredient to ${coven.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+}
+
+test(
   'a member opens Add Ingredient from the shell, adding to the coven it is on',
   {
     tag: '@story-28',
-    annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
   },
   async ({ page }) => {
-    const coven = await seedCoven(page, 'Fixture Coven Story 28', 'story-28.test', {
+    const coven = await seedCoven(page, FIRST, 'story-28.test', {
       A: 'owner',
       C: 'viewer',
       B: 'member',
@@ -131,16 +147,21 @@ test.fixme(
         await page.goto(path);
         await expect(shellAddIngredient(page)).toBeEnabled();
         const dialog = await openAddIngredient(page);
-        // In one coven, so there is nothing to choose.
-        await expect(covenSelect(dialog).box).toHaveCount(0);
+        // In one coven, so there is nothing to choose: no chevron, and the
+        // dialog names the coven it adds to.
+        await expect(destinationMenu(page).toggle).toHaveCount(0);
+        await expect(dialog).toHaveAccessibleName(namesCoven(FIRST));
         await expect(nameField(dialog)).toBeVisible();
         if (path === '/account') await assertNoAccessibilityViolations(page);
 
         // The page behind is inert while the dialog is open: walking back
-        // out of it never reaches the bar's own controls.
-        for (let press = 0; press < 3; press += 1) {
+        // past the dialog's first control never reaches the bar's own. The
+        // dialog is drawn inside the bar, beside its button, so the bar's
+        // controls are what the banner holds outside the dialog.
+        for (let press = 0; press < 8; press += 1) {
           await page.keyboard.press('Shift+Tab');
-          expect(await holdsFocus(page.getByRole('banner'))).toBe(false);
+          const onBar = (await holdsFocus(page.getByRole('banner'))) && !(await holdsFocus(dialog));
+          expect(onBar).toBe(false);
         }
 
         // Untouched, so Escape closes at once, and the focus goes back to the button.
@@ -160,26 +181,31 @@ test.fixme(
       expect(await savedRows(coven.id, 'Vorpelleaf')).toHaveLength(1);
     });
 
-    const second = await seedCoven(page, 'Fixture Second Coven Story 28', 'story-28-second.test', {
+    const second = await seedCoven(page, SECOND, 'story-28-second.test', {
       G: 'owner',
     });
-    const viewed = await seedCoven(page, 'Fixture Viewed Coven Story 28', 'story-28-viewed.test', {
+    const viewed = await seedCoven(page, VIEWED, 'story-28-viewed.test', {
       H: 'owner',
     });
     await joinCoven(second, coven.users.B, 'member');
     await joinCoven(viewed, coven.users.B, 'viewer');
     await signInAgainAs(page, coven.users.B);
 
-    await test.step('in more than one coven, a Coven select is set to the current one, with a viewed coven disabled', async () => {
-      await page.goto(`/coven/${second.slug}`);
-      const dialog = await openAddIngredient(page);
-      const select = covenSelect(dialog);
-      await expect(select.box).toHaveValue('Fixture Second Coven Story 28');
-      await select.box.click();
-      await expect(select.choice('Fixture Coven Story 28')).toBeEnabled();
-      await expect(select.choice('Fixture Second Coven Story 28')).toBeEnabled();
-      await expect(select.choice('Fixture Viewed Coven Story 28')).toBeDisabled();
-      await page.keyboard.press('Escape');
+    await test.step('in more than one coven, the chevron lists the covens written to and a choice opens its dialog', async () => {
+      await page.goto(`/coven/${coven.slug}`);
+      const destinations = destinationMenu(page);
+      await destinations.toggle.click();
+      await expect(destinations.toggle).toHaveAttribute('aria-expanded', 'true');
+      // The covens B writes to, in order; the one B only views is not a destination.
+      await expect(destinations.choices).toHaveText([`to ${FIRST}`, `to ${SECOND}`]);
+      await expect(destinations.choice(`to ${VIEWED}`)).toHaveCount(0);
+
+      // On the first coven's page, choosing the second adds to the second.
+      await destinations.choice(`to ${SECOND}`).click();
+      await expect(destinations.menu).toHaveCount(0);
+      const dialog = page.getByRole('dialog', { name: 'Add Ingredient' });
+      await expect(dialog).toBeVisible();
+      await expect(dialog).toHaveAccessibleName(namesCoven(SECOND));
 
       await nameField(dialog).fill('Wexilroot');
       await saveIngredient(dialog).click();
@@ -188,11 +214,17 @@ test.fixme(
       expect(await savedRows(coven.id, 'Wexilroot')).toHaveLength(0);
     });
 
-    await test.step('on a coven the member only views, the select is never set to it', async () => {
+    await test.step('the main part adds to the coven the address names, and never to one the member only views', async () => {
+      await page.goto(`/coven/${second.slug}`);
+      let dialog = await openAddIngredient(page);
+      await expect(dialog).toHaveAccessibleName(namesCoven(SECOND));
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+
       // B reads the viewed coven: the page is theirs to see, not to write to.
       expect((await page.goto(`/coven/${viewed.slug}`))?.status()).toBe(200);
-      const dialog = await openAddIngredient(page);
-      await expect(covenSelect(dialog).box).not.toHaveValue('Fixture Viewed Coven Story 28');
+      dialog = await openAddIngredient(page);
+      await expect(dialog).not.toHaveAccessibleName(namesCoven(VIEWED));
       await page.keyboard.press('Escape');
     });
 
@@ -208,25 +240,24 @@ test.fixme(
       expect(await savedRows(coven.id, 'Quorrelbud')).toHaveLength(0);
     });
 
-    await test.step("an admin in no coven has none off the admin pages, and on them it opens the compendium's", async () => {
+    await test.step("an admin in no coven has the compendium alone, on every page, and it opens the compendium's dialog", async () => {
       await signInAs(page, 'e@story-28-admin.test', ['discord'], 'admin');
-      await page.goto('/account');
-      await expect(page.getByRole('banner')).toBeVisible();
-      await expect(shellAddIngredient(page)).toHaveCount(0);
-
-      await page.goto('/admin/categories');
-      await shellAddIngredient(page).click();
-      await expect(page).toHaveURL(/\/admin\/compendium\?new(?:[=&]|$)/);
-      await expect(page.getByRole('dialog', { name: 'Add Ingredient' })).toBeVisible();
+      for (const path of ['/account', '/admin/categories']) {
+        await page.goto(path);
+        // One destination, so a plain button with nothing to choose.
+        await expect(destinationMenu(page).toggle).toHaveCount(0);
+        await shellAddIngredient(page).click();
+        await expect(page).toHaveURL(/\/admin\/compendium\?new(?:[=&]|$)/);
+        await expect(page.getByRole('dialog', { name: 'Add Ingredient' })).toBeVisible();
+      }
     });
   },
 );
 
-test.fixme(
+test(
   'a member saves a name-only stub, and Save & Add Another keeps the dialog for the next',
   {
     tag: '@story-29',
-    annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
   },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Story 29', 'story-29.test', {
@@ -267,14 +298,58 @@ test.fixme(
       await page.keyboard.press('Escape');
       await expect(dialog).toHaveCount(0);
     });
+
+    await test.step('a stub hiding a compendium entry the coven holds a jar of takes the jar, and the status names it', async () => {
+      // A compendium entry with no formal name, so a stub of its name has its
+      // identity and hides it (MB.215), and the coven's jar of its one form.
+      const jar = await withSql(async (sql) => {
+        await insertIngredient(
+          sql,
+          makeIngredient({
+            name: 'Ostrelvine',
+            nomenclature: 'none',
+            variants: [makeVariant({ form: 'Fixture Husk' })],
+          }),
+          coven.users.A,
+        );
+        const held = await compendiumVariant(sql, 'Ostrelvine', 'Fixture Husk');
+        return insertStock(
+          sql,
+          coven.id,
+          held,
+          { quantity: 12, unit: 'g', threshold: 0 },
+          coven.users.A,
+        );
+      });
+
+      const dialog = await openAddIngredient(page);
+      await nameField(dialog).fill('Ostrelvine');
+      await saveIngredient(dialog).click();
+      // The entry it hides is a near match, so the first save is held on it.
+      const createAnyway = dialog.getByRole('button', { name: 'Create Anyway', exact: true });
+      await expect(createAnyway).toBeFocused();
+      await createAnyway.click();
+      await saveIngredient(dialog).click();
+      await expect(dialog).toHaveCount(0);
+      // The jar's form is data: the status names the jar that moved.
+      await expect(savedStatus(page, 'Ostrelvine')).toContainText('Fixture Husk');
+
+      const [row] = await savedRows(coven.id, 'Ostrelvine');
+      const moved = await withSql(
+        (sql) => sql<{ ingredient_id: string; form: string }[]>`
+          select s.ingredient_id, v.form from inventory_items s
+          join ingredient_variants v on v.id = s.variant_id
+          where s.id = ${jar}`,
+      );
+      expect(moved).toEqual([{ ingredient_id: row.id, form: 'Fixture Husk' }]);
+    });
   },
 );
 
-test.fixme(
+test(
   'a member files a new ingredient under categories through the picker',
   {
     tag: '@story-30',
-    annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
   },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Story 30', 'story-30.test', {
@@ -314,11 +389,10 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'errors show beside their fields on leaving one and on submit',
   {
     tag: '@story-31',
-    annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
   },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Story 31', 'story-31.test', {
@@ -327,15 +401,22 @@ test.fixme(
     });
     await page.goto(`/coven/${coven.slug}`);
 
-    await test.step('leaving Name empty marks it, linking its error, and filling it clears the mark', async () => {
+    await test.step('leaving Name blank once edited marks it, linking its error, and filling it clears the mark', async () => {
       const dialog = await openAddIngredient(page);
       const name = nameField(dialog);
       // What Name describes while valid, so the error is what the mark adds.
       await expect(name).not.toHaveAttribute('aria-invalid', 'true');
       const valid = await describedIds(name);
 
-      await name.fill('D');
-      await name.fill('');
+      // Left untouched, Name stays quiet: an error shows only once the field
+      // is both edited and left, or the form submitted (M8.16, the owner's
+      // call).
+      await name.focus();
+      await page.keyboard.press('Tab');
+      await expect(name).not.toHaveAttribute('aria-invalid', 'true');
+
+      // Edited to a blank, which the schema trims to nothing, and left.
+      await name.fill('   ');
       await page.keyboard.press('Tab');
       await expectFieldError(name, valid);
 
@@ -348,12 +429,34 @@ test.fixme(
       await expect(dialog).toHaveCount(0);
     });
 
-    await test.step('a submit with fields missing marks each, focuses the first and saves nothing', async () => {
+    await test.step('pressing another control while Name is blank still reaches it, the error drawn once the button is up', async () => {
+      const dialog = await openAddIngredient(page);
+      const name = nameField(dialog);
+      await name.fill('   ');
+
+      // The press leaves Name; were its error drawn at once, the controls
+      // below would slide down before the button came up and the click would
+      // miss Classification.
+      await dialog.getByRole('combobox', { name: 'Classification', exact: true }).click();
+      await expect(
+        page.getByRole('listbox', { name: 'Classification choices', exact: true }),
+      ).toBeVisible();
+      await expect(name).toHaveAttribute('aria-invalid', 'true');
+
+      await page.keyboard.press('Escape');
+      await dialog.getByRole('button', { name: 'Close', exact: true }).click();
+      await discardQuestion(dialog).discard.click();
+      await expect(dialog).toHaveCount(0);
+    });
+
+    await test.step('a submit with a field missing marks it and focuses it, saving nothing, until each is filled', async () => {
       const dialog = await openAddIngredient(page);
       const name = nameField(dialog);
       const formal = dialog.getByRole('textbox', { name: 'Formal Name', exact: true });
       const validName = await describedIds(name);
-      // A botanical entry needs a formal name (§5), so both are missing.
+      // A botanical entry needs a formal name (§5), so both are missing. The
+      // schema checks the formal name only once every field passes on its
+      // own, so a submit marks the name first, and the formal name the next.
       await dialog
         .getByRole('textbox', { name: 'Description', exact: true })
         .fill('Grows by fixture light.');
@@ -362,8 +465,14 @@ test.fixme(
 
       await saveIngredient(dialog).click();
       await expectFieldError(name, validName);
-      await expectFieldError(formal, validFormal);
       await expect(name).toBeFocused();
+      await expect(dialog).toBeVisible();
+
+      await name.fill('Dorvenmoss');
+      await saveIngredient(dialog).click();
+      await expect(name).not.toHaveAttribute('aria-invalid', 'true');
+      await expectFieldError(formal, validFormal);
+      await expect(formal).toBeFocused();
       await expect(dialog).toBeVisible();
       const described = await withSql(
         (sql) => sql`
@@ -372,7 +481,6 @@ test.fixme(
       );
       expect(described).toHaveLength(0);
 
-      await name.fill('Dorvenmoss');
       await formal.fill('Dorvena fixtura');
       await saveIngredient(dialog).click();
       await expect(dialog).toHaveCount(0);
@@ -382,11 +490,10 @@ test.fixme(
   },
 );
 
-test.fixme(
+test(
   'closing with unsaved input asks before discarding it',
   {
     tag: '@story-32',
-    annotation: { type: 'fixme', description: 'M8.16 builds the coven add dialog' },
   },
   async ({ page }) => {
     const coven = await seedCoven(page, 'Fixture Coven Story 32', 'story-32.test', {
@@ -413,6 +520,9 @@ test.fixme(
     await test.step('the Close button asks the same question', async () => {
       await close.click();
       await expect(question.keep).toBeFocused();
+      // Its ring drawn too: after a pointer press the browser drew none for a
+      // scripted focus, so the focus was there and could not be seen (M8.16).
+      await expect(question.keep).toHaveCSS('outline-style', 'solid');
       await question.keep.click();
       await expect(close).toBeFocused();
       await expect(name).toHaveValue('Halvenseed');

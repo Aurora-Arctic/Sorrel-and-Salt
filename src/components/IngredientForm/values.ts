@@ -761,45 +761,78 @@ const VARIANT_SECTION_OF: Readonly<Record<string, VariantSectionKey>> = {
   formLink: 'identity',
 };
 
-/** The sections `errors` names in `sectionOf`, by the first key of each error's path, a box's draft by its list's. */
+/** Whether an error on a field is drawn, by the field's full path, `variants.0.form`. */
+export type ErrorShown = (path: string) => boolean;
+
+/** A field's own error, rather than the errors of the fields beneath a path. */
+const isFieldError = (error: object): boolean => 'type' in error || 'message' in error;
+
+/** Whether any field error under `path` is drawn. */
+function anyShown(error: unknown, path: string, shown: ErrorShown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  if (isFieldError(error)) return shown(path);
+  return Object.entries(error).some(([key, inner]) => anyShown(inner, `${path}.${key}`, shown));
+}
+
+/**
+ * The sections `errors` names in `sectionOf`, by the first key of each
+ * error's path, a box's draft by its list's; only for an error `shown` draws,
+ * so a section is never flagged for an error no field in it shows.
+ */
 function sectionsIn<K extends SectionKey>(
   errors: object,
   sectionOf: Readonly<Record<string, K>>,
+  shown: ErrorShown,
+  prefix = '',
 ): Set<K> {
   const found = new Set<K>();
   for (const [key, error] of Object.entries(errors)) {
-    const keys = key === 'drafts' && error ? Object.keys(error as object) : [key];
-    for (const named of keys) {
+    const drafts = key === 'drafts' && error ? Object.entries(error as object) : null;
+    for (const [named, inner] of drafts ?? [[key, error]]) {
       const section = sectionOf[named];
-      if (section) found.add(section);
+      const path = drafts ? `${prefix}drafts.${named}` : `${prefix}${named}`;
+      if (section && anyShown(inner, path, shown)) found.add(section);
     }
   }
   return found;
 }
 
 /**
- * The sections holding an error, the schema's or the server's, by the
- * first key of each error's path (the list's, for a box's draft). The form's
- * `root` error names no field, and so no section.
+ * The sections holding an error that is drawn, the schema's or the server's,
+ * by the first key of each error's path (the list's, for a box's draft). The
+ * form's `root` error names no field, and so no section.
  */
-export function sectionsWithErrors(errors: FieldErrors<IngredientFormValues>): Set<SectionKey> {
-  return sectionsIn(errors, SECTION_OF);
+export function sectionsWithErrors(
+  errors: FieldErrors<IngredientFormValues>,
+  shown: ErrorShown,
+): Set<SectionKey> {
+  return sectionsIn(errors, SECTION_OF, shown);
 }
 
-/** One variant's sections holding an error, read from its errors, `errors.variants[i]`. */
-export function variantSectionsWithErrors(errors: unknown): Set<VariantSectionKey> {
-  return errors && typeof errors === 'object' ? sectionsIn(errors, VARIANT_SECTION_OF) : new Set();
+/**
+ * One variant's sections holding an error that is drawn, read from its errors,
+ * `errors.variants[i]`, under its path, `variants.1.`.
+ */
+export function variantSectionsWithErrors(
+  errors: unknown,
+  shown: ErrorShown,
+  prefix: string,
+): Set<VariantSectionKey> {
+  return errors && typeof errors === 'object'
+    ? sectionsIn(errors, VARIANT_SECTION_OF, shown, prefix)
+    : new Set();
 }
 
-/** Each variant holding an error, by its place in the list, and the sections it holds them in. */
+/** Each variant holding an error that is drawn, by its place in the list, and the sections it holds them in. */
 export function variantsWithErrors(
   errors: FieldErrors<IngredientFormValues>,
+  shown: ErrorShown,
 ): Map<number, Set<VariantSectionKey>> {
   const found = new Map<number, Set<VariantSectionKey>>();
   // An array's own error sits on it as `root`, beside the variants' places.
   for (const [key, error] of Object.entries(errors.variants ?? {})) {
     const index = Number(key);
-    const sections = variantSectionsWithErrors(error);
+    const sections = variantSectionsWithErrors(error, shown, `variants.${key}.`);
     if (Number.isInteger(index) && sections.size > 0) found.set(index, sections);
   }
   return found;

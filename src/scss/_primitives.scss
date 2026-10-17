@@ -194,6 +194,15 @@
     font-size: type-size('caption');
   }
 
+  // A size between the full button and `.btn--small` (the owner's call,
+  // M8.16), for the shell's bar, where the full one is too tall and the small
+  // one too slight: the label stays at `.btn`'s size and the edge at its
+  // weight, and only the height comes down, off the field's.
+  .btn--medium {
+    min-height: 0;
+    padding: space(1) space(4);
+  }
+
   // A save in flight, the owner's call for every Save button (M5.6): a ring
   // in the button's ink, open on one side so its turn reads, ahead of the
   // label, the button `aria-busy`. Slowed rather than stopped where motion is
@@ -238,25 +247,7 @@
   // disabled button at all.
   .btn:disabled,
   .btn[aria-disabled='true'] {
-    background-color: transparent;
-    border-color: $text-muted;
-    border-style: dashed;
-    color: $text-muted;
-    opacity: $opacity-disabled;
-    cursor: not-allowed;
-    box-shadow: none;
-
-    &:hover,
-    &:focus-visible {
-      background-color: transparent;
-      border-color: $text-muted;
-      color: $text-muted;
-      box-shadow: none;
-    }
-
-    svg {
-      opacity: 0.5;
-    }
+    @include btn-disabled;
   }
 
   // The one filled button in a view: its primary action. Its hover is a

@@ -314,7 +314,7 @@ describe('IngredientForm’s variants', () => {
     expect(calls[0].input.variants?.map(({ form }) => form)).toEqual(['Herb']);
   });
 
-  it('keeps a variant, open as it was, when its removal is answered Keep It', () => {
+  it('keeps a variant, open as it was, when its removal is answered Keep It', async () => {
     renderForm({ workspaceId: WORKSPACE_ID });
 
     addVariant('Oil');
@@ -327,9 +327,11 @@ describe('IngredientForm’s variants', () => {
     expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
     expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
     expect(remove).toHaveFocus();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
   });
 
-  it('asks one question at a time: Cancel while a removal asks shows the unsaved changes instead', () => {
+  it('asks one question at a time: Cancel while a removal asks shows the unsaved changes instead', async () => {
     offerNothing();
     renderWithClient(
       <IngredientForm workspaceId={WORKSPACE_ID} onSaved={vi.fn()} onCancel={vi.fn()} />,
@@ -345,6 +347,8 @@ describe('IngredientForm’s variants', () => {
 
     expect(screen.getByRole('button', { name: 'Keep It' })).toBeInTheDocument();
     expect(variant('Oil')).toBeInTheDocument();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
   });
 
   it('refuses a repeat form at Add, folded as the save folds it, adding no second fieldset', () => {
@@ -1117,6 +1121,8 @@ describe('IngredientForm’s variants', () => {
 
       expect(variant('Oil')).toBeInTheDocument();
       expect(newForm()).toHaveValue('');
+      // Leaving a field validates it; let that land inside the test.
+      await act(async () => {});
     });
 
     it('opens the closed section an undone change was made in, and redoes it', async () => {
@@ -1141,6 +1147,8 @@ describe('IngredientForm’s variants', () => {
       redo();
 
       expect(screen.getByRole('button', { name: 'Remove Silver' })).toBeInTheDocument();
+      // Leaving a field validates it; let that land inside the test.
+      await act(async () => {});
     });
 
     it('opens the closed variant, and the closed section in it, that an undone change was made in', async () => {
@@ -1187,6 +1195,8 @@ describe('IngredientForm’s variants', () => {
 
       noVariant('Oil');
       expect(variant('Herb')).toBeInTheDocument();
+      // Leaving a field validates it; let that land inside the test.
+      await act(async () => {});
     });
 
     it('undoes nothing after an edit is saved', async () => {
@@ -1271,7 +1281,7 @@ describe('IngredientForm’s variants, undone', () => {
   };
   const name = () => control(document.body, 'Name');
 
-  it('lands on the Form field of the variant an undo brought back', () => {
+  it('lands on the Form field of the variant an undo brought back', async () => {
     renderForm({ workspaceId: WORKSPACE_ID });
     type(document.body, 'Name', 'Testwort');
     addVariant('Oil');
@@ -1283,9 +1293,11 @@ describe('IngredientForm’s variants, undone', () => {
     chord(name());
 
     expect(control(variant('Oil'), 'Form')).toHaveFocus();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
   });
 
-  it('lands on the New Form box after a redo that only takes a variant out', () => {
+  it('lands on the New Form box after a redo that only takes a variant out', async () => {
     renderForm({ workspaceId: WORKSPACE_ID });
     type(document.body, 'Name', 'Testwort');
     addVariant('Oil');
@@ -1299,9 +1311,11 @@ describe('IngredientForm’s variants, undone', () => {
 
     noVariant('Oil');
     expect(newForm()).toHaveFocus();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
   });
 
-  it('lands on the box of a list inside a variant after undoing an entry added to it', () => {
+  it('lands on the box of a list inside a variant after undoing an entry added to it', async () => {
     renderForm({ workspaceId: WORKSPACE_ID });
     type(document.body, 'Name', 'Testwort');
     addVariant('Oil');
@@ -1315,5 +1329,7 @@ describe('IngredientForm’s variants, undone', () => {
 
     expect(within(variant('Herb')).queryByLabelText('Remove Silver')).toBeNull();
     expect(control(variant('Herb'), 'Colour')).toHaveFocus();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
   });
 });
