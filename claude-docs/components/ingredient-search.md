@@ -101,8 +101,9 @@ The table gives four functions, and every caller uses only these:
 - `href(path, filter, extra)`: the address of a filter, in table order, then
   `extra` for the cursor and the modal. Every link, the pager and the filter
   form's applies call it, through the list's `compendiumHref`.
-- `variables(filter)`: the query's variables, a blank as `undefined`. The page
+- `variables(filter, lookups?)`: the query's variables, a blank as `undefined`. The page
   keys its cached read by them, so adding a filter changes nothing there.
+  `lookups` is the optional map a slug list needs to become ids (below).
 - `changed(place, change)`: the place with a change applied and the cursor
   dropped.
 
@@ -133,6 +134,22 @@ and a modal's way back write a cursor, through `extra`. Reload and Back need
 nothing built for them: the address is the state, so a reload reads it again
 and Back steps through the filters one change at a time. The e2e spec in
 `tests/e2e/admin-compendium.spec.ts` asserts both.
+
+**A slug list** (`slugListParam`) is a repeated parameter whose values the address
+spells as slugs and the query takes as ids. `read` drops repeats; `variables`
+maps each slug through `lookups[lookupKey]` (a `Map` of slug to id the page
+builds), dropping a slug the map does not hold, and gives `undefined` when none
+are known. The table holds nothing category-specific. The compendium's
+`categories` entry is `slugListParam('categories', 'categoryIds', 'categories')`; its
+page reads the cached `listCategories` (every page, through `allPages`) for the
+map, and the Categories picker (`CategoryPicker`, M8.11) after Form in the filter
+row draws the choice. A pick applies the whole slug list at once. The picker
+keeps its own chosen state while the address catches up, and the filter row is
+keyed by the other filters only, so a pick does not remount it: its status
+region announces the pick once and the list's own status does not. Hidden
+inputs repeat the slugs so a native GET submit before hydration keeps them. A
+match is the union of an entry's categories and its forms' (MB.215), by the
+finder's category arm, ANDed across the categories chosen.
 
 The `elements` filter is the first list filter: an `elements` argument on
 `compendium` and `workspaceIngredients` matching an entry that holds any element
