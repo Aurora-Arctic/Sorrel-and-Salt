@@ -12,15 +12,25 @@ vi.mock('@/components/IngredientForm', () => ({
   default: ({
     workspaceId,
     onSaved,
+    duplicateHref,
+    entryHref,
   }: {
     workspaceId: string | null;
+    duplicateHref: (match: { id: string }) => string;
+    entryHref: (entry: { slug: string; isGlobal: boolean }) => string | undefined;
     onSaved: (
-      saved: { name: string; slug: string; stock?: unknown[] },
+      saved: { id: string; name: string; slug: string; stock?: unknown[] },
       next: 'open' | 'another',
     ) => void;
   }) => (
     <form aria-label="Ingredient Form" data-workspace={workspaceId}>
-      <button type="button" onClick={() => onSaved({ name: 'Testwort', slug: 'testwort' }, 'open')}>
+      <a href={duplicateHref({ id: 'near-id' })}>Near Match</a>
+      <a href={entryHref({ slug: 'testwort', isGlobal: true })}>Compendium Substitute</a>
+      <a href={entryHref({ slug: 'mine', isGlobal: false })}>Own Substitute</a>
+      <button
+        type="button"
+        onClick={() => onSaved({ id: 'saved-id', name: 'Testwort', slug: 'testwort' }, 'open')}
+      >
         Save Ingredient
       </button>
       <button
@@ -28,6 +38,7 @@ vi.mock('@/components/IngredientForm', () => ({
         onClick={() =>
           onSaved(
             {
+              id: 'saved-id',
               name: 'Testwort',
               slug: 'testwort',
               stock: [
@@ -43,7 +54,7 @@ vi.mock('@/components/IngredientForm', () => ({
       </button>
       <button
         type="button"
-        onClick={() => onSaved({ name: 'Testwort', slug: 'testwort' }, 'another')}
+        onClick={() => onSaved({ id: 'saved-id', name: 'Testwort', slug: 'testwort' }, 'another')}
       >
         Save & Add Another
       </button>
@@ -242,6 +253,31 @@ describe('AddIngredientButton', () => {
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
+  it('opens the saved ingredient’s page in the coven after Save Ingredient', async () => {
+    draw(MEMBER, [FIXTURE]);
+    open();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(push).toHaveBeenCalledExactlyOnceWith(`/coven/${FIXTURE.slug}/ingredients/saved-id`);
+  });
+
+  it('links a near match to the coven’s page for it, and a compendium substitute to its public page', () => {
+    draw(MEMBER, [FIXTURE]);
+    open();
+
+    expect(screen.getByRole('link', { name: 'Near Match' })).toHaveAttribute(
+      'href',
+      `/coven/${FIXTURE.slug}/ingredients/near-id`,
+    );
+    expect(screen.getByRole('link', { name: 'Compendium Substitute' })).toHaveAttribute(
+      'href',
+      '/compendium/ingredients/testwort',
+    );
+    expect(screen.queryByRole('link', { name: 'Own Substitute' })).toBeNull();
+  });
+
   it('names the jars that came with the new entry in its status', async () => {
     draw(MEMBER, [FIXTURE]);
     open();
@@ -260,5 +296,6 @@ describe('AddIngredientButton', () => {
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
     expect(screen.queryByRole('status')).toBeNull();
+    expect(push).not.toHaveBeenCalled();
   });
 });

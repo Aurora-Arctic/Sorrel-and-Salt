@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
@@ -60,9 +61,10 @@ function AddIngredientBody({
         close();
       }}
       onCancel={close}
-      // A coven's ingredient page is M8.19's; until then a near match links
-      // to the list it is in.
-      duplicateHref={() => `/coven/${workspace.slug}/ingredients`}
+      duplicateHref={(match) => `/coven/${workspace.slug}/ingredients/${match.id}`}
+      // A linked substitute that is a compendium entry opens its public page; a
+      // coven's own has none to open from here.
+      entryHref={({ slug, isGlobal }) => (isGlobal ? `/compendium/ingredients/${slug}` : undefined)}
     />
   );
 }
@@ -154,7 +156,11 @@ const AddIngredientButton = ({
             <AddIngredientBody
               workspace={adding}
               close={close}
-              onSaved={(ingredient) => setSaved(savedMessage(ingredient))}
+              onSaved={(ingredient) => {
+                setSaved(savedMessage(ingredient));
+                // Save Ingredient opens the new ingredient's page.
+                router.push(`/coven/${adding.slug}/ingredients/${ingredient.id}` as Route);
+              }}
             />
           )}
         </Modal>

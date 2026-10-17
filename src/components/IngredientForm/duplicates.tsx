@@ -134,16 +134,8 @@ const joinerAt = (index: number, count: number) => {
   return index === count - 1 ? ' or ' : ', ';
 };
 
-/** A match's page, as a coven's form links it: the ingredient by id, M8.19's. */
-const covenHref = ({ id }: Duplicate) => `/ingredients/${id}`;
-
 /** The name field, with the duplicate warning beneath it. */
-export function NameField({
-  warning,
-  hrefOf = covenHref,
-  holds = true,
-  ref,
-}: NameFieldProps): ReactElement {
+export function NameField({ warning, hrefOf, holds = true, ref }: NameFieldProps): ReactElement {
   const { shown, blocking } = warning;
   const warningId = useId();
 
@@ -171,8 +163,8 @@ export function NameField({
         <output className="ingredient-form__duplicates" aria-label="Possible duplicates">
           {shown.length > 0 && (
             <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
-              {/* Plain anchors rather than <Link>: typed routes refuse a page
-                  not built yet, and /ingredients/[id] is M8.19's. Each in a
+              {/* Plain anchors rather than <Link>, since the caller hands
+                  back a plain string, not a typed route. Each in a
                   new tab, so the form and its unsaved changes stay where they
                   are (the owner's call at MB.115's review). */}
               <p id={warningId}>

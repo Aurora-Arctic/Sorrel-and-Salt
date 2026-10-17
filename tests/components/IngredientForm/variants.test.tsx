@@ -9,7 +9,7 @@ import {
   VARIANT_SECTION_KEYS,
 } from '@/components/IngredientForm/values';
 import { VARIANT_SECTIONS, openSections, openSectionsIn } from '../../support/ingredient-sections';
-import { renderWithClient, waitFor } from '../../support/ingredient-form';
+import { renderWithClient, waitFor, duplicateHref } from '../../support/ingredient-form';
 import { press, redo, undo } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import {
@@ -87,12 +87,17 @@ function renderForm(
   const form =
     props.workspaceId === null ? (
       <IngredientForm
+        duplicateHref={duplicateHref}
         workspaceId={null}
         onSaved={onSaved}
         entry={props.values && { id: ENTRY_ID, values: props.values }}
       />
     ) : (
-      <IngredientForm workspaceId={props.workspaceId} onSaved={onSaved} />
+      <IngredientForm
+        duplicateHref={duplicateHref}
+        workspaceId={props.workspaceId}
+        onSaved={onSaved}
+      />
     );
   renderWithClient(form);
   // An edit opens with every section closed (MB.115): its variants are what
@@ -334,7 +339,12 @@ describe('IngredientForm’s variants', () => {
   it('asks one question at a time: Cancel while a removal asks shows the unsaved changes instead', async () => {
     offerNothing();
     renderWithClient(
-      <IngredientForm workspaceId={WORKSPACE_ID} onSaved={vi.fn()} onCancel={vi.fn()} />,
+      <IngredientForm
+        duplicateHref={duplicateHref}
+        workspaceId={WORKSPACE_ID}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
     );
 
     addVariant('Oil');

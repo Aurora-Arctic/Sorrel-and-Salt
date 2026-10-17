@@ -5,7 +5,7 @@ import { NameField, useDuplicateWarning } from '@/components/IngredientForm/dupl
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { DEBOUNCE_MS } from '@/lib/debounce';
-import { renderWithClient } from '../../support/ingredient-form';
+import { renderWithClient, duplicateHref } from '../../support/ingredient-form';
 import { press, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { WORKSPACE_ID, offerDuplicates } from '../../support/msw/ingredient-lookups';
@@ -61,7 +61,7 @@ function renderName(opened?: string) {
           })}
         >
           {/* No ref: moving the focus to Create Anyway is the form's. */}
-          <NameField warning={warning} ref={null} />
+          <NameField warning={warning} hrefOf={duplicateHref} ref={null} />
           <button type="submit">Save Ingredient</button>
         </form>
       </FormProvider>
@@ -167,15 +167,15 @@ describe('NameField, with useDuplicateWarning', () => {
     const tomentosa = await within(warning()).findByRole('link', {
       name: /^Cat's Claw \(Uncaria tomentosa\)/,
     });
-    expect(tomentosa).toHaveAttribute('href', '/ingredients/claw-1');
+    expect(tomentosa).toHaveAttribute('href', '/fixture/ingredients/claw-1');
     expect(tomentosa).toHaveAttribute('target', '_blank');
     expect(screen.getByRole('link', { name: /^Cat's Claw \(Felis catus\)/ })).toHaveAttribute(
       'href',
-      '/ingredients/claw-2',
+      '/fixture/ingredients/claw-2',
     );
     expect(screen.getByRole('link', { name: /^Mockleaf/ })).toHaveAttribute(
       'href',
-      '/ingredients/mock-1',
+      '/fixture/ingredients/mock-1',
     );
     // Read with the field, as its hint is, and not an error until a save meets it.
     expect(name().getAttribute('aria-describedby')).toContain(warning().id);

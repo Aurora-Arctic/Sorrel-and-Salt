@@ -37,6 +37,7 @@ import {
   renderWithClient,
   textbox,
   waitFor,
+  duplicateHref,
 } from '../../support/ingredient-form';
 import { openSections } from '../../support/ingredient-sections';
 import { choose, press, type, typeIn } from '../../support/interact';
@@ -78,7 +79,13 @@ function renderForm(props: Partial<Extract<IngredientFormProps, { workspaceId: n
   const onDeleted = vi.fn();
   const asks = offerNothing();
   renderWithClient(
-    <IngredientForm workspaceId={null} onSaved={onSaved} onDeleted={onDeleted} {...props} />,
+    <IngredientForm
+      duplicateHref={duplicateHref}
+      workspaceId={null}
+      onSaved={onSaved}
+      onDeleted={onDeleted}
+      {...props}
+    />,
   );
   return { onSaved, onDeleted, asks };
 }
@@ -248,6 +255,7 @@ describe('IngredientForm on the compendium', () => {
       const onClose = renderInModal(
         (done) => (
           <IngredientForm
+            duplicateHref={duplicateHref}
             workspaceId={null}
             entry={{ id: ENTRY_ID, values }}
             onSaved={vi.fn()}
@@ -270,7 +278,13 @@ describe('IngredientForm on the compendium', () => {
     it('asks before Cancel or Escape discards a change, and closes on Discard Changes', async () => {
       offerNothing();
       const onClose = renderInModal((done) => (
-        <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
+        <IngredientForm
+          duplicateHref={duplicateHref}
+          workspaceId={null}
+          onSaved={vi.fn()}
+          onDeleted={done}
+          onCancel={done}
+        />
       ));
 
       expectGuardedWaysOut(onClose, () => type('Name', 'Testwort'));
@@ -283,7 +297,13 @@ describe('IngredientForm on the compendium', () => {
     it('asks before Escape or Cancel discards what is typed in a reference panel, keeping it on Keep Editing', async () => {
       offerNothing();
       const onClose = renderInModal((done) => (
-        <IngredientForm workspaceId={null} onSaved={vi.fn()} onDeleted={done} onCancel={done} />
+        <IngredientForm
+          duplicateHref={duplicateHref}
+          workspaceId={null}
+          onSaved={vi.fn()}
+          onDeleted={done}
+          onCancel={done}
+        />
       ));
       const title = () => inPanel('Title');
 
@@ -557,6 +577,7 @@ describe('IngredientForm on the compendium', () => {
     const renderInDialog = () =>
       renderInModal((done) => (
         <IngredientForm
+          duplicateHref={duplicateHref}
           workspaceId={null}
           entry={{ id: ENTRY_ID, values: TESTWORT }}
           onSaved={vi.fn()}

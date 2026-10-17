@@ -52,8 +52,8 @@ const IngredientSummaryDocument = graphql(`
 
 /**
  * Where a summary links its entry, when the page holding the form has a page
- * for it: none by default, since a coven's ingredient page and the public
- * compendium's are not built yet.
+ * for it: none by default, and the dialogs that hold the form pass the real
+ * routes (the public compendium page, or the admin's modal).
  */
 export const EntryHrefContext = createContext<EntryHref | undefined>(undefined);
 
