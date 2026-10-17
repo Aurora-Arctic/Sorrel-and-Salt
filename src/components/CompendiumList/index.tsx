@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { Route } from 'next';
-import { EditLink } from '../IconTip';
+import { EditLink, LinkIcon } from '../IconTip';
 import LinkHint from '../LinkHint';
 import { Fragment, type ReactElement } from 'react';
 import FormIcon from '../FormIcon';
@@ -38,8 +38,13 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     // The entry's own public page, by its stored slug (M8.19), which offers a
     // curator Edit; the pencil still opens the modal from here.
     cell: (entry) => (
-      <Link href={`/compendium/ingredients/${entry.slug}` as Route}>
-        {entry.name} <LinkHint />
+      <Link
+        className="compendium-list__name"
+        href={`/compendium/ingredients/${entry.slug}` as Route}
+      >
+        {entry.name}
+        <LinkIcon />
+        <LinkHint />
       </Link>
     ),
   },

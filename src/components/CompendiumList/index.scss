@@ -1,4 +1,5 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The forms in the Form column, one wrapping row: the gap sets each form off
 // from the comma before it by more than a word space, so an icon reads as its
@@ -23,4 +24,55 @@
   align-items: center;
   gap: 0.25em;
   white-space: nowrap;
+}
+
+// A name linking to its entry's page: the body ink with no underline at rest,
+// the chain icon after it saying it is a link (colour alone would not), and
+// pointed at or focused the whole name, icon included, takes the link colour
+// while the icon alone grows a little. A transform on the icon, from its inline
+// start, so nothing around it moves; the name keeps its size. Reduced motion
+// snaps both, with no transition.
+.compendium-list__name {
+  color: $text-primary;
+  text-decoration: none;
+  @include theme-transition(color);
+
+  svg {
+    width: 1em;
+    height: 1em;
+    margin-inline-start: space(1);
+    vertical-align: -0.125em;
+    transform-origin: left center;
+    @include theme-transition(transform);
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $accent;
+
+    svg {
+      transform: scale(1.2);
+    }
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:where(:visited) {
+    color: $text-primary;
+  }
+
+  &:hover:where(:visited),
+  &:focus-visible:where(:visited) {
+    color: $accent;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    svg {
+      transition: none;
+    }
+  }
 }
