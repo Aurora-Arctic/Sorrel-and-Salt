@@ -28,10 +28,9 @@ describe('the error boundary', () => {
 
 describe('the global error boundary', () => {
   it('offers a way home and prints no message or stack', () => {
-    // It renders <html>, which cannot sit inside the test's <div>.
-    const { container } = render(<GlobalError error={failure} />, {
-      container: document.documentElement,
-    });
+    // It renders <html>, which cannot sit inside the test's <div>, so React
+    // takes the document itself as the root.
+    const { container } = render(<GlobalError error={failure} />, { container: document });
 
     expect(screen.getByRole('link')).toHaveAttribute('href', '/');
     expect(container.textContent).not.toMatch(/secret_table|secret-file/);
