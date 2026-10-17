@@ -303,20 +303,28 @@ a name with no break in it breaks anywhere.
 ## A control in the header
 
 The header holds the title, with its eyebrow over it on an edit, then the ×,
-and under the × a place whose foot is level with the heading's. In a dialog
-narrower than a form's stacking width (`$narrow-column` and the padding, the
-width ConfirmOverlay's row stacks at) the place moves to a line of its own
-under the heading, at its start, and empty it takes no line. The
-modal hands that place down as an element (`HeaderSlotContext`), and its
-contents may portal one control of their own into it through
+and under them a toolbar row, full width, at every width: one layout. The row
+is stretched, so every button in it is as tall as the tallest, and a little
+space sits above it. Empty, it takes no line. The first control sits at its
+start and a form's Undo and Redo pair at its end (the pair carries
+`margin-inline-start: auto`, so a group form's lone pair lands at the end
+too). This is the owner's call at M12.10 (2026-10-17), which replaced
+MB.115's place under the ×, level with the heading's foot; MB.115 had moved
+the control off the title line, between the title and the ×, because there it
+squeezed a phone's heading until a name broke mid-word, and the row avoids
+that too.
+
+The modal hands the row down as an element (`HeaderSlotContext`), and its
+contents may portal controls of their own into it through
 `useModalHeaderSlot()`: the ingredient form's Open All / Close All, the
-owner's call at MB.115, and a form's Undo and Redo buttons (`FormHistoryButtons`, M12.9). The context is exported from the barrel too, so a panel inside the form can set it to `null` and keep its own undo buttons out of the header (M12.10). A slot, as the guard is, since the form sits inside
-the modal's render prop, out of its owner's reach. Outside a modal the hook
-answers null and the form keeps the control in its own flow. The place sat
-between the title and the × until the owner moved it, at MB.115: there it
-squeezed a phone's heading until a name broke mid-word. Tab order follows
-the page: the ×, then the control, then the form. While a question is asked
-over the form, the place is held and dimmed with it
+owner's call at MB.115, and a form's Undo and Redo buttons
+(`FormHistoryButtons`, M12.9). The context is exported from the barrel too,
+so a panel inside the form can set it to `null` and keep its own undo buttons
+out of the header (M12.10). A slot, as the guard is, since the form sits
+inside the modal's render prop, out of its owner's reach. Outside a modal the
+hook answers null and the form keeps the controls in its own flow. Tab order
+follows the page: the ×, then the controls, then the form. While a question is
+asked over the form, the row is held and dimmed with it
 (["Asking over the form"](#asking-over-the-form)).
 
 ## ModalButton

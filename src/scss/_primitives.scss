@@ -1107,13 +1107,39 @@
     margin-inline-start: auto;
   }
 
-  // A form's Undo and Redo (M12.9): two small quiet buttons side by side. In a
-  // modal they sit in its header slot beside Open All; elsewhere, at the start
-  // of the form.
+  // A form's Undo and Redo (M12.9): two small quiet buttons joined as one pair
+  // (M12.10): no gap, the second laid over the first's border so the seam is
+  // one line, the inner corners square and the outer ones `.btn`'s. In a
+  // modal the pair sits at the end of the header slot's row, stretched to the
+  // row's height so the icon buttons come out as tall as a text button beside
+  // them; elsewhere, at the start of the form. Each button is wrapped in an
+  // `IconTip`, so the rules reach through it.
   .form-history {
     display: inline-flex;
     align-self: flex-start;
-    gap: space(1);
+    margin-inline-start: auto;
+
+    .icon-tip + .icon-tip {
+      margin-inline-start: -1px;
+    }
+
+    .icon-tip:not(:last-child) .btn {
+      border-start-end-radius: 0;
+      border-end-end-radius: 0;
+    }
+
+    .icon-tip:not(:first-child) .btn {
+      border-start-start-radius: 0;
+      border-end-start-radius: 0;
+    }
+
+    // A half that is hovered or focused rises over its neighbour, so its
+    // border and focus ring are not cut by the overlap.
+    .btn:hover,
+    .btn:focus-visible {
+      position: relative;
+      z-index: 1;
+    }
   }
 
   .field {

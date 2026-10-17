@@ -362,8 +362,9 @@ const history = useFormHistory(methods, { root, enabled: !discard.asking });
   for the fall-back to the Undo button. The test for a single subscription
   reads `control._subjects`. A react-hook-form upgrade re-checks both.
 - **The buttons** are small quiet icon buttons in an `IconTip`, labelled Undo and
-  Redo and disabled while there is nothing to do. In a modal they portal into
-  the header slot beside the title ([`modal.md`](modal.md#a-control-in-the-header));
+  Redo and disabled while there is nothing to do, joined as one pair: no gap,
+  one shared border, the inner corners square. In a modal they portal into the
+  header slot's toolbar row, at its end ([`modal.md`](modal.md#a-control-in-the-header));
   elsewhere they sit at the start of the form. `FormHistoryButtons` draws nothing
   without a `FormHistoryContext`. Their `.form-history` row is styled in
   `src/scss/_primitives.scss`.

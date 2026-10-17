@@ -1172,8 +1172,9 @@ The form has an undo and a redo (M12.10), the same `useFormHistory` that
 [`field.md`](field.md#undo-and-redo) describes. It is wired on the form's own
 `<form>` ref and switched off, as the chords and buttons are, while a question
 is asked over the form (the discard guard, a delete, or the form's own
-`question`). Undo and Redo sit in the modal's header beside Open All, in that
-order: `FormHistoryButtons` is drawn just after the Open All portal.
+`question`). The modal's header row holds Open All at its start and the joined Undo and
+Redo pair at its end: `FormHistoryButtons` is drawn just after the Open All
+portal, and the pair's own `margin-inline-start: auto` carries it to the end.
 
 **Two resets clear the history.** A step that leads back past a save would
 undo what the server now holds. After Save & Add Another's `reset(EMPTY_VALUES)`
