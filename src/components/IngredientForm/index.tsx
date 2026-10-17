@@ -80,6 +80,13 @@ const CreateWorkspaceIngredientDocument = graphql(`
       id
       name
       slug
+      stock(workspaceId: $workspaceId) {
+        quantityOnHand
+        unit
+        variant {
+          form
+        }
+      }
     }
   }
 `);
@@ -143,6 +150,11 @@ const IngredientForm = ({
     // react-hook-form focuses in registration order and only a registered
     // field; a list entry is neither, so the effect below does it instead.
     shouldFocusError: false,
+    // A field is checked when it is first left, and on every change after, so
+    // an untouched one stays quiet until submit. Not the default (submit, then
+    // change): story 31 wants the error beside the field as the person moves on.
+    mode: 'onTouched',
+    reValidateMode: 'onChange',
   });
   const {
     control,
