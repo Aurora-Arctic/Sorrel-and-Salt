@@ -211,6 +211,20 @@ export const Filtered: Story = () => (
   </Page>
 );
 
+// Two forms and Toxic: the Filters button reads 3, one for each chosen value.
+export const ChosenValuesCounted: Story = () => (
+  <Page>
+    <CompendiumList
+      entries={[entry('Mockroot', 'none', null, ['Powder'])]}
+      filter={{ ...NO_FILTER, forms: ['Oil', 'Powder'], toxic: 'not_toxic' }}
+      facets={FACETS}
+      categories={CATEGORIES}
+      vocabulary={VOCABULARY}
+      total={1}
+    />
+  </Page>
+);
+
 export const NoMatch: Story = () => (
   <Page>
     <CompendiumList
