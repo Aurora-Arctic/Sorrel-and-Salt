@@ -1666,7 +1666,8 @@
   // segment carries the state by its fill as well as the name beneath
   // (WCAG 1.4.1). Both classes, so it outranks `.fieldset`'s own column
   // direction below.
-  .fieldset.radio-group--strip {
+  .fieldset.radio-group--strip,
+  .fieldset.radio-group--segmented {
     flex-direction: column;
     align-items: flex-start;
     gap: space(2);
@@ -1755,6 +1756,26 @@
     margin: 0;
     color: $text-muted;
     font-size: type-size('caption');
+  }
+
+  // The segmented layout (`layout="segmented"`, M12.4): the same bar with the
+  // option's name in text rather than an icon, and its count after it. Wider
+  // than the icon segment's square, its height kept, and never wrapped, so a
+  // bar of three stays one row.
+  .radio--text {
+    inline-size: auto;
+    padding-inline: space(4);
+    white-space: nowrap;
+
+    // Muted beside the name while unchosen; the chosen segment's fill takes
+    // the ink whole.
+    .radio__count {
+      color: $text-muted;
+    }
+
+    &:has(input:checked) .radio__count {
+      color: inherit;
+    }
   }
 
   .radio__text {

@@ -87,3 +87,53 @@ describe('RadioGroupField, strip', () => {
     expect(none).toHaveAccessibleName('None');
   });
 });
+
+// The text layout (M12.4): Match and Toxic on the compendium filter. The same
+// native radios, each segment its name in text and, where the caller knows
+// it, how many entries choosing it would leave.
+describe('RadioGroupField, segmented', () => {
+  function Segmented({ counts = true }: { counts?: boolean }) {
+    const [value, setValue] = useState('any');
+    return (
+      <RadioGroupField<string>
+        legend="Toxic"
+        name="toxic"
+        layout="segmented"
+        value={value}
+        onChange={setValue}
+        options={[
+          { value: 'any', label: 'Any' },
+          { value: 'toxic', label: 'Toxic', count: counts ? 4 : undefined },
+          { value: 'not-toxic', label: 'Not Toxic', count: counts ? 8 : undefined },
+        ]}
+      />
+    );
+  }
+
+  it('offers native radios named by their text, the count read with the name', () => {
+    render(<Segmented />);
+
+    const group = screen.getByRole('group', { name: 'Toxic' });
+    expect(within(group).getAllByRole('radio')).toHaveLength(3);
+    expect(within(group).getByRole('radio', { name: 'Any' })).toBeChecked();
+    expect(within(group).getByRole('radio', { name: 'Toxic (4)' })).toBeInTheDocument();
+    expect(within(group).getByRole('radio', { name: 'Not Toxic (8)' })).toBeInTheDocument();
+  });
+
+  it('changes the choice on a click, and submits it under the group name', () => {
+    render(<Segmented />);
+
+    fireEvent.click(screen.getByRole('radio', { name: 'Toxic (4)' }));
+
+    expect(screen.getByRole('radio', { name: 'Toxic (4)' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Any' })).not.toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Toxic (4)' })).toHaveAttribute('name', 'toxic');
+  });
+
+  it('names a segment by its label alone when it has no count, and prints no chosen caption', () => {
+    const { container } = render(<Segmented counts={false} />);
+
+    expect(screen.getByRole('radio', { name: 'Toxic' })).toBeInTheDocument();
+    expect(container.querySelector('.radio-strip__chosen')).toBeNull();
+  });
+});
