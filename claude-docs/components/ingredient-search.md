@@ -184,3 +184,41 @@ makes (once after the debounce, never before focus or under the floor, first 25
 and no cursor), the action row and empty message, that a pick opens the match
 without applying the text, that the clear empties the box and applies the empty search, and that Enter
 applies the trimmed text.
+
+## The search sentence
+
+`sentence.ts` exports `buildSearchSentence({ filter, labels, total, noun, admin })`
+(M12.4). It is pure: no React, no component imports. It turns the filter as the
+address holds it, the display labels of each vocabulary and the total into
+`{ fragments, hasFilter }`. A fragment is `{ kind: 'text', text }` or
+`{ kind: 'value', text, facet, value }`; the component draws a `value` as a link
+to the same filter without that value, and draws Clear All while `hasFilter` is
+true. Types are in `types.ts` (`SearchSentenceFilter`, `SearchSentenceFragment`).
+
+It leads with the count (`No ingredients`, `1 ingredient`, `3 ingredients`; `noun`
+swaps the pair), then one clause per kind, always in this order whatever order
+the address holds them: text query, categories, forms, deities, zodiac, planets,
+elements, toxic, then the admin-only classification and No Refs. Clauses are
+separated by a comma. An example with every kind:
+
+> 3 ingredients, matching “rue”, in the Protection and Healing categories, in the
+> form Oil or Resin, linked to Isis, under Aries, ruled by the Sun or Mars, of
+> the Fire element, that are not toxic, classified as botanical, without references
+
+- **Joining.** Values are joined through `Intl.ListFormat` in `en-GB`, which has
+  no serial comma: "Oil, Resin or Leaf". Forms, deities, zodiac, planets and
+  elements join with "or"; categories join with "and" in all-mode ("in the
+  Protection and Healing categories") and "or" in any-mode ("in the Protection or
+  Healing category"). `Intl.ListFormat` is Baseline Widely Available, so the
+  browser-floor guard needs no line for it.
+- **No article before a vocabulary word**, except "the" before Sun and Moon among
+  planets, which belongs to the linked value ("the Sun").
+- **Toxic** says "that are toxic" or "that are not toxic", and nothing for either.
+- **Classification and No Refs** are named only when `admin` is true; otherwise
+  they are ignored and do not count as a chosen filter.
+- **A value with no label** is named by its raw value, so a stale link still reads.
+  Blank values and empty lists are not chosen.
+
+`tests/components/IngredientSearch/sentence.test.ts` asserts these strings. It is
+the task's one named exception to the copy rule, since the strings are what the
+function makes; the component tests assert only the status region's presence and update.

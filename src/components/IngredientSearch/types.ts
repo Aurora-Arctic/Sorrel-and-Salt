@@ -66,3 +66,68 @@ export interface IngredientSearchBoxProps {
   pickHref: IngredientSearchFormProps['pickHref'];
   pickHeading?: IngredientSearchFormProps['pickHeading'];
 }
+
+/** The kinds of filter the search sentence can name, in the order it names them. */
+export type SearchSentenceFacet =
+  | 'query'
+  | 'categories'
+  | 'forms'
+  | 'deities'
+  | 'zodiac'
+  | 'planets'
+  | 'elements'
+  | 'toxic'
+  | 'classification'
+  | 'withoutReferences';
+
+/** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
+export interface SearchSentenceFilter {
+  query?: string | null;
+  /** Category slugs. */
+  categories?: readonly string[];
+  /** `all` (the default) lists entries in every category, `any` in at least one. */
+  categoryMode?: 'all' | 'any';
+  forms?: readonly string[];
+  /** Deity slugs. */
+  deities?: readonly string[];
+  zodiac?: readonly string[];
+  planets?: readonly string[];
+  elements?: readonly string[];
+  /** `true` toxic only, `false` not toxic only, `null` or left out either. */
+  toxic?: boolean | null;
+  /** Admin lists only. */
+  classification?: string | null;
+  /** Admin lists only. */
+  withoutReferences?: boolean;
+}
+
+/** The kinds that choose from a vocabulary, and so take display labels. */
+export type SearchSentenceLabelFacet =
+  'categories' | 'forms' | 'deities' | 'zodiac' | 'planets' | 'elements';
+
+/** Display labels by chosen value. A value with no label is named by itself. */
+export type SearchSentenceLabels = Partial<
+  Record<SearchSentenceLabelFacet, Readonly<Record<string, string>>>
+>;
+
+/** One piece of the sentence: plain text, or a chosen value the component links to the same filter without it. */
+export type SearchSentenceFragment =
+  | { kind: 'text'; text: string }
+  | { kind: 'value'; text: string; facet: SearchSentenceFacet; value: string };
+
+export interface SearchSentenceInput {
+  filter: SearchSentenceFilter;
+  labels?: SearchSentenceLabels;
+  /** The number of entries the list found. */
+  total: number;
+  /** The noun for one entry and for any other number. Defaults to ingredient. */
+  noun?: { one: string; other: string };
+  /** An admin list: names Classification and No Refs. */
+  admin?: boolean;
+}
+
+export interface SearchSentence {
+  fragments: SearchSentenceFragment[];
+  /** Whether any value is named, so the component can draw Clear All. */
+  hasFilter: boolean;
+}
