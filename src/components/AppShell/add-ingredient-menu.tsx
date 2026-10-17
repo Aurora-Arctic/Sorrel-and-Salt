@@ -11,7 +11,14 @@ import type { AddDestination } from './types';
 // claude-docs/components/app-shell.md, "Add Ingredient".
 
 const Chevron = (): ReactElement => (
-  <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
+  <svg
+    className="app-shell__add-chevron"
+    viewBox="0 0 16 16"
+    width="1em"
+    height="1em"
+    aria-hidden="true"
+    focusable="false"
+  >
     <path
       d="M3.5 6l4.5 4.5L12.5 6"
       fill="none"

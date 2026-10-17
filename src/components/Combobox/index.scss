@@ -241,6 +241,13 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &:focus-visible {
     @include focus-ring;
   }
+
+  // The chevron turns over while the list is open, as the account menu's
+  // does: under the text box's toggle button, or the select's control, each
+  // of which carries `aria-expanded`.
+  .chevron-icon {
+    @include chevron-flip("[aria-expanded='true']");
+  }
 }
 
 // The list, floating beneath the control at its width, on the card surface

@@ -563,25 +563,34 @@
 // paints above an overlay stretched from a button, and would take the press.
 // With `$flip`, it is flipped about its horizontal edge (`rotateX`) instead of
 // turned in the plane, and the caller names the transition (`transform`).
-@mixin disclosure-chevron($open, $flip: false) {
+// A chevron's open flip, the account menu's for every chevron (the owner's
+// call, M8.16): turned over on open, eased, and still under reduced motion.
+// `$open` is the selector the flip waits on, ending in `>` for a parent;
+// `$props` are any other properties the chevron eases alongside the turn.
+@mixin chevron-flip($open, $props...) {
+  @include theme-transition(transform, $props...);
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  #{$open} & {
+    transform: rotateX(180deg);
+  }
+}
+
+@mixin disclosure-chevron($open, $props...) {
   display: inline-flex;
   flex: none;
   width: $glyph-size;
   height: $glyph-size;
   color: $text-muted;
   pointer-events: none;
+  @include chevron-flip($open, $props...);
 
   svg {
     width: 100%;
     height: 100%;
-  }
-
-  #{$open} & {
-    @if $flip {
-      transform: rotateX(180deg);
-    } @else {
-      rotate: 180deg;
-    }
   }
 }
 

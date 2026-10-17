@@ -1071,8 +1071,10 @@ heavier than the reverse; light reverts to the browser default.
   window); `tip-bubble-open` (a bubble's open state alone, for one opened
   by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
   turns `$text-primary` when pointed at or focused), `icon-button-edit`
-  and `icon-button-remove` (the accent and the wax); `disclosure-chevron`
-  (a chevron that turns over while its section is open); `floating-panel`
+  and `icon-button-remove` (the accent and the wax); `chevron-flip` (the
+  account menu's turn-over on open, eased and still under reduced motion,
+  which every chevron shares, M8.16) and `disclosure-chevron` (a section's
+  chevron, sized and inked, with that flip); `floating-panel`
   (the card surface, floating shadow and muted edge a list or summary
   floats on); `field-box` (the edge, ground and height a field and the
   admin menu's summary share); `arrived` (the fade a list or tab's new

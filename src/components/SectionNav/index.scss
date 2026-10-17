@@ -119,14 +119,7 @@
 }
 
 .section-nav__chevron {
-  @include disclosure-chevron('.section-nav__more-button[aria-expanded="true"]', $flip: true);
-
-  // The flip eases rather than snaps.
-  transition: transform $theme-transition-duration $theme-transition-easing;
-
-  @include reduced-motion {
-    transition: none;
-  }
+  @include disclosure-chevron('.section-nav__more-button[aria-expanded="true"]');
 }
 
 .section-nav .section-nav__sheet > li {

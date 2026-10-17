@@ -218,6 +218,11 @@
   display: inline-flex;
 }
 
+// The menu's chevron turns over while the menu is open, as the account menu's does.
+.app-shell__add-chevron {
+  @include chevron-flip("[aria-expanded='true'] >");
+}
+
 // The two parts share one outline: the inner corners square, and a single
 // divider in the bar's own colour between the fills, kept through hover and
 // focus, which the solid variant would otherwise recolour with the fill.
