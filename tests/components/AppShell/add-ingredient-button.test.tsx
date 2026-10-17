@@ -1,9 +1,11 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import axe from 'axe-core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
+const push = vi.fn();
+vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => ({ push }) }));
 // The form is Lane B's and tested on its own: a stub that shows which coven it
 // writes to and saves on request, in either way.
 vi.mock('@/components/IngredientForm', () => ({
@@ -81,36 +83,16 @@ const target = () => screen.getByRole('form', { name: 'Ingredient Form' }).datas
 
 beforeEach(() => {
   pathname.mockReturnValue('/coven/fixture-coven');
+  push.mockClear();
 });
 
 describe('AddIngredientButton', () => {
-  it('links a curator on an admin page to the compendium’s add dialog', () => {
-    pathname.mockReturnValue('/admin/users');
-    draw(ADMIN, [FIXTURE]);
-
-    expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
-      'href',
-      '/admin/compendium?new',
-    );
-    expect(screen.queryByRole('button', { name: 'Add Ingredient' })).toBeNull();
-  });
-
-  it('treats a viewer who cannot curate on an admin path as on no coven page', () => {
-    pathname.mockReturnValue('/admin/users');
-    draw(MEMBER, [FIXTURE]);
-
-    expect(screen.queryByRole('link', { name: 'Add Ingredient' })).toBeNull();
-    open();
-    expect(target()).toBe('id-fixture-coven');
-  });
-
   it('targets the coven the address names', () => {
     pathname.mockReturnValue('/coven/testwort-circle/ingredients');
     draw(MEMBER, [FIXTURE, TESTWORT]);
     open();
 
     expect(target()).toBe('id-testwort-circle');
-    expect(screen.getByRole('combobox', { name: 'Coven' })).toHaveValue('id-testwort-circle');
   });
 
   it('targets the only writable coven when the address names none', () => {
@@ -126,35 +108,113 @@ describe('AddIngredientButton', () => {
     draw(MEMBER, [FIXTURE, VIEW_ONLY]);
     open();
 
-    expect(screen.getByRole('combobox', { name: 'Coven' })).toHaveValue('id-fixture-coven');
     expect(target()).toBe('id-fixture-coven');
   });
 
-  it('offers a Coven choice among several, the view-only one disabled', () => {
+  it('is a plain button, with no menu, for one destination', () => {
     draw(MEMBER, [FIXTURE, VIEW_ONLY]);
-    open();
 
-    const select = within(screen.getByRole('dialog')).getByRole('combobox', { name: 'Coven' });
-    expect(within(select).getByRole('option', { name: 'Fixture Coven' })).toBeEnabled();
-    expect(within(select).getByRole('option', { name: 'Testwort Circle' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Ingredient' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Choose Where to Add' })).toBeNull();
   });
 
-  it('writes to the coven chosen, remounting the form', () => {
-    draw(MEMBER, [FIXTURE, TESTWORT]);
-    open();
+  describe('as a split button', () => {
+    const chevron = () => screen.getByRole('button', { name: 'Choose Where to Add' });
+    const menuOf = () => screen.getByRole('menu');
 
-    fireEvent.change(screen.getByRole('combobox', { name: 'Coven' }), {
-      target: { value: 'id-testwort-circle' },
+    it('lists the compendium then the coven for a curator, and opens the coven chosen', () => {
+      pathname.mockReturnValue('/admin/users');
+      draw(ADMIN, [FIXTURE]);
+      expect(chevron()).toHaveAttribute('aria-haspopup', 'menu');
+      expect(chevron()).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.click(chevron());
+      expect(chevron()).toHaveAttribute('aria-expanded', 'true');
+      const items = within(menuOf()).getAllByRole('menuitem');
+      expect(items.map((item) => item.textContent)).toEqual(['Compendium', 'Fixture Coven']);
+
+      fireEvent.click(items[1]!);
+      expect(screen.queryByRole('menu')).toBeNull();
+      expect(screen.getByRole('dialog', { name: /Fixture Coven/ })).toBeInTheDocument();
+      expect(target()).toBe('id-fixture-coven');
+      expect(push).not.toHaveBeenCalled();
     });
 
-    expect(target()).toBe('id-testwort-circle');
-  });
+    it('sends the compendium choice to its add dialog', () => {
+      draw(ADMIN, [FIXTURE]);
+      fireEvent.click(chevron());
+      fireEvent.click(within(menuOf()).getByRole('menuitem', { name: 'Compendium' }));
 
-  it('offers no Coven choice to a viewer of one coven', () => {
-    draw(MEMBER, [FIXTURE]);
-    open();
+      expect(push).toHaveBeenCalledWith('/admin/compendium?new');
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
 
-    expect(screen.queryByRole('combobox', { name: 'Coven' })).toBeNull();
+    it('opens the compendium from the main part on an admin page', () => {
+      pathname.mockReturnValue('/admin/users');
+      draw(ADMIN, [FIXTURE]);
+      open();
+
+      expect(push).toHaveBeenCalledWith('/admin/compendium?new');
+    });
+
+    it('opens the coven the address names from the main part, a curator off the admin pages', () => {
+      pathname.mockReturnValue('/coven/testwort-circle');
+      draw(ADMIN, [FIXTURE, TESTWORT]);
+      open();
+
+      expect(push).not.toHaveBeenCalled();
+      expect(target()).toBe('id-testwort-circle');
+    });
+
+    it('lists both covens and no compendium for a member of two', () => {
+      draw(MEMBER, [FIXTURE, TESTWORT, coven('viewed-circle', false)]);
+      fireEvent.click(chevron());
+
+      expect(
+        within(menuOf())
+          .getAllByRole('menuitem')
+          .map((item) => item.textContent),
+      ).toEqual(['Fixture Coven', 'Testwort Circle']);
+    });
+
+    it('roves with the arrow keys', () => {
+      draw(MEMBER, [FIXTURE, TESTWORT]);
+      fireEvent.click(chevron());
+      const [first, second] = within(menuOf()).getAllByRole('menuitem');
+      expect(first).toHaveFocus();
+
+      fireEvent.keyDown(first!, { key: 'ArrowDown' });
+      expect(second).toHaveFocus();
+      fireEvent.keyDown(second!, { key: 'ArrowDown' });
+      expect(first).toHaveFocus();
+      fireEvent.keyDown(first!, { key: 'ArrowUp' });
+      expect(second).toHaveFocus();
+    });
+
+    it('closes on Escape, the focus back on the chevron', () => {
+      draw(MEMBER, [FIXTURE, TESTWORT]);
+      fireEvent.click(chevron());
+      fireEvent.keyDown(within(menuOf()).getAllByRole('menuitem')[0]!, { key: 'Escape' });
+
+      expect(screen.queryByRole('menu')).toBeNull();
+      expect(chevron()).toHaveFocus();
+    });
+
+    it('closes on a press outside', () => {
+      draw(MEMBER, [FIXTURE, TESTWORT]);
+      fireEvent.click(chevron());
+      fireEvent.pointerDown(document.body);
+
+      expect(screen.queryByRole('menu')).toBeNull();
+    });
+
+    it('has no accessibility violations with the menu open', async () => {
+      const { container } = draw(MEMBER, [FIXTURE, TESTWORT]);
+      fireEvent.click(chevron());
+
+      const { violations } = await axe.run(container);
+      expect(violations).toEqual([]);
+    });
   });
 
   it('renders nothing when no coven can be written to', () => {

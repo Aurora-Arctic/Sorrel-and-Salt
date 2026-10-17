@@ -2,16 +2,16 @@ import { describe, expect, it, vi } from 'vitest';
 import { Forbidden } from '@/lib/errors';
 
 // The Updated column's names (MB.260). Who may read them is
-// `usersForAdmin`'s, asserted against a database in
-// tests/modules/identity/services/privilege-changes.test.ts: an admin is
-// answered, a coven owner is refused every slot. This file holds what the
+// `editorNamesForCurator`'s, asserted against a database in
+// tests/modules/identity/services/editor-names.test.ts: a curator and an admin are
+// answered, a coven owner is refused. This file holds what the
 // page adds: the stamp each row gets, from the editor that made the latest
 // edit.
 
-const usersForAdmin = vi.fn();
+const editorNamesForCurator = vi.fn();
 const SEED = '00000000-0000-0000-0000-000000000001';
 vi.mock('@/modules/identity', () => ({
-  usersForAdmin,
+  editorNamesForCurator,
   listedOnUserList: (id: string) => id !== SEED,
 }));
 
@@ -25,7 +25,10 @@ const AT = new Date('2026-05-06T10:00:00Z');
 
 describe('editorStamps', () => {
   it("names each row's last editor, not its creator, and reads every name in one lookup", async () => {
-    usersForAdmin.mockResolvedValueOnce([{ name: 'Fixture Second' }, { name: 'Fixture First' }]);
+    editorNamesForCurator.mockResolvedValueOnce([
+      { name: 'Fixture Second' },
+      { name: 'Fixture First' },
+    ]);
 
     // The first row was created by FIRST and last edited by SECOND.
     const stamps = await editorStamps(ADMIN, [
@@ -33,8 +36,8 @@ describe('editorStamps', () => {
       { updatedBy: FIRST, updatedAt: AT },
     ]);
 
-    expect(usersForAdmin).toHaveBeenCalledTimes(1);
-    expect(usersForAdmin).toHaveBeenCalledWith(ADMIN, [SECOND, FIRST]);
+    expect(editorNamesForCurator).toHaveBeenCalledTimes(1);
+    expect(editorNamesForCurator).toHaveBeenCalledWith(ADMIN, [SECOND, FIRST]);
     expect(stamps).toEqual([
       { updatedBy: 'Fixture Second', updatedAt: AT },
       { updatedBy: 'Fixture First', updatedAt: AT },
@@ -42,7 +45,7 @@ describe('editorStamps', () => {
   });
 
   it('reads an editor whose account is gone as Unknown, never as their id', async () => {
-    usersForAdmin.mockResolvedValueOnce([null]);
+    editorNamesForCurator.mockResolvedValueOnce([null]);
 
     const [stamp] = await editorStamps(ADMIN, [{ updatedBy: GONE, updatedAt: AT }]);
 
@@ -51,7 +54,10 @@ describe('editorStamps', () => {
   });
 
   it('leaves a row last written by the seed system user unstamped', async () => {
-    usersForAdmin.mockResolvedValueOnce([{ name: 'Seed System User' }, { name: 'Fixture First' }]);
+    editorNamesForCurator.mockResolvedValueOnce([
+      { name: 'Seed System User' },
+      { name: 'Fixture First' },
+    ]);
 
     const stamps = await editorStamps(ADMIN, [
       { updatedBy: SEED, updatedAt: AT },
@@ -65,7 +71,9 @@ describe('editorStamps', () => {
   });
 
   it('passes on the refusal a non-admin session gets', async () => {
-    usersForAdmin.mockResolvedValueOnce([new Forbidden('Only a site admin may read this')]);
+    editorNamesForCurator.mockRejectedValueOnce(
+      new Forbidden('Only a curator may read editor names'),
+    );
 
     await expect(
       editorStamps({ userId: 'owner-1', role: 'user' }, [{ updatedBy: FIRST, updatedAt: AT }]),

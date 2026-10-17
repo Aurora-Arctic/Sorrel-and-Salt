@@ -56,7 +56,8 @@ export const CovenPage: Story = () => (
   </ShellFrame>
 );
 
-// An admin on an admin page: Your Coven and Admin in the bar, "Admin" in the row.
+// An admin on an admin page: Your Coven and Admin in the bar, "Admin" in the row,
+// and Add Ingredient as a split button (the compendium and each coven).
 export const AdminPage: Story = () => (
   <ShellFrame area="admin" viewer={{ name: 'Fixture Admin', canCurate: true }} open="/admin">
     <AdminStub />

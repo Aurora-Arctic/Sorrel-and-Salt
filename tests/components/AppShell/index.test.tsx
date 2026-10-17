@@ -3,7 +3,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname() }));
+vi.mock('next/navigation', () => ({
+  usePathname: () => pathname(),
+  useRouter: () => ({ push: vi.fn() }),
+}));
 vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 
 const { default: AppShell } = await import('@/components/AppShell');

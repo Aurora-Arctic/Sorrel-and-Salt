@@ -1,25 +1,25 @@
 'use client';
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { type ReactElement, useId, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
 import type { ShellWorkspace } from '../../lib/types';
-import { fieldDescription, FieldShell } from '../Field';
 import IngredientForm from '../IngredientForm';
 import type { SavedIngredient } from '../IngredientForm/types';
-import { ModalButton } from '../Modal';
-import type { AddIngredientButtonProps } from './types';
+import Modal from '../Modal';
+import AddIngredientMenu from './add-ingredient-menu';
+import type { AddDestination, AddIngredientButtonProps } from './types';
 
-// The bar's one global action (MB.7, M8.16). Where a new ingredient goes
-// follows the area: the compendium on an admin page, for someone who
-// curates; otherwise the coven the address names, else the viewer's only
-// writable coven. A coven the viewer may only read is never a target, and
-// with none to write to the button is not drawn at all.
-// claude-docs/components/modal.md, "ModalButton".
+// The bar's one global action (MB.7, M8.16). The places a new ingredient can go
+// are the compendium, for someone who curates, and each coven they may write
+// to. One place is a plain button; two or more make it a split button, the
+// main part opening the default place and the chevron a menu of them all. The
+// dialog for a coven names it in its head and cannot change it.
+// claude-docs/components/modal.md, "Add Ingredient".
 
 const LABEL = 'Add Ingredient';
 const CLASSES = 'btn app-shell__add';
+const MORE_CLASSES = 'btn app-shell__add app-shell__add--more';
 
 /**
  * A sentence for what a save left behind. The form's own Saved notice goes
@@ -39,70 +39,59 @@ function savedMessage(saved: SavedIngredient): string {
   return `Saved ${saved.name}, with ${list}`;
 }
 
-/** The Coven choice, native so a view-only coven is a disabled option. */
-function CovenSelect({
-  workspaces,
-  value,
-  onChange,
-}: {
-  workspaces: readonly ShellWorkspace[];
-  value: string;
-  onChange: (id: string) => void;
-}): ReactElement {
-  const field = fieldDescription({ id: useId() });
-  return (
-    <FieldShell label="Coven" {...field}>
-      <select
-        id={field.controlId}
-        className="select"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-      >
-        {workspaces.map(({ id, name, canWrite }) => (
-          <option key={id} value={id} disabled={!canWrite}>
-            {name}
-          </option>
-        ))}
-      </select>
-    </FieldShell>
-  );
-}
-
-/** The form for one coven, and the choice of which when the viewer has several. */
+/** The form for one coven, its name over the dialog's title. */
 function AddIngredientBody({
-  workspaces,
-  initial,
+  workspace,
   close,
   onSaved,
 }: {
-  workspaces: readonly ShellWorkspace[];
-  initial: ShellWorkspace;
+  workspace: ShellWorkspace;
   close: () => void;
   onSaved: (saved: SavedIngredient) => void;
 }): ReactElement {
-  const [workspaceId, setWorkspaceId] = useState(initial.id);
-  const chosen = workspaces.find(({ id }) => id === workspaceId) ?? initial;
   return (
-    <>
-      {workspaces.length > 1 && (
-        <CovenSelect workspaces={workspaces} value={workspaceId} onChange={setWorkspaceId} />
-      )}
-      <IngredientForm
-        // A fresh form per coven: what was typed belonged to the other one.
-        key={chosen.id}
-        workspaceId={chosen.id}
-        onSaved={(saved, next) => {
-          if (next !== 'open') return;
-          onSaved(saved);
-          close();
-        }}
-        onCancel={close}
-        // A coven's ingredient page is M8.19's; until then a near match links
-        // to the list it is in.
-        duplicateHref={() => `/coven/${chosen.slug}/ingredients`}
-      />
-    </>
+    <IngredientForm
+      workspaceId={workspace.id}
+      onSaved={(saved, next) => {
+        if (next !== 'open') return;
+        onSaved(saved);
+        close();
+      }}
+      onCancel={close}
+      // A coven's ingredient page is M8.19's; until then a near match links
+      // to the list it is in.
+      duplicateHref={() => `/coven/${workspace.slug}/ingredients`}
+    />
   );
+}
+
+/**
+ * Every place the viewer can add to, the compendium first, and which one the
+ * bar's main part opens. On an admin page a curator's default is the
+ * compendium; otherwise the coven the address names, else the first writable
+ * one. A coven the viewer may only read is not a destination.
+ */
+function destinationsOf(
+  viewer: AddIngredientButtonProps['viewer'],
+  workspaces: AddIngredientButtonProps['workspaces'],
+  pathname: string,
+): { all: AddDestination[]; initial: AddDestination | undefined } {
+  const covens: AddDestination[] = workspaces
+    .filter(({ canWrite }) => canWrite)
+    .map((workspace) => ({
+      kind: 'coven',
+      key: workspace.id,
+      name: workspace.name,
+      workspace,
+    }));
+  const compendium: AddDestination[] = viewer.canCurate
+    ? [{ kind: 'compendium', key: 'compendium', name: 'Compendium' }]
+    : [];
+  const all = [...compendium, ...covens];
+  const slug = covenSlugOf(pathname);
+  const named = covens.find((d) => d.kind === 'coven' && d.workspace.slug === slug);
+  const onAdmin = pathname.startsWith('/admin') && compendium.length > 0;
+  return { all, initial: onAdmin ? compendium[0] : (named ?? covens[0] ?? compendium[0]) };
 }
 
 const AddIngredientButton = ({
@@ -110,43 +99,62 @@ const AddIngredientButton = ({
   workspaces,
 }: AddIngredientButtonProps): ReactElement | null => {
   const pathname = usePathname();
+  const router = useRouter();
   const [saved, setSaved] = useState<string | null>(null);
+  // The coven whose dialog is open; the destination is fixed once it opens.
+  const [adding, setAdding] = useState<ShellWorkspace | null>(null);
+  const main = useRef<HTMLButtonElement>(null);
+  // Set by a close only, so the first render takes no focus.
+  const returning = useRef(false);
+
+  useEffect(() => {
+    if (!adding && returning.current) {
+      returning.current = false;
+      main.current?.focus();
+    }
+  }, [adding]);
 
   if (!viewer.verified) return null;
+  const { all, initial } = destinationsOf(viewer, workspaces, pathname);
+  if (!initial) return null;
 
-  // A plain link: the admin page draws its dialog for a direct request, and
-  // the route-modal provider that would open it at once sits below the shell.
-  if (pathname.startsWith('/admin') && viewer.canCurate) {
-    return (
-      <Link href="/admin/compendium?new" className={CLASSES}>
-        {LABEL}
-      </Link>
-    );
-  }
-
-  const writable = workspaces.filter(({ canWrite }) => canWrite);
-  const slug = covenSlugOf(pathname);
-  const initial =
-    writable.find((workspace) => workspace.slug === slug) ??
-    (writable.length === 1 ? writable[0] : undefined);
-  // Several writable covens and none named: the first in the list is the
-  // starting choice, which the Coven select changes.
-  const target = initial ?? writable[0];
-  if (!target) return null;
+  const go = (destination: AddDestination): void => {
+    // The compendium's dialog is the admin page's own, drawn for a direct
+    // request: the route-modal provider that would open it at once sits below
+    // the shell.
+    if (destination.kind === 'compendium') router.push('/admin/compendium?new');
+    else setAdding(destination.workspace);
+  };
 
   return (
     <>
       {saved && <output className="app-shell__saved">{saved}</output>}
-      <ModalButton label={LABEL} className={CLASSES} title={LABEL}>
-        {(close) => (
-          <AddIngredientBody
-            workspaces={workspaces}
-            initial={target}
-            close={close}
-            onSaved={(ingredient) => setSaved(savedMessage(ingredient))}
-          />
+      <span className="app-shell__add-group">
+        <button ref={main} type="button" className={CLASSES} onClick={() => go(initial)}>
+          {LABEL}
+        </button>
+        {all.length > 1 && (
+          <AddIngredientMenu destinations={all} className={MORE_CLASSES} onChoose={go} />
         )}
-      </ModalButton>
+      </span>
+      {adding && (
+        <Modal
+          eyebrow={adding.name}
+          title={LABEL}
+          onClose={() => {
+            returning.current = true;
+            setAdding(null);
+          }}
+        >
+          {(close) => (
+            <AddIngredientBody
+              workspace={adding}
+              close={close}
+              onSaved={(ingredient) => setSaved(savedMessage(ingredient))}
+            />
+          )}
+        </Modal>
+      )}
     </>
   );
 };

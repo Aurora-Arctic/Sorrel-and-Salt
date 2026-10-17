@@ -196,3 +196,52 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+// Add Ingredient as a split button: the main part and the chevron sit in one
+// group, and the chevron's menu hangs from it, as the account panel does.
+.app-shell__add-group {
+  display: inline-flex;
+  flex: none;
+  align-items: stretch;
+}
+
+.app-shell__add-more {
+  position: relative;
+  display: inline-flex;
+}
+
+.app-shell__menu {
+  position: absolute;
+  top: calc(100% + #{space(2)});
+  right: 0;
+  z-index: layer('floating');
+  min-width: 13rem;
+  border: 1px solid $text-muted;
+  border-radius: radius('surface');
+  background-color: $surface-card;
+  box-shadow: $shadow-floating;
+}
+
+.app-shell__menu-item {
+  @include button-reset;
+
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  padding: space(2) space(4);
+  color: $text-primary;
+  font-size: type-size('small');
+  text-align: start;
+  white-space: nowrap;
+
+  &:hover,
+  &:focus-visible {
+    background-color: $fill-quiet;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+
+    outline-offset: -2px;
+  }
+}

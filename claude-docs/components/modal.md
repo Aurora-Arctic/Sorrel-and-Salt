@@ -349,18 +349,28 @@ loads with the focus where the browser puts it.
 
 ### Add Ingredient
 
-The shell’s Add Ingredient button (`AppShell/add-ingredient-button.tsx`, M8.16)
-is a `ModalButton` holding an `IngredientForm` for a coven. Its target
-follows the address: the coven the path names, else the viewer’s only coven
-they may write to. A coven the viewer may only read is never the target; with
-several covens, a native Coven select above the form lists them all, the
-view-only ones disabled, and a change remounts the form, since what was typed
-belonged to the other coven. With nowhere to write the button is not drawn.
-After Save Ingredient the modal closes and the button leaves a status beside
-it, since the form’s own Saved notice goes with the form. On an admin page a
-curator gets a plain link to `/admin/compendium?new` instead: the admin
-layout’s route-modal provider sits below the shell, so the button cannot open
-the dialog at once, and the page draws it for a direct request.
+The shell’s Add Ingredient control (`AppShell/add-ingredient-button.tsx`,
+M8.16) opens a `Modal` holding an `IngredientForm` for one coven. A
+_destination_ is the compendium (for a viewer who can curate) or a coven the
+viewer may write to; a coven they may only read is never one. With one
+destination the control is a plain button. With two or more it is a split
+button: the main part opens the default destination, and a chevron (`Choose
+Where to Add`, `aria-haspopup="menu"`) opens a menu listing every
+destination by name, the compendium first (`add-ingredient-menu.tsx`; the
+repo had no ARIA menu, so it is written there with arrow keys, Escape and a
+press outside). The default is, on `/admin/*`, the compendium for a curator;
+otherwise the coven the address names, else the first coven they may write to.
+Choosing the compendium is a `router.push` to `/admin/compendium?new` (the
+admin layout’s route-modal provider sits below the shell, so the button cannot
+open that dialog itself, and the page draws it for a direct request); choosing
+a coven opens the modal.
+
+The modal’s head is the coven’s name as the eyebrow over the title “Add
+Ingredient”, so the person always sees where the ingredient goes. The
+destination is fixed once the dialog opens: there is no Coven select. With
+nowhere to write the control is not drawn. After Save Ingredient the modal
+closes and the control leaves a status beside it, since the form’s own Saved
+notice goes with the form.
 
 ## RouteModal
 
