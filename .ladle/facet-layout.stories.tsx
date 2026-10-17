@@ -9,7 +9,6 @@ import {
   FieldShell,
   fieldDescription,
   FilterSelectField,
-  RadioGroupField,
   SearchField,
   SwitchField,
 } from '../src/components/Field';
@@ -27,7 +26,8 @@ import './facet-layout.scss';
 // static sentence; nothing here is the real build and none of it is tested.
 // `ApplyOnChange` is the variant the coordinator recommends: no Apply button
 // once hydrated (the submit stays for the form before hydration).
-// Toxic uses the radio list layout: the strip layout is icon-only.
+// Toxic and Match are a text segmented control in every variant (`.facet-strip`),
+// so the variants differ only in layout. All, sidebar and tray are the record's A, B and D.
 export default {
   title: 'Admin / Compendium List / Facet Layout',
 };
@@ -206,7 +206,47 @@ function Typeahead({
 
 const iconFor = (name: string) => FORMS.find((form) => form.name === name)?.icon ?? null;
 
+interface StripProps<T extends string> {
+  legend: string;
+  name: string;
+  options: { value: T; label: string }[];
+  value: T;
+  onChange: (next: T) => void;
+}
+
+/** A text segmented control: adjacent button-looking radios in a row. */
+function Strip<T extends string>({
+  legend,
+  name,
+  options,
+  value,
+  onChange,
+}: StripProps<T>): ReactElement {
+  return (
+    <fieldset className="fieldset facet-strip">
+      <legend>{legend}</legend>
+      <div>
+        {options.map((option) => (
+          <label key={option.value}>
+            <input
+              type="radio"
+              name={name}
+              value={option.value}
+              checked={value === option.value}
+              onChange={() => onChange(option.value)}
+            />
+            {option.label}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
+
+type Variant = 'disclosure' | 'open' | 'sidebar' | 'tray';
+
 interface LayoutProps {
+  variant?: Variant;
   open?: boolean;
   onChange?: boolean;
   forms?: string[];
@@ -219,8 +259,9 @@ interface LayoutProps {
   sentence: ReactNode;
 }
 
-/** The whole proposal, interactive enough to open, pick and clear. */
+/** The proposal and its alternatives, interactive enough to open, pick and clear. */
 function Layout({
+  variant = 'disclosure',
   open = false,
   onChange = false,
   forms: initialForms = [],
@@ -241,147 +282,276 @@ function Layout({
   const [zodiac, setZodiac] = useState(initialZodiac);
   const [planets, setPlanets] = useState(initialPlanets);
   const [nomenclature, setNomenclature] = useState('');
+  const [tray, setTray] = useState(open);
   const toggle = (list: string[], set: (next: string[]) => void) => (value: string) =>
     set(list.includes(value) ? list.filter((other) => other !== value) : [...list, value]);
   const hidden = forms.length + deities.length + zodiac.length + planets.length;
+  const facets = [categories, forms, deities, zodiac, planets].filter((l) => l.length > 0).length;
+  const filterCount = facets + (toxic === 'any' ? 0 : 1);
+  const without = (list: string[], set: (next: string[]) => void, value: string) =>
+    set(list.filter((other) => other !== value));
+  const categoryName = (id: string) => CATEGORIES.find((c) => c.id === id)?.name ?? id;
+
+  const search = (
+    <SearchField
+      label="Search"
+      name="query"
+      placeholder="Search Names"
+      value={query}
+      onChange={setQuery}
+    />
+  );
+
+  const primary = (
+    <div className="facet-layout__row">
+      <div className="facet-layout__grow">
+        <CategoryPicker
+          legend="Categories"
+          entry="Category"
+          placeholder="Add Category"
+          categories={CATEGORIES}
+          value={categories}
+          onChange={setCategories}
+        />
+        {categories.length >= 2 && (
+          <Strip
+            legend="Match"
+            name="categoryMode"
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'any', label: 'Any' },
+            ]}
+            value={mode}
+            onChange={setMode}
+          />
+        )}
+      </div>
+      <div className="facet-layout__toxic">
+        <Strip
+          legend="Toxic"
+          name="toxic"
+          options={[
+            { value: 'any', label: 'Any' },
+            { value: 'toxic', label: 'Toxic' },
+            { value: 'not-toxic', label: 'Not Toxic' },
+          ]}
+          value={toxic}
+          onChange={setToxic}
+        />
+      </div>
+    </div>
+  );
+
+  const panel = (
+    <div className="facet-layout__panel">
+      <Typeahead
+        label="Forms"
+        placeholder="Add Form"
+        chosen={forms}
+        onChange={setForms}
+        iconOf={(value) => <FormIcon name={iconFor(value)} />}
+        options={FORMS.map((form) => ({
+          value: form.name,
+          label: `${form.name} (${form.count})`,
+          icon: <FormIcon name={form.icon} />,
+          count: form.count,
+        }))}
+      />
+      <Typeahead
+        label="Deities"
+        placeholder="Add Deity"
+        chosen={deities}
+        onChange={setDeities}
+        options={DEITIES.map((deity) => ({
+          value: deity.name,
+          label: `${deity.name} (${deity.count})`,
+          heading: deity.tradition,
+          count: deity.count,
+        }))}
+      />
+      <div className="facet-layout__wide">
+        <ChipRow
+          legend="Zodiac"
+          name="zodiac"
+          items={ZODIAC}
+          chosen={zodiac}
+          onToggle={toggle(zodiac, setZodiac)}
+        />
+      </div>
+      <div className="facet-layout__wide">
+        <ChipRow
+          legend="Planets"
+          name="planets"
+          items={PLANETS}
+          chosen={planets}
+          onToggle={toggle(planets, setPlanets)}
+        />
+      </div>
+      <FilterSelectField
+        label="Classification"
+        name="nomenclature"
+        all="Any"
+        options={NOMENCLATURE_OPTIONS}
+        defaultValue={nomenclature}
+        onChange={setNomenclature}
+      />
+      <SwitchField label="No Refs" name="withoutReferences" value="1" onChange={() => {}} />
+    </div>
+  );
+
+  const apply = (
+    <div className="facet-layout__apply">
+      {/* Once hydrated, ApplyOnChange drops this; the submit stays for the form before hydration. */}
+      {!onChange && (
+        <button type="submit" className="btn btn--solid">
+          Apply Filters
+        </button>
+      )}
+      <a href={COMPENDIUM_PATH}>Clear All</a>
+    </div>
+  );
+
+  const results = (
+    <>
+      {/* The record names a role="status" paragraph, as the real sentence will be. */}
+      {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
+      <p role="status" className="facet-layout__sentence">
+        {sentence}
+      </p>
+      <ul className="facet-layout__results">
+        {RESULTS.map((name) => (
+          <li key={name} className="facet-layout__result">
+            <strong>{name}</strong>
+            <span className="facet-layout__count">Fixtura testalis</span>
+          </li>
+        ))}
+      </ul>
+    </>
+  );
+
+  const formProps = {
+    method: 'get',
+    action: COMPENDIUM_PATH,
+    className: 'form facet-layout',
+    'aria-label': 'Filter the Compendium',
+  };
+
+  let body: ReactElement;
+  if (variant === 'sidebar') {
+    body = (
+      <div className="facet-layout__split">
+        <form {...formProps}>
+          {search}
+          {primary}
+          {panel}
+          {apply}
+        </form>
+        <div className="facet-layout__main">{results}</div>
+      </div>
+    );
+  } else if (variant === 'tray') {
+    const chosen: { key: string; label: string; remove: () => void }[] = [
+      ...categories.map((id) => ({
+        key: `c-${id}`,
+        label: categoryName(id),
+        remove: () => without(categories, setCategories, id),
+      })),
+      ...forms.map((v) => ({ key: `f-${v}`, label: v, remove: () => without(forms, setForms, v) })),
+      ...deities.map((v) => ({
+        key: `d-${v}`,
+        label: v,
+        remove: () => without(deities, setDeities, v),
+      })),
+      ...zodiac.map((v) => ({
+        key: `z-${v}`,
+        label: v,
+        remove: () => without(zodiac, setZodiac, v),
+      })),
+      ...planets.map((v) => ({
+        key: `p-${v}`,
+        label: v,
+        remove: () => without(planets, setPlanets, v),
+      })),
+      ...(toxic === 'any'
+        ? []
+        : [
+            {
+              key: 'toxic',
+              label: toxic === 'toxic' ? 'Toxic' : 'Not Toxic',
+              remove: () => setToxic('any'),
+            },
+          ]),
+    ];
+    body = (
+      <>
+        <div className="facet-layout__bar">
+          <div className="facet-layout__grow">{search}</div>
+          <button type="button" className="btn" onClick={() => setTray(true)}>
+            {filterCount > 0 ? `Filters (${filterCount})` : 'Filters'}
+          </button>
+        </div>
+        {chosen.length > 0 && (
+          <ul className="facet-layout__chosen" aria-label="Chosen filters">
+            {chosen.map((item) => (
+              <li key={item.key}>
+                <button type="button" onClick={item.remove} aria-label={`Remove ${item.label}`}>
+                  {item.label}
+                  <span aria-hidden="true">×</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+        {results}
+        {tray && (
+          <form {...formProps} className="form facet-layout facet-layout__tray">
+            <div className="facet-layout__tray-head">
+              <strong>Filters</strong>
+              <button type="button" className="btn" onClick={() => setTray(false)}>
+                Close
+              </button>
+            </div>
+            {primary}
+            {panel}
+            <div className="facet-layout__apply facet-layout__tray-foot">
+              <button type="submit" className="btn btn--solid">
+                Apply Filters
+              </button>
+              <button type="button" className="btn" onClick={() => setTray(false)}>
+                Close
+              </button>
+              <a href={COMPENDIUM_PATH}>Clear All</a>
+            </div>
+          </form>
+        )}
+      </>
+    );
+  } else {
+    body = (
+      <>
+        <form {...formProps}>
+          {search}
+          {primary}
+          {variant === 'open' ? (
+            panel
+          ) : (
+            <details className="facet-layout__more" open={open || undefined}>
+              <summary>{hidden > 0 ? `More Filters (${hidden})` : 'More Filters'}</summary>
+              {panel}
+            </details>
+          )}
+          {apply}
+        </form>
+        {results}
+      </>
+    );
+  }
 
   return (
     <AdminFrame open={COMPENDIUM_PATH}>
       <main>
         <PageHeader title="Compendium" />
-        <form
-          method="get"
-          action={COMPENDIUM_PATH}
-          className="form facet-layout"
-          aria-label="Filter the Compendium"
-        >
-          <SearchField
-            label="Search"
-            name="query"
-            placeholder="Search Names"
-            value={query}
-            onChange={setQuery}
-          />
-          <div className="facet-layout__row">
-            <div className="facet-layout__grow">
-              <CategoryPicker
-                legend="Categories"
-                entry="Category"
-                placeholder="Add Category"
-                categories={CATEGORIES}
-                value={categories}
-                onChange={setCategories}
-              />
-              {categories.length >= 2 && (
-                <RadioGroupField
-                  legend="Match"
-                  name="categoryMode"
-                  options={[
-                    { value: 'all', label: 'All' },
-                    { value: 'any', label: 'Any' },
-                  ]}
-                  value={mode}
-                  onChange={setMode}
-                />
-              )}
-            </div>
-            <div className="facet-layout__toxic">
-              <RadioGroupField
-                legend="Toxic"
-                name="toxic"
-                options={[
-                  { value: 'any', label: 'Any' },
-                  { value: 'toxic', label: 'Toxic' },
-                  { value: 'not-toxic', label: 'Not Toxic' },
-                ]}
-                value={toxic}
-                onChange={setToxic}
-              />
-            </div>
-          </div>
-
-          <details className="facet-layout__more" open={open || undefined}>
-            <summary>{hidden > 0 ? `More Filters (${hidden})` : 'More Filters'}</summary>
-            <div className="facet-layout__panel">
-              <Typeahead
-                label="Forms"
-                placeholder="Add Form"
-                chosen={forms}
-                onChange={setForms}
-                iconOf={(value) => <FormIcon name={iconFor(value)} />}
-                options={FORMS.map((form) => ({
-                  value: form.name,
-                  label: `${form.name} (${form.count})`,
-                  icon: <FormIcon name={form.icon} />,
-                  count: form.count,
-                }))}
-              />
-              <Typeahead
-                label="Deities"
-                placeholder="Add Deity"
-                chosen={deities}
-                onChange={setDeities}
-                options={DEITIES.map((deity) => ({
-                  value: deity.name,
-                  label: `${deity.name} (${deity.count})`,
-                  heading: deity.tradition,
-                  count: deity.count,
-                }))}
-              />
-              <div className="facet-layout__wide">
-                <ChipRow
-                  legend="Zodiac"
-                  name="zodiac"
-                  items={ZODIAC}
-                  chosen={zodiac}
-                  onToggle={toggle(zodiac, setZodiac)}
-                />
-              </div>
-              <div className="facet-layout__wide">
-                <ChipRow
-                  legend="Planets"
-                  name="planets"
-                  items={PLANETS}
-                  chosen={planets}
-                  onToggle={toggle(planets, setPlanets)}
-                />
-              </div>
-              <FilterSelectField
-                label="Classification"
-                name="nomenclature"
-                all="Any"
-                options={NOMENCLATURE_OPTIONS}
-                defaultValue={nomenclature}
-                onChange={setNomenclature}
-              />
-              <SwitchField label="No Refs" name="withoutReferences" value="1" onChange={() => {}} />
-            </div>
-          </details>
-
-          <div className="facet-layout__apply">
-            {/* Once hydrated, ApplyOnChange drops this; the submit stays for the form before hydration. */}
-            {!onChange && (
-              <button type="submit" className="btn btn--solid">
-                Apply Filters
-              </button>
-            )}
-            <a href={COMPENDIUM_PATH}>Clear All</a>
-          </div>
-        </form>
-
-        {/* The record names a role="status" paragraph, as the real sentence will be. */}
-        {/* oxlint-disable-next-line jsx-a11y/prefer-tag-over-role */}
-        <p role="status" className="facet-layout__sentence">
-          {sentence}
-        </p>
-        <ul className="facet-layout__results">
-          {RESULTS.map((name) => (
-            <li key={name} className="facet-layout__result">
-              <strong>{name}</strong>
-              <span className="facet-layout__count">Fixtura testalis</span>
-            </li>
-          ))}
-        </ul>
+        {body}
       </main>
     </AdminFrame>
   );
@@ -449,3 +619,31 @@ export const ApplyOnChange: Story = () => <Layout {...OPEN_PROPS} onChange />;
 export const NothingChosen: Story = () => (
   <Layout categories={[]} query="" sentence={<>214 ingredients.</>} />
 );
+
+// Alternative A from the record: every facet as a plain open row, no disclosure.
+export const AllOpen: Story = () => <Layout {...OPEN_PROPS} variant="open" />;
+
+export const AllOpenPhoneLight: Story = () => <AllOpen />;
+AllOpenPhoneLight.meta = { theme: 'light', width: 375 };
+
+export const AllOpenPhoneDark: Story = () => <AllOpen />;
+AllOpenPhoneDark.meta = { theme: 'dark', width: 375 };
+
+// Alternative B: the filters in a left column beside the results, stacking on a phone.
+export const Sidebar: Story = () => <Layout {...OPEN_PROPS} variant="sidebar" />;
+
+export const SidebarPhoneLight: Story = () => <Sidebar />;
+SidebarPhoneLight.meta = { theme: 'light', width: 375 };
+
+export const SidebarPhoneDark: Story = () => <Sidebar />;
+SidebarPhoneDark.meta = { theme: 'dark', width: 375 };
+
+// Alternative D: a Filters button, the chosen values as removable chips, and the
+// filters in a tray (a right-hand drawer on desktop, a full-height sheet on a phone).
+export const FiltersTray: Story = () => <Layout {...OPEN_PROPS} variant="tray" />;
+
+export const FiltersTrayPhoneLight: Story = () => <FiltersTray />;
+FiltersTrayPhoneLight.meta = { theme: 'light', width: 375 };
+
+export const FiltersTrayPhoneDark: Story = () => <FiltersTray />;
+FiltersTrayPhoneDark.meta = { theme: 'dark', width: 375 };

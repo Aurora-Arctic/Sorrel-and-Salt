@@ -142,3 +142,146 @@
 .facet-layout__sentence {
   margin-block: space(4);
 }
+
+// A text segmented control: radios styled as adjacent buttons in a row.
+.facet-strip {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+
+  > div {
+    display: inline-flex;
+  }
+
+  label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: space(2) space(4);
+    border: 1px solid $hairline;
+    margin-left: -1px;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:first-child {
+      margin-left: 0;
+      border-radius: radius('surface') 0 0 radius('surface');
+    }
+
+    &:last-child {
+      border-radius: 0 radius('surface') radius('surface') 0;
+    }
+
+    &:only-child {
+      border-radius: radius('surface');
+    }
+
+    &:has(input:checked) {
+      @include chip($dark: $accent, $light: $accent, $state: selected);
+      border-radius: 0;
+      padding: space(2) space(4);
+      font-size: inherit;
+      z-index: 1;
+    }
+
+    &:first-child:has(input:checked) {
+      border-radius: radius('surface') 0 0 radius('surface');
+    }
+
+    &:last-child:has(input:checked) {
+      border-radius: 0 radius('surface') radius('surface') 0;
+    }
+
+    &:has(input:focus-visible) {
+      outline: 2px solid $accent;
+      outline-offset: 2px;
+    }
+  }
+
+  input {
+    position: absolute;
+    opacity: 0;
+    inset: 0;
+    margin: 0;
+    cursor: pointer;
+  }
+}
+
+// Alternative B: the filters in a left column, the sentence and results beside.
+.facet-layout__split {
+  display: grid;
+  gap: space(6);
+  grid-template-columns: 1fr;
+  align-items: start;
+
+  @media (min-width: $shell-tablet-width) {
+    grid-template-columns: minmax(18rem, 22rem) minmax(0, 1fr);
+  }
+
+  .facet-layout__panel {
+    grid-template-columns: 1fr;
+  }
+
+  .facet-layout__apply {
+    position: static;
+    border-top: 0;
+    padding: 0;
+  }
+}
+
+.facet-layout__main {
+  min-width: 0;
+}
+
+// Alternative D: the Filters button beside the search box, chosen values as chips.
+.facet-layout__bar {
+  display: flex;
+  gap: space(4);
+  align-items: flex-end;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.facet-layout__chosen {
+  @include list-reset;
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  margin-top: space(4);
+
+  button {
+    @include chip($dark: $accent, $light: $accent, $state: selected);
+    gap: space(2);
+    cursor: pointer;
+  }
+}
+
+.facet-layout__tray {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 20;
+  width: min(32rem, 100%);
+  overflow-y: auto;
+  padding: space(4);
+  background-color: $surface-page;
+  border-left: 1px solid $hairline;
+  box-sizing: border-box;
+}
+
+.facet-layout__tray-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.facet-layout__tray-foot {
+  position: sticky;
+  bottom: 0;
+  margin-top: auto;
+  padding: space(3) 0;
+  background-color: $surface-page;
+  border-top: 1px solid $hairline;
+}
