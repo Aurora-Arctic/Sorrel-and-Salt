@@ -36,8 +36,8 @@ import {
 // Stories 28–34: the add and edit dialogs of a coven's ingredient. Scaffolds:
 // M8.16 builds the add dialog's coven behaviour and unskips stories 28–32;
 // M8.17 builds the coven edit and unskips 33 and 34, each named in its
-// annotation. M8.16 lands before the coven's list (M9.6) and the entry's
-// page (M8.19), so stories 28–32 open the dialog from pages that exist now,
+// annotation. M8.16 landed before the coven's list (M9.6), so stories 28–32 open the
+// dialog from pages that exist now,
 // the coven's home, its members page and /account, and read each save back
 // in SQL. Each story writes its own coven, and its ingredients' invented
 // names share no word, so the form's duplicate warning never holds a save
@@ -605,7 +605,7 @@ test.fixme(
     tag: '@story-33',
     annotation: {
       type: 'fixme',
-      description: "M8.17 builds the coven edit, after M9.6's list and M8.19's entry page",
+      description: "M8.17 builds the coven edit, after M9.6's list",
     },
   },
   async ({ page }) => {
@@ -729,7 +729,7 @@ test.fixme(
     tag: '@story-34',
     annotation: {
       type: 'fixme',
-      description: "M8.17 builds the coven edit, after M9.6's list and M8.19's entry page",
+      description: "M8.17 builds the coven edit, after M9.6's list",
     },
   },
   async ({ page }) => {

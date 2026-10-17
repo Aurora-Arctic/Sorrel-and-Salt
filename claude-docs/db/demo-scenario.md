@@ -19,6 +19,18 @@ badge (M10.20) has to have both to show, and one layer carries no quantity at
 all — a sprig laid on top is not a measurement, and `quantity`/`unit` are
 nullable precisely so it does not have to be one.
 
+**The curated compendium comes with it.** After `seedStandardContent`, in the
+same transaction, `demo` calls `seedCompendiumContent(tx, COMPENDIUM)`, so a
+person exploring the app finds the real compendium (every curated entry and
+its sources) beside standard's fixture entries, not only the 26 invented ones.
+The vocabularies it picks from are already there, since `standard` seeds them.
+The order matters: the fixture entries go in first and keep their rows, and a
+curated entry of the same identity, name or slug is skipped as present. The
+guard (`assertCompendiumValid`) runs before the transaction opens, so an invalid
+literal writes nothing. `standard` stays without it: it is the test fixture
+cast, and its tests rely on those rows alone. The layers name fixture entries
+by tier and identity, so the extra entries make none of them ambiguous.
+
 **Four things in it are fixtures rather than decoration:**
 
 - **W's own ingredients**, the workspace tier of §5's one table: `Garden

@@ -84,8 +84,9 @@ follows is what exists.
   through `existsIn`, so a soft-deleted one answers nothing. `excluding`
   leaves one entry out on both sides, as the one that moved and as the one
   holding the slug.
-- **`resolveCompendiumSlug(slug)` is the public route's one read,** taking no
-  session: the live entry at `slug` (`findCompendiumEntryBySlug`), with
+- **`resolveCompendiumSlug(slug)` answers the public route's address,** taking no
+  session, beneath `readCompendiumEntry` (M8.19), the cached read the page
+  makes: the live entry at `slug` (`findCompendiumEntryBySlug`), with
   `movedAway` naming an entry whose redirect from it would still be running
   but for this one, else `{ kind: 'moved', slug }` for a 308 to the current
   slug, else `NotFound` — a coven's slug included, since a coven entry's
@@ -129,4 +130,4 @@ the step — `column "slug" of relation "ingredients" contains null values` —
 and `npm run db:reset` (`make db-reset` from the host) rebuilds it. The test
 and e2e databases are built from an empty schema every run and never meet it.
 
-**MB.215: the slug drops the form.** One page shows every form of an entry, so the address names the label and the formal name alone: Rosemary becomes `rosemary-salvia-rosmarinus`, and the two Cat's Claw barks `cats-claw-uncaria-tomentosa` and `cats-claw-uncaria-guianensis`, still told apart by their formal names. MB.220 calls `ingredientSlug(name, null, canonicalName)` at every call site and rewrites no slug in SQL, which would be a second slug rule: each entry keeps its form-bearing slug until its next save, when the service derives the new one and retires the old through the path above, so the old address redirects for 180 days. The seed re-slugs its own entries on reseed and retires each compendium slug it moves, and a curated form's rename no longer moves any slug. MB.223 removed `ingredientSlug`'s middle parameter ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
+**MB.215: the slug drops the form.** One page shows every form of an entry, so the address names the label and the formal name alone: Rosemary becomes `rosemary-salvia-rosmarinus`, and the two Cat's Claw barks `cats-claw-uncaria-tomentosa` and `cats-claw-uncaria-guianensis`, still told apart by their formal names. MB.220 calls `ingredientSlug(name, null, canonicalName)` at every call site and rewrites no slug in SQL, which would be a second slug rule: each entry keeps its form-bearing slug until its next save, when the service derives the new one and retires the old through the path above, so the old address redirects for 180 days. The seed re-slugs its own entries on reseed and retires each compendium slug it moves, and a curated form's rename no longer moves any slug. `standard` also seeds two retirements as live examples of the entry page's two redirects (see "The compendium is awkward on purpose" in [`standard-scenario.md`](standard-scenario.md)). MB.223 removed `ingredientSlug`'s middle parameter ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).

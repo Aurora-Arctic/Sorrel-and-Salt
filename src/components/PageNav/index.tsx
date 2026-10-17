@@ -1,7 +1,7 @@
 'use client';
 
-import { type ReactElement, useEffect, useState } from 'react';
-import type { PageNavProps } from './types';
+import { type ReactElement, useEffect, useId, useState } from 'react';
+import type { PageNavEntry, PageNavItem, PageNavProps } from './types';
 import './index.scss';
 
 // A menu of jump links to a page's own sections, marking the one in view
@@ -9,8 +9,20 @@ import './index.scss';
 // menu works before the script loads; the script only moves `aria-current`.
 // The server render marks the first entry.
 
+function itemsOf(entries: readonly PageNavEntry[]): PageNavItem[] {
+  const items: PageNavItem[] = [];
+  for (const entry of entries) {
+    const last = items[items.length - 1];
+    if (entry.group === undefined) items.push({ kind: 'entry', entry });
+    else if (last?.kind === 'group' && last.label === entry.group) last.entries.push(entry);
+    else items.push({ kind: 'group', label: entry.group, entries: [entry] });
+  }
+  return items;
+}
+
 export default function PageNav({ label, entries }: PageNavProps): ReactElement {
   const [current, setCurrent] = useState(entries[0]?.href);
+  const groupId = useId();
 
   useEffect(() => {
     // No observer (an old browser): the server's mark stays.
@@ -39,16 +51,38 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
     return () => observer.disconnect();
   }, [entries]);
 
+  const link = (entry: PageNavEntry) => (
+    <li key={entry.href}>
+      <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
+        {entry.label}
+      </a>
+    </li>
+  );
+
+  // The entries stay one flat list for the observer above; only the drawing
+  // nests a group, its label naming its list.
   return (
-    <nav className="page-nav" aria-label={label}>
+    <nav
+      className={
+        entries.some((entry) => entry.group !== undefined)
+          ? 'page-nav page-nav--grouped'
+          : 'page-nav'
+      }
+      aria-label={label}
+    >
       <ul>
-        {entries.map((entry) => (
-          <li key={entry.href}>
-            <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
-              {entry.label}
-            </a>
-          </li>
-        ))}
+        {itemsOf(entries).map((item, at) =>
+          item.kind === 'entry' ? (
+            link(item.entry)
+          ) : (
+            <li key={`group-${at}`}>
+              <span className="page-nav__group" id={`${groupId}-${at}`}>
+                {item.label}
+              </span>
+              <ul aria-labelledby={`${groupId}-${at}`}>{item.entries.map(link)}</ul>
+            </li>
+          ),
+        )}
       </ul>
     </nav>
   );

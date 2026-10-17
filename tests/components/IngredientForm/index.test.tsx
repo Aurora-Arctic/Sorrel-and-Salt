@@ -25,6 +25,7 @@ import {
   renderWithClient,
   textbox,
   waitFor,
+  duplicateHref,
 } from '../../support/ingredient-form';
 import { layOutChips, moveByKeyboard } from '../../support/sortable';
 import { choose, press, redo, type, typeIn, undo } from '../../support/interact';
@@ -59,7 +60,9 @@ function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refuse
   const onSaved = vi.fn();
   offerNothing();
   offerCategories(categories);
-  renderWithClient(<IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />);
+  renderWithClient(
+    <IngredientForm duplicateHref={duplicateHref} workspaceId={WORKSPACE_ID} onSaved={onSaved} />,
+  );
   return onSaved;
 }
 

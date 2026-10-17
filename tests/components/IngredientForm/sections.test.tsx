@@ -4,7 +4,7 @@ import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { renderInModal } from '../../support/discard-guard';
-import { control, renderWithClient, waitFor } from '../../support/ingredient-form';
+import { control, renderWithClient, waitFor, duplicateHref } from '../../support/ingredient-form';
 import { choose, press, type, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import { ENTRY_ID, acceptUpdate, offerNothing } from '../../support/msw/ingredient-lookups';
@@ -36,7 +36,11 @@ const TESTWORT: IngredientFormValues = {
 function renderForm(values?: IngredientFormValues) {
   offerNothing();
   renderWithClient(
-    <IngredientForm workspaceId={null} entry={values && { id: ENTRY_ID, values }} />,
+    <IngredientForm
+      duplicateHref={duplicateHref}
+      workspaceId={null}
+      entry={values && { id: ENTRY_ID, values }}
+    />,
   );
 }
 
@@ -100,7 +104,11 @@ describe('IngredientForm’s sections', () => {
   it('puts Open All beside the modal’s title, out of the form, and it still opens every section', () => {
     offerNothing();
     renderInModal(() => (
-      <IngredientForm workspaceId={null} entry={{ id: ENTRY_ID, values: TESTWORT }} />
+      <IngredientForm
+        duplicateHref={duplicateHref}
+        workspaceId={null}
+        entry={{ id: ENTRY_ID, values: TESTWORT }}
+      />
     ));
 
     const openAll = screen.getByRole('button', { name: 'Open All' });
@@ -118,7 +126,9 @@ describe('IngredientForm’s sections', () => {
   // The owner's call: a control the question holds is off, not merely faded.
   it('turns Close All off while the unsaved changes are asked about, and on again on Keep Editing', async () => {
     offerNothing();
-    renderInModal((done) => <IngredientForm workspaceId={null} onCancel={done} />);
+    renderInModal((done) => (
+      <IngredientForm duplicateHref={duplicateHref} workspaceId={null} onCancel={done} />
+    ));
     const closeAll = screen.getByRole('button', { name: 'Close All' });
     type('Name', 'Testwort');
     expect(closeAll).toBeEnabled();

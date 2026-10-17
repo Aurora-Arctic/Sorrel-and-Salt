@@ -296,14 +296,14 @@ The eyebrow and title are a `.header` column, closer than its gap, which may
 shrink past its content: a long name wraps rather than pushing the × out, and
 a name with no break in it breaks anywhere.
 
-| Dialog                                    | Eyebrow                               | Qualifier   |
-| ----------------------------------------- | ------------------------------------- | ----------- |
-| `/admin/compendium?edit=`                 | Edit Ingredient                       | Formal name |
-| `/admin/categories`, `forms`              | Edit Category, Edit Form              | —           |
-| `/admin/deities`                          | Edit Deity                            | Tradition   |
-| `/admin/celestial-bodies`, `zodiac-signs` | Edit Celestial Body, Edit Zodiac Sign | —           |
-| `/admin/category-groups`, `form-groups`   | Edit Category Group, Edit Form Group  | —           |
-| `/admin/deity-traditions`                 | Edit Tradition                        | —           |
+| Dialog                                     | Eyebrow                               | Qualifier   |
+| ------------------------------------------ | ------------------------------------- | ----------- |
+| `/admin/compendium?edit=`, an entry's page | Edit Ingredient                       | Formal name |
+| `/admin/categories`, `forms`               | Edit Category, Edit Form              | —           |
+| `/admin/deities`                           | Edit Deity                            | Tradition   |
+| `/admin/celestial-bodies`, `zodiac-signs`  | Edit Celestial Body, Edit Zodiac Sign | —           |
+| `/admin/category-groups`, `form-groups`    | Edit Category Group, Edit Form Group  | —           |
+| `/admin/deity-traditions`                  | Edit Tradition                        | —           |
 
 ## A control in the header
 
@@ -428,7 +428,8 @@ at once, with its head over a skeleton, the way a filter shows it is loading.
 The form arrives in the same dialog.
 
 - **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
-  mounted once, in `src/app/(shell)/admin/layout.tsx`. It keeps the heading of the
+  mounted in `src/app/(shell)/admin/layout.tsx`, and by `IngredientEntry` when it
+  is given `edit` (M8.19; the two entry routes have no layout one). It keeps the heading of the
   modal just pressed and runs `router.push(href)` inside `useTransition`
   (a React call that marks a change as in progress until it finishes). It
   offers `loading` (that heading while the push is pending, otherwise
@@ -444,6 +445,8 @@ The form arrives in the same dialog.
   ([`icon-tip.md`](icon-tip.md)), `AddAction` (`src/app/(shell)/admin/add-action.tsx`)
   and New Invitation all use it, and so does each name on `/admin/users`, which
   opens the user's modal, `?user=<id>` (M9.19, [`user-list.md`](user-list.md)).
+  So does Edit on an ingredient's own page, which opens the edit modal over
+  that page ([`ingredient-entry.md`](ingredient-entry.md), "Edit").
 - **The heading is known before the form.** The page builds each row's
   `editHeading` on the server, with the same builder the loaded modal uses,
   and hands it to the row beside `editHref`. So the head does not change when

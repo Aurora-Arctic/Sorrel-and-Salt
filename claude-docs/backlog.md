@@ -57,6 +57,7 @@
 - [ ] Both private and public comment sections for compendium entries.
 - [ ] _**Dark Magic**_
 - [ ] In spell steps: allow the user to link to a specific ingredient in the spell in the notes but that drops to plain text if they remove the ingredient and displays a warning to update on the step.
+- [ ] Inline editing on the ingredient entry page: an Edit beside each item opens that item for editing where it sits, rather than the whole form in a modal (M8.19's page).
 
 ### V3
 

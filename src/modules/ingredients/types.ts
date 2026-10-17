@@ -14,7 +14,8 @@ import type { ReferenceInput } from './validation/reference';
 import type { JarMerge, StockInput } from './validation/stock';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from './validation/types';
 import type { ValidationIssue } from '../../lib/types';
-import type { CategoryRow, DeityRow } from '@/modules/vocabulary';
+import type { CategoryGroupRow, CategoryRow, DeityRow } from '@/modules/vocabulary';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
 // The repository's own, rather than a second `typeof …$inferSelect`.
 export type {
@@ -212,6 +213,72 @@ export type CompendiumAddress =
       entry: IngredientRow;
       /** The entry that moved off this address, while its redirect's window is open. */
       movedAway: IngredientRow | null;
+    }
+  | { kind: 'moved'; slug: string };
+
+/**
+ * A category as the entry page shows it (M8.19): the row, and the group whose
+ * colours its chip takes, read with it so the page needs no second lookup.
+ */
+export interface CategoryDetail {
+  category: CategoryRow;
+  group: CategoryGroupRow;
+}
+
+/**
+ * A deity as the entry page shows it: its name, and the tradition the curated
+ * deity sits in, null for a typed name and once the deity or its tradition
+ * is retired.
+ */
+export interface DeityDetail {
+  name: string;
+  tradition: string | null;
+}
+
+/**
+ * A substitute as the entry page shows it: the name, the ingredient to link
+ * (null on typed text and on a deleted link, when the name is plain text),
+ * and the form the link names, null when it names the ingredient whole.
+ */
+export interface SubstituteDetail {
+  name: string;
+  ingredient: Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'> | null;
+  form: string | null;
+}
+
+/**
+ * One form of an ingredient as its page shows it (MB.215): the variant's row,
+ * the icon of the curated form's group (null on an uncurated form), and the
+ * lists that are the form's own. Its references are MB.155's.
+ */
+export interface VariantDetail {
+  variant: IngredientVariantRow;
+  icon: FormGroupIcon | null;
+  categories: CategoryDetail[];
+  substitutes: SubstituteDetail[];
+}
+
+/**
+ * An ingredient as its page shows it (M8.19): the row, the child lists that
+ * are the ingredient's own, and one detail per live variant in form order.
+ * Both routes render this one shape; the public one reads it from the cache.
+ */
+export interface IngredientDetail {
+  entry: IngredientRow;
+  folkNames: string[];
+  categories: CategoryDetail[];
+  deities: DeityDetail[];
+  substitutes: SubstituteDetail[];
+  variants: VariantDetail[];
+}
+
+/** What the public entry route reads: the detail at an address, or the slug it moved to. */
+export type CompendiumEntryPage =
+  | {
+      kind: 'entry';
+      detail: IngredientDetail;
+      /** The entry that moved off this address, while its redirect's window is open. */
+      movedAway: Pick<IngredientRow, 'name' | 'slug'> | null;
     }
   | { kind: 'moved'; slug: string };
 

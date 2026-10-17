@@ -3,18 +3,20 @@ import type postgres from 'postgres';
 import { revalidateTag } from 'next/cache';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { COMPENDIUM_TAG } from '@/lib/compendium-cache';
+import { NotFound } from '@/lib/errors';
 import type { PageRequest } from '@/lib/types';
 import {
   compendiumFacets,
   countCompendium,
   deleteCompendiumEntry,
   listCompendium,
+  readCompendiumEntry,
 } from '@/modules/ingredients';
 import { A, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { makeIngredient } from '../../../support/fixtures';
-import { clearDataCache } from '../../../support/next-data-cache';
+import { clearDataCache, declared } from '../../../support/next-data-cache';
 
 // M8.6: the compendium's page and MB.105's count held in the data cache under
 // the `compendium` tag, each keyed by its arguments (DESIGN.md §7). A data
@@ -115,5 +117,37 @@ describe('M12.3: the compendium facets are cached under the compendium tag', () 
     await deleteCompendiumEntry(asUser(E), deleting);
 
     expect(await forms()).toEqual([{ value: 'Testform', count: 2 }]);
+  });
+});
+
+describe('M8.19: the public entry read is cached under the compendium tag', () => {
+  const nameAt = async (slug: string) => {
+    const page = await readCompendiumEntry(slug);
+    if (page.kind !== 'entry') throw new Error('Expected an entry');
+    return page.detail.entry.name;
+  };
+
+  it('declares the read under the tag, answers a repeat from the cache, and reads Postgres again after expiry', async () => {
+    expect(declared).toContainEqual(
+      expect.objectContaining({ keyParts: ['compendium-entry'], tags: [COMPENDIUM_TAG] }),
+    );
+    const id = await seed('Fixture Alpha');
+    const [{ slug }] = await sql`select slug from ingredients where id = ${id}`;
+    expect(await nameAt(slug)).toBe('Fixture Alpha');
+
+    // Renamed underneath the read, its slug left where it was.
+    await sql`update ingredients set name = 'Fixture Renamed' where id = ${id}`;
+    expect(await nameAt(slug)).toBe('Fixture Alpha');
+
+    revalidateTag(COMPENDIUM_TAG, { expire: 0 });
+
+    expect(await nameAt(slug)).toBe('Fixture Renamed');
+  });
+
+  it('caches no refusal: a slug that named nothing answers once an entry is there', async () => {
+    await expect(readCompendiumEntry('fixture-late')).rejects.toThrow(NotFound);
+    await sql`update ingredients set slug = 'fixture-late' where id = ${await seed('Fixture Late')}`;
+
+    expect(await nameAt('fixture-late')).toBe('Fixture Late');
   });
 });

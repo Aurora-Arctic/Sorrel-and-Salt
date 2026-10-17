@@ -118,6 +118,16 @@ $badge-palettes: (
       treatment: solid,
       dark: $sorrel-bright,
       light: $sorrel-vivid,
+    ),
+  // A coven's own entry rather than the compendium's (M8.19): where the row
+  // lives, not a warning, so a tint, in the accent's inks, which spend no hue
+  // the groups need, and tinted so it never reads as last-used's pointer.
+  // Light takes the accent's hover ink: $sorrel-vivid's label on its tint
+  // was 4.42:1. Label on tint 5.60:1 dark, 6.98:1 light; edge at least 4.01:1.
+  'local': (
+      treatment: tinted,
+      dark: $sorrel-bright,
+      light: $sorrel-deep,
     )
 );
 

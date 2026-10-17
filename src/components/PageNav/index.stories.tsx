@@ -18,6 +18,23 @@ export const Default: Story = () => (
   />
 );
 
+// A run of entries under a group's label, as the ingredient page puts its
+// forms under Forms (M8.19).
+export const Grouped: Story = () => (
+  <PageNav
+    label="On this page"
+    entries={[
+      { href: '#one', label: 'Details' },
+      { href: '#two', label: 'Root', group: 'Forms' },
+      { href: '#three', label: 'Oil', group: 'Forms' },
+      { href: '#four', label: 'Smoke Bundle', group: 'Forms' },
+    ]}
+  />
+);
+
+export const GroupedPhone: Story = () => <Grouped />;
+GroupedPhone.meta = { width: 375 };
+
 // A phone's width: the bar on the left, the text left-aligned.
 export const Phone: Story = () => <Default />;
 Phone.meta = { width: 375 };

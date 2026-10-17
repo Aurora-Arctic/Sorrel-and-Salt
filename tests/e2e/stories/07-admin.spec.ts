@@ -139,12 +139,19 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       expect((await page.goto(`/coven/${coven}`))?.status()).toBe(200);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
 
-      // Today a non-admin meets a compendium entry nowhere but these addresses;
-      // the public compendium (M8.18, M8.19) will show them entries, and this
-      // walk extends there: the entry's page read, with no Edit or Delete on it.
+      // The edit addresses refuse a non-admin.
       await expectNotAuthorized(page, `/admin/compendium?edit=${slug}`);
       await expect(page.getByRole('textbox')).toHaveCount(0);
       await expectNotAuthorized(page, '/admin/compendium?new');
+
+      // The entry's public page shows the same non-admin its content and no way
+      // to change it: no Edit, no Delete, anywhere on it.
+      const entry = await page.goto(`/compendium/ingredients/${slug}`);
+      expect(entry?.status()).toBe(200);
+      await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible();
+      await expect(page.getByRole('link', { name: /^(edit|delete)/i })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /^(edit|delete)/i })).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
 
       // The entry is as the admin left it: it still opens, under its own name.
       await signInAgainAs(page, adminId);

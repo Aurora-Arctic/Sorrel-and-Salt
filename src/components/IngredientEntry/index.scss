@@ -1,0 +1,272 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The entry page's body. Spacing and the existing inks only: the section's
+// look is MB.120's design review (claude-docs/styling.md, "Designing a
+// section"); the layout is the owner's, given at M8.19.
+// claude-docs/components/ingredient-entry.md, "Layout".
+
+// The width a section's side column takes beside its text: room for a row
+// of two or three category chips and a correspondence's list of colours.
+$side-column: calc(#{space(8)} * 5);
+
+// The article fills the frame's wide column, not `.page-with-nav`'s narrow
+// one: an entry is read, not filled in, and its sections hold a side column.
+.ingredient-entry {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: space(6);
+
+  > * {
+    box-sizing: border-box;
+    margin-block: 0;
+  }
+}
+
+// From a tablet up, the jump menu stands in a sticky column to the left of
+// the content, which takes the rest of the frame. The breakpoint and the
+// sticky offset are `.page-with-nav`'s (`_primitives.scss`), so the two
+// layouts' menus agree. The menu's width is that layout's 12rem while the
+// article is wide; below that the content keeps 60rem (the side column,
+// its gutter and 38rem for the text) and the menu takes what is left, so
+// on a smaller desktop the menu gives way first rather than holding its
+// width while the text alone narrows (the owner's call, M8.19); it never
+// goes narrower than its longest label. The children are the head,
+// the menu, Details and the forms; the menu spans the last two rows, so it
+// sticks for the length of the page.
+@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  .ingredient-entry--with-nav {
+    display: grid;
+    grid-template-columns:
+      minmax(min-content, min(calc(#{space(8)} * 3), calc(100% - #{space(8)} * 15)))
+      minmax(0, 1fr);
+    align-content: start;
+
+    > :not(.page-nav) {
+      grid-column: 2;
+    }
+
+    > .page-nav {
+      position: sticky;
+      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      grid-column: 1;
+      grid-row: 2 / span 2;
+      align-self: start;
+    }
+  }
+}
+
+// Clear of the top of the frame, and the eyebrow close over its heading:
+// the heading's line box carries its own air above the letters, so the
+// stack's gap is taken back and a little more (the owner's call).
+.ingredient-entry__head {
+  @include stack(3);
+
+  padding-block-start: space(4);
+}
+
+.ingredient-entry__formal + .page-header {
+  margin-block-start: calc(-1 * #{space(4)});
+}
+
+.ingredient-entry__head .page-header {
+  margin: 0;
+}
+
+// The formal name over the heading as an eyebrow, its tip beside it; the
+// term ("Botanical Name") is read, not seen (the owner's call).
+.ingredient-entry__formal {
+  // The tip is placed against the nearest positioned ancestor: this.
+  position: relative;
+
+  dt {
+    @include visually-hidden;
+  }
+
+  dd {
+    display: flex;
+    gap: space(1);
+    align-items: center;
+  }
+
+  // Below the name rather than above it, where the shell's sticky bar would
+  // cover it at the top of the page; it covers the heading while open.
+  .info-tip__bubble {
+    inset: 100% auto auto 0;
+    margin: space(1) 0 0;
+  }
+
+  // Beside the mark where there is room, so it covers nothing: anchored on
+  // the mark itself, level with its middle. A phone keeps it below, where
+  // 18rem to the right of the mark would run off the screen.
+  @media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+    .info-tip {
+      position: relative;
+    }
+
+    .info-tip__bubble {
+      inset: 50% auto auto calc(100% + #{space(2)});
+      margin: 0;
+      translate: 0 -50%;
+    }
+  }
+}
+
+// A section: its heading, its text (description and caution), then its side
+// column (the correspondences and lists), one under the other on a phone.
+.ingredient-entry__section {
+  @include stack(4);
+
+  // A jump from the menu lands clear of the top inset, and of the shell's
+  // sticky bar where there is one, as `.page-frame__section` does.
+  scroll-margin-top: calc(#{$top-inset} + #{space(4)});
+}
+
+.app-shell .ingredient-entry__section {
+  scroll-margin-top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+}
+
+// Details' h2, or a form's h3.
+.ingredient-entry__section > h2,
+.ingredient-entry__section > h3 {
+  margin: 0;
+}
+
+.ingredient-entry__text {
+  @include stack(4);
+}
+
+// The side column's blocks stand further apart than the text's parts, so
+// each heading reads as its own list and not as the last one's tail.
+.ingredient-entry__side {
+  @include stack(6);
+}
+
+// Under the text, the side column stands a clear step off it, so the
+// details read as a second part of the section and not as its next line.
+.ingredient-entry__side {
+  margin-block-start: space(4);
+}
+
+// Past a tablet's width the side column stands to the right of the text,
+// the heading across both. Not from the menu's breakpoint: there the text
+// beside a side column would be a few words wide.
+@media (min-width: calc(#{$shell-tablet-width} + 0.01rem)) {
+  .ingredient-entry__section {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    // A wide gutter between the text and its details (the owner's call).
+    gap: space(4) space(8);
+    align-items: start;
+
+    > h2,
+    > h3 {
+      grid-column: 1 / -1;
+    }
+  }
+
+  .ingredient-entry__side {
+    grid-column: 2;
+    margin-block-start: 0;
+  }
+
+  // The head keeps to the text column, so Edit at the end of the heading's
+  // line ends where the text does (the owner's call).
+  .ingredient-entry__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    column-gap: space(8);
+
+    > * {
+      grid-column: 1;
+    }
+  }
+}
+
+.ingredient-entry__forms {
+  @include stack(6);
+
+  > h2 {
+    margin: 0;
+  }
+}
+
+.ingredient-entry__form-heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  align-items: center;
+}
+
+// The formal name and each correspondence: the term above its value, so a
+// long list of colours wraps under its label rather than beside it.
+.ingredient-entry__formal,
+.ingredient-entry__correspondences {
+  @include stack(2);
+
+  margin: 0;
+
+  dt {
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+    // Not a `<p>`, so it takes the measure itself.
+    max-width: $measure;
+  }
+}
+
+// In the side column a row is a term over a list that may wrap to several
+// lines: a step more between the term and its value, and a clear break
+// before the next term, so the rows read apart (the owner's call).
+.ingredient-entry__correspondences {
+  @include stack(3);
+
+  dd + dt {
+    margin-block-start: space(5);
+  }
+}
+
+// A block's heading: an h3 under Details, an h4 under a form; either
+// way the stack's gap is the space to its list, not the heading's own.
+.ingredient-entry__block {
+  @include stack(2);
+
+  > h3,
+  > h4 {
+    margin: 0;
+  }
+}
+
+.ingredient-entry__description {
+  margin: 0;
+  // Typed in a textarea, with its line breaks.
+  white-space: pre-line;
+}
+
+.ingredient-entry__list {
+  @include list-reset;
+  @include stack(1);
+
+  > li {
+    max-width: $measure;
+  }
+}
+
+.ingredient-entry__chips {
+  flex-flow: row wrap;
+  gap: space(2);
+}
+
+// Said where a field holds nothing, in the muted ink, so it reads as a
+// statement and not as a value.
+.ingredient-entry__empty {
+  margin: 0;
+  color: $text-muted;
+}
+
+.ingredient-entry__canonical {
+  margin: 0;
+}
