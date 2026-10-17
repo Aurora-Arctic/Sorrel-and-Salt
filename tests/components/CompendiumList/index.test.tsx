@@ -531,11 +531,8 @@ describe('CompendiumList filter', () => {
       </Navigating>,
     );
     openPanel();
-    const controls = () => [
-      nameBox(),
-      screen.getByRole('button', { name: 'Search' }),
-      unsourcedSwitch(),
-    ];
+    // The panel shuts as the navigation starts, so only the row's own controls are read after.
+    const controls = () => [nameBox(), screen.getByRole('button', { name: 'Search' })];
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(row()).not.toHaveAttribute('aria-busy');
 

@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import FormIcon from '@/components/FormIcon';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
@@ -297,6 +297,20 @@ describe('the /admin/compendium page', () => {
 });
 
 describe('the /admin/compendium filter', () => {
+  // The panel of facets opens as it does from the tablet width up, over the results.
+  beforeEach(() => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('min-width'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+  });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+  const openPanel = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }));
+
   it('reads ?query= trimmed, a repeated ?forms= as a list and ?withoutReferences=1 into the list and its count', async () => {
     await renderPage({
       query: '  test wort ',
@@ -310,7 +324,8 @@ describe('the /admin/compendium filter', () => {
       withoutReferences: true,
     });
     expect(screen.getByRole('combobox', { name: 'Name' })).toHaveValue('test wort');
-    expect(screen.getByRole('switch', { name: 'No Refs' })).toBeChecked();
+    openPanel();
+    expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeChecked();
   });
 
   // The facets are the choices' counts, so they are read under the filter the
@@ -377,7 +392,8 @@ describe('the /admin/compendium filter', () => {
 
     expect(lastFilter()).toEqual(NO_FILTER);
     expect(screen.getByRole('combobox', { name: 'Name' })).toHaveValue('');
-    expect(screen.getByRole('combobox', { name: 'Form' })).toHaveValue('');
+    openPanel();
+    expect(screen.getByRole('combobox', { name: 'Forms' })).toHaveValue('');
   });
 
   // The classification filter left the search: an address that still carries
@@ -397,15 +413,17 @@ describe('the /admin/compendium filter', () => {
     await renderPage({ withoutReferences: 'true' });
 
     expect(lastFilter()).toEqual(NO_FILTER);
-    expect(screen.getByRole('switch', { name: 'No Refs' })).not.toBeChecked();
+    openPanel();
+    expect(screen.getByRole('switch', { name: /^No Refs/ })).not.toBeChecked();
   });
 
   it('turns ?categories= slugs into the ids of the live categories, for the list and its count', async () => {
     await renderPage({ categories: ['testward', 'testcraft'] });
 
     expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'] });
-    expect(screen.getByRole('button', { name: 'Remove Testward' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Remove Testcraft' })).toBeInTheDocument();
+    openPanel();
+    expect(screen.getByRole('button', { name: 'Remove Category: testward' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove Category: testcraft' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Add Ingredient' })).toHaveAttribute(
       'href',
       '/admin/compendium?categories=testward&categories=testcraft&new',
@@ -416,21 +434,28 @@ describe('the /admin/compendium filter', () => {
     await renderPage({ categories: ['testward', 'testcraft'], categoryMode: 'any' });
 
     expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'], categoryMode: 'any' });
-    expect(screen.getByRole('radio', { name: 'Any' })).toBeChecked();
+    openPanel();
+    expect(
+      within(screen.getByRole('group', { name: 'Match' })).getByRole('radio', { name: 'Any' }),
+    ).toBeChecked();
   });
 
   it('reads any other ?categoryMode= as all, which sends nothing', async () => {
     await renderPage({ categories: ['testward', 'testcraft'], categoryMode: 'both' });
 
     expect(lastFilter()).toEqual({ categoryIds: ['c-tw', 'c-tc'] });
-    expect(screen.getByRole('radio', { name: 'All' })).toBeChecked();
+    openPanel();
+    expect(
+      within(screen.getByRole('group', { name: 'Match' })).getByRole('radio', { name: 'All' }),
+    ).toBeChecked();
   });
 
   it('drops a ?categories= slug no live category holds, and the known one still filters', async () => {
     await renderPage({ categories: ['renamed-away', 'testcraft'] });
 
     expect(lastFilter()).toEqual({ categoryIds: ['c-tc'] });
-    expect(screen.getAllByRole('button', { name: /^Remove / })).toHaveLength(1);
+    openPanel();
+    expect(screen.getByRole('button', { name: 'Remove Category: testcraft' })).toBeInTheDocument();
   });
 
   it('filters by no category when every slug is unknown', async () => {
@@ -471,8 +496,9 @@ describe('the /admin/compendium filter', () => {
 
     await renderPage();
 
-    fireEvent.click(screen.getByRole('combobox', { name: 'Form' }));
-    const choices = screen.getByRole('listbox', { name: 'Form choices' });
+    openPanel();
+    fireEvent.click(screen.getByRole('button', { name: /^Show Forms/ }));
+    const choices = screen.getByRole('listbox', { name: /^Forms/ });
     expect(
       within(choices)
         .getAllByRole('option')
