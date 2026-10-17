@@ -2654,16 +2654,16 @@ No error, no code, no message — `drizzle-kit migrate` catches whatever postgre
 
 **It validates the _resolved_ URL, which is the gap MB.47 reopened.** MB.46's validator only ever saw the file `vercel pull` wrote; MB.47 then took `DATABASE_URL` from a GitHub secret and handed it straight to drizzle-kit, so a malformed secret failed exactly as silently as a malformed pull used to — one task after the gap was closed, by its own successor. `Resolve DATABASE_URL` now writes whichever value won to `$RUNNER_TEMP/resolved.env` under `umask 077`, and the probe reads that. A file path rather than argv or a step `env:`, for MB.46's reasons.
 
-**`channel_binding` gets a named rule rather than a note.** It is a libpq _client-side_ option that postgres.js passes through to the server, which answers `42704` ([`ci/deploy.md`](../ci/deploy.md) has the mechanism). Neon's console adds it by default, so it will recur — and it is cheaper to reject in the validator, before a connection is attempted, than to diagnose from a 42704 afterwards.
+**`channel_binding` is stripped rather than rejected.** It is a libpq _client-side_ option that postgres.js passes through to the server, which answers `42704` ([`ci/deploy.md`](../ci/deploy.md) has the mechanism). The task first rejected it in the validator, but a hotfix's URL is written by Neon's Vercel integration, which adds the parameter and rewrites the variable, so nobody can delete it by hand. `withoutClientOnlyParams` (`src/db/connection-url.ts`) now removes it wherever a connection opens; postgres.js never enforced channel binding, so nothing is lost.
 
 _Acceptance criteria:_
 
 - Tests written first and watched fail — the `channel_binding` rule against `validateDatabaseUrl`, the probe's error-description and scrubbing helpers, and the workflow sweep
 - The probe runs in `migrate.yml` before `Apply pending migrations` and in `deploy.yml` before `Build`, fatal in the first and advisory in the second, asserted apart
 - Its output names the driver's error code and message and **never** the URL — asserted against a realistic connection string rather than intended, including errors that quote the URL, the password and the userinfo back at it. The hostname is deliberately kept: `ENOTFOUND` without the name it failed to resolve is the same silence this task exists to end
-- `validateDatabaseUrl` gains the client-only-parameter rule, with a green case for a Neon pooled URL carrying `sslmode=require` alone — postgres.js consumes that one, and rejecting it would break every working string in the project
+- Client-only parameters are removed from the URL where a connection opens, with a green case for a Neon pooled URL carrying `sslmode=require` alone — postgres.js consumes that one, and removing it would break every working string in the project. (Originally a `validateDatabaseUrl` rejection; see above.)
 - The resolved `DATABASE_URL` is validated whatever its source, secret or pulled `POSTGRES_URL`, pinned by a guard — the point is that the gap cannot reopen a second time
-- Docs corrected: `ci.md` and `db.md` on what a failed migration now tells you, `secrets.md` on deleting `channel_binding` from what the Neon console hands you
+- Docs corrected: `ci.md` and `db.md` on what a failed migration now tells you, `secrets.md` on `channel_binding` in what the Neon console hands you
 - **Not done when CI is green** — done when a live staging push either migrates, or fails with a named cause somebody can act on
 
 **MB.50 — Make code comments concise; move the arguments into `claude-docs/`** · 6h
