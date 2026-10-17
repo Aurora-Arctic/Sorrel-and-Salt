@@ -341,18 +341,21 @@ $side-column: calc(#{space(8)} * 5);
 // the darker link colour, `$accent-hover` (the owner's call; `$accent` is 3.96:1
 // on the `:target` highlight, `$accent-hover` is above 6:1), as the admin
 // compendium's name links do. The underline stays, since it is what marks
-// them as links without the colour, but faded: 40% of the link's own colour,
-// so it follows the colour to a faded green on hover. No token holds a faded
-// underline, so it is a `color-mix`, as `$fill-quiet` is.
+// them as links without the colour, but faded: 55% of the link's own colour at
+// rest and 65% pointed at or focused, so it follows the colour to a faded green.
+// Those are the lowest mixes that hold 3:1 against the page and the `:target`
+// fill in both themes. No token holds a faded underline, so it is a `color-mix`,
+// as `$fill-quiet` is.
 .ingredient-entry__marks a,
 .ingredient-entry__references a {
   color: $text-primary;
-  text-decoration-color: color-mix(in srgb, currentcolor 40%, transparent);
+  text-decoration-color: color-mix(in srgb, currentcolor 55%, transparent);
   @include theme-transition(color);
 
   &:hover,
   &:focus-visible {
     color: $accent-hover;
+    text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
   }
 
   &:focus-visible {
@@ -366,6 +369,7 @@ $side-column: calc(#{space(8)} * 5);
   &:hover:where(:visited),
   &:focus-visible:where(:visited) {
     color: $accent-hover;
+    text-decoration-color: color-mix(in srgb, currentcolor 65%, transparent);
   }
 
   @include reduced-motion {
