@@ -14,6 +14,7 @@ import type {
   PickerCategoriesQuery,
   CelestialBodySuggestionsQuery,
   PossibleDuplicatesQuery,
+  PromoteFolkNameMutation,
   ReferenceQuery,
   ReferenceSuggestionsQuery,
   UpdateCompendiumIngredientMutation,
@@ -24,6 +25,7 @@ import { citationText } from '../../lib/citation';
 import type { CitationFields } from '../../lib/types';
 import Modal from '../Modal';
 import IngredientForm from '.';
+import { PromoteFolkNameQuestion, usePromoteFolkName } from './promote';
 import { press } from '../../../.ladle/press';
 import { Reopenable } from '../../../.ladle/reopenable';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
@@ -504,6 +506,20 @@ function answer(operation: string, variables: Record<string, unknown>): object |
         updateCompendiumIngredient: { id: ENTRY.id, name: input?.name ?? '', slug: 'saved' },
       } satisfies UpdateCompendiumIngredientMutation;
     }
+    case 'PromoteFolkName':
+      // The swap as the server answers it: the folk name in as the name, the
+      // old name left in the list.
+      return {
+        promoteFolkName: {
+          id: ENTRY.id,
+          name: 'Hedge Fixture',
+          slug: 'promoted',
+          folkNames: [
+            { id: '00000000-0000-4000-8000-000000000402', name: 'Fixture Bane' },
+            { id: '00000000-0000-4000-8000-000000000403', name: ENTRY.values.name },
+          ],
+        },
+      } satisfies PromoteFolkNameMutation;
     case 'DeleteCompendiumIngredient':
       return {
         deleteCompendiumIngredient: ENTRY.id,
@@ -518,6 +534,7 @@ const SAVES = new Set([
   'CreateWorkspaceIngredient',
   'CreateCompendiumIngredient',
   'UpdateCompendiumIngredient',
+  'PromoteFolkName',
   'DeleteCompendiumIngredient',
   'CreateReference',
   'UpdateReference',
@@ -1330,3 +1347,97 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => <CompendiumEntry />;
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// Promoting a folk name (M12.1): the arrow on a saved folk name's chip, and the
+// question it always asks.
+
+/** The entry with two saved folk names, which only a saved entry has. */
+const PROMOTABLE = {
+  ...ENTRY,
+  values: {
+    ...ENTRY.values,
+    folkNames: [
+      { value: 'Hedge Fixture', id: '00000000-0000-4000-8000-000000000401' },
+      { value: 'Fixture Bane', id: '00000000-0000-4000-8000-000000000402' },
+    ],
+  },
+};
+
+/** The promotable entry's form, its Identity open, optionally with the question asked and a change made first. */
+function PromotableEntry({ asking, changed }: { asking: boolean; changed: boolean }) {
+  useCannedApi();
+  useEffect(() => {
+    openSection('Identity');
+    if (changed) {
+      const name = document.querySelector<HTMLInputElement>('input[name="name"]');
+      if (name) {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(
+          name,
+          'Testwort Edited',
+        );
+        name.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+    if (asking) {
+      // Next tick, after the change is in the form's state.
+      setTimeout(
+        () =>
+          document
+            .querySelector<HTMLButtonElement>(
+              'button[aria-label="Make Hedge Fixture the Display Name"]',
+            )
+            ?.click(),
+        50,
+      );
+    }
+  }, [asking, changed]);
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={PROMOTABLE}
+      entryHref={entryHref}
+      mayPromote
+      onCancel={() => undefined}
+    />
+  );
+}
+
+/** A compendium entry's folk names, each saved one with its arrow ahead of the ×. */
+export const PromoteControl: Story = () => <PromotableEntry asking={false} changed={false} />;
+
+/** The question over a form with nothing to save: Promote and Cancel. */
+export const PromoteQuestion: Story = () => <PromotableEntry asking changed={false} />;
+
+/** The question over a form with a change: Save and Promote, Discard and Promote, and Cancel. */
+export const PromoteQuestionWithChanges: Story = () => <PromotableEntry asking changed />;
+
+export const PromoteQuestionPhoneDark: Story = () => <PromotableEntry asking changed />;
+PromoteQuestionPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PromoteQuestionPhoneLight: Story = () => <PromotableEntry asking changed />;
+PromoteQuestionPhoneLight.meta = { theme: 'light', width: 375 };
+
+/**
+ * A coven's ingredient: the question without the compendium's note that the
+ * swap is global. The coven's form does not edit yet (M8.17), so the question
+ * stands alone, open over nothing.
+ */
+export const PromoteQuestionCoven: Story = () => {
+  useCannedApi();
+  const promotion = usePromoteFolkName(WORKSPACE_ID, PROMOTABLE.id);
+  return (
+    <PromoteFolkNameQuestion
+      promotion={promotion}
+      folkName={{ id: '00000000-0000-4000-8000-000000000401', value: 'Hedge Fixture' }}
+      displayName="Testwort"
+      tier="coven"
+      dirty={false}
+      saveFirst={async () => true}
+      discardFirst={() => undefined}
+      onPromoted={() => undefined}
+      onKeep={() => undefined}
+      onRefused={() => undefined}
+    />
+  );
+};

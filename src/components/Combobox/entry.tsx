@@ -5,6 +5,7 @@ import { type ReactElement, useId, useLayoutEffect, useRef } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { GripIcon, LinkIcon } from './icons';
 import { useEntrySummary } from './summary';
+import IconTip from '../IconTip';
 import { useTip } from '../InfoTip/use-tip';
 import type { ComboboxEntryProps, EntryHandleProps } from './types';
 
@@ -66,6 +67,7 @@ export function ComboboxEntry({
   summary: summarised,
   note,
   onRemove,
+  action,
   sortable,
 }: ComboboxEntryProps): ReactElement {
   const text = useRef<HTMLSpanElement | null>(null);
@@ -213,6 +215,22 @@ export function ComboboxEntry({
         >
           {summary.content()}
         </dialog>
+      )}
+      {/* An action on the entry, ahead of the x, in the tab order and named
+          for its entry as the x is; its tip is decoration (IconTip). */}
+      {action && (
+        <IconTip tip={action.tip} placement="above">
+          <button
+            type="button"
+            className="combobox__entry-action"
+            aria-label={action.label}
+            aria-describedby={describedBy}
+            disabled={action.disabled}
+            onClick={action.onClick}
+          >
+            {action.icon}
+          </button>
+        </IconTip>
       )}
       {/* Named for its entry: a column of bare "Remove"s is no help to a
           screen reader. In the tab order, a 24px target, and described by

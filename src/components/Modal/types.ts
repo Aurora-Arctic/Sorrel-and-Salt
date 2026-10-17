@@ -219,6 +219,19 @@ export interface ConfirmQuestionProps {
   busy: boolean;
   /** The action. A rejection is a refusal, handed to `onRefused` where given. */
   onConfirm: () => Promise<void>;
+  /**
+   * A second acting answer beside the first, for a question with two ways
+   * forward: "Discard and Promote" next to "Save and Promote" (M12.1). It is
+   * drawn destructive, being the one that gives something up. While either
+   * runs, both are shut and the safe answer with them, so the question cannot
+   * be left mid-action.
+   */
+  also?: {
+    label: string;
+    busyLabel: string;
+    busy: boolean;
+    onClick: () => Promise<void>;
+  };
   onKeep: () => void;
   /** Told a refused action's sentence, for the form's alert; the form closes the question. */
   onRefused?: (message: string) => void;

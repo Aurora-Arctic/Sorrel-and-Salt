@@ -158,6 +158,23 @@ export interface ComboboxQualifier {
   detail?: string;
 }
 
+/**
+ * A button a chip carries before its x, for a list whose entries can be acted
+ * on one by one: promoting a folk name to the display name (M12.1). Generic,
+ * so the entry knows nothing of what it does.
+ */
+export interface EntryAction {
+  /** The button's accessible name: "Make Hedge Fixture the Display Name". */
+  label: string;
+  /** The word its tooltip shows on hover and focus; decoration, as the name says it. */
+  tip: string;
+  /** The glyph, drawn at the icon size in the button's own ink. */
+  icon: ReactNode;
+  onClick: () => void;
+  /** Shut while what it starts is running. */
+  disabled?: boolean;
+}
+
 /** An entry a list holds, drawn inside the control: its text, and the x that takes it out. */
 export interface ComboboxEntryProps {
   value: string;
@@ -196,6 +213,8 @@ export interface ComboboxEntryProps {
    */
   note?: string;
   onRemove: () => void;
+  /** A button before the x, for acting on this entry: left out, the chip has the x alone. */
+  action?: EntryAction;
   /**
    * The chip's place in a sortable list, from dnd-kit's `useSortable`: it
    * draws a handle to move the chip by. Set by `ComboboxSortableEntries`,

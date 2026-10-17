@@ -532,6 +532,40 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// An action on the entry, before its x (M12.1: promote a folk name): the x's
+// 24px target and glyph, square, and in the accent a pointer or the focus
+// warms, since it makes rather than takes away. Its IconTip wrapper is
+// the chip's flex item.
+.combobox__entry > .icon-tip {
+  display: inline-flex;
+  flex: none;
+}
+
+.combobox__entry-action {
+  @include icon-button($icon-size, $glyph-size);
+  @include icon-button-edit;
+
+  flex: none;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  // On a coloured chip's fill the muted ink and the accent are unchecked;
+  // the inverted ink is, as the x's is.
+  :where(.is-coloured) &,
+  :where(.is-coloured) &:hover,
+  :where(.is-coloured) &:focus-visible {
+    background-color: transparent;
+    color: inherit;
+  }
+}
+
 // `$icon-size`: WCAG 2.2's 24px minimum target, inside a chip too short for
 // 44px.
 // Its hover is the warning's wash and ink, as react-select's remove is, faded
