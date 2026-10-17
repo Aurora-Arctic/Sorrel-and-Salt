@@ -146,5 +146,20 @@ export const AllZeroFacet: Story = () => (
   />
 );
 
+// Either Toxic value counting nothing: every matching entry shares one toxicity, so the
+// group rests on Any, is disabled, and says why in its hint.
+export const ToxicStuck: Story = () => (
+  <Panel
+    start={{ ...NONE, toxic: 'toxic' }}
+    facets={{
+      ...FACETS,
+      toxic: [
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not_toxic', label: 'Not Toxic', count: 21 },
+      ],
+    }}
+  />
+);
+
 // The admin list also has the No Refs switch.
 export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferences: true }} />;
