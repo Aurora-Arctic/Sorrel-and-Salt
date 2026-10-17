@@ -1,0 +1,57 @@
+# SearchSentence
+
+`src/components/SearchSentence/` — the sentence above a list that says what it is
+searching for (M12.4): "12 ingredients matching “rue”", and beneath it, opened,
+the filters that narrowed it. It draws the fragments `buildSearchSentence`
+returns ([`ingredient-search.md`](ingredient-search.md), "The search sentence") and
+does the loading animation that stands in for a spinner. A client component.
+
+## Props
+
+`SearchSentenceProps` (`types.ts`):
+
+| Prop        | What it is                                                                                           |
+| ----------- | ---------------------------------------------------------------------------------------------------- |
+| `sentence`  | The `SearchSentence` from `buildSearchSentence`. Its values are drawn bold and are never links       |
+| `query`     | The text the person searched for, or "". It always shows in the closed line                          |
+| `pending`   | A search is on its way. Read as its two edges: true starts the typing, false is the search returning |
+| `className` | Added to the sentence's own class                                                                    |
+
+There is no `total` prop: the count is the sentence's own lead, so passing it as
+well would be a second copy to keep equal.
+
+## Contracts
+
+- **Settled, it is one closed line.** The lead, the term and a chevron, with one
+  space at every join and no comma: "12 ingredients matching “rue”". The builder
+  writes a comma before each clause (the term's too), so the component takes the
+  sentence apart (`parts.ts`) and keeps the commas for the clauses beneath only.
+  A press opens the clauses and a second shuts them. With no clause to show (no
+  filter) it is a plain line and has no chevron.
+- **Before hydration** it is a native `<details>`, closed, holding the whole
+  clauses, so it opens without script; the tail is not clipped until the script
+  runs.
+- **While `pending` the sentence is typed in its place.** The lead reads "Searching
+  for ingredients", the term and the clauses are typed after it, and the clauses
+  slide open beneath. The old line is backspaced first (about half a second at
+  most), keeping the term if it did not change. The whole typed line is `aria-hidden`
+  and `inert`, so it is neither read nor focusable.
+- **On return** the lead is backspaced to "N ingredients" at the normal pace and the
+  clauses still to type finish at four characters a tick (a fast search). The finished
+  sentence is held for a second, then the clauses slide up into the closed line. Its
+  text stays in the page, whole, through the slide (`useSlide`, `src/lib/use-slide.ts`).
+- **A status region** (`role="status"`, visually hidden) is empty while a search is
+  pending and receives the finished sentence once, when it returns. It holds no
+  links. The typed line is not announced, because announcing every character would
+  be noise (WCAG 4.1.3, Status Messages).
+- **Reduced motion** turns the typing and the slide off: the line snaps to the
+  finished sentence and shuts, with no hold.
+- The chevron turns with `disclosure-chevron` (`$flip: true`) and fades by opacity
+  as a search starts and ends, so it never pops in or out.
+
+## Files
+
+| File        | What it holds                                                                  |
+| ----------- | ------------------------------------------------------------------------------ |
+| `parts.ts`  | Cuts the fragments into the lead, the term and the clauses                     |
+| `typing.ts` | The editing: one character an edit towards a goal, and the animation's timings |
