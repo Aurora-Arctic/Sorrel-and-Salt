@@ -360,12 +360,13 @@ describe('IngredientForm', () => {
 
     // Story 31: errors show on leaving a field, not only on submit.
     describe('on leaving a field', () => {
-      it('flags a required field left empty after it was touched, before any submit', async () => {
+      // A whitespace-only Name is an edit the person made, which the schema
+      // refuses; emptying a field back to its default is not an edit.
+      it('flags an edited value that is invalid once the field is left, before any submit', async () => {
         const calls = acceptCreate();
         renderForm();
 
-        type('Name', 'Testwort');
-        type('Name', '');
+        type('Name', '   ');
         fireEvent.blur(textbox('Name'));
 
         await waitFor(() => expectErrorOn(textbox('Name')));
@@ -375,13 +376,50 @@ describe('IngredientForm', () => {
       it('clears the error as the field is corrected, without leaving it again', async () => {
         renderForm();
 
-        type('Name', 'Testwort');
-        type('Name', '');
+        type('Name', '   ');
         fireEvent.blur(textbox('Name'));
         await waitFor(() => expect(textbox('Name')).toBeInvalid());
         type('Name', 'Testwort');
 
         await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
+      });
+
+      it('says nothing of a field entered and left with nothing typed', async () => {
+        renderForm();
+
+        fireEvent.focus(textbox('Name'));
+        fireEvent.blur(textbox('Name'));
+        await settle();
+
+        expect(textbox('Name')).not.toBeInvalid();
+      });
+
+      it('says nothing of a field typed in and emptied again, until a submit', async () => {
+        acceptCreate();
+        renderForm();
+
+        type('Name', 'Testwort');
+        type('Name', '');
+        fireEvent.blur(textbox('Name'));
+        await settle();
+        expect(textbox('Name')).not.toBeInvalid();
+
+        // Save stays shut until something differs, so edit another field.
+        type('Description', 'An entry with no name.');
+        save();
+        await waitFor(() => expectErrorOn(textbox('Name')));
+      });
+
+      it('does not flag the formal name when only the classification changed', async () => {
+        renderForm();
+
+        type('Name', 'Testwort');
+        choose('Classification', 'Botanical');
+        // Leaving the picker is what lets its change revalidate Formal Name.
+        fireEvent.blur(select('Classification'));
+        await settle();
+
+        expect(textbox('Formal Name')).not.toBeInvalid();
       });
 
       it('says nothing of an empty required field that was never touched', async () => {

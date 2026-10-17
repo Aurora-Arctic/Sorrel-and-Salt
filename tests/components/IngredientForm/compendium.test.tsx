@@ -161,12 +161,11 @@ describe('IngredientForm on the compendium', () => {
   describe('a new entry', () => {
     // Story 31 on the admin tier: the form is shared, so leaving a field
     // flags it here too.
-    it('flags a required field left empty on leaving it, before any submit', async () => {
+    it('flags an edited, invalid value on leaving it, before any submit', async () => {
       const calls = acceptCompendiumCreate();
       renderForm();
 
-      type('Name', 'Testwort');
-      type('Name', '');
+      type('Name', '   ');
       fireEvent.blur(textbox('Name'));
 
       await waitFor(() => expect(textbox('Name')).toBeInvalid());
