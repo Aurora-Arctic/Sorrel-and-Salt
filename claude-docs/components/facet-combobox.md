@@ -62,7 +62,8 @@ box's state.
   counts, icons, the loading placeholder, `removeNoun`, `disableZeros` (a zero
   row last, disabled, noted, ignored when picked) and the hidden inputs all
   behave as in the default form. A row's `group` is its heading in the list,
-  the headings in the order they first appear, ungrouped rows after them. Before
+  the headings in the order they first appear, ungrouped rows after them, under no heading of their own, so a grouped set gives
+  every choice a `group`. Before
   hydration the native select makes each group an `optgroup`.
 - **`count`, `disabled` and `note` on a choice** are drawn by both forms; the
   plain `Combobox` ignores them.

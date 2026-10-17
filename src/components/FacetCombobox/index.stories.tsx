@@ -48,7 +48,7 @@ function Stateful({
         choices={choices}
         values={values}
         onChange={setValues}
-        placeholder="Add an element"
+        placeholder={`Add ${label.toLowerCase().replace(/s$/, '')}`}
         removeNoun={label.replace(/s$/, '')}
         {...props}
       />
@@ -90,7 +90,7 @@ const DEITIES: ComboboxChoice[] = [
   { value: 'b', label: 'Test Borros', count: 0, group: 'Test Tradition One' },
   { value: 'c', label: 'Test Corvane', count: 8, group: 'Test Tradition Two' },
   { value: 'd', label: 'Test Dessa', count: 2, group: 'Test Tradition Two' },
-  { value: 'e', label: 'Test Elowen', count: 5 },
+  { value: 'e', label: 'Test Elowen', count: 5, group: 'Test Tradition Two' },
 ];
 
 // Each choice under its group's heading, as the Deities filter groups by tradition.
