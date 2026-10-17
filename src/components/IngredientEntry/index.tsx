@@ -51,20 +51,14 @@ const NAME_LABELS: Partial<Record<NomenclatureKind, string>> = {
  * DESIGN.md §5's nomenclature table states each kind.
  */
 const NAME_TIPS: Partial<Record<NomenclatureKind, string>> = {
-  botanical:
-    'The botanical name: the name the International Code of Nomenclature for algae, fungi, and plants (ICN) gives the plant.',
-  fungal:
-    'The fungal name: the name the International Code of Nomenclature for algae, fungi, and plants (ICN) gives the fungus.',
-  zoological:
-    'The zoological name: the name the International Code of Zoological Nomenclature (ICZN) gives the animal.',
-  mineral:
-    'The mineral name: an International Mineralogical Association (IMA) species or variety, or the accepted name of a rock, mineraloid or natural glass.',
-  chemical:
-    'The chemical name: the name the International Union of Pure and Applied Chemistry (IUPAC) gives the substance, or its accepted chemical name.',
+  botanical: 'Its botanical name, under the ICN.',
+  fungal: 'Its fungal name, under the ICN.',
+  zoological: 'Its zoological name, under the ICZN.',
+  mineral: 'Its mineral name: an IMA species or variety, or a rock, mineraloid or natural glass.',
+  chemical: 'Its chemical name, IUPAC\u2019s or the accepted one.',
 };
-const FORMAL_NAME_TIP =
-  'The formal name: there is one, and which naming system it belongs to is not yet settled.';
-const NO_FORMAL_NAME_TIP = 'The formal name: no naming system names this.';
+const FORMAL_NAME_TIP = 'Its formal name; which naming system it belongs to is not yet settled.';
+const NO_FORMAL_NAME_TIP = 'No naming system names it.';
 
 /** One correspondence row: its label and what it lists, possibly nothing. */
 interface Row {
@@ -156,23 +150,29 @@ function blockOf(prefix: string, key: string, nameId?: string): Block {
   return { id, labelledBy: nameId ? `${nameId} ${id}` : id };
 }
 
+/** A block's heading level: below Details' h2, or below a form's h3. */
+type BlockLevel = 3 | 4;
+
 function ListBlock({
   block,
   title,
+  level,
   empty,
   className,
   children,
 }: {
   block: Block;
   title: string;
+  level: BlockLevel;
   /** Said in place of the list when it holds nothing, so the heading never stands over nothing. */
   empty?: string;
   className?: string;
   children: ReactNode[];
 }): ReactElement {
+  const Heading = `h${level}` as const;
   return (
     <div className="ingredient-entry__block">
-      <h3 id={block.id}>{title}</h3>
+      <Heading id={block.id}>{title}</Heading>
       {children.length > 0 ? (
         <ul
           className={className ? `ingredient-entry__list ${className}` : 'ingredient-entry__list'}
@@ -187,10 +187,19 @@ function ListBlock({
   );
 }
 
-function CorrespondenceBlock({ block, rows }: { block: Block; rows: Row[] }): ReactElement {
+function CorrespondenceBlock({
+  block,
+  rows,
+  level,
+}: {
+  block: Block;
+  rows: Row[];
+  level: BlockLevel;
+}): ReactElement {
+  const Heading = `h${level}` as const;
   return (
     <div className="ingredient-entry__block">
-      <h3 id={block.id}>Correspondences</h3>
+      <Heading id={block.id}>Correspondences</Heading>
       <dl className="ingredient-entry__correspondences" aria-labelledby={block.labelledBy}>
         {rows.map((row) => (
           <div key={row.label}>
@@ -267,15 +276,15 @@ function FormSection({
 
   return (
     <section id={anchor} className="ingredient-entry__section" aria-labelledby={nameId}>
-      <h2 className="ingredient-entry__form-heading">
+      <h3 className="ingredient-entry__form-heading">
         <FormIcon name={icon} /> <span id={nameId}>{capitalise(variant.form)}</span>{' '}
         <ToxicMark toxic={variant.toxic} />
-      </h2>
+      </h3>
       <div className="ingredient-entry__text">
         {said(variant.description) && (
           <p className="ingredient-entry__description">{variant.description}</p>
         )}
-        <SafetyNote safetyNotes={variant.safetyNotes} level={3} />
+        <SafetyNote safetyNotes={variant.safetyNotes} level={4} />
         {addsNothing && (
           <p className="ingredient-entry__empty">
             {variant.toxic
@@ -287,19 +296,24 @@ function FormSection({
       {hasLists && (
         <div className="ingredient-entry__side">
           {rows.length > 0 && (
-            <CorrespondenceBlock block={blockOf(anchor, 'correspondences', nameId)} rows={rows} />
+            <CorrespondenceBlock
+              block={blockOf(anchor, 'correspondences', nameId)}
+              rows={rows}
+              level={4}
+            />
           )}
           {categories.length > 0 && (
             <ListBlock
               block={blockOf(anchor, 'categories', nameId)}
               title="Categories"
+              level={4}
               className="ingredient-entry__chips"
             >
               {categoryItems(categories)}
             </ListBlock>
           )}
           {substitutes.length > 0 && (
-            <ListBlock block={blockOf(anchor, 'substitutes', nameId)} title="Substitutes">
+            <ListBlock block={blockOf(anchor, 'substitutes', nameId)} title="Substitutes" level={4}>
               {substituteItems(substitutes, hrefOf)}
             </ListBlock>
           )}
@@ -333,7 +347,7 @@ const IngredientEntry = ({
           title={entry.name}
           action={
             edit && (
-              <Link className="btn" href={edit.href}>
+              <Link className="btn btn--quiet btn--medium" href={edit.href}>
                 Edit
               </Link>
             )
@@ -389,10 +403,12 @@ const IngredientEntry = ({
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
             rows={correspondences(entry, deities)}
+            level={3}
           />
           <ListBlock
             block={blockOf('details', 'folk-names')}
             title="Folk Names"
+            level={3}
             empty="No folk names recorded."
           >
             {folkNames.map((name) => (
@@ -402,6 +418,7 @@ const IngredientEntry = ({
           <ListBlock
             block={blockOf('details', 'categories')}
             title="Categories"
+            level={3}
             empty="No categories recorded."
             className="ingredient-entry__chips"
           >
@@ -410,6 +427,7 @@ const IngredientEntry = ({
           <ListBlock
             block={blockOf('details', 'substitutes')}
             title="Substitutes"
+            level={3}
             empty="No substitutes recorded."
           >
             {substituteItems(substitutes, hrefOf)}
@@ -419,17 +437,22 @@ const IngredientEntry = ({
       </section>
 
       {/* The forms, the last thing drawn: v2's notes section is appended
-          after this wrapper, so adding it moves nothing above. */}
-      <div className="ingredient-entry__forms">
-        {variants.map((variant, at) => (
-          <FormSection
-            key={variant.variant.id}
-            detail={variant}
-            anchor={anchors[at]!}
-            hrefOf={hrefOf}
-          />
-        ))}
-      </div>
+          after this wrapper, so adding it moves nothing above. Headed, so
+          the forms read as one part of the page (the owner's call), each
+          form a level beneath. */}
+      {variants.length > 0 && (
+        <section id="forms" className="ingredient-entry__forms" aria-labelledby="forms-heading">
+          <h2 id="forms-heading">Forms</h2>
+          {variants.map((variant, at) => (
+            <FormSection
+              key={variant.variant.id}
+              detail={variant}
+              anchor={anchors[at]!}
+              hrefOf={hrefOf}
+            />
+          ))}
+        </section>
+      )}
     </article>
   );
 };

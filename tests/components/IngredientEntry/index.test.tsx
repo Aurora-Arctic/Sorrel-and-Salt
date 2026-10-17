@@ -310,10 +310,10 @@ describe('IngredientEntry', () => {
     const oil = container.querySelector('#form-testoil')!;
     expect(root).toHaveRole('region');
     expect(oil).toHaveRole('region');
-    expect(within(root as HTMLElement).getByRole('heading', { level: 2 })).toHaveTextContent(
+    expect(within(root as HTMLElement).getByRole('heading', { level: 3 })).toHaveTextContent(
       /testroot/i,
     );
-    const oilHeading = within(oil as HTMLElement).getByRole('heading', { level: 2 });
+    const oilHeading = within(oil as HTMLElement).getByRole('heading', { level: 3 });
     expect(oilHeading).toHaveTextContent(/testoil/i);
     expect(within(oilHeading).getByText('Toxic', { exact: true })).toBeInTheDocument();
     expect(within(oil as HTMLElement).getByRole('region', { name: 'Caution' })).toBeInTheDocument();
@@ -328,7 +328,7 @@ describe('IngredientEntry', () => {
     const { container } = renderEntry();
 
     const root = container.querySelector('#form-testroot') as HTMLElement;
-    const heading = within(root).getByRole('heading', { level: 2 });
+    const heading = within(root).getByRole('heading', { level: 3 });
     expect(root.textContent!.replace(heading.textContent!, '').trim()).not.toBe('');
   });
 
@@ -354,11 +354,11 @@ describe('IngredientEntry', () => {
     expect(within(within(oil).getByRole('list')).getAllByRole('listitem')).toHaveLength(1);
     // The form's rows and list share a column apart from its heading.
     const side = sharedColumn([
-      within(oil).getByRole('heading', { name: 'Correspondences', level: 3 }),
+      within(oil).getByRole('heading', { name: 'Correspondences', level: 4 }),
       within(oil).getByRole('list'),
     ]);
     expect(side).not.toBe(oil);
-    expect(side).not.toContainElement(within(oil).getByRole('heading', { level: 2 }));
+    expect(side).not.toContainElement(within(oil).getByRole('heading', { level: 3 }));
   });
 
   it('jumps to the details and to each form from the page nav', () => {

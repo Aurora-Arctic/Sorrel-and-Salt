@@ -160,10 +160,26 @@ $side-column: calc(#{space(8)} * 5);
     grid-column: 2;
     margin-block-start: 0;
   }
+
+  // The head keeps to the text column, so Edit at the end of the heading's
+  // line ends where the text does (the owner's call).
+  .ingredient-entry__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) $side-column;
+    column-gap: space(8);
+
+    > * {
+      grid-column: 1;
+    }
+  }
 }
 
 .ingredient-entry__forms {
   @include stack(6);
+
+  > h2 {
+    margin: 0;
+  }
 }
 
 .ingredient-entry__form-heading {
