@@ -1480,7 +1480,8 @@ test('a press outside the open panel shuts it and applies what was held, on the 
 
   // Wide: a press on the page itself, away from every control.
   panel = await openFilters(page);
-  await choose(panel.getByRole('radio', { name: 'Any' }).first());
+  // The Toxic group's own Any: the first Any in the panel is Match's, disabled below two categories.
+  await choose(panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: 'Any' }));
   await expect(page).toHaveURL(/toxic=toxic/);
   await page.getByRole('heading', { level: 1 }).click();
   await expect(panel).toBeHidden();
