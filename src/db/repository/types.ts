@@ -1,4 +1,4 @@
-import type { ExtractTablesWithRelations, SQL } from 'drizzle-orm';
+import type { ExtractTablesWithRelations, SQL, SQLWrapper } from 'drizzle-orm';
 import type { AnyPgColumn, PgTable, PgTransaction } from 'drizzle-orm/pg-core';
 import type { PostgresJsQueryResultHKT } from 'drizzle-orm/postgres-js';
 import type { invitations } from '../../modules/coven/schema/invitations';
@@ -119,6 +119,13 @@ export interface KeyOrder {
   /** A parenthesised, aliased statement joined to the table, which a sort part or the `where` may read. */
   join?: { source: SQL; on: SQL };
   /**
+   * A table left-joined after `join`, which a sort part or the `where` may
+   * read, null where `on` matched none: a coven's cupboard row beside the
+   * entry it names (M12.18). A page carries the joined row onto each entry as
+   * `joined`; `on` holds the joined table's own filters.
+   */
+  leftJoined?: LeftJoin<PgTable>;
+  /**
    * The `where` holds a `<%` search, so the read runs in a transaction
    * under `select.ts`'s `SEARCH_WORD_SIMILARITY_THRESHOLD` rather than the
    * server's.
@@ -202,7 +209,7 @@ export interface Similarity {
  */
 export interface Aggregate<TRow extends Record<string, unknown>> {
   aggregate: { [K in keyof TRow]: SQL<TRow[K]> };
-  over: Pick<KeyOrder, 'join' | 'wordMatch'>;
+  over: Pick<KeyOrder, 'join' | 'leftJoined' | 'wordMatch'>;
   /**
    * Tables joined after the search join, in order, each ANDing its own
    * `deleted_at IS NULL` into `on`. A right join keeps every row of its table
@@ -781,6 +788,31 @@ export type SuggestionGroup = 'yours' | 'compendium';
 /** What each row of the substitute picker carries beside its entry. */
 export interface SuggestionGroupTag {
   group: SuggestionGroup;
+}
+
+/**
+ * What an entry of a coven's ingredient list carries beside its rank: the
+ * coven's live cupboard row for it, read by the list's own join, so
+ * `Ingredient.cupboardEntry` is answered without a second read. Null for the
+ * coven's own entries (M12.18).
+ */
+export interface WorkspaceListEdge extends CompendiumScore {
+  cupboardEntry: CupboardEntryRow | null;
+}
+
+/**
+ * The columns a list filters, sorts and counts that a coven's cupboard row
+ * may restate (M12.18): each the row's value where it holds one, else the
+ * entry's. On the compendium's own list they are the entry's columns, and
+ * there is no join.
+ */
+export interface ListColumns {
+  name: SortPart;
+  elements: SQLWrapper;
+  celestialBodies: SQLWrapper;
+  zodiacSigns: SQLWrapper;
+  /** The cupboard row's join, which every read of the columns needs. */
+  leftJoined?: LeftJoin<PgTable>;
 }
 
 /**
