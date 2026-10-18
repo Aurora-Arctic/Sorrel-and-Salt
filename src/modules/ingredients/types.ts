@@ -86,6 +86,29 @@ export interface CupboardEntryKey {
  */
 export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
 
+/**
+ * What an own entry had that the compendium entry it became does not carry
+ * (M12.21), by name, each list sorted and without repeats: the forms that
+ * matched no compendium form and held nothing, and the folk names,
+ * substitutes, categories, references and deities of the entry and its forms.
+ * The rows themselves stay on the soft-deleted entry.
+ */
+export interface DroppedOnConvert {
+  forms: string[];
+  folkNames: string[];
+  substitutes: string[];
+  categories: string[];
+  /** Each as its bibliography entry reads. */
+  references: string[];
+  deities: string[];
+}
+
+/** What `convertLocalToCompendiumEntry` answers: the cupboard row it wrote, and what the coven lost. */
+export interface ConvertedLocal {
+  entry: CupboardEntryRow;
+  dropped: DroppedOnConvert;
+}
+
 /** One `ingredient_variants` row as the table holds it. */
 export type VariantRecord = typeof ingredientVariants.$inferSelect;
 

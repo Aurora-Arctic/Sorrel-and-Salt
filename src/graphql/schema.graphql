@@ -166,6 +166,14 @@ input CompendiumIngredientUpdateInput {
   zodiacSigns: [String!]!
 }
 
+"""
+An own entry turned into a compendium entry: the cupboard entry written, and what was lost.
+"""
+type ConvertedLocal {
+  dropped: DroppedOnConvert!
+  entry: CupboardEntry!
+}
+
 type CorrespondenceSuggestion {
   curated: Boolean!
   description: String
@@ -247,6 +255,25 @@ type DeityTradition {
 input DeityTraditionInput {
   description: String!
   name: String!
+}
+
+"""
+What an own entry had that the compendium entry it became does not carry, by name, each list sorted. The rows stay on the deleted own entry.
+"""
+type DroppedOnConvert {
+  """The entry's and its forms'."""
+  categories: [String!]!
+  deities: [String!]!
+  folkNames: [String!]!
+
+  """Forms that matched no compendium form and held no jar or spell layer."""
+  forms: [String!]!
+
+  """The entry's and its forms', each as its bibliography entry reads."""
+  references: [String!]!
+
+  """The entry's and its forms'."""
+  substitutes: [String!]!
 }
 
 """An element, and how many entries it would list."""
@@ -681,6 +708,11 @@ type Mutation {
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
   """
   annotateCupboardEntry(ingredientId: ID!, input: CupboardEntryInput!, workspaceId: ID!): CupboardEntry!
+
+  """
+  Turns one of the coven's own entries into the compendium entry it duplicates: its jars and spell layers move to the compendium's forms of the same name, a cupboard entry carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no match, or a jar or a layer would meet one of the compendium's.
+  """
+  convertLocalToCompendiumEntry(compendiumId: ID!, localId: ID!, workspaceId: ID!): ConvertedLocal!
 
   """
   Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.
