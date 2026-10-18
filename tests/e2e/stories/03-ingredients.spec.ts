@@ -615,14 +615,21 @@ test.fixme(
     const cards = list.getByRole('listitem');
     await expect(cards).toHaveCount(4);
 
-    // M9.7's three states as RadioGroupField's fieldset, a `group` by role, All,
+    // M9.7's three states as a choice chip in a fieldset, a `group` by role, All,
     // Local and Compendium, and in-stock-only as a switch, as the admin's Without
     // References is (claude-docs/components/compendium-list.md).
     const source = filterOf(page).getByRole('group', { name: 'Source' });
     const inStock = filterOf(page).getByRole('switch', { name: /^In Stock/ });
+    // Source is a choice chip: its radios sit in a menu the summary opens.
+    const chooseSource = async (name: string | RegExp) => {
+      const radio = source.getByRole('radio', { name });
+      await source.locator('summary').click();
+      await radio.locator('xpath=ancestor::label[1]').click({ position: { x: 10, y: 10 } });
+      await expect(radio).toBeChecked();
+    };
 
     await test.step('local only: the two local entries, badged', async () => {
-      await source.getByRole('radio', { name: /^Local/ }).check();
+      await chooseSource(/^Local/);
       await expect(cards).toHaveCount(2);
       for (const name of ['Testwort', 'Fixture Emptywort']) {
         await expect(localBadge(rowOf(list, name))).toBeVisible();
@@ -634,7 +641,7 @@ test.fixme(
     });
 
     await test.step('compendium only: the two jars, unbadged', async () => {
-      await source.getByRole('radio', { name: /^Compendium/ }).check();
+      await chooseSource(/^Compendium/);
       await expect(cards).toHaveCount(2);
       for (const name of ['Rosemary', 'Selenite']) {
         await expect(rowOf(list, name)).toBeVisible();
@@ -643,7 +650,7 @@ test.fixme(
     });
 
     await test.step('all again, then in stock only: the empty jars go, and Testwort stays badged', async () => {
-      await source.getByRole('radio', { name: 'All' }).check();
+      await chooseSource('All');
       await expect(cards).toHaveCount(4);
       await inStock.click();
       await expect(cards).toHaveCount(2);
@@ -653,7 +660,7 @@ test.fixme(
     });
 
     await test.step('local and in stock together, kept by a reload, and Back steps out of each', async () => {
-      await source.getByRole('radio', { name: /^Local/ }).check();
+      await chooseSource(/^Local/);
       await expect(cards).toHaveCount(1);
       await expect(localBadge(rowOf(list, 'Testwort'))).toBeVisible();
       await page.reload();

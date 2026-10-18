@@ -110,7 +110,7 @@ describe('FacetPanel', () => {
       />,
     );
     // Two forms, two categories and a Toxic setting; the Match mode adds none.
-    expect(filtersButton()).toHaveAccessibleName('Filters (5)');
+    expect(filtersButton()).toHaveAccessibleName('Filters 5');
   });
 
   it('offers Clear All beside the button only while something is chosen', () => {
@@ -299,8 +299,9 @@ describe('FacetPanel', () => {
     );
     fireEvent.click(filtersButton());
     const match = () => screen.getByRole('group', { name: 'Match' });
-    // The held mode is Any, so All being checked is the stuck state and not the stored value.
-    expect(within(match()).getByRole('radio', { name: 'All' })).toBeChecked();
+    // The held mode is Any, so the chip resting on All is the stuck state and not the stored value.
+    expect(within(match()).getByRole('button', { name: /All/ })).toBeDisabled();
+    expect(within(match()).queryByRole('radio')).toBeNull();
     expect(match()).toBeDisabled();
     expect(match()).toHaveAccessibleDescription();
 
@@ -309,6 +310,81 @@ describe('FacetPanel', () => {
     );
     expect(match()).toBeEnabled();
     expect(within(match()).getByRole('radio', { name: 'Any' })).toBeChecked();
+  });
+
+  describe('the choice chips (M9.7)', () => {
+    const openPanel = (
+      filter: Partial<FacetPanelFilter> = {},
+      more: Partial<FacetPanelProps> = {},
+    ) => {
+      stubViewport(true);
+      const view = render(<FacetPanel {...props(filter, more)} />);
+      fireEvent.click(filtersButton());
+      return view;
+    };
+    const match = () => screen.getByRole('group', { name: 'Match' });
+    const menu = () => match().querySelector('details') as HTMLDetailsElement;
+    const summary = () => menu().querySelector('summary') as HTMLElement;
+
+    it('draws Match as a group holding a summary that opens a menu of native radios', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      expect(menu().open).toBe(false);
+      fireEvent.click(summary());
+      expect(menu().open).toBe(true);
+      expect(
+        within(match())
+          .getAllByRole('radio')
+          .map((radio) => radio.getAttribute('value')),
+      ).toEqual(['all', 'any']);
+    });
+
+    it('closes on choosing, and reports the choice as a patch of only that part', () => {
+      const onChange = vi.fn();
+      openPanel({ categories: ['warding', 'mending'] }, { onChange });
+      fireEvent.click(summary());
+      fireEvent.click(within(match()).getByRole('radio', { name: 'Any' }));
+      expect(onChange).toHaveBeenLastCalledWith({ categoryMode: 'any' });
+      expect(menu().open).toBe(false);
+    });
+
+    it('closes on Escape and returns focus to the chip, leaving the panel open', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      fireEvent.click(summary());
+      fireEvent.keyDown(within(match()).getAllByRole('radio')[0], { key: 'Escape' });
+      expect(menu().open).toBe(false);
+      expect(menu().querySelector('summary')).toHaveFocus();
+      expect(dialog().open).toBe(true);
+    });
+
+    it('closes on a press outside it', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      fireEvent.click(summary());
+      expect(menu().open).toBe(true);
+      fireEvent.pointerDown(screen.getByRole('group', { name: 'Toxic' }));
+      expect(menu().open).toBe(false);
+    });
+
+    it('carries each count as its own number in the radio name, Toxic included', () => {
+      openPanel();
+      const toxic = screen.getByRole('group', { name: 'Toxic' });
+      expect(within(toxic).getByRole('radio', { name: 'Toxic 2' })).toBeInTheDocument();
+      expect(within(toxic).getByRole('radio', { name: 'Not Toxic 9' })).toBeInTheDocument();
+      expect(within(toxic).getByRole('radio', { name: 'Any' })).toBeChecked();
+    });
+
+    it('sends the held choices through the GET form even while the menus are shut', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel
+            {...props({ categories: ['warding', 'mending'], categoryMode: 'any', toxic: 'toxic' })}
+          />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('categoryMode')).toEqual(['any']);
+      expect(data.getAll('toxic')).toEqual(['toxic']);
+    });
   });
 
   it('shows No Refs to an admin only', () => {
@@ -360,10 +436,10 @@ describe('FacetPanel', () => {
     it('carries each count in the option and switch names, zero kept, All and the Toxic strip as they were', () => {
       open(COVEN, counted);
       const source = screen.getByRole('group', { name: 'Source' });
-      expect(within(source).getByRole('radio', { name: /^Local \(4\)/ })).toBeInTheDocument();
-      expect(within(source).getByRole('radio', { name: /^Compendium \(0\)/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: /^Local 4/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: /^Compendium 0/ })).toBeInTheDocument();
       expect(within(source).getByRole('radio', { name: 'All' })).toBeInTheDocument();
-      expect(screen.getByRole('switch', { name: /^In Stock \(3\)/ })).toBeInTheDocument();
+      expect(screen.getByRole('switch', { name: 'In Stock 3' })).toBeInTheDocument();
     });
 
     it('reports a chosen counted source and switch as a patch of only that part', () => {
@@ -400,7 +476,7 @@ describe('FacetPanel', () => {
       const { rerender } = render(<FacetPanel {...props(COVEN)} />);
       expect(filtersButton()).toHaveAccessibleName('Filters');
       rerender(<FacetPanel {...props({ source: 'compendium', inStock: true })} />);
-      expect(filtersButton()).toHaveAccessibleName('Filters (2)');
+      expect(filtersButton()).toHaveAccessibleName('Filters 2');
     });
 
     it('submits through the GET form around it, as source=local and inStock=1', () => {
@@ -427,14 +503,14 @@ describe('FacetPanel', () => {
     };
     const group = () => screen.getByRole('group', { name: /^Toxic/ });
 
-    it('keeps all three segments, disables the group on Any and carries a hint when Toxic is zero', () => {
+    it('rests the chip on Any, disables the group and carries a hint when Toxic is zero', () => {
       withToxic([
         { value: 'toxic', label: 'Toxic', count: 0 },
         { value: 'not_toxic', label: 'Not Toxic', count: 9 },
       ]);
-      expect(within(group()).getAllByRole('radio')).toHaveLength(3);
-      expect(screen.getByRole('radio', { name: /^Toxic \(0\)/ })).toBeInTheDocument();
-      expect(within(group()).getByRole('radio', { name: /^Any/ })).toBeChecked();
+      // The chip rests on Any and does not open, so it holds no radios while stuck.
+      expect(within(group()).getByRole('button', { name: /Any/ })).toBeDisabled();
+      expect(within(group()).queryByRole('radio')).toBeNull();
       expect(group()).toBeDisabled();
       expect(group()).toHaveAccessibleDescription();
     });
@@ -447,8 +523,7 @@ describe('FacetPanel', () => {
         ],
         { toxic: 'not_toxic' },
       );
-      expect(screen.getByRole('radio', { name: /^Not Toxic \(0\)/ })).toBeInTheDocument();
-      expect(within(group()).getByRole('radio', { name: /^Any/ })).toBeChecked();
+      expect(within(group()).getByRole('button', { name: /Any/ })).toBeDisabled();
       expect(group()).toBeDisabled();
     });
 
@@ -465,7 +540,7 @@ describe('FacetPanel', () => {
     render(<FacetPanel {...props({}, { admin: true, onChange })} />);
     fireEvent.click(filtersButton());
 
-    fireEvent.click(screen.getByRole('radio', { name: /^Toxic \(2\)/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Toxic 2/ }));
     expect(onChange).toHaveBeenLastCalledWith({ toxic: 'toxic' });
 
     fireEvent.click(screen.getByRole('switch', { name: /^No Refs/ }));

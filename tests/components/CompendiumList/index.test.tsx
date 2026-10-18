@@ -347,7 +347,7 @@ describe('CompendiumList filter', () => {
         })}
       />,
     );
-    expect(screen.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters (3)');
+    expect(screen.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters 3');
   });
 
   it('offers Clear All, a link to the unfiltered list, only while a facet is in use', () => {
@@ -459,11 +459,11 @@ describe('CompendiumList filter', () => {
     answerCounts(7);
     render(<CompendiumList {...props({ facets: { ...FACETS, withoutReferences: 2 } })} />);
     openPanel();
-    expect(unsourcedSwitch()).toHaveAccessibleName('No Refs (2)');
+    expect(unsourcedSwitch()).toHaveAccessibleName('No Refs 2');
 
     fireEvent.click(unsourcedSwitch());
 
-    expect(await screen.findByRole('switch', { name: 'No Refs (7)' })).toBeChecked();
+    expect(await screen.findByRole('switch', { name: 'No Refs 7' })).toBeChecked();
     expect(router.push).not.toHaveBeenCalled();
   });
 
@@ -488,7 +488,7 @@ describe('CompendiumList filter', () => {
 
     fireEvent.click(forms);
     fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil (3)' }));
-    await screen.findByRole('switch', { name: 'No Refs (5)' });
+    await screen.findByRole('switch', { name: 'No Refs 5' });
 
     fireEvent.change(forms, { target: { value: 'Fixture Pow' } });
     expect(await screen.findByRole('option', { name: 'Fixture Powder (2)' })).toBeInTheDocument();

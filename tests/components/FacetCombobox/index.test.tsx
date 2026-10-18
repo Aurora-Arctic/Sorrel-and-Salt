@@ -152,15 +152,15 @@ describe('FacetCombobox', () => {
     const select = within(host).getByRole('listbox', { name: 'Elements' });
     expect(select).toHaveAttribute('name', 'elements');
     expect(select).toHaveAttribute('multiple');
-    expect(within(select).getByRole('option', { name: 'Testfire (9)' })).toHaveProperty(
+    expect(within(select).getByRole('option', { name: 'Testfire 9' })).toHaveProperty(
       'selected',
       true,
     );
-    expect(within(select).getByRole('option', { name: 'Testair (3)' })).toHaveProperty(
+    expect(within(select).getByRole('option', { name: 'Testair 3' })).toHaveProperty(
       'selected',
       false,
     );
-    expect(within(select).queryByRole('option', { name: 'Testearth (0)' })).not.toBeInTheDocument();
+    expect(within(select).queryByRole('option', { name: 'Testearth 0' })).not.toBeInTheDocument();
     host.remove();
   });
 
