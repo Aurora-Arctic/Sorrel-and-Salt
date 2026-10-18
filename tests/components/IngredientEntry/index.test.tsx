@@ -181,6 +181,7 @@ const LINKED_HREF = '/compendium/ingredients/fixture-mockroot' as Route;
 function detail(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
   return {
     entry: entryRow(),
+    cupboardEntry: null,
     folkNames: ['Fixture Bane', 'Testing Weed'],
     categories: [category('Testwards'), category('Mockcraft')],
     deities: [{ name: 'Fixtura', tradition: 'Fixture Pantheon' }],

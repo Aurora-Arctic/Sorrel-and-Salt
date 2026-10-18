@@ -15,6 +15,7 @@ export * from './services/jar-merge-needed';
 export * from './services/workspace-ingredient-list';
 export * from './services/ingredient-facets';
 export * from './services/replaced-entries';
+export * from './services/cupboard-entries';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
 export * from './loaders/stock';
@@ -38,6 +39,8 @@ export type {
   CompendiumAddress,
   CompendiumEntryPage,
   CompendiumFacets,
+  CupboardEntryKey,
+  CupboardEntryRow,
   DeityDetail,
   FacetCount,
   IngredientDeityRow,

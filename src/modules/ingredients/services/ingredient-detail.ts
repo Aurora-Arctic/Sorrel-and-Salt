@@ -1,5 +1,7 @@
 import 'server-only';
+import { Forbidden } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import { getCupboardEntry } from './cupboard-entries';
 import {
   categoriesOf,
   categoriesOfVariants,
@@ -19,6 +21,7 @@ import {
 } from '@/modules/vocabulary';
 import type {
   CategoryDetail,
+  CupboardEntryRow,
   CategoryRow,
   DeityDetail,
   IngredientDetail,
@@ -44,15 +47,25 @@ function only<T>([answer]: readonly (T | Error)[]): T {
 /**
  * `entry` with everything its page lists beneath it: folk names, categories
  * with their groups, deities with their traditions, substitutes,
- * references, and one detail per live form in form order.
+ * references, one detail per live form in form order, and the cupboard entry
+ * of `workspaceId`, the coven the page is read in, when it holds this
+ * compendium entry (M12.14). No `workspaceId` is the public page, which
+ * reads no cupboard.
  *
- * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven.
+ * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven,
+ * or `session` is not in `workspaceId`.
  */
 export async function ingredientDetailOf(
   session: Session | null,
   entry: IngredientRow,
+  workspaceId?: string,
 ): Promise<IngredientDetail> {
   const refs = [{ id: entry.id, workspaceId: entry.workspaceId }];
+  // The cupboard read runs beside the children but is awaited after them: its
+  // refusal is the quickest answer, and settling first would leave the
+  // children's reads running behind a request that has already failed.
+  const cupboard = cupboardEntryOf(session, entry, workspaceId);
+  cupboard.catch(() => {});
   const [folkNames, categories, deities, substitutes, references, variants] = await Promise.all([
     folkNamesOf(session, refs).then(only),
     categoriesOf(session, refs).then(only),
@@ -61,6 +74,7 @@ export async function ingredientDetailOf(
     referencesOf(session, refs).then(only),
     variantsOf(session, refs).then(only),
   ]);
+  const cupboardEntry = await cupboard;
 
   // Each form's own children, one batch over the forms.
   const variantRefs = variants.map(({ id, ingredientId, workspaceId }) => ({
@@ -144,6 +158,7 @@ export async function ingredientDetailOf(
 
   return {
     entry,
+    cupboardEntry,
     folkNames: folkNames.map(({ name }) => name),
     categories: withGroup(categories),
     deities: deities.map(({ name, deity }): DeityDetail => ({
@@ -163,6 +178,21 @@ export async function ingredientDetailOf(
       };
     }),
   };
+}
+
+/**
+ * The cupboard entry `workspaceId`'s page reads beside `entry`: none
+ * without a coven, and none for a coven's own entry, which no cupboard entry
+ * can name.
+ */
+async function cupboardEntryOf(
+  session: Session | null,
+  entry: IngredientRow,
+  workspaceId: string | undefined,
+): Promise<CupboardEntryRow | null> {
+  if (workspaceId === undefined || entry.workspaceId !== null) return null;
+  if (!session) throw new Forbidden();
+  return getCupboardEntry(session, workspaceId, entry.id);
 }
 
 /** The name of a group or tradition, or null once it is gone. */
