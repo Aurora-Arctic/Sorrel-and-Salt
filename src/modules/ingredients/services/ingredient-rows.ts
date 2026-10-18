@@ -96,10 +96,9 @@ export function ingredientColumns(fields: IngredientFields) {
  * so a service passes each on without naming them. Either tier's parse.
  */
 export function splitChildren<P extends LocalIngredientInput>(parsed: P) {
-  const { folkNames, substitutes, references, deities, variants, jarMerges, ...fields } = parsed;
+  const { folkNames, substitutes, references, deities, variants, ...fields } = parsed;
   return {
     fields,
-    jarMerges,
     lists: { folkNames, substitutes, references },
     picked: { deities: deities ?? [], variants } satisfies PickedLists,
   };
