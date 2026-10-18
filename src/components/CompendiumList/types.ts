@@ -128,6 +128,8 @@ export interface CompendiumFacetCounts {
   source?: FacetChoice<IngredientSource>[];
   /** The coven's In Stock switch's count, the same with it on or off. Left off with `source`. */
   inStock?: number;
+  /** The coven's Low Stock Only switch's count (M9.8), read as inStock's is. */
+  lowStockOnly?: number;
 }
 
 /**

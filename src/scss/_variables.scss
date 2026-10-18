@@ -57,6 +57,12 @@ $wax-deep: color.adjust($wax-vivid, $lightness: -6%); // light secondary, hover
 $chalk-muted: color.mix($chalk, $soot, 80%);
 $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 
+// The muted red of Out of Stock (M9.8), a tint of the sealing wax with its
+// saturation pulled down, so it is plainly a red but quieter than safety's solid
+// fill. Dark lifts lightness for text on soot; light darkens slightly.
+$wax-muted-dark: color.adjust($wax, $saturation: -10%, $lightness: 30%);
+$wax-muted-light: color.adjust($wax, $saturation: -8%, $lightness: -2%);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
@@ -113,6 +119,14 @@ $badge-palettes: (
     dark: $chalk-muted,
     light: $ink-muted,
   ),
+  // A jar at nothing (M9.8): a muted red tint, owner's call 2026-10-18. Tinted,
+  // so safety stays the one solid, alarming badge. Label on tint 5.10:1 dark,
+  // 6.18:1 light; edge at least 3.70:1.
+  'out-of-stock': (
+      treatment: tinted,
+      dark: $wax-muted-dark,
+      light: $wax-muted-light,
+    ),
   // A compendium entry the curators retired, still read by a coven that uses
   // it (M12.24): a fact about the entry, not a hazard, so low-stock's muted
   // tint and its checked inks, until the section's design review.

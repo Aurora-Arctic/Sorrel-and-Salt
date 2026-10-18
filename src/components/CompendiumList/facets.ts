@@ -66,6 +66,7 @@ export function covenFacetCounts(
       count,
     })),
     inStock: facets.inStock,
+    lowStockOnly: facets.lowStockOnly,
   };
 }
 

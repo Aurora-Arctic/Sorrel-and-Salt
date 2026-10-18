@@ -308,6 +308,15 @@ does an entry with no jar, whether the coven's own or one its cupboard names.
 Because `workspaceListScope` is shared with the facets, a facet's count equals
 the list's total under the same two settings.
 
+`lowStockOnly` (M9.8) keeps an entry only when one of the coven's live jars of it,
+of a live form, reads Out of Stock or Low Stock: its quantity is 0, or it is above 0
+and at or below a threshold above 0. A threshold of 0 or none never makes a jar low,
+and a jar with no quantity is neither. It is filtered in SQL in `holdsJarLowOrOut`
+(`src/db/repository/ingredients.ts`), beside `inStock`, and `stockState`
+(`src/components/StockBadge/stock-state.ts`) says the same table in code, so a
+change to one is a change to both. Its facet count is the list's total with the
+switch forced on, under the rest of the filter and the chosen Source.
+
 **The coven's facet counts read the same rows.**
 `workspaceIngredientFacets(session, workspaceId, filter)` (M12.3, in
 `services/ingredient-facets.ts`) tells the coven's filter panel how many

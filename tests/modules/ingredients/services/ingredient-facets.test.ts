@@ -49,9 +49,14 @@ async function stock(
   workspaceId: string,
   form: string,
   quantityOnHand: string | null = null,
+  lowStockThreshold: string | null = null,
 ): Promise<void> {
   const variantId = await variantIdOf(sql, ingredientId, form);
-  await insertStock(sql, { workspaceId, ingredientId, variantId, quantityOnHand }, A.id);
+  await insertStock(
+    sql,
+    { workspaceId, ingredientId, variantId, quantityOnHand, lowStockThreshold },
+    A.id,
+  );
 }
 
 /** The compendium entry `ingredientId` in `workspaceId`'s cupboard, with `overrides`. */
@@ -425,6 +430,71 @@ describe('workspaceIngredientFacets', () => {
         { value: 'compendium', count: 0 },
       ]);
       expect(elsewhere.inStock).toBe(1);
+    });
+  });
+
+  describe('the Low Stock Only count (M9.8)', () => {
+    /** W: a low jar, an out jar, a healthy jar, an unweighed one, a held compendium entry low; X: its own out jar. */
+    async function seedLow(): Promise<void> {
+      const form = (name: string, workspaceId?: string) =>
+        add(name, { workspaceId, variants: [makeVariant({ form: `${name}form` })] });
+      const jar = async (name: string, quantity: string | null, workspaceId = WORKSPACE_W_ID) => {
+        const id = await form(name, workspaceId);
+        await stock(id, workspaceId, `${name}form`, quantity, '3');
+      };
+      await jar('Lowwort', '2');
+      await jar('Outwort', '0');
+      await jar('Fullwort', '50');
+      await jar('Unweighedwort', null);
+      await jar('Elsewort', '0', WORKSPACE_X_ID);
+      const held = await form('Heldlowwort');
+      await hold(held);
+      await stock(held, WORKSPACE_W_ID, 'Heldlowwortform', '1', '3');
+    }
+
+    it('counts the entries with a Low Stock or Out of Stock jar, in this coven alone', async () => {
+      await seedLow();
+
+      const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
+      const elsewhere = await workspaceIngredientFacets(asUser(D), WORKSPACE_X_ID, {});
+
+      // Why it could have been larger: W lists five entries, and X holds a jar that is out.
+      expect(facets.source.reduce((sum, { count }) => sum + count, 0)).toBe(5);
+      expect(facets.lowStockOnly).toBe(3);
+      expect(elsewhere.lowStockOnly).toBe(1);
+    });
+
+    it("equals the list's total with the switch on, whatever the rest of the filter and the switch itself", async () => {
+      await seedLow();
+      const bases = [{}, { query: 'low' }, { source: 'local' as const }, { inStock: true }];
+
+      for (const base of bases) {
+        for (const on of [{}, { lowStockOnly: true }]) {
+          const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+            ...base,
+            ...on,
+          });
+          expect({ base, on, count: facets.lowStockOnly }).toEqual({
+            base,
+            on,
+            count: await listedCount(asUser(B), { ...base, lowStockOnly: true }),
+          });
+        }
+      }
+    });
+
+    it('counts the other values under the switch as the list reads them', async () => {
+      await seedLow();
+
+      const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+        lowStockOnly: true,
+      });
+
+      expect(countedOf(facets, 'forms')).toEqual(['Heldlowwortform', 'Lowwortform', 'Outwortform']);
+      expect(facets.source).toEqual([
+        { value: 'local', count: 2 },
+        { value: 'compendium', count: 1 },
+      ]);
     });
   });
 

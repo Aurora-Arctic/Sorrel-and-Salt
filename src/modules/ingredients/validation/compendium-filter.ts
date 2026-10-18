@@ -124,6 +124,11 @@ export const WorkspaceIngredientFilter = CompendiumFilter.pick({
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),
+  // M9.8: entries with a jar badged Low Stock or Out of Stock. False is no filter.
+  lowStockOnly: z
+    .boolean()
+    .nullish()
+    .transform((only) => (only === true ? true : undefined)),
 });
 
 export type WorkspaceIngredientFilterInput = z.input<typeof WorkspaceIngredientFilter>;

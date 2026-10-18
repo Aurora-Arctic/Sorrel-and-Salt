@@ -28,6 +28,11 @@ const stockArgs = builder.args((t) => ({
     description:
       'Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.',
   }),
+  lowStockOnly: t.boolean({
+    required: false,
+    description:
+      'Keeps entries with a jar at 0 (Out of Stock) or at or below a threshold above 0 (Low Stock); false, or leaving it out, keeps all.',
+  }),
 }));
 
 builder.queryField('workspaceIngredients', (t) =>
@@ -92,6 +97,7 @@ function filterOf({
   toxic,
   source,
   inStock,
+  lowStockOnly,
 }: WorkspaceIngredientFilterInput): WorkspaceIngredientFilterInput {
   return {
     query,
@@ -105,5 +111,6 @@ function filterOf({
     toxic,
     source,
     inStock,
+    lowStockOnly,
   };
 }

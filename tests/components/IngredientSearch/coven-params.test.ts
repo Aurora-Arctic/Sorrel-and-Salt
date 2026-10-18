@@ -85,3 +85,27 @@ describe('the inStock parameter', () => {
     ).toBe(`${PATH}?query=wort&toxic=toxic&source=local&inStock=1`);
   });
 });
+
+describe('the lowStockOnly parameter', () => {
+  const lowStockOnly = COVEN_PARAMS.entries.lowStockOnly;
+
+  it('reads 1 as on, and everything else as off', () => {
+    expect(lowStockOnly.read('1')).toBe(true);
+    expect(lowStockOnly.read(undefined)).toBe(false);
+    expect(lowStockOnly.read('true')).toBe(false);
+    expect(lowStockOnly.read('0')).toBe(false);
+  });
+
+  it('writes 1 when on and nothing when off, and reads it back', () => {
+    expect(COVEN_PARAMS.href(PATH, { lowStockOnly: true })).toBe(`${PATH}?lowStockOnly=1`);
+    expect(COVEN_PARAMS.href(PATH, { lowStockOnly: false })).toBe(PATH);
+    expect(COVEN_PARAMS.read({ lowStockOnly: '1' }).lowStockOnly).toBe(true);
+  });
+
+  it('becomes the lowStockOnly variable only when on', () => {
+    expect(COVEN_PARAMS.variables({ ...BLANK, lowStockOnly: true })).toMatchObject({
+      lowStockOnly: true,
+    });
+    expect(COVEN_PARAMS.variables({ ...BLANK, lowStockOnly: false }).lowStockOnly).toBeUndefined();
+  });
+});

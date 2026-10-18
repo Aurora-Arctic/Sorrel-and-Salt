@@ -280,12 +280,13 @@ export function localBadge(row: Locator): Locator {
 }
 
 /**
- * M9.8's two badges, by their words, which are what keeps the meaning off
- * colour alone. "Low Stock" and "Out of Stock" are this file's choice, after
- * the entry's "low and out-of-stock badges", in title case as every label is.
+ * M9.8's two badges. Low Stock is a button (its tip opens from it) named "Low
+ * Stock" and the jar's quantity; Out of Stock is its words alone. "Low Stock"
+ * and "Out of Stock" are this file's choice, after the entry's "low and
+ * out-of-stock badges", in title case as every label is.
  */
 export function lowBadge(row: Locator): Locator {
-  return row.getByText('Low Stock', { exact: true });
+  return row.getByRole('button', { name: /^Low Stock/ });
 }
 
 export function outBadge(row: Locator): Locator {

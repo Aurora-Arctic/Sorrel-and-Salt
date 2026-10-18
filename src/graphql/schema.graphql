@@ -444,7 +444,12 @@ type IngredientFacets {
   inStock: Int!
 
   """
-  local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStock included.
+  How many entries the list would hold with lowStockOnly on, the rest of the filter kept, source included: the same whether lowStockOnly is chosen or not.
+  """
+  lowStockOnly: Int!
+
+  """
+  local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStock and lowStockOnly included.
   """
   source: [SourceFacetCount!]!
 
@@ -1182,6 +1187,11 @@ type Query {
     Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.
     """
     inStock: Boolean
+
+    """
+    Keeps entries with a jar at 0 (Out of Stock) or at or below a threshold above 0 (Low Stock); false, or leaving it out, keeps all.
+    """
+    lowStockOnly: Boolean
     query: String
 
     """
@@ -1232,6 +1242,11 @@ type Query {
     """
     inStock: Boolean
     last: Int
+
+    """
+    Keeps entries with a jar at 0 (Out of Stock) or at or below a threshold above 0 (Low Stock); false, or leaving it out, keeps all.
+    """
+    lowStockOnly: Boolean
     query: String
 
     """
