@@ -269,6 +269,17 @@ The search, category, form, deity, zodiac sign, planet and toxic filters (the fo
 compendium does. They run under the coven's proof rather than the compendium
 tier, so a filter never reaches another coven's rows.
 
+Two settings belong to the coven's list alone (M9.7), so they sit in
+`workspaceListScope` and not in `compendiumList`, which the compendium's page and
+count share. `source: 'local'` keeps the coven's own entries; `source: 'compendium'`
+keeps the compendium entries it holds; leaving it out keeps both. `inStockOnly` keeps
+an entry only when one of the coven's live jars of it, of a live form, is not at 0.
+A jar with no quantity is held but unweighed, so it counts as in stock (the test is
+"null or not 0", since a bare `<> 0` is unknown for null and would drop it). An entry
+whose jars are all at 0 leaves, and so does a local entry with no jar. Because
+`workspaceListScope` is shared with the facets, a facet's count equals the list's total
+under the same two settings.
+
 **The coven's facet counts read the same rows.**
 `workspaceIngredientFacets(session, workspaceId, filter)` (M12.3, in
 `services/ingredient-facets.ts`) tells the coven's filter panel how many
