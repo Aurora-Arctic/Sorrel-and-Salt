@@ -309,6 +309,11 @@ type Ingredient {
   name: String!
   nomenclature: Nomenclature!
   references: [ReferenceLink!]!
+
+  """
+  A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).
+  """
+  retired: Boolean!
   safetyNotes: String
   slug: String!
 
