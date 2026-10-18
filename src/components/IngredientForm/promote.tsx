@@ -124,13 +124,33 @@ export function PromoteFolkNameQuestion({
   return (
     <ConfirmQuestion
       asked={folkName !== null && !discardAsking}
+      // Four tiers, told apart by type as well as space: the question as the
+      // card's heading, naming no name, since the panel beneath names both;
+      // the swap on a tinted panel; the compendium's reach as a muted aside;
+      // and, ruled off above the buttons, the question they answer.
       question={
+        <span className="promote-question__title">Make this folk name the display name?</span>
+      }
+      details={
         <>
-          Make &quot;{folkName?.value}&quot; the display name of &quot;{displayName}&quot;? &quot;
-          {displayName}&quot; becomes a folk name.
-          {tier === 'compendium' &&
-            ' The change is made at once, everywhere the compendium shows it.'}
-          {dirty && ' This form has changes that are not saved.'}
+          <dl className="promote-question__swap">
+            <div>
+              <dt>New display name</dt>
+              <dd>{folkName?.value}</dd>
+            </div>
+            <div>
+              <dt>Becomes a folk name</dt>
+              <dd>{displayName}</dd>
+            </div>
+          </dl>
+          {tier === 'compendium' && (
+            <p className="promote-question__aside">Every coven sees the change at once.</p>
+          )}
+          {dirty && (
+            <p className="promote-question__unsaved">
+              You have other unsaved changes. Save them, or discard them?
+            </p>
+          )}
         </>
       }
       tone="solid"

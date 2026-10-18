@@ -23,6 +23,7 @@ import type { ConfirmQuestionProps } from './types';
  */
 export function ConfirmQuestion({
   question,
+  details,
   asked = true,
   guard,
   confirmLabel = 'Delete',
@@ -49,6 +50,7 @@ export function ConfirmQuestion({
   };
   return (
     <ConfirmOverlay question={question} safe={keep}>
+      {details}
       <div className="modal__actions">
         <BusyButton
           className={`btn btn--${tone}`}

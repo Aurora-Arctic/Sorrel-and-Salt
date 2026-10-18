@@ -882,8 +882,21 @@ per row through `rowAction`. A name typed and not yet saved has no id on the
 server, so it has no arrow.
 
 - **It always asks first**, in the form's usual card (`PromoteFolkNameQuestion`,
-  `promote.tsx`). On the compendium the question says the change is made at
-  once, everywhere the compendium shows it. A coven's question leaves that out.
+  `promote.tsx`). The card's lines are told apart by type, not by space
+  alone, the owner's call:
+  - The question, "Make this folk name the display name?", is set larger, as
+    the card's heading. It names no name, since the panel beneath names both.
+  - The swap is a `dl` on a tinted panel. Each term ("New display name",
+    "Becomes a folk name") is a small uppercase overline, with its name
+    larger beneath it.
+  - On the compendium a muted caption says every coven sees the change at
+    once. A coven's question leaves that out.
+  - A form with changes adds "You have other unsaved changes. Save them, or
+    discard them?", ruled off above the buttons that answer it.
+
+  The lines beneath the question are `ConfirmQuestion`'s `details`
+  ([Modal](modal.md), "`ConfirmQuestion`").
+
 - **A form with changes** is offered **Save & Promote**, **Discard &
   Promote** and **Cancel**. Save & Promote runs the form's own save
   first, with the same validation and errors. If it does not land, nothing is

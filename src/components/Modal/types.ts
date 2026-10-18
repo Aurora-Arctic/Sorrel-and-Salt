@@ -203,6 +203,12 @@ export interface ConfirmOverlayProps {
 export interface ConfirmQuestionProps {
   /** The question, "Delete "Fixture Healing"? …", which names the card. */
   question: ReactNode;
+  /**
+   * What the question needs said beneath it, apart from its name: what the
+   * answer will change, and anything to weigh first (M12.1). Absent for a
+   * question that says it all in its one line.
+   */
+  details?: ReactNode;
   /** Its own question is being asked; true when the form draws it only then. */
   asked?: boolean;
   /** The form's discard guard, whose question shows instead while it asks. */
