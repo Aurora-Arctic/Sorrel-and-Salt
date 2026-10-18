@@ -1,7 +1,6 @@
 import 'server-only';
 import {
   type CupboardEntryRow,
-  type IngredientRow,
   findCupboardEntriesOf,
   findCupboardEntry,
 } from '../../../db/repository';
@@ -17,30 +16,6 @@ import { type Membership, assertMembership } from '@/modules/coven';
 // references and `toxic` are never overridden, so they always read as the
 // compendium has them (claude-docs/db/workspace-compendium-entries.md,
 // "Reading it").
-
-/**
- * `row` as a coven reads it through its cupboard entry: per column
- * `entry?.x ?? row.x`, the label standing over the name. A null override is
- * the compendium's value and a set one the coven's; an empty list is a set
- * one, cleared on purpose, which is why this is `??` and never `||`. No entry
- * answers `row` as it is. The id and the tier stay the compendium's.
- */
-export function applyCupboardEntry(
-  row: IngredientRow,
-  entry: CupboardEntryRow | null | undefined,
-): IngredientRow {
-  if (!entry) return row;
-  return {
-    ...row,
-    name: entry.label ?? row.name,
-    description: entry.description ?? row.description,
-    safetyNotes: entry.safetyNotes ?? row.safetyNotes,
-    elements: entry.elements ?? row.elements,
-    celestialBodies: entry.celestialBodies ?? row.celestialBodies,
-    zodiacSigns: entry.zodiacSigns ?? row.zodiacSigns,
-    colors: entry.colors ?? row.colors,
-  };
-}
 
 /**
  * The coven's live cupboard entry for this compendium entry, or null: none
