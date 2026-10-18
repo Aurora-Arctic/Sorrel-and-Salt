@@ -310,7 +310,7 @@ describe('createStock on a form of a hidden entry', () => {
   });
 });
 
-// A save of an own entry and a create that adds a jar both take the
+// A create that adds a jar takes the
 // coven's stock lock first, so whichever comes second waits for the first and
 // sees it. Each test holds that lock from a connection of its own, as a save
 // in flight would, and watches the call queue behind it.
@@ -368,54 +368,6 @@ describe("a coven's stock lock", () => {
   const countOf = async (table: 'ingredients' | 'inventory_items', where: string) =>
     (await sql.unsafe(`select count(*)::int as n from ${table} where ${where}`))[0].n as number;
 
-  it('holds a create back until the lock is released', async () => {
-    const created = await queued(
-      WORKSPACE_W_ID,
-      () =>
-        createWorkspaceIngredient(
-          asUser(A),
-          WORKSPACE_W_ID,
-          inputOf(local({ name: 'Testwort', variants: [] })),
-        ),
-      async () => {
-        expect(await countOf('ingredients', `workspace_id = '${WORKSPACE_W_ID}'`)).toBe(0);
-      },
-    );
-    expect(created.name).toBe('Testwort');
-  });
-
-  it('holds an update back until the lock is released', async () => {
-    const id = await seedLocal();
-    const updated = await queued(
-      WORKSPACE_W_ID,
-      () =>
-        updateWorkspaceIngredient(
-          asUser(A),
-          WORKSPACE_W_ID,
-          id,
-          inputOf(local({ name: 'Testwort', variants: [] })),
-        ),
-      async () => {
-        expect(await countOf('ingredients', `id = '${id}' and name = 'Covenwort'`)).toBe(1);
-      },
-    );
-    expect(updated.name).toBe('Testwort');
-  });
-
-  it('holds a promote back until the lock is released', async () => {
-    const id = await seedLocal({ folkNames: ['Testwort'] });
-    const [folk] = await sql`
-      select id from ingredient_folk_names where ingredient_id = ${id} and name = 'Testwort'`;
-    const promoted = await queued(
-      WORKSPACE_W_ID,
-      () => promoteFolkName(asUser(A), WORKSPACE_W_ID, id, folk.id),
-      async () => {
-        expect(await countOf('ingredients', `id = '${id}' and name = 'Covenwort'`)).toBe(1);
-      },
-    );
-    expect(promoted.name).toBe('Testwort');
-  });
-
   it('holds a new jar back until the lock is released', async () => {
     const jar = await queued(
       WORKSPACE_W_ID,
@@ -427,14 +379,13 @@ describe("a coven's stock lock", () => {
     expect(jar.variantId).toBe(entryForm);
   });
 
-  it("is per coven: another coven's lock does not hold a call back", async () => {
+  it("is per coven: another coven's lock does not hold a new jar back", async () => {
     await holding(WORKSPACE_X_ID, async () => {
-      const created = await createWorkspaceIngredient(
-        asUser(A),
-        WORKSPACE_W_ID,
-        inputOf(local({ name: 'Testwort', variants: [] })),
-      );
-      expect(created.name).toBe('Testwort');
+      const jar = await createStock(asUser(A), WORKSPACE_W_ID, entryForm, {
+        quantityOnHand: 5,
+        unit: 'g',
+      });
+      expect(jar.variantId).toBe(entryForm);
     });
   });
 });

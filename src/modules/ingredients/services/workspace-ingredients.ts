@@ -53,7 +53,6 @@ export async function createWorkspaceIngredient(
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, {
     ingredient: ['create'],
-    inventory: ['update'],
   });
   const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
   const picks = await resolvePicks('coven', parsed, picked, []);
@@ -63,7 +62,6 @@ export async function createWorkspaceIngredient(
   const columns = ingredientColumns(fields);
 
   return withAudit(session, async (write) => {
-    await write.lockCovenStock(membership);
     const [row] = await write.insertInWorkspace(membership, ingredients, columns);
     await writeChildren(write, [membership], row.id, { ...lists, ...picks.children }, 'add');
     return row;
@@ -98,7 +96,6 @@ export async function updateWorkspaceIngredient(
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, {
     ingredient: ['update'],
-    inventory: ['update'],
   });
   const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, input));
   // An id that is not a uuid names nothing, and would be a driver error at the comparison.
@@ -111,7 +108,6 @@ export async function updateWorkspaceIngredient(
   const columns = ingredientColumns(fields);
 
   return withAudit(session, async (write) => {
-    await write.lockCovenStock(membership);
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columns);
     if (!row) throw new NotFound('No such ingredient in this coven');
     await writeChildren(
@@ -147,7 +143,6 @@ export async function promoteWorkspaceFolkName(
 ): Promise<IngredientRow> {
   const membership = await assertMembership(session, workspaceId, {
     ingredient: ['update'],
-    inventory: ['update'],
   });
   if (!RowId.safeParse(id).success) throw new NotFound('No such ingredient in this coven');
   const current = await findOneByIdInWorkspace(membership, ingredients, id);
@@ -158,7 +153,6 @@ export async function promoteWorkspaceFolkName(
   const slug = ingredientSlug(fields.name, fields.canonicalName);
 
   return withAudit(session, async (write) => {
-    await write.lockCovenStock(membership);
     await swapFolkName(write, id, promoted.id, current.name, others);
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, {
       name: fields.name,
