@@ -45,6 +45,7 @@ type Documents = {
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
+    "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n": typeof types.CompendiumEntryUsersDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": typeof types.PossibleDuplicatesDocument,
     "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n      stock(workspaceId: $workspaceId) {\n        quantityOnHand\n        unit\n        variant {\n          form\n        }\n      }\n    }\n  }\n": typeof types.CreateWorkspaceIngredientDocument,
     "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateCompendiumIngredientDocument,
@@ -114,6 +115,7 @@ const documents: Documents = {
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
+    "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n": types.CompendiumEntryUsersDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": types.PossibleDuplicatesDocument,
     "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n      stock(workspaceId: $workspaceId) {\n        quantityOnHand\n        unit\n        variant {\n          form\n        }\n      }\n    }\n  }\n": types.CreateWorkspaceIngredientDocument,
     "\n  mutation CreateCompendiumIngredient($input: CompendiumIngredientInput!, $endRedirect: Boolean) {\n    createCompendiumIngredient(input: $input, endRedirect: $endRedirect) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateCompendiumIngredientDocument,
@@ -290,6 +292,10 @@ export function graphql(source: "\n  mutation DeleteZodiacSign($id: ID!) {\n    
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n"): (typeof documents)["\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

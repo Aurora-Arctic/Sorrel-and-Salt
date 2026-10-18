@@ -49,6 +49,7 @@ export {
 export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
 export {
   findCompendiumMatchesByName,
+  countCovensUsing,
   findCupboardEntriesOf,
   findCupboardEntry,
   findCupboardEntryIncludingSoftDeleted,

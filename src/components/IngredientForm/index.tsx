@@ -20,6 +20,7 @@ import {
   type PromotedName,
 } from './promote';
 import { PromoteIcon } from './icons';
+import { DeleteUsers } from './delete-users';
 import Notice from '../Notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
@@ -804,6 +805,7 @@ const IngredientForm = ({
                           spell that uses it keeps it.
                         </>
                       }
+                      details={compendium && entry ? <DeleteUsers id={entry.id} /> : undefined}
                       busy={remove.isPending}
                       onConfirm={confirmDelete}
                       onKeep={() => setDeleting(false)}

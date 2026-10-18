@@ -1,7 +1,9 @@
 import { and, eq, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
+import { workspaces } from '../../modules/coven/schema/workspaces';
 import type { Membership } from '@/modules/coven';
+import type { Curator } from '@/modules/identity';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import type { CupboardEntryRow, IngredientRow } from './types';
@@ -119,4 +121,35 @@ export function findCompendiumMatchesByName(name: string): Promise<IngredientRow
       ),
     ),
   );
+}
+
+/**
+ * How many covens hold this compendium entry in their cupboard: the distinct
+ * live covens with a live cupboard row naming it (M12.25). Unscoped, so it
+ * takes a curator's proof rather than a coven's, and it answers a number and
+ * never a coven's name or id: the curator's delete confirm shows how many the
+ * deletion touches, not who. Zero for an id that is not a live compendium
+ * entry, which the service has told apart already.
+ */
+export async function countCovensUsing(_curator: Curator, ingredientId: string): Promise<number> {
+  const [row] = await selectFrom(
+    workspaceCompendiumEntries,
+    and(
+      notSoftDeleted(workspaceCompendiumEntries),
+      eq(workspaceCompendiumEntries.ingredientId, ingredientId),
+      existsIn(workspaces, eq(workspaces.id, workspaceCompendiumEntries.workspaceId)),
+      existsIn(
+        ingredients,
+        and(eq(ingredients.id, workspaceCompendiumEntries.ingredientId), inCompendium(ingredients)),
+      ),
+    ),
+    {
+      aggregate: {
+        count: sql<number>`count(distinct ${workspaceCompendiumEntries.workspaceId})::int`,
+      },
+      // No search, so no join or threshold to read under.
+      over: {},
+    },
+  );
+  return row.count;
 }

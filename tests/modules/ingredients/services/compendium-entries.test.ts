@@ -7,6 +7,7 @@ import { ingredientSlug } from '@/lib/slugify';
 import {
   categoriesOf,
   countCompendium,
+  countCompendiumEntryUsers,
   createWorkspaceIngredient,
   createCompendiumEntry,
   deitiesOf,
@@ -35,6 +36,7 @@ import type { PageRequest } from '@/lib/types';
 import { A, B, C, E, F, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { insertSpell } from '../../../support/db/insert-spell';
@@ -421,6 +423,43 @@ describe('deleteCompendiumEntry', () => {
       deleteCompendiumEntry(admin, '99999999-9999-9999-9999-999999999999'),
     ).rejects.toThrow(NotFound);
     await expect(deleteCompendiumEntry(admin, 'not-a-uuid')).rejects.toThrow(NotFound);
+  });
+});
+
+// M12.25: the number the delete confirm shows. Only a curator or admin may ask,
+// and only of a compendium entry, because the count is a fact about covens.
+describe('countCompendiumEntryUsers', () => {
+  it.each(CURATORS)('answers how many covens hold the entry for %s', async (_who, user) => {
+    const id = await seed();
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: id }, A.id);
+
+    expect(await countCompendiumEntryUsers(asUser(user), id)).toBe(1);
+  });
+
+  it.each(NON_ADMINS)(
+    'refuses %s, though a coven holds the entry so the count would be 1',
+    async (_who, user) => {
+      const id = await seed();
+      await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: id }, A.id);
+      // Why the refusal is the guard's: a curator reads that same 1.
+      expect(await countCompendiumEntryUsers(asUser(E), id)).toBe(1);
+
+      await expect(countCompendiumEntryUsers(asUser(user), id)).rejects.toThrow(Forbidden);
+    },
+  );
+
+  it("answers NotFound for a coven's ingredient, a deleted entry, a missing id and a non-uuid", async () => {
+    const own = await seed({ workspaceId: WORKSPACE_W_ID, nomenclature: 'none' });
+    const gone = await seed({ name: 'Goneroot', canonicalName: 'Fixtura goneroot' });
+    await deleteCompendiumEntry(asUser(E), gone);
+    const admin = asUser(E);
+
+    await expect(countCompendiumEntryUsers(admin, own)).rejects.toThrow(NotFound);
+    await expect(countCompendiumEntryUsers(admin, gone)).rejects.toThrow(NotFound);
+    await expect(
+      countCompendiumEntryUsers(admin, '00000000-0000-4000-8000-000000000000'),
+    ).rejects.toThrow(NotFound);
+    await expect(countCompendiumEntryUsers(admin, 'not-a-uuid')).rejects.toThrow(NotFound);
   });
 });
 

@@ -6,6 +6,7 @@ import {
   findCompendiumEntryBySlug,
   findCompendiumPage,
   findCompendiumSlugRedirect,
+  countCovensUsing,
   findOneIngredient,
   withAudit,
 } from '../../../db/repository';
@@ -480,6 +481,23 @@ export async function deleteCompendiumEntry(session: Session, id: string): Promi
     write.softDeleteByIdInCompendium(curator, ingredients, id),
   );
   expireCompendium();
+}
+
+/**
+ * How many covens hold this compendium entry in their cupboard, for the
+ * curator's delete confirm (M12.25): a count, never a coven's name or id.
+ * Lives here beside `deleteCompendiumEntry`, which the number is asked
+ * before; the cupboard's own services are the coven's, under a membership.
+ *
+ * @throws {Forbidden} the caller is neither a curator nor an admin.
+ * @throws {NotFound} no live compendium entry has this id — a coven's
+ * ingredient, one already deleted and an id that is not one included.
+ */
+export async function countCompendiumEntryUsers(session: Session, id: string): Promise<number> {
+  const curator = assertCurator(session);
+  const entry = RowId.safeParse(id).success ? await findOneIngredient([], id) : undefined;
+  if (!entry) throw new NotFound('No such compendium entry');
+  return countCovensUsing(curator, id);
 }
 
 /**
