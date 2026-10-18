@@ -17,7 +17,7 @@ import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
 import { capitalise } from '../../lib/text';
 import {
-  BINOMIAL_KINDS,
+  isBinomial,
   NAMELESS_KIND,
   type NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
@@ -126,7 +126,7 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
     value = <span className="ingredient-entry__empty">None — no naming system names it</span>;
   } else if (formal === '') {
     value = <span className="ingredient-entry__empty">Not yet looked up</span>;
-  } else if (BINOMIAL_KINDS.has(entry.nomenclature)) {
+  } else if (isBinomial(entry.nomenclature)) {
     // `i` rather than `em`: a taxonomic name is set apart, not stressed.
     value = <i className="binomial">{formal}</i>;
   } else if (NAME_LABELS[entry.nomenclature]) {

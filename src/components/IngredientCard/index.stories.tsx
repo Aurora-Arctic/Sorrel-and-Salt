@@ -19,10 +19,23 @@ const VARIANTS: SafetyVariant[] = [
   { form: 'whole root', safetyNotes: '' },
 ];
 
+const CATEGORIES = [
+  {
+    category: { id: 'c1', name: 'Protection' },
+    group: { colorDark: '#7aa7d9', colorLight: '#1f4f8a' },
+  },
+  {
+    category: { id: 'c2', name: 'Clarity' },
+    group: { colorDark: '#c9a3e0', colorLight: '#6b2f8a' },
+  },
+];
+
 const BASE = {
   href: '/compendium/ingredients/testwort-testalis' as const,
   label: 'Testwort',
   formalName: 'Fixtura testalis',
+  nomenclature: 'botanical' as const,
+  categories: CATEGORIES,
   variants: VARIANTS,
 };
 
@@ -45,6 +58,17 @@ export const OwnWithJars: Story = () => (
   <IngredientCard {...BASE} kind="own" safetyNotes="Keep away from pets.">
     <Jars />
   </IngredientCard>
+);
+
+// A mineral’s formal name is upright, not italic.
+export const MineralName: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="compendium"
+    label="Testite"
+    formalName="Fixtura testite"
+    nomenclature="mineral"
+  />
 );
 
 export const InCupboardAnnotated: Story = () => (

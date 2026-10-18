@@ -37,6 +37,9 @@ export const BINOMIAL_KINDS: ReadonlySet<string> = new Set<NomenclatureKind>([
   'zoological',
 ]);
 
+/** Whether a nomenclature’s formal name is set in italics; one rule for the entry page and the card. */
+export const isBinomial = (kind: string): boolean => BINOMIAL_KINDS.has(kind);
+
 export const INGREDIENT_ELEMENTS = ['earth', 'air', 'fire', 'water', 'spirit'] as const;
 export type IngredientElement = (typeof INGREDIENT_ELEMENTS)[number];
 

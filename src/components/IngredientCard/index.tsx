@@ -1,9 +1,11 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
+import { chipColors } from '../../lib/chip-colors';
 import { capitalise } from '../../lib/text';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
 import SafetyNote, { ToxicMark } from '../SafetyNote';
+import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
 import './index.scss';
 
@@ -18,7 +20,9 @@ const IngredientCard = ({
   href,
   label,
   formalName,
+  nomenclature,
   variants = [],
+  categories = [],
   safetyNotes,
   toxic,
   kind,
@@ -30,55 +34,70 @@ const IngredientCard = ({
   const Heading = `h${level}` as const;
   const formal = (formalName ?? '').trim();
 
-  // The secondary line's items in order: the formal name, then each form.
-  const items = [
-    ...(formal !== ''
-      ? [{ key: 'formal', node: <i className="ingredient-card__formal">{formal}</i> }]
-      : []),
-    ...variants.map((variant) => ({
-      key: `form-${variant.form}`,
-      node: (
-        <span className="ingredient-card__form">
-          <FormIcon name={variant.formChoice?.group.icon ?? null} /> {capitalise(variant.form)}
-        </span>
-      ),
-    })),
-  ];
-
-  // Without a mark the row is left out, not left empty, so it adds no gap.
+  // Without a mark the cluster is left out, not left empty, so it adds no gap.
   const marked = Boolean(
     kind !== 'compendium' || retired || toxic || variants.some((v) => v.toxic),
   );
 
   return (
-    <article className="ingredient-card panel">
-      <Heading className="ingredient-card__name">
-        <Link href={href}>{label}</Link>
-      </Heading>
-      {items.length > 0 && (
-        <p className="ingredient-card__secondary">
-          {items.map((item, at) => (
-            <span key={item.key} className="ingredient-card__item">
+    <article className="ingredient-card specimen">
+      <div className="specimen__top">
+        <div>
+          <Heading className="ingredient-card__name">
+            <Link href={href}>{label}</Link>
+          </Heading>
+          {formal !== '' && (
+            <p className="meta ingredient-card__formal">
+              {/* `i` rather than `em`: a taxonomic name is set apart, not stressed.
+                  Only a binomial is italic; a mineral or chemical name is upright
+                  (the entry page’s rule, `isBinomial`). */}
+              {nomenclature && isBinomial(nomenclature) ? (
+                <i className="binomial">{formal}</i>
+              ) : (
+                formal
+              )}
+            </p>
+          )}
+        </div>
+        {marked && (
+          <div className="specimen__badges">
+            <EntryMarks kind={kind} annotated={annotated} retired={retired} />
+            <ToxicMark toxic={toxic} variants={variants} />
+          </div>
+        )}
+      </div>
+      {variants.length > 0 && (
+        <p className="ingredient-card__forms">
+          {variants.map((variant, at) => (
+            <span key={variant.form} className="ingredient-card__item">
               {/* Decorative: the separator is for the eye, and a screen reader
-                  hears the items as the run of text they are. */}
+                  hears the forms as the run of text they are. */}
               {at > 0 && <span aria-hidden="true"> · </span>}
-              {item.node}
+              <span className="ingredient-card__form">
+                <FormIcon name={variant.formChoice?.group.icon ?? null} />{' '}
+                {capitalise(variant.form)}
+              </span>
             </span>
           ))}
         </p>
       )}
-      {marked && (
-        <div className="badges">
-          <EntryMarks kind={kind} annotated={annotated} retired={retired} />
-          <ToxicMark toxic={toxic} variants={variants} />
-        </div>
+      {categories.length > 0 && (
+        <ul className="specimen__chips" aria-label="Categories">
+          {categories.map(({ category, group }) => (
+            <li key={category.id}>
+              <span className="chip" style={chipColors(group)}>
+                {category.name}
+              </span>
+            </li>
+          ))}
+        </ul>
       )}
       <SafetyNote
         safetyNotes={safetyNotes}
         variants={variants}
         level={(level + 1) as 3 | 4 | 5 | 6}
       />
-      {children}
+      {children != null && children !== false && <div className="specimen__stock">{children}</div>}
     </article>
   );
 };

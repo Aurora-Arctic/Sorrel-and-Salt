@@ -9,19 +9,21 @@ nothing from the data.
 
 `IngredientCardProps` (`types.ts`):
 
-| Prop          | What it is                                                                                                                         |
-| ------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `href`        | The entry's page (M8.19). The name links to it                                                                                     |
-| `label`       | The label to show, already merged by the caller (`applyCupboardEntry`)                                                             |
-| `formalName`  | The formal name, first on the secondary line                                                                                       |
-| `variants`    | The entry's live forms: an icon and the name each on the secondary line; their notes and flags feed the caution and the Toxic mark |
-| `safetyNotes` | The ingredient's own notes                                                                                                         |
-| `toxic`       | The ingredient's own flag                                                                                                          |
-| `kind`        | `own`, `cupboard` or `compendium`; see [`entry-marks.md`](entry-marks.md)                                                          |
-| `annotated`   | The cupboard row overrides a field                                                                                                 |
-| `retired`     | The curators retired the entry                                                                                                     |
-| `level`       | The name's heading level, 2 to 5; the caution sits one below. Defaults to 2                                                        |
-| `children`    | The jar-line slot, beneath the forms                                                                                               |
+| Prop           | What it is                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `href`         | The entry's page (M8.19). The name links to it                                                                                       |
+| `label`        | The label to show, already merged by the caller (`applyCupboardEntry`)                                                               |
+| `formalName`   | The formal name, a caption beneath the name                                                                                          |
+| `nomenclature` | Decides its italics: only a binomial kind (`isBinomial`, shared with the entry page) is italic; mineral, chemical or none is upright |
+| `categories`   | The entry's categories with their groups; chips in the group colours, plain not links, no row when empty                             |
+| `variants`     | The entry's live forms: an icon and the name each on the secondary line; their notes and flags feed the caution and the Toxic mark   |
+| `safetyNotes`  | The ingredient's own notes                                                                                                           |
+| `toxic`        | The ingredient's own flag                                                                                                            |
+| `kind`         | `own`, `cupboard` or `compendium`; see [`entry-marks.md`](entry-marks.md)                                                            |
+| `annotated`    | The cupboard row overrides a field                                                                                                   |
+| `retired`      | The curators retired the entry                                                                                                       |
+| `level`        | The name's heading level, 2 to 5; the caution sits one below. Defaults to 2                                                          |
+| `children`     | The jar-line slot, last                                                                                                              |
 
 ## What it is made of
 
@@ -30,13 +32,14 @@ restyled here:
 
 - the name, an `h2` holding the card's **one link**, so the card is reached by
   keyboard through it alone;
-- the secondary line: the formal name, then each form with a `FormIcon` before it, a dot ("Herb · Oil") between items. The dot is `aria-hidden`, so a screen reader does not read it.
-  Two entries can share a label, and this line tells them apart;
-- the marks, through `EntryMarks`, with `ToxicMark` beside them;
+- the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the forms line (a `FormIcon` before each form, an `aria-hidden` dot between: "Herb · Oil"; it tells two entries sharing a label apart), the category chips, the caution, and the jar lines;
+- the marks, through `EntryMarks`, with `ToxicMark` beside them, in `.specimen__badges`;
 - `SafetyNote`, when the entry or a listed form has notes;
 - the **jar-line slot**. M9.6 fills it with a line per jar (the form's icon, the
   form, quantity and unit, M9.8's `StockBadge`, M9.9's and M9.10's actions). The
   public compendium leaves it empty.
+
+The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is forms, chips, caution, stock: the specimen has no forms or caution, so the identity lines sit together under the name and the stock line stays last with its rule above.
 
 ## Order
 

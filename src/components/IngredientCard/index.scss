@@ -1,21 +1,19 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
-// Layout only: the surface is `.panel`, the badges are the shared primitives,
-// and the caution and stock treatments keep their own components' styling.
+// The Foundations specimen (`.specimen` in _primitives.scss) carries the
+// layout; this adds the surface, which `.modal` gives the specimen there (its padding too) but
+// a list item should not (it is not a dialog), and the forms line's spacing.
 // Past the tokens only after the section's design review (MB.84).
 .ingredient-card {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: space(3);
+  @include modal-surface($shadow-floating);
+
+  padding: space(5);
 }
 
-.ingredient-card__name {
-  margin: 0;
-}
-
-// The formal name, then each form with its icon, a dot between each.
-.ingredient-card__secondary {
+.ingredient-card__name,
+.ingredient-card__formal,
+.ingredient-card__forms {
   margin: 0;
 }
 

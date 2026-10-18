@@ -51,10 +51,28 @@ describe('IngredientCard', () => {
     expect(screen.getByText('Testroot')).toBeInTheDocument();
   });
 
-  it('separates the items with a dot hidden from assistive technology', () => {
-    render(<IngredientCard {...BASE} formalName="Fixtura testalis" variants={[LEAF, ROOT]} />);
+  it('sets the formal name in italics for a binomial nomenclature and upright otherwise', () => {
+    const bin = render(
+      <IngredientCard {...BASE} formalName="Fixtura testalis" nomenclature="botanical" />,
+    );
+    expect(screen.getByText('Fixtura testalis').tagName).toBe('I');
+    bin.unmount();
 
-    // Three items, two separators.
+    const mineral = render(
+      <IngredientCard {...BASE} formalName="Fixtura testite" nomenclature="mineral" />,
+    );
+    expect(screen.getByText('Fixtura testite').tagName).not.toBe('I');
+    mineral.unmount();
+
+    // A nomenclature not passed is not assumed to be a binomial.
+    render(<IngredientCard {...BASE} formalName="Fixtura testalis" />);
+    expect(screen.getByText('Fixtura testalis').tagName).not.toBe('I');
+  });
+
+  it('separates the items with a dot hidden from assistive technology', () => {
+    render(<IngredientCard {...BASE} variants={[LEAF, ROOT, OIL]} />);
+
+    // Three forms, two separators.
     const dots = screen.getAllByText(/·/);
     expect(dots).toHaveLength(2);
     for (const dot of dots) expect(dot).toHaveAttribute('aria-hidden', 'true');
@@ -65,6 +83,30 @@ describe('IngredientCard', () => {
 
     expect(screen.queryByText('Fixtura testalis')).toBeNull();
     expect(screen.queryByText('Testleaf')).toBeNull();
+  });
+
+  describe('the category chips', () => {
+    const GROUP = { colorDark: '#112233', colorLight: '#445566' };
+    const CATS = [
+      { category: { id: 'c1', name: 'Testing' }, group: GROUP },
+      { category: { id: 'c2', name: 'Fixturing' }, group: GROUP },
+    ];
+
+    it('lists each category as plain text, not a link', () => {
+      render(<IngredientCard {...BASE} categories={CATS} />);
+
+      const list = screen.getByRole('list', { name: 'Categories' });
+      expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+      expect(within(list).getByText('Testing')).toBeInTheDocument();
+      expect(within(list).queryByRole('link')).toBeNull();
+      expect(within(list).queryByRole('button')).toBeNull();
+    });
+
+    it('draws no row for an entry with none', () => {
+      render(<IngredientCard {...BASE} categories={[]} />);
+
+      expect(screen.queryByRole('list', { name: 'Categories' })).toBeNull();
+    });
   });
 
   describe('safety', () => {

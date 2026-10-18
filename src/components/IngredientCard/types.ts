@@ -1,7 +1,14 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
+import type { GroupColors } from '../../lib/types';
+import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { EntryKind } from '../EntryMarks/types';
 import type { SafetyVariant } from '../SafetyNote/types';
+
+export interface CardCategory {
+  category: { id: string; name: string };
+  group: GroupColors;
+}
 
 export interface IngredientCardProps {
   /** The entry's page (M8.19); the name links to it, and it is the card's one link. */
@@ -12,8 +19,15 @@ export interface IngredientCardProps {
    * (`applyCupboardEntry`). The card does no merging.
    */
   label: string;
-  /** The formal name, first on the secondary line; none when the entry declares none. */
+  /** The formal name, a caption beneath the name; none when the entry declares none. */
   formalName?: string | null;
+  /** Decides the formal name’s italics: only a binomial kind is italic (`isBinomial`). */
+  nomenclature?: NomenclatureKind | null;
+  /**
+   * The entry’s categories, each with its group for the chip’s colours. Chips are
+   * plain, not links or toggles; none given draws no row.
+   */
+  categories?: readonly CardCategory[];
   /**
    * The entry's live forms, read from its variants (MB.215): each draws its
    * group's icon before its name on the secondary line, and the caution lists
