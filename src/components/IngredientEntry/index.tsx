@@ -516,7 +516,9 @@ const IngredientEntry = ({
           <div className="badges">
             {local && <span className="badge badge--local">Local</span>}
             {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
-            {held && <output className="badge badge--low-stock">From the Compendium</output>}
+            {held && !retired && (
+              <output className="badge badge--low-stock">From the Compendium</output>
+            )}
             {held && isAnnotated(cupboardEntry) && (
               <output className="badge badge--low-stock">Annotated</output>
             )}

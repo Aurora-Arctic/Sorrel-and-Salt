@@ -1,6 +1,7 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
+import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
@@ -12,12 +13,14 @@ import { ModalButton } from '../Modal';
 import Notice from '../Notice';
 import type { CupboardActionsProps } from './types';
 
-// The three buttons a compendium entry offers a coven's member beside its
-// title (M12.17): Add to Cupboard while the coven does not hold it; Annotate
-// This Entry and Remove from Cupboard once it does. Which buttons show is the
-// page's, from the member's permissions; each is only the door, and the
-// service is the guard. Each write goes through /api/graphql and then reads
-// the page again, so the marks and the buttons follow the cupboard.
+// The buttons a compendium entry offers a coven's member beside its title
+// (M12.17): Add to Cupboard while the coven does not hold it; Annotate This
+// Entry, Remove from Cupboard and Make It Ours (M12.23) once it does. Make It
+// Ours leads to the own entry it writes, since the compendium entry's page is
+// no longer the coven's; every other write reads the page again, so the marks
+// and the buttons follow the cupboard. Which buttons show is the page's, from
+// the member's permissions; each is only the door, and the service is the
+// guard. Every write goes through /api/graphql.
 
 const AddCupboardEntryDocument = graphql(`
   mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {
@@ -33,19 +36,32 @@ const RemoveCupboardEntryDocument = graphql(`
   }
 `);
 
+const MakeItOursDocument = graphql(`
+  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {
+    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {
+      entry {
+        id
+      }
+    }
+  }
+`);
+
 export default function CupboardActions({
   workspaceId,
+  covenSlug,
   ingredientId,
   held,
   canAdd,
   canAnnotate,
   canRemove,
+  canMakeOurs,
   compendium,
   overrides,
 }: CupboardActionsProps): ReactElement | null {
   const router = useRouter();
   const [alert, setAlert] = useState<string>();
-  const [asking, setAsking] = useState(false);
+  // Which of the two confirms is open: one asks at a time.
+  const [asking, setAsking] = useState<'remove' | 'own'>();
 
   const add = useMutation({
     mutationFn: () => graphqlRequest(AddCupboardEntryDocument, { workspaceId, ingredientId }),
@@ -57,13 +73,23 @@ export default function CupboardActions({
     onSuccess: () => router.refresh(),
     onError: (error) => {
       // The jar refusal names its remedy, so it is shown as the service wrote it.
-      setAsking(false);
+      setAsking(undefined);
+      setAlert(readGraphqlFailure(error).alert);
+    },
+  });
+  const makeOurs = useMutation({
+    mutationFn: () => graphqlRequest(MakeItOursDocument, { workspaceId, ingredientId }),
+    onSuccess: ({ convertCompendiumEntryToLocal: { entry } }) =>
+      router.push(`/coven/${covenSlug}/ingredients/${entry.id}` as Route),
+    onError: (error) => {
+      // A refusal names the own entry in the way, so it is shown as the service wrote it.
+      setAsking(undefined);
       setAlert(readGraphqlFailure(error).alert);
     },
   });
 
   if (!held && !canAdd) return null;
-  if (held && !canAnnotate && !canRemove) return null;
+  if (held && !canAnnotate && !canRemove && !canMakeOurs) return null;
 
   return (
     <div className="ingredient-entry__cupboard">
@@ -98,19 +124,57 @@ export default function CupboardActions({
           )}
         </ModalButton>
       )}
-      {held && canRemove && !asking && (
+      {held && canMakeOurs && asking !== 'own' && (
+        <button
+          type="button"
+          className="btn btn--quiet btn--medium"
+          onClick={() => {
+            setAlert(undefined);
+            setAsking('own');
+          }}
+        >
+          Make It Ours
+        </button>
+      )}
+      {held && canMakeOurs && asking === 'own' && (
+        <span role="group" aria-label="Make It Ours" className="ingredient-entry__ask">
+          <span>
+            Make this entry your coven's own? It takes a copy of the compendium's entry with your
+            annotations, and your jars and spells move to it. Later compendium changes no longer
+            reach it.
+          </span>
+          <BusyButton
+            className="btn btn--solid btn--medium"
+            busy={makeOurs.isPending}
+            busyLabel="Making It Ours"
+            disabled={makeOurs.isPending}
+            onClick={() => makeOurs.mutate()}
+          >
+            Make It Ours
+          </BusyButton>
+          <button
+            type="button"
+            className="btn btn--quiet btn--medium"
+            disabled={makeOurs.isPending}
+            onClick={() => setAsking(undefined)}
+          >
+            Cancel
+          </button>
+        </span>
+      )}
+      {held && canRemove && asking !== 'remove' && (
         <button
           type="button"
           className="btn btn--destructive btn--medium"
           onClick={() => {
             setAlert(undefined);
-            setAsking(true);
+            setAsking('remove');
           }}
         >
           Remove from Cupboard
         </button>
       )}
-      {held && canRemove && asking && (
+      {held && canRemove && asking === 'remove' && (
         <span role="group" aria-label="Remove from Cupboard" className="ingredient-entry__ask">
           <span>Remove this entry from your cupboard? Your annotations go with it.</span>
           <BusyButton
@@ -126,7 +190,7 @@ export default function CupboardActions({
             type="button"
             className="btn btn--quiet btn--medium"
             disabled={remove.isPending}
-            onClick={() => setAsking(false)}
+            onClick={() => setAsking(undefined)}
           >
             Cancel
           </button>

@@ -47,6 +47,7 @@ type Documents = {
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
     "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n": typeof types.AddCupboardEntryDocument,
     "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n": typeof types.RemoveCupboardEntryDocument,
+    "\n  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {\n    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      entry {\n        id\n      }\n    }\n  }\n": typeof types.MakeItOursDocument,
     "\n  mutation ConvertLocalToCompendiumEntry($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {\n    convertLocalToCompendiumEntry(\n      workspaceId: $workspaceId\n      localId: $localId\n      compendiumId: $compendiumId\n    ) {\n      entry {\n        id\n      }\n    }\n  }\n": typeof types.ConvertLocalToCompendiumEntryDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
     "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n": typeof types.CompendiumEntryUsersDocument,
@@ -123,6 +124,7 @@ const documents: Documents = {
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
     "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n": types.AddCupboardEntryDocument,
     "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n": types.RemoveCupboardEntryDocument,
+    "\n  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {\n    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      entry {\n        id\n      }\n    }\n  }\n": types.MakeItOursDocument,
     "\n  mutation ConvertLocalToCompendiumEntry($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {\n    convertLocalToCompendiumEntry(\n      workspaceId: $workspaceId\n      localId: $localId\n      compendiumId: $compendiumId\n    ) {\n      entry {\n        id\n      }\n    }\n  }\n": types.ConvertLocalToCompendiumEntryDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
     "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n": types.CompendiumEntryUsersDocument,
@@ -312,6 +314,10 @@ export function graphql(source: "\n  mutation AddCupboardEntry($workspaceId: ID!
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n"): (typeof documents)["\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {\n    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      entry {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation MakeItOurs($workspaceId: ID!, $ingredientId: ID!) {\n    convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      entry {\n        id\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

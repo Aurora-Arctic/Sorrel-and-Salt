@@ -39,6 +39,9 @@ vi.mock('@/modules/ingredients', () => ({
   getCupboardEntry,
   // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
+  // The page reads Make It Ours's permission from the module (M12.23), so the
+  // mock carries it as the service declares it.
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
 }));
 
 // The form is its own tests'; here only that the dialog holds one.

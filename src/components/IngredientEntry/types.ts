@@ -102,10 +102,18 @@ export interface IngredientEntryProps {
  */
 export interface CupboardProps {
   workspaceId: string;
+  /** The coven's address segment, for the own entry Make It Ours leads to. */
+  covenSlug: string;
   /** What the member may do, from their role: add needs create, annotate update, remove delete. */
   canAdd: boolean;
   canAnnotate: boolean;
   canRemove: boolean;
+  /**
+   * Make It Ours (M12.23), on the permission the service asserts, read from
+   * `MAKE_IT_OURS_PERMISSION`; offered once the coven holds the entry, a
+   * retired one included.
+   */
+  canMakeOurs: boolean;
 }
 
 /** What the client buttons need to draw: the props above, and the entry's two sides for the form. */

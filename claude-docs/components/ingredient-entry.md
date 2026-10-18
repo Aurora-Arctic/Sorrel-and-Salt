@@ -138,13 +138,14 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 
 ## Cupboard buttons (M12.17)
 
-The optional `cupboard` prop (`{ workspaceId, canAdd, canAnnotate, canRemove }`) is passed by the coven route for a compendium entry, never by the public page, and is ignored for a coven's own entry. The route sets each flag from the member's role with `rolePermits` (`ingredient:create`, `update`, `delete`); the service is still the guard. `cupboard-actions.tsx` draws, in the header's action slot beside Edit:
+The optional `cupboard` prop (`{ workspaceId, covenSlug, canAdd, canAnnotate, canRemove, canMakeOurs }`) is passed by the coven route for a compendium entry, and for a retired one the coven still holds, never by the public page, and is ignored for a coven's own entry. The route sets each flag from the member's role with `rolePermits` (`ingredient:create`, `update`, `delete`, and `MAKE_IT_OURS_PERMISSION` for Make It Ours, the set its service checks); the service is still the guard. For a retired entry only `canMakeOurs` can be true, since the other cupboard services no longer find its row. `cupboard-actions.tsx` draws, in the header's action slot beside Edit:
 
 - **Add to Cupboard** while the coven does not hold the entry (`cupboardEntry == null`): `addCupboardEntry` with no overrides.
 - **Annotate This Entry** once it does: opens [`CupboardEntryForm`](cupboard-entry-form.md) in a modal.
+- **Make It Ours** (M12.23) once it does: asks in place (Make It Ours, Cancel), then `convertCompendiumEntryToLocal`, with the confirm's buttons disabled and the busy label shown while it runs. On success it goes to the new own entry's page, `/coven/<covenSlug>/ingredients/<id>`, since this one is no longer the coven's; a refusal shows the service's sentence in the notice.
 - **Remove from Cupboard** once it does, a `.btn--destructive`: asks in place (Remove, Cancel), then `removeCupboardEntry`. A jar still held in the cupboard refuses; the service's sentence shows in a notice beside the buttons.
 
-Each write calls `router.refresh()`, so the marks and the buttons follow the cupboard. A viewer sees none of them. Stories: `AddToCupboard`, `AnnotateOrRemove`, `ViewerSeesNoCupboardButtons`. Tests: `tests/components/IngredientEntry/cupboard-actions.test.tsx`.
+Every other write calls `router.refresh()`, so the marks and the buttons follow the cupboard. One confirm is open at a time. A viewer sees none of them. Stories: `AddToCupboard`, `AnnotateOrRemove`, `ViewerSeesNoCupboardButtons`, `RetiredOffersMakeItOurs`. Tests: `tests/components/IngredientEntry/cupboard-actions.test.tsx`.
 
 ## The two routes
 

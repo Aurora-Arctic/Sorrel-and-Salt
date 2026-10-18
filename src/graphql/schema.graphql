@@ -167,6 +167,14 @@ input CompendiumIngredientUpdateInput {
 }
 
 """
+A compendium entry made the coven's own: the own entry written, and what it could not carry.
+"""
+type ConvertedCompendium {
+  dropped: DroppedOnConvert!
+  entry: Ingredient!
+}
+
+"""
 An own entry turned into a compendium entry: the cupboard entry written, and what was lost.
 """
 type ConvertedLocal {
@@ -258,7 +266,7 @@ input DeityTraditionInput {
 }
 
 """
-What an own entry had that the compendium entry it became does not carry, by name, each list sorted. The rows stay on the deleted own entry.
+What a convert left behind, by name, each list sorted. An own entry made a compendium entry lists what the compendium entry does not carry, whose rows stay on the deleted own entry; a compendium entry made the coven's own lists what its copy could not hold.
 """
 type DroppedOnConvert {
   """The entry's and its forms'."""
@@ -708,6 +716,11 @@ type Mutation {
   Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
   """
   annotateCupboardEntry(ingredientId: ID!, input: CupboardEntryInput!, workspaceId: ID!): CupboardEntry!
+
+  """
+  Makes a compendium entry the coven holds its own: a new own entry from the coven's reading of it, with copies of its forms, folk names, substitutes, categories, references and deities; its jars and spell layers move to the copy's forms of the same name, and the cupboard entry is removed. Works on an entry the compendium has retired. The compendium entry is not changed.
+  """
+  convertCompendiumEntryToLocal(ingredientId: ID!, workspaceId: ID!): ConvertedCompendium!
 
   """
   Turns one of the coven's own entries into the compendium entry it duplicates: its jars and spell layers move to the compendium's forms of the same name, a cupboard entry carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no match, or a jar or a layer would meet one of the compendium's.

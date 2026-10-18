@@ -1,13 +1,7 @@
 import 'server-only';
-import {
-  findOneByIdInWorkspace,
-  findWorkspaceIngredientByIdentity,
-  withAudit,
-} from '../../../db/repository';
+import { findOneByIdInWorkspace, withAudit } from '../../../db/repository';
 import { NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
-import { addressTaken } from '../../../lib/text';
-import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { ingredientSlug } from '../../../lib/slugify';
@@ -17,6 +11,7 @@ import {
   heldDeities,
   ingredientColumns,
   readPromotedFolkName,
+  refuseCollision,
   resolvePicks,
   softDeleteIngredient,
   splitChildren,
@@ -24,11 +19,7 @@ import {
   writeChildren,
 } from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
-import { describeEntry } from '@/modules/vocabulary';
-import type { IngredientFields, IngredientRow, IngredientValues } from '../types';
-
-/** What a collision is reported from: the label and the formal name alone. */
-type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
+import type { IngredientRow, IngredientValues } from '../types';
 
 // Story 15: a coven's own ingredients. Every read and write is under the
 // proof, so the tier is the proof's — `workspace_id` is never read from the
@@ -206,59 +197,4 @@ export async function getWorkspaceIngredient(
   const row = await findOneByIdInWorkspace(membership, ingredients, id);
   if (!row) throw new NotFound('No such ingredient in this coven');
   return row;
-}
-
-/**
- * A write that broke one of the coven's unique indexes, as a `ValidationError`
- * on the field that caused it; any other error unchanged. An identity
- * collision — a second ingredient under a formal name the coven holds
- * (MB.215) — is reported on `canonicalName`, or on `name` for one with none,
- * whose label is its identity, naming the ingredient holding it, read after
- * the write rolled back, and pointing at adding the form to it — whichever
- * index Postgres names: the label and address indexes are older than the
- * identity one, so the oil written under the herb's label meets them first.
- * `slug` is the one this write set, `id` the ingredient an update writes,
- * never its own collision.
- */
-async function refuseCollision(
-  error: unknown,
-  membership: Membership,
-  fields: NameFields,
-  slug: string,
-  id: string | undefined,
-): Promise<never> {
-  const refuse = (path: string, message: string) => {
-    throw new ValidationError([{ path: [path], message }]);
-  };
-  const { name, canonicalName } = fields;
-  const index = violatedUniqueIndex(error);
-  if (
-    index === 'ingredients_workspace_identity_key_unique' ||
-    index === 'ingredients_workspace_label_unique' ||
-    index === 'ingredients_workspace_slug_unique'
-  ) {
-    const holder = await findWorkspaceIngredientByIdentity(membership, fields);
-    if (holder && holder.id !== id) {
-      refuse(
-        canonicalName == null ? 'name' : 'canonicalName',
-        `This coven already has ${describeEntry(holder)} — add this form to it instead`,
-      );
-    }
-  }
-
-  switch (index) {
-    case 'ingredients_workspace_label_unique':
-      return refuse('name', `This coven already has an ingredient called "${name}"`);
-    case 'ingredients_workspace_identity_key_unique':
-      return refuse(
-        canonicalName == null ? 'name' : 'canonicalName',
-        `This coven already has an ingredient that is ${canonicalName ?? name}`,
-      );
-    case 'ingredients_workspace_slug_unique':
-      return refuse(
-        'name',
-        addressTaken('Another ingredient in this coven', slug, 'change the name or formal name'),
-      );
-  }
-  throw error;
 }

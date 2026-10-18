@@ -8,10 +8,16 @@ import {
   addCupboardEntry,
   findCompendiumMatches,
   annotateCupboardEntry,
+  convertCompendiumEntryToLocal,
   convertLocalToCompendiumEntry,
   removeCupboardEntry,
 } from '../services/cupboard-entries';
-import type { CupboardEntryNode, CupboardEntryRow, DroppedOnConvert } from '../types';
+import type {
+  ConvertedCompendium,
+  CupboardEntryNode,
+  CupboardEntryRow,
+  DroppedOnConvert,
+} from '../types';
 import { isAnnotated } from '../validation/cupboard-merge';
 import { IngredientElementEnum, IngredientRef } from './ingredient';
 
@@ -176,7 +182,7 @@ builder.mutationField('removeCupboardEntry', (t) =>
 
 const DroppedOnConvertRef = builder.objectRef<DroppedOnConvert>('DroppedOnConvert').implement({
   description:
-    'What an own entry had that the compendium entry it became does not carry, by name, each list sorted. The rows stay on the deleted own entry.',
+    "What a convert left behind, by name, each list sorted. An own entry made a compendium entry lists what the compendium entry does not carry, whose rows stay on the deleted own entry; a compendium entry made the coven's own lists what its copy could not hold.",
   fields: (t) => ({
     forms: t.exposeStringList('forms', {
       description: 'Forms that matched no compendium form and held no jar or spell layer.',
@@ -225,6 +231,39 @@ builder.mutationField('convertLocalToCompendiumEntry', (t) =>
         compendiumId,
       );
       return { entry: await nodeOf(entry, loaders), dropped };
+    },
+  }),
+);
+
+const ConvertedCompendiumRef = builder
+  .objectRef<ConvertedCompendium>('ConvertedCompendium')
+  .implement({
+    description:
+      "A compendium entry made the coven's own: the own entry written, and what it could not carry.",
+    fields: (t) => ({
+      entry: t.field({ type: IngredientRef, resolve: (converted) => converted.entry }),
+      dropped: t.field({ type: DroppedOnConvertRef, resolve: (converted) => converted.dropped }),
+    }),
+  });
+
+builder.mutationField('convertCompendiumEntryToLocal', (t) =>
+  t.field({
+    type: ConvertedCompendiumRef,
+    description:
+      "Makes a compendium entry the coven holds its own: a new own entry from the coven's reading of it, with copies of its forms, folk names, substitutes, categories, references and deities; its jars and spell layers move to the copy's forms of the same name, and the cupboard entry is removed. Works on an entry the compendium has retired. The compendium entry is not changed.",
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      ingredientId: t.arg.id({ required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, ingredientId }, { loaders, ...context }) => {
+      const converted = await convertCompendiumEntryToLocal(
+        sessionOf(context),
+        workspaceId,
+        ingredientId,
+      );
+      clearCupboardEntry(loaders, { ingredientId, workspaceId });
+      return converted;
     },
   }),
 );
