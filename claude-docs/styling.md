@@ -1122,7 +1122,7 @@ heavier than the reverse; light reverts to the browser default.
     `.btn` and its `--solid` / `--quiet` / `--destructive` variants and
     `--small` size, `.notice`, `.page-frame` and its parts, `.provider-mark`,
     the form fields (`.form`, `.field`, `.input`, `.select`, `.textarea`,
-    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*`,
+    `.checkbox`, `.switch`, `.fieldset`), `.modal` / `.modal__actions`, `.specimen*` (the `IngredientCard`'s look; Foundations renders the card itself),
     `.chip` and `.chip.is-selected` over `chip()`, the `.badge--*` classes over `badge()`, `.visually-hidden`, for text a
     screen reader reads and nothing draws, such as a live region's news, and `.spoken-separator`, a comma heard but not seen between two parts of one name, drawn at no size so Chrome adds no space around it in the name (MB.115).
 - `src/app/fonts.ts` — Cormorant Unicase (weights 500/600/700) and Lexend,

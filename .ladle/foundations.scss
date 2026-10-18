@@ -366,7 +366,7 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     background-color: $surface-page;
 
     // A phone's width has no room to spare: less ground around the card. The badges
-    // drop under the name by themselves, as the specimen's top row wraps.
+    // drop under the name by themselves, as the card's top row wraps.
     @media (max-width: 30rem) {
       padding: space(3);
     }

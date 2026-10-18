@@ -93,6 +93,10 @@ the `(name, id)` keyset the list pages on
 ([`../db/compendium-read.md`](../db/compendium-read.md)), asserted in
 `tests/db/repository/ingredients.test.ts`.
 
+Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyphens: auto` with `overflow-wrap: anywhere` as the fallback where the dictionary has no word. No library and no soft hyphens.
+
+Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture, so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
+
 ## Accessibility
 
 Meaning is carried by words and shape, never colour alone: every badge has its
@@ -102,4 +106,4 @@ Styling stops at the tokens until the section's design review (MB.84).
 
 ### A long name
 
-The top row (`.specimen__top`) wraps, in the primitive, so the Foundations specimen does the same. The name block (`.ingredient-card__heading`) takes the room it needs and may shrink below its longest word; when it and the badges do not fit side by side, the badge group wraps onto its own row beneath, at the left (the name block grows, so beside it the badges sit at the right; the group itself takes only its content's width, with no auto margin). Badges that wrap among themselves beside the name still hug the right. The wrapped group is 12px (`space(3)`, the row gap) below the formal name and 12px above the chips. A single long word breaks rather than overflows: `overflow-wrap: anywhere` on the block, and `hyphens: auto` on the name heading only, so a break shows a hyphen where the browser's dictionary can place one (the page's `lang` is `en`). Chromium, with no dictionary hit for an invented word such as "Nameicanicusmus", falls back to a plain break with no hyphen. The italic formal name gets no `hyphens`: binomials are Latin, and English hyphenation would split them oddly. No soft hyphens are ever inserted into the text.
+The top row (`.specimen__top`) wraps, in the primitive, so it holds wherever the primitive is used. The name block (`.ingredient-card__heading`) takes the room it needs and may shrink below its longest word; when it and the badges do not fit side by side, the badge group wraps onto its own row beneath, at the left (the name block grows, so beside it the badges sit at the right; the group itself takes only its content's width, with no auto margin). Badges that wrap among themselves beside the name still hug the right. The wrapped group is 12px (`space(3)`, the row gap) below the formal name and 12px above the chips. A single long word breaks rather than overflows: `overflow-wrap: anywhere` on the block, and `hyphens: auto` on the name heading only, so a break shows a hyphen where the browser's dictionary can place one (the page's `lang` is `en`). Chromium, with no dictionary hit for an invented word such as "Nameicanicusmus", falls back to a plain break with no hyphen. The italic formal name gets no `hyphens`: binomials are Latin, and English hyphenation would split them oddly. No soft hyphens are ever inserted into the text.
