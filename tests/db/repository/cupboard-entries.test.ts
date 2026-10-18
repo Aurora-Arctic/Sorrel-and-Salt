@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
 import {
+  countCovensUsing,
   findCompendiumMatchesByName,
   findCupboardEntriesOf,
   findCupboardEntry,
@@ -9,6 +10,7 @@ import {
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { assertMembership } from '@/modules/coven';
+import { assertCurator } from '@/modules/identity';
 import { A, D, E, asUser } from '../../support/as-user';
 import { useTestDatabase } from '../../support/db/database';
 import { insertCupboardEntry } from '../../support/db/insert-cupboard-entry';
@@ -221,5 +223,44 @@ describe('findCompendiumMatchesByName', () => {
       byFormal,
     ]);
     expect(await findCompendiumMatchesByName('Testwor')).toEqual([]);
+  });
+});
+
+describe('countCovensUsing (M12.25)', () => {
+  const curator = () => assertCurator(asUser(E));
+
+  it('counts the covens with a live row naming the entry, and no other row', async () => {
+    const entry = await compendiumEntry('Testwort', 'Fixtura testalis');
+    const other = await compendiumEntry('Fixture Other');
+    const local = await insertIngredient(
+      sql,
+      makeIngredient({ workspaceId: WORKSPACE_W_ID, name: 'Fixture Local', nomenclature: 'none' }),
+      A.id,
+    );
+    expect(await countCovensUsing(curator(), entry)).toBe(0);
+
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: entry }, A.id);
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_X_ID, ingredientId: entry }, D.id);
+    // Rows the count must leave out: another entry's, a coven-tier ingredient's.
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: other }, A.id);
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: local }, A.id);
+
+    expect(await countCovensUsing(curator(), entry)).toBe(2);
+    expect(await countCovensUsing(curator(), other)).toBe(1);
+    expect(await countCovensUsing(curator(), local)).toBe(0);
+  });
+
+  it('leaves out a soft-deleted row and a soft-deleted coven', async () => {
+    const entry = await compendiumEntry('Testwort');
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: entry }, A.id);
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_X_ID, ingredientId: entry, deleted: true },
+      D.id,
+    );
+    expect(await countCovensUsing(curator(), entry)).toBe(1);
+
+    await sql`update workspaces set deleted_at = now(), deleted_by = ${A.id} where id = ${WORKSPACE_W_ID}`;
+    expect(await countCovensUsing(curator(), entry)).toBe(0);
   });
 });

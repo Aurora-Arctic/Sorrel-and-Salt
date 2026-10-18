@@ -43,6 +43,10 @@ The service reads the row for a member, viewers included, under `{ ingredient: [
 
 `tests/db/repository/cupboard-entries.test.ts` holds the finders' rules, each case seeding the row a read must leave out beside the one it must return, and `tests/modules/ingredients/services/cupboard-entries.test.ts` holds the merge, per column for null, set and `[]`.
 
+### Counting covens
+
+M12.25 adds **`countCovensUsing(curator, ingredientId)`** to `cupboard-entries.ts`. It answers how many distinct live covens have a live row naming the entry, as one `count(distinct workspace_id)`. It is unscoped by design: it takes the `Curator` proof where the other finders take a `Membership`, and it returns a number, so no coven name or id leaves the database layer. A soft-deleted row, a soft-deleted coven, and a row naming a coven's own ingredient are not counted. The `ingredients` service `countCompendiumEntryUsers(session, id)` in `services/compendium.ts` checks `assertCurator`, then `NotFound` for an id that is not a live compendium entry, and the delete confirm reads it through `Query.compendiumEntryUsers` ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations"). It sits in `compendium.ts` because that file holds the compendium tier's curator reads and `deleteCompendiumEntry`, whereas `cupboard-entries.ts` services act for a coven under a membership.
+
 ### Writing it
 
 M12.15 adds the three writes in the same service, `services/cupboard-entries.ts`. Each checks membership first, then writes through `withAudit` (the one wrapper that opens the transaction and stamps who wrote).

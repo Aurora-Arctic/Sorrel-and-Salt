@@ -1008,6 +1008,14 @@ curated values.
   deleted entry and an id that names nothing are `NOT_FOUND`, so the admin
   reaches no coven's row by id.
 
+**`compendiumEntryUsers(id: ID!): Int!`** (M12.25) answers how many covens
+hold a compendium entry in their cupboard, for the delete confirm. It carries
+`authScopes: { curator: true }` and the service's `assertCurator` refuses
+again; an id that is not a live compendium entry (a coven's ingredient, a
+deleted entry, an unknown id) is `NOT_FOUND`. It is a count and never names a
+coven ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Counting covens").
+
 `tests/modules/ingredients/graphql/compendium-entries.test.ts` holds the three
 writes' half: the input left short refused before any resolver runs, the
 loaders cleared between two updates, `endRedirect` reaching the update's

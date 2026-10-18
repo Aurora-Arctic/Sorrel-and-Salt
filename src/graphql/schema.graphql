@@ -1037,6 +1037,11 @@ type Query {
   ): QueryCompendiumConnection!
 
   """
+  How many covens hold this compendium entry in their cupboard; a count, never who. Curators and admins only.
+  """
+  compendiumEntryUsers(id: ID!): Int!
+
+  """
   How many compendium entries each search filter value would list under the rest of the filter.
   """
   compendiumFacets(
