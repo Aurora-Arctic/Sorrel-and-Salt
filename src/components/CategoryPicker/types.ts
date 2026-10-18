@@ -15,6 +15,8 @@ export interface PickerCategory {
   /** Read beneath the row, and in the entry's tooltip. */
   description?: string | null;
   group: PickerGroup;
+  /** How many entries picking it would leave, when the filter knows: read after the name, "Fire (9)". */
+  count?: number;
 }
 
 /** A row the box offers: the category a pick adds. */
@@ -37,6 +39,12 @@ export interface CategoryPickerProps {
   categories: readonly PickerCategory[];
   /** The categories are still being read: the box says it is looking. */
   pending?: boolean;
+  /** The counts are still being read: a pick's chip holds a placeholder where its count will be. */
+  loading?: boolean;
+  /** Names a pick's x with the noun, "Remove Category: Testward"; without it, "Remove Testward". */
+  removeNoun?: string;
+  /** Leaves out a category whose count is zero. A pick keeps its chip. */
+  hideZeros?: boolean;
   /** The picked categories' ids. */
   value: readonly string[];
   /** Called with the ids picked after one is added or taken out, in the order they were picked. */

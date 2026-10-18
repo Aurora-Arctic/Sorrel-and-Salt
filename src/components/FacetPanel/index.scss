@@ -1,0 +1,317 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The Filters button and its panel (claude-docs/components/facet-panel.md). The panel
+// positions itself against the nearest positioned ancestor, which is the filter form
+// (`position: relative` there), so that it opens just under the search row.
+
+// The Filters button keeps to one line: a count in it does not wrap on a phone.
+.facet-panel__button {
+  flex: none;
+  white-space: nowrap;
+}
+
+// Clear All beside the button: a quiet link on the controls' line.
+.facet-panel__clear {
+  display: flex;
+  flex: none;
+  align-items: center;
+  min-height: $control-height;
+  white-space: nowrap;
+}
+
+// The dialog is an overlay that slides down over the results, so they never move. It is
+// opened by script: show() from the tablet width up (no scrim, no inert page), showModal()
+// below it. The slide is grid rows 0fr to 1fr on the clip inside it; the dialog stays open
+// until the transition ends, so the content is whole, never faded, until it is gone.
+.facet-panel {
+  box-sizing: border-box;
+  position: absolute;
+  inset: auto;
+  inset-block-start: 100%;
+  inset-inline: 0;
+  z-index: layer('floating');
+  width: auto;
+  max-width: none;
+  height: auto;
+  max-height: none;
+  margin: space(2) 0 0;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+  color: inherit;
+  overflow: visible;
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Before the script runs the panel is an ordinary block above the results at every width.
+.facet-panel--static {
+  position: static;
+  flex: 1 1 100%;
+  margin: space(4) 0;
+}
+
+// With script on its way (the mark the root layout's pre-paint script sets), the open
+// panel waits out hydration unseen instead of flashing; without script it stays.
+[data-js] .facet-panel--static {
+  display: none;
+}
+
+.facet-panel__clip {
+  display: grid;
+  grid-template-rows: 0fr;
+  border-radius: radius('surface');
+  box-shadow: $shadow-elevated;
+  transition: grid-template-rows var(--slide-ms, 350ms) ease;
+
+  &--open {
+    grid-template-rows: 1fr;
+  }
+}
+
+.facet-panel--static .facet-panel__clip {
+  box-shadow: none;
+}
+
+.facet-panel__inner {
+  min-height: 0;
+  overflow: hidden;
+  // Clip, where it is known, rather than hide: a hidden box can still be scrolled by the
+  // browser's focus step, which moves a dialog's first control into view as it opens and
+  // slid the content up inside a still-short panel, so its top rose and then fell back.
+  // A clipped box cannot scroll at all. `hidden` above is the older browsers' fallback.
+  overflow: clip;
+  border-radius: radius('surface');
+}
+
+.facet-panel__pad {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+  padding: space(4);
+  background-color: $surface-page;
+  border: 1px solid $hairline;
+  border-radius: radius('surface');
+}
+
+.facet-panel__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.facet-panel__title {
+  margin: 0;
+}
+
+// One row per pair of facets: a combobox takes the spare width and the compact control
+// beside it (Match, No Refs, the Toxic strip) keeps its own. Below the tablet width every
+// control stacks, in the same order as the source.
+.facet-panel__line {
+  display: flex;
+  flex-direction: column;
+  gap: space(4);
+
+  // The group's own vertical margin (set for a group among prose) would push the strip
+  // below its neighbour's label; the row's gap is the spacing.
+  .fieldset.radio-group {
+    margin-block: 0;
+  }
+
+  // Match's legend carries an InfoTip, whose button is taller than the text, so the legend
+  // stood 6px taller than Categories' and its strip sat lower. The label row is held to one
+  // line (the button overflows it, centred) and the gap is Categories' own (space 3), so the
+  // two fields share a label and a control top.
+  .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
+    margin-bottom: space(3);
+
+    .field__label-row {
+      block-size: 1lh;
+    }
+  }
+
+  // The Forms row's combobox sits a space 2 gap under its label, not Categories' space 3, so
+  // the Toxic legend keeps the plain gap with or without its hint: its strip then shares
+  // Forms' control top in both states (measured: 4px low with the hint before this).
+  &--forms > .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
+    margin-bottom: space(2);
+  }
+
+  // Stacked, a combobox is as tall as it is, not the row-wise basis.
+  > .facet-panel__grow {
+    flex: none;
+  }
+
+  @media (min-width: $shell-tablet-width) {
+    flex-direction: row;
+    // The top, so that when one control wraps to two lines (many chips) its neighbours stay
+    // level with its label instead of dropping to its bottom edge.
+    align-items: flex-start;
+
+    > .facet-panel__grow {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+}
+
+// Match and No Refs share one line on the phone sheet, tops level, instead of stacking full
+// width; from the tablet width the row is already a row, so the pair dissolves into it.
+.facet-panel__pair {
+  display: flex;
+  gap: space(4);
+  align-items: flex-start;
+
+  @media (min-width: $shell-tablet-width) {
+    display: contents;
+  }
+}
+
+// The switch sits centred under its label.
+.facet-panel__no-refs {
+  width: fit-content;
+
+  .field__label {
+    text-align: center;
+  }
+
+  .switch__control {
+    display: flex;
+    justify-content: center;
+  }
+}
+
+.facet-panel__foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(4);
+  align-items: center;
+}
+
+// Wide: the title and Close go (the dialog is still named by the title, which stays for
+// assistive technology; the Filters button and Escape close it).
+@media (min-width: $shell-tablet-width) {
+  .facet-panel:not(.facet-panel--static) {
+    .facet-panel__head {
+      @include visually-hidden;
+    }
+
+    .facet-panel__phone-only {
+      display: none;
+    }
+  }
+}
+
+// Before the script: nothing can close it, so there is no Close and the title is plain.
+.facet-panel--static .facet-panel__phone-only {
+  display: none;
+}
+
+// The modal sheet below the tablet width: a full-height drawer with no slide. Its foot
+// sticks to the bottom, and the sheet scrolls with room kept above it so that a focused
+// control is never hidden behind it (WCAG 2.4.11).
+.facet-panel:modal {
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  width: min(32rem, 100%);
+  height: 100%;
+  margin: 0 0 0 auto;
+  background-color: $surface-page;
+  border-left: 1px solid $hairline;
+  overflow-y: auto;
+  scroll-padding-block-end: 6rem;
+
+  // It fades in and out, sheet and backdrop together, as a Modal does (M5.5): in is CSS alone,
+  // from `@starting-style` as `showModal()` shows it; out is `.is-closing`, which the
+  // component sets and waits on before it closes the dialog.
+  opacity: 1;
+  transition: opacity $modal-fade;
+
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without fading in
+  @starting-style {
+    opacity: 0;
+  }
+
+  &::backdrop {
+    background-color: $modal-scrim;
+    opacity: 1;
+    transition: opacity $modal-fade;
+
+    // stylelint-disable-next-line plugin/use-baseline -- enhancement: the backdrop appears without fading in
+    @starting-style {
+      opacity: 0;
+    }
+  }
+
+  &.is-closing,
+  &.is-closing::backdrop {
+    opacity: 0;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    &::backdrop {
+      transition: none;
+    }
+  }
+
+  .facet-panel__clip {
+    display: flex;
+    flex: 1;
+    border-radius: 0;
+    box-shadow: none;
+    transition: none;
+  }
+
+  .facet-panel__inner {
+    display: flex;
+    flex: 1;
+    overflow: visible;
+    border-radius: 0;
+  }
+
+  .facet-panel__pad {
+    flex: 1;
+    border: 0;
+    border-radius: 0;
+  }
+
+  .facet-panel__foot {
+    position: sticky;
+    bottom: 0;
+    margin-top: auto;
+    padding: space(3) 0;
+    background-color: $surface-page;
+    border-top: 1px solid $hairline;
+  }
+}
+
+@include reduced-motion {
+  .facet-panel__clip {
+    transition: none;
+  }
+}
+
+// A tip in the panel opens below its label, not above it as everywhere else. The panel's
+// clip (needed for the slide) ends at the first row's top edge, so a tip opening upward
+// from Match, which sits in that row, was cut off. Below there is always room in the panel.
+.facet-panel .info-tip__bubble {
+  top: 100%;
+  bottom: auto;
+  margin-block: space(1) 0;
+}
+
+// On the wide panel Match stands at the right-hand end of its row, so a tip hung from the
+// label's left edge ran past the panel's right edge and was cut. It hangs from the icon's
+// right edge there and opens leftward. On the sheet, Match starts at the left, as the tip does.
+@media (min-width: $shell-tablet-width) {
+  .facet-panel .info-tip__bubble {
+    right: 0;
+    left: auto;
+  }
+}

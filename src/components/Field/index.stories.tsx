@@ -192,6 +192,62 @@ export const RadioStrip: Story = () => {
   );
 };
 
+// The segmented layout (M12.4): a text bar, each segment's name with how many
+// entries it would leave. The compendium filter's Toxic, and its Match without counts.
+export const RadioSegmented: Story = () => {
+  const [toxic, setToxic] = useState('any');
+  const [match, setMatch] = useState('all');
+  return (
+    <div className="form" style={{ maxWidth: '24rem' }}>
+      <RadioGroupField<string>
+        legend="Match"
+        name="categoryMode"
+        hint="All: an ingredient must be in every chosen category. Any: in at least one of them."
+        layout="segmented"
+        value={match}
+        onChange={setMatch}
+        options={[
+          { value: 'all', label: 'All' },
+          { value: 'any', label: 'Any' },
+        ]}
+      />
+      <RadioGroupField<string>
+        legend="Toxic"
+        name="toxic"
+        layout="segmented"
+        value={toxic}
+        onChange={setToxic}
+        options={[
+          { value: 'any', label: 'Any' },
+          { value: 'toxic', label: 'Toxic', count: 4 },
+          { value: 'not-toxic', label: 'Not Toxic', count: 8 },
+        ]}
+      />
+    </div>
+  );
+};
+
+// A segmented group disabled as a whole, as the compendium filter's Toxic is when every
+// matching entry shares one toxicity: dashed borders, no hover, Any selected, a hint why.
+export const RadioSegmentedDisabled: Story = () => (
+  <div className="form" style={{ maxWidth: '24rem' }}>
+    <RadioGroupField<string>
+      legend="Toxic"
+      name="toxic-disabled"
+      layout="segmented"
+      disabled
+      hint="Every matching entry shares the same toxicity, so this filter cannot narrow further."
+      value="any"
+      onChange={() => {}}
+      options={[
+        { value: 'any', label: 'Any' },
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not-toxic', label: 'Not Toxic', count: 8 },
+      ]}
+    />
+  </div>
+);
+
 // A form's row of actions: Save off until there is something to save, then
 // on, then busy; Cancel quiet; Delete apart at the far end on an edit; and a
 // form that sends rather than saves, its submit renamed.

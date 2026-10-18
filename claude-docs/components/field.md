@@ -200,6 +200,18 @@ is decoration. The tips need the bar unclipped, so `.radio-strip` has no
 `overflow: hidden`: the end segments round their own corners, and the
 dividers are counted on the tips' wrappers.
 
+`layout="segmented"` (M12.4) is the same bar with the option's name in text
+rather than an icon, for the compendium filter's Match (All, Any) and Toxic
+(Any, Toxic, Not Toxic). It reuses `.radio-strip` and `.radio--segment`, so the
+chosen segment is the same accent fill, with `.radio--text` letting the
+segment grow to its text and not wrap. An option's optional `count` (a
+`RadioOption` field) reads after its name, "Toxic (4)", the space a text node of
+the label's so that the radio's accessible name keeps it; the count is muted
+while the segment is unchosen. It prints no chosen caption: the name is
+already on the bar. Titles are title case ("Not Toxic"), and the strip is
+still native radios, so the arrow keys, `checked` and a form's GET submission
+before the script loads all come from the browser. Its segments are the bar's own children, so the dividers and rounded ends are counted on them (`.radio-strip--text`), the bar is `$control-height` tall, and the legend takes a field label's weight and gap, so a row of mixed controls shares one top. An optional `hint` on any group draws an InfoTip beside the legend and joins the fieldset's `aria-describedby`; `disabled` disables the whole group, as the filter's Toxic does when a count is zero, with a hint saying why. Story: `RadioSegmented`.
+
 `SwitchField` (`SwitchFieldProps`) takes `label`, `name` and `value`, what
 it submits while on (`1`, or empty for a bare flag such as `awaiting=`),
 `onChange(checked)`, `disabled`, an optional `hint`, and either `checked`, held by the caller,

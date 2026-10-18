@@ -254,6 +254,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
     highlightedIndex,
   } = useCombobox<Item<O>>({
     items,
+    // Only a suggestion can be disabled; the typed and action rows never are.
+    isItemDisabled: (item) => !isTyped(item) && !isAction(item) && Boolean(item.disabled),
     inputId: id,
     labelId,
     menuId: `${id}-list`,
@@ -351,6 +353,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
           // The action row is no suggestion either, and reads as the typed row does.
           (isTyped(item) || isAction(item)) && 'combobox__option--typed',
           colors && 'is-coloured',
+          !isTyped(item) && !isAction(item) && item.disabled && 'is-disabled',
           highlighted && 'is-highlighted',
         ]
           .filter(Boolean)
@@ -378,6 +381,14 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 </span>
               )}
               {item.label ?? item.value}
+              {/* The space is a text node of the label's own: an accessible
+                  name drops the one a span begins with. */}
+              {item.count !== undefined && (
+                <>
+                  {' '}
+                  <span className="combobox__count">({item.count})</span>
+                </>
+              )}
             </span>
             {item.note && <div className="combobox__note">{item.note}</div>}
           </>

@@ -1,0 +1,123 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// The sentence above a list: a closed one-line disclosure once settled, typed out while a
+// search is on its way (claude-docs/components/search-sentence.md).
+
+.search-sentence {
+  margin: 0;
+}
+
+.search-sentence__line {
+  margin: 0;
+}
+
+// The values the sentence names are bold (700); there is no weight token, the scale is raw
+// numbers. Inside the disclosure they are one step lighter, 600.
+.search-sentence strong {
+  font-weight: 700;
+}
+
+.search-sentence__disclosure strong {
+  font-weight: 600;
+}
+
+.search-sentence__disclosure > summary {
+  cursor: pointer;
+  width: fit-content;
+  // No native marker: the chevron at the end of the line is the only one.
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.search-sentence__first {
+  margin: 0;
+}
+
+// The clauses beneath the first line open and close by height. Grid rows 0fr to 1fr is
+// the Baseline way to animate an auto height.
+.search-sentence__tail {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--slide-ms, 350ms) ease;
+
+  &--open,
+  // Before the script runs the browser's own toggle shows the details: nothing may clip them.
+  &--static {
+    grid-template-rows: 1fr;
+  }
+}
+
+.search-sentence__tail-inner {
+  min-height: 0;
+  overflow: hidden;
+
+  > p {
+    margin-block: space(2) 0;
+  }
+}
+
+// The app's disclosure chevron, turned over while the tail is open on the app's theme
+// transition; it also fades by opacity when a search starts and ends, so it never pops.
+.search-sentence__chevron {
+  @include disclosure-chevron('.search-sentence__disclosure.is-tail-open');
+
+  margin-inline-start: space(1);
+  vertical-align: text-bottom;
+  transition:
+    transform $theme-transition-duration $theme-transition-easing,
+    opacity $motion-short ease-out;
+
+  &.is-hidden {
+    opacity: 0;
+  }
+
+  // After the transition above, which would otherwise outrank the mixin's own.
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// The untyped rest of the sentence keeps its place, invisible, so the lines do not reflow
+// as it types.
+.search-sentence__untyped {
+  visibility: hidden;
+}
+
+.search-sentence__caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  // Drawn over the edge between two characters and taking no room, so the text beside it
+  // never shifts as the caret comes and goes.
+  margin-inline: -1px;
+  vertical-align: text-bottom;
+  background-color: currentcolor;
+  animation: search-sentence-caret 1s steps(1) infinite;
+}
+
+@keyframes search-sentence-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+// The status region and the chevron's label: read aloud, never seen.
+.search-sentence__status,
+.search-sentence__sr {
+  @include visually-hidden;
+}
+
+@include reduced-motion {
+  .search-sentence__caret {
+    animation: none;
+  }
+
+  .search-sentence__tail,
+  .search-sentence__chevron {
+    transition: none;
+  }
+}

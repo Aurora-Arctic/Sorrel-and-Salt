@@ -1,0 +1,14 @@
+@use '../../scss/variables' as *;
+
+// Layout only: the box, its chips and its list are the Combobox's. The native
+// select the server draws before the script loads is a short list rather than
+// the one-line box, so it is kept to a few rows and the filter row does not
+// stretch to every value.
+.facet-combobox {
+  min-width: 0;
+
+  .facet-combobox__native {
+    block-size: auto;
+    max-block-size: 7.5rem;
+  }
+}

@@ -13,6 +13,10 @@ export interface FilterFormProps {
   searchHref: () => Route;
   /** Each value of the filter the page shows: Clear is drawn while any is set. */
   shown: readonly FilterValue[];
+  /** Draw Clear while a filter is shown. Default true; a row with its own Clear All turns it off. */
+  clear?: boolean;
+  /** Joins the form's class: a row whose panel anchors under it sets `position: relative`. */
+  className?: string;
   /** The filter's fields, a `SearchField` first, each carrying the `name` the page reads. */
   children: ReactNode;
 }

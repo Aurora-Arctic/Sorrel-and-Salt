@@ -77,6 +77,31 @@ export const listParam = <T extends string>(
 });
 
 /**
+ * Any number of free-text values, written as repeated parameters,
+ * `?forms=Oil&forms=Tincture`, each trimmed, with blanks and repeats dropped
+ * (a repeat folds case, as the compendium read does, so `oil` after `Oil` is
+ * the same form); empty is no filter. For a vocabulary that is only an
+ * autofill: unlike `listParam` it holds no fixed set to check against, so a
+ * value nobody has curated stays valid. Repeated rather than comma-joined,
+ * since the text may hold a comma.
+ */
+export const textListParam = (name: string, variable: string): SearchParam<string[]> => ({
+  name,
+  variable,
+  read: (raw) => {
+    const seen = new Set<string>();
+    return list(raw).filter((value) => {
+      const folded = value.toLocaleLowerCase();
+      if (seen.has(folded)) return false;
+      seen.add(folded);
+      return true;
+    });
+  },
+  write: (value) => value,
+  toVariable: (value) => (value.length > 0 ? value : undefined),
+});
+
+/**
  * Any number of slugs, written as repeated parameters, `?categories=a&categories=b`,
  * each trimmed and a repeat dropped; empty is no filter. The variable is the
  * ids of the slugs the page's lookup `lookupKey` holds: a slug it does not

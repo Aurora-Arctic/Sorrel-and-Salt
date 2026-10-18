@@ -84,6 +84,8 @@ const FilterForm = ({
   action,
   searchHref,
   shown,
+  clear: withClear = true,
+  className,
   children,
 }: FilterFormProps): ReactElement => {
   const { pending } = useListNavigation();
@@ -157,7 +159,7 @@ const FilterForm = ({
   return (
     <search>
       <form
-        className="filter-row"
+        className={className ? `filter-row ${className}` : 'filter-row'}
         ref={form}
         method="get"
         action={action}
@@ -172,7 +174,7 @@ const FilterForm = ({
             there is something to clear, the owner's call, rather than
             disabled in place: it sits at the row's end, so nothing moves
             when it comes and goes. */}
-        {filtered && (
+        {withClear && filtered && (
           <a
             className="filter-row__clear"
             href={action}

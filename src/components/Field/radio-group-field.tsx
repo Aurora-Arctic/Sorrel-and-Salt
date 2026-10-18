@@ -3,6 +3,7 @@
 import { type ReactElement, useId } from 'react';
 import { pressFeedback } from '../../lib/press-feedback';
 import IconTip from '../IconTip';
+import InfoTip from '../InfoTip';
 import type { RadioGroupFieldProps } from './types';
 
 /**
@@ -13,7 +14,9 @@ import type { RadioGroupFieldProps } from './types';
  * `value`; the caller holds the state. A `note` is the group's own line, read
  * with it, for what holds for every choice. `layout="strip"` draws the options
  * as one bar of icon-only segments with the chosen name printed beneath, still
- * a native radio underneath (claude-docs/components/field.md).
+ * a native radio underneath. `layout="segmented"` draws them as the same kind of
+ * bar with each choice's name in text and, if it has one, its count, as the
+ * compendium filter's Match and Toxic (claude-docs/components/field.md).
  */
 export function RadioGroupField<T extends string>({
   legend,
@@ -24,17 +27,37 @@ export function RadioGroupField<T extends string>({
   disabled,
   note,
   layout = 'list',
+  hint,
 }: RadioGroupFieldProps<T>): ReactElement {
   const id = useId();
   const strip = layout === 'strip';
+  const segmented = layout === 'segmented';
   const noteId = `${id}-note`;
+  const hintId = `${id}-hint`;
   return (
     <fieldset
-      className={strip ? 'fieldset radio-group radio-group--strip' : 'fieldset radio-group'}
+      className={
+        strip
+          ? 'fieldset radio-group radio-group--strip'
+          : segmented
+            ? 'fieldset radio-group radio-group--segmented'
+            : 'fieldset radio-group'
+      }
       disabled={disabled}
-      aria-describedby={note ? noteId : undefined}
+      aria-describedby={[note && noteId, hint && hintId].filter(Boolean).join(' ') || undefined}
     >
-      <legend className="fieldset__legend">{legend}</legend>
+      <legend className="fieldset__legend">
+        {hint ? (
+          <span className="field__label-row">
+            {legend}
+            <InfoTip id={hintId} label={legend}>
+              {hint}
+            </InfoTip>
+          </span>
+        ) : (
+          legend
+        )}
+      </legend>
       {strip && (
         <>
           <div className="radio-strip">
@@ -66,7 +89,37 @@ export function RadioGroupField<T extends string>({
           </p>
         </>
       )}
+      {segmented && (
+        <div className="radio-strip radio-strip--text">
+          {options.map((option) => (
+            <label
+              key={option.value}
+              className="radio radio--segment radio--text"
+              {...pressFeedback}
+            >
+              <input
+                type="radio"
+                name={name}
+                value={option.value}
+                checked={value === option.value}
+                onChange={() => onChange(option.value)}
+                {...pressFeedback}
+              />
+              {option.label}
+              {/* The space is a text node of the label's own: an accessible
+                  name drops the one a span begins with. */}
+              {option.count !== undefined && (
+                <>
+                  {' '}
+                  <span className="radio__count">({option.count})</span>
+                </>
+              )}
+            </label>
+          ))}
+        </div>
+      )}
       {!strip &&
+        !segmented &&
         options.map((option) => {
           const descriptionId = `${id}-${option.value}`;
           return (

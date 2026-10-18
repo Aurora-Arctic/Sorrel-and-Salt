@@ -1,3 +1,4 @@
+import type { ToxicFilter } from '@/modules/ingredients/schema/ingredient-enums';
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
 import type { FilterValue } from '../FilterForm/types';
@@ -54,6 +55,10 @@ export interface IngredientSearchFormProps {
    * over the list as it stands; left out, a pick is a plain navigation.
    */
   pickHeading?: (match: IngredientSearchMatch) => ModalHeading;
+  /** Draw the form's own Clear while a filter is shown. Default true. */
+  clear?: boolean;
+  /** Joins the form's class. */
+  className?: string;
   /** The filter slot: the consumer's other fields, after the search box. */
   children?: ReactNode;
 }
@@ -65,4 +70,69 @@ export interface IngredientSearchBoxProps {
   searchHref: IngredientSearchFormProps['searchHref'];
   pickHref: IngredientSearchFormProps['pickHref'];
   pickHeading?: IngredientSearchFormProps['pickHeading'];
+}
+
+/** The kinds of filter the search sentence can name, in the order it names them. */
+export type SearchSentenceFacet =
+  | 'query'
+  | 'categories'
+  | 'forms'
+  | 'deities'
+  | 'zodiac'
+  | 'planets'
+  | 'elements'
+  | 'toxic'
+  | 'nomenclature'
+  | 'withoutReferences';
+
+/** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
+export interface SearchSentenceFilter {
+  query?: string | null;
+  /** Category slugs. */
+  categories?: readonly string[];
+  /** `all` (the default) lists entries in every category, `any` in at least one. */
+  categoryMode?: 'all' | 'any';
+  forms?: readonly string[];
+  /** Deity slugs. */
+  deities?: readonly string[];
+  zodiac?: readonly string[];
+  planets?: readonly string[];
+  elements?: readonly string[];
+  /** The address's own choice: `toxic`, `not_toxic`, or `any` / left out for either. */
+  toxic?: ToxicFilter | null;
+  /** Admin lists only. */
+  nomenclature?: string | null;
+  /** Admin lists only. */
+  withoutReferences?: boolean;
+}
+
+/** The kinds that choose from a vocabulary, and so take display labels. */
+export type SearchSentenceLabelFacet =
+  'categories' | 'forms' | 'deities' | 'zodiac' | 'planets' | 'elements';
+
+/** Display labels by chosen value. A value with no label is named by itself. */
+export type SearchSentenceLabels = Partial<
+  Record<SearchSentenceLabelFacet, Readonly<Record<string, string>>>
+>;
+
+/** One piece of the sentence: plain text, or a chosen value the component links to the same filter without it. */
+export type SearchSentenceFragment =
+  | { kind: 'text'; text: string }
+  | { kind: 'value'; text: string; facet: SearchSentenceFacet; value: string };
+
+export interface SearchSentenceInput {
+  filter: SearchSentenceFilter;
+  labels?: SearchSentenceLabels;
+  /** The number of entries the list found. */
+  total: number;
+  /** The noun for one entry and for any other number. Defaults to ingredient. */
+  noun?: { one: string; other: string };
+  /** An admin list: names Nomenclature and No Refs. */
+  admin?: boolean;
+}
+
+export interface SearchSentence {
+  fragments: SearchSentenceFragment[];
+  /** Whether any value is named, so the component can draw Clear All. */
+  hasFilter: boolean;
 }
