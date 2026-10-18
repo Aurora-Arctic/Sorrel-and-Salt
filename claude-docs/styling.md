@@ -232,7 +232,9 @@ themes but does not join the rotation (§6).
 Six palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
-alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
+alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
+(M9.8) wears the same palette and is told apart by its word, its drawing and a heavier
+border, so it adds no alarming badge and no hue. That keeps
 exactly one alarming badge in the app and spends no hue, which matters because every
 hue not already reserved belongs to one of the eight groups. **Last used** marks
 the sign-in button this browser last signed in with (MB.77). It is a pointer,

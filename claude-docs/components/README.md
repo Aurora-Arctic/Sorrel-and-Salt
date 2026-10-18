@@ -43,6 +43,12 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | ---------------------------------------------- | -------------------------------------------------------------------------------------------- |
 | [`ingredient-search.md`](ingredient-search.md) | The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager |
 
+## Stock
+
+| Doc                                | Component                                                                                    |
+| ---------------------------------- | -------------------------------------------------------------------------------------------- |
+| [`stock-badge.md`](stock-badge.md) | A jar's Low Stock or Out of Stock badge, and the threshold readout beside it on the jar line |
+
 ## Pages
 
 | Doc                                          | Component                                                                                 |

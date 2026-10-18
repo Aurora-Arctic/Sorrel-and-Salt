@@ -1,0 +1,29 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Both states wear the low-stock palette (`.badge--low-stock`, from the
+// primitives): safety is the only alarming badge, and no colour token is added
+// before the section's design review. They are told apart by their word and
+// icon, and Out of Stock also by a heavier border, so the difference survives
+// without colour.
+.stock-badge {
+  gap: space(1);
+}
+
+.stock-badge--out {
+  border-width: 2px;
+  // Keeps the heavier border from making this badge taller than a Low Stock one.
+  padding-block: 0;
+  font-weight: 700;
+}
+
+.stock-badge__icon {
+  inline-size: 0.875em;
+  block-size: 0.875em;
+  flex: none;
+}
+
+.stock-threshold {
+  font-size: type-size('caption');
+  color: badge-token('low-stock', 'fg');
+}
