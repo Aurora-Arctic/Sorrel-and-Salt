@@ -1,5 +1,5 @@
 import { and, eq, sql, type SQL } from 'drizzle-orm';
-import { alias, type AnyPgColumn } from 'drizzle-orm/pg-core';
+import { alias } from 'drizzle-orm/pg-core';
 import type { Membership } from '@/modules/coven';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -13,6 +13,7 @@ import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-form
 import {
   compendiumList,
   elementArm,
+  listColumns,
   listHolds,
   pairIsLive,
   stated,
@@ -28,6 +29,7 @@ import type {
   FacetCount,
   IngredientFacets,
   IngredientFilter,
+  ListColumns,
   WorkspaceIngredientFacets,
 } from './types';
 
@@ -68,7 +70,10 @@ export async function findCompendiumFacets(filter: IngredientFilter): Promise<Co
 /**
  * How many of a coven's ingredients each filter value would list (M12.3): the
  * rows `findWorkspaceIngredientPage` reads, counted as `findCompendiumFacets`
- * counts the compendium's.
+ * counts the compendium's, over the coven's overrides (M12.18): an entry's
+ * elements, celestial bodies and zodiac signs are counted as its cupboard row
+ * states them, an empty list under none. Categories have no override, so
+ * they stay the compendium's.
  */
 export async function findWorkspaceIngredientFacets(
   membership: Membership,
@@ -78,11 +83,15 @@ export async function findWorkspaceIngredientFacets(
   // The seven kinds and the switch count under the filter's own source and
   // jars; the source strip under its jars only, and the switch under its source.
   const [facets, source, inStock] = await Promise.all([
-    readFacets(filter, and(readable, workspaceListScope(membership, filter))),
-    sourceFacet(filter, (value) =>
+    readFacets(filter, and(readable, workspaceListScope(membership, filter)), membership),
+    sourceFacet(filter, membership, (value) =>
       and(readable, workspaceListScope(membership, { ...filter, source: value })),
     ),
-    totalUnder(filter, and(readable, workspaceListScope(membership, { ...filter, inStock: true }))),
+    totalUnder(
+      filter,
+      and(readable, workspaceListScope(membership, { ...filter, inStock: true })),
+      membership,
+    ),
   ]);
   return { ...facets, source, inStock };
 }
@@ -94,16 +103,23 @@ export async function findWorkspaceIngredientFacets(
  */
 async function sourceFacet(
   filter: IngredientFilter,
+  membership: Membership,
   scopeOf: (value: 'local' | 'compendium') => SQL | undefined,
 ): Promise<WorkspaceIngredientFacets['source']> {
   const values = ['local', 'compendium'] as const;
-  const counts = await Promise.all(values.map((value) => totalUnder(filter, scopeOf(value))));
+  const counts = await Promise.all(
+    values.map((value) => totalUnder(filter, scopeOf(value), membership)),
+  );
   return values.map((value, index) => ({ value, count: counts[index] }));
 }
 
 /** How many entries `filter`'s search arms hold within `scope`. */
-async function totalUnder(filter: IngredientFilter, scope: SQL | undefined): Promise<number> {
-  const { where, over } = listed(filter, scope);
+async function totalUnder(
+  filter: IngredientFilter,
+  scope: SQL | undefined,
+  membership?: Membership,
+): Promise<number> {
+  const { where, over } = listed(filter, scope, membership);
   const [row] = await selectFrom(ingredients, where, {
     aggregate: { count: sql<number>`count(*)::int` },
     over,
@@ -111,24 +127,30 @@ async function totalUnder(filter: IngredientFilter, scope: SQL | undefined): Pro
   return row.count;
 }
 
-/** Every kind's counts over the rows `scope` holds, the seven reads at once. */
+/**
+ * Every kind's counts over the rows `scope` holds, the seven reads at once,
+ * under `membership`'s overrides where there is one.
+ */
 async function readFacets(
   filter: IngredientFilter,
   scope: SQL | undefined,
+  membership?: Membership,
 ): Promise<IngredientFacets> {
+  const columns = listColumns(membership);
+  const read = { scope, membership };
   const [forms, deityCounts, categoryCounts, signs, bodies, elements, toxic] = await Promise.all([
-    formFacet(filter, scope),
-    deityFacet(filter, scope),
-    categoryFacet(filter, scope),
-    listFacet(zodiacSigns, ingredients.zodiacSigns, { ...filter, zodiacSigns: undefined }, scope),
+    formFacet(filter, read),
+    deityFacet(filter, read),
+    categoryFacet(filter, read),
+    listFacet(zodiacSigns, columns.zodiacSigns, { ...filter, zodiacSigns: undefined }, read),
     listFacet(
       celestialBodies,
-      ingredients.celestialBodies,
+      columns.celestialBodies,
       { ...filter, celestialBodies: undefined },
-      scope,
+      read,
     ),
-    elementFacet(filter, scope),
-    toxicFacet(filter, scope),
+    elementFacet(filter, read, columns),
+    toxicFacet(filter, read),
   ]);
   return {
     forms,
@@ -141,12 +163,22 @@ async function readFacets(
   };
 }
 
-/** The list's `where` under `filter` within `scope`, and its search join and threshold. */
+/** The rows a facet counts: the list's scope, and the proof whose overrides it reads, if any. */
+interface FacetRead {
+  scope: SQL | undefined;
+  membership?: Membership;
+}
+
+/**
+ * The list's `where` under `filter` within `scope`, and its search join, its
+ * cupboard join under a proof, and its threshold.
+ */
 function listed(
   filter: IngredientFilter,
   scope: SQL | undefined,
+  membership?: Membership,
 ): { where: SQL | undefined; over: Aggregate<never>['over'] } {
-  const list = compendiumList(filter);
+  const list = compendiumList(filter, membership);
   return { where: and(scope, list.arms), over: list.order };
 }
 
@@ -162,9 +194,12 @@ const entries = sql<number>`count(distinct ${ingredients.id})::int`;
  * which every form in it shares: Postgres takes no grouped expression inside
  * a subquery, but takes an aggregate of the outer read's columns.
  */
-async function formFacet(filter: IngredientFilter, scope: SQL | undefined): Promise<FacetCount[]> {
+async function formFacet(
+  filter: IngredientFilter,
+  { scope, membership }: FacetRead,
+): Promise<FacetCount[]> {
   const chosen = stated(filter.forms);
-  const { where, over } = listed({ ...filter, forms: undefined }, scope);
+  const { where, over } = listed({ ...filter, forms: undefined }, scope, membership);
   const variant = alias(ingredientVariants, 'facet_variant');
   const key = fold(variant.form);
   const choice = sql.identifier('choice');
@@ -204,8 +239,11 @@ async function formFacet(filter: IngredientFilter, scope: SQL | undefined): Prom
 }
 
 /** Deities, by the curated row each live link names; a link to a deleted deity counts for none. */
-async function deityFacet(filter: IngredientFilter, scope: SQL | undefined): Promise<FacetCount[]> {
-  const { where, over } = listed({ ...filter, deityIds: undefined }, scope);
+async function deityFacet(
+  filter: IngredientFilter,
+  { scope, membership }: FacetRead,
+): Promise<FacetCount[]> {
+  const { where, over } = listed({ ...filter, deityIds: undefined }, scope, membership);
   const link = alias(ingredientDeities, 'facet_link');
   const counted = await selectFrom(ingredients, where, {
     aggregate: { value: sql<string>`${deities.id}`, count: entries },
@@ -230,10 +268,10 @@ async function deityFacet(filter: IngredientFilter, scope: SQL | undefined): Pro
  */
 async function categoryFacet(
   filter: IngredientFilter,
-  scope: SQL | undefined,
+  { scope, membership }: FacetRead,
 ): Promise<FacetCount[]> {
   const rest = filter.categoryMode === 'any' ? { ...filter, categoryIds: undefined } : filter;
-  const { where, over } = listed(rest, scope);
+  const { where, over } = listed(rest, scope, membership);
   const pair = alias(ingredientCategories, 'facet_pair');
   const counted = await selectFrom(ingredients, where, {
     aggregate: { value: sql<string>`${categories.id}`, count: entries },
@@ -264,11 +302,11 @@ async function categoryFacet(
  */
 function listFacet(
   vocabulary: typeof zodiacSigns | typeof celestialBodies,
-  list: AnyPgColumn,
+  list: ListColumns['zodiacSigns'],
   filter: IngredientFilter,
-  scope: SQL | undefined,
+  { scope, membership }: FacetRead,
 ): Promise<FacetCount[]> {
-  const { where, over } = listed(filter, scope);
+  const { where, over } = listed(filter, scope, membership);
   return selectFrom(ingredients, curated(vocabulary), {
     aggregate: {
       value: sql<string>`${vocabulary.name}`,
@@ -284,12 +322,16 @@ function listFacet(
 /** Each element, in `INGREDIENT_ELEMENTS`' order, counted by `elementArm` in one pass. */
 async function elementFacet(
   filter: IngredientFilter,
-  scope: SQL | undefined,
+  { scope, membership }: FacetRead,
+  columns: ListColumns,
 ): Promise<IngredientFacets['elements']> {
-  const { where, over } = listed({ ...filter, elements: undefined }, scope);
+  const { where, over } = listed({ ...filter, elements: undefined }, scope, membership);
   const [row] = await selectFrom(ingredients, where, {
     aggregate: Object.fromEntries(
-      INGREDIENT_ELEMENTS.map((element) => [element, countWhere(elementArm([element]))]),
+      INGREDIENT_ELEMENTS.map((element) => [
+        element,
+        countWhere(elementArm([element], columns.elements)),
+      ]),
     ) as Record<(typeof INGREDIENT_ELEMENTS)[number], SQL<number>>,
     over,
   });
@@ -299,9 +341,9 @@ async function elementFacet(
 /** Toxic, then not toxic, each counted by `toxicArm` in one pass. */
 async function toxicFacet(
   filter: IngredientFilter,
-  scope: SQL | undefined,
+  { scope, membership }: FacetRead,
 ): Promise<IngredientFacets['toxic']> {
-  const { where, over } = listed({ ...filter, toxic: undefined }, scope);
+  const { where, over } = listed({ ...filter, toxic: undefined }, scope, membership);
   const [row] = await selectFrom(ingredients, where, {
     aggregate: {
       toxic: countWhere(toxicArm('toxic')),

@@ -1064,6 +1064,27 @@ since the caller hands back a plain string, where a typed `<Link>` wants a route
 the build contains. Nothing refuses the create on the server: the warning is the
 form's alone.
 
+**An exact compendium name is a question, not a warning** (M12.20). A new
+coven entry's save also asks `compendiumMatches`
+([`graphql/schema.md`](../graphql/schema.md), "compendiumMatches") for the
+compendium entries bearing the typed name exactly, case aside, on the formal
+name too. If any come back that the person has not set aside, the save waits
+and the notice reads "The compendium has Cat's Claw (Uncaria tomentosa).",
+with **Use It** for each entry, or **Open It**, a link to its coven page,
+where the cupboard already holds it, and one **Add Our Own**. Add Our Own sets
+the entries aside and takes the focus the way Create Anyway does, so the next
+Save makes the coven's own entry as before. Use It calls `addCupboardEntry`
+(no jar, no form) and sends the typed name as `label` only when it differs
+from the entry's own name, string for string, plus whichever of the
+description, safety notes, elements, celestial bodies, zodiac signs and
+colours were filled as the coven's overrides. It then reports the entry
+through `onSaved` as `'open'`, so the modal closes and the page routes to the
+entry's coven page; a refused label lands beside Name. A near match in the
+did-you-mean list gets the same Use It or Open It beside its link when it is a
+compendium entry (`isGlobal`), and none when it is the coven's own. Both need
+`onUse`, which the compendium's form leaves out, since it has no cupboard.
+Viewers never reach the modal.
+
 **An edit's warning holds nothing** (MB.115, the owner's call). Renaming an
 entry makes nothing new, so on an edit the warning names its matches and
 links them as above, but offers no Create Anyway and never holds Save: the

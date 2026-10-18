@@ -7,10 +7,10 @@ written out the way a member would write them — an intent in a sentence,
 instructions that read like instructions, a stack that names what went in and
 in what order — rather than generated as "Spell 1" and "Spell 2".
 
-| Spell              | Id      | Status     | Layers                                                                              |
-| ------------------ | ------- | ---------- | ----------------------------------------------------------------------------------- |
-| Hearth Warding Jar | `…0001` | `complete` | sea salt · black salt · hearth ash · **dust from the front step** · garden rosemary |
-| Dreaming Sachet    | `…0002` | `draft`    | mugwort · lavender · house chamomile · amethyst                                     |
+| Spell              | Id      | Status     | Layers                                                                       |
+| ------------------ | ------- | ---------- | ---------------------------------------------------------------------------- |
+| Hearth Warding Jar | `…0001` | `complete` | sea salt · black salt · hearth ash · **dust from the front step** · rosemary |
+| Dreaming Sachet    | `…0002` | `draft`    | mugwort · lavender · german chamomile · amethyst                             |
 
 The ids are fixed and take a block of their own, `…0002-…`, after the users
 (`…0000-…`) and the workspaces (`…0001-…`), so a stray id is never ambiguous
@@ -33,39 +33,39 @@ by tier and identity, so the extra entries make none of them ambiguous.
 
 **Four things in it are fixtures rather than decoration:**
 
-- **W's own ingredients**, the workspace tier of §5's one table: `Garden
-Rosemary`, `Hearth Ash`, `House Chamomile`, `Ginger` and `Cat's Claw`. A grimoire
-  that only ever reached the compendium would exercise half of §5, and the
-  jars mix the two the way a real one does.
-- **W's Ginger carries the uncurated form**, one variant typed `rhizome`
-  with no pick — §5's example of a value a member writes before an admin
-  curates it, and the second bucket of M4.7a's suggestion list. Since MB.162
-  the compendium holds only curated values, so it lives on a coven's entry.
-  The variant carries its own description, "Knobbed rhizome bought fresh at
-  the market, sliced and dried on the rack.", and the entry its own, "The
-  coven’s own ginger, kept for warming jars." W's Ginger is _Zingiber
-  officinale_, the identity of the compendium's Ginger (form `Root`) in the
-  other tier, which the identity indexes permit, so W's entry shadows it under
-  M8.3 as Garden Rosemary shadows Rosemary.
-- **Garden Rosemary shadows the compendium's Rosemary** — same formal name,
-  different tier, which the two partial unique indexes permit, whatever forms
-  either holds (Garden Rosemary's one `herb`, the compendium's `Herb` and
-  `Oil`). That pair is exactly what M8.3's local-beats-compendium resolution
-  collapses, and it can only be resolved where both rows exist.
-  It is also the case M12.12 shows: Garden Rosemary's page has an
-  “In the Compendium” block linking the compendium's Rosemary
-  (`rosemary-salvia-rosmarinus`) by its title, with a warning beside the
-  heading that the two differ, because the finder behind the link matches on that same identity
-  under another label. Basil is the other case, a compendium entry seen from a
-  coven, which gets the same block listing itself once, with its own ⓘ sentence. The same identity makes
-  House Chamomile and Ginger link their compendium entries too
-  (`tests/db/seed/demo.test.ts` pins Rosemary's).
-- **Cat's Claw is the multi-entry case for M12.12.** W's entry has no formal
-  name (nomenclature `unknown`, one `bark` variant), so it replaces every
-  compendium entry called Cat's Claw, and `standard` seeds five (four plants and the animal claw). Its page shows
-  three links in the “In the Compendium” block, then “See All 5”, which opens
-  the compendium search for “Cat's Claw”.
-  (`tests/db/seed/demo.test.ts` pins three entries and a total of five.)
+- **W's cupboard** (M12.26), the compendium entries a coven holds as
+  `workspace_compendium_entries` rows ([workspace-compendium-entries.md](workspace-compendium-entries.md)).
+  The seed inserts them directly, stamped like every other row, and does not
+  call the cupboard service. Three, one of each kind of row:
+  - **Rosemary**, labelled `Garden Rosemary`, with its own description,
+    "Cut from the bush by the back door, dried in bunches over the stove."
+    (an annotated row with a label and a text override);
+  - **German Chamomile** (_Matricaria chamomilla_), labelled `House Chamomile`,
+    with `colors` set to `white` and `yellow` (a label and an array override;
+    the compendium lists no colour for it);
+  - **Ginger** (_Zingiber officinale_), with no override at all (in the
+    cupboard and not annotated).
+
+  Every other column is null, so it reads as the compendium's value. These
+  three were W's own rows until M12.26, which shadowed the compendium's entry
+  under the hiding rule (M8.3, M12.12); a coven now names the entry instead of
+  copying it. The two jars' layers for Rosemary and Chamomile point at the
+  compendium's variants (Rosemary's `Herb`, Chamomile's `Flower`). The demo
+  seeds no stock, so no jar sits on a compendium variant; when one does, its
+  entry has a row (decision 11 of the plan,
+  [m12.13-cupboard-names-the-compendium-plan.md](../design-decisions/m12.13-cupboard-names-the-compendium-plan.md)).
+
+- **W's own ingredients**, the coven tier of §5's one table: `Hearth Ash` and
+  `Cat's Claw`. A grimoire that only ever reached the compendium would exercise
+  half of §5, and the jars mix the two the way a real one does.
+- **Cat's Claw is the "Similar in the Compendium" case** (M12.22). W's entry
+  has no formal name (nomenclature `unknown`, one `bark` variant), and
+  `standard` seeds five compendium Cat's Claws (four plants and the animal
+  claw). It stays an own stub beside them, with no cupboard row, for a member
+  to declare it to be one of the five. Until M12.28 retires the hiding rule it
+  also still replaces all five in the lists, and its page shows three links
+  then "See All 5" (`tests/db/seed/demo.test.ts` pins that none of the five is
+  in the cupboard).
 - **One custom, one-off layer** (MB.40, story 57): "Dust from the front step",
   `form` `dust`, no `ingredient_id`, sitting between two linked layers in the
   same jar. It is never an `ingredients` row anywhere, and `dust` is nowhere in
@@ -77,32 +77,33 @@ Layer order is the position in the `layers` array, never a number written
 beside it: one list, so the stack and its depths cannot disagree, and each jar
 is numbered from 1 — what M10.16's reorder rewrites and M10.9's read orders by.
 
-**MB.215: W's ingredients take variants, and Fresh Ginger becomes Ginger.** MB.216 writes a variant beside each of W's ingredients' forms (Hearth Ash's `ash`, House Chamomile's `flower`), so every linked layer in the two jars can name one, and MB.217's migration fills each layer's `variant_id` from its ingredient's one variant. Identity on the formal name alone changes two of the fixtures above. Fresh Ginger and the compendium's Ginger are now one identity, _Zingiber officinale_, in two tiers, which the identity indexes permit, so W's entry shadows the compendium's under M8.3 as Garden Rosemary does; MB.222 renamed it Ginger, with an uncurated `rhizome` variant, so it stays the coven's example of a form no admin has curated. Garden Rosemary shadows the compendium's Rosemary on the formal name, whatever forms either holds. MB.222 corrected this section ([`../design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
-
-**W's entries have their variants too (MB.216, MB.222).** Each of W's
+**W's own entries have variants too (MB.216, MB.222).** Each of W's two
 literals lists its forms as `variants`, as the compendium's do
 ([standard-scenario.md](standard-scenario.md)). After W's entries,
 `insertMissingVariants` from `standard.ts` writes them, typed rather than
-picked, lower-case as the literals spell them (Hearth Ash is `ash`, House
-Chamomile `flower`, Garden Rosemary `herb`, Ginger `rhizome`), so every
-linked layer's ingredient has a variant a layer can name now that MB.217
-gives layers one. A linked layer lays its ingredient's first live variant in
-form order, read back after the variants are written; every ingredient a jar
-names has exactly one.
+picked, lower-case as the literals spell them (Hearth Ash is `ash`, Cat's
+Claw `bark`). A linked layer lays its ingredient's first live variant in form
+order, read back after the variants are written; every ingredient a jar names
+has one, and Rosemary's `Herb` comes before its `Oil`.
+
+M12.26 moved Garden Rosemary, House Chamomile and Ginger off this list, so the
+seed no longer holds a coven entry in the identity of a compendium one except
+Cat's Claw (which has no formal name). It also loses `rhizome`, the uncurated
+form Ginger carried as §5's example of a value a member writes before an admin
+curates it: no coven entry in the demo has one now.
 
 A layer finds its ingredient by tier and identity (`ingredientIdByIdentity`),
-because two tiers share an identity twice over — Garden Rosemary and
-Rosemary, W's Ginger and the compendium's — so a layer naming the
-compendium's Rosemary would find the compendium's row, not Garden Rosemary.
-No jar lays it today.
+the same key the cupboard rows use.
 
 ### A jar's stack is seeded whole or not at all
 
 Idempotency is `standard`'s — insert what is missing, keyed on identity,
 ignoring `deleted_at` — for the spells (fixed id), W's ingredients
 (`identityOf`, the identity, over W's rows, deleted or not) and the assigned categories (the
-pair). A database seeded when Ginger was "Fresh Ginger" finds it present under
-the same formal name, so it keeps its old label. **`spell_ingredients` is the exception: the unit keyed on is the spell,
+pair), and W's cupboard rows (the coven and the entry), a row the coven
+removed counting as present. A database seeded before M12.26 still holds
+Garden Rosemary, House Chamomile and Ginger as own rows, which a reseed leaves
+alone: `make db-reset` is what brings it to this scenario. **`spell_ingredients` is the exception: the unit keyed on is the spell,
 not the layer.**
 
 The `standard` rows it writes through `seedStandardContent(tx)` keep their

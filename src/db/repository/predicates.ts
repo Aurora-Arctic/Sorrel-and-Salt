@@ -99,7 +99,7 @@ export function containsText(column: AnyPgColumn, query: string): SQL {
  * value against, so a list holds a value whatever spacing or case an entry
  * was written with.
  */
-export function listFolds(list: AnyPgColumn): SQL {
+export function listFolds(list: SQLWrapper): SQL {
   const entry = sql.identifier('entry');
   return sql`(select ${fold(entry)} from unnest(${list}) as ${entry})`;
 }
