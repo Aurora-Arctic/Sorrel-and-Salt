@@ -349,7 +349,7 @@ export type CompendiumEntryPage =
     }
   | { kind: 'moved'; slug: string };
 
-/** A compendium entry a coven's own entry hides (M12.12), as its page links it. */
+/** A compendium entry an own entry is or may be, as its page links it (M12.22). */
 export interface ReplacedCompendiumEntry {
   id: string;
   slug: string;
@@ -357,8 +357,16 @@ export interface ReplacedCompendiumEntry {
   canonicalName: string | null;
 }
 
-/** The first few compendium entries a coven's own entry hides, by name, and how many it hides in all (M12.12). */
-export interface ReplacedCompendiumEntries {
+/**
+ * The first few compendium entries an own entry is or may be, by name, and how
+ * many there are in all (M12.22). `same` shares the entry's formal name's
+ * identity, `similar` shares its label when it declares no formal name, and
+ * `none` is for a compendium entry. `canConvert` is whether the caller's
+ * role may turn the own entry into one of them.
+ */
+export interface CompendiumMatches {
+  kind: 'same' | 'similar' | 'none';
   entries: ReplacedCompendiumEntry[];
   total: number;
+  canConvert: boolean;
 }

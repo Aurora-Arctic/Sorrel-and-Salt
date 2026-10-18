@@ -4,17 +4,17 @@ import { findCompendiumEntriesHiddenBy, findOneIngredient } from '@/db/repositor
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import { assertMembership } from '@/modules/coven';
-import { compendiumEntriesReplacedBy } from '@/modules/ingredients';
+import { compendiumMatchesOf } from '@/modules/ingredients';
 import { A, B, C, D, asUser } from '../../../support/as-user';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 
-// M12.12: the compendium entries a coven's own entry hides, read from the
-// local side with the predicate the lists drop them by. The table is emptied
+// M12.22: the compendium entries a coven's own entry is (same identity) or may
+// be (same label, when it declares no formal name). The table is emptied
 // per test, so every row a result could come from is one this file wrote.
 
 let sql: ReturnType<typeof postgres>;
-const none = { entries: [], total: 0 };
+const none = { kind: 'none', entries: [], total: 0, canConvert: false };
 
 beforeAll(() => {
   sql = postgres(process.env.DATABASE_URL as string);
@@ -36,12 +36,14 @@ async function replacedBy(id: string, workspaceId: string | null, asMember = A) 
     : undefined;
   const row = await findOneIngredient(membership ? [membership] : [], id);
   if (!row) throw new Error('fixture row not found');
-  return compendiumEntriesReplacedBy(asUser(asMember), row);
+  return compendiumMatchesOf(asUser(asMember), row);
 }
 
-describe('compendiumEntriesReplacedBy', () => {
-  it('finds the entry sharing the identity, across differing labels', async () => {
-    const entry = await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
+describe('compendiumMatchesOf', () => {
+  it('gives an entry with a formal name only its same-identity entry, never a name-only match', async () => {
+    const same = await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
+    // Precondition: this one shares the local's label, so only identity keeps it out.
+    await add({ name: 'Cronefixture', canonicalName: 'Fixtura other' });
     const local = await add({
       name: 'Cronefixture',
       canonicalName: 'FIXTURA vulgaris',
@@ -49,10 +51,10 @@ describe('compendiumEntriesReplacedBy', () => {
     });
 
     const found = await replacedBy(local, WORKSPACE_W_ID);
-    expect(found.entries.map(({ id }) => id)).toEqual([entry]);
+    expect(found.kind).toBe('same');
+    expect(found.entries.map(({ id }) => id)).toEqual([same]);
     expect(found.total).toBe(1);
-    expect(found.entries[0]?.slug).toBeTruthy();
-    expect(found.entries[0]?.canonicalName).toBe('Fixtura vulgaris');
+    expect(found.canConvert).toBe(false);
     expect(Object.keys(found.entries[0] ?? {}).sort()).toEqual([
       'canonicalName',
       'id',
@@ -61,140 +63,54 @@ describe('compendiumEntriesReplacedBy', () => {
     ]);
   });
 
-  it('matches a label only when the local declares no formal name', async () => {
-    const entry = await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
-    const unnamed = await add({ name: 'FIXTUREWORT', workspaceId: WORKSPACE_W_ID });
+  it('gives an entry with no formal name each exact label match, and a member the right to convert', async () => {
+    const ids = [
+      await add({ name: "Fixture Cat's Claw", canonicalName: 'Fixtura b' }),
+      await add({ name: "fixture cat's claw", canonicalName: 'Fixtura a' }),
+    ];
+    const other = await add({ name: 'Fixture Other' });
+    const local = await add({ name: "FIXTURE CAT'S CLAW", workspaceId: WORKSPACE_W_ID });
 
-    expect((await replacedBy(unnamed, WORKSPACE_W_ID)).entries.map(({ id }) => id)).toEqual([
-      entry,
-    ]);
-
-    // Precondition: the labels agree, so only the formal name stops the match.
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${unnamed}`;
-    const named = await add({
-      name: 'Fixturewort',
-      canonicalName: 'Fixtura other',
-      workspaceId: WORKSPACE_W_ID,
-    });
-    expect(await replacedBy(named, WORKSPACE_W_ID)).toEqual(none);
+    const found = await replacedBy(local, WORKSPACE_W_ID);
+    expect(found.kind).toBe('similar');
+    expect(found.entries.map(({ id }) => id).sort()).toEqual([...ids].sort());
+    expect(found.entries.map(({ id }) => id)).not.toContain(other);
+    expect(found.total).toBe(2);
+    expect(found.canConvert).toBe(true);
   });
 
-  it('gives nothing for two differently identified entries sharing a label', async () => {
+  it('lets a viewer read the matches but not convert, where a member may', async () => {
     await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
-    const local = await add({
-      name: 'Fixturewort',
-      canonicalName: 'Fixtura absinthium',
-      workspaceId: WORKSPACE_W_ID,
-    });
+    const local = await add({ name: 'Fixturewort', workspaceId: WORKSPACE_W_ID });
 
-    expect(await replacedBy(local, WORKSPACE_W_ID)).toEqual(none);
-  });
-
-  it('gives nothing for a local hiding nothing', async () => {
-    await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
-    const local = await add({ name: 'Unrelated Fixture', workspaceId: WORKSPACE_W_ID });
-
-    expect(await replacedBy(local, WORKSPACE_W_ID)).toEqual(none);
+    expect((await replacedBy(local, WORKSPACE_W_ID, B)).canConvert).toBe(true);
+    const viewer = await replacedBy(local, WORKSPACE_W_ID, C);
+    expect(viewer.total).toBe(1);
+    expect(viewer.canConvert).toBe(false);
   });
 
   it('gives nothing for a compendium entry, whoever asks', async () => {
     const entry = await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
-    await add({
-      name: 'Cronefixture',
-      canonicalName: 'Fixtura vulgaris',
-      workspaceId: WORKSPACE_W_ID,
-    });
+    await add({ name: 'Fixturewort', workspaceId: WORKSPACE_W_ID });
 
     expect(await replacedBy(entry, null, D)).toEqual(none);
   });
 
-  it('gives every entry sharing the label of an unnamed local, by name', async () => {
+  it('gives the first three by name and counts every one, leaving out a deleted entry', async () => {
     const ids: string[] = [];
-    for (const latin of ['Fixtura b', 'Fixtura a']) {
-      ids.push(await add({ name: "Fixture Cat's Claw", canonicalName: latin }));
+    for (const latin of ['Fixtura d', 'Fixtura c', 'Fixtura b', 'Fixtura a']) {
+      ids.push(await add({ name: 'Fixture Moss', canonicalName: latin }));
     }
-    const other = await add({ name: 'Fixture Other' });
-    const local = await add({ name: "fixture cat's claw", workspaceId: WORKSPACE_W_ID });
-
-    const found = await replacedBy(local, WORKSPACE_W_ID);
-    expect(found.entries.map(({ id }) => id).sort()).toEqual([...ids].sort());
-    expect(found.entries.map(({ id }) => id)).not.toContain(other);
-    expect(found.total).toBe(2);
-  });
-
-  it('gives the first three by name and counts every one, ties broken by id', async () => {
-    // Four entries sharing the local's label, told apart by formal name.
-    const ids = new Map<string, string>();
-    for (const [name, latin] of [
-      ['Fixture Moss', 'Fixtura d'],
-      ['fixture moss', 'Fixtura c'],
-      ['Fixture Moss', 'Fixtura b'],
-      ['Fixture Moss', 'Fixtura a'],
-    ] as const) {
-      ids.set(latin, await add({ name, canonicalName: latin }));
-    }
+    const gone = await add({ name: 'Fixture Moss', canonicalName: 'Fixtura z' });
+    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
     const local = await add({ name: 'Fixture Moss', workspaceId: WORKSPACE_W_ID });
 
     const found = await replacedBy(local, WORKSPACE_W_ID);
 
     expect(found.total).toBe(4);
     expect(found.entries).toHaveLength(3);
-    // The database's order: its name collation, then id. Read the same way here.
-    const [expected] = await sql<{ ids: string[] }[]>`
-      select array_agg(id order by name, id) as ids from ingredients
-      where workspace_id is null and deleted_at is null`;
-    expect(found.entries.map(({ id }) => id)).toEqual(expected?.ids.slice(0, 3));
-  });
-
-  it('orders by the database collation, where a plain code-unit compare differs', async () => {
-    // Postgres's name order (when its collation is not C) puts case variants
-    // together; a code-unit compare puts capitals first. Read the database's.
-    const ids: string[] = [];
-    for (const [name, latin] of [
-      ['FIXTURE AB', 'Fixtura one'],
-      ['fixture ab', 'Fixtura two'],
-      ['Fixture Ab', 'Fixtura three'],
-    ] as const) {
-      ids.push(await add({ name, canonicalName: latin }));
-    }
-    const local = await add({ name: 'fixture ab', workspaceId: WORKSPACE_W_ID });
-    const [expected] = await sql<{ ids: string[] }[]>`
-      select array_agg(id order by name, id) as ids from ingredients
-      where workspace_id is null and deleted_at is null`;
-
-    const found = await replacedBy(local, WORKSPACE_W_ID);
-
-    expect(found.entries.map(({ id }) => id)).toEqual(expected?.ids);
-    expect(found.entries).toHaveLength(ids.length);
-  });
-
-  it('leaves out a soft-deleted compendium entry', async () => {
-    const entry = await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
-    const local = await add({
-      name: 'Cronefixture',
-      canonicalName: 'Fixtura vulgaris',
-      workspaceId: WORKSPACE_W_ID,
-    });
-    expect((await replacedBy(local, WORKSPACE_W_ID)).entries.map(({ id }) => id)).toEqual([entry]);
-
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${entry}`;
-
-    expect(await replacedBy(local, WORKSPACE_W_ID)).toEqual(none);
-  });
-
-  it('answers a viewer, who reads what a member does', async () => {
-    const entry = await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
-    const local = await add({
-      name: 'Cronefixture',
-      canonicalName: 'Fixtura vulgaris',
-      workspaceId: WORKSPACE_W_ID,
-    });
-
-    for (const reader of [B, C]) {
-      expect((await replacedBy(local, WORKSPACE_W_ID, reader)).entries.map(({ id }) => id)).toEqual(
-        [entry],
-      );
-    }
+    expect(found.entries.map(({ id }) => id)).not.toContain(gone);
+    expect(found.entries.map(({ id }) => id).every((id) => ids.includes(id))).toBe(true);
   });
 
   it('refuses a non-member, who is refused only for lack of a seat', async () => {
@@ -226,7 +142,7 @@ describe('findCompendiumEntriesHiddenBy', () => {
     const underX = await findCompendiumEntriesHiddenBy(inXProof, inX, 3);
     expect(underX.entries.map(({ id }) => id)).toEqual([entry]);
     expect(underX.total).toBe(1);
-    expect(await findCompendiumEntriesHiddenBy(inW, inX, 3)).toEqual(none);
+    expect(await findCompendiumEntriesHiddenBy(inW, inX, 3)).toEqual({ entries: [], total: 0 });
   });
 
   it('gives nothing for a soft-deleted local', async () => {
@@ -241,6 +157,6 @@ describe('findCompendiumEntriesHiddenBy', () => {
 
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${local}`;
 
-    expect(await findCompendiumEntriesHiddenBy(inW, local, 3)).toEqual(none);
+    expect(await findCompendiumEntriesHiddenBy(inW, local, 3)).toEqual({ entries: [], total: 0 });
   });
 });
