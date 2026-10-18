@@ -13,6 +13,8 @@ import type {
   FormSuggestionsQueryVariables,
   IngredientSuggestionsQueryVariables,
   CelestialBodySuggestionsQueryVariables,
+  CompendiumMatchesQuery,
+  CompendiumMatchesQueryVariables,
   PossibleDuplicatesQuery,
   PossibleDuplicatesQueryVariables,
   ReferenceQuery,
@@ -83,7 +85,33 @@ export function offerDuplicates(nodes: DuplicateNode[]) {
     'PossibleDuplicates',
     (variables) => {
       calls.push(variables);
-      return { possibleDuplicates: { edges: nodes.map((node) => ({ node })) } };
+      return {
+        possibleDuplicates: {
+          edges: nodes.map((node) => ({ node: { isGlobal: false, inCupboard: false, ...node } })),
+        },
+      };
+    },
+  );
+  // A save also asks which compendium entries bear the name exactly (M12.20):
+  // none, until a test says otherwise with `offerCompendiumMatches`.
+  offerCompendiumMatches([]);
+  return calls;
+}
+
+/** Answers `CompendiumMatches` with these compendium entries, recording each ask. */
+export function offerCompendiumMatches(nodes: DuplicateNode[]) {
+  const calls: CompendiumMatchesQueryVariables[] = [];
+  mockGraphQLQuery<CompendiumMatchesQuery, CompendiumMatchesQueryVariables>(
+    'CompendiumMatches',
+    (variables) => {
+      calls.push(variables);
+      return {
+        compendiumMatches: {
+          edges: nodes.map((node) => ({
+            node: { isGlobal: true, inCupboard: false, ...node },
+          })),
+        },
+      };
     },
   );
   return calls;
