@@ -80,7 +80,8 @@ type WorkspaceSaved = CreateWorkspaceIngredientMutation['createWorkspaceIngredie
 
 /**
  * What a save answers: the ingredient, and for a coven’s new one the jars it
- * holds, which are the ones M12.8 moved onto it. A compendium save carries none.
+ * holds. A save has moved no jar since M12.27, so the list comes back empty
+ * and the field is a leftover. A compendium save carries none.
  */
 export type SavedIngredient = Omit<WorkspaceSaved, 'stock'> &
   Partial<Pick<WorkspaceSaved, 'stock'>>;

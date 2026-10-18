@@ -47,8 +47,8 @@ const HEARTH_ASH: SeedWorkspaceIngredient = {
  * formal name, so it is an own stub beside the compendium's five Cat's Claws
  * (four plants and the animal claw). A member can declare it to be one of the
  * five (M12.21). It is the one own entry here that shares a name with the
- * compendium; until M12.28 retires the hiding rule it still replaces all five
- * in the lists.
+ * compendium, and it hides none of the five: a name match hides nothing
+ * (M12.28).
  */
 const CATS_CLAW: SeedWorkspaceIngredient = {
   name: "Cat's Claw",
