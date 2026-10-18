@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { chipColors } from '../../lib/chip-colors';
-import { capitalise } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
 import { CautionMark, ToxicMark } from '../SafetyNote';
@@ -92,8 +92,7 @@ const IngredientCard = ({
                   a screen reader gets this word break. */}
               {at > 0 && <span className="spoken-separator">,</span>}
               <span className="ingredient-card__form">
-                <FormIcon name={variant.formChoice?.group.icon ?? null} />{' '}
-                {capitalise(variant.form)}
+                <FormIcon name={variant.formChoice?.group.icon ?? null} /> {formLabel(variant.form)}
               </span>
             </span>
           ))}

@@ -18,10 +18,7 @@ const SOURCE = /^src\/(components|app)\/.*\.tsx$/;
 const STORIES = /\.stories\.tsx$/;
 
 /** Files that still show a form bare, each to be removed from here by its owner's PR. */
-const PENDING = new Set<string>([
-  // M8.14's card, edited in its own worktree; it adopts `formLabel` there.
-  'src/components/IngredientCard/index.tsx',
-]);
+const PENDING = new Set<string>([]);
 
 /** `x.form` the property: not `x.form.id`, `x.form?.elements`, or `LIST_KINDS.form`. */
 const FORM_PROPERTY = /\.form\b(?!\??\.)/;

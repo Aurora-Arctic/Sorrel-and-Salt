@@ -54,7 +54,7 @@ const Jars = () => (
   <ul>
     <li>
       <span>
-        Dried leaf <Dot /> 6 g
+        Dried Leaf <Dot /> 6 g
       </span>
       <StockBadge quantity={6} threshold={10} unit="g" />
     </li>
