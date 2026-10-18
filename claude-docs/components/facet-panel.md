@@ -39,19 +39,21 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
   up it opens with `show()`: over the results, no scrim, the page still usable, sliding
   down by `useSlide` (`src/lib/use-slide.ts`; grid rows 0fr to 1fr, and reduced motion
   snaps). Below it, `showModal()`: a right-hand drawer with the browser's backdrop,
-  inert page and Escape, and no slide: it fades in and out as every dialog does
-  (`$modal-fade` and `$modal-scrim` in `_variables.scss`, shared with `Modal`). In is CSS
+  inert page and Escape. The sheet slides in from the right edge and back out to it
+  (`transform`, `$sheet-slide` in the component's scss), while the backdrop fades as a
+  `Modal`'s does (`$modal-fade` and `$modal-scrim` in `_variables.scss`). In is CSS
   alone, `@starting-style` as `showModal()` shows it; out is `.is-closing`, which the
-  component sets and waits on (the dialog's `transitionend` for `opacity`, or a 400ms net)
-  before it calls `close()`, as `Modal` does. Reduced motion, or no `matchMedia`, closes at
+  component sets and waits on (the dialog's `transitionend` for `transform`, or a 400ms
+  net) before it calls `close()`. The backdrop's `opacity` end reaches the dialog too, and
+  is not the one it waits on. Reduced motion, or no `matchMedia`, closes at
   once, and so does the width crossing the tablet width.
 - **Focus.** Opening focuses the dialog. Closing returns focus to the button when it
   was inside the panel.
 - **Escape.** A non-modal panel closes on Escape, except an Escape that a combobox
   popup used (`defaultPrevented`), which closes only the popup. A modal sheet's Escape
-  (`cancel`) is held back and taken through the fade; the dialog's `close` event, which
+  (`cancel`) is held back and taken through the slide; the dialog's `close` event, which
   the browser raises on any other close, snaps the state shut.
-- **Held, then applied.** A change in the open panel goes to `onChange` and nowhere else, since the panel covers the results. Every shut calls `onApply` once, as it starts (a shut that follows a shut, or comes during the sheet's fade, calls nothing). Apply Filters is the form's submit, which applies everything, so it only shuts the panel without calling `onApply` again. A modified click on a Clear All link (new tab) still follows the link.
+- **Held, then applied.** A change in the open panel goes to `onChange` and nowhere else, since the panel covers the results. Every shut calls `onApply` once, as it starts (a shut that follows a shut, or comes during the sheet's slide out, calls nothing). Apply Filters is the form's submit, which applies everything, so it only shuts the panel without calling `onApply` again. A modified click on a Clear All link (new tab) still follows the link.
 - **A press outside shuts it.** While the non-modal panel is open, a `pointerdown` anywhere outside it (the search box, the page) shuts it and calls `onApply`, the same path as Escape. The Filters button and the bar's Clear All are left to their own handlers, so nothing applies twice. On the modal sheet the page is inert and the backdrop is the dialog's own box, so a press whose target is the dialog itself (not anything in it) shuts it. The sheet fills the screen below 32rem, so there is no backdrop to press on a narrow phone; Close and Escape remain.
 - **Crossing the tablet width** closes the panel at once, since it would otherwise
   change from an overlay to a sheet under the person's hands.

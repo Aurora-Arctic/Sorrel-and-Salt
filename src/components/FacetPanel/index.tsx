@@ -39,10 +39,10 @@ import './index.scss';
 
 /** The shell's tablet width (`$shell-tablet-width`), where the panel stops being a sheet. */
 /**
- * How long a leaving sheet waits for its fade to end before it closes anyway: longer than the
- * fade (`$modal-fade`), for a browser that never reports its end. Modal waits the same.
+ * How long a leaving sheet waits for its slide out to end before it closes anyway: longer than
+ * the slide (`$sheet-slide` in index.scss), for a browser that never reports its end.
  */
-const FADE_LIMIT_MS = 400;
+const LEAVE_LIMIT_MS = 400;
 
 const WIDE = '(min-width: 56rem)';
 
@@ -138,7 +138,7 @@ export default function FacetPanel({
   // Whether this opening is the modal sheet, fixed when it opens.
   const modal = useRef(false);
   const slide = useSlide('facet-panel__clip');
-  // The sheet fading out: it stays open, with `is-closing` on it, until the fade ends.
+  // The sheet sliding out: it stays open, with `is-closing` on it, until the slide ends.
   const [leaving, setLeaving] = useState(false);
 
   // Every chosen value counts, so two categories and two forms read 4. Match is a mode
@@ -174,8 +174,8 @@ export default function FacetPanel({
   // The panel shuts, and what was changed in it is applied once: whichever way it shuts, the
   // Filters button, Escape, Close, the sheet's own Escape or the width changing under it.
   // Nothing happens when it is already shut, so a close that follows a close applies nothing twice.
-  // `snap` shuts with no motion at all; otherwise the sheet fades out and the panel slides up.
-  // The sheet fades out before it closes, as a Modal does; the panel slides, and motion turned
+  // `snap` shuts with no motion at all; otherwise the sheet slides out right and the panel slides up.
+  // The sheet slides out before it closes, as a Modal waits out its fade; the panel slides, and motion turned
   // down, or no way to ask, closes either at once.
   const leave = () => {
     if (!modal.current || fadesAreOff()) {
@@ -231,10 +231,10 @@ export default function FacetPanel({
     }
   });
 
-  // The net for a fade whose end the browser never reports.
+  // The net for a slide whose end the browser never reports.
   useEffect(() => {
     if (!leaving) return undefined;
-    const limit = setTimeout(finishLeaving, FADE_LIMIT_MS);
+    const limit = setTimeout(finishLeaving, LEAVE_LIMIT_MS);
     return () => clearTimeout(limit);
   });
 
@@ -261,15 +261,15 @@ export default function FacetPanel({
 
   // The sheet's backdrop belongs to the dialog itself, so a press that lands on the dialog and
   // not on anything in it is a press on the backdrop.
-  // The sheet's own Escape would close it at once; it goes through the fade instead.
+  // The sheet's own Escape would close it at once; it goes through the slide instead.
   const onCancel = (event: SyntheticEvent<HTMLDialogElement>) => {
     if (!modal.current) return;
     event.preventDefault();
     dismiss();
   };
 
-  const onFadeEnd = (event: TransitionEvent<HTMLDialogElement>) => {
-    if (leaving && event.target === event.currentTarget && event.propertyName === 'opacity') {
+  const onSlideEnd = (event: TransitionEvent<HTMLDialogElement>) => {
+    if (leaving && event.target === event.currentTarget && event.propertyName === 'transform') {
       finishLeaving();
     }
   };
@@ -354,7 +354,7 @@ export default function FacetPanel({
         onKeyDown={onKeyDown}
         onPointerDown={onPointerDown}
         onCancel={onCancel}
-        onTransitionEnd={onFadeEnd}
+        onTransitionEnd={onSlideEnd}
         onClose={() => shut(true)}
       >
         <div
