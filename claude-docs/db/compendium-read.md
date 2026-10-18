@@ -401,14 +401,12 @@ of the proof's workspace, never another, so it is on
   over those ids with the group as its first sort key, so the cursor and the
   page keep working; each node's `group` rides on its edge as a `carry`. A
   `form` ranks inside each group, never across them.
-- **A coven's own entry no longer hides the compendium entry it names.**
-  The picker stopped applying `notHiddenByLocal(membership)` at M12.19: the
-  coven's entry and the compendium's same-named one are both offered, in two
-  groups. The predicate is a `NOT EXISTS` over the coven's live rows
-  (DESIGN.md §5): a compendium row is hidden when a live local row has the
-  same `identity_key`, or, only when that local row declares no formal name,
-  the same label with case folded. No list applies it
-  since M12.18, when the coven's list stopped too; M12.28 removes it.
+- **A name match hides nothing.** The coven's own entry and the
+  compendium's same-named one are both offered, in two groups (DESIGN.md §5).
+  The picker stopped hiding the compendium entry at M12.19 and the coven's
+  list at M12.18; M12.28 removed the predicate, a `NOT EXISTS` that matched a
+  live local row on `identity_key`, or on the folded label when the local
+  declared no formal name.
 - **A `form` ranks, and filters nothing.** A non-blank `form` puts a rank
   first in the sort: 0 for an entry holding a live variant of that form
   (folded), 1 for one holding a form of the same curated group (a variant

@@ -192,13 +192,13 @@ while the table was empty.
 writes a coven's stock. It has five functions, each taking the coven's id and
 checking membership first:
 
-| Function                                              | Checks              | What it does                                                                                                           |
-| ----------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `createStock(session, workspaceId, variantId, input)` | `inventory: update` | Starts a jar of one form the coven does not hold yet; a hidden entry's form lands on the local's (M12.8, until M12.28) |
-| `updateStock(session, workspaceId, id, input)`        | `inventory: update` | Changes a jar: a field left out keeps its value, `null` clears it                                                      |
-| `deleteStock(session, workspaceId, id)`               | `inventory: update` | Soft-deletes a jar: marks it deleted, leaving the row in place                                                         |
-| `getStock(session, workspaceId, id)`                  | `inventory: read`   | One jar, for any member of the coven, viewers included                                                                 |
-| `stockOf(session, refs)`                              | `inventory: read`   | The jars of many ingredients at once, for `Ingredient.stock`                                                           |
+| Function                                              | Checks              | What it does                                                                       |
+| ----------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
+| `createStock(session, workspaceId, variantId, input)` | `inventory: update` | Starts a jar of one form the coven does not hold yet, stored on that form (M12.28) |
+| `updateStock(session, workspaceId, id, input)`        | `inventory: update` | Changes a jar: a field left out keeps its value, `null` clears it                  |
+| `deleteStock(session, workspaceId, id)`               | `inventory: update` | Soft-deletes a jar: marks it deleted, leaving the row in place                     |
+| `getStock(session, workspaceId, id)`                  | `inventory: read`   | One jar, for any member of the coven, viewers included                             |
+| `stockOf(session, refs)`                              | `inventory: read`   | The jars of many ingredients at once, for `Ingredient.stock`                       |
 
 The permission is the `inventory` statement in
 `src/modules/coven/services/access-control.ts`: viewers hold `read`, members
@@ -225,8 +225,9 @@ stock.
   only the variant to its ingredient.
 - **A jar of a compendium form lists the entry (M12.15).** `createStock` also
   inserts the coven's cupboard row for the entry when it has none, in the same
-  transaction and after the hidden-entry redirect has decided the jar stays on
-  the compendium form. A second jar of another form adds no second row
+  transaction, under the coven's stock lock. The jar is stored on the
+  compendium form asked for even when the coven's own entry shares the entry's
+  name or formal name: a name match takes nothing from it (M12.28). A second jar of another form adds no second row
   ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Writing it").
 - **A form the coven holds is refused.** `createStock` throws a
   `ValidationError` beside `variantId` and writes nothing. It neither
@@ -269,9 +270,8 @@ A coven's ingredients are two kinds of row, in one query (M12.18):
 
 Nothing is hidden. A coven's own entry and a compendium entry its cupboard
 names are both listed, even when they share a formal name or a label: the
-coven chose both, so the list no longer drops the compendium one in favour of
-the local one (`notHiddenByLocal` is no longer applied here, and M12.28
-removes it).
+coven chose both, so the list never drops the compendium one in favour of
+the local one (M12.18; the hiding rule was removed by M12.28).
 
 A compendium entry is listed as the coven has it. The query left-joins the
 coven's cupboard row and reads `coalesce(row, entry)` for the label and the
@@ -324,4 +324,4 @@ The condition is shared rather than copied, so a count and the list cannot disag
 rows are the coven's. Unlike the compendium's, it is never cached: what it
 counts differs from coven to coven (CLAUDE.md rule 6).
 
-**A save never moves a jar** (M12.27). Saving a coven's own entry, whether a create, an update or a folk name promoted to the label, leaves every jar of the coven where it is, even when the save makes the entry hide a compendium entry the coven holds a jar of. The save-time follow of M12.8 (`carryJarsToLocal`, `JarMergeNeeded`, the `jarMerges` input and the jar merge) is gone; the only part of M12.8 that remains is the `createStock` redirect, which stores a new jar of a hidden entry's form on the local's form (made if missing), until M12.28 replaces it. The three saves no longer take the per-coven advisory lock (`lockCovenStock`) or assert `inventory: update`; both were added by M12.8 for the carry alone. The lock now has four callers: `createStock`, `removeCupboardEntry` (M12.15), which counts jars under it, `convertLocalToCompendiumEntry` (M12.21), which moves an own entry's jars and spell layers onto a compendium entry's forms ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Converting an own entry"), and `convertCompendiumEntryToLocal` (M12.23), which moves them the other way, onto the forms of a new own entry ("Converting a compendium entry into our own"). Both converts also call `lockJarsOfIngredient` and `lockLiveVariants`, so those two stay when M12.28 removes `lockJarsOnHiddenEntries`, `lockLocalsHiding` and the `HiddenJar` type. The retired design is recorded in [`m12.8-jar-follows-local.md`](../design-decisions/m12.8-jar-follows-local.md).
+**A save never moves a jar** (M12.27). Saving a coven's own entry, whether a create, an update or a folk name promoted to the label, leaves every jar of the coven where it is, even when the save gives the entry a compendium entry's name or formal name. The save-time follow of M12.8 (`carryJarsToLocal`, `JarMergeNeeded`, the `jarMerges` input and the jar merge) is gone, and M12.28 removed the rest of M12.8, the `createStock` redirect that stored a new jar of a matched entry's form on the local's form. The three saves no longer take the per-coven advisory lock (`lockCovenStock`) or assert `inventory: update`; both were added by M12.8 for the carry alone. The lock now has four callers: `createStock`, `removeCupboardEntry` (M12.15), which counts jars under it, `convertLocalToCompendiumEntry` (M12.21), which moves an own entry's jars and spell layers onto a compendium entry's forms ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Converting an own entry"), and `convertCompendiumEntryToLocal` (M12.23), which moves them the other way, onto the forms of a new own entry ("Converting a compendium entry into our own"). Both converts also call `lockJarsOfIngredient` and `lockLiveVariants`, the two locked reads left after M12.28 removed the redirect's `lockJarsOnHiddenEntries` and `lockLocalsHiding`. The retired design is recorded in [`m12.8-jar-follows-local.md`](../design-decisions/m12.8-jar-follows-local.md).
