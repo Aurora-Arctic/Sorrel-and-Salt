@@ -544,12 +544,8 @@ describe('LookupListField', () => {
     // Told apart by whose entry each is.
     expect(rows[0]).not.toHaveAccessibleName(rows[1].textContent ?? '');
     expect(rows[2]).toHaveTextContent('Mockwort Tea');
-    // All of one group here, so the list shows no heading at all.
-    expect(
-      within(
-        screen.getByRole('listbox', { name: 'Substitute Ingredient suggestions' }),
-      ).queryByRole('group'),
-    ).not.toBeInTheDocument();
+    // None is in the cupboard, so there is no Your Ingredients group.
+    expect(screen.queryByRole('group', { name: 'Your Ingredients' })).not.toBeInTheDocument();
   });
 
   it('lists the coven’s cupboard under Your Ingredients and the rest under Compendium', async () => {
