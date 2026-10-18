@@ -52,10 +52,17 @@ is not wrapped in an `<a>`: a screen reader would read the whole card as the
 link's name, and a link cannot hold the Low badge's button. So the accessible name
 stays the ingredient's name and the card has exactly one link. The Low badge's tip
 anchor sits above the overlay (`z-index: 1`) and keeps its own hover, focus and
-click. The name is `$text-primary` with no underline; hovering anywhere on the card
-underlines it and shows the pointer, and the focus ring is drawn on the overlay,
-round the card. A cost accepted: text in the card is harder to select, since a
+click. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
+pointer, and the focus ring is drawn on the overlay,
+round the card. Under the pointer, or with focus inside it, the card lightens
+(`$surface-card-hover`: a step lighter in dark, brighter in light) and rises 2px
+with a stronger shadow (`$shadow-lifted`, between floating and elevated), over 150ms.
+Under reduced motion the move and the fade go and the colour and shadow change
+stay. It uses `:focus-within`, not `:has()`, so a click's focus lifts it too.
+Muted jar text on the hovered card measures 7.99:1 dark and 6.95:1 light. A cost accepted: text in the card is harder to select, since a
 drag starts on the overlay.
+
+The jar lines take the `small` size in the muted ink of the `.specimen__stock` primitive, its opacity reset so the badges keep their own inks.
 
 ## Order
 

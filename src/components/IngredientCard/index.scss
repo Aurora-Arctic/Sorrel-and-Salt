@@ -17,7 +17,7 @@
 // The whole card is the link: the name's one `<a>` stretches an empty `::after`
 // over the article. Not an `<a>` around the card, which a screen reader would
 // read whole as the link's name and which cannot hold the Low badge's button.
-// Plain ink with no underline at rest; the card's hover draws the underline.
+// Plain ink with no underline, at rest or on hover.
 .ingredient-card .ingredient-card__name a {
   color: $text-primary;
   text-decoration: none;
@@ -44,8 +44,32 @@
   }
 }
 
-.ingredient-card:hover .ingredient-card__name a {
-  text-decoration: underline;
+// Under the pointer, or with the link focused, the card lightens and rises. No
+// `:has()`: `:focus-within` catches the link's focus, and also a click's, which
+// is harmless; only `:focus-visible` on the link itself draws the ring.
+.ingredient-card {
+  transition:
+    transform 150ms ease,
+    box-shadow 150ms ease,
+    background-color 150ms ease,
+    color $theme-transition-duration $theme-transition-easing;
+
+  &:hover,
+  &:focus-within {
+    background-color: $surface-card-hover;
+    box-shadow: $shadow-lifted;
+    transform: translateY(-2px);
+  }
+
+  // The colour and shadow change stay; the movement and the fade go.
+  @include reduced-motion {
+    transition: none;
+
+    &:hover,
+    &:focus-within {
+      transform: none;
+    }
+  }
 }
 
 // Above the overlay, so the Low badge's button keeps its own hover, focus and
@@ -94,15 +118,15 @@
   @include list-reset;
 }
 
-// Jar lines are read as text, so they take the `small` size in the ordinary
-// ink, not the primitive's muted caption, which would let the badges outweigh
-// them. The rule above them stays.
+// Jar lines take the `small` size, so the stock badges do not outweigh them, in
+// the primitive's muted ink. The rule above them stays.
 .ingredient-card .specimen__stock {
   display: block;
   // Air between the chips and the rule: the primitive's gap alone read tight.
   margin-top: space(1);
   font-size: type-size('small');
-  color: $text-primary;
+  // The primitive's muted ink; its 0.85 opacity is reset so the badges keep their own inks.
+  color: $text-muted;
   opacity: 1;
 }
 

@@ -68,6 +68,12 @@ $wax-muted-light: color.adjust($wax, $saturation: -8%, $lightness: -2%);
 $wax-caution-dark: color.adjust($wax, $saturation: 15%, $lightness: 30%);
 $wax-caution-light: color.adjust($wax, $saturation: 15%, $lightness: -4%);
 
+// A card under the pointer (M8.14): its own surface a step lighter, and in
+// light "lighter" is brighter, toward white, not darker. Small steps, so text
+// contrast holds (claude-docs/components/ingredient-card.md has the ratios).
+$soot-lifted: color.adjust($soot-raised, $lightness: 3%);
+$parchment-lifted: color.adjust($parchment-raised, $lightness: 2.5%);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
@@ -298,6 +304,8 @@ $secondary: var(--secondary);
 $secondary-hover: var(--secondary-hover);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
+$shadow-lifted: var(--shadow-lifted);
+$surface-card-hover: var(--surface-card-hover);
 
 // How `Backdrop`'s grey ornaments meet the page: the opacity of its `screen`
 // layer, which lifts them out of soot, and of its `multiply` layer, which sinks

@@ -635,6 +635,9 @@
   --secondary-hover: #{$wax-glow};
   --shadow-elevated: 0 20px 45px #{$shadow-dark};
   --shadow-floating: 0 2px 8px #{$shadow-dark};
+  // Between floating and elevated: a card that rises under the pointer.
+  --shadow-lifted: 0 8px 20px #{$shadow-dark};
+  --surface-card-hover: #{$soot-lifted};
   --ornament-screen: 0.3;
   --ornament-multiply: 0;
 
@@ -656,6 +659,8 @@
   --secondary-hover: #{$wax-deep};
   --shadow-elevated: 0 20px 45px #{$shadow-light};
   --shadow-floating: 0 2px 8px #{$shadow-light};
+  --shadow-lifted: 0 8px 20px #{$shadow-light};
+  --surface-card-hover: #{$parchment-lifted};
   --ornament-screen: 0;
   --ornament-multiply: 0.4;
 
