@@ -7,11 +7,13 @@ import type { Membership } from '@/modules/coven';
 import { inTiers, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
 import type {
+  AuditWriter,
   IngredientRow,
   IngredientScoped,
   NotSpellScoped,
   SpellScoped,
   Unscoped,
+  WriterContext,
 } from './types';
 
 /**
@@ -126,4 +128,43 @@ export async function findManyOfSpellIngredientsIncludingSoftDeleted<
       ),
     ),
   );
+}
+
+/**
+ * The writes that move a coven's spell layers from one form to another
+ * (M12.21), spread into the writer. Here rather than in the grimoire module,
+ * because the ingredients module moves them and may not import the
+ * grimoire's schema; the repository belongs to no module. Every layer is read
+ * through its spell, scoped to the proof's coven and live, so another coven's
+ * layers are never touched. Private spells are not filtered out: a layer is
+ * moved because its form is going, whoever may read the spell.
+ */
+export function spellLayerWrites({
+  tx,
+  update,
+}: WriterContext): Pick<AuditWriter, 'lockLayersOfVariants' | 'moveLayers'> {
+  const inCovenSpell = (membership: Membership) =>
+    existsIn(spells, and(eq(spells.id, spellIngredients.spellId), scopedTo(membership, spells)));
+  return {
+    lockLayersOfVariants: (membership, variantIds) => {
+      if (variantIds.length === 0) return Promise.resolve([]);
+      return selectFrom(
+        spellIngredients,
+        and(
+          notSoftDeleted(spellIngredients),
+          inArray(spellIngredients.variantId, [...variantIds]),
+          inCovenSpell(membership),
+        ),
+        { lockIn: tx, lockOrder: spellIngredients.id },
+      );
+    },
+    moveLayers: (membership, layerIds, to) => {
+      if (layerIds.length === 0) return Promise.resolve([]);
+      return update(
+        spellIngredients,
+        { ingredientId: to.ingredientId, variantId: to.variantId },
+        and(inArray(spellIngredients.id, [...layerIds]), inCovenSpell(membership)),
+      );
+    },
+  };
 }
