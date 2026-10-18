@@ -17,6 +17,7 @@ import {
   getIngredient,
   ingredientDetailOf,
   isRetired,
+  MAKE_IT_OURS_PERMISSION,
 } from '@/modules/ingredients';
 import type { CovenIngredientParams } from './types';
 
@@ -138,14 +139,19 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
             : undefined
         }
         // The buttons a member's role permits over a compendium entry; the
-        // services refuse the rest whatever is drawn (M12.17).
+        // services refuse the rest whatever is drawn (M12.17). A retired one
+        // (M12.24) offers Make It Ours alone (M12.23): the cupboard services
+        // no longer find its row, and taking it as the coven's own is the way
+        // out of it. Make It Ours reads the permission its service asserts.
         cupboard={
-          inCompendium
+          entry.workspaceId === null && (inCompendium || cupboardEntry != null)
             ? {
                 workspaceId: workspace.id,
-                canAdd: rolePermits(role, { ingredient: ['create'] }),
-                canAnnotate: rolePermits(role, { ingredient: ['update'] }),
-                canRemove: rolePermits(role, { ingredient: ['delete'] }),
+                covenSlug: workspace.slug,
+                canAdd: inCompendium && rolePermits(role, { ingredient: ['create'] }),
+                canAnnotate: inCompendium && rolePermits(role, { ingredient: ['update'] }),
+                canRemove: inCompendium && rolePermits(role, { ingredient: ['delete'] }),
+                canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
               }
             : undefined
         }

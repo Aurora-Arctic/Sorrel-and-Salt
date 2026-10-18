@@ -321,9 +321,16 @@ export const Annotated: Story = () => (
 
 // The cupboard buttons beside the title (M12.17). The workshop has no API, so
 // a press answers with the generic error. A member sees Add to Cupboard while
-// the coven does not hold the entry; Annotate This Entry and Remove from
-// Cupboard once it does; a viewer sees none.
-const CUPBOARD = { workspaceId: nextId(), canAdd: true, canAnnotate: true, canRemove: true };
+// the coven does not hold the entry; Annotate This Entry, Make It Ours
+// (M12.23) and Remove from Cupboard once it does; a viewer sees none.
+const CUPBOARD = {
+  workspaceId: nextId(),
+  covenSlug: 'fixture-coven',
+  canAdd: true,
+  canAnnotate: true,
+  canRemove: true,
+  canMakeOurs: true,
+};
 
 export const AddToCupboard: Story = () => <Entry cupboard={CUPBOARD} />;
 
@@ -334,7 +341,13 @@ export const AnnotateOrRemove: Story = () => (
 export const ViewerSeesNoCupboardButtons: Story = () => (
   <Entry
     detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
-    cupboard={{ ...CUPBOARD, canAdd: false, canAnnotate: false, canRemove: false }}
+    cupboard={{
+      ...CUPBOARD,
+      canAdd: false,
+      canAnnotate: false,
+      canRemove: false,
+      canMakeOurs: false,
+    }}
   />
 );
 
@@ -370,6 +383,15 @@ export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_C
 // coven's cupboard still names it (M12.24): marked, and with neither the
 // public link nor Edit, since the compendium no longer holds it.
 export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
+
+// The same, to a member: Make It Ours is the one cupboard button left
+// (M12.23), since the cupboard services no longer find the entry.
+export const RetiredOffersMakeItOurs: Story = () => (
+  <Entry
+    detail={{ ...FULL, retired: true, cupboardEntry: cupboardEntry() }}
+    cupboard={{ ...CUPBOARD, canAdd: false, canAnnotate: false, canRemove: false }}
+  />
+);
 
 // A coven's own entry that hides a compendium entry by its formal name: the
 // "In the Compendium" block with its one link and the ⓘ saying why it is shown.
