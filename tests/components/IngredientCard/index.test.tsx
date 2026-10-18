@@ -50,6 +50,15 @@ describe('IngredientCard', () => {
     expect(screen.getByText('Testroot')).toBeInTheDocument();
   });
 
+  it('separates the items with a dot hidden from assistive technology', () => {
+    render(<IngredientCard {...BASE} formalName="Fixtura testalis" variants={[LEAF, ROOT]} />);
+
+    // Three items, two separators.
+    const dots = screen.getAllByText(/·/);
+    expect(dots).toHaveLength(2);
+    for (const dot of dots) expect(dot).toHaveAttribute('aria-hidden', 'true');
+  });
+
   it('shows no formal name and no forms for an entry with neither', () => {
     render(<IngredientCard {...BASE} formalName={null} variants={[]} />);
 

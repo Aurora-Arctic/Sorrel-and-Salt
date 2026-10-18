@@ -30,7 +30,7 @@ restyled here:
 
 - the name, an `h2` holding the card's **one link**, so the card is reached by
   keyboard through it alone;
-- the secondary line: the formal name, then each form with a `FormIcon` before it.
+- the secondary line: the formal name, then each form with a `FormIcon` before it, a dot ("Herb · Oil") between items. The dot is `aria-hidden`, so a screen reader does not read it.
   Two entries can share a label, and this line tells them apart;
 - the marks, through `EntryMarks`, with `ToxicMark` beside them;
 - `SafetyNote`, when the entry or a listed form has notes;

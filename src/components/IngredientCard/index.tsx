@@ -30,6 +30,21 @@ const IngredientCard = ({
   const Heading = `h${level}` as const;
   const formal = (formalName ?? '').trim();
 
+  // The secondary line's items in order: the formal name, then each form.
+  const items = [
+    ...(formal !== ''
+      ? [{ key: 'formal', node: <i className="ingredient-card__formal">{formal}</i> }]
+      : []),
+    ...variants.map((variant) => ({
+      key: `form-${variant.form}`,
+      node: (
+        <span className="ingredient-card__form">
+          <FormIcon name={variant.formChoice?.group.icon ?? null} /> {capitalise(variant.form)}
+        </span>
+      ),
+    })),
+  ];
+
   // Without a mark the row is left out, not left empty, so it adds no gap.
   const marked = Boolean(
     kind !== 'compendium' || retired || toxic || variants.some((v) => v.toxic),
@@ -40,12 +55,14 @@ const IngredientCard = ({
       <Heading className="ingredient-card__name">
         <Link href={href}>{label}</Link>
       </Heading>
-      {(formal !== '' || variants.length > 0) && (
+      {items.length > 0 && (
         <p className="ingredient-card__secondary">
-          {formal !== '' && <i className="ingredient-card__formal">{formal}</i>}
-          {variants.map((variant) => (
-            <span key={variant.form} className="ingredient-card__form">
-              <FormIcon name={variant.formChoice?.group.icon ?? null} /> {capitalise(variant.form)}
+          {items.map((item, at) => (
+            <span key={item.key} className="ingredient-card__item">
+              {/* Decorative: the separator is for the eye, and a screen reader
+                  hears the items as the run of text they are. */}
+              {at > 0 && <span aria-hidden="true"> · </span>}
+              {item.node}
             </span>
           ))}
         </p>

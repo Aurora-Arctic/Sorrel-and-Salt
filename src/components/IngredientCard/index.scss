@@ -14,15 +14,12 @@
   margin: 0;
 }
 
-// The formal name, then each form with its icon, wrapping on a narrow screen.
+// The formal name, then each form with its icon, a dot between each.
 .ingredient-card__secondary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: space(1) space(4);
   margin: 0;
 }
 
+// Keeps a form's icon on the line with its name when the line wraps.
 .ingredient-card__form {
   display: inline-flex;
   align-items: center;
