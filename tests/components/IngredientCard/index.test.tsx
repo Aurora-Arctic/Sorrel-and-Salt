@@ -5,8 +5,8 @@ import { StockBadge } from '@/components/StockBadge';
 
 // M8.14 (claude-docs/components/ingredient-card.md): the card is presentational,
 // so each case is its props in and what rendered out. The names, forms and
-// notes are the test's own data; every badge is asserted by its presence in
-// the state that shows it and its absence otherwise, never by its wording.
+// notes are the test's own data. Marks are found by their exact text and
+// asserted by presence or absence, never by what the words say.
 
 const HREF = '/compendium/ingredients/testwort-testalis';
 const LEAF = {
@@ -18,7 +18,10 @@ const LEAF = {
 const OIL = { form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: false };
 const BASE = { href: HREF, label: 'Fixture Testwort', kind: 'compendium' as const };
 
-const mark = (container: HTMLElement, name: string) => container.querySelector(`.badge--${name}`);
+const toxicMark = () => screen.queryByText('Toxic', { exact: true });
+const localMark = () => screen.queryByText('Local', { exact: true });
+const heldMark = () => screen.queryByText('From the Compendium', { exact: true });
+const retiredMark = () => screen.queryByText('No Longer in the Compendium', { exact: true });
 
 describe('IngredientCard', () => {
   it('has one link, the name, to the entry page', () => {
@@ -36,26 +39,21 @@ describe('IngredientCard', () => {
     expect(screen.getByRole('heading', { level: 3 })).toContainElement(screen.getByRole('link'));
   });
 
-  it('shows the formal name and every form on the secondary line, an icon before each form', () => {
-    const { container } = render(
-      <IngredientCard {...BASE} formalName="Fixtura testalis" variants={[LEAF, OIL]} />,
-    );
+  // The icon before each form is aria-hidden, so the role tree cannot see it;
+  // FormIcon's own tests cover which icon draws.
+  it('shows the formal name and every form on the secondary line', () => {
+    render(<IngredientCard {...BASE} formalName="Fixtura testalis" variants={[LEAF, OIL]} />);
 
-    const line = container.querySelector('.ingredient-card__secondary') as HTMLElement;
-    expect(line).toHaveTextContent('Fixtura testalis');
-    expect(line).toHaveTextContent('Testleaf');
-    expect(line).toHaveTextContent('Testoil');
-    const forms = line.querySelectorAll('.ingredient-card__form');
-    expect(forms).toHaveLength(2);
-    for (const form of forms) {
-      expect(form.firstElementChild?.tagName.toLowerCase()).toBe('svg');
-    }
+    expect(screen.getByText('Fixtura testalis')).toBeInTheDocument();
+    expect(screen.getByText('Testleaf')).toBeInTheDocument();
+    expect(screen.getByText('Testoil')).toBeInTheDocument();
   });
 
-  it('leaves the secondary line out for an entry with no formal name and no forms', () => {
-    const { container } = render(<IngredientCard {...BASE} formalName={null} variants={[]} />);
+  it('shows no formal name and no forms for an entry with neither', () => {
+    render(<IngredientCard {...BASE} formalName={null} variants={[]} />);
 
-    expect(container.querySelector('.ingredient-card__secondary')).toBeNull();
+    expect(screen.queryByText('Fixtura testalis')).toBeNull();
+    expect(screen.queryByText('Testleaf')).toBeNull();
   });
 
   describe('safety', () => {
@@ -82,35 +80,39 @@ describe('IngredientCard', () => {
 
     it('shows the toxic mark for the entry or any listed form, and not otherwise', () => {
       const clean = render(<IngredientCard {...BASE} variants={[LEAF]} />);
-      expect(mark(clean.container, 'safety')).toBeNull();
+      expect(toxicMark()).toBeNull();
       clean.unmount();
 
       const entry = render(<IngredientCard {...BASE} toxic />);
-      expect(mark(entry.container, 'safety')).not.toBeNull();
+      expect(toxicMark()).toBeInTheDocument();
       entry.unmount();
 
-      const form = render(<IngredientCard {...BASE} variants={[LEAF, { ...OIL, toxic: true }]} />);
-      expect(mark(form.container, 'safety')).not.toBeNull();
+      render(<IngredientCard {...BASE} variants={[LEAF, { ...OIL, toxic: true }]} />);
+      expect(toxicMark()).toBeInTheDocument();
     });
   });
 
   describe('the cupboard marks', () => {
     it("shows Local on a coven's own entry and no status", () => {
-      const { container } = render(<IngredientCard {...BASE} kind="own" />);
+      render(<IngredientCard {...BASE} kind="own" />);
 
-      expect(mark(container, 'local')).not.toBeNull();
+      expect(localMark()).toBeInTheDocument();
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
     it('shows none on a compendium entry the cupboard does not hold', () => {
-      const { container } = render(<IngredientCard {...BASE} kind="compendium" />);
+      render(<IngredientCard {...BASE} kind="compendium" />);
 
-      expect(container.querySelector('.badges')).toBeNull();
+      expect(localMark()).toBeNull();
+      expect(heldMark()).toBeNull();
+      expect(retiredMark()).toBeNull();
+      expect(toxicMark()).toBeNull();
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
     it('shows the held mark, and Annotated once a field is overridden', () => {
       const held = render(<IngredientCard {...BASE} kind="cupboard" />);
+      expect(heldMark()).toBeInTheDocument();
       expect(screen.getAllByRole('status')).toHaveLength(1);
       held.unmount();
 
@@ -119,11 +121,11 @@ describe('IngredientCard', () => {
     });
 
     it('shows the retired mark in place of the held one', () => {
-      const { container } = render(<IngredientCard {...BASE} kind="cupboard" retired />);
+      render(<IngredientCard {...BASE} kind="cupboard" retired />);
 
       expect(screen.getAllByRole('status')).toHaveLength(1);
-      expect(mark(container, 'retired')).not.toBeNull();
-      expect(mark(container, 'low-stock')).toBeNull();
+      expect(retiredMark()).toBeInTheDocument();
+      expect(heldMark()).toBeNull();
     });
   });
 
@@ -147,15 +149,15 @@ describe('IngredientCard', () => {
 
       const jars = screen.getByRole('list', { name: 'Jars' });
       // Low is a button, Out is plain text, and a healthy jar draws nothing.
-      expect(within(jars).getAllByRole('button')).toHaveLength(1);
-      expect(jars.querySelectorAll('.badge--out-of-stock')).toHaveLength(1);
-      expect(jars.querySelectorAll('.badge')).toHaveLength(2);
+      expect(within(jars).getAllByRole('button', { name: /^Low Stock/ })).toHaveLength(1);
+      expect(within(jars).getAllByText('Out of Stock')).toHaveLength(1);
     });
 
     it('renders nothing for the slot when the caller passes none', () => {
-      const { container } = render(<IngredientCard {...BASE} />);
+      render(<IngredientCard {...BASE} />);
 
-      expect(container.querySelector('.stock-badge')).toBeNull();
+      expect(screen.queryByRole('button')).toBeNull();
+      expect(screen.queryByText('Out of Stock')).toBeNull();
     });
   });
 });
