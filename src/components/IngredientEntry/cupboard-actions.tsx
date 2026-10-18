@@ -128,7 +128,7 @@ export default function CupboardActions({
             disabled={remove.isPending}
             onClick={() => setAsking(false)}
           >
-            Keep It
+            Cancel
           </button>
         </span>
       )}

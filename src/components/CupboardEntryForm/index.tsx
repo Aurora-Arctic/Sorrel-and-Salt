@@ -2,17 +2,30 @@
 
 import { useMutation } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
-import { type FormEvent, type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useId, useRef, useState } from 'react';
+import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlIssues } from '../../lib/graphql-failure';
-import { ComboboxMultiSelect } from '../Combobox';
-import { FieldShell, FormActions, fieldDescription } from '../Field';
+import {
+  FieldShell,
+  FormActions,
+  FormHistoryButtons,
+  FormHistoryContext,
+  fieldDescription,
+  useFormHistory,
+} from '../Field';
+import { ListField, MultiSelectField } from '../IngredientForm/fields';
+import {
+  LookupListField,
+  useCelestialBodySuggestions,
+  useZodiacSuggestions,
+} from '../IngredientForm/suggestions';
 import { ELEMENT_OPTIONS } from '../IngredientForm/options';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
-import { FIELDS, baselineOf, changesOf, isOwn, openingValues } from './changes';
-import ListInput from './list-input';
+import { FIELDS, differs, baselineOf, changesOf, isOwn, openingValues } from './changes';
+import { fromForm, toForm, type CupboardFormValues } from './form-values';
 import type {
   CupboardEntryFormProps,
   CupboardField,
@@ -20,14 +33,13 @@ import type {
   ListFieldName,
   TextField,
 } from './types';
-import './index.scss';
 
 // The coven's override form for a compendium entry it holds (M12.17): seven
 // fields, each showing the coven's own value or the compendium's, each with
-// a "Use the Compendium's" that hands the field back. Plain state rather than
-// react-hook-form, because the form must tell null (the compendium's) from an
-// empty list (the coven cleared it), and a form library's array cannot
-// (claude-docs/components/cupboard-entry-form.md).
+// a "Use the Compendium's" that hands the field back. On react-hook-form,
+// with the four lists the own-entry form's own fields and its undo and redo;
+// null (the compendium's) and an empty list (cleared) are told apart in
+// `changes.ts`, not by the library (claude-docs/components/cupboard-entry-form.md).
 
 const AnnotateCupboardEntryDocument = graphql(`
   mutation AnnotateCupboardEntry(
@@ -59,37 +71,19 @@ const TEXT: Record<TextField, { label: string; hint: string; placeholder: string
   },
 };
 
-const LISTS: Record<
-  Exclude<ListFieldName, 'elements'>,
-  { label: string; entry: string; hint: string; placeholder: string }
-> = {
-  celestialBodies: {
-    label: 'Celestial Bodies',
-    entry: 'Celestial Body',
-    hint: 'The heavenly bodies your coven ties it to. An empty list says it has none.',
-    placeholder: 'Add a body',
-  },
-  zodiacSigns: {
-    label: 'Zodiac Signs',
-    entry: 'Zodiac Sign',
-    hint: 'The signs your coven ties it to. An empty list says it has none.',
-    placeholder: 'Add a sign',
-  },
-  colors: {
-    label: 'Colours',
-    entry: 'Colour',
-    hint: 'The colours your coven ties it to in a working. An empty list says it has none.',
-    placeholder: 'Add a colour',
-  },
-};
-
-const ERRORS_BY_FIELD = (path: readonly (string | number)[]): CupboardField | undefined => {
+/** Where a server refusal lands: the field's own place, or a list's entry or typing box. */
+const placeOf = (
+  path: readonly (string | number)[],
+): { field: CupboardField; at?: number } | undefined => {
   // The input's own fields, with or without the argument's name before them.
   const [first, second] = path[0] === 'input' ? path.slice(1) : path;
-  return FIELDS.find((field) => field === first) && second === undefined
-    ? (first as CupboardField)
-    : undefined;
+  const field = FIELDS.find((name) => name === first);
+  if (!field) return undefined;
+  return { field, at: typeof second === 'number' ? second : undefined };
 };
+
+const TEXT_FIELD_NAMES: readonly CupboardField[] = ['label', 'description', 'safetyNotes'];
+const LIST_BOX = ['celestialBodies', 'zodiacSigns', 'colors'] as const;
 
 const CupboardEntryForm = ({
   workspaceId,
@@ -100,67 +94,76 @@ const CupboardEntryForm = ({
 }: CupboardEntryFormProps): ReactElement => {
   const id = useId();
   const router = useRouter();
+  const form = useRef<HTMLFormElement>(null);
   const baseline = baselineOf(compendium);
-  const [values, setValues] = useState<CupboardValues>(() => openingValues(baseline, overrides));
+  const methods = useForm<CupboardFormValues>({
+    defaultValues: toForm(openingValues(baseline, overrides)),
+  });
+  const { control, register, handleSubmit, setValue, setError, clearErrors, formState } = methods;
+  const { errors } = formState;
   const [handedBack, setHandedBack] = useState<ReadonlySet<CupboardField>>(new Set());
-  const [errors, setErrors] = useState<Partial<Record<CupboardField, string>>>({});
   const [alert, setAlert] = useState<string>();
 
-  const changes = changesOf(values, baseline, overrides, handedBack);
+  const values = fromForm(useWatch({ control }) as CupboardFormValues);
+  // A field stays handed back only while it still holds the compendium's: a
+  // new answer, or an undo, ends it.
+  const handed = new Set([...handedBack].filter((field) => !differs(field, values, baseline)));
+  const changes = changesOf(values, baseline, overrides, handed);
   const dirty = Object.keys(changes).length > 0;
   const discard = useDiscardGuard(dirty);
+  const history = useFormHistory(methods, { root: form, enabled: !discard.asking });
 
   const save = useMutation({
-    mutationFn: () =>
-      graphqlRequest(AnnotateCupboardEntryDocument, {
-        workspaceId,
-        ingredientId,
-        input: changes,
-      }),
+    mutationFn: (input: typeof changes) =>
+      graphqlRequest(AnnotateCupboardEntryDocument, { workspaceId, ingredientId, input }),
   });
 
-  const set = <Field extends CupboardField>(field: Field, value: CupboardValues[Field]): void => {
-    setValues((current) => ({ ...current, [field]: value }));
-    // A new answer for the field: no longer handed back, and its refusal is stale.
-    setHandedBack((current) => {
-      const next = new Set(current);
-      next.delete(field);
-      return next;
-    });
-    setErrors(({ [field]: _gone, ...rest }) => rest);
-  };
-
   const handBack = (field: CupboardField): void => {
-    setValues((current) => ({ ...current, [field]: baseline[field] }));
+    setValue(field, toForm(baseline)[field] as never, { shouldDirty: true });
+    if (field !== 'label' && field !== 'description' && field !== 'safetyNotes') {
+      // A list's typing box is part of the answer it is handing back.
+      if (field !== 'elements') setValue(`drafts.${field}`, '');
+    }
     setHandedBack((current) => new Set(current).add(field));
-    setErrors(({ [field]: _gone, ...rest }) => rest);
+    clearErrors(field);
   };
 
-  const submit = async (event: FormEvent): Promise<void> => {
-    event.preventDefault();
+  const submit = handleSubmit(async (held) => {
     setAlert(undefined);
-    setErrors({});
+    // Text left in a list's box is an entry the person meant to add.
+    const settled = { ...held };
+    for (const list of LIST_BOX) {
+      const text = held.drafts[list].trim();
+      if (text !== '') settled[list] = [...held[list], { value: text }];
+    }
+    const sent = changesOf(fromForm(settled), baseline, overrides, handed);
     try {
-      await save.mutateAsync();
+      await save.mutateAsync(sent);
       router.refresh();
       onDone();
     } catch (error) {
-      const placed: Partial<Record<CupboardField, string>> = {};
       const unplaced: string[] = [];
+      let placed = 0;
       for (const { path, message } of readGraphqlIssues(error)) {
-        const field = ERRORS_BY_FIELD(path);
-        if (field) placed[field] = message;
-        else unplaced.push(message);
+        const where = placeOf(path);
+        if (!where) {
+          unplaced.push(message);
+          continue;
+        }
+        placed += 1;
+        const { field, at } = where;
+        if (field === 'elements' || TEXT_FIELD_NAMES.includes(field)) setError(field, { message });
+        else if (at !== undefined) setError(`${field}.${at}.value` as never, { message });
+        else setError(`drafts.${field}` as never, { message });
       }
-      setErrors(placed);
       if (unplaced.length > 0) setAlert(unplaced.join(' '));
-      else if (Object.keys(placed).length === 0) setAlert("That didn't work. Please try again.");
+      else if (placed === 0) setAlert("That didn't work. Please try again.");
     }
-  };
+  });
 
   /** "Use the Compendium's", at the end of a field's label row while the coven says its own. */
   const useCompendium = (field: CupboardField, label: string): ReactElement | undefined =>
-    isOwn(field, values, baseline, overrides, handedBack) ? (
+    isOwn(field, values, baseline, overrides, handed) ? (
       <button
         type="button"
         className="btn btn--quiet btn--small cupboard-form__reset"
@@ -176,13 +179,13 @@ const CupboardEntryForm = ({
     const { aria, ...shell } = fieldDescription({
       id: `${id}-${field}`,
       hint,
-      error: errors[field],
+      error: errors[field]?.message,
     });
     const common = {
       id: shell.controlId,
-      value: values[field],
       placeholder: field === 'label' ? compendium.name : placeholder,
       ...aria,
+      ...register(field),
     };
     return (
       <FieldShell
@@ -193,79 +196,75 @@ const CupboardEntryForm = ({
         action={useCompendium(field, label)}
       >
         {multiline ? (
-          <textarea
-            className="textarea"
-            rows={field === 'description' ? 7 : 3}
-            {...common}
-            onChange={(event) => set(field, event.target.value)}
-          />
+          <textarea className="textarea" rows={field === 'description' ? 7 : 3} {...common} />
         ) : (
-          <input
-            className="input"
-            type="text"
-            autoComplete="off"
-            {...common}
-            onChange={(event) => set(field, event.target.value)}
-          />
+          <input className="input" type="text" autoComplete="off" {...common} />
         )}
       </FieldShell>
     );
   };
 
-  const elements = fieldDescription({
-    id: `${id}-elements`,
-    hint: 'The elements your coven ties it to. An empty list says it has none.',
-    error: errors.elements,
-  });
-  const { aria: elementsAria, ...elementsShell } = elements;
+  /** A list's legend row carries "Use the Compendium's" beside its info tip. */
+  const handBackAction = (field: CupboardField, label: string) => () => useCompendium(field, label);
 
   return (
-    <form className="form" onSubmit={(event) => void submit(event)} noValidate>
-      {alert && <Notice kind="error">{alert}</Notice>}
-      {textField('label', false)}
-      {textField('description', true)}
-      {textField('safetyNotes', true)}
-      <FieldShell
-        label="Elements"
-        hint="The elements your coven ties it to. An empty list says it has none."
-        {...elementsShell}
-        action={useCompendium('elements', 'Elements')}
-      >
-        <ComboboxMultiSelect
-          id={elementsShell.controlId}
-          label="Elements"
-          labelId={elementsShell.labelId}
-          values={values.elements}
-          onChange={(next) => set('elements', next as CupboardValues['elements'])}
-          choices={ELEMENT_OPTIONS}
-          placeholder="Add an element"
-          removeNoun="Element"
-          {...elementsAria}
-        />
-      </FieldShell>
-      {(Object.keys(LISTS) as Exclude<ListFieldName, 'elements'>[]).map((field) => {
-        const { label, entry, hint, placeholder } = LISTS[field];
-        return (
-          <ListInput
-            key={field}
-            label={label}
-            entry={entry}
-            hint={hint}
-            placeholder={placeholder}
-            values={values[field]}
-            onChange={(next) => set(field, next)}
-            action={useCompendium(field, label)}
+    <FormProvider {...methods}>
+      <FormHistoryContext.Provider value={history}>
+        <form ref={form} className="form" onSubmit={(event) => void submit(event)} noValidate>
+          {alert && <Notice kind="error">{alert}</Notice>}
+          <FormHistoryButtons />
+          {textField('label', false)}
+          {textField('description', true)}
+          {textField('safetyNotes', true)}
+          <MultiSelectField
+            name="elements"
+            label="Elements"
+            hint="The elements your coven ties it to. An empty list says it has none."
+            placeholder="Add an element"
+            options={ELEMENT_OPTIONS}
+            action={useCompendium('elements', 'Elements')}
           />
-        );
-      })}
-      <FormActions
-        noun="Annotation"
-        dirty={dirty}
-        submitting={save.isPending}
-        onCancel={() => discard.request(onDone)}
-      />
-      {discard.asking && <DiscardQuestion guard={discard} />}
-    </form>
+          <LookupListField
+            workspaceId={workspaceId}
+            useSuggestions={useCelestialBodySuggestions}
+            name="celestialBodies"
+            ordered
+            legend="Celestial Bodies"
+            entry="Celestial Body"
+            hint="The heavenly bodies your coven ties it to. An empty list says it has none."
+            placeholder="Add a body"
+            action={handBackAction('celestialBodies', 'Celestial Bodies')}
+          />
+          <LookupListField
+            workspaceId={workspaceId}
+            useSuggestions={useZodiacSuggestions}
+            name="zodiacSigns"
+            ordered
+            legend="Zodiac Signs"
+            entry="Zodiac Sign"
+            hint="The signs your coven ties it to. An empty list says it has none."
+            placeholder="Add a sign"
+            action={handBackAction('zodiacSigns', 'Zodiac Signs')}
+          />
+          <ListField
+            name="colors"
+            ordered
+            legend="Colours"
+            entry="Colour"
+            hint="The colours your coven ties it to in a working. An empty list says it has none."
+            placeholder="Add a colour"
+            action={handBackAction('colors', 'Colours')}
+          />
+          <FormActions
+            noun="Annotation"
+            dirty={dirty}
+            submitting={save.isPending}
+            onCancel={() => discard.request(onDone)}
+          />
+          {discard.asking && <DiscardQuestion guard={discard} />}
+        </form>
+      </FormHistoryContext.Provider>
+    </FormProvider>
   );
 };
 

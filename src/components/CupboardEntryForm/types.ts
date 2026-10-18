@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import type { IngredientElement as ElementKind } from '@/modules/ingredients/schema/ingredient-enums';
 
 /** The seven things a coven may say over a compendium entry. */
@@ -61,17 +60,3 @@ export interface CupboardEntryFormProps {
 export type CupboardChanges = Partial<{
   [Field in CupboardField]: CupboardValues[Field] | null;
 }>;
-
-/** The free-text list's props. */
-export interface ListInputProps {
-  /** The field's label, in title case: "Colours". */
-  label: string;
-  hint: string;
-  placeholder: string;
-  /** What one entry is, singular and title case: "Colour". */
-  entry: string;
-  values: readonly string[];
-  onChange: (values: string[]) => void;
-  /** Drawn at the end of the label row: "Use the Compendium's". */
-  action?: ReactNode;
-}

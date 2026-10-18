@@ -119,18 +119,29 @@ describe('CupboardEntryForm', () => {
     const onDone = renderForm();
 
     // Colours start as the Compendium's single entry; taking it out is the coven clearing them.
-    press('Remove Colour: green');
+    press('Remove green');
     press(save());
 
     await waitFor(() => expect(onDone).toHaveBeenCalled());
     expect(calls[0]?.input).toEqual({ colors: [] });
   });
 
+  it('undoes a removed entry, leaving nothing to save', async () => {
+    renderForm();
+
+    press('Remove green');
+    expect(save()).toBeEnabled();
+    press('Undo');
+
+    await waitFor(() => expect(save()).toBeDisabled());
+    expect(screen.getByRole('button', { name: 'Remove green' })).toBeInTheDocument();
+  });
+
   it('makes a list the coven’s own once an entry is added', async () => {
     const calls = captureSaves();
     const onDone = renderForm();
 
-    typeIn(screen.getByRole('textbox', { name: 'Colours' }), 'indigo');
+    typeIn(screen.getByLabelText('Colour', { selector: 'input' }), 'indigo');
     press('Add Colour');
     press(save());
 

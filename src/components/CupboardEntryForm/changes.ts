@@ -61,7 +61,7 @@ export function openingValues(
 }
 
 /** True when `values` for `field` differ from `other`: text trimmed, lists in order. */
-function differs(field: CupboardField, a: CupboardValues, b: CupboardValues): boolean {
+export function differs(field: CupboardField, a: CupboardValues, b: CupboardValues): boolean {
   if (isText(field)) return a[field].trim() !== b[field].trim();
   return !sameList(a[field], b[field]);
 }
