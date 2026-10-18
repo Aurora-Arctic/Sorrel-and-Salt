@@ -318,6 +318,25 @@ export const Annotated: Story = () => (
   />
 );
 
+// The cupboard buttons beside the title (M12.17). The workshop has no API, so
+// a press answers with the generic error. A member sees Add to Cupboard while
+// the coven does not hold the entry; Annotate This Entry and Remove from
+// Cupboard once it does; a viewer sees none.
+const CUPBOARD = { workspaceId: nextId(), canAdd: true, canAnnotate: true, canRemove: true };
+
+export const AddToCupboard: Story = () => <Entry cupboard={CUPBOARD} />;
+
+export const AnnotateOrRemove: Story = () => (
+  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} cupboard={CUPBOARD} />
+);
+
+export const ViewerSeesNoCupboardButtons: Story = () => (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    cupboard={{ ...CUPBOARD, canAdd: false, canAnnotate: false, canRemove: false }}
+  />
+);
+
 // A coven's own entry, badged Local. Its Edit is M8.17's, so none yet.
 export const CovenEntry: Story = () => (
   <Entry

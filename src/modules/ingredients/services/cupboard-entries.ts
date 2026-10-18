@@ -1,6 +1,7 @@
 import 'server-only';
 import {
   type CupboardEntryRow,
+  type IngredientRow,
   findCupboardEntriesOf,
   findCupboardEntry,
   findCompendiumMatchPage,
