@@ -281,3 +281,18 @@ describe('IngredientCard', () => {
     });
   });
 });
+
+// M8.14: the foot's actions are the caller's own buttons, kept as controls beside
+// the card's one link.
+describe('IngredientCard actions', () => {
+  it('draws the given buttons in the card, beside the name link', () => {
+    render(<IngredientCard {...BASE} actions={<button type="button">Fixture Use</button>} />);
+    expect(screen.getByRole('button', { name: 'Fixture Use' })).toBeTruthy();
+    expect(screen.getAllByRole('link')).toHaveLength(1);
+  });
+
+  it('draws no foot without actions or jar lines', () => {
+    render(<IngredientCard {...BASE} />);
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+});

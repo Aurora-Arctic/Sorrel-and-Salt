@@ -46,6 +46,11 @@ export interface IngredientCardProps {
   /** The name's heading level, 2 to 5; Defaults to 2. */
   level?: 2 | 3 | 4 | 5;
   /**
+   * Buttons for the card's foot, right-aligned beneath the jar lines (M9.9, M9.10).
+   * They sit above the card's link, so each keeps its own click, hover and focus.
+   */
+  actions?: ReactNode;
+  /**
    * The jar-line slot beneath the forms. The coven's Ingredients page fills it
    * with a line per jar (M9.6); the public compendium leaves it empty.
    */

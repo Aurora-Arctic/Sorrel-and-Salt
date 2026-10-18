@@ -185,3 +185,24 @@ export const LongName: Story = () => (
   </IngredientCard>
 );
 LongName.meta = { theme: 'dark', width: 300 };
+
+// Two buttons in the foot, right-aligned beneath the jar lines (M9.9, M9.10). Each
+// sits above the card's link, so pressing one never opens the entry page.
+export const WithActions: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="own"
+    actions={
+      <>
+        <button type="button" className="btn btn--small">
+          Use
+        </button>
+        <button type="button" className="btn btn--small">
+          Restock
+        </button>
+      </>
+    }
+  >
+    <Jars />
+  </IngredientCard>
+);

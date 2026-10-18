@@ -183,12 +183,33 @@
   gap: space(2);
 }
 
+// The foot holds the jar lines and the actions. `margin-top: auto` takes up any
+// spare height when the card is stretched to its grid row (IngredientCardList), so
+// the foot lands at the bottom; on its own it is nothing. The padding is the air
+// between the chips and the rule (24px with the card's own gap; it read tight at 12
+// and then 16), kept whether or not there is spare height.
+.ingredient-card__foot {
+  margin-top: auto;
+  padding-top: space(3);
+}
+
+// Right-aligned buttons, above the stretched link (`z-index`), so each is its own target.
+.ingredient-card__actions {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: space(2);
+  // Air beneath the jar lines' rule.
+  margin-top: space(3);
+}
+
 // Jar lines take the `small` size, so the stock badges do not outweigh them, in
 // the primitive's muted ink. The rule above them stays.
 .ingredient-card .specimen__stock {
   display: block;
-  // Air between the chips and the rule (24px with the card's own gap; it read tight at 12 and then 16).
-  margin-top: space(3);
+  margin: 0;
   // Air between the rule and the first line, and after the last line (the
   // primitive has 8px above and the card's padding alone below).
   padding-block: space(3) space(2);
