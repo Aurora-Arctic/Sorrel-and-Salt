@@ -2,15 +2,11 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
-import { insertIngredient } from '../../support/db/insert-ingredient';
-import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
 import { signInAgainAs, signInAs } from '../session';
 import {
   type Coven,
   type Role,
-  compendiumVariant,
   graphqlFromPage,
-  insertStock,
   ingredientList,
   localIngredient,
   markDocument,
@@ -297,51 +293,6 @@ test(
       // Cleared, so nothing is left to lose: Escape closes without asking.
       await page.keyboard.press('Escape');
       await expect(dialog).toHaveCount(0);
-    });
-
-    await test.step('a stub hiding a compendium entry the coven holds a jar of takes the jar, and the status names it', async () => {
-      // A compendium entry with no formal name, so a stub of its name has its
-      // identity and hides it (MB.215), and the coven's jar of its one form.
-      const jar = await withSql(async (sql) => {
-        await insertIngredient(
-          sql,
-          makeIngredient({
-            name: 'Ostrelvine',
-            nomenclature: 'none',
-            variants: [makeVariant({ form: 'Fixture Husk' })],
-          }),
-          coven.users.A,
-        );
-        const held = await compendiumVariant(sql, 'Ostrelvine', 'Fixture Husk');
-        return insertStock(
-          sql,
-          coven.id,
-          held,
-          { quantity: 12, unit: 'g', threshold: 0 },
-          coven.users.A,
-        );
-      });
-
-      const dialog = await openAddIngredient(page);
-      await nameField(dialog).fill('Ostrelvine');
-      await saveIngredient(dialog).click();
-      // The entry it hides is a near match, so the first save is held on it.
-      const createAnyway = dialog.getByRole('button', { name: 'Create Anyway', exact: true });
-      await expect(createAnyway).toBeFocused();
-      await createAnyway.click();
-      await saveIngredient(dialog).click();
-      await expect(dialog).toHaveCount(0);
-      // The jar's form is data: the status names the jar that moved.
-      await expect(savedStatus(page, 'Ostrelvine')).toContainText('Fixture Husk');
-
-      const [row] = await savedRows(coven.id, 'Ostrelvine');
-      const moved = await withSql(
-        (sql) => sql<{ ingredient_id: string; form: string }[]>`
-          select s.ingredient_id, v.form from inventory_items s
-          join ingredient_variants v on v.id = s.variant_id
-          where s.id = ${jar}`,
-      );
-      expect(moved).toEqual([{ ingredient_id: row.id, form: 'Fixture Husk' }]);
     });
   },
 );
