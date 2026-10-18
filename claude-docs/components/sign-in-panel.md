@@ -155,6 +155,14 @@ React re-renders with the cookie's value straight after. The mark arrives
 just after hydration, not in the first HTML. The subscription is a no-op:
 only a callback writes the cookie, and a callback is a navigation away.
 
+The snapshot is not Better Auth's raw read but a roster id or `null`. React
+reads a snapshot twice in one render and warns if the two reads differ. The raw
+read gives `''` for a cookie that is present but empty and `null` for none, and
+a cookie being expired can look like either, depending on the instant it is
+read. None of those names a provider, so all of them must read the same: the
+wrapper returns the roster provider whose id matches, else `null`. Strings
+compare by value, so a real provider id is stable too.
+
 ## Error state
 
 One `message` field covers both sources: the server-rendered callback error

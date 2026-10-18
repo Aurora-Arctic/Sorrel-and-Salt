@@ -133,6 +133,24 @@ describe('SignInPanel', () => {
     }
   });
 
+  // happy-dom reads a cookie cleared with max-age=0 as empty-valued for the
+  // rest of that millisecond and as absent after it, so two reads in one render
+  // can differ. Neither names a provider, so both must read as the same "none":
+  // React warns, and the harness fails the test, when a snapshot changes
+  // between two reads of one render.
+  it('reads a cookie naming no provider as the same value however it is spelled, so the render is stable', () => {
+    const reads = [`${LAST_USED_PROVIDER_COOKIE}=`, ''];
+    let read = 0;
+    const cookie = vi.spyOn(document, 'cookie', 'get').mockImplementation(() => reads[read++ % 2]!);
+    try {
+      render(<SignInPanel next="/" configured={['google', 'discord']} />);
+    } finally {
+      cookie.mockRestore();
+    }
+
+    expect(screen.queryByRole('button', { name: /last used/i })).not.toBeInTheDocument();
+  });
+
   // The server has no cookie to read, so its HTML must carry no mark, or a
   // returning visitor's hydration would disagree with it. happy-dom has a
   // `document` even here, so it is the server snapshot, not its absence, that
