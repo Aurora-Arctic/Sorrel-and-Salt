@@ -18,6 +18,7 @@ type Documents = {
     "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n": typeof types.CreateAdminInvitationDocument,
     "\n  query CompendiumFacetCounts(\n    $query: String\n    $forms: [String!]\n    $withoutReferences: Boolean\n    $elements: [IngredientElement!]\n    $categoryIds: [ID!]\n    $categoryMode: CategoryMode\n    $deityIds: [ID!]\n    $zodiacSigns: [String!]\n    $celestialBodies: [String!]\n    $toxic: ToxicFilter\n  ) {\n    compendiumFacets(\n      query: $query\n      forms: $forms\n      withoutReferences: $withoutReferences\n      elements: $elements\n      categoryIds: $categoryIds\n      categoryMode: $categoryMode\n      deityIds: $deityIds\n      zodiacSigns: $zodiacSigns\n      celestialBodies: $celestialBodies\n      toxic: $toxic\n    ) {\n      forms {\n        value\n        count\n      }\n      deities {\n        value\n        count\n      }\n      categories {\n        value\n        count\n      }\n      zodiacSigns {\n        value\n        count\n      }\n      celestialBodies {\n        value\n        count\n      }\n      elements {\n        value\n        count\n      }\n      toxic {\n        value\n        count\n      }\n      withoutReferences\n    }\n  }\n": typeof types.CompendiumFacetCountsDocument,
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": typeof types.CreateWorkspaceDocument,
+    "\n  mutation AnnotateCupboardEntry(\n    $workspaceId: ID!\n    $ingredientId: ID!\n    $input: CupboardEntryInput!\n  ) {\n    annotateCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": typeof types.AnnotateCupboardEntryDocument,
     "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": typeof types.DeleteWorkspaceDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": typeof types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": typeof types.CreateCategoryGroupDocument,
@@ -44,6 +45,8 @@ type Documents = {
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
+    "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n": typeof types.AddCupboardEntryDocument,
+    "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n": typeof types.RemoveCupboardEntryDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
     "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n": typeof types.CompendiumEntryUsersDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n          isGlobal\n          inCupboard(workspaceId: $workspaceId)\n        }\n      }\n    }\n  }\n": typeof types.PossibleDuplicatesDocument,
@@ -90,6 +93,7 @@ const documents: Documents = {
     "\n  mutation CreateAdminInvitation($email: String!, $siteRole: InvitableSiteRole!, $note: String) {\n    createAdminInvitation(email: $email, siteRole: $siteRole, note: $note) {\n      id\n    }\n  }\n": types.CreateAdminInvitationDocument,
     "\n  query CompendiumFacetCounts(\n    $query: String\n    $forms: [String!]\n    $withoutReferences: Boolean\n    $elements: [IngredientElement!]\n    $categoryIds: [ID!]\n    $categoryMode: CategoryMode\n    $deityIds: [ID!]\n    $zodiacSigns: [String!]\n    $celestialBodies: [String!]\n    $toxic: ToxicFilter\n  ) {\n    compendiumFacets(\n      query: $query\n      forms: $forms\n      withoutReferences: $withoutReferences\n      elements: $elements\n      categoryIds: $categoryIds\n      categoryMode: $categoryMode\n      deityIds: $deityIds\n      zodiacSigns: $zodiacSigns\n      celestialBodies: $celestialBodies\n      toxic: $toxic\n    ) {\n      forms {\n        value\n        count\n      }\n      deities {\n        value\n        count\n      }\n      categories {\n        value\n        count\n      }\n      zodiacSigns {\n        value\n        count\n      }\n      celestialBodies {\n        value\n        count\n      }\n      elements {\n        value\n        count\n      }\n      toxic {\n        value\n        count\n      }\n      withoutReferences\n    }\n  }\n": types.CompendiumFacetCountsDocument,
     "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n": types.CreateWorkspaceDocument,
+    "\n  mutation AnnotateCupboardEntry(\n    $workspaceId: ID!\n    $ingredientId: ID!\n    $input: CupboardEntryInput!\n  ) {\n    annotateCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n": types.AnnotateCupboardEntryDocument,
     "\n  mutation DeleteWorkspace($workspaceId: ID!) {\n    deleteWorkspace(workspaceId: $workspaceId)\n  }\n": types.DeleteWorkspaceDocument,
     "\n  mutation SetEmail($email: String!, $next: String) {\n    setEmail(email: $email, next: $next) {\n      id\n      email\n    }\n  }\n": types.SetEmailDocument,
     "\n  mutation CreateCategoryGroup($input: CategoryGroupInput!) {\n    createCategoryGroup(input: $input) {\n      id\n      slug\n    }\n  }\n": types.CreateCategoryGroupDocument,
@@ -116,6 +120,8 @@ const documents: Documents = {
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
+    "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n": types.AddCupboardEntryDocument,
+    "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n": types.RemoveCupboardEntryDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
     "\n  query CompendiumEntryUsers($id: ID!) {\n    compendiumEntryUsers(id: $id)\n  }\n": types.CompendiumEntryUsersDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n          isGlobal\n          inCupboard(workspaceId: $workspaceId)\n        }\n      }\n    }\n  }\n": types.PossibleDuplicatesDocument,
@@ -188,6 +194,10 @@ export function graphql(source: "\n  query CompendiumFacetCounts(\n    $query: S
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n"): (typeof documents)["\n  mutation CreateWorkspace($name: String!) {\n    createWorkspace(name: $name) {\n      id\n      name\n      slug\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AnnotateCupboardEntry(\n    $workspaceId: ID!\n    $ingredientId: ID!\n    $input: CupboardEntryInput!\n  ) {\n    annotateCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AnnotateCupboardEntry(\n    $workspaceId: ID!\n    $ingredientId: ID!\n    $input: CupboardEntryInput!\n  ) {\n    annotateCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -292,6 +302,14 @@ export function graphql(source: "\n  mutation UpdateZodiacSign($id: ID!, $input:
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n"): (typeof documents)["\n  mutation RemoveCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {\n    removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
