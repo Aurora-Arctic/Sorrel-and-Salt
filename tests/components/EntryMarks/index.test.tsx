@@ -10,7 +10,7 @@ import EntryMarks from '@/components/EntryMarks';
 const statuses = () => screen.queryAllByRole('status');
 const local = () => screen.queryByText('Local', { exact: true });
 const held = () => screen.queryByText('Compendium', { exact: true });
-const annotated = () => screen.queryByText('Annotated', { exact: true });
+const annotated = () => screen.queryByRole('button', { name: 'Annotated' });
 const retired = () => screen.queryByRole('button', { name: 'Retired' });
 
 describe('EntryMarks', () => {
@@ -30,15 +30,15 @@ describe('EntryMarks', () => {
     expect(annotated()).toBeNull();
   });
 
-  it('adds a second status once the cupboard row overrides a field', () => {
+  it('shows Annotated in place of Compendium once the cupboard row overrides a field', () => {
     render(<EntryMarks kind="cupboard" annotated />);
 
-    expect(held()).toBeInTheDocument();
     expect(annotated()).toBeInTheDocument();
-    expect(statuses()).toHaveLength(2);
+    expect(held()).toBeNull();
+    expect(statuses()).toHaveLength(0);
   });
 
-  it('shows the retired mark in place of the held one, and Annotated beside it', () => {
+  it('shows the retired mark in place of the held one, and Annotated beside it, each a button', () => {
     const plain = render(<EntryMarks kind="cupboard" retired />);
     expect(statuses()).toHaveLength(0);
     expect(retired()).toBeInTheDocument();
@@ -46,23 +46,30 @@ describe('EntryMarks', () => {
     plain.unmount();
 
     render(<EntryMarks kind="cupboard" retired annotated />);
-    expect(statuses()).toHaveLength(1);
+    expect(statuses()).toHaveLength(0);
+    expect(held()).toBeNull();
     expect(retired()).toBeInTheDocument();
     expect(annotated()).toBeInTheDocument();
   });
 
-  it('opens its tip on focus, describes the button by it, and closes it on blur', () => {
-    render(<EntryMarks kind="cupboard" retired />);
-    const button = retired() as HTMLElement;
-    expect(screen.queryByRole('tooltip')).toBeNull();
+  it.each([
+    ['Retired', { retired: true }],
+    ['Annotated', { annotated: true }],
+  ])(
+    'opens the %s tip on focus, describes the button by it, and closes it on blur',
+    (name, flags) => {
+      render(<EntryMarks kind="cupboard" {...flags} />);
+      const button = screen.getByRole('button', { name });
+      expect(screen.queryByRole('tooltip')).toBeNull();
 
-    fireEvent.focus(button);
-    const tip = screen.getByRole('tooltip');
-    expect(button).toHaveAccessibleDescription(tip.textContent ?? '');
+      fireEvent.focus(button);
+      const tip = screen.getByRole('tooltip');
+      expect(button).toHaveAccessibleDescription(tip.textContent ?? '');
 
-    fireEvent.blur(button);
-    expect(screen.queryByRole('tooltip')).toBeNull();
-  });
+      fireEvent.blur(button);
+      expect(screen.queryByRole('tooltip')).toBeNull();
+    },
+  );
 
   it('shows nothing for a compendium entry the cupboard does not hold', () => {
     const { container } = render(<EntryMarks kind="compendium" />);

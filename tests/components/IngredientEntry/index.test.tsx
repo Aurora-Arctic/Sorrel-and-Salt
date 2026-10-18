@@ -1025,11 +1025,9 @@ describe('IngredientEntry on a coven page', () => {
     expect(rowOf('Elements')).toBe('Water');
     expect(rowOf('Planets')).not.toBe('Fixture Moon');
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
-    // The marks are statuses; a compendium entry is never Local.
-    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual([
-      'Compendium',
-      'Annotated',
-    ]);
+    // Annotated stands in for Compendium; a compendium entry is never Local.
+    expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
+    expect(screen.queryAllByRole('status')).toHaveLength(0);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 

@@ -62,7 +62,8 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await dialog.getByRole('button', { name: 'Save Annotation' }).click();
   await expect(dialog).toBeHidden();
   await expect(heading('Fixture Our Screenwort')).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: 'Annotated' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
 
   // The form opens on the coven's label; handing it back restores the compendium's.
   await page.getByRole('button', { name: 'Annotate This Entry' }).click();
@@ -70,7 +71,8 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await dialog.getByRole('button', { name: 'Save Annotation' }).click();
   await expect(dialog).toBeHidden();
   await expect(heading('Fixture Screens Wort')).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: 'Annotated' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Annotated' })).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
 
   // At a phone's width, the narrowest a section signs off at.
   await page.setViewportSize({ width: 375, height: 812 });

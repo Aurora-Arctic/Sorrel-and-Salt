@@ -1,7 +1,7 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// The Retired badge and its tip together: the tip's anchor, and the box the
+// A tipped badge (Retired, Annotated) and its tip together: the tip's anchor, and the box the
 // pointer may cross onto the tip within. Lifted above the ingredient card's
 // stretched link so a click on it opens the tip and does not navigate.
 .entry-mark-tip {
@@ -12,7 +12,7 @@
 }
 
 // A button that only opens its tip: the badge look, the help cursor, a focus ring.
-.entry-mark--retired {
+.entry-mark--tip {
   font-family: inherit;
   cursor: help;
 

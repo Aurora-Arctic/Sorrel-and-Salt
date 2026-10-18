@@ -229,7 +229,7 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Eight palettes, deliberately not equals. Three appear on an IngredientCard.
+Nine palettes, deliberately not equals. Three appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
@@ -261,6 +261,8 @@ than solid, so it never reads as last-used's pointer. Dark takes
 because `$sorrel-vivid` on its own tint measured 4.42:1, under 4.5. As drawn,
 its label on its tint is 5.60:1 dark and 6.98:1 light, and its edge 4.23:1 and
 4.66:1 on the dark card and page, 4.46:1 and 4.01:1 on the light ones.
+
+**Annotated** (M8.14) marks a compendium entry with the coven's own changes. It wears Local's inks exactly, through the shared `$local-badge-dark` and `$local-badge-light` tokens (the same idea as an entry of its own), tinted, with Local's contrast. It is its own palette, never `badge--local`.
 
 **Retired** (M12.24) marks a compendium entry the curators have retired, on
 the ingredient page of a coven whose cupboard still names it. It is a fact

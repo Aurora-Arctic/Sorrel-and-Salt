@@ -109,6 +109,10 @@ $badge-treatments: (
 $wax-badge-dark: color.adjust($wax, $saturation: 22%, $lightness: 18%);
 $wax-badge-light: color.adjust($wax, $saturation: 22%);
 
+// The two inks Local's tint is made of, so Annotated cannot drift from it.
+$local-badge-dark: $sorrel-bright;
+$local-badge-light: $sorrel-deep;
+
 $badge-palettes: (
   // Both inks carry +22% saturation, holding the two halves the same red. The
   // dark lift is +18%, sized for the label ($soot) on the fill, not for text on soot.
@@ -172,8 +176,15 @@ $badge-palettes: (
   // was 4.42:1. Label on tint 5.60:1 dark, 6.98:1 light; edge at least 4.01:1.
   'local': (
       treatment: tinted,
-      dark: $sorrel-bright,
-      light: $sorrel-deep,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
+    ),
+  // A compendium entry with this coven's own changes (M8.14): the same idea as
+  // an entry of its own, so Local's inks, already contrast-checked.
+  'annotated': (
+      treatment: tinted,
+      dark: $local-badge-dark,
+      light: $local-badge-light,
     )
 );
 

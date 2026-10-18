@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 import type { EntryMarksProps } from './types';
-import RetiredMark from './retired-mark';
+import TipMark from './tip-mark';
 import './index.scss';
 
 // The badges saying whose an ingredient entry is: Local, Compendium,
@@ -19,11 +19,27 @@ const EntryMarks = ({
     <>
       {kind === 'own' && <span className="badge badge--local">Local</span>}
       {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
-      {held && !retired && <output className="badge badge--low-stock">Compendium</output>}
-      {held && annotated && <output className="badge badge--low-stock">Annotated</output>}
+      {/* Annotated says the entry is from the Compendium and changed, so it takes
+          Compendium's place; an unannotated entry shows Compendium, bare. */}
+      {held && !retired && !annotated && (
+        <output className="badge badge--low-stock">Compendium</output>
+      )}
       {/* A compendium entry the curators retired, read because this coven's
           cupboard names it (M12.24): a button opening its own tip. */}
-      {retired && <RetiredMark />}
+      {retired && (
+        <TipMark
+          label="Retired"
+          palette="retired"
+          tip="No longer in the Compendium; your coven still has it."
+        />
+      )}
+      {held && annotated && (
+        <TipMark
+          label="Annotated"
+          palette="annotated"
+          tip="From the Compendium, with your coven's own changes."
+        />
+      )}
     </>
   );
 };

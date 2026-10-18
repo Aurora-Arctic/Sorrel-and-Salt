@@ -66,8 +66,8 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   ).toBeVisible();
   await expect(page.getByText('What our coven makes of it.')).toBeVisible();
   await expect(page.getByText('Fixture Reference Wort', { exact: true }).first()).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: 'Annotated' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
   // At a phone's width, the narrowest a section signs off at.
   await page.setViewportSize({ width: 375, height: 812 });
