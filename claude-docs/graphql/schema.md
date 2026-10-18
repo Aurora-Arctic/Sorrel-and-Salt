@@ -779,6 +779,15 @@ reference under the rest of the filter, the same whether the switch is on or
 off; a coven's list has no such switch. The seven shared fields are written
 once, in `facetFields`, which both types spread.
 
+A coven's `IngredientFacets` also carries two counts that a compendium list has no
+switch for (M9.7), so the two answers are two types and the fields are non-null on
+the coven's alone. `source` is a `SourceFacetCount` list (`value` is `local` or
+`compendium`, `count` an `Int!`) that always holds both values, zeros kept, each
+counted with the Source setting blanked and everything else, In Stock Only
+included, kept. `inStockOnly` is one `Int!`: how many entries the list would
+hold with the switch on, under the rest of the filter and the chosen Source. A
+count equals the list's `totalCount` under the same filter.
+
 ```graphql
 type CompendiumFacets {
   # the seven fields of IngredientFacets, then:
@@ -786,6 +795,7 @@ type CompendiumFacets {
 }
 
 type IngredientFacets {
+  # a coven's also has source: [SourceFacetCount!]! and inStockOnly: Int!
   forms: [NameFacetCount!]!
   deities: [IdFacetCount!]!
   categories: [IdFacetCount!]!
