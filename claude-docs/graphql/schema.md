@@ -917,6 +917,24 @@ transport's half: the answer and its `annotated`, a viewer answered, the
 refusal at the field, the nulls, and one repository read for a page of entries,
 counted by a spy.
 
+**The three writes** (M12.15) take the coven and the compendium entry's id, and
+answer through the same `nodeOf` as the read, so the loader is cleared and the
+answer is a fresh read:
+
+- **`addCupboardEntry(workspaceId, ingredientId, input)`** answers the new
+  `CupboardEntry`. `input` is optional.
+- **`annotateCupboardEntry(workspaceId, ingredientId, input)`** answers the
+  row after the change. A field left out keeps its value, `null` hands it back
+  to the compendium, and a list, even empty, is the coven's own.
+- **`removeCupboardEntry(workspaceId, ingredientId)`** answers the
+  `ingredientId`, as the other deletes answer the id. It is refused with
+  `VALIDATION` while the coven holds a jar of the entry.
+
+A viewer is `FORBIDDEN`, an entry the coven does not hold is `NOT_FOUND`,
+and a taken label is `VALIDATION` beside `label`
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Writing it").
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in

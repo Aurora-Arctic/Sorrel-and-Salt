@@ -11,10 +11,10 @@ export * from './services/compendium';
 export * from './services/references';
 export * from './services/promote-folk-name';
 export * from './services/stock';
-export * from './services/jar-merge-needed';
 export * from './services/workspace-ingredient-list';
 export * from './services/ingredient-facets';
 export * from './services/replaced-entries';
+export * from './validation/cupboard-merge';
 export * from './services/cupboard-entries';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
@@ -51,8 +51,6 @@ export type {
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
-  JarConflict,
-  JarMergeChoice,
   ReplacedCompendiumEntries,
   ReplacedCompendiumEntry,
   StockKey,

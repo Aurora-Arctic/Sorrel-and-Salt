@@ -194,6 +194,21 @@ type CupboardEntry {
 }
 
 """
+The coven's overrides of a compendium entry. On an add, a field left out is no override. On an annotate, a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
+"""
+input CupboardEntryInput {
+  celestialBodies: [String!]
+  colors: [String!]
+  description: String
+  elements: [IngredientElement!]
+
+  """What the coven calls the entry; unique in the coven."""
+  label: String
+  safetyNotes: String
+  zodiacSigns: [String!]
+}
+
+"""
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format.
 """
 scalar DateTime
@@ -643,9 +658,19 @@ type Mutation {
   acceptInvitationById(id: ID!): Invitation!
 
   """
+  Adds a compendium entry to the coven's cupboard, with the overrides given. Creates no jar and no form; an entry the coven already holds is refused.
+  """
+  addCupboardEntry(ingredientId: ID!, input: CupboardEntryInput, workspaceId: ID!): CupboardEntry!
+
+  """
   Starts the coven's jar of one form; a form it already holds is refused beside variantId.
   """
   addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
+
+  """
+  Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
+  """
+  annotateCupboardEntry(ingredientId: ID!, input: CupboardEntryInput!, workspaceId: ID!): CupboardEntry!
 
   """
   Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.
@@ -755,6 +780,11 @@ type Mutation {
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+
+  """
+  Takes the entry out of the coven's cupboard; refused while the coven holds a jar of any of its forms.
+  """
+  removeCupboardEntry(ingredientId: ID!, workspaceId: ID!): ID!
 
   """
   Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.
