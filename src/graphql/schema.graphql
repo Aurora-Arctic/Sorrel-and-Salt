@@ -411,6 +411,14 @@ input IngredientInput {
 }
 
 """
+Where a coven's list reads from: local, the coven's own entries; or compendium, the compendium entries it holds. Leaving it out lists both.
+"""
+enum IngredientSource {
+  compendium
+  local
+}
+
+"""
 The whole ingredient, replacing the row. Every field is sent, and "" or [] clears one.
 """
 input IngredientUpdateInput {
@@ -1032,7 +1040,17 @@ type Query {
     Keeps entries with a live form named any one of these, ignoring case and outer spaces.
     """
     forms: [String!]
+
+    """
+    Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.
+    """
+    inStockOnly: Boolean
     query: String
+
+    """
+    Keeps the coven's own entries, or the compendium entries it holds; leaving it out keeps both.
+    """
+    source: IngredientSource
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
@@ -1071,8 +1089,18 @@ type Query {
     Keeps entries with a live form named any one of these, ignoring case and outer spaces.
     """
     forms: [String!]
+
+    """
+    Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.
+    """
+    inStockOnly: Boolean
     last: Int
     query: String
+
+    """
+    Keeps the coven's own entries, or the compendium entries it holds; leaving it out keeps both.
+    """
+    source: IngredientSource
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
