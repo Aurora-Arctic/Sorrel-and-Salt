@@ -229,7 +229,7 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Five palettes, deliberately not equals. Two appear on an IngredientCard.
+Six palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. That keeps
@@ -256,6 +256,14 @@ than solid, so it never reads as last-used's pointer. Dark takes
 because `$sorrel-vivid` on its own tint measured 4.42:1, under 4.5. As drawn,
 its label on its tint is 5.60:1 dark and 6.98:1 light, and its edge 4.23:1 and
 4.66:1 on the dark card and page, 4.46:1 and 4.01:1 on the light ones.
+
+**Retired** (M12.24) marks a compendium entry the curators have retired, on
+the ingredient page of a coven whose cupboard still names it. It is a fact
+about the entry, not a hazard, so it takes low stock's treatment and inks
+exactly (tinted, `$chalk-muted` dark, `$ink-muted` light), which spends no hue
+and needs no new contrast check. It is its own palette so that the entry page
+does not name a retired entry after stock, and so that the section's design
+review can give it a look of its own.
 
 Each palette is one ink per theme plus the **treatment** it is drawn in, and the
 treatment decides which parts it emits:

@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
@@ -26,10 +26,13 @@ vi.mock('@/lib/viewer', () => ({ viewerOf }));
 const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
 const compendiumEntriesReplacedBy = vi.fn();
+// Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
+const isRetired = vi.fn((_row: unknown) => false);
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
   compendiumEntriesReplacedBy,
+  isRetired,
 }));
 
 // The form is its own tests'; here only that the dialog holds one.
@@ -171,6 +174,22 @@ describe('the coven ingredient page', () => {
     expect(edits()).toHaveLength(0);
   });
 
+  it('gives a retired compendium entry neither the public link nor Edit, even to a curator', async () => {
+    // Why it could have had both: the same entry, live, gets both.
+    await open(compendiumRow(), true);
+    expect(screen.getByRole('list', { name: 'In the Compendium' })).toBeInTheDocument();
+    expect(edits()).toHaveLength(1);
+    cleanup();
+
+    getIngredient.mockResolvedValue(compendiumRow());
+    ingredientDetailOf.mockResolvedValue({ ...entryDetail(), retired: true });
+    render(await Page(params()));
+
+    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
+    expect(edits()).toHaveLength(0);
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
   it("opens no dialog on the coven's own entry, even for a curator who asks for one", async () => {
     await open(covenRow(), true, { edit: '' });
 
@@ -232,6 +251,16 @@ describe('the coven ingredient page title', () => {
       title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
       alternates: { canonical: '/compendium/ingredients/testwort-fixtura-testalis' },
     });
+  });
+
+  it('names no canonical for a retired compendium entry, whose public page is gone', async () => {
+    getIngredient.mockResolvedValue(compendiumRow());
+    isRetired.mockReturnValueOnce(true);
+
+    expect(await generateMetadata(params())).toEqual({
+      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
+    });
+    expect(isRetired).toHaveBeenCalledWith(compendiumRow());
   });
 
   it("names no canonical for the coven's own entry", async () => {

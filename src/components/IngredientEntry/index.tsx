@@ -405,7 +405,7 @@ const IngredientEntry = ({
   movedAway,
   replaces,
 }: IngredientEntryProps): ReactElement => {
-  const { entry, folkNames, categories, deities, substitutes, variants } = detail;
+  const { entry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   const local = entry.workspaceId !== null;
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   const anchors = formAnchors(variants);
@@ -435,9 +435,15 @@ const IngredientEntry = ({
           title={entry.name}
           action={edit && <EditButton href={edit.href} entry={editable} />}
         />
-        {(local || toxic) && (
+        {(local || toxic || retired) && (
           <div className="badges">
             {local && <span className="badge badge--local">Local</span>}
+            {/* A compendium entry the curators retired, read because this
+                coven's cupboard names it (M12.24). An `output`, so it carries
+                the status role: on the page from the start, never announced. */}
+            {retired && (
+              <output className="badge badge--retired">No Longer in the Compendium</output>
+            )}
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}

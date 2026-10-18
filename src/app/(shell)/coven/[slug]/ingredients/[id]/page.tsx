@@ -13,6 +13,7 @@ import {
   compendiumEntriesReplacedBy,
   getIngredient,
   ingredientDetailOf,
+  isRetired,
 } from '@/modules/ingredients';
 import type { CovenIngredientParams } from './types';
 
@@ -51,12 +52,13 @@ const entryOf = cache(async (slug: string, id: string) => {
 
 // A compendium entry names its public page as canonical, since that is the
 // address a search engine should index. The path is relative: the origin
-// varies by deployment, and MB.84 owns the public page's metadata.
+// varies by deployment, and MB.84 owns the public page's metadata. A retired
+// entry has no public page left to name (M12.24).
 export async function generateMetadata({ params }: CovenIngredientParams): Promise<Metadata> {
   const { slug, id } = await params;
   const { entry } = await entryOf(slug, id);
   const title = pageTitleOf(entry);
-  return entry.workspaceId === null
+  return entry.workspaceId === null && !isRetired(entry)
     ? { title, alternates: { canonical: publicAddress(entry.slug) } }
     : { title };
 }
@@ -72,7 +74,10 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
     viewerOf(),
     compendiumEntriesReplacedBy(session, entry),
   ]);
-  const inCompendium = entry.workspaceId === null;
+  // A retired entry (M12.24) is the compendium's still, but the compendium
+  // no longer holds it: no public page to link, and nothing for a curator to
+  // edit, since the compendium's screens no longer read it.
+  const inCompendium = entry.workspaceId === null && !detail.retired;
 
   // A compendium entry offers Edit to a curator, opening the compendium's edit modal
   // over this page (M8.19). A coven's own entry gets no Edit until M8.17's modal. The form's values are

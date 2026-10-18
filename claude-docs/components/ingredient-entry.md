@@ -28,6 +28,7 @@ In page order, with the accessible names a test or a story walk finds them by:
    - The formal name (below), an eyebrow over the heading.
    - `PageHeader`: the `h1` is `entry.name`; `edit` puts a `.btn` link named **Edit** (`EditButton`) at the end of its line. From the tablet width up the head keeps to the text column (the section grid's first column), so the formal name ends where the description's text does.
    - `replaces`: an **In the Compendium** block of links, one ⓘ beside its heading saying why they are shown: for a coven's own entry, the entries it replaces, and **See All** past three; for a compendium entry, the entry itself (see the `replaces` row in the props table).
+   - The badges: **Local** for a coven's own entry, **Toxic** (`ToxicMark`), and **No Longer in the Compendium** when `detail.retired` (M12.24): a compendium entry the curators retired, read because this coven's cupboard still names it. That last one is an `<output>`, so a `status` found by its role, present from the start and never announced. The page gives a retired entry no `replaces` and no `edit`, since the compendium no longer holds it.
    - `movedAway`: a quiet warning `Notice`, a `status`, holding a link named after the moved entry.
 2. **The jump menu**: `PageNav`, a `navigation` named **On this page**, with **Details** (`#details`) at the top level, then the forms grouped under a **Forms** label: a nested `list` named **Forms**, one entry per form, labelled with the form capitalised (`#form-oil`). The grouping is `PageNav`'s `group` ([`page-nav.md`](page-nav.md)), so the ingredient reads apart from its forms. Drawn only when there is a form: with none there is nowhere to jump.
 3. **Details**: `<section id="details">`, a `region` named **Details** by its visible `h2`, then two plain `<div>`s: the text (`__text`) and the side column (`__side`). The side column is not an `<aside>`: a `complementary` landmark per section would be eight on a page like the rose's, noise to a screen reader, and each block in it is already headed and labelled. In order:
@@ -67,7 +68,7 @@ Inside a form, the lists are named by the form's name and then the heading — "
 - **Every link to another page carries a `LinkHint`** (the substitutes, the In the Compendium links, the moved-away link), so a click shows it took while the server answers. The jump menu and the Edit button do not: the first stays on the page, the second opens a modal with its own skeleton. There is no `loading.tsx` and no Suspense boundary on purpose: one would turn the public route's 404 and 308 into 200s and break rendering without script (Next's `loading` file docs, "Status codes"). See [`link-hint.md`](link-hint.md).
 - **Safety is drawn by `SafetyNote` and `ToxicMark` only** (M8.13a). The ingredient's note sits in Details; each form's sits in its own section, given that form's notes as `safetyNotes`, since the section's heading already names the form.
 - **The notes slot.** The References section is the article's last child, and v2's notes section is appended after it, so adding it moves nothing above.
-- **Meaning never by colour alone.** Local and Toxic carry their words; a category chip carries its name, its colour repeating its group.
+- **Meaning never by colour alone.** Local, Toxic and No Longer in the Compendium carry their words; a category chip carries its name, its colour repeating its group.
 
 ## Edit
 
@@ -80,7 +81,7 @@ A curator's Edit opens the compendium's edit modal over the entry's own page, no
 
 ## Styling
 
-`index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), the shell's breakpoints and offsets, `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` badge palette is new here, in `_variables.scss` (`styling.md`, "Badge palettes").
+`index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), the shell's breakpoints and offsets, `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` and `retired` badge palettes are new here (`retired` takes `low-stock`'s muted inks until the design review), in `_variables.scss` (`styling.md`, "Badge palettes").
 
 Running text stops at `$measure`: the description is a `<p>`, which `typography-base` caps, and a `dd` or list item takes `max-width: $measure` itself. A description keeps the line breaks typed into its textarea (`white-space: pre-line`).
 
@@ -101,6 +102,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - `NoFormalName`, `UnknownWithName`, `UnknownWithoutName`: the formal-name line's three sentences.
 - `NothingRecorded`: every empty state, and a form that adds nothing.
 - `CovenEntry`: a coven's own entry, badged Local.
+- `RetiredInCoven`: a retired compendium entry a coven still uses, marked No Longer in the Compendium.
 - `CompendiumEntryForCurator`: Edit, and the link to the public page.
 - `MovedAway`: the notice for the entry that left this address.
 - `FormAddsNothing`: two forms adding nothing, one of them toxic.
@@ -113,6 +115,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - the `h1` is the entry's name;
 - the formal name is a labelled, non-empty value for all eight cases (the seven kinds, `unknown` with and without a name), in italics for the three binomial kinds only, and an unconfirmed name has more than the name beside it;
 - Local is there for a coven's entry and not for a compendium one;
+- a retired entry carries a `status` in its head, and a live one none;
 - a toxic form marks the entry Toxic though the ingredient is not;
 - Folk Names, Categories and Substitutes are lists of that name in Details, with one item each;
 - a linked substitute links to `hrefOf`'s address, a typed one and one `hrefOf` has no page for are text;

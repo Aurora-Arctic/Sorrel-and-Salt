@@ -299,6 +299,15 @@ describe('IngredientEntry', () => {
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
+  it('marks a retired entry with a status in its head, and a live one with none', () => {
+    const { unmount } = renderEntry();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    unmount();
+
+    renderEntry({ detail: detail({ retired: true }) });
+    expect(screen.getByRole('status').closest('header')).not.toBeNull();
+  });
+
   it('marks the entry Toxic when a form is, though the ingredient is not', () => {
     const outsideForms = () =>
       screen

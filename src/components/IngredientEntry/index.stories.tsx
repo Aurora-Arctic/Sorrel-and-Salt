@@ -307,6 +307,11 @@ export const CompendiumEntryForCurator: Story = () => (
 // itself once, with no See All.
 export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_CASE} />;
 
+// A compendium entry the curators retired, read on a coven's route because the
+// coven's cupboard still names it (M12.24): marked, and with neither the
+// public link nor Edit, since the compendium no longer holds it.
+export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
+
 // A coven's own entry that hides a compendium entry by its formal name: the
 // "In the Compendium" block with its one link and the ⓘ saying why it is shown.
 export const LocalReplacingCompendiumEntry: Story = () => (
