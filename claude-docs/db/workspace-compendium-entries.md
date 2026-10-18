@@ -104,3 +104,35 @@ It checks `ingredient: create` and `delete` and `inventory: update`, because it 
 Two jars, or two layers in one spell, of the same form would break a unique index, and merging them would be a guess at what the coven meant, so both are refused rather than merged. The jar refusal is reachable only for a jar of a compendium form with no cupboard row, which since M12.15 only stock from before that task can be: `createStock` inserts the row with the first jar, and the existing-row refusal comes first. A layer refusal names only forms, never the spell, which may be another member's private one.
 
 `tests/modules/ingredients/services/convert-local-to-compendium.test.ts` holds the rules, the rollback included (a trigger fails the cupboard insert after the moves), and `tests/modules/ingredients/graphql/convert-local-to-compendium.test.ts` the transport's half.
+
+### Converting a compendium entry into our own
+
+M12.23 adds `convertCompendiumEntryToLocal(session, workspaceId, ingredientId)`, the other way round. It turns a compendium entry the coven holds into the coven's own ingredient, for the coven that wants to change what a cupboard row cannot override, such as the forms and sources, or to keep an entry the curators retired. The entry page offers it as **Make It Ours**. A new own ingredient is written, the coven's jars and spell layers move onto its forms, and the cupboard row is soft-deleted. The compendium entry itself is never written, and no other coven's cupboard changes.
+
+It checks `ingredient: create` and `delete` and `inventory: update`, because it adds an ingredient, removes a cupboard row and moves jars. The set is exported as `MAKE_IT_OURS_PERMISSION`, so the page offers the button on exactly what the service checks. Everything happens in one `withAudit` transaction under the coven's stock lock (`lockCovenStock`), and a failure at any step leaves every row where it was.
+
+**What the copy holds.** The new entry is written from what the coven reads on the entry page: the compendium's values with the cupboard row's overrides laid over them (`applyCupboardEntry`). So the label becomes its name, and the formal name and nomenclature are the compendium's. The write goes through the coven's own create path (`parseInput`, `resolvePicks`, `writeChildren` in `services/ingredient-rows.ts`), so the copy is checked as any own entry is. Its children are copies of the entry's:
+
+- **Forms**, each with its description, notes, lists, categories, references and substitutes. A form keeps its curated pick only while that curated form is live and still spelt as the form is; otherwise the form is kept as text.
+- **Folk names**, except one the new name now takes (the label equal to a folk name, ignoring case), which would repeat the name.
+- **Substitutes.** A link to a live ingredient is kept, with the form it names while that form is live; when the form is gone it links the ingredient whole. A link whose ingredient is gone, and a typed name, are kept as the name they read as, once each. A substitute naming the entry itself is pointed at the copy, form for form; one naming a form that was not copied is left out.
+- **Categories** and **deities**. A deity keeps its curated pick while that deity is live; otherwise its name.
+- **References**, as links to the same compendium `references` rows with their locators. The coven tier may cite a compendium reference, so nothing is lost.
+
+A retired entry the coven still holds converts the same way: its children are read through the coven's cupboard row (`heldBy`), as the page reads them.
+
+**Moving.** Each jar of a copied form is updated in place, so its id, quantity, unit and threshold are unchanged and only its ingredient and form change; forms are matched by `foldForm`, which is exact here since the copy took the forms' own text. Spell layers move the same way through `moveLayers`, every spell of the coven included, private ones whoever wrote them. A jar or layer on a form deleted earlier is in no read and stays where it is, as in M12.21.
+
+**What is lost.** Only a folk name the new name took. The answer, a `ConvertedCompendium`, carries the new entry and a `DroppedOnConvert` whose `folkNames` lists it; every other list is empty.
+
+| Refusal                                                                                 | Error             | Beside          |
+| --------------------------------------------------------------------------------------- | ----------------- | --------------- |
+| The caller lacks one of the three permissions; a viewer, or not in the coven            | `Forbidden`       |                 |
+| The coven holds no cupboard row for `ingredientId`, an own entry's id or another's      | `NotFound`        |                 |
+| Another entry of the coven already uses the label as its label                          | `ValidationError` | `label`         |
+| The coven already has its own entry of the same formal name                             | `ValidationError` | `canonicalName` |
+| The coven already has its own entry of the same name, where the entry has no formal one | `ValidationError` | `name`          |
+
+The identity refusals come from the identity index (`identity_key`, unique per coven), read back as the coven's own create reads it (`refuseCollision`, which this task moved into `services/ingredient-rows.ts` so both share it). Nothing moves when any of them is refused.
+
+`tests/modules/ingredients/services/convert-compendium-to-local.test.ts` holds the rules, the rollback included (a trigger fails the cupboard row's soft-delete after the moves), `tests/modules/ingredients/graphql/convert-compendium-to-local.test.ts` the transport's half, and `tests/e2e/make-it-ours.spec.ts` the button.

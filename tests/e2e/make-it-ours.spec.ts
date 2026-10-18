@@ -49,17 +49,22 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
     return { compendiumId: id, jarId: jar };
   });
 
+  // At a phone's width, the narrowest a section signs off at, for both scans.
+  await page.setViewportSize({ width: 375, height: 812 });
   // Why the button could be refused or absent: the entry is the compendium's,
   // the coven holds it, and the jar is on the compendium entry's form.
   await page.goto(`/coven/${coven.slug}/ingredients/${compendiumId}`);
   await expect(page.getByRole('heading', { level: 1, name: 'Fixture Our Ownwort' })).toBeVisible();
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
 
-  await page.getByRole('button', { name: 'Make It Ours' }).click();
-  await page
-    .getByRole('group', { name: 'Make It Ours' })
-    .getByRole('button', { name: 'Make It Ours' })
-    .click();
+  // By keyboard, as the entry asks: focused, then Enter, both times.
+  await page.getByRole('button', { name: 'Make It Ours' }).focus();
+  await page.keyboard.press('Enter');
+  const ask = page.getByRole('group', { name: 'Make It Ours' });
+  await expect(ask).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await ask.getByRole('button', { name: 'Make It Ours' }).focus();
+  await page.keyboard.press('Enter');
 
   const ownAddress = new RegExp(
     `/coven/${coven.slug}/ingredients/(?!${compendiumId})[0-9a-f-]{36}$`,
@@ -77,7 +82,5 @@ test('a member makes a held compendium entry the coven’s own and lands on it, 
   );
   expect(jar).toEqual({ ingredient_id: ownId, workspace_id: coven.id });
 
-  // At a phone's width, the narrowest a section signs off at.
-  await page.setViewportSize({ width: 375, height: 812 });
   await assertNoAccessibilityViolations(page);
 });

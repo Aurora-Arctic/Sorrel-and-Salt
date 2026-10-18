@@ -962,6 +962,17 @@ refusal that moves nothing is `VALIDATION` beside `ingredientId`, `label`,
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
 "Converting an own entry").
 
+**The reverse** (M12.23), `convertCompendiumEntryToLocal(workspaceId,
+ingredientId)`, makes a compendium entry the coven holds into the coven's
+own, the entry page's Make It Ours, and answers a `ConvertedCompendium`:
+`entry`, the new own `Ingredient`, and `dropped`, the same
+`DroppedOnConvert`, in which only `folkNames` can be non-empty (a folk name
+the new name took). A viewer is `FORBIDDEN`, an entry the coven does not
+hold `NOT_FOUND`, and a taken label or an own entry of the same identity
+`VALIDATION` beside `label`, `canonicalName` or `name`
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Converting a compendium entry into our own").
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in
