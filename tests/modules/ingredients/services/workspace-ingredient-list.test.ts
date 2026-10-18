@@ -7,16 +7,18 @@ import type { Session } from '@/lib/session';
 import { listWorkspaceIngredients, workspaceIngredientFacets } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
+import type { CupboardEntryFixture } from '../../../support/db/insert-cupboard-entry';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
 import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { Overrides } from '../../../support/fixtures';
 
-// Story 14's list (M9.4): a coven's ingredients are its own entries and the
-// compendium entries it holds a live jar of, the compendium half through the
-// local-beats-compendium anti-join, filtered as the compendium is but under
-// the coven's proof. The ingredient tables are emptied per test, so every row
+// Story 14's list (M9.4, M12.18): a coven's ingredients are its own entries and
+// the compendium entries its cupboard names, one live
+// `workspace_compendium_entries` row each, filtered as the compendium is but
+// under the coven's proof and over the coven's overrides. The ingredient tables are emptied per test, so every row
 // a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
@@ -31,6 +33,22 @@ beforeEach(async () => {
 /** An entry, compendium by default, with no formal name unless stated. */
 function add(name: string, overrides: Overrides<IngredientFixture> = {}): Promise<string> {
   return insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
+}
+
+/** The compendium entry `ingredientId` in `workspaceId`'s cupboard, with `overrides`. */
+function hold(
+  ingredientId: string,
+  workspaceId = WORKSPACE_W_ID,
+  overrides: Omit<CupboardEntryFixture, 'workspaceId' | 'ingredientId'> = {},
+): Promise<string> {
+  return insertCupboardEntry(sql, { workspaceId, ingredientId, ...overrides }, A.id);
+}
+
+/** A compendium entry in W's cupboard. */
+async function held(name: string, overrides: Overrides<IngredientFixture> = {}): Promise<string> {
+  const id = await add(name, overrides);
+  await hold(id);
+  return id;
 }
 
 /** A jar in `workspaceId` of the ingredient's form `form`, written raw. */
@@ -57,12 +75,24 @@ async function listed(
   return page.edges.map(({ node }) => node.name);
 }
 
+/** The ids `session` is listed in `workspaceId` under `filter`. */
+async function idsListed(
+  session: Session,
+  workspaceId: string,
+  filter: Parameters<typeof listWorkspaceIngredients>[2],
+): Promise<string[]> {
+  const page = await resolvePage({ first: 100 }, (request) =>
+    listWorkspaceIngredients(session, workspaceId, filter, request),
+  );
+  return page.edges.map(({ node }) => node.id);
+}
+
 describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
   /** A local entry, a held compendium entry and a local one with no jar. */
   async function seedSources(): Promise<void> {
     await stock(await add('Covenwort', { workspaceId: WORKSPACE_W_ID }));
     await add('Barecovenwort', { workspaceId: WORKSPACE_W_ID });
-    await stock(await add('Heldwort'));
+    await stock(await held('Heldwort'));
     await add('Unheldwort');
     await add('Elsewort', { workspaceId: WORKSPACE_X_ID });
   }
@@ -79,15 +109,15 @@ describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
   });
 
   it('keeps an entry with any jar not at 0, and one whose only jar has no quantity', async () => {
-    const mixed = await add('Mixedwort', {
+    const mixed = await held('Mixedwort', {
       variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })],
     });
     await stock(mixed, WORKSPACE_W_ID, 'Herb', false, '0');
     await stock(mixed, WORKSPACE_W_ID, 'Oil', false, '2');
-    await stock(await add('Unweighedwort'));
-    await stock(await add('Weighedwort'), WORKSPACE_W_ID, 'Testform', false, '3.5');
-    await stock(await add('Emptywort'), WORKSPACE_W_ID, 'Testform', false, '0');
-    const spent = await add('Spentwort', {
+    await stock(await held('Unweighedwort'));
+    await stock(await held('Weighedwort'), WORKSPACE_W_ID, 'Testform', false, '3.5');
+    await stock(await held('Emptywort'), WORKSPACE_W_ID, 'Testform', false, '0');
+    const spent = await held('Spentwort', {
       variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })],
     });
     await stock(spent, WORKSPACE_W_ID, 'Herb', false, '0');
@@ -112,11 +142,11 @@ describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
   });
 
   it("does not count a deleted jar as in stock, nor another coven's jar", async () => {
-    const entry = await add('Deletedjarwort');
+    const entry = await held('Deletedjarwort');
     await stock(entry, WORKSPACE_W_ID, 'Testform', false, '0');
     await stock(entry, WORKSPACE_W_ID, 'Testform', true, '5');
     await stock(entry, WORKSPACE_X_ID, 'Testform', false, '5');
-    await stock(await add('Livejarwort'), WORKSPACE_W_ID, 'Testform', false, '5');
+    await stock(await held('Livejarwort'), WORKSPACE_W_ID, 'Testform', false, '5');
 
     expect(await listed(asUser(B))).toEqual(['Deletedjarwort', 'Livejarwort']);
     expect(await listed(asUser(B), WORKSPACE_W_ID, { inStock: true })).toEqual(['Livejarwort']);
@@ -130,7 +160,7 @@ describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
       false,
       '1',
     );
-    await stock(await add('Heldwort'), WORKSPACE_W_ID, 'Testform', false, '1');
+    await stock(await held('Heldwort'), WORKSPACE_W_ID, 'Testform', false, '1');
     await stock(
       await add('Emptywort', { workspaceId: WORKSPACE_W_ID }),
       WORKSPACE_W_ID,
@@ -149,13 +179,15 @@ describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
 });
 
 describe('listWorkspaceIngredients', () => {
-  it("lists the coven's own entries and the compendium entries it holds, and nothing else", async () => {
+  it("lists the coven's own entries and the compendium entries its cupboard names, and nothing else", async () => {
     await add('Covenwort', { workspaceId: WORKSPACE_W_ID });
-    await stock(await add('Heldwort'));
+    await held('Heldwort');
     await add('Unheldwort');
+    // A jar alone no longer puts an entry in the list: only the cupboard row does.
+    await stock(await add('Jaronlywort'));
     await add('Elsewort', { workspaceId: WORKSPACE_X_ID });
-    // X's jar of a compendium entry does not put it in W's list.
-    await stock(await add('Xheldwort'), WORKSPACE_X_ID);
+    // X's cupboard row does not put a compendium entry in W's list.
+    await hold(await add('Xheldwort'), WORKSPACE_X_ID);
 
     expect(await listed(asUser(B))).toEqual(['Covenwort', 'Heldwort']);
     // Why W's list could have held the rest: they are live, and X lists its own.
@@ -163,33 +195,30 @@ describe('listWorkspaceIngredients', () => {
   });
 
   it('lists a held entry once, however many of its forms the coven holds', async () => {
-    const held = await add('Heldwort', {
+    const entry = await held('Heldwort', {
       variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })],
     });
-    await stock(held, WORKSPACE_W_ID, 'Herb');
-    await stock(held, WORKSPACE_W_ID, 'Oil');
+    await stock(entry, WORKSPACE_W_ID, 'Herb');
+    await stock(entry, WORKSPACE_W_ID, 'Oil');
 
     expect(await listed(asUser(B))).toEqual(['Heldwort']);
   });
 
-  it('leaves out an entry whose only jar is deleted, or is of a deleted form', async () => {
-    await stock(await add('Thrownwort'), WORKSPACE_W_ID, 'Testform', true);
-    const formGone = await add('Formgonewort');
-    await stock(formGone);
-    await sql`
-      update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
-      where ingredient_id = ${formGone}`;
-    // Why they could have been listed: a live jar of either put it there.
-    await stock(await add('Heldwort'));
+  it('leaves out an entry whose cupboard row is deleted, and one whose row names a coven entry', async () => {
+    await hold(await add('Removedwort'), WORKSPACE_W_ID, { deleted: true });
+    // A row naming the coven's own entry is not a cupboard entry; the entry
+    // lists once, as the coven's own.
+    await hold(await add('Ownwort', { workspaceId: WORKSPACE_W_ID }));
+    // Why the first could have been listed: a live row puts it there.
+    await held('Heldwort');
 
-    expect(await listed(asUser(B))).toEqual(['Heldwort']);
+    expect(await listed(asUser(B))).toEqual(['Heldwort', 'Ownwort']);
   });
 
   it("leaves out the coven's deleted entry, and a deleted compendium entry it holds", async () => {
     await add('Covenwort', { workspaceId: WORKSPACE_W_ID });
     const deleted = await add('Deletedwort', { workspaceId: WORKSPACE_W_ID });
-    const retired = await add('Retiredwort');
-    await stock(retired);
+    const retired = await held('Retiredwort');
     await sql`
       update ingredients set deleted_at = now(), deleted_by = ${A.id}
       where id in ${sql([deleted, retired])}`;
@@ -197,25 +226,80 @@ describe('listWorkspaceIngredients', () => {
     expect(await listed(asUser(B))).toEqual(['Covenwort']);
   });
 
-  it('shows the local entry in place of a held compendium entry it matches, keeping the jar', async () => {
-    const entry = await add('Fixturewort', {
+  // M12.18 decision 2: the coven chose both entries, so both are listed. The
+  // local entry no longer hides the compendium entry it matches.
+  it('lists a local entry beside the held compendium entry it matches', async () => {
+    const entry = await held('Fixturewort', {
       canonicalName: 'Fixtura vulgaris',
       nomenclature: 'botanical',
     });
-    const jar = await stock(entry);
-    // Why the entry could have been listed: until the local exists, it is.
-    expect(await listed(asUser(B))).toEqual(['Fixturewort']);
-
-    await add('Cronefixture', {
+    const local = await add('Cronefixture', {
       canonicalName: 'Fixtura vulgaris',
       nomenclature: 'botanical',
       workspaceId: WORKSPACE_W_ID,
     });
 
-    expect(await listed(asUser(B))).toEqual(['Cronefixture']);
-    // Nothing is moved or deleted behind the member's back (M9.4).
-    const [row] = await sql`select deleted_at from inventory_items where id = ${jar}`;
-    expect(row.deleted_at).toBeNull();
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, {})).toEqual([local, entry]);
+  });
+
+  it('sorts and finds a relabelled entry under its label, and still finds it by its compendium name', async () => {
+    const relabelled = await add('Zorvaxine');
+    await hold(relabelled, WORKSPACE_W_ID, { label: 'Amblequist' });
+    const own = await add('Midfixture', { workspaceId: WORKSPACE_W_ID });
+    // X's label is not W's: it neither sorts nor finds W's entry.
+    await hold(relabelled, WORKSPACE_X_ID, { label: 'Pellhaven' });
+
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, {})).toEqual([relabelled, own]);
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, { query: 'amblequist' })).toEqual([
+      relabelled,
+    ]);
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, { query: 'zorvaxine' })).toEqual([
+      relabelled,
+    ]);
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, { query: 'pellhaven' })).toEqual([]);
+    // Why X's label could have found it: X's list finds it so.
+    expect(await idsListed(asUser(D), WORKSPACE_X_ID, { query: 'pellhaven' })).toEqual([
+      relabelled,
+    ]);
+  });
+
+  it('pages a relabelled entry by its label, one at a time', async () => {
+    const relabelled = await add('Zedfixture');
+    await hold(relabelled, WORKSPACE_W_ID, { label: 'Midfixture' });
+    const first = await add('Amberfixture', { workspaceId: WORKSPACE_W_ID });
+    const last = await held('Quillfixture');
+
+    const ids: string[] = [];
+    let after: string | undefined;
+    for (let i = 0; i < 4; i++) {
+      const page = await resolvePage({ first: 1, after }, (request) =>
+        listWorkspaceIngredients(asUser(B), WORKSPACE_W_ID, {}, request),
+      );
+      ids.push(...page.edges.map(({ node }) => node.id));
+      if (!page.pageInfo.hasNextPage) break;
+      after = page.pageInfo.endCursor ?? undefined;
+    }
+
+    expect(ids).toEqual([first, relabelled, last]);
+  });
+
+  it('ranks by score alone, an own entry and a compendium entry of one name side by side', async () => {
+    const own = await add('Tiefixture', { workspaceId: WORKSPACE_W_ID });
+    const entry = await held('Tiefixture');
+    // A folk name scores below a name, so the rank, not the kind, orders the rest.
+    const byFolk = await add('Aafixture', {
+      workspaceId: WORKSPACE_W_ID,
+      folkNames: ['Tiefixture'],
+    });
+
+    const page = await resolvePage({ first: 10 }, (request) =>
+      listWorkspaceIngredients(asUser(B), WORKSPACE_W_ID, { query: 'tiefixture' }, request),
+    );
+    const ranked = page.edges.map(({ node, score }) => ({ id: node.id, score }));
+    // The two named entries tie at the top and fall back to name, then id.
+    expect(ranked.map(({ id }) => id)).toEqual([...[own, entry].sort(), byFolk]);
+    expect(ranked[0].score).toBe(ranked[1].score);
+    expect(ranked[2].score).toBeLessThan(ranked[1].score as number);
   });
 
   it("filters by search, category and forms, under the coven's proof", async () => {
@@ -224,14 +308,10 @@ describe('listWorkspaceIngredients', () => {
       folkNames: ['Cronefixture'],
       categories: ['Protection'],
     });
-    await stock(
-      await add('Oilfixture', {
-        variants: [makeVariant({ form: 'Oil' })],
-        categories: ['Protection'],
-      }),
-      WORKSPACE_W_ID,
-      'Oil',
-    );
+    await held('Oilfixture', {
+      variants: [makeVariant({ form: 'Oil' })],
+      categories: ['Protection'],
+    });
     await add('Plainfixture', { workspaceId: WORKSPACE_W_ID });
     // X's entry matches every filter below, so a filter reading past the
     // proof would list it.
@@ -289,18 +369,6 @@ describe('listWorkspaceIngredients', () => {
 
     await expect(listed(asUser(E))).rejects.toThrow(Forbidden);
   });
-
-  /** The ids `session` is listed in `workspaceId` under `filter`. */
-  async function idsListed(
-    session: Session,
-    workspaceId: string,
-    filter: Parameters<typeof listWorkspaceIngredients>[2],
-  ): Promise<string[]> {
-    const page = await resolvePage({ first: 100 }, (request) =>
-      listWorkspaceIngredients(session, workspaceId, filter, request),
-    );
-    return page.edges.map(({ node }) => node.id);
-  }
 
   // A curator cannot delete a deity or category a compendium entry holds, but
   // a coven's own entry keeps its link through the delete. The filter reads

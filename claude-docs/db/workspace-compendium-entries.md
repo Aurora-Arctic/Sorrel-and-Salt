@@ -89,3 +89,14 @@ It checks `ingredient: create` and `delete` and `inventory: update`, because it 
 Two jars, or two layers in one spell, of the same form would break a unique index, and merging them would be a guess at what the coven meant, so both are refused rather than merged. The jar refusal is reachable only for a jar of a compendium form with no cupboard row, which since M12.15 only stock from before that task can be: `createStock` inserts the row with the first jar, and the existing-row refusal comes first. A layer refusal names only forms, never the spell, which may be another member's private one.
 
 `tests/modules/ingredients/services/convert-local-to-compendium.test.ts` holds the rules, the rollback included (a trigger fails the cupboard insert after the moves), and `tests/modules/ingredients/graphql/convert-local-to-compendium.test.ts` the transport's half.
+
+### In the cupboard list
+
+The coven's ingredient list and its facet counts (M12.18; [`stock.md`](stock.md), "The workspace ingredient list") read this table in two ways.
+
+- **Which compendium entries are listed.** `workspaceListScope` keeps a compendium entry when the proof's coven has a live row for it, as one keyed `EXISTS` on the `(workspace_id, ingredient_id)` unique above. A jar of the entry is neither needed nor enough. The source filter's `compendium` side counts exactly these entries, so it and the `local` side add up to the list's total.
+- **What the listed entry says.** The statement left-joins the coven's live row, under the private alias `cupboard` in `src/db/repository/ingredients.ts`, joined only onto a compendium row, so a row naming one of the coven's own ingredients changes nothing. `listColumns(membership)` reads `coalesce(cupboard.x, ingredients.x)` for the label and for elements, celestial bodies and zodiac signs: the sort and the cursor run on `coalesce(label, name)`, the search adds the label as an arm (M12.19), and the filters and facet counts read the three lists as the coven left them, with `[]` counting under nothing, as `applyCupboardEntry` treats it. Categories, forms and `toxic` have no override and read from the compendium; the `colors` override has no filter or facet to read it yet.
+
+The joined row rides on each page entry as `cupboardEntry`, and the list's resolver primes the `cupboardEntryByIngredient` loader with it, so `Ingredient.cupboardEntry` on a listed row is answered without `findCupboardEntriesOf`. A row whose compendium entry has been retired (soft-deleted) lists nothing yet: the tombstone filter on `ingredients` drops the entry first, until M12.24's hatch.
+
+`tests/modules/ingredients/services/workspace-ingredient-list.test.ts` holds the list's cases and `tests/modules/ingredients/services/ingredient-facets.test.ts` the counts, each seeding another coven's row beside the one that must count.
