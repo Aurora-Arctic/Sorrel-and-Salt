@@ -17,9 +17,23 @@
   margin: 0;
 }
 
-// Keeps a form's icon on the line with its name when the line wraps.
+// One wrapping row; each item is a flex row so the dot, the icon and the name
+// share a centre line (a dot in plain text would sit on the baseline). Flex
+// trims the spaces around the dot, so the gap does the spacing.
+.ingredient-card__forms {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.ingredient-card__item,
 .ingredient-card__form {
   display: inline-flex;
   align-items: center;
   gap: space(1);
+}
+
+// The chip row is a list, so it drops typography-base's ◆ marker and indent.
+.ingredient-card .specimen__chips {
+  @include list-reset;
 }

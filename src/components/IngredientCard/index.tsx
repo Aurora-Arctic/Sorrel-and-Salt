@@ -72,7 +72,7 @@ const IngredientCard = ({
             <span key={variant.form} className="ingredient-card__item">
               {/* Decorative: the separator is for the eye, and a screen reader
                   hears the forms as the run of text they are. */}
-              {at > 0 && <span aria-hidden="true"> · </span>}
+              {at > 0 && <span aria-hidden="true">·</span>}
               <span className="ingredient-card__form">
                 <FormIcon name={variant.formChoice?.group.icon ?? null} />{' '}
                 {capitalise(variant.form)}
