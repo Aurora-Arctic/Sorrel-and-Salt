@@ -36,6 +36,19 @@ describe('IngredientCard', () => {
     expect(links[0]).toHaveAttribute('href', HREF);
   });
 
+  it('keeps one link, named by the ingredient, beside the Low badge button', () => {
+    render(
+      <IngredientCard {...BASE}>
+        <StockBadge quantity={6} threshold={10} unit="g" />
+      </IngredientCard>,
+    );
+
+    const card = screen.getByRole('article');
+    expect(within(card).getAllByRole('link')).toHaveLength(1);
+    expect(within(card).getByRole('link')).toHaveAccessibleName('Fixture Testwort');
+    expect(within(card).getByRole('button', { name: /^Low Stock/ })).toBeInTheDocument();
+  });
+
   it('names the card by the heading holding the link, at the level asked', () => {
     render(<IngredientCard {...BASE} level={3} />);
 

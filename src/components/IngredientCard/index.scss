@@ -9,6 +9,49 @@
   @include modal-surface($shadow-floating);
 
   padding: space(5);
+  // The containing block for the name link's stretched `::after` below.
+  position: relative;
+  cursor: pointer;
+}
+
+// The whole card is the link: the name's one `<a>` stretches an empty `::after`
+// over the article. Not an `<a>` around the card, which a screen reader would
+// read whole as the link's name and which cannot hold the Low badge's button.
+// Plain ink with no underline at rest; the card's hover draws the underline.
+.ingredient-card .ingredient-card__name a {
+  color: $text-primary;
+  text-decoration: none;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: radius('surface');
+  }
+
+  // The ring goes round the card, drawn on the overlay, so the name shows none of
+  // its own and no `:has()` is needed.
+  &:focus-visible {
+    outline: none;
+
+    &::after {
+      @include focus-ring;
+    }
+  }
+}
+
+.ingredient-card:hover .ingredient-card__name a {
+  text-decoration: underline;
+}
+
+// Above the overlay, so the Low badge's button keeps its own hover, focus and
+// click (it opens a tip) instead of following the card's link.
+.ingredient-card .stock-badge-tip {
+  z-index: 1;
 }
 
 .ingredient-card__name,

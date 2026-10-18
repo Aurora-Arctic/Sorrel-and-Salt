@@ -46,6 +46,17 @@ the badge's normal font weight and padding, so both come out the same height. Th
 word and the icon still tell the states apart; the heavier edge is M9.8's for a
 badge standing alone. The forms line leaves 8px either side of its dot.
 
+**The whole card is the link.** The name's one `<a>` stretches an empty `::after`
+over the `article` (`position: relative`), the stretched-link pattern. The card
+is not wrapped in an `<a>`: a screen reader would read the whole card as the
+link's name, and a link cannot hold the Low badge's button. So the accessible name
+stays the ingredient's name and the card has exactly one link. The Low badge's tip
+anchor sits above the overlay (`z-index: 1`) and keeps its own hover, focus and
+click. The name is `$text-primary` with no underline; hovering anywhere on the card
+underlines it and shows the pointer, and the focus ring is drawn on the overlay,
+round the card. A cost accepted: text in the card is harder to select, since a
+drag starts on the overlay.
+
 ## Order
 
 The card declares no sort. Two rows sharing a label keep a stable order through
