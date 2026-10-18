@@ -189,6 +189,20 @@ const hrefOf: IngredientEntryProps['hrefOf'] = (ingredient) =>
   `/compendium/ingredients/${ingredient.slug}` as Route;
 
 /** A page's main, as the routes give it. */
+const COMPENDIUM_CASE: NonNullable<IngredientEntryProps['replaces']> = {
+  tip: 'This entry is the compendium’s. Its public page is linked here.',
+  entries: [
+    {
+      title: 'Testwort (Fixtura testalis)',
+      href: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+    },
+  ],
+  total: 1,
+};
+
+const LOCAL_TIP =
+  'Your coven’s entry is offered in their place when you pick a substitute. Compare them here.';
+
 const Page = ({ children }: { children: ReactNode }) => (
   <main className="page-column">{children}</main>
 );
@@ -275,7 +289,7 @@ export const CovenEntry: Story = () => (
 
 // A compendium entry as a curator reads it on a coven's route: Edit opens the
 // compendium's edit modal over the page (it has no router here, so a press
-// follows the link), and the link to its public page.
+// follows the link), and the "In the Compendium" block linking its public page.
 export const CompendiumEntryForCurator: Story = () => (
   <Entry
     edit={{
@@ -283,7 +297,46 @@ export const CompendiumEntryForCurator: Story = () => (
       closeHref: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
       deletedHref: '/compendium' as Route,
     }}
-    canonical={'/compendium/ingredients/testwort-fixtura-testalis' as Route}
+    replaces={COMPENDIUM_CASE}
+  />
+);
+
+// A compendium entry seen from a coven: the same block, listing the entry
+// itself once, with no See All.
+export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_CASE} />;
+
+// A coven's own entry that hides a compendium entry by its formal name: the
+// "In the Compendium" block with its one link and the ⓘ saying why it is shown.
+export const LocalReplacingCompendiumEntry: Story = () => (
+  <Entry
+    replaces={{
+      tip: LOCAL_TIP,
+      entries: [
+        {
+          title: 'Testwort (Fixtura testalis)',
+          href: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+        },
+      ],
+      total: 1,
+      allHref: '/compendium?query=Fixture%20Wort' as Route,
+    }}
+  />
+);
+
+// A label match hides four compendium entries: the first three, then See All
+// to the compendium search for the label.
+export const LocalReplacingSeveral: Story = () => (
+  <Entry
+    replaces={{
+      tip: LOCAL_TIP,
+      entries: [
+        { title: 'Fixture Alpha', href: '/compendium/ingredients/fixture-alpha' as Route },
+        { title: 'Fixture Beta', href: '/compendium/ingredients/fixture-beta' as Route },
+        { title: 'Fixture Gamma', href: '/compendium/ingredients/fixture-gamma' as Route },
+      ],
+      total: 4,
+      allHref: '/compendium?query=Fixture%20Wort' as Route,
+    }}
   />
 );
 

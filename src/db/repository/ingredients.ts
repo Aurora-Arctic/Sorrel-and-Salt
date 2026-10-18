@@ -47,6 +47,7 @@ import { existsIn, selectFrom, selectOne } from './select';
 import { curated, inLiveGroup } from './vocabularies';
 import type {
   CompendiumScore,
+  HiddenCompendiumEntries,
   IngredientFilter,
   IngredientIdentity,
   IngredientRow,
@@ -378,6 +379,45 @@ export function notHiddenByLocal(membership: Membership): SQL {
       and(scopedTo(membership, local), inCompendium(ingredients), hides(local, ingredients)),
     ),
   );
+}
+
+/**
+ * The first `limit` live compendium entries the coven's own entry `localId`
+ * hides (M12.12), and how many it hides in all. Ordered by name and then id,
+ * in the database and as the compendium's own list is, so a page that lists
+ * both agrees with this. A match is the entry's identity, or its label when it
+ * declares no formal name, as `hides` reads them, so the link a page shows and
+ * the entry a list drops are the same pair. The local row is read under the
+ * proof and live, so another coven's id, a deleted one, or a compendium
+ * entry's own id hides nothing. Only the four fields a link needs return.
+ */
+export async function findCompendiumEntriesHiddenBy(
+  membership: Membership,
+  localId: string,
+  limit: number,
+): Promise<HiddenCompendiumEntries> {
+  const local = alias(ingredients, 'local');
+  const where = and(
+    inCompendium(ingredients),
+    existsIn(
+      local,
+      and(scopedTo(membership, local), eq(local.id, localId), hides(local, ingredients)),
+    ),
+  );
+  const order = [ingredients.name];
+  const [page, { totalCount }] = await Promise.all([
+    findPageInTiers([], ingredients, order, { limit, inverted: false }, where),
+    findPageCountInTiers([], ingredients, order, undefined, where),
+  ]);
+  return {
+    entries: page.map(({ node: { id, slug, name, canonicalName } }) => ({
+      id,
+      slug,
+      name,
+      canonicalName,
+    })),
+    total: totalCount,
+  };
 }
 
 /** The columns of an `ingredients` row `hides` compares, whatever alias the row is read under. */

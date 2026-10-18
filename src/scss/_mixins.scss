@@ -737,7 +737,7 @@
 // A short decorative hairline, drawn by a pseudo-element so the markup gains no
 // element: the caller makes the box it sits in `position: relative` and says
 // where, with the insets. Used by the jump menu's gap above References and the
-// entry page's gap under the Compendium Entry link.
+// entry page's gap under the In the Compendium block.
 @mixin short-hairline {
   content: '';
   position: absolute;

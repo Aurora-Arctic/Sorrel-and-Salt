@@ -346,12 +346,64 @@ function FormSection({
   );
 }
 
+// The side column's link to the compendium (M12.12), for both cases: a coven's
+// own entry lists the compendium entries it replaces, and a compendium entry
+// viewed in a coven lists itself, once, at its public page. The page chooses the
+// ⓘ sentence for each, so the component does not branch on tier. A block headed
+// like its siblings (an h3, and no entry in the jump menu, which lists sections),
+// with one ⓘ beside the heading saying why they are shown, and not one per
+// link; the list is described by it, as a field is by its hint. Each link is the
+// entry's own title, so the titles tell them apart and nothing is hidden.
+// Three at most, then "See All" to the compendium search for the label: a
+// paragraph after the list, not an item in it, since it is not an entry.
+function ReplacesBlock({
+  replaces,
+}: {
+  replaces: NonNullable<IngredientEntryProps['replaces']>;
+}): ReactElement {
+  const block = blockOf('details', 'compendium');
+  const whyId = `${block.id}-why`;
+  return (
+    <div className="ingredient-entry__block ingredient-entry__replaces">
+      <div className="ingredient-entry__heading-row">
+        <h3 id={block.id}>In the Compendium</h3>
+        <InfoTip id={whyId} label="In the Compendium">
+          {replaces.tip}
+        </InfoTip>
+      </div>
+      <ul
+        className="ingredient-entry__list ingredient-entry__replaced"
+        aria-labelledby={block.id}
+        aria-describedby={whyId}
+      >
+        {replaces.entries.map(({ title, href }) => (
+          <li key={href}>
+            <Link href={href}>
+              {title}
+              <LinkIcon />
+              <LinkHint />
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {replaces.allHref && replaces.total > replaces.entries.length && (
+        <p className="ingredient-entry__see-all">
+          <Link href={replaces.allHref}>
+            See All {replaces.total}
+            <LinkHint />
+          </Link>
+        </p>
+      )}
+    </div>
+  );
+}
+
 const IngredientEntry = ({
   detail,
   hrefOf,
   edit,
   movedAway,
-  canonical,
+  replaces,
 }: IngredientEntryProps): ReactElement => {
   const { entry, folkNames, categories, deities, substitutes, variants } = detail;
   const local = entry.workspaceId !== null;
@@ -429,15 +481,7 @@ const IngredientEntry = ({
         {/* A plain div, not an aside: one complementary landmark per section
             would be noise, and each block is already headed and labelled. */}
         <div className="ingredient-entry__side">
-          {canonical && (
-            <p className="ingredient-entry__canonical">
-              <Link href={canonical}>
-                Compendium Entry
-                <LinkIcon />
-                <LinkHint />
-              </Link>
-            </p>
-          )}
+          {replaces && <ReplacesBlock replaces={replaces} />}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
             rows={correspondences(entry, deities)}

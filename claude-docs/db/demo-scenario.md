@@ -34,7 +34,7 @@ by tier and identity, so the extra entries make none of them ambiguous.
 **Four things in it are fixtures rather than decoration:**
 
 - **W's own ingredients**, the workspace tier of §5's one table: `Garden
-Rosemary`, `Hearth Ash`, `House Chamomile` and `Ginger`. A grimoire
+Rosemary`, `Hearth Ash`, `House Chamomile`, `Ginger` and `Cat's Claw`. A grimoire
   that only ever reached the compendium would exercise half of §5, and the
   jars mix the two the way a real one does.
 - **W's Ginger carries the uncurated form**, one variant typed `rhizome`
@@ -52,6 +52,20 @@ Rosemary`, `Hearth Ash`, `House Chamomile` and `Ginger`. A grimoire
   either holds (Garden Rosemary's one `herb`, the compendium's `Herb` and
   `Oil`). That pair is exactly what M8.3's local-beats-compendium resolution
   collapses, and it can only be resolved where both rows exist.
+  It is also the case M12.12 shows: Garden Rosemary's page has an
+  “In the Compendium” block linking the compendium's Rosemary
+  (`rosemary-salvia-rosmarinus`) by its title, with a warning beside the
+  heading that the two differ, because the finder behind the link matches on that same identity
+  under another label. Basil is the other case, a compendium entry seen from a
+  coven, which gets the same block listing itself once, with its own ⓘ sentence. The same identity makes
+  House Chamomile and Ginger link their compendium entries too
+  (`tests/db/seed/demo.test.ts` pins Rosemary's).
+- **Cat's Claw is the multi-entry case for M12.12.** W's entry has no formal
+  name (nomenclature `unknown`, one `bark` variant), so it replaces every
+  compendium entry called Cat's Claw, and `standard` seeds five (four plants and the animal claw). Its page shows
+  three links in the “In the Compendium” block, then “See All 5”, which opens
+  the compendium search for “Cat's Claw”.
+  (`tests/db/seed/demo.test.ts` pins three entries and a total of five.)
 - **One custom, one-off layer** (MB.40, story 57): "Dust from the front step",
   `form` `dust`, no `ingredient_id`, sitting between two linked layers in the
   same jar. It is never an `ingredients` row anywhere, and `dust` is nowhere in

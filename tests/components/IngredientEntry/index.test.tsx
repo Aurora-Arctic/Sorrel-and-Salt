@@ -455,18 +455,105 @@ describe('IngredientEntry', () => {
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
   });
 
-  it('links to the public page when given its address', () => {
-    const canonical = '/compendium/ingredients/testwort-fixtura-testalis' as Route;
-    const { unmount } = renderEntry();
-    expect(
-      screen.queryAllByRole('link').filter((link) => link.getAttribute('href') === canonical),
-    ).toHaveLength(0);
-    unmount();
+  describe('a coven entry that replaces compendium entries', () => {
+    const ALL = '/compendium?query=Fixture%20Wort' as Route;
+    const replacing = (
+      count: number,
+      total = count,
+    ): NonNullable<IngredientEntryProps['replaces']> => ({
+      tip: 'Fixture reason the entries are shown.',
+      entries: Array.from({ length: count }, (_, at) => ({
+        title: `Fixture Replaced ${at + 1}`,
+        href: `/compendium/ingredients/fixture-replaced-${at + 1}` as Route,
+      })),
+      total,
+      allHref: ALL,
+    });
+    const block = () => screen.queryByRole('heading', { name: 'In the Compendium' });
+    const links = () =>
+      within(screen.getByRole('list', { name: 'In the Compendium' })).getAllByRole('link');
+    const seeAll = () => screen.queryByRole('link', { name: /^See All 4/ });
+    const why = () => screen.queryByRole('button', { name: 'About In the Compendium' });
 
-    renderEntry({ canonical });
-    expect(
-      screen.getAllByRole('link').filter((link) => link.getAttribute('href') === canonical),
-    ).toHaveLength(1);
+    it('heads a block of links, each to its entry’s public page by its title, above Correspondences', () => {
+      renderEntry({ replaces: replacing(2) });
+
+      expect(links().map((link) => link.getAttribute('href'))).toEqual([
+        '/compendium/ingredients/fixture-replaced-1',
+        '/compendium/ingredients/fixture-replaced-2',
+      ]);
+      expect(links()[0]).toHaveAccessibleName(/Fixture Replaced 1/);
+      expect(
+        precedes(block()!, screen.getAllByRole('heading', { name: 'Correspondences' })[0]!),
+      ).toBe(true);
+      // It is a block of the side column, not a section of the jump menu.
+      expect(screen.queryByRole('link', { name: 'In the Compendium' })).not.toBeInTheDocument();
+    });
+
+    it('puts one ⓘ beside the heading, however many entries it links', () => {
+      renderEntry({ replaces: replacing(3) });
+
+      expect(screen.getAllByRole('button', { name: 'About In the Compendium' })).toHaveLength(1);
+      expect(
+        within(block()!.parentElement!).getByRole('button', { name: 'About In the Compendium' }),
+      ).toBe(why());
+    });
+
+    it('describes the list by the ⓘ’s text, and opens that text when the ⓘ takes focus', () => {
+      renderEntry({ replaces: replacing(1) });
+      const list = screen.getByRole('list', { name: 'In the Compendium' });
+      // The text is in the page while closed, so the list is described without opening it.
+      expect(list).toHaveAccessibleDescription(/\S/);
+      expect(screen.queryByRole('tooltip', { name: /\S/ })).not.toBeInTheDocument();
+      const before = screen.queryAllByRole('tooltip').length;
+
+      act(() => why()!.focus());
+
+      expect(screen.getAllByRole('tooltip')).toHaveLength(before + 1);
+    });
+
+    it('links three entries and no See All when it replaces three', () => {
+      renderEntry({ replaces: replacing(3) });
+
+      expect(links()).toHaveLength(3);
+      expect(seeAll()).not.toBeInTheDocument();
+    });
+
+    it('links the first three and a See All to the search for the label when it replaces four', () => {
+      renderEntry({ replaces: replacing(3, 4) });
+
+      expect(links()).toHaveLength(3);
+      expect(seeAll()).toHaveAttribute('href', ALL);
+      // It is the way on to the rest, not a fourth entry: it stands outside the list.
+      expect(screen.getByRole('list', { name: 'In the Compendium' })).not.toContainElement(
+        seeAll(),
+      );
+      expect(seeAll()).toHaveAccessibleName(/4/);
+    });
+
+    it('shows no block and no ⓘ when the entry replaces nothing', () => {
+      renderEntry();
+
+      expect(block()).not.toBeInTheDocument();
+      expect(why()).not.toBeInTheDocument();
+    });
+
+    it('gives a compendium entry the same block: one link to its public page, the ⓘ, no See All', () => {
+      const href = '/compendium/ingredients/testwort-fixtura-testalis' as Route;
+      renderEntry({
+        replaces: {
+          tip: 'Fixture reason the entry is shown.',
+          entries: [{ title: 'Testwort (Fixtura testalis)', href }],
+          total: 1,
+        },
+      });
+
+      expect(links().map((link) => link.getAttribute('href'))).toEqual([href]);
+      expect(block()).toBeInTheDocument();
+      expect(why()).toBeInTheDocument();
+      expect(seeAll()).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Compendium Entry' })).not.toBeInTheDocument();
+    });
   });
 
   it('links the entry that moved off this address to where it is now', () => {

@@ -54,6 +54,21 @@ export interface IngredientEntryProps {
    * open (MB.82): its name, and its page now.
    */
   movedAway?: { name: string; href: Route };
-  /** The public page of a compendium entry, which the coven route links to. */
-  canonical?: Route;
+  /**
+   * The side column's "In the Compendium" block (M12.12). For a coven's own
+   * entry, the compendium entries it replaces: up to three links, each titled
+   * "Name (Formal Name)" (or the name alone) and going to the entry's public
+   * page. For a compendium entry, itself: one link to its public page. `tip`
+   * is the sentence in the ⓘ beside the heading, chosen by the page. `total`
+   * is how many are replaced in all; past the links shown, "See All" goes to
+   * `allHref`, the compendium search for the entry's label. `allHref` is left
+   * out where nothing is hidden, and then no See All shows. The block is left
+   * out for a local replacing nothing.
+   */
+  replaces?: {
+    tip: string;
+    entries: { title: string; href: Route }[];
+    total: number;
+    allHref?: Route;
+  };
 }

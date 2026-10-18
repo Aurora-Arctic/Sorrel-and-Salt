@@ -31,6 +31,7 @@ export {
 } from './spells';
 export {
   findCompendiumCount,
+  findCompendiumEntriesHiddenBy,
   findCompendiumEntryByIdentity,
   findCompendiumPage,
   findDeitiesOfIngredients,
