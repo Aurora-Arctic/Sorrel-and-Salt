@@ -62,17 +62,35 @@ it is open.
 
 ## Placement
 
-The tip is placed against its **nearest positioned ancestor**, not against the
-button, from that ancestor's left edge, **above** it: beneath the label it would
-cover the field, and what is typed in it. It is as
-wide as its text, up to `$tip-width` (18rem) and never more than the
-viewport less 2rem. In
-`IngredientForm` that ancestor is the field's label row, which starts at the
-column's edge, so an open tip lies above the label, over the end of the field
-before, and never runs off a phone the way a bubble hung off an icon at the
-end of a long label would. Whatever holds an `InfoTip` must be positioned, at
-the start of its column. The tip sits one layer up (`z-index: 1`), above the
-control that precedes it in the page.
+**Every tip positions itself as it opens and stays on screen** (M8.14,
+amended 2026-10-18). `useTip` places the bubble through Floating UI
+(`@floating-ui/react-dom`, as Combobox's list is, `Combobox/position.ts`):
+`offset` (4px), `flip` to the other side when the preferred one has no room,
+and `shift` along the side until it is 8px inside the screen. The bubble is
+`position: fixed`, so no scrolling or clipping ancestor cuts it, and it is
+followed (`autoUpdate`) only while open.
+
+The caller hands the hook's three results to its markup: `anchor` (a ref) to
+the element the bubble belongs to, the wrapper that hears the hover;
+`bubble` (a ref) to the bubble; and `bubbleStyle` to the bubble's `style`.
+`useTip(canOpen?, placement?)` takes the side it prefers, `top` by default.
+A stylesheet can ask for another with the custom property `--tip-placement`
+(any Floating UI placement, such as `bottom` or `left`), which inherits to
+every tip inside and may be set by a media or container query: the filter
+panel sets `bottom`, and a stacked table sets `left` for its Edit pencils. It
+is read as the tip opens. An ancestor marked `data-tip-boundary` (the filter
+panel) is the edge the bubble keeps inside, in place of the screen.
+
+Before the script has run, the `tip-above` mixin's rest state keeps the bubble
+out of the page's flow: fixed at the origin, invisible, its text still in the
+page, so reading and the field's `aria-describedby` are as before. It is as
+wide as its text, up to `$tip-width` (18rem) and never more than the viewport
+less 2rem. The tip sits one layer up (`z-index: 1`), above the control that
+precedes it. `tests/guards/tip-placement.test.ts` fails a component that opens
+a tip without the hook's refs and style, or a stylesheet that pins a tip with
+`tip-above($align: ...)`; EntryMarks and IngredientCard are on its `PENDING`
+list until they adopt this. `tests/e2e/tip-placement.spec.ts` measures every
+tip of the Add Ingredient dialog inside a 320px viewport.
 
 ## Styling
 

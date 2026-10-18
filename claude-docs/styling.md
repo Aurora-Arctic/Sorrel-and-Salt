@@ -1091,9 +1091,10 @@ heavier than the reverse; light reverts to the browser default.
   reads, which the `.visually-hidden` class includes); `button-reset` (a
   button with its box taken away); `stack($step)` (a column a step of space
   apart); `busy-faded` (colour out and `$opacity-disabled` left);
-  `tip-anchor` and `tip-above($align, $layer, $capped)` (what a tip is
-  placed against, and a bubble above it, capped to `$tip-width` and the
-  window); `tip-bubble-open` (a bubble's open state alone, for one opened
+  `tip-anchor` and `tip-above($layer, $capped)` (a fixed bubble, placed by
+  `useTip` through Floating UI and kept on screen; capped to `$tip-width` and
+  the window; a `$align` still pins the old way and is for EntryMarks and
+  IngredientCard until they adopt the hook); `tip-bubble-open` (a bubble's open state alone, for one opened
   by something other than `.is-open`, such as a hover); `icon-button` (which takes a `$radius` and a `$cursor`, and
   turns `$text-primary` when pointed at or focused), `icon-button-edit`
   and `icon-button-remove` (the accent and the wax); `chevron-flip` (the

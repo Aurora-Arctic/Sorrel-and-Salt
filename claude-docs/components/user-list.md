@@ -351,7 +351,7 @@ width the seven columns keep their order, restyled at MB.115's sign-off.
   WCAG 2.2's 24px target, around a `$glyph-size` icon, in `$text-muted`;
   the history link's hit area reaches `$control-height` through a
   pseudo-element.
-- **The tips** are the `tip-bubble` mixin's: a mark's or logo's centred
+- **The tips** are placed by `useTip` (Floating UI: flipped and shifted to stay on screen; a mark's or logo's hover is `Hint`, `hint.tsx`, which uses it with hover only), and drawn by the `tip-bubble` mixin: a mark's or logo's centred
   above it (`.user-list__tip`), the history link's, the crown's and a locked
   control's from its left edge, no wider than `$tip-width` capped at the
   window. Each sits one layer above the sticky column (`_layers.scss`).
