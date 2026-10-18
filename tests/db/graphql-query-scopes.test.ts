@@ -378,6 +378,11 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   removeCupboardEntry: write(
     `mutation { removeCupboardEntry(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}") }`,
   ),
+  // Ids naming no own entry and no compendium entry, so a caller past the
+  // scope is refused by the service before anything is written.
+  convertLocalToCompendiumEntry: write(
+    `mutation { convertLocalToCompendiumEntry(workspaceId: "${WORKSPACE_W_ID}", localId: "${NOWHERE}", compendiumId: "${NOWHERE}") { entry { id } } }`,
+  ),
   createCompendiumIngredient: write(
     'mutation { createCompendiumIngredient(input: { name: "Testwort", nomenclature: none, variants: [] }) { id } }',
   ),
@@ -554,6 +559,7 @@ const OPEN_WRITES = [
   'addCupboardEntry',
   'annotateCupboardEntry',
   'removeCupboardEntry',
+  'convertLocalToCompendiumEntry',
   'createReference',
   'updateReference',
   'promoteFolkName',
