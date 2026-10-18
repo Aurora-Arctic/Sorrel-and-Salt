@@ -166,9 +166,9 @@ its hover and press look.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/FilterForm/index.stories.tsx),
-`Admin / Filter Form`: a name search, a group select and a No Refs switch,
-as a value list's filter has them, the select a `FilterSelectField`, the
-select and the switch applying through `useApplyFilter`. `Default`, with `PhoneDark` and `PhoneLight`, a
+`Admin / Filter Form`: the categories list's own filter, `GroupedValueListFilter`, a name
+search and a type-ahead group select (a `FilterSelectField`) applying through `useApplyFilter`, on
+the workshop's invented groups. `Default`, with `PhoneDark` and `PhoneLight`, a
 page showing no filter, so no Clear; `Filtered`, with `FilteredPhoneDark`
 and `FilteredPhoneLight`, a page showing one, Clear at the row's end. Each
 sits in a `ListFrame`, whose navigation it needs; the workshop's router goes
