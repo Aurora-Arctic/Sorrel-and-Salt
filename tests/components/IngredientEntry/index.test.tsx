@@ -567,6 +567,42 @@ describe('IngredientEntry', () => {
     });
   });
 
+  describe('a coven entry with no formal name', () => {
+    const similar = (convert?: {
+      workspaceId: string;
+      localId: string;
+    }): NonNullable<IngredientEntryProps['similar']> => ({
+      tip: 'Fixture reason the entries are shown.',
+      entries: [1, 2, 3].map((at) => ({
+        id: 'id-' + at,
+        title: 'Fixture Similar ' + at,
+        href: `/compendium/ingredients/fixture-similar-${at}` as Route,
+        thenHref: `/coven/fixture-coven/ingredients/id-${at}` as Route,
+      })),
+      total: 5,
+      allHref: '/compendium?query=Fixture%20Wort' as Route,
+      convert,
+    });
+    const list = () => screen.getByRole('list', { name: 'Similar in the Compendium' });
+
+    it('heads a Similar block with a ⓘ, three entries and See All, and a This Is It for each when it may convert', () => {
+      renderEntry({ similar: similar({ workspaceId: 'w', localId: 'l' }) });
+
+      expect(within(list()).getAllByRole('link')).toHaveLength(3);
+      expect(within(list()).getAllByRole('button')).toHaveLength(3);
+      expect(screen.getByRole('button', { name: 'About Similar in the Compendium' })).toBeVisible();
+      expect(screen.getByRole('link', { name: /^See All 5/ })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In the Compendium' })).toBeNull();
+    });
+
+    it('shows a viewer the entries and no This Is It', () => {
+      renderEntry({ similar: similar() });
+
+      expect(within(list()).getAllByRole('link')).toHaveLength(3);
+      expect(screen.queryByRole('button', { name: /This Is It/ })).toBeNull();
+    });
+  });
+
   it('links the entry that moved off this address to where it is now', () => {
     const href = '/compendium/ingredients/fixture-movedwort' as Route;
     const { unmount } = renderEntry();
