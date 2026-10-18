@@ -103,8 +103,8 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - `NoFormalName`, `UnknownWithName`, `UnknownWithoutName`: the formal-name line's three sentences.
 - `NothingRecorded`: every empty state, and a form that adds nothing.
 - `CovenEntry`: a coven's own entry, badged Local.
-- `RetiredInCoven`: a retired compendium entry a coven still uses, marked No Longer in the Compendium.
 - `FromTheCompendium`, `Annotated`: a compendium entry held in the coven's cupboard (M12.16), unchanged and with the coven's label, description and cleared planets.
+- `RetiredInCoven`: a retired compendium entry a coven still uses, marked No Longer in the Compendium.
 - `CompendiumEntryForCurator`: Edit, and the link to the public page.
 - `MovedAway`: the notice for the entry that left this address.
 - `FormAddsNothing`: two forms adding nothing, one of them toxic.
@@ -117,8 +117,8 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - the `h1` is the entry's name;
 - the formal name is a labelled, non-empty value for all eight cases (the seven kinds, `unknown` with and without a name), in italics for the three binomial kinds only, and an unconfirmed name has more than the name beside it;
 - Local is there for a coven's entry and not for a compendium one;
-- a retired entry carries a `status` in its head, and a live one none;
 - a compendium entry held in the cupboard shows the merged values (the label as the `h1` with the compendium's name beneath, a null override falling back, an empty list shown as cleared) and the statuses From the Compendium, plus Annotated when any override is set; one not held shows neither;
+- a retired entry carries a `status` in its head, and a live one none;
 - a toxic form marks the entry Toxic though the ingredient is not;
 - Folk Names, Categories and Substitutes are lists of that name in Details, with one item each;
 - a linked substitute links to `hrefOf`'s address, a typed one and one `hrefOf` has no page for are text;
