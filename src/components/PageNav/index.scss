@@ -57,9 +57,11 @@
     color: $text-primary;
   }
 
-  // A step of air between the label and its first entry.
+  // The smallest step of air between the label and its first entry: the
+  // label belongs to its entries, so it sits nearer them than the break above
+  // it (the owner's call, a step closer than it was).
   .page-nav__group + ul {
-    margin-block-start: space(2);
+    margin-block-start: space(1);
   }
 
   // A group's entries are not stepped in from its label at any width: the
@@ -74,25 +76,38 @@
     font-size: 1.125rem;
   }
 
-  // An entry set apart (an ingredient's References) reads as a group's entries
-  // do, and takes the break a group label takes: the same token, so the gap
-  // is the one between Details and Forms whether or not forms follow.
+  // An item set apart (an ingredient's Forms, and its References, one link or
+  // a group of Notes and Bibliography) takes a break a step wider than a group
+  // label's, so the line in it has air on both sides (the owner's call). A
+  // group's label carries its own break, so here the item takes the gap and
+  // the label gives its own up, which keeps the gap from being doubled and
+  // does not lean on margins collapsing.
   //
-  // A short hairline sits a quarter of that gap above the entry, drawn by a
+  // A short hairline sits halfway through that gap, drawn by a
   // pseudo-element so the list gains no element: it starts at the entries' own
-  // inset and, where the menu is right-aligned, ends there.
+  // inset and, where the menu is right-aligned, ends there. The entries above
+  // and the item itself both pad their text by space(1) top and bottom, so
+  // the middle of the margin is the middle between the two texts. The rule is
+  // 1px tall and hangs below its offset, so half a pixel is taken off to put
+  // its centre, not its top edge, on the middle.
   .page-nav__apart {
+    $break: space(6);
+
     position: relative;
-    margin-block-start: space(5);
+    margin-block-start: $break;
 
     &::before {
       @include short-hairline;
-      inset-block-start: calc(#{space(5)} / -4);
+      inset-block-start: calc(#{$break} / -2 - 0.5px);
       inset-inline-start: space(4);
     }
 
     > a {
       font-size: inherit;
+    }
+
+    > .page-nav__group {
+      margin-block-start: 0;
     }
   }
 
