@@ -72,14 +72,6 @@
   }
 }
 
-// The name block and the badges side by side while they fit; when they do not
-// (a long name), the badges wrap onto their own row beneath, at the left. On the card only: the specimen primitive's top row is not otherwise
-// meant to wrap.
-.ingredient-card .specimen__top {
-  flex-wrap: wrap;
-  row-gap: space(3);
-}
-
 // Takes the room it needs and may shrink below its longest word, which breaks
 // (hyphenated where the dictionary can, anywhere where it cannot) rather than
 // pushing the badges off the card. `hyphens` is Baseline Widely Available.
@@ -91,16 +83,6 @@
 
 .ingredient-card__name {
   hyphens: auto;
-}
-
-// The badges take only the room they need. Beside the name, the growing name
-// block pushes them to the right edge; wrapped onto their own row they start at
-// the left. Badges that wrap among themselves while beside the name still hug the
-// right edge. On the card only: the specimen primitive's badge row is not
-// otherwise right-aligned.
-.ingredient-card .specimen__badges {
-  flex: 0 1 auto;
-  justify-content: flex-end;
 }
 
 // Above the overlay, so the Low badge's button keeps its own hover, focus and
@@ -168,78 +150,6 @@
   }
 }
 
-// The chip row is a list, so it drops typography-base's ◆ marker and indent.
-.ingredient-card .specimen__chips {
-  @include list-reset;
-}
-
-// M9.6’s jar lines are a list; a list directly in the slot drops the ◆ marker and indent.
-.ingredient-card .specimen__stock > ul {
-  @include list-reset;
-
-  display: flex;
-  flex-direction: column;
-  // Jar lines with 24px badges nearly touched; a step apart reads as separate lines.
-  gap: space(2);
-}
-
-// The foot holds the jar lines and the actions. `margin-top: auto` takes up any
-// spare height when the card is stretched to its grid row (IngredientCardList), so
-// the foot lands at the bottom; on its own it is nothing. The padding is the air
-// between the chips and the rule (24px with the card's own gap; it read tight at 12
-// and then 16), kept whether or not there is spare height.
-.ingredient-card__foot {
-  margin-top: auto;
-  padding-top: space(3);
-}
-
-// Right-aligned buttons, above the stretched link (`z-index`), so each is its own target.
-.ingredient-card__actions {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: space(2);
-  // Air beneath the jar lines' rule.
-  margin-top: space(3);
-}
-
-// Jar lines take the `small` size, so the stock badges do not outweigh them, in
-// the primitive's muted ink. The rule above them stays.
-.ingredient-card .specimen__stock {
-  display: block;
-  margin: 0;
-  // Air between the rule and the first line, and after the last line (the
-  // primitive has 8px above and the card's padding alone below).
-  padding-block: space(3) space(2);
-  font-size: type-size('small');
-  // The primitive's muted ink; its 0.85 opacity is reset so the badges keep their own inks.
-  color: $text-muted;
-  opacity: 1;
-}
-
-// The card's contract for a jar list: one `li` per jar, the form and quantity
-// first and the stock badge last, so the badge lands at the right edge.
-.ingredient-card .specimen__stock > ul > li {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: space(2);
-
-  > span {
-    display: inline-flex;
-    align-items: center;
-    gap: space(1);
-
-    // Out of the flex flow, as in the forms line, so the dot has the same gap
-    // either side; still read aloud.
-    > .spoken-separator {
-      position: absolute;
-    }
-  }
-}
-
 // The Low badge sits at the card's right edge, where a left-anchored tip runs
 // off the screen: open it from the badge's right edge, as the Retired tip does.
 .ingredient-card .stock-badge__tip {
@@ -255,4 +165,11 @@
   border-width: 1px;
   padding-block: 0.125rem;
   font-weight: 500;
+}
+
+// The actions' own addition to the primitive: above the stretched link, so each
+// button is its own target.
+.ingredient-card .specimen__actions {
+  position: relative;
+  z-index: 1;
 }

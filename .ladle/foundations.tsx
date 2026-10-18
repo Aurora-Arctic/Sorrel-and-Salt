@@ -901,10 +901,19 @@ export default function Foundations(): ReactElement {
                 Craft &amp; Change
               </span>
             </div>
-            <p className="specimen__stock">
-              <span>Dried leaf · 4&nbsp;g on hand</span>
-              <code className="specimen__threshold">threshold 10&nbsp;g</code>
-            </p>
+            <div className="specimen__foot">
+              <div className="specimen__stock">
+                <ul>
+                  <li>
+                    <span>
+                      Dried Leaf <span aria-hidden="true">·</span>
+                      <span className="spoken-separator">,</span> 4&nbsp;g
+                    </span>
+                    <span className="badge badge--low-stock">Low Stock</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </article>
         </div>
       </section>

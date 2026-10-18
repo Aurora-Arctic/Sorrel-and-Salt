@@ -105,9 +105,9 @@ const IngredientCard = ({
       {(jars || hasActions) && (
         // The foot: the jar lines, then the actions. Pushed to the card's bottom edge
         // (`margin-top: auto`), so cards in one grid row end on the same line.
-        <div className="ingredient-card__foot">
+        <div className="specimen__foot">
           {jars && <div className="specimen__stock">{children}</div>}
-          {hasActions && <div className="ingredient-card__actions">{actions}</div>}
+          {hasActions && <div className="specimen__actions">{actions}</div>}
         </div>
       )}
     </article>
