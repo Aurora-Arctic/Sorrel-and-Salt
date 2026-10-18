@@ -48,6 +48,7 @@ export {
 } from './ingredients';
 export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
 export {
+  findCompendiumMatchPage,
   findCompendiumMatchesByName,
   findCupboardEntriesOf,
   findCupboardEntry,
@@ -128,6 +129,7 @@ export type {
   GroupFilter,
   IngredientFacets,
   WorkspaceIngredientFacets,
+  WorkspaceListEdge,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,

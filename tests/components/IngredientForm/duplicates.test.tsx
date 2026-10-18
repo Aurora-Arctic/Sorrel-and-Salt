@@ -8,7 +8,11 @@ import { DEBOUNCE_MS } from '@/lib/debounce';
 import { renderWithClient, duplicateHref } from '../../support/ingredient-form';
 import { press, typeIn } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
-import { WORKSPACE_ID, offerDuplicates } from '../../support/msw/ingredient-lookups';
+import {
+  WORKSPACE_ID,
+  offerCompendiumMatches,
+  offerDuplicates,
+} from '../../support/msw/ingredient-lookups';
 import type { DuplicateNode } from './types';
 
 // Story 16's warning on its own (MB.181): `useDuplicateWarning` and the
@@ -43,6 +47,7 @@ const MOCKLEAF: DuplicateNode = {
  */
 function renderName(opened?: string) {
   const sent = vi.fn();
+  const used = vi.fn();
   const Harness = () => {
     const methods = useForm<IngredientFormValues>({
       defaultValues: { ...EMPTY_VALUES, name: opened ?? '' },
@@ -61,14 +66,14 @@ function renderName(opened?: string) {
           })}
         >
           {/* No ref: moving the focus to Create Anyway is the form's. */}
-          <NameField warning={warning} hrefOf={duplicateHref} ref={null} />
+          <NameField warning={warning} hrefOf={duplicateHref} onUse={used} ref={null} />
           <button type="submit">Save Ingredient</button>
         </form>
       </FormProvider>
     );
   };
   renderWithClient(<Harness />);
-  return sent;
+  return Object.assign(sent, { used });
 }
 
 const name = () => screen.getByRole('textbox', { name: 'Name' });
@@ -310,5 +315,88 @@ describe('NameField, with useDuplicateWarning', () => {
 
     await waitFor(() => expect(sent).toHaveBeenCalledWith("Cat's Claw"));
     expect(warning()).toBeEmptyDOMElement();
+  });
+
+  // M12.20: an exact compendium name is a question, a near one a list.
+  describe('a compendium entry of the very name typed', () => {
+    const CLAW = { ...TOMENTOSA, isGlobal: true };
+
+    it('holds the save on a question, with Use It for the entry and Add Our Own', async () => {
+      const sent = renderName();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([CLAW]);
+
+      type("Cat's Claw");
+      save();
+
+      expect(await screen.findByRole('button', { name: /^Use It/ })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Add Our Own' })).toBeInTheDocument();
+      expect(createAnyway()).not.toBeInTheDocument();
+      expect(sent).not.toHaveBeenCalled();
+    });
+
+    it('hands the entry chosen to Use It, and sends nothing itself', async () => {
+      const sent = renderName();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([CLAW]);
+      type("Cat's Claw");
+      save();
+
+      press(await screen.findByRole('button', { name: /^Use It/ }));
+
+      expect(sent.used).toHaveBeenCalledWith(expect.objectContaining({ id: CLAW.id }));
+      expect(sent).not.toHaveBeenCalled();
+    });
+
+    it('lets the next save go once Add Our Own is pressed', async () => {
+      const sent = renderName();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([CLAW]);
+      type("Cat's Claw");
+      save();
+      press(await screen.findByRole('button', { name: 'Add Our Own' }));
+
+      save();
+      await settleSave();
+
+      expect(sent).toHaveBeenCalledWith("Cat's Claw");
+    });
+
+    it('offers Open It and no Use It for an entry the cupboard already holds', async () => {
+      renderName();
+      const held = { ...CLAW, inCupboard: true };
+      offerDuplicates([held]);
+      offerCompendiumMatches([held]);
+      type("Cat's Claw");
+      save();
+
+      expect(await screen.findByRole('link', { name: /^Open It/ })).toHaveAttribute(
+        'href',
+        duplicateHref(held),
+      );
+      expect(screen.queryByRole('button', { name: /^Use It/ })).not.toBeInTheDocument();
+    });
+
+    it('lists a near match with Use It and asks no question', async () => {
+      renderName();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([]);
+      type('Cats Claw');
+      settle();
+
+      expect(await screen.findByRole('button', { name: /^Use It/ })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Add Our Own' })).not.toBeInTheDocument();
+      expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
+    });
+
+    it("offers no Use It beside a coven's own entry", async () => {
+      renderName();
+      offerDuplicates([MOCKLEAF]);
+      type('Mockleaff');
+      settle();
+
+      await screen.findByRole('link', { name: /Mockleaf/ });
+      expect(screen.queryByRole('button', { name: /^Use It/ })).not.toBeInTheDocument();
+    });
   });
 });

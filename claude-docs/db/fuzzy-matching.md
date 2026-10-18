@@ -98,6 +98,8 @@ columns and the raw trigram indexes, and one diacritic barely moves a trigram
 score, so the duplicate warning is accent-tolerant without folding. Folding it
 too would be a small task of its own, not a gap.
 
+**The exact match is not fuzzy** (M12.20): `compendiumMatches` compares `lower(name)` and `lower(canonical_name)` for equality over the compendium alone, with no `%`, so it reads no trigram index.
+
 Full column list, the CHECK constraints' exact text, and the
 local-beats-compendium resolution query that reads these indexes: DESIGN.md
 §5.

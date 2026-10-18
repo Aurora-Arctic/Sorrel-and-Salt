@@ -2,6 +2,8 @@ import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
+import { insertIngredient } from '../../support/db/insert-ingredient';
+import { makeIngredient } from '../../support/fixtures/ingredient';
 import { signInAgainAs, signInAs } from '../session';
 import {
   type Coven,
@@ -293,6 +295,59 @@ test(
       // Cleared, so nothing is left to lose: Escape closes without asking.
       await page.keyboard.press('Escape');
       await expect(dialog).toHaveCount(0);
+    });
+
+    // M12.20: a name the compendium already bears is a question, not a copy.
+    await test.step("a name the compendium bears asks first: Add Our Own saves the coven's own, Use It puts the entry in the cupboard with the typed label", async () => {
+      await withSql(async (sql) => {
+        for (const name of ['Ostrelvine', 'Kaelmoss']) {
+          await insertIngredient(
+            sql,
+            makeIngredient(
+              name === 'Kaelmoss'
+                ? { name, canonicalName: 'Kaelmossia testalis', nomenclature: 'botanical' }
+                : { name, nomenclature: 'none' },
+            ),
+            coven.users.A,
+          );
+        }
+      });
+      await page.goto(`/coven/${coven.slug}`);
+      let dialog = await openAddIngredient(page);
+      await nameField(dialog).fill('Ostrelvine');
+      await saveIngredient(dialog).click();
+
+      const own = dialog.getByRole('button', { name: 'Add Our Own', exact: true });
+      await expect(own).toBeVisible();
+      await expect(dialog.getByRole('button', { name: /^Use It/ })).toBeVisible();
+      // The save waits on the question: nothing was written.
+      expect(await savedRows(coven.id, 'Ostrelvine')).toHaveLength(0);
+      await assertNoAccessibilityViolations(page);
+
+      await own.click();
+      await saveIngredient(dialog).click();
+      await expect(dialog).toHaveCount(0);
+      expect(await savedRows(coven.id, 'Ostrelvine')).toHaveLength(1);
+
+      dialog = await openAddIngredient(page);
+      await nameField(dialog).fill('Kaelmossia testalis');
+      await saveIngredient(dialog).click();
+      await dialog.getByRole('button', { name: /^Use It/ }).click();
+
+      await expect(dialog).toHaveCount(0);
+      await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}`));
+      const [held] = await withSql(
+        (sql) => sql<{ label: string | null; jars: number; copies: number }[]>`
+          select e.label,
+            (select count(*)::int from inventory_items where workspace_id = ${coven.id}
+              and ingredient_id = e.ingredient_id) as jars,
+            (select count(*)::int from ingredients where workspace_id = ${coven.id}
+              and lower(name) = 'kaelmossia testalis' and deleted_at is null) as copies
+          from workspace_compendium_entries e
+          join ingredients i on i.id = e.ingredient_id
+          where e.workspace_id = ${coven.id} and i.name = 'Kaelmoss' and e.deleted_at is null`,
+      );
+      expect(held).toEqual({ label: 'Kaelmossia testalis', jars: 0, copies: 0 });
     });
   },
 );

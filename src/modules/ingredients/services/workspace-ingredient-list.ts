@@ -1,5 +1,5 @@
 import 'server-only';
-import { type CompendiumScore, findWorkspaceIngredientPage } from '../../../db/repository';
+import { type WorkspaceListEdge, findWorkspaceIngredientPage } from '../../../db/repository';
 import type { Session } from '../../../lib/session';
 import type { PageEntry, PageRequest } from '../../../lib/types';
 import { parseInput } from '../../../lib/validation';
@@ -11,12 +11,12 @@ import type { IngredientRow } from '../types';
 import { assertMembership } from '@/modules/coven';
 
 /**
- * One page of a coven's ingredients (story 14, M9.4): its own entries, and
- * every compendium entry it holds a live jar of, filtered by search, category
- * and the five facets (M11.22) as the compendium is. A local entry hides the compendium entry it
- * matches, jar and all: the jar stays in the table, reaching no read until
- * the local entry no longer matches (claude-docs/db/stock.md, "The workspace
- * ingredient list"). Each entry's jars are `Ingredient.stock`'s, read apart.
+ * One page of a coven's ingredients (story 14, M9.4, M12.18): its own entries,
+ * and every compendium entry its cupboard holds, filtered by search, category
+ * and the five facets (M11.22) as the compendium is, over the coven's
+ * overrides. Each entry carries its cupboard row, null for the coven's own
+ * (claude-docs/db/stock.md, "The workspace ingredient list"). Each entry's
+ * jars are `Ingredient.stock`'s, read apart.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.
  * @throws {ValidationError} the filter names a category or deity by an id that
@@ -27,7 +27,7 @@ export async function listWorkspaceIngredients(
   workspaceId: string,
   filter: WorkspaceIngredientFilterInput,
   page: PageRequest,
-): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
+): Promise<PageEntry<IngredientRow, WorkspaceListEdge>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
   return findWorkspaceIngredientPage(
     membership,
