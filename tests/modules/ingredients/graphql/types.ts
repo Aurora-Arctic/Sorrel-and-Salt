@@ -93,7 +93,7 @@ export interface WorkspaceIngredientNode {
 }
 
 export interface IngredientSuggestionConnection {
-  edges: { cursor: string; node: DuplicateNode }[];
+  edges: { cursor: string; group: 'yours' | 'compendium'; node: DuplicateNode }[];
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
 }
 

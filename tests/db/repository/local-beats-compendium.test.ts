@@ -1,17 +1,19 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { findIngredientSuggestions } from '@/db/repository';
+import { findIngredientSuggestions, findWorkspaceIngredientPage } from '@/db/repository';
 import { resolvePage } from '@/lib/pagination';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { type Membership, assertMembership } from '@/modules/coven';
 import { A, B, D, asUser } from '../../support/as-user';
 import { insertIngredient } from '../../support/db/insert-ingredient';
+import { insertStock } from '../../support/db/insert-stock';
 import { makeIngredient, makeVariant } from '../../support/fixtures';
 
-// Local beats compendium (DESIGN.md §5): in a coven's results a live local
-// entry hides the compendium entry it matches on identity, or on the label
-// when it declares no formal name. Read through the substitute picker's
-// finder, which is the first list to apply it.
+// Local beats compendium (DESIGN.md §5): in a coven's ingredient list a live
+// local entry hides the compendium entry it matches on identity, or on the label
+// when it declares no formal name. Read through the workspace list, the one list
+// that still applies it: the substitute picker stopped at M12.19, where a coven
+// entry and the compendium's same-named one are both offered, in two groups.
 
 let sql: ReturnType<typeof postgres>;
 let inW: Membership;
@@ -31,10 +33,23 @@ function add(name: string, overrides: Parameters<typeof makeIngredient>[0] = {})
   return insertIngredient(sql, makeIngredient({ name, nomenclature: 'none', ...overrides }), A.id);
 }
 
-/** What the picker offers `membership` for a blank query, as `label` or `label / formal name`. */
-async function offered(membership: Membership, query = ''): Promise<string[]> {
+/** What the coven's list shows `membership` once it holds a jar of every compendium entry, as `label` or `label / formal name`. */
+async function offered(membership: Membership, workspaceId: string, query = ''): Promise<string[]> {
+  const rows = await sql`
+    select i.id as ingredient_id, v.id as variant_id from ingredients i
+    join ingredient_variants v on v.ingredient_id = i.id and v.deleted_at is null
+    where i.workspace_id is null and i.deleted_at is null
+      and not exists (select 1 from inventory_items s where s.workspace_id = ${workspaceId}
+        and s.variant_id = v.id and s.deleted_at is null)`;
+  for (const row of rows) {
+    await insertStock(
+      sql,
+      { workspaceId, ingredientId: row.ingredient_id, variantId: row.variant_id },
+      A.id,
+    );
+  }
   const page = await resolvePage({ first: 100 }, (request) =>
-    findIngredientSuggestions(membership, query, request),
+    findWorkspaceIngredientPage(membership, { query }, request),
   );
   return page.edges.map(({ node }) =>
     node.canonicalName ? `${node.name} / ${node.canonicalName}` : node.name,
@@ -46,7 +61,7 @@ describe('local beats compendium', () => {
     await add('Fixturewort', { canonicalName: 'Fixtura vulgaris', nomenclature: 'botanical' });
     await add('Fixturewort', { workspaceId: WORKSPACE_W_ID });
 
-    expect(await offered(inW)).toEqual(['Fixturewort']);
+    expect(await offered(inW, WORKSPACE_W_ID)).toEqual(['Fixturewort']);
     const [{ workspace }] = await sql`
       select count(*) filter (where workspace_id is not null)::int as workspace from ingredients`;
     expect(workspace).toBe(1);
@@ -61,7 +76,7 @@ describe('local beats compendium', () => {
     // Matched in case: the label is compared as the unique index folds it.
     await add('FIXTUREWORT', { canonicalName: null, workspaceId: WORKSPACE_W_ID });
 
-    expect(await offered(inW)).toEqual(['FIXTUREWORT']);
+    expect(await offered(inW, WORKSPACE_W_ID)).toEqual(['FIXTUREWORT']);
   });
 
   it('hides the entry sharing the identity of a local with another label', async () => {
@@ -72,7 +87,7 @@ describe('local beats compendium', () => {
       workspaceId: WORKSPACE_W_ID,
     });
 
-    expect(await offered(inW)).toEqual(['Cronefixture / FIXTURA vulgaris']);
+    expect(await offered(inW, WORKSPACE_W_ID)).toEqual(['Cronefixture / FIXTURA vulgaris']);
   });
 
   it('shows both when the label is shared and the identities differ', async () => {
@@ -84,7 +99,7 @@ describe('local beats compendium', () => {
     });
 
     // Equal names tie, and the tie breaks on id, so compare as a set.
-    expect((await offered(inW)).sort()).toEqual([
+    expect((await offered(inW, WORKSPACE_W_ID)).sort()).toEqual([
       'Fixturewort / Fixtura absinthium',
       'Fixturewort / Fixtura vulgaris',
     ]);
@@ -97,7 +112,7 @@ describe('local beats compendium', () => {
     await add('Fixture Other');
     await add("Fixture Cat's Claw", { workspaceId: WORKSPACE_W_ID });
 
-    expect(await offered(inW)).toEqual(["Fixture Cat's Claw", 'Fixture Other']);
+    expect(await offered(inW, WORKSPACE_W_ID)).toEqual(["Fixture Cat's Claw", 'Fixture Other']);
   });
 
   it('leaves another coven every compendium entry', async () => {
@@ -105,8 +120,8 @@ describe('local beats compendium', () => {
     await add('Fixturewort', { workspaceId: WORKSPACE_W_ID });
 
     // Why W could have hidden it from X: the same label is a live local in W.
-    expect(await offered(inW)).toEqual(['Fixturewort']);
-    expect(await offered(inX)).toEqual(['Fixturewort']);
+    expect(await offered(inW, WORKSPACE_W_ID)).toEqual(['Fixturewort']);
+    expect(await offered(inX, WORKSPACE_X_ID)).toEqual(['Fixturewort']);
     const [{ count }] = await sql`select count(*)::int as count from ingredients`;
     expect(count).toBe(2);
   });
@@ -116,7 +131,7 @@ describe('local beats compendium', () => {
     const local = await add('Fixturewort', { workspaceId: WORKSPACE_W_ID });
     await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${local}`;
 
-    expect(await offered(inW)).toEqual(['Fixturewort']);
+    expect(await offered(inW, WORKSPACE_W_ID)).toEqual(['Fixturewort']);
   });
 
   it('matches across forms: the identity is the formal name alone', async () => {
@@ -132,7 +147,7 @@ describe('local beats compendium', () => {
       variants: [makeVariant({ form: 'Herb' })],
     });
 
-    expect(await offered(inW)).toEqual(['Fixture Rosemary / Fixtura rosmarina']);
+    expect(await offered(inW, WORKSPACE_W_ID)).toEqual(['Fixture Rosemary / Fixtura rosmarina']);
   });
 
   it('keeps two locals of one label from coexisting in a coven', async () => {

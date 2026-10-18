@@ -11,6 +11,7 @@ import type {
   CreateWorkspaceIngredientMutationVariables,
   FormSuggestionsQuery,
   FormSuggestionsQueryVariables,
+  IngredientSuggestionsQueryVariables,
   CelestialBodySuggestionsQueryVariables,
   PossibleDuplicatesQuery,
   PossibleDuplicatesQueryVariables,
@@ -111,8 +112,25 @@ export const offerSigns = (nodes: CorrespondenceNode[]) =>
   offerList('ZodiacSuggestions', 'zodiacSuggestions', nodes);
 export const offerDeities = (nodes: DeityNode[]) =>
   offerList('DeitySuggestions', 'deitySuggestions', nodes);
-export const offerIngredients = (nodes: IngredientNode[]) =>
-  offerList('IngredientSuggestions', 'ingredientSuggestions', nodes);
+/** Answers `IngredientSuggestions`, each row's group on its edge (M12.19), recording each ask. */
+export function offerIngredients(nodes: IngredientNode[]) {
+  const calls: IngredientSuggestionsQueryVariables[] = [];
+  mockGraphQLQuery<Record<string, unknown>, IngredientSuggestionsQueryVariables>(
+    'IngredientSuggestions',
+    (variables) => {
+      calls.push(variables);
+      return {
+        ingredientSuggestions: {
+          edges: nodes.map(({ group = 'compendium', ...node }) => ({
+            group,
+            node: { cupboardEntry: null, ...node },
+          })),
+        },
+      };
+    },
+  );
+  return calls;
+}
 
 /** Answers `ReferenceSuggestions` with these sources, recording each ask. */
 export function offerReferences(nodes: ReferenceNode[]) {

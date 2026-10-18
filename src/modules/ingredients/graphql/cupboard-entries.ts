@@ -10,6 +10,7 @@ import {
   removeCupboardEntry,
 } from '../services/cupboard-entries';
 import type { CupboardEntryNode, CupboardEntryRow } from '../types';
+import { isAnnotated } from '../validation/cupboard-merge';
 import { IngredientElementEnum, IngredientRef } from './ingredient';
 
 // A coven's cupboard entry over the wire (M12.14): the coven's own say over
@@ -17,17 +18,6 @@ import { IngredientElementEnum, IngredientRef } from './ingredient';
 // a client can show both. Who may read it is the cupboard-entry service's
 // check, through the loader (claude-docs/graphql/schema.md, "Cupboard
 // entries: CupboardEntry and Ingredient.cupboardEntry").
-
-/** The seven overrides; any one set makes the entry annotated. */
-const OVERRIDES = [
-  'label',
-  'description',
-  'safetyNotes',
-  'elements',
-  'celestialBodies',
-  'zodiacSigns',
-  'colors',
-] as const satisfies readonly (keyof CupboardEntryRow)[];
 
 export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEntry').implement({
   description:
@@ -46,7 +36,7 @@ export const CupboardEntryRef = builder.objectRef<CupboardEntryNode>('CupboardEn
     colors: t.exposeStringList('colors', { nullable: true }),
     annotated: t.boolean({
       description: 'True when the coven has set any of the seven overrides.',
-      resolve: (entry) => OVERRIDES.some((column) => entry[column] !== null),
+      resolve: (entry) => isAnnotated(entry),
     }),
     compendiumName: t.exposeString('compendiumName', {
       description: "The compendium entry's own name, whatever the coven's label.",
