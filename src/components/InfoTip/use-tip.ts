@@ -66,7 +66,16 @@ function sideFor(anchor: Element | null | undefined, fallback: Placement): Place
   return SIDES.has(asked) ? (asked as Placement) : fallback;
 }
 
-const edges = { padding: EDGE_PX };
+/**
+ * The edges a bubble keeps inside: the nearest ancestor marked
+ * `data-tip-boundary` (the filter panel, which is narrower than the screen
+ * and whose tips must not leave it), else the screen.
+ */
+const edges = ({ elements }: { elements: { reference: unknown } }) => {
+  const reference = elements.reference;
+  const marked = reference instanceof Element ? reference.closest('[data-tip-boundary]') : null;
+  return marked ? { padding: EDGE_PX, boundary: marked } : { padding: EDGE_PX };
+};
 
 /**
  * Whether the tip is open, and its three handlers. `canOpen` is asked as it

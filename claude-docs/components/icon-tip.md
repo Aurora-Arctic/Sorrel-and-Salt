@@ -125,7 +125,7 @@ of the radio strip (M12.7): a tip to the side would cover the next segment,
 and one below the chosen name printed under the bar. It fades in from, and out
 to, two pixels below its place.
 
-**Over the Add's plus, above it and right-aligned** to the plus's right edge, so it stays inside the window at the line's end, at `layer('floating')`. The action's wrapper carries no `translate` (it is brought down to the heading's letters with `position: relative; top` instead): a `translate` makes the wrapper a stacking context, which would rank the tip's layer only inside it and hold the tip under the shell's bar once the page is scrolled.
+**Over the Add's plus, above it**, placed by `useTip` so it stays inside the window at the line's end, at `layer('floating')`. The action's wrapper carries no `translate` (it is brought down to the heading's letters with `position: relative; top` instead): a `translate` makes the wrapper a stacking context, which would rank the tip's layer only inside it and hold the tip under the shell's bar once the page is scrolled.
 
 ## Styling
 
