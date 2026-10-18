@@ -950,6 +950,61 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await expect(edit('Modewort One')).toHaveCount(0);
 });
 
+// M12.1: a curator makes a folk name the display name. The question always
+// asks; once answered the list shows the folk name as the entry's name, and
+// the question holds at 375px without an accessibility violation.
+test('a curator promotes a folk name, and the list shows it as the name', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 800 });
+  const { userId } = await signInAs(
+    page,
+    'promote-curator@admin-compendium.test',
+    ['discord'],
+    'curator',
+  );
+  const fixture = makeIngredient({
+    name: 'Fixture Promotewort',
+    canonicalName: 'Fixtura promotea',
+    folkNames: ['Hedge Promote', 'Lane Promote'],
+  });
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    await insertIngredient(sql, fixture, userId);
+  } finally {
+    await sql.end();
+  }
+  await page.goto(`/admin/compendium?edit=${ingredientSlug(fixture.name, fixture.canonicalName)}`);
+  const dialog = page.getByRole('dialog', { name: /^Edit Ingredient, Fixture Promotewort/ });
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Open All' }).click();
+
+  const folk = dialog.getByRole('group', { name: 'Folk Names', exact: true });
+  const promote = folk.getByRole('button', {
+    name: 'Make Hedge Promote the Display Name',
+    exact: true,
+  });
+  // The precondition: the entry is named for what it is saved as, and the control is there to press.
+  await expect(dialog.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(
+    'Fixture Promotewort',
+  );
+  await promote.click();
+
+  const question = page.getByRole('button', { name: 'Promote', exact: true });
+  await expect(question).toBeVisible();
+  await assertNoAccessibilityViolations(page);
+  await question.click();
+
+  await expect(dialog.getByRole('textbox', { name: 'Name', exact: true })).toHaveValue(
+    'Hedge Promote',
+  );
+  await expect(folk.getByRole('button', { name: 'Remove Fixture Promotewort' })).toBeVisible();
+  await expect(folk.getByRole('button', { name: 'Remove Hedge Promote' })).toHaveCount(0);
+
+  // What the list reads from the database, not from the open form.
+  await page.goto('/admin/compendium?query=Promote');
+  await expect(page.getByRole('link', { name: /^Edit Hedge Promote/ })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Edit Fixture Promotewort/ })).toHaveCount(0);
+});
+
 // M12.4: the Filters panel and the sentence above the results, walked in a browser. Five
 // entries named Facetwort A to E: A holds the form Alpha, B the form Beta, C the form Gamma
 // and the Greek deity, D Alpha and the Greek deity and is toxic, E Alpha and the Roman deity.

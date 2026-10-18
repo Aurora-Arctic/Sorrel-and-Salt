@@ -3,6 +3,7 @@ import postgres from 'postgres';
 import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, E, asUser } from '../../../support/as-user';
+import { liveFolkNames } from '../../../support/db/folk-names';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { run as runOperation } from '../../../support/graphql/run';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
@@ -39,7 +40,7 @@ const run = (
     session,
     `query ($workspaceId: ID!, $name: String!, $first: Int, $after: String) {
       possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first, after: $after) {
-        edges { cursor score node { id name canonicalName isGlobal folkNames } }
+        edges { cursor score node { id name canonicalName isGlobal folkNames { id name } } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
@@ -57,7 +58,7 @@ async function nodesFor(
 
 describe('possibleDuplicates', () => {
   it('answers a member with near-misses, best first, each carrying its formal name', async () => {
-    await addIngredient({
+    const mugwort = await addIngredient({
       name: 'Mugwort',
       canonicalName: 'Artemisia vulgaris',
       folkNames: ['Cronewort'],
@@ -75,7 +76,7 @@ describe('possibleDuplicates', () => {
         name: 'Mugwort',
         canonicalName: 'Artemisia vulgaris',
         isGlobal: true,
-        folkNames: ['Cronewort'],
+        folkNames: await liveFolkNames(sql, mugwort),
       }),
     ]);
   });

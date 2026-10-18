@@ -14,6 +14,7 @@ import type { Built } from '../../../graphql/loaders/types';
 import type {
   CategoryRow,
   CitedReference,
+  FolkNameRow,
   IngredientDeityRow,
   IngredientKey,
   IngredientVariantRow,
@@ -35,7 +36,7 @@ const CHILD_LOADERS = {
   categoriesByIngredient: defineLoader<IngredientKey, CategoryRow[], string>(categoriesOf, byId),
 
   /** `Ingredient.folkNames`, batched: the folk names of each ingredient loaded in one request. */
-  folkNamesByIngredient: defineLoader<IngredientKey, string[], string>(folkNamesOf, byId),
+  folkNamesByIngredient: defineLoader<IngredientKey, FolkNameRow[], string>(folkNamesOf, byId),
 
   /** `Ingredient.references`, batched: the references each ingredient loaded in one request cites. */
   referencesByIngredient: defineLoader<IngredientKey, CitedReference[], string>(referencesOf, byId),

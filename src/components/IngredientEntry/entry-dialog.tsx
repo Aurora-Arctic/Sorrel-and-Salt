@@ -38,6 +38,7 @@ export default function EntryDialog({
               // A fresh form per entry, inside the one modal.
               key={opened.id}
               workspaceId={null}
+              mayPromote
               entry={opened}
               // An edit has Save Ingredient alone, so a save is always 'open':
               // the modal stays, the form keeping what it saved. A rename moves

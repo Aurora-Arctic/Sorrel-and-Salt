@@ -269,6 +269,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
 | MB.265 | Admin Pages Fail Axe's Title Check Under Load                                                                            | Bugfixes | —                      |
 | MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
+| MB.267 | Story 18 and the Sign-In Panel Test Pass Every CI Run                                                                    | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1584,6 +1585,41 @@ _Acceptance criteria:_
 - The name read is guarded by `assertCurator`, returns id and name only, and refuses a coven owner (A) by direct id
 - `usersForAdmin` and the People pages stay admin-only
 - Docs: `claude-docs/components/data-table.md` names the curator-safe read
+
+**MB.267 — Story 18 and the Sign-In Panel Test Pass Every CI Run** · 3h
+
+_Story:_ As a developer opening a PR, I want story 18 and the sign-in panel's component test to pass on every run, so that a red check on my PR means my change broke something.
+
+Found on 2026-10-18 on M12.1's PR (#1063), which changes neither. Two failures, filed as one task on the owner's call. Neither is a hotfix: no user-facing page is shown broken.
+
+**Story 18 runs at its time limit in CI.** "An admin adds a compendium entry, edits it, and deletes it, the list following each" (`tests/e2e/stories/07-admin.spec.ts`, `@story-18`) has Playwright's default 30-second limit, since `playwright.stories.config.ts` sets none. In CI it took 29.7s on M12.4's passing run (39080852601), and 30.3s and 31.1s, then 30.3s and 30.0s, on M12.1's two failing runs (39081808999, 39092340049), each retry included. Locally it passed three runs of three. Each failure was "Test timeout of 30000ms exceeded" just after the reload: Close is pressed, and the dialog is still open when time runs out. The failure snapshot shows Close focused, Save disabled and no unsaved-changes question, so the form held nothing unsaved. Whether Close is slow after a reload, or the story simply runs out of time doing five axe checks and a reload, is unproven.
+
+Steps to reproduce:
+
+1. Open a PR into `staging`, so the PR gate runs the stories job.
+2. Story 18 signs in as an admin, adds an entry, edits it, saves, reloads, opens the Oil variant's Details & Care, and presses Close.
+
+Actual: the test times out at 30s waiting for the dialog to close, on the first try and the retry.
+Expected: the story passes within its time limit on every run.
+
+**The sign-in panel test warns about an uncached snapshot.** `tests/components/SignInPanel/index.test.tsx` intermittently fails on React's console error "The result of getSnapshot should be cached to avoid an infinite loop", which the harness turns into a failure. In CI run 39092340049 it failed "marks the last-used provider in its button's accessible name…". Locally, on M12.1's branch and on M12.4's head (`158361cc`) alike, it failed "surfaces a failing signIn.social result in the same alert region". Earlier CI runs passed it. The panel reads Better Auth's `getLastUsedLoginMethod` through `useSyncExternalStore` (`src/components/SignInPanel/index.tsx`), which parses `document.cookie` on every call. A string or null compares equal across calls, so the warning implies the cookie changes between React's reads, as the test's helpers write or clear it. That is unproven. M11.25's happy-dom pin is the last change to the test environment.
+
+Steps to reproduce:
+
+1. Run `npx vitest run tests/components/SignInPanel` (with `env -u CLAUDECODE` to see the console).
+2. Repeat until a test fails.
+
+Actual: a test fails on the getSnapshot console error; which test varies.
+Expected: every test passes on every run, with no console error.
+
+The getSnapshot warning does not reach story 18: it appears in neither story run's log, the sign-in panel is not on the compendium page, and every external store that page uses returns a stable value.
+
+_Acceptance criteria:_
+
+- Story 18's slow step is named from a CI trace, and the story passes on three consecutive PR-gate runs; a longer time limit is set only for the story, with a comment saying why, if the time is proved to be the story's own work and not the app's
+- If Close is slow after a reload, that is fixed in the app, with a regression test that fails before the fix
+- A regression test reproduces the sign-in panel's getSnapshot warning before the fix, and the panel's test passes twenty consecutive runs with none
+- Docs: `claude-docs/components/sign-in-panel.md`, "Last used", says how the read stays stable
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 

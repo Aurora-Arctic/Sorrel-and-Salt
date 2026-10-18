@@ -19,6 +19,7 @@ import type { Membership } from '@/modules/coven';
 import type {
   CategoryRow,
   CitedReference,
+  FolkNameRow,
   IngredientDeityRow,
   IngredientKey,
   IngredientVariantRow,
@@ -65,15 +66,15 @@ export async function categoriesOfVariants(
 }
 
 /**
- * The live folk names of each ingredient, flattened to strings as §7's
- * `folkNames: [String!]!` exposes them — one answer per ref, sorted. One read
+ * The live folk names of each ingredient, each as its id and text as §7's
+ * `folkNames: [FolkName!]!` exposes them — one answer per ref, sorted. One read
  * whatever the batch size, plus one role lookup per coven named; refused
  * exactly as `categoriesOf` refuses.
  */
 export async function folkNamesOf(
   session: Session | null,
   refs: readonly IngredientKey[],
-): Promise<(string[] | Forbidden)[]> {
+): Promise<(FolkNameRow[] | Forbidden)[]> {
   const { admitted, answer } = await admit(session, refs);
   const rows = await admitted(ingredientFolkNames);
 
@@ -81,7 +82,7 @@ export async function folkNamesOf(
     rows
       .filter((row) => row.ingredientId === id)
       .sort(byName)
-      .map((row) => row.name),
+      .map(({ id, name }) => ({ id, name })),
   );
 }
 

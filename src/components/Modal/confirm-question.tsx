@@ -23,6 +23,7 @@ import type { ConfirmQuestionProps } from './types';
  */
 export function ConfirmQuestion({
   question,
+  details,
   asked = true,
   guard,
   confirmLabel = 'Delete',
@@ -31,15 +32,17 @@ export function ConfirmQuestion({
   keepLabel = 'Keep It',
   busy,
   onConfirm,
+  also,
   onKeep,
   onRefused,
 }: ConfirmQuestionProps): ReactElement | null {
   const keep = useRef<HTMLButtonElement>(null);
   if (guard?.asking) return <DiscardQuestion guard={guard} />;
   if (!asked) return null;
-  const confirm = async () => {
+  const running = busy || also?.busy === true;
+  const run = async (action: () => Promise<void>) => {
     try {
-      await onConfirm();
+      await action();
     } catch (error) {
       if (!onRefused) throw error;
       onRefused(readGraphqlIssues(error)[0]?.message ?? GENERIC_FAILURE);
@@ -47,17 +50,36 @@ export function ConfirmQuestion({
   };
   return (
     <ConfirmOverlay question={question} safe={keep}>
+      {details}
       <div className="modal__actions">
         <BusyButton
           className={`btn btn--${tone}`}
-          disabled={busy}
+          disabled={running}
           busy={busy}
           busyLabel={busyLabel}
-          onClick={() => void confirm()}
+          onClick={() => void run(onConfirm)}
         >
           {confirmLabel}
         </BusyButton>
-        <button ref={keep} type="button" className="btn btn--quiet" onClick={onKeep}>
+        {also && (
+          <BusyButton
+            className="btn btn--destructive"
+            disabled={running}
+            busy={also.busy}
+            busyLabel={also.busyLabel}
+            onClick={() => void run(also.onClick)}
+          >
+            {also.label}
+          </BusyButton>
+        )}
+        <button
+          ref={keep}
+          type="button"
+          className="btn btn--quiet"
+          // Shut only beside a second answer, whose action cannot be taken back.
+          disabled={also !== undefined && running}
+          onClick={onKeep}
+        >
           {keepLabel}
         </button>
       </div>

@@ -224,6 +224,12 @@ type ElementFacetCount {
   value: IngredientElement!
 }
 
+"""An alternative name for an ingredient."""
+type FolkName {
+  id: ID!
+  name: String!
+}
+
 enum FormGroupIcon {
   animal
   botanical
@@ -271,7 +277,7 @@ type Ingredient {
   deities: [IngredientDeity!]!
   description: String
   elements: [IngredientElement!]
-  folkNames: [String!]!
+  folkNames: [FolkName!]!
   id: ID!
   isGlobal: Boolean!
   name: String!

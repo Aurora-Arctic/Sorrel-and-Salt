@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import type { Session } from '@/lib/session';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
+import { liveFolkNames } from '../../../support/db/folk-names';
 import {
   insertIngredient,
   insertSubstituteLink,
@@ -52,7 +53,7 @@ const run = (session: Session | null, variables: { id: string; workspaceId?: str
     session,
     `query ($id: ID!, $workspaceId: ID) {
       ingredient(id: $id, workspaceId: $workspaceId) {
-        id name nomenclature canonicalName isGlobal folkNames categories { name }
+        id name nomenclature canonicalName isGlobal folkNames { id name } categories { name }
       }
     }`,
     variables,
@@ -63,13 +64,16 @@ describe('ingredient', () => {
     const result = await run(null, { id: compendiumId });
 
     expect(result.errors).toBeUndefined();
+    expect(result.data?.ingredient?.folkNames).toEqual([
+      { id: expect.any(String), name: 'Fixture Folk' },
+    ]);
     expect(result.data?.ingredient).toEqual({
       id: compendiumId,
       name: 'Fixture Compendial',
       nomenclature: 'none',
       canonicalName: null,
       isGlobal: true,
-      folkNames: ['Fixture Folk'],
+      folkNames: await liveFolkNames(sql, compendiumId),
       categories: [{ name: 'Protection' }],
     });
   });

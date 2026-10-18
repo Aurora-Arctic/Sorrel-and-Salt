@@ -1592,3 +1592,50 @@ describe('Combobox leading node and toggle', () => {
     expect(control().querySelector('.combobox__indicators')).toBeNull();
   });
 });
+
+describe('an entry action', () => {
+  const action = (onClick: () => void, disabled = false) => ({
+    label: 'Make Hedge Fixture the Display Name',
+    tip: 'Make Display Name',
+    icon: <svg />,
+    onClick,
+    disabled,
+  });
+
+  it('is a button named for its entry, beside the remove, and acts without removing', () => {
+    const onClick = vi.fn();
+    const onRemove = vi.fn();
+    render(
+      <ul>
+        <ComboboxEntry value="Hedge Fixture" action={action(onClick)} onRemove={onRemove} />
+      </ul>,
+    );
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons.map((button) => button.getAttribute('aria-label'))).toEqual([
+      'Make Hedge Fixture the Display Name',
+      'Remove Hedge Fixture',
+    ]);
+    fireEvent.click(buttons[0] as HTMLElement);
+    expect(onClick).toHaveBeenCalledOnce();
+    expect(onRemove).not.toHaveBeenCalled();
+  });
+
+  it('is shut when disabled, and absent when none is given', () => {
+    const onClick = vi.fn();
+    const { rerender } = render(
+      <ul>
+        <ComboboxEntry value="Hedge Fixture" action={action(onClick, true)} onRemove={vi.fn()} />
+      </ul>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Make Hedge Fixture the Display Name' }));
+    expect(onClick).not.toHaveBeenCalled();
+
+    rerender(
+      <ul>
+        <ComboboxEntry value="Hedge Fixture" onRemove={vi.fn()} />
+      </ul>,
+    );
+    expect(screen.getAllByRole('button')).toHaveLength(1);
+  });
+});

@@ -9,6 +9,7 @@ import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredien
 import { A, B, C, asUser } from '../../../support/as-user';
 import { curatedDeityId, curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
+import { liveFolkNames } from '../../../support/db/folk-names';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import {
   type IngredientFixture,
@@ -41,7 +42,7 @@ beforeEach(async () => {
 const FIELDS = `
   id name slug canonicalName nomenclature description
   elements celestialBodies zodiacSigns deities { name deity { id tradition { name } } } colors safetyNotes
-  substitutes { name ingredient { id } } isGlobal folkNames
+  substitutes { name ingredient { id } } isGlobal folkNames { id name }
   categories { name } variants { form formChoice { id name group { name } } }
   audit { createdBy updatedBy }
 `;
@@ -161,7 +162,11 @@ describe('createWorkspaceIngredient', () => {
       zodiacSigns: ['Taurus', 'Cancer'],
       colors: ['Green', 'Silver'],
     });
-    expect([...answered.folkNames].sort()).toEqual(['Fixture Herb', 'Test Root']);
+    expect(answered.folkNames.map(({ name }) => name).sort()).toEqual([
+      'Fixture Herb',
+      'Test Root',
+    ]);
+    expect(answered.folkNames).toEqual(await liveFolkNames(sql, answered.id));
     const fresh = await read(asUser(B), answered.id);
     expect(fresh.errors).toBeUndefined();
     expect(answered).toEqual(fresh.data?.ingredient);
@@ -251,9 +256,10 @@ describe('updateIngredient', () => {
       description: null,
       celestialBodies: ['Mars'],
       colors: ['Red', 'Black'],
-      folkNames: ['Added Root'],
+      folkNames: [{ id: expect.any(String), name: 'Added Root' }],
       audit: { createdBy: A.id, updatedBy: B.id },
     });
+    expect(answered.folkNames).toEqual(await liveFolkNames(sql, id));
     expect(answered).toEqual((await read(asUser(B), id)).data?.ingredient);
   });
 
@@ -390,10 +396,10 @@ describe('updateIngredient', () => {
     const id = await seed(local());
     const twice = `mutation ($workspaceId: ID!, $id: ID!, $first: IngredientUpdateInput!, $second: IngredientUpdateInput!) {
       first: updateIngredient(workspaceId: $workspaceId, id: $id, input: $first) {
-        folkNames substitutes { name } deities { name }
+        folkNames { id name } substitutes { name } deities { name }
       }
       second: updateIngredient(workspaceId: $workspaceId, id: $id, input: $second) {
-        folkNames substitutes { name } deities { name }
+        folkNames { id name } substitutes { name } deities { name }
       }
     }`;
 
@@ -417,8 +423,8 @@ describe('updateIngredient', () => {
     );
 
     expect(result.errors).toBeUndefined();
-    expect(result.data?.first.folkNames).toEqual(['First Root']);
-    expect(result.data?.second.folkNames).toEqual(['Second Root']);
+    expect(result.data?.first.folkNames.map(({ name }) => name)).toEqual(['First Root']);
+    expect(result.data?.second.folkNames.map(({ name }) => name)).toEqual(['Second Root']);
     expect(result.data?.first.substitutes).toEqual([{ name: 'First Zest' }]);
     expect(result.data?.second.substitutes).toEqual([{ name: 'Second Zest' }]);
     expect(result.data?.first.deities).toEqual([{ name: 'Testara' }]);

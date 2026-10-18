@@ -3,7 +3,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { type ReactElement, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useFocusFirstInvalid, useOnEachSubmit } from './on-submit';
-import { createPortal } from 'react-dom';
+import { createPortal, flushSync } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
 import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
@@ -13,6 +13,13 @@ import BusyButton from '../BusyButton';
 import { ConfirmQuestion, useDiscardGuard, useModalHeaderSlot } from '../Modal';
 import { PanelChangesContext, usePanelChanges } from './panel-changes';
 import { DiscardAskingContext } from './remove-question';
+import {
+  PromoteFolkNameQuestion,
+  usePromoteFolkName,
+  type PromotedIngredient,
+  type PromotedName,
+} from './promote';
+import { PromoteIcon } from './icons';
 import Notice from '../Notice';
 import { NAMELESS_KIND, UNSETTLED_KIND } from '@/modules/ingredients/schema/ingredient-enums';
 import { CategoryField } from './categories';
@@ -143,6 +150,7 @@ const IngredientForm = ({
   onCancel,
   duplicateHref,
   entryHref,
+  mayPromote = false,
 }: IngredientFormProps): ReactElement => {
   // A null coven is the compendium: the classification answered, the
   // vocabulary boxes picked from the curated rows, and every lookup asking
@@ -261,6 +269,11 @@ const IngredientForm = ({
   // The delete's own confirmation, and why a delete was refused.
   const [deleting, setDeleting] = useState(false);
   const [refusal, setRefusal] = useState<string>();
+  // The folk name whose promotion is being asked about (M12.1), if any.
+  const [promoting, setPromoting] = useState<PromotedName | null>(null);
+  // Whether the last save sent through `handleSubmit(save)` landed: Save and
+  // Promote promotes only if it did.
+  const landed = useRef(false);
   // Cancel, and every other way out of the modal, asks first while the form
   // has changes (MB.115, the owner's call), ahead of any other question; a
   // save or a delete does not. A reference panel's own edits count too:
@@ -368,7 +381,7 @@ const IngredientForm = ({
   });
 
   /** Sends the input, and says what came of it: saved, asked about, or refused beside its fields. */
-  const deliver = async (input: IngredientFormInput, endRedirect: boolean): Promise<void> => {
+  const deliver = async (input: IngredientFormInput, endRedirect: boolean): Promise<boolean> => {
     try {
       const row = await mutation.mutateAsync({ input, endRedirect });
       onSaved?.(row, next.current);
@@ -386,6 +399,7 @@ const IngredientForm = ({
         clearEdited();
         clearHistory();
       }
+      return true;
     } catch (error) {
       // setError, as the resolver's own errors are set: the next submit or an
       // edit to the field clears them the same way. MB.82's refusal is a
@@ -395,6 +409,7 @@ const IngredientForm = ({
         setQuestion({ message, input });
         return false;
       });
+      return false;
     }
   };
 
@@ -405,7 +420,52 @@ const IngredientForm = ({
     // exists rather than making another, so its warning holds nothing (MB.115,
     // the owner's call).
     if (!editing && (await duplicates.check(input.name))) return;
-    await deliver(input, false);
+    landed.current = await deliver(input, false);
+  };
+
+  // Promoting a folk name (M12.1). Only a saved entry has folk names with ids.
+  const promotion = usePromoteFolkName(workspaceId, entry?.id ?? '');
+  const promoteOffered = mayPromote && entry !== undefined;
+
+  /**
+   * Save & Promote's first half: the form's own save, validated and drawn as
+   * any save is. When it does not land the question closes and the first
+   * invalid field takes the focus by hand, since the question's overlay would
+   * otherwise hand the focus back to the control that opened it.
+   */
+  const saveForPromotion = async (): Promise<boolean> => {
+    landed.current = false;
+    next.current = 'open';
+    setSaved(null);
+    setRefusal(undefined);
+    await handleSubmit(save)();
+    if (!landed.current) {
+      flushSync(() => setPromoting(null));
+      form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    }
+    return landed.current;
+  };
+
+  /** The swap was made: the form holds what the server answered, with nothing left to save. */
+  const promoted = (ingredient: PromotedIngredient): void => {
+    reset({
+      ...getValues(),
+      name: ingredient.name,
+      folkNames: ingredient.folkNames.map(({ id, name }) => ({ value: name, id })),
+    });
+    clearEdited();
+    clearHistory();
+    flushSync(() => {
+      setPromoting(null);
+      setSaved(ingredient.name);
+    });
+    onSaved?.(
+      { id: ingredient.id, name: ingredient.name, slug: ingredient.slug } as SavedIngredient,
+      'open',
+    );
+    // The chip that was pressed has gone with the reset; the name it became is
+    // where the eye should go.
+    form.current?.querySelector<HTMLInputElement>('input[name="name"]')?.focus();
   };
 
   const endRedirect = async (): Promise<void> => {
@@ -514,6 +574,20 @@ const IngredientForm = ({
                         workspaceId={workspaceId}
                         useSuggestions={useCommonNameSuggestions}
                         name="folkNames"
+                        rowAction={(row) => {
+                          const { id, value } = row as { id?: string; value: string };
+                          if (!promoteOffered || !id) return undefined;
+                          return {
+                            label: `Make ${value} the Display Name`,
+                            tip: 'Make Display Name',
+                            icon: <PromoteIcon />,
+                            disabled: promotion.isPending,
+                            onClick: () => {
+                              setRefusal(undefined);
+                              setPromoting({ id, value });
+                            },
+                          };
+                        }}
                         legend="Folk Names"
                         entry="Folk Name"
                         hint="Other names it goes by. A search finds it by any of them."
@@ -687,6 +761,23 @@ const IngredientForm = ({
                   {/* A question is asked over the form, centred in view however far
               the form is scrolled, the focus on Keep It (MB.115, the owner's
               call): the unsaved changes' first, then MB.82's, then Delete's. */}
+                  {promoteOffered && (
+                    <PromoteFolkNameQuestion
+                      promotion={promotion}
+                      folkName={promoting}
+                      displayName={entry?.values.name ?? ''}
+                      tier={compendium ? 'compendium' : 'coven'}
+                      dirty={isDirty || panels.changed}
+                      saveFirst={saveForPromotion}
+                      discardFirst={() => reset()}
+                      onPromoted={promoted}
+                      onKeep={() => setPromoting(null)}
+                      onRefused={(message) => {
+                        setPromoting(null);
+                        setRefusal(message);
+                      }}
+                    />
+                  )}
                   {question ? (
                     // MB.82: the address this save takes is another entry's redirect.
                     // Asked before anything else is pressed; Keep It leaves the entry

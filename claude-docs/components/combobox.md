@@ -545,6 +545,15 @@ so that every list draws the same one:
   instead of a wash (the `outlined-chip` mixin, `_mixins.scss`); a coloured
   chip stays filled, since its group's colour is its look.
 
+### An action on an entry
+
+An entry may carry one action button, ahead of its ×: `action`, `{ label, tip,
+icon, onClick, disabled? }` (M12.1, promoting a folk name). It is a real
+button in the tab order, named by `label` and described as the × is, with
+its `tip` shown on hover and focus by [IconTip](icon-tip.md). Its click
+removes nothing and does not touch a sortable entry's handle. A list gives
+one per row or none; the Combobox knows nothing of what it does.
+
 ## A linked entry's summary
 
 `summary`, `{ label, content }`, is what a linked entry opens: IngredientForm

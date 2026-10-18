@@ -30,3 +30,19 @@ export function SourceEditIcon(): ReactElement {
 
 /** A cross: take this row out. The type-ahead's clear, which is drawn the same. */
 export { ClearIcon as RemoveIcon } from '../Combobox/icons';
+
+/** An arrow up, the way a folk name rises to be the display name: promote this row. */
+export function PromoteIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 13V3M3.75 7.25 8 3l4.25 4.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

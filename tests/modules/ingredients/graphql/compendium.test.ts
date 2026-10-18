@@ -90,7 +90,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
           cursor
           score
           node {
-            id name slug canonicalName nomenclature isGlobal folkNames
+            id name slug canonicalName nomenclature isGlobal folkNames { id name }
             categories { name group { name colorDark } }
             audit { createdBy }
           }
