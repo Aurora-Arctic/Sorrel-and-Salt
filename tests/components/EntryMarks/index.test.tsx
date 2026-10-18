@@ -9,7 +9,7 @@ import EntryMarks from '@/components/EntryMarks';
 
 const statuses = () => screen.queryAllByRole('status');
 const local = () => screen.queryByText('Local', { exact: true });
-const held = () => screen.queryByText('From the Compendium', { exact: true });
+const held = () => screen.queryByText('Compendium', { exact: true });
 const annotated = () => screen.queryByText('Annotated', { exact: true });
 const retired = () => screen.queryByRole('button', { name: 'Retired' });
 

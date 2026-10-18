@@ -23,7 +23,7 @@ const BASE = { href: HREF, label: 'Fixture Testwort', kind: 'compendium' as cons
 const cautionMark = () => screen.queryByText('Caution', { exact: true });
 const toxicMark = () => screen.queryByText('Toxic', { exact: true });
 const localMark = () => screen.queryByText('Local', { exact: true });
-const heldMark = () => screen.queryByText('From the Compendium', { exact: true });
+const heldMark = () => screen.queryByText('Compendium', { exact: true });
 const retiredMark = () => screen.queryByRole('button', { name: 'Retired' });
 
 describe('IngredientCard', () => {

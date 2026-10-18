@@ -43,7 +43,7 @@ design is in [`../design-decisions/mb.7-navigation.md`](../design-decisions/mb.7
 | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | [`ingredient-search.md`](ingredient-search.md) | The list shell for finding ingredients by name: a debounced dropdown, filters, action, pager               |
 | [`ingredient-card.md`](ingredient-card.md)     | One ingredient in a list: its name as the one link, formal name and forms, marks, caution, a jar-line slot |
-| [`entry-marks.md`](entry-marks.md)             | The Local, From the Compendium, Annotated and Retired badges, shared by the card and the entry page        |
+| [`entry-marks.md`](entry-marks.md)             | The Local, Compendium, Annotated and Retired badges, shared by the card and the entry page                 |
 
 ## Stock
 

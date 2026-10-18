@@ -53,7 +53,7 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await expect(page.getByRole('button', { name: 'Annotate This Entry' })).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Add to Cupboard' }).click();
-  await expect(page.getByRole('status').filter({ hasText: 'From the Compendium' })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add to Cupboard' })).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Annotate This Entry' }).click();
@@ -83,5 +83,5 @@ test('a member adds a compendium entry to the cupboard, annotates it, hands the 
   await page.getByRole('button', { name: 'Remove from Cupboard' }).click();
   await page.getByRole('button', { name: 'Remove', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Add to Cupboard' })).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: 'From the Compendium' })).toHaveCount(0);
+  await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
 });

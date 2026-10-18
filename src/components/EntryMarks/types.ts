@@ -11,6 +11,6 @@ export interface EntryMarksProps {
   kind: EntryKind;
   /** The cupboard row overrides a field of the compendium's; only a `cupboard` entry shows it. */
   annotated?: boolean;
-  /** The curators retired the entry (M12.24); it shows in place of From the Compendium. */
+  /** The curators retired the entry (M12.24); it shows in place of Compendium. */
   retired?: boolean;
 }

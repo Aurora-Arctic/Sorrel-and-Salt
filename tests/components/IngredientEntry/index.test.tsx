@@ -299,13 +299,13 @@ describe('IngredientEntry', () => {
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
 
-  it('marks a retired entry with a status in its head, and a live one with none', () => {
+  it('marks a retired entry with a Retired button in its head, and a live one with none', () => {
     const { unmount } = renderEntry();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Retired' })).not.toBeInTheDocument();
     unmount();
 
     renderEntry({ detail: detail({ retired: true }) });
-    expect(screen.getByRole('status').closest('header')).not.toBeNull();
+    expect(screen.getByRole('button', { name: 'Retired' }).closest('header')).not.toBeNull();
   });
 
   it('marks the entry Toxic when a form is, though the ingredient is not', () => {
@@ -1027,7 +1027,7 @@ describe('IngredientEntry on a coven page', () => {
     expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
     // The marks are statuses; a compendium entry is never Local.
     expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual([
-      'From the Compendium',
+      'Compendium',
       'Annotated',
     ]);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
@@ -1037,9 +1037,7 @@ describe('IngredientEntry on a coven page', () => {
     renderEntry({ detail: detail({ cupboardEntry: held() }) });
 
     expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
-    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual([
-      'From the Compendium',
-    ]);
+    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual(['Compendium']);
     expect(screen.getAllByText('Testwort')).toHaveLength(1);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
   });
