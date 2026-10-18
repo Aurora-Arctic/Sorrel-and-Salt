@@ -107,31 +107,13 @@
   margin: 0;
 }
 
-// One row per pair of facets: a combobox takes the spare width and the compact control
-// beside it (Match, No Refs, the Toxic strip) keeps its own. Below the tablet width every
-// control stacks, in the same order as the source.
+// One row per pair of facets: a combobox takes the spare width and the compact controls
+// beside it (the chips and switches, in `.facet-panel__quick`) keep their own. Below the
+// tablet width every control stacks, in the same order as the source.
 .facet-panel__line {
   display: flex;
   flex-direction: column;
   gap: space(4);
-
-  // The group's own vertical margin (set for a group among prose) would push the strip
-  // below its neighbour's label; the row's gap is the spacing.
-  .fieldset.radio-group {
-    margin-block: 0;
-  }
-
-  // Match's legend carries an InfoTip, whose button is taller than the text, so the legend
-  // stood 6px taller than Categories' and its strip sat lower. The label row is held to one
-  // line (the button overflows it, centred) and the gap is Categories' own (space 3), so the
-  // two fields share a label and a control top.
-  .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
-    margin-bottom: space(3);
-
-    .field__label-row {
-      block-size: 1lh;
-    }
-  }
 
   // Stacked, a combobox is as tall as it is, not the row-wise basis.
   > .facet-panel__grow {
@@ -151,27 +133,138 @@
   }
 }
 
-// The small controls on one wrapping row under Categories: Toxic, then Source and In Stock
-// Only where the caller offers them, then No Refs for the admin. Each stands at its own width,
-// tops level so that a label with a hint (Toxic's, Source's) does not lift its strip, and the
-// row wraps to two or so a line on the phone sheet. The switch is centred under its label.
-.facet-panel__small {
+// The chips and switches of a row, side by side and wrapping on a phone. Each stands where a
+// labelled field would, tops level: the chip's spacer is the height of a label.
+.facet-panel__quick {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-start;
   gap: space(3) space(4);
+}
 
-  .fieldset.radio-group {
-    margin-block: 0;
+// Beside the category picker, whose legend sits a step higher above its box than a field's
+// label does (space 3 against 2): the chip steps down by the difference. Before the script the
+// categories are a plain field, with no difference.
+.facet-panel__quick--picker {
+  padding-block-start: space(1);
+}
+
+// A count after a name (Filters, an option, a switch): small, in the muted ink, the same font,
+// with no brackets round it.
+.facet-panel__count {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+// A choice chip (ChoiceChip): "Match: All" and a caret, opening a menu of radios. A
+// `<details>`, so it opens before the script runs; once the script has run the menu fades as
+// other dropdowns do, and stays in the page until the fade ends.
+.facet-chip__bar {
+  display: flex;
+  align-items: center;
+  gap: space(1);
+}
+
+.facet-chip__group {
+  margin: 0;
+}
+
+.facet-chip__details {
+  position: relative;
+}
+
+.facet-chip__summary {
+  @include field-box;
+
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  min-height: var(--facet-control, #{$control-height});
+  padding-block: 0;
+  border-radius: radius('pill');
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+  @include theme-transition(background-color);
+
+  &::-webkit-details-marker {
+    display: none;
   }
 
-  .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
-    margin-bottom: space(2);
-
-    .field__label-row {
-      block-size: 1lh;
-    }
+  &:hover {
+    background-color: color-mix(in srgb, $accent 12%, $surface-card);
   }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  // A chip that cannot change rests dashed and dim, as a shut field does.
+  &:disabled {
+    border-style: dashed;
+    background-color: transparent;
+    color: $text-muted;
+    cursor: default;
+  }
+}
+
+.facet-chip__details[open] > .facet-chip__summary {
+  border-color: $accent;
+}
+
+.facet-chip__name {
+  color: $text-muted;
+}
+
+.facet-chip__value {
+  font-weight: 500;
+}
+
+.facet-chip__caret {
+  inline-size: 0.625rem;
+  block-size: 0.375rem;
+  color: $text-muted;
+}
+
+.facet-chip__menu {
+  @include floating-panel;
+
+  position: absolute;
+  inset-block-start: calc(100% + #{space(1)});
+  inset-inline-start: 0;
+  z-index: layer('floating');
+  min-inline-size: 100%;
+  padding: space(1) space(3);
+  white-space: nowrap;
+}
+
+// With the script on, the menu is always in the page while open and fades by opacity and
+// visibility, the way a tip bubble does; without it, an open `<details>` shows it whole.
+.facet-chip--script > .facet-chip__menu {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity $modal-fade,
+    visibility 0s linear 150ms;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity $modal-fade,
+      visibility 0s;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+.facet-chip__option {
+  align-items: center;
+  min-block-size: 2rem;
+  padding-block: space(1);
 }
 
 .facet-panel__foot {
@@ -331,12 +424,6 @@ $compact-control: 2.5rem;
 
   .combobox__input {
     min-height: var(--facet-text);
-  }
-
-  // The segmented strips: the bar stands the compact height, inside its own 1px edge.
-  .radio--text {
-    block-size: calc(var(--facet-control) - 2px);
-    padding-inline: space(3);
   }
 
   .switch .switch__control {

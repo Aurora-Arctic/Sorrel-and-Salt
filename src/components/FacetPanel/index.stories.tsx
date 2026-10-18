@@ -83,12 +83,15 @@ function Panel({
   admin = false,
   facets = FACETS,
   open = true,
+  menu,
 }: {
   start?: FacetPanelFilter;
   admin?: boolean;
   facets?: CompendiumFacetCounts;
   /** Open on desktop widths as the story loads, so the layout is seen without a click. */
   open?: boolean;
+  /** The chip whose menu is opened once the panel is, so the menu is seen without a click. */
+  menu?: string;
 }) {
   const [filter, setFilter] = useState(start);
   const [loading, setLoading] = useState(false);
@@ -100,7 +103,13 @@ function Panel({
     if (!open || !window.matchMedia('(min-width: 56rem)').matches) return;
     const button = frame.current?.querySelector<HTMLButtonElement>('.facet-panel__button');
     if (button && button.getAttribute('aria-expanded') !== 'true') button.click();
-  }, [open]);
+    if (!menu) return undefined;
+    const wait = window.setTimeout(() => {
+      const chips = frame.current?.querySelectorAll<HTMLElement>('.facet-chip__summary') ?? [];
+      [...chips].find((chip) => chip.textContent?.startsWith(`${menu}:`))?.click();
+    }, 500);
+    return () => window.clearTimeout(wait);
+  }, [open, menu]);
   return (
     <div ref={frame} style={{ minHeight: '34rem' }}>
       {/* The anchor the panel opens under, as the list's filter form is. */}
@@ -131,8 +140,8 @@ function Panel({
 // Nothing chosen: Filters alone, no Clear All.
 export const Empty: Story = () => <Panel open={false} />;
 
-// The public compendium's panel: no Source, no In Stock, no No Refs, and no counts for them.
-// Open on desktop.
+// The public compendium's panel: Categories with Match at its right, Forms with Toxic, and no
+// Source, In Stock or No Refs. Open on desktop.
 export const Public: Story = () => <Panel />;
 
 // Chosen values: the count on the button (every chosen value, so seven here; Match counts
@@ -170,12 +179,12 @@ export const AllZeroFacet: Story = () => (
   />
 );
 
-// Fewer than two categories: Match stays, on All, disabled and dashed, its hint saying when it
-// applies.
+// Fewer than two categories: the Match chip stays, on All, disabled and dashed, its hint saying
+// when it applies.
 export const MatchStuck: Story = () => <Panel start={{ ...NONE, categories: ['warding'] }} />;
 
 // Either Toxic value counting nothing: every matching entry shares one toxicity, so the
-// group rests on Any, is disabled, and says why in its hint.
+// chip rests on Any, is disabled, and says why in its hint.
 export const ToxicStuck: Story = () => (
   <Panel
     start={{ ...NONE, toxic: 'toxic' }}
@@ -189,11 +198,11 @@ export const ToxicStuck: Story = () => (
   />
 );
 
-// The admin list also has the No Refs switch.
+// The admin list also has the No Refs switch, after Toxic on the Forms row.
 export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferences: true }} />;
 
-// The coven's list also has a Source group and the In Stock switch, on a row of their own
-// above the foot. Their values count on the Filters button, so the two chosen here make 2.
+// The coven's list also has a Source chip and the In Stock switch, on the Forms row beside Toxic.
+// Their values count on the Filters button, so the two chosen here make 2.
 export const Coven: Story = () => (
   <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStock: true }} />
 );
@@ -202,3 +211,19 @@ export const Coven: Story = () => (
 export const CovenEmpty: Story = () => (
   <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />
 );
+
+// The Match chip open, two categories chosen: the menu of radios fades in under the chip.
+export const MatchMenu: Story = () => (
+  <Panel
+    menu="Match"
+    start={{ ...NONE, categories: ['warding', 'mending'], categoryMode: 'any' }}
+  />
+);
+
+// The coven's Source chip open: Local and Compendium with their counts, no brackets.
+export const SourceMenu: Story = () => (
+  <Panel menu="Source" facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStock: true }} />
+);
+
+// The admin's Toxic chip open, with No Refs on the same row.
+export const ToxicMenu: Story = () => <Panel menu="Toxic" admin start={NONE} />;

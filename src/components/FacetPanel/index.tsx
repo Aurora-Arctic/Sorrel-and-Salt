@@ -21,10 +21,11 @@ import CategoryPicker from '../CategoryPicker';
 import FacetCombobox from '../FacetCombobox';
 import { fieldDescription } from '../Field/description';
 import { FieldShell } from '../Field/shell';
-import { RadioGroupField } from '../Field/radio-group-field';
-import { SwitchField } from '../Field/switch-field';
 import FormIcon from '../FormIcon';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
+import { ChoiceChip, fadesAreOff } from './choice-chip';
+import { FacetCount } from './facet-count';
+import { FacetSwitch } from './facet-switch';
 import type { FacetPanelProps } from './types';
 import './index.scss';
 
@@ -43,11 +44,6 @@ import './index.scss';
  */
 const FADE_LIMIT_MS = 400;
 
-/** Motion turned down, or no way to ask, so a close is not held for a fade. */
-const fadesAreOff = (): boolean =>
-  typeof window.matchMedia !== 'function' ||
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 const WIDE = '(min-width: 56rem)';
 
 const SOURCE_LABELS: Record<IngredientSource, string> = {
@@ -56,7 +52,7 @@ const SOURCE_LABELS: Record<IngredientSource, string> = {
 };
 
 /**
- * The Source strip's choices: All, then Local and Compendium. The two always show, each with
+ * The Source chip's choices: All, then Local and Compendium. The two always show, each with
  * its count once the coven's counts are read, as Toxic's do; All has none, as Toxic's Any has
  * none.
  */
@@ -113,7 +109,7 @@ function NativeCategories({
               .filter((category) => category.count > 0 || values.includes(category.value))
               .map((category) => (
                 <option key={category.value} value={category.value}>
-                  {category.label} ({category.count})
+                  {category.label} {category.count}
                 </option>
               ))}
           </optgroup>
@@ -309,7 +305,12 @@ export default function FacetPanel({
     event.currentTarget.scrollTop = 0;
   };
 
-  const filtersLabel = count > 0 ? `Filters (${count})` : 'Filters';
+  const filtersLabel = (
+    <>
+      Filters
+      {count > 0 && <FacetCount count={count} />}
+    </>
+  );
   const clip = hydrated ? slide.className : 'facet-panel__clip facet-panel__clip--open';
 
   return (
@@ -403,78 +404,27 @@ export default function FacetPanel({
                 {/* Match stays below two categories so the row does not shift as categories are
                     picked: it rests on All, disabled, and says when it applies. The held mode is
                     kept (it still reads All here, and the address drops it, M8.12). */}
-                <RadioGroupField
-                  legend="Match"
-                  name="categoryMode"
-                  layout="segmented"
-                  hint={
-                    matchStuck
-                      ? 'Match applies once two or more categories are chosen.'
-                      : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
+                <div
+                  className={
+                    hydrated
+                      ? 'facet-panel__quick facet-panel__quick--picker'
+                      : 'facet-panel__quick'
                   }
-                  options={MATCH_OPTIONS}
-                  value={matchStuck ? 'all' : filter.categoryMode}
-                  disabled={matchStuck}
-                  onChange={(categoryMode) => onChange({ categoryMode })}
-                />
-              </div>
-
-              <div className="facet-panel__small">
-                <RadioGroupField
-                  legend="Toxic"
-                  name="toxic"
-                  layout="segmented"
-                  options={[
-                    { value: '', label: 'Any' },
-                    ...facets.toxic.map((choice) => ({
-                      value: choice.value,
-                      label: choice.label,
-                      count: choice.count,
-                    })),
-                  ]}
-                  // Toxic is the one facet that keeps a zero-count value: all three
-                  // segments always show. With either side empty, every matching entry
-                  // shares one toxicity, so the field rests on Any and cannot narrow.
-                  value={toxicStuck ? '' : filter.toxic}
-                  disabled={toxicStuck}
-                  hint={
-                    toxicStuck
-                      ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
-                      : undefined
-                  }
-                  onChange={(toxic) => onChange({ toxic })}
-                />
-                {filter.source !== undefined && (
-                  <RadioGroupField
-                    legend="Source"
-                    name="source"
-                    layout="segmented"
-                    hint="Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium."
-                    options={sourceOptions(facets.source)}
-                    value={filter.source}
-                    onChange={(source) => onChange({ source })}
-                  />
-                )}
-                {filter.inStock !== undefined && (
-                  <SwitchField
-                    label={
-                      facets.inStock === undefined ? 'In Stock' : `In Stock (${facets.inStock})`
+                >
+                  <ChoiceChip
+                    legend="Match"
+                    name="categoryMode"
+                    hint={
+                      matchStuck
+                        ? 'Match applies once two or more categories are chosen.'
+                        : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
                     }
-                    name="inStock"
-                    value="1"
-                    checked={filter.inStock}
-                    onChange={(inStock) => onChange({ inStock })}
+                    options={MATCH_OPTIONS}
+                    value={matchStuck ? 'all' : filter.categoryMode}
+                    disabled={matchStuck}
+                    onChange={(categoryMode) => onChange({ categoryMode })}
                   />
-                )}
-                {admin && (
-                  <SwitchField
-                    label={`No Refs (${facets.withoutReferences})`}
-                    name="withoutReferences"
-                    value="1"
-                    checked={filter.withoutReferences}
-                    onChange={(withoutReferences) => onChange({ withoutReferences })}
-                  />
-                )}
+                </div>
               </div>
 
               <div className="facet-panel__line">
@@ -495,6 +445,59 @@ export default function FacetPanel({
                     values={filter.forms}
                     onChange={(forms) => onChange({ forms })}
                   />
+                </div>
+                <div className="facet-panel__quick">
+                  <ChoiceChip
+                    legend="Toxic"
+                    name="toxic"
+                    options={[
+                      { value: '', label: 'Any' },
+                      ...facets.toxic.map((choice) => ({
+                        value: choice.value,
+                        label: choice.label,
+                        count: choice.count,
+                      })),
+                    ]}
+                    // Toxic is the one facet that keeps a zero-count value: all three
+                    // choices always show. With either side empty, every matching entry
+                    // shares one toxicity, so the chip rests on Any and cannot narrow.
+                    value={toxicStuck ? '' : filter.toxic}
+                    disabled={toxicStuck}
+                    hint={
+                      toxicStuck
+                        ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
+                        : undefined
+                    }
+                    onChange={(toxic) => onChange({ toxic })}
+                  />
+                  {filter.source !== undefined && (
+                    <ChoiceChip
+                      legend="Source"
+                      name="source"
+                      hint="Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium."
+                      options={sourceOptions(facets.source)}
+                      value={filter.source}
+                      onChange={(source) => onChange({ source })}
+                    />
+                  )}
+                  {filter.inStock !== undefined && (
+                    <FacetSwitch
+                      label="In Stock"
+                      count={facets.inStock}
+                      name="inStock"
+                      checked={filter.inStock}
+                      onChange={(inStock) => onChange({ inStock })}
+                    />
+                  )}
+                  {admin && (
+                    <FacetSwitch
+                      label="No Refs"
+                      count={facets.withoutReferences}
+                      name="withoutReferences"
+                      checked={filter.withoutReferences}
+                      onChange={(withoutReferences) => onChange({ withoutReferences })}
+                    />
+                  )}
                 </div>
               </div>
 
