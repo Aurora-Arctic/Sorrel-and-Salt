@@ -19,6 +19,7 @@ import type { referenceLinks } from '../../modules/ingredients/schema/reference-
 import type { references } from '../../modules/ingredients/schema/references';
 import type { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
+import type { spellIngredients } from '../../modules/grimoire/schema/spell-ingredients';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
@@ -573,6 +574,27 @@ export interface AuditWriter {
    */
   lockLocalsHiding(membership: Membership, entryId: string): Promise<IngredientRow[]>;
   /**
+   * The live layers, in live spells of the proof's coven, that lay any of
+   * these forms, locked in layer-id order until the transaction ends: what a
+   * convert moves and checks for a spell that would hold one form twice
+   * (M12.21). Private spells included, whoever wrote them; another coven's
+   * layers never.
+   */
+  lockLayersOfVariants(
+    membership: Membership,
+    variantIds: readonly string[],
+  ): Promise<SpellLayerRow[]>;
+  /**
+   * Points these layers, each in a live spell of the proof's coven, at another
+   * ingredient's form, stamped from the session, and answers the rows moved.
+   * Nothing else on the layer changes.
+   */
+  moveLayers(
+    membership: Membership,
+    layerIds: readonly string[],
+    to: { ingredientId: string; variantId: string },
+  ): Promise<SpellLayerRow[]>;
+  /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
    * never the values'. The token is hashed here and only the hash is stored.
@@ -925,6 +947,9 @@ export type CupboardEntryRow = typeof workspaceCompendiumEntries.$inferSelect;
 
 /** A form of an ingredient, as a finder or a write returns it. */
 export type VariantRow = typeof ingredientVariants.$inferSelect;
+
+/** One `spell_ingredients` row, a layer of a spell, as the writer reads it. */
+export type SpellLayerRow = typeof spellIngredients.$inferSelect;
 
 /** The compendium entries a coven's own entry hides (M12.12): the first few a link needs, and how many in all. */
 export interface HiddenCompendiumEntries {

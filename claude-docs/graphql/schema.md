@@ -949,6 +949,18 @@ and a taken label is `VALIDATION` beside `label`
 ([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
 "Writing it").
 
+**The convert** (M12.21), `convertLocalToCompendiumEntry(workspaceId, localId,
+compendiumId)`, turns one of the coven's own entries into a compendium entry
+and answers a `ConvertedLocal`: `entry`, the new `CupboardEntry` through the
+same `nodeOf`, and `dropped`, a `DroppedOnConvert` listing by name the
+`forms`, `folkNames`, `substitutes`, `categories`, `references` (each as its
+bibliography entry reads) and `deities` the coven no longer sees. A viewer is
+`FORBIDDEN`, a missing own entry or compendium entry `NOT_FOUND`, and each
+refusal that moves nothing is `VALIDATION` beside `ingredientId`, `label`,
+`forms`, `jars` or `layers`
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Converting an own entry").
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in
