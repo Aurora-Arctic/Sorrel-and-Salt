@@ -1348,6 +1348,11 @@ type QueryIngredientSuggestionsConnection {
 
 type QueryIngredientSuggestionsConnectionEdge {
   cursor: String!
+
+  """
+  Yours: an entry of the coven, its own or one it holds from the compendium. Compendium: an entry it does not hold. Yours is listed first, then the compendium, each ranked by match.
+  """
+  group: SuggestionGroup!
   node: Ingredient!
 }
 
@@ -1568,6 +1573,14 @@ input SubstituteInput {
 type SuggestionClaimant {
   canonicalName: String
   name: String!
+}
+
+"""
+Where the substitute picker lists an entry: the coven's own cupboard (yours), or the rest of the compendium.
+"""
+enum SuggestionGroup {
+  compendium
+  yours
 }
 
 """A toxic setting other than any, and how many entries it would list."""
