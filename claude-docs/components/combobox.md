@@ -439,20 +439,40 @@ a second way through the chips would be a second tab model for one look.
 - **Each change is announced** in a visually hidden `<output>` named
   "Element changes", "Added Air", "Removed Air" or "Cleared Element", as a
   list field's are (WCAG 4.1.3).
+- **A choice may carry a count and be disabled** (M12.4), for a filter that
+  shows how many entries each value would leave. A row reads "Fire (9)": the
+  count follows the label in its own span, after a space that is a text node,
+  because an accessible name drops a space a span begins with. `hideZeros`
+  leaves out a row whose count is 0, and a choice's own `disabled` makes a
+  row that is listed but cannot be chosen. A disabled row is truly disabled (Downshift's
+  `isItemDisabled`: `aria-disabled`, skipped by the arrow keys, no choosing
+  by click or key), is listed after every row that can be chosen so the keys
+  meet those first, and keeps its text's ink rather than being dimmed. The list
+  closes once only disabled rows remain, as it does with none left; with
+  `hideZeros` and every count 0 there is nothing to list. A value
+  already chosen is a chip, never a row, so a chosen zero-count value stays
+  removable. `count`, `disabled` and `note` are the multi-select's: the
+  select-only box ignores them.
+- **A chip can carry an icon, a count, a loading mark and an outlined look**
+  (M12.4); see "An entry".
 
-| Prop                 | Meaning                                                                                   |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.     |
-| `label`              | What the box is called, its list's name, "Element choices", its clear's and its status's. |
-| `values`/`onChange`  | The values chosen, in order, held by the caller; every change comes as the whole list.    |
-| `choices`            | `{ value, label }` in order; the list offers those not in `values`.                       |
-| `placeholder`        | Shown, muted, while a choice is left, after the chips too; never in the list.             |
-| `required`           | `aria-required`, as the field marks it.                                                   |
-| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                        |
+| Prop                 | Meaning                                                                                                                                  |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                                                    |
+| `label`              | What the box is called, its list's name, "Element choices", its clear's and its status's.                                                |
+| `values`/`onChange`  | The values chosen, in order, held by the caller; every change comes as the whole list.                                                   |
+| `choices`            | `ComboboxChoice`s in order: `value`, `label`, and optionally `icon`, `count`, `disabled`, `note`; the list offers those not in `values`. |
+| `hideZeros`          | A choice whose `count` is 0 is left out of the list. Chosen values are never affected.                                                   |
+| `loading`            | The counts are still being read: each chip holds a placeholder where its count will be.                                                  |
+| `chipsOutlined`      | Draws the chips outlined, not filled (see "An entry").                                                                                   |
+| `removeNoun`         | Names each chip's x "Remove {Noun}: {Value}"; without it, "Remove {Value}".                                                              |
+| `placeholder`        | Shown, muted, while a choice is left, after the chips too; never in the list.                                                            |
+| `required`           | `aria-required`, as the field marks it.                                                                                                  |
+| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                                                       |
 
 ## An entry
 
-`ComboboxEntry({ value, errorId?, detail?, qualifier?, colors?, summary?, note?, onRemove })`, a named export beside the
+`ComboboxEntry({ value, errorId?, detail?, qualifier?, colors?, summary?, note?, icon?, count?, loading?, outlined?, removeNoun?, onRemove })`, a named export beside the
 default, is the chip a list passes in `entries`, inside a
 `ul.combobox__entries`. It is MB.133's entry moved out of `IngredientForm`
 so that every list draws the same one:
@@ -512,6 +532,18 @@ so that every list draws the same one:
   the link mark a linked entry has and this one lacks.
 - **A summary turns the text into a button** (MB.115); see "A linked
   entry's summary" below.
+- **An icon, a count, a loading mark and an outlined look** (M12.4), for the
+  filter's chips. `icon` leads the text, `aria-hidden`. `count` follows it as
+  "(12)" outside the span that is cut off, so a long name loses its tail and
+  never its count, with its space a text node of the label's own so the chip
+  reads "Water (7)". `loading` swaps the count for a shimmering placeholder
+  (the list skeleton's `skeleton-shimmer`, still under reduced motion),
+  `aria-hidden`, and `loading` wins over `count`. `removeNoun` names the x
+  "Remove {Noun}: {Value}" (`Remove Element: Water`) and that name is the same
+  whether or not the count has arrived, so a reader never meets a label that
+  changes under them. `outlined` draws the chip as an outline on the card
+  instead of a wash (the `outlined-chip` mixin, `_mixins.scss`); a coloured
+  chip stays filled, since its group's colour is its look.
 
 ### An action on an entry
 
@@ -735,6 +767,12 @@ and say so in a comment: the 6rem the text keeps before it wraps onto a row
 of its own (beside entries, the placeholder's width instead, `--combobox-room` from `room.ts`, in `ch` and never past the row, so the prompt shows whole or wraps under the chips), the list's 20rem height, the category bar's 3px and 5px, the
 grip's half-icon width, and the 1px edges.
 
+A count is the muted ink at the label's size (`.combobox__count` in a
+row, `.combobox__entry-count` in a chip). An outlined chip is the
+`outlined-chip` mixin: the body ink on the card with a 1px edge, `is-outlined`
+on the chip. The loading placeholder is 1.75ch by 0.8em, centred on the chip's
+line, filled with the chip's own ink at low strength so it shows on any chip.
+
 ## Stories
 
 [`index.stories.tsx`](../../src/components/Combobox/index.stories.tsx):
@@ -745,7 +783,7 @@ and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier
 Substance, the group in the box and its description in a tooltip, dropped by
 an edit; `SelectOnly`, the select-only box; `SelectWithIcons`, the same with an icon on each choice; `Typeahead`, the type-ahead box over five
 traditions, the value shown beneath it; and
-`MultiSelect`, the multi-select box with two elements chosen;
+`MultiSelect`, the multi-select box with two elements chosen (the filter's version, with counts, is `FacetCombobox`'s stories, [`facet-combobox.md`](facet-combobox.md));
 `CreateRow`, its list open on "New Reference" last whatever is typed, saying beneath the
 box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
 375px; and `QualifierInForm`, the ingredient form's Form box under a Name
@@ -832,6 +870,8 @@ leaving the box, with the choice the text names or `''`, and never while
 typed. The control's width, which happy-dom does not lay out,
 was measured in the workshop at MB.115: one width empty, mid-typing, chosen
 and cleared.
+
+`tests/components/Combobox/counts.test.tsx` covers M12.4's additions in the multi-select, the typed box and the chip: a row's and a chip's name carrying the count ("Fire (9)"); `hideZeros` leaving a zero-count row out (and every row, with the box staying, when all are zero); a chosen zero-count value staying removable; the loading placeholder hidden from a reader and the x's name unchanged when the count arrives; and the icon and the outlined look on a chip.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 

@@ -435,6 +435,27 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   cursor: text;
 }
 
+// A row's count, "(12)" after its label (M12.4): part of the option's name, so
+// the same size, only a step quieter than the name beside it.
+.combobox__count {
+  color: $text-muted;
+
+  .is-highlighted & {
+    color: $text-primary;
+  }
+}
+
+// A row shown but not pickable (M12.4): the pointer says so, and no wash
+// follows it. Its text keeps its ink (4.5:1 muted on the card), the note
+// beside the count saying why; the row is truly disabled, not dimmed.
+.combobox__option.is-disabled {
+  cursor: not-allowed;
+
+  &:hover {
+    background-color: transparent;
+  }
+}
+
 // Who claims the value, or what a curated row stands for, beneath its name.
 .combobox__note {
   color: $text-muted;
@@ -495,6 +516,12 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &.is-coloured {
     background-color: light-dark(var(--chip-light), var(--chip-dark));
     color: $text-on-color;
+  }
+
+  // The neutral chips of a faceted filter (M12.4): no fill, an ink border. A
+  // category chip keeps its group's fill, which the entry never marks outlined.
+  &.is-outlined {
+    @include outlined-chip;
   }
 
   // The field's error edge, a shape as well as a colour, on the entry it names.
@@ -580,6 +607,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
   &:focus-visible {
     @include focus-ring;
+  }
+
+  // On an outlined chip the cross is in the chip's own ink, as its text is.
+  :where(.is-outlined) & {
+    color: inherit;
   }
 
   // On a coloured chip's fill, the muted ink is not checked, and nor is the
@@ -744,6 +776,47 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   overflow-wrap: anywhere;
 
   @include floating-panel;
+}
+
+// A chip's leading mark (M12.4), a form group's glyph: decorative, clear of
+// the text, and as tall as the text beside it.
+.combobox__entry-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-inline-end: space(1);
+}
+
+// A chip's count after its text, "(12)": never cut off, the text gives way.
+.combobox__entry-count {
+  flex: none;
+  // The label is a flex row, which drops the space between text and count.
+  margin-inline-start: space(1);
+  white-space: nowrap;
+
+  // Where the count will be while a search runs. The shape and the shimmer
+  // are the list skeleton's (`skeleton-shimmer`, _primitives.scss); the fill
+  // is the chip's own ink at low strength, since a chip is a solid colour the
+  // quiet fill would vanish on. Still under reduced motion.
+  &.is-pending {
+    display: inline-block;
+    width: 1.75ch;
+    height: 0.8em;
+    align-self: center;
+    border-radius: radius('control');
+    background-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, currentcolor 22%, transparent) 0%,
+      color-mix(in srgb, currentcolor 42%, transparent) 50%,
+      color-mix(in srgb, currentcolor 22%, transparent) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+
+    @include reduced-motion {
+      animation: none;
+    }
+  }
 }
 
 // The entry's text, cut off with an ellipsis where the control ends; the

@@ -414,6 +414,14 @@ $wide-column: 80rem;
 $dialog-column: 32rem;
 $dialog-column-wide: 48rem;
 
+// The page's ground at three quarters over what lies behind: a dialog's backdrop
+// over the page, and a question's scrim over the form it asks about (MB.115). The
+// Filters sheet shares it.
+$modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
+
+// How a dialog and its backdrop fade in and out (M5.5), the Filters sheet with them.
+$modal-fade: 150ms ease-out;
+
 // A small control's square box: WCAG 2.2's 24px minimum target, around a
 // `$glyph-size` mark. InfoTip's ⓘ, Combobox's clear and chip-remove buttons
 // and the user list's icon boxes each wrote 1.5rem.

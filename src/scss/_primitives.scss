@@ -1666,7 +1666,8 @@
   // segment carries the state by its fill as well as the name beneath
   // (WCAG 1.4.1). Both classes, so it outranks `.fieldset`'s own column
   // direction below.
-  .fieldset.radio-group--strip {
+  .fieldset.radio-group--strip,
+  .fieldset.radio-group--segmented {
     flex-direction: column;
     align-items: flex-start;
     gap: space(2);
@@ -1755,6 +1756,73 @@
     margin: 0;
     color: $text-muted;
     font-size: type-size('caption');
+  }
+
+  // The segmented layout (`layout="segmented"`, M12.4): the same bar with the
+  // option's name in text rather than an icon, and its count after it. Wider
+  // than the icon segment's square, its height kept, and never wrapped, so a
+  // bar of three stays one row.
+  // The segments are the bar's own children here, with no tip wrapper, so the dividers
+  // and rounded ends are counted on them. The legend's gap is the fieldset's alone, as a
+  // field's label has, and the bar is a control's height, so a row of mixed controls
+  // shares one top and one baseline.
+  .fieldset.radio-group--segmented .fieldset__legend {
+    margin-bottom: space(2);
+    font-weight: 400;
+  }
+
+  .radio-strip--text {
+    > .radio--segment:not(:first-child) {
+      border-inline-start: 1px solid $text-muted;
+    }
+
+    > .radio--segment:first-child {
+      border-start-start-radius: calc(#{radius('control')} - 1px);
+      border-end-start-radius: calc(#{radius('control')} - 1px);
+    }
+
+    > .radio--segment:last-child {
+      border-start-end-radius: calc(#{radius('control')} - 1px);
+      border-end-end-radius: calc(#{radius('control')} - 1px);
+    }
+  }
+
+  // A disabled segmented group (the filter's Toxic when every matching entry shares one
+  // toxicity) reads as settled, not merely dimmed: dashed borders and dividers say "not a
+  // control right now", and hover gives no hint that a segment can be pressed. Keyed on the
+  // fieldset's own disabled state, so a group disabled by its caller gets it too.
+  .fieldset.radio-group--segmented:disabled .radio-strip--text {
+    border-style: dashed;
+
+    > .radio--segment {
+      cursor: default;
+
+      &:not(:first-child) {
+        border-inline-start-style: dashed;
+      }
+
+      &:hover:not(:has(input:checked)) {
+        background-color: transparent;
+      }
+    }
+  }
+
+  .radio--text {
+    inline-size: auto;
+    // Inside the bar's own 1px border, so the bar stands a control's height.
+    block-size: calc(#{$control-height} - 2px);
+    padding-inline: space(4);
+    white-space: nowrap;
+
+    // Muted beside the name while unchosen; the chosen segment's fill takes
+    // the ink whole.
+    .radio__count {
+      color: $text-muted;
+    }
+
+    &:has(input:checked) .radio__count {
+      color: inherit;
+    }
   }
 
   .radio__text {

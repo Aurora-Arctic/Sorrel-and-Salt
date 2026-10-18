@@ -146,6 +146,8 @@ export interface RadioOption<T extends string> {
   description?: string;
   /** A mark drawn before the name, outside its accessible name: pass one hidden from assistive technology. */
   icon?: ReactNode;
+  /** How many entries choosing it would leave, read with its name in the segmented layout: "Toxic (4)". */
+  count?: number;
 }
 
 export interface RadioGroupFieldProps<T extends string> {
@@ -164,10 +166,13 @@ export interface RadioGroupFieldProps<T extends string> {
   /**
    * How the options are laid out: `list`, one row each with its explanation
    * (the default), or `strip`, one bar of icon-only segments with the chosen name
-   * beneath, for a choice that is seen rather than read. A radio underneath
-   * either way.
+   * beneath, for a choice that is seen rather than read, or `segmented`, one bar
+   * of text segments, each with its `count` when it has one. A radio underneath
+   * every way.
    */
-  layout?: 'list' | 'strip';
+  layout?: 'list' | 'strip' | 'segmented';
+  /** An InfoTip beside the legend, for what the choices mean. */
+  hint?: string;
 }
 
 /** A form's row of actions: Save, any further saves, Cancel and Delete. */

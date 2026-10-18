@@ -28,6 +28,8 @@ const CHOOSING: readonly string[] = [
 /** What the open list says with every choice made: the one place it is worded. */
 const EVERY_CHOICE = 'Every option is already chosen';
 
+/** What a disabled zero-count row says beside its count (M12.4). */
+
 export function ComboboxMultiSelect({
   id,
   labelId,
@@ -37,13 +39,26 @@ export function ComboboxMultiSelect({
   onBlur,
   choices,
   placeholder,
+  emptyPlaceholder,
   required,
   inputRef,
+  hideZeros,
+  loading,
+  chipsOutlined,
+  removeNoun,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
 }: ComboboxMultiSelectProps): ReactElement {
   const chosen = values.flatMap((value) => choices.filter((choice) => choice.value === value));
-  const left = choices.filter((choice) => !values.includes(choice.value));
+  // The rows offered: those not yet chosen, and when asked, only those with something
+  // behind them (a count above 0), a disabled one (the caller's) after the rest, the order
+  // otherwise kept. Last so that the arrow keys and the highlight that follows a choice meet
+  // every chooseable row first.
+  const unchosen = choices.filter(
+    (choice) => !values.includes(choice.value) && !(hideZeros && choice.count === 0),
+  );
+  const left = [...unchosen.filter((c) => !c.disabled), ...unchosen.filter((c) => c.disabled)];
+  const choosable = left.filter((choice) => !choice.disabled).length;
   // What the last change did, for a screen reader: a chip appears or goes,
   // and nothing else says so. The list fields' own announcement.
   const [announcement, setAnnouncement] = useState('');
@@ -79,8 +94,9 @@ export function ComboboxMultiSelect({
     if (CHOOSING.includes(type) && changes.selectedItem) {
       return {
         ...changes,
-        isOpen: left.length > 1,
-        highlightedIndex: Math.min(state.highlightedIndex, left.length - 2),
+        // Shut once only disabled rows are left, as it is with none.
+        isOpen: choosable > 1,
+        highlightedIndex: Math.min(state.highlightedIndex, choosable - 2),
       };
     }
     return changes;
@@ -89,6 +105,7 @@ export function ComboboxMultiSelect({
   const { isOpen, highlightedIndex, getToggleButtonProps, getMenuProps, getItemProps, toggleMenu } =
     useSelect<ComboboxChoice>({
       items: left,
+      isItemDisabled: (choice) => Boolean(choice?.disabled),
       // Held at none: a choice is added to the list, never shown in the box.
       selectedItem: null,
       itemToString: (choice) => choice?.label ?? '',
@@ -142,6 +159,11 @@ export function ComboboxMultiSelect({
                   // refuses it only on save), and two chips must not share a key.
                   key={`${index}-${choice.value}`}
                   value={choice.label}
+                  icon={choice.icon}
+                  count={choice.count}
+                  loading={loading}
+                  outlined={chipsOutlined}
+                  removeNoun={removeNoun}
                   onRemove={() => {
                     removeSelectedItem(choice);
                     // The pressed x is about to go; the box keeps the focus.
@@ -181,6 +203,10 @@ export function ComboboxMultiSelect({
               <span className="is-placeholder" aria-hidden={chosen.length > 0 || undefined}>
                 {placeholder}
               </span>
+            )}
+            {/* Nothing chosen and nothing left to offer: say so, rather than a blank box. */}
+            {left.length === 0 && chosen.length === 0 && emptyPlaceholder && (
+              <span className="is-placeholder">{emptyPlaceholder}</span>
             )}
           </div>
         </div>
@@ -229,14 +255,32 @@ export function ComboboxMultiSelect({
             left.map((choice, index) => (
               <li
                 key={choice.value}
-                className={
-                  index === highlightedIndex
-                    ? 'combobox__option is-highlighted'
-                    : 'combobox__option'
-                }
+                className={[
+                  'combobox__option',
+                  index === highlightedIndex && 'is-highlighted',
+                  choice.disabled && 'is-disabled',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 {...getItemProps({ item: choice, index })}
               >
-                <span className="combobox__label">{choice.label}</span>
+                <span className="combobox__label">
+                  {choice.icon && (
+                    <span className="combobox__icon" aria-hidden="true">
+                      {choice.icon}
+                    </span>
+                  )}
+                  {choice.label}
+                  {/* The space is a text node of the label's own: an accessible
+                      name drops the one a span begins with. */}
+                  {choice.count !== undefined && (
+                    <>
+                      {' '}
+                      <span className="combobox__count">({choice.count})</span>
+                    </>
+                  )}
+                </span>
+                {choice.note && <div className="combobox__note">{choice.note}</div>}
               </li>
             ))}
         </ul>

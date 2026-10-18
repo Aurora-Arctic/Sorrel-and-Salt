@@ -10,10 +10,6 @@ $modal-gap: clamp(#{space(4)}, 5vmin, #{space(7)});
 // width, so a column keeps the content width it had.
 $modal-padding: space(5) * 2;
 
-// The page's ground at three quarters over what lies behind: the backdrop's
-// over the page, and a question's scrim over the form it asks about (MB.115).
-$modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
-
 // Only what the native element needs beyond the `.modal` primitive: its
 // default border and padding gone, a width that fits a phone, and a backdrop.
 // Border-box, so the primitive's padding sits inside the limits rather than
@@ -89,8 +85,6 @@ $modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
 // owner to close it (FADE_LIMIT_MS there outlasts this). Compounded with
 // `.modal`, whose primitive sets its own `transition` as `body .modal`: the
 // theme's colour transitions are restated beside the fade so both run.
-$modal-fade: 150ms ease-out;
-
 .modal.modal-dialog {
   opacity: 1;
   transition:

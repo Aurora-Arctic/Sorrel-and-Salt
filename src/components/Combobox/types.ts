@@ -30,6 +30,14 @@ export interface ComboboxOption {
    * combobox knows no icon set; the caller hands over a drawn, decorative one.
    */
   icon?: ReactNode;
+  /** How many results picking it would match (M12.4): read after the label, "Wax (3)", part of the option's name. */
+  count?: number;
+  /**
+   * Shown and read but not pickable (`aria-disabled`, stepped over by the
+   * arrow keys, a press does nothing). Giving the reason in `note` keeps the
+   * row from being a mystery. The caller orders it: the box lists rows as given.
+   */
+  disabled?: boolean;
 }
 
 /** What a source has for the text as it stands: the rows, and whether more are on their way. */
@@ -212,6 +220,30 @@ export interface ComboboxEntryProps {
    * the eye tells by its want of a link mark.
    */
   note?: string;
+  /**
+   * A mark drawn before the text, decorative and outside the chip's name: a
+   * form's group icon (M12.4). Handed over drawn, as `ComboboxOption.icon` is.
+   */
+  icon?: ReactNode;
+  /** How many results the value matches, "(12)" after the text, outside the cross's name. */
+  count?: number;
+  /**
+   * A search is running, so a count is on its way: a shimmering placeholder
+   * stands where the count goes, hidden from assistive technology, and holds
+   * still under reduced motion. The cross's name is the same either way.
+   */
+  loading?: boolean;
+  /**
+   * Drawn as an outlined chip (no fill, an ink border) instead of the filled
+   * one. A chip with `colors` stays filled in them.
+   */
+  outlined?: boolean;
+  /**
+   * What the value is of, "Element": the cross reads "Remove Element: Water"
+   * and not the bare "Remove Water", so a column of chips from several
+   * boxes still says what each one removes.
+   */
+  removeNoun?: string;
   onRemove: () => void;
   /** A button before the x, for acting on this entry: left out, the chip has the x alone. */
   action?: EntryAction;
@@ -320,6 +352,28 @@ export interface ComboboxChoice {
    * as `ComboboxOption.icon` is.
    */
   icon?: ReactNode;
+  /**
+   * How many results choosing it would match (M12.4): read after the label in
+   * its row and on its chip, "Water (7)", part of the option's accessible name.
+   * Left out where the number is not known (yet): the row and the chip then show
+   * none, which is not a zero. Drawn by the multi-select box only.
+   */
+  count?: number;
+  /**
+   * The row is shown and read but cannot be chosen (`aria-disabled`, stepped
+   * over by the arrow keys). A disabled row is listed after the others. The
+   * caller sets it by hand.
+   * Honoured by the multi-select box only.
+   */
+  disabled?: boolean;
+  /** A second line under the row, also part of its name: why a disabled choice is out. */
+  note?: string;
+  /**
+   * The heading its row is listed under, a deity's tradition (M12.4). Drawn by
+   * the facet box's typing form only, which sets the rows of one heading
+   * together; the native select before hydration makes it an `optgroup`.
+   */
+  group?: string;
 }
 
 /** The select-only box: a closed set, chosen from the same control and list. */
@@ -406,9 +460,22 @@ export interface ComboboxMultiSelectProps {
   choices: readonly ComboboxChoice[];
   /** Shown while nothing is chosen, and not itself a choice. */
   placeholder?: string;
+  /** Shown in place of the placeholder when nothing is chosen and no choice is left to offer. */
+  emptyPlaceholder?: string;
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;
+  /**
+   * Leave out the choices with a `count` of 0 (M12.4). A value already chosen
+   * keeps its chip and its cross whatever its count.
+   */
+  hideZeros?: boolean;
+  /** A search is running: the chips show a count placeholder, as `ComboboxEntry`'s `loading`. */
+  loading?: boolean;
+  /** Draw the chips outlined, as `ComboboxEntry`'s `outlined`. */
+  chipsOutlined?: boolean;
+  /** What the values are of, for the crosses' names: "Remove Element: Water". The bare value when left out. */
+  removeNoun?: string;
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
 }
