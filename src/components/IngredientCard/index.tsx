@@ -47,7 +47,7 @@ const IngredientCard = ({
   return (
     <article className="ingredient-card specimen">
       <div className="specimen__top">
-        <div>
+        <div className="ingredient-card__heading">
           <Heading className="ingredient-card__name">
             <Link href={href}>{label}</Link>
           </Heading>

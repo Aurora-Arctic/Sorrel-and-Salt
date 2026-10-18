@@ -98,3 +98,7 @@ Meaning is carried by words and shape, never colour alone: every badge has its
 text. The page that places the card (M8.18, M9.6) owns the axe run and the
 keyboard walk in its Playwright spec, since the card has no page of its own.
 Styling stops at the tokens until the section's design review (MB.84).
+
+### A long name
+
+The top row (`.specimen__top`) wraps on the card only. The name block (`.ingredient-card__heading`) takes the room it needs and may shrink below its longest word; when it and the badges do not fit side by side, the badge group wraps onto its own row beneath, still at the right edge (`margin-inline-start: auto`). A single long word breaks rather than overflows: `overflow-wrap: anywhere` on the block, and `hyphens: auto` on the name heading only, so a break shows a hyphen where the browser's dictionary can place one (the page's `lang` is `en`). Chromium, with no dictionary hit for an invented word such as "Nameicanicusmus", falls back to a plain break with no hyphen. The italic formal name gets no `hyphens`: binomials are Latin, and English hyphenation would split them oddly. No soft hyphens are ever inserted into the text.

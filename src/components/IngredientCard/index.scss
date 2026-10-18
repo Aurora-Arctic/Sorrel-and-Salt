@@ -72,11 +72,35 @@
   }
 }
 
+// The name block and the badges side by side while they fit; when they do not
+// (a long name), the badges wrap onto their own row beneath, still at the right
+// edge. On the card only: the specimen primitive's top row is not otherwise
+// meant to wrap.
+.ingredient-card .specimen__top {
+  flex-wrap: wrap;
+  row-gap: space(2);
+}
+
+// Takes the room it needs and may shrink below its longest word, which breaks
+// (hyphenated where the dictionary can, anywhere where it cannot) rather than
+// pushing the badges off the card. `hyphens` is Baseline Widely Available.
+.ingredient-card__heading {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.ingredient-card__name {
+  hyphens: auto;
+}
+
 // The badges, when they wrap (a phone, or Retired, Annotated, Caution and Toxic
 // together), hug the right edge on every row. On the card only: the specimen
 // primitive's badge row is not otherwise right-aligned.
 .ingredient-card .specimen__badges {
   justify-content: flex-end;
+  // Stays at the right when it wraps beneath the name.
+  margin-inline-start: auto;
 }
 
 // Above the overlay, so the Low badge's button keeps its own hover, focus and
