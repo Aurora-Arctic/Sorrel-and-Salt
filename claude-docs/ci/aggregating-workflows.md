@@ -48,7 +48,7 @@
   - `deploy.yml`'s own `closed` handler, which tears a hotfix preview down,
     is separate and unaffected.
 - **An edited PR's gate run waits, then cancels itself unless the edit
-  retargeted the base** (MB.100). `edited` is in the trigger types so a
+  retargeted the base or the PR's head commit is untested** (MB.100). `edited` is in the trigger types so a
   retarget re-runs the gate against the new base, but an edit to a title or a
   description changes nothing the gate checks, and once its run cancelled the
   one in flight like a push. Blacksmith's [code]smith, while it was installed (until M11.24), appended a
@@ -62,11 +62,22 @@
   edit replacing an earlier — and when the run in flight finishes, the first
   step of `changes` cancels it unless the payload carries `changes.base`, the
   one edit the gate cares about, which then gates as any push would. A retarget
-  is therefore delayed by one gate rather than cancelling it. The edit's run
-  and the close's run carry a suffix in the workflow's `run-name`, so the
-  Actions list says beside the real gate what each will do. Neither ever
-  covers a commit: a gate cancelled by hand to let the queued edit run through
-  leaves its commit ungated, and the answer is to re-run the cancelled gate.
+  is therefore delayed by one gate rather than cancelling it.
+  - **An edit's run also gates a commit no run has tested.** The one pending
+    run GitHub holds can be a push's: a push cancels the run in flight, waits
+    while it shuts down, and an edit in that window replaces it before it
+    starts a job. On #1107 that left the head commit with no gate at all, and
+    re-running the edit's run only cancelled it again. So before standing
+    down, `changes` lists this workflow's runs for the PR's head commit and
+    cancels the edit's run only if another run for the PR finished other than
+    cancelled or skipped, or is still going. A run that lists no PR counts as
+    not covering, so a doubt costs a run rather than an untested commit; the
+    same check gates a commit whose gate was cancelled by hand to let the
+    queued edit's run through.
+  - The edit's run and the close's run carry a suffix in the workflow's
+    `run-name`, so the Actions list says beside the real gate what each will
+    do. A close's run never covers a commit; an edit's covers one only in the
+    case above.
   - **Why every job now `needs: changes`.** A job that had started in a run
     about to cancel itself leaves a cancelled check run under its own name,
     newer than the real run's on the same commit, and a required check reads
