@@ -887,6 +887,39 @@ each answer equal to a fresh read, the loader cleared between two updates in
 one request, and per field one refusal per error code it can answer. Which
 roles are refused at which jars is `services/stock.test.ts`'s.
 
+### Cupboard entries: `CupboardEntry` and `Ingredient.cupboardEntry`
+
+A coven's own say over a compendium entry it holds (M12.14), registered by
+`ingredients` in `graphql/cupboard-entries.ts` over the cupboard-entry service
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Reading it").
+
+- **`CupboardEntry`** is one row of `workspace_compendium_entries`: its `id`,
+  the seven overrides (`label`, `description`, `safetyNotes`, `elements`,
+  `celestialBodies`, `zodiacSigns`, `colors`), and two fields worked out on
+  read. A null override means "the compendium's value", and an empty list is
+  one the coven cleared on purpose. `annotated` is true when any of the seven
+  is set, so a list can mark the entries a coven has said something about.
+  `compendiumName` is the compendium entry's own name, read off the parent
+  `Ingredient`, so a page can show it beside the coven's label.
+- **`Ingredient.cupboardEntry(workspaceId)`** is that coven's live row for the
+  entry, or null: null for an entry the coven does not hold, and for a coven's
+  own ingredient, which has no cupboard entry. It reads through the
+  `cupboardEntryByIngredient` loader ([`loaders.md`](loaders.md)), so a page of
+  entries makes one read per coven named. A coven the caller is not in refuses
+  at the field, `FORBIDDEN` with the field's path, as `Ingredient.stock` does.
+  Any member reads it, viewers included.
+
+The field answers the row beside the entry rather than merged into it, so
+`Ingredient` itself still answers the compendium's values and `isGlobal` stays
+true for a compendium entry. Forms, folk names, substitutes, categories,
+references and `toxic` have no override and always read from the compendium.
+
+`tests/modules/ingredients/graphql/cupboard-entries.test.ts` holds the
+transport's half: the answer and its `annotated`, a viewer answered, the
+refusal at the field, the nulls, and one repository read for a page of entries,
+counted by a spy.
+
 ### The compendium mutations
 
 Story 18's writes (M5.5), registered by `ingredients` in
