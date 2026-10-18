@@ -42,3 +42,14 @@ The service reads the row for a member, viewers included, under `{ ingredient: [
 **`applyCupboardEntry(row, entry)`** lays a row over its compendium entry, column by column as `entry?.x ?? row.x`, the label over the name. It uses `??` and never `||`, so an empty list stays cleared rather than falling back to the compendium's. Forms, folk names, substitutes, categories, references and `toxic` have no override and always read from the compendium, and the id and the tier stay the compendium's, so `isGlobal` stays true for a compendium entry. Over GraphQL the row is answered beside the entry rather than merged into it ([`graphql/schema.md`](../graphql/schema.md), "Cupboard entries").
 
 `tests/db/repository/cupboard-entries.test.ts` holds the finders' rules, each case seeding the row a read must leave out beside the one it must return, and `tests/modules/ingredients/services/cupboard-entries.test.ts` holds the merge, per column for null, set and `[]`.
+
+### In the cupboard list
+
+The coven's ingredient list and its facet counts (M12.18; [`stock.md`](stock.md), "The workspace ingredient list") read this table in two ways.
+
+- **Which compendium entries are listed.** `workspaceListScope` keeps a compendium entry when the proof's coven has a live row for it, as one keyed `EXISTS` on the `(workspace_id, ingredient_id)` unique above. A jar of the entry is neither needed nor enough. The source filter's `compendium` side counts exactly these entries, so it and the `local` side add up to the list's total.
+- **What the listed entry says.** The statement left-joins the coven's live row, under the private alias `cupboard` in `src/db/repository/ingredients.ts`, joined only onto a compendium row, so a row naming one of the coven's own ingredients changes nothing. `listColumns(membership)` reads `coalesce(cupboard.x, ingredients.x)` for the label and for elements, celestial bodies and zodiac signs: the sort and the cursor run on `coalesce(label, name)`, the search adds the label as an arm (M12.19), and the filters and facet counts read the three lists as the coven left them, with `[]` counting under nothing, as `applyCupboardEntry` treats it. Categories, forms and `toxic` have no override and read from the compendium; the `colors` override has no filter or facet to read it yet.
+
+The joined row rides on each page entry as `cupboardEntry`, and the list's resolver primes the `cupboardEntryByIngredient` loader with it, so `Ingredient.cupboardEntry` on a listed row is answered without `findCupboardEntriesOf`. A row whose compendium entry has been retired (soft-deleted) lists nothing yet: the tombstone filter on `ingredients` drops the entry first, until M12.24's hatch.
+
+`tests/modules/ingredients/services/workspace-ingredient-list.test.ts` holds the list's cases and `tests/modules/ingredients/services/ingredient-facets.test.ts` the counts, each seeding another coven's row beside the one that must count.

@@ -4,6 +4,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import { suggestIngredients } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { insertCupboardEntry } from '../../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import { type IngredientFixture, type Overrides, makeIngredient } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
@@ -82,14 +83,15 @@ describe('suggestIngredients', () => {
       await addIngredient({ name: 'Mugwart', workspaceId: WORKSPACE_W_ID });
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
 
-      expect(await namesFor(B, 'mugwort')).toEqual(['Mugwort', 'Mugwart']);
+      // The coven's own entry is in the first group, whatever the score.
+      expect(await namesFor(B, 'mugwort')).toEqual(['Mugwart', 'Mugwort']);
     });
 
     it('lists everything in name order for a blank query', async () => {
       await addIngredient({ name: 'Yarrow', workspaceId: WORKSPACE_W_ID });
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
 
-      expect(await namesFor(B, '   ')).toEqual(['Mugwort', 'Yarrow']);
+      expect(await namesFor(B, '   ')).toEqual(['Yarrow', 'Mugwort']);
     });
 
     // The compendium search's minimum: one letter ranks by noise.
@@ -97,7 +99,7 @@ describe('suggestIngredients', () => {
       await addIngredient({ name: 'Yarrow', workspaceId: WORKSPACE_W_ID });
       await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
 
-      expect(await namesFor(B, 'y')).toEqual(['Mugwort', 'Yarrow']);
+      expect(await namesFor(B, 'y')).toEqual(['Yarrow', 'Mugwort']);
     });
   });
 
@@ -160,6 +162,92 @@ describe('suggestIngredients', () => {
       const fromW = (await suggestionsFor(B, '')).map((row) => row.id);
 
       expect(fromW.sort()).toEqual([compendium, ours].sort());
+    });
+  });
+
+  // M12.19: the picker offers the coven's cupboard, then the compendium.
+  describe('the two groups', () => {
+    const groupsFor = async (query: string, workspaceId = WORKSPACE_W_ID, user = B) =>
+      (await suggestIngredients(asUser(user), workspaceId, query, PAGE)).map((entry) => ({
+        id: entry.node.id,
+        group: entry.group,
+      }));
+
+    it("offers the coven's own entry and the compendium's same-named one, apart", async () => {
+      const compendium = await addIngredient({
+        name: 'Mugwort',
+        canonicalName: 'Artemisia vulgaris',
+      });
+      const own = await addIngredient({ name: 'Mugwort', workspaceId: WORKSPACE_W_ID });
+
+      expect(await groupsFor('mugwort')).toEqual([
+        { id: own, group: 'yours' },
+        { id: compendium, group: 'compendium' },
+      ]);
+    });
+
+    it('lists a cupboard entry once, in yours, and not in the compendium group', async () => {
+      const mugwort = await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
+      const yarrow = await addIngredient({ name: 'Yarrow', canonicalName: 'Achillea millefolium' });
+      // The precondition: with no cupboard row the entry is the compendium group's.
+      expect(await groupsFor('mugwort')).toEqual([{ id: mugwort, group: 'compendium' }]);
+
+      await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: mugwort }, A.id);
+
+      expect(await groupsFor('')).toEqual([
+        { id: mugwort, group: 'yours' },
+        { id: yarrow, group: 'compendium' },
+      ]);
+    });
+
+    it('finds a relabelled cupboard entry by its label and by the compendium name', async () => {
+      const mugwort = await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
+      await insertCupboardEntry(
+        sql,
+        { workspaceId: WORKSPACE_W_ID, ingredientId: mugwort, label: 'Crone Herb' },
+        A.id,
+      );
+
+      const expected = [{ id: mugwort, group: 'yours' }];
+      expect(await groupsFor('crone herb')).toEqual(expected);
+      expect(await groupsFor('mugwort')).toEqual(expected);
+    });
+
+    it("does not let another coven's cupboard row move an entry into this coven's yours", async () => {
+      const mugwort = await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
+      await insertCupboardEntry(sql, { workspaceId: WORKSPACE_X_ID, ingredientId: mugwort }, A.id);
+      // Why it could have moved: X's own member sees it in yours.
+      expect(await groupsFor('mugwort', WORKSPACE_X_ID, D)).toEqual([
+        { id: mugwort, group: 'yours' },
+      ]);
+
+      expect(await groupsFor('mugwort')).toEqual([{ id: mugwort, group: 'compendium' }]);
+    });
+
+    it('drops a retired entry from both groups, though the coven holds a row for it', async () => {
+      const mugwort = await addIngredient({ name: 'Mugwort', canonicalName: 'Artemisia vulgaris' });
+      await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: mugwort }, A.id);
+      expect(await groupsFor('mugwort')).toEqual([{ id: mugwort, group: 'yours' }]);
+
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${mugwort}`;
+
+      expect(await groupsFor('mugwort')).toEqual([]);
+    });
+
+    it('limits each group to eight, ranked within itself', async () => {
+      for (let n = 1; n <= 10; n++) {
+        await addIngredient({ name: `Fixture Mug ${n}` });
+        await addIngredient({ name: `Fixture Own ${n}`, workspaceId: WORKSPACE_W_ID });
+      }
+      const exact = await addIngredient({ name: 'Fixture', workspaceId: WORKSPACE_W_ID });
+
+      const groups = await groupsFor('fixture');
+
+      expect(groups.map(({ group }) => group)).toEqual([
+        ...Array(8).fill('yours'),
+        ...Array(8).fill('compendium'),
+      ]);
+      expect(groups[0].id).toBe(exact);
     });
   });
 

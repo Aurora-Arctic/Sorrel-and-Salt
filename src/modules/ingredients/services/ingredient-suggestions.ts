@@ -1,5 +1,9 @@
 import 'server-only';
-import { type CompendiumScore, findIngredientSuggestions } from '../../../db/repository';
+import {
+  type CompendiumScore,
+  type SuggestionGroupTag,
+  findIngredientSuggestions,
+} from '../../../db/repository';
 import type { ingredients } from '../schema/ingredients';
 import type { Session } from '../../../lib/session';
 import { parseInput } from '../../../lib/validation';
@@ -10,15 +14,18 @@ import { CompendiumFilter } from '../validation/compendium-filter';
 /**
  * What the substitute picker offers as `query` is typed (MB.138): the
  * ingredients a substitute in this workspace may link — the compendium's and
- * its own, never another workspace's — best match first, each carrying the
- * formal name and tier that tell same-labelled entries apart. Unlike
+ * its own, never another workspace's — in two groups (M12.19): the coven's
+ * cupboard, then the rest of the compendium, each best match first and cut at a
+ * limit, each carrying the formal name and tier that tell same-labelled entries
+ * apart. Unlike
  * `suggestCommonNames`, it answers with ingredients, since picking one writes
  * a link. A blank query offers all, and so does one under the compendium's
  * `MIN_QUERY_LENGTH`, since it matches as the compendium search does.
  *
  * A `form` ranks the entries holding that form first, then those holding another
- * form of its curated group (M8.3). A coven's own ingredient hides the
- * compendium entry it names (claude-docs/db/compendium-read.md).
+ * form of its curated group (M8.3), within each group. A coven's own
+ * ingredient no longer hides the compendium entry it names here: both are
+ * listed, in their own groups (claude-docs/db/compendium-read.md).
  *
  * Asks only `ingredient: ['read']`: every row it can return is one a reader of
  * this workspace could already list.
@@ -31,7 +38,7 @@ export async function suggestIngredients(
   query: string,
   page: PageRequest,
   form?: string,
-): Promise<PageEntry<typeof ingredients.$inferSelect, CompendiumScore>[]> {
+): Promise<PageEntry<typeof ingredients.$inferSelect, CompendiumScore & SuggestionGroupTag>[]> {
   const membership = await assertMembership(session, workspaceId, { ingredient: ['read'] });
   const filter = parseInput(CompendiumFilter, { query });
   return findIngredientSuggestions(membership, filter.query ?? '', page, form);

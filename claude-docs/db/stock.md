@@ -251,34 +251,57 @@ the list on the coven's Ingredients page. It checks `ingredient: read`, so any
 member of the coven, viewers included, may read it, and answers one page from
 `findWorkspaceIngredientPage` in `src/db/repository/ingredients.ts`.
 
-A coven's ingredients are two kinds of row, in one query:
+A coven's ingredients are two kinds of row, in one query (M12.18):
 
 - **The coven's own entries**, live.
-- **The compendium entries it holds a jar of.** The jar must be live and of a
-  live form; a deleted jar, or a jar of a deleted form, does not put its entry
-  in the list. An entry is listed once however many of its forms the coven
-  holds. Another coven's jar of a compendium entry never puts it here.
+- **The compendium entries its cupboard names.** A compendium entry is listed
+  when the coven has a live row for it in `workspace_compendium_entries`
+  ([`workspace-compendium-entries.md`](workspace-compendium-entries.md)), read
+  as one keyed `EXISTS` on that row's `(workspace_id, ingredient_id)` unique.
+  A jar no longer decides it: a compendium entry the coven holds a jar of but
+  has no cupboard row for is not listed, and one with a cupboard row is listed
+  with no jar at all. Another coven's cupboard row never puts an entry here.
 
-Both kinds pass `notHiddenByLocal`, the same anti-join `ingredientSuggestions`
-uses: a compendium entry the coven has its own version of (same formal name, or
-the same label when the local entry declares no formal name) is left out, and
-the local entry shows in its place.
+Nothing is hidden. A coven's own entry and a compendium entry its cupboard
+names are both listed, even when they share a formal name or a label: the
+coven chose both, so the list no longer drops the compendium one in favour of
+the local one (`notHiddenByLocal` is no longer applied here, and M12.28
+removes it).
 
-The search, category, form, deity, zodiac sign, planet and toxic filters (the form filter a list, and the last four, since M11.22) are the compendium's own, from
-`compendiumList`, so the list matches, ranks and pages exactly as the
-compendium does. They run under the coven's proof rather than the compendium
-tier, so a filter never reaches another coven's rows.
+A compendium entry is listed as the coven has it. The query left-joins the
+coven's cupboard row and reads `coalesce(row, entry)` for the label and the
+three lists that have filters (elements, celestial bodies, zodiac signs), so a
+coven's override is what the list sorts, searches, filters and counts by. The
+list sorts and pages on `coalesce(label, name)`, and the cursor is built from
+the same expression, so a relabelled entry sits where its label puts it and
+paging never skips or repeats it. The search matches the label as well as the
+compendium's own name, formal name and folk names, through the sixth arm
+M12.19 added for the substitute picker
+([`compendium-read.md`](compendium-read.md), "The ingredient picker's search"), and ranks by
+the match score alone, as the compendium does. The joined row rides on each
+page entry, so the resolver primes the `cupboardEntryByIngredient` loader from
+it and `Ingredient.cupboardEntry` on a list row costs no second read.
+
+The search, category, form, deity, zodiac sign, planet and toxic filters (the
+form filter a list, and the last four since M11.22) are the compendium's own,
+from `compendiumList`, so the list matches, ranks and pages as the compendium
+does. They run under the coven's proof rather than the compendium tier, so a
+filter never reaches another coven's rows. Categories, forms, folk names and
+`toxic` have no override and read from the compendium; so do a form's own
+elements, which a cupboard row does not cover.
 
 Two settings belong to the coven's list alone (M9.7), so they sit in
-`workspaceListScope` and not in `compendiumList`, which the compendium's page and
-count share. `source: 'local'` keeps the coven's own entries; `source: 'compendium'`
-keeps the compendium entries it holds; leaving it out keeps both. `inStock` keeps
-an entry only when one of the coven's live jars of it, of a live form, is not at 0.
-A jar with no quantity is held but unweighed, so it counts as in stock (the test is
-"null or not 0", since a bare `<> 0` is unknown for null and would drop it). An entry
-whose jars are all at 0 leaves, and so does a local entry with no jar. Because
-`workspaceListScope` is shared with the facets, a facet's count equals the list's total
-under the same two settings.
+`workspaceListScope` and not in `compendiumList`, which the compendium's page
+and count share. `source: 'local'` keeps the coven's own entries;
+`source: 'compendium'` keeps the compendium entries its cupboard names; leaving
+it out keeps both, so the two `source` counts add up to the list's total.
+`inStock` keeps an entry only when one of the coven's live jars of it, of a
+live form, is not at 0. A jar with no quantity is held but unweighed, so it
+counts as in stock (the test is "null or not 0", since a bare `<> 0` is unknown
+for null and would drop it). An entry whose jars are all at 0 leaves, and so
+does an entry with no jar, whether the coven's own or one its cupboard names.
+Because `workspaceListScope` is shared with the facets, a facet's count equals
+the list's total under the same two settings.
 
 **The coven's facet counts read the same rows.**
 `workspaceIngredientFacets(session, workspaceId, filter)` (M12.3, in
@@ -286,10 +309,13 @@ under the same two settings.
 entries each filter value would list, counted by the rules of
 [`findCompendiumFacets`](compendium-read.md). It makes the same
 `ingredient: read` check as the list, then calls
-`findWorkspaceIngredientFacets`, which counts within `workspaceListScope`:
-the condition `findWorkspaceIngredientPage` lists by (the coven's own
-entries, the compendium entries it holds, less those a local entry hides),
-shared rather than copied, so a count and the list cannot disagree on which
+`findWorkspaceIngredientFacets`, which counts within `workspaceListScope`
+(the coven's own entries and the compendium entries its cupboard names) over
+the same left join, so the element, zodiac sign and planet counts read the
+coven's overrides: an entry whose cupboard row moves it from one element to
+another is counted under the new one, and a list cleared to `[]` counts under
+none. Category counts stay the compendium's, as categories have no override.
+The condition is shared rather than copied, so a count and the list cannot disagree on which
 rows are the coven's. Unlike the compendium's, it is never cached: what it
 counts differs from coven to coven (CLAUDE.md rule 6).
 
