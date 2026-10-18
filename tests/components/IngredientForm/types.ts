@@ -30,8 +30,20 @@ export type DeityNode = DeitySuggestionsQuery['deitySuggestions']['edges'][numbe
 export type IngredientNode =
   IngredientSuggestionsQuery['ingredientSuggestions']['edges'][number]['node'];
 
-/** One row of a `PossibleDuplicates` answer. */
-export type DuplicateNode = PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'];
+/**
+ * One row of a `PossibleDuplicates` answer. A coven's own entry unless said
+ * otherwise: `isGlobal` and `inCupboard` default to false (M12.20).
+ */
+export type DuplicateNode = Omit<
+  PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'],
+  'isGlobal' | 'inCupboard'
+> &
+  Partial<
+    Pick<
+      PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'],
+      'isGlobal' | 'inCupboard'
+    >
+  >;
 
 /** One row of a `ReferenceSuggestions` answer. */
 export type ReferenceNode =

@@ -53,6 +53,7 @@ import {
 } from './suggestions';
 import type {
   AfterSave,
+  Duplicate,
   IngredientFormInput,
   IngredientFormProps,
   IngredientFormValues,
@@ -98,6 +99,19 @@ const CreateWorkspaceIngredientDocument = graphql(`
           form
         }
       }
+    }
+  }
+`);
+
+// Use It (M12.20): the compendium entry goes into the cupboard, no jar with it.
+const AddCupboardEntryDocument = graphql(`
+  mutation AddCupboardEntryFromForm(
+    $workspaceId: ID!
+    $ingredientId: ID!
+    $input: CupboardEntryInput
+  ) {
+    addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: $input) {
+      id
     }
   }
 `);
@@ -413,6 +427,43 @@ const IngredientForm = ({
     }
   };
 
+  /**
+   * Use It on a compendium match: the typed name is the coven's label only
+   * when it differs from the entry's, and what else was typed rides as the
+   * coven's overrides. The page the entry is in opens, as a save's does.
+   */
+  const useEntry = async (match: Duplicate): Promise<void> => {
+    if (workspaceId === null) return;
+    const values = getValues();
+    const typed = values.name.trim();
+    const listed = (entries: { value: string }[]): string[] | undefined => {
+      const chosen = entries.map(({ value }) => value.trim()).filter((value) => value !== '');
+      return chosen.length > 0 ? chosen : undefined;
+    };
+    const input = {
+      label: typed !== match.name ? typed : undefined,
+      description: values.description.trim() || undefined,
+      safetyNotes: values.safetyNotes.trim() || undefined,
+      elements: values.elements.length > 0 ? values.elements : undefined,
+      celestialBodies: listed(values.celestialBodies),
+      zodiacSigns: listed(values.zodiacSigns),
+      colors: listed(values.colors),
+    };
+    try {
+      await graphqlRequest(AddCupboardEntryDocument, {
+        workspaceId,
+        ingredientId: match.id,
+        input,
+      });
+      setSaved(typed);
+      onSaved?.({ id: match.id, name: typed, slug: match.slug }, 'open');
+    } catch (error) {
+      placeServerIssues(error, setError, ({ path }) =>
+        path.includes('label') ? 'name' : undefined,
+      );
+    }
+  };
+
   const save = async (input: IngredientFormInput): Promise<void> => {
     // A near match not yet dismissed holds a save that would otherwise go,
     // asked about the name being sent rather than waiting out the debounce.
@@ -532,6 +583,7 @@ const IngredientForm = ({
                       <NameField
                         warning={duplicates}
                         hrefOf={duplicateHref}
+                        onUse={workspaceId === null ? undefined : useEntry}
                         holds={!editing}
                         ref={createAnyway}
                       />
