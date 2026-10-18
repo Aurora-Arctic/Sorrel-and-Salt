@@ -326,6 +326,19 @@ describe('FacetPanel', () => {
     const menu = () => match().querySelector('details') as HTMLDetailsElement;
     const summary = () => menu().querySelector('summary') as HTMLElement;
 
+    it('keeps every chip tip inside the bar its chip stands in, the box its bubble is placed against', () => {
+      // One chip held disabled (Match below two categories, its tip outside the fieldset) and one open.
+      openPanel({ categories: ['warding'], source: 'local' });
+      const tips = screen.getAllByRole('button', { name: /^About (Match|Source)/ });
+      expect(tips.length).toBeGreaterThan(0);
+      for (const tip of tips) {
+        const bar = tip.closest('.facet-chip__bar');
+        expect(bar).not.toBeNull();
+        // The bar holds the chip too, so the tip stands beside it and not in the panel at large.
+        expect(bar?.querySelector('summary, button.facet-chip__summary')).not.toBeNull();
+      }
+    });
+
     it('draws Match as a group holding a summary that opens a menu of native radios', () => {
       openPanel({ categories: ['warding', 'mending'] });
       expect(menu().open).toBe(false);

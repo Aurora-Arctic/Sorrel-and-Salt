@@ -215,8 +215,11 @@
   border-color: $accent;
 }
 
+// The name is the quieter half of the chip: the caption size the counts use, in the muted ink,
+// so the value beside it is what reads. The chip's height is the summary's own minimum.
 .facet-chip__name {
   color: $text-muted;
+  font-size: type-size('caption');
 }
 
 .facet-chip__value {
@@ -389,6 +392,16 @@
   top: 100%;
   bottom: auto;
   margin-block: space(1) 0;
+}
+
+// Below the tablet width a chip that is not first on its line (Source after Toxic) hangs its
+// tip from the icon's right edge, as the wide panel does, so that it opens leftward instead of
+// running past the sheet's right edge. A first chip (Match, Toxic) starts at the sheet's left.
+@media (max-width: #{$shell-tablet-width - 0.0625rem}) {
+  .facet-panel .facet-chip:not(:first-child) .info-tip__bubble {
+    right: 0;
+    left: auto;
+  }
 }
 
 // On the wide panel Match stands at the right-hand end of its row, so a tip hung from the
