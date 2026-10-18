@@ -1818,6 +1818,7 @@
     // the ink whole.
     .radio__count {
       color: $text-muted;
+      font-size: type-size('caption');
     }
 
     &:has(input:checked) .radio__count {

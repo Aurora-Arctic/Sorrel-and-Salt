@@ -111,7 +111,7 @@ export function RadioGroupField<T extends string>({
               {option.count !== undefined && (
                 <>
                   {' '}
-                  <span className="radio__count">({option.count})</span>
+                  <span className="radio__count">{option.count}</span>
                 </>
               )}
             </label>
