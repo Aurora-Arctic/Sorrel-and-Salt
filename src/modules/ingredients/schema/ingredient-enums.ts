@@ -62,3 +62,11 @@ export type ToxicFilter = (typeof TOXIC_FILTERS)[number];
 export const CATEGORY_MODES = ['all', 'any'] as const;
 
 export type CategoryMode = (typeof CATEGORY_MODES)[number];
+
+// Not a column: where a coven's list entry comes from (M9.7), kept here so the
+// GraphQL enum, the filter's Zod schema and the coven's address read one list.
+// `local` is the coven's own entry, `compendium` one it holds a jar of; leaving
+// the setting out keeps both.
+export const INGREDIENT_SOURCES = ['local', 'compendium'] as const;
+
+export type IngredientSource = (typeof INGREDIENT_SOURCES)[number];

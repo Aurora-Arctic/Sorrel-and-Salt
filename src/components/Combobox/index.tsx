@@ -386,7 +386,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
               {item.count !== undefined && (
                 <>
                   {' '}
-                  <span className="combobox__count">({item.count})</span>
+                  <span className="combobox__count">{item.count}</span>
                 </>
               )}
             </span>

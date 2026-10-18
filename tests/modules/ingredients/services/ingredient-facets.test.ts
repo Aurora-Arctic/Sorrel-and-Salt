@@ -42,9 +42,14 @@ function add(name: string, overrides: Overrides<IngredientFixture> = {}): Promis
 }
 
 /** A jar in `workspaceId` of the ingredient's form `form`, written raw. */
-async function stock(ingredientId: string, workspaceId: string, form: string): Promise<void> {
+async function stock(
+  ingredientId: string,
+  workspaceId: string,
+  form: string,
+  quantityOnHand: string | null = null,
+): Promise<void> {
   const variantId = await variantIdOf(sql, ingredientId, form);
-  await insertStock(sql, { workspaceId, ingredientId, variantId }, A.id);
+  await insertStock(sql, { workspaceId, ingredientId, variantId, quantityOnHand }, A.id);
 }
 
 /** A live vocabulary row's id, by name. */
@@ -163,6 +168,195 @@ describe('workspaceIngredientFacets', () => {
       }
     }
     expect(checked).toBeGreaterThan(20);
+  });
+
+  it('counts each value as the list reads it under source and inStock', async () => {
+    await seedCovens();
+    const spent = await add('Spentwort', { variants: [makeVariant({ form: 'Spentform' })] });
+    await stock(spent, WORKSPACE_W_ID, 'Spentform', '0');
+    const full = await add('Fullwort', {
+      variants: [makeVariant({ form: 'Fullform' })],
+      toxic: true,
+    });
+    await stock(full, WORKSPACE_W_ID, 'Fullform', '4');
+    const bases = [
+      { source: 'local' as const },
+      { source: 'compendium' as const },
+      { inStock: true },
+      { source: 'compendium' as const, inStock: true },
+      { source: 'local' as const, inStock: true },
+    ];
+
+    let checked = 0;
+    for (const base of bases) {
+      const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, base);
+      for (const { value, count } of facets.forms) {
+        expect({ base, value, count }).toEqual({
+          base,
+          value,
+          count: await listedCount(asUser(B), { ...base, forms: [value] }),
+        });
+        checked += 1;
+      }
+      for (const { value, count } of facets.toxic) {
+        expect({ base, value, count }).toEqual({
+          base,
+          value,
+          count: await listedCount(asUser(B), { ...base, toxic: value }),
+        });
+        checked += 1;
+      }
+    }
+    expect(checked).toBeGreaterThan(10);
+    // Why the filters could have changed nothing: they narrow the unfiltered counts.
+    const all = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
+    const local = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, { source: 'local' });
+    const inStock = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+      inStock: true,
+    });
+    expect(countedOf(local, 'forms')).not.toEqual(countedOf(all, 'forms'));
+    expect(countedOf(inStock, 'forms')).toEqual(['Fullform', 'Heldform', 'Root']);
+  });
+
+  describe('the Source and In Stock counts', () => {
+    /**
+     * W's local entries (one jarred at 4, one with a jar at 0, one with a jar
+     * of no quantity, one with no jar), a compendium entry W holds in stock, one
+     * it holds at 0, one it does not hold, and X's local entry with a jar in X.
+     */
+    async function seedSources(): Promise<void> {
+      const form = (name: string, workspaceId?: string) =>
+        add(name, { workspaceId, variants: [makeVariant({ form: `${name}form` })] });
+      const full = await form('Fullwort', WORKSPACE_W_ID);
+      await stock(full, WORKSPACE_W_ID, 'Fullwortform', '4');
+      const spent = await form('Spentwort', WORKSPACE_W_ID);
+      await stock(spent, WORKSPACE_W_ID, 'Spentwortform', '0');
+      const unweighed = await form('Unweighedwort', WORKSPACE_W_ID);
+      await stock(unweighed, WORKSPACE_W_ID, 'Unweighedwortform');
+      await form('Barewort', WORKSPACE_W_ID);
+      const held = await form('Heldwort');
+      await stock(held, WORKSPACE_W_ID, 'Heldwortform', '2');
+      const heldSpent = await form('Heldspentwort');
+      await stock(heldSpent, WORKSPACE_W_ID, 'Heldspentwortform', '0');
+      await form('Unheldwort');
+      const elsewhere = await form('Elsewort', WORKSPACE_X_ID);
+      await stock(elsewhere, WORKSPACE_X_ID, 'Elsewortform', '9');
+    }
+
+    const countOf = (facets: { source: { value: string; count: number }[] }, value: string) =>
+      facets.source.find((entry) => entry.value === value)?.count;
+
+    it('counts Local and Compendium, both always present, zeros kept', async () => {
+      await seedSources();
+
+      const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
+
+      expect(facets.source).toEqual([
+        { value: 'local', count: 4 },
+        { value: 'compendium', count: 2 },
+      ]);
+      expect(facets.inStock).toBe(3);
+
+      await sql`truncate ingredients cascade`;
+      const empty = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
+      expect(empty.source).toEqual([
+        { value: 'local', count: 0 },
+        { value: 'compendium', count: 0 },
+      ]);
+      expect(empty.inStock).toBe(0);
+    });
+
+    it('counts each source under inStock and the rest, whatever source is chosen', async () => {
+      await seedSources();
+
+      for (const source of [undefined, 'local', 'compendium'] as const) {
+        const stocked = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+          source,
+          inStock: true,
+        });
+        // A jar at 0 is out of stock; one with no quantity is held.
+        expect(stocked.source).toEqual([
+          { value: 'local', count: 2 },
+          { value: 'compendium', count: 1 },
+        ]);
+      }
+    });
+
+    it('counts In Stock under the chosen source, whatever inStock is', async () => {
+      await seedSources();
+      const expected = { undefined: 3, local: 2, compendium: 1 };
+
+      for (const source of [undefined, 'local', 'compendium'] as const) {
+        for (const inStock of [undefined, true]) {
+          const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+            source,
+            inStock,
+          });
+          expect({ source, inStock, count: facets.inStock }).toEqual({
+            source,
+            inStock,
+            count: expected[`${source}`],
+          });
+        }
+      }
+    });
+
+    it('counts what the list totals with that value added, and counts the rest of the filter', async () => {
+      await seedSources();
+      const bases = [{}, { query: 'wort' }, { query: 'held' }, { toxic: 'not_toxic' as const }];
+
+      let checked = 0;
+      for (const base of bases) {
+        for (const inStock of [{}, { inStock: true }]) {
+          const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+            ...base,
+            ...inStock,
+          });
+          for (const value of ['local', 'compendium'] as const) {
+            expect({ base, inStock, value, count: countOf(facets, value) }).toEqual({
+              base,
+              inStock,
+              value,
+              count: await listedCount(asUser(B), { ...base, ...inStock, source: value }),
+            });
+            checked += 1;
+          }
+        }
+        for (const source of [{}, { source: 'local' as const }]) {
+          const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+            ...base,
+            ...source,
+          });
+          expect({ base, source, count: facets.inStock }).toEqual({
+            base,
+            source,
+            count: await listedCount(asUser(B), { ...base, ...source, inStock: true }),
+          });
+          checked += 1;
+        }
+      }
+      expect(checked).toBe(24);
+      // Why the rest of the filter could have changed nothing: it does.
+      const narrowed = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
+        query: 'held',
+      });
+      expect(narrowed.source).toEqual([
+        { value: 'local', count: 0 },
+        { value: 'compendium', count: 2 },
+      ]);
+    });
+
+    it("leaves another coven's entries and jars out of both counts", async () => {
+      await seedSources();
+
+      const elsewhere = await workspaceIngredientFacets(asUser(D), WORKSPACE_X_ID, {});
+
+      expect(elsewhere.source).toEqual([
+        { value: 'local', count: 1 },
+        { value: 'compendium', count: 0 },
+      ]);
+      expect(elsewhere.inStock).toBe(1);
+    });
   });
 
   it.each([

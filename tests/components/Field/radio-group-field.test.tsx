@@ -116,18 +116,18 @@ describe('RadioGroupField, segmented', () => {
     const group = screen.getByRole('group', { name: 'Toxic' });
     expect(within(group).getAllByRole('radio')).toHaveLength(3);
     expect(within(group).getByRole('radio', { name: 'Any' })).toBeChecked();
-    expect(within(group).getByRole('radio', { name: 'Toxic (4)' })).toBeInTheDocument();
-    expect(within(group).getByRole('radio', { name: 'Not Toxic (8)' })).toBeInTheDocument();
+    expect(within(group).getByRole('radio', { name: 'Toxic 4' })).toBeInTheDocument();
+    expect(within(group).getByRole('radio', { name: 'Not Toxic 8' })).toBeInTheDocument();
   });
 
   it('changes the choice on a click, and submits it under the group name', () => {
     render(<Segmented />);
 
-    fireEvent.click(screen.getByRole('radio', { name: 'Toxic (4)' }));
+    fireEvent.click(screen.getByRole('radio', { name: 'Toxic 4' }));
 
-    expect(screen.getByRole('radio', { name: 'Toxic (4)' })).toBeChecked();
+    expect(screen.getByRole('radio', { name: 'Toxic 4' })).toBeChecked();
     expect(screen.getByRole('radio', { name: 'Any' })).not.toBeChecked();
-    expect(screen.getByRole('radio', { name: 'Toxic (4)' })).toHaveAttribute('name', 'toxic');
+    expect(screen.getByRole('radio', { name: 'Toxic 4' })).toHaveAttribute('name', 'toxic');
   });
 
   it('names a segment by its label alone when it has no count, and prints no chosen caption', () => {

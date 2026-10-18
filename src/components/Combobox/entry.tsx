@@ -115,13 +115,13 @@ export function ComboboxEntry({
   // After the text, outside the span that is cut off, so a long name loses
   // its tail and never its count. Read with the chip's text; the placeholder
   // is for the eye alone. The space is a text node outside the span, so the
-  // chip reads "Water (7)" (a name computation drops a span's own leading one).
+  // chip reads "Water 7" (a name computation drops a span's own leading one).
   const countMark = loading ? (
     <span className="combobox__entry-count is-pending" aria-hidden="true" />
   ) : count !== undefined ? (
     <>
       {' '}
-      <span className="combobox__entry-count">({count})</span>
+      <span className="combobox__entry-count">{count}</span>
     </>
   ) : null;
   const iconMark = icon ? (

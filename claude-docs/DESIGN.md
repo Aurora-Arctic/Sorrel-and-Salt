@@ -860,7 +860,7 @@ type Query {
     celestialBodies: [String!]
     toxic: ToxicFilter
     source: IngredientSource # local or compendium only; all by default (M9.7)
-    inStockOnly: Boolean # keeps entries the coven holds in stock (M9.7)
+    inStock: Boolean # keeps entries the coven holds in stock (M9.7)
     lowStockOnly: Boolean # keeps entries running low (M9.8)
     first: Int
     after: String

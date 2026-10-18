@@ -3,6 +3,7 @@ import { RowId, optionalText } from '../../../lib/validation';
 import {
   CATEGORY_MODES,
   INGREDIENT_ELEMENTS,
+  INGREDIENT_SOURCES,
   NOMENCLATURE_KINDS,
   TOXIC_FILTERS,
 } from '../schema/ingredient-enums';
@@ -100,7 +101,8 @@ export type CompendiumFilter = z.output<typeof CompendiumFilter>;
 
 // The coven's ingredient list takes the compendium's search, categories and
 // facets (M9.4, M11.22), but not the admin's two to-do lists, so it parses
-// them exactly as the compendium does.
+// them exactly as the compendium does; the two settings that need a coven's
+// own rows and jars (M9.7) are its alone.
 export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   query: true,
   categoryIds: true,
@@ -111,6 +113,17 @@ export const WorkspaceIngredientFilter = CompendiumFilter.pick({
   celestialBodies: true,
   elements: true,
   toxic: true,
+}).extend({
+  // M9.7: where an entry came from; null or missing keeps both.
+  source: z
+    .enum(INGREDIENT_SOURCES)
+    .nullish()
+    .transform((source) => source ?? undefined),
+  // M9.7: entries with a jar not at 0. False is no filter.
+  inStock: z
+    .boolean()
+    .nullish()
+    .transform((only) => (only === true ? true : undefined)),
 });
 
 export type WorkspaceIngredientFilterInput = z.input<typeof WorkspaceIngredientFilter>;

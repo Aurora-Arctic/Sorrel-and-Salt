@@ -909,20 +909,21 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await page.goto('/admin/compendium?query=Modewort&categories=protection');
   await openFilters(page);
   // One category: the mode stays, on All, and cannot be changed.
-  await expect(match.getByRole('radio', { name: 'All' })).toBeDisabled();
+  await expect(match.getByRole('button', { name: /All/ })).toBeDisabled();
 
   const box = page.getByRole('combobox', { name: 'Category' });
   await box.fill('cleansing');
   await page.getByRole('option', { name: /^Cleansing/ }).click();
-  await expect(match.getByRole('radio', { name: 'All' })).toBeEnabled();
-  await expect(match.getByRole('radio', { name: 'All' })).toBeChecked();
+  await expect(match.getByRole('button', { name: /All/ })).toHaveCount(0);
+  await expect(held(match, 'All')).toBeEnabled();
+  await expect(held(match, 'All')).toBeChecked();
   await applyFilters(page);
   // Why Any could differ: under All, the entry with one category is out.
   await expect(edit('Modewort Both')).toBeVisible();
   await expect(edit('Modewort One')).toHaveCount(0);
 
   await openFilters(page);
-  await choose(match.getByRole('radio', { name: 'Any' }));
+  await choose(match, 'Any');
   await applyFilters(page);
   await expect(page).toHaveURL(/[?&]categoryMode=any(&|$)/);
   await expect(edit('Modewort One')).toBeVisible();
@@ -932,12 +933,12 @@ test('the match mode widens two categories to Any, is kept in the address, and g
 
   await page.reload();
   await openFilters(page);
-  await expect(match.getByRole('radio', { name: 'Any' })).toBeChecked();
+  await expect(held(match, 'Any')).toBeChecked();
   await expect(edit('Modewort One')).toBeVisible();
 
   // Back to one category: the mode goes from the address and the group rests on All, disabled.
   await page.getByRole('button', { name: 'Remove Category: Cleansing' }).click();
-  await expect(match.getByRole('radio', { name: 'All' })).toBeDisabled();
+  await expect(match.getByRole('button', { name: /All/ })).toBeDisabled();
   await applyFilters(page);
   await expect(page).not.toHaveURL(/categoryMode/);
 
@@ -945,7 +946,7 @@ test('the match mode widens two categories to Any, is kept in the address, and g
   await openFilters(page);
   await box.fill('cleansing');
   await page.getByRole('option', { name: /^Cleansing/ }).click();
-  await expect(match.getByRole('radio', { name: 'All' })).toBeChecked();
+  await expect(held(match, 'All')).toBeChecked();
   await applyFilters(page);
   await expect(edit('Modewort One')).toHaveCount(0);
 });
@@ -1054,11 +1055,23 @@ async function seedFacetworts(userId: string) {
   }
 }
 
-/** Picks a segmented choice by clicking its label: the native radio under a segment is drawn invisible, so a click on the input itself finds the label in the way. */
-async function choose(radio: Locator): Promise<void> {
-  await radio.locator('xpath=ancestor::label[1]').click();
-  await expect(radio).toBeChecked();
+/**
+ * Picks a choice in a choice chip: opens its menu, then clicks the option's label, since the
+ * native radio under it is drawn invisible and a click on the input finds the label in the way.
+ * Shut, the menu's radios are out of the accessibility tree, so the option is found only once
+ * the summary has opened it.
+ */
+async function choose(group: Locator, name: string | RegExp): Promise<void> {
+  await group.locator('summary').click();
+  await group
+    .getByRole('radio', { name })
+    .locator('xpath=ancestor::label[1]')
+    .click({ position: { x: 10, y: 10 } });
 }
+
+/** A radio in a chip's menu whether the menu is open or shut, for what it holds rather than what is shown. */
+const held = (group: Locator, name: string | RegExp): Locator =>
+  group.getByRole('radio', { name, includeHidden: true });
 
 async function listed(page: Page): Promise<string> {
   // A link is named by its aria-label when it has one, else by its text.
@@ -1077,8 +1090,9 @@ async function listed(page: Page): Promise<string> {
 const sentenceOf = (page: Page) =>
   page.locator('p[role="status"]').filter({ hasNot: page.getByRole('link') });
 
-/** The number in a label's closing brackets, as in "Toxic (3)". */
-const countIn = (label: string) => Number(/\((\d+)\)\s*$/.exec(label.trim())?.[1]);
+/** The number a label ends on, as in "Toxic 3". */
+// Bare in a choice chip's radio and in a suggestion; a radio group's own count may still carry brackets.
+const countIn = (label: string) => Number(/(\d+)\)?\s*$/.exec(label.trim())?.[1]);
 
 /** Picks the option of a type-ahead or multi-select by its label. */
 async function pick(page: Page, box: string, typed: string, option: string | RegExp) {
@@ -1165,36 +1179,36 @@ test('Toxic keeps its three states in the address, and each count is the total o
   await page.goto('/admin/compendium?query=Facetwort');
   const panel = await openFilters(page);
   const toxic = panel.getByRole('group', { name: 'Toxic' });
-  await expect(toxic.getByRole('radio', { name: 'Any' })).toBeChecked();
+  await expect(held(toxic, 'Any')).toBeChecked();
 
   // The count shown beside each choice, read before it is chosen.
   const countOf = async (name: RegExp) =>
     countIn(
       await toxic
-        .getByRole('radio', { name })
+        .getByRole('radio', { name, includeHidden: true })
         .evaluate((el) => (el as HTMLInputElement).labels?.[0]?.textContent ?? ''),
     );
 
-  const toxicCount = await countOf(/^Toxic \(/);
-  const safeCount = await countOf(/^Not Toxic \(/);
+  const toxicCount = await countOf(/^Toxic \d/);
+  const safeCount = await countOf(/^Not Toxic \d/);
   expect(toxicCount).toBe(1);
   expect(safeCount).toBe(4);
 
-  await choose(toxic.getByRole('radio', { name: /^Toxic \(/ }));
+  await choose(toxic, /^Toxic \d/);
   await applyFilters(page);
   await expect(page).toHaveURL(/[?&]toxic=toxic(&|$)/);
   await expect.poll(() => listed(page)).toBe('D');
   expect((await listed(page)).length).toBe(toxicCount);
 
   await openFilters(page);
-  await choose(toxic.getByRole('radio', { name: /^Not Toxic \(/ }));
+  await choose(toxic, /^Not Toxic \d/);
   await applyFilters(page);
   await expect(page).toHaveURL(/[?&]toxic=not_toxic(&|$)/);
   await expect.poll(() => listed(page)).toBe('ABCE');
   expect((await listed(page)).length).toBe(safeCount);
 
   await openFilters(page);
-  await choose(toxic.getByRole('radio', { name: 'Any' }));
+  await choose(toxic, 'Any');
   await applyFilters(page);
   await expect(page).not.toHaveURL(/toxic=/);
   await expect.poll(() => listed(page)).toBe('ABCDE');
@@ -1251,9 +1265,7 @@ test('a count in the panel follows a change before Apply, and Escape applies it'
   expect(countIn(await alpha.innerText())).toBe(3);
   await field.fill('');
 
-  await choose(
-    panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Toxic \(/ }),
-  );
+  await choose(panel.getByRole('group', { name: 'Toxic' }), /^Toxic \d/);
   await field.fill('Facetform Alpha');
   await expect.poll(async () => countIn(await alpha.innerText())).toBe(1);
   // Nothing has been applied: the address and the list are as they were.
@@ -1283,9 +1295,7 @@ test('Apply Filters applies every held change in one navigation, a step Back und
   const panel = await openFilters(page);
 
   await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
-  await choose(
-    panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Toxic \(/ }),
-  );
+  await choose(panel.getByRole('group', { name: 'Toxic' }), /^Toxic \d/);
   await expect(page).not.toHaveURL(/forms=|toxic=/);
   await applyFilters(page);
 
@@ -1344,11 +1354,9 @@ test('a value with nothing behind it is left out of its facet, a chosen one keep
   await page.goto('/admin/compendium?query=Facetwort&forms=Facetform+Gamma');
   const panel = await openFilters(page);
   const toxic = panel.getByRole('group', { name: 'Toxic' });
-  // Toxic is the exception: all three segments stay, and with one at zero the group rests on Any, disabled.
-  await expect(toxic.getByRole('radio', { name: /^Toxic \(0\)/ })).toBeVisible();
-  await expect(toxic.getByRole('radio', { name: /^Not Toxic \(/ })).toBeVisible();
-  await expect(toxic.getByRole('radio', { name: 'Any' })).toBeChecked();
-  await expect(toxic.getByRole('radio', { name: 'Any' })).toBeDisabled();
+  // Toxic is the exception: with one choice at zero the chip rests on Any, disabled, and opens no menu.
+  await expect(toxic.getByRole('button', { name: /Any/ })).toBeDisabled();
+  await expect(toxic.getByRole('radio')).toHaveCount(0);
 
   // Toxic chosen, with Beta chosen before its count fell to zero: Beta keeps its chip,
   // Gamma (also zero now) is not offered, and Alpha (one toxic entry) is.
@@ -1357,8 +1365,8 @@ test('a value with nothing behind it is left out of its facet, a chosen one keep
   await expect(page.getByRole('button', { name: 'Remove Form: Facetform Beta' })).toBeVisible();
   // Beta holds no toxic entry, so Toxic reads zero and the group rests on Any, disabled.
   await expect(
-    page.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: 'Any' }),
-  ).toBeChecked();
+    page.getByRole('group', { name: 'Toxic' }).getByRole('button', { name: /Any/ }),
+  ).toBeDisabled();
   await page.getByRole('combobox', { name: 'Forms', exact: true }).fill('Facetform');
   await expect(page.getByRole('option', { name: /^Facetform Alpha/ })).toHaveCount(1);
   await expect(page.getByRole('option', { name: /^Facetform Gamma/ })).toHaveCount(0);
@@ -1405,14 +1413,12 @@ test('Filters counts every chosen value', async ({ page }) => {
   // Two chosen values of one facet, both held in the panel before Apply.
   await pick(page, 'Forms', 'Facetform Alpha', /^Facetform Alpha/);
   await pick(page, 'Forms', 'Facetform Beta', /^Facetform Beta/);
-  await choose(
-    panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: /^Not Toxic \(/ }),
-  );
+  await choose(panel.getByRole('group', { name: 'Toxic' }), /^Not Toxic \d/);
   await applyFilters(page);
   // Why two forms and a Toxic choice could be counted as two: the address holds both forms.
   await expect(page).toHaveURL(/forms=Facetform(\+|%20)Alpha&forms=Facetform(\+|%20)Beta/);
   await expect(page).toHaveURL(/toxic=not_toxic/);
-  await expect(page.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters (3)');
+  await expect(page.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters 3');
 });
 
 test('Clear All resets the filter, the name included', async ({ page }) => {
@@ -1426,7 +1432,7 @@ test('Clear All resets the filter, the name included', async ({ page }) => {
   await page.goto('/admin/compendium?query=Facetwort&forms=Facetform+Alpha&toxic=toxic');
   const button = page.getByRole('button', { name: /^Filters/ });
   // Two chosen values in use (a form and Toxic); the name is not counted.
-  await expect(button).toHaveAccessibleName('Filters (2)');
+  await expect(button).toHaveAccessibleName('Filters 2');
   await expect.poll(() => listed(page)).toBe('D');
 
   await page.getByRole('link', { name: 'Clear All' }).first().click();
@@ -1463,23 +1469,23 @@ test('the panel takes focus in, gives it back on Escape, and a reload and Back b
   await applyFilters(page);
   await expect.poll(() => listed(page)).toBe('ADE');
   await openFilters(page);
-  await choose(page.getByRole('radio', { name: /^Toxic \(/ }));
+  await choose(page.getByRole('group', { name: 'Toxic' }), /^Toxic \d/);
   await applyFilters(page);
   await expect.poll(() => listed(page)).toBe('D');
 
   await page.reload();
   await expect(page).toHaveURL(/toxic=toxic/);
-  await expect(button).toHaveAccessibleName('Filters (2)');
+  await expect(button).toHaveAccessibleName('Filters 2');
   await expect.poll(() => listed(page)).toBe('D');
   await openFilters(page);
   await expect(page.getByRole('button', { name: 'Remove Form: Facetform Alpha' })).toBeVisible();
-  await expect(page.getByRole('radio', { name: /^Toxic \(/ })).toBeChecked();
+  await expect(held(page.getByRole('group', { name: 'Toxic' }), /^Toxic \d/)).toBeChecked();
 
   await page.goBack();
   await expect(page).not.toHaveURL(/toxic=/);
   await expect(page).toHaveURL(/forms=Facetform/);
   await expect.poll(() => listed(page)).toBe('ADE');
-  await expect(page.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters (1)');
+  await expect(page.getByRole('button', { name: /^Filters/ })).toHaveAccessibleName('Filters 1');
 });
 
 test('at 375px the panel is a modal sheet that closes on Escape, with no accessibility violations', async ({
@@ -1525,7 +1531,7 @@ test('a press outside the open panel shuts it and applies what was held, on the 
 
   // Wide: a press in the search box.
   let panel = await openFilters(page);
-  await choose(panel.getByRole('radio', { name: /^Toxic \(/ }));
+  await choose(panel.getByRole('group', { name: 'Toxic' }), /^Toxic \d/);
   // Why it could have applied already: the choice is held, and the address says nothing yet.
   await expect(page).not.toHaveURL(/toxic=/);
   await page.getByRole('combobox', { name: 'Name', exact: true }).click();
@@ -1536,7 +1542,7 @@ test('a press outside the open panel shuts it and applies what was held, on the 
   // Wide: a press on the page itself, away from every control.
   panel = await openFilters(page);
   // The Toxic group's own Any: the first Any in the panel is Match's, disabled below two categories.
-  await choose(panel.getByRole('group', { name: 'Toxic' }).getByRole('radio', { name: 'Any' }));
+  await choose(panel.getByRole('group', { name: 'Toxic' }), 'Any');
   await expect(page).toHaveURL(/toxic=toxic/);
   await page.getByRole('heading', { level: 1 }).click();
   await expect(panel).toBeHidden();
@@ -1546,7 +1552,7 @@ test('a press outside the open panel shuts it and applies what was held, on the 
   // The sheet (under 56rem wide): the backdrop beside it, which is the dialog's own box.
   await page.setViewportSize({ width: 700, height: 800 });
   panel = await openFilters(page);
-  await choose(panel.getByRole('radio', { name: /^Toxic \(/ }));
+  await choose(panel.getByRole('group', { name: 'Toxic' }), /^Toxic \d/);
   await expect(page).not.toHaveURL(/toxic=/);
   await page.mouse.click(5, 400);
   await expect(panel).toBeHidden();
@@ -1594,26 +1600,41 @@ test('the panel opens with its top at its final place from the first frame, and 
   const top = async (locator: Locator) => (await locator.boundingBox())?.y ?? Number.NaN;
   const toxic = panel.getByRole('group', { name: 'Toxic' });
   const forms = panel.getByRole('combobox', { name: 'Forms', exact: true });
-  // The combobox's box is two levels above its input; the strip stands where that box does,
+  // The combobox's box is two levels above its input; the chip stands where that box does,
   // and is as tall.
-  const strip = toxic.locator('.radio-strip');
+  const chip = toxic.locator('summary, button');
   const box = forms.locator('xpath=ancestor::div[2]');
-  expect(await top(strip)).toBeCloseTo(await top(box), 0);
-  expect((await strip.boundingBox())?.height).toBeCloseTo(
-    (await box.boundingBox())?.height ?? 0,
-    0,
-  );
-  expect(await top(toxic.locator('legend'))).toBeCloseTo(
-    await top(panel.locator('label[for]', { hasText: /^Forms$/ })),
-    0,
-  );
-  // A divider between the segments, as Match has.
-  expect(
-    await toxic
-      .locator('.radio--segment:nth-child(2)')
-      .evaluate((el) => getComputedStyle(el).borderInlineStartWidth),
-  ).toBe('1px');
+  expect(await top(chip)).toBeCloseTo(await top(box), 0);
+  expect((await chip.boundingBox())?.height).toBeCloseTo((await box.boundingBox())?.height ?? 0, 0);
 });
+
+for (const [label, width, height] of [
+  ['1280', 1280, 900],
+  ['390', 390, 800],
+] as const) {
+  test(`the Match menu opens whole inside the panel at ${label}px`, async ({ page }) => {
+    await signInAs(page, `match-menu-${label}@admin-compendium.test`, ['discord'], 'admin');
+    await page.setViewportSize({ width, height });
+    // Two categories chosen, so Match can open; it ends its row on every panel, which is
+    // where a menu hung from the chip's left edge ran past the panel's right edge.
+    await page.goto('/admin/compendium?categories=protection&categories=cleansing');
+    const panel = await openFilters(page);
+    const match = panel.getByRole('group', { name: 'Match' });
+    await match.locator('summary').click();
+    const menu = match.locator('.facet-chip__menu');
+    await expect(menu).toBeVisible();
+    // Let the fade finish so the box is the settled one.
+    await expect(menu).toHaveClass(/is-open/);
+    // Why it could have been cut: the menu is wider than the chip and the panel clips to its
+    // own box.
+    const menuBox = (await menu.boundingBox())!;
+    const chipBox = (await match.locator('summary').boundingBox())!;
+    const panelBox = (await panel.boundingBox())!;
+    expect(menuBox.width).toBeGreaterThan(chipBox.width);
+    expect(menuBox.x).toBeGreaterThanOrEqual(panelBox.x);
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(panelBox.x + panelBox.width);
+  });
+}
 
 for (const [label, width, height] of [
   ['1280', 1280, 900],
@@ -1626,7 +1647,7 @@ for (const [label, width, height] of [
     const panel = await openFilters(page);
     const match = panel.getByRole('group', { name: 'Match' });
     await expect(match).toBeVisible();
-    await match.getByRole('button', { name: 'About Match' }).click();
+    await match.locator('summary, button').hover();
     const tip = panel.getByRole('tooltip');
     await expect(tip).toBeVisible();
     // Why it could have been cut: the panel clips to its own box, so a tip opening past the

@@ -352,6 +352,16 @@ type IngredientFacets {
   """
   forms: [NameFacetCount!]!
 
+  """
+  How many entries the list would hold with inStock on, the rest of the filter kept, source included: the same whether inStock is chosen or not.
+  """
+  inStock: Int!
+
+  """
+  local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStock included.
+  """
+  source: [SourceFacetCount!]!
+
   """toxic, then not_toxic, zeros included."""
   toxic: [ToxicFacetCount!]!
 
@@ -414,6 +424,14 @@ input IngredientInput {
   """
   variants: [IngredientVariantInput!]!
   zodiacSigns: [String!]
+}
+
+"""
+Where a coven's list reads from: local, the coven's own entries; or compendium, the compendium entries it holds. Leaving it out lists both.
+"""
+enum IngredientSource {
+  compendium
+  local
 }
 
 """
@@ -1038,7 +1056,17 @@ type Query {
     Keeps entries with a live form named any one of these, ignoring case and outer spaces.
     """
     forms: [String!]
+
+    """
+    Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.
+    """
+    inStock: Boolean
     query: String
+
+    """
+    Keeps the coven's own entries, or the compendium entries it holds; leaving it out keeps both.
+    """
+    source: IngredientSource
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
@@ -1077,8 +1105,18 @@ type Query {
     Keeps entries with a live form named any one of these, ignoring case and outer spaces.
     """
     forms: [String!]
+
+    """
+    Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.
+    """
+    inStock: Boolean
     last: Int
     query: String
+
+    """
+    Keeps the coven's own entries, or the compendium entries it holds; leaving it out keeps both.
+    """
+    source: IngredientSource
 
     """
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
@@ -1415,6 +1453,17 @@ type ReferenceLink {
 input ReferenceLinkInput {
   locator: String
   referenceId: ID!
+}
+
+"""A source, local or compendium, and how many entries it would list."""
+type SourceFacetCount {
+  """
+  How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
+  """
+  count: Int!
+
+  """local or compendium, as source takes it."""
+  value: IngredientSource!
 }
 
 input StockInput {

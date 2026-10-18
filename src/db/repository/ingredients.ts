@@ -4,6 +4,7 @@ import {
   eq,
   inArray,
   isNull,
+  ne,
   not,
   or,
   sql,
@@ -301,33 +302,48 @@ export function findWorkspaceIngredientPage(
     ingredients,
     list.order,
     page,
-    and(list.arms, workspaceListScope(membership)),
+    and(list.arms, workspaceListScope(membership, filter)),
   );
 }
 
 /**
  * Which readable rows a coven's ingredient list holds (M9.4): its own, and
  * the compendium entries it holds, minus any a local entry hides. The page
- * and the facets (M12.3) both read it, so they hold the same rows.
+ * and the facets (M12.3) both read it, so they hold the same rows. The
+ * coven-only `source` and `inStock` settings (M9.7) are read here, not
+ * in `compendiumList`, which the compendium's page and count share and
+ * where a coven's jars mean nothing.
  */
-export function workspaceListScope(membership: Membership): SQL | undefined {
+export function workspaceListScope(
+  membership: Membership,
+  filter: Pick<IngredientFilter, 'source' | 'inStock'> = {},
+): SQL | undefined {
   return and(
     notHiddenByLocal(membership),
     or(scopedTo(membership, ingredients), heldBy(membership)),
+    filter.source === 'local' ? scopedTo(membership, ingredients) : undefined,
+    filter.source === 'compendium' ? inCompendium(ingredients) : undefined,
+    filter.inStock ? heldBy(membership, true) : undefined,
   );
 }
 
 /**
  * The coven holds a live jar of the row, of a live form. The row is already
  * the readable ingredient, so a plain live-variant `EXISTS` rather than
- * `readableVariantParent`'s tier check, as `categoryArms` reads it.
+ * `readableVariantParent`'s tier check, as `categoryArms` reads it. With
+ * `inStock`, the jar must also not be at 0: a jar with no quantity is held
+ * unweighed, so it is an `OR` with null rather than `<> 0` alone, which
+ * SQL reads as unknown for null and would drop it.
  */
-function heldBy(membership: Membership): SQL {
+function heldBy(membership: Membership, inStock = false): SQL {
   return existsIn(
     inventoryItems,
     and(
       eq(inventoryItems.ingredientId, ingredients.id),
       scopedTo(membership, inventoryItems),
+      inStock
+        ? or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0'))
+        : undefined,
       existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
     ),
   );

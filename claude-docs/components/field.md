@@ -205,7 +205,7 @@ rather than an icon, for the compendium filter's Match (All, Any) and Toxic
 (Any, Toxic, Not Toxic). It reuses `.radio-strip` and `.radio--segment`, so the
 chosen segment is the same accent fill, with `.radio--text` letting the
 segment grow to its text and not wrap. An option's optional `count` (a
-`RadioOption` field) reads after its name, "Toxic (4)", the space a text node of
+`RadioOption` field) reads after its name as a bare number at the caption size, "Toxic 4", the space a text node of
 the label's so that the radio's accessible name keeps it; the count is muted
 while the segment is unchosen. It prints no chosen caption: the name is
 already on the bar. Titles are title case ("Not Toxic"), and the strip is

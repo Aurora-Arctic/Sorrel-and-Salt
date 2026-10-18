@@ -28,6 +28,7 @@ import type {
   FacetCount,
   IngredientFacets,
   IngredientFilter,
+  WorkspaceIngredientFacets,
 } from './types';
 
 // M12.3: how many entries each value of each filter kind would list. A kind
@@ -69,14 +70,45 @@ export async function findCompendiumFacets(filter: IngredientFilter): Promise<Co
  * rows `findWorkspaceIngredientPage` reads, counted as `findCompendiumFacets`
  * counts the compendium's.
  */
-export function findWorkspaceIngredientFacets(
+export async function findWorkspaceIngredientFacets(
   membership: Membership,
   filter: IngredientFilter,
-): Promise<IngredientFacets> {
-  return readFacets(
-    filter,
-    and(readableInTiers([membership], ingredients), workspaceListScope(membership)),
-  );
+): Promise<WorkspaceIngredientFacets> {
+  const readable = readableInTiers([membership], ingredients);
+  // The seven kinds and the switch count under the filter's own source and
+  // jars; the source strip under its jars only, and the switch under its source.
+  const [facets, source, inStock] = await Promise.all([
+    readFacets(filter, and(readable, workspaceListScope(membership, filter))),
+    sourceFacet(filter, (value) =>
+      and(readable, workspaceListScope(membership, { ...filter, source: value })),
+    ),
+    totalUnder(filter, and(readable, workspaceListScope(membership, { ...filter, inStock: true }))),
+  ]);
+  return { ...facets, source, inStock };
+}
+
+/**
+ * Local, then compendium, each counted as the list totals with that source
+ * the only one chosen. Both always read, at zero if need be, so the strip
+ * never loses a segment.
+ */
+async function sourceFacet(
+  filter: IngredientFilter,
+  scopeOf: (value: 'local' | 'compendium') => SQL | undefined,
+): Promise<WorkspaceIngredientFacets['source']> {
+  const values = ['local', 'compendium'] as const;
+  const counts = await Promise.all(values.map((value) => totalUnder(filter, scopeOf(value))));
+  return values.map((value, index) => ({ value, count: counts[index] }));
+}
+
+/** How many entries `filter`'s search arms hold within `scope`. */
+async function totalUnder(filter: IngredientFilter, scope: SQL | undefined): Promise<number> {
+  const { where, over } = listed(filter, scope);
+  const [row] = await selectFrom(ingredients, where, {
+    aggregate: { count: sql<number>`count(*)::int` },
+    over,
+  });
+  return row.count;
 }
 
 /** Every kind's counts over the rows `scope` holds, the seven reads at once. */
@@ -284,13 +316,8 @@ async function toxicFacet(
 }
 
 /** How many entries the list holds with the No Refs switch on, through `citesNowhere`. */
-async function unsourcedCount(filter: IngredientFilter, scope: SQL | undefined): Promise<number> {
-  const { where, over } = listed({ ...filter, withoutReferences: true }, scope);
-  const [row] = await selectFrom(ingredients, where, {
-    aggregate: { count: sql<number>`count(*)::int` },
-    over,
-  });
-  return row.count;
+function unsourcedCount(filter: IngredientFilter, scope: SQL | undefined): Promise<number> {
+  return totalUnder({ ...filter, withoutReferences: true }, scope);
 }
 
 /** How many of the read's rows `arm` holds. `filter` has no builder. */

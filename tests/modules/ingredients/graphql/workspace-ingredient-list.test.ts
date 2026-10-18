@@ -37,6 +37,7 @@ useTestDatabase((client) => {
 interface ListNode {
   id: string;
   name: string;
+  isGlobal: boolean;
   categories: { name: string }[];
   stock: { id: string; variant: { form: string } }[];
 }
@@ -60,6 +61,8 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $celestialBodies: [String!]
       $elements: [IngredientElement!]
       $toxic: ToxicFilter
+      $source: IngredientSource
+      $inStock: Boolean
       $first: Int
       $after: String
     ) {
@@ -74,13 +77,15 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         celestialBodies: $celestialBodies
         elements: $elements
         toxic: $toxic
+        source: $source
+        inStock: $inStock
         first: $first
         after: $after
       ) {
         edges {
           cursor
           node {
-            id name categories { name }
+            id name isGlobal categories { name }
             stock(workspaceId: $workspaceId) { id variant { form } }
           }
         }
@@ -161,10 +166,17 @@ describe('workspaceIngredients', () => {
       (connection) => connection?.edges.map((edge) => edge.node) ?? [],
     );
     expect(nodes).toEqual([
-      { id: own, name: 'Covenwort', categories: [{ name: 'Protection' }], stock: [] },
+      {
+        id: own,
+        name: 'Covenwort',
+        isGlobal: false,
+        categories: [{ name: 'Protection' }],
+        stock: [],
+      },
       {
         id: held,
         name: 'Heldwort',
+        isGlobal: true,
         categories: [{ name: 'Protection' }],
         stock: [{ id: jar, variant: { form: 'Oil' } }],
       },
@@ -206,6 +218,31 @@ describe('workspaceIngredients', () => {
     expect(await names({ toxic: 'toxic' })).toEqual(['Heldwort']);
     expect(await names({ toxic: 'not_toxic' })).toEqual(['Covenwort']);
     expect(await names({ toxic: 'any' })).toEqual(['Covenwort', 'Heldwort']);
+  });
+
+  it('takes a source and inStock, and badges the local entry in every state', async () => {
+    const badges = async (variables: Record<string, unknown>) => {
+      const result = await run(asUser(B), variables);
+      expect(result.errors).toBeUndefined();
+      return result.data?.workspaceIngredients.edges.map(({ node }) => [node.name, node.isGlobal]);
+    };
+
+    // Why each could have answered both: both entries are listed unfiltered.
+    expect(await badges({})).toEqual([
+      ['Covenwort', false],
+      ['Heldwort', true],
+    ]);
+    expect(await badges({ source: 'local' })).toEqual([['Covenwort', false]]);
+    expect(await badges({ source: 'compendium' })).toEqual([['Heldwort', true]]);
+    // The local entry has no jar; the held one's has no quantity, so is held.
+    expect(await badges({ inStock: true })).toEqual([['Heldwort', true]]);
+    expect(await badges({ inStock: false })).toHaveLength(2);
+
+    await sql`update inventory_items set quantity_on_hand = 0 where id = ${jar}`;
+    expect(await names({ inStock: true })).toEqual([]);
+
+    const refused = await run(asUser(B), { source: 'both' });
+    expect(refused.errors).toHaveLength(1);
   });
 
   it("resolves a page's stock, its jars' forms and its categories in one read each", async () => {
