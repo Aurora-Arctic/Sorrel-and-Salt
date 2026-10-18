@@ -1,3 +1,4 @@
+import type { CompendiumValues, CupboardOverrides } from '../CupboardEntryForm/types';
 import type { Route } from 'next';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
@@ -86,4 +87,40 @@ export interface IngredientEntryProps {
     allHref?: Route;
     convert?: { workspaceId: string; localId: string };
   };
+  /**
+   * The cupboard buttons (M12.17), for a compendium entry seen from a coven:
+   * Add to Cupboard, or Annotate This Entry and Remove from Cupboard once the
+   * coven holds it, each only for a member whose role permits it. Left out on
+   * the public page and for a coven's own entry.
+   */
+  cupboard?: CupboardProps;
+}
+
+/**
+ * What a coven's member may do about a compendium entry in their cupboard
+ * (M12.17). Left out on the public page and for a coven's own entry.
+ */
+export interface CupboardProps {
+  workspaceId: string;
+  /** The coven's address segment, for the own entry Make It Ours leads to. */
+  covenSlug: string;
+  /** What the member may do, from their role: add needs create, annotate update, remove delete. */
+  canAdd: boolean;
+  canAnnotate: boolean;
+  canRemove: boolean;
+  /**
+   * Make It Ours (M12.23), on the permission the service asserts, read from
+   * `MAKE_IT_OURS_PERMISSION`; offered once the coven holds the entry, a
+   * retired one included.
+   */
+  canMakeOurs: boolean;
+}
+
+/** What the client buttons need to draw: the props above, and the entry's two sides for the form. */
+export interface CupboardActionsProps extends CupboardProps {
+  ingredientId: string;
+  /** The coven holds the entry now. */
+  held: boolean;
+  compendium: CompendiumValues;
+  overrides: CupboardOverrides;
 }

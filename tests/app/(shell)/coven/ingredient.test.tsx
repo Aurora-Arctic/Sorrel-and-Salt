@@ -1,7 +1,10 @@
-import { render, screen, within } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { cleanup, render, screen, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
+import { makeQueryClient } from '@/lib/graphql-client';
 import { entryDetail } from '../../../support/entry-detail';
 
 // A coven's ingredient page (M8.19). The guard and the services are mocked,
@@ -27,11 +30,16 @@ const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
 const compendiumMatchesOf = vi.fn();
 const getCupboardEntry = vi.fn();
+// Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
+const isRetired = vi.fn((_row: unknown) => false);
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
   compendiumMatchesOf,
   getCupboardEntry,
+  isRetired,
+  // The permission Make It Ours is offered on, as the service asserts it (M12.23).
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
   // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
 }));
@@ -43,6 +51,11 @@ vi.mock('@/components/IngredientForm', () => ({
 
 const entryValues = vi.fn();
 vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+
+// The cupboard buttons (M12.17) are client parts that send mutations, so the page
+// renders under a query client.
+const renderPage = (ui: ReactElement) =>
+  render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
 const { default: Page, generateMetadata } =
   await import('@/app/(shell)/coven/[slug]/ingredients/[id]/page');
@@ -69,7 +82,7 @@ const open = async (
   getIngredient.mockResolvedValue(row);
   ingredientDetailOf.mockResolvedValue({ ...entryDetail(), entry: row });
   viewerOf.mockResolvedValue({ viewer: { name: 'Fixture Member', canCurate }, workspaces: [] });
-  render(await Page(params(ID, search)));
+  renderPage(await Page(params(ID, search)));
 };
 
 beforeEach(() => {
@@ -176,6 +189,22 @@ describe('the coven ingredient page', () => {
     expect(edits()).toHaveLength(0);
   });
 
+  it('gives a retired compendium entry neither the public link nor Edit, even to a curator', async () => {
+    // Why it could have had both: the same entry, live, gets both.
+    await open(compendiumRow(), true);
+    expect(screen.getByRole('list', { name: 'In the Compendium' })).toBeInTheDocument();
+    expect(edits()).toHaveLength(1);
+    cleanup();
+
+    getIngredient.mockResolvedValue(compendiumRow());
+    ingredientDetailOf.mockResolvedValue({ ...entryDetail(), retired: true });
+    renderPage(await Page(params()));
+
+    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
+    expect(edits()).toHaveLength(0);
+    expect(screen.getByRole('status')).toBeInTheDocument();
+  });
+
   it("opens no dialog on the coven's own entry, even for a curator who asks for one", async () => {
     await open(covenRow(), true, { edit: '' });
 
@@ -259,6 +288,16 @@ describe('the coven ingredient page title', () => {
       title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
       alternates: { canonical: '/compendium/ingredients/testwort-fixtura-testalis' },
     });
+  });
+
+  it('names no canonical for a retired compendium entry, whose public page is gone', async () => {
+    getIngredient.mockResolvedValue(compendiumRow());
+    isRetired.mockReturnValueOnce(true);
+
+    expect(await generateMetadata(params())).toEqual({
+      title: `${compendiumRow().name} (${compendiumRow().canonicalName})`,
+    });
+    expect(isRetired).toHaveBeenCalledWith(compendiumRow());
   });
 
   it("names no canonical for the coven's own entry", async () => {

@@ -87,11 +87,13 @@ export interface CupboardEntryKey {
 export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
 
 /**
- * What an own entry had that the compendium entry it became does not carry
- * (M12.21), by name, each list sorted and without repeats: the forms that
+ * What a convert left behind, by name, each list sorted and without repeats.
+ * An own entry becoming a compendium entry (M12.21) lists the forms that
  * matched no compendium form and held nothing, and the folk names,
- * substitutes, categories, references and deities of the entry and its forms.
- * The rows themselves stay on the soft-deleted entry.
+ * substitutes, categories, references and deities of the entry and its
+ * forms, whose rows stay on the soft-deleted entry. A compendium entry
+ * becoming the coven's own (M12.23) copies everything, so it lists only what
+ * the new entry could not hold: a folk name its new name took.
  */
 export interface DroppedOnConvert {
   forms: string[];
@@ -106,6 +108,12 @@ export interface DroppedOnConvert {
 /** What `convertLocalToCompendiumEntry` answers: the cupboard row it wrote, and what the coven lost. */
 export interface ConvertedLocal {
   entry: CupboardEntryRow;
+  dropped: DroppedOnConvert;
+}
+
+/** What `convertCompendiumEntryToLocal` answers: the own entry it wrote, and what that could not carry. */
+export interface ConvertedCompendium {
+  entry: IngredientRow;
   dropped: DroppedOnConvert;
 }
 
@@ -316,6 +324,12 @@ export interface VariantDetail {
  */
 export interface IngredientDetail {
   entry: IngredientRow;
+  /**
+   * `entry` is a compendium entry the curators have retired, read because
+   * the coven's cupboard names it (M12.24): marked "No Longer in the
+   * Compendium". Always false on the public page, which reads no retired entry.
+   */
+  retired: boolean;
   /**
    * The cupboard entry of the coven the page is read in, for a compendium
    * entry that coven holds (M12.14); null on the public page, for a coven's

@@ -34,7 +34,7 @@ The repository's scoped writers accept it with no further marking, because they 
 
 M12.14 adds the reads, in `src/db/repository/cupboard-entries.ts` and the `ingredients` service `services/cupboard-entries.ts`.
 
-- **`findCupboardEntry(membership, ingredientId)`** and **`findCupboardEntriesOf(membership, ingredientIds)`** read the proof's coven's live rows, one or a batch. Each ANDs the proof's `workspace_id` and the row's tombstone filter, and keeps a row only while it names a live compendium entry: the private `inCupboard` filter checks the ingredient exists under `workspace_id IS NULL`. So a row naming a coven's own ingredient is never returned, which is the read filter half of the tier rule above, and neither is the row of an entry the compendium has deleted, until M12.24's escape hatch.
+- **`findCupboardEntry(membership, ingredientId)`** and **`findCupboardEntriesOf(membership, ingredientIds)`** read the proof's coven's live rows, one or a batch. Each ANDs the proof's `workspace_id` and the row's tombstone filter, and keeps a row only while it names a live compendium entry: the private `inCupboard` filter checks the ingredient exists under `workspace_id IS NULL`. So a row naming a coven's own ingredient is never returned, which is the read filter half of the tier rule above, and neither is the row of an entry the compendium has deleted, which only the escape hatch below reads (M12.24).
 - **`findCompendiumMatchesByName(name)`** answers the live compendium entries whose name or formal name is `name`, exactly but for case. It takes no proof, because the compendium is public. Later tasks read it for the add flow's question when the compendium already has a typed name (M12.20), and, through `compendiumMatchesOf` in `services/replaced-entries.ts`, for a coven's own entry's page (M12.22). With a formal name the matches are kept to the same `identityKey` and fill **In the Compendium**; with none, every exact-name match fills **Similar in the Compendium**, where each gets a **This Is It** button that calls the conversion. The service answers `canConvert` from `CONVERT_PERMISSION`, the same permission the conversion asserts, so the page holds no role check.
 
 The service reads the row for a member, viewers included, under `{ ingredient: ['read'] }`: `getCupboardEntry` one at a time, and `cupboardEntriesOf` as `Ingredient.cupboardEntry`'s batch, one read per coven named, with a `Forbidden` in a refused coven's slots as `stockOf` answers. A coven's entry page reads the row through `ingredientDetailOf(session, entry, workspaceId)`, whose `cupboardEntry` is null on the public page, which names no coven.
@@ -53,6 +53,21 @@ The coven's ingredient list and its facet counts (M12.18; [`stock.md`](stock.md)
 The joined row rides on each page entry as `cupboardEntry`, and the list's resolver primes the `cupboardEntryByIngredient` loader with it, so `Ingredient.cupboardEntry` on a listed row is answered without `findCupboardEntriesOf`. A row whose compendium entry has been retired (soft-deleted) lists nothing yet: the tombstone filter on `ingredients` drops the entry first, until M12.24's hatch.
 
 `tests/modules/ingredients/services/workspace-ingredient-list.test.ts` holds the list's cases and `tests/modules/ingredients/services/ingredient-facets.test.ts` the counts, each seeding another coven's row beside the one that must count.
+
+### When the compendium retires the entry
+
+A curator's delete soft-deletes the `ingredients` row alone: its forms stay live, and so does every cupboard row naming it. M12.24 decides what those covens see. The entry leaves the compendium at once, and a coven whose cupboard names it goes on reading it, marked, until the coven removes its own row. A coven that never added it reads nothing, even if it has a jar of one of its forms. The record is [`m12.24-retired-entry-stays-readable.md`](../design-decisions/m12.24-retired-entry-stays-readable.md).
+
+- **`findCupboardEntryIncludingSoftDeleted(membership, ingredientId)`** in `cupboard-entries.ts` is the escape hatch ([`soft-delete.md`](soft-delete.md)). It reads the entry past its tombstone and returns it beside the cupboard row, or `undefined`. It returns the entry only while it is a compendium entry and the proof's coven has a live row naming it; the row's own tombstone still filters. The service reaches it as `heldCompendiumEntry(membership, ingredientId)` in `services/cupboard-entries.ts`, and `isRetired(row)` there says whether an entry is retired: a compendium row with `deleted_at` set.
+- **The entry.** `getIngredient(session, id, workspaceId)` tries the hatch only when its live read misses, so a live entry is read as before. `ingredientDetailOf` sees a retired entry, asks the coven for `{ ingredient: ['read'] }` (viewers included), and reads the hatch again: `NotFound` without a coven named or a row, `Forbidden` without a session. It answers `retired: true`.
+- **Its children.** The child readers in `services/ingredient-children.ts`, and the repository finders under them, take an optional last `heldBy` proof. With it, `inUseIngredientParent` and `inUseVariantParent` in `ingredient-parent.ts` admit the retired parent while `heldBy`'s coven names it in its cupboard, and admit a live parent exactly as `readableIngredientParent` and `readableVariantParent` do. The tier is checked on both arms, so a stray cupboard row naming a coven's own deleted ingredient admits nothing. A retired entry's tier is still the compendium's, so a reader's `where` that compares a child's tier with its parent's works unchanged. `ingredientDetailOf` passes the proof to every reader: folk names, categories, deities, substitutes, references, and each form's categories, substitutes and references.
+- **Its jars.** `findManyStock` reads every jar through `inUseVariantParent` with the coven's own proof, so `stockOf`, `updateStock` and `deleteStock` go on working on the coven's jars of a retired entry, and on no other coven's.
+- **What drops it at once.** The public page and the public list with its search (`findCompendiumEntryBySlug`, `findCompendiumPage`), the add flow's exact match (`findCompendiumMatchesByName`), and both groups of the ingredient picker read live rows only and take no `heldBy`. So does `findReadableVariant`, so `createStock` refuses a new jar of a retired entry's form with `NotFound`.
+- **On the page and the wire.** `Ingredient.retired` is true for a retired entry. The coven's entry page marks it **No Longer in the Compendium** and gives it no public link, no canonical address and no Edit, since the compendium no longer holds it.
+
+Not yet covered: the GraphQL child loaders and `Ingredient.cupboardEntry` read nothing for a retired entry, because a loader's key carries no reading coven to prove the cupboard row with; the cupboard list row is M12.18's, and the mark on cupboard rows and jars waits for those screens.
+
+`tests/modules/ingredients/services/retired-entry.test.ts` holds the service half: the holding coven's reads and jars, the other coven's `NotFound`, and every reader that drops the entry, each beside its state before retirement. `tests/db/repository/cupboard-entries.test.ts` holds the hatch's rows and the `heldBy` arm.
 
 ### Writing it
 
@@ -100,3 +115,35 @@ It checks `ingredient: create` and `delete` and `inventory: update`, because it 
 Two jars, or two layers in one spell, of the same form would break a unique index, and merging them would be a guess at what the coven meant, so both are refused rather than merged. The jar refusal is reachable only for a jar of a compendium form with no cupboard row, which since M12.15 only stock from before that task can be: `createStock` inserts the row with the first jar, and the existing-row refusal comes first. A layer refusal names only forms, never the spell, which may be another member's private one.
 
 `tests/modules/ingredients/services/convert-local-to-compendium.test.ts` holds the rules, the rollback included (a trigger fails the cupboard insert after the moves), and `tests/modules/ingredients/graphql/convert-local-to-compendium.test.ts` the transport's half.
+
+### Converting a compendium entry into our own
+
+M12.23 adds `convertCompendiumEntryToLocal(session, workspaceId, ingredientId)`, the other way round. It turns a compendium entry the coven holds into the coven's own ingredient, for the coven that wants to change what a cupboard row cannot override, such as the forms and sources, or to keep an entry the curators retired. The entry page offers it as **Make It Ours**. A new own ingredient is written, the coven's jars and spell layers move onto its forms, and the cupboard row is soft-deleted. The compendium entry itself is never written, and no other coven's cupboard changes.
+
+It checks `ingredient: create` and `delete` and `inventory: update`, because it adds an ingredient, removes a cupboard row and moves jars. The set is exported as `MAKE_IT_OURS_PERMISSION`, so the page offers the button on exactly what the service checks. Everything happens in one `withAudit` transaction under the coven's stock lock (`lockCovenStock`), and a failure at any step leaves every row where it was.
+
+**What the copy holds.** The new entry is written from what the coven reads on the entry page: the compendium's values with the cupboard row's overrides laid over them (`applyCupboardEntry`). So the label becomes its name, and the formal name and nomenclature are the compendium's. The write goes through the coven's own create path (`parseInput`, `resolvePicks`, `writeChildren` in `services/ingredient-rows.ts`), so the copy is checked as any own entry is. Its children are copies of the entry's:
+
+- **Forms**, each with its description, notes, lists, categories, references and substitutes. A form keeps its curated pick only while that curated form is live and still spelt as the form is; otherwise the form is kept as text.
+- **Folk names**, except one the new name now takes (the label equal to a folk name, ignoring case), which would repeat the name.
+- **Substitutes.** A link to a live ingredient is kept, with the form it names while that form is live; when the form is gone it links the ingredient whole. A link whose ingredient is gone, and a typed name, are kept as the name they read as, once each. A substitute naming the entry itself is pointed at the copy, form for form; one naming a form that was not copied is left out.
+- **Categories** and **deities**. A deity keeps its curated pick while that deity is live; otherwise its name.
+- **References**, as links to the same compendium `references` rows with their locators. The coven tier may cite a compendium reference, so nothing is lost.
+
+A retired entry the coven still holds converts the same way: its children are read through the coven's cupboard row (`heldBy`), as the page reads them.
+
+**Moving.** Each jar of a copied form is updated in place, so its id, quantity, unit and threshold are unchanged and only its ingredient and form change; forms are matched by `foldForm`, which is exact here since the copy took the forms' own text. Spell layers move the same way through `moveLayers`, every spell of the coven included, private ones whoever wrote them. A jar or layer on a form deleted earlier is in no read and stays where it is, as in M12.21.
+
+**What is lost.** Only a folk name the new name took. The answer, a `ConvertedCompendium`, carries the new entry and a `DroppedOnConvert` whose `folkNames` lists it; every other list is empty.
+
+| Refusal                                                                                 | Error             | Beside          |
+| --------------------------------------------------------------------------------------- | ----------------- | --------------- |
+| The caller lacks one of the three permissions; a viewer, or not in the coven            | `Forbidden`       |                 |
+| The coven holds no cupboard row for `ingredientId`, an own entry's id or another's      | `NotFound`        |                 |
+| Another entry of the coven already uses the label as its label                          | `ValidationError` | `label`         |
+| The coven already has its own entry of the same formal name                             | `ValidationError` | `canonicalName` |
+| The coven already has its own entry of the same name, where the entry has no formal one | `ValidationError` | `name`          |
+
+The identity refusals come from the identity index (`identity_key`, unique per coven), read back as the coven's own create reads it (`refuseCollision`, which this task moved into `services/ingredient-rows.ts` so both share it). Nothing moves when any of them is refused.
+
+`tests/modules/ingredients/services/convert-compendium-to-local.test.ts` holds the rules, the rollback included (a trigger fails the cupboard row's soft-delete after the moves), `tests/modules/ingredients/graphql/convert-compendium-to-local.test.ts` the transport's half, and `tests/e2e/make-it-ours.spec.ts` the button.

@@ -252,6 +252,7 @@ describe('ingredientDetailOf', () => {
       references: [],
       variants: [],
       cupboardEntry: null,
+      retired: false,
     });
   });
 

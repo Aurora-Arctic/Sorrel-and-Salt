@@ -19,7 +19,7 @@ NULL` ANDed onto whatever `where` the caller supplied — or the caller's
   filter, so a second bypass is a decision argued for in the diff, not a
   convenience appearing quietly beside an import.
 
-There are four such hatches, from three decisions. The first is what a spell
+There are five such hatches, from four decisions. The first is what a spell
 holds: `findIngredientsInSpellsIncludingSoftDeleted` and
 `findManyOfSpellIngredientsIncludingSoftDeleted` (M5.3) read an ingredient
 past its tombstone, and nothing else past one, for a member who may read a spell
@@ -53,6 +53,23 @@ left-joins each to its user row, a deleted user's included, so that a deleted
 user reads under the name their row last held. The viewer's own seat and the
 coven are live by `existsIn`, and the finder returns an id and a name, never
 the row ([`auth/display-names.md`](../auth/display-names.md)).
+
+The fourth, decided by M12.24, is a compendium entry the curators have
+retired while a coven still uses it: `findCupboardEntryIncludingSoftDeleted`
+reads the entry past its tombstone, and only while the proof's coven has a
+live cupboard row naming it, so the coven goes on reading what it holds. The
+cupboard row's own tombstone filters, the entry must be a compendium one, and
+the proof's `workspace_id` scopes the row. The entry's children and jars
+follow through `inUseIngredientParent` and `inUseVariantParent` in
+`ingredient-parent.ts`, which a finder takes as an optional last `heldBy`
+proof: one `EXISTS` over the ingredient that admits it live and in a tier the
+proofs read, or in the compendium with a live cupboard row of `heldBy`'s
+coven. That `EXISTS` is `existsInIncludingSoftDeleted` in `select.ts`, which
+skips `existsIn`'s tombstone filter so the first arm can put it back; it is
+not in the index, and named as the hatches are so a second caller is a
+decision in the diff
+([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "When
+the compendium retires the entry").
 
 Neither builder is in the repository's surface — their siblings import them,
 and nothing outside the folder may (["The repository's files"](repository-files.md)) — so
@@ -91,7 +108,7 @@ each named `…IncludingSoftDeleted`, so a new one is a decision in the diff.
 The finders are read off the index itself, so a new finder is checked without
 being listed. What each hatch still filters — the spell hatches skip the
 ingredient's tombstone alone, the substitute hatch the linked ingredient's
-alone, the co-member hatch the asked-about user's seat and row alone — is its service's READS table's to prove
+alone, the co-member hatch the asked-about user's seat and row alone, the cupboard hatch the compendium entry's alone — is its service's READS table's to prove
 ([`testing/layer-ownership.md`](../testing/layer-ownership.md), "The owning
 layer").
 

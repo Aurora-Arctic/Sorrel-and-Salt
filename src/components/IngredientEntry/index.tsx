@@ -28,6 +28,7 @@ import type {
   VariantDetail,
 } from '@/modules/ingredients';
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
+import CupboardActions from './cupboard-actions';
 import EditButton from './edit-button';
 import { DETAILS, NoteMarks, ReferencesSection, referenceNotes } from './references';
 import EntryDialog from './entry-dialog';
@@ -427,8 +428,9 @@ const IngredientEntry = ({
   movedAway,
   replaces,
   similar,
+  cupboard,
 }: IngredientEntryProps): ReactElement => {
-  const { cupboardEntry, folkNames, categories, deities, substitutes, variants } = detail;
+  const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use;
   // `shown` lays the coven's cupboard entry over it for what the page says.
   // Three kinds: ours (a coven's row, Local), the compendium's held in this
@@ -464,18 +466,57 @@ const IngredientEntry = ({
         <FormalName entry={entry} />
         <PageHeader
           title={shown.name}
-          action={edit && <EditButton href={edit.href} entry={editable} />}
+          action={
+            (edit || cupboard) && (
+              <>
+                {edit && <EditButton href={edit.href} entry={editable} />}
+                {cupboard && !local && (
+                  <CupboardActions
+                    {...cupboard}
+                    ingredientId={entry.id}
+                    held={held}
+                    compendium={{
+                      name: entry.name,
+                      description: entry.description,
+                      safetyNotes: entry.safetyNotes,
+                      elements: entry.elements ?? [],
+                      celestialBodies: entry.celestialBodies ?? [],
+                      zodiacSigns: entry.zodiacSigns ?? [],
+                      colors: entry.colors ?? [],
+                    }}
+                    overrides={{
+                      label: cupboardEntry?.label ?? null,
+                      description: cupboardEntry?.description ?? null,
+                      safetyNotes: cupboardEntry?.safetyNotes ?? null,
+                      elements: cupboardEntry?.elements ?? null,
+                      celestialBodies: cupboardEntry?.celestialBodies ?? null,
+                      zodiacSigns: cupboardEntry?.zodiacSigns ?? null,
+                      colors: cupboardEntry?.colors ?? null,
+                    }}
+                  />
+                )}
+              </>
+            )
+          }
         />
         {relabelled && (
           <p className="ingredient-entry__compendium-name">
             Called <span>{entry.name}</span> in the Compendium
           </p>
         )}
-        {(local || held || toxic) && (
+        {(local || held || toxic || retired) && (
           <div className="badges">
             {local && <span className="badge badge--local">Local</span>}
+            {/* A compendium entry the curators retired, read because this
+                coven's cupboard names it (M12.24). An `output`, so it carries
+                the status role: on the page from the start, never announced. */}
+            {retired && (
+              <output className="badge badge--retired">No Longer in the Compendium</output>
+            )}
             {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
-            {held && <output className="badge badge--low-stock">From the Compendium</output>}
+            {held && !retired && (
+              <output className="badge badge--low-stock">From the Compendium</output>
+            )}
             {held && isAnnotated(cupboardEntry) && (
               <output className="badge badge--low-stock">Annotated</output>
             )}

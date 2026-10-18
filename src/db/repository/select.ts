@@ -329,6 +329,26 @@ export function existsIn<TTable extends PgTable>(table: TTable, where: SQL | und
   );
 }
 
+/**
+ * `existsIn` without the parent's tombstone filter: a correlated `EXISTS`
+ * over `table` under `where` alone. Only for `inUseIngredientParent` in
+ * `ingredient-parent.ts`, which puts the filter back on one arm and, on the
+ * other, admits a retired compendium entry only while the reading coven's
+ * cupboard names it (M12.24). Named as the escape hatches are, so no other
+ * caller reaches it unnoticed.
+ */
+export function existsInIncludingSoftDeleted<TTable extends PgTable>(
+  table: TTable,
+  where: SQL | undefined,
+): SQL {
+  return exists(
+    db
+      .select({ one: sql`1` })
+      .from(table as never)
+      .where(where),
+  );
+}
+
 /** SQLSTATE class 22 — a value that would not cast to its column's type. Drizzle wraps the driver's error as `cause`. */
 function isDataException(error: unknown): boolean {
   const code = (error as { cause?: { code?: unknown } } | null)?.cause?.code;

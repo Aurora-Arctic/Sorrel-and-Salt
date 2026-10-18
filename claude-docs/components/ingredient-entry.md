@@ -29,6 +29,7 @@ In page order, with the accessible names a test or a story walk finds them by:
    - The formal name (below), an eyebrow over the heading.
    - `PageHeader`: the `h1` is `entry.name`; `edit` puts a `.btn` link named **Edit** (`EditButton`) at the end of its line. From the tablet width up the head keeps to the text column (the section grid's first column), so the formal name ends where the description's text does.
    - `replaces`: an **In the Compendium** block of links, one ⓘ beside its heading saying why they are shown: for a coven's own entry, the compendium entries of the same formal name, and **See All** past three; for a compendium entry, the entry itself (see the `replaces` row in the props table).
+   - The badges: **Local** for a coven's own entry, **Toxic** (`ToxicMark`), and **No Longer in the Compendium** when `detail.retired` (M12.24): a compendium entry the curators retired, read because this coven's cupboard still names it. That last one is an `<output>`, so a `status` found by its role, present from the start and never announced. The page gives a retired entry no `replaces` and no `edit`, since the compendium no longer holds it.
    - `movedAway`: a quiet warning `Notice`, a `status`, holding a link named after the moved entry.
 2. **The jump menu**: `PageNav`, a `navigation` named **On this page**, with **Details** (`#details`) at the top level, then the forms grouped under a **Forms** label: a nested `list` named **Forms**, one entry per form, labelled with the form capitalised (`#form-oil`). The grouping is `PageNav`'s `group` ([`page-nav.md`](page-nav.md)), so the ingredient reads apart from its forms. Drawn only when there is a form: with none there is nowhere to jump.
 3. **Details**: `<section id="details">`, a `region` named **Details** by its visible `h2`, then two plain `<div>`s: the text (`__text`) and the side column (`__side`). The side column is not an `<aside>`: a `complementary` landmark per section would be eight on a page like the rose's, noise to a screen reader, and each block in it is already headed and labelled. In order:
@@ -68,7 +69,7 @@ Inside a form, the lists are named by the form's name and then the heading — "
 - **Every link to another page carries a `LinkHint`** (the substitutes, the In the Compendium links, the moved-away link), so a click shows it took while the server answers. The jump menu and the Edit button do not: the first stays on the page, the second opens a modal with its own skeleton. There is no `loading.tsx` and no Suspense boundary on purpose: one would turn the public route's 404 and 308 into 200s and break rendering without script (Next's `loading` file docs, "Status codes"). See [`link-hint.md`](link-hint.md).
 - **Safety is drawn by `SafetyNote` and `ToxicMark` only** (M8.13a). The ingredient's note sits in Details; each form's sits in its own section, given that form's notes as `safetyNotes`, since the section's heading already names the form.
 - **The notes slot.** The References section is the article's last child, and v2's notes section is appended after it, so adding it moves nothing above.
-- **Meaning never by colour alone.** Local and Toxic carry their words; a category chip carries its name, its colour repeating its group.
+- **Meaning never by colour alone.** Local, Toxic and No Longer in the Compendium carry their words; a category chip carries its name, its colour repeating its group.
 
 ## Edit
 
@@ -81,7 +82,7 @@ A curator's Edit opens the compendium's edit modal over the entry's own page, no
 
 ## Styling
 
-`index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), the shell's breakpoints and offsets, `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` badge palette is new here, in `_variables.scss` (`styling.md`, "Badge palettes").
+`index.scss` uses spacing (`space()`, the `stack` and `list-reset` mixins), the shell's breakpoints and offsets, `$measure` and `$text-muted` only, and the `.badges`, `.badge--*`, `.chip`, `.binomial` and `.btn` classes. The section's look is MB.120's design review ([`styling.md`](../styling.md), "Designing a section"). The `local` and `retired` badge palettes are new here (`retired` takes `low-stock`'s muted inks until the design review), in `_variables.scss` (`styling.md`, "Badge palettes").
 
 Running text stops at `$measure`: the description is a `<p>`, which `typography-base` caps, and a `dd` or list item takes `max-width: $measure` itself. A description keeps the line breaks typed into its textarea (`white-space: pre-line`).
 
@@ -102,6 +103,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - `NoFormalName`, `UnknownWithName`, `UnknownWithoutName`: the formal-name line's three sentences.
 - `NothingRecorded`: every empty state, and a form that adds nothing.
 - `CovenEntry`: a coven's own entry, badged Local.
+- `RetiredInCoven`: a retired compendium entry a coven still uses, marked No Longer in the Compendium.
 - `FromTheCompendium`, `Annotated`: a compendium entry held in the coven's cupboard (M12.16), unchanged and with the coven's label, description and cleared planets.
 - `CompendiumEntryForCurator`: Edit, and the link to the public page.
 - `MovedAway`: the notice for the entry that left this address.
@@ -115,6 +117,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - the `h1` is the entry's name;
 - the formal name is a labelled, non-empty value for all eight cases (the seven kinds, `unknown` with and without a name), in italics for the three binomial kinds only, and an unconfirmed name has more than the name beside it;
 - Local is there for a coven's entry and not for a compendium one;
+- a retired entry carries a `status` in its head, and a live one none;
 - a compendium entry held in the cupboard shows the merged values (the label as the `h1` with the compendium's name beneath, a null override falling back, an empty list shown as cleared) and the statuses From the Compendium, plus Annotated when any override is set; one not held shows neither;
 - a toxic form marks the entry Toxic though the ingredient is not;
 - Folk Names, Categories and Substitutes are lists of that name in Details, with one item each;
@@ -132,6 +135,17 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 ## Cupboard entries (M12.16)
 
 `detail.cupboardEntry` is the coven's row for a compendium entry it holds (null on the public page). The component tells three kinds apart and never reads `isGlobal`: a coven's own entry (`entry.workspaceId !== null`) is badged Local; a compendium entry with a cupboard entry (`cupboardEntry != null`) is not, and shows a **From the Compendium** status, plus **Annotated** when `isAnnotated(cupboardEntry)` (any of the seven overrides is set, an empty list counting as set); a compendium entry without one is drawn as before. The merge is `applyCupboardEntry(entry, cupboardEntry)`, in `src/modules/ingredients/validation/cupboard-merge.ts` (pure, with no `server-only`, so a component may import it by its path): the page heading, description, caution and the four correspondence rows read the merged row, and when the label differs a line beneath the heading names the compendium's own name. Forms, folk names, substitutes, categories, references and the toxic flag are the compendium's. Edit and the "In the Compendium" block still read the unmerged row, so a curator edits the compendium's name and the block links by it. The marks are `output` elements (role status) in the existing `low-stock` tint, a neutral one: where the row lives is not a warning.
+
+## Cupboard buttons (M12.17)
+
+The optional `cupboard` prop (`{ workspaceId, covenSlug, canAdd, canAnnotate, canRemove, canMakeOurs }`) is passed by the coven route for a compendium entry, and for a retired one the coven still holds, never by the public page, and is ignored for a coven's own entry. The route sets each flag from the member's role with `rolePermits` (`ingredient:create`, `update`, `delete`, and `MAKE_IT_OURS_PERMISSION` for Make It Ours, the set its service checks); the service is still the guard. For a retired entry only `canMakeOurs` can be true, since the other cupboard services no longer find its row. `cupboard-actions.tsx` draws, in the header's action slot beside Edit:
+
+- **Add to Cupboard** while the coven does not hold the entry (`cupboardEntry == null`): `addCupboardEntry` with no overrides.
+- **Annotate This Entry** once it does: opens [`CupboardEntryForm`](cupboard-entry-form.md) in a modal.
+- **Make It Ours** (M12.23) once it does: asks in place (Make It Ours, Cancel), then `convertCompendiumEntryToLocal`, with the confirm's buttons disabled and the busy label shown while it runs. On success it goes to the new own entry's page, `/coven/<covenSlug>/ingredients/<id>`, since this one is no longer the coven's; a refusal shows the service's sentence in the notice.
+- **Remove from Cupboard** once it does, a `.btn--destructive`: asks in place (Remove, Cancel), then `removeCupboardEntry`. A jar still held in the cupboard refuses; the service's sentence shows in a notice beside the buttons.
+
+Every other write calls `router.refresh()`, so the marks and the buttons follow the cupboard. One confirm is open at a time. A viewer sees none of them. Stories: `AddToCupboard`, `AnnotateOrRemove`, `ViewerSeesNoCupboardButtons`, `RetiredOffersMakeItOurs`. Tests: `tests/components/IngredientEntry/cupboard-actions.test.tsx`.
 
 ## The two routes
 
