@@ -1,26 +1,20 @@
-# StockBadge and ThresholdReadout
+# StockBadge
 
 `src/components/StockBadge/` — how the project flags a jar that is running low or
-empty (M9.8, story 23). Two components share the directory:
-
-- **`StockBadge`** shows Low Stock or Out of Stock for one jar, or nothing.
-- **`ThresholdReadout`** states the jar's low-stock level on the jar line.
-
-The ingredient card (M8.14) and the entry page (M8.19) leave a slot on each jar
-line for these. A consumer renders them for every jar and checks nothing itself.
+empty (M9.8, story 23). `StockBadge` shows Low Stock or Out of Stock for one jar,
+or nothing. The ingredient card (M8.14) and the entry page (M8.19) leave a slot on
+each jar line for it. A consumer renders it for every jar and checks nothing itself.
 Editing the threshold is M9.9's, in its dialog.
 
 ## Props
 
 `StockBadgeProps` (`types.ts`):
 
-| Prop        | What it is                                                                 |
-| ----------- | -------------------------------------------------------------------------- |
-| `quantity`  | The jar's quantity on hand. `null` is held but not weighed                 |
-| `threshold` | The jar's low-stock threshold. `null` or 0 turns the Low Stock warning off |
-
-`ThresholdReadoutProps`: `threshold` (as above) and `unit`, the jar's unit as its
-row spells it.
+| Prop        | What it is                                                              |
+| ----------- | ----------------------------------------------------------------------- |
+| `quantity`  | The jar's quantity on hand. `null` is held but not weighed              |
+| `threshold` | The jar's low-stock threshold. `null` or 0 means no Low Stock badge     |
+| `unit`      | The jar's unit as its row spells it, shown after the numbers (optional) |
 
 ## The table
 
@@ -46,13 +40,21 @@ jar states that both are tested against, so a change to one copy alone fails.
   and nothing on the other.
 - **Nothing to flag, nothing rendered.** `StockBadge` returns `null` for the "No
   badge" rows.
-- **A threshold of 0 disables the warning.** It never means "always low". A jar at
-  0 still reads Out of Stock. `ThresholdReadout` shows a threshold of 0 as
-  "Low Stock warning off" and a null threshold as nothing.
+- **Low reads "Low · 6 g".** The word, a middle dot, then the jar's quantity and
+  unit as a plain number. Its accessible name is "Low Stock, 6 g": the word "Stock"
+  is visually hidden, and the space before it sits outside the hidden span.
+- **The threshold lives in the Low badge's tip.** "Low at 10 g or less". The badge
+  is a button; the tip opens on hover, tap and focus, closes on Escape, and stays
+  open while the pointer is over it (WCAG 1.4.13). It reuses `useTip`
+  (`src/components/InfoTip/use-tip.ts`) and the InfoTip markup: the tip text stays
+  in the page, `role="tooltip"`, listed in the button's `aria-describedby`, so it is
+  the description and not part of the name.
+- **A threshold of 0 or none shows no Low badge.** It never means "always low". A
+  jar at 0 still reads Out of Stock.
+- **Out of Stock is the word alone.** No quantity, no tip, not focusable.
 - **The meaning never rests on colour.** Each state carries its words and its own
   small drawing (a double down chevron for Low, a slashed ring for Out), hidden from
   assistive technology because the words are there.
-- **Text, not a control.** Nothing here takes focus.
 
 ## Styling
 
@@ -67,14 +69,14 @@ trimmed by the extra border so the two badges stand the same height.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/StockBadge/index.stories.tsx), under
-`Surfaces / Stock Badge`: `Low`, `Out`, `Readout`,
-`ReadoutOff`, and `PhoneDark` and `PhoneLight` showing a jar line of each state at 375px.
+`Surfaces / Stock Badge`: `Low`, `Out`, and `PhoneDark` and `PhoneLight` showing a jar line of each state at 375px.
 
 ## Testing
 
 `tests/components/StockBadge/index.test.tsx` walks the shared jar states through
 `stockState`, checks which of the two badges shows (and that the other does not),
 that a zero threshold still reads Out of Stock at 0, that the two states differ in
-their drawing, and the readout's three cases. The `lowStockOnly` filter is proved
+their drawing, and the Low badge's name, its description and the tip opening on focus,
+hover and click and closing on Escape. The `lowStockOnly` filter is proved
 on the same jar states, one entry each, in `tests/modules/ingredients/services/workspace-ingredient-list.test.ts`
 and its count in `tests/modules/ingredients/services/ingredient-facets.test.ts`.

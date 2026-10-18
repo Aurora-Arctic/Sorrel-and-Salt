@@ -1,32 +1,33 @@
 import type { Story } from '@ladle/react';
-import { StockBadge, ThresholdReadout } from '.';
+import { StockBadge } from '.';
 
 // Render-only; which state shows when is asserted in tests/components/StockBadge.
+// The Low badge's tip opens on hover, tap or focus: point at it to see it.
 export default {
   title: 'Surfaces / Stock Badge',
 };
 
-export const Low: Story = () => <StockBadge quantity={6} threshold={10} />;
+export const Low: Story = () => (
+  <div style={{ paddingBlockStart: '3rem' }}>
+    <StockBadge quantity={6} threshold={10} unit="g" />
+  </div>
+);
 
-export const Out: Story = () => <StockBadge quantity={0} threshold={10} />;
+export const Out: Story = () => <StockBadge quantity={0} threshold={10} unit="g" />;
 
-export const Readout: Story = () => <ThresholdReadout threshold={10} unit="g" />;
-
-export const ReadoutOff: Story = () => <ThresholdReadout threshold={0} unit="g" />;
-
-// A jar line as a card sets it: the badge, then the threshold.
+// A jar line as a card sets it: a badge per jar.
 const JarLines = () => (
   <div
-    style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '0.75rem' }}
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      gap: '0.75rem',
+      paddingBlockStart: '3rem',
+    }}
   >
-    <span style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-      <StockBadge quantity={6} threshold={10} />
-      <ThresholdReadout threshold={10} unit="g" />
-    </span>
-    <span style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-      <StockBadge quantity={0} threshold={10} />
-      <ThresholdReadout threshold={10} unit="g" />
-    </span>
+    <StockBadge quantity={6} threshold={10} unit="g" />
+    <StockBadge quantity={0} threshold={10} unit="g" />
   </div>
 );
 

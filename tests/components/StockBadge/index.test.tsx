@@ -1,6 +1,6 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
-import { StockBadge, ThresholdReadout, stockState } from '@/components/StockBadge';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+import { StockBadge, stockState } from '@/components/StockBadge';
 import { JAR_STATES } from '../../support/jar-states';
 
 // M9.8, story 23 (claude-docs/components/stock-badge.md): the shared jar
@@ -10,7 +10,6 @@ import { JAR_STATES } from '../../support/jar-states';
 // around them.
 
 const out = () => screen.queryByText('Out of Stock');
-const low = () => screen.queryByText('Low Stock');
 
 describe('stockState: the shared table of jar states', () => {
   it.each(JAR_STATES)('$label', ({ quantity, threshold, expected }) => {
@@ -25,57 +24,63 @@ describe('stockState: the shared table of jar states', () => {
 });
 
 describe('StockBadge', () => {
-  it('shows Out of Stock, and not Low Stock, for a jar at zero', () => {
-    render(<StockBadge quantity={0} threshold={10} />);
+  it('shows Out of Stock, word only, for a jar at zero: not focusable, no tip', () => {
+    const { container } = render(<StockBadge quantity={0} threshold={10} unit="g" />);
     expect(out()).toBeInTheDocument();
-    expect(low()).toBeNull();
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(container.querySelector('[role=tooltip]')).toBeNull();
+    expect(container).not.toHaveTextContent(/\bg\b/);
   });
 
-  it('shows Low Stock, and not Out of Stock, at or under the threshold', () => {
-    render(<StockBadge quantity={10} threshold={10} />);
-    expect(low()).toBeInTheDocument();
+  it('shows Low Stock with the quantity, as a button described by the level', () => {
+    render(<StockBadge quantity={6} threshold={10} unit="g" />);
+    const badge = screen.getByRole('button', { name: /^Low Stock/ });
+    expect(badge).toHaveAccessibleName(/6 g/);
+    expect(badge).toHaveAccessibleDescription(/10 g/);
     expect(out()).toBeNull();
   });
 
   it('shows nothing above the threshold, for a zero threshold or for an unweighed jar', () => {
-    const { container, rerender } = render(<StockBadge quantity={11} threshold={10} />);
+    const { container, rerender } = render(<StockBadge quantity={11} threshold={10} unit="g" />);
     expect(container).toBeEmptyDOMElement();
-    rerender(<StockBadge quantity={5} threshold={0} />);
+    rerender(<StockBadge quantity={5} threshold={0} unit="g" />);
     expect(container).toBeEmptyDOMElement();
-    rerender(<StockBadge quantity={null} threshold={10} />);
+    rerender(<StockBadge quantity={null} threshold={10} unit="g" />);
     expect(container).toBeEmptyDOMElement();
   });
 
-  it('still reads Out of Stock at zero when the threshold is zero', () => {
-    render(<StockBadge quantity={0} threshold={0} />);
-    expect(out()).toBeInTheDocument();
+  it('opens the tip on focus, on hover and on a tap, and closes it on Escape', () => {
+    vi.useFakeTimers();
+    try {
+      render(<StockBadge quantity={6} threshold={10} unit="g" />);
+      const badge = screen.getByRole('button', { name: /^Low Stock/ });
+      const tip = () => screen.queryByRole('tooltip');
+      expect(tip()).toBeNull();
+
+      act(() => badge.focus());
+      expect(tip()).toBeInTheDocument();
+      fireEvent.keyDown(document, { key: 'Escape' });
+      expect(tip()).toBeNull();
+      act(() => badge.blur());
+
+      fireEvent.mouseEnter(badge);
+      expect(tip()).toBeInTheDocument();
+      fireEvent.mouseLeave(badge);
+      act(() => vi.advanceTimersByTime(200));
+      expect(tip()).toBeNull();
+
+      fireEvent.click(badge);
+      expect(tip()).toBeInTheDocument();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('tells the two states apart without colour: a word and a drawing each', () => {
-    const { container, rerender } = render(<StockBadge quantity={0} threshold={10} />);
+    const { container, rerender } = render(<StockBadge quantity={0} threshold={10} unit="g" />);
     const outDrawing = container.querySelector('svg')!.innerHTML;
     expect(container.querySelector('svg')).toHaveAttribute('aria-hidden', 'true');
-    rerender(<StockBadge quantity={6} threshold={10} />);
+    rerender(<StockBadge quantity={6} threshold={10} unit="g" />);
     expect(container.querySelector('svg')!.innerHTML).not.toBe(outDrawing);
-  });
-});
-
-describe('ThresholdReadout', () => {
-  it('states the level the member set, in the jar unit', () => {
-    render(<ThresholdReadout threshold={15} unit="ml" />);
-    expect(screen.getByText(/15/)).toHaveTextContent('ml');
-  });
-
-  it('reads a threshold of zero as the warning being off, not as a level', () => {
-    const { container, rerender } = render(<ThresholdReadout threshold={0} unit="g" />);
-    expect(container).not.toBeEmptyDOMElement();
-    expect(container).not.toHaveTextContent(/\bg\b/);
-    rerender(<ThresholdReadout threshold={10} unit="g" />);
-    expect(container).toHaveTextContent('10');
-  });
-
-  it('draws nothing when no threshold is set', () => {
-    const { container } = render(<ThresholdReadout threshold={null} unit="g" />);
-    expect(container).toBeEmptyDOMElement();
   });
 });

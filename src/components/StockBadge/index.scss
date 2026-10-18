@@ -22,7 +22,24 @@
   flex: none;
 }
 
-.stock-threshold {
-  font-size: type-size('caption');
-  color: badge-token('low-stock', 'fg');
+// The Low badge and its tip together: the tip's anchor, and the box the pointer
+// may cross onto the tip within.
+.stock-badge-tip {
+  @include tip-anchor;
+}
+
+// The badge as a button: only the tip opens from it, so it keeps the badge look
+// and shows the help cursor and a focus ring.
+.stock-badge--low {
+  font-family: inherit;
+  cursor: help;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// InfoTip's bubble, above the badge from its left edge.
+.stock-badge__tip {
+  @include tip-above;
 }
