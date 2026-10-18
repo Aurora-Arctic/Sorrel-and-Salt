@@ -527,6 +527,9 @@ $close-target: 2.5rem;
 // table in a narrow column stacks too. claude-docs/styling.md, "Tables at
 // phone width".
 $table-stack-width: 40rem;
+// The narrowest an ingredient card is drawn: the grid of cards (IngredientCardList)
+// and the skeleton standing in for it both fill a row with as many as fit.
+$ingredient-card-min: 20rem;
 
 // The heavy rule, for a line that must read by its weight as well as its
 // colour: the impersonation banner's foot, the owner's call in MB.53, where it

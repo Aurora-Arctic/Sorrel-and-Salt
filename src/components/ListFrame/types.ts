@@ -23,6 +23,8 @@ export interface ListFrameProps {
 }
 
 export interface ListBodyProps {
+  /** What the skeleton stands in for: `table` (the default), or `cards`, a grid of ingredient cards. */
+  shape?: 'table' | 'cards';
   /** The table or its empty state, then the pager: what the skeleton stands in for. */
   children: ReactNode;
 }
