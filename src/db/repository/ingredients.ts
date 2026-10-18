@@ -310,20 +310,20 @@ export function findWorkspaceIngredientPage(
  * Which readable rows a coven's ingredient list holds (M9.4): its own, and
  * the compendium entries it holds, minus any a local entry hides. The page
  * and the facets (M12.3) both read it, so they hold the same rows. The
- * coven-only `source` and `inStockOnly` settings (M9.7) are read here, not
+ * coven-only `source` and `inStock` settings (M9.7) are read here, not
  * in `compendiumList`, which the compendium's page and count share and
  * where a coven's jars mean nothing.
  */
 export function workspaceListScope(
   membership: Membership,
-  filter: Pick<IngredientFilter, 'source' | 'inStockOnly'> = {},
+  filter: Pick<IngredientFilter, 'source' | 'inStock'> = {},
 ): SQL | undefined {
   return and(
     notHiddenByLocal(membership),
     or(scopedTo(membership, ingredients), heldBy(membership)),
     filter.source === 'local' ? scopedTo(membership, ingredients) : undefined,
     filter.source === 'compendium' ? inCompendium(ingredients) : undefined,
-    filter.inStockOnly ? heldBy(membership, true) : undefined,
+    filter.inStock ? heldBy(membership, true) : undefined,
   );
 }
 

@@ -108,7 +108,7 @@ The table gives four functions, and every caller uses only these:
   dropped.
 
 **Adding a filter is one new entry** and touches none of those callers;
-`tests/lib/search-param-table.test.ts` proves it by adding one, and the coven's table is the first real one: `COVEN_PARAMS` ([`IngredientSearch/coven-params.ts`](../../src/components/IngredientSearch/coven-params.ts)) spreads the compendium's entries and adds `source` and `inStockOnly` (M9.7), with `tests/components/IngredientSearch/coven-params.test.ts` showing the compendium's table unchanged. The pieces
+`tests/lib/search-param-table.test.ts` proves it by adding one, and the coven's table is the first real one: `COVEN_PARAMS` ([`IngredientSearch/coven-params.ts`](../../src/components/IngredientSearch/coven-params.ts)) spreads the compendium's entries and adds `source` and `inStock` (M9.7), with `tests/components/IngredientSearch/coven-params.test.ts` showing the compendium's table unchanged. The pieces
 that do change are the filter's own control, the service and the GraphQL
 argument it reaches.
 

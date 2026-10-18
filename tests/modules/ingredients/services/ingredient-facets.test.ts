@@ -170,7 +170,7 @@ describe('workspaceIngredientFacets', () => {
     expect(checked).toBeGreaterThan(20);
   });
 
-  it('counts each value as the list reads it under source and inStockOnly', async () => {
+  it('counts each value as the list reads it under source and inStock', async () => {
     await seedCovens();
     const spent = await add('Spentwort', { variants: [makeVariant({ form: 'Spentform' })] });
     await stock(spent, WORKSPACE_W_ID, 'Spentform', '0');
@@ -182,9 +182,9 @@ describe('workspaceIngredientFacets', () => {
     const bases = [
       { source: 'local' as const },
       { source: 'compendium' as const },
-      { inStockOnly: true },
-      { source: 'compendium' as const, inStockOnly: true },
-      { source: 'local' as const, inStockOnly: true },
+      { inStock: true },
+      { source: 'compendium' as const, inStock: true },
+      { source: 'local' as const, inStock: true },
     ];
 
     let checked = 0;
@@ -212,7 +212,7 @@ describe('workspaceIngredientFacets', () => {
     const all = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
     const local = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, { source: 'local' });
     const inStock = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
-      inStockOnly: true,
+      inStock: true,
     });
     expect(countedOf(local, 'forms')).not.toEqual(countedOf(all, 'forms'));
     expect(countedOf(inStock, 'forms')).toEqual(['Fullform', 'Heldform', 'Root']);
@@ -255,7 +255,7 @@ describe('workspaceIngredientFacets', () => {
         { value: 'local', count: 4 },
         { value: 'compendium', count: 2 },
       ]);
-      expect(facets.inStockOnly).toBe(3);
+      expect(facets.inStock).toBe(3);
 
       await sql`truncate ingredients cascade`;
       const empty = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {});
@@ -263,16 +263,16 @@ describe('workspaceIngredientFacets', () => {
         { value: 'local', count: 0 },
         { value: 'compendium', count: 0 },
       ]);
-      expect(empty.inStockOnly).toBe(0);
+      expect(empty.inStock).toBe(0);
     });
 
-    it('counts each source under inStockOnly and the rest, whatever source is chosen', async () => {
+    it('counts each source under inStock and the rest, whatever source is chosen', async () => {
       await seedSources();
 
       for (const source of [undefined, 'local', 'compendium'] as const) {
         const stocked = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
           source,
-          inStockOnly: true,
+          inStock: true,
         });
         // A jar at 0 is out of stock; one with no quantity is held.
         expect(stocked.source).toEqual([
@@ -282,19 +282,19 @@ describe('workspaceIngredientFacets', () => {
       }
     });
 
-    it('counts In Stock under the chosen source, whatever inStockOnly is', async () => {
+    it('counts In Stock under the chosen source, whatever inStock is', async () => {
       await seedSources();
       const expected = { undefined: 3, local: 2, compendium: 1 };
 
       for (const source of [undefined, 'local', 'compendium'] as const) {
-        for (const inStockOnly of [undefined, true]) {
+        for (const inStock of [undefined, true]) {
           const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
             source,
-            inStockOnly,
+            inStock,
           });
-          expect({ source, inStockOnly, count: facets.inStockOnly }).toEqual({
+          expect({ source, inStock, count: facets.inStock }).toEqual({
             source,
-            inStockOnly,
+            inStock,
             count: expected[`${source}`],
           });
         }
@@ -307,7 +307,7 @@ describe('workspaceIngredientFacets', () => {
 
       let checked = 0;
       for (const base of bases) {
-        for (const inStock of [{}, { inStockOnly: true }]) {
+        for (const inStock of [{}, { inStock: true }]) {
           const facets = await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, {
             ...base,
             ...inStock,
@@ -327,10 +327,10 @@ describe('workspaceIngredientFacets', () => {
             ...base,
             ...source,
           });
-          expect({ base, source, count: facets.inStockOnly }).toEqual({
+          expect({ base, source, count: facets.inStock }).toEqual({
             base,
             source,
-            count: await listedCount(asUser(B), { ...base, ...source, inStockOnly: true }),
+            count: await listedCount(asUser(B), { ...base, ...source, inStock: true }),
           });
           checked += 1;
         }
@@ -355,7 +355,7 @@ describe('workspaceIngredientFacets', () => {
         { value: 'local', count: 1 },
         { value: 'compendium', count: 0 },
       ]);
-      expect(elsewhere.inStockOnly).toBe(1);
+      expect(elsewhere.inStock).toBe(1);
     });
   });
 

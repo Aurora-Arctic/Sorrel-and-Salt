@@ -120,7 +120,7 @@ export const WorkspaceIngredientFilter = CompendiumFilter.pick({
     .nullish()
     .transform((source) => source ?? undefined),
   // M9.7: entries with a jar not at 0. False is no filter.
-  inStockOnly: z
+  inStock: z
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),

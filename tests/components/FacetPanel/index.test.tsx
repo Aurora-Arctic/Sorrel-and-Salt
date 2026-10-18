@@ -322,7 +322,7 @@ describe('FacetPanel', () => {
   });
 
   describe("the coven's Source and In Stock controls (M9.7)", () => {
-    const COVEN = { source: '', inStockOnly: false } as const;
+    const COVEN = { source: '', inStock: false } as const;
     const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
       stubViewport(true);
       render(<FacetPanel {...props(filter, more)} />);
@@ -342,7 +342,7 @@ describe('FacetPanel', () => {
           { value: 'local', label: 'Local', count: 4 },
           { value: 'compendium', label: 'Compendium', count: 0 },
         ],
-        inStockOnly: 3,
+        inStock: 3,
       },
     };
 
@@ -373,7 +373,7 @@ describe('FacetPanel', () => {
       fireEvent.click(screen.getByRole('radio', { name: /^Local/ }));
       expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
       fireEvent.click(screen.getByRole('switch', { name: /^In Stock/ }));
-      expect(onChange).toHaveBeenLastCalledWith({ inStockOnly: true });
+      expect(onChange).toHaveBeenLastCalledWith({ inStock: true });
     });
 
     it('reports a chosen source and the switch as a patch of only that part', () => {
@@ -386,11 +386,11 @@ describe('FacetPanel', () => {
       expect(onChange).toHaveBeenLastCalledWith({ source: 'compendium' });
 
       fireEvent.click(screen.getByRole('switch', { name: 'In Stock' }));
-      expect(onChange).toHaveBeenLastCalledWith({ inStockOnly: true });
+      expect(onChange).toHaveBeenLastCalledWith({ inStock: true });
     });
 
     it('shows what is held', () => {
-      open({ source: 'local', inStockOnly: true });
+      open({ source: 'local', inStock: true });
       expect(screen.getByRole('radio', { name: /^Local/ })).toBeChecked();
       expect(screen.getByRole('switch', { name: 'In Stock' })).toBeChecked();
     });
@@ -399,20 +399,20 @@ describe('FacetPanel', () => {
       stubViewport(true);
       const { rerender } = render(<FacetPanel {...props(COVEN)} />);
       expect(filtersButton()).toHaveAccessibleName('Filters');
-      rerender(<FacetPanel {...props({ source: 'compendium', inStockOnly: true })} />);
+      rerender(<FacetPanel {...props({ source: 'compendium', inStock: true })} />);
       expect(filtersButton()).toHaveAccessibleName('Filters (2)');
     });
 
-    it('submits through the GET form around it, as source=local and inStockOnly=1', () => {
+    it('submits through the GET form around it, as source=local and inStock=1', () => {
       stubViewport(true);
       const { container } = render(
         <form method="get">
-          <FacetPanel {...props({ source: 'local', inStockOnly: true })} />
+          <FacetPanel {...props({ source: 'local', inStock: true })} />
         </form>,
       );
       const data = new FormData(container.querySelector('form') as HTMLFormElement);
       expect(data.getAll('source')).toEqual(['local']);
-      expect(data.getAll('inStockOnly')).toEqual(['1']);
+      expect(data.getAll('inStock')).toEqual(['1']);
     });
   });
 

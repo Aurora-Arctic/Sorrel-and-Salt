@@ -15,9 +15,9 @@ export const COVEN_PARAMS = defineSearchParams({
   // reads as both.
   source: choiceParam('source', INGREDIENT_SOURCES, 'source'),
   // Only entries with a jar not at 0. Written `1`, the value its switch submits natively.
-  inStockOnly: searchParam({
-    name: 'inStockOnly',
-    variable: 'inStockOnly',
+  inStock: searchParam({
+    name: 'inStock',
+    variable: 'inStock',
     read: (raw) => single(raw) === '1',
     write: (on: boolean) => (on ? '1' : undefined),
     toVariable: (on) => on || undefined,

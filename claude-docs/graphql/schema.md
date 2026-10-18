@@ -739,7 +739,7 @@ as a `t.pagedConnection` of `Ingredient`. It takes the coven as `workspaceId`,
 and `query`, `categoryIds`, `forms`, `deityIds`, `zodiacSigns`, `celestialBodies` and `toxic` (M11.22), which filter as `compendium`'s do, still under the coven's membership check.
 Two more arguments are the coven's alone (M9.7), left out of `compendium`: `source`, an
 `IngredientSource` of `local` (the coven's own entries) or `compendium` (the
-compendium entries it holds), where leaving it out lists both; and `inStockOnly`, which keeps an
+compendium entries it holds), where leaving it out lists both; and `inStock`, which keeps an
 entry only when one of the coven's jars of it is not at 0, a jar with no quantity counting as
 held, so a local entry with no jar leaves. A coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
 may read it. An entry's jars are its `stock` field, below, so a page reads its
@@ -760,7 +760,7 @@ exactly `compendium`'s filter arguments (`query`, `categoryIds`,
 `nomenclature`), with no page. `workspaceIngredientFacets` sits in
 `graphql/workspace-ingredient-list.ts` and takes `workspaceIngredients`'
 (`workspaceId`, `query`, the category arguments, the six facet
-arguments, and the coven-only `source` and `inStockOnly`), so a count agrees with the list under the same filter. Each resolver hands its arguments to its service,
+arguments, and the coven-only `source` and `inStock`), so a count agrees with the list under the same filter. Each resolver hands its arguments to its service,
 `compendiumFacets` or `workspaceIngredientFacets` in
 `services/ingredient-facets.ts`, and checks nothing itself. How each value
 is counted is [`db/compendium-read.md`](../db/compendium-read.md),
@@ -784,7 +784,7 @@ switch for (M9.7), so the two answers are two types and the fields are non-null 
 the coven's alone. `source` is a `SourceFacetCount` list (`value` is `local` or
 `compendium`, `count` an `Int!`) that always holds both values, zeros kept, each
 counted with the Source setting blanked and everything else, In Stock
-included, kept. `inStockOnly` is one `Int!`: how many entries the list would
+included, kept. `inStock` is one `Int!`: how many entries the list would
 hold with the switch on, under the rest of the filter and the chosen Source. A
 count equals the list's `totalCount` under the same filter.
 
@@ -795,7 +795,7 @@ type CompendiumFacets {
 }
 
 type IngredientFacets {
-  # a coven's also has source: [SourceFacetCount!]! and inStockOnly: Int!
+  # a coven's also has source: [SourceFacetCount!]! and inStock: Int!
   forms: [NameFacetCount!]!
   deities: [IdFacetCount!]!
   categories: [IdFacetCount!]!

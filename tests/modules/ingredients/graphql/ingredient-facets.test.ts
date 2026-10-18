@@ -103,21 +103,21 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
 
 function workspaceFacets(session: Session, variables: Record<string, unknown> = {}) {
   return runOperation<{
-    workspaceIngredientFacets: Facets & { source: FacetCount[]; inStockOnly: number };
+    workspaceIngredientFacets: Facets & { source: FacetCount[]; inStock: number };
   }>(
     session,
     `query (
       $workspaceId: ID!
       $forms: [String!]
       $source: IngredientSource
-      $inStockOnly: Boolean
+      $inStock: Boolean
     ) {
       workspaceIngredientFacets(
         workspaceId: $workspaceId
         forms: $forms
         source: $source
-        inStockOnly: $inStockOnly
-      ) ${SELECTION.slice(0, -1)} source { value count } inStockOnly }
+        inStock: $inStock
+      ) ${SELECTION.slice(0, -1)} source { value count } inStock }
     }`,
     { workspaceId: WORKSPACE_W_ID, ...variables },
   );
@@ -208,7 +208,7 @@ describe('workspaceIngredientFacets', () => {
     ]);
   });
 
-  it('takes a source and inStockOnly, counting the coven under each', async () => {
+  it('takes a source and inStock, counting the coven under each', async () => {
     const forms = async (variables: Record<string, unknown>) => {
       const result = await workspaceFacets(asUser(B), variables);
       expect(result.errors).toBeUndefined();
@@ -221,8 +221,8 @@ describe('workspaceIngredientFacets', () => {
     expect(await forms({ source: 'local' })).toEqual(covenform);
     expect(await forms({ source: 'compendium' })).toEqual([]);
     // Covenwort has no jar, so it is out of stock.
-    expect(await forms({ inStockOnly: true })).toEqual([]);
-    expect(await forms({ inStockOnly: false })).toEqual(covenform);
+    expect(await forms({ inStock: true })).toEqual([]);
+    expect(await forms({ inStock: false })).toEqual(covenform);
   });
 
   it("answers the coven's Source and In Stock counts, zeros kept", async () => {
@@ -234,7 +234,7 @@ describe('workspaceIngredientFacets', () => {
       { value: 'local', count: 1 },
       { value: 'compendium', count: 0 },
     ]);
-    expect(result.data?.workspaceIngredientFacets.inStockOnly).toBe(0);
+    expect(result.data?.workspaceIngredientFacets.inStock).toBe(0);
 
     const [{ id: ingredientId }] = await sql`select id from ingredients where name = 'Covenwort'`;
     const [{ id: variantId }] = await sql`
@@ -256,9 +256,9 @@ describe('workspaceIngredientFacets', () => {
       { value: 'local', count: 1 },
       { value: 'compendium', count: 0 },
     ]);
-    expect(chosen.data?.workspaceIngredientFacets.inStockOnly).toBe(0);
+    expect(chosen.data?.workspaceIngredientFacets.inStock).toBe(0);
     const local = await workspaceFacets(asUser(B), { source: 'local' });
-    expect(local.data?.workspaceIngredientFacets.inStockOnly).toBe(1);
+    expect(local.data?.workspaceIngredientFacets.inStock).toBe(1);
   });
 
   it('is FORBIDDEN to a caller naming by id a coven they are not in', async () => {

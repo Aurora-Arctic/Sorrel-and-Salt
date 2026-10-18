@@ -63,7 +63,7 @@ const COVEN_FACETS: CompendiumFacetCounts = {
     { value: 'local', label: 'Local', count: 18 },
     { value: 'compendium', label: 'Compendium', count: 0 },
   ],
-  inStockOnly: 9,
+  inStock: 9,
 };
 
 const NONE: FacetPanelFilter = {
@@ -198,25 +198,25 @@ export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferenc
 // The coven's list also has a Source group and the In Stock switch, on a row of their own
 // above the foot. Their values count on the Filters button, so the two chosen here make 2.
 export const Coven: Story = () => (
-  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStockOnly: true }} />
+  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStock: true }} />
 );
 
 // The coven's controls with nothing chosen: Source rests on All and the switch is off.
 export const CovenEmpty: Story = () => (
-  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStockOnly: false }} />
+  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />
 );
 
 // Temporary comparison for the owner (M9.7): the Coven panel at each control height. Removed
 // once the height is chosen.
 export const Compact2Point5Rem: Story = () => (
-  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStockOnly: true }} />
+  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStock: true }} />
 );
 
 export const Compact2Point75Rem: Story = () => (
   <Panel
     className="facet-panel--control-275"
     facets={COVEN_FACETS}
-    start={{ ...NONE, source: 'local', inStockOnly: true }}
+    start={{ ...NONE, source: 'local', inStock: true }}
   />
 );
 

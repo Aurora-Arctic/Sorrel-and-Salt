@@ -62,7 +62,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $elements: [IngredientElement!]
       $toxic: ToxicFilter
       $source: IngredientSource
-      $inStockOnly: Boolean
+      $inStock: Boolean
       $first: Int
       $after: String
     ) {
@@ -78,7 +78,7 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         elements: $elements
         toxic: $toxic
         source: $source
-        inStockOnly: $inStockOnly
+        inStock: $inStock
         first: $first
         after: $after
       ) {
@@ -220,7 +220,7 @@ describe('workspaceIngredients', () => {
     expect(await names({ toxic: 'any' })).toEqual(['Covenwort', 'Heldwort']);
   });
 
-  it('takes a source and inStockOnly, and badges the local entry in every state', async () => {
+  it('takes a source and inStock, and badges the local entry in every state', async () => {
     const badges = async (variables: Record<string, unknown>) => {
       const result = await run(asUser(B), variables);
       expect(result.errors).toBeUndefined();
@@ -235,11 +235,11 @@ describe('workspaceIngredients', () => {
     expect(await badges({ source: 'local' })).toEqual([['Covenwort', false]]);
     expect(await badges({ source: 'compendium' })).toEqual([['Heldwort', true]]);
     // The local entry has no jar; the held one's has no quantity, so is held.
-    expect(await badges({ inStockOnly: true })).toEqual([['Heldwort', true]]);
-    expect(await badges({ inStockOnly: false })).toHaveLength(2);
+    expect(await badges({ inStock: true })).toEqual([['Heldwort', true]]);
+    expect(await badges({ inStock: false })).toHaveLength(2);
 
     await sql`update inventory_items set quantity_on_hand = 0 where id = ${jar}`;
-    expect(await names({ inStockOnly: true })).toEqual([]);
+    expect(await names({ inStock: true })).toEqual([]);
 
     const refused = await run(asUser(B), { source: 'both' });
     expect(refused.errors).toHaveLength(1);

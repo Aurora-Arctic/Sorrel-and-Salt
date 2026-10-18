@@ -17,7 +17,7 @@ describe('the coven parameter table', () => {
 
   it('leaves the compendium table without the coven filters', () => {
     expect(Object.keys(COMPENDIUM_PARAMS.entries)).not.toContain('source');
-    expect(Object.keys(COMPENDIUM_PARAMS.entries)).not.toContain('inStockOnly');
+    expect(Object.keys(COMPENDIUM_PARAMS.entries)).not.toContain('inStock');
   });
 });
 
@@ -51,8 +51,8 @@ describe('the source parameter', () => {
   });
 });
 
-describe('the inStockOnly parameter', () => {
-  const inStock = COVEN_PARAMS.entries.inStockOnly;
+describe('the inStock parameter', () => {
+  const inStock = COVEN_PARAMS.entries.inStock;
 
   it('reads 1 as on, and everything else as off', () => {
     expect(inStock.read('1')).toBe(true);
@@ -62,16 +62,16 @@ describe('the inStockOnly parameter', () => {
   });
 
   it('writes 1 when on and nothing when off, and reads it back', () => {
-    expect(COVEN_PARAMS.href(PATH, { inStockOnly: true })).toBe(`${PATH}?inStockOnly=1`);
-    expect(COVEN_PARAMS.href(PATH, { inStockOnly: false })).toBe(PATH);
-    expect(COVEN_PARAMS.read({ inStockOnly: '1' }).inStockOnly).toBe(true);
+    expect(COVEN_PARAMS.href(PATH, { inStock: true })).toBe(`${PATH}?inStock=1`);
+    expect(COVEN_PARAMS.href(PATH, { inStock: false })).toBe(PATH);
+    expect(COVEN_PARAMS.read({ inStock: '1' }).inStock).toBe(true);
   });
 
-  it('becomes the inStockOnly variable only when on', () => {
-    expect(COVEN_PARAMS.variables({ ...BLANK, inStockOnly: true })).toMatchObject({
-      inStockOnly: true,
+  it('becomes the inStock variable only when on', () => {
+    expect(COVEN_PARAMS.variables({ ...BLANK, inStock: true })).toMatchObject({
+      inStock: true,
     });
-    expect(COVEN_PARAMS.variables({ ...BLANK, inStockOnly: false }).inStockOnly).toBeUndefined();
+    expect(COVEN_PARAMS.variables({ ...BLANK, inStock: false }).inStock).toBeUndefined();
   });
 
   it('sits beside the other filters in one address', () => {
@@ -79,9 +79,9 @@ describe('the inStockOnly parameter', () => {
       COVEN_PARAMS.href(PATH, {
         query: 'wort',
         source: 'local',
-        inStockOnly: true,
+        inStock: true,
         toxic: 'toxic',
       }),
-    ).toBe(`${PATH}?query=wort&toxic=toxic&source=local&inStockOnly=1`);
+    ).toBe(`${PATH}?query=wort&toxic=toxic&source=local&inStock=1`);
   });
 });

@@ -715,7 +715,7 @@ export interface IngredientFilter {
    * is not at 0, a jar with no quantity counting as held. The compendium's
    * own read ignores it.
    */
-  inStockOnly?: boolean;
+  inStock?: boolean;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
@@ -746,12 +746,12 @@ export interface IngredientFacets {
 /**
  * A coven's facets (M9.7): the seven kinds, and the two settings only a coven's
  * list has. `source` lists both values, zeros kept, in the enum's order;
- * `inStockOnly` is how many entries the list would hold with the switch on.
+ * `inStock` is how many entries the list would hold with the switch on.
  * Each is counted with its own setting left out and every other kept.
  */
 export interface WorkspaceIngredientFacets extends IngredientFacets {
   source: FacetCount<'local' | 'compendium'>[];
-  inStockOnly: number;
+  inStock: number;
 }
 
 /**

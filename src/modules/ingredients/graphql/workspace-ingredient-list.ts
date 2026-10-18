@@ -22,7 +22,7 @@ const stockArgs = builder.args((t) => ({
     description:
       "Keeps the coven's own entries, or the compendium entries it holds; leaving it out keeps both.",
   }),
-  inStockOnly: t.boolean({
+  inStock: t.boolean({
     required: false,
     description:
       'Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.',
@@ -74,7 +74,7 @@ function filterOf({
   elements,
   toxic,
   source,
-  inStockOnly,
+  inStock,
 }: WorkspaceIngredientFilterInput): WorkspaceIngredientFilterInput {
   return {
     query,
@@ -87,6 +87,6 @@ function filterOf({
     elements,
     toxic,
     source,
-    inStockOnly,
+    inStock,
   };
 }

@@ -160,7 +160,7 @@ export default function FacetPanel({
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
     (filter.source ? 1 : 0) +
-    (filter.inStockOnly ? 1 : 0);
+    (filter.inStock ? 1 : 0);
 
   const matchStuck = filter.categories.length < 2;
   const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
@@ -455,17 +455,15 @@ export default function FacetPanel({
                     onChange={(source) => onChange({ source })}
                   />
                 )}
-                {filter.inStockOnly !== undefined && (
+                {filter.inStock !== undefined && (
                   <SwitchField
                     label={
-                      facets.inStockOnly === undefined
-                        ? 'In Stock'
-                        : `In Stock (${facets.inStockOnly})`
+                      facets.inStock === undefined ? 'In Stock' : `In Stock (${facets.inStock})`
                     }
-                    name="inStockOnly"
+                    name="inStock"
                     value="1"
-                    checked={filter.inStockOnly}
-                    onChange={(inStockOnly) => onChange({ inStockOnly })}
+                    checked={filter.inStock}
+                    onChange={(inStock) => onChange({ inStock })}
                   />
                 )}
                 {admin && (

@@ -57,7 +57,7 @@ async function listed(
   return page.edges.map(({ node }) => node.name);
 }
 
-describe('listWorkspaceIngredients under source and inStockOnly (M9.7)', () => {
+describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
   /** A local entry, a held compendium entry and a local one with no jar. */
   async function seedSources(): Promise<void> {
     await stock(await add('Covenwort', { workspaceId: WORKSPACE_W_ID }));
@@ -103,7 +103,7 @@ describe('listWorkspaceIngredients under source and inStockOnly (M9.7)', () => {
 
     // Why they could have been listed: without the filter every one is.
     expect(await listed(asUser(B))).toHaveLength(7);
-    expect(await listed(asUser(B), WORKSPACE_W_ID, { inStockOnly: true })).toEqual([
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { inStock: true })).toEqual([
       'Covenwort',
       'Mixedwort',
       'Unweighedwort',
@@ -119,10 +119,10 @@ describe('listWorkspaceIngredients under source and inStockOnly (M9.7)', () => {
     await stock(await add('Livejarwort'), WORKSPACE_W_ID, 'Testform', false, '5');
 
     expect(await listed(asUser(B))).toEqual(['Deletedjarwort', 'Livejarwort']);
-    expect(await listed(asUser(B), WORKSPACE_W_ID, { inStockOnly: true })).toEqual(['Livejarwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { inStock: true })).toEqual(['Livejarwort']);
   });
 
-  it('combines source with inStockOnly', async () => {
+  it('combines source with inStock', async () => {
     await stock(
       await add('Covenwort', { workspaceId: WORKSPACE_W_ID }),
       WORKSPACE_W_ID,
@@ -140,11 +140,11 @@ describe('listWorkspaceIngredients under source and inStockOnly (M9.7)', () => {
     );
 
     expect(
-      await listed(asUser(B), WORKSPACE_W_ID, { source: 'compendium', inStockOnly: true }),
+      await listed(asUser(B), WORKSPACE_W_ID, { source: 'compendium', inStock: true }),
     ).toEqual(['Heldwort']);
-    expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'local', inStockOnly: true })).toEqual(
-      ['Covenwort'],
-    );
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'local', inStock: true })).toEqual([
+      'Covenwort',
+    ]);
   });
 });
 

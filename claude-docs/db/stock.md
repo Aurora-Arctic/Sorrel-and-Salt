@@ -272,7 +272,7 @@ tier, so a filter never reaches another coven's rows.
 Two settings belong to the coven's list alone (M9.7), so they sit in
 `workspaceListScope` and not in `compendiumList`, which the compendium's page and
 count share. `source: 'local'` keeps the coven's own entries; `source: 'compendium'`
-keeps the compendium entries it holds; leaving it out keeps both. `inStockOnly` keeps
+keeps the compendium entries it holds; leaving it out keeps both. `inStock` keeps
 an entry only when one of the coven's live jars of it, of a live form, is not at 0.
 A jar with no quantity is held but unweighed, so it counts as in stock (the test is
 "null or not 0", since a bare `<> 0` is unknown for null and would drop it). An entry

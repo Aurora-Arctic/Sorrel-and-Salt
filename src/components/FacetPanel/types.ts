@@ -25,7 +25,7 @@ export interface FacetPanelFilter {
    */
   source?: '' | IngredientSource;
   /** The coven's In Stock switch, shown only when this is set. */
-  inStockOnly?: boolean;
+  inStock?: boolean;
 }
 
 export interface FacetPanelProps {

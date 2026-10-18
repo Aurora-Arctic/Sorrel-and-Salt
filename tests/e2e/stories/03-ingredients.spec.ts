@@ -619,7 +619,7 @@ test.fixme(
     // Local and Compendium, and in-stock-only as a switch, as the admin's Without
     // References is (claude-docs/components/compendium-list.md).
     const source = filterOf(page).getByRole('group', { name: 'Source' });
-    const inStockOnly = filterOf(page).getByRole('switch', { name: /^In Stock/ });
+    const inStock = filterOf(page).getByRole('switch', { name: /^In Stock/ });
 
     await test.step('local only: the two local entries, badged', async () => {
       await source.getByRole('radio', { name: /^Local/ }).check();
@@ -645,7 +645,7 @@ test.fixme(
     await test.step('all again, then in stock only: the empty jars go, and Testwort stays badged', async () => {
       await source.getByRole('radio', { name: 'All' }).check();
       await expect(cards).toHaveCount(4);
-      await inStockOnly.click();
+      await inStock.click();
       await expect(cards).toHaveCount(2);
       await expect(rowOf(list, 'Rosemary')).toBeVisible();
       await expect(localBadge(rowOf(list, 'Testwort'))).toBeVisible();
@@ -658,7 +658,7 @@ test.fixme(
       await expect(localBadge(rowOf(list, 'Testwort'))).toBeVisible();
       await page.reload();
       await expect(cards).toHaveCount(1);
-      await expect(inStockOnly).toBeChecked();
+      await expect(inStock).toBeChecked();
       await expect(source.getByRole('radio', { name: /^Local/ })).toBeChecked();
 
       await page.goBack();
