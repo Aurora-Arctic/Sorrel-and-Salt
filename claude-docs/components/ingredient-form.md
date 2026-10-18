@@ -1338,7 +1338,12 @@ site admin's, through the compendium mutations
   the owner's call; [`modal.md`](modal.md), "Asking over the form"). Delete sends
   `deleteCompendiumIngredient`, busy until the answer, and calls
   `onDeleted`; a refusal drops the question and shows the server's message
-  as an alert above the fields.
+  as an alert above the fields. On a compendium entry the question also shows
+  how many covens use the entry (M12.25): `DeleteUsers` reads
+  `compendiumEntryUsers` when the question opens and renders a status line
+  only once the number arrives, so a slow or refused read leaves the question
+  as it was. It is a count and never names a coven, and Delete stays
+  unconditional.
 - **MB.82's question.** A save taking an address another entry still
   redirects from is refused at `['endRedirect']`
   ([`db/ingredient-slugs.md`](../db/ingredient-slugs.md), "Ingredient
