@@ -87,6 +87,7 @@ const open = async (
 
 beforeEach(() => {
   vi.clearAllMocks();
+  getCupboardEntry.mockResolvedValue(null);
   requireCovenMembership.mockResolvedValue({
     workspace: WORKSPACE,
     membership: { workspaceId: WORKSPACE.id, userId: SESSION.userId, role: 'member' },
