@@ -1,5 +1,7 @@
 'use client';
 
+import { formLabel } from '@/modules/ingredients/validation/form-label';
+
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { type FieldPath, useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { plural } from '@/lib/text';
@@ -130,7 +132,7 @@ function merged(
  */
 function said(field: CopiedField, added: number, skipped = 0, form = ''): string {
   if (skipped > 0) {
-    const none = form.trim() === '' ? 'no form like this one' : `no ${form.trim()} form`;
+    const none = form.trim() === '' ? 'no form like this one' : `no ${formLabel(form)} form`;
     const why = `Skipped ${skipped} with ${none}`;
     return added === 0 ? why : `${said(field, added)}. ${why}`;
   }
@@ -240,6 +242,7 @@ export function SkippedNotice({
 }: SkippedNoticeProps): ReactElement {
   const { getValues, setValue } = useFormContext<IngredientFormValues>();
   const textId = useId();
+  const named = skipped ? formLabel(skipped.form) : '';
   const path = `${at}.substitutes` as const;
   const close = () => {
     onDone();
@@ -261,8 +264,8 @@ export function SkippedNotice({
       {skipped && (
         <div className="notice notice--warn">
           <p id={textId}>
-            {skipped.form ? `No ${skipped.form} form to link` : 'No form like this one to link'}, so
-            not copied: {skipped.entries.map(entryText).join(', ')}.
+            {named ? `No ${named} form to link` : 'No form like this one to link'}, so not copied:{' '}
+            {skipped.entries.map(entryText).join(', ')}.
           </p>
           <div className="ingredient-form__copy-skipped-actions">
             <button

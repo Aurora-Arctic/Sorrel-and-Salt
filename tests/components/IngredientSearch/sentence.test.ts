@@ -104,8 +104,8 @@ describe('buildSearchSentence', () => {
     );
   });
 
-  it('names a value with no label by its raw value', () => {
-    expect(text({ forms: ['tincture'] }, 1)).toBe('1 ingredient, in the form tincture');
+  it('shows a form with no label in title case', () => {
+    expect(text({ forms: ['tincture'] }, 1)).toBe('1 ingredient, in the form Tincture');
   });
 
   it('puts every kind in the fixed order', () => {
