@@ -24,6 +24,8 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  // The same gap as inside an item, so a dot has equal space either side.
+  gap: space(1);
 }
 
 .ingredient-card__item,
@@ -35,5 +37,10 @@
 
 // The chip row is a list, so it drops typography-base's ◆ marker and indent.
 .ingredient-card .specimen__chips {
+  @include list-reset;
+}
+
+// M9.6’s jar lines are a list; a list directly in the slot drops the ◆ marker and indent.
+.ingredient-card .specimen__stock > ul {
   @include list-reset;
 }

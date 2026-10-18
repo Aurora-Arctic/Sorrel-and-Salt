@@ -40,7 +40,7 @@ const BASE = {
 };
 
 const Jars = () => (
-  <ul style={{ margin: 0, paddingInlineStart: 0, listStyle: 'none' }}>
+  <ul>
     <li>
       Dried leaf, 6 g <StockBadge quantity={6} threshold={10} unit="g" />
     </li>
