@@ -1,5 +1,5 @@
 import { builder } from '../../../graphql/builder';
-import type { CupboardEntryRow } from '../types';
+import type { CupboardEntryNode, CupboardEntryRow } from '../types';
 import { IngredientElementEnum, IngredientRef } from './ingredient';
 
 // A coven's cupboard entry over the wire (M12.14): the coven's own say over
@@ -7,9 +7,6 @@ import { IngredientElementEnum, IngredientRef } from './ingredient';
 // a client can show both. Who may read it is the cupboard-entry service's
 // check, through the loader (claude-docs/graphql/schema.md, "Cupboard
 // entries: CupboardEntry and Ingredient.cupboardEntry").
-
-/** The row, with the compendium entry's own name beside the coven's label. */
-type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
 
 /** The seven overrides; any one set makes the entry annotated. */
 const OVERRIDES = [

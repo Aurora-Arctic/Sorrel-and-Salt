@@ -80,6 +80,12 @@ export interface CupboardEntryKey {
   workspaceId: string;
 }
 
+/**
+ * A cupboard entry as `CupboardEntry` answers it on the wire (M12.14): the
+ * row, with the compendium entry's own name beside the coven's label.
+ */
+export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
+
 /** One `ingredient_variants` row as the table holds it. */
 export type VariantRecord = typeof ingredientVariants.$inferSelect;
 
