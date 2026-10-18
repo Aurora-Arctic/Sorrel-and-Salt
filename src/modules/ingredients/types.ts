@@ -13,7 +13,7 @@ import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
 import type { ReferenceInput } from './validation/reference';
-import type { JarMerge, StockInput } from './validation/stock';
+import type { StockInput } from './validation/stock';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from './validation/types';
 import type { ValidationIssue } from '../../lib/types';
 import type { CategoryGroupRow, CategoryRow, DeityRow } from '@/modules/vocabulary';
@@ -92,7 +92,7 @@ export type VariantRecord = typeof ingredientVariants.$inferSelect;
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
 export type IngredientFields = Omit<
   LocalIngredientInput,
-  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants' | 'jarMerges'
+  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants'
 >;
 
 /** Where in the input an issue lands — `['variants', 1]` — as `ValidationIssue` paths it. */
@@ -325,24 +325,6 @@ export type CompendiumEntryPage =
       movedAway: Pick<IngredientRow, 'name' | 'slug'> | null;
     }
   | { kind: 'moved'; slug: string };
-
-/**
- * The amount a save chooses for a jar it merges into another (M12.8): the
- * moving jar's id and the figure the merged jar takes.
- */
-export type JarMergeChoice = z.output<typeof JarMerge>;
-
-/**
- * Two jars of one form that cannot be added because their units differ
- * (M12.8): the jar the coven's local ingredient holds, or is about to, and the
- * jar of a compendium form that is moving onto it. The whole row of each, so
- * a caller can show both amounts without a second read.
- */
-export interface JarConflict {
-  reason: 'units';
-  localJar: StockRow;
-  movingJar: StockRow;
-}
 
 /** A compendium entry a coven's own entry hides (M12.12), as its page links it. */
 export interface ReplacedCompendiumEntry {
