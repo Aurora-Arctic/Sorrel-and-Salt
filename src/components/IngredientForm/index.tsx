@@ -441,7 +441,7 @@ const IngredientForm = ({
       return chosen.length > 0 ? chosen : undefined;
     };
     const input = {
-      label: typed !== match.name ? typed : undefined,
+      label: typed.toLowerCase() !== match.name.trim().toLowerCase() ? typed : undefined,
       description: values.description.trim() || undefined,
       safetyNotes: values.safetyNotes.trim() || undefined,
       elements: values.elements.length > 0 ? values.elements : undefined,

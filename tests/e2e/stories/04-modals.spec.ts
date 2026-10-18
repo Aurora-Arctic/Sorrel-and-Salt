@@ -303,7 +303,11 @@ test(
         for (const name of ['Ostrelvine', 'Kaelmoss']) {
           await insertIngredient(
             sql,
-            makeIngredient({ name, nomenclature: 'none' }),
+            makeIngredient(
+              name === 'Kaelmoss'
+                ? { name, canonicalName: 'Kaelmossia testalis', nomenclature: 'botanical' }
+                : { name, nomenclature: 'none' },
+            ),
             coven.users.A,
           );
         }
@@ -326,7 +330,7 @@ test(
       expect(await savedRows(coven.id, 'Ostrelvine')).toHaveLength(1);
 
       dialog = await openAddIngredient(page);
-      await nameField(dialog).fill('kaelmoss');
+      await nameField(dialog).fill('Kaelmossia testalis');
       await saveIngredient(dialog).click();
       await dialog.getByRole('button', { name: /^Use It/ }).click();
 
@@ -338,12 +342,12 @@ test(
             (select count(*)::int from inventory_items where workspace_id = ${coven.id}
               and ingredient_id = e.ingredient_id) as jars,
             (select count(*)::int from ingredients where workspace_id = ${coven.id}
-              and lower(name) = 'kaelmoss' and deleted_at is null) as copies
+              and lower(name) = 'kaelmossia testalis' and deleted_at is null) as copies
           from workspace_compendium_entries e
           join ingredients i on i.id = e.ingredient_id
           where e.workspace_id = ${coven.id} and i.name = 'Kaelmoss' and e.deleted_at is null`,
       );
-      expect(held).toEqual({ label: 'kaelmoss', jars: 0, copies: 0 });
+      expect(held).toEqual({ label: 'Kaelmossia testalis', jars: 0, copies: 0 });
     });
   },
 );

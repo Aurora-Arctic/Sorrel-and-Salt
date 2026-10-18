@@ -1139,7 +1139,7 @@ describe('IngredientForm', () => {
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
 
-      type('Name', "cat's claw");
+      type('Name', 'Porch Claw');
       type('Description', 'Dried from the porch.');
       save();
       fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
@@ -1150,7 +1150,7 @@ describe('IngredientForm', () => {
           workspaceId: WORKSPACE_ID,
           ingredientId: 'claw-1',
           input: expect.objectContaining({
-            label: "cat's claw",
+            label: 'Porch Claw',
             description: 'Dried from the porch.',
           }),
         },
@@ -1159,13 +1159,13 @@ describe('IngredientForm', () => {
       expect(creates).toHaveLength(0);
     });
 
-    it("sends no label when the typed name is the entry's own", async () => {
+    it("sends no label when the typed name differs from the entry's only in case", async () => {
       const adds = accept();
       const onSaved = renderForm();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
 
-      type('Name', "Cat's Claw");
+      type('Name', "  cat's claw ");
       save();
       fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
 
