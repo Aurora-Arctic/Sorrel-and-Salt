@@ -1,7 +1,18 @@
 'use client';
 
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Fragment, type MouseEvent, type ReactElement, useId, useState } from 'react';
+import {
+  type MouseEvent,
+  type ReactElement,
+  type RefObject,
+  type TransitionEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { graphql } from '../../gql';
 import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
@@ -10,11 +21,14 @@ import type { Duplicate, DuplicateWarning, IngredientFormValues, NameFieldProps 
 
 // Story 16's "did you mean": the name asks MB.11's possibleDuplicates once
 // the typing settles, on the debounce the other lookups wait on, and each
-// near match is named beneath the field by its label and formal name, linked
-// to its entry. It has to be answered: a save asks about the very name it is
-// sending, settled or not, and while a match shows the save is held, the
-// warning turns to an error on the name, and the focus goes to Create
-// Anyway, which sets the matches aside so the next save goes. An edit's
+// near match is listed beneath the field by its label and formal name, linked
+// to its entry, with M12.20's Use It or Open It at the row's right for a
+// compendium entry. The list is a list, one match a row, never a sentence
+// with buttons run into it (the owner's call at the cupboard review). It has
+// to be answered: a save asks about the very name it is sending, settled or
+// not, and while a match shows the save is held, the warning turns to an
+// error on the name, and the focus goes to Create Anyway, which sets the
+// matches aside so the next save goes. An edit's
 // warning only names the matches: renaming makes nothing new, so its save
 // is never held and it offers no Create Anyway (MB.115, the owner's call)
 // (claude-docs/components/ingredient-form.md, "The duplicate warning").
@@ -58,8 +72,11 @@ const CompendiumMatchesDocument = graphql(`
 /** Exact matches a question names: more than a handful of one name is not a choice a person makes. */
 const EXACT_ROWS = 5;
 
-/** Matches a warning names: the closest few, best first, as a sentence can hold them. */
+/** Matches a warning lists: the closest few, best first. */
 const DUPLICATE_ROWS = 3;
+
+/** The shortest name the field asks about: one letter resembles half the compendium (the owner's call). */
+const MIN_ASKED = 2;
 
 const lookup = (workspaceId: string | null, name: string) =>
   graphqlQuery(PossibleDuplicatesDocument, { workspaceId, name, first: DUPLICATE_ROWS });
@@ -94,9 +111,9 @@ export function useDuplicateWarning(
     setEdited(true);
   }
   const untouched = !edited && typed === opened.trim();
-  // The untouched name asks nothing, as a blank one does.
-  const name = useDebouncedValue(untouched ? '' : typed);
-  const { data } = useQuery({
+  // The untouched name asks nothing, as a blank or single-letter one does.
+  const name = useDebouncedValue(untouched || typed.length < MIN_ASKED ? '' : typed);
+  const { data, isFetching } = useQuery({
     ...lookup(workspaceId, name),
     // A blank name has nothing to resemble, and the server answers it empty.
     enabled: name !== '',
@@ -169,6 +186,9 @@ export function useDuplicateWarning(
 
   return {
     shown: untouched ? [] : shown,
+    // A new name's answer on its way while the last name's list still shows
+    // (keepPreviousData), so the field can say the list is about to change.
+    pending: !untouched && name !== '' && isFetching,
     blocking: !untouched && heldFor === typed && shown.length > 0,
     exact: !untouched && heldFor === typed ? exact : [],
     check,
@@ -176,15 +196,257 @@ export function useDuplicateWarning(
   };
 }
 
+/**
+ * Where a row is in the list's slide: `entering` is a new row's first frame,
+ * unseen, so that its fade is a transition; `leaving` a row the answer
+ * dropped, fading out whole until the list's bottom has slid up over it.
+ */
+type RowPhase = 'entering' | 'present' | 'leaving';
+
+interface Row {
+  match: Duplicate;
+  phase: RowPhase;
+  /** The entry this place showed before, fading out over the one it shows now. */
+  gone?: Duplicate;
+}
+
+/** An answer waiting under the shapes until they are fully in. */
+interface Held {
+  matches: readonly Duplicate[];
+  key: string;
+}
+
+/** The slide's length, the CSS's $skeleton-fade (index.scss). */
+const SLIDE_MS = 300;
+
+/** The shapes' delay and fade, the CSS's $skeleton-delay and $skeleton-fade (index.scss), with room to spare: the net for a fade in whose end never came. */
+const SKELETON_NET_MS = 200 + 300 + 250;
+
+/** The slide with room to spare: the net for a transition that never ran, as use-slide.ts keeps one. */
+const SLIDE_NET_MS = SLIDE_MS + 250;
+
+const LEAVING_CLASS = 'ingredient-form__match--leaving';
+
+const settleRows = (rows: readonly Row[]): Row[] =>
+  rows.flatMap(({ match, phase }) => (phase === 'leaving' ? [] : [{ match, phase: 'present' }]));
+
+/** The rows for a new answer, by place: a place beyond the last answer enters, one beyond this answer leaves holding what it had, a leaving one asked for again is back, and one showing another entry now keeps the old to fade out (the owner's call), unless the shapes cover the change. */
+const rowsFor = (rows: readonly Row[], matches: readonly Duplicate[], covered = false): Row[] => [
+  ...matches.map((match, place): Row => {
+    const was = rows[place];
+    if (!was) return { match, phase: 'entering' };
+    if (was.phase === 'leaving') return { match, phase: 'present' };
+    if (was.match.id === match.id) return { ...was, match };
+    return covered ? { match, phase: was.phase } : { match, phase: was.phase, gone: was.match };
+  }),
+  ...rows.slice(matches.length).map((was): Row => ({ match: was.match, phase: 'leaving' })),
+];
+
+const reducedMotion = () =>
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+
+/**
+ * Where the list's bottom will be once its leaving rows are gone: the foot
+ * of its last row that stays. The leaving rows are the trailing ones, still
+ * in the flow, so the list's own height is the one thing that moves.
+ */
+const settledHeightOf = (list: HTMLUListElement): number => {
+  const staying = Array.from(list.children).filter(
+    (child): child is HTMLElement =>
+      child instanceof HTMLElement && !child.classList.contains(LEAVING_CLASS),
+  );
+  const last = staying[staying.length - 1];
+  if (!last) return 0;
+  // From the edges as drawn, not the whole-pixel offsets, and with the row's
+  // own end margin (typography-base's `li`), which the list's resting height
+  // holds: a target short of that height slid the list up a little and let
+  // it back down at the end (the owner's finding).
+  return (
+    last.getBoundingClientRect().bottom -
+    list.getBoundingClientRect().top +
+    parseFloat(getComputedStyle(last).marginBottom)
+  );
+};
+
+/**
+ * The list's rows as slots by place, and the list's slide between answers
+ * (the owner's calls, 2026-10-18): a dropped row fades out whole while the
+ * list's bottom slides up over it, and a new row fades in as the bottom
+ * slides down to show it, so the box never jumps. The height slides from the
+ * list's last measured height to its settled one, set on the list itself,
+ * the way a height that is otherwise `auto` can be moved; the rows are
+ * settled by the slide's end, or by the net. Reduced motion settles at once.
+ */
+function useSlidingRows(
+  matches: readonly Duplicate[],
+  pending: boolean,
+  listRef: RefObject<HTMLUListElement | null>,
+): {
+  rows: Row[];
+  covered: boolean;
+  onTransitionStart: (event: TransitionEvent<HTMLUListElement>) => void;
+  onTransitionEnd: (event: TransitionEvent<HTMLUListElement>) => void;
+} {
+  const [rows, setRows] = useState<Row[]>([]);
+  // The answer the rows were last built for, by id: the array itself is new
+  // every render. Set during render, as the hook above sets its own state.
+  const [builtFor, setBuiltFor] = useState('');
+  // Where the shapes are, by their own transition events: `fading` in,
+  // `in`, or off. An answer back while they fade in waits under them, and is
+  // shown once they are in, so the change is never seen; one back with them
+  // in changes the rows under them; one back before they began shows through
+  // the rows' own cross-fade (the owner's finding, 2026-10-18: an answer
+  // landing mid-fade showed the old rows a moment, then the new outright).
+  // Under reduced motion no transition runs, so every answer shows at once.
+  const [shapes, setShapes] = useState<'off' | 'fading' | 'in'>('off');
+  const [held, setHeld] = useState<Held | null>(null);
+  const key = matches.map((match) => match.id).join(' ');
+  let holding = held;
+  if (key !== (held?.key ?? builtFor)) {
+    if (rows.length > 0 && shapes === 'fading') {
+      holding = { matches, key };
+      setHeld(holding);
+    } else {
+      setBuiltFor(key);
+      setRows(rowsFor(rows, matches, shapes === 'in'));
+      setHeld(null);
+      holding = null;
+    }
+  }
+  const covered = pending || holding !== null;
+
+  /** Shows a held answer under the shapes. */
+  const release = useCallback((answer: Held) => {
+    setBuiltFor(answer.key);
+    setRows((now) => rowsFor(now, answer.matches, true));
+    setHeld(null);
+  }, []);
+
+  // The net for a fade in whose end never came.
+  useEffect(() => {
+    if (!held) return undefined;
+    const timer = window.setTimeout(() => release(held), SKELETON_NET_MS);
+    return () => window.clearTimeout(timer);
+  }, [held, release]);
+
+  // Read off the native event: React wraps only transitionend as a
+  // TransitionEvent, so the start event's own propertyName is undefined.
+  const shapesEvent = (event: TransitionEvent<HTMLUListElement>) =>
+    event.nativeEvent.propertyName === 'opacity' &&
+    event.target instanceof HTMLElement &&
+    event.target.classList.contains('ingredient-form__shapes');
+  const entering = rows.some((row) => row.phase === 'entering');
+  const leaving = rows.some((row) => row.phase === 'leaving');
+  const moving = rows.some((row) => row.phase !== 'present' || row.gone !== undefined);
+  // The list's height at rest, measured each settled render, so a slide
+  // starts from where the rows last stood; and the answer last slid for.
+  const restHeight = useRef<number | null>(null);
+  const slidFor = useRef('');
+  // The list's height is set for a slide and let go only once the rows it
+  // slid for are settled: let go as the leaving rows are asked out, the list
+  // stood a frame at its auto height with them still in the flow, a jump at
+  // the very end (the owner's finding).
+  const sliding = useRef(false);
+
+  const letGo = (list: HTMLUListElement) => {
+    list.style.height = '';
+    list.style.overflow = '';
+    list.style.transition = '';
+  };
+
+  const settle = useCallback(() => {
+    sliding.current = false;
+    // With no row to take out, nothing moves when the height is let go now;
+    // otherwise it is let go in the layout effect, after they are gone.
+    if (listRef.current && !leaving) letGo(listRef.current);
+    setRows(settleRows);
+  }, [leaving, listRef]);
+
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) {
+      restHeight.current = null;
+      sliding.current = false;
+      return;
+    }
+    if (!moving) {
+      if (!sliding.current) letGo(list);
+      restHeight.current = list.getBoundingClientRect().height;
+      return;
+    }
+    if (slidFor.current === builtFor) return;
+    slidFor.current = builtFor;
+    const midSlide = list.style.height !== '';
+    const now = list.getBoundingClientRect().height;
+    // Mid-slide, from where it is; at rest, from where it was, since a new
+    // row is already in the flow.
+    const from = midSlide ? now : (restHeight.current ?? now);
+    const to = settledHeightOf(list);
+    // Every row leaving: the region closes round the whole notice instead
+    // (index.scss), and the rows are only settled by the net.
+    if (to === 0) return;
+    if (reducedMotion() || Math.abs(from - to) < 0.5) {
+      // Nothing to slide: the rows fade on their own, or, reduced, swap at
+      // the next frame rather than in this effect.
+      restHeight.current = to;
+      if (!reducedMotion()) return;
+      const frame = window.requestAnimationFrame(settle);
+      return () => window.cancelAnimationFrame(frame);
+    }
+    list.style.transition = 'none';
+    list.style.height = `${from}px`;
+    list.style.overflow = 'hidden';
+    // A frame at the old height first, so that the new one is a transition.
+    void list.offsetHeight;
+    list.style.transition = `height ${SLIDE_MS}ms ease-in-out`;
+    list.style.height = `${to}px`;
+    sliding.current = true;
+    restHeight.current = to;
+  });
+
+  useEffect(() => {
+    if (!entering) return undefined;
+    // A frame unseen first, so that the fade in is a transition.
+    let inner = 0;
+    const outer = window.requestAnimationFrame(() => {
+      inner = window.requestAnimationFrame(() =>
+        setRows((now) =>
+          now.map((row) => (row.phase === 'entering' ? { ...row, phase: 'present' } : row)),
+        ),
+      );
+    });
+    return () => {
+      window.cancelAnimationFrame(outer);
+      window.cancelAnimationFrame(inner);
+    };
+  }, [entering, rows]);
+
+  useEffect(() => {
+    if (!moving) return undefined;
+    const net = window.setTimeout(settle, SLIDE_NET_MS);
+    return () => window.clearTimeout(net);
+  }, [moving, rows, settle]);
+
+  return {
+    rows,
+    covered,
+    onTransitionStart: (event) => {
+      if (shapesEvent(event)) setShapes(covered ? 'fading' : 'off');
+    },
+    onTransitionEnd: (event) => {
+      if (event.target === event.currentTarget && event.nativeEvent.propertyName === 'height')
+        settle();
+      if (shapesEvent(event)) {
+        setShapes(covered ? 'in' : 'off');
+        if (held && covered) release(held);
+      }
+    },
+  };
+}
+
 /** "Cat's Claw (Uncaria tomentosa)": the label alone names five plants. */
 const titleOf = ({ name, canonicalName }: Duplicate) =>
   canonicalName ? `${name} (${canonicalName})` : name;
-
-/** What goes before the match at `index` of `count`: "A, B or C". */
-const joinerAt = (index: number, count: number) => {
-  if (index === 0) return '';
-  return index === count - 1 ? ' or ' : ', ';
-};
 
 /** The name field, with the duplicate warning beneath it. */
 export function NameField({
@@ -194,37 +456,49 @@ export function NameField({
   holds = true,
   ref,
 }: NameFieldProps): ReactElement {
-  const { shown, blocking, exact } = warning;
+  const { shown, blocking, exact, pending } = warning;
   // The save is held on a compendium entry of the very name typed: a question
-  // rather than a warning, answered by using the entry or adding our own.
+  // rather than a warning, answered by using the entry or creating anyway.
   const asking = blocking && exact.length > 0;
   const warningId = useId();
+  const list = useRef<HTMLUListElement>(null);
+  const { rows, covered, onTransitionStart, onTransitionEnd } = useSlidingRows(
+    asking ? exact : shown,
+    pending,
+    list,
+  );
+  // The notice stays while any row is drawn, the leaving ones too, and the
+  // region closes round them as they fade: open while a row stays.
+  const drawn = rows.length > 0;
+  const open = rows.some((row) => row.phase !== 'leaving');
 
   /**
-   * What a compendium match offers: Use It, which puts it in the cupboard, or
-   * Open It, its coven page, once the cupboard holds it. Nothing for a coven's
-   * own entry, or where no cupboard is to be put into (the admin's).
+   * What a compendium match offers, in either list: Use It, which puts it in
+   * the cupboard, or Open It, its coven page, once the cupboard holds it.
+   * Nothing for a coven's own entry, or where no cupboard is to be put into
+   * (the admin's form).
    */
-  const choiceFor = (match: Duplicate, beside = false): ReactElement | null => {
+  const choiceFor = (match: Duplicate): ReactElement | null => {
     if (!onUse || !match.isGlobal) return null;
     const name = <span className="visually-hidden"> {titleOf(match)}</span>;
-    const mark = beside ? ' ' : '';
     return match.inCupboard ? (
-      <>
-        {mark}
-        <a className="btn btn--quiet btn--small" href={hrefOf(match)}>
-          Open It{name}
-        </a>
-      </>
+      <a className="btn btn--quiet btn--small" href={hrefOf(match)}>
+        Open It{name}
+      </a>
     ) : (
-      <>
-        {mark}
-        <button type="button" className="btn btn--quiet btn--small" onClick={() => onUse(match)}>
-          Use It{name}
-        </button>
-      </>
+      <button type="button" className="btn btn--quiet btn--small" onClick={() => onUse(match)}>
+        Use It{name}
+      </button>
     );
   };
+
+  /** A match's title, linked to its entry in a new tab. */
+  const linkTo = (match: Duplicate): ReactElement => (
+    <a href={hrefOf(match)} target="_blank" rel="noopener noreferrer">
+      {titleOf(match)}
+      <span className="visually-hidden"> (opens in a new tab)</span>
+    </a>
+  );
 
   const dismiss = (event: MouseEvent<HTMLButtonElement>) => {
     // The pressed button is about to go, so the name takes the focus first:
@@ -244,68 +518,120 @@ export function NameField({
       placeholder="Add a name"
       describedBy={shown.length > 0 ? warningId : undefined}
       invalid={blocking}
+      // The one sign of a lookup out: the region below draws nothing until an
+      // answer has something to show (the owner's call, 2026-10-18).
+      busy={pending}
       after={
         // Always in the page, as a live region must be to be heard: the
         // warning arrives after the typing, and nothing else says so.
-        <output className="ingredient-form__duplicates" aria-label="Possible duplicates">
-          {(shown.length > 0 || asking) && (
-            <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
-              {/* Plain anchors rather than <Link>, since the caller hands
-                  back a plain string, not a typed route. Each in a
-                  new tab, so the form and its unsaved changes stay where they
-                  are (the owner's call at MB.115's review). */}
-              {asking ? (
-                <>
-                  <p id={warningId}>The compendium has {exact.map(titleOf).join(' or ')}.</p>
-                  <ul className="ingredient-form__uses">
-                    {exact.map((match) => (
-                      <li key={match.id}>{choiceFor(match)}</li>
-                    ))}
+        <output
+          className={`ingredient-form__duplicates${open ? ' ingredient-form__duplicates--open' : ''}`}
+          aria-label="Possible duplicates"
+          aria-busy={pending || undefined}
+        >
+          {/* The region opens by height round its notice, which fades in
+              (the owner's call, 2026-10-18: the first warning landed too
+              abruptly). */}
+          <div className="ingredient-form__duplicates-inner">
+            {drawn && (
+              <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
+                {/* The id sits on the whole block, sentence and list, so the
+                  button described by it is read with the names. Plain anchors
+                  rather than <Link>, since the caller hands back a plain
+                  string, not a typed route; each in a new tab, so the form and
+                  its unsaved changes stay where they are (the owner's call at
+                  MB.115's review). While another name's answer is on its way
+                  each row cross-fades to the skeleton's shapes, as a tab's
+                  list wears them, after a short delay, so an answer back fast
+                  never flashes them and nothing moves (the owner's calls,
+                  2026-10-18, over a spinner). Both stay mounted for the fade. */}
+                <div id={warningId} className="ingredient-form__matches">
+                  <p>
+                    {asking
+                      ? `The compendium already has ${exact.length === 1 ? 'an entry' : 'entries'} of this name.`
+                      : 'Did you mean one of these?'}
+                  </p>
+                  <ul
+                    ref={list}
+                    onTransitionStart={onTransitionStart}
+                    onTransitionEnd={onTransitionEnd}
+                  >
+                    {/* Keyed by place, not entry: a new answer then changes
+                      each row under its shapes and every row fades back
+                      together, where a new entry's row would mount drawn
+                      beside a surviving one fading in. A row leaving is
+                      out of the accessibility tree at once. */}
+                    {rows.map(({ match, phase, gone }, place) => {
+                      const choice = choiceFor(match);
+                      const classes = ['ingredient-form__match'];
+                      if (phase !== 'present') classes.push(`ingredient-form__match--${phase}`);
+                      if (covered) classes.push('ingredient-form__match--pending');
+                      return (
+                        <li
+                          key={place}
+                          className={classes.join(' ')}
+                          aria-hidden={phase === 'leaving' || undefined}
+                        >
+                          <div className="ingredient-form__body">
+                            {/* Keyed by entry, so another entry's row fades in
+                              afresh, over the last one's fading out as text
+                              alone: nothing in it to press. */}
+                            <span
+                              key={match.id}
+                              className={`ingredient-form__row${gone ? ' ingredient-form__row--arriving' : ''}`}
+                            >
+                              {linkTo(match)}
+                              {choice}
+                            </span>
+                            {gone && (
+                              <span
+                                // Keyed too: a third entry within the fade
+                                // then starts a fresh fade out of the second,
+                                // rather than taking over one already done.
+                                key={gone.id}
+                                className="ingredient-form__row ingredient-form__row--gone"
+                                aria-hidden="true"
+                              >
+                                <span className="ingredient-form__was">{titleOf(gone)}</span>
+                                {choiceFor(gone) && (
+                                  <span className="btn btn--quiet btn--small">
+                                    {gone.inCupboard ? 'Open It' : 'Use It'}
+                                  </span>
+                                )}
+                              </span>
+                            )}
+                            <span className="ingredient-form__shapes" aria-hidden="true">
+                              <span className="ingredient-form__shape" />
+                              {choice && (
+                                <span className="ingredient-form__shape ingredient-form__shape--button" />
+                              )}
+                            </span>
+                          </div>
+                        </li>
+                      );
+                    })}
                   </ul>
+                </div>
+                {/* One Create Anyway under either list (the owner's call,
+                  2026-10-18: the question's own button was Add Our Own), in
+                  the accent outline at the medium size. Described by the
+                  warning: a save that stops here moves the focus to it, and
+                  the focus should say why. None on an edit's warning, whose
+                  save is never held. */}
+                {(asking || holds) && (
                   <button
                     ref={ref}
                     type="button"
-                    className="btn btn--quiet btn--small"
+                    className="btn btn--medium"
                     aria-describedby={warningId}
                     onClick={dismiss}
                   >
-                    Add Our Own
+                    Create Anyway
                   </button>
-                </>
-              ) : (
-                <>
-                  <p id={warningId}>
-                    Did you mean{' '}
-                    {shown.map((match, index) => (
-                      <Fragment key={match.id}>
-                        {joinerAt(index, shown.length)}
-                        <a href={hrefOf(match)} target="_blank" rel="noopener noreferrer">
-                          {titleOf(match)}
-                          <span className="visually-hidden"> (opens in a new tab)</span>
-                        </a>
-                        {choiceFor(match, true)}
-                      </Fragment>
-                    ))}
-                    ?
-                  </p>
-                  {/* Described by the warning: a save that stops here moves the
-                  focus to it, and the focus should say why. None on an
-                  edit, whose save the warning never holds. */}
-                  {holds && (
-                    <button
-                      ref={ref}
-                      type="button"
-                      className="btn btn--quiet btn--small"
-                      aria-describedby={warningId}
-                      onClick={dismiss}
-                    >
-                      Create Anyway
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+                )}
+              </div>
+            )}
+          </div>
         </output>
       }
     />

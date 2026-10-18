@@ -1031,6 +1031,12 @@ describe('IngredientForm', () => {
       vi.useRealTimers();
     });
     const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
+    // The region once its last rows have faded: they leave on the slide's
+    // net, and the notice with them.
+    const emptied = async () => {
+      await act(() => vi.advanceTimersByTimeAsync(600));
+      expect(warning()).toHaveTextContent('');
+    };
     const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
 
     it('holds a save on a near match to this coven’s name as sent, the focus on Create Anyway, which lets the next save go', async () => {
@@ -1051,7 +1057,7 @@ describe('IngredientForm', () => {
       expect(saves).toHaveLength(0);
 
       fireEvent.click(createAnyway() as HTMLElement);
-      expect(warning()).toBeEmptyDOMElement();
+      await emptied();
       expect(textbox('Name')).toHaveFocus();
       save();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
@@ -1084,7 +1090,7 @@ describe('IngredientForm', () => {
       release();
       await waitFor(() => expect(onSaved).toHaveBeenCalled());
       expect(saves[0].input.name).toBe('Fixture Nothingalike');
-      expect(warning()).toBeEmptyDOMElement();
+      await emptied();
     });
 
     it('lets an error elsewhere take the save first', async () => {
