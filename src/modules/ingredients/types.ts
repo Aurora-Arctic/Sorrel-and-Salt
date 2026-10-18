@@ -312,3 +312,17 @@ export interface JarConflict {
   localJar: StockRow;
   movingJar: StockRow;
 }
+
+/** A compendium entry a coven's own entry hides (M12.12), as its page links it. */
+export interface ReplacedCompendiumEntry {
+  id: string;
+  slug: string;
+  name: string;
+  canonicalName: string | null;
+}
+
+/** The first few compendium entries a coven's own entry hides, by name, and how many it hides in all (M12.12). */
+export interface ReplacedCompendiumEntries {
+  entries: ReplacedCompendiumEntry[];
+  total: number;
+}

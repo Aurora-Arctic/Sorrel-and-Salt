@@ -55,6 +55,23 @@ const HEARTH_ASH: SeedWorkspaceIngredient = {
   elements: ['fire'],
 };
 
+/**
+ * M12.12's multi-entry case: bought as "cat's claw" with no formal name, so
+ * it replaces every compendium entry of that name (five in `standard`). The
+ * page shows three links and "See All 5". Once hiding goes (M12.13–M12.28,
+ * claude-docs/design-decisions/m12.13-cupboard-names-the-compendium-plan.md)
+ * this is the "Similar in the Compendium" case: an own stub a member can
+ * declare to be one of the five, and until then the one that shows twice.
+ */
+const CATS_CLAW: SeedWorkspaceIngredient = {
+  name: "Cat's Claw",
+  nomenclature: 'unknown',
+  variants: [{ form: 'bark' }],
+  description:
+    'Bought as "cat\'s claw" from a market stall, and the seller could not say which plant it was.',
+  elements: ['earth'],
+};
+
 const HOUSE_CHAMOMILE: SeedWorkspaceIngredient = {
   name: 'House Chamomile',
   canonicalName: 'Matricaria chamomilla',
@@ -92,6 +109,7 @@ export const WORKSPACE_W_INGREDIENTS: SeedWorkspaceIngredient[] = [
   HEARTH_ASH,
   HOUSE_CHAMOMILE,
   GINGER,
+  CATS_CLAW,
 ];
 
 /**

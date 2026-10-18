@@ -4,7 +4,10 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { truncateAllTables } from '../../support/seeded-database';
 import { seed } from '@/db/seed/index';
 import { WORKSPACE_W_INGREDIENTS } from '@/db/seed/demo';
-import { COMPENDIUM_INGREDIENTS, identityOf } from '@/db/seed/standard';
+import { COMPENDIUM_INGREDIENTS, WORKSPACE_W_ID, identityOf } from '@/db/seed/standard';
+import { findCompendiumEntriesHiddenBy } from '@/db/repository';
+import { assertMembership } from '@/modules/coven';
+import { A, asUser } from '../../support/as-user';
 import { COMPENDIUM } from '@/db/seed/compendium/index';
 
 // What running the `demo` scenario, `standard` inside it, leaves between an
@@ -80,6 +83,29 @@ describe('seed(db, { scenario: "demo" })', () => {
       select v.form_id from ingredient_variants v join ingredients i on i.id = v.ingredient_id
       where i.workspace_id is not null and i.name = 'Ginger'`;
     expect(ginger.form_id).toBeNull();
+  });
+
+  it("lets W's Garden Rosemary hide the compendium's Rosemary by identity, under another label", async () => {
+    const [local] = await sql`
+      select id from ingredients
+      where workspace_id = ${WORKSPACE_W_ID} and name = 'Garden Rosemary' and deleted_at is null`;
+    const inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['read'] });
+
+    const hidden = await findCompendiumEntriesHiddenBy(inW, local.id, 3);
+
+    expect(hidden.entries.map(({ slug }) => slug)).toEqual(['rosemary-salvia-rosmarinus']);
+  });
+
+  it("lets W's Cat's Claw, with no formal name, replace all five compendium Cat's Claws", async () => {
+    const [local] = await sql`
+      select id from ingredients
+      where workspace_id = ${WORKSPACE_W_ID} and name = 'Cat''s Claw' and deleted_at is null`;
+    const inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['read'] });
+
+    const hidden = await findCompendiumEntriesHiddenBy(inW, local.id, 3);
+
+    expect(hidden.entries).toHaveLength(3);
+    expect(hidden.total).toBe(5);
   });
 
   it('holds the curated compendium beside the fixtures, and a second run writes no further ingredient', async () => {

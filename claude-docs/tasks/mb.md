@@ -599,7 +599,7 @@ What it edits. DESIGN.md §5: the `ingredients` entry; the identity section, ret
 
 The tasks it re-scopes, each gaining one dated "Amended by MB.215" line, the owner syncing their issues:
 
-- M8.3: the local-beats-compendium anti-join matches on `identity_key`, and `ingredientSuggestions` ranks a matching form first, then its form group
+- M8.3: the local-beats-compendium anti-join matches on `identity_key`, and `ingredientSuggestions` ranks a matching form first, then its form group (The hiding rule described here is retired by M12.28; see `claude-docs/design-decisions/m12.13-cupboard-names-the-compendium-plan.md`.)
 - M8.3a: the key a promotion leaves unchanged is `identity_key`, not `canonicalKey`
 - M8.10: the text match reaches a variant's form and description (MB.218), still one row per ingredient
 - M8.11 and M8.12: a category match is the union of the ingredient's categories and its variants'

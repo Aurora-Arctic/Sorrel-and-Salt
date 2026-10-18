@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
@@ -7,7 +7,7 @@ import { entryDetail } from '../../../support/entry-detail';
 // A coven's ingredient page (M8.19). The guard and the services are mocked,
 // since what they decide is their own tests'. Here: that the coven in the
 // address is what the lookup is given, that a refusal is a 404, and which of
-// Edit and the canonical link each kind of entry gets.
+// Edit and the compendium link each kind of entry gets.
 
 const notFound = vi.fn(() => {
   throw new Error('not-found');
@@ -25,7 +25,12 @@ vi.mock('@/lib/viewer', () => ({ viewerOf }));
 
 const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
-vi.mock('@/modules/ingredients', () => ({ getIngredient, ingredientDetailOf }));
+const compendiumEntriesReplacedBy = vi.fn();
+vi.mock('@/modules/ingredients', () => ({
+  getIngredient,
+  ingredientDetailOf,
+  compendiumEntriesReplacedBy,
+}));
 
 // The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
@@ -71,6 +76,7 @@ beforeEach(() => {
   });
   requireSession.mockResolvedValue(SESSION);
   entryValues.mockResolvedValue(EMPTY_VALUES);
+  compendiumEntriesReplacedBy.mockResolvedValue({ entries: [], total: 0 });
 });
 
 describe('the coven ingredient page', () => {
@@ -118,7 +124,8 @@ describe('the coven ingredient page', () => {
   it('gives a compendium entry the link to its public page', async () => {
     await open(compendiumRow());
 
-    expect(screen.getByRole('link', { name: 'Compendium Entry' })).toHaveAttribute(
+    expect(screen.getByRole('list', { name: 'In the Compendium' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Testwort/ })).toHaveAttribute(
       'href',
       '/compendium/ingredients/testwort-fixtura-testalis',
     );
@@ -160,7 +167,7 @@ describe('the coven ingredient page', () => {
     await open(covenRow(), true);
 
     expect(screen.getByText('Local')).toBeVisible();
-    expect(screen.queryByRole('link', { name: 'Compendium Entry' })).toBeNull();
+    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
     expect(edits()).toHaveLength(0);
   });
 
@@ -169,6 +176,51 @@ describe('the coven ingredient page', () => {
 
     expect(dialog()).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
+  });
+});
+
+describe('the coven ingredient page’s replaced compendium entries', () => {
+  const replaced = (count: number, total: number) => ({
+    entries: Array.from({ length: count }, (_, at) => ({
+      id: `00000000-0000-4000-8000-00000000010${at}`,
+      slug: `fixture-replaced-${at}`,
+      name: `Fixture Replaced ${at}`,
+      canonicalName: at === 0 ? 'Fixtura replacata' : null,
+    })),
+    total,
+  });
+  const list = () => screen.queryByRole('list', { name: 'In the Compendium' });
+
+  it('passes the service’s entries and total to the component, each by title to its public page', async () => {
+    compendiumEntriesReplacedBy.mockResolvedValue(replaced(3, 4));
+
+    await open(covenRow());
+
+    expect(compendiumEntriesReplacedBy).toHaveBeenCalledWith(SESSION, covenRow());
+    const links = within(list()!).getAllByRole('link');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/compendium/ingredients/fixture-replaced-0',
+      '/compendium/ingredients/fixture-replaced-1',
+      '/compendium/ingredients/fixture-replaced-2',
+    ]);
+    expect(links[0]).toHaveAccessibleName(/Fixture Replaced 0 \(Fixtura replacata\)/);
+    // "See All" stands after the list, not in it: it is not a compendium entry.
+    const seeAll = screen.getByRole('link', { name: /4/ });
+    expect(list()).not.toContainElement(seeAll);
+    expect(seeAll.getAttribute('href')).toContain('/compendium?query=');
+  });
+
+  it('passes a compendium entry itself, once, to its public address, and no See All', async () => {
+    await open(compendiumRow());
+
+    // The service finds nothing replaced for a compendium entry; the page
+    // passes the entry itself.
+    expect(compendiumEntriesReplacedBy).toHaveBeenCalledWith(SESSION, compendiumRow());
+    const links = within(list()!).getAllByRole('link');
+    expect(links.map((link) => link.getAttribute('href'))).toEqual([
+      '/compendium/ingredients/testwort-fixtura-testalis',
+    ]);
+    expect(screen.queryByRole('link', { name: /^See All/ })).toBeNull();
   });
 });
 

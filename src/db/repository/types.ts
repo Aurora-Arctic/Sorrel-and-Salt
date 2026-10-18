@@ -882,6 +882,12 @@ export type StockRow = typeof inventoryItems.$inferSelect;
 /** A form of an ingredient, as a finder or a write returns it. */
 export type VariantRow = typeof ingredientVariants.$inferSelect;
 
+/** The compendium entries a coven's own entry hides (M12.12): the first few a link needs, and how many in all. */
+export interface HiddenCompendiumEntries {
+  entries: Pick<IngredientRow, 'id' | 'slug' | 'name' | 'canonicalName'>[];
+  total: number;
+}
+
 /**
  * A jar a coven holds on a compendium entry its own ingredient hides (M12.8),
  * with the form it sits on and the entry that form belongs to.

@@ -7,8 +7,13 @@ import type { LinkedIngredient } from '../../../../../../components/IngredientEn
 import { Forbidden, NotFound } from '../../../../../../lib/errors';
 import { requireCovenMembership, requireSession } from '../../../../../../lib/request-session';
 import { viewerOf } from '../../../../../../lib/viewer';
+import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
-import { getIngredient, ingredientDetailOf } from '@/modules/ingredients';
+import {
+  compendiumEntriesReplacedBy,
+  getIngredient,
+  ingredientDetailOf,
+} from '@/modules/ingredients';
 import type { CovenIngredientParams } from './types';
 
 // One ingredient inside a coven (M8.19): the coven's own, or a compendium
@@ -23,6 +28,11 @@ import type { CovenIngredientParams } from './types';
 // The shell draws no `<main>`, so the page does. The entry's own article
 // carries its own wide layout (the jump menu and the side columns), so
 // `<main>` stays plain.
+
+// The ⓘ sentence beside "In the Compendium", one for each case.
+const COMPENDIUM_TIP = 'This entry is the compendium’s. Its public page is linked here.';
+const LOCAL_TIP =
+  'Your coven’s entry is offered in their place when you pick a substitute. Compare them here.';
 
 const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -54,12 +64,18 @@ export async function generateMetadata({ params }: CovenIngredientParams): Promi
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
   const { slug, id } = await params;
   const { workspace, session, entry } = await entryOf(slug, id);
-  const [detail, { viewer }] = await Promise.all([ingredientDetailOf(session, entry), viewerOf()]);
+  // A coven's own entry also links the compendium entries it hides (M12.12),
+  // read here for this one page and never through GraphQL; none for a
+  // compendium entry. The compendium is public, so the links reveal nothing.
+  const [detail, { viewer }, replaced] = await Promise.all([
+    ingredientDetailOf(session, entry),
+    viewerOf(),
+    compendiumEntriesReplacedBy(session, entry),
+  ]);
   const inCompendium = entry.workspaceId === null;
 
-  // A compendium entry offers its public page's address as canonical, and Edit
-  // to a curator, opening the compendium's edit modal over this page (M8.19).
-  // A coven's own entry gets no Edit until M8.17's modal. The form's values are
+  // A compendium entry offers Edit to a curator, opening the compendium's edit modal
+  // over this page (M8.19). A coven's own entry gets no Edit until M8.17's modal. The form's values are
   // read only for a curator who asks for them with a bare `?edit`.
   const own = `/coven/${workspace.slug}/ingredients/${entry.id}` as Route;
   const canEdit = inCompendium && viewer.canCurate;
@@ -93,7 +109,27 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
               }
             : undefined
         }
-        canonical={inCompendium ? publicAddress(entry.slug) : undefined}
+        replaces={
+          inCompendium
+            ? {
+                tip: COMPENDIUM_TIP,
+                entries: [{ title: pageTitleOf(entry), href: publicAddress(entry.slug) }],
+                total: 1,
+              }
+            : replaced.entries.length > 0
+              ? {
+                  tip: LOCAL_TIP,
+                  entries: replaced.entries.map((hidden) => ({
+                    title: pageTitleOf(hidden),
+                    href: publicAddress(hidden.slug),
+                  })),
+                  total: replaced.total,
+                  // See All opens the compendium search for this entry's label,
+                  // written through the search's own parameter table.
+                  allHref: COMPENDIUM_PARAMS.href('/compendium', { query: entry.name }),
+                }
+              : undefined
+        }
       />
     </main>
   );
