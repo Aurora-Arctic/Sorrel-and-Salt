@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import EntryMarks from '@/components/EntryMarks';
 
@@ -11,7 +11,7 @@ const statuses = () => screen.queryAllByRole('status');
 const local = () => screen.queryByText('Local', { exact: true });
 const held = () => screen.queryByText('From the Compendium', { exact: true });
 const annotated = () => screen.queryByText('Annotated', { exact: true });
-const retired = () => screen.queryByText('No Longer in the Compendium', { exact: true });
+const retired = () => screen.queryByRole('button', { name: 'Retired' });
 
 describe('EntryMarks', () => {
   it("marks a coven's own entry, with no status badge", () => {
@@ -40,15 +40,28 @@ describe('EntryMarks', () => {
 
   it('shows the retired mark in place of the held one, and Annotated beside it', () => {
     const plain = render(<EntryMarks kind="cupboard" retired />);
-    expect(statuses()).toHaveLength(1);
+    expect(statuses()).toHaveLength(0);
     expect(retired()).toBeInTheDocument();
     expect(held()).toBeNull();
     plain.unmount();
 
     render(<EntryMarks kind="cupboard" retired annotated />);
-    expect(statuses()).toHaveLength(2);
+    expect(statuses()).toHaveLength(1);
     expect(retired()).toBeInTheDocument();
     expect(annotated()).toBeInTheDocument();
+  });
+
+  it('opens its tip on focus, describes the button by it, and closes it on blur', () => {
+    render(<EntryMarks kind="cupboard" retired />);
+    const button = retired() as HTMLElement;
+    expect(screen.queryByRole('tooltip')).toBeNull();
+
+    fireEvent.focus(button);
+    const tip = screen.getByRole('tooltip');
+    expect(button).toHaveAccessibleDescription(tip.textContent ?? '');
+
+    fireEvent.blur(button);
+    expect(screen.queryByRole('tooltip')).toBeNull();
   });
 
   it('shows nothing for a compendium entry the cupboard does not hold', () => {

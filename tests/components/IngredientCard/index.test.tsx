@@ -24,7 +24,7 @@ const cautionMark = () => screen.queryByText('Caution', { exact: true });
 const toxicMark = () => screen.queryByText('Toxic', { exact: true });
 const localMark = () => screen.queryByText('Local', { exact: true });
 const heldMark = () => screen.queryByText('From the Compendium', { exact: true });
-const retiredMark = () => screen.queryByText('No Longer in the Compendium', { exact: true });
+const retiredMark = () => screen.queryByRole('button', { name: 'Retired' });
 
 describe('IngredientCard', () => {
   it('has one link, the name, to the entry page', () => {
@@ -212,7 +212,7 @@ describe('IngredientCard', () => {
     it('shows the retired mark in place of the held one', () => {
       render(<IngredientCard {...BASE} kind="cupboard" retired />);
 
-      expect(screen.getAllByRole('status')).toHaveLength(1);
+      expect(screen.queryAllByRole('status')).toHaveLength(0);
       expect(retiredMark()).toBeInTheDocument();
       expect(heldMark()).toBeNull();
     });

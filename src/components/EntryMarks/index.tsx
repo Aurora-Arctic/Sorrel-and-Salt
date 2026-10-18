@@ -1,8 +1,10 @@
 import type { ReactElement } from 'react';
 import type { EntryMarksProps } from './types';
+import RetiredMark from './retired-mark';
+import './index.scss';
 
 // The badges saying whose an ingredient entry is: Local, From the Compendium,
-// Annotated, No Longer in the Compendium. One component so the entry page's
+// Annotated, Retired. One component so the entry page's
 // head and the ingredient card cannot drift (M8.14). It takes the kind and the
 // two flags as props and works none of them out from the data. It renders the
 // badges bare, with no wrapper, so a caller can set the Toxic mark in the same
@@ -20,9 +22,8 @@ const EntryMarks = ({
       {held && !retired && <output className="badge badge--low-stock">From the Compendium</output>}
       {held && annotated && <output className="badge badge--low-stock">Annotated</output>}
       {/* A compendium entry the curators retired, read because this coven's
-          cupboard names it (M12.24). An `output`, so it carries the status
-          role: on the page from the start, never announced. */}
-      {retired && <output className="badge badge--retired">No Longer in the Compendium</output>}
+          cupboard names it (M12.24): a button opening its own tip. */}
+      {retired && <RetiredMark />}
     </>
   );
 };

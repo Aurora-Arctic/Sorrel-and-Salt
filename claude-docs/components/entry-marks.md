@@ -25,7 +25,7 @@ The reasoning is in
 | `cupboard`   | A compendium entry this coven's cupboard names               | From the Compendium, and Annotated once a field is overridden |
 | `compendium` | A compendium entry no cupboard names: all of the public list | Nothing                                                       |
 
-A retired entry shows No Longer in the Compendium in place of From the Compendium.
+A retired entry shows **Retired** in place of From the Compendium (it was worded "No Longer in the Compendium" until 2026-10-18). Retired is a button, `retired-mark.tsx`: hovering, tapping or focusing it opens a tip, "No longer in the Compendium; your coven still has it.", built on `useTip` and the same classes as StockBadge's Low badge. Its wrapper sits above the card's stretched link (`z-index: 1`), so a click opens the tip and does not navigate.
 
 ## Contracts
 
@@ -34,6 +34,6 @@ A retired entry shows No Longer in the Compendium in place of From the Compendiu
   `isAnnotated`; the card is handed the same by its caller.
 - **No wrapper.** It renders the badges bare, so the caller lays them in its own
   `.badges` row beside the Toxic mark. With nothing to show it renders nothing.
-- **Local is a `span`; the others are `output` elements**, so they carry the
-  `status` role: on the page from the start, never announced.
+- **Local is a `span`; From the Compendium and Annotated are `output` elements**, so they carry the
+  `status` role: on the page from the start, never announced. Retired is a `button` with the tip described by `aria-describedby`, so a screen reader hears the reason without opening it.
 - Meaning is the badge's words, never its tint alone.

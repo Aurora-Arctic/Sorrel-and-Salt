@@ -29,7 +29,7 @@ In page order, with the accessible names a test or a story walk finds them by:
    - The formal name (below), an eyebrow over the heading.
    - `PageHeader`: the `h1` is `entry.name`; `edit` puts a `.btn` link named **Edit** (`EditButton`) at the end of its line. From the tablet width up the head keeps to the text column (the section grid's first column), so the formal name ends where the description's text does.
    - `replaces`: an **In the Compendium** block of links, one ⓘ beside its heading saying why they are shown: for a coven's own entry, the compendium entries of the same formal name, and **See All** past three; for a compendium entry, the entry itself (see the `replaces` row in the props table).
-   - The badges, drawn by the shared `EntryMarks` (M8.14, [`entry-marks.md`](entry-marks.md)) beside `ToxicMark`: **Local** for a coven's own entry, **Toxic** (`ToxicMark`), and **No Longer in the Compendium** when `detail.retired` (M12.24): a compendium entry the curators retired, read because this coven's cupboard still names it. That last one is an `<output>`, so a `status` found by its role, present from the start and never announced. The page gives a retired entry no `replaces` and no `edit`, since the compendium no longer holds it.
+   - The badges, drawn by the shared `EntryMarks` (M8.14, [`entry-marks.md`](entry-marks.md)) beside `ToxicMark`: **Local** for a coven's own entry, **Toxic** (`ToxicMark`), and **Retired** when `detail.retired` (M12.24; "No Longer in the Compendium" until 2026-10-18): a compendium entry the curators retired, read because this coven's cupboard still names it. That last one is a button opening a tip ("No longer in the Compendium; your coven still has it."), found by role and name. The page gives a retired entry no `replaces` and no `edit`, since the compendium no longer holds it.
    - `movedAway`: a quiet warning `Notice`, a `status`, holding a link named after the moved entry.
 2. **The jump menu**: `PageNav`, a `navigation` named **On this page**, with **Details** (`#details`) at the top level, then the forms grouped under a **Forms** label: a nested `list` named **Forms**, one entry per form, labelled with the form capitalised (`#form-oil`). The Forms group is `apart`, so the same short line stands between Details and Forms as between the forms and References. The grouping is `PageNav`'s `group` ([`page-nav.md`](page-nav.md)), so the ingredient reads apart from its forms. Drawn only when there is a form: with none there is nowhere to jump.
 3. **Details**: `<section id="details">`, a `region` named **Details** by its visible `h2`, then two plain `<div>`s: the text (`__text`) and the side column (`__side`). The side column is not an `<aside>`: a `complementary` landmark per section would be eight on a page like the rose's, noise to a screen reader, and each block in it is already headed and labelled. In order:
@@ -69,7 +69,7 @@ Inside a form, the lists are named by the form's name and then the heading — "
 - **Every link to another page carries a `LinkHint`** (the substitutes, the In the Compendium links, the moved-away link), so a click shows it took while the server answers. The jump menu and the Edit button do not: the first stays on the page, the second opens a modal with its own skeleton. There is no `loading.tsx` and no Suspense boundary on purpose: one would turn the public route's 404 and 308 into 200s and break rendering without script (Next's `loading` file docs, "Status codes"). See [`link-hint.md`](link-hint.md).
 - **Safety is drawn by `SafetyNote` and `ToxicMark` only** (M8.13a). The ingredient's note sits in Details; each form's sits in its own section, given that form's notes as `safetyNotes`, since the section's heading already names the form.
 - **The notes slot.** The References section is the article's last child, and v2's notes section is appended after it, so adding it moves nothing above.
-- **Meaning never by colour alone.** Local, Toxic and No Longer in the Compendium carry their words; a category chip carries its name, its colour repeating its group.
+- **Meaning never by colour alone.** Local, Toxic and Retired carry their words; a category chip carries its name, its colour repeating its group.
 
 ## Edit
 
@@ -104,7 +104,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - `NothingRecorded`: every empty state, and a form that adds nothing.
 - `CovenEntry`: a coven's own entry, badged Local.
 - `FromTheCompendium`, `Annotated`: a compendium entry held in the coven's cupboard (M12.16), unchanged and with the coven's label, description and cleared planets.
-- `RetiredInCoven`: a retired compendium entry a coven still uses, marked No Longer in the Compendium.
+- `RetiredInCoven`: a retired compendium entry a coven still uses, marked Retired.
 - `CompendiumEntryForCurator`: Edit, and the link to the public page.
 - `MovedAway`: the notice for the entry that left this address.
 - `FormAddsNothing`: two forms adding nothing, one of them toxic.
