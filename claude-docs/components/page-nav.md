@@ -16,12 +16,20 @@ The account page's sections are panels; the coven index's are plain
 
 - `label`: the landmark's accessible name ("On this page").
 - `entries`: `{ href: '#id', label, group?, apart? }[]`, one per section, in page order.
-  `apart` (MB.155) sets a top-level entry off from those above it: a group
-  entry's size and the break a group label takes (`space(5)` above), for an
-  ingredient's closing References entry, with or without forms before it, and
-  a short `$hairline` rule (the shared `short-hairline` mixin, a pseudo-element, not an element) a quarter of that
-  break above the entry, at the entries' inset: on the start edge, the end edge where the menu
-  is right-aligned.
+  `apart` (MB.155) sets an item off from those above it: a break a step
+  wider than a group label's (`space(6)` above, so the rule has air on both
+  sides; the owner's call), for an ingredient's Forms and its closing
+  References, and a short `$hairline` rule (the shared
+  `short-hairline` mixin, a pseudo-element, not an element) halfway through
+  that break (`space(6) / 2`, less half the rule's 1px so its centre is on the
+  middle), at the entries' inset: on the start edge, the end edge where the
+  menu is right-aligned. On a top-level entry it also takes a group entry's
+  size. A group is set apart by its **first** entry's `apart`; the `<li>` of
+  the group takes the break and its label gives up its own, so the gap is not
+  doubled. The ingredient page sets apart its **Forms** group, so it opens
+  with the same line, and, with sources, a **References** group of **Notes**
+  and **Bibliography**; with none, the single References link. Only the
+  group's `<li>` draws it, never its first entry again inside the group.
   `group` is optional and the account page and coven index leave it out.
   Consecutive entries naming the same `group` are drawn as one nested list
   under a label: `<li><span class="page-nav__group">Forms</span><ul>…</ul></li>`.
@@ -56,8 +64,8 @@ The account page's sections are panels; the coven index's are plain
 - A group's label is set as `.eyebrow` is (`overline` size, weight 500,
   uppercase, letter-spaced) but in the body ink, `$text-primary`, darker
   than the muted entries under it, padded as an entry is, a `space(5)` step
-  below the entry above and `space(2)` above its first entry (the owner's
-  calls at M8.19). Its entries are not stepped
+  below the entry above and `space(1)` above its first entry (the owner's
+  calls at M8.19, the second brought a step closer since). Its entries are not stepped
   in from it at any width: the label alone sets them apart (the owner's call
   at M8.19: a step in read as too much room to their left on a phone, and on
   a wide screen, where the text is right-aligned, pushed them off the
