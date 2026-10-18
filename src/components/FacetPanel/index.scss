@@ -204,6 +204,8 @@
 
   // A chip that cannot change rests dashed and dim, as a shut field does.
   &:disabled {
+    // Off, so a hover lands on the bar around it, which shows the hint.
+    pointer-events: none;
     border-style: dashed;
     background-color: transparent;
     color: $text-muted;

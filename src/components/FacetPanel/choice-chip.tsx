@@ -14,6 +14,7 @@ import {
 import { useHydrated } from '../../lib/hydrated';
 import { pressFeedback } from '../../lib/press-feedback';
 import InfoTip from '../InfoTip';
+import { useTip } from '../InfoTip/use-tip';
 import { FacetCount } from './facet-count';
 
 // One choice from a few, drawn as a chip reading "Match: All" that opens a small menu of
@@ -47,10 +48,17 @@ export interface ChoiceChipProps<T extends string> {
   options: ReadonlyArray<ChoiceChipOption<T>>;
   value: T;
   onChange: (value: T) => void;
-  /** Rests on its value and cannot be changed; the chip does not open. */
+  /**
+   * Rests on its value and cannot be changed; the chip does not open and takes no focus.
+   */
   disabled?: boolean;
   /** What the choice means, behind an InfoTip beside the chip. */
   hint?: string;
+  /**
+   * What the choice means, shown in a tip bubble when the pointer is on the chip or, while
+   * enabled, the chip has focus, with no icon beside it. Hidden while the menu is open, so it never covers it.
+   */
+  chipHint?: string;
 }
 
 export function ChoiceChip<T extends string>({
@@ -61,9 +69,12 @@ export function ChoiceChip<T extends string>({
   onChange,
   disabled,
   hint,
+  chipHint,
 }: ChoiceChipProps<T>): ReactElement {
   const id = useId();
   const hintId = `${id}-hint`;
+  const chipHintId = `${id}-chip-hint`;
+  const tip = useTip();
   const hydrated = useHydrated();
   const root = useRef<HTMLDetailsElement>(null);
   const summary = useRef<HTMLElement>(null);
@@ -134,6 +145,8 @@ export function ChoiceChip<T extends string>({
     }
   };
 
+  const describedBy = chipHint ? chipHintId : hint ? hintId : undefined;
+
   const face = (
     <>
       <span className="facet-chip__name">{legend}:</span>
@@ -151,14 +164,20 @@ export function ChoiceChip<T extends string>({
       <span className="field__label facet-chip__spacer" aria-hidden="true">
         &#8203;
       </span>
-      <div className="facet-chip__bar">
+      <div
+        className="facet-chip__bar"
+        onMouseEnter={chipHint ? tip.show : undefined}
+        onMouseLeave={chipHint ? tip.hideSoon : undefined}
+      >
         <fieldset
           className="fieldset facet-chip__group"
           disabled={disabled}
-          aria-describedby={hint ? hintId : undefined}
+          aria-describedby={describedBy}
         >
           <legend className="visually-hidden">{legend}</legend>
           {disabled ? (
+            // Really disabled, so unfocusable; a disabled button may swallow mouse events, so the
+            // hover is taken on the bar around it (its pointer events are off, see the scss).
             <button type="button" className="facet-chip__summary" disabled>
               {face}
             </button>
@@ -176,6 +195,8 @@ export function ChoiceChip<T extends string>({
               <summary
                 ref={summary}
                 className="facet-chip__summary"
+                onFocus={chipHint ? tip.show : undefined}
+                onBlur={chipHint ? tip.hide : undefined}
                 onClick={hydrated ? toggle : undefined}
               >
                 {face}
@@ -207,6 +228,16 @@ export function ChoiceChip<T extends string>({
             </details>
           )}
         </fieldset>
+        {chipHint && (
+          <span
+            id={chipHintId}
+            role="tooltip"
+            className={tip.open && !shown ? 'info-tip__bubble is-open' : 'info-tip__bubble'}
+            aria-hidden={!(tip.open && !shown)}
+          >
+            {chipHint}
+          </span>
+        )}
         {hint && (
           <InfoTip id={hintId} label={legend}>
             {hint}

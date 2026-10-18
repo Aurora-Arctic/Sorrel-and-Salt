@@ -160,6 +160,10 @@ export default function FacetPanel({
 
   const matchStuck = filter.categories.length < 2;
   const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
+  // The Source chip is stuck the same way: a source with nothing behind it means every
+  // matching entry comes from the other, so the filter cannot narrow. Counts not yet read
+  // (`facets.source` unset) leave it free.
+  const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
 
   // Focus goes back to the button when it was inside the panel, so that a closing panel
   // never leaves it on a control that is about to disappear.
@@ -414,7 +418,7 @@ export default function FacetPanel({
                   <ChoiceChip
                     legend="Match"
                     name="categoryMode"
-                    hint={
+                    chipHint={
                       matchStuck
                         ? 'Match applies once two or more categories are chosen.'
                         : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
@@ -463,7 +467,7 @@ export default function FacetPanel({
                     // shares one toxicity, so the chip rests on Any and cannot narrow.
                     value={toxicStuck ? '' : filter.toxic}
                     disabled={toxicStuck}
-                    hint={
+                    chipHint={
                       toxicStuck
                         ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
                         : undefined
@@ -474,9 +478,20 @@ export default function FacetPanel({
                     <ChoiceChip
                       legend="Source"
                       name="source"
-                      hint="Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium."
+                      hint={
+                        sourceStuck
+                          ? undefined
+                          : 'Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium.'
+                      }
+                      chipHint={
+                        sourceStuck
+                          ? 'Every matching entry comes from the same source, so this filter cannot narrow further.'
+                          : undefined
+                      }
                       options={sourceOptions(facets.source)}
-                      value={filter.source}
+                      // Rests on All while stuck and submits nothing, as Toxic rests on Any.
+                      value={sourceStuck ? '' : filter.source}
+                      disabled={sourceStuck}
                       onChange={(source) => onChange({ source })}
                     />
                   )}

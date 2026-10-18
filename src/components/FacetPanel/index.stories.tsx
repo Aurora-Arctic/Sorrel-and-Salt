@@ -61,7 +61,7 @@ const COVEN_FACETS: CompendiumFacetCounts = {
   ...FACETS,
   source: [
     { value: 'local', label: 'Local', count: 18 },
-    { value: 'compendium', label: 'Compendium', count: 0 },
+    { value: 'compendium', label: 'Compendium', count: 7 },
   ],
   inStock: 9,
 };
@@ -195,6 +195,21 @@ export const ToxicStuck: Story = () => (
         { value: 'not_toxic', label: 'Not Toxic', count: 21 },
       ],
     }}
+  />
+);
+
+// Either source counting nothing: every matching entry comes from the other, so the chip rests
+// on All, is disabled, and says why when the pointer or focus is on it.
+export const SourceStuck: Story = () => (
+  <Panel
+    facets={{
+      ...COVEN_FACETS,
+      source: [
+        { value: 'local', label: 'Local', count: 18 },
+        { value: 'compendium', label: 'Compendium', count: 0 },
+      ],
+    }}
+    start={{ ...NONE, source: 'local', inStock: false }}
   />
 );
 

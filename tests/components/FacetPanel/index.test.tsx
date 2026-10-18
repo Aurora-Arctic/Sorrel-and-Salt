@@ -300,15 +300,23 @@ describe('FacetPanel', () => {
     fireEvent.click(filtersButton());
     const match = () => screen.getByRole('group', { name: 'Match' });
     // The held mode is Any, so the chip resting on All is the stuck state and not the stored value.
-    expect(within(match()).getByRole('button', { name: /All/ })).toBeDisabled();
+    const chip = within(match()).getByRole('button', { name: /All/ });
+    expect(chip).toBeDisabled();
+    expect(chip.closest('fieldset')).toHaveAccessibleDescription();
     expect(within(match()).queryByRole('radio')).toBeNull();
-    expect(match()).toBeDisabled();
-    expect(match()).toHaveAccessibleDescription();
+
+    // A stuck chip is disabled and unfocusable; the fieldset carries its hint, and hovering shows it.
+    const stuck = within(match()).getByRole('button', { name: /All/ });
+    const bubble = document.getElementById(
+      stuck.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+    );
+    fireEvent.mouseEnter(stuck);
+    expect(bubble).toHaveAttribute('aria-hidden', 'false');
 
     rerender(
       <FacetPanel {...props({ categories: ['warding', 'mending'], categoryMode: 'any' })} />,
     );
-    expect(match()).toBeEnabled();
+    expect(within(match()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
     expect(within(match()).getByRole('radio', { name: 'Any' })).toBeChecked();
   });
 
@@ -327,9 +335,9 @@ describe('FacetPanel', () => {
     const summary = () => menu().querySelector('summary') as HTMLElement;
 
     it('keeps every chip tip inside the bar its chip stands in, the box its bubble is placed against', () => {
-      // One chip held disabled (Match below two categories, its tip outside the fieldset) and one open.
+      // Match's tip is on the chip itself; Source's ordinary tip is the icon beside its chip.
       openPanel({ categories: ['warding'], source: 'local' });
-      const tips = screen.getAllByRole('button', { name: /^About (Match|Source)/ });
+      const tips = screen.getAllByRole('button', { name: /^About Source/ });
       expect(tips.length).toBeGreaterThan(0);
       for (const tip of tips) {
         const bar = tip.closest('.facet-chip__bar');
@@ -337,6 +345,22 @@ describe('FacetPanel', () => {
         // The bar holds the chip too, so the tip stands beside it and not in the panel at large.
         expect(bar?.querySelector('summary, button.facet-chip__summary')).not.toBeNull();
       }
+    });
+
+    it('shows the enabled Match hint on hover and on focus of its summary, and not while the menu is open', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      const bubble = () =>
+        document.getElementById(
+          match().closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      fireEvent.mouseLeave(summary());
+      fireEvent.focus(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      fireEvent.click(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
     });
 
     it('draws Match as a group holding a summary that opens a menu of native radios', () => {
@@ -429,7 +453,7 @@ describe('FacetPanel', () => {
         ...FACETS,
         source: [
           { value: 'local', label: 'Local', count: 4 },
-          { value: 'compendium', label: 'Compendium', count: 0 },
+          { value: 'compendium', label: 'Compendium', count: 2 },
         ],
         inStock: 3,
       },
@@ -446,11 +470,11 @@ describe('FacetPanel', () => {
       expect(within(source).getByRole('radio', { name: 'All' })).toBeChecked();
     });
 
-    it('carries each count in the option and switch names, zero kept, All and the Toxic strip as they were', () => {
+    it('carries each count in the option and switch names, All and the Toxic strip as they were', () => {
       open(COVEN, counted);
       const source = screen.getByRole('group', { name: 'Source' });
       expect(within(source).getByRole('radio', { name: /^Local 4/ })).toBeInTheDocument();
-      expect(within(source).getByRole('radio', { name: /^Compendium 0/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: /^Compendium 2/ })).toBeInTheDocument();
       expect(within(source).getByRole('radio', { name: 'All' })).toBeInTheDocument();
       expect(screen.getByRole('switch', { name: 'In Stock 3' })).toBeInTheDocument();
     });
@@ -522,10 +546,10 @@ describe('FacetPanel', () => {
         { value: 'not_toxic', label: 'Not Toxic', count: 9 },
       ]);
       // The chip rests on Any and does not open, so it holds no radios while stuck.
-      expect(within(group()).getByRole('button', { name: /Any/ })).toBeDisabled();
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
       expect(within(group()).queryByRole('radio')).toBeNull();
-      expect(group()).toBeDisabled();
-      expect(group()).toHaveAccessibleDescription();
     });
 
     it('does the same when Not Toxic is zero, even if it was the chosen value', () => {
@@ -536,14 +560,97 @@ describe('FacetPanel', () => {
         ],
         { toxic: 'not_toxic' },
       );
-      expect(within(group()).getByRole('button', { name: /Any/ })).toBeDisabled();
-      expect(group()).toBeDisabled();
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+    });
+
+    it('opens the hint when the pointer rests on the disabled chip itself', () => {
+      withToxic([
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not_toxic', label: 'Not Toxic', count: 9 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      const bubble = () =>
+        document.getElementById(
+          chip.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(chip);
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
     });
 
     it('is enabled, with no hint, when both counts are above zero', () => {
       withToxic(FACETS.toxic);
-      expect(group()).toBeEnabled();
-      expect(group()).not.toHaveAccessibleDescription();
+      expect(within(group()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
+    });
+  });
+
+  describe('the Source field when a count is zero', () => {
+    const withSource = (
+      source: NonNullable<CompendiumFacetCounts['source']>,
+      filter: Partial<FacetPanelFilter> = {},
+    ) => {
+      stubViewport(true);
+      render(
+        <form method="get">
+          <FacetPanel
+            {...props({ source: '', inStock: false, ...filter }, { facets: { ...FACETS, source } })}
+          />
+        </form>,
+      );
+      fireEvent.click(filtersButton());
+    };
+    const group = () => screen.getByRole('group', { name: /^Source/ });
+    const submitted = () =>
+      new FormData(document.querySelector('form') as HTMLFormElement).getAll('source');
+
+    it('rests the chip on All, disables the group and carries a hint when Compendium is zero', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 0 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+      expect(within(group()).queryByRole('radio')).toBeNull();
+    });
+
+    it('does the same when Local is zero, and submits nothing for a held source', () => {
+      withSource(
+        [
+          { value: 'local', label: 'Local', count: 0 },
+          { value: 'compendium', label: 'Compendium', count: 4 },
+        ],
+        { source: 'local' },
+      );
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+      expect(submitted()).toEqual([]);
+    });
+
+    it('is enabled, with no hint, when both counts are above zero', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 3 },
+      ]);
+      expect(within(group()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
+    });
+
+    it('opens the hint when the pointer rests on the disabled chip itself', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 0 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      const bubble = () =>
+        document.getElementById(
+          chip.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(chip);
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
     });
   });
 

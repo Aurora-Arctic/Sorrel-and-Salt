@@ -1564,7 +1564,7 @@ for (const [label, width, height] of [
     const panel = await openFilters(page);
     const match = panel.getByRole('group', { name: 'Match' });
     await expect(match).toBeVisible();
-    await panel.getByRole('button', { name: 'About Match' }).click();
+    await match.locator('summary, button').hover();
     const tip = panel.getByRole('tooltip');
     await expect(tip).toBeVisible();
     // Why it could have been cut: the panel clips to its own box, so a tip opening past the
