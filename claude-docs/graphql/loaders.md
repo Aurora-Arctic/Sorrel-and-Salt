@@ -41,7 +41,10 @@ merely absent:
   `Ingredient.stock`, M9.4: keyed `{ ingredientId, workspaceId }`, cached by
   `workspaceId:ingredientId`, a refused coven a `Forbidden` in its own slots;
   `clearStock` drops one key after an add or update, and `deleteStock` clears
-  it whole). M6.11 adds no
+  it whole), and `cupboardEntryByIngredient` (`ingredients`, for
+  `Ingredient.cupboardEntry`, M12.14: keyed and cached as `stockByIngredient`
+  is, a refused coven a `Forbidden` in its own slots, and nothing clears it,
+  since no write answers a cupboard entry yet). M6.11 adds no
   `membersByWorkspace`: `Workspace.members` reads a coven at a time
   ([`m6.11-members-without-a-loader.md`](../design-decisions/m6.11-members-without-a-loader.md)). A test that builds a context
   by hand calls `createLoaders(session)` rather than passing `{}`, which the

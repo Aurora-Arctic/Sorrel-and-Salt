@@ -35,6 +35,7 @@ export function entryDetail(overrides: Partial<IngredientRow> = {}): IngredientD
       ...STAMPS,
       ...overrides,
     },
+    cupboardEntry: null,
     folkNames: [],
     categories: [],
     deities: [],

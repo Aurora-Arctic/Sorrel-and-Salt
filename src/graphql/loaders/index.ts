@@ -3,6 +3,7 @@ import { providersByUser, usersById, usersByIdForAdmin } from '@/modules/identit
 import {
   categoriesByIngredient,
   categoriesByVariant,
+  cupboardEntryByIngredient,
   deitiesByIngredient,
   folkNamesByIngredient,
   ingredientsById,
@@ -42,6 +43,7 @@ const LOADERS = {
   substitutesByVariant,
   referencesByVariant,
   stockByIngredient,
+  cupboardEntryByIngredient,
   categoryGroupsById,
   ingredientFormGroupsById,
   ingredientFormsById,

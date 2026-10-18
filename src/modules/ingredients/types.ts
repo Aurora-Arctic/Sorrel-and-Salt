@@ -70,6 +70,22 @@ export interface StockKey {
   workspaceId: string;
 }
 
+/**
+ * A compendium entry as `Ingredient.cupboardEntry`'s loader keys it (M12.14):
+ * the entry, and the coven whose cupboard is asked about, the argument the
+ * caller named, as `StockKey`'s is.
+ */
+export interface CupboardEntryKey {
+  ingredientId: string;
+  workspaceId: string;
+}
+
+/**
+ * A cupboard entry as `CupboardEntry` answers it on the wire (M12.14): the
+ * row, with the compendium entry's own name beside the coven's label.
+ */
+export type CupboardEntryNode = CupboardEntryRow & { compendiumName: string };
+
 /** One `ingredient_variants` row as the table holds it. */
 export type VariantRecord = typeof ingredientVariants.$inferSelect;
 
@@ -277,6 +293,13 @@ export interface VariantDetail {
  */
 export interface IngredientDetail {
   entry: IngredientRow;
+  /**
+   * The cupboard entry of the coven the page is read in, for a compendium
+   * entry that coven holds (M12.14); null on the public page, for a coven's
+   * own entry, and for one the coven does not hold. `entry` is the
+   * compendium's row as it is: `applyCupboardEntry` lays this over it.
+   */
+  cupboardEntry: CupboardEntryRow | null;
   /** Names only: the page displays them and promotes none. */
   folkNames: string[];
   categories: CategoryDetail[];

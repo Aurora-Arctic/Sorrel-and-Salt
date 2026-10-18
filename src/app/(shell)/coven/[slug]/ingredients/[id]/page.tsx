@@ -68,7 +68,7 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // read here for this one page and never through GraphQL; none for a
   // compendium entry. The compendium is public, so the links reveal nothing.
   const [detail, { viewer }, replaced] = await Promise.all([
-    ingredientDetailOf(session, entry),
+    ingredientDetailOf(session, entry, workspace.id),
     viewerOf(),
     compendiumEntriesReplacedBy(session, entry),
   ]);

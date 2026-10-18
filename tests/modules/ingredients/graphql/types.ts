@@ -125,3 +125,17 @@ export interface InventoryItemNode {
   variant: { id: string; form: string };
   audit: { createdBy: string; updatedBy: string };
 }
+
+/** One `CupboardEntry` as cupboard-entries.test.ts selects it (M12.14). */
+export interface CupboardEntryNode {
+  id: string;
+  label: string | null;
+  description: string | null;
+  safetyNotes: string | null;
+  elements: string[] | null;
+  celestialBodies: string[] | null;
+  zodiacSigns: string[] | null;
+  colors: string[] | null;
+  annotated: boolean;
+  compendiumName: string;
+}
