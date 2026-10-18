@@ -246,6 +246,14 @@
   white-space: nowrap;
 }
 
+// A chip at the end of a row would open a menu wider than itself past the panel's right edge,
+// where the slide's clip cuts it. choice-chip.tsx measures on open and adds this class when
+// that would happen; the menu then hangs from the chip's right edge and opens leftward. Which
+// chip ends a row varies (Match, Toxic, No Refs, Source), so the CSS alone cannot say.
+.facet-chip__menu--end {
+  inset-inline: auto 0;
+}
+
 // With the script on, the menu is always in the page while open and fades by opacity and
 // visibility, the way a tip bubble does; without it, an open `<details>` shows it whole.
 .facet-chip--script > .facet-chip__menu {

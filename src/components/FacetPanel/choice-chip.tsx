@@ -8,6 +8,7 @@ import {
   type TransitionEvent,
   useEffect,
   useId,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -30,6 +31,17 @@ const FADE_LIMIT_MS = 400;
 export const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/**
+ * The right edge of the nearest ancestor that clips its children (the panel's slide clip), or
+ * the viewport's when none does.
+ */
+const clipRight = (from: HTMLElement): number => {
+  for (let el = from.parentElement; el; el = el.parentElement) {
+    if (getComputedStyle(el).overflowX !== 'visible') return el.getBoundingClientRect().right;
+  }
+  return document.documentElement.clientWidth;
+};
 
 type Phase = 'closed' | 'opening' | 'open' | 'closing';
 
@@ -118,6 +130,20 @@ export function ChoiceChip<T extends string>({
   }, [phase]);
 
   const shown = phase === 'opening' || phase === 'open';
+
+  // Left-aligned is the menu's rest place. Each time it opens, if that box would end past what
+  // clips it (a chip at a row's end), it hangs from the chip's right edge instead. Measured
+  // from the chip's left and the menu's own width, so the answer does not depend on the last
+  // placement. Before the script runs the menu stays left-aligned.
+  const [alignEnd, setAlignEnd] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!shown || !root.current || !menuRef.current) return;
+    setAlignEnd(
+      root.current.getBoundingClientRect().left + menuRef.current.offsetWidth >
+        clipRight(root.current),
+    );
+  }, [shown]);
   const toggle = (event: MouseEvent) => {
     event.preventDefault();
     if (shown) close(false);
@@ -202,7 +228,14 @@ export function ChoiceChip<T extends string>({
                 {face}
               </summary>
               <div
-                className={phase === 'open' ? 'facet-chip__menu is-open' : 'facet-chip__menu'}
+                ref={menuRef}
+                className={[
+                  'facet-chip__menu',
+                  phase === 'open' && 'is-open',
+                  alignEnd && 'facet-chip__menu--end',
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
                 onTransitionEnd={onFadeEnd}
               >
                 {options.map((option) => (

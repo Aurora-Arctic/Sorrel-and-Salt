@@ -1555,6 +1555,40 @@ test('the panel opens with its top at its final place from the first frame, and 
 
 for (const [label, width, height] of [
   ['1280', 1280, 900],
+  ['390', 390, 800],
+] as const) {
+  test(`the public panel's Toxic menu opens whole inside the panel at ${label}px`, async ({
+    page,
+  }) => {
+    const { userId } = await signInAs(
+      page,
+      `toxic-menu-${label}@admin-compendium.test`,
+      ['discord'],
+      'admin',
+    );
+    await seedFacetworts(userId);
+    await page.setViewportSize({ width, height });
+    await page.goto('/compendium?query=Facetwort');
+    const panel = await openFilters(page);
+    const toxic = panel.getByRole('group', { name: 'Toxic' });
+    await toxic.locator('summary').click();
+    const menu = toxic.locator('.facet-chip__menu');
+    await expect(menu).toBeVisible();
+    // Let the fade finish so the box is the settled one.
+    await expect(menu).toHaveClass(/is-open/);
+    // Why it could have been cut: the menu is wider than the chip and the panel clips to its
+    // own box, so a menu hung from the chip's left edge ran past the panel's right edge.
+    const menuBox = (await menu.boundingBox())!;
+    const chipBox = (await toxic.locator('summary').boundingBox())!;
+    const panelBox = (await panel.boundingBox())!;
+    expect(menuBox.width).toBeGreaterThan(chipBox.width);
+    expect(menuBox.x).toBeGreaterThanOrEqual(panelBox.x);
+    expect(menuBox.x + menuBox.width).toBeLessThanOrEqual(panelBox.x + panelBox.width);
+  });
+}
+
+for (const [label, width, height] of [
+  ['1280', 1280, 900],
   ['375', 375, 800],
 ] as const) {
   test(`the Match tip opens whole inside the panel at ${label}px`, async ({ page }, info) => {
