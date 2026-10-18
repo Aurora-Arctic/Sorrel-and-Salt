@@ -24,6 +24,7 @@ nothing from the data.
 | `retired`      | The curators retired the entry                                                                                                       |
 | `level`        | The name's heading level, 2 to 5; Defaults to 2                                                                                      |
 | `children`     | The jar-line slot, last (see the slot’s contract)                                                                                    |
+| `actions`      | Buttons for the card's foot, right-aligned beneath the jar lines; they sit above the stretched link, so they press on their own      |
 
 ## What it is made of
 
@@ -83,7 +84,7 @@ stay. It uses `:focus-within`, not `:has()`, so a click's focus lifts it too.
 Muted jar text on the hovered card measures 7.99:1 dark and 6.95:1 light. A cost accepted: text in the card is harder to select, since a
 drag starts on the overlay.
 
-The jar lines take the `small` size in the muted ink of the `.specimen__stock` primitive, its opacity reset so the badges keep their own inks.
+The foot (`.specimen__foot`) holds the jar lines and then the actions, and sits at the card's bottom, so cards of one grid row share a bottom line. The jar lines take the `small` size in the muted ink of the `.specimen__stock` primitive, its opacity reset so the badges keep their own inks.
 
 ## Order
 
@@ -101,4 +102,4 @@ Styling stops at the tokens until the section's design review (MB.84).
 
 ### A long name
 
-The top row (`.specimen__top`) wraps on the card only. The name block (`.ingredient-card__heading`) takes the room it needs and may shrink below its longest word; when it and the badges do not fit side by side, the badge group wraps onto its own row beneath, at the left (the name block grows, so beside it the badges sit at the right; the group itself takes only its content's width, with no auto margin). Badges that wrap among themselves beside the name still hug the right. The wrapped group is 12px (`space(3)`, the row gap) below the formal name and 12px above the chips. A single long word breaks rather than overflows: `overflow-wrap: anywhere` on the block, and `hyphens: auto` on the name heading only, so a break shows a hyphen where the browser's dictionary can place one (the page's `lang` is `en`). Chromium, with no dictionary hit for an invented word such as "Nameicanicusmus", falls back to a plain break with no hyphen. The italic formal name gets no `hyphens`: binomials are Latin, and English hyphenation would split them oddly. No soft hyphens are ever inserted into the text.
+The top row (`.specimen__top`) wraps, in the primitive, so the Foundations specimen does the same. The name block (`.ingredient-card__heading`) takes the room it needs and may shrink below its longest word; when it and the badges do not fit side by side, the badge group wraps onto its own row beneath, at the left (the name block grows, so beside it the badges sit at the right; the group itself takes only its content's width, with no auto margin). Badges that wrap among themselves beside the name still hug the right. The wrapped group is 12px (`space(3)`, the row gap) below the formal name and 12px above the chips. A single long word breaks rather than overflows: `overflow-wrap: anywhere` on the block, and `hyphens: auto` on the name heading only, so a break shows a hyphen where the browser's dictionary can place one (the page's `lang` is `en`). Chromium, with no dictionary hit for an invented word such as "Nameicanicusmus", falls back to a plain break with no hyphen. The italic formal name gets no `hyphens`: binomials are Latin, and English hyphenation would split them oddly. No soft hyphens are ever inserted into the text.

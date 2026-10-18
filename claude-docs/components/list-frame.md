@@ -51,7 +51,8 @@ parts, and the table passes through them from the server.
 - **While a page is on its way** the body shows the tabs' own skeleton,
   `TabPanelLoading` from `TabbedPage/panel-loading.tsx` with no filter row,
   since the real filter row stays: a table's heading, six banded rows and a
-  pager, cards at a phone's width, one visually hidden `<output>` its one
+  pager (or, with `shape="cards"`, six card shapes in the
+  [`IngredientCardList`](ingredient-card-list.md) grid), cards at a phone's width, one visually hidden `<output>` its one
   status. The filter row greys out and is off
   ([`filter-form.md`](filter-form.md)).
 - **When the new page renders** the body shows it, keyed afresh so it fades
@@ -80,7 +81,7 @@ renders, in a tabbed page or not; reduced motion stills them there.
 
 [`index.stories.tsx`](../../src/components/ListFrame/index.stories.tsx),
 `Layout / List Frame`: `Default`, a small table and its pager, and
-`Pending`, the same with a page on its way. A whole list on its way, filter
+`Pending`, the same with a page on its way, and `PendingCards`, the card skeleton. A whole list on its way, filter
 row and all, inside its tabbed page, is GroupedValueList's
 `CategoriesPending` with `PendingPhoneDark` and `PendingPhoneLight`
 ([`grouped-value-list.md`](grouped-value-list.md)).
