@@ -1,4 +1,5 @@
 import { test, expect } from './fixtures';
+import { assertNoAccessibilityViolations } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAs } from './session';
 import { seedCoven, withSql } from './stories/coven-ingredients';
@@ -68,6 +69,9 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
   await expect(page.getByRole('status').filter({ hasText: 'From the Compendium' })).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: 'Annotated' })).toBeVisible();
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);
+  // At a phone's width, the narrowest a section signs off at.
+  await page.setViewportSize({ width: 375, height: 812 });
+  await assertNoAccessibilityViolations(page);
 
   await page.goto(`/compendium/ingredients/${slug}`);
   await expect(
