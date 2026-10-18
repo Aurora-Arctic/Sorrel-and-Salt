@@ -3,7 +3,9 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { Membership } from '@/modules/coven';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { findPageInTiers } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
+import type { PageEntry, PageRequest } from '../../lib/types';
 import type { CupboardEntryRow, IngredientRow } from './types';
 
 // The reads over a coven's cupboard entries (M12.14): the rows of
@@ -106,17 +108,36 @@ function inCupboard(membership: Membership): SQL | undefined {
  * rather than fuzzy: a near spelling is `findSimilarIngredients`'.
  */
 export function findCompendiumMatchesByName(name: string): Promise<IngredientRow[]> {
+  return selectFrom(ingredients, and(compendiumNamed(name), notSoftDeleted(ingredients)));
+}
+
+/**
+ * One page of the same exact matches, by name and then id: the Add flow's
+ * question (M12.20), which the schema serves as a connection like any list.
+ * Never more rows than the entries one typed name can equal.
+ */
+export function findCompendiumMatchPage(
+  name: string,
+  page: PageRequest,
+): Promise<PageEntry<IngredientRow, object>[]> {
+  return findPageInTiers(
+    [],
+    ingredients,
+    [ingredients.name],
+    page,
+    and(compendiumNamed(name), notSoftDeleted(ingredients)),
+  );
+}
+
+/** A compendium entry whose label or formal name is `name`, exactly but for case; the finders add the soft-delete filter. */
+function compendiumNamed(name: string): SQL | undefined {
   // `lower` has no builder.
   const folded = sql`lower(${name})`;
-  return selectFrom(
-    ingredients,
-    and(
-      inCompendium(ingredients),
-      notSoftDeleted(ingredients),
-      or(
-        eq(sql`lower(${ingredients.name})`, folded),
-        eq(sql`lower(${ingredients.canonicalName})`, folded),
-      ),
+  return and(
+    inCompendium(ingredients),
+    or(
+      eq(sql`lower(${ingredients.name})`, folded),
+      eq(sql`lower(${ingredients.canonicalName})`, folded),
     ),
   );
 }

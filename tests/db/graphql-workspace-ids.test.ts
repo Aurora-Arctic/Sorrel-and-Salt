@@ -211,6 +211,11 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       possibleDuplicates(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
     }`,
   },
+  compendiumMatches: {
+    source: `query ($workspaceId: ID!) {
+      compendiumMatches(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
+    }`,
+  },
   ingredient: {
     source:
       'query ($workspaceId: ID, $id: ID!) { ingredient(workspaceId: $workspaceId, id: $id) { id } }',

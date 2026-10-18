@@ -48,6 +48,7 @@ export {
 } from './ingredients';
 export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
 export {
+  findCompendiumMatchPage,
   findCompendiumMatchesByName,
   findCupboardEntriesOf,
   findCupboardEntry,
