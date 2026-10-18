@@ -320,6 +320,72 @@ describe('FacetPanel', () => {
     rerender(<FacetPanel {...props({}, { admin: true })} />);
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
   });
+
+  describe("the coven's Source and In Stock Only controls (M9.7)", () => {
+    const COVEN = { source: '', inStockOnly: false } as const;
+    const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
+      stubViewport(true);
+      render(<FacetPanel {...props(filter, more)} />);
+      fireEvent.click(filtersButton());
+    };
+
+    it('shows neither on a panel whose caller passes neither', () => {
+      open();
+      expect(screen.queryByRole('group', { name: 'Source' })).toBeNull();
+      expect(screen.queryByRole('switch', { name: 'In Stock Only' })).toBeNull();
+    });
+
+    it('offers Source as All, Local and Compendium, on All by default', () => {
+      open(COVEN);
+      const source = screen.getByRole('group', { name: 'Source' });
+      expect(
+        within(source)
+          .getAllByRole('radio')
+          .map((radio) => radio.getAttribute('value')),
+      ).toEqual(['', 'local', 'compendium']);
+      expect(within(source).getByRole('radio', { name: 'All' })).toBeChecked();
+    });
+
+    it('reports a chosen source and the switch as a patch of only that part', () => {
+      const onChange = vi.fn();
+      open(COVEN, { onChange });
+
+      fireEvent.click(screen.getByRole('radio', { name: 'Local' }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
+      fireEvent.click(screen.getByRole('radio', { name: 'Compendium' }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'compendium' });
+
+      fireEvent.click(screen.getByRole('switch', { name: 'In Stock Only' }));
+      expect(onChange).toHaveBeenLastCalledWith({ inStockOnly: true });
+    });
+
+    it('shows what is held', () => {
+      open({ source: 'local', inStockOnly: true });
+      expect(screen.getByRole('radio', { name: 'Local' })).toBeChecked();
+      expect(screen.getByRole('switch', { name: 'In Stock Only' })).toBeChecked();
+    });
+
+    it('counts a chosen source and the switch on the Filters button', () => {
+      stubViewport(true);
+      const { rerender } = render(<FacetPanel {...props(COVEN)} />);
+      expect(filtersButton()).toHaveAccessibleName('Filters');
+      rerender(<FacetPanel {...props({ source: 'compendium', inStockOnly: true })} />);
+      expect(filtersButton()).toHaveAccessibleName('Filters (2)');
+    });
+
+    it('submits through the GET form around it, as source=local and inStockOnly=1', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel {...props({ source: 'local', inStockOnly: true })} />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('source')).toEqual(['local']);
+      expect(data.getAll('inStockOnly')).toEqual(['1']);
+    });
+  });
+
   describe('the Toxic field when a count is zero', () => {
     const withToxic = (
       toxic: CompendiumFacetCounts['toxic'],
