@@ -16,8 +16,9 @@ nothing from the data.
 | `formalName`   | The formal name, a caption beneath the name                                                                                          |
 | `nomenclature` | Decides its italics: only a binomial kind (`isBinomial`, shared with the entry page) is italic; mineral, chemical or none is upright |
 | `categories`   | The entry's categories with their groups; chips in the group colours, plain not links, no row when empty                             |
-| `variants`     | The entry's live forms: an icon and the name each on the secondary line; their notes and flags feed the caution and the Toxic mark   |
+| `variants`     | The entry's live forms: an icon and the name each on the secondary line; their notes and flags feed the Caution and Toxic marks      |
 | `toxic`        | The ingredient's own flag                                                                                                            |
+| `safetyNotes`  | The ingredient's own safety notes; notes here or on a listed form show the Caution badge. The notes themselves are never drawn       |
 | `kind`         | `own`, `cupboard` or `compendium`; see [`entry-marks.md`](entry-marks.md)                                                            |
 | `annotated`    | The cupboard row overrides a field                                                                                                   |
 | `retired`      | The curators retired the entry                                                                                                       |
@@ -32,13 +33,18 @@ restyled here:
 - the name, an `h2` holding the card's **one link**, so the card is reached by
   keyboard through it alone;
 - the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the forms line (a `FormIcon` before each form, an `aria-hidden` dot between: "Herb · Oil"; it tells two entries sharing a label apart), the category chips, and the jar lines;
-- the marks, through `EntryMarks`, with `ToxicMark` beside them, in `.specimen__badges`;
-- no caution block: the notes live on the entry page, and the card carries only the Toxic mark;
+- the marks, through `EntryMarks`, then `CautionMark`, then `ToxicMark` last, in `.specimen__badges`;
+- no caution block: the notes live on the entry page, and the card carries only the Caution badge, a word with no tip, so Toxic stays the one solid badge;
 - the **jar-line slot**. M9.6 fills it with a line per jar (the form's icon, the
   form, quantity and unit, M9.8's `StockBadge`, M9.9's and M9.10's actions). The
   public compendium leaves it empty.
 
 The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is forms, chips, stock: the specimen has no forms line, so the identity lines sit together under the name and the stock line stays last with its rule above.
+
+On the card only, Out of Stock takes Low's weight in the jar slot: a thin border,
+the badge's normal font weight and padding, so both come out the same height. The
+word and the icon still tell the states apart; the heavier edge is M9.8's for a
+badge standing alone. The forms line leaves 8px either side of its dot.
 
 ## Order
 

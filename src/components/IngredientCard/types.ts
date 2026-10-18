@@ -35,6 +35,8 @@ export interface IngredientCardProps {
   variants?: readonly SafetyVariant[];
   /** The ingredient's own toxic flag; the Toxic mark also shows when any listed form is flagged. */
   toxic?: boolean | null;
+  /** The ingredient's own safety notes; any notes here or on a listed form show the Caution badge, never the notes themselves. */
+  safetyNotes?: string | null;
   /** Whose entry it is (see `EntryKind`); the caller reads it from the data. */
   kind: EntryKind;
   /** The cupboard row overrides a field of the compendium's. */

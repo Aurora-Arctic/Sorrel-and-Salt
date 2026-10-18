@@ -229,13 +229,17 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Seven palettes, deliberately not equals. Two appear on an IngredientCard.
+Eight palettes, deliberately not equals. Three appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
 (M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): a tint of `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill, and is drawn tinted so it never reads as a second alarm. Its label on its tint measures 5.10:1 dark and 6.18:1 light, and its edge 3.83:1 and 4.11:1 on the dark and light cards, 4.22:1 and 3.70:1 on the pages. It also keeps its word, drawing and heavier border, so its meaning never rests on colour. That keeps
 exactly one alarming badge in the app and spends no new hue, which matters because every
-hue not already reserved belongs to one of the eight groups. **Last used** marks
+hue not already reserved belongs to one of the eight groups.
+
+**Caution** (M8.14) marks an ingredient or form that carries safety notes. It is the safety red as a tint with a red edge (`$wax-caution-dark`, `$wax-caution-light`: the wax at +15% saturation, lifted 30% for dark and darkened 4% for light), so Toxic stays the one solid badge. Its label on its tint measures 4.94:1 dark and 6.49:1 light, and its edge 3.68:1 and 4.47:1 on the dark and light cards (3.89:1 and 4.18:1 on the pages). Beside Out of Stock it differs only in saturation, so the word, not the colour, tells them apart.
+
+**Last used** marks
 the sign-in button this browser last signed in with (MB.77). It is a pointer,
 not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`
 dark, `$sorrel-vivid` light), a hue already reserved, and spends none of the groups'.

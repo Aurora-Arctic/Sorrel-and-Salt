@@ -69,6 +69,19 @@ export const OwnWithJars: Story = () => (
   </IngredientCard>
 );
 
+// Caution and Toxic together: the oil form carries notes and the flag.
+export const CautionAndToxic: Story = () => <IngredientCard {...BASE} kind="compendium" />;
+
+// Caution alone: notes on the entry, no form flagged.
+export const CautionAlone: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="compendium"
+    variants={VARIANTS.filter((v) => !v.toxic)}
+    safetyNotes="Keep away from open flame."
+  />
+);
+
 // A mineral’s formal name is upright, not italic.
 export const MineralName: Story = () => (
   <IngredientCard

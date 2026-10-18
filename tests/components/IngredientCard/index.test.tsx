@@ -20,6 +20,7 @@ const OIL = { form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: false
 const ROOT = { form: 'testroot', safetyNotes: '', toxic: false };
 const BASE = { href: HREF, label: 'Fixture Testwort', kind: 'compendium' as const };
 
+const cautionMark = () => screen.queryByText('Caution', { exact: true });
 const toxicMark = () => screen.queryByText('Toxic', { exact: true });
 const localMark = () => screen.queryByText('Local', { exact: true });
 const heldMark = () => screen.queryByText('From the Compendium', { exact: true });
@@ -110,6 +111,42 @@ describe('IngredientCard', () => {
   });
 
   describe('safety', () => {
+    it('shows the caution badge for notes on the entry, and not the notes', () => {
+      render(<IngredientCard {...BASE} safetyNotes="Fixture entry caution." />);
+
+      expect(cautionMark()).not.toBeNull();
+      expect(screen.queryByText('Fixture entry caution.')).toBeNull();
+    });
+
+    it('shows the caution badge for notes on a listed form alone', () => {
+      render(<IngredientCard {...BASE} variants={[LEAF, OIL]} />);
+
+      expect(cautionMark()).not.toBeNull();
+    });
+
+    it('shows no caution badge for blank or whitespace notes', () => {
+      render(
+        <IngredientCard
+          {...BASE}
+          safetyNotes="   "
+          variants={[LEAF, { ...ROOT, safetyNotes: '\n ' }]}
+        />,
+      );
+
+      expect(cautionMark()).toBeNull();
+    });
+
+    it('shows Toxic without Caution when nothing has notes, and both when both apply', () => {
+      const bare = render(<IngredientCard {...BASE} toxic variants={[LEAF]} />);
+      expect(toxicMark()).not.toBeNull();
+      expect(cautionMark()).toBeNull();
+      bare.unmount();
+
+      render(<IngredientCard {...BASE} toxic variants={[OIL]} />);
+      expect(toxicMark()).not.toBeNull();
+      expect(cautionMark()).not.toBeNull();
+    });
+
     it('draws no caution block, even when a listed form has notes', () => {
       render(<IngredientCard {...BASE} variants={[OIL]} />);
 

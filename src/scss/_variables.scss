@@ -63,6 +63,11 @@ $ink-muted: color.adjust($iron-gall, $lightness: 20%);
 $wax-muted-dark: color.adjust($wax, $saturation: -10%, $lightness: 30%);
 $wax-muted-light: color.adjust($wax, $saturation: -8%, $lightness: -2%);
 
+// The red of Caution (M8.14): the same wax with its saturation raised instead of
+// lowered, so it reads as the fuller safety red beside Out of Stock's greyed one.
+$wax-caution-dark: color.adjust($wax, $saturation: 15%, $lightness: 30%);
+$wax-caution-light: color.adjust($wax, $saturation: 15%, $lightness: -4%);
+
 // A 0.8-alpha shadow reads as a hole punched in parchment; light gets a softer one.
 $shadow-dark: rgba(6, 5, 3, 0.8);
 $shadow-light: rgba(35, 32, 26, 0.18);
@@ -126,6 +131,19 @@ $badge-palettes: (
       treatment: tinted,
       dark: $wax-muted-dark,
       light: $wax-muted-light,
+    ),
+  // An ingredient or a form that carries safety notes (M8.14, owner's call
+  // 2026-10-18): the safety red as a tint with a red edge, so Toxic stays the
+  // one solid, alarming badge. Inks are the wax at +15% saturation, lifted 30%
+  // for dark and darkened 4% for light. Label on tint 4.94:1 dark, 6.49:1 light;
+  // edge on the card 3.68:1 dark, 4.47:1 light (3.89 and 4.18 on the page).
+  // Beside Out of Stock (same family, 5.10 and 6.18) it differs only in
+  // saturation, 88% against 80% in dark and 54% against 49% in light, so the
+  // word, never the colour, tells them apart.
+  'caution': (
+      treatment: tinted,
+      dark: $wax-caution-dark,
+      light: $wax-caution-light,
     ),
   // A compendium entry the curators retired, still read by a coven that uses
   // it (M12.24): a fact about the entry, not a hazard, so low-stock's muted

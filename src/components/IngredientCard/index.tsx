@@ -4,7 +4,7 @@ import { chipColors } from '../../lib/chip-colors';
 import { capitalise } from '../../lib/text';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
-import { ToxicMark } from '../SafetyNote';
+import { CautionMark, ToxicMark } from '../SafetyNote';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
 import './index.scss';
@@ -24,6 +24,7 @@ const IngredientCard = ({
   variants = [],
   categories = [],
   toxic,
+  safetyNotes,
   kind,
   annotated,
   retired,
@@ -35,7 +36,12 @@ const IngredientCard = ({
 
   // Without a mark the cluster is left out, not left empty, so it adds no gap.
   const marked = Boolean(
-    kind !== 'compendium' || retired || toxic || variants.some((v) => v.toxic),
+    kind !== 'compendium' ||
+    retired ||
+    toxic ||
+    variants.some((v) => v.toxic) ||
+    (safetyNotes ?? '').trim() !== '' ||
+    variants.some((v) => (v.safetyNotes ?? '').trim() !== ''),
   );
 
   return (
@@ -61,6 +67,7 @@ const IngredientCard = ({
         {marked && (
           <div className="specimen__badges">
             <EntryMarks kind={kind} annotated={annotated} retired={retired} />
+            <CautionMark safetyNotes={safetyNotes} variants={variants} />
             <ToxicMark toxic={toxic} variants={variants} />
           </div>
         )}

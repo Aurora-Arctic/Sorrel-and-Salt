@@ -24,8 +24,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  // The same gap as inside an item, so a dot has equal space either side.
-  gap: space(1);
+  // The same gap as between an item's dot and its form, so a dot has equal
+  // space either side.
+  gap: space(2);
 }
 
 .ingredient-card__item,
@@ -33,6 +34,11 @@
   display: inline-flex;
   align-items: center;
   gap: space(1);
+}
+
+// The dot and its form: wider than the icon-to-word gap inside a form.
+.ingredient-card__item {
+  gap: space(2);
 }
 
 // The chip row is a list, so it drops typography-base's ◆ marker and indent.
@@ -50,6 +56,8 @@
 // them. The rule above them stays.
 .ingredient-card .specimen__stock {
   display: block;
+  // Air between the chips and the rule: the primitive's gap alone read tight.
+  margin-top: space(1);
   font-size: type-size('small');
   color: $text-primary;
   opacity: 1;
@@ -68,4 +76,13 @@
     align-items: center;
     gap: space(1);
   }
+}
+
+// Out of Stock takes Low's weight on the card: the word and the icon still tell
+// the states apart, and the heavier edge is M9.8's for a badge standing alone.
+// The values are the badge mixin's own, so both come out the same height.
+.ingredient-card .specimen__stock .stock-badge--out {
+  border-width: 1px;
+  padding-block: 0.125rem;
+  font-weight: 500;
 }

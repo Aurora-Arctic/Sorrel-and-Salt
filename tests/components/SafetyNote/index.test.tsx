@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import FormIcon from '@/components/FormIcon';
-import SafetyNote, { ToxicMark } from '@/components/SafetyNote';
+import SafetyNote, { CautionMark, ToxicMark } from '@/components/SafetyNote';
 import { capitalise } from '@/lib/text';
 
 // The one presentation of an ingredient's caution (M8.13a;
@@ -136,5 +136,27 @@ describe('ToxicMark', () => {
     render(<ToxicMark toxic />);
 
     expect(stops(screen.getByText('Toxic'))).toEqual([]);
+  });
+});
+
+describe('CautionMark', () => {
+  it('shows for notes on the ingredient or on any form, and not for blank ones', () => {
+    const own = render(<CautionMark safetyNotes="Fixture caution." />);
+    expect(screen.queryByText('Caution')).not.toBeNull();
+    own.unmount();
+
+    const form = render(<CautionMark variants={[{ form: 'testoil', safetyNotes: 'Fixture.' }]} />);
+    expect(screen.queryByText('Caution')).not.toBeNull();
+    form.unmount();
+
+    render(<CautionMark safetyNotes=" " variants={[{ form: 'testoil', safetyNotes: '' }]} />);
+    expect(screen.queryByText('Caution')).toBeNull();
+  });
+
+  it('takes no focus', () => {
+    render(<CautionMark safetyNotes="Fixture caution." />);
+
+    expect(screen.queryByRole('button')).toBeNull();
+    expect(screen.queryByRole('link')).toBeNull();
   });
 });
