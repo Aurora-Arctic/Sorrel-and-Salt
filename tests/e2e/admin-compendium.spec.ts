@@ -1035,8 +1035,8 @@ async function listed(page: Page): Promise<string> {
 const sentenceOf = (page: Page) =>
   page.locator('p[role="status"]').filter({ hasNot: page.getByRole('link') });
 
-/** The number in a label's closing brackets, as in "Toxic (3)". */
-// The number a label ends on, bare in a choice chip's radio and in parentheses in a suggestion.
+/** The number a label ends on, as in "Toxic 3". */
+// Bare in a choice chip's radio and in a suggestion; a radio group's own count may still carry brackets.
 const countIn = (label: string) => Number(/(\d+)\)?\s*$/.exec(label.trim())?.[1]);
 
 /** Picks the option of a type-ahead or multi-select by its label. */

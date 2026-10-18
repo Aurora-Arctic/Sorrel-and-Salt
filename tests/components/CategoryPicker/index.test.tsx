@@ -241,23 +241,23 @@ describe('CategoryPicker', () => {
     it('reads a row as its name and count together, and a pick the same', () => {
       renderControlled(['c-tw'], { categories: counted() });
 
-      expect(entry('Testward')).toHaveTextContent('(4)');
+      expect(entry('Testward')).toHaveTextContent('4');
       open();
-      expect(screen.getByRole('option', { name: /^Testcraft \(0\)/ })).toBeInTheDocument();
-      expect(screen.getByRole('option', { name: /^Ablefix \(1\)/ })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /^Testcraft 0/ })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /^Ablefix 1/ })).toBeInTheDocument();
     });
 
     it('leaves a zero-count row choosable unless asked, and leaves it out when asked', () => {
       const { onChange } = renderPicker({ categories: counted() });
       open();
-      fireEvent.click(screen.getByRole('option', { name: /^Testcraft \(0\)/ }));
+      fireEvent.click(screen.getByRole('option', { name: /^Testcraft 0/ }));
       expect(onChange).toHaveBeenCalledWith(['c-tc']);
 
       cleanup();
       renderPicker({ categories: counted(), hideZeros: true });
       open();
       expect(screen.queryByRole('option', { name: /^Testcraft/ })).not.toBeInTheDocument();
-      expect(screen.getByRole('option', { name: /^Ablefix \(1\)/ })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /^Ablefix 1/ })).toBeInTheDocument();
     });
 
     it('names a pick for removal by its noun, whether or not its count has arrived', () => {
@@ -266,11 +266,11 @@ describe('CategoryPicker', () => {
         screen.getByRole('button', { name: 'Remove Category: Testward' }).closest('li')!;
       const { rerender } = render(<CategoryPicker {...props} loading />);
       expect(screen.getByRole('button', { name: 'Remove Category: Testward' })).toBeInTheDocument();
-      expect(chip()).not.toHaveTextContent('(4)');
+      expect(chip()).not.toHaveTextContent('4');
 
       rerender(<CategoryPicker {...props} />);
       expect(screen.getByRole('button', { name: 'Remove Category: Testward' })).toBeInTheDocument();
-      expect(chip()).toHaveTextContent('(4)');
+      expect(chip()).toHaveTextContent('4');
     });
 
     it('keeps a chosen zero-count pick removable', () => {

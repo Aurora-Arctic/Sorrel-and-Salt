@@ -487,11 +487,11 @@ describe('CompendiumList filter', () => {
     const forms = within(panel()).getByRole('combobox', { name: 'Forms' });
 
     fireEvent.click(forms);
-    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil (3)' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Fixture Oil 3' }));
     await screen.findByRole('switch', { name: 'No Refs 5' });
 
     fireEvent.change(forms, { target: { value: 'Fixture Pow' } });
-    expect(await screen.findByRole('option', { name: 'Fixture Powder (2)' })).toBeInTheDocument();
+    expect(await screen.findByRole('option', { name: 'Fixture Powder 2' })).toBeInTheDocument();
   });
 
   it('applies Clear All beside the Filters button at once, and Clear All in the panel too', () => {

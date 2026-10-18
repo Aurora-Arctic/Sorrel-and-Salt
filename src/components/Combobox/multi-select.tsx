@@ -276,7 +276,7 @@ export function ComboboxMultiSelect({
                   {choice.count !== undefined && (
                     <>
                       {' '}
-                      <span className="combobox__count">({choice.count})</span>
+                      <span className="combobox__count">{choice.count}</span>
                     </>
                   )}
                 </span>

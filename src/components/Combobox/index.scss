@@ -435,10 +435,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   cursor: text;
 }
 
-// A row's count, "(12)" after its label (M12.4): part of the option's name, so
-// the same size, only a step quieter than the name beside it.
+// A row's count after its label, "Oil 12" (M12.4): part of the option's name, a
+// small muted number with no brackets, as the facet panel's counts are.
 .combobox__count {
   color: $text-muted;
+  font-size: type-size('caption');
 
   .is-highlighted & {
     color: $text-primary;
@@ -753,9 +754,19 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   margin-inline-end: space(1);
 }
 
-// A chip's count after its text, "(12)": never cut off, the text gives way.
+// A chip's count after its text, "Water 7": never cut off, the text gives way.
+// Small and muted as the facet panel's counts are; on a coloured or lifted chip
+// it keeps the chip's own ink, the one checked against that fill.
 .combobox__entry-count {
   flex: none;
+  color: $text-muted;
+  font-size: type-size('caption');
+
+  .combobox__entry.is-coloured &,
+  .combobox__entry.is-dragging & {
+    color: inherit;
+  }
+
   // The label is a flex row, which drops the space between text and count.
   margin-inline-start: space(1);
   white-space: nowrap;
