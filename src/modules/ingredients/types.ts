@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type {
   CompendiumFacets,
+  CupboardEntryRow,
   FacetCount,
   IngredientFacets,
   IngredientRow,
@@ -21,6 +22,7 @@ import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons
 // The repository's own, rather than a second `typeof …$inferSelect`.
 export type {
   CompendiumFacets,
+  CupboardEntryRow,
   FacetCount,
   IngredientFacets,
   IngredientRow,

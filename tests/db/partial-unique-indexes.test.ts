@@ -155,6 +155,14 @@ async function spellIngredient(linked: boolean): Promise<Row> {
   });
 }
 
+/** A compendium entry's presence in coven W's cupboard, with no overrides. */
+async function cupboardEntry(): Promise<Row> {
+  return stamped({
+    workspace_id: WORKSPACE_W_ID,
+    ingredient_id: await idOf('ingredients', await compendiumIngredient()),
+  });
+}
+
 const address = () => `${token()}@partial-unique.test`;
 
 // Keyed by index rather than table: one table's indexes can hold rows on
@@ -261,6 +269,13 @@ const ROWS: Record<string, PartialIndexRow> = {
       const t = token();
       return stamped({ name: `Fixture Coven ${t}`, slug: `fixture-coven-${t}` });
     },
+  },
+  // A fresh compendium entry in coven W; the label index's clash is the coven and the
+  // label alone, under another entry, which the entry index would otherwise refuse first.
+  workspace_compendium_entries_workspace_ingredient_unique: { row: cupboardEntry },
+  workspace_compendium_entries_workspace_label_unique: {
+    row: async () => ({ ...(await cupboardEntry()), label: `Testleaf ${token()}` }),
+    clash: ['workspace_id', 'label'],
   },
   zodiac_signs_seed_key_unique: { row: zodiacSign },
   zodiac_signs_slug_unique: { row: zodiacSign },

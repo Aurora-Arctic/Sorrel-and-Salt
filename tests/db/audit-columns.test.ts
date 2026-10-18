@@ -83,7 +83,7 @@ describe('the audit columns', () => {
           .map((row) => row.table_name),
       ),
     ].filter((table) => STAMP_COLUMNS.every((column) => audit(table).columns[column]));
-    expect(AUDITED_TABLES).toHaveLength(27);
+    expect(AUDITED_TABLES).toHaveLength(28);
     expect(stamped.sort()).toEqual(AUDITED_TABLES);
 
     expect(Object.fromEntries(AUDITED_TABLES.map((table) => [table, audit(table)]))).toEqual(
