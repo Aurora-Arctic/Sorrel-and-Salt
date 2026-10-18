@@ -39,20 +39,28 @@ const BASE = {
   variants: VARIANTS,
 };
 
+// The dot for the eye and a word break for a screen reader, so "Dried leaf, 6 g"
+// is not read "Dried leaf6 g".
+const Dot = () => (
+  <>
+    <span aria-hidden="true">·</span>
+    <span className="spoken-separator">,</span>
+  </>
+);
+
 // A stand-in for M9.6’s jar lines, to the card’s contract: one `li` per jar,
-// the form and quantity first and the stock badge last. The dot is hidden from
-// assistive technology, as on the forms line.
+// the form and quantity first and the stock badge last.
 const Jars = () => (
   <ul>
     <li>
       <span>
-        Dried leaf <span aria-hidden="true">·</span> 6 g
+        Dried leaf <Dot /> 6 g
       </span>
       <StockBadge quantity={6} threshold={10} unit="g" />
     </li>
     <li>
       <span>
-        Oil <span aria-hidden="true">·</span> 0 ml
+        Oil <Dot /> 0 ml
       </span>
       <StockBadge quantity={0} threshold={10} unit="ml" />
     </li>
@@ -114,3 +122,34 @@ export const PhoneLight: Story = () => (
   </IngredientCard>
 );
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// Many forms in a narrow column, so the forms line wraps: no dot leads or ends a line.
+const MANY_FORMS = [
+  'dried leaf',
+  'fresh leaf',
+  'whole root',
+  'powdered root',
+  'oil',
+  'tincture',
+  'flower',
+  'seed',
+  'bark',
+].map((form, at) => ({
+  form,
+  formChoice: { group: { icon: at % 2 ? ('fluid' as const) : ('botanical' as const) } },
+  safetyNotes: '',
+}));
+
+export const ManyFormsNarrow: Story = () => (
+  <IngredientCard {...BASE} kind="own" variants={MANY_FORMS}>
+    <Jars />
+  </IngredientCard>
+);
+ManyFormsNarrow.meta = { theme: 'dark', width: 280 };
+
+export const ManyFormsPhone: Story = () => (
+  <IngredientCard {...BASE} kind="own" variants={MANY_FORMS}>
+    <Jars />
+  </IngredientCard>
+);
+ManyFormsPhone.meta = { theme: 'light', width: 375 };

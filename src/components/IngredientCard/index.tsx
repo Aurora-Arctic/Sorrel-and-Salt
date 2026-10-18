@@ -72,21 +72,6 @@ const IngredientCard = ({
           </div>
         )}
       </div>
-      {variants.length > 0 && (
-        <p className="ingredient-card__forms">
-          {variants.map((variant, at) => (
-            <span key={variant.form} className="ingredient-card__item">
-              {/* Decorative: the separator is for the eye, and a screen reader
-                  hears the forms as the run of text they are. */}
-              {at > 0 && <span aria-hidden="true">·</span>}
-              <span className="ingredient-card__form">
-                <FormIcon name={variant.formChoice?.group.icon ?? null} />{' '}
-                {capitalise(variant.form)}
-              </span>
-            </span>
-          ))}
-        </p>
-      )}
       {categories.length > 0 && (
         <ul className="specimen__chips" aria-label="Categories">
           {categories.map(({ category, group }) => (
@@ -97,6 +82,22 @@ const IngredientCard = ({
             </li>
           ))}
         </ul>
+      )}
+      {variants.length > 0 && (
+        <p className="ingredient-card__forms">
+          {variants.map((variant, at) => (
+            <span key={variant.form} className="ingredient-card__item">
+              {/* The eye gets a dot drawn in CSS (it is not text, so it is never
+                  announced, and it can be clipped at the start of a wrapped line);
+                  a screen reader gets this word break. */}
+              {at > 0 && <span className="spoken-separator">,</span>}
+              <span className="ingredient-card__form">
+                <FormIcon name={variant.formChoice?.group.icon ?? null} />{' '}
+                {capitalise(variant.form)}
+              </span>
+            </span>
+          ))}
+        </p>
       )}
       {children != null && children !== false && <div className="specimen__stock">{children}</div>}
     </article>

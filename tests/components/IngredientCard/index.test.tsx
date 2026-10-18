@@ -83,13 +83,42 @@ describe('IngredientCard', () => {
     expect(screen.getByText('Fixtura testalis').tagName).not.toBe('I');
   });
 
-  it('separates the items with a dot hidden from assistive technology', () => {
+  it('puts a spoken separator between the forms, and none after the last', () => {
     render(<IngredientCard {...BASE} variants={[LEAF, ROOT, OIL]} />);
 
-    // Three forms, two separators.
-    const dots = screen.getAllByText(/·/);
-    expect(dots).toHaveLength(2);
-    for (const dot of dots) expect(dot).toHaveAttribute('aria-hidden', 'true');
+    // Three forms, two separators; the dot itself is drawn in CSS, not text.
+    expect(screen.getAllByText(',')).toHaveLength(2);
+    expect(screen.queryByText(/·/)).toBeNull();
+  });
+
+  it('lays the body out as the top row, the categories, the forms, then the jar lines', () => {
+    render(
+      <IngredientCard
+        {...BASE}
+        kind="own"
+        variants={[LEAF]}
+        categories={[
+          {
+            category: { id: 'c1', name: 'Testing' },
+            group: { colorDark: '#112233', colorLight: '#445566' },
+          },
+        ]}
+      >
+        <ul aria-label="Jars">
+          <li>Testleaf</li>
+        </ul>
+      </IngredientCard>,
+    );
+
+    const follows = (a: HTMLElement, b: HTMLElement) =>
+      Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const name = screen.getByRole('heading');
+    const chips = screen.getByRole('list', { name: 'Categories' });
+    const form = screen.getByText('Testleaf', { selector: 'span' });
+    const jars = screen.getByRole('list', { name: 'Jars' });
+    expect(follows(name, chips)).toBe(true);
+    expect(follows(chips, form)).toBe(true);
+    expect(follows(form, jars)).toBe(true);
   });
 
   it('shows no formal name and no forms for an entry with neither', () => {

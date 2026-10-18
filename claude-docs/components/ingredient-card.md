@@ -32,19 +32,39 @@ restyled here:
 
 - the name, an `h2` holding the card's **one link**, so the card is reached by
   keyboard through it alone;
-- the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the forms line (a `FormIcon` before each form, an `aria-hidden` dot between: "Herb · Oil"; it tells two entries sharing a label apart), the category chips, and the jar lines;
+- the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the category chips, the forms line (a `FormIcon` before each form, a dot between: "Herb · Oil"; it tells two entries sharing a label apart), and the jar lines;
 - the marks, through `EntryMarks`, then `CautionMark`, then `ToxicMark` last, in `.specimen__badges`;
 - no caution block: the notes live on the entry page, and the card carries only the Caution badge, a word with no tip, so Toxic stays the one solid badge;
 - the **jar-line slot**. M9.6 fills it with a line per jar (the form's icon, the
   form, quantity and unit, M9.8's `StockBadge`, M9.9's and M9.10's actions). The
   public compendium leaves it empty.
 
-The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is forms, chips, stock: the specimen has no forms line, so the identity lines sit together under the name and the stock line stays last with its rule above.
+The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is top row, chips, forms, stock (changed 2026-10-18): the chips sit under the name and the forms line leads into the jar lines it describes, with the stock line last under its rule.
 
 On the card only, Out of Stock takes Low's weight in the jar slot: a thin border,
 the badge's normal font weight and padding, so both come out the same height. The
 word and the icon still tell the states apart; the heavier edge is M9.8's for a
-badge standing alone. The forms line leaves 8px either side of its dot.
+badge standing alone.
+**The forms line's dot is drawn in CSS and never leads or ends a wrapped line.**
+Each form after the first carries a `::before` circle (4px, `currentcolor`, so not
+text and never announced) in the 24px margin to its left. The line has a matching
+negative inline-start margin and a `clip-path` over that band, so a dot that would
+start a wrapped line falls in the clipped band and a line never ends with one,
+since each dot belongs to the form after it. A screen reader gets a
+`.spoken-separator` comma in each item, so "Dried Leaf, Oil" is not run together;
+the jar-line dot gets the same. Nothing focusable sits in the line, so the clip
+cuts no focus ring.
+
+### Jar-section spacing
+
+Every gap is a `space()` token. Before and after (px), changed 2026-10-18:
+
+| Gap                                     | Before | After |
+| --------------------------------------- | ------ | ----- |
+| Between two jar lines                   | 0      | 8     |
+| Forms line (or chips) to the rule above | 16     | 24    |
+| Rule to the first jar line              | 8      | 12    |
+| Last jar line to the card's bottom edge | 24     | 32    |
 
 **The whole card is the link.** The name's one `<a>` stretches an empty `::after`
 over the `article` (`position: relative`), the stretched-link pattern. The card
