@@ -65,6 +65,35 @@ The three take the compendium entry's id, not the row's, because that is what a 
 
 `tests/modules/ingredients/services/cupboard-entry-writes.test.ts` holds the rules and `tests/modules/ingredients/graphql/cupboard-entry-writes.test.ts` the transport's half.
 
+### Converting an own entry
+
+M12.21 adds `convertLocalToCompendiumEntry(session, workspaceId, localId, compendiumId)` to the same service. It turns one of the coven's own ingredients into the compendium entry it duplicates, for the coven that finds a reference entry for something it had written up itself. Nothing is copied. The coven's jars and spell layers move onto the compendium entry's forms, a cupboard row records what the coven had said differently, and the own ingredient is soft-deleted.
+
+It checks `ingredient: create` and `delete` and `inventory: update`, because it adds a cupboard row, deletes an ingredient and moves jars. Everything happens in one `withAudit` transaction under the coven's stock lock (`lockCovenStock`), so no jar of either entry appears between the checks and the moves, and a failure at any step leaves every row where it was.
+
+**Matching forms.** Each live form of the own ingredient is matched to the compendium form it folds to (`foldForm` in `services/ingredient-rows.ts`: trimmed and lower-cased, as the variants' unique index folds). A form "holds" something when a live jar of the coven is on it, or a live layer of a live spell of the coven, private spells included, whoever wrote them. A form that matches nothing and holds nothing is dropped. A jar on a form deleted earlier is in no read and is not moved; nor is a layer on such a form, which is why a spell laid with one still reads the deleted ingredient through the M5.3 hatch (`findIngredientsInSpellsIncludingSoftDeleted`).
+
+**Moving.** Each jar is updated in place, so its id, quantity, unit and threshold are unchanged and only its ingredient and form change. Spell layers move the same way, through the writer's `moveLayers`, which sits in `src/db/repository/spells.ts` because the ingredients module may not import the grimoire's schema; `lockLayersOfVariants` beside it reads them locked.
+
+**The cupboard row** carries only what differs: the own name as the label when it is not the compendium's name, the description and safety notes when set and different, and each of the four lists when non-empty and holding other values (order aside). An own ingredient has nothing to inherit, so an empty note or list on it says nothing, and copying it would hide the compendium's value.
+
+**What is lost.** Folk names, substitutes, categories, references and deities have no override on a cupboard row (see "Reading it"). Their rows are not deleted: they stay on the soft-deleted ingredient, as a plain delete leaves them. The answer lists them by name, the ingredient's and its forms' together, each list sorted, beside the forms dropped, so the page can tell the coven what it no longer sees.
+
+| Refusal                                                                          | Error             | Beside         |
+| -------------------------------------------------------------------------------- | ----------------- | -------------- |
+| The caller lacks one of the three permissions; a viewer, or not in the coven     | `Forbidden`       |                |
+| `localId` is not a live ingredient of this coven, another coven's included       | `NotFound`        |                |
+| `compendiumId` is not a live compendium entry                                    | `NotFound`        |                |
+| The coven already holds the compendium entry in its cupboard                     | `ValidationError` | `ingredientId` |
+| Another entry of the coven already uses the own name as its label                | `ValidationError` | `label`        |
+| A form holding a jar or a layer matches no compendium form; the message names it | `ValidationError` | `forms`        |
+| The coven already holds a jar of a matched compendium form: combine them first   | `ValidationError` | `jars`         |
+| One spell lays both a form and the compendium form it matches                    | `ValidationError` | `layers`       |
+
+Two jars, or two layers in one spell, of the same form would break a unique index, and merging them would be a guess at what the coven meant, so both are refused rather than merged. The jar refusal is reachable only for a jar of a compendium form with no cupboard row, which since M12.15 only stock from before that task can be: `createStock` inserts the row with the first jar, and the existing-row refusal comes first. A layer refusal names only forms, never the spell, which may be another member's private one.
+
+`tests/modules/ingredients/services/convert-local-to-compendium.test.ts` holds the rules, the rollback included (a trigger fails the cupboard insert after the moves), and `tests/modules/ingredients/graphql/convert-local-to-compendium.test.ts` the transport's half.
+
 ### In the cupboard list
 
 The coven's ingredient list and its facet counts (M12.18; [`stock.md`](stock.md), "The workspace ingredient list") read this table in two ways.

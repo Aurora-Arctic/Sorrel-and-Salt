@@ -55,6 +55,10 @@ let deletableJarId: string;
 let unheldEntryId: string;
 let heldEntryId: string;
 let removableEntryId: string;
+// An own entry of W and the compendium entry it is converted into, each with
+// a Root form, for the convert probe alone.
+let convertibleId: string;
+let convertTargetId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
@@ -114,6 +118,25 @@ beforeAll(async () => {
   await insertCupboardEntry(
     sql,
     { workspaceId: WORKSPACE_W_ID, ingredientId: removableEntryId },
+    A.id,
+  );
+  convertTargetId = await insertIngredient(
+    sql,
+    makeIngredient({
+      name: 'Fixture Convert Target',
+      nomenclature: 'none',
+      variants: [makeVariant({ form: 'Root' })],
+    }),
+    A.id,
+  );
+  convertibleId = await insertIngredient(
+    sql,
+    makeIngredient({
+      workspaceId: WORKSPACE_W_ID,
+      name: 'Fixture Convertible',
+      nomenclature: 'none',
+      variants: [makeVariant({ form: 'Root' })],
+    }),
     A.id,
   );
   const insertCoven = async (name: string) => {
@@ -320,6 +343,14 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)
     }`,
     variables: () => ({ ingredientId: removableEntryId }),
+  },
+  convertLocalToCompendiumEntry: {
+    source: `mutation ($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {
+      convertLocalToCompendiumEntry(workspaceId: $workspaceId, localId: $localId, compendiumId: $compendiumId) {
+        entry { id }
+      }
+    }`,
+    variables: () => ({ localId: convertibleId, compendiumId: convertTargetId }),
   },
 };
 
