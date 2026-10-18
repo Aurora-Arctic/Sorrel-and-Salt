@@ -466,3 +466,19 @@ $jump-link-line: 1.25;
     transition: none;
   }
 }
+
+// The cupboard buttons beside the title (M12.17): in a row that wraps on a
+// phone, the remove question's sentence taking a line of its own.
+.ingredient-entry__cupboard {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}
+
+.ingredient-entry__ask {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}

@@ -1,3 +1,4 @@
+import type { CompendiumValues, CupboardOverrides } from '../CupboardEntryForm/types';
 import type { Route } from 'next';
 import type { IngredientDetail, IngredientRow } from '@/modules/ingredients';
 import type { EditedIngredient } from '../IngredientForm/types';
@@ -71,4 +72,32 @@ export interface IngredientEntryProps {
     total: number;
     allHref?: Route;
   };
+  /**
+   * The cupboard buttons (M12.17), for a compendium entry seen from a coven:
+   * Add to Cupboard, or Annotate This Entry and Remove from Cupboard once the
+   * coven holds it, each only for a member whose role permits it. Left out on
+   * the public page and for a coven's own entry.
+   */
+  cupboard?: CupboardProps;
+}
+
+/**
+ * What a coven's member may do about a compendium entry in their cupboard
+ * (M12.17). Left out on the public page and for a coven's own entry.
+ */
+export interface CupboardProps {
+  workspaceId: string;
+  /** What the member may do, from their role: add needs create, annotate update, remove delete. */
+  canAdd: boolean;
+  canAnnotate: boolean;
+  canRemove: boolean;
+}
+
+/** What the client buttons need to draw: the props above, and the entry's two sides for the form. */
+export interface CupboardActionsProps extends CupboardProps {
+  ingredientId: string;
+  /** The coven holds the entry now. */
+  held: boolean;
+  compendium: CompendiumValues;
+  overrides: CupboardOverrides;
 }
