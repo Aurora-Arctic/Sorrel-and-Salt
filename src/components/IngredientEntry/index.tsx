@@ -435,7 +435,6 @@ const IngredientEntry = ({
   movedAway,
   replaces,
   similar,
-
   cupboard,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;

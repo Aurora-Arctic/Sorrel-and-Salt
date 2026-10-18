@@ -1,9 +1,10 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, render, screen, within } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
-import { makeQueryClient } from '@/lib/graphql-client';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
+import { makeQueryClient } from '@/lib/graphql-client';
 import { entryDetail } from '../../../support/entry-detail';
 
 // A coven's ingredient page (M8.19). The guard and the services are mocked,
@@ -28,20 +29,19 @@ vi.mock('@/lib/viewer', () => ({ viewerOf }));
 const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
 const compendiumMatchesOf = vi.fn();
+const getCupboardEntry = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
-const getCupboardEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
   compendiumMatchesOf,
-  isRetired,
   getCupboardEntry,
+  isRetired,
+  // The permission Make It Ours is offered on, as the service asserts it (M12.23).
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
   // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
-  // The page reads Make It Ours's permission from the module (M12.23), so the
-  // mock carries it as the service declares it.
-  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
 }));
 
 // The form is its own tests'; here only that the dialog holds one.
@@ -51,6 +51,11 @@ vi.mock('@/components/IngredientForm', () => ({
 
 const entryValues = vi.fn();
 vi.mock('@/app/(shell)/admin/compendium/entry-values', () => ({ entryValues }));
+
+// The cupboard buttons (M12.17) are client parts that send mutations, so the page
+// renders under a query client.
+const renderPage = (ui: ReactElement) =>
+  render(<QueryClientProvider client={makeQueryClient()}>{ui}</QueryClientProvider>);
 
 const { default: Page, generateMetadata } =
   await import('@/app/(shell)/coven/[slug]/ingredients/[id]/page');
@@ -77,13 +82,7 @@ const open = async (
   getIngredient.mockResolvedValue(row);
   ingredientDetailOf.mockResolvedValue({ ...entryDetail(), entry: row });
   viewerOf.mockResolvedValue({ viewer: { name: 'Fixture Member', canCurate }, workspaces: [] });
-  // The cupboard buttons the page draws for a member (M12.17) read a query
-  // client, as the browser gives them one.
-  render(
-    <QueryClientProvider client={makeQueryClient()}>
-      {await Page(params(ID, search))}
-    </QueryClientProvider>,
-  );
+  renderPage(await Page(params(ID, search)));
 };
 
 beforeEach(() => {
@@ -200,7 +199,7 @@ describe('the coven ingredient page', () => {
 
     getIngredient.mockResolvedValue(compendiumRow());
     ingredientDetailOf.mockResolvedValue({ ...entryDetail(), retired: true });
-    render(await Page(params()));
+    renderPage(await Page(params()));
 
     expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
     expect(edits()).toHaveLength(0);

@@ -1351,8 +1351,8 @@ describe('IngredientForm', () => {
     });
   });
 
-  // M12.8 moves a coven's jars onto the local entry it hides; the save's
-  // result carries them for the dialog's status to name (M8.16).
+  // The save's result carries the new entry's jars for the dialog's status to
+  // name (M8.16). Since M12.27 a save moves none, so only a mock fills it.
   it('hands onSaved the jars the new entry holds', async () => {
     mockGraphQLMutation<
       CreateWorkspaceIngredientMutation,

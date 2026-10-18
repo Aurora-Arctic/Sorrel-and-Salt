@@ -95,9 +95,9 @@ the 26 entries carry §5's own hard cases:
   argument for demanding a formal name in the curated tier is that those two
   are confused in the field.
 
-M4.7/M4.7a (fuzzy duplicates, scoped suggestions) and M8.3/M8.3a
-(local-beats-compendium resolution, folk-name promotion) resolve against these
-rows. None of those tasks can be tested against tidy data, which is why the
+M4.7/M4.7a (fuzzy duplicates, scoped suggestions), M8.3a (folk-name
+promotion) and the compendium matches an own entry's page offers (M12.12,
+M12.22) resolve against these rows. None of those tasks can be tested against tidy data, which is why the
 mess is seeded rather than left for each test to build.
 
 Entries also carry folk names (M4.4a's child table — "Uña de Gato" on both

@@ -434,4 +434,37 @@ describe('createStock on a compendium form', () => {
     expect(stored).toHaveLength(1);
     expect(stored[0]).toMatchObject({ id: row, label: 'Hedgewort' });
   });
+
+  // M12.28: a name match takes nothing from the compendium entry. The jar is
+  // stored where the member put it, not on the coven's same-named entry.
+  it("stores the jar on the compendium form, though the coven's own entry shares its identity and form", async () => {
+    const own = await insertIngredient(
+      sql,
+      makeIngredient({
+        workspaceId: WORKSPACE_W_ID,
+        variants: [makeVariant({ form: 'Testform' })],
+      }),
+      A.id,
+    );
+    // Why the jar could have gone to the own entry: it is live in W, and its
+    // name, identity and form all match the compendium entry's.
+    const shared = await sql`
+      select id, workspace_id, name, identity_key from ingredients
+      where id in (${entry}, ${own}) and deleted_at is null`;
+    const [ownRow, entryRow] = [own, entry].map((id) => shared.find((row) => row.id === id));
+    expect(ownRow).toMatchObject({ workspace_id: WORKSPACE_W_ID });
+    expect(entryRow).toMatchObject({ workspace_id: null });
+    expect(ownRow?.name).toBe(entryRow?.name);
+    expect(ownRow?.identity_key).toBe(entryRow?.identity_key);
+    expect(await variantIdOf(sql, own, 'Testform')).toBeTypeOf('string');
+    expect(await rowsOf(entry)).toHaveLength(0);
+
+    const jar = await createStock(asUser(B), WORKSPACE_W_ID, form, {});
+
+    expect(jar).toMatchObject({ ingredientId: entry, variantId: form });
+    expect(await rowsOf(entry)).toHaveLength(1);
+    const [{ count }] = await sql`
+      select count(*)::int as count from inventory_items where ingredient_id = ${own}`;
+    expect(count).toBe(0);
+  });
 });

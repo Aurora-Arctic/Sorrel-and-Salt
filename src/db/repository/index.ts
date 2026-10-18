@@ -31,7 +31,6 @@ export {
 } from './spells';
 export {
   findCompendiumCount,
-  findCompendiumEntriesHiddenBy,
   findCompendiumEntryByIdentity,
   findCompendiumPage,
   findDeitiesOfIngredients,
@@ -135,7 +134,6 @@ export type {
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,
-  HiddenJar,
   IngredientRow,
   InvitableRole,
   InvitableSiteRole,

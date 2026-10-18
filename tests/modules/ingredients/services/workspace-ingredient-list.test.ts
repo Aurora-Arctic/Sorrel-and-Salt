@@ -226,8 +226,8 @@ describe('listWorkspaceIngredients', () => {
     expect(await listed(asUser(B))).toEqual(['Covenwort']);
   });
 
-  // M12.18 decision 2: the coven chose both entries, so both are listed. The
-  // local entry no longer hides the compendium entry it matches.
+  // M12.18 decision 2: the coven chose both entries, so both are listed; a
+  // name match hides neither (M12.28).
   it('lists a local entry beside the held compendium entry it matches', async () => {
     const entry = await held('Fixturewort', {
       canonicalName: 'Fixtura vulgaris',

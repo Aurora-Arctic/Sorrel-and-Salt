@@ -24,8 +24,8 @@ import { CompendiumFilter } from '../validation/compendium-filter';
  *
  * A `form` ranks the entries holding that form first, then those holding another
  * form of its curated group (M8.3), within each group. A coven's own
- * ingredient no longer hides the compendium entry it names here: both are
- * listed, in their own groups (claude-docs/db/compendium-read.md).
+ * ingredient and a compendium entry sharing its name are both listed, in their
+ * own groups (claude-docs/db/compendium-read.md).
  *
  * Asks only `ingredient: ['read']`: every row it can return is one a reader of
  * this workspace could already list.

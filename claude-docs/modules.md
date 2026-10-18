@@ -296,7 +296,7 @@ curated form's rename onto the compendium variants picking it (`carryFormRename`
 list, its count, the identity lookup, the exact-name match, the rename's clash check, the two address finders and the writer
 touch the compendium tier alone, as do `citesNothing` and `cites`; each of the rest
 reads the compendium and the proofs' workspaces in a single statement. A later
-task that adds such a finder — M8.3's local-beats-compendium resolution — adds the finder's name to
+task that adds such a finder adds its name to
 this list in its own PR, with a one-line reason beside it.
 The list is then the scope of the extraction task, read from one file.
 
