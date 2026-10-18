@@ -12,6 +12,7 @@ import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { ingredientSlug } from '../../../lib/slugify';
 import { carryJarsToLocal } from './carry-stock';
+import { refuseCupboardLabelAsName } from './cupboard-entries';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
@@ -48,7 +49,8 @@ type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
  * @throws {JarMergeNeeded} two jars of one form differ in unit and
  * `jarMerges` names no amount; nothing is saved.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
- * collides with another of the coven's ingredients, picks a form or deity no
+ * collides with another of the coven's ingredients or a label it gave a
+ * compendium entry, picks a form or deity no
  * curated row holds, files it under no live category, links a substitute
  * or cites a reference outside the compendium and this coven, or merges jars
  * past the largest amount a jar holds.
@@ -73,6 +75,7 @@ export async function createWorkspaceIngredient(
   const { fields } = picks;
 
   const columns = ingredientColumns(fields);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
     await write.lockCovenStock(membership);
@@ -133,6 +136,7 @@ export async function updateWorkspaceIngredient(
   const { fields } = picks;
 
   const columns = ingredientColumns(fields);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
     await write.lockCovenStock(membership);
@@ -186,6 +190,7 @@ export async function promoteWorkspaceFolkName(
 
   const fields = { name: promoted.name, canonicalName: current.canonicalName };
   const slug = ingredientSlug(fields.name, fields.canonicalName);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
     await write.lockCovenStock(membership);
