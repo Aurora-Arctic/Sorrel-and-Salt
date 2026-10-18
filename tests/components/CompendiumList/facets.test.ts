@@ -203,7 +203,7 @@ describe("a coven's facet counts as its panel takes them (M9.7)", () => {
     inStockOnly: 3,
   };
 
-  it('carries both Source values, zero kept, and the In Stock Only count beside the shared kinds', () => {
+  it('carries both Source values, zero kept, and the In Stock count beside the shared kinds', () => {
     const counts = covenFacetCounts(
       { ...covenCounts, toxic: [{ value: 'toxic', count: 2 }] },
       VOCABULARIES,

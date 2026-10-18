@@ -56,7 +56,7 @@ const FACETS: CompendiumFacetCounts = {
   withoutReferences: 7,
 };
 
-// The coven's counts: Source's two values, one at zero as Toxic's may be, and the In Stock Only count.
+// The coven's counts: Source's two values, one at zero as Toxic's may be, and the In Stock count.
 const COVEN_FACETS: CompendiumFacetCounts = {
   ...FACETS,
   source: [
@@ -134,7 +134,7 @@ function Panel({
 // Nothing chosen: Filters alone, no Clear All.
 export const Empty: Story = () => <Panel open={false} />;
 
-// The public compendium's panel: no Source, no In Stock Only, no No Refs, and no counts for them.
+// The public compendium's panel: no Source, no In Stock, no No Refs, and no counts for them.
 // Open on desktop.
 export const Public: Story = () => <Panel />;
 
@@ -195,7 +195,7 @@ export const ToxicStuck: Story = () => (
 // The admin list also has the No Refs switch.
 export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferences: true }} />;
 
-// The coven's list also has a Source group and the In Stock Only switch, on a row of their own
+// The coven's list also has a Source group and the In Stock switch, on a row of their own
 // above the foot. Their values count on the Filters button, so the two chosen here make 2.
 export const Coven: Story = () => (
   <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStockOnly: true }} />

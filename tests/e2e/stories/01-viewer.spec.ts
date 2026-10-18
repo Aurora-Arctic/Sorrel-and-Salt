@@ -51,7 +51,7 @@ function writeControls(page: Page): Locator {
 
 /**
  * A field a member edits stock or a spell's visibility with; a viewer is offered none.
- * The filter form, FilterForm's `search` landmark, is left out: its In Stock Only switch and
+ * The filter form, FilterForm's `search` landmark, is left out: its In Stock switch and
  * the like change nothing stored, so a viewer gets them too (M9.7). `:not(search *)` leaves
  * out anything inside it and still counts the same field anywhere else in `main`.
  */

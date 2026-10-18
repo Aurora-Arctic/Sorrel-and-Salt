@@ -218,7 +218,7 @@ describe('workspaceIngredientFacets', () => {
     expect(countedOf(inStock, 'forms')).toEqual(['Fullform', 'Heldform', 'Root']);
   });
 
-  describe('the Source and In Stock Only counts', () => {
+  describe('the Source and In Stock counts', () => {
     /**
      * W's local entries (one jarred at 4, one with a jar at 0, one with a jar
      * of no quantity, one with no jar), a compendium entry W holds in stock, one
@@ -282,7 +282,7 @@ describe('workspaceIngredientFacets', () => {
       }
     });
 
-    it('counts In Stock Only under the chosen source, whatever inStockOnly is', async () => {
+    it('counts In Stock under the chosen source, whatever inStockOnly is', async () => {
       await seedSources();
       const expected = { undefined: 3, local: 2, compendium: 1 };
 

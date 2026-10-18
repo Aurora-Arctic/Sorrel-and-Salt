@@ -321,7 +321,7 @@ describe('FacetPanel', () => {
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
   });
 
-  describe("the coven's Source and In Stock Only controls (M9.7)", () => {
+  describe("the coven's Source and In Stock controls (M9.7)", () => {
     const COVEN = { source: '', inStockOnly: false } as const;
     const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
       stubViewport(true);
@@ -332,7 +332,7 @@ describe('FacetPanel', () => {
     it('shows neither on a panel whose caller passes neither', () => {
       open();
       expect(screen.queryByRole('group', { name: 'Source' })).toBeNull();
-      expect(screen.queryByRole('switch', { name: 'In Stock Only' })).toBeNull();
+      expect(screen.queryByRole('switch', { name: 'In Stock' })).toBeNull();
     });
 
     const counted: Partial<FacetPanelProps> = {
@@ -363,7 +363,7 @@ describe('FacetPanel', () => {
       expect(within(source).getByRole('radio', { name: /^Local \(4\)/ })).toBeInTheDocument();
       expect(within(source).getByRole('radio', { name: /^Compendium \(0\)/ })).toBeInTheDocument();
       expect(within(source).getByRole('radio', { name: 'All' })).toBeInTheDocument();
-      expect(screen.getByRole('switch', { name: /^In Stock Only \(3\)/ })).toBeInTheDocument();
+      expect(screen.getByRole('switch', { name: /^In Stock \(3\)/ })).toBeInTheDocument();
     });
 
     it('reports a chosen counted source and switch as a patch of only that part', () => {
@@ -372,7 +372,7 @@ describe('FacetPanel', () => {
 
       fireEvent.click(screen.getByRole('radio', { name: /^Local/ }));
       expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
-      fireEvent.click(screen.getByRole('switch', { name: /^In Stock Only/ }));
+      fireEvent.click(screen.getByRole('switch', { name: /^In Stock/ }));
       expect(onChange).toHaveBeenLastCalledWith({ inStockOnly: true });
     });
 
@@ -385,14 +385,14 @@ describe('FacetPanel', () => {
       fireEvent.click(screen.getByRole('radio', { name: 'Compendium' }));
       expect(onChange).toHaveBeenLastCalledWith({ source: 'compendium' });
 
-      fireEvent.click(screen.getByRole('switch', { name: 'In Stock Only' }));
+      fireEvent.click(screen.getByRole('switch', { name: 'In Stock' }));
       expect(onChange).toHaveBeenLastCalledWith({ inStockOnly: true });
     });
 
     it('shows what is held', () => {
       open({ source: 'local', inStockOnly: true });
       expect(screen.getByRole('radio', { name: /^Local/ })).toBeChecked();
-      expect(screen.getByRole('switch', { name: 'In Stock Only' })).toBeChecked();
+      expect(screen.getByRole('switch', { name: 'In Stock' })).toBeChecked();
     });
 
     it('counts a chosen source and the switch on the Filters button', () => {

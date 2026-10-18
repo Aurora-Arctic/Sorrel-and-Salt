@@ -783,7 +783,7 @@ A coven's `IngredientFacets` also carries two counts that a compendium list has 
 switch for (M9.7), so the two answers are two types and the fields are non-null on
 the coven's alone. `source` is a `SourceFacetCount` list (`value` is `local` or
 `compendium`, `count` an `Int!`) that always holds both values, zeros kept, each
-counted with the Source setting blanked and everything else, In Stock Only
+counted with the Source setting blanked and everything else, In Stock
 included, kept. `inStockOnly` is one `Int!`: how many entries the list would
 hold with the switch on, under the rest of the filter and the chosen Source. A
 count equals the list's `totalCount` under the same filter.

@@ -300,7 +300,7 @@ rules:
 `compendiumList`, so a count cannot match differently from the list it sits
 beside. They run at once with `Promise.all`, so a read costs eight
 queries for the compendium (the seven kinds and the No Refs count) and ten
-for a coven (the seven kinds, the two Source counts and the In Stock Only count), whatever the filter. With a search, each runs in its own transaction
+for a coven (the seven kinds, the two Source counts and the In Stock count), whatever the filter. With a search, each runs in its own transaction
 that sets the 0.5 threshold, as the list does. Signs and bodies use a right
 join from the vocabulary table, with the entries' conditions in the join, so a
 sign no entry lists still comes back at zero. Elements and toxic need no

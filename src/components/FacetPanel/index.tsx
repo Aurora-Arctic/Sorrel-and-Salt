@@ -459,8 +459,8 @@ export default function FacetPanel({
                   <SwitchField
                     label={
                       facets.inStockOnly === undefined
-                        ? 'In Stock Only'
-                        : `In Stock Only (${facets.inStockOnly})`
+                        ? 'In Stock'
+                        : `In Stock (${facets.inStockOnly})`
                     }
                     name="inStockOnly"
                     value="1"

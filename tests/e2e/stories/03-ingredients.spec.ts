@@ -619,7 +619,7 @@ test.fixme(
     // Local and Compendium, and in-stock-only as a switch, as the admin's Without
     // References is (claude-docs/components/compendium-list.md).
     const source = filterOf(page).getByRole('group', { name: 'Source' });
-    const inStockOnly = filterOf(page).getByRole('switch', { name: /^In Stock Only/ });
+    const inStockOnly = filterOf(page).getByRole('switch', { name: /^In Stock/ });
 
     await test.step('local only: the two local entries, badged', async () => {
       await source.getByRole('radio', { name: /^Local/ }).check();

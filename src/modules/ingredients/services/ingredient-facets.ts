@@ -43,7 +43,7 @@ export async function compendiumFacets(filter: CompendiumFilterInput): Promise<C
  * `compendiumFacets` counts, over the rows `listWorkspaceIngredients` reads:
  * the coven's own entries and the compendium entries it holds. Never cached,
  * since what it counts is the coven's. Beside the seven kinds it counts the
- * Source strip's two values and the In Stock Only switch (M9.7), each under
+ * Source strip's two values and the In Stock switch (M9.7), each under
  * the rest of the filter, its own setting left out.
  *
  * @throws {Forbidden} the caller may not read this coven's ingredients.

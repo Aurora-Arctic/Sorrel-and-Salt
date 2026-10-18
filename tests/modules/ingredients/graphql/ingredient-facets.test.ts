@@ -225,7 +225,7 @@ describe('workspaceIngredientFacets', () => {
     expect(await forms({ inStockOnly: false })).toEqual(covenform);
   });
 
-  it("answers the coven's Source and In Stock Only counts, zeros kept", async () => {
+  it("answers the coven's Source and In Stock counts, zeros kept", async () => {
     const result = await workspaceFacets(asUser(B));
 
     expect(result.errors).toBeUndefined();

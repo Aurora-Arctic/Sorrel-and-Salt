@@ -24,7 +24,7 @@ export interface FacetPanelFilter {
    * as the address leaves it blank. The compendium's panel leaves it out.
    */
   source?: '' | IngredientSource;
-  /** The coven's In Stock Only switch, shown only when this is set. */
+  /** The coven's In Stock switch, shown only when this is set. */
   inStockOnly?: boolean;
 }
 
