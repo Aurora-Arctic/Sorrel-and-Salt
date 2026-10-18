@@ -104,7 +104,7 @@ describe('CupboardActions', () => {
 
     press('Remove from Cupboard');
     expect(button('Remove')).toBeInTheDocument();
-    press('Keep It');
+    press('Cancel');
 
     expect(button('Remove')).not.toBeInTheDocument();
     expect(button('Remove from Cupboard')).toBeInTheDocument();

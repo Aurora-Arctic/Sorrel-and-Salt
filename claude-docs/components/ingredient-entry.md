@@ -138,7 +138,7 @@ The optional `cupboard` prop (`{ workspaceId, canAdd, canAnnotate, canRemove }`)
 
 - **Add to Cupboard** while the coven does not hold the entry (`cupboardEntry == null`): `addCupboardEntry` with no overrides.
 - **Annotate This Entry** once it does: opens [`CupboardEntryForm`](cupboard-entry-form.md) in a modal.
-- **Remove from Cupboard** once it does, a `.btn--destructive`: asks in place (Remove, Keep It), then `removeCupboardEntry`. A jar still held in the cupboard refuses; the service's sentence shows in a notice beside the buttons.
+- **Remove from Cupboard** once it does, a `.btn--destructive`: asks in place (Remove, Cancel), then `removeCupboardEntry`. A jar still held in the cupboard refuses; the service's sentence shows in a notice beside the buttons.
 
 Each write calls `router.refresh()`, so the marks and the buttons follow the cupboard. A viewer sees none of them. Stories: `AddToCupboard`, `AnnotateOrRemove`, `ViewerSeesNoCupboardButtons`. Tests: `tests/components/IngredientEntry/cupboard-actions.test.tsx`.
 

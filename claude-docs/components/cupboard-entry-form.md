@@ -1,6 +1,6 @@
 # CupboardEntryForm
 
-`src/components/CupboardEntryForm/` is the form a coven's member annotates a compendium entry with (M12.17). The entry page opens it from **Annotate This Entry** ([`ingredient-entry.md`](ingredient-entry.md), "Cupboard buttons"), in a modal. It edits the seven overrides of a coven's cupboard entry, saving through `annotateCupboardEntry` (`src/modules/ingredients/graphql/cupboard-entries.ts`).
+`src/components/CupboardEntryForm/` is the form a coven's member annotates a compendium entry with (M12.17). The entry page opens it from **Annotate This Entry** ([`ingredient-entry.md`](ingredient-entry.md), "Cupboard buttons"), in a modal. It is a react-hook-form form, so the lists can be the shared ones; null against an empty list is told apart in `changes.ts` and `form-values.ts` (list entries as `{ value }`), not by the library. It edits the seven overrides of a coven's cupboard entry, saving through `annotateCupboardEntry` (`src/modules/ingredients/graphql/cupboard-entries.ts`).
 
 An override is either the coven's own value or nothing, in which case the page shows the compendium's. The form keeps that difference: `null` means "use the compendium's", and an empty list is the coven clearing the field on purpose (M12.16; `applyCupboardEntry` in `validation/cupboard-merge.ts`).
 
@@ -22,7 +22,8 @@ Seven, in this order: Label, Description, Safety Notes, Elements, Celestial Bodi
 
 - **Prefill.** A field with an override opens on it. A field without one shows the compendium's value, except Label, which opens blank with the compendium's name as its placeholder (a blank label is the compendium's name).
 - **Use the Compendium's.** Beside a field's label, shown only while the field is the coven's own. It hands the field back: the field shows the compendium's value again and the save sends `null`.
-- **Lists.** Elements are a multi-select; the other three are free-text lists (Enter or Add puts an entry in; the chips take it out). Taking the last entry out and saving sends `[]`, a deliberate clear. Editing a list that showed the compendium's values makes the whole list the coven's own.
+- **Lists.** The same field components the own-entry form uses (`IngredientForm/fields.tsx`, `suggestions.tsx`): Elements the multi-select, Celestial Bodies and Zodiac Signs the lookup lists suggesting from their curated vocabularies and the values in use, Colours the plain list, chips inside the control. Free text is allowed beside the suggestions, since a coven is not the compendium. Taking the last entry out and saving sends `[]`, a deliberate clear. Editing a list that showed the compendium's values makes the whole list the coven's own. Text left in a list's box at Save is added as an entry.
+- **Undo and redo.** `useFormHistory` with `FormHistoryButtons`, as the own-entry form carries them (M12.9; `field.md`, "Undo and redo"). "Use the Compendium's" is a value change like any other, so it undoes; a handed-back field is derived from the values (it stays handed back only while it holds the compendium's), so an undo restores the right state.
 - **Only changes are sent.** `changesOf` (`changes.ts`, pure) compares each field with what the form opened on. Blank text sends `null`, as the server reads it. An unchanged field is left out, so saving one field never pins the others to today's compendium text.
 
 ## Contracts
@@ -37,8 +38,4 @@ Seven, in this order: Label, Description, Safety Notes, Elements, Celestial Bodi
 
 ## Testing
 
-`tests/components/CupboardEntryForm/index.test.tsx`: Save stays disabled until a change; only the changed field is sent; Use the Compendium's sends `null`; an emptied list sends `[]`; adding to an inherited list sends the whole list; a Label refusal lands on the Label field and the form stays open. The end-to-end flow is `tests/e2e/cupboard-screens.spec.ts`.
-
-## Gaps
-
-Free-text lists offer no lookup suggestions, and the form has no undo or redo.
+`tests/components/CupboardEntryForm/index.test.tsx`: Save stays disabled until a change; only the changed field is sent; Use the Compendium's sends `null`; an emptied list sends `[]`; adding to an inherited list sends the whole list; Undo brings back a removed entry; a Label refusal lands on the Label field and the form stays open. The end-to-end flow is `tests/e2e/cupboard-screens.spec.ts`.
