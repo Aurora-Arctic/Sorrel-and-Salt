@@ -530,6 +530,8 @@ Five columns are easy to confuse, so the division is stated once:
 
 Where a system genuinely gives two entries the same most-specific name — sea salt and Himalayan pink salt are both `Sodium chloride` — they are one identity by this model, and so one entry in a tier, and that is the answer rather than a bug. Until MB.215 a differing form separated two such entries; the form is a variant now, not identity.
 
+A coven's cupboard names the compendium entries it holds in a row of its own, `workspace_compendium_entries`, rather than guessing from matching names ([`db/workspace-compendium-entries.md`](db/workspace-compendium-entries.md), M12.13).
+
 **No format regex on `canonicalName`.** Real names include `Artemisia spp.`, `Lavandula angustifolia 'Hidcote'`, `subsp.` and `var.` ranks, and author citations like `Salvia officinalis L.` — a binomial regex rejects valid names, which is the same silent guess §11's `unitConvert` rule already forbids. Two of the four Cat's Claws were renamed at genus level in the last two decades, which is the argument again. For related reasons there is **no external identifier column** — POWO, IPNI, GBIF, CAS, IMA — in v1: nothing reads one, taxonomic ids churn, and a nullable text column is purely additive later.
 
 `nomenclature` has seven values:

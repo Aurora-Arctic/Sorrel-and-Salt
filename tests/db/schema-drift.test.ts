@@ -20,6 +20,7 @@ import * as ingredientSubstitutes from '@/modules/ingredients/schema/ingredient-
 import * as ingredientVariants from '@/modules/ingredients/schema/ingredient-variants';
 import * as ingredients from '@/modules/ingredients/schema/ingredients';
 import * as inventoryItems from '@/modules/ingredients/schema/inventory-items';
+import * as workspaceCompendiumEntries from '@/modules/ingredients/schema/workspace-compendium-entries';
 import * as referenceLinks from '@/modules/ingredients/schema/reference-links';
 import * as references from '@/modules/ingredients/schema/references';
 import * as retiredIngredientSlugs from '@/modules/ingredients/schema/retired-ingredient-slugs';
@@ -77,6 +78,7 @@ const MODULES = [
   ingredientVariants,
   ingredients,
   inventoryItems,
+  workspaceCompendiumEntries,
   referenceLinks,
   references,
   retiredIngredientSlugs,

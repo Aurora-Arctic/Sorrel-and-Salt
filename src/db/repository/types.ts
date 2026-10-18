@@ -17,6 +17,7 @@ import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
 import type { references } from '../../modules/ingredients/schema/references';
+import type { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired-ingredient-slugs';
 import type { Membership, WorkspaceRole } from '@/modules/coven';
 import type { Curator, SiteAdmin } from '@/modules/identity';
@@ -878,6 +879,9 @@ export type IngredientRow = typeof ingredients.$inferSelect;
 
 /** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
 export type StockRow = typeof inventoryItems.$inferSelect;
+
+/** A `workspace_compendium_entries` row — a compendium entry's presence in one coven's cupboard (M12.13) — as a finder or a write returns it. */
+export type CupboardEntryRow = typeof workspaceCompendiumEntries.$inferSelect;
 
 /** A form of an ingredient, as a finder or a write returns it. */
 export type VariantRow = typeof ingredientVariants.$inferSelect;

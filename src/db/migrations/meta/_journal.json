@@ -547,6 +547,13 @@
       "when": 1792162689168,
       "tag": "0077_backfill-form-group-icons",
       "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1792341874287,
+      "tag": "0078_workspace_compendium_entries",
+      "breakpoints": true
     }
   ]
 }

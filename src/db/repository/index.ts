@@ -111,6 +111,7 @@ export type {
   CommonNameSuggestion,
   CompendiumFacets,
   CompendiumScore,
+  CupboardEntryRow,
   DeityFilter,
   DeitySuggestion,
   FacetCount,
