@@ -5,6 +5,8 @@ import {
   categoriesOfVariants,
   deitiesOf,
   folkNamesOf,
+  referencesOf,
+  referencesOfVariants,
   substitutesOf,
   substitutesOfVariants,
   variantsOf,
@@ -41,8 +43,8 @@ function only<T>([answer]: readonly (T | Error)[]): T {
 
 /**
  * `entry` with everything its page lists beneath it: folk names, categories
- * with their groups, deities with their traditions, substitutes, and one
- * detail per live form in form order. References are not read here (MB.155).
+ * with their groups, deities with their traditions, substitutes,
+ * references, and one detail per live form in form order.
  *
  * @throws {Forbidden} `entry` is a coven's and `session` is not in that coven.
  */
@@ -51,11 +53,12 @@ export async function ingredientDetailOf(
   entry: IngredientRow,
 ): Promise<IngredientDetail> {
   const refs = [{ id: entry.id, workspaceId: entry.workspaceId }];
-  const [folkNames, categories, deities, substitutes, variants] = await Promise.all([
+  const [folkNames, categories, deities, substitutes, references, variants] = await Promise.all([
     folkNamesOf(session, refs).then(only),
     categoriesOf(session, refs).then(only),
     deitiesOf(session, refs).then(only),
     substitutesOf(session, refs).then(only),
+    referencesOf(session, refs).then(only),
     variantsOf(session, refs).then(only),
   ]);
 
@@ -66,12 +69,14 @@ export async function ingredientDetailOf(
     workspaceId,
   }));
   const picked = deities.flatMap(({ deity }) => deity ?? []);
-  const [variantCategories, variantSubstitutes, traditions, forms] = await Promise.all([
-    categoriesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
-    substitutesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
-    deityTraditionsOf(picked.map((deity) => deity.traditionId)),
-    formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
-  ]);
+  const [variantCategories, variantSubstitutes, variantReferences, traditions, forms] =
+    await Promise.all([
+      categoriesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
+      substitutesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
+      referencesOfVariants(session, variantRefs).then((answers) => answers.map((a) => only([a]))),
+      deityTraditionsOf(picked.map((deity) => deity.traditionId)),
+      formChoicesOf(variants.flatMap(({ formId }) => formId ?? [])),
+    ]);
 
   // What the second batch names: the groups of every category and of every
   // curated form, and the forms of every ingredient a substitute links.
@@ -146,6 +151,7 @@ export async function ingredientDetailOf(
       tradition: deity ? (traditionOf.get(deity.id) ?? null) : null,
     })),
     substitutes: substitutes.map(toSubstitute),
+    references,
     variants: variants.map((variant, i): VariantDetail => {
       const curated = variant.formId ? formOf.get(variant.formId) : undefined;
       return {
@@ -153,6 +159,7 @@ export async function ingredientDetailOf(
         icon: (curated && iconGroupOf.get(curated.groupId)?.icon) || null,
         categories: withGroup(variantCategories[i]),
         substitutes: variantSubstitutes[i].map(toSubstitute),
+        references: variantReferences[i],
       };
     }),
   };

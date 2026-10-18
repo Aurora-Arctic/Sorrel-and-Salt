@@ -1,25 +1,32 @@
 @use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
 
 // The forms in the Form column, one wrapping row: the gap sets each form off
 // from the comma before it by more than a word space, so an icon reads as its
 // own name's and not the last one's (the owner's call, 2026-10-16). A gap
 // rather than a margin on each form, so a form that wraps starts its line at
 // the cell's edge and is not indented by the space that separated it from the
-// one before.
+// one before. `vertical-align: top` because an inline-flex box sits on its first
+// item's baseline, and the icon's svg has none, so its bottom edge would sit on
+// the line and lift every name 4px; top puts the first line level with the
+// row's other text, and a form that wraps hangs below it.
 .compendium-list__forms {
   display: inline-flex;
+  vertical-align: top;
   flex-wrap: wrap;
   gap: space(1) space(2);
 }
 
 // A form: its icon and its name as one unit that never wraps apart, the icon a
-// quarter em from the name. `vertical-align: bottom` because an inline-flex box
-// sits on its first item's baseline, and the icon's svg has none, so its
-// bottom edge would sit on the line and lift the name 4px.
+// quarter em from the name.
 .compendium-list__form {
   display: inline-flex;
-  vertical-align: bottom;
   align-items: center;
   gap: 0.25em;
   white-space: nowrap;
+}
+
+// A name linking to its entry's page, drawn by the shared `icon-link` mixin.
+.compendium-list__name {
+  @include icon-link;
 }

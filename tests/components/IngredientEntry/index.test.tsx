@@ -9,6 +9,7 @@ import { Navigating } from '../../support/navigating';
 import type {
   IngredientRow,
   CategoryDetail,
+  CitedReference,
   IngredientDetail,
   IngredientVariantRow,
   VariantDetail,
@@ -106,6 +107,42 @@ function variantRow(form: string, overrides: Partial<IngredientVariantRow> = {})
     icon: null,
     categories: [],
     substitutes: [],
+    references: [],
+  };
+}
+
+/** A web page or book as the loader returns it: invented title, optional locator and url. */
+function cited(
+  title: string,
+  locator: string | null = null,
+  url: string | null = null,
+): CitedReference {
+  return {
+    reference: {
+      id: nextId(),
+      workspaceId: null,
+      kind: url ? 'web_page' : 'book',
+      title,
+      authors: 'Fixture, Ada',
+      container: url ? 'Fixture Site' : null,
+      contributors: null,
+      edition: null,
+      volume: null,
+      issue: null,
+      series: null,
+      place: null,
+      publisher: null,
+      published: '1988',
+      pages: null,
+      host: null,
+      url,
+      modified: null,
+      accessed: url ? '2026-01-01' : null,
+      note: null,
+      seedKey: null,
+      ...STAMPS,
+    },
+    locator,
   };
 }
 
@@ -152,6 +189,7 @@ function detail(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
       { name: 'Typed Testleaf', ingredient: null, form: null },
       { name: 'Fixture Mockroot', ingredient: LINKED, form: 'testoil' },
     ],
+    references: [],
     variants: [
       variantRow('testroot'),
       variantRow('testoil', { toxic: true, safetyNotes: 'Fixture oil caution.' }),
@@ -351,8 +389,8 @@ describe('IngredientEntry', () => {
 
     const details = screen.getByRole('region', { name: 'Details' });
     expect(details.compareDocumentPosition(root) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // The forms are the last thing drawn, where v2's notes section is appended.
-    expect(container.firstElementChild!.lastElementChild).toContainElement(oil as HTMLElement);
+    // The forms stand beneath one wrapper, which References follows.
+    expect(document.getElementById('forms')).toContainElement(oil as HTMLElement);
   });
 
   it("still says something in a form's section when the form adds nothing", () => {
@@ -392,7 +430,7 @@ describe('IngredientEntry', () => {
     expect(side).not.toContainElement(within(oil).getByRole('heading', { level: 3 }));
   });
 
-  it('jumps to the details and to each form from the page nav', () => {
+  it('jumps to the details, each form and the references from the page nav', () => {
     renderEntry();
 
     const nav = screen.getByRole('navigation', { name: 'On this page' });
@@ -400,7 +438,7 @@ describe('IngredientEntry', () => {
       within(nav)
         .getAllByRole('link')
         .map((link) => link.getAttribute('href')),
-    ).toEqual(['#details', '#form-testroot', '#form-testoil']);
+    ).toEqual(['#details', '#form-testroot', '#form-testoil', '#references']);
     // The forms are grouped apart from the ingredient's own Details.
     const forms = within(nav).getByRole('list', { name: 'Forms' });
     expect(
@@ -443,6 +481,248 @@ describe('IngredientEntry', () => {
       'href',
       href,
     );
+  });
+});
+
+describe('IngredientEntry references', () => {
+  const noteMarks = (region: HTMLElement) =>
+    within(region).queryAllByRole('link', { name: /^Note \d+$/ });
+  const bibliography = () => screen.getByRole('list', { name: 'Bibliography' });
+  const notes = () => screen.getByRole('list', { name: 'Notes' });
+
+  /** The whole sample: two sources on the ingredient, one on the oil form, none on the root form. */
+  function sample() {
+    const herbal = cited('A Herbal of Testing', 'p. 12');
+    const zeta = cited('Zeta Fixtures', null, 'https://fixtures.example/zeta');
+    const oil = cited('Oil Fixtures', 'chap. 3');
+    renderEntry({
+      detail: detail({
+        references: [herbal, zeta],
+        variants: [{ ...variantRow('testoil'), references: [oil] }, variantRow('testroot')],
+      }),
+    });
+    return { herbal, zeta, oil };
+  }
+
+  it('ends each section that cites sources with note numbers that link to their notes, in page order', () => {
+    sample();
+
+    const details = noteMarks(screen.getByRole('region', { name: 'Details' }));
+    const oil = noteMarks(screen.getByRole('region', { name: /testoil/i }));
+    expect(details.map((link) => link.getAttribute('href'))).toEqual(['#note-1', '#note-2']);
+    expect(oil.map((link) => link.getAttribute('href'))).toEqual(['#note-3']);
+    expect(noteMarks(screen.getByRole('region', { name: /testroot/i }))).toHaveLength(0);
+    for (const link of [...details, ...oil]) {
+      expect(link.closest('sup')).not.toBeNull();
+      expect(document.getElementById(link.getAttribute('href')!.slice(1))).not.toBeNull();
+    }
+  });
+
+  it('groups a section\x27s numbers under a References label that is not a heading', () => {
+    sample();
+    const details = screen.getByRole('region', { name: 'Details' });
+
+    const group = within(details).getByRole('group', { name: 'References' });
+    expect(within(group).getAllByRole('link')).toHaveLength(2);
+    expect(within(details).queryByRole('heading', { name: 'References' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('heading', { name: 'References' })).toHaveLength(1);
+    expect(
+      within(screen.getByRole('region', { name: /testoil/i })).getByRole('group', {
+        name: 'References',
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it('puts the numbers after the text of their section', () => {
+    sample();
+    const details = screen.getByRole('region', { name: 'Details' });
+    const description = within(details).getByText('A fixture herb.');
+
+    expect(precedes(description, noteMarks(details)[0]!)).toBe(true);
+  });
+
+  it('lists one numbered note for each link, in page order, each linking back to its number', () => {
+    sample();
+
+    const items = within(notes()).getAllByRole('listitem');
+    expect(notes().tagName).toBe('OL');
+    expect(items).toHaveLength(3);
+    items.forEach((item, at) => {
+      expect(item.id).toBe(`note-${at + 1}`);
+      const back = within(item).getByRole('link', { name: /^Back to/ });
+      const mark = document.getElementById(back.getAttribute('href')!.slice(1));
+      expect(mark).toHaveAttribute('href', `#note-${at + 1}`);
+    });
+    expect(within(items[0]!).getByRole('link', { name: /^Back to Details/ })).toBeInTheDocument();
+    expect(within(items[2]!).getByRole('link', { name: /^Back to Testoil/ })).toBeInTheDocument();
+  });
+
+  it('gives a source its own note for each locator it is cited with in one section', () => {
+    const herbal = cited('A Herbal of Testing', 'p. 12');
+    const again = { reference: herbal.reference, locator: 'p. 99' };
+    renderEntry({ detail: detail({ references: [herbal, again], variants: [] }) });
+
+    const items = within(notes()).getAllByRole('listitem');
+    expect(items).toHaveLength(2);
+    expect(items[0]).toHaveTextContent('p. 12');
+    expect(items[1]).toHaveTextContent('p. 99');
+    expect(within(bibliography()).getAllByRole('listitem')).toHaveLength(1);
+  });
+
+  it("sets a note in short form with its locator, the title in a cite, and links it to the source's entry", () => {
+    const { herbal } = sample();
+
+    const [first] = within(notes()).getAllByRole('listitem');
+    const entry = within(first!).getByRole('link', { name: /Herbal/ });
+    expect(entry).toHaveAttribute('href', `#ref-${herbal.reference.id}`);
+    expect(entry.querySelector('cite')?.textContent).toBe('Herbal of Testing');
+    expect(first).toHaveTextContent('p. 12');
+    const target = document.getElementById(`ref-${herbal.reference.id}`)!;
+    expect(bibliography().contains(target)).toBe(true);
+    expect(target).toHaveRole('listitem');
+  });
+
+  it('closes a note with its locator inside a short quoted title, and without one', () => {
+    renderEntry({
+      detail: detail({
+        references: [{ ...cited('Located Fixtures', 'p. 7', 'https://fixtures.example/a') }],
+        variants: [],
+      }),
+    });
+
+    const text = within(notes()).getByRole('listitem').textContent!;
+    expect(text).toMatch(/"Located Fixtures,"\s+p\. 7\./);
+  });
+
+  it('lists each source once in the bibliography, in alphabetical order, in full form', () => {
+    const herbal = cited('A Herbal of Testing');
+    const zeta = cited('Zeta Fixtures');
+    const mid = cited('Mid Fixtures');
+    renderEntry({
+      detail: detail({
+        references: [zeta, herbal],
+        variants: [
+          {
+            ...variantRow('testoil'),
+            references: [mid, { reference: zeta.reference, locator: null }],
+          },
+        ],
+      }),
+    });
+
+    const items = within(bibliography()).getAllByRole('listitem');
+    expect(items.map((item) => item.querySelector('cite')?.textContent)).toEqual([
+      'A Herbal of Testing',
+      'Mid Fixtures',
+      'Zeta Fixtures',
+    ]);
+    expect(within(notes()).getAllByRole('listitem')).toHaveLength(4);
+  });
+
+  it('sets only the italic parts of an entry in cite', () => {
+    renderEntry({ detail: detail({ references: [cited('A Herbal of Testing')], variants: [] }) });
+
+    const item = within(bibliography()).getByRole('listitem');
+    expect(item.querySelectorAll('cite')).toHaveLength(1);
+    expect(item.textContent).toContain('Fixture, Ada');
+    expect(item.querySelector('cite')?.textContent).not.toContain('Fixture, Ada');
+  });
+
+  it('links each entry back to every note that cites it, and each of those reaches the entry', () => {
+    const herbal = cited('A Herbal of Testing', 'p. 1');
+    renderEntry({
+      detail: detail({
+        references: [herbal],
+        variants: [
+          {
+            ...variantRow('testoil'),
+            references: [{ reference: herbal.reference, locator: 'p. 2' }],
+          },
+        ],
+      }),
+    });
+
+    const entry = within(bibliography()).getByRole('listitem');
+    const backs = within(entry).getAllByRole('link', { name: /^Back to Note/ });
+    expect(backs.map((link) => link.getAttribute('href'))).toEqual(['#note-1', '#note-2']);
+    for (const back of backs) {
+      const note = document.getElementById(back.getAttribute('href')!.slice(1))!;
+      expect(notes().contains(note)).toBe(true);
+      expect(within(note).getByRole('link', { name: /Herbal/ })).toHaveAttribute(
+        'href',
+        `#${entry.id}`,
+      );
+    }
+  });
+
+  it('links a url to its source, opened with rel noopener', () => {
+    renderEntry({
+      detail: detail({
+        references: [cited('Linked Fixtures', null, 'https://fixtures.example/testwort')],
+        variants: [],
+      }),
+    });
+
+    const link = within(bibliography()).getByRole('link', { name: /source/i });
+    expect(link).toHaveAttribute('href', 'https://fixtures.example/testwort');
+    expect(link.getAttribute('rel')?.split(' ')).toContain('noopener');
+  });
+
+  it('links no source for a reference with no url', () => {
+    renderEntry({ detail: detail({ references: [cited('Printed Fixtures')], variants: [] }) });
+
+    expect(within(bibliography()).queryByRole('link', { name: /source/i })).not.toBeInTheDocument();
+  });
+
+  it('is one section at the foot of the page, after the forms, headed with its parts a level beneath', () => {
+    sample();
+    const section = screen.getByRole('region', { name: 'References' });
+
+    expect(section).toHaveAttribute('id', 'references');
+    expect(precedes(document.getElementById('forms')!, section)).toBe(true);
+    expect(section.parentElement!.lastElementChild).toBe(section);
+    expect(
+      within(section).getByRole('heading', { name: 'References', level: 2 }),
+    ).toBeInTheDocument();
+    expect(within(section).getByRole('heading', { name: 'Notes', level: 3 })).toBeInTheDocument();
+    expect(
+      within(section).getByRole('heading', { name: 'Bibliography', level: 3 }),
+    ).toBeInTheDocument();
+    expect(notes()).toHaveAccessibleName('Notes');
+  });
+
+  it("leaves no reference in Details' side column or inside a form", () => {
+    sample();
+
+    for (const region of [
+      screen.getByRole('region', { name: 'Details' }),
+      screen.getByRole('region', { name: /testoil/i }),
+    ]) {
+      expect(
+        within(region).queryByRole('heading', { name: /references/i }),
+      ).not.toBeInTheDocument();
+      expect(region.querySelector('cite')).toBeNull();
+    }
+  });
+
+  it('shows the section with an empty state, and no lists, when the entry cites nothing', () => {
+    renderEntry();
+    const section = screen.getByRole('region', { name: 'References' });
+
+    expect(within(section).queryByRole('list')).not.toBeInTheDocument();
+    expect(within(section).queryByRole('heading', { level: 3 })).not.toBeInTheDocument();
+    expect(section.querySelector('p')).not.toBeNull();
+    expect(noteMarks(document.body)).toHaveLength(0);
+  });
+
+  it('adds References to the jump menu, after Details and the forms', () => {
+    sample();
+    const links = within(screen.getByRole('navigation', { name: 'On this page' })).getAllByRole(
+      'link',
+    );
+
+    expect(links[links.length - 1]).toHaveAttribute('href', '#references');
+    expect(links[0]).toHaveAttribute('href', '#details');
   });
 });
 
