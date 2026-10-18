@@ -127,7 +127,7 @@ export const ManyFormsPhone: Story = () => (
 ManyFormsPhone.meta = { theme: 'light', width: 375 };
 
 // Retired, Annotated, Caution and Toxic together: the badges wrap and every row
-// hugs the right edge.
+// start at the left edge.
 export const AllMarks: Story = () => (
   <IngredientCard
     {...BASE}

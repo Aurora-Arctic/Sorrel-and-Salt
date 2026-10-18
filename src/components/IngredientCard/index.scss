@@ -118,7 +118,7 @@
   // Air above, the chips to the forms the same as the forms to the rule below
   // (the stock section's `margin-top` is this token too, each beside the
   // specimen's own 12px gap), so the two read as equal.
-  margin-block-start: space(3);
+  margin-block-start: $ingredient-card-forms-air;
   margin-inline-start: calc(-1 * var(--forms-gap));
   clip-path: inset(0 0 0 var(--forms-gap));
 }

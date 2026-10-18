@@ -48,7 +48,7 @@ const Cards = () => (
       categories={CHIPS}
       variants={[LEAF]}
     >
-      <Jars />
+      <Jars jars={['leaf']} />
     </IngredientCard>
     <IngredientCard
       href={href('testite')}
@@ -78,10 +78,10 @@ const Cards = () => (
         </>
       }
     >
-      <Jars />
+      <Jars jars={['leaf']} />
     </IngredientCard>
     <IngredientCard href={href('testflower')} label="Testflower" kind="own" variants={[OIL]}>
-      <Jars />
+      <Jars jars={['oil']} />
     </IngredientCard>
     <IngredientCard
       href={href('testseed')}

@@ -1905,11 +1905,15 @@
     gap: space(2);
   }
 
-  // Takes only the room it needs; badges that wrap among themselves, beside the
-  // name, hug the right edge.
+  // Takes only the room it needs. Rows start at the left: when the group sits
+  // under the name it fills the row and wraps within itself, and CSS cannot tell
+  // that from the group beside the name, so both are left-aligned. Beside the
+  // name it still sits at the right, since the name block takes the spare room.
   .specimen__badges {
     flex: 0 1 auto;
-    justify-content: flex-end;
+    // Air below the group, which only shows when it sits under the name: beside it
+    // the name block is the taller one, so the row is no higher. 12px + this = 20px.
+    margin-block-end: space(2);
   }
 
   // The chip row is a list in the real card, so it drops the ◆ marker and indent.
@@ -1920,10 +1924,10 @@
   // The foot holds the jar lines and the actions. `margin-top: auto` takes up any
   // spare height when the card is stretched to a grid row, so the foot lands at the
   // bottom; on its own it is nothing. The padding is the air between the chips and
-  // the rule (24px with the card's own gap; it read tight at 12 and then 16).
+  // the rule (20px with the card's own gap; owner trimmed it from 24).
   .specimen__foot {
     margin-top: auto;
-    padding-top: space(3);
+    padding-top: $ingredient-card-forms-air;
   }
 
   // The jar lines, under a rule: the `small` size so the stock badges do not outweigh

@@ -41,6 +41,7 @@ const SPECIMEN_CATEGORIES = ['Protection & Defense', 'Mind & Spirit', 'Craft & C
 const SPECIMEN_FORMS = [
   { form: 'dried leaf', formChoice: { group: { icon: 'botanical' } }, safetyNotes: '' },
   { form: 'whole root', safetyNotes: '' },
+  { form: 'oil', formChoice: { group: { icon: 'fluid' } }, safetyNotes: '' },
 ];
 
 const RAW_PALETTE: readonly (readonly [name: string, purpose: string])[] = [

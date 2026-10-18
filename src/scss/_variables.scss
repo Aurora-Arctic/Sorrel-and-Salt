@@ -654,6 +654,10 @@ $space-steps: (
   @return map.get($space-steps, $step);
 }
 
+// The air added to the card's own 12px gap above and below the forms line (chips to
+// forms, forms to the jar rule): one token, so the two stay equal. 20px in all.
+$ingredient-card-forms-air: space(2);
+
 // Written after `space()` above: a Sass function is not in scope before its
 // definition, and inside `calc()` an unknown name is left as plain CSS text,
 // which is invalid and drops the declaration.
