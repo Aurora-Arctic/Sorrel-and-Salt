@@ -53,3 +53,48 @@ export function noMatchText(noun: string, parts: readonly string[], emptyText: s
     ? `No ${noun} match ${joinAnd(parts)}. Change or clear the filter to see more.`
     : emptyText;
 }
+
+/** The short words a title leaves lower-case unless they open it. */
+const SMALL_WORDS: ReadonlySet<string> = new Set([
+  'of',
+  'and',
+  'in',
+  'on',
+  'the',
+  'a',
+  'an',
+  'or',
+  'for',
+  'to',
+  'with',
+  'at',
+  'by',
+  'from',
+]);
+
+/** `part` with its first letter raised, unless a capital already sits inside it ("pH", "CBD"). */
+function raised(part: string): string {
+  if (/\p{Lu}/u.test(part.slice(1))) return part;
+  return part.replace(/\p{L}/u, (letter) => letter.toUpperCase());
+}
+
+/**
+ * `text` in title case, for display only: "dried leaf" is "Dried Leaf", "oil of
+ * cloves" is "Oil of Cloves". The small words of, and, in, on, the, a, an, or,
+ * for, to, with, at, by and from stay lower-case unless they come first; each
+ * part of a hyphenated word is raised ("cold-pressed" is "Cold-Pressed"); a
+ * word that already holds a capital past its first letter is left as written.
+ * Runs of whitespace become one space, so the result is a label and never a
+ * value to store: a stored form keeps what was typed, and matching folds case.
+ */
+export function titleCase(text: string): string {
+  return text
+    .split(/\s+/u)
+    .filter((word) => word !== '')
+    .map((word, at) => {
+      const lower = word.toLowerCase();
+      if (at > 0 && SMALL_WORDS.has(lower) && word === lower) return word;
+      return word.split('-').map(raised).join('-');
+    })
+    .join(' ');
+}

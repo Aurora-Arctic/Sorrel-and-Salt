@@ -1,3 +1,4 @@
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type {
   SearchSentence,
   SearchSentenceFacet,
@@ -98,7 +99,10 @@ export function buildSearchSentence({
 
   const forms = picked(filter.forms);
   if (forms.length > 0) {
-    clause(text('in the form '), ...valueList('forms', forms, OR, (v) => label('forms', v)));
+    clause(
+      text('in the form '),
+      ...valueList('forms', forms, OR, (v) => formLabel(label('forms', v))),
+    );
   }
 
   const deities = picked(filter.deities);

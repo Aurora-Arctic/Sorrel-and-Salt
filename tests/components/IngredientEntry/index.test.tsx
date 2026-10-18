@@ -371,7 +371,7 @@ describe('IngredientEntry', () => {
     const links = within(substitutes).getAllByRole('link');
     expect(links).toHaveLength(2);
     for (const link of links) expect(link).toHaveAttribute('href', LINKED_HREF);
-    expect(links[1]).toHaveTextContent('testoil');
+    expect(links[1]).toHaveTextContent('Testoil');
     expect(within(substitutes).getByText('Typed Testleaf')).not.toHaveRole('link');
     expect(within(substitutes).getByText('Typed Testleaf').closest('a')).toBeNull();
   });

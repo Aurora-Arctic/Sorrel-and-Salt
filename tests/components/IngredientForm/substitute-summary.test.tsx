@@ -100,7 +100,7 @@ function renderSubstitutes(entryHref?: (ingredient: { slug: string }) => string)
   renderWithClient(<Harness />);
 }
 
-const LINKED_TEXT = 'Mockwort (Fixtura vulgaris) · Dried leaf';
+const LINKED_TEXT = 'Mockwort (Fixtura vulgaris) · Dried Leaf';
 const opener = () => screen.getByRole('button', { name: LINKED_TEXT });
 const summary = () => screen.getByRole('dialog', { name: `About ${LINKED_TEXT}` });
 /** What the summary says of `term`, as its description list pairs them. */
@@ -133,7 +133,7 @@ describe('a substitute list’s chips', () => {
     expect(calls).toEqual([{ id: MOCKWORT_ID, workspaceId: WORKSPACE_ID }]);
     expect(within(summary()).getByText('Fixtura vulgaris')).toBeInTheDocument();
     expect(within(summary()).getByText(MOCKWORT.description ?? '')).toBeInTheDocument();
-    expect(fact('Form')).toHaveTextContent('Dried leaf');
+    expect(fact('Form')).toHaveTextContent('Dried Leaf');
     expect(fact('Elements')).toHaveTextContent('Water');
     // The ingredient's celestial body and the form's own, together.
     expect(fact('Celestial Bodies')).toHaveTextContent('Moon, Saturn');

@@ -16,6 +16,7 @@ import SafetyNote, { ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
 import { capitalise } from '../../lib/text';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import {
   isBinomial,
   NAMELESS_KIND,
@@ -157,7 +158,7 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
 }
 
 const substituteLabel = ({ name, form }: SubstituteDetail): string =>
-  form ? `${name} (${form})` : name;
+  form ? `${name} (${formLabel(form)})` : name;
 
 /** The ids one block of a section takes: its heading's, and what names its content. */
 interface Block {
@@ -311,7 +312,7 @@ function FormSection({
   return (
     <section id={anchor} className="ingredient-entry__section" aria-labelledby={nameId}>
       <h3 className="ingredient-entry__form-heading">
-        <FormIcon name={icon} /> <span id={nameId}>{capitalise(variant.form)}</span>{' '}
+        <FormIcon name={icon} /> <span id={nameId}>{formLabel(variant.form)}</span>{' '}
         <ToxicMark toxic={variant.toxic} />
       </h3>
       <div className="ingredient-entry__text">
@@ -453,7 +454,7 @@ const IngredientEntry = ({
   const notes = referenceNotes(
     detail,
     anchors,
-    variants.map(({ variant }) => capitalise(variant.form)),
+    variants.map(({ variant }) => formLabel(variant.form)),
   );
 
   // Only the fields the client parts use cross to them, not the whole row.
@@ -540,7 +541,7 @@ const IngredientEntry = ({
             { href: '#details', label: 'Details' },
             ...variants.map(({ variant }, at) => ({
               href: `#${anchors[at]}` as const,
-              label: capitalise(variant.form),
+              label: formLabel(variant.form),
               group: 'Forms',
               // The forms take the line References takes, so each part of
               // the menu opens the same way.
