@@ -30,12 +30,9 @@ export interface IngredientCardProps {
   categories?: readonly CardCategory[];
   /**
    * The entry's live forms, read from its variants (MB.215): each draws its
-   * group's icon before its name on the secondary line, and the caution lists
-   * the notes of those that have any. Structural, so a GraphQL variant passes as is.
+   * group's icon before its name on the secondary line, and    * the notes of those that have any. Structural, so a GraphQL variant passes as is.
    */
   variants?: readonly SafetyVariant[];
-  /** The ingredient's own safety notes; the caution shows when this or a form's has any. */
-  safetyNotes?: string | null;
   /** The ingredient's own toxic flag; the Toxic mark also shows when any listed form is flagged. */
   toxic?: boolean | null;
   /** Whose entry it is (see `EntryKind`); the caller reads it from the data. */
@@ -44,7 +41,7 @@ export interface IngredientCardProps {
   annotated?: boolean;
   /** The curators retired the entry. */
   retired?: boolean;
-  /** The name's heading level, 2 to 5; the caution sits one below. Defaults to 2. */
+  /** The name's heading level, 2 to 5; Defaults to 2. */
   level?: 2 | 3 | 4 | 5;
   /**
    * The jar-line slot beneath the forms. The coven's Ingredients page fills it

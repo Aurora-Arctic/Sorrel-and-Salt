@@ -39,19 +39,21 @@ const BASE = {
   variants: VARIANTS,
 };
 
-// A stand-in for M9.6’s jar lines: the form, a dot hidden from assistive
-// technology (as on the forms line), then the quantity and the stock badge,
-// centred on one line with the same token gap.
-const JAR_LINE = { display: 'flex', alignItems: 'center', gap: '0.25rem' } as const;
-
+// A stand-in for M9.6’s jar lines, to the card’s contract: one `li` per jar,
+// the form and quantity first and the stock badge last. The dot is hidden from
+// assistive technology, as on the forms line.
 const Jars = () => (
   <ul>
-    <li style={JAR_LINE}>
-      Dried leaf <span aria-hidden="true">·</span> 6 g{' '}
+    <li>
+      <span>
+        Dried leaf <span aria-hidden="true">·</span> 6 g
+      </span>
       <StockBadge quantity={6} threshold={10} unit="g" />
     </li>
-    <li style={JAR_LINE}>
-      Oil <span aria-hidden="true">·</span> 0 ml{' '}
+    <li>
+      <span>
+        Oil <span aria-hidden="true">·</span> 0 ml
+      </span>
       <StockBadge quantity={0} threshold={10} unit="ml" />
     </li>
   </ul>
@@ -62,7 +64,7 @@ export const Compendium: Story = () => <IngredientCard {...BASE} kind="compendiu
 
 // A coven's own entry, with the jar lines M9.6 will fill the slot with.
 export const OwnWithJars: Story = () => (
-  <IngredientCard {...BASE} kind="own" safetyNotes="Keep away from pets.">
+  <IngredientCard {...BASE} kind="own">
     <Jars />
   </IngredientCard>
 );
@@ -87,14 +89,14 @@ export const InCupboardAnnotated: Story = () => (
 export const Retired: Story = () => <IngredientCard {...BASE} kind="cupboard" retired />;
 
 export const PhoneDark: Story = () => (
-  <IngredientCard {...BASE} kind="own" safetyNotes="Keep away from pets.">
+  <IngredientCard {...BASE} kind="own">
     <Jars />
   </IngredientCard>
 );
 PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => (
-  <IngredientCard {...BASE} kind="own" safetyNotes="Keep away from pets.">
+  <IngredientCard {...BASE} kind="own">
     <Jars />
   </IngredientCard>
 );

@@ -4,7 +4,7 @@ import { chipColors } from '../../lib/chip-colors';
 import { capitalise } from '../../lib/text';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
-import SafetyNote, { ToxicMark } from '../SafetyNote';
+import { ToxicMark } from '../SafetyNote';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
 import type { IngredientCardProps } from './types';
 import './index.scss';
@@ -12,9 +12,9 @@ import './index.scss';
 // One ingredient in a list, for the public compendium (M8.18) and the coven's
 // Ingredients page (M9.6) alike: its name as the card's one link, the formal
 // name and the forms beneath it (two entries can share a label, and these tell
-// them apart), the marks, the caution, and a slot for jar lines. Presentational:
-// it takes props only and works out nothing from the data, so the marks, the
-// safety note and the stock badge are each the project's one presentation, used
+// them apart), the marks, and a slot for jar lines. Presentational:
+// it takes props only and works out nothing from the data, so the marks and the
+// stock badge are each the project's one presentation, used
 // as they are and never restyled here. claude-docs/components/ingredient-card.md.
 const IngredientCard = ({
   href,
@@ -23,7 +23,6 @@ const IngredientCard = ({
   nomenclature,
   variants = [],
   categories = [],
-  safetyNotes,
   toxic,
   kind,
   annotated,
@@ -92,11 +91,6 @@ const IngredientCard = ({
           ))}
         </ul>
       )}
-      <SafetyNote
-        safetyNotes={safetyNotes}
-        variants={variants}
-        level={(level + 1) as 3 | 4 | 5 | 6}
-      />
       {children != null && children !== false && <div className="specimen__stock">{children}</div>}
     </article>
   );

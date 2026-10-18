@@ -17,13 +17,12 @@ nothing from the data.
 | `nomenclature` | Decides its italics: only a binomial kind (`isBinomial`, shared with the entry page) is italic; mineral, chemical or none is upright |
 | `categories`   | The entry's categories with their groups; chips in the group colours, plain not links, no row when empty                             |
 | `variants`     | The entry's live forms: an icon and the name each on the secondary line; their notes and flags feed the caution and the Toxic mark   |
-| `safetyNotes`  | The ingredient's own notes                                                                                                           |
 | `toxic`        | The ingredient's own flag                                                                                                            |
 | `kind`         | `own`, `cupboard` or `compendium`; see [`entry-marks.md`](entry-marks.md)                                                            |
 | `annotated`    | The cupboard row overrides a field                                                                                                   |
 | `retired`      | The curators retired the entry                                                                                                       |
-| `level`        | The name's heading level, 2 to 5; the caution sits one below. Defaults to 2                                                          |
-| `children`     | The jar-line slot, last                                                                                                              |
+| `level`        | The name's heading level, 2 to 5; Defaults to 2                                                                                      |
+| `children`     | The jar-line slot, last (see the slot’s contract)                                                                                    |
 
 ## What it is made of
 
@@ -32,14 +31,14 @@ restyled here:
 
 - the name, an `h2` holding the card's **one link**, so the card is reached by
   keyboard through it alone;
-- the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the forms line (a `FormIcon` before each form, an `aria-hidden` dot between: "Herb · Oil"; it tells two entries sharing a label apart), the category chips, the caution, and the jar lines;
+- the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the forms line (a `FormIcon` before each form, an `aria-hidden` dot between: "Herb · Oil"; it tells two entries sharing a label apart), the category chips, and the jar lines;
 - the marks, through `EntryMarks`, with `ToxicMark` beside them, in `.specimen__badges`;
-- `SafetyNote`, when the entry or a listed form has notes;
+- no caution block: the notes live on the entry page, and the card carries only the Toxic mark;
 - the **jar-line slot**. M9.6 fills it with a line per jar (the form's icon, the
   form, quantity and unit, M9.8's `StockBadge`, M9.9's and M9.10's actions). The
   public compendium leaves it empty.
 
-The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is forms, chips, caution, stock: the specimen has no forms or caution, so the identity lines sit together under the name and the stock line stays last with its rule above.
+The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is forms, chips, stock: the specimen has no forms line, so the identity lines sit together under the name and the stock line stays last with its rule above.
 
 ## Order
 

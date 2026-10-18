@@ -110,25 +110,11 @@ describe('IngredientCard', () => {
   });
 
   describe('safety', () => {
-    it('shows the caution when the ingredient or a listed form has notes, and not otherwise', () => {
-      const none = render(<IngredientCard {...BASE} variants={[LEAF]} />);
-      expect(screen.queryByRole('region')).toBeNull();
-      none.unmount();
-
-      const own = render(<IngredientCard {...BASE} safetyNotes="Fixture caution." />);
-      expect(screen.getByRole('region')).toHaveTextContent('Fixture caution.');
-      own.unmount();
-
+    it('draws no caution block, even when a listed form has notes', () => {
       render(<IngredientCard {...BASE} variants={[OIL]} />);
-      expect(screen.getByRole('region')).toHaveTextContent('Fixture oil caution.');
-    });
 
-    it('sets the caution one heading level below the name', () => {
-      render(<IngredientCard {...BASE} level={2} safetyNotes="Fixture caution." />);
-
-      expect(screen.getByRole('region')).toContainElement(
-        screen.getByRole('heading', { level: 3 }),
-      );
+      expect(screen.queryByRole('region')).toBeNull();
+      expect(screen.queryByText('Fixture oil caution.')).toBeNull();
     });
 
     it('shows the toxic mark for the entry or any listed form, and not otherwise', () => {

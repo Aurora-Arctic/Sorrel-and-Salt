@@ -44,3 +44,28 @@
 .ingredient-card .specimen__stock > ul {
   @include list-reset;
 }
+
+// Jar lines are read as text, so they take the `small` size in the ordinary
+// ink, not the primitive's muted caption, which would let the badges outweigh
+// them. The rule above them stays.
+.ingredient-card .specimen__stock {
+  display: block;
+  font-size: type-size('small');
+  color: $text-primary;
+  opacity: 1;
+}
+
+// The card's contract for a jar list: one `li` per jar, the form and quantity
+// first and the stock badge last, so the badge lands at the right edge.
+.ingredient-card .specimen__stock > ul > li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: space(2);
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: space(1);
+  }
+}
