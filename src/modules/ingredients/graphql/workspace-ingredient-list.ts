@@ -4,7 +4,7 @@ import { workspaceIngredientFacets } from '../services/ingredient-facets';
 import { listWorkspaceIngredients } from '../services/workspace-ingredient-list';
 import type { WorkspaceIngredientFilterInput } from '../validation/compendium-filter';
 import { categoryArgs, facetArgs } from './compendium';
-import { IngredientRef } from './ingredient';
+import { IngredientRef, IngredientSourceEnum } from './ingredient';
 import { IngredientFacetsRef } from './ingredient-facets';
 
 // Story 14's list (M9.4): a coven's own entries and the compendium entries it
@@ -12,6 +12,22 @@ import { IngredientFacetsRef } from './ingredient-facets';
 // and beside it how many entries each filter value would list (M12.3). The
 // resolvers refuse only a missing session; who may read which coven is the
 // service's check (claude-docs/graphql/schema.md, "workspaceIngredients").
+
+// The two settings only a coven's list has (M9.7), so not in `facetArgs`,
+// which the compendium shares.
+const stockArgs = builder.args((t) => ({
+  source: t.field({
+    type: IngredientSourceEnum,
+    required: false,
+    description:
+      "Keeps the coven's own entries, or the compendium entries it holds; leaving it out keeps both.",
+  }),
+  inStockOnly: t.boolean({
+    required: false,
+    description:
+      'Keeps entries with a jar not at 0, a jar with no quantity counting as held; false, or leaving it out, keeps all.',
+  }),
+}));
 
 builder.queryField('workspaceIngredients', (t) =>
   t.pagedConnection({
@@ -22,6 +38,7 @@ builder.queryField('workspaceIngredients', (t) =>
       ...categoryArgs,
       // Filtering as the compendium's do, under the coven's membership check.
       ...facetArgs,
+      ...stockArgs,
     },
     resolve: (_root, args, page, context) =>
       listWorkspaceIngredients(sessionOf(context), args.workspaceId, filterOf(args), page),
@@ -38,6 +55,7 @@ builder.queryField('workspaceIngredientFacets', (t) =>
       query: t.arg.string({ required: false }),
       ...categoryArgs,
       ...facetArgs,
+      ...stockArgs,
     },
     resolve: (_root, args, context) =>
       workspaceIngredientFacets(sessionOf(context), args.workspaceId, filterOf(args)),
@@ -55,6 +73,8 @@ function filterOf({
   celestialBodies,
   elements,
   toxic,
+  source,
+  inStockOnly,
 }: WorkspaceIngredientFilterInput): WorkspaceIngredientFilterInput {
   return {
     query,
@@ -66,5 +86,7 @@ function filterOf({
     celestialBodies,
     elements,
     toxic,
+    source,
+    inStockOnly,
   };
 }

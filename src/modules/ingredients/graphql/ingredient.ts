@@ -3,6 +3,7 @@ import { AuditInfo } from '../../../graphql/schema/audit';
 import {
   CATEGORY_MODES,
   INGREDIENT_ELEMENTS,
+  INGREDIENT_SOURCES,
   NOMENCLATURE_KINDS,
   TOXIC_FILTERS,
 } from '../schema/ingredient-enums';
@@ -27,6 +28,12 @@ export const ToxicFilterEnum = builder.enumType('ToxicFilter', {
   values: TOXIC_FILTERS,
   description:
     'Which entries a search keeps by toxicity: any (no filter); toxic, flagged on the entry or on any live form; or not_toxic, flagged on neither.',
+});
+// Where a coven's list reads from (M9.7), an argument rather than a field.
+export const IngredientSourceEnum = builder.enumType('IngredientSource', {
+  values: INGREDIENT_SOURCES,
+  description:
+    "Where a coven's list reads from: local, the coven's own entries; or compendium, the compendium entries it holds. Leaving it out lists both.",
 });
 // How a search combines its categories (M8.12), an argument rather than a field.
 export const CategoryModeEnum = builder.enumType('CategoryMode', {

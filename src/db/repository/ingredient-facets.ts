@@ -75,7 +75,7 @@ export function findWorkspaceIngredientFacets(
 ): Promise<IngredientFacets> {
   return readFacets(
     filter,
-    and(readableInTiers([membership], ingredients), workspaceListScope(membership)),
+    and(readableInTiers([membership], ingredients), workspaceListScope(membership, filter)),
   );
 }
 

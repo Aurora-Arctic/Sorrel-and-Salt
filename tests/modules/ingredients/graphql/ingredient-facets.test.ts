@@ -103,8 +103,18 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
 function workspaceFacets(session: Session, variables: Record<string, unknown> = {}) {
   return runOperation<{ workspaceIngredientFacets: Facets }>(
     session,
-    `query ($workspaceId: ID!, $forms: [String!]) {
-      workspaceIngredientFacets(workspaceId: $workspaceId, forms: $forms) ${SELECTION}
+    `query (
+      $workspaceId: ID!
+      $forms: [String!]
+      $source: IngredientSource
+      $inStockOnly: Boolean
+    ) {
+      workspaceIngredientFacets(
+        workspaceId: $workspaceId
+        forms: $forms
+        source: $source
+        inStockOnly: $inStockOnly
+      ) ${SELECTION}
     }`,
     { workspaceId: WORKSPACE_W_ID, ...variables },
   );
@@ -193,6 +203,23 @@ describe('workspaceIngredientFacets', () => {
       { value: 'toxic', count: 0 },
       { value: 'not_toxic', count: 0 },
     ]);
+  });
+
+  it('takes a source and inStockOnly, counting the coven under each', async () => {
+    const forms = async (variables: Record<string, unknown>) => {
+      const result = await workspaceFacets(asUser(B), variables);
+      expect(result.errors).toBeUndefined();
+      return result.data?.workspaceIngredientFacets.forms;
+    };
+    const covenform = [{ value: 'Covenform', count: 1 }];
+
+    // Why each could have answered the same: the unfiltered count holds Covenform.
+    expect(await forms({})).toEqual(covenform);
+    expect(await forms({ source: 'local' })).toEqual(covenform);
+    expect(await forms({ source: 'compendium' })).toEqual([]);
+    // Covenwort has no jar, so it is out of stock.
+    expect(await forms({ inStockOnly: true })).toEqual([]);
+    expect(await forms({ inStockOnly: false })).toEqual(covenform);
   });
 
   it('is FORBIDDEN to a caller naming by id a coven they are not in', async () => {

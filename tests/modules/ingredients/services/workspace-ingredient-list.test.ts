@@ -39,9 +39,10 @@ async function stock(
   workspaceId = WORKSPACE_W_ID,
   form = 'Testform',
   deleted = false,
+  quantityOnHand: string | null = null,
 ): Promise<string> {
   const variantId = await variantIdOf(sql, ingredientId, form);
-  return insertStock(sql, { workspaceId, ingredientId, variantId, deleted }, A.id);
+  return insertStock(sql, { workspaceId, ingredientId, variantId, deleted, quantityOnHand }, A.id);
 }
 
 /** Every label `session` is listed in `workspaceId` under `filter`, in the list's order. */
@@ -55,6 +56,97 @@ async function listed(
   );
   return page.edges.map(({ node }) => node.name);
 }
+
+describe('listWorkspaceIngredients under source and inStockOnly (M9.7)', () => {
+  /** A local entry, a held compendium entry and a local one with no jar. */
+  async function seedSources(): Promise<void> {
+    await stock(await add('Covenwort', { workspaceId: WORKSPACE_W_ID }));
+    await add('Barecovenwort', { workspaceId: WORKSPACE_W_ID });
+    await stock(await add('Heldwort'));
+    await add('Unheldwort');
+    await add('Elsewort', { workspaceId: WORKSPACE_X_ID });
+  }
+
+  it('lists both sources when none is chosen, the coven only for local, the compendium only for compendium', async () => {
+    await seedSources();
+
+    expect(await listed(asUser(B))).toEqual(['Barecovenwort', 'Covenwort', 'Heldwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'local' })).toEqual([
+      'Barecovenwort',
+      'Covenwort',
+    ]);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'compendium' })).toEqual(['Heldwort']);
+  });
+
+  it('keeps an entry with any jar not at 0, and one whose only jar has no quantity', async () => {
+    const mixed = await add('Mixedwort', {
+      variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })],
+    });
+    await stock(mixed, WORKSPACE_W_ID, 'Herb', false, '0');
+    await stock(mixed, WORKSPACE_W_ID, 'Oil', false, '2');
+    await stock(await add('Unweighedwort'));
+    await stock(await add('Weighedwort'), WORKSPACE_W_ID, 'Testform', false, '3.5');
+    await stock(await add('Emptywort'), WORKSPACE_W_ID, 'Testform', false, '0');
+    const spent = await add('Spentwort', {
+      variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })],
+    });
+    await stock(spent, WORKSPACE_W_ID, 'Herb', false, '0');
+    await stock(spent, WORKSPACE_W_ID, 'Oil', false, '0');
+    await add('Barecovenwort', { workspaceId: WORKSPACE_W_ID });
+    await stock(
+      await add('Covenwort', { workspaceId: WORKSPACE_W_ID }),
+      WORKSPACE_W_ID,
+      'Testform',
+      false,
+      '1',
+    );
+
+    // Why they could have been listed: without the filter every one is.
+    expect(await listed(asUser(B))).toHaveLength(7);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { inStockOnly: true })).toEqual([
+      'Covenwort',
+      'Mixedwort',
+      'Unweighedwort',
+      'Weighedwort',
+    ]);
+  });
+
+  it("does not count a deleted jar as in stock, nor another coven's jar", async () => {
+    const entry = await add('Deletedjarwort');
+    await stock(entry, WORKSPACE_W_ID, 'Testform', false, '0');
+    await stock(entry, WORKSPACE_W_ID, 'Testform', true, '5');
+    await stock(entry, WORKSPACE_X_ID, 'Testform', false, '5');
+    await stock(await add('Livejarwort'), WORKSPACE_W_ID, 'Testform', false, '5');
+
+    expect(await listed(asUser(B))).toEqual(['Deletedjarwort', 'Livejarwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { inStockOnly: true })).toEqual(['Livejarwort']);
+  });
+
+  it('combines source with inStockOnly', async () => {
+    await stock(
+      await add('Covenwort', { workspaceId: WORKSPACE_W_ID }),
+      WORKSPACE_W_ID,
+      'Testform',
+      false,
+      '1',
+    );
+    await stock(await add('Heldwort'), WORKSPACE_W_ID, 'Testform', false, '1');
+    await stock(
+      await add('Emptywort', { workspaceId: WORKSPACE_W_ID }),
+      WORKSPACE_W_ID,
+      'Testform',
+      false,
+      '0',
+    );
+
+    expect(
+      await listed(asUser(B), WORKSPACE_W_ID, { source: 'compendium', inStockOnly: true }),
+    ).toEqual(['Heldwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'local', inStockOnly: true })).toEqual(
+      ['Covenwort'],
+    );
+  });
+});
 
 describe('listWorkspaceIngredients', () => {
   it("lists the coven's own entries and the compendium entries it holds, and nothing else", async () => {
