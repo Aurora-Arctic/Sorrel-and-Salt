@@ -15,11 +15,7 @@ import { fromRoot } from '../support/paths';
 // `role="tooltip"` is not seen.
 
 /** Files still on the old pinned tip, each removed from here by its owner's PR. */
-const PENDING = new Set([
-  'src/components/EntryMarks/tip-mark.tsx',
-  'src/components/EntryMarks/index.scss',
-  'src/components/IngredientCard/index.scss',
-]);
+const PENDING = new Set<string>();
 
 function walk(dir: string): string[] {
   return readdirSync(fromRoot(dir), { withFileTypes: true }).flatMap((e) => {

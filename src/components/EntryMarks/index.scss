@@ -22,6 +22,6 @@
 }
 
 .entry-mark__tip {
-  // From the badge's right edge: the badges sit at the card's right, where a left-anchored bubble runs off the screen.
-  @include tip-above($align: end);
+  // Placed by `useTip`, which keeps it on the screen wherever the badge wraps to.
+  @include tip-above;
 }

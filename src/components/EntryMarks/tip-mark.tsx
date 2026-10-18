@@ -20,11 +20,11 @@ type TipMarkProps = {
 // reader hears the reason without opening it. claude-docs/components/entry-marks.md.
 const TipMark = ({ label, palette, tip }: TipMarkProps): ReactElement => {
   const tipId = useId();
-  const { open, show, hide, hideSoon } = useTip();
+  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
   return (
     // Hover on the wrapper, which holds the tip as well as the button, so the
     // pointer can move onto the tip without closing it.
-    <span className="entry-mark-tip" onMouseEnter={show} onMouseLeave={hideSoon}>
+    <span ref={anchor} className="entry-mark-tip" onMouseEnter={show} onMouseLeave={hideSoon}>
       <button
         type="button"
         className={`badge badge--${palette} entry-mark entry-mark--tip`}
@@ -37,6 +37,8 @@ const TipMark = ({ label, palette, tip }: TipMarkProps): ReactElement => {
       </button>
       <span
         id={tipId}
+        ref={bubble}
+        style={bubbleStyle}
         role="tooltip"
         className={open ? 'entry-mark__tip is-open' : 'entry-mark__tip'}
         aria-hidden={!open}

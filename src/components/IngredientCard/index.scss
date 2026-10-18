@@ -150,14 +150,6 @@
   }
 }
 
-// The Low badge sits at the card's right edge, where a left-anchored tip runs
-// off the screen: open it from the badge's right edge, as the Retired tip does.
-.ingredient-card .stock-badge__tip {
-  @include tip-above($align: end);
-
-  left: auto;
-}
-
 // Out of Stock takes Low's weight on the card: the word and the icon still tell
 // the states apart, and the heavier edge is M9.8's for a badge standing alone.
 // The values are the badge mixin's own, so both come out the same height.
