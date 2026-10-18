@@ -308,6 +308,13 @@ export function entryDetail(entry: AnyListEntry): string | undefined {
 const formNamed = (link: SubstituteLink, id: string | undefined): string | undefined =>
   link.variants?.find((variant) => variant.id === id)?.form;
 
+/** The substitute picker's two headings (M12.19), in the order they list. */
+export const YOUR_INGREDIENTS = 'Your Ingredients';
+export const COMPENDIUM_HEADING = 'Compendium';
+
+/** The picker's own cupboard group lists first and stays first, whatever a form ranks (M12.19). */
+const groupOf = ({ heading }: ListOption): number => (heading === YOUR_INGREDIENTS ? 0 : 1);
+
 /**
  * A variant's substitute suggestions, ranked for `form` (MB.215): the
  * ingredients that come in a form folding alike first, then those with a
@@ -330,7 +337,7 @@ export function rankForForm(
   };
   return options
     .map((option, index) => ({ option, index, tier: rankOf(option) }))
-    .sort((a, b) => a.tier - b.tier || a.index - b.index)
+    .sort((a, b) => groupOf(a.option) - groupOf(b.option) || a.tier - b.tier || a.index - b.index)
     .map(({ option }) => option);
 }
 
@@ -368,6 +375,7 @@ export function formRows(
     return ranked.map(({ variant }) => ({
       value: option.value,
       label: `${name} · ${variant.group ? `${variant.form} (${variant.group})` : variant.form}`,
+      heading: option.heading,
       key: `${option.key ?? link.id}/${variant.id}`,
       link,
       variantId: variant.id,

@@ -1,6 +1,8 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
+import { makeQueryClient } from '@/lib/graphql-client';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { entryDetail } from '../../../support/entry-detail';
 
@@ -28,11 +30,18 @@ const ingredientDetailOf = vi.fn();
 const compendiumEntriesReplacedBy = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
+const getCupboardEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
   compendiumEntriesReplacedBy,
   isRetired,
+  getCupboardEntry,
+  // The pure merge: no cupboard entry, nothing laid over.
+  applyCupboardEntry: (entry: unknown) => entry,
+  // The page reads Make It Ours's permission from the module (M12.23), so the
+  // mock carries it as the service declares it.
+  MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
 }));
 
 // The form is its own tests'; here only that the dialog holds one.
@@ -68,11 +77,18 @@ const open = async (
   getIngredient.mockResolvedValue(row);
   ingredientDetailOf.mockResolvedValue({ ...entryDetail(), entry: row });
   viewerOf.mockResolvedValue({ viewer: { name: 'Fixture Member', canCurate }, workspaces: [] });
-  render(await Page(params(ID, search)));
+  // The cupboard buttons the page draws for a member (M12.17) read a query
+  // client, as the browser gives them one.
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      {await Page(params(ID, search))}
+    </QueryClientProvider>,
+  );
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  getCupboardEntry.mockResolvedValue(null);
   requireCovenMembership.mockResolvedValue({
     workspace: WORKSPACE,
     membership: { workspaceId: WORKSPACE.id, userId: SESSION.userId, role: 'member' },

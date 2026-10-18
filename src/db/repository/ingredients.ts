@@ -23,6 +23,7 @@ import type {
   IngredientElement,
 } from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
+import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
@@ -62,6 +63,8 @@ import type {
   NotSpellScoped,
   SimilarityScore,
   SortPart,
+  SuggestionGroup,
+  SuggestionGroupTag,
   Unscoped,
   VariantScoped,
 } from './types';
@@ -368,29 +371,70 @@ function heldBy(membership: Membership, inStock = false): SQL {
   );
 }
 
+/** How many entries each group of the substitute picker offers (M12.19): an estimate, tuned in the e2e test. */
+const SUGGESTION_GROUP_LIMIT = 8;
+
 /**
- * One page of the live ingredients a coven's substitute may link — the
- * compendium's and the proof's workspace's (MB.138) — matched and ordered as
- * the compendium search is, best match first, so a typed prefix finds its
- * entry where `findSimilarIngredients`' whole-string 0.4 would not. A blank
- * `query` lists both tiers by name (claude-docs/db/compendium-read.md,
- * "The ingredient picker's search").
+ * The substitute picker's rows (MB.138, M12.19), in two groups. `yours` is the
+ * coven's cupboard: its own live entries, and each compendium entry it holds a
+ * live cupboard row for, found by the label it gave the entry as well as the
+ * compendium's name. `compendium` is every other live compendium entry, those
+ * with no row here, through a keyed `NOT EXISTS` on that row. An entry is in
+ * one group; a coven's own entry no longer hides the compendium entry it
+ * shares a name with. A retired (soft-deleted) compendium entry is in
+ * neither, as the tombstone filter drops it first. Each group is matched and
+ * ordered as the compendium search is, best match first, and cut at
+ * `SUGGESTION_GROUP_LIMIT`; the result lists `yours` first and pages by
+ * cursor over those rows, each carrying its `group`. A blank `query` lists
+ * both by name (claude-docs/db/compendium-read.md, "The ingredient picker's
+ * search").
  */
-export function findIngredientSuggestions(
+export async function findIngredientSuggestions(
   membership: Membership,
   query: string,
   page: PageRequest,
   form?: string,
-): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  const list = compendiumList({ query });
+): Promise<PageEntry<IngredientRow, CompendiumScore & SuggestionGroupTag>[]> {
+  const list = compendiumList({ query }, membership);
   const ranked = formRank(form);
-  const order = ranked ? { ...list.order, sort: [ranked, ...list.order.sort] } : list.order;
+  const sort = ranked ? [ranked, ...list.order.sort] : list.order.sort;
+  const order = { ...list.order, sort };
+  // The coven holds a live cupboard row for the compendium entry.
+  const held = existsIn(
+    workspaceCompendiumEntries,
+    and(
+      scopedTo(membership, workspaceCompendiumEntries),
+      eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
+    ),
+  );
+  const yours = or(scopedTo(membership, ingredients), held) as SQL;
+  const top = async (scope: SQL) =>
+    (
+      await findPageInTiers(
+        [membership],
+        ingredients,
+        order,
+        { limit: SUGGESTION_GROUP_LIMIT, inverted: false },
+        and(list.arms, scope),
+      )
+    ).map(({ node }) => node.id);
+  const ids = (
+    await Promise.all([top(yours), top(and(inCompendium(ingredients), not(held)) as SQL)])
+  ).flat();
+  if (ids.length === 0) return [];
   return findPageInTiers(
     [membership],
     ingredients,
-    order,
+    {
+      ...order,
+      sort: [{ expression: sql`case when ${yours} then 0 else 1 end`, type: 'integer' }, ...sort],
+      carry: {
+        score: list.order.carry?.score as SQL<number | null>,
+        group: sql<SuggestionGroup>`case when ${yours} then 'yours' else 'compendium' end`,
+      },
+    },
     page,
-    and(list.arms, notHiddenByLocal(membership)),
+    inArray(ingredients.id, ids),
   );
 }
 
@@ -400,7 +444,8 @@ export function findIngredientSuggestions(
  * database (DESIGN.md §5). A local row hides an entry sharing its `identity_key`
  * (the formal name, whatever forms either holds), and, only when the local row
  * declares no formal name, one sharing its label, folded. A coven row passes.
- * `ingredientSuggestions` and the workspace ingredient list (M9.4) apply it.
+ * The workspace ingredient list (M9.4) applies it; the substitute picker no
+ * longer does (M12.19).
  */
 export function notHiddenByLocal(membership: Membership): SQL {
   const local = alias(ingredients, 'local');
@@ -602,11 +647,14 @@ function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
  * row comparison bounds it, and the position where its best field holds the
  * query, so Wood Ash leads Sandalwood for `wood`; a browse keys `[name]`.
  */
-export function compendiumList(filter: IngredientFilter): {
+export function compendiumList(
+  filter: IngredientFilter,
+  cupboardOf?: Membership,
+): {
   arms: SQL | undefined;
   order: ListOrder<CompendiumScore>;
 } {
-  const match = searchMatch(filter.query);
+  const match = searchMatch(filter.query, cupboardOf);
   return {
     arms: and(
       ...categoryArms(filter.categoryIds ?? [], filter.categoryMode),
@@ -680,6 +728,7 @@ const SEARCH_WEIGHTS = {
  */
 function searchMatch(
   query: string | undefined,
+  cupboardOf?: Membership,
 ): { join: { source: SQL; on: SQL }; score: SQL<number>; position: SQL<number> } | undefined {
   const trimmed = query?.trim();
   if (!trimmed) return undefined;
@@ -701,6 +750,22 @@ function searchMatch(
       from ${from}
       where ${and(matches(text), live)}`;
   const entries = sql`${ingredients} as ${candidate}`;
+  // With a coven's proof, a sixth arm: the label that coven gave a compendium
+  // entry it holds, ranked as a label is (M12.19). That coven's live rows only.
+  const cupboardArm = cupboardOf
+    ? sql`
+      union all
+      ${arm(
+        workspaceCompendiumEntries.ingredientId,
+        workspaceCompendiumEntries.label,
+        SEARCH_WEIGHTS.name,
+        workspaceCompendiumEntries,
+        and(
+          scopedTo(cupboardOf, workspaceCompendiumEntries),
+          notSoftDeleted(workspaceCompendiumEntries),
+        ),
+      )}`
+    : sql``;
   // The position is the best-scoring arm's, not `min(position)`: a weaker
   // field holding the query earlier — a folk name starting with it, under a
   // label holding it mid-word — must not move the entry it did not rank.
@@ -716,7 +781,7 @@ function searchMatch(
       union all
       ${arm(ingredientVariants.ingredientId, ingredientVariants.form, SEARCH_WEIGHTS.form, ingredientVariants, notSoftDeleted(ingredientVariants))}
       union all
-      ${arm(ingredientVariants.ingredientId, ingredientVariants.description, SEARCH_WEIGHTS.description, ingredientVariants, notSoftDeleted(ingredientVariants))}
+      ${arm(ingredientVariants.ingredientId, ingredientVariants.description, SEARCH_WEIGHTS.description, ingredientVariants, notSoftDeleted(ingredientVariants))}${cupboardArm}
     ) as ${arms}
     group by ${arms}.id) as ${matched}`;
   return {
