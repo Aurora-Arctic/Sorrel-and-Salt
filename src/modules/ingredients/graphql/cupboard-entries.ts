@@ -7,9 +7,10 @@ import { type cupboardEntryByIngredient, clearCupboardEntry } from '../loaders/c
 import {
   addCupboardEntry,
   annotateCupboardEntry,
+  convertLocalToCompendiumEntry,
   removeCupboardEntry,
 } from '../services/cupboard-entries';
-import type { CupboardEntryNode, CupboardEntryRow } from '../types';
+import type { CupboardEntryNode, CupboardEntryRow, DroppedOnConvert } from '../types';
 import { IngredientElementEnum, IngredientRef } from './ingredient';
 
 // A coven's cupboard entry over the wire (M12.14): the coven's own say over
@@ -155,6 +156,61 @@ builder.mutationField('removeCupboardEntry', (t) =>
       await removeCupboardEntry(sessionOf(context), workspaceId, ingredientId);
       clearCupboardEntry(loaders, { ingredientId, workspaceId });
       return ingredientId;
+    },
+  }),
+);
+
+const DroppedOnConvertRef = builder.objectRef<DroppedOnConvert>('DroppedOnConvert').implement({
+  description:
+    'What an own entry had that the compendium entry it became does not carry, by name, each list sorted. The rows stay on the deleted own entry.',
+  fields: (t) => ({
+    forms: t.exposeStringList('forms', {
+      description: 'Forms that matched no compendium form and held no jar or spell layer.',
+    }),
+    folkNames: t.exposeStringList('folkNames'),
+    substitutes: t.exposeStringList('substitutes', {
+      description: "The entry's and its forms'.",
+    }),
+    categories: t.exposeStringList('categories', {
+      description: "The entry's and its forms'.",
+    }),
+    references: t.exposeStringList('references', {
+      description: "The entry's and its forms', each as its bibliography entry reads.",
+    }),
+    deities: t.exposeStringList('deities'),
+  }),
+});
+
+const ConvertedLocalRef = builder
+  .objectRef<{ entry: CupboardEntryNode; dropped: DroppedOnConvert }>('ConvertedLocal')
+  .implement({
+    description:
+      'An own entry turned into a compendium entry: the cupboard entry written, and what was lost.',
+    fields: (t) => ({
+      entry: t.field({ type: CupboardEntryRef, resolve: (converted) => converted.entry }),
+      dropped: t.field({ type: DroppedOnConvertRef, resolve: (converted) => converted.dropped }),
+    }),
+  });
+
+builder.mutationField('convertLocalToCompendiumEntry', (t) =>
+  t.field({
+    type: ConvertedLocalRef,
+    description:
+      "Turns one of the coven's own entries into the compendium entry it duplicates: its jars and spell layers move to the compendium's forms of the same name, a cupboard entry carries what the coven said differently, and the own entry is deleted. Refused, with nothing moved, when a form holding a jar or a layer has no match, or a jar or a layer would meet one of the compendium's.",
+    args: {
+      workspaceId: t.arg.id({ required: true }),
+      localId: t.arg.id({ required: true }),
+      compendiumId: t.arg.id({ required: true }),
+    },
+    authScopes: { signedIn: true },
+    resolve: async (_root, { workspaceId, localId, compendiumId }, { loaders, ...context }) => {
+      const { entry, dropped } = await convertLocalToCompendiumEntry(
+        sessionOf(context),
+        workspaceId,
+        localId,
+        compendiumId,
+      );
+      return { entry: await nodeOf(entry, loaders), dropped };
     },
   }),
 );
