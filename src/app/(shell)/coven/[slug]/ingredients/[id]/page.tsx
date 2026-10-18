@@ -9,6 +9,7 @@ import { requireCovenMembership, requireSession } from '../../../../../../lib/re
 import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
+import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
   compendiumEntriesReplacedBy,
@@ -77,6 +78,9 @@ export async function generateMetadata({ params }: CovenIngredientParams): Promi
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
   const { slug, id } = await params;
   const { workspace, session, entry } = await entryOf(slug, id);
+  const {
+    membership: { role },
+  } = await requireCovenMembership(slug);
   // A coven's own entry also links the compendium entries it hides (M12.12),
   // read here for this one page and never through GraphQL; none for a
   // compendium entry. The compendium is public, so the links reveal nothing.
@@ -123,6 +127,18 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 // The address names the entry's id, which a save leaves be.
                 savedHref: `${own}?edit` as Route,
                 opened,
+              }
+            : undefined
+        }
+        // The buttons a member's role permits over a compendium entry; the
+        // services refuse the rest whatever is drawn (M12.17).
+        cupboard={
+          inCompendium
+            ? {
+                workspaceId: workspace.id,
+                canAdd: rolePermits(role, { ingredient: ['create'] }),
+                canAnnotate: rolePermits(role, { ingredient: ['update'] }),
+                canRemove: rolePermits(role, { ingredient: ['delete'] }),
               }
             : undefined
         }
