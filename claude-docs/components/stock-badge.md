@@ -48,7 +48,7 @@ The server's `lowStockOnly` filter says the same thing in SQL
   0 still reads Out of Stock. `ThresholdReadout` shows a threshold of 0 as
   "Low Stock warning off" and a null threshold as nothing.
 - **The meaning never rests on colour.** Each state carries its words and its own
-  small drawing (a down chevron for Low, a slashed ring for Out), hidden from
+  small drawing (a double down chevron for Low, a slashed ring for Out), hidden from
   assistive technology because the words are there.
 - **Text, not a control.** Nothing here takes focus.
 
@@ -58,7 +58,7 @@ Both states wear `.badge--low-stock`, the muted tinted palette. Safety stays the
 only alarming badge ([`styling.md`](../styling.md), "Badge palettes"), and no
 colour token is added before the section's design review. Out of Stock is told
 apart without colour: a 2px border in place of 1px, a heavier weight, and the
-slashed ring in place of the chevron. Its vertical padding is trimmed by the extra
+slashed ring in place of the double chevron. Its vertical padding is trimmed by the extra
 border so the two badges stand the same height.
 
 **Open for the design review:** whether Out of Stock should get a palette of its
@@ -67,7 +67,7 @@ own (the same inks, a different tint), once the section is designed.
 ## Stories
 
 [`index.stories.tsx`](../../src/components/StockBadge/index.stories.tsx), under
-`Surfaces / Stock Badge`: `Low`, `Out`, `Fine` (empty on purpose), `Readout`,
+`Surfaces / Stock Badge`: `Low`, `Out`, `Readout`,
 `ReadoutOff`, and `PhoneDark` and `PhoneLight` showing a jar line of each state at 375px.
 
 ## Testing

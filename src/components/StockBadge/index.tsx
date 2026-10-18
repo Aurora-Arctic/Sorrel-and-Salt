@@ -34,7 +34,7 @@ export const StockBadge = ({ quantity, threshold }: StockBadgeProps): ReactEleme
             <path d="M4.1 11.9 11.9 4.1" />
           </>
         ) : (
-          <path d="M3.5 6 8 10.5 12.5 6" />
+          <path d="M3.5 3.5 8 8l4.5-4.5M3.5 8.5 8 13l4.5-4.5" />
         )}
       </svg>
       {out ? 'Out of Stock' : 'Low Stock'}

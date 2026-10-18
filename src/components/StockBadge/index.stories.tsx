@@ -10,9 +10,6 @@ export const Low: Story = () => <StockBadge quantity={6} threshold={10} />;
 
 export const Out: Story = () => <StockBadge quantity={0} threshold={10} />;
 
-// Nothing renders for a jar above its threshold, so this story is empty on purpose.
-export const Fine: Story = () => <StockBadge quantity={40} threshold={10} />;
-
 export const Readout: Story = () => <ThresholdReadout threshold={10} unit="g" />;
 
 export const ReadoutOff: Story = () => <ThresholdReadout threshold={0} unit="g" />;
