@@ -121,7 +121,12 @@ describe('the ranked search plan over ~20,000 rows', () => {
       expect(plan).toContain(`Index Scan on ${UNACCENT_INDEX}`);
       expect(plan).toContain(`Index Scan on ${FOLK_NAMES_UNACCENT_INDEX}`);
       expect(plan).toContain(`Index Scan on ${VARIANTS_UNACCENT_INDEX}`);
-      expect(plan).not.toContain('SubPlan');
+      // A subplan that runs per row is the bug; the picker's one hashed set of
+      // the coven's cupboard rows (M12.19) is built once and probed.
+      const perRow = plan
+        .split('\n')
+        .filter((line) => /SubPlan/.test(line) && !/hashed SubPlan|^\s*SubPlan \d+\s*$/.test(line));
+      expect(perRow).toEqual([]);
       expect(plan).not.toContain('Seq Scan');
     });
   }
