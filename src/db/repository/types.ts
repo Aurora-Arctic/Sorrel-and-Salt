@@ -744,6 +744,17 @@ export interface IngredientFacets {
 }
 
 /**
+ * A coven's facets (M9.7): the seven kinds, and the two settings only a coven's
+ * list has. `source` lists both values, zeros kept, in the enum's order;
+ * `inStockOnly` is how many entries the list would hold with the switch on.
+ * Each is counted with its own setting left out and every other kept.
+ */
+export interface WorkspaceIngredientFacets extends IngredientFacets {
+  source: FacetCount<'local' | 'compendium'>[];
+  inStockOnly: number;
+}
+
+/**
  * The compendium's facets, and how many entries cite no live reference under
  * the rest of the filter: the No Refs switch's count (M12.3), the same with
  * the switch on or off. A coven's list has no such switch, so its facets do

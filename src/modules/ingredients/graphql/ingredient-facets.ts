@@ -1,7 +1,12 @@
 import { builder } from '../../../graphql/builder';
 import type { BuilderTypes } from '../../../graphql/types';
-import type { CompendiumFacets, FacetCount, IngredientFacets } from '../types';
-import { IngredientElementEnum, ToxicFilterEnum } from './ingredient';
+import type {
+  CompendiumFacets,
+  FacetCount,
+  IngredientFacets,
+  WorkspaceIngredientFacets,
+} from '../types';
+import { IngredientElementEnum, IngredientSourceEnum, ToxicFilterEnum } from './ingredient';
 
 // M12.3's answer: how many entries each search filter value would list, for
 // the compendium (`compendiumFacets`, in compendium.ts, which adds the No Refs
@@ -60,6 +65,19 @@ export const ToxicFacetCountRef = builder
     }),
   });
 
+export const SourceFacetCountRef = builder
+  .objectRef<WorkspaceIngredientFacets['source'][number]>('SourceFacetCount')
+  .implement({
+    description: 'A source, local or compendium, and how many entries it would list.',
+    fields: (t) => ({
+      value: t.expose('value', {
+        type: IngredientSourceEnum,
+        description: 'local or compendium, as source takes it.',
+      }),
+      count: t.exposeInt('count', { description: COUNT_DESCRIPTION }),
+    }),
+  });
+
 const FACETS_DESCRIPTION =
   'Each kind is counted under the rest of the filter, leaving out that kind’s own choice, except categories under categoryMode all, which are counted with the chosen ones.';
 
@@ -112,11 +130,26 @@ function facetFields<Parent extends IngredientFacets>(
   };
 }
 
+// The coven's type carries the two settings only a coven's list has, and the
+// compendium's carries No Refs, so the two stay separate types sharing
+// `facetFields` rather than one type with nullable fields.
 export const IngredientFacetsRef = builder
-  .objectRef<IngredientFacets>('IngredientFacets')
+  .objectRef<WorkspaceIngredientFacets>('IngredientFacets')
   .implement({
     description: `How many of a coven’s ingredients each search filter value would list. ${FACETS_DESCRIPTION}`,
-    fields: (t) => facetFields(t),
+    fields: (t) => ({
+      ...facetFields(t),
+      source: t.field({
+        type: [SourceFacetCountRef],
+        description:
+          'local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStockOnly included.',
+        resolve: (facets) => facets.source,
+      }),
+      inStockOnly: t.exposeInt('inStockOnly', {
+        description:
+          'How many entries the list would hold with inStockOnly on, the rest of the filter kept, source included: the same whether inStockOnly is chosen or not.',
+      }),
+    }),
   });
 
 export const CompendiumFacetsRef = builder

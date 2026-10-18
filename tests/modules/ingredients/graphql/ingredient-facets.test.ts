@@ -5,6 +5,7 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertStock } from '../../../support/db/insert-stock';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { Overrides } from '../../../support/fixtures';
@@ -101,7 +102,9 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
 }
 
 function workspaceFacets(session: Session, variables: Record<string, unknown> = {}) {
-  return runOperation<{ workspaceIngredientFacets: Facets }>(
+  return runOperation<{
+    workspaceIngredientFacets: Facets & { source: FacetCount[]; inStockOnly: number };
+  }>(
     session,
     `query (
       $workspaceId: ID!
@@ -114,7 +117,7 @@ function workspaceFacets(session: Session, variables: Record<string, unknown> = 
         forms: $forms
         source: $source
         inStockOnly: $inStockOnly
-      ) ${SELECTION}
+      ) ${SELECTION.slice(0, -1)} source { value count } inStockOnly }
     }`,
     { workspaceId: WORKSPACE_W_ID, ...variables },
   );
@@ -220,6 +223,42 @@ describe('workspaceIngredientFacets', () => {
     // Covenwort has no jar, so it is out of stock.
     expect(await forms({ inStockOnly: true })).toEqual([]);
     expect(await forms({ inStockOnly: false })).toEqual(covenform);
+  });
+
+  it("answers the coven's Source and In Stock Only counts, zeros kept", async () => {
+    const result = await workspaceFacets(asUser(B));
+
+    expect(result.errors).toBeUndefined();
+    // Covenwort is W's own and has no jar; W holds no compendium entry.
+    expect(result.data?.workspaceIngredientFacets.source).toEqual([
+      { value: 'local', count: 1 },
+      { value: 'compendium', count: 0 },
+    ]);
+    expect(result.data?.workspaceIngredientFacets.inStockOnly).toBe(0);
+
+    const [{ id: ingredientId }] = await sql`select id from ingredients where name = 'Covenwort'`;
+    const [{ id: variantId }] = await sql`
+      select id from ingredient_variants where ingredient_id = ${ingredientId as string}`;
+    await insertStock(
+      sql,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        ingredientId: ingredientId as string,
+        variantId: variantId as string,
+        quantityOnHand: '3',
+      },
+      A.id,
+    );
+    // The compendium source empties the list, yet the counts leave their own setting out.
+    const chosen = await workspaceFacets(asUser(B), { source: 'compendium' });
+    expect(chosen.errors).toBeUndefined();
+    expect(chosen.data?.workspaceIngredientFacets.source).toEqual([
+      { value: 'local', count: 1 },
+      { value: 'compendium', count: 0 },
+    ]);
+    expect(chosen.data?.workspaceIngredientFacets.inStockOnly).toBe(0);
+    const local = await workspaceFacets(asUser(B), { source: 'local' });
+    expect(local.data?.workspaceIngredientFacets.inStockOnly).toBe(1);
   });
 
   it('is FORBIDDEN to a caller naming by id a coven they are not in', async () => {

@@ -346,6 +346,16 @@ type IngredientFacets {
   """
   forms: [NameFacetCount!]!
 
+  """
+  How many entries the list would hold with inStockOnly on, the rest of the filter kept, source included: the same whether inStockOnly is chosen or not.
+  """
+  inStockOnly: Int!
+
+  """
+  local, then compendium, zeros included: how many entries the list would hold with that source chosen, the rest of the filter kept, inStockOnly included.
+  """
+  source: [SourceFacetCount!]!
+
   """toxic, then not_toxic, zeros included."""
   toxic: [ToxicFacetCount!]!
 
@@ -1437,6 +1447,17 @@ type ReferenceLink {
 input ReferenceLinkInput {
   locator: String
   referenceId: ID!
+}
+
+"""A source, local or compendium, and how many entries it would list."""
+type SourceFacetCount {
+  """
+  How many entries the list would hold with this value as the only one chosen of its kind, the rest of the filter unchanged.
+  """
+  count: Int!
+
+  """local or compendium, as source takes it."""
+  value: IngredientSource!
 }
 
 input StockInput {
