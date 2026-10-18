@@ -257,10 +257,10 @@ declaration it is written in, and a private helper under its own name rather
 than credited to whichever export happens to sit above it. Review holds the
 list since MB.224 retired the guard that pinned it.
 
-It holds the predicate, the five builders over it, twenty-two functions and the
+It holds the predicate, the seven builders over it, twenty-three functions and the
 writer today: `inCompendium` in `predicates.ts`, which is `workspace_id IS
 NULL` itself; `inTiers` and `readableInTiers` beside it,
-`readableIngredientParent` in `ingredient-parent.ts`, and `findPageInTiers`
+`readableIngredientParent` in `ingredient-parent.ts` with `inUseIngredientParent` and `inUseVariantParent` (M12.24), which also admit a retired compendium entry the reading coven's cupboard names, and `findPageInTiers`
 and `findPageCountInTiers` in `finders.ts`
 (MB.206); `findSimilarIngredients`
 (M4.7), the fuzzy duplicate match; `findVocabularySuggestions` (MB.94, forms
@@ -277,7 +277,9 @@ curated form's rename would give two forms of one name; `findCompendiumEntryBySl
 (MB.82), the entry at an address and the one a retired address redirects to;
 `inCupboard` (M12.14), the private filter under `findCupboardEntry` and
 `findCupboardEntriesOf` that admits a coven's cupboard row only while it
-names a live compendium entry; `findCompendiumMatchesByName` (M12.14), the
+names a live compendium entry; `findCupboardEntryIncludingSoftDeleted` (M12.24),
+the escape hatch that reads a retired compendium entry for a coven whose live
+cupboard row names it; `findCompendiumMatchesByName` (M12.14), the
 compendium entries a typed name or formal name names exactly;
 `findIngredientsInSpellsIncludingSoftDeleted` (M5.3), what a readable spell
 holds, deleted or not; `findSubstitutesIncludingSoftDeleted` (MB.140), an
