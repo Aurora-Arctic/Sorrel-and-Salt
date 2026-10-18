@@ -1557,29 +1557,23 @@ for (const [label, width, height] of [
   ['1280', 1280, 900],
   ['390', 390, 800],
 ] as const) {
-  test(`the public panel's Toxic menu opens whole inside the panel at ${label}px`, async ({
-    page,
-  }) => {
-    const { userId } = await signInAs(
-      page,
-      `toxic-menu-${label}@admin-compendium.test`,
-      ['discord'],
-      'admin',
-    );
-    await seedFacetworts(userId);
+  test(`the Match menu opens whole inside the panel at ${label}px`, async ({ page }) => {
+    await signInAs(page, `match-menu-${label}@admin-compendium.test`, ['discord'], 'admin');
     await page.setViewportSize({ width, height });
-    await page.goto('/compendium?query=Facetwort');
+    // Two categories chosen, so Match can open; it ends its row on every panel, which is
+    // where a menu hung from the chip's left edge ran past the panel's right edge.
+    await page.goto('/admin/compendium?categories=protection&categories=cleansing');
     const panel = await openFilters(page);
-    const toxic = panel.getByRole('group', { name: 'Toxic' });
-    await toxic.locator('summary').click();
-    const menu = toxic.locator('.facet-chip__menu');
+    const match = panel.getByRole('group', { name: 'Match' });
+    await match.locator('summary').click();
+    const menu = match.locator('.facet-chip__menu');
     await expect(menu).toBeVisible();
     // Let the fade finish so the box is the settled one.
     await expect(menu).toHaveClass(/is-open/);
     // Why it could have been cut: the menu is wider than the chip and the panel clips to its
-    // own box, so a menu hung from the chip's left edge ran past the panel's right edge.
+    // own box.
     const menuBox = (await menu.boundingBox())!;
-    const chipBox = (await toxic.locator('summary').boundingBox())!;
+    const chipBox = (await match.locator('summary').boundingBox())!;
     const panelBox = (await panel.boundingBox())!;
     expect(menuBox.width).toBeGreaterThan(chipBox.width);
     expect(menuBox.x).toBeGreaterThanOrEqual(panelBox.x);
