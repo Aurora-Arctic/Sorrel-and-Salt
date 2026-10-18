@@ -82,13 +82,11 @@ function Panel({
   start = NONE,
   admin = false,
   facets = FACETS,
-  className,
   open = true,
 }: {
   start?: FacetPanelFilter;
   admin?: boolean;
   facets?: CompendiumFacetCounts;
-  className?: string;
   /** Open on desktop widths as the story loads, so the layout is seen without a click. */
   open?: boolean;
 }) {
@@ -114,7 +112,6 @@ function Panel({
           facets={facets}
           filter={filter}
           admin={admin}
-          className={className}
           loading={loading}
           clearHref="#clear"
           onClear={() => setFilter(NONE)}
@@ -205,20 +202,3 @@ export const Coven: Story = () => (
 export const CovenEmpty: Story = () => (
   <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStock: false }} />
 );
-
-// Temporary comparison for the owner (M9.7): the Coven panel at each control height. Removed
-// once the height is chosen.
-export const Compact2Point5Rem: Story = () => (
-  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStock: true }} />
-);
-
-export const Compact2Point75Rem: Story = () => (
-  <Panel
-    className="facet-panel--control-275"
-    facets={COVEN_FACETS}
-    start={{ ...NONE, source: 'local', inStock: true }}
-  />
-);
-
-Compact2Point5Rem.storyName = 'Compact 2.5rem';
-Compact2Point75Rem.storyName = 'Compact 2.75rem';
