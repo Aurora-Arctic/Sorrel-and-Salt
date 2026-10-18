@@ -73,12 +73,11 @@
 }
 
 // The name block and the badges side by side while they fit; when they do not
-// (a long name), the badges wrap onto their own row beneath, still at the right
-// edge. On the card only: the specimen primitive's top row is not otherwise
+// (a long name), the badges wrap onto their own row beneath, at the left. On the card only: the specimen primitive's top row is not otherwise
 // meant to wrap.
 .ingredient-card .specimen__top {
   flex-wrap: wrap;
-  row-gap: space(2);
+  row-gap: space(3);
 }
 
 // Takes the room it needs and may shrink below its longest word, which breaks
@@ -94,13 +93,14 @@
   hyphens: auto;
 }
 
-// The badges, when they wrap (a phone, or Retired, Annotated, Caution and Toxic
-// together), hug the right edge on every row. On the card only: the specimen
-// primitive's badge row is not otherwise right-aligned.
+// The badges take only the room they need. Beside the name, the growing name
+// block pushes them to the right edge; wrapped onto their own row they start at
+// the left. Badges that wrap among themselves while beside the name still hug the
+// right edge. On the card only: the specimen primitive's badge row is not
+// otherwise right-aligned.
 .ingredient-card .specimen__badges {
+  flex: 0 1 auto;
   justify-content: flex-end;
-  // Stays at the right when it wraps beneath the name.
-  margin-inline-start: auto;
 }
 
 // Above the overlay, so the Low badge's button keeps its own hover, focus and
