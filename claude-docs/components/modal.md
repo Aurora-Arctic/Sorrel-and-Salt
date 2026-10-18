@@ -229,19 +229,21 @@ on their own (MB.115): `GroupForm`'s Delete and Move and Delete,
 Redirect & Save. A `ConfirmOverlay` holding the acting answer, a
 `BusyButton`, and the safe one, quiet, which takes the focus.
 
-| Prop           | What it is                                                                           |
-| -------------- | ------------------------------------------------------------------------------------ |
-| `question`     | The question, which names the card                                                   |
-| `asked`        | Its own question is being asked; true by default, for a form that draws it only then |
-| `guard`        | The form's `useDiscardGuard`, whose question shows in its place while it asks        |
-| `confirmLabel` | The acting answer: "Delete" by default                                               |
-| `busyLabel`    | What it says while busy: "Deleting" by default                                       |
-| `tone`         | `'destructive'` by default, `'solid'` for a save                                     |
-| `keepLabel`    | The safe answer: "Keep It" by default, "Back" for a step back                        |
-| `busy`         | The action is in flight: the acting answer busy and shut                             |
-| `onConfirm`    | The action, a promise                                                                |
-| `onKeep`       | The safe answer's                                                                    |
-| `onRefused`    | Told a refusal's sentence when `onConfirm` rejects, for the form's alert             |
+| Prop           | What it is                                                                                                                                                |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `question`     | The question, which names the card                                                                                                                        |
+| `details`      | What stands beneath the question, apart from its name: what the answer changes, and anything to weigh first (M12.1). Absent when the question says it all |
+| `asked`        | Its own question is being asked; true by default, for a form that draws it only then                                                                      |
+| `guard`        | The form's `useDiscardGuard`, whose question shows in its place while it asks                                                                             |
+| `confirmLabel` | The acting answer: "Delete" by default                                                                                                                    |
+| `busyLabel`    | What it says while busy: "Deleting" by default                                                                                                            |
+| `tone`         | `'destructive'` by default, `'solid'` for a save                                                                                                          |
+| `keepLabel`    | The safe answer: "Keep It" by default, "Back" for a step back                                                                                             |
+| `busy`         | The action is in flight: the acting answer busy and shut                                                                                                  |
+| `onConfirm`    | The action, a promise                                                                                                                                     |
+| `also`         | A second acting answer between the two, as Discard & Promote (M12.1): its label, busy label, busy state and action                                        |
+| `onKeep`       | The safe answer's                                                                                                                                         |
+| `onRefused`    | Told a refusal's sentence when `onConfirm` rejects, for the form's alert                                                                                  |
 
 - **Which question shows.** Given the form's guard, the unsaved changes'
   question shows while it asks, ahead of the form's own, since they are what

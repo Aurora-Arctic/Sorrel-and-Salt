@@ -15,7 +15,12 @@ import type {
 import type { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
 import type { ReferenceInput } from '@/modules/ingredients/validation/reference';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
-import type { ComboboxQualifier, ComboboxOption, Suggestions } from '../Combobox/types';
+import type {
+  ComboboxQualifier,
+  ComboboxOption,
+  EntryAction,
+  Suggestions,
+} from '../Combobox/types';
 import type { FieldProps, SelectOption } from '../Field/types';
 import type { Announce, LegendAction } from '../CategoryPicker/types';
 import type { ShortCitationFields } from '@/lib/types';
@@ -42,6 +47,12 @@ interface IngredientFormCallbacks {
    * nothing (MB.115).
    */
   entryHref?: EntryHref;
+  /**
+   * Whether a saved folk name may be made the display name (M12.1): the
+   * compendium's edit passes true. The control still shows only on an edit of
+   * a saved entry and a name that has a saved row.
+   */
+  mayPromote?: boolean;
 }
 
 /** Where a linked ingredient's page is, by its address and its tier, or undefined for none. */
@@ -79,6 +90,14 @@ export type IngredientElement = (typeof INGREDIENT_ELEMENTS)[number];
 /** One entry of a list field: `useFieldArray` keys objects, never bare strings. */
 export interface ListEntry {
   value: string;
+}
+
+/**
+ * One folk name. `id` is the saved row's, which promoting it names; a name
+ * typed and not yet saved has none. Only the text is sent.
+ */
+export interface FolkNameListEntry extends ListEntry {
+  id?: string;
 }
 
 /**
@@ -207,7 +226,7 @@ export interface IngredientFormValues {
   name: string;
   nomenclature: NomenclatureKind | '';
   canonicalName: string;
-  folkNames: ListEntry[];
+  folkNames: FolkNameListEntry[];
   description: string;
   /** In the order chosen; none chosen is the answer "none". */
   elements: IngredientElement[];
@@ -383,6 +402,11 @@ export interface ListFieldProps {
   action?: LegendAction;
   /** Drawn beneath the box and its error: a variant's notice of the substitutes a copy skipped. */
   after?: ReactNode;
+  /**
+   * A button on a chip, before its x, given the entry it is for: the folk
+   * names' promote (M12.1). Returns undefined for a chip with none.
+   */
+  rowAction?: (entry: AnyListEntry) => EntryAction | undefined;
   /**
    * The coven a linked substitute's summary reads its entry from, as the
    * lookups do; null, the default, for the compendium alone (MB.115).

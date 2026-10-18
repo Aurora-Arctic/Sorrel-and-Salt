@@ -500,6 +500,12 @@ type QueryCompendiumConnectionEdge {
   group loaders, `categoryGroupsById`, `ingredientFormGroupsById` and
   `deityTraditionsById`; and a variant's `formChoice` through
   `ingredientFormsById` (MB.167; ["Loaders"](loaders.md)).
+- **`FolkName` is an id and a name** (DESIGN.md §7, M12.1). The id is the live
+  row's, so a client can name one to `promoteFolkName`; it carries no `audit`.
+  `Ingredient.folkNames` is non-null, `[]` with none, and sorted by `name`. The
+  inputs still take bare strings: a name typed and not yet saved has no id.
+  The public entry page's `IngredientDetail.folkNames` stays a list of names,
+  since it only displays them.
 - **`Substitute` is a link or a typed name** (DESIGN.md §7, MB.138; built by
   MB.140): `name` is what it shows — the linked ingredient's label, its last
   once deleted, or the typed text — and `ingredient` is the one to follow,

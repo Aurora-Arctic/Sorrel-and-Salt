@@ -45,6 +45,7 @@ so the union cannot say one yet.
 | `onCancel`      | Given, a quiet Cancel follows the saves, and calls it: the page holding the form closes it. With unsaved changes Cancel asks first, and calls it on Discard Changes (["On the compendium"](#on-the-compendium), "Unsaved changes").                                                                                                                                                                                                                                 |
 | `duplicateHref` | Required. Where the duplicate warning links a near match: the admin's compendium page opens its modal, the shell's add button goes to the coven's ingredient page, `/coven/[slug]/ingredients/[id]` (["The duplicate warning"](#the-duplicate-warning)).                                                                                                                                                                                                            |
 | `entryHref`     | Where a linked substitute's summary links its ingredient, given `{ slug, isGlobal }`, opened in a new tab; `undefined` for one with no page. Left out, a summary links nothing (MB.115; ["A linked substitute's summary"](#a-linked-substitutes-summary)).                                                                                                                                                                                                          |
+| `mayPromote`    | Whether the saved folk names offer to become the display name. Left false, the arrow is absent. The compendium's edit mounts pass true. It shows only on an edit, and only on a folk name the server has saved (one with an id).                                                                                                                                                                                                                                    |
 
 ## The fields
 
@@ -869,6 +870,52 @@ the form's usual card ([`ConfirmQuestion`](modal.md)), drawn by
 - **The chip lists are unchanged.** A chip's × still removes at once, and
   Backspace in their empty box still takes the last chip.
 
+### Promoting a folk name
+
+A saved folk name's chip carries an up arrow ahead of its ×, named "Make
+<name> the Display Name" (M12.1). It makes that folk name the ingredient's
+name, and the old name becomes a folk name, in one step on the server
+(`promoteFolkName`). The arrow is a button in the tab order, so the chips'
+sortable and Backspace behaviour are untouched. It is drawn by the Combobox
+entry's `action` ([Combobox](combobox.md), "An entry"), which ListField fills
+per row through `rowAction`. A name typed and not yet saved has no id on the
+server, so it has no arrow.
+
+- **It always asks first**, in the form's usual card (`PromoteFolkNameQuestion`,
+  `promote.tsx`). The card's lines are told apart by type, not by space
+  alone, the owner's call:
+  - The question, "Make this folk name the display name?", is set larger, as
+    the card's heading. It names no name, since the panel beneath names both.
+  - The swap is a `dl` on a tinted panel. Each term ("New display name",
+    "Becomes a folk name") is a small uppercase overline, with its name
+    larger beneath it.
+  - On the compendium a muted caption says every coven sees the change at
+    once. A coven's question leaves that out.
+  - A form with changes adds "You have other unsaved changes. Save them, or
+    discard them?", ruled off above the buttons that answer it.
+
+  The lines beneath the question are `ConfirmQuestion`'s `details`
+  ([Modal](modal.md), "`ConfirmQuestion`").
+
+- **A form with changes** is offered **Save & Promote**, **Discard &
+  Promote** and **Cancel**. Save & Promote runs the form's own save
+  first, with the same validation and errors. If it does not land, nothing is
+  promoted: the question closes and the first invalid field takes the focus.
+  Discard & Promote puts the form back to its saved values, then promotes.
+  An open reference panel's own edits survive Save & Promote, and Discard &
+  Promote closes the panels with the reset.
+- **One round trip.** The mutation answers the new name and the full folk
+  name list with ids. The form resets from that answer, clears its edited
+  marks and its undo history, calls `onSaved`, and says "Saved" in the status
+  line. The focus goes to the Name field, since the chip that was pressed is
+  gone.
+- **A refusal** (a name already taken, say) shows in the form's alert and the
+  question closes.
+- **Both tiers.** `usePromoteFolkName(workspaceId, ingredientId)` and the
+  question take a null `workspaceId` for the compendium, or a coven's id. A
+  coven's form does not edit yet (M8.17), so only the compendium reaches the
+  control; the coven tier is tested on the question and hook alone.
+
 ### Copying from the ingredient
 
 A form often says much of what its ingredient says, so each of an open
@@ -1510,6 +1557,8 @@ entry's text fires. List entries take no length cap: the layout holds any
 length, and no other text field has one either.
 
 ## Stories
+
+The promote control has its own stories: `PromoteControl`, `PromoteQuestion` (clean), `PromoteQuestionWithChanges`, phone dark and light, and `PromoteQuestionCoven`.
 
 [`index.stories.tsx`](../../src/components/IngredientForm/index.stories.tsx),
 titled "Admin / Ingredient Form":

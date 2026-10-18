@@ -174,6 +174,7 @@ export function ListField({
   pickOnly,
   action,
   after,
+  rowAction,
   workspaceId = null,
 }: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
@@ -318,6 +319,7 @@ export function ListField({
         ? substituteSummary(entry as SubstituteListEntry, value, workspaceId)
         : undefined,
       note: substitutes && !linked ? NAME_ONLY : undefined,
+      action: rowAction?.(entry),
       errorId: entryErrors[index] && errorId,
       onRemove: () => {
         setAnnouncement(`Removed ${entryText(row)}`);

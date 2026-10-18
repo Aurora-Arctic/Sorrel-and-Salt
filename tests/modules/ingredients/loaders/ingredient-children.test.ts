@@ -16,6 +16,7 @@ import {
   variantsByIngredient,
 } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
+import { liveFolkNames } from '../../../support/db/folk-names';
 import {
   insertIngredient,
   insertSubstituteLink,
@@ -166,7 +167,8 @@ async function addVariant({ ref }: Written): Promise<void> {
 const categoryNames = async (loaders: Loaders, ref: IngredientKey) =>
   (await loaders.categoriesByIngredient.load(ref)).map((category) => category.name);
 
-const folkNames = (loaders: Loaders, ref: IngredientKey) => loaders.folkNamesByIngredient.load(ref);
+const folkNames = async (loaders: Loaders, ref: IngredientKey) =>
+  (await loaders.folkNamesByIngredient.load(ref)).map(({ name }) => name);
 
 const substituteNames = async (loaders: Loaders, ref: IngredientKey) =>
   (await loaders.substitutesByIngredient.load(ref)).map((substitute) => substitute.name);
@@ -245,7 +247,10 @@ describe('the folkNamesByIngredient loader', () => {
 
     const answers = await Promise.all(written.map(({ ref }) => loader.load(ref)));
 
-    expect(answers).toEqual(written.map(({ folkNames: names }) => names));
+    expect(answers.map((names) => names.map(({ name }) => name))).toEqual(
+      written.map(({ folkNames: names }) => names),
+    );
+    expect(answers[0]).toEqual(await liveFolkNames(sql, written[0].ref.id));
     expect(countOf()).toEqual({
       findManyOfIngredients: 1,
       findManyOfVariants: 0,
@@ -264,7 +269,9 @@ describe('the folkNamesByIngredient loader', () => {
       shuffled.map(({ ref }) => ref),
     );
 
-    expect(answers).toEqual(shuffled.map(({ folkNames: names }) => names));
+    expect(
+      answers.map((names) => (names instanceof Error ? names : names.map(({ name }) => name))),
+    ).toEqual(shuffled.map(({ folkNames: names }) => names));
   });
 
   it('leaves out a soft-deleted folk name', async () => {
@@ -275,6 +282,9 @@ describe('the folkNamesByIngredient loader', () => {
     `;
 
     expect(await folkNames(loadersFor(asUser(B)), ref)).toEqual(['Mock Root']);
+    expect(await loadersFor(asUser(B)).folkNamesByIngredient.load(ref)).toEqual(
+      await liveFolkNames(sql, ref.id),
+    );
   });
 });
 

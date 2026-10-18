@@ -32,6 +32,7 @@ export default function CompendiumDialog({ place, opened }: CompendiumDialogProp
               // and back.
               key={entry?.id ?? 'new'}
               workspaceId={null}
+              mayPromote
               entry={entry}
               // Save Ingredient opens the entry it saved, at the address its name
               // now spells; Save & Add Another stays on the new form, which clears
