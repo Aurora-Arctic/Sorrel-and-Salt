@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import IngredientCard from '@/components/IngredientCard';
@@ -8,7 +9,7 @@ import { StockBadge } from '@/components/StockBadge';
 // notes are the test's own data. Marks are found by their exact text and
 // asserted by presence or absence, never by what the words say.
 
-const HREF = '/compendium/ingredients/testwort-testalis';
+const HREF = '/compendium/ingredients/testwort-testalis' as Route;
 const LEAF = {
   form: 'testleaf',
   formChoice: { group: { icon: 'botanical' as const } },
