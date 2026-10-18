@@ -775,6 +775,14 @@ export interface CompendiumScore {
   score: number | null;
 }
 
+/** Which of the substitute picker's two groups an entry is listed in (M12.19). */
+export type SuggestionGroup = 'yours' | 'compendium';
+
+/** What each row of the substitute picker carries beside its entry. */
+export interface SuggestionGroupTag {
+  group: SuggestionGroup;
+}
+
 /**
  * An ingredient's identity as a write gives it: the two parts its
  * `identity_key` is built from, the formal name and the label it falls back
