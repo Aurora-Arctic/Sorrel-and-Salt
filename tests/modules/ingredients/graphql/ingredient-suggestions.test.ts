@@ -49,7 +49,7 @@ const run = (
     session,
     `query ($workspaceId: ID!, $query: String, $form: String, $first: Int, $after: String) {
       ingredientSuggestions(workspaceId: $workspaceId, query: $query, form: $form, first: $first, after: $after) {
-        edges { cursor node { id name canonicalName isGlobal folkNames { id name } } }
+        edges { cursor group node { id name canonicalName isGlobal folkNames { id name } } }
         pageInfo { hasNextPage endCursor }
       }
     }`,
@@ -76,16 +76,16 @@ describe('ingredientSuggestions', () => {
 
     expect(await nodesFor(asUser(B), { query: 'mugwort' })).toEqual([
       expect.objectContaining({
-        name: 'Mugwort',
-        canonicalName: 'Artemisia vulgaris',
-        isGlobal: true,
-        folkNames: await liveFolkNames(sql, mugwort),
-      }),
-      expect.objectContaining({
         name: 'Mugwort Root',
         canonicalName: null,
         isGlobal: false,
         folkNames: [],
+      }),
+      expect.objectContaining({
+        name: 'Mugwort',
+        canonicalName: 'Artemisia vulgaris',
+        isGlobal: true,
+        folkNames: await liveFolkNames(sql, mugwort),
       }),
     ]);
   });
@@ -109,7 +109,7 @@ describe('ingredientSuggestions', () => {
 
     const first = await run(asUser(B), { query: 'mugwort', first: 1 });
     const page = first.data?.ingredientSuggestions as IngredientSuggestionConnection;
-    expect(page.edges.map((edge) => edge.node.name)).toEqual(['Mugwort']);
+    expect(page.edges.map((edge) => edge.node.name)).toEqual(['Mugwart']);
     expect(page.pageInfo.hasNextPage).toBe(true);
 
     const next = await run(asUser(B), {
@@ -120,7 +120,7 @@ describe('ingredientSuggestions', () => {
 
     expect(next.errors).toBeUndefined();
     const rest = next.data?.ingredientSuggestions as IngredientSuggestionConnection;
-    expect(rest.edges.map((edge) => edge.node.name)).toEqual(['Mugwart']);
+    expect(rest.edges.map((edge) => edge.node.name)).toEqual(['Mugwort']);
     expect(rest.pageInfo.hasNextPage).toBe(false);
   });
 
@@ -146,12 +146,21 @@ describe('ingredientSuggestions', () => {
     ]);
   });
 
-  it("hides a compendium entry the coven's own ingredient names", async () => {
-    await addIngredient({ name: 'Fixturewort' });
-    await addIngredient({ name: 'Fixturewort', workspaceId: WORKSPACE_W_ID });
+  it("offers the coven's own entry and the compendium's same-named one, in two groups", async () => {
+    const compendium = await addIngredient({
+      name: 'Mugwort',
+      canonicalName: 'Artemisia vulgaris',
+    });
+    const own = await addIngredient({ name: 'Mugwort', workspaceId: WORKSPACE_W_ID });
 
-    const nodes = await nodesFor(asUser(B), { query: 'fixturewort' });
+    const result = await run(asUser(B), { query: 'mugwort' });
 
-    expect(nodes.map((node) => node.isGlobal)).toEqual([false]);
+    expect(result.errors).toBeUndefined();
+    expect(
+      result.data?.ingredientSuggestions.edges.map((edge) => [edge.group, edge.node.id]),
+    ).toEqual([
+      ['yours', own],
+      ['compendium', compendium],
+    ]);
   });
 });

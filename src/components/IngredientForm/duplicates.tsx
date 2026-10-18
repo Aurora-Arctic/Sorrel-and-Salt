@@ -28,11 +28,35 @@ const PossibleDuplicatesDocument = graphql(`
           name
           canonicalName
           slug
+          isGlobal
+          inCupboard(workspaceId: $workspaceId)
         }
       }
     }
   }
 `);
+
+// The compendium entries whose name is the typed one exactly (M12.20): asked
+// when a save is sent, since only a save is held on the answer.
+const CompendiumMatchesDocument = graphql(`
+  query CompendiumMatches($workspaceId: ID!, $name: String!, $first: Int) {
+    compendiumMatches(workspaceId: $workspaceId, name: $name, first: $first) {
+      edges {
+        node {
+          id
+          name
+          canonicalName
+          slug
+          isGlobal
+          inCupboard(workspaceId: $workspaceId)
+        }
+      }
+    }
+  }
+`);
+
+/** Exact matches a question names: more than a handful of one name is not a choice a person makes. */
+const EXACT_ROWS = 5;
 
 /** Matches a warning names: the closest few, best first, as a sentence can hold them. */
 const DUPLICATE_ROWS = 3;
@@ -86,6 +110,8 @@ export function useDuplicateWarning(
   // The name a save was held on. Another name lifts the hold, so a match
   // arriving as it is typed never takes the focus; its save asks again.
   const [heldFor, setHeldFor] = useState<string | null>(null);
+  // The compendium entries named exactly as the held save's name (M12.20).
+  const [exact, setExact] = useState<Duplicate[]>([]);
   const matches =
     name === ''
       ? []
@@ -106,19 +132,45 @@ export function useDuplicateWarning(
       // As the field's own lookup: a failure warns of nothing, and holds nothing.
       return false;
     }
-    const holds = found.some((match) => !dismissed.has(match.id));
-    if (holds) setHeldFor(sending);
+    // A coven's save asks which compendium entries bear the name exactly; the
+    // compendium's own has no cupboard to put one in. A failure asks no question.
+    let same: Duplicate[] = [];
+    if (workspaceId !== null) {
+      try {
+        const answer = await client.fetchQuery(
+          graphqlQuery(CompendiumMatchesDocument, {
+            workspaceId,
+            name: sending,
+            first: EXACT_ROWS,
+          }),
+        );
+        same = answer.compendiumMatches.edges
+          .map(({ node }) => node)
+          .filter((match) => !dismissed.has(match.id));
+      } catch {
+        same = [];
+      }
+    }
+    const holds = same.length > 0 || found.some((match) => !dismissed.has(match.id));
+    if (holds) {
+      setExact(same);
+      setHeldFor(sending);
+    }
     return holds;
   };
 
   const dismiss = () => {
-    setDismissed(new Set([...dismissed, ...shown.map((match) => match.id)]));
+    setDismissed(
+      new Set([...dismissed, ...shown.map((match) => match.id), ...exact.map((match) => match.id)]),
+    );
     setHeldFor(null);
+    setExact([]);
   };
 
   return {
     shown: untouched ? [] : shown,
     blocking: !untouched && heldFor === typed && shown.length > 0,
+    exact: !untouched && heldFor === typed ? exact : [],
     check,
     dismiss,
   };
@@ -135,9 +187,44 @@ const joinerAt = (index: number, count: number) => {
 };
 
 /** The name field, with the duplicate warning beneath it. */
-export function NameField({ warning, hrefOf, holds = true, ref }: NameFieldProps): ReactElement {
-  const { shown, blocking } = warning;
+export function NameField({
+  warning,
+  hrefOf,
+  onUse,
+  holds = true,
+  ref,
+}: NameFieldProps): ReactElement {
+  const { shown, blocking, exact } = warning;
+  // The save is held on a compendium entry of the very name typed: a question
+  // rather than a warning, answered by using the entry or adding our own.
+  const asking = blocking && exact.length > 0;
   const warningId = useId();
+
+  /**
+   * What a compendium match offers: Use It, which puts it in the cupboard, or
+   * Open It, its coven page, once the cupboard holds it. Nothing for a coven's
+   * own entry, or where no cupboard is to be put into (the admin's).
+   */
+  const choiceFor = (match: Duplicate, beside = false): ReactElement | null => {
+    if (!onUse || !match.isGlobal) return null;
+    const name = <span className="visually-hidden"> {titleOf(match)}</span>;
+    const mark = beside ? ' ' : '';
+    return match.inCupboard ? (
+      <>
+        {mark}
+        <a className="btn btn--quiet btn--small" href={hrefOf(match)}>
+          Open It{name}
+        </a>
+      </>
+    ) : (
+      <>
+        {mark}
+        <button type="button" className="btn btn--quiet btn--small" onClick={() => onUse(match)}>
+          Use It{name}
+        </button>
+      </>
+    );
+  };
 
   const dismiss = (event: MouseEvent<HTMLButtonElement>) => {
     // The pressed button is about to go, so the name takes the focus first:
@@ -161,38 +248,61 @@ export function NameField({ warning, hrefOf, holds = true, ref }: NameFieldProps
         // Always in the page, as a live region must be to be heard: the
         // warning arrives after the typing, and nothing else says so.
         <output className="ingredient-form__duplicates" aria-label="Possible duplicates">
-          {shown.length > 0 && (
+          {(shown.length > 0 || asking) && (
             <div className={blocking ? 'notice notice--error' : 'notice notice--warn'}>
               {/* Plain anchors rather than <Link>, since the caller hands
                   back a plain string, not a typed route. Each in a
                   new tab, so the form and its unsaved changes stay where they
                   are (the owner's call at MB.115's review). */}
-              <p id={warningId}>
-                Did you mean{' '}
-                {shown.map((match, index) => (
-                  <Fragment key={match.id}>
-                    {joinerAt(index, shown.length)}
-                    <a href={hrefOf(match)} target="_blank" rel="noopener noreferrer">
-                      {titleOf(match)}
-                      <span className="visually-hidden"> (opens in a new tab)</span>
-                    </a>
-                  </Fragment>
-                ))}
-                ?
-              </p>
-              {/* Described by the warning: a save that stops here moves the
+              {asking ? (
+                <>
+                  <p id={warningId}>The compendium has {exact.map(titleOf).join(' or ')}.</p>
+                  <ul className="ingredient-form__uses">
+                    {exact.map((match) => (
+                      <li key={match.id}>{choiceFor(match)}</li>
+                    ))}
+                  </ul>
+                  <button
+                    ref={ref}
+                    type="button"
+                    className="btn btn--quiet btn--small"
+                    aria-describedby={warningId}
+                    onClick={dismiss}
+                  >
+                    Add Our Own
+                  </button>
+                </>
+              ) : (
+                <>
+                  <p id={warningId}>
+                    Did you mean{' '}
+                    {shown.map((match, index) => (
+                      <Fragment key={match.id}>
+                        {joinerAt(index, shown.length)}
+                        <a href={hrefOf(match)} target="_blank" rel="noopener noreferrer">
+                          {titleOf(match)}
+                          <span className="visually-hidden"> (opens in a new tab)</span>
+                        </a>
+                        {choiceFor(match, true)}
+                      </Fragment>
+                    ))}
+                    ?
+                  </p>
+                  {/* Described by the warning: a save that stops here moves the
                   focus to it, and the focus should say why. None on an
                   edit, whose save the warning never holds. */}
-              {holds && (
-                <button
-                  ref={ref}
-                  type="button"
-                  className="btn btn--quiet btn--small"
-                  aria-describedby={warningId}
-                  onClick={dismiss}
-                >
-                  Create Anyway
-                </button>
+                  {holds && (
+                    <button
+                      ref={ref}
+                      type="button"
+                      className="btn btn--quiet btn--small"
+                      aria-describedby={warningId}
+                      onClick={dismiss}
+                    >
+                      Create Anyway
+                    </button>
+                  )}
+                </>
               )}
             </div>
           )}

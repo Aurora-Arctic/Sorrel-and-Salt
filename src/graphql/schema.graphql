@@ -194,6 +194,21 @@ type CupboardEntry {
 }
 
 """
+The coven's overrides of a compendium entry. On an add, a field left out is no override. On an annotate, a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
+"""
+input CupboardEntryInput {
+  celestialBodies: [String!]
+  colors: [String!]
+  description: String
+  elements: [IngredientElement!]
+
+  """What the coven calls the entry; unique in the coven."""
+  label: String
+  safetyNotes: String
+  zodiacSigns: [String!]
+}
+
+"""
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format.
 """
 scalar DateTime
@@ -305,6 +320,11 @@ type Ingredient {
   elements: [IngredientElement!]
   folkNames: [FolkName!]!
   id: ID!
+
+  """
+  Whether the coven's cupboard names this compendium entry: false for one it does not hold and for a coven's own ingredient, and with no coven named.
+  """
+  inCupboard(workspaceId: ID): Boolean!
   isGlobal: Boolean!
   name: String!
   nomenclature: Nomenclature!
@@ -648,9 +668,19 @@ type Mutation {
   acceptInvitationById(id: ID!): Invitation!
 
   """
+  Adds a compendium entry to the coven's cupboard, with the overrides given. Creates no jar and no form; an entry the coven already holds is refused.
+  """
+  addCupboardEntry(ingredientId: ID!, input: CupboardEntryInput, workspaceId: ID!): CupboardEntry!
+
+  """
   Starts the coven's jar of one form; a form it already holds is refused beside variantId.
   """
   addIngredientToWorkspace(input: StockInput!, variantId: ID!, workspaceId: ID!): InventoryItem!
+
+  """
+  Changes the coven's overrides: a field left out keeps its value, null hands it back to the compendium, and a list, even an empty one, is the coven's own.
+  """
+  annotateCupboardEntry(ingredientId: ID!, input: CupboardEntryInput!, workspaceId: ID!): CupboardEntry!
 
   """
   Invites an address to become a curator or an admin, mailing it the link; answers the invitation, never the link. Refused for an address already holding that role or a higher one, and while admin changes are paused, but to the primary admin.
@@ -760,6 +790,11 @@ type Mutation {
   Makes a common name the ingredient's display name, and the old display name a common name. A null workspaceId names a compendium entry, under the admin proof.
   """
   promoteFolkName(folkNameId: ID!, id: ID!, workspaceId: ID): Ingredient!
+
+  """
+  Takes the entry out of the coven's cupboard; refused while the coven holds a jar of any of its forms.
+  """
+  removeCupboardEntry(ingredientId: ID!, workspaceId: ID!): ID!
 
   """
   Removes a member from a coven, who can no longer reach it. Owners only; refused when it would leave the coven without an owner.
@@ -1016,6 +1051,11 @@ type Query {
   ): CompendiumFacets!
 
   """
+  The compendium entries whose name or formal name is exactly the typed one, case aside: what the Add Ingredient form asks about before it makes a second copy.
+  """
+  compendiumMatches(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryCompendiumMatchesConnection!
+
+  """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
   """
   deities(after: String, before: String, first: Int, last: Int, query: String, traditionId: ID): QueryDeitiesConnection!
@@ -1247,6 +1287,16 @@ type QueryCompendiumConnectionEdge {
   score: Float
 }
 
+type QueryCompendiumMatchesConnection {
+  edges: [QueryCompendiumMatchesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCompendiumMatchesConnectionEdge {
+  cursor: String!
+  node: Ingredient!
+}
+
 type QueryDeitiesConnection {
   """
   How many of the list's rows come before this page's first edge: 0 on the first page, so the page is floor(countBefore / size) + 1. Null on an empty page.
@@ -1328,6 +1378,11 @@ type QueryIngredientSuggestionsConnection {
 
 type QueryIngredientSuggestionsConnectionEdge {
   cursor: String!
+
+  """
+  Yours: an entry of the coven, its own or one it holds from the compendium. Compendium: an entry it does not hold. Yours is listed first, then the compendium, each ranked by match.
+  """
+  group: SuggestionGroup!
   node: Ingredient!
 }
 
@@ -1548,6 +1603,14 @@ input SubstituteInput {
 type SuggestionClaimant {
   canonicalName: String
   name: String!
+}
+
+"""
+Where the substitute picker lists an entry: the coven's own cupboard (yours), or the rest of the compendium.
+"""
+enum SuggestionGroup {
+  compendium
+  yours
 }
 
 """A toxic setting other than any, and how many entries it would list."""

@@ -5,7 +5,9 @@ import { workspaces } from '../../modules/coven/schema/workspaces';
 import type { Membership } from '@/modules/coven';
 import type { Curator } from '@/modules/identity';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
+import { findPageInTiers } from './finders';
 import { existsIn, selectFrom, selectOne } from './select';
+import type { PageEntry, PageRequest } from '../../lib/types';
 import type { CupboardEntryRow, IngredientRow } from './types';
 
 // The reads over a coven's cupboard entries (M12.14): the rows of
@@ -108,17 +110,77 @@ function inCupboard(membership: Membership): SQL | undefined {
  * rather than fuzzy: a near spelling is `findSimilarIngredients`'.
  */
 export function findCompendiumMatchesByName(name: string): Promise<IngredientRow[]> {
+  return selectFrom(ingredients, and(compendiumNamed(name), notSoftDeleted(ingredients)));
+}
+
+/**
+ * One page of the same exact matches, by name and then id: the Add flow's
+ * question (M12.20), which the schema serves as a connection like any list.
+ * Never more rows than the entries one typed name can equal.
+ */
+export function findCompendiumMatchPage(
+  name: string,
+  page: PageRequest,
+): Promise<PageEntry<IngredientRow, object>[]> {
+  return findPageInTiers(
+    [],
+    ingredients,
+    [ingredients.name],
+    page,
+    and(compendiumNamed(name), notSoftDeleted(ingredients)),
+  );
+}
+
+/** A compendium entry whose label or formal name is `name`, exactly but for case; the finders add the soft-delete filter. */
+function compendiumNamed(name: string): SQL | undefined {
   // `lower` has no builder.
   const folded = sql`lower(${name})`;
-  return selectFrom(
+  return and(
+    inCompendium(ingredients),
+    or(
+      eq(sql`lower(${ingredients.name})`, folded),
+      eq(sql`lower(${ingredients.canonicalName})`, folded),
+    ),
+  );
+}
+
+/**
+ * The proof's live cupboard entry labelled `label`, case folded, or
+ * `undefined`: the row a label the coven is about to take would collide with
+ * (M12.15). It does not join the compendium entry: the label index does not,
+ * so a row naming an entry the compendium has since deleted still holds its
+ * label.
+ */
+export function findCupboardEntryByLabel(
+  membership: Membership,
+  label: string,
+): Promise<CupboardEntryRow | undefined> {
+  return selectOne(
+    workspaceCompendiumEntries,
+    and(
+      scopedTo(membership, workspaceCompendiumEntries),
+      notSoftDeleted(workspaceCompendiumEntries),
+      // `lower` has no builder.
+      eq(sql`lower(${workspaceCompendiumEntries.label})`, sql`lower(${label})`),
+    ),
+  );
+}
+
+/**
+ * The proof's live own ingredient named `name`, case folded, or `undefined`:
+ * the other side of the label rule, which `ingredients_workspace_label_unique`
+ * covers for own rows alone (M12.15).
+ */
+export function findWorkspaceIngredientByName(
+  membership: Membership,
+  name: string,
+): Promise<IngredientRow | undefined> {
+  return selectOne(
     ingredients,
     and(
-      inCompendium(ingredients),
+      scopedTo(membership, ingredients),
       notSoftDeleted(ingredients),
-      or(
-        eq(sql`lower(${ingredients.name})`, folded),
-        eq(sql`lower(${ingredients.canonicalName})`, folded),
-      ),
+      eq(sql`lower(${ingredients.name})`, sql`lower(${name})`),
     ),
   );
 }

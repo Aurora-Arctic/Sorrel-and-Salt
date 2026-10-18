@@ -26,12 +26,31 @@ export type CorrespondenceNode =
 /** One row of a `DeitySuggestions` answer. */
 export type DeityNode = DeitySuggestionsQuery['deitySuggestions']['edges'][number]['node'];
 
-/** One row of an `IngredientSuggestions` answer. */
-export type IngredientNode =
-  IngredientSuggestionsQuery['ingredientSuggestions']['edges'][number]['node'];
+/**
+ * One row of an `IngredientSuggestions` answer: its node, and the group its
+ * edge carries (M12.19). Both are optional here, so a test not about the
+ * groups lists its rows as the compendium's, with no cupboard entry.
+ */
+type SuggestedNode = IngredientSuggestionsQuery['ingredientSuggestions']['edges'][number]['node'];
+export type IngredientNode = Omit<SuggestedNode, 'cupboardEntry'> & {
+  cupboardEntry?: SuggestedNode['cupboardEntry'];
+  group?: 'yours' | 'compendium';
+};
 
-/** One row of a `PossibleDuplicates` answer. */
-export type DuplicateNode = PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'];
+/**
+ * One row of a `PossibleDuplicates` answer. A coven's own entry unless said
+ * otherwise: `isGlobal` and `inCupboard` default to false (M12.20).
+ */
+export type DuplicateNode = Omit<
+  PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'],
+  'isGlobal' | 'inCupboard'
+> &
+  Partial<
+    Pick<
+      PossibleDuplicatesQuery['possibleDuplicates']['edges'][number]['node'],
+      'isGlobal' | 'inCupboard'
+    >
+  >;
 
 /** One row of a `ReferenceSuggestions` answer. */
 export type ReferenceNode =

@@ -47,6 +47,35 @@ The service reads the row for a member, viewers included, under `{ ingredient: [
 
 M12.25 adds **`countCovensUsing(curator, ingredientId)`** to `cupboard-entries.ts`. It answers how many distinct live covens have a live row naming the entry, as one `count(distinct workspace_id)`. It is unscoped by design: it takes the `Curator` proof where the other finders take a `Membership`, and it returns a number, so no coven name or id leaves the database layer. A soft-deleted row, a soft-deleted coven, and a row naming a coven's own ingredient are not counted. The `ingredients` service `countCompendiumEntryUsers(session, id)` in `services/compendium.ts` checks `assertCurator`, then `NotFound` for an id that is not a live compendium entry, and the delete confirm reads it through `Query.compendiumEntryUsers` ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations"). It sits in `compendium.ts` because that file holds the compendium tier's curator reads and `deleteCompendiumEntry`, whereas `cupboard-entries.ts` services act for a coven under a membership.
 
+### Writing it
+
+M12.15 adds the three writes in the same service, `services/cupboard-entries.ts`. Each checks membership first, then writes through `withAudit` (the one wrapper that opens the transaction and stamps who wrote).
+
+| Function                                                           | Checks               | What it does                                                                                                                                                   |
+| ------------------------------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addCupboardEntry(session, workspaceId, ingredientId, input?)`     | `ingredient: create` | Inserts the row, bare or with overrides. It makes no jar and no form                                                                                           |
+| `annotateCupboardEntry(session, workspaceId, ingredientId, patch)` | `ingredient: update` | Changes the overrides: a key left out keeps its value, `null` hands the column back to the compendium, and a value, a list even when empty, is the coven's own |
+| `removeCupboardEntry(session, workspaceId, ingredientId)`          | `ingredient: delete` | Soft-deletes the row (marks it deleted). Refused while the coven holds a live jar of any form of the entry                                                     |
+
+The three take the compendium entry's id, not the row's, because that is what a page holds. A coven's own ingredient, a deleted compendium entry and an id that is not a uuid give `NotFound` on an add. A second add of one entry is a `ValidationError` beside `ingredientId`. Remove takes the coven's stock lock (`lockCovenStock`) before it counts jars, so a first jar created at the same moment is either counted or queues behind the remove.
+
+**The label rule.** A label is unique in the coven across its own ingredients' names and its cupboard labels, case folded. The database holds each half (`ingredients_workspace_label_unique` for own rows, `workspace_compendium_entries_workspace_label_unique` for labels) but cannot hold both in one index, so the service reads first. Add and annotate refuse a label that matches an own name or another label, as a `ValidationError` beside `label`. The own-row saves (`createWorkspaceIngredient`, `updateWorkspaceIngredient`, `promoteWorkspaceFolkName`) refuse a `name` that matches a live label, beside `name`, through `refuseCupboardLabelAsName`. An entry with no label reserves nothing. Two writes racing across the two tables could both pass the read; that race is accepted, and the result is a coven with one name on two rows, not a lost write.
+
+`createStock` on a form of a compendium entry inserts the cupboard row when the coven has none, in the same transaction, so no jar sits under an entry the cupboard does not list ([`stock.md`](stock.md)). A coven's own ingredient inserts nothing.
+
+`tests/modules/ingredients/services/cupboard-entry-writes.test.ts` holds the rules and `tests/modules/ingredients/graphql/cupboard-entry-writes.test.ts` the transport's half.
+
+### In the cupboard list
+
+The coven's ingredient list and its facet counts (M12.18; [`stock.md`](stock.md), "The workspace ingredient list") read this table in two ways.
+
+- **Which compendium entries are listed.** `workspaceListScope` keeps a compendium entry when the proof's coven has a live row for it, as one keyed `EXISTS` on the `(workspace_id, ingredient_id)` unique above. A jar of the entry is neither needed nor enough. The source filter's `compendium` side counts exactly these entries, so it and the `local` side add up to the list's total.
+- **What the listed entry says.** The statement left-joins the coven's live row, under the private alias `cupboard` in `src/db/repository/ingredients.ts`, joined only onto a compendium row, so a row naming one of the coven's own ingredients changes nothing. `listColumns(membership)` reads `coalesce(cupboard.x, ingredients.x)` for the label and for elements, celestial bodies and zodiac signs: the sort and the cursor run on `coalesce(label, name)`, the search adds the label as an arm (M12.19), and the filters and facet counts read the three lists as the coven left them, with `[]` counting under nothing, as `applyCupboardEntry` treats it. Categories, forms and `toxic` have no override and read from the compendium; the `colors` override has no filter or facet to read it yet.
+
+The joined row rides on each page entry as `cupboardEntry`, and the list's resolver primes the `cupboardEntryByIngredient` loader with it, so `Ingredient.cupboardEntry` on a listed row is answered without `findCupboardEntriesOf`. A row whose compendium entry has been retired (soft-deleted) lists nothing: the tombstone filter on `ingredients` drops the entry first. M12.24's hatch serves the entry page only, and the list row stays M12.18's.
+
+`tests/modules/ingredients/services/workspace-ingredient-list.test.ts` holds the list's cases and `tests/modules/ingredients/services/ingredient-facets.test.ts` the counts, each seeding another coven's row beside the one that must count.
+
 ### When the compendium retires the entry
 
 A curator's delete soft-deletes the `ingredients` row alone: its forms stay live, and so does every cupboard row naming it. M12.24 decides what those covens see. The entry leaves the compendium at once, and a coven whose cupboard names it goes on reading it, marked, until the coven removes its own row. A coven that never added it reads nothing, even if it has a jar of one of its forms. The record is [`m12.24-retired-entry-stays-readable.md`](../design-decisions/m12.24-retired-entry-stays-readable.md).
