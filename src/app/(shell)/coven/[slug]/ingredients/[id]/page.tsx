@@ -10,7 +10,9 @@ import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import {
+  applyCupboardEntry,
   compendiumEntriesReplacedBy,
+  getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
   isRetired,
@@ -50,6 +52,13 @@ const entryOf = cache(async (slug: string, id: string) => {
   }
 });
 
+// The coven's cupboard entry for a compendium entry, read once per request for
+// the metadata and the page both; none for a coven's own entry.
+const cupboardOf = cache(async (slug: string, id: string) => {
+  const { workspace, session, entry } = await entryOf(slug, id);
+  return entry.workspaceId === null ? getCupboardEntry(session, workspace.id, entry.id) : null;
+});
+
 // A compendium entry names its public page as canonical, since that is the
 // address a search engine should index. The path is relative: the origin
 // varies by deployment, and MB.84 owns the public page's metadata. A retired
@@ -57,10 +66,14 @@ const entryOf = cache(async (slug: string, id: string) => {
 export async function generateMetadata({ params }: CovenIngredientParams): Promise<Metadata> {
   const { slug, id } = await params;
   const { entry } = await entryOf(slug, id);
-  const title = pageTitleOf(entry);
-  return entry.workspaceId === null && !isRetired(entry)
-    ? { title, alternates: { canonical: publicAddress(entry.slug) } }
-    : { title };
+  if (entry.workspaceId !== null) return { title: pageTitleOf(entry) };
+  // The tab says what the page heading says: the coven's label when its
+  // cupboard entry sets one (M12.16). The canonical address stays the
+  // compendium's public page, whatever the coven calls the entry.
+  const title = pageTitleOf(applyCupboardEntry(entry, await cupboardOf(slug, id)));
+  return isRetired(entry)
+    ? { title }
+    : { title, alternates: { canonical: publicAddress(entry.slug) } };
 }
 
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
@@ -69,11 +82,17 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // A coven's own entry also links the compendium entries it hides (M12.12),
   // read here for this one page and never through GraphQL; none for a
   // compendium entry. The compendium is public, so the links reveal nothing.
-  const [detail, { viewer }, replaced] = await Promise.all([
-    ingredientDetailOf(session, entry, workspace.id),
+  // The detail is read without the coven so it does not read the cupboard
+  // entry again; the one the metadata shares is laid in.
+  const [read, { viewer }, replaced, cupboardEntry] = await Promise.all([
+    ingredientDetailOf(session, entry, isRetired(entry) ? workspace.id : undefined),
     viewerOf(),
     compendiumEntriesReplacedBy(session, entry),
+    cupboardOf(slug, id),
   ]);
+  // A retired entry (M12.24) reads its children through its cupboard entry,
+  // so its detail is read in the coven and carries that entry itself.
+  const detail = { ...read, cupboardEntry: read.cupboardEntry ?? cupboardEntry };
   // A retired entry (M12.24) is the compendium's still, but the compendium
   // no longer holds it: no public page to link, and nothing for a curator to
   // edit, since the compendium's screens no longer read it.

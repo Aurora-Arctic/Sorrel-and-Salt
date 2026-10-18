@@ -1,6 +1,7 @@
 import 'server-only';
 import {
   type StockRow,
+  findCupboardEntry,
   findOneIngredient,
   findReadableVariant,
   findStockById,
@@ -13,6 +14,7 @@ import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { chooseHidingLocal, localFormFor } from './carry-stock';
 import { inventoryItems } from '../schema/inventory-items';
+import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entries';
 import { type Unit, dimensionOf } from '../schema/units';
 import { unitConvert } from '../units/convert';
 import { StockInput } from '../validation/stock';
@@ -42,6 +44,9 @@ const HELD = 'Your coven already holds this form';
  * (M12.8): the returned row names the local ingredient and form. Of two
  * ingredients hiding one entry, the one sharing its identity is taken, then
  * the older.
+ *
+ * A jar stored on a compendium form puts that entry in the coven's cupboard,
+ * in the same transaction, when it is not there already (M12.15).
  *
  * @throws {Forbidden} the caller may not write this coven's stock.
  * @throws {ValidationError} the input breaks `StockInput`, or the coven
@@ -73,6 +78,18 @@ export async function createStock(
         entry?.workspaceId === null ? await write.lockLocalsHiding(membership, entry.id) : [];
       const local = entry && chooseHidingLocal(locals, entry);
       const form = local ? await localFormFor(write, membership, local, variant) : variant;
+      // A jar that stays on the compendium's form puts the entry in the
+      // cupboard, once (M12.15). The lock above makes the read below see a
+      // concurrent create's row; the unique index backs it.
+      if (
+        entry?.workspaceId === null &&
+        !local &&
+        !(await findCupboardEntry(membership, entry.id))
+      ) {
+        await write.insertInWorkspace(membership, workspaceCompendiumEntries, {
+          ingredientId: entry.id,
+        });
+      }
       return write.insertInWorkspace(membership, inventoryItems, {
         ingredientId: form.ingredientId,
         variantId: form.id,

@@ -342,6 +342,20 @@ type DeitySuggestion {
 `suggestions.test.ts` holds, with each curated row's `id` and `tradition`;
 the rules are `services/deity-suggestions.test.ts`'s.
 
+### `compendiumMatches`
+
+M12.20's question before a duplicate: `compendiumMatches(workspaceId, name)`
+lists the compendium entries whose name or formal name is exactly the typed
+one, folded to lower case, and no other tier, so no coven's own entry is ever
+offered. `findCompendiumMatches` asserts read membership of the coven first,
+so a viewer is answered and a non-member is `FORBIDDEN` by direct id. It is
+paged (`t.pagedConnection`, ordered by name, the form asks for five), and a
+blank name answers empty. Its node is the `Ingredient`, whose
+`inCupboard(workspaceId)` says whether that coven's cupboard holds it
+(through the batched `cupboardEntryByIngredient` loader, so a page is one
+read); `possibleDuplicates` nodes carry it too. `workspaceId` is nullable
+there, answering false, so the admin's call shares the document.
+
 ### `possibleDuplicates`
 
 Story 16's "did you mean" (MB.11), registered by `ingredients` over M4.7's
@@ -409,11 +423,8 @@ writes a link to it (DESIGN.md §5, `ingredient_substitutes`).
   descriptions, accents folded, so a typed prefix finds its entry. `possibleDuplicates`' whole-string 0.4 does not:
   `mu` is under 0.4 similar to Mugwort and 0.67 word-similar. Best match
   first, under the compendium's weights, with no score on the edge, since a picker ranks rather than reports.
-  A blank `query` lists both tiers by name, so an opened box lists something.
-- **Local beats compendium, and `form` ranks (M8.3).** A coven's own ingredient
-  hides the compendium entry it names, and a `form` lists entries holding it
-  first, then those holding a form of its curated group
-  ([`db/compendium-read.md`](../db/compendium-read.md)).
+  A blank `query` lists both groups by name, so an opened box lists something.
+- **Each edge carries a `group` (M12.19)**, the `SuggestionGroup` enum, `yours` or `compendium`. `yours` is the coven's cupboard, its own entries and the compendium entries it holds, listed first; `compendium` is the rest. Each group is ranked by score within itself and holds up to eight to start. A coven's own entry no longer hides the compendium entry it names, so both appear. A held entry's node answers `cupboardEntry(workspaceId)` for the label the coven gave it. `group` is on the edge, not the node, because it depends on the viewing coven, as `score` does on `compendium`. `form` ranks within each group ([`db/compendium-read.md`](../db/compendium-read.md)).
 - **The refusals are `possibleDuplicates`'**: `Forbidden` for a signed-out
   caller from the resolver, then `assertMembership` for `ingredient: ['read']`.
   A viewer is answered, a coven the caller is not in is refused, and so is a
@@ -931,6 +942,24 @@ half.
 transport's half: the answer and its `annotated`, a viewer answered, the
 refusal at the field, the nulls, and one repository read for a page of entries,
 counted by a spy.
+
+**The three writes** (M12.15) take the coven and the compendium entry's id, and
+answer through the same `nodeOf` as the read, so the loader is cleared and the
+answer is a fresh read:
+
+- **`addCupboardEntry(workspaceId, ingredientId, input)`** answers the new
+  `CupboardEntry`. `input` is optional.
+- **`annotateCupboardEntry(workspaceId, ingredientId, input)`** answers the
+  row after the change. A field left out keeps its value, `null` hands it back
+  to the compendium, and a list, even empty, is the coven's own.
+- **`removeCupboardEntry(workspaceId, ingredientId)`** answers the
+  `ingredientId`, as the other deletes answer the id. It is refused with
+  `VALIDATION` while the coven holds a jar of the entry.
+
+A viewer is `FORBIDDEN`, an entry the coven does not hold is `NOT_FOUND`,
+and a taken label is `VALIDATION` beside `label`
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"Writing it").
 
 ### The compendium mutations
 

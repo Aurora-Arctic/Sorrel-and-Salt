@@ -140,6 +140,7 @@ export async function selectFrom(
                   // the row: a table keyed on a pair breaks ties on one of its
                   // columns, not on an `id` it does not have.
                   keyId: sql<string>`cast(${keyset.id} as text)`,
+                  ...(keyset.leftJoined && { joined: getTableColumns(keyset.leftJoined.leftJoin) }),
                 }
               : joined && {
                   row: getTableColumns(relation),
@@ -155,6 +156,7 @@ export async function selectFrom(
       .from(source as never)
       .$dynamic();
     if (keyed?.join) query.innerJoin(keyed.join.source, keyed.join.on);
+    if (keyed?.leftJoined) query.leftJoin(keyed.leftJoined.leftJoin, keyed.leftJoined.on);
     if (joined) query.leftJoin(joined.leftJoin, joined.on);
     for (const { type, table, on } of aggregated?.joins ?? []) {
       const live = and(on, notSoftDeleted(table));

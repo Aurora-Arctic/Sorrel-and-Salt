@@ -11,7 +11,10 @@ import type {
   CreateWorkspaceIngredientMutationVariables,
   FormSuggestionsQuery,
   FormSuggestionsQueryVariables,
+  IngredientSuggestionsQueryVariables,
   CelestialBodySuggestionsQueryVariables,
+  CompendiumMatchesQuery,
+  CompendiumMatchesQueryVariables,
   PossibleDuplicatesQuery,
   PossibleDuplicatesQueryVariables,
   ReferenceQuery,
@@ -82,7 +85,33 @@ export function offerDuplicates(nodes: DuplicateNode[]) {
     'PossibleDuplicates',
     (variables) => {
       calls.push(variables);
-      return { possibleDuplicates: { edges: nodes.map((node) => ({ node })) } };
+      return {
+        possibleDuplicates: {
+          edges: nodes.map((node) => ({ node: { isGlobal: false, inCupboard: false, ...node } })),
+        },
+      };
+    },
+  );
+  // A save also asks which compendium entries bear the name exactly (M12.20):
+  // none, until a test says otherwise with `offerCompendiumMatches`.
+  offerCompendiumMatches([]);
+  return calls;
+}
+
+/** Answers `CompendiumMatches` with these compendium entries, recording each ask. */
+export function offerCompendiumMatches(nodes: DuplicateNode[]) {
+  const calls: CompendiumMatchesQueryVariables[] = [];
+  mockGraphQLQuery<CompendiumMatchesQuery, CompendiumMatchesQueryVariables>(
+    'CompendiumMatches',
+    (variables) => {
+      calls.push(variables);
+      return {
+        compendiumMatches: {
+          edges: nodes.map((node) => ({
+            node: { isGlobal: true, inCupboard: false, ...node },
+          })),
+        },
+      };
     },
   );
   return calls;
@@ -111,8 +140,25 @@ export const offerSigns = (nodes: CorrespondenceNode[]) =>
   offerList('ZodiacSuggestions', 'zodiacSuggestions', nodes);
 export const offerDeities = (nodes: DeityNode[]) =>
   offerList('DeitySuggestions', 'deitySuggestions', nodes);
-export const offerIngredients = (nodes: IngredientNode[]) =>
-  offerList('IngredientSuggestions', 'ingredientSuggestions', nodes);
+/** Answers `IngredientSuggestions`, each row's group on its edge (M12.19), recording each ask. */
+export function offerIngredients(nodes: IngredientNode[]) {
+  const calls: IngredientSuggestionsQueryVariables[] = [];
+  mockGraphQLQuery<Record<string, unknown>, IngredientSuggestionsQueryVariables>(
+    'IngredientSuggestions',
+    (variables) => {
+      calls.push(variables);
+      return {
+        ingredientSuggestions: {
+          edges: nodes.map(({ group = 'compendium', ...node }) => ({
+            group,
+            node: { cupboardEntry: null, ...node },
+          })),
+        },
+      };
+    },
+  );
+  return calls;
+}
 
 /** Answers `ReferenceSuggestions` with these sources, recording each ask. */
 export function offerReferences(nodes: ReferenceNode[]) {

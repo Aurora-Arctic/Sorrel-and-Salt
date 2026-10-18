@@ -28,11 +28,15 @@ const ingredientDetailOf = vi.fn();
 const compendiumEntriesReplacedBy = vi.fn();
 // Which rows are retired is the service's to say (M12.24); live unless a test says otherwise.
 const isRetired = vi.fn((_row: unknown) => false);
+const getCupboardEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
   compendiumEntriesReplacedBy,
   isRetired,
+  getCupboardEntry,
+  // The pure merge: no cupboard entry, nothing laid over.
+  applyCupboardEntry: (entry: unknown) => entry,
 }));
 
 // The form is its own tests'; here only that the dialog holds one.
@@ -73,6 +77,7 @@ const open = async (
 
 beforeEach(() => {
   vi.clearAllMocks();
+  getCupboardEntry.mockResolvedValue(null);
   requireCovenMembership.mockResolvedValue({
     workspace: WORKSPACE,
     membership: { workspaceId: WORKSPACE.id, userId: SESSION.userId, role: 'member' },

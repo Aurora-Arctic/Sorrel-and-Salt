@@ -48,10 +48,13 @@ export {
 } from './ingredients';
 export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';
 export {
+  findCompendiumMatchPage,
   findCompendiumMatchesByName,
   findCupboardEntriesOf,
   findCupboardEntry,
+  findCupboardEntryByLabel,
   findCupboardEntryIncludingSoftDeleted,
+  findWorkspaceIngredientByName,
 } from './cupboard-entries';
 export { COVEN_STOCK_LOCK_NAMESPACE, findStockById, findStockOfIngredients } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';
@@ -117,6 +120,8 @@ export type {
   CommonNameSuggestion,
   CompendiumFacets,
   CompendiumScore,
+  SuggestionGroup,
+  SuggestionGroupTag,
   CupboardEntryRow,
   DeityFilter,
   DeitySuggestion,
@@ -125,6 +130,7 @@ export type {
   GroupFilter,
   IngredientFacets,
   WorkspaceIngredientFacets,
+  WorkspaceListEdge,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,
