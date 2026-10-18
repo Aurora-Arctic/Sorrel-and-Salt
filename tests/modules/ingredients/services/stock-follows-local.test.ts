@@ -4,7 +4,6 @@ import { COVEN_STOCK_LOCK_NAMESPACE } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, ValidationError } from '@/lib/errors';
 import {
-  JarMergeNeeded,
   createStock,
   createWorkspaceIngredient,
   deleteStock,
@@ -26,13 +25,10 @@ import {
   variantInput,
 } from '../../../support/fixtures';
 
-// M12.8: a jar follows a local ingredient that hides its compendium entry. A
-// coven that holds a jar of a compendium form and then makes its own entry
-// for the same ingredient finds the jar moved onto the local's form, in the
-// same transaction as the save; two jars of one form merge where their units
-// agree and refuse the save where they do not. This supersedes M9.4's "a
-// hidden jar stays put" (claude-docs/design-decisions/m12.8-jar-follows-local.md).
-// The ingredient tables are emptied per test, and the cascade empties
+// A coven's own entry that hides a compendium entry never moves the coven's
+// jars when it is saved (M12.27 retired the save-time follow of M12.8); only
+// `createStock` redirects a new jar of a hidden form onto the local, until
+// M12.28. The ingredient tables are emptied per test, and the cascade empties
 // `inventory_items`, so every jar a result could come from is one this file wrote.
 
 let sql: postgres.Sql;
@@ -87,10 +83,7 @@ function local(overrides: Overrides<IngredientFixture> = {}): IngredientFixture 
 }
 
 /** The fixture as a save's input: forms whole, and the picks and lists a form would send. */
-function inputOf(
-  fixture: IngredientFixture,
-  jarMerges?: { jarId: string; quantityOnHand?: number | null; unit?: 'g' | 'kg' | 'tsp' | null }[],
-) {
+function inputOf(fixture: IngredientFixture) {
   const {
     workspaceId: _tier,
     categories: _categories,
@@ -104,7 +97,6 @@ function inputOf(
     variants: variants.map((variant) => variantInput(variant)),
     substitutes: substitutes.map((name) => ({ ingredientId: null, name })),
     deities: deities.map((name) => ({ deityId: null, name })),
-    ...(jarMerges ? { jarMerges } : {}),
   };
 }
 
@@ -137,92 +129,30 @@ function liveVariants(ingredientId: string) {
     order by lower(form)`;
 }
 
-describe('a save that makes a local hide a compendium entry', () => {
-  it("moves the coven's jar to a form of the new local, keeping every figure", async () => {
+describe("a save of the coven's own entry", () => {
+  /** The jar W holds of the compendium form, and the figures it must still hold afterwards. */
+  async function heldJar() {
     const jar = await entryJar();
+    const before = await jarRow(jar);
+    // Preconditions: the jar is live, on the compendium entry itself.
+    expect(before).toMatchObject({ ingredient_id: entry, variant_id: entryForm, deleted_at: null });
+    return { jar, before };
+  }
 
-    const created = await createWorkspaceIngredient(
+  it("leaves the coven's jar of a hidden entry where it is when it creates the entry's namesake", async () => {
+    const { jar, before } = await heldJar();
+
+    await createWorkspaceIngredient(
       asUser(A),
       WORKSPACE_W_ID,
       inputOf(local({ name: 'Testwort', variants: [] })),
     );
 
-    const forms = await liveVariants(created.id);
-    expect(forms).toHaveLength(1);
-    expect(await jarRow(jar)).toMatchObject({
-      id: jar,
-      workspace_id: WORKSPACE_W_ID,
-      ingredient_id: created.id,
-      variant_id: forms[0].id,
-      quantity_on_hand: '5.000',
-      unit: 'g',
-      unit_dimension: 'weight',
-      low_stock_threshold: '10.000',
-      deleted_at: null,
-    });
+    expect(await jarRow(jar)).toEqual(before);
   });
 
-  it("creates the form the local lacks with the compendium form's own facts, and no child rows", async () => {
-    await entryJar();
-
-    const created = await createWorkspaceIngredient(
-      asUser(B),
-      WORKSPACE_W_ID,
-      inputOf(local({ name: 'Testwort', variants: [] })),
-    );
-
-    const [form] = await liveVariants(created.id);
-    expect(form).toMatchObject({
-      form: 'Testform',
-      description: 'Fixture form note',
-      safety_notes: 'Fixture form caution',
-      toxic: true,
-      elements: ['fire'],
-      celestial_bodies: ['Fixture Moon'],
-      zodiac_signs: ['Fixture Ram'],
-      colors: ['Fixture red'],
-    });
-    const [{ count }] = await sql`
-      select (
-        (select count(*) from ingredient_categories where variant_id = ${form.id}) +
-        (select count(*) from ingredient_substitutes where variant_id = ${form.id}) +
-        (select count(*) from reference_links where ingredient_variant_id = ${form.id})
-      )::int as count`;
-    expect(count).toBe(0);
-  });
-
-  it('reuses a form the save writes from its own list, in any casing', async () => {
-    const jar = await entryJar();
-
-    const created = await createWorkspaceIngredient(
-      asUser(A),
-      WORKSPACE_W_ID,
-      inputOf(local({ name: 'Testwort', variants: [makeVariant({ form: 'TESTFORM' })] })),
-    );
-
-    const forms = await liveVariants(created.id);
-    expect(forms.map((form) => form.form)).toEqual(['TESTFORM']);
-    expect((await jarRow(jar)).variant_id).toBe(forms[0].id);
-  });
-
-  it('reuses a form the local already had, in another casing', async () => {
-    const jar = await entryJar();
-    const id = await seedLocal({ variants: [makeVariant({ form: 'testFORM' })] });
-    const existing = await variantIdOf(sql, id, 'testform');
-
-    await updateWorkspaceIngredient(
-      asUser(A),
-      WORKSPACE_W_ID,
-      id,
-      inputOf(local({ name: 'Testwort', variants: [makeVariant({ form: 'testFORM' })] })),
-    );
-
-    expect(await liveVariants(id)).toHaveLength(1);
-    expect(await jarRow(jar)).toMatchObject({ ingredient_id: id, variant_id: existing });
-  });
-
-  it("moves the jar when an update relabels the local to the entry's name", async () => {
-    const jar = await entryJar();
+  it("leaves the jar where it is when an update relabels the entry to the compendium's name", async () => {
+    const { jar, before } = await heldJar();
     const id = await seedLocal();
 
     await updateWorkspaceIngredient(
@@ -232,12 +162,11 @@ describe('a save that makes a local hide a compendium entry', () => {
       inputOf(local({ name: 'Testwort', variants: [] })),
     );
 
-    const [form] = await liveVariants(id);
-    expect(await jarRow(jar)).toMatchObject({ ingredient_id: id, variant_id: form.id });
+    expect(await jarRow(jar)).toEqual(before);
   });
 
-  it("moves the jar when an update gives the local the entry's formal name", async () => {
-    const jar = await entryJar();
+  it("leaves the jar where it is when an update gives the entry the compendium's formal name", async () => {
+    const { jar, before } = await heldJar();
     const id = await seedLocal();
 
     await updateWorkspaceIngredient(
@@ -247,336 +176,46 @@ describe('a save that makes a local hide a compendium entry', () => {
       inputOf(local({ name: 'Covenwort', canonicalName: 'Fixtura testalis', variants: [] })),
     );
 
-    const [form] = await liveVariants(id);
-    expect(await jarRow(jar)).toMatchObject({ ingredient_id: id, variant_id: form.id });
+    expect(await jarRow(jar)).toEqual(before);
   });
 
-  it("moves the jar when promoting a folk name relabels the local to the entry's name", async () => {
-    const jar = await entryJar();
+  it("leaves the jar where it is when promoting a folk name relabels the entry to the compendium's name", async () => {
+    const { jar, before } = await heldJar();
     const id = await seedLocal({ folkNames: ['Testwort'] });
     const [folk] = await sql`
       select id from ingredient_folk_names where ingredient_id = ${id} and name = 'Testwort'`;
 
     await promoteFolkName(asUser(A), WORKSPACE_W_ID, id, folk.id);
 
-    const [form] = await liveVariants(id);
-    expect(await jarRow(jar)).toMatchObject({ ingredient_id: id, variant_id: form.id });
-  });
-
-  it("leaves another coven's jar of the same form where it is", async () => {
-    const own = await entryJar();
-    const elsewhere = await insertStock(
-      sql,
-      {
-        workspaceId: WORKSPACE_X_ID,
-        ingredientId: entry,
-        variantId: entryForm,
-        quantityOnHand: '9',
-        unit: 'g',
-      },
-      D.id,
-    );
-    const before = await jarRow(elsewhere);
-
-    await createWorkspaceIngredient(
-      asUser(A),
-      WORKSPACE_W_ID,
-      inputOf(local({ name: 'Testwort', variants: [] })),
-    );
-
-    expect(await jarRow(elsewhere)).toEqual(before);
-    expect((await jarRow(own)).ingredient_id).not.toBe(entry);
-  });
-
-  it.each([
-    ['C, a viewer', C],
-    ['D, a member of another coven', D],
-  ])('refuses %s, and moves nothing', async (_label, user) => {
-    const jar = await entryJar();
-    const before = await jarRow(jar);
-
-    await expect(
-      createWorkspaceIngredient(
-        asUser(user),
-        WORKSPACE_W_ID,
-        inputOf(local({ name: 'Testwort', variants: [] })),
-      ),
-    ).rejects.toBeInstanceOf(Forbidden);
-
     expect(await jarRow(jar)).toEqual(before);
   });
-});
 
-describe('two jars of one form', () => {
-  /** The local Testwort holding a jar of Testform, and the coven's jar of the entry's form. */
-  async function bothHeld(localJar: JarSeed, movingJar: JarSeed) {
+  it('makes no form on the entry for the jar, and merges no two jars of one form', async () => {
+    const { jar } = await heldJar();
     const id = await seedLocal({ variants: [makeVariant({ form: 'Testform' })] });
-    const form = await variantIdOf(sql, id, 'Testform');
-    const held = await insertStock(
+    const own = await insertStock(
       sql,
       {
         workspaceId: WORKSPACE_W_ID,
         ingredientId: id,
-        variantId: form,
-        lowStockThreshold: '7',
-        ...localJar,
-      },
-      A.id,
-    );
-    const moving = await entryJar(movingJar);
-    return { id, held, moving };
-  }
-
-  const relabel = (id: string, jarMerges?: Parameters<typeof inputOf>[1]) =>
-    updateWorkspaceIngredient(
-      asUser(A),
-      WORKSPACE_W_ID,
-      id,
-      inputOf(
-        local({ name: 'Testwort', variants: [makeVariant({ form: 'Testform' })] }),
-        jarMerges,
-      ),
-    );
-
-  it("adds the quantities exactly where the units agree, and keeps the local jar's own threshold", async () => {
-    const { id, held, moving } = await bothHeld(
-      { quantityOnHand: '0.1', unit: 'g' },
-      { quantityOnHand: '0.2', unit: 'g' },
-    );
-
-    await relabel(id);
-
-    expect(await jarRow(held)).toMatchObject({
-      quantity_on_hand: '0.300',
-      unit: 'g',
-      unit_dimension: 'weight',
-      low_stock_threshold: '7.000',
-      deleted_at: null,
-    });
-    expect((await jarRow(moving)).deleted_at).not.toBeNull();
-  });
-
-  it.each([
-    [
-      'the local jar',
-      { quantityOnHand: null, unit: null },
-      { quantityOnHand: '5', unit: 'kg' as const },
-    ],
-    [
-      'the moving jar',
-      { quantityOnHand: '5', unit: 'kg' as const },
-      { quantityOnHand: null, unit: null },
-    ],
-  ])(
-    "merges when %s holds no amount at all, taking the other's figure",
-    async (_who, localJar, movingJar) => {
-      const { id, held, moving } = await bothHeld(localJar, movingJar);
-
-      await relabel(id);
-
-      expect(await jarRow(held)).toMatchObject({
-        quantity_on_hand: '5.000',
-        unit: 'kg',
-        unit_dimension: 'weight',
-      });
-      expect((await jarRow(moving)).deleted_at).not.toBeNull();
-    },
-  );
-
-  it('keeps an amount of nothing unmeasured when both jars hold none', async () => {
-    const { id, held } = await bothHeld(
-      { quantityOnHand: null, unit: null },
-      { quantityOnHand: null, unit: null },
-    );
-
-    await relabel(id);
-
-    expect(await jarRow(held)).toMatchObject({ quantity_on_hand: null, unit: null });
-  });
-
-  it('refuses a save whose jars differ in unit, g against kg included, and writes nothing', async () => {
-    const { id, held, moving } = await bothHeld(
-      { quantityOnHand: '1', unit: 'kg' },
-      { quantityOnHand: '500', unit: 'g' },
-    );
-    const beforeJars = await jars();
-    const beforeLocal = (await sql`select name, slug from ingredients where id = ${id}`)[0];
-
-    const error = await relabel(id).catch((caught: unknown) => caught);
-
-    expect(error).toBeInstanceOf(JarMergeNeeded);
-    expect(error).toBeInstanceOf(ValidationError);
-    const refusal = error as JarMergeNeeded;
-    expect(refusal.issues.map((issue) => issue.path)).toEqual([['jarMerges']]);
-    expect(refusal.conflicts).toHaveLength(1);
-    expect(refusal.conflicts[0]).toMatchObject({
-      reason: 'units',
-      localJar: { id: held },
-      movingJar: { id: moving },
-    });
-    expect(await jars()).toEqual(beforeJars);
-    expect((await sql`select name, slug from ingredients where id = ${id}`)[0]).toEqual(
-      beforeLocal,
-    );
-  });
-
-  it('moves nothing when a later jar conflicts: no jar leaves, and no form is made', async () => {
-    // Two compendium entries the one local hides, each with a Testform jar:
-    // the first moves, the second meets it in another unit.
-    const other = await insertIngredient(
-      sql,
-      makeIngredient({
-        name: 'Testwort',
-        canonicalName: 'Fixtura altera',
-        variants: [makeVariant({ form: 'testform' })],
-      }),
-      E.id,
-    );
-    const otherForm = await variantIdOf(sql, other, 'Testform');
-    const first = await entryJar({ quantityOnHand: '5', unit: 'g' });
-    const second = await insertStock(
-      sql,
-      {
-        workspaceId: WORKSPACE_W_ID,
-        ingredientId: other,
-        variantId: otherForm,
-        quantityOnHand: '5',
+        variantId: await variantIdOf(sql, id, 'Testform'),
+        quantityOnHand: '1',
         unit: 'kg',
       },
       A.id,
     );
     const before = await jars();
-
-    const error = await createWorkspaceIngredient(
-      asUser(A),
-      WORKSPACE_W_ID,
-      inputOf(local({ name: 'Testwort', variants: [] })),
-    ).catch((caught: unknown) => caught);
-
-    expect(error).toBeInstanceOf(JarMergeNeeded);
-    const ids = (error as JarMergeNeeded).conflicts.flatMap((c) => [c.localJar.id, c.movingJar.id]);
-    expect(ids.sort()).toEqual([first, second].sort());
-    expect(await jars()).toEqual(before);
-    const [{ count }] = await sql`
-      select count(*)::int as count from ingredients where workspace_id = ${WORKSPACE_W_ID}`;
-    expect(count).toBe(0);
-    const [{ forms }] = await sql`select count(*)::int as forms from ingredient_variants`;
-    expect(forms).toBe(2);
-  });
-
-  it('takes the chosen figure, its unit and dimension, and soft-deletes the moving jar', async () => {
-    const { id, held, moving } = await bothHeld(
-      { quantityOnHand: '1', unit: 'kg' },
-      { quantityOnHand: '500', unit: 'g' },
-    );
-
-    await relabel(id, [{ jarId: moving, quantityOnHand: 1500, unit: 'g' }]);
-
-    expect(await jarRow(held)).toMatchObject({
-      quantity_on_hand: '1500.000',
-      unit: 'g',
-      unit_dimension: 'weight',
-      low_stock_threshold: '7000.000',
-      deleted_at: null,
-    });
-    expect((await jarRow(moving)).deleted_at).not.toBeNull();
-  });
-
-  it('sets the chosen figure even where the units agree', async () => {
-    const { id, held, moving } = await bothHeld(
-      { quantityOnHand: '1', unit: 'g' },
-      { quantityOnHand: '2', unit: 'g' },
-    );
-
-    await relabel(id, [{ jarId: moving, quantityOnHand: 2, unit: 'g' }]);
-
-    expect((await jarRow(held)).quantity_on_hand).toBe('2.000');
-  });
-
-  it("converts the local jar's threshold when a chosen merge changes the unit within its dimension", async () => {
-    const { id, held, moving } = await bothHeld(
-      { quantityOnHand: '1', unit: 'g', lowStockThreshold: '10' },
-      { quantityOnHand: '2', unit: 'kg' },
-    );
-
-    await relabel(id, [{ jarId: moving, quantityOnHand: 3, unit: 'kg' }]);
-
-    expect(await jarRow(held)).toMatchObject({
-      unit: 'kg',
-      low_stock_threshold: '0.010',
-    });
-  });
-
-  it("clears the local jar's threshold when a chosen merge crosses dimensions", async () => {
-    const { id, held, moving } = await bothHeld(
-      { quantityOnHand: '1', unit: 'g', lowStockThreshold: '10' },
-      { quantityOnHand: '2', unit: 'g' },
-    );
-
-    await relabel(id, [{ jarId: moving, quantityOnHand: 3, unit: 'tsp' }]);
-
-    expect(await jarRow(held)).toMatchObject({
-      unit: 'tsp',
-      unit_dimension: 'volume',
-      low_stock_threshold: null,
-    });
-  });
-
-  it("leaves the local jar's threshold alone when a chosen merge keeps the unit", async () => {
-    const { id, held, moving } = await bothHeld(
-      { quantityOnHand: '1', unit: 'g', lowStockThreshold: '10' },
-      { quantityOnHand: '2', unit: 'g' },
-    );
-
-    await relabel(id, [{ jarId: moving, quantityOnHand: 3, unit: 'g' }]);
-
-    expect(await jarRow(held)).toMatchObject({ unit: 'g', low_stock_threshold: '10.000' });
-  });
-
-  it("clears the threshold of a local jar with no unit when it takes the moving jar's", async () => {
-    const { id, held } = await bothHeld(
-      { quantityOnHand: null, unit: null, lowStockThreshold: '10' },
-      { quantityOnHand: '2', unit: 'g' },
-    );
-
-    await relabel(id);
-
-    expect(await jarRow(held)).toMatchObject({ unit: 'g', low_stock_threshold: null });
-  });
-
-  it('ignores a choice naming a jar that does not merge', async () => {
-    const jar = await entryJar();
-    const id = await seedLocal();
 
     await updateWorkspaceIngredient(
       asUser(A),
       WORKSPACE_W_ID,
       id,
-      inputOf(local({ name: 'Testwort', variants: [] }), [
-        { jarId: jar, quantityOnHand: 99, unit: 'kg' },
-      ]),
+      inputOf(local({ name: 'Testwort', variants: [makeVariant({ form: 'Testform' })] })),
     );
 
-    expect(await jarRow(jar)).toMatchObject({
-      ingredient_id: id,
-      quantity_on_hand: '5.000',
-      unit: 'g',
-      deleted_at: null,
-    });
-  });
-
-  it('refuses a choice the merged jar cannot hold', async () => {
-    const { id } = await bothHeld(
-      { quantityOnHand: '999999999', unit: 'g' },
-      { quantityOnHand: '2', unit: 'g' },
-    );
-    const before = await jars();
-
-    const error = await relabel(id).catch((caught: unknown) => caught);
-
-    expect(error).toBeInstanceOf(ValidationError);
-    expect(error).not.toBeInstanceOf(JarMergeNeeded);
     expect(await jars()).toEqual(before);
+    expect((await jarRow(jar)).deleted_at).toBeNull();
+    expect((await jarRow(own)).deleted_at).toBeNull();
   });
 });
 
@@ -671,95 +310,7 @@ describe('createStock on a form of a hidden entry', () => {
   });
 });
 
-describe('a jar after it has moved', () => {
-  /** A moved jar: W's jar, now on a form of W's own Testwort. */
-  async function movedJar() {
-    const jar = await entryJar();
-    const created = await createWorkspaceIngredient(
-      asUser(A),
-      WORKSPACE_W_ID,
-      inputOf(local({ name: 'Testwort', variants: [] })),
-    );
-    return { jar, created };
-  }
-
-  it('is changed and deleted by a member of the coven by its id, and refused to a member of another', async () => {
-    const { jar, created } = await movedJar();
-    // Preconditions: the jar is live in W, on W's own ingredient, and D really
-    // is a member of a coven, only not this one.
-    expect(await jarRow(jar)).toMatchObject({
-      workspace_id: WORKSPACE_W_ID,
-      ingredient_id: created.id,
-      deleted_at: null,
-    });
-    expect(await getStock(asUser(B), WORKSPACE_W_ID, jar)).toMatchObject({ id: jar });
-    const [{ member }] = await sql`
-      select count(*)::int as member from workspace_members
-      where user_id = ${D.id} and workspace_id = ${WORKSPACE_X_ID} and deleted_at is null`;
-    expect(member).toBe(1);
-
-    await expect(
-      updateStock(asUser(D), WORKSPACE_W_ID, jar, { quantityOnHand: 1 }),
-    ).rejects.toBeInstanceOf(Forbidden);
-    await expect(deleteStock(asUser(D), WORKSPACE_W_ID, jar)).rejects.toBeInstanceOf(Forbidden);
-    expect((await jarRow(jar)).quantity_on_hand).toBe('5.000');
-
-    await updateStock(asUser(B), WORKSPACE_W_ID, jar, { quantityOnHand: 1 });
-    expect((await jarRow(jar)).quantity_on_hand).toBe('1.000');
-    await deleteStock(asUser(B), WORKSPACE_W_ID, jar);
-    expect((await jarRow(jar)).deleted_at).not.toBeNull();
-  });
-
-  it('is changed by nobody who is a viewer', async () => {
-    const { jar } = await movedJar();
-
-    await expect(
-      updateStock(asUser(C), WORKSPACE_W_ID, jar, { quantityOnHand: 1 }),
-    ).rejects.toBeInstanceOf(Forbidden);
-    await expect(deleteStock(asUser(C), WORKSPACE_W_ID, jar)).rejects.toBeInstanceOf(Forbidden);
-  });
-});
-
-describe('a promote that meets two jars in different units', () => {
-  it('is refused with no field to blame, and moves nothing', async () => {
-    const id = await seedLocal({
-      folkNames: ['Testwort'],
-      variants: [makeVariant({ form: 'Testform' })],
-    });
-    const held = await insertStock(
-      sql,
-      {
-        workspaceId: WORKSPACE_W_ID,
-        ingredientId: id,
-        variantId: await variantIdOf(sql, id, 'Testform'),
-        quantityOnHand: '1',
-        unit: 'kg',
-      },
-      A.id,
-    );
-    const moving = await entryJar({ quantityOnHand: '500', unit: 'g' });
-    const [folk] = await sql`
-      select id from ingredient_folk_names where ingredient_id = ${id} and name = 'Testwort'`;
-    const beforeJars = await jars();
-
-    const error = await promoteFolkName(asUser(A), WORKSPACE_W_ID, id, folk.id).catch(
-      (caught: unknown) => caught,
-    );
-
-    expect(error).toBeInstanceOf(JarMergeNeeded);
-    const refusal = error as JarMergeNeeded;
-    expect(refusal.issues.map((issue) => issue.path)).toEqual([[]]);
-    expect(refusal.conflicts).toHaveLength(1);
-    expect(refusal.conflicts[0]).toMatchObject({
-      localJar: { id: held },
-      movingJar: { id: moving },
-    });
-    expect(await jars()).toEqual(beforeJars);
-    expect((await sql`select name from ingredients where id = ${id}`)[0].name).toBe('Covenwort');
-  });
-});
-
-// M12.8: a save that moves jars and a create that adds one both take the
+// A save of an own entry and a create that adds a jar both take the
 // coven's stock lock first, so whichever comes second waits for the first and
 // sees it. Each test holds that lock from a connection of its own, as a save
 // in flight would, and watches the call queue behind it.

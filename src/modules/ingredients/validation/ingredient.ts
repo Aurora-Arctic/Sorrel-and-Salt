@@ -7,7 +7,6 @@ import {
 } from '../schema/ingredient-enums';
 import { RowId, optionalText, requiredText } from '../../../lib/validation';
 import { formatLocator } from './reference-format';
-import { JarMerge } from './stock';
 import type {
   DeityEntry,
   DeityFields,
@@ -508,12 +507,9 @@ export const CompendiumIngredientInput = z
  * would contradict the name and `botanical` would guess its system.
  */
 export const LocalIngredientInput = z
-  // The merge choices ride beside the fields and are never a column: the
-  // compendium holds no jars to merge, so its input does not take them.
   .object({
     ...fields,
     nomenclature: nomenclature.nullish(),
-    jarMerges: z.array(JarMerge).optional(),
   })
   .transform((value) => ({
     ...value,
