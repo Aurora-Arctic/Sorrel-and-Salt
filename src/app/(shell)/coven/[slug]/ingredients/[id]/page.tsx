@@ -12,7 +12,7 @@ import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
-  compendiumEntriesReplacedBy,
+  compendiumMatchesOf,
   getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
@@ -34,8 +34,9 @@ import type { CovenIngredientParams } from './types';
 
 // The ⓘ sentence beside "In the Compendium", one for each case.
 const COMPENDIUM_TIP = 'This entry is the compendium’s. Its public page is linked here.';
-const LOCAL_TIP =
-  'Your coven’s entry is offered in their place when you pick a substitute. Compare them here.';
+const SAME_TIP = 'This is the compendium entry that names the same thing. Compare them here.';
+const SIMILAR_TIP =
+  'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. If one of them is the same thing, This Is It moves your jars and spell layers to it and removes this entry.';
 
 const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -81,15 +82,15 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   const {
     membership: { role },
   } = await requireCovenMembership(slug);
-  // A coven's own entry also links the compendium entries it hides (M12.12),
+  // A coven's own entry also links the compendium entries it is, or may be (M12.22),
   // read here for this one page and never through GraphQL; none for a
   // compendium entry. The compendium is public, so the links reveal nothing.
   // The detail is read without the coven so it does not read the cupboard
   // entry again; the one the metadata shares is laid in.
-  const [read, { viewer }, replaced, cupboardEntry] = await Promise.all([
+  const [read, { viewer }, matches, cupboardEntry] = await Promise.all([
     ingredientDetailOf(session, entry),
     viewerOf(),
-    compendiumEntriesReplacedBy(session, entry),
+    compendiumMatchesOf(session, entry),
     cupboardOf(slug, id),
   ]);
   const detail = { ...read, cupboardEntry };
@@ -149,19 +150,40 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 entries: [{ title: pageTitleOf(entry), href: publicAddress(entry.slug) }],
                 total: 1,
               }
-            : replaced.entries.length > 0
+            : matches.kind === 'same' && matches.entries.length > 0
               ? {
-                  tip: LOCAL_TIP,
-                  entries: replaced.entries.map((hidden) => ({
-                    title: pageTitleOf(hidden),
-                    href: publicAddress(hidden.slug),
+                  tip: SAME_TIP,
+                  entries: matches.entries.map((match) => ({
+                    title: pageTitleOf(match),
+                    href: publicAddress(match.slug),
                   })),
-                  total: replaced.total,
-                  // See All opens the compendium search for this entry's label,
+                  total: matches.total,
+                  // See All opens the compendium search for this entry's formal name,
                   // written through the search's own parameter table.
-                  allHref: COMPENDIUM_PARAMS.href('/compendium', { query: entry.name }),
+                  allHref: COMPENDIUM_PARAMS.href('/compendium', {
+                    query: entry.canonicalName ?? entry.name,
+                  }),
                 }
               : undefined
+        }
+        similar={
+          matches.kind === 'similar' && matches.entries.length > 0
+            ? {
+                tip: SIMILAR_TIP,
+                entries: matches.entries.map((match) => ({
+                  id: match.id,
+                  title: pageTitleOf(match),
+                  href: publicAddress(match.slug),
+                  // The coven's page for the compendium entry, which a convert lands on.
+                  thenHref: `/coven/${workspace.slug}/ingredients/${match.id}` as Route,
+                })),
+                total: matches.total,
+                allHref: COMPENDIUM_PARAMS.href('/compendium', { query: entry.name }),
+                convert: matches.canConvert
+                  ? { workspaceId: workspace.id, localId: entry.id }
+                  : undefined,
+              }
+            : undefined
         }
       />
     </main>

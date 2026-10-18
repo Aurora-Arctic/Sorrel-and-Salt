@@ -145,6 +145,16 @@ export async function findCompendiumMatches(
 // inserts the entry beside a first jar (claude-docs/db/workspace-compendium-entries.md,
 // "Writing it").
 
+/**
+ * What converting an own entry asks of a role (M12.21): it deletes the own
+ * entry, writes a cupboard entry and moves jars. Exported so the entry page
+ * offers This Is It on exactly the permission the service then checks.
+ */
+export const CONVERT_PERMISSION = {
+  ingredient: ['create', 'delete'],
+  inventory: ['update'],
+} as const;
+
 const NO_ENTRY = 'No such compendium entry';
 const NO_ROW = 'This coven does not hold that compendium entry';
 const HELD = 'Your coven already holds this entry';
@@ -480,10 +490,7 @@ export async function convertLocalToCompendiumEntry(
   localId: string,
   compendiumId: string,
 ): Promise<ConvertedLocal> {
-  const membership = await assertMembership(session, workspaceId, {
-    ingredient: ['create', 'delete'],
-    inventory: ['update'],
-  });
+  const membership = await assertMembership(session, workspaceId, CONVERT_PERMISSION);
   if (!RowId.safeParse(localId).success) throw new NotFound(NO_LOCAL);
   if (!RowId.safeParse(compendiumId).success) throw new NotFound(NO_ENTRY);
   const own = await findOneByIdInWorkspace(membership, ingredients, localId);

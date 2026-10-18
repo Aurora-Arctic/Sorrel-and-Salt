@@ -51,7 +51,7 @@ export type {
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
-  ReplacedCompendiumEntries,
+  CompendiumMatches,
   ReplacedCompendiumEntry,
   StockKey,
   StockRow,

@@ -27,12 +27,12 @@ vi.mock('@/lib/viewer', () => ({ viewerOf }));
 
 const getIngredient = vi.fn();
 const ingredientDetailOf = vi.fn();
-const compendiumEntriesReplacedBy = vi.fn();
+const compendiumMatchesOf = vi.fn();
 const getCupboardEntry = vi.fn();
 vi.mock('@/modules/ingredients', () => ({
   getIngredient,
   ingredientDetailOf,
-  compendiumEntriesReplacedBy,
+  compendiumMatchesOf,
   getCupboardEntry,
   // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
@@ -89,7 +89,8 @@ beforeEach(() => {
   });
   requireSession.mockResolvedValue(SESSION);
   entryValues.mockResolvedValue(EMPTY_VALUES);
-  compendiumEntriesReplacedBy.mockResolvedValue({ entries: [], total: 0 });
+  getCupboardEntry.mockResolvedValue(null);
+  compendiumMatchesOf.mockResolvedValue({ kind: 'none', entries: [], total: 0, canConvert: false });
 });
 
 describe('the coven ingredient page', () => {
@@ -192,8 +193,10 @@ describe('the coven ingredient page', () => {
   });
 });
 
-describe('the coven ingredient page’s replaced compendium entries', () => {
-  const replaced = (count: number, total: number) => ({
+describe('the coven ingredient page’s compendium matches', () => {
+  const replaced = (count: number, total: number, kind = 'same', canConvert = false) => ({
+    kind,
+    canConvert,
     entries: Array.from({ length: count }, (_, at) => ({
       id: `00000000-0000-4000-8000-00000000010${at}`,
       slug: `fixture-replaced-${at}`,
@@ -205,11 +208,11 @@ describe('the coven ingredient page’s replaced compendium entries', () => {
   const list = () => screen.queryByRole('list', { name: 'In the Compendium' });
 
   it('passes the service’s entries and total to the component, each by title to its public page', async () => {
-    compendiumEntriesReplacedBy.mockResolvedValue(replaced(3, 4));
+    compendiumMatchesOf.mockResolvedValue(replaced(3, 4));
 
     await open(covenRow());
 
-    expect(compendiumEntriesReplacedBy).toHaveBeenCalledWith(SESSION, covenRow());
+    expect(compendiumMatchesOf).toHaveBeenCalledWith(SESSION, covenRow());
     const links = within(list()!).getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/compendium/ingredients/fixture-replaced-0',
@@ -223,12 +226,32 @@ describe('the coven ingredient page’s replaced compendium entries', () => {
     expect(seeAll.getAttribute('href')).toContain('/compendium?query=');
   });
 
+  it('offers an unnamed own entry the matches as Similar, This Is It going to the entry in the coven', async () => {
+    compendiumMatchesOf.mockResolvedValue(replaced(2, 2, 'similar', true));
+
+    await open(covenRow());
+
+    expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
+    const similar = screen.getByRole('list', { name: 'Similar in the Compendium' });
+    expect(within(similar).getAllByRole('button')).toHaveLength(2);
+  });
+
+  it('offers a role that may not convert the matches and no This Is It', async () => {
+    compendiumMatchesOf.mockResolvedValue(replaced(2, 2, 'similar', false));
+
+    await open(covenRow());
+
+    const similar = screen.getByRole('list', { name: 'Similar in the Compendium' });
+    expect(within(similar).getAllByRole('link')).toHaveLength(2);
+    expect(within(similar).queryByRole('button')).toBeNull();
+  });
+
   it('passes a compendium entry itself, once, to its public address, and no See All', async () => {
     await open(compendiumRow());
 
     // The service finds nothing replaced for a compendium entry; the page
     // passes the entry itself.
-    expect(compendiumEntriesReplacedBy).toHaveBeenCalledWith(SESSION, compendiumRow());
+    expect(compendiumMatchesOf).toHaveBeenCalledWith(SESSION, compendiumRow());
     const links = within(list()!).getAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/compendium/ingredients/testwort-fixtura-testalis',

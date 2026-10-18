@@ -398,6 +398,15 @@ $jump-link-line: 1.25;
   @include icon-link;
 }
 
+// An entry of "Similar in the Compendium" carries its This Is It beside the
+// link, and a refusal beneath; the row wraps on a narrow column.
+.ingredient-entry__replaced li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
+}
+
 // "See All N" is the way on to the rest, not one of the entries: a step
 // smaller and muted, underlined and without the chain icon, and set off by
 // `space(4)` more than the list's own gap, so it does not read as a fourth.

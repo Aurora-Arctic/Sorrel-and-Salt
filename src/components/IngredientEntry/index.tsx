@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactElement, ReactNode } from 'react';
 import FormIcon from '../FormIcon';
@@ -31,6 +32,7 @@ import CupboardActions from './cupboard-actions';
 import EditButton from './edit-button';
 import { DETAILS, NoteMarks, ReferencesSection, referenceNotes } from './references';
 import EntryDialog from './entry-dialog';
+import ThisIsIt from './this-is-it';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
 
@@ -360,16 +362,26 @@ function FormSection({
 // paragraph after the list, not an item in it, since it is not an entry.
 function ReplacesBlock({
   replaces,
+  heading = 'In the Compendium',
+  convert,
 }: {
-  replaces: NonNullable<IngredientEntryProps['replaces']>;
+  replaces: {
+    tip: string;
+    entries: { title: string; href: Route; id?: string; thenHref?: Route }[];
+    total: number;
+    allHref?: Route;
+  };
+  heading?: string;
+  /** Given for "Similar in the Compendium" to a role that may convert: This Is It beside each entry. */
+  convert?: { workspaceId: string; localId: string };
 }): ReactElement {
-  const block = blockOf('details', 'compendium');
+  const block = blockOf('details', heading === 'In the Compendium' ? 'compendium' : 'similar');
   const whyId = `${block.id}-why`;
   return (
     <div className="ingredient-entry__block ingredient-entry__replaces">
       <div className="ingredient-entry__heading-row">
-        <h3 id={block.id}>In the Compendium</h3>
-        <InfoTip id={whyId} label="In the Compendium">
+        <h3 id={block.id}>{heading}</h3>
+        <InfoTip id={whyId} label={heading}>
           {replaces.tip}
         </InfoTip>
       </div>
@@ -378,13 +390,22 @@ function ReplacesBlock({
         aria-labelledby={block.id}
         aria-describedby={whyId}
       >
-        {replaces.entries.map(({ title, href }) => (
+        {replaces.entries.map(({ title, href, id, thenHref }) => (
           <li key={href}>
             <Link href={href}>
               {title}
               <LinkIcon />
               <LinkHint />
             </Link>
+            {convert && id && thenHref && (
+              <ThisIsIt
+                workspaceId={convert.workspaceId}
+                localId={convert.localId}
+                compendiumId={id}
+                thenHref={thenHref}
+                name={title}
+              />
+            )}
           </li>
         ))}
       </ul>
@@ -406,6 +427,8 @@ const IngredientEntry = ({
   edit,
   movedAway,
   replaces,
+  similar,
+
   cupboard,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants } = detail;
@@ -534,6 +557,13 @@ const IngredientEntry = ({
             would be noise, and each block is already headed and labelled. */}
         <div className="ingredient-entry__side">
           {replaces && <ReplacesBlock replaces={replaces} />}
+          {similar && (
+            <ReplacesBlock
+              replaces={similar}
+              heading="Similar in the Compendium"
+              convert={similar.convert}
+            />
+          )}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
             rows={correspondences(shown, deities)}
