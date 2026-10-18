@@ -7,8 +7,9 @@ import { categoryArgs, facetArgs } from './compendium';
 import { IngredientRef, IngredientSourceEnum } from './ingredient';
 import { IngredientFacetsRef } from './ingredient-facets';
 
-// Story 14's list (M9.4): a coven's own entries and the compendium entries it
-// holds, a page at a time, each entry's jars read through `Ingredient.stock`;
+// Story 14's list (M9.4): a coven's own entries and the compendium entries its
+// cupboard holds, a page at a time, each entry's jars read through
+// `Ingredient.stock` and its cupboard row primed from the page (M12.18);
 // and beside it how many entries each filter value would list (M12.3). The
 // resolvers refuse only a missing session; who may read which coven is the
 // service's check (claude-docs/graphql/schema.md, "workspaceIngredients").
@@ -40,8 +41,24 @@ builder.queryField('workspaceIngredients', (t) =>
       ...facetArgs,
       ...stockArgs,
     },
-    resolve: (_root, args, page, context) =>
-      listWorkspaceIngredients(sessionOf(context), args.workspaceId, filterOf(args), page),
+    resolve: async (_root, args, page, context) => {
+      const entries = await listWorkspaceIngredients(
+        sessionOf(context),
+        args.workspaceId,
+        filterOf(args),
+        page,
+      );
+      // The page read each entry's cupboard row beside it, under the same
+      // read permission the loader's service asks, so `Ingredient.cupboardEntry`
+      // is answered from here rather than by a second read (M12.18).
+      for (const { node, cupboardEntry } of entries) {
+        context.loaders.cupboardEntryByIngredient.prime(
+          { ingredientId: node.id, workspaceId: args.workspaceId },
+          cupboardEntry,
+        );
+      }
+      return entries;
+    },
   }),
 );
 

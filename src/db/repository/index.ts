@@ -124,6 +124,7 @@ export type {
   GroupFilter,
   IngredientFacets,
   WorkspaceIngredientFacets,
+  WorkspaceListEdge,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,

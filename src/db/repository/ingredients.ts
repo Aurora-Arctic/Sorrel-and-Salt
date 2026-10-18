@@ -23,6 +23,7 @@ import type {
   IngredientElement,
 } from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
+import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
@@ -48,18 +49,21 @@ import { existsIn, selectFrom, selectOne } from './select';
 import { curated, inLiveGroup } from './vocabularies';
 import type {
   CompendiumScore,
+  CupboardEntryRow,
   HiddenCompendiumEntries,
   IngredientFilter,
   IngredientIdentity,
   IngredientRow,
   IngredientScoped,
   JoinedRow,
+  ListColumns,
   ListOrder,
   NotSpellScoped,
   SimilarityScore,
   SortPart,
   Unscoped,
   VariantScoped,
+  WorkspaceListEdge,
 } from './types';
 
 /**
@@ -286,42 +290,59 @@ export function findCompendiumCount(
 }
 
 /**
- * One page of a coven's ingredients under `filter` (M9.4): its own live
- * entries, and every live compendium entry it holds a live jar of, minus any
- * a local entry hides. Matched, ordered and keyed as the compendium is, by
- * the same arms, but under the proof rather than the compendium tier
- * (claude-docs/db/stock.md, "The workspace ingredient list").
+ * One page of a coven's ingredients under `filter` (M9.4, M12.18): its own
+ * live entries, and every live compendium entry its cupboard names. Matched,
+ * ordered and keyed as the compendium is, by the same arms, but under the
+ * proof, over the coven's overrides, and with each entry's cupboard row beside
+ * it, null for the coven's own (claude-docs/db/stock.md, "The workspace
+ * ingredient list").
  */
-export function findWorkspaceIngredientPage(
+export async function findWorkspaceIngredientPage(
   membership: Membership,
   filter: IngredientFilter,
   page: PageRequest,
-): Promise<PageEntry<IngredientRow, CompendiumScore>[]> {
-  const list = compendiumList(filter);
-  return findPageInTiers(
+): Promise<PageEntry<IngredientRow, WorkspaceListEdge>[]> {
+  const list = compendiumList(filter, membership);
+  // The order's left join carries the cupboard row onto each entry as
+  // `joined`; the finder's type knows the carried score alone.
+  const entries = (await findPageInTiers(
     [membership],
     ingredients,
     list.order,
     page,
     and(list.arms, workspaceListScope(membership, filter)),
-  );
+  )) as PageEntry<IngredientRow, CompendiumScore & { joined: CupboardEntryRow | null }>[];
+  return entries.map(({ joined, ...entry }) => ({ ...entry, cupboardEntry: joined }));
 }
 
 /**
- * Which readable rows a coven's ingredient list holds (M9.4): its own, and
- * the compendium entries it holds, minus any a local entry hides. The page
- * and the facets (M12.3) both read it, so they hold the same rows. The
- * coven-only `source` and `inStock` settings (M9.7) are read here, not
- * in `compendiumList`, which the compendium's page and count share and
- * where a coven's jars mean nothing.
+ * Which readable rows a coven's ingredient list holds (M9.4, M12.18): its
+ * own, and the compendium entries a live cupboard row of its names, one keyed
+ * `EXISTS` on the row's `(workspace_id, ingredient_id)` unique. A jar no
+ * longer decides it, and a local entry no longer hides the compendium entry
+ * it matches: the coven chose both. The page and the facets (M12.3) both read
+ * it, so they hold the same rows. The coven-only `source` and `inStock`
+ * settings (M9.7) are read here, not in `compendiumList`, which the
+ * compendium's page and count share and where a coven's jars mean nothing.
  */
 export function workspaceListScope(
   membership: Membership,
   filter: Pick<IngredientFilter, 'source' | 'inStock'> = {},
 ): SQL | undefined {
   return and(
-    notHiddenByLocal(membership),
-    or(scopedTo(membership, ingredients), heldBy(membership)),
+    or(
+      scopedTo(membership, ingredients),
+      and(
+        inCompendium(ingredients),
+        existsIn(
+          workspaceCompendiumEntries,
+          and(
+            eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
+            scopedTo(membership, workspaceCompendiumEntries),
+          ),
+        ),
+      ),
+    ),
     filter.source === 'local' ? scopedTo(membership, ingredients) : undefined,
     filter.source === 'compendium' ? inCompendium(ingredients) : undefined,
     filter.inStock ? heldBy(membership, true) : undefined,
@@ -584,19 +605,24 @@ function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
  * row comparison bounds it, and the position where its best field holds the
  * query, so Wood Ash leads Sandalwood for `wood`; a browse keys `[name]`.
  */
-export function compendiumList(filter: IngredientFilter): {
+export function compendiumList(
+  filter: IngredientFilter,
+  membership?: Membership,
+): {
   arms: SQL | undefined;
   order: ListOrder<CompendiumScore>;
 } {
-  const match = searchMatch(filter.query);
+  const columns = listColumns(membership);
+  const match = searchMatch(filter.query, membership);
+  const leftJoined = columns.leftJoined && { leftJoined: columns.leftJoined };
   return {
     arms: and(
       ...categoryArms(filter.categoryIds ?? [], filter.categoryMode),
       formArm(filter.forms),
       pickedFormArm(filter.formId),
-      listArm(ingredients.celestialBodies, filter.celestialBodies),
-      listArm(ingredients.zodiacSigns, filter.zodiacSigns),
-      elementArm(filter.elements),
+      listArm(columns.celestialBodies, filter.celestialBodies),
+      listArm(columns.zodiacSigns, filter.zodiacSigns),
+      elementArm(filter.elements, columns.elements),
       deityArm(filter.deityIds),
       toxicArm(filter.toxic),
       filter.withoutReferences ? citesNowhere() : undefined,
@@ -607,16 +633,61 @@ export function compendiumList(filter: IngredientFilter): {
           sort: [
             { expression: sql`-${match.score}`, type: 'real' },
             { expression: match.position, type: 'integer' },
-            ingredients.name,
+            columns.name,
           ],
           wordMatch: true,
           join: match.join,
+          ...leftJoined,
           carry: { score: match.score },
         }
       : {
-          sort: [ingredients.name],
+          sort: [columns.name],
+          ...leftJoined,
           carry: { score: sql<number | null>`null` },
         },
+  };
+}
+
+/**
+ * A coven's cupboard row for the entry, left-joined beside it in the coven's
+ * list. Aliased, since the list's scope reads the table itself in an `EXISTS`.
+ */
+const cupboard = alias(workspaceCompendiumEntries, 'cupboard');
+
+/**
+ * The name, elements, celestial bodies and zodiac signs a list reads (M12.18).
+ * Under a coven's proof each is `coalesce(cupboard row's, entry's)`, so an
+ * override sorts, filters and counts where the coven put it, and an empty
+ * list it cleared matches nothing: `coalesce` takes `[]` as a value, as
+ * `applyCupboardEntry`'s `??` does. The join matches the proof's live row
+ * for a live compendium entry, so a coven's own entry reads its own columns.
+ * Without a proof, the compendium's own list, each is the entry's column.
+ * Raw, since `coalesce` has no builder.
+ */
+export function listColumns(membership?: Membership): ListColumns {
+  if (!membership) {
+    return {
+      name: ingredients.name,
+      elements: ingredients.elements,
+      celestialBodies: ingredients.celestialBodies,
+      zodiacSigns: ingredients.zodiacSigns,
+    };
+  }
+  const over = (own: AnyPgColumn, entry: AnyPgColumn) => sql`coalesce(${own}, ${entry})`;
+  return {
+    name: { expression: over(cupboard.label, ingredients.name), type: 'text' },
+    elements: over(cupboard.elements, ingredients.elements),
+    celestialBodies: over(cupboard.celestialBodies, ingredients.celestialBodies),
+    zodiacSigns: over(cupboard.zodiacSigns, ingredients.zodiacSigns),
+    leftJoined: {
+      leftJoin: cupboard,
+      on: and(
+        eq(cupboard.ingredientId, ingredients.id),
+        scopedTo(membership, cupboard),
+        notSoftDeleted(cupboard),
+        inCompendium(ingredients),
+      ) as SQL,
+    },
   };
 }
 
@@ -662,6 +733,7 @@ const SEARCH_WEIGHTS = {
  */
 function searchMatch(
   query: string | undefined,
+  membership?: Membership,
 ): { join: { source: SQL; on: SQL }; score: SQL<number>; position: SQL<number> } | undefined {
   const trimmed = query?.trim();
   if (!trimmed) return undefined;
@@ -683,6 +755,21 @@ function searchMatch(
       from ${from}
       where ${and(matches(text), live)}`;
   const entries = sql`${ingredients} as ${candidate}`;
+  // Under a coven's proof, a sixth arm: what the coven's live cupboard rows
+  // call their entries, weighted as a name, so a relabelled entry is found by
+  // its label and, through the first arm, by the compendium's name.
+  const label = membership
+    ? sql`union all ${arm(
+        workspaceCompendiumEntries.ingredientId,
+        workspaceCompendiumEntries.label,
+        SEARCH_WEIGHTS.name,
+        workspaceCompendiumEntries,
+        and(
+          notSoftDeleted(workspaceCompendiumEntries),
+          scopedTo(membership, workspaceCompendiumEntries),
+        ),
+      )}`
+    : sql``;
   // The position is the best-scoring arm's, not `min(position)`: a weaker
   // field holding the query earlier — a folk name starting with it, under a
   // label holding it mid-word — must not move the entry it did not rank.
@@ -699,6 +786,7 @@ function searchMatch(
       ${arm(ingredientVariants.ingredientId, ingredientVariants.form, SEARCH_WEIGHTS.form, ingredientVariants, notSoftDeleted(ingredientVariants))}
       union all
       ${arm(ingredientVariants.ingredientId, ingredientVariants.description, SEARCH_WEIGHTS.description, ingredientVariants, notSoftDeleted(ingredientVariants))}
+      ${label}
     ) as ${arms}
     group by ${arms}.id) as ${matched}`;
   return {
@@ -783,7 +871,7 @@ export function stated(values: readonly string[] | undefined): string[] {
  * by entry, which `listFolds` does, and an overlap would compare the raw
  * spellings. Blank values are skipped, and none means no filter.
  */
-function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL | undefined {
+function listArm(list: SQLWrapper, values: readonly string[] | undefined): SQL | undefined {
   const wanted = stated(values);
   if (wanted.length === 0) return undefined;
   return or(...wanted.map((value) => listHolds(list, value)));
@@ -793,7 +881,7 @@ function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL 
  * `list` holds an entry folding as `value` does: one value of `listArm`, and
  * how a facet matches a curated row's name to the list (M12.3).
  */
-export function listHolds(list: AnyPgColumn, value: SQLWrapper | string): SQL {
+export function listHolds(list: SQLWrapper, value: SQLWrapper | string): SQL {
   return inArray(fold(value), listFolds(list));
 }
 
@@ -805,11 +893,16 @@ export function listHolds(list: AnyPgColumn, value: SQLWrapper | string): SQL {
  * nothing. The toxic filter's reading. Elements are a closed set, so there is
  * nothing to fold. Empty means no filter.
  */
-export function elementArm(elements: readonly IngredientElement[] | undefined): SQL | undefined {
+export function elementArm(
+  elements: readonly IngredientElement[] | undefined,
+  own: SQLWrapper = ingredients.elements,
+): SQL | undefined {
   if (!elements?.length) return undefined;
   const wanted = [...elements];
   return or(
-    arrayOverlaps(ingredients.elements, wanted),
+    // Bound as one array through the column's encoder: an expression has none,
+    // and Drizzle would otherwise spread the values into a row.
+    arrayOverlaps(own, sql`${sql.param(wanted, ingredients.elements)}`),
     existsIn(
       ingredientVariants,
       and(
