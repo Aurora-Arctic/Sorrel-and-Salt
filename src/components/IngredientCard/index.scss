@@ -72,6 +72,13 @@
   }
 }
 
+// The badges, when they wrap (a phone, or Retired, Annotated, Caution and Toxic
+// together), hug the right edge on every row. On the card only: the specimen
+// primitive's badge row is not otherwise right-aligned.
+.ingredient-card .specimen__badges {
+  justify-content: flex-end;
+}
+
 // Above the overlay, so the Low badge's button keeps its own hover, focus and
 // click (it opens a tip) instead of following the card's link.
 .ingredient-card .stock-badge-tip {
@@ -100,7 +107,12 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  row-gap: space(2);
+  // Wrapped lines sit close: they are one list of forms, not separate rows.
+  row-gap: space(1);
+  // Air above, the chips to the forms the same as the forms to the rule below
+  // (the stock section's `margin-top` is this token too, each beside the
+  // specimen's own 12px gap), so the two read as equal.
+  margin-block-start: space(3);
   margin-inline-start: calc(-1 * var(--forms-gap));
   clip-path: inset(0 0 0 var(--forms-gap));
 }
