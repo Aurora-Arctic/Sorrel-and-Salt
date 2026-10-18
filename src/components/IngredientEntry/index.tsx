@@ -26,6 +26,8 @@ import type {
   SubstituteDetail,
   VariantDetail,
 } from '@/modules/ingredients';
+import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
+import CupboardActions from './cupboard-actions';
 import EditButton from './edit-button';
 import { DETAILS, NoteMarks, ReferencesSection, referenceNotes } from './references';
 import EntryDialog from './entry-dialog';
@@ -404,9 +406,18 @@ const IngredientEntry = ({
   edit,
   movedAway,
   replaces,
+  cupboard,
 }: IngredientEntryProps): ReactElement => {
-  const { entry, folkNames, categories, deities, substitutes, variants, retired } = detail;
+  const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
+  // `entry` is the row as the compendium has it, which edit and identity use;
+  // `shown` lays the coven's cupboard entry over it for what the page says.
+  // Three kinds: ours (a coven's row, Local), the compendium's held in this
+  // cupboard (the marks), and the compendium's not held (neither).
+  const { entry } = detail;
+  const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
+  const held = !local && cupboardEntry != null;
+  const relabelled = held && shown.name !== entry.name;
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   const anchors = formAnchors(variants);
   const notes = referenceNotes(
@@ -432,10 +443,46 @@ const IngredientEntry = ({
       <header className="ingredient-entry__head">
         <FormalName entry={entry} />
         <PageHeader
-          title={entry.name}
-          action={edit && <EditButton href={edit.href} entry={editable} />}
+          title={shown.name}
+          action={
+            (edit || cupboard) && (
+              <>
+                {edit && <EditButton href={edit.href} entry={editable} />}
+                {cupboard && !local && (
+                  <CupboardActions
+                    {...cupboard}
+                    ingredientId={entry.id}
+                    held={held}
+                    compendium={{
+                      name: entry.name,
+                      description: entry.description,
+                      safetyNotes: entry.safetyNotes,
+                      elements: entry.elements ?? [],
+                      celestialBodies: entry.celestialBodies ?? [],
+                      zodiacSigns: entry.zodiacSigns ?? [],
+                      colors: entry.colors ?? [],
+                    }}
+                    overrides={{
+                      label: cupboardEntry?.label ?? null,
+                      description: cupboardEntry?.description ?? null,
+                      safetyNotes: cupboardEntry?.safetyNotes ?? null,
+                      elements: cupboardEntry?.elements ?? null,
+                      celestialBodies: cupboardEntry?.celestialBodies ?? null,
+                      zodiacSigns: cupboardEntry?.zodiacSigns ?? null,
+                      colors: cupboardEntry?.colors ?? null,
+                    }}
+                  />
+                )}
+              </>
+            )
+          }
         />
-        {(local || toxic || retired) && (
+        {relabelled && (
+          <p className="ingredient-entry__compendium-name">
+            Called <span>{entry.name}</span> in the Compendium
+          </p>
+        )}
+        {(local || held || toxic || retired) && (
           <div className="badges">
             {local && <span className="badge badge--local">Local</span>}
             {/* A compendium entry the curators retired, read because this
@@ -443,6 +490,13 @@ const IngredientEntry = ({
                 the status role: on the page from the start, never announced. */}
             {retired && (
               <output className="badge badge--retired">No Longer in the Compendium</output>
+            )}
+            {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
+            {held && !retired && (
+              <output className="badge badge--low-stock">From the Compendium</output>
+            )}
+            {held && isAnnotated(cupboardEntry) && (
+              <output className="badge badge--low-stock">Annotated</output>
             )}
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
@@ -476,12 +530,12 @@ const IngredientEntry = ({
       <section id="details" className="ingredient-entry__section" aria-labelledby="details-heading">
         <h2 id="details-heading">Details</h2>
         <div className="ingredient-entry__text">
-          {said(entry.description) ? (
-            <p className="ingredient-entry__description">{entry.description}</p>
+          {said(shown.description) ? (
+            <p className="ingredient-entry__description">{shown.description}</p>
           ) : (
             <p className="ingredient-entry__empty">No description recorded.</p>
           )}
-          <SafetyNote safetyNotes={entry.safetyNotes} level={3} />
+          <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
           <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
         </div>
         {/* A plain div, not an aside: one complementary landmark per section
@@ -490,7 +544,7 @@ const IngredientEntry = ({
           {replaces && <ReplacesBlock replaces={replaces} />}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
-            rows={correspondences(entry, deities)}
+            rows={correspondences(shown, deities)}
             level={3}
           />
           <ListBlock

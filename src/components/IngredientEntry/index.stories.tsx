@@ -148,6 +148,24 @@ const DREAMS = category('Testdreams', '#c79bd8', '#6d3d82');
 
 const MOCKROOT = { id: nextId(), slug: 'fixture-mockroot', workspaceId: null };
 
+/** A coven's cupboard row over FULL's entry; every override null unless given. */
+const cupboardEntry = (
+  overrides: Partial<NonNullable<IngredientDetail['cupboardEntry']>> = {},
+): NonNullable<IngredientDetail['cupboardEntry']> => ({
+  id: nextId(),
+  workspaceId: '00000000-0000-4000-8000-0000000000c1',
+  ingredientId: '00000000-0000-4000-8000-000000000001',
+  label: null,
+  description: null,
+  safetyNotes: null,
+  elements: null,
+  celestialBodies: null,
+  zodiacSigns: null,
+  colors: null,
+  ...STAMPS,
+  ...overrides,
+});
+
 const FULL: IngredientDetail = {
   entry: entryRow(),
   retired: false,
@@ -276,6 +294,47 @@ export const NothingRecorded: Story = () => (
       references: [],
       variants: [variant('chip')],
     }}
+  />
+);
+
+// A compendium entry this coven holds in its cupboard, with nothing changed
+// (M12.16): marked From the Compendium, and no Local badge.
+export const FromTheCompendium: Story = () => (
+  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} />
+);
+
+// The same, annotated: the coven's label heads the page with the compendium's
+// name beneath it, its own description stands, the planets are cleared on
+// purpose, and the rest is the compendium's.
+export const Annotated: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      cupboardEntry: cupboardEntry({
+        label: 'Hedgewort',
+        description: 'What our coven makes of it.',
+        celestialBodies: [],
+      }),
+    }}
+  />
+);
+
+// The cupboard buttons beside the title (M12.17). The workshop has no API, so
+// a press answers with the generic error. A member sees Add to Cupboard while
+// the coven does not hold the entry; Annotate This Entry and Remove from
+// Cupboard once it does; a viewer sees none.
+const CUPBOARD = { workspaceId: nextId(), canAdd: true, canAnnotate: true, canRemove: true };
+
+export const AddToCupboard: Story = () => <Entry cupboard={CUPBOARD} />;
+
+export const AnnotateOrRemove: Story = () => (
+  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} cupboard={CUPBOARD} />
+);
+
+export const ViewerSeesNoCupboardButtons: Story = () => (
+  <Entry
+    detail={{ ...FULL, cupboardEntry: cupboardEntry() }}
+    cupboard={{ ...CUPBOARD, canAdd: false, canAnnotate: false, canRemove: false }}
   />
 );
 

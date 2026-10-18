@@ -57,3 +57,21 @@ A curator's delete soft-deletes the `ingredients` row alone: its forms stay live
 Not yet covered: the GraphQL child loaders and `Ingredient.cupboardEntry` read nothing for a retired entry, because a loader's key carries no reading coven to prove the cupboard row with; the cupboard list row is M12.18's, and the mark on cupboard rows and jars waits for those screens.
 
 `tests/modules/ingredients/services/retired-entry.test.ts` holds the service half: the holding coven's reads and jars, the other coven's `NotFound`, and every reader that drops the entry, each beside its state before retirement. `tests/db/repository/cupboard-entries.test.ts` holds the hatch's rows and the `heldBy` arm.
+
+### Writing it
+
+M12.15 adds the three writes in the same service, `services/cupboard-entries.ts`. Each checks membership first, then writes through `withAudit` (the one wrapper that opens the transaction and stamps who wrote).
+
+| Function                                                           | Checks               | What it does                                                                                                                                                   |
+| ------------------------------------------------------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `addCupboardEntry(session, workspaceId, ingredientId, input?)`     | `ingredient: create` | Inserts the row, bare or with overrides. It makes no jar and no form                                                                                           |
+| `annotateCupboardEntry(session, workspaceId, ingredientId, patch)` | `ingredient: update` | Changes the overrides: a key left out keeps its value, `null` hands the column back to the compendium, and a value, a list even when empty, is the coven's own |
+| `removeCupboardEntry(session, workspaceId, ingredientId)`          | `ingredient: delete` | Soft-deletes the row (marks it deleted). Refused while the coven holds a live jar of any form of the entry                                                     |
+
+The three take the compendium entry's id, not the row's, because that is what a page holds. A coven's own ingredient, a deleted compendium entry and an id that is not a uuid give `NotFound` on an add. A second add of one entry is a `ValidationError` beside `ingredientId`. Remove takes the coven's stock lock (`lockCovenStock`) before it counts jars, so a first jar created at the same moment is either counted or queues behind the remove.
+
+**The label rule.** A label is unique in the coven across its own ingredients' names and its cupboard labels, case folded. The database holds each half (`ingredients_workspace_label_unique` for own rows, `workspace_compendium_entries_workspace_label_unique` for labels) but cannot hold both in one index, so the service reads first. Add and annotate refuse a label that matches an own name or another label, as a `ValidationError` beside `label`. The own-row saves (`createWorkspaceIngredient`, `updateWorkspaceIngredient`, `promoteWorkspaceFolkName`) refuse a `name` that matches a live label, beside `name`, through `refuseCupboardLabelAsName`. An entry with no label reserves nothing. Two writes racing across the two tables could both pass the read; that race is accepted, and the result is a coven with one name on two rows, not a lost write.
+
+`createStock` on a form of a compendium entry inserts the cupboard row when the coven has none, in the same transaction, so no jar sits under an entry the cupboard does not list ([`stock.md`](stock.md)). A coven's own ingredient inserts nothing.
+
+`tests/modules/ingredients/services/cupboard-entry-writes.test.ts` holds the rules and `tests/modules/ingredients/graphql/cupboard-entry-writes.test.ts` the transport's half.

@@ -51,7 +51,9 @@ export {
   findCompendiumMatchesByName,
   findCupboardEntriesOf,
   findCupboardEntry,
+  findCupboardEntryByLabel,
   findCupboardEntryIncludingSoftDeleted,
+  findWorkspaceIngredientByName,
 } from './cupboard-entries';
 export { COVEN_STOCK_LOCK_NAMESPACE, findStockById, findStockOfIngredients } from './stock';
 export { findManyReferences, findReferenceSuggestions, findReferencesOf } from './references';

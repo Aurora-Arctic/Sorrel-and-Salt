@@ -103,6 +103,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - `NothingRecorded`: every empty state, and a form that adds nothing.
 - `CovenEntry`: a coven's own entry, badged Local.
 - `RetiredInCoven`: a retired compendium entry a coven still uses, marked No Longer in the Compendium.
+- `FromTheCompendium`, `Annotated`: a compendium entry held in the coven's cupboard (M12.16), unchanged and with the coven's label, description and cleared planets.
 - `CompendiumEntryForCurator`: Edit, and the link to the public page.
 - `MovedAway`: the notice for the entry that left this address.
 - `FormAddsNothing`: two forms adding nothing, one of them toxic.
@@ -116,6 +117,7 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 - the formal name is a labelled, non-empty value for all eight cases (the seven kinds, `unknown` with and without a name), in italics for the three binomial kinds only, and an unconfirmed name has more than the name beside it;
 - Local is there for a coven's entry and not for a compendium one;
 - a retired entry carries a `status` in its head, and a live one none;
+- a compendium entry held in the cupboard shows the merged values (the label as the `h1` with the compendium's name beneath, a null override falling back, an empty list shown as cleared) and the statuses From the Compendium, plus Annotated when any override is set; one not held shows neither;
 - a toxic form marks the entry Toxic though the ingredient is not;
 - Folk Names, Categories and Substitutes are lists of that name in Details, with one item each;
 - a linked substitute links to `hrefOf`'s address, a typed one and one `hrefOf` has no page for are text;
@@ -129,7 +131,21 @@ The owner's, from seeing the page in a browser at M8.19: the entry is read rathe
 
 **Checked in a real browser:** `tests/e2e/compendium-entry.spec.ts` scans the public page with axe and at a phone's width, and story 17 scans it again as a non-admin.
 
+## Cupboard entries (M12.16)
+
+`detail.cupboardEntry` is the coven's row for a compendium entry it holds (null on the public page). The component tells three kinds apart and never reads `isGlobal`: a coven's own entry (`entry.workspaceId !== null`) is badged Local; a compendium entry with a cupboard entry (`cupboardEntry != null`) is not, and shows a **From the Compendium** status, plus **Annotated** when `isAnnotated(cupboardEntry)` (any of the seven overrides is set, an empty list counting as set); a compendium entry without one is drawn as before. The merge is `applyCupboardEntry(entry, cupboardEntry)`, in `src/modules/ingredients/validation/cupboard-merge.ts` (pure, with no `server-only`, so a component may import it by its path): the page heading, description, caution and the four correspondence rows read the merged row, and when the label differs a line beneath the heading names the compendium's own name. Forms, folk names, substitutes, categories, references and the toxic flag are the compendium's. Edit and the "In the Compendium" block still read the unmerged row, so a curator edits the compendium's name and the block links by it. The marks are `output` elements (role status) in the existing `low-stock` tint, a neutral one: where the row lives is not a warning.
+
+## Cupboard buttons (M12.17)
+
+The optional `cupboard` prop (`{ workspaceId, canAdd, canAnnotate, canRemove }`) is passed by the coven route for a compendium entry, never by the public page, and is ignored for a coven's own entry. The route sets each flag from the member's role with `rolePermits` (`ingredient:create`, `update`, `delete`); the service is still the guard. `cupboard-actions.tsx` draws, in the header's action slot beside Edit:
+
+- **Add to Cupboard** while the coven does not hold the entry (`cupboardEntry == null`): `addCupboardEntry` with no overrides.
+- **Annotate This Entry** once it does: opens [`CupboardEntryForm`](cupboard-entry-form.md) in a modal.
+- **Remove from Cupboard** once it does, a `.btn--destructive`: asks in place (Remove, Cancel), then `removeCupboardEntry`. A jar still held in the cupboard refuses; the service's sentence shows in a notice beside the buttons.
+
+Each write calls `router.refresh()`, so the marks and the buttons follow the cupboard. A viewer sees none of them. Stories: `AddToCupboard`, `AnnotateOrRemove`, `ViewerSeesNoCupboardButtons`. Tests: `tests/components/IngredientEntry/cupboard-actions.test.tsx`.
+
 ## The two routes
 
 - **`/compendium/ingredients/[slug]`** (`src/app/(public)/`) reads `readCompendiumEntry(slug)`, which takes no session. An unknown slug and a coven entry's slug both answer 404 (`notFound()`); a slug the entry has moved off answers `permanentRedirect` to its current address, a 308. The page asks `viewerIfSignedIn()` only to offer a curator Edit, which opens the edit modal on this same page (`?edit`, "Edit", below); a visitor with no session reads the same page. It draws no `<main>`, since the `(public)` layout does. A compendium ingredient it links is `/compendium/ingredients/<slug>`; a coven's own is not linked, as the public page would answer 404. Its title is the entry's name, then its formal name in brackets when it has one that differs (`pageTitleOf`, shared with the coven route); the description and canonical link are MB.84's.
-- **`/coven/[slug]/ingredients/[id]`** (`src/app/(shell)/`) runs `requireCovenMembership(slug)`, then `requireSession()` (the shell layout skips the email check), then `getIngredient(session, id, workspace.id)`. A non-member, and an id the coven cannot see, answer 404. It draws its own `<main>`. For a compendium entry it passes `replaces` holding the entry itself (its public page's path, relative since the origin varies by deployment, under its own ⓘ sentence) and, for a curator, `edit` (the same modal, at the coven's own address); it also sets `alternates.canonical` in its metadata. A coven's own entry gets neither, and no Edit until M8.17. It links a compendium ingredient to the public page and the coven's own to `/coven/<slug>/ingredients/<id>`.
+- **`/coven/[slug]/ingredients/[id]`** (`src/app/(shell)/`) runs `requireCovenMembership(slug)`, then `requireSession()` (the shell layout skips the email check), then `getIngredient(session, id, workspace.id)`. A non-member, and an id the coven cannot see, answer 404. It draws its own `<main>`. For a compendium entry it passes `replaces` holding the entry itself (its public page's path, relative since the origin varies by deployment, under its own ⓘ sentence) and, for a curator, `edit` (the same modal, at the coven's own address); it also sets `alternates.canonical` in its metadata. The tab title uses the coven's label when its cupboard entry sets one (a `cache()`d `getCupboardEntry` the page and `generateMetadata` share, so one request reads it once; the page reads the detail without the coven and lays that entry in). A coven's own entry gets neither, and no Edit until M8.17. It links a compendium ingredient to the public page and the coven's own to `/coven/<slug>/ingredients/<id>`.
