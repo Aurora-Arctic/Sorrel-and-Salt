@@ -1,6 +1,6 @@
 import type { Story } from '@ladle/react';
 import IngredientCard from '../IngredientCard';
-import { StockBadge } from '../StockBadge';
+import { Jars } from '../IngredientCard/story-jars';
 import type { SafetyVariant } from '../SafetyNote/types';
 import IngredientCardList from '.';
 
@@ -24,19 +24,6 @@ const OIL: SafetyVariant = {
   safetyNotes: 'Dilute before it touches skin.',
   toxic: true,
 };
-
-const Jars = () => (
-  <ul>
-    <li>
-      <span>Dried Leaf, 6 g</span>
-      <StockBadge quantity={6} threshold={10} unit="g" />
-    </li>
-    <li>
-      <span>Oil, 40 ml</span>
-      <StockBadge quantity={40} threshold={10} unit="ml" />
-    </li>
-  </ul>
-);
 
 const href = (slug: string) => `/compendium/ingredients/${slug}` as const;
 
