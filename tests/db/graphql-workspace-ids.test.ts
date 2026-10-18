@@ -59,6 +59,8 @@ let removableEntryId: string;
 // a Root form, for the convert probe alone.
 let convertibleId: string;
 let convertTargetId: string;
+// A compendium entry W holds, for the probe that makes it W's own.
+let ownableEntryId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
@@ -137,6 +139,12 @@ beforeAll(async () => {
       nomenclature: 'none',
       variants: [makeVariant({ form: 'Root' })],
     }),
+    A.id,
+  );
+  ownableEntryId = await compendiumEntry('Fixture Ownable Entry');
+  await insertCupboardEntry(
+    sql,
+    { workspaceId: WORKSPACE_W_ID, ingredientId: ownableEntryId },
     A.id,
   );
   const insertCoven = async (name: string) => {
@@ -346,6 +354,14 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
       }
     }`,
     variables: () => ({ localId: convertibleId, compendiumId: convertTargetId }),
+  },
+  convertCompendiumEntryToLocal: {
+    source: `mutation ($workspaceId: ID!, $ingredientId: ID!) {
+      convertCompendiumEntryToLocal(workspaceId: $workspaceId, ingredientId: $ingredientId) {
+        entry { id }
+      }
+    }`,
+    variables: () => ({ ingredientId: ownableEntryId }),
   },
 };
 
