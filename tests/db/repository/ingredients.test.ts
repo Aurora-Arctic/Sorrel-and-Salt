@@ -1580,6 +1580,34 @@ describe('a variant read under its ingredient', () => {
   });
 });
 
+describe('form ranking of the picker', () => {
+  it('lists an entry holding the form first, then one holding a form of its group, then the rest', async () => {
+    const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
+    await add('Fixture A Plain', { variants: [makeVariant({ form: 'Powder' })] });
+    await add('Fixture B Group', { variants: [makeVariant({ form: 'Resin' })] });
+    await add('Fixture C Exact', { variants: [makeVariant({ form: 'ROOT' })] });
+    await add('Fixture D Bare', { variants: [] });
+    const groups = await sql`
+      select f.name, f.group_id from ingredient_forms f
+      where f.name in ('Root', 'Powder', 'Resin') and f.deleted_at is null`;
+    const groupOf = new Map(groups.map((row) => [row.name as string, row.group_id as string]));
+    // Why the group could have ranked them: Root and Resin share one group, Powder another.
+    expect(groupOf.get('Root')).toBe(groupOf.get('Resin'));
+    expect(groupOf.get('Root')).not.toBe(groupOf.get('Powder'));
+
+    const page = await resolvePage({ first: 100 }, (request) =>
+      findIngredientSuggestions(inW, '', request, 'root'),
+    );
+
+    expect(page.edges.map(({ node }) => node.name)).toEqual([
+      'Fixture C Exact',
+      'Fixture B Group',
+      'Fixture A Plain',
+      'Fixture D Bare',
+    ]);
+  });
+});
+
 // The entry a colliding write names (MB.220): keyed on the formal name alone,
 // or the label without one, whatever the form.
 describe('findCompendiumEntryByIdentity', () => {

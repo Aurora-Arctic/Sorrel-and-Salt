@@ -1,7 +1,7 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import postgres from 'postgres';
-import { findCompendiumEntriesHiddenBy, findOneIngredient } from '@/db/repository';
-import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
+import { findOneIngredient } from '@/db/repository';
+import { WORKSPACE_W_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import { assertMembership } from '@/modules/coven';
 import { compendiumMatchesOf } from '@/modules/ingredients';
@@ -124,39 +124,5 @@ describe('compendiumMatchesOf', () => {
     // Why it could have succeeded: a member of W is told the entry.
     expect((await replacedBy(local, WORKSPACE_W_ID, A)).total).toBe(1);
     await expect(replacedBy(local, WORKSPACE_W_ID, D)).rejects.toThrow(Forbidden);
-  });
-});
-
-describe('findCompendiumEntriesHiddenBy', () => {
-  it("never reads another coven's local passed by id under this coven's proof", async () => {
-    const entry = await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
-    const inX = await add({
-      name: 'Cronefixture',
-      canonicalName: 'Fixtura vulgaris',
-      workspaceId: WORKSPACE_X_ID,
-    });
-    const inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['read'] });
-    const inXProof = await assertMembership(asUser(D), WORKSPACE_X_ID, { ingredient: ['read'] });
-
-    // Why it could have matched: under X's own proof the same id hides the entry.
-    const underX = await findCompendiumEntriesHiddenBy(inXProof, inX, 3);
-    expect(underX.entries.map(({ id }) => id)).toEqual([entry]);
-    expect(underX.total).toBe(1);
-    expect(await findCompendiumEntriesHiddenBy(inW, inX, 3)).toEqual({ entries: [], total: 0 });
-  });
-
-  it('gives nothing for a soft-deleted local', async () => {
-    await add({ name: 'Fixturewort', canonicalName: 'Fixtura vulgaris' });
-    const local = await add({
-      name: 'Cronefixture',
-      canonicalName: 'Fixtura vulgaris',
-      workspaceId: WORKSPACE_W_ID,
-    });
-    const inW = await assertMembership(asUser(A), WORKSPACE_W_ID, { ingredient: ['read'] });
-    expect((await findCompendiumEntriesHiddenBy(inW, local, 3)).total).toBe(1);
-
-    await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${local}`;
-
-    expect(await findCompendiumEntriesHiddenBy(inW, local, 3)).toEqual({ entries: [], total: 0 });
   });
 });

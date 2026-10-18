@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import type postgres from 'postgres';
+import { COVEN_STOCK_LOCK_NAMESPACE } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import {
@@ -487,5 +488,84 @@ describe('stockOf', () => {
       { ingredientId: compendiumIngredient, workspaceId: WORKSPACE_W_ID },
     ]);
     expect(answer).toBeInstanceOf(Forbidden);
+  });
+});
+
+// createStock takes the coven's stock lock, which the cupboard's writes that
+// count or move jars queue on too (M12.15, M12.21, M12.23).
+describe("a coven's stock lock", () => {
+  const WAIT_MS = 200;
+
+  /**
+   * Holds `workspaceId`'s lock in an open transaction while `during` runs, and
+   * releases it after, even when `during` throws.
+   */
+  async function holding(workspaceId: string, during: () => Promise<void>) {
+    let release!: () => void;
+    const released = new Promise<void>((resolve) => (release = resolve));
+    let acquired!: () => void;
+    const held = new Promise<void>((resolve) => (acquired = resolve));
+    const transaction = sql.begin(async (tx) => {
+      await tx`select pg_advisory_xact_lock(${COVEN_STOCK_LOCK_NAMESPACE}, hashtext(${workspaceId}))`;
+      acquired();
+      await released;
+    });
+    try {
+      await held;
+      await during();
+    } finally {
+      release();
+      await transaction;
+    }
+  }
+
+  /**
+   * Starts `call` while `lockedId`'s lock is held, asserts it has not settled
+   * and `untouched` still holds after the wait, then releases the lock and
+   * returns what the call came to.
+   */
+  async function queued<T>(
+    lockedId: string,
+    call: () => Promise<T>,
+    untouched: () => Promise<void>,
+  ): Promise<T> {
+    let running!: Promise<T>;
+    await holding(lockedId, async () => {
+      let settled = false;
+      running = call();
+      running.then(
+        () => (settled = true),
+        () => (settled = true),
+      );
+      await new Promise((resolve) => setTimeout(resolve, WAIT_MS));
+      expect(settled).toBe(false);
+      await untouched();
+    });
+    return running;
+  }
+
+  const jarCount = async () =>
+    (await sql`select count(*)::int as n from inventory_items`)[0].n as number;
+
+  it('holds a new jar back until the lock is released', async () => {
+    const jar = await queued(
+      WORKSPACE_W_ID,
+      () =>
+        createStock(asUser(A), WORKSPACE_W_ID, compendiumForm, { quantityOnHand: 5, unit: 'g' }),
+      async () => {
+        expect(await jarCount()).toBe(0);
+      },
+    );
+    expect(jar.variantId).toBe(compendiumForm);
+  });
+
+  it("is per coven: another coven's lock does not hold a new jar back", async () => {
+    await holding(WORKSPACE_X_ID, async () => {
+      const jar = await createStock(asUser(A), WORKSPACE_W_ID, compendiumForm, {
+        quantityOnHand: 5,
+        unit: 'g',
+      });
+      expect(jar.variantId).toBe(compendiumForm);
+    });
   });
 });

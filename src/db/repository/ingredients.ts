@@ -54,7 +54,6 @@ import { curated, inLiveGroup } from './vocabularies';
 import type {
   CompendiumScore,
   CupboardEntryRow,
-  HiddenCompendiumEntries,
   IngredientFilter,
   IngredientIdentity,
   IngredientRow,
@@ -338,9 +337,9 @@ export async function findWorkspaceIngredientPage(
 /**
  * Which readable rows a coven's ingredient list holds (M9.4, M12.18): its
  * own, and the compendium entries a live cupboard row of its names, one keyed
- * `EXISTS` on the row's `(workspace_id, ingredient_id)` unique. A jar no
- * longer decides it, and a local entry no longer hides the compendium entry
- * it matches: the coven chose both. The page and the facets (M12.3) both read
+ * `EXISTS` on the row's `(workspace_id, ingredient_id)` unique. A jar does
+ * not decide it, and an own entry sharing a compendium entry's name leaves
+ * both listed: the coven chose both. The page and the facets (M12.3) both read
  * it, so they hold the same rows. The coven-only `source` and `inStock`
  * settings (M9.7) are read here, not in `compendiumList`, which the
  * compendium's page and count share and where a coven's jars mean nothing.
@@ -365,27 +364,25 @@ export function workspaceListScope(
     ),
     filter.source === 'local' ? scopedTo(membership, ingredients) : undefined,
     filter.source === 'compendium' ? inCompendium(ingredients) : undefined,
-    filter.inStock ? heldBy(membership, true) : undefined,
+    filter.inStock ? holdsJarInStock(membership) : undefined,
   );
 }
 
 /**
- * The coven holds a live jar of the row, of a live form. The row is already
- * the readable ingredient, so a plain live-variant `EXISTS` rather than
- * `readableVariantParent`'s tier check, as `categoryArms` reads it. With
- * `inStock`, the jar must also not be at 0: a jar with no quantity is held
- * unweighed, so it is an `OR` with null rather than `<> 0` alone, which
- * SQL reads as unknown for null and would drop it.
+ * The `inStock` filter (M9.7): the coven holds a live jar of the row, of a
+ * live form, and the jar is not at 0. The row is already the readable
+ * ingredient, so a plain live-variant `EXISTS` rather than
+ * `readableVariantParent`'s tier check, as `categoryArms` reads it. A jar
+ * with no quantity is held unweighed, so it is an `OR` with null rather than
+ * `<> 0` alone, which SQL reads as unknown for null and would drop it.
  */
-function heldBy(membership: Membership, inStock = false): SQL {
+function holdsJarInStock(membership: Membership): SQL {
   return existsIn(
     inventoryItems,
     and(
       eq(inventoryItems.ingredientId, ingredients.id),
       scopedTo(membership, inventoryItems),
-      inStock
-        ? or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0'))
-        : undefined,
+      or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0')),
       existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
     ),
   );
@@ -400,8 +397,8 @@ const SUGGESTION_GROUP_LIMIT = 8;
  * live cupboard row for, found by the label it gave the entry as well as the
  * compendium's name. `compendium` is every other live compendium entry, those
  * with no row here, through a keyed `NOT EXISTS` on that row. An entry is in
- * one group; a coven's own entry no longer hides the compendium entry it
- * shares a name with. A retired (soft-deleted) compendium entry is in
+ * one group, and an own entry and a compendium entry sharing a name are both
+ * offered. A retired (soft-deleted) compendium entry is in
  * neither, as the tombstone filter drops it first. Each group is matched and
  * ordered as the compendium search is, best match first, and cut at
  * `SUGGESTION_GROUP_LIMIT`; the result lists `yours` first and pages by
@@ -456,90 +453,6 @@ export async function findIngredientSuggestions(
     page,
     inArray(ingredients.id, ids),
   );
-}
-
-/**
- * The row is not a compendium entry the proof's coven already has its own of:
- * one anti-join over the coven's live rows, so a hidden entry never leaves the
- * database (DESIGN.md §5). A local row hides an entry sharing its `identity_key`
- * (the formal name, whatever forms either holds), and, only when the local row
- * declares no formal name, one sharing its label, folded. A coven row passes.
- * No list applies it now: the substitute picker stopped at M12.19 and the
- * coven's list at M12.18. It has no caller, and M12.28 removes it with the
- * rest of the hiding rule.
- */
-export function notHiddenByLocal(membership: Membership): SQL {
-  const local = alias(ingredients, 'local');
-  // The compendium test sits inside the subquery, not beside it as an `OR`: a
-  // bare `NOT EXISTS` is what Postgres can plan as an anti-join, and an `OR`
-  // around it would make it a per-row subplan.
-  return not(
-    existsIn(
-      local,
-      and(scopedTo(membership, local), inCompendium(ingredients), hides(local, ingredients)),
-    ),
-  );
-}
-
-/**
- * The first `limit` live compendium entries the coven's own entry `localId`
- * hides (M12.12), and how many it hides in all. Ordered by name and then id,
- * in the database and as the compendium's own list is, so a page that lists
- * both agrees with this. A match is the entry's identity, or its label when it
- * declares no formal name, as `hides` reads them, so the link a page shows and
- * the entry a list drops are the same pair. The local row is read under the
- * proof and live, so another coven's id, a deleted one, or a compendium
- * entry's own id hides nothing. Only the four fields a link needs return.
- */
-export async function findCompendiumEntriesHiddenBy(
-  membership: Membership,
-  localId: string,
-  limit: number,
-): Promise<HiddenCompendiumEntries> {
-  const local = alias(ingredients, 'local');
-  const where = and(
-    inCompendium(ingredients),
-    existsIn(
-      local,
-      and(scopedTo(membership, local), eq(local.id, localId), hides(local, ingredients)),
-    ),
-  );
-  const order = [ingredients.name];
-  const [page, { totalCount }] = await Promise.all([
-    findPageInTiers([], ingredients, order, { limit, inverted: false }, where),
-    findPageCountInTiers([], ingredients, order, undefined, where),
-  ]);
-  return {
-    entries: page.map(({ node: { id, slug, name, canonicalName } }) => ({
-      id,
-      slug,
-      name,
-      canonicalName,
-    })),
-    total: totalCount,
-  };
-}
-
-/** The columns of an `ingredients` row `hides` compares, whatever alias the row is read under. */
-interface HidingColumns {
-  identityKey: AnyPgColumn;
-  canonicalName: AnyPgColumn;
-  name: AnyPgColumn;
-}
-
-/**
- * `local` hides the compendium entry `entry` (DESIGN.md §5, "Local beats
- * compendium"): they share an `identity_key`, or `local` declares no formal
- * name and shares the entry's label, folded. The one spelling of the match, so
- * the lists that drop a hidden entry (`notHiddenByLocal`) and the save that
- * moves a coven's jars off it (M12.8) cannot disagree. The tiers are the
- * caller's to test.
- */
-export function hides(local: HidingColumns, entry: HidingColumns): SQL {
-  return or(
-    eq(local.identityKey, entry.identityKey),
-    and(isNull(local.canonicalName), eq(sql`lower(${local.name})`, sql`lower(${entry.name})`)),
-  ) as SQL;
 }
 
 /**
