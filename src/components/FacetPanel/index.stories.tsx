@@ -72,17 +72,29 @@ function Panel({
   start = NONE,
   admin = false,
   facets = FACETS,
+  className,
+  open = true,
 }: {
   start?: FacetPanelFilter;
   admin?: boolean;
   facets?: CompendiumFacetCounts;
+  className?: string;
+  /** Open on desktop widths as the story loads, so the layout is seen without a click. */
+  open?: boolean;
 }) {
   const [filter, setFilter] = useState(start);
   const [loading, setLoading] = useState(false);
   const timer = useRef(0);
+  const frame = useRef<HTMLDivElement>(null);
   useEffect(() => () => window.clearTimeout(timer.current), []);
+  // Press Filters once hydrated, on the wide layout only (below it the sheet is modal).
+  useEffect(() => {
+    if (!open || !window.matchMedia('(min-width: 56rem)').matches) return;
+    const button = frame.current?.querySelector<HTMLButtonElement>('.facet-panel__button');
+    if (button && button.getAttribute('aria-expanded') !== 'true') button.click();
+  }, [open]);
   return (
-    <div style={{ minHeight: '34rem' }}>
+    <div ref={frame} style={{ minHeight: '34rem' }}>
       {/* The anchor the panel opens under, as the list's filter form is. */}
       <form
         onSubmit={(event) => event.preventDefault()}
@@ -92,6 +104,7 @@ function Panel({
           facets={facets}
           filter={filter}
           admin={admin}
+          className={className}
           loading={loading}
           clearHref="#clear"
           onClear={() => setFilter(NONE)}
@@ -109,7 +122,10 @@ function Panel({
 }
 
 // Nothing chosen: Filters alone, no Clear All.
-export const Empty: Story = () => <Panel />;
+export const Empty: Story = () => <Panel open={false} />;
+
+// The public compendium's panel: no Source, no In Stock Only, no No Refs. Open on desktop.
+export const Public: Story = () => <Panel />;
 
 // Chosen values: the count on the button (every chosen value, so seven here; Match counts
 // none), Clear All beside it, Match with its hint for two categories.
@@ -176,3 +192,19 @@ export const Coven: Story = () => <Panel start={{ ...NONE, source: 'local', inSt
 export const CovenEmpty: Story = () => (
   <Panel start={{ ...NONE, source: '', inStockOnly: false }} />
 );
+
+// Temporary comparison for the owner (M9.7): the Coven panel at each control height. Removed
+// once the height is chosen.
+export const Compact2Point5Rem: Story = () => (
+  <Panel start={{ ...NONE, source: 'local', inStockOnly: true }} />
+);
+
+export const Compact2Point75Rem: Story = () => (
+  <Panel
+    className="facet-panel--control-275"
+    start={{ ...NONE, source: 'local', inStockOnly: true }}
+  />
+);
+
+Compact2Point5Rem.storyName = 'Compact 2.5rem';
+Compact2Point75Rem.storyName = 'Compact 2.75rem';

@@ -321,7 +321,7 @@ export default function FacetPanel({
         ref={dialogRef}
         id={id}
         className={
-          `facet-panel${hydrated ? '' : ' facet-panel--static'}` +
+          `facet-panel facet-panel--compact${hydrated ? '' : ' facet-panel--static'}` +
           (leaving ? ' is-closing' : '') +
           (className ? ` ${className}` : '')
         }
@@ -385,54 +385,23 @@ export default function FacetPanel({
                 {/* Match stays below two categories so the row does not shift as categories are
                     picked: it rests on All, disabled, and says when it applies. The held mode is
                     kept (it still reads All here, and the address drops it, M8.12). */}
-                <div className="facet-panel__pair">
-                  <RadioGroupField
-                    legend="Match"
-                    name="categoryMode"
-                    layout="segmented"
-                    hint={
-                      matchStuck
-                        ? 'Match applies once two or more categories are chosen.'
-                        : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
-                    }
-                    options={MATCH_OPTIONS}
-                    value={matchStuck ? 'all' : filter.categoryMode}
-                    disabled={matchStuck}
-                    onChange={(categoryMode) => onChange({ categoryMode })}
-                  />
-                  {admin && (
-                    <div className="facet-panel__no-refs">
-                      <SwitchField
-                        label={`No Refs (${facets.withoutReferences})`}
-                        name="withoutReferences"
-                        value="1"
-                        checked={filter.withoutReferences}
-                        onChange={(withoutReferences) => onChange({ withoutReferences })}
-                      />
-                    </div>
-                  )}
-                </div>
+                <RadioGroupField
+                  legend="Match"
+                  name="categoryMode"
+                  layout="segmented"
+                  hint={
+                    matchStuck
+                      ? 'Match applies once two or more categories are chosen.'
+                      : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
+                  }
+                  options={MATCH_OPTIONS}
+                  value={matchStuck ? 'all' : filter.categoryMode}
+                  disabled={matchStuck}
+                  onChange={(categoryMode) => onChange({ categoryMode })}
+                />
               </div>
 
-              <div className="facet-panel__line facet-panel__line--forms">
-                <div className="facet-panel__grow">
-                  <FacetCombobox
-                    label="Forms"
-                    name="forms"
-                    typeahead
-                    placeholder="Add Form"
-                    removeNoun="Form"
-                    loading={loading}
-                    choices={facets.forms.map((form) => ({
-                      value: form.value,
-                      label: form.label,
-                      count: form.count,
-                      icon: <FormIcon name={form.icon} />,
-                    }))}
-                    values={filter.forms}
-                    onChange={(forms) => onChange({ forms })}
-                  />
-                </div>
+              <div className="facet-panel__small">
                 <RadioGroupField
                   legend="Toxic"
                   name="toxic"
@@ -457,6 +426,56 @@ export default function FacetPanel({
                   }
                   onChange={(toxic) => onChange({ toxic })}
                 />
+                {filter.source !== undefined && (
+                  <RadioGroupField
+                    legend="Source"
+                    name="source"
+                    layout="segmented"
+                    hint="Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium."
+                    options={SOURCE_OPTIONS}
+                    value={filter.source}
+                    onChange={(source) => onChange({ source })}
+                  />
+                )}
+                {filter.inStockOnly !== undefined && (
+                  <SwitchField
+                    label="In Stock Only"
+                    name="inStockOnly"
+                    value="1"
+                    checked={filter.inStockOnly}
+                    onChange={(inStockOnly) => onChange({ inStockOnly })}
+                  />
+                )}
+                {admin && (
+                  <SwitchField
+                    label={`No Refs (${facets.withoutReferences})`}
+                    name="withoutReferences"
+                    value="1"
+                    checked={filter.withoutReferences}
+                    onChange={(withoutReferences) => onChange({ withoutReferences })}
+                  />
+                )}
+              </div>
+
+              <div className="facet-panel__line">
+                <div className="facet-panel__grow">
+                  <FacetCombobox
+                    label="Forms"
+                    name="forms"
+                    typeahead
+                    placeholder="Add Form"
+                    removeNoun="Form"
+                    loading={loading}
+                    choices={facets.forms.map((form) => ({
+                      value: form.value,
+                      label: form.label,
+                      count: form.count,
+                      icon: <FormIcon name={form.icon} />,
+                    }))}
+                    values={filter.forms}
+                    onChange={(forms) => onChange({ forms })}
+                  />
+                </div>
               </div>
 
               <div className="facet-panel__line">
@@ -519,31 +538,6 @@ export default function FacetPanel({
                   />
                 </div>
               </div>
-
-              {(filter.source !== undefined || filter.inStockOnly !== undefined) && (
-                <div className="facet-panel__line">
-                  {filter.source !== undefined && (
-                    <RadioGroupField
-                      legend="Source"
-                      name="source"
-                      layout="segmented"
-                      hint="Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium."
-                      options={SOURCE_OPTIONS}
-                      value={filter.source}
-                      onChange={(source) => onChange({ source })}
-                    />
-                  )}
-                  {filter.inStockOnly !== undefined && (
-                    <SwitchField
-                      label="In Stock Only"
-                      name="inStockOnly"
-                      value="1"
-                      checked={filter.inStockOnly}
-                      onChange={(inStockOnly) => onChange({ inStockOnly })}
-                    />
-                  )}
-                </div>
-              )}
 
               <div className="facet-panel__foot">
                 <button type="submit" className="btn btn--solid" onClick={closeOnSubmit}>

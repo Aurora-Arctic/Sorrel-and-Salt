@@ -133,13 +133,6 @@
     }
   }
 
-  // The Forms row's combobox sits a space 2 gap under its label, not Categories' space 3, so
-  // the Toxic legend keeps the plain gap with or without its hint: its strip then shares
-  // Forms' control top in both states (measured: 4px low with the hint before this).
-  &--forms > .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
-    margin-bottom: space(2);
-  }
-
   // Stacked, a combobox is as tall as it is, not the row-wise basis.
   > .facet-panel__grow {
     flex: none;
@@ -158,29 +151,26 @@
   }
 }
 
-// Match and No Refs share one line on the phone sheet, tops level, instead of stacking full
-// width; from the tablet width the row is already a row, so the pair dissolves into it.
-.facet-panel__pair {
+// The small controls on one wrapping row under Categories: Toxic, then Source and In Stock
+// Only where the caller offers them, then No Refs for the admin. Each stands at its own width,
+// tops level so that a label with a hint (Toxic's, Source's) does not lift its strip, and the
+// row wraps to two or so a line on the phone sheet. The switch is centred under its label.
+.facet-panel__small {
   display: flex;
-  gap: space(4);
+  flex-wrap: wrap;
   align-items: flex-start;
+  gap: space(3) space(4);
 
-  @media (min-width: $shell-tablet-width) {
-    display: contents;
-  }
-}
-
-// The switch sits centred under its label.
-.facet-panel__no-refs {
-  width: fit-content;
-
-  .field__label {
-    text-align: center;
+  .fieldset.radio-group {
+    margin-block: 0;
   }
 
-  .switch__control {
-    display: flex;
-    justify-content: center;
+  .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
+    margin-bottom: space(2);
+
+    .field__label-row {
+      block-size: 1lh;
+    }
   }
 }
 
@@ -314,4 +304,52 @@
     right: 0;
     left: auto;
   }
+}
+
+// The compact scale (M9.7): every input in the panel is a step shorter than the app's forms
+// (`$control-height`), so the panel takes less room. Scoped here: the primitives, Field and
+// Combobox stay as the ingredient form draws them. Only heights and the strip's side padding
+// change; type stays at the body and small sizes, and colours and focus rings are the
+// primitives' own. The height is a custom property so the workshop can compare scales.
+// Chips are left at their own size: they already fit inside a box this tall.
+$compact-control: 2.5rem;
+
+.facet-panel--compact {
+  --facet-control: #{$compact-control};
+  --facet-text: calc(var(--facet-control) - 2px - #{2 * space(1)});
+
+  // A native select, a typed box and a combobox's box.
+  .input,
+  .select {
+    min-height: var(--facet-control);
+  }
+
+  .combobox__value {
+    min-height: var(--facet-text);
+    line-height: var(--facet-text);
+  }
+
+  .combobox__input {
+    min-height: var(--facet-text);
+  }
+
+  // The segmented strips: the bar stands the compact height, inside its own 1px edge.
+  .radio--text {
+    block-size: calc(var(--facet-control) - 2px);
+    padding-inline: space(3);
+  }
+
+  .switch .switch__control {
+    min-height: var(--facet-control);
+  }
+
+  .facet-panel__pad,
+  .facet-panel__line {
+    gap: space(3);
+  }
+}
+
+// A comparison scale for the workshop (temporary, M9.7): the same panel at 2.75rem.
+.facet-panel--control-275 {
+  --facet-control: 2.75rem;
 }
