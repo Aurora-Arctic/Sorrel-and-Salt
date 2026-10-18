@@ -1,11 +1,10 @@
 @use '../../scss/variables' as *;
 @use '../../scss/mixins' as *;
 
-// Both states wear the low-stock palette (`.badge--low-stock`, from the
-// primitives): safety is the only alarming badge, and no colour token is added
-// before the section's design review. They are told apart by their word and
-// icon, and Out of Stock also by a heavier border, so the difference survives
-// without colour.
+// Low Stock wears the muted `.badge--low-stock` palette and Out of Stock a muted
+// red of its own, `.badge--out-of-stock` (both from the primitives); safety stays
+// the only solid, alarming badge. The states are also told apart by word and icon,
+// and Out of Stock by a heavier border, so the difference survives without colour.
 .stock-badge {
   gap: space(1);
 }

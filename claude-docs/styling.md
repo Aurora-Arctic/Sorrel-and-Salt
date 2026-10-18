@@ -229,13 +229,12 @@ themes but does not join the rotation (§6).
 
 ## Badge palettes
 
-Six palettes, deliberately not equals. Two appear on an IngredientCard.
+Seven palettes, deliberately not equals. Two appear on an IngredientCard.
 **Safety** is a warning — an ingredient flagged toxic or unsafe to burn (story 53) — and wears the sealing-wax hue, the loudest thing in the palette, lifted in
 saturation. **Low stock** is an inventory state, not an
 alarm (story 54), so it takes the muted ink and is left unsaturated. **Out of Stock**
-(M9.8) wears the same palette and is told apart by its word, its drawing and a heavier
-border, so it adds no alarming badge and no hue. That keeps
-exactly one alarming badge in the app and spends no hue, which matters because every
+(M9.8) is a jar at nothing, and takes a muted red of its own (the owner's call, 2026-10-18): a tint of `$wax` with its saturation pulled down (`$wax-muted-dark`, `$wax-muted-light`), so it is plainly a red but quieter than safety's solid fill, and is drawn tinted so it never reads as a second alarm. Its label on its tint measures 5.10:1 dark and 6.18:1 light, and its edge 3.83:1 and 4.11:1 on the dark and light cards, 4.22:1 and 3.70:1 on the pages. It also keeps its word, drawing and heavier border, so its meaning never rests on colour. That keeps
+exactly one alarming badge in the app and spends no new hue, which matters because every
 hue not already reserved belongs to one of the eight groups. **Last used** marks
 the sign-in button this browser last signed in with (MB.77). It is a pointer,
 not a warning, so it is drawn solid in the accent's own inks (`$sorrel-bright`

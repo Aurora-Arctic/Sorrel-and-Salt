@@ -54,15 +54,13 @@ The server's `lowStockOnly` filter says the same thing in SQL
 
 ## Styling
 
-Both states wear `.badge--low-stock`, the muted tinted palette. Safety stays the
-only alarming badge ([`styling.md`](../styling.md), "Badge palettes"), and no
-colour token is added before the section's design review. Out of Stock is told
-apart without colour: a 2px border in place of 1px, a heavier weight, and the
-slashed ring in place of the double chevron. Its vertical padding is trimmed by the extra
-border so the two badges stand the same height.
-
-**Open for the design review:** whether Out of Stock should get a palette of its
-own (the same inks, a different tint), once the section is designed.
+Low Stock wears `.badge--low-stock`, the muted tinted palette. Out of Stock wears
+`.badge--out-of-stock`, a muted red of its own, a tint of the sealing wax with its
+saturation pulled down; the owner chose it on 2026-10-18. Safety stays the only
+solid, alarming badge ([`styling.md`](../styling.md), "Badge palettes"). Meaning
+never rests on colour: Out of Stock also has a 2px border in place of 1px, a heavier
+weight, and the slashed ring in place of the double chevron. Its vertical padding is
+trimmed by the extra border so the two badges stand the same height.
 
 ## Stories
 

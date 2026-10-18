@@ -7,8 +7,8 @@ import './index.scss';
 // jar-line slot the ingredient card leaves, so a card holding two forms can
 // flag one and not the other. Nothing to flag, nothing rendered: a consumer
 // renders it every time and checks nothing. Each state carries its words and
-// its own small drawing, so neither rests on colour. Out of Stock is not a
-// louder colour; safety stays the only alarming badge (styling.md).
+// its own small drawing, so neither rests on colour. Out of Stock has a muted
+// red tint of its own; safety stays the only alarming badge (styling.md).
 // claude-docs/components/stock-badge.md.
 
 export const StockBadge = ({ quantity, threshold }: StockBadgeProps): ReactElement | null => {
@@ -16,7 +16,9 @@ export const StockBadge = ({ quantity, threshold }: StockBadgeProps): ReactEleme
   if (state === 'ok') return null;
   const out = state === 'out';
   return (
-    <span className={`badge badge--low-stock stock-badge${out ? ' stock-badge--out' : ''}`}>
+    <span
+      className={`badge ${out ? 'badge--out-of-stock stock-badge--out' : 'badge--low-stock'} stock-badge`}
+    >
       <svg
         className="stock-badge__icon"
         viewBox="0 0 16 16"
