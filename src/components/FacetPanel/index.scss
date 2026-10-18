@@ -308,10 +308,17 @@
   display: none;
 }
 
-// The modal sheet below the tablet width: a full-height drawer with no slide. Its foot
+// How long the phone sheet takes to slide in or out: longer than a dialog's fade, since it
+// travels its own width. index.tsx waits up to LEAVE_LIMIT_MS for it, which must stay longer.
+$sheet-slide: 250ms ease-out;
+
+// The modal sheet below the tablet width: a full-height drawer from the right. Its foot
 // sticks to the bottom, and the sheet scrolls with room kept above it so that a focused
 // control is never hidden behind it (WCAG 2.4.11).
 .facet-panel:modal {
+  // Fixed, as a modal dialog is by default, not the overlay's absolute: an absolute box
+  // translated past the right edge widens the page, which then scrolled sideways after it.
+  position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
@@ -323,15 +330,16 @@
   overflow-y: auto;
   scroll-padding-block-end: 6rem;
 
-  // It fades in and out, sheet and backdrop together, as a Modal does (M5.5): in is CSS alone,
-  // from `@starting-style` as `showModal()` shows it; out is `.is-closing`, which the
-  // component sets and waits on before it closes the dialog.
-  opacity: 1;
-  transition: opacity $modal-fade;
+  // It slides in from the right edge and back out to it, while the backdrop fades as a
+  // Modal's does (M5.5): in is CSS alone, from `@starting-style` as `showModal()` shows it;
+  // out is `.is-closing`, which the component sets and waits on (the sheet's `transform`)
+  // before it closes the dialog. A slide rather than a fade: a drawer comes from its edge.
+  transform: none;
+  transition: transform $sheet-slide;
 
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without fading in
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without sliding in
   @starting-style {
-    opacity: 0;
+    transform: translateX(100%);
   }
 
   &::backdrop {
@@ -345,7 +353,10 @@
     }
   }
 
-  &.is-closing,
+  &.is-closing {
+    transform: translateX(100%);
+  }
+
   &.is-closing::backdrop {
     opacity: 0;
   }

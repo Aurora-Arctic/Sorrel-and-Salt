@@ -419,7 +419,7 @@ $dialog-column-wide: 48rem;
 // Filters sheet shares it.
 $modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
 
-// How a dialog and its backdrop fade in and out (M5.5), the Filters sheet with them.
+// How a dialog and its backdrop fade in and out (M5.5), the Filters sheet's backdrop with them.
 $modal-fade: 150ms ease-out;
 
 // A small control's square box: WCAG 2.2's 24px minimum target, around a

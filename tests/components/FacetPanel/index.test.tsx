@@ -722,23 +722,24 @@ describe('FacetPanel', () => {
   });
 });
 
-// The phone sheet fades in and out as every dialog does, and waits out the fade before it
+// The phone sheet slides in from the right and out to it, and waits out the slide before it
 // closes; the desktop slide and reduced motion are untouched.
-describe('FacetPanel phone sheet fade', () => {
+describe('FacetPanel phone sheet slide', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
-  const fadeEnd = () => {
+  const transitionEnd = (propertyName: string) => {
     const end = new Event('transitionend', { bubbles: true });
-    Object.defineProperty(end, 'propertyName', { value: 'opacity' });
+    Object.defineProperty(end, 'propertyName', { value: propertyName });
     fireEvent(dialog(), end);
   };
+  const slideEnd = () => transitionEnd('transform');
   const closeButton = () => screen.getAllByRole('button', { name: 'Close' })[0]!;
 
-  it('holds the sheet open, leaving, until the fade ends, then closes and applies once', () => {
+  it('holds the sheet open, leaving, until the slide ends, then closes and applies once', () => {
     stubViewport(false, false);
     const onApply = vi.fn();
     render(<FacetPanel {...props({}, { onApply })} />);
@@ -751,7 +752,7 @@ describe('FacetPanel phone sheet fade', () => {
     expect(dialog()).toHaveAttribute('open');
     expect(onApply).toHaveBeenCalledTimes(1);
 
-    fadeEnd();
+    slideEnd();
 
     expect(dialog()).not.toHaveAttribute('open');
     expect(dialog()).not.toHaveClass('is-closing');
@@ -759,7 +760,7 @@ describe('FacetPanel phone sheet fade', () => {
     expect(onApply).toHaveBeenCalledTimes(1);
   });
 
-  it('applies once however many times it is asked to shut during the fade', () => {
+  it('applies once however many times it is asked to shut during the slide', () => {
     stubViewport(false, false);
     const onApply = vi.fn();
     render(<FacetPanel {...props({}, { onApply })} />);
@@ -768,13 +769,13 @@ describe('FacetPanel phone sheet fade', () => {
     fireEvent.click(closeButton());
     fireEvent.pointerDown(dialog());
     fireEvent.click(closeButton());
-    fadeEnd();
+    slideEnd();
     fireEvent(dialog(), new Event('close'));
 
     expect(onApply).toHaveBeenCalledTimes(1);
   });
 
-  it('closes after a limit when the browser never reports the end of the fade', () => {
+  it('closes after a limit when the browser never reports the end of the slide', () => {
     vi.useFakeTimers();
     stubViewport(false, false);
     render(<FacetPanel {...props()} />);
@@ -789,7 +790,20 @@ describe('FacetPanel phone sheet fade', () => {
     expect(dialog()).not.toHaveAttribute('open');
   });
 
-  it('takes the sheet own Escape through the fade rather than closing at once', () => {
+  // The backdrop's fade ends on the dialog too, and sooner than the sheet's slide.
+  it('stays open when only the backdrop fade ends', () => {
+    stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+    fireEvent.click(closeButton());
+
+    transitionEnd('opacity');
+
+    expect(dialog()).toHaveAttribute('open');
+    expect(dialog()).toHaveClass('is-closing');
+  });
+
+  it('takes the sheet own Escape through the slide rather than closing at once', () => {
     stubViewport(false, false);
     render(<FacetPanel {...props()} />);
     fireEvent.click(filtersButton());
@@ -799,7 +813,7 @@ describe('FacetPanel phone sheet fade', () => {
 
     expect(cancel.defaultPrevented).toBe(true);
     expect(dialog()).toHaveClass('is-closing');
-    fadeEnd();
+    slideEnd();
     expect(dialog()).not.toHaveAttribute('open');
   });
 
@@ -816,7 +830,7 @@ describe('FacetPanel phone sheet fade', () => {
     expect(onApply).toHaveBeenCalledTimes(1);
   });
 
-  it('snaps shut with no fade when the width crosses the tablet width', () => {
+  it('snaps shut with no slide when the width crosses the tablet width', () => {
     const listeners = stubViewport(false, false);
     render(<FacetPanel {...props()} />);
     fireEvent.click(filtersButton());
@@ -826,7 +840,7 @@ describe('FacetPanel phone sheet fade', () => {
     expect(dialog()).not.toHaveAttribute('open');
   });
 
-  it('leaves the desktop panel on its slide, never the sheet fade', () => {
+  it('leaves the desktop panel on its slide, never the sheet slide', () => {
     stubViewport(true, false);
     render(<FacetPanel {...props()} />);
     fireEvent.click(filtersButton());
