@@ -19,6 +19,13 @@ export interface ModalHeading {
    */
   eyebrow?: string;
   /**
+   * Where an add lands, "Whitethorn Coven" or "Compendium", drawn in the
+   * eyebrow's place over the title (M8.16, the owner's call). Spoken after the
+   * title and joined to it by a hidden "to", so the dialog's name is the
+   * phrase "Add Ingredient to Whitethorn Coven"; never with an eyebrow.
+   */
+  destination?: string;
+  /**
    * After the title, quieter, and in its accessible name: a second identifier
    * the entry's list shows, an ingredient's formal name or a deity's
    * tradition. The caller sets a binomial's italics, since only it knows the
@@ -196,6 +203,12 @@ export interface ConfirmOverlayProps {
 export interface ConfirmQuestionProps {
   /** The question, "Delete "Fixture Healing"? …", which names the card. */
   question: ReactNode;
+  /**
+   * What the question needs said beneath it, apart from its name: what the
+   * answer will change, and anything to weigh first (M12.1). Absent for a
+   * question that says it all in its one line.
+   */
+  details?: ReactNode;
   /** Its own question is being asked; true when the form draws it only then. */
   asked?: boolean;
   /** The form's discard guard, whose question shows instead while it asks. */
@@ -212,6 +225,19 @@ export interface ConfirmQuestionProps {
   busy: boolean;
   /** The action. A rejection is a refusal, handed to `onRefused` where given. */
   onConfirm: () => Promise<void>;
+  /**
+   * A second acting answer beside the first, for a question with two ways
+   * forward: "Discard & Promote" next to "Save & Promote" (M12.1). It is
+   * drawn destructive, being the one that gives something up. While either
+   * runs, both are shut and the safe answer with them, so the question cannot
+   * be left mid-action.
+   */
+  also?: {
+    label: string;
+    busyLabel: string;
+    busy: boolean;
+    onClick: () => Promise<void>;
+  };
   onKeep: () => void;
   /** Told a refused action's sentence, for the form's alert; the form closes the question. */
   onRefused?: (message: string) => void;

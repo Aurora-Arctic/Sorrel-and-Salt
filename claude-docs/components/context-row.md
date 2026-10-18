@@ -7,14 +7,16 @@ area's section nav beside it (MB.7). A server component of two slots.
 ## Props
 
 - `lead`: what names the area. The coven layout passes `WorkspaceSwitcher`; the
-  admin layout `<span className="context-row__name">Admin</span>`.
+  admin layout a `Link` to `/admin` reading "Admin", with `context-row__name`, so
+  the area's name is its home as the switcher is the coven's (M8.16, the owner's
+  call).
 - `children`: the section nav (`CovenNav`, `AdminNav`).
 
 ## Contracts
 
 - The layouts render it, not the shell, because only a layout knows the area.
   The coven layout renders it above its `.coven-layout` frame and the admin
-  layout above `.admin-layout` (inside `RouteModalProvider`).
+  layout above `.page-column` (inside `RouteModalProvider`).
 - The section nav leaves the row at a phone's width by its own stylesheet (it
   becomes a bar fixed along the bottom), so there the row shows the lead alone.
   The nav stretches to the row's height, so the row is a flex row with
@@ -42,7 +44,7 @@ area's section nav beside it (MB.7). A server component of two slots.
   and the inner column's inline padding is the same half step. A two-line
   coven name makes the row taller rather than clipping it.
 - **`.context-row__name` is set as an h4 is**, so "Admin" matches the coven
-  row's switcher: `@include heading-face` (the display family, weight 700,
+  row's switcher, with no link underline until hover or focus: `@include heading-face` (the display family, weight 700,
   letter-spaced 0.01em) and `heading-size(4)`, 1.5rem
   ([`styling.md`](../styling.md), "Type"). Its line height is its own, 1
   rather than the h4's 1.25, since the name is one line that never wraps and

@@ -115,13 +115,15 @@
 // The chevron at the line's end, down while closed and turned over while
 // open, as the admin menu's is: at once, so there is no motion to reduce.
 .ingredient-form__fold-chevron {
-  @include disclosure-chevron('.is-open > .ingredient-form__fold-head');
+  // Pointed at, the chevron darkens and grows a quarter (the owner's call),
+  // eased with the flip; `scale` composes with the open state's `transform`.
+  @include disclosure-chevron('.is-open > .ingredient-form__fold-head', color, scale);
 
   margin-inline-start: auto;
-  @include theme-transition(color);
 
   .ingredient-form__fold-head:hover & {
     color: $text-primary;
+    scale: 1.25;
   }
 }
 
@@ -158,6 +160,19 @@
   // Closed is the attribute's, which the display above would otherwise undo.
   &[hidden] {
     display: none;
+  }
+}
+
+// A switch here, Toxic on the ingredient and on each variant, stands at the
+// start of its column, its label and hint above it at the start too, as the
+// fields above it do (the owner's call, 2026-10-16). Not the primitive's
+// centring, which lines a filter bar's switch up under its label among
+// boxes; here it sits alone on its row beneath full-width fields.
+.ingredient-form .switch {
+  align-items: flex-start;
+
+  .field__label {
+    text-align: start;
   }
 }
 
@@ -429,6 +444,11 @@
 
 .ingredient-form__variant-form {
   font-weight: 500;
+
+  // The group's mark, a little clear of the form's name.
+  .form-icon {
+    margin-inline-end: space(1);
+  }
 }
 
 .ingredient-form__variant-group,
@@ -614,4 +634,60 @@
   > p {
     margin: 0 0 space(2);
   }
+}
+
+// The promote question (M12.1), in four tiers told apart by type, not space
+// alone: the question set larger, as the card's heading; the swap on a tinted
+// panel, each term an overline (the .eyebrow's look) above its name, so the
+// names carry the weight; the compendium's reach as a muted caption; and the
+// unsaved-changes question ruled off above the buttons that answer it.
+// Not nested in the form: the question is drawn in the modal's layer.
+.promote-question__title {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.promote-question__swap {
+  margin: space(5) 0 0;
+  padding: 0 space(4);
+  border-radius: radius('surface');
+  // Lighter than $fill-quiet, so the muted terms hold 4.5:1 on it.
+  background-color: color-mix(in srgb, $text-muted 8%, $surface-card);
+
+  > div {
+    padding: space(3) 0;
+  }
+
+  > div + div {
+    border-top: 1px solid $hairline;
+  }
+
+  dt {
+    font-size: type-size('overline');
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: $text-muted;
+  }
+
+  dd {
+    margin: space(1) 0 0;
+    font-size: 1.125rem;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+  }
+}
+
+.promote-question__aside {
+  margin: space(2) 0 0;
+  font-size: type-size('caption');
+  color: $text-muted;
+}
+
+.promote-question__unsaved {
+  margin: space(5) 0;
+  padding-top: space(4);
+  border-top: 1px solid $hairline;
 }

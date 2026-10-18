@@ -5,12 +5,15 @@ export * from './services/duplicates';
 export * from './services/common-names';
 export * from './services/ingredient-suggestions';
 export * from './services/ingredient-children';
+export * from './services/ingredient-detail';
 export * from './services/workspace-ingredients';
 export * from './services/compendium';
 export * from './services/references';
 export * from './services/promote-folk-name';
 export * from './services/stock';
+export * from './services/jar-merge-needed';
 export * from './services/workspace-ingredient-list';
+export * from './services/ingredient-facets';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
 export * from './loaders/stock';
@@ -28,16 +31,28 @@ export * from './graphql/stock';
 export { unitConvert } from './units/convert';
 export type { ConversionRefusal, UnitConversion } from './units/types';
 export type {
+  CategoryDetail,
   CategoryRow,
   CitedReference,
   CompendiumAddress,
+  CompendiumEntryPage,
+  CompendiumFacets,
+  DeityDetail,
+  FacetCount,
   IngredientDeityRow,
+  IngredientDetail,
+  IngredientFacets,
   IngredientKey,
   IngredientRow,
   IngredientVariantRow,
+  JarConflict,
+  JarMergeChoice,
   StockKey,
   StockRow,
   StockValues,
+  SubstituteDetail,
   SubstituteRow,
+  VariantDetail,
   VariantKey,
+  WorkspaceIngredientFacets,
 } from './types';

@@ -1,5 +1,10 @@
 import type { Answer } from '../../../support/graphql/types';
 
+export interface FolkNameNode {
+  id: string;
+  name: string;
+}
+
 export interface CommonNameConnection {
   edges: { cursor: string; node: Record<string, unknown> }[];
   pageInfo: { hasNextPage: boolean; endCursor: string | null };
@@ -11,7 +16,7 @@ export interface CompendiumNode {
   canonicalName: string | null;
   nomenclature: string;
   isGlobal: boolean;
-  folkNames: string[];
+  folkNames: FolkNameNode[];
   categories: { name: string; group: { name: string; colorDark: string } }[];
 }
 
@@ -25,7 +30,7 @@ export interface DuplicateNode {
   name: string;
   canonicalName: string | null;
   isGlobal: boolean;
-  folkNames: string[];
+  folkNames: FolkNameNode[];
 }
 
 export interface DuplicateConnection {
@@ -41,7 +46,7 @@ export interface IngredientNode {
   nomenclature: string;
   canonicalName: string | null;
   isGlobal: boolean;
-  folkNames: string[];
+  folkNames: FolkNameNode[];
   categories: { name: string }[];
 }
 
@@ -80,7 +85,7 @@ export interface WorkspaceIngredientNode {
   nomenclature: string;
   elements: string[] | null;
   deities: IngredientDeityNode[];
-  folkNames: string[];
+  folkNames: FolkNameNode[];
   substitutes: SubstituteNode[];
   isGlobal: boolean;
   audit: { createdBy: string; updatedBy: string };

@@ -12,9 +12,14 @@ export default {
   title: 'Admin / Group Form',
 };
 
-// Two of the shared groups, and the one edited here.
+// Two of the shared groups, and the one edited here. The first two carry an
+// icon, which a form group's move-to choices draw: the first its own, the
+// second none, so the generic.
 const GROUPS = [
-  ...asOptions(GROUP_NAMES.form.slice(0, 2)),
+  ...asOptions(GROUP_NAMES.form.slice(0, 2)).map((group, index) => ({
+    ...group,
+    icon: index === 0 ? ('mineral' as const) : null,
+  })),
   { id: '5a0e3c2b-7d6f-4e1a-9b8c-0f1e2d3c4b5a', name: 'Testwort Wards' },
 ];
 
@@ -24,6 +29,7 @@ const WARDS = {
   description: 'An invented group, for the workshop.',
   colorDark: '#5d8ab1',
   colorLight: '#286ba6',
+  icon: '' as const,
 };
 
 const done = () => {};
@@ -49,13 +55,30 @@ export const EditingACategoryGroup: Story = () => (
   </Reopenable>
 );
 
+// A form group adds its icon: six, and None last for the generic.
+export const AddingAFormGroup: Story = () => (
+  <Reopenable>
+    {(close) => (
+      <Modal title="Add Form Group" onClose={close}>
+        <GroupForm kind="form" groups={GROUPS} onDone={done} />
+      </Modal>
+    )}
+  </Reopenable>
+);
+
 export const EditingAFormGroup: Story = () => (
   <Reopenable>
     {(close) => (
       <Modal eyebrow="Edit Form Group" title="Testwort Matter" onClose={close}>
         <GroupForm
           kind="form"
-          group={{ ...WARDS, name: 'Testwort Matter', colorDark: '', colorLight: '' }}
+          group={{
+            ...WARDS,
+            name: 'Testwort Matter',
+            colorDark: '',
+            colorLight: '',
+            icon: 'mineral',
+          }}
           groups={GROUPS}
           memberCount={0}
           onDone={done}
@@ -90,6 +113,7 @@ export const EditingATradition: Story = () => (
             description: 'An invented tradition, for the workshop.',
             colorDark: '',
             colorLight: '',
+            icon: '',
           }}
           groups={TRADITIONS}
           memberCount={2}

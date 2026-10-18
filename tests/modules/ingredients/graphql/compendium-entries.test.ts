@@ -7,6 +7,7 @@ import type { Session } from '@/lib/session';
 import { A, B, E, asUser } from '../../../support/as-user';
 import { curatedFormId } from '../../../support/db/curated-ids';
 import { useTestDatabase } from '../../../support/db/database';
+import { liveFolkNames } from '../../../support/db/folk-names';
 import { insertIngredient } from '../../../support/db/insert-ingredient';
 import {
   type IngredientFixture,
@@ -44,7 +45,7 @@ beforeEach(async () => {
 });
 
 const FIELDS = `
-  id name slug canonicalName nomenclature isGlobal folkNames
+  id name slug canonicalName nomenclature isGlobal folkNames { id name }
   substitutes { name } deities { name } categories { name }
   audit { createdBy updatedBy }
 `;
@@ -164,9 +165,10 @@ describe('createCompendiumIngredient', () => {
       slug: 'testwort-fixtura-testalis',
       nomenclature: 'botanical',
       isGlobal: true,
-      folkNames: ['Fixture Root'],
+      folkNames: [{ id: expect.any(String), name: 'Fixture Root' }],
       audit: { createdBy: E.id, updatedBy: E.id },
     });
+    expect(created.folkNames).toEqual(await liveFolkNames(sql, created.id));
     expect(await rowOf(created.id)).toMatchObject({
       workspace_id: null,
       created_by: E.id,
@@ -254,8 +256,8 @@ describe('updateCompendiumIngredient', () => {
   it('answers its own folk names and substitutes when one request updates the entry twice', async () => {
     const id = await seed();
     const twice = `mutation ($id: ID!, $first: CompendiumIngredientUpdateInput!, $second: CompendiumIngredientUpdateInput!) {
-      first: updateCompendiumIngredient(id: $id, input: $first) { folkNames substitutes { name } }
-      second: updateCompendiumIngredient(id: $id, input: $second) { folkNames substitutes { name } }
+      first: updateCompendiumIngredient(id: $id, input: $first) { folkNames { id name } substitutes { name } }
+      second: updateCompendiumIngredient(id: $id, input: $second) { folkNames { id name } substitutes { name } }
     }`;
 
     const result = await run<{ first: WorkspaceIngredientNode; second: WorkspaceIngredientNode }>(
@@ -273,8 +275,9 @@ describe('updateCompendiumIngredient', () => {
     );
 
     expect(result.errors).toBeUndefined();
-    expect(result.data?.first.folkNames).toEqual(['First Root']);
-    expect(result.data?.second.folkNames).toEqual(['Second Root']);
+    expect(result.data?.first.folkNames.map(({ name }) => name)).toEqual(['First Root']);
+    expect(result.data?.second.folkNames).toEqual(await liveFolkNames(sql, id));
+    expect(result.data?.second.folkNames.map(({ name }) => name)).toEqual(['Second Root']);
     expect(result.data?.first.substitutes).toEqual([{ name: 'First Zest' }]);
     expect(result.data?.second.substitutes).toEqual([{ name: 'Second Zest' }]);
   });

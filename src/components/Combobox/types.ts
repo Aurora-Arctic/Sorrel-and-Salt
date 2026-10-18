@@ -24,6 +24,20 @@ export interface ComboboxOption {
    * edged in it, so the colour its chip will wear is seen before the pick.
    */
   colors?: GroupColors;
+  /**
+   * A mark drawn before the label, outside the option's accessible name: a
+   * form's group icon. A `ReactNode` rather than a typed name, so the
+   * combobox knows no icon set; the caller hands over a drawn, decorative one.
+   */
+  icon?: ReactNode;
+  /** How many results picking it would match (M12.4): read after the label, "Wax (3)", part of the option's name. */
+  count?: number;
+  /**
+   * Shown and read but not pickable (`aria-disabled`, stepped over by the
+   * arrow keys, a press does nothing). Giving the reason in `note` keeps the
+   * row from being a mystery. The caller orders it: the box lists rows as given.
+   */
+  disabled?: boolean;
 }
 
 /** What a source has for the text as it stands: the rows, and whether more are on their way. */
@@ -55,6 +69,16 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
   onRemoveLast?: () => void;
   /** The suggestions for the text; left out for a box with no source, which never opens. */
   suggestions?: Suggestions<O>;
+  /**
+   * What an open list says once its lookup has settled with no rows and the
+   * text is not blank. Left out, the default: No match for “text”. Pass a
+   * more specific sentence where the caller knows more ("Keep typing to
+   * search"), or `false` where saying nothing is right. Drawn in the popup
+   * outside the listbox (it is no option), and read by the status. The typed
+   * row counts as a row, so a caller wanting the message passes
+   * `offerTyped={false}`. A typed box never closes for having nothing to show.
+   */
+  empty?: string | false;
   /** The entries a list holds, drawn inside the control ahead of the box. */
   entries?: ReactNode;
   /**
@@ -65,11 +89,30 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    */
   clear?: { label: string; onClear: () => void; empty: boolean };
   /**
-   * A last row that makes something new rather than picking a suggestion,
-   * "New Reference…", there whatever is typed and in place of the typed row:
-   * for a list whose entries can only be picked (MB.154; last since MB.115).
+   * A caller's own control drawn inside the control box, before the text and
+   * before any entries: a form's submit, say. A slot rather than a built-in
+   * because Combobox knows nothing about forms or what the caller wants
+   * pressed. A button given here should be styled `combobox__indicator` to
+   * match the others; a press on it is inside the box, so it neither closes an
+   * open list nor moves the focus.
    */
-  create?: { label: string; onCreate: () => void };
+  leading?: ReactNode;
+  /**
+   * Whether a box with `suggestions` draws its chevron button. Left out
+   * (`false`) for a free-text search that opens as you type, where a chevron
+   * promises a set to browse. Typing still opens the list. Defaults to true.
+   */
+  toggle?: boolean;
+  /**
+   * A last row that does something rather than picking a suggestion, there
+   * whatever is typed and in place of the typed row, set off in italics as the
+   * typed row is. Two callers use it: "New Reference" makes something new for
+   * a list whose entries can only be picked (MB.154; last since MB.115), and
+   * "See all results." applies the search to the list (M8.10). Reached by the
+   * arrow keys and picked by Enter or a click, which call `onSelect`; it is
+   * no result, so the status does not count it.
+   */
+  action?: { label: string; onSelect: () => void };
   /**
    * Whether the typed row is offered: false for text the caller would
    * refuse, a list's repeat (MB.174). Enter still reaches `onCommit`, which
@@ -86,6 +129,14 @@ export interface ComboboxProps<O extends ComboboxOption = ComboboxOption> {
    * status's count. "suggestion" unless said; a closed set's are "choice"s.
    */
   noun?: string;
+  /** The mark on the typed row, "Use what you typed": the same slot as an option's `icon`. */
+  typedIcon?: ReactNode;
+  /**
+   * A mark drawn before the text, decorative: the type-ahead box's chosen
+   * icon, there while the box reads the chosen label, as the select-only
+   * box's closed value draws its choice's (M12.7).
+   */
+  icon?: ReactNode;
   /** Shown, muted, while the box is empty. */
   placeholder?: string;
   /** `aria-required`, as the field marks it. */
@@ -113,6 +164,23 @@ export interface ComboboxQualifier {
   text: string;
   /** Shown in a tooltip while the qualifier is hovered or the box has focus, and read after the text. */
   detail?: string;
+}
+
+/**
+ * A button a chip carries before its x, for a list whose entries can be acted
+ * on one by one: promoting a folk name to the display name (M12.1). Generic,
+ * so the entry knows nothing of what it does.
+ */
+export interface EntryAction {
+  /** The button's accessible name: "Make Hedge Fixture the Display Name". */
+  label: string;
+  /** The word its tooltip shows on hover and focus; decoration, as the name says it. */
+  tip: string;
+  /** The glyph, drawn at the icon size in the button's own ink. */
+  icon: ReactNode;
+  onClick: () => void;
+  /** Shut while what it starts is running. */
+  disabled?: boolean;
 }
 
 /** An entry a list holds, drawn inside the control: its text, and the x that takes it out. */
@@ -152,7 +220,33 @@ export interface ComboboxEntryProps {
    * the eye tells by its want of a link mark.
    */
   note?: string;
+  /**
+   * A mark drawn before the text, decorative and outside the chip's name: a
+   * form's group icon (M12.4). Handed over drawn, as `ComboboxOption.icon` is.
+   */
+  icon?: ReactNode;
+  /** How many results the value matches, "(12)" after the text, outside the cross's name. */
+  count?: number;
+  /**
+   * A search is running, so a count is on its way: a shimmering placeholder
+   * stands where the count goes, hidden from assistive technology, and holds
+   * still under reduced motion. The cross's name is the same either way.
+   */
+  loading?: boolean;
+  /**
+   * Drawn as an outlined chip (no fill, an ink border) instead of the filled
+   * one. A chip with `colors` stays filled in them.
+   */
+  outlined?: boolean;
+  /**
+   * What the value is of, "Element": the cross reads "Remove Element: Water"
+   * and not the bare "Remove Water", so a column of chips from several
+   * boxes still says what each one removes.
+   */
+  removeNoun?: string;
   onRemove: () => void;
+  /** A button before the x, for acting on this entry: left out, the chip has the x alone. */
+  action?: EntryAction;
   /**
    * The chip's place in a sortable list, from dnd-kit's `useSortable`: it
    * draws a handle to move the chip by. Set by `ComboboxSortableEntries`,
@@ -218,14 +312,14 @@ export interface TypedRow {
   typed: true;
 }
 
-/** The first row of a list whose caller can make something new: its label. */
-export interface CreateRow {
+/** The last row of a list whose caller gave an `action`: its label. */
+export interface ActionRow {
   value: string;
-  create: true;
+  action: true;
 }
 
-/** A row Downshift numbers: a suggestion, the typed row, or the create row. */
-export type Item<O extends ComboboxOption> = O | TypedRow | CreateRow;
+/** A row Downshift numbers: a suggestion, the typed row, or the action row. */
+export type Item<O extends ComboboxOption> = O | TypedRow | ActionRow;
 
 /** A bucket of rows under its heading, or the one unheaded list of a source with one bucket. */
 export interface Bucket<O extends ComboboxOption> {
@@ -252,6 +346,34 @@ export interface ComboboxChoice {
    * plus. The caller decides what choosing it does.
    */
   create?: boolean;
+  /**
+   * A mark drawn before the label, in its row and in the closed value, outside
+   * the accessible name: a form group's icon. Handed over drawn and decorative,
+   * as `ComboboxOption.icon` is.
+   */
+  icon?: ReactNode;
+  /**
+   * How many results choosing it would match (M12.4): read after the label in
+   * its row and on its chip, "Water (7)", part of the option's accessible name.
+   * Left out where the number is not known (yet): the row and the chip then show
+   * none, which is not a zero. Drawn by the multi-select box only.
+   */
+  count?: number;
+  /**
+   * The row is shown and read but cannot be chosen (`aria-disabled`, stepped
+   * over by the arrow keys). A disabled row is listed after the others. The
+   * caller sets it by hand.
+   * Honoured by the multi-select box only.
+   */
+  disabled?: boolean;
+  /** A second line under the row, also part of its name: why a disabled choice is out. */
+  note?: string;
+  /**
+   * The heading its row is listed under, a deity's tradition (M12.4). Drawn by
+   * the facet box's typing form only, which sets the rows of one heading
+   * together; the native select before hydration makes it an `optgroup`.
+   */
+  group?: string;
 }
 
 /** The select-only box: a closed set, chosen from the same control and list. */
@@ -338,9 +460,22 @@ export interface ComboboxMultiSelectProps {
   choices: readonly ComboboxChoice[];
   /** Shown while nothing is chosen, and not itself a choice. */
   placeholder?: string;
+  /** Shown in place of the placeholder when nothing is chosen and no choice is left to offer. */
+  emptyPlaceholder?: string;
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;
+  /**
+   * Leave out the choices with a `count` of 0 (M12.4). A value already chosen
+   * keeps its chip and its cross whatever its count.
+   */
+  hideZeros?: boolean;
+  /** A search is running: the chips show a count placeholder, as `ComboboxEntry`'s `loading`. */
+  loading?: boolean;
+  /** Draw the chips outlined, as `ComboboxEntry`'s `outlined`. */
+  chipsOutlined?: boolean;
+  /** What the values are of, for the crosses' names: "Remove Element: Water". The bare value when left out. */
+  removeNoun?: string;
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
 }

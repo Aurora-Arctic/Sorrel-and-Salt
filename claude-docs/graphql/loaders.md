@@ -30,7 +30,7 @@ merely absent:
   `categoriesByIngredient`, `folkNamesByIngredient`,
   `substitutesByIngredient`, `deitiesByIngredient`, `referencesByIngredient`
   and `variantsByIngredient` (`ingredients`, for `Ingredient.categories`,
-  `Ingredient.folkNames`, `Ingredient.substitutes`, `Ingredient.deities`,
+  `Ingredient.folkNames` (each a `FolkName`, an id and a name), `Ingredient.substitutes`, `Ingredient.deities`,
   `Ingredient.references` and `Ingredient.variants`, the last MB.218's),
   `categoriesByVariant`, `substitutesByVariant` and `referencesByVariant`
   (`ingredients`, for `IngredientVariant`'s three, MB.218),

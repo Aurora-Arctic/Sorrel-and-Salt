@@ -2,7 +2,7 @@ import type { Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
-import { signInAgainAs } from '../session';
+import { signInAgainAs, signInAs } from '../session';
 import {
   compendiumList,
   compendiumVariant,
@@ -18,12 +18,21 @@ import {
   stockEditor,
   withSql,
 } from './coven-ingredients';
+import { openAddIngredient } from './ingredient-dialogs';
+import { insertIngredient } from '../../support/db/insert-ingredient';
+import {
+  insertReference,
+  insertReferenceLink,
+  insertVariantReferenceLink,
+} from '../../support/db/insert-reference';
+import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
+import { slugify } from '@/lib/slugify';
 
 // Stories 14, 15 and 16: the compendium as anyone browses it, an entry added
 // from it to a coven, a coven's own ingredient, and the warning that a new
-// name resembles one already there. Scaffolds: /compendium (M8.18), its entry
-// page (M8.19) and the add modal (M8.16) are not built yet, and the task in
-// each annotation turns its `fixme` into `test`.
+// name resembles one already there. Scaffolds: /compendium (M8.18) and the add
+// modal (M8.16) are not built yet, and the task in each annotation turns its
+// `fixme` into `test`. The entry pages (M8.19) are built.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -50,7 +59,7 @@ test.fixme(
     tag: '@story-14',
     annotation: {
       type: 'fixme',
-      description: 'M8.18 builds /compendium and M8.19 /compendium/ingredients/[slug]',
+      description: 'M8.18 builds /compendium',
     },
   },
   async ({ page }) => {
@@ -164,8 +173,7 @@ test.fixme(
     tag: '@story-14',
     annotation: {
       type: 'fixme',
-      description:
-        'M8.18 builds /compendium, M8.19 /compendium/ingredients/[slug] and M9.6 /coven/[slug]/ingredients',
+      description: 'M8.18 builds /compendium and M9.6 /coven/[slug]/ingredients',
     },
   },
   async ({ page, browser, baseURL }) => {
@@ -310,14 +318,6 @@ test.fixme(
   },
 );
 
-/** The shell's Add Ingredient, which on a coven's page adds to that coven (claude-docs/components/app-shell.md). */
-async function openAddIngredient(page: Page) {
-  await page.getByRole('button', { name: 'Add Ingredient', disabled: false }).click();
-  const dialog = page.getByRole('dialog', { name: 'Add Ingredient' });
-  await expect(dialog).toBeVisible();
-  return dialog;
-}
-
 const INGREDIENT_QUERY = 'query ($id: ID!, $w: ID) { ingredient(id: $id, workspaceId: $w) { id } }';
 
 test.fixme(
@@ -327,7 +327,7 @@ test.fixme(
     annotation: {
       type: 'fixme',
       description:
-        'M8.16 opens the Add Ingredient modal from the shell, and M9.6 builds /coven/[slug]/ingredients',
+        'M8.16 opens the Add Ingredient modal from the shell and M9.6 builds /coven/[slug]/ingredients',
     },
   },
   async ({ page }) => {
@@ -366,16 +366,17 @@ test.fixme(
       await page.goto(`/coven/${coven.slug}/ingredients`);
       const dialog = await openAddIngredient(page);
       // Name is the one required field (claude-docs/components/ingredient-form.md).
-      await dialog.getByRole('textbox', { name: 'Name' }).fill(NAME);
+      await dialog.getByRole('textbox', { name: 'Name', exact: true }).fill(NAME);
       await dialog.getByRole('button', { name: 'Save Ingredient' }).click();
 
-      // Save Ingredient opens what it saved, at /ingredients/[id] (M8.16).
-      await expect(page).toHaveURL(/\/ingredients\/[0-9a-f-]{36}$/);
+      // Save Ingredient opens what it saved, at the coven's entry page,
+      // /coven/[slug]/ingredients/[id] (M8.19; the Wave 12 review).
+      await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}$`));
       const tiers = await tiersHolding();
       // Local, and only local: the compendium still lacks it.
       expect(tiers).toEqual([{ id: expect.any(String), workspace_id: coven.id }]);
       createdId = tiers[0].id;
-      expect(page.url()).toMatch(new RegExp(`/ingredients/${createdId}$`));
+      expect(page.url()).toMatch(new RegExp(`/coven/${coven.slug}/ingredients/${createdId}$`));
     });
 
     for (const [who, userId] of [
@@ -417,7 +418,10 @@ test.fixme(
       await expect(rowOf(ingredientList(page), NAME)).toHaveCount(0);
 
       expect((await page.goto(`/coven/${coven.slug}/ingredients`))?.status()).toBe(404);
-      expect((await page.goto(`/ingredients/${createdId}`))?.status()).toBe(404);
+      // The entry's page is the coven's too, so a non-member meets the same 404 (M8.19).
+      expect((await page.goto(`/coven/${coven.slug}/ingredients/${createdId}`))?.status()).toBe(
+        404,
+      );
 
       // By direct id, under either coven's name: refused under the one D is
       // not in, and not found in the one D is.
@@ -466,12 +470,14 @@ test.fixme(
         where workspace_id is null and deleted_at is null and name = 'Cat''s Claw'`,
     );
     expect(clawIds.map((row) => row.canonical_name).sort()).toEqual(CATS_CLAWS);
-    const hrefs = clawIds.map((row) => `/ingredients/${row.id}`);
+    // Each match links the coven's entry page, which reaches a compendium
+    // entry too (claude-docs/components/ingredient-form.md, the duplicate warning).
+    const hrefs = clawIds.map((row) => `/coven/${coven.slug}/ingredients/${row.id}`);
 
     await signInAgainAs(page, coven.users.B);
     await page.goto(`/coven/${coven.slug}/ingredients`);
     const dialog = await openAddIngredient(page);
-    const name = dialog.getByRole('textbox', { name: 'Name' });
+    const name = dialog.getByRole('textbox', { name: 'Name', exact: true });
     const warning = dialog.getByRole('status', { name: 'Possible duplicates' });
     const matches = warning.getByRole('link');
 
@@ -522,7 +528,7 @@ test.fixme(
       await dialog.getByRole('button', { name: 'Create Anyway' }).click();
       await dialog.getByRole('button', { name: 'Save Ingredient' }).click();
 
-      await expect(page).toHaveURL(/\/ingredients\/[0-9a-f-]{36}$/);
+      await expect(page).toHaveURL(new RegExp(`/coven/${coven.slug}/ingredients/[0-9a-f-]{36}$`));
       const created = await withSql(
         (sql) => sql<{ id: string; name: string; canonical_name: string }[]>`
           select id, name, canonical_name from ingredients where workspace_id = ${coven.id}`,
@@ -530,6 +536,119 @@ test.fixme(
       expect(created).toEqual([
         { id: expect.any(String), name: "Cat's Claw", canonical_name: 'Fixtura felina' },
       ]);
+    });
+  },
+);
+
+test(
+  'a reader sees where an entry’s information came from, and an entry with no sources says so',
+  { tag: '@story-64' },
+  async ({ page, browser, baseURL }) => {
+    // The rows are written by a user made on a page of its own; the reader is
+    // the signed-out `page`.
+    const maker = await browser.newPage({ baseURL });
+    const author = await (async () => {
+      try {
+        return (await signInAs(maker, 'author@story-64.test', ['discord'], 'admin')).userId;
+      } finally {
+        await maker.close();
+      }
+    })();
+    const cited = 'Fixture Bramble Sourced';
+    const bare = 'Fixture Bramble Unsourced';
+    const form = 'Fixture Oil';
+    await withSql(async (sql) => {
+      const id = await insertIngredient(
+        sql,
+        makeIngredient({
+          name: cited,
+          nomenclature: 'none',
+          variants: [makeVariant({ form })],
+        }),
+        author,
+      );
+      const [variant] = await sql<{ id: string }[]>`
+        select id from ingredient_variants where ingredient_id = ${id}`;
+      // Written out of order, so the page's order is the loader's and not insertion.
+      const zeta = await insertReference(sql, { title: 'Zeta Fixtures' }, author);
+      const alpha = await insertReference(
+        sql,
+        {
+          kind: 'web_page',
+          title: 'Alpha Fixtures',
+          container: 'Fixture Site',
+          url: 'https://fixtures.example/alpha',
+          accessed: '2026-01-01',
+        },
+        author,
+      );
+      const oil = await insertReference(sql, { title: 'Oil Fixtures' }, author);
+      await insertReferenceLink(sql, id, zeta, author);
+      await insertReferenceLink(sql, id, alpha, author, 'p. 112');
+      await insertVariantReferenceLink(sql, variant!.id, oil, author);
+      await insertIngredient(
+        sql,
+        makeIngredient({ name: bare, nomenclature: 'none', variants: [] }),
+        author,
+      );
+    });
+
+    await test.step('a section’s note number leads to its note, the note to its entry, and each links back', async () => {
+      await page.goto(`/compendium/ingredients/${slugify(cited)}`);
+      const details = page.getByRole('region', { name: 'Details' });
+      const notes = page.getByRole('list', { name: 'Notes' });
+      const bibliography = page.getByRole('list', { name: 'Bibliography' });
+
+      // The loader's order, not insertion order: Alpha before Zeta.
+      await expect(details.getByRole('link', { name: /^Note \d+$/ })).toHaveCount(2);
+      await details.getByRole('link', { name: 'Note 1' }).click();
+      await expect(page).toHaveURL(/#note-1$/);
+      const note = notes.getByRole('listitem').nth(0);
+      await expect(note).toContainText('Alpha Fixtures');
+      await expect(note).toContainText('p. 112');
+
+      await note.getByRole('link', { name: /Alpha/ }).click();
+      await expect(page).toHaveURL(/#ref-/);
+      const entry = bibliography.getByRole('listitem').filter({ hasText: 'Alpha Fixtures' });
+      await expect(entry).toBeVisible();
+
+      await entry.getByRole('link', { name: 'Back to Note 1' }).click();
+      await expect(page).toHaveURL(/#note-1$/);
+      await note.getByRole('link', { name: 'Back to Details' }).click();
+      await expect(page).toHaveURL(/#note-ref-1$/);
+      await expect(details.getByRole('link', { name: 'Note 1' })).toBeInViewport();
+    });
+
+    await test.step('a form’s own source is noted at the end of its section, and the bibliography holds each once, alphabetically', async () => {
+      const section = page.locator(`#form-${slugify(form)}`);
+      await expect(section.getByRole('list', { name: /References/ })).toHaveCount(0);
+      await section.getByRole('link', { name: 'Note 3' }).click();
+      await expect(page).toHaveURL(/#note-3$/);
+      await expect(
+        page.getByRole('list', { name: 'Notes' }).getByRole('link', { name: 'Back to ' + form }),
+      ).toBeVisible();
+
+      const entries = page.getByRole('list', { name: 'Bibliography' }).getByRole('listitem');
+      await expect(entries).toHaveCount(3);
+      await expect(entries.nth(0)).toContainText('Alpha Fixtures');
+      await expect(entries.nth(1).locator('cite')).toHaveText('Oil Fixtures');
+      await expect(entries.nth(2).locator('cite')).toHaveText('Zeta Fixtures');
+      // A web page’s title is quoted, not italic; its url is a link out.
+      const link = entries.nth(0).getByRole('link', { name: /source/i });
+      await expect(link).toHaveAttribute('href', 'https://fixtures.example/alpha');
+      await expect(link).toHaveAttribute('rel', /noopener/);
+      await expect(entries.nth(2).getByRole('link', { name: /source/i })).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
+    });
+
+    await test.step('an entry with none shows an empty state rather than nothing', async () => {
+      await page.goto(`/compendium/ingredients/${slugify(bare)}`);
+      const section = page.getByRole('region', { name: 'References' });
+
+      await expect(section).toBeVisible();
+      await expect(section.getByRole('list')).toHaveCount(0);
+      await expect(section.locator('p')).toBeVisible();
+      await assertNoAccessibilityViolations(page);
     });
   },
 );

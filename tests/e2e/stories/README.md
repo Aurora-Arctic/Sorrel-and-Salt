@@ -11,6 +11,7 @@ A story with no test reads "no test yet". CI runs it as the `stories` job of
 `.github/workflows/pr-gate.yml`, never a required check, so a red scaffold is
 never on the merge path.
 `npm run e2e` (the gate suite) skips this directory.
+`npm run test:stories:audit` runs the same stories in WebKit, Firefox and as a phone (claude-docs/testing/e2e.md, "The audit"); a story passes only if it passes in all.
 
 ## Naming a story
 
@@ -54,14 +55,15 @@ Going green is `test.fixme` → `test` and deleting the annotation.
 | `01-members.spec.ts`         | 9, 10, 11  | M9.1                                      |
 | `01-invitations.spec.ts`     | 4–7        | M9.1                                      |
 | `01-viewer.spec.ts`          | 12, 13     | fixme: M9.6, M10.11, M9.9, M6.18          |
-| `02-compendium.spec.ts`      | 14–16      | fixme: M8.18, M8.19, M9.4, M9.12          |
+| `02-compendium.spec.ts`      | 14–16      | fixme: M8.18, M9.4, M9.12                 |
 | `03-ingredients.spec.ts`     | 20–27      | fixme: M9.6–M9.11                         |
 | `04-modals.spec.ts`          | 28–34      | M8.9 (scaffold); 28–32 M8.16, 33–34 M8.17 |
 | `06-grimoire.spec.ts`        | 47–57      | M10.1                                     |
 | `07-admin.spec.ts`           | 17–19      | M9.1                                      |
 | `08-email-and-admin.spec.ts` | 58–62      | M9.1                                      |
+| `09-public.spec.ts`          | 63         | MB.83                                     |
 
-Stories 63–64 have no file yet.
+Story 64 has no file yet.
 
 Which old acceptance test each file replaces, and which gate e2e tests it made
 obsolete, is tabled in the decision record's "Mapping" section

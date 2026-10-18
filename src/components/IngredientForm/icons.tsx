@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 
 // The form's row icons, a reference row's and a variant's edit and remove
-// (MB.115), and a reference's Edit Source: drawn at the glyph size in the
+// (MB.115), and a reference's Edit Source: drawn at the icon size in the
 // button's own ink, and hidden from assistive technology, since the button
 // around each is what names it. The pencil is every Edit control's, the
 // admin lists' too, so it lives with the tip they share.
@@ -30,3 +30,19 @@ export function SourceEditIcon(): ReactElement {
 
 /** A cross: take this row out. The type-ahead's clear, which is drawn the same. */
 export { ClearIcon as RemoveIcon } from '../Combobox/icons';
+
+/** An arrow up, the way a folk name rises to be the display name: promote this row. */
+export function PromoteIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M8 13V3M3.75 7.25 8 3l4.25 4.25"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

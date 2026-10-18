@@ -1,9 +1,16 @@
 import { builder } from '../../../graphql/builder';
 import { AuditInfo } from '../../../graphql/schema/audit';
-import { INGREDIENT_ELEMENTS, NOMENCLATURE_KINDS, TOXIC_FILTERS } from '../schema/ingredient-enums';
+import {
+  CATEGORY_MODES,
+  INGREDIENT_ELEMENTS,
+  INGREDIENT_SOURCES,
+  NOMENCLATURE_KINDS,
+  TOXIC_FILTERS,
+} from '../schema/ingredient-enums';
 import { ReferenceLinkRef } from './references';
 import { CategoryRef, DeityRef, IngredientFormValueRef } from '@/modules/vocabulary';
 import type {
+  FolkNameRow,
   IngredientDeityRow,
   IngredientRow,
   IngredientVariantRow,
@@ -22,6 +29,18 @@ export const ToxicFilterEnum = builder.enumType('ToxicFilter', {
   values: TOXIC_FILTERS,
   description:
     'Which entries a search keeps by toxicity: any (no filter); toxic, flagged on the entry or on any live form; or not_toxic, flagged on neither.',
+});
+// Where a coven's list reads from (M9.7), an argument rather than a field.
+export const IngredientSourceEnum = builder.enumType('IngredientSource', {
+  values: INGREDIENT_SOURCES,
+  description:
+    "Where a coven's list reads from: local, the coven's own entries; or compendium, the compendium entries it holds. Leaving it out lists both.",
+});
+// How a search combines its categories (M8.12), an argument rather than a field.
+export const CategoryModeEnum = builder.enumType('CategoryMode', {
+  values: CATEGORY_MODES,
+  description:
+    'How a search combines the categories it is given: all (the default), an entry must carry every one; or any, at least one. A category counts when it is filed on the entry or on any live form.',
 });
 export const IngredientElementEnum = builder.enumType('IngredientElement', {
   values: INGREDIENT_ELEMENTS,
@@ -65,6 +84,18 @@ export const SubstituteRef = builder.objectRef<SubstituteRow>('Substitute').impl
         return variants.find((variant) => variant.id === variantId) ?? null;
       },
     }),
+  }),
+});
+
+/**
+ * One of an ingredient's alternative names. Its id is what promoting it
+ * names. No `audit`.
+ */
+export const FolkNameRef = builder.objectRef<FolkNameRow>('FolkName').implement({
+  description: 'An alternative name for an ingredient.',
+  fields: (t) => ({
+    id: t.exposeID('id'),
+    name: t.exposeString('name'),
   }),
 });
 
@@ -163,7 +194,8 @@ IngredientRef.implement({
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
     // The row is the loaders' key: they read `workspaceId` off it to know
     // which coven to check, and cache by `id`.
-    folkNames: t.stringList({
+    folkNames: t.field({
+      type: [FolkNameRef],
       resolve: (row, _args, { loaders }) => loaders.folkNamesByIngredient.load(row),
     }),
     categories: t.field({

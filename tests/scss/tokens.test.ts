@@ -168,7 +168,7 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
 
     // A chip on its wash, the muted ink 18% into the card (Combobox/index.scss):
     // its text, the body ink, at 4.5:1; a linked substitute's link mark
-    // (MB.115), a glyph in the accent, at the 3:1 a control's mark needs;
+    // (MB.115), an icon in the accent, at the 3:1 a control's mark needs;
     // and the linked chip pointed at, its text and mark in the accent's
     // hover, at 4.5:1. The accent itself is held to 3:1 alone, so the text
     // keeps the body ink and its underline until pointed at.

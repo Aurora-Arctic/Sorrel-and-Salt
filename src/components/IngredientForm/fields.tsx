@@ -56,6 +56,8 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
   onPick,
   onEdit,
   qualifier,
+  icon,
+  typedIcon,
   offerTyped,
 }: SuggestFieldProps<O>): ReactElement {
   const { control } = useFormContext<IngredientFormValues>();
@@ -80,6 +82,8 @@ export function SuggestField<O extends ComboboxOption = ComboboxOption>({
         }}
         suggestions={suggestions}
         qualifier={qualifier}
+        icon={icon}
+        typedIcon={typedIcon}
         offerTyped={offerTyped}
         placeholder={placeholder}
         inputRef={field.ref}
@@ -170,6 +174,7 @@ export function ListField({
   pickOnly,
   action,
   after,
+  rowAction,
   workspaceId = null,
 }: ListFieldProps): ReactElement {
   const form = useFormContext<IngredientFormValues>();
@@ -314,6 +319,7 @@ export function ListField({
         ? substituteSummary(entry as SubstituteListEntry, value, workspaceId)
         : undefined,
       note: substitutes && !linked ? NAME_ONLY : undefined,
+      action: rowAction?.(entry),
       errorId: entryErrors[index] && errorId,
       onRemove: () => {
         setAnnouncement(`Removed ${entryText(row)}`);

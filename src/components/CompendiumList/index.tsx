@@ -1,25 +1,32 @@
-import { EditLink } from '../IconTip';
-import type { ReactElement } from 'react';
+import Link from 'next/link';
+import type { Route } from 'next';
+import { EditLink, LinkIcon } from '../IconTip';
+import LinkHint from '../LinkHint';
+import { Fragment, type ReactElement } from 'react';
+import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import { noMatchText } from '../../lib/text';
-import { NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
-import ListFrame, { ListBody } from '../ListFrame';
-import Pager from '../Pager';
+import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from '../IngredientForm/options';
+import IngredientSearch from '../IngredientSearch';
 import CompendiumListFilter from './filter';
 import type {
+  CompendiumCategoryChoice,
+  CompendiumFacetCounts,
   CompendiumListEntry,
   CompendiumListFilter as Filter,
   CompendiumListProps,
 } from './types';
+import './index.scss';
 
 // `/admin/compendium`'s filter, table and pager (M5.5), as the category
 // list's. Render-only: the page reads one page of the compendium under the
 // address's filter through the service and hands it here. The filter is a GET
 // form to the page itself, so a filtered page — the unknown kind, the
 // unsourced — is an address. Each Edit is an address too, the page opening its
-// modal from the URL, so a modal can be linked to and Back closes it
-// (claude-docs/components/compendium-list.md).
+// modal from the URL, so a modal can be linked to and Back closes it. The
+// frame, filter row and pager are IngredientSearch's (M8.10); this list gives
+// it the filter and the table (claude-docs/components/compendium-list.md).
 
 // None, rather than an empty cell: the to-do list tells an unconfirmed formal
 // name from no formal name by this column.
@@ -27,13 +34,53 @@ const NONE = '—';
 
 /** The columns; Edit's pencil stands at a card's top right on a phone. */
 const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
-  { heading: 'Name', cell: (entry) => entry.name },
+  {
+    heading: 'Name',
+    // The entry's own public page, by its stored slug (M8.19), which offers a
+    // curator Edit; the pencil still opens the modal from here.
+    cell: (entry) => (
+      <Link
+        className="compendium-list__name"
+        href={`/compendium/ingredients/${entry.slug}` as Route}
+      >
+        {entry.name}
+        <LinkIcon />
+        <LinkHint />
+      </Link>
+    ),
+  },
   { heading: 'Formal Name', cell: (entry) => entry.canonicalName ?? NONE },
   {
     heading: 'Classification',
     cell: (entry) => labelOf(NOMENCLATURE_OPTIONS, entry.nomenclature),
   },
-  { heading: 'Form', cell: (entry) => (entry.forms.length ? entry.forms.join(', ') : NONE) },
+  {
+    heading: 'Form',
+    // Each form led by its group's icon, the generic where it has none, the
+    // two held together as one unit that never wraps apart: the icon close
+    // to its name and the next form farther off (the owner's call,
+    // 2026-10-16). The forms sit in one wrapping row whose gap sets them
+    // apart, so a form that wraps starts its line at the cell's edge. The
+    // comma stays, on the name before it, so a screen reader hears a list; the
+    // space between two forms draws nothing in a flex row, and keeps the
+    // cell's name reading "Herb, Oil" and not "Herb,Oil".
+    cell: (entry) =>
+      entry.forms.length ? (
+        <span className="compendium-list__forms">
+          {entry.forms.map(({ name, icon }, i) => (
+            <Fragment key={name}>
+              {i > 0 && ' '}
+              <span className="compendium-list__form">
+                <FormIcon name={icon} />
+                {i < entry.forms.length - 1 ? `${name},` : name}
+              </span>
+            </Fragment>
+          ))}
+        </span>
+      ) : (
+        NONE
+      ),
+  },
   updatedColumn(),
   {
     heading: 'Edit',
@@ -54,15 +101,47 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
 /**
  * The empty list, naming the filters in use (MB.115, on the owner's call), so
  * an admin sees what to change: "No entries match “wort”, the form “Oil” and
- * the classification Botanical. Change or clear the filter to see more." With no
+ * the element Fire. Change or clear the filter to see more." With no
  * filter, the compendium itself is empty, and says how to begin it.
  */
-function emptyText({ query, form, nomenclature, withoutReferences }: Filter): string {
+function emptyText(
+  {
+    query,
+    forms,
+    deities,
+    zodiac,
+    planets,
+    toxic,
+    withoutReferences,
+    elements,
+    categories,
+    categoryMode,
+  }: Filter,
+  known: readonly CompendiumCategoryChoice[],
+  facets: CompendiumFacetCounts,
+): string {
+  // A deity by its name and tradition, the pair that tells two of one name apart.
+  const deityNames = deities.flatMap((slug) => {
+    const deity = facets.deities.find(({ value }) => value === slug);
+    return deity ? `${deity.label} (${deity.tradition})` : [];
+  });
+  const toxicLabel = facets.toxic.find(({ value }) => value === toxic)?.label;
+  const quoted = (values: readonly string[]) => values.map((each) => `“${each}”`).join(' or ');
+  // By name, the ones the page knows; a slug it does not is not filtering anything.
+  const named = categories.flatMap((slug) => known.find((each) => each.slug === slug)?.name ?? []);
   const filters = [
     query && `“${query}”`,
-    form && `the form “${form}”`,
-    nomenclature && `the classification ${labelOf(NOMENCLATURE_OPTIONS, nomenclature)}`,
+    forms.length > 0 && `the ${forms.length === 1 ? 'form' : 'forms'} ${quoted(forms)}`,
+    deityNames.length > 0 &&
+      `the ${deityNames.length === 1 ? 'deity' : 'deities'} ${quoted(deityNames)}`,
+    zodiac.length > 0 && `the ${zodiac.length === 1 ? 'sign' : 'signs'} ${quoted(zodiac)}`,
+    planets.length > 0 && `the ${planets.length === 1 ? 'planet' : 'planets'} ${quoted(planets)}`,
+    toxicLabel && `the toxic setting ${toxicLabel}`,
     withoutReferences && 'No Refs',
+    elements.length > 0 &&
+      `the ${elements.length === 1 ? 'element' : 'elements'} ${elements.map((each) => labelOf(ELEMENT_OPTIONS, each)).join(' or ')}`,
+    named.length > 0 &&
+      `the ${named.length === 1 ? 'category' : 'categories'} ${named.join(categoryMode === 'any' ? ' or ' : ' and ')}`,
   ].filter((filter): filter is string => Boolean(filter));
   return noMatchText(
     'entries',
@@ -74,30 +153,38 @@ function emptyText({ query, form, nomenclature, withoutReferences }: Filter): st
 const CompendiumList = ({
   entries,
   filter,
-  forms,
+  facets,
+  categories,
+  vocabulary,
   previousHref,
   nextHref,
   position,
+  total,
 }: CompendiumListProps): ReactElement => (
-  <ListFrame>
-    {/* Keyed by the filter shown, so another one starts the form again from it. */}
-    <CompendiumListFilter
-      key={`${filter.query}\n${filter.form}\n${filter.nomenclature}\n${filter.withoutReferences}`}
-      filter={filter}
-      forms={forms}
-    />
-
-    <ListBody>
-      <StackTable
-        columns={COLUMNS}
-        rows={entries}
-        rowKey={(entry) => entry.id}
-        empty={emptyText(filter)}
+  <IngredientSearch
+    search={
+      // Not keyed here: the row inside is keyed by the name searched, and follows the
+      // rest of the filter itself, so a facet's change keeps the open panel and its
+      // focus, and the sentence above the results keeps its typing across a search.
+      <CompendiumListFilter
+        filter={filter}
+        facets={facets}
+        categories={categories}
+        vocabulary={vocabulary}
+        total={total}
       />
-
-      <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />
-    </ListBody>
-  </ListFrame>
+    }
+    previousHref={previousHref}
+    nextHref={nextHref}
+    position={position}
+  >
+    <StackTable
+      columns={COLUMNS}
+      rows={entries}
+      rowKey={(entry) => entry.id}
+      empty={emptyText(filter, categories, facets)}
+    />
+  </IngredientSearch>
 );
 
 export default CompendiumList;

@@ -101,6 +101,7 @@ export interface FormGroupNode {
   name: string;
   slug: string;
   description: string;
+  icon: string | null;
 }
 
 /** A deity as the admin writes ask for it back: its own fields, and its tradition's name. */

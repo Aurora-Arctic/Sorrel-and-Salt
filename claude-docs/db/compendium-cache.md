@@ -31,17 +31,20 @@ read, hit or miss, so both answer the same types.
 
 ### What is cached
 
-Ten reads, the list and its count of each of six things, every one taking no
-session and filtering to the compendium tier or a curated vocabulary, which
-are public (MB.80):
+Twelve reads, every one taking no session and filtering to the compendium
+tier or a curated vocabulary, which are public (MB.80): the list and its count
+of each of six things, the compendium's facet counts, how many entries
+each search filter value would list (M12.3), and the public page's read of one
+entry by its address (M8.19):
 
-| Service file                                                   | Reads                                                   |
-| -------------------------------------------------------------- | ------------------------------------------------------- |
-| `ingredients/services/compendium.ts`                           | `listCompendium`, `countCompendium`                     |
-| `vocabulary/services/categories.ts`                            | `listCategories`, `countCategories`                     |
-| `vocabulary/services/ingredient-form-values.ts`                | `listIngredientFormValues`, `countIngredientFormValues` |
-| `vocabulary/services/astrology.ts`, celestial bodies and signs | `listAstrologyValues`, `countAstrologyValues`           |
-| `vocabulary/services/deities.ts`                               | `listDeities`, `countDeities`                           |
+| Service file                                                   | Reads                                                                                            |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `ingredients/services/compendium.ts`                           | `listCompendium`, `countCompendium`, and `readCompendiumEntry`, under the key `compendium-entry` |
+| `ingredients/services/ingredient-facets.ts`                    | `compendiumFacets`, under the key `compendium-facets`                                            |
+| `vocabulary/services/categories.ts`                            | `listCategories`, `countCategories`                                                              |
+| `vocabulary/services/ingredient-form-values.ts`                | `listIngredientFormValues`, `countIngredientFormValues`                                          |
+| `vocabulary/services/astrology.ts`, celestial bodies and signs | `listAstrologyValues`, `countAstrologyValues`                                                    |
+| `vocabulary/services/deities.ts`                               | `listDeities`, `countDeities`                                                                    |
 
 A `no-restricted-imports` path in `.oxlintrc.json` fails any import of
 `next/cache` outside the wrapper. This list is the review: adding a call of
@@ -53,9 +56,17 @@ Not cached, deliberately:
 - **The reads a write decides by.** A delete refused while an entry holds the
   row, a curated spelling checked, a collision named: each reads the
   repository directly, so a write never acts on an hour-old answer.
-- **One entry by id or by slug** (`getIngredient`, `resolveCompendiumSlug`),
-  and an entry's children, which DataLoader batches per request (rule 9).
-  `getIngredient` also answers a coven's own row to its members.
+- **One entry by id** (`getIngredient`), and an entry's children, which
+  DataLoader batches per request (rule 9). `getIngredient` also answers a
+  coven's own row to its members, so a coven's entry page reads it and
+  `ingredientDetailOf` uncached. Only the public page's read of an address is
+  held (`readCompendiumEntry` above): it takes a slug and no session, so every
+  viewer sees one answer. A slug that names nothing, and a coven entry's slug,
+  answer `NotFound`, which is never stored. `resolveCompendiumSlug`, which
+  a write decides by, stays uncached.
+- **A coven's facet counts** (`workspaceIngredientFacets`, M12.3), which
+  count the coven's own entries and the compendium entries it holds, so they
+  differ by viewer.
 - **The group vocabularies** (category groups, form groups, deity
   traditions), which only the admin pages list, and the suggestion reads,
   which draw on the current coven as well as the compendium.

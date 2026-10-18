@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 import AdminNav from '../../../components/AdminNav';
 import ContextRow from '../../../components/ContextRow';
 // From its own client file: the Modal index re-exports modules a server
@@ -27,10 +28,17 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <RouteModalProvider>
-      <ContextRow lead={<span className="context-row__name">Admin</span>}>
+      {/* The area's name is its home link, as the coven row's switcher leads to the coven. */}
+      <ContextRow
+        lead={
+          <Link href="/admin" className="context-row__name">
+            Admin
+          </Link>
+        }
+      >
         <AdminNav managesPeople={role === 'admin'} />
       </ContextRow>
-      <div className="admin-layout">{children}</div>
+      <div className="page-column">{children}</div>
     </RouteModalProvider>
   );
 }

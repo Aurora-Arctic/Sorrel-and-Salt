@@ -51,8 +51,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 }
 
 // The select-only box: the control itself takes the focus and the press,
-// so it draws its own ring, and points rather than shows a caret.
-.combobox__control--select {
+// so it draws its own ring, and points rather than shows a caret. Weighted
+// with `.input` as the control above is, or that rule's caret wins over the
+// whole box, text and padding alike.
+.input.combobox__control--select {
   cursor: pointer;
 
   &:focus-visible {
@@ -121,6 +123,15 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
     color: $text-placeholder;
   }
+}
+
+// A caller's own control at the start of the control box: a flex item that
+// keeps its own size, and centres its button against the text's line.
+.combobox__leading {
+  display: flex;
+  flex: none;
+  align-items: center;
+  align-self: stretch;
 }
 
 .combobox__indicators {
@@ -232,6 +243,14 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &:focus-visible {
     @include focus-ring;
   }
+
+  // The chevron turns over while the list is open, as the account menu's
+  // does. `aria-expanded` sits on the input, button or control beside the
+  // indicator, never above it, so a selector on it cannot reach the chevron;
+  // the root carries `is-open` while the list is open, and the flip waits on it.
+  .chevron-icon {
+    @include chevron-flip('.combobox.is-open');
+  }
 }
 
 // The list, floating beneath the control at its width, on the card surface
@@ -256,6 +275,50 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   &.is-open {
     display: block;
   }
+}
+
+// With an empty message the popup is the placed, bordered panel; the
+// listbox inside it is a plain list with no panel of its own. Without one,
+// the list above is the panel, as it always was. The popup does not scroll:
+// Downshift scrolls the highlighted row into view within the listbox
+// element, so a scroller outside it (the popup) is never moved and an
+// arrowed-to row stays hidden. The listbox is the scroller, as above, and
+// reads `--combobox-list-room`, which the placement sets on the popup and
+// the listbox inherits.
+.combobox__popup {
+  z-index: 1;
+  display: none;
+  box-sizing: border-box;
+  // The popup's rounded edge clips what it holds: a row highlighted at a
+  // corner, or the listbox's own ground, would otherwise paint over the
+  // border there. The listbox inside scrolls as before.
+  overflow: hidden;
+
+  @include floating-panel;
+
+  &.is-open {
+    display: block;
+  }
+}
+
+// Inside the popup the listbox is no panel of its own: the popup draws the
+// edge, the ground, the corners and the shadow, once.
+.combobox__list.is-inset {
+  display: block;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.combobox__list.is-inset:not(.is-open) {
+  display: none;
+}
+
+// The message sits in the popup's surface, set in by a row's padding; the
+// design review styles it.
+.combobox__empty {
+  padding: space(2) space(3);
 }
 
 // A bucket and its rows: no typography-base ◆, no list margins.
@@ -355,6 +418,45 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   font-style: italic;
 }
 
+// A mark before a row's label or the qualifier: decorative, a little clear of
+// the text, and as tall as the text beside it.
+.combobox__icon {
+  margin-inline-end: space(1);
+}
+
+// The chosen choice's mark ahead of the type-ahead box's text (M12.7):
+// spaced by the values' own gap rather than the row mark's margin, and a
+// press on it is a press on the text, as on the qualifier.
+.combobox__lead {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-inline-end: 0;
+  cursor: text;
+}
+
+// A row's count after its label, "Oil 12" (M12.4): part of the option's name, a
+// small muted number with no brackets, as the facet panel's counts are.
+.combobox__count {
+  color: $text-muted;
+  font-size: type-size('caption');
+
+  .is-highlighted & {
+    color: $text-primary;
+  }
+}
+
+// A row shown but not pickable (M12.4): the pointer says so, and no wash
+// follows it. Its text keeps its ink (4.5:1 muted on the card), the note
+// beside the count saying why; the row is truly disabled, not dimmed.
+.combobox__option.is-disabled {
+  cursor: not-allowed;
+
+  &:hover {
+    background-color: transparent;
+  }
+}
+
 // Who claims the value, or what a curated row stands for, beneath its name.
 .combobox__note {
   color: $text-muted;
@@ -417,6 +519,12 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     color: $text-on-color;
   }
 
+  // The neutral chips of a faceted filter (M12.4): no fill, an ink border. A
+  // category chip keeps its group's fill, which the entry never marks outlined.
+  &.is-outlined {
+    @include outlined-chip;
+  }
+
   // The field's error edge, a shape as well as a colour, on the entry it names.
   &.is-invalid {
     box-shadow: inset 0 0 0 1px $secondary;
@@ -452,6 +560,40 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
+// An action on the entry, before its x (M12.1: promote a folk name): the x's
+// 24px target and glyph, square, and in the accent a pointer or the focus
+// warms, since it makes rather than takes away. Its IconTip wrapper is
+// the chip's flex item.
+.combobox__entry > .icon-tip {
+  display: inline-flex;
+  flex: none;
+}
+
+.combobox__entry-action {
+  @include icon-button($icon-size, $glyph-size);
+  @include icon-button-edit;
+
+  flex: none;
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  // On a coloured chip's fill the muted ink and the accent are unchecked;
+  // the inverted ink is, as the x's is.
+  :where(.is-coloured) &,
+  :where(.is-coloured) &:hover,
+  :where(.is-coloured) &:focus-visible {
+    background-color: transparent;
+    color: inherit;
+  }
+}
+
 // `$icon-size`: WCAG 2.2's 24px minimum target, inside a chip too short for
 // 44px.
 // Its hover is the warning's wash and ink, as react-select's remove is, faded
@@ -466,6 +608,11 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 
   &:focus-visible {
     @include focus-ring;
+  }
+
+  // On an outlined chip the cross is in the chip's own ink, as its text is.
+  :where(.is-outlined) & {
+    color: inherit;
   }
 
   // On a coloured chip's fill, the muted ink is not checked, and nor is the
@@ -526,7 +673,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // body ink while it is held.
 .combobox__entry-grip {
   flex: none;
-  // Two columns of dots, half a glyph wide: the mark's own geometry.
+  // Two columns of dots, half an icon wide: the mark's own geometry.
   width: 0.5rem;
   height: $glyph-size;
   color: $text-muted;
@@ -600,7 +747,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   }
 }
 
-// The link mark, a glyph ahead of the text in the button's own ink.
+// The link mark, an icon ahead of the text in the button's own ink.
 .combobox__entry-mark {
   flex: none;
   width: $glyph-size;
@@ -630,6 +777,57 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   overflow-wrap: anywhere;
 
   @include floating-panel;
+}
+
+// A chip's leading mark (M12.4), a form group's glyph: decorative, clear of
+// the text, and as tall as the text beside it.
+.combobox__entry-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  margin-inline-end: space(1);
+}
+
+// A chip's count after its text, "Water 7": never cut off, the text gives way.
+// Small and muted as the facet panel's counts are; on a coloured or lifted chip
+// it keeps the chip's own ink, the one checked against that fill.
+.combobox__entry-count {
+  flex: none;
+  color: $text-muted;
+  font-size: type-size('caption');
+
+  .combobox__entry.is-coloured &,
+  .combobox__entry.is-dragging & {
+    color: inherit;
+  }
+
+  // The label is a flex row, which drops the space between text and count.
+  margin-inline-start: space(1);
+  white-space: nowrap;
+
+  // Where the count will be while a search runs. The shape and the shimmer
+  // are the list skeleton's (`skeleton-shimmer`, _primitives.scss); the fill
+  // is the chip's own ink at low strength, since a chip is a solid colour the
+  // quiet fill would vanish on. Still under reduced motion.
+  &.is-pending {
+    display: inline-block;
+    width: 1.75ch;
+    height: 0.8em;
+    align-self: center;
+    border-radius: radius('control');
+    background-image: linear-gradient(
+      90deg,
+      color-mix(in srgb, currentcolor 22%, transparent) 0%,
+      color-mix(in srgb, currentcolor 42%, transparent) 50%,
+      color-mix(in srgb, currentcolor 22%, transparent) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+
+    @include reduced-motion {
+      animation: none;
+    }
+  }
 }
 
 // The entry's text, cut off with an ellipsis where the control ends; the

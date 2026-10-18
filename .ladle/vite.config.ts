@@ -17,6 +17,8 @@ import { defineConfig } from 'vite';
 export default defineConfig({
   resolve: {
     alias: {
+      // The components import `@/modules/...` at runtime, as `tsconfig.json`'s paths say.
+      '@': fileURLToPath(new URL('../src', import.meta.url)),
       'next/link': fileURLToPath(new URL('./UnoptimizedLink.tsx', import.meta.url)),
       'next/navigation': fileURLToPath(new URL('./navigation.ts', import.meta.url)),
     },

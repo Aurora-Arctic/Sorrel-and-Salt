@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { ModalHeading } from '../Modal/types';
 import type { GroupColors, PagePosition, PagerHrefs } from '../../lib/types';
 import type { UpdatedStamp } from '../DataTable/types';
@@ -14,6 +15,8 @@ export interface GroupListEntry extends Partial<GroupColors>, UpdatedStamp {
   name: string;
   slug: string;
   description: string;
+  /** A form group's icon name, `null` for one with none; absent for the other kinds, which have no icon. */
+  icon?: FormGroupIcon | null;
   editHref: Route;
   /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
   editHeading: ModalHeading;

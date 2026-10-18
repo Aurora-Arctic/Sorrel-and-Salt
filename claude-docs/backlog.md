@@ -12,7 +12,7 @@
 - [x] Icons for forms?
       Yes, one per form group, with a generic salt spoon for a form no group
       covers. The spoon also replaces the flask as the Forms tab mark. Minted
-      as M12.6 (the column) and M12.7 (the glyphs and where they show).
+      as M12.6 (the column) and M12.7 (the icons and where they show).
 
 ### Feature Additions
 
@@ -57,6 +57,7 @@
 - [ ] Both private and public comment sections for compendium entries.
 - [ ] _**Dark Magic**_
 - [ ] In spell steps: allow the user to link to a specific ingredient in the spell in the notes but that drops to plain text if they remove the ingredient and displays a warning to update on the step.
+- [ ] Inline editing on the ingredient entry page: an Edit beside each item opens that item for editing where it sits, rather than the whole form in a modal (M8.19's page).
 
 ### V3
 

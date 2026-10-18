@@ -1,5 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import { HTML_REPORT, baseConfig } from './playwright.config';
+import { HTML_REPORT, auditProjects, baseConfig } from './playwright.config';
 import { slotServers } from './tests/e2e/servers';
 
 // The story suite (M9.1): one browser flow per user story, under
@@ -23,5 +23,8 @@ export default defineConfig({
     ['./tests/support/story-playwright-reporter.ts', { outputFile: process.env.STORIES_JSON }],
     ...(process.env.CI ? ([['json'], ['html', HTML_REPORT]] as const) : []),
   ],
-  projects: [{ name: 'stories', use: { ...devices['Desktop Chrome'] } }],
+  // Under `E2E_AUDIT=1` (`npm run test:stories:audit`) the stories also run in
+  // WebKit, Firefox and as a phone; the reporter counts a story passing only
+  // when its test passes in every project that ran.
+  projects: [{ name: 'stories', use: { ...devices['Desktop Chrome'] } }, ...auditProjects()],
 });

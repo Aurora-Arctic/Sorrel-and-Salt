@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { dialogParams, listHref } from '@/lib/list-href';
+import { list } from '@/lib/search-params';
 
 // The one shared path every list's address goes through (rule 5): a bare flag
 // is what the pages read `?new` and `?awaiting` by, and a blank filter must
@@ -36,5 +37,25 @@ describe('dialogParams', () => {
 
   it('writes no modal as neither', () => {
     expect(listHref('/admin/categories', dialogParams())).toBe('/admin/categories');
+  });
+});
+
+// M8.13: a list filter is a repeated parameter, `?forms=Herb&forms=Oil`, which
+// `list` (src/lib/search-params.ts) reads back.
+describe('listHref, with a list', () => {
+  it('writes each value as its own pair, in place', () => {
+    expect(listHref('/compendium', { query: 'wort', forms: ['Herb', 'Oil'], after: 'c' })).toBe(
+      '/compendium?query=wort&forms=Herb&forms=Oil&after=c',
+    );
+  });
+
+  it('leaves out an empty list and blank values', () => {
+    expect(listHref('/compendium', { forms: [] })).toBe('/compendium');
+    expect(listHref('/compendium', { forms: ['', 'Oil'] })).toBe('/compendium?forms=Oil');
+  });
+
+  it('is read back by list', () => {
+    const href = new URL(listHref('/compendium', { forms: ['A b', 'Oil'] }), 'http://x');
+    expect(list(href.searchParams.getAll('forms'))).toEqual(['A b', 'Oil']);
   });
 });

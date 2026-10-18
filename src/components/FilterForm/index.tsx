@@ -27,9 +27,13 @@ import type { FilterFormProps, FilterValue } from './types';
 // this holds the form, Clear and the navigation, which five lists had each
 // written for themselves (claude-docs/components/filter-form.md).
 
-/** A value the page shows a filter by: a blank, `false` or none is no filter. */
+/** A value the page shows a filter by: a blank, `false`, an empty list or none is no filter. */
 const isSet = (value: FilterValue): boolean =>
-  typeof value === 'string' ? value.trim() !== '' : value === true;
+  typeof value === 'string'
+    ? value.trim() !== ''
+    : Array.isArray(value)
+      ? value.length > 0
+      : value === true;
 
 /**
  * The caller's controls, which the row marks `aria-disabled` while a list is
@@ -80,6 +84,8 @@ const FilterForm = ({
   action,
   searchHref,
   shown,
+  clear: withClear = true,
+  className,
   children,
 }: FilterFormProps): ReactElement => {
   const { pending } = useListNavigation();
@@ -153,7 +159,7 @@ const FilterForm = ({
   return (
     <search>
       <form
-        className="filter-row"
+        className={className ? `filter-row ${className}` : 'filter-row'}
         ref={form}
         method="get"
         action={action}
@@ -168,7 +174,7 @@ const FilterForm = ({
             there is something to clear, the owner's call, rather than
             disabled in place: it sits at the row's end, so nothing moves
             when it comes and goes. */}
-        {filtered && (
+        {withClear && filtered && (
           <a
             className="filter-row__clear"
             href={action}

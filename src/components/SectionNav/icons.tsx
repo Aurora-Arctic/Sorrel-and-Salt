@@ -1,11 +1,14 @@
 import type { ReactElement } from 'react';
+import { SPOON } from '../FormIcon';
 import type { SectionIconName } from './types';
 
 // The section navs' icons, drawn on a 24-unit square in a 1.6 stroke with
 // round ends and no fill, so they take the link's colour (`currentColor`) and
 // read alike at the row's size and the bottom bar's. Inline rather than an
-// icon package: ten shapes, each used here and nowhere else. Hidden from
-// assistive technology, since the label beside each names the section
+// icon package: nine shapes, each used here and nowhere else, and the forms
+// mark, which is FormIcon's generic salt spoon rather than a shape of its own,
+// so one mark means "a form" everywhere (M12.7). Hidden from assistive
+// technology, since the label beside each names the section
 // (claude-docs/components/section-nav.md, "Icons").
 const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
   overview: (
@@ -52,12 +55,7 @@ const SHAPES: Record<SectionIconName | 'more', ReactElement> = {
       <circle cx="8.3" cy="8.3" r="1.5" />
     </>
   ),
-  forms: (
-    <>
-      <path d="M9 3.5h6M10.5 3.5v5.2L5.4 17.6a2 2 0 0 0 1.7 2.9h9.8a2 2 0 0 0 1.7-2.9l-5.1-8.9V3.5" />
-      <path d="M7.6 14h8.8" />
-    </>
-  ),
+  forms: SPOON,
   deities: <path d="M12 3.5l2 6.5 6.5 2-6.5 2-2 6.5-2-6.5-6.5-2 6.5-2z" />,
   astrology: (
     <>

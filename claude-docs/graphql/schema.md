@@ -452,9 +452,9 @@ type QueryCompendiumConnectionEdge {
   transposed pair both find their entry; every listed category (AND; M8.12
   adds a mode); and four lists and a toxic setting (M11.22, [`../design-decisions/m11.22-search-facets.md`](../design-decisions/m11.22-search-facets.md)). `forms` keeps an entry holding a live variant whose form, trimmed and lower-cased, is any one of the list, so an entry with two forms is found under either, once (MB.222). `deityIds` keeps an entry with a live link to any one of the listed curated deities. `zodiacSigns` and `celestialBodies` keep an entry whose own list holds any one of the values, folded on both sides. `toxic` is the `ToxicFilter` enum, `any`, `toxic` or `not_toxic` (lower case, as `Nomenclature` is): `toxic` keeps an entry flagged on itself or on any live form, `not_toxic` one where neither holds, a retired form's flag counts for nothing, and `any` or leaving it out is no filter. Within one kind the chosen values OR; across kinds the filters AND. An empty list, a blank entry, or a value matching nothing is no filter rather than an error. The single `form: String` argument is gone; the admin list sends a one-item `forms`. The facet screen and its counts are M12.3 and M12.4. The browser never holds more than a page (rule
   8), so it cannot be the search, which is why M8.4's client-side
-  `filterIngredients()` was retired (DESIGN.md §14). `element` (M8.13) is
-  that task's argument to add, and matches an entry whose `elements` holds
-  it, among others or alone (MB.157). The admin's two to-do lists, which M5.5
+  `filterIngredients()` was retired (DESIGN.md §14). `elements` (M8.13, `[IngredientElement!]`, lower case) matches an entry whose
+  `elements`, or those of any live variant, hold any one listed, among others or alone, by array overlap
+  in SQL (MB.157, MB.215). On `workspaceIngredients` too. The admin's two to-do lists, which M5.5
   puts on `/admin/compendium`: `withoutReferences: true` (MB.153), only the
   entries citing no live compendium reference, so an entry whose one link is
   unlinked, or cites a soft-deleted reference, is on it, as its bibliography
@@ -500,6 +500,12 @@ type QueryCompendiumConnectionEdge {
   group loaders, `categoryGroupsById`, `ingredientFormGroupsById` and
   `deityTraditionsById`; and a variant's `formChoice` through
   `ingredientFormsById` (MB.167; ["Loaders"](loaders.md)).
+- **`FolkName` is an id and a name** (DESIGN.md §7, M12.1). The id is the live
+  row's, so a client can name one to `promoteFolkName`; it carries no `audit`.
+  `Ingredient.folkNames` is non-null, `[]` with none, and sorted by `name`. The
+  inputs still take bare strings: a name typed and not yet saved has no id.
+  The public entry page's `IngredientDetail.folkNames` stays a list of names,
+  since it only displays them.
 - **`Substitute` is a link or a typed name** (DESIGN.md §7, MB.138; built by
   MB.140): `name` is what it shows — the linked ingredient's label, its last
   once deleted, or the typed text — and `ingredient` is the one to follow,
@@ -658,6 +664,10 @@ signatures DESIGN.md §7's sketch gives them.
   one the ingredient already holds is kept once retired, sent back by id or
   by name. The list replaces the live rows in the order sent
   ([`db/ingredient-children.md`](../db/ingredient-children.md)).
+- **`categoryMode`** (M8.12): a `CategoryMode` enum, `all` or `any`, beside
+  `categoryIds` on `compendium` and `workspaceIngredients`, defaulting to `all`.
+  `any` matches an entry holding any of the ids; it changes nothing with fewer
+  than two.
 - **The categories are `categoryIds`** (MB.125, story 30): `[ID!]` on the
   create, `[ID!]!` on the update where `[]` clears, as every list there is.
   Each must name a live category — an id naming none, or a soft-deleted one,
@@ -732,8 +742,12 @@ Story 14's list (M9.4), registered by `ingredients` in
 ([`db/stock.md`](../db/stock.md), "The workspace ingredient list"): a coven's
 own entries and the compendium entries it holds a jar of, a page at a time,
 as a `t.pagedConnection` of `Ingredient`. It takes the coven as `workspaceId`,
-and `query`, `categoryIds`, `forms`, `deityIds`, `zodiacSigns`, `celestialBodies` and `toxic` (M11.22), which filter as `compendium`'s do, still under the coven's membership check. A
-coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
+and `query`, `categoryIds`, `forms`, `deityIds`, `zodiacSigns`, `celestialBodies` and `toxic` (M11.22), which filter as `compendium`'s do, still under the coven's membership check.
+Two more arguments are the coven's alone (M9.7), left out of `compendium`: `source`, an
+`IngredientSource` of `local` (the coven's own entries) or `compendium` (the
+compendium entries it holds), where leaving it out lists both; and `inStock`, which keeps an
+entry only when one of the coven's jars of it is not at 0, a jar with no quantity counting as
+held, so a local entry with no jar leaves. A coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
 may read it. An entry's jars are its `stock` field, below, so a page reads its
 stock in one batch whatever its length.
 
@@ -741,6 +755,95 @@ stock in one batch whatever its length.
 transport's half: the page and its cursor, the arguments reaching the read,
 one read each for a page's stock, its categories and its jars' forms, and the
 one refusal. Which rows the list holds is the service test's.
+
+### `compendiumFacets` and `workspaceIngredientFacets`
+
+The numbers beside each choice in the search's filter panel (M12.3): for
+every value of every filter, how many entries the list would hold with that
+value picked. `compendiumFacets` sits in `graphql/compendium.ts` and takes
+exactly `compendium`'s filter arguments (`query`, `categoryIds`,
+`categoryMode`, the six facet arguments, `withoutReferences` and
+`nomenclature`), with no page. `workspaceIngredientFacets` sits in
+`graphql/workspace-ingredient-list.ts` and takes `workspaceIngredients`'
+(`workspaceId`, `query`, the category arguments, the six facet
+arguments, and the coven-only `source` and `inStock`), so a count agrees with the list under the same filter. Each resolver hands its arguments to its service,
+`compendiumFacets` or `workspaceIngredientFacets` in
+`services/ingredient-facets.ts`, and checks nothing itself. How each value
+is counted is [`db/compendium-read.md`](../db/compendium-read.md),
+`findCompendiumFacets`, and which rows a coven's counts read is
+[`db/stock.md`](../db/stock.md), "The workspace ingredient list".
+
+`compendiumFacets` answers one `CompendiumFacets` object and
+`workspaceIngredientFacets` one `IngredientFacets`. Neither is a list, so neither is
+a connection (a paged list), and the pagination guard, which fails a bare
+list on `Query`, has nothing to exempt. Its seven lists are bounded by the
+vocabularies and by the forms, deities and categories the counted entries
+carry. Each item's `value` has the type of the argument it would be sent
+back as, so a client can put a picked value straight into the next query.
+`CompendiumFacets` adds `withoutReferences`, how many entries cite no live
+reference under the rest of the filter, the same whether the switch is on or
+off; a coven's list has no such switch. The seven shared fields are written
+once, in `facetFields`, which both types spread.
+
+A coven's `IngredientFacets` also carries two counts that a compendium list has no
+switch for (M9.7), so the two answers are two types and the fields are non-null on
+the coven's alone. `source` is a `SourceFacetCount` list (`value` is `local` or
+`compendium`, `count` an `Int!`) that always holds both values, zeros kept, each
+counted with the Source setting blanked and everything else, In Stock
+included, kept. `inStock` is one `Int!`: how many entries the list would
+hold with the switch on, under the rest of the filter and the chosen Source. A
+count equals the list's `totalCount` under the same filter.
+
+```graphql
+type CompendiumFacets {
+  # the seven fields of IngredientFacets, then:
+  withoutReferences: Int!
+}
+
+type IngredientFacets {
+  # a coven's also has source: [SourceFacetCount!]! and inStock: Int!
+  forms: [NameFacetCount!]!
+  deities: [IdFacetCount!]!
+  categories: [IdFacetCount!]!
+  zodiacSigns: [NameFacetCount!]!
+  celestialBodies: [NameFacetCount!]!
+  elements: [ElementFacetCount!]!
+  toxic: [ToxicFacetCount!]!
+}
+
+type NameFacetCount {
+  value: String!
+  count: Int!
+}
+
+type IdFacetCount {
+  value: ID!
+  count: Int!
+}
+
+type ElementFacetCount {
+  value: IngredientElement!
+  count: Int!
+}
+
+type ToxicFacetCount {
+  value: ToxicFilter! # toxic or not_toxic, never any
+  count: Int!
+}
+```
+
+`compendiumFacets` is public like `compendium`: no `signedIn` scope and no
+session, and its service caches the answer under the `compendium` tag
+([`db/compendium-cache.md`](../db/compendium-cache.md)).
+`workspaceIngredientFacets` refuses as `workspaceIngredients` does: a
+signed-out caller and a coven the caller is not in both answer `FORBIDDEN`,
+and any member, viewers included, may read it. It is never cached.
+
+`tests/modules/ingredients/graphql/ingredient-facets.test.ts` holds the
+transport's half: the arguments reaching each service, each value typed as
+its argument, the No Refs count with the switch on and off, and the refusal of a non-member naming a coven by id. The
+signed-out answers are `tests/db/graphql-query-scopes.test.ts`'s, and a
+malformed `workspaceId` is `tests/db/graphql-workspace-ids.test.ts`'s.
 
 ### Stock: `InventoryItem`, `Ingredient.stock` and the three stock writes
 
@@ -916,7 +1019,7 @@ vocabulary adds is told to it:
   form's `group`, a deity's `tradition`: the field, read through its loader,
   and the id column, which is also the input's required `ID`.
 - **`fields` and `input`**, the type's and the input's own: a category
-  group's two colours.
+  group's two colours, a form group's `icon`.
 - **`services`**, the three exported writes, each calling `assertSiteAdmin`
   itself; the input reaches them through `definedArgs`.
 - **`moveTo`**, present for a group whose delete moves its rows first: the

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { currentHrefs, hrefs } from '../../support/links';
@@ -101,14 +101,18 @@ describe('TabbedPage', () => {
   // with it, so it is found by its link in the DOM rather than by role.
   const action = () => screen.getByText('Pause').closest('a');
 
-  it('greys every tab and the action and puts a status in place of the content while a pressed tab is on its way', () => {
+  it('greys every tab and the action and puts a status in place of the content while a pressed tab is on its way', async () => {
     renderNavigating();
     // Before the press: every tab and the action can be pressed, and the content shows.
     expect(tabs().filter((link) => link.hasAttribute('aria-disabled'))).toEqual([]);
     expect(action()?.closest('[inert]')).toBeNull();
     expect(within(panel()).queryByRole('status')).not.toBeInTheDocument();
 
-    fireEvent.click(tab('Invitations'));
+    // Awaited: the press starts a navigation that suspends, which a synchronous
+    // act leaves uncommitted.
+    await act(async () => {
+      fireEvent.click(tab('Invitations'));
+    });
 
     expect(router.push).toHaveBeenCalledWith('/admin/invitations');
     for (const link of tabs()) expect(link).toHaveAttribute('aria-disabled', 'true');
@@ -121,7 +125,9 @@ describe('TabbedPage', () => {
     expect(busy()).toEqual(['/admin/invitations']);
 
     // A second press while the first is on its way goes nowhere.
-    fireEvent.click(tab('Privilege Changes'));
+    await act(async () => {
+      fireEvent.click(tab('Privilege Changes'));
+    });
     expect(router.push).toHaveBeenCalledTimes(1);
   });
 

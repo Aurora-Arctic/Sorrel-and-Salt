@@ -190,7 +190,7 @@ without a page routed to it.
   `onClose` would do nothing wraps it in this.
 - **`admin-frame.tsx`** — the shared story wrapper for the admin area.
   `AdminFrame` is the admin layout as it is: the context row holding
-  "Admin" and `AdminNav`, then the `.admin-layout` column around the story,
+  "Admin" and `AdminNav`, then the `.page-column` column around the story,
   all inside the shell's `.app-shell__main`, which keeps the last row clear
   of the phone's bottom nav. Its optional `open` is the address the workshop
   pretends to be on, which decides the nav's current page.
@@ -244,7 +244,7 @@ without a page routed to it.
   width, and inside a 375px box (`.fd-phone`), so their container queries,
   which measure the element's own frame rather than the window, show the
   phone layout at any window size; the boxed table is the stacking one, and
-  the page header's box also carries `.admin-layout`, so its action spans the
+  the page header's box also carries `.page-column`, so its action spans the
   line as on an admin page. It lives in
   `.ladle/` because the app never imports it; `foundations.scss` holds only
   reference-page chrome, nested under `.fd`.

@@ -1,17 +1,25 @@
 import { builder } from '../../../graphql/builder';
 import { countCompendium, getIngredient, listCompendium } from '../services/compendium';
+import { compendiumFacets } from '../services/ingredient-facets';
 import type { CompendiumFilterInput } from '../validation/compendium-filter';
-import { IngredientRef, NomenclatureEnum, ToxicFilterEnum } from './ingredient';
+import {
+  CategoryModeEnum,
+  IngredientElementEnum,
+  IngredientRef,
+  NomenclatureEnum,
+  ToxicFilterEnum,
+} from './ingredient';
+import { CompendiumFacetsRef } from './ingredient-facets';
 
-// The compendium's two queries. Public, so neither carries the `signedIn`
+// The compendium's three queries. Public, so none carries the `signedIn`
 // scope (MB.80); tests/db/graphql-query-scopes.test.ts holds every other
 // query to its refusal. The filtering is the service's, in SQL: the browser
 // never holds more than a page, so it cannot be the search
 // (claude-docs/graphql/schema.md, "compendium, ingredient and ingredientFormValues").
 
 /**
- * The five facet arguments the compendium and a coven's ingredient list share
- * (M11.22, claude-docs/design-decisions/m11.22-search-facets.md): within each
+ * The six facet arguments the compendium and a coven's ingredient list share
+ * (M11.22, M8.13, claude-docs/design-decisions/m11.22-search-facets.md): within each
  * list any value matches, and every argument given must match.
  */
 export const facetArgs = builder.args((t) => ({
@@ -33,6 +41,12 @@ export const facetArgs = builder.args((t) => ({
     description:
       'Keeps entries listing any one of these planets or other celestial bodies, ignoring case.',
   }),
+  elements: t.field({
+    type: [IngredientElementEnum],
+    required: false,
+    description:
+      'Keeps entries whose elements, or those of any of their live forms, include any one of these, alone or among others.',
+  }),
   toxic: t.field({
     type: ToxicFilterEnum,
     required: false,
@@ -41,12 +55,27 @@ export const facetArgs = builder.args((t) => ({
   }),
 }));
 
+/**
+ * The category arguments the compendium and a coven's ingredient list share:
+ * the ids, and how many of them an entry needs (M8.12).
+ */
+export const categoryArgs = builder.args((t) => ({
+  categoryIds: t.idList({ required: false }),
+  categoryMode: t.field({
+    type: CategoryModeEnum,
+    required: false,
+    defaultValue: 'all',
+    description:
+      'With categoryIds: all (the default) keeps entries carrying every one of them; any keeps entries carrying at least one. A category counts when it is filed on the entry or on any live form.',
+  }),
+}));
+
 builder.queryField('compendium', (t) =>
   t.pagedConnection({
     type: IngredientRef,
     args: {
       query: t.arg.string({ required: false }),
-      categoryIds: t.arg.idList({ required: false }),
+      ...categoryArgs,
       ...facetArgs,
       // The admin's to-do list: live entries citing no live reference (M5.5).
       withoutReferences: t.arg.boolean({ required: false }),
@@ -67,6 +96,24 @@ builder.queryField('compendium', (t) =>
   }),
 );
 
+// How many entries each filter value would list (M12.3), under the same
+// arguments as `compendium`, so the counts sit beside the page they narrow.
+builder.queryField('compendiumFacets', (t) =>
+  t.field({
+    type: CompendiumFacetsRef,
+    description:
+      'How many compendium entries each search filter value would list under the rest of the filter.',
+    args: {
+      query: t.arg.string({ required: false }),
+      ...categoryArgs,
+      ...facetArgs,
+      withoutReferences: t.arg.boolean({ required: false }),
+      nomenclature: t.arg({ type: NomenclatureEnum, required: false }),
+    },
+    resolve: (_root, args) => compendiumFacets(filterOf(args)),
+  }),
+);
+
 builder.queryField('ingredient', (t) =>
   t.field({
     type: IngredientRef,
@@ -84,10 +131,12 @@ builder.queryField('ingredient', (t) =>
 function filterOf({
   query,
   categoryIds,
+  categoryMode,
   forms,
   deityIds,
   zodiacSigns,
   celestialBodies,
+  elements,
   toxic,
   withoutReferences,
   nomenclature,
@@ -95,10 +144,12 @@ function filterOf({
   return {
     query,
     categoryIds,
+    categoryMode,
     forms,
     deityIds,
     zodiacSigns,
     celestialBodies,
+    elements,
     toxic,
     withoutReferences,
     nomenclature,

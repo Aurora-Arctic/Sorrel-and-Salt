@@ -1,4 +1,5 @@
 import type { Route } from 'next';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type { UpdatedStamp } from '../DataTable/types';
 import type { ModalHeading } from '../Modal/types';
 import type { GroupColors, PagePosition, PagerHrefs } from '../../lib/types';
@@ -39,6 +40,8 @@ export interface GroupedValueListEntry extends UpdatedStamp {
   groupName: string;
   /** The group's chip pair, which its name is drawn in; none draws it plain. */
   groupColors?: GroupColors;
+  /** A form's group's icon name, `null` for a group with none; absent for the other kinds, which draw no icon. */
+  groupIcon?: FormGroupIcon | null;
   editHref: Route;
   /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
   editHeading: ModalHeading;

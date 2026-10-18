@@ -1,4 +1,16 @@
-import { and, eq, inArray, isNull, not, or, sql, type SQL, type SQLWrapper } from 'drizzle-orm';
+import {
+  and,
+  arrayOverlaps,
+  eq,
+  inArray,
+  isNull,
+  ne,
+  not,
+  or,
+  sql,
+  type SQL,
+  type SQLWrapper,
+} from 'drizzle-orm';
 import { type AnyPgColumn, type PgTable, alias } from 'drizzle-orm/pg-core';
 import { ingredientCategories } from '../../modules/ingredients/schema/ingredient-categories';
 import { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
@@ -6,7 +18,12 @@ import { ingredientFolkNames } from '../../modules/ingredients/schema/ingredient
 import { ingredientSubstitutes } from '../../modules/ingredients/schema/ingredient-substitutes';
 import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
 import { identityKeyOf, ingredients } from '../../modules/ingredients/schema/ingredients';
+import type {
+  CategoryMode,
+  IngredientElement,
+} from '../../modules/ingredients/schema/ingredient-enums';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
+import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import {
   ingredientFormGroups,
@@ -28,7 +45,7 @@ import {
 } from './predicates';
 import { cites, citesNothing } from './references';
 import { existsIn, selectFrom, selectOne } from './select';
-import { curated } from './vocabularies';
+import { curated, inLiveGroup } from './vocabularies';
 import type {
   CompendiumScore,
   IngredientFilter,
@@ -285,25 +302,48 @@ export function findWorkspaceIngredientPage(
     ingredients,
     list.order,
     page,
-    and(
-      list.arms,
-      notHiddenByLocal(membership),
-      or(scopedTo(membership, ingredients), heldBy(membership)),
-    ),
+    and(list.arms, workspaceListScope(membership, filter)),
+  );
+}
+
+/**
+ * Which readable rows a coven's ingredient list holds (M9.4): its own, and
+ * the compendium entries it holds, minus any a local entry hides. The page
+ * and the facets (M12.3) both read it, so they hold the same rows. The
+ * coven-only `source` and `inStock` settings (M9.7) are read here, not
+ * in `compendiumList`, which the compendium's page and count share and
+ * where a coven's jars mean nothing.
+ */
+export function workspaceListScope(
+  membership: Membership,
+  filter: Pick<IngredientFilter, 'source' | 'inStock'> = {},
+): SQL | undefined {
+  return and(
+    notHiddenByLocal(membership),
+    or(scopedTo(membership, ingredients), heldBy(membership)),
+    filter.source === 'local' ? scopedTo(membership, ingredients) : undefined,
+    filter.source === 'compendium' ? inCompendium(ingredients) : undefined,
+    filter.inStock ? heldBy(membership, true) : undefined,
   );
 }
 
 /**
  * The coven holds a live jar of the row, of a live form. The row is already
  * the readable ingredient, so a plain live-variant `EXISTS` rather than
- * `readableVariantParent`'s tier check, as `categoryArms` reads it.
+ * `readableVariantParent`'s tier check, as `categoryArms` reads it. With
+ * `inStock`, the jar must also not be at 0: a jar with no quantity is held
+ * unweighed, so it is an `OR` with null rather than `<> 0` alone, which
+ * SQL reads as unknown for null and would drop it.
  */
-function heldBy(membership: Membership): SQL {
+function heldBy(membership: Membership, inStock = false): SQL {
   return existsIn(
     inventoryItems,
     and(
       eq(inventoryItems.ingredientId, ingredients.id),
       scopedTo(membership, inventoryItems),
+      inStock
+        ? or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0'))
+        : undefined,
       existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
     ),
   );
@@ -351,19 +391,31 @@ export function notHiddenByLocal(membership: Membership): SQL {
   return not(
     existsIn(
       local,
-      and(
-        scopedTo(membership, local),
-        inCompendium(ingredients),
-        or(
-          eq(local.identityKey, ingredients.identityKey),
-          and(
-            isNull(local.canonicalName),
-            eq(sql`lower(${local.name})`, sql`lower(${ingredients.name})`),
-          ),
-        ),
-      ),
+      and(scopedTo(membership, local), inCompendium(ingredients), hides(local, ingredients)),
     ),
   );
+}
+
+/** The columns of an `ingredients` row `hides` compares, whatever alias the row is read under. */
+interface HidingColumns {
+  identityKey: AnyPgColumn;
+  canonicalName: AnyPgColumn;
+  name: AnyPgColumn;
+}
+
+/**
+ * `local` hides the compendium entry `entry` (DESIGN.md §5, "Local beats
+ * compendium"): they share an `identity_key`, or `local` declares no formal
+ * name and shares the entry's label, folded. The one spelling of the match, so
+ * the lists that drop a hidden entry (`notHiddenByLocal`) and the save that
+ * moves a coven's jars off it (M12.8) cannot disagree. The tiers are the
+ * caller's to test.
+ */
+export function hides(local: HidingColumns, entry: HidingColumns): SQL {
+  return or(
+    eq(local.identityKey, entry.identityKey),
+    and(isNull(local.canonicalName), eq(sql`lower(${local.name})`, sql`lower(${entry.name})`)),
+  ) as SQL;
 }
 
 /**
@@ -492,18 +544,19 @@ function identityIs({ name, canonicalName }: IngredientIdentity): SQL {
  * row comparison bounds it, and the position where its best field holds the
  * query, so Wood Ash leads Sandalwood for `wood`; a browse keys `[name]`.
  */
-function compendiumList(filter: IngredientFilter): {
+export function compendiumList(filter: IngredientFilter): {
   arms: SQL | undefined;
   order: ListOrder<CompendiumScore>;
 } {
   const match = searchMatch(filter.query);
   return {
     arms: and(
-      ...categoryArms(filter.categoryIds ?? []),
+      ...categoryArms(filter.categoryIds ?? [], filter.categoryMode),
       formArm(filter.forms),
       pickedFormArm(filter.formId),
       listArm(ingredients.celestialBodies, filter.celestialBodies),
       listArm(ingredients.zodiacSigns, filter.zodiacSigns),
+      elementArm(filter.elements),
       deityArm(filter.deityIds),
       toxicArm(filter.toxic),
       filter.withoutReferences ? citesNowhere() : undefined,
@@ -633,26 +686,44 @@ function citesNowhere(): SQL | undefined {
 }
 
 /**
- * One correlated `EXISTS` per id, so an entry must carry every one of them,
- * on itself or on a live form: a variant's pair names the ingredient too
+ * The category filter. Under `all` it is one correlated `EXISTS` per id, so
+ * an entry must carry every one of them; under `any` it is a single
+ * `EXISTS` over the whole list, which also keeps an entry holding two of
+ * them from being found twice. Either way the category may be filed on the
+ * entry or on a live form: a variant's pair names the ingredient too
  * (MB.217), so the union comes for free, but the table is hard-deleted and
  * its pairs outlive a soft-deleted variant, so the variant's liveness is read
  * here. Inside the compendium's own list the parent is already the row, so a
  * plain live-variant `EXISTS` rather than `readableVariantParent`'s tier check.
+ * The category itself must be live too, through `pointsLive`.
  */
-function categoryArms(categoryIds: readonly string[]): SQL[] {
-  return categoryIds.map((categoryId) =>
+function categoryArms(categoryIds: readonly string[], mode: CategoryMode = 'all'): SQL[] {
+  if (categoryIds.length === 0) return [];
+  const carries = (category: SQL | undefined) =>
     existsIn(
       ingredientCategories,
       and(
         eq(ingredientCategories.ingredientId, ingredients.id),
-        eq(ingredientCategories.categoryId, categoryId),
-        or(
-          isNull(ingredientCategories.variantId),
-          existsIn(ingredientVariants, eq(ingredientVariants.id, ingredientCategories.variantId)),
-        ),
+        category,
+        pairIsLive(ingredientCategories),
+        pointsLive(categories, ingredientCategories.categoryId),
       ),
-    ),
+    );
+  return mode === 'any'
+    ? [carries(inArray(ingredientCategories.categoryId, [...categoryIds]))]
+    : categoryIds.map((categoryId) => carries(eq(ingredientCategories.categoryId, categoryId)));
+}
+
+/**
+ * A category pair counts: it is the entry's own, or its variant is live. The
+ * table is hard-deleted, so a pair outlives the soft-deleted variant it
+ * belongs to, and only this says it no longer counts. Takes the pair's
+ * column, so an aliased read of the table can ask too (M12.3).
+ */
+export function pairIsLive(pair: { variantId: AnyPgColumn }): SQL | undefined {
+  return or(
+    isNull(pair.variantId),
+    existsIn(ingredientVariants, eq(ingredientVariants.id, pair.variantId)),
   );
 }
 
@@ -661,7 +732,7 @@ function categoryArms(categoryIds: readonly string[]): SQL[] {
  * `['', 'Mars']` filters by Mars and `[' ']` by nothing (M11.22). They are
  * not folded here: the fold stays in SQL, beside the column's own.
  */
-function stated(values: readonly string[] | undefined): string[] {
+export function stated(values: readonly string[] | undefined): string[] {
   return (values ?? []).filter((value) => value.trim() !== '');
 }
 
@@ -675,7 +746,38 @@ function stated(values: readonly string[] | undefined): string[] {
 function listArm(list: AnyPgColumn, values: readonly string[] | undefined): SQL | undefined {
   const wanted = stated(values);
   if (wanted.length === 0) return undefined;
-  return or(...wanted.map((value) => inArray(fold(value), listFolds(list))));
+  return or(...wanted.map((value) => listHolds(list, value)));
+}
+
+/**
+ * `list` holds an entry folding as `value` does: one value of `listArm`, and
+ * how a facet matches a curated row's name to the list (M12.3).
+ */
+export function listHolds(list: AnyPgColumn, value: SQLWrapper | string): SQL {
+  return inArray(fold(value), listFolds(list));
+}
+
+/**
+ * The entry's own `elements` list, or a live variant's, holds any of
+ * `elements` (M8.13, MB.215): an array overlap on each side, the variant's a
+ * correlated `EXISTS` that skips a soft-deleted form, so an entry is one row
+ * however many of them it holds and a retired form's element counts for
+ * nothing. The toxic filter's reading. Elements are a closed set, so there is
+ * nothing to fold. Empty means no filter.
+ */
+export function elementArm(elements: readonly IngredientElement[] | undefined): SQL | undefined {
+  if (!elements?.length) return undefined;
+  const wanted = [...elements];
+  return or(
+    arrayOverlaps(ingredients.elements, wanted),
+    existsIn(
+      ingredientVariants,
+      and(
+        eq(ingredientVariants.ingredientId, ingredients.id),
+        arrayOverlaps(ingredientVariants.elements, wanted),
+      ),
+    ),
+  );
 }
 
 /**
@@ -698,7 +800,7 @@ function formArm(forms: readonly string[] | undefined): SQL | undefined {
 }
 
 /**
- * The entry holds a live link to any of the curated deities `deityIds`
+ * The entry holds a live link to any of the live curated deities `deityIds`
  * (MB.167, M11.22): a correlated `EXISTS`, so an entry linking two of them is
  * one row, answered by `ingredient_deities_deity_id_idx`. Empty means no
  * filter.
@@ -710,8 +812,19 @@ function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
     and(
       eq(ingredientDeities.ingredientId, ingredients.id),
       inArray(ingredientDeities.deityId, deityIds),
+      pointsLive(deities, ingredientDeities.deityId),
     ),
   );
+}
+
+/**
+ * The curated row a link's `column` names is live, and so is its group:
+ * what the facets' join to the same row reads, so a value the facets count
+ * at nothing lists nothing. A curator cannot delete a row a compendium entry
+ * links, but a coven's own entry keeps its link through the delete.
+ */
+function pointsLive(vocabulary: typeof categories | typeof deities, column: AnyPgColumn): SQL {
+  return existsIn(vocabulary, and(eq(vocabulary.id, column), inLiveGroup(vocabulary)));
 }
 
 /**
@@ -722,7 +835,7 @@ function deityArm(deityIds: readonly string[] | undefined): SQL | undefined {
  * negation of the same predicate rather than a second one, so the two
  * settings always split the list between them. Absent means any.
  */
-function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
+export function toxicArm(toxic: IngredientFilter['toxic']): SQL | undefined {
   if (!toxic) return undefined;
   const flagged = or(
     eq(ingredients.toxic, true),

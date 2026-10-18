@@ -737,7 +737,7 @@ export default function Foundations(): ReactElement {
         <SectionHead eyebrow="_primitives.scss · .page-header" title="The Page Header">
           A page's heading with its one primary action at the line's end, brought down to the
           heading's letters. Under the forms' column of its own width, the action goes beneath the
-          heading, and inside <code>.admin-layout</code> it spans the line, as in the phone-width
+          heading, and inside <code>.page-column</code> it spans the line, as in the phone-width
           box, which carries that class.
         </SectionHead>
         <div className="fd-tables">
@@ -747,7 +747,7 @@ export default function Foundations(): ReactElement {
               Add Category Group
             </a>
           </div>
-          <div className="fd-phone admin-layout">
+          <div className="fd-phone page-column">
             <div className="page-header">
               <h1>Category Groups</h1>
               <a className="btn btn--solid" href="#fd-page-header">
@@ -787,12 +787,14 @@ export default function Foundations(): ReactElement {
         <SectionHead eyebrow="--badge-*" title="Badges">
           Deliberately not equals. <strong>Safety</strong> is a warning, drawn solid in the
           sealing-wax hue. <strong>Low stock</strong> is an inventory state, the muted ink tinted
-          into the surface. <strong>Last Used</strong> is a pointer, solid in the accent.
+          into the surface. <strong>Last Used</strong> is a pointer, solid in the accent.{' '}
+          <strong>Local</strong> marks a coven's own entry, the accent tinted into the surface.
         </SectionHead>
         <div className="panel badges">
           <span className="badge badge--safety">Toxic</span>
           <span className="badge badge--low-stock">Low Stock</span>
           <span className="badge badge--last-used">Last Used</span>
+          <span className="badge badge--local">Local</span>
         </div>
       </section>
 

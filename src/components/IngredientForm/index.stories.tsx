@@ -14,6 +14,7 @@ import type {
   PickerCategoriesQuery,
   CelestialBodySuggestionsQuery,
   PossibleDuplicatesQuery,
+  PromoteFolkNameMutation,
   ReferenceQuery,
   ReferenceSuggestionsQuery,
   UpdateCompendiumIngredientMutation,
@@ -24,6 +25,7 @@ import { citationText } from '../../lib/citation';
 import type { CitationFields } from '../../lib/types';
 import Modal from '../Modal';
 import IngredientForm from '.';
+import { PromoteFolkNameQuestion, usePromoteFolkName } from './promote';
 import { press } from '../../../.ladle/press';
 import { Reopenable } from '../../../.ladle/reopenable';
 import type { AfterSave, IngredientFormValues, SavedIngredient } from './types';
@@ -55,6 +57,7 @@ const FORMS = [
     value: 'Wax',
     description: 'Beeswax, as it comes from the comb.',
     group: 'Animal',
+    icon: 'animal',
     curated: true,
     claimants: [{ name: 'Testwort', canonicalName: 'Fixtura testalis' }],
   },
@@ -63,6 +66,7 @@ const FORMS = [
     value: 'Wax',
     description: 'Candle and poppet wax.',
     group: 'Substance',
+    icon: 'substance',
     curated: true,
     claimants: [],
   },
@@ -71,6 +75,7 @@ const FORMS = [
     value: 'Dried leaf',
     description: null,
     group: 'Plant part',
+    icon: 'botanical',
     curated: true,
     claimants: [],
   },
@@ -79,6 +84,7 @@ const FORMS = [
     value: 'Whole root',
     description: null,
     group: 'Plant part',
+    icon: 'botanical',
     curated: true,
     claimants: [],
   },
@@ -87,6 +93,7 @@ const FORMS = [
     value: 'Moon-dried shavings',
     description: null,
     group: null,
+    icon: null,
     curated: false,
     claimants: [{ name: 'Mockleaf', canonicalName: null }],
   },
@@ -499,6 +506,20 @@ function answer(operation: string, variables: Record<string, unknown>): object |
         updateCompendiumIngredient: { id: ENTRY.id, name: input?.name ?? '', slug: 'saved' },
       } satisfies UpdateCompendiumIngredientMutation;
     }
+    case 'PromoteFolkName':
+      // The swap as the server answers it: the folk name in as the name, the
+      // old name left in the list.
+      return {
+        promoteFolkName: {
+          id: ENTRY.id,
+          name: 'Hedge Fixture',
+          slug: 'promoted',
+          folkNames: [
+            { id: '00000000-0000-4000-8000-000000000402', name: 'Fixture Bane' },
+            { id: '00000000-0000-4000-8000-000000000403', name: ENTRY.values.name },
+          ],
+        },
+      } satisfies PromoteFolkNameMutation;
     case 'DeleteCompendiumIngredient':
       return {
         deleteCompendiumIngredient: ENTRY.id,
@@ -513,6 +534,7 @@ const SAVES = new Set([
   'CreateWorkspaceIngredient',
   'CreateCompendiumIngredient',
   'UpdateCompendiumIngredient',
+  'PromoteFolkName',
   'DeleteCompendiumIngredient',
   'CreateReference',
   'UpdateReference',
@@ -720,13 +742,12 @@ function WhatToTry() {
           unchanged. A compendium source has none here: it is the admins&rsquo; to change.
         </li>
         <li>
-          <strong>A new reference:</strong> pick &ldquo;New Reference&hellip;&rdquo;, the
-          list&rsquo;s last row, and choose a Kind: each shows only its own fields, the required
-          ones starred. Save Reference with a Chapter&rsquo;s Book empty, or a Web Page&rsquo;s
-          Address, to see them refused; a Title with &ldquo;taken&rdquo; in it is refused by the
-          server beside Title, and one with &ldquo;refuse&rdquo; in it above the panel&rsquo;s
-          fields. Enter in a field saves the reference, not the ingredient. Save the ingredient with
-          the panel open to see it held.
+          <strong>A new reference:</strong> pick &ldquo;New Reference&rdquo;, the list&rsquo;s last
+          row, and choose a Kind: each shows only its own fields, the required ones starred. Save
+          Reference with a Chapter&rsquo;s Book empty, or a Web Page&rsquo;s Address, to see them
+          refused; a Title with &ldquo;taken&rdquo; in it is refused by the server beside Title, and
+          one with &ldquo;refuse&rdquo; in it above the panel&rsquo;s fields. Enter in a field saves
+          the reference, not the ingredient. Save the ingredient with the panel open to see it held.
         </li>
         <li>
           <strong>Tidied as you go:</strong> in a new reference, type a Title in quotation marks, an
@@ -770,11 +791,15 @@ export const Blank: Story = () => {
   // 'open', and the workshop has no page to go to, so it says so instead.
   const [opens, setOpens] = useState<string | null>(null);
   const onSaved = ({ id }: SavedIngredient, next: AfterSave) =>
-    setOpens(next === 'open' ? `/ingredients/${id}` : null);
+    setOpens(next === 'open' ? `/coven/fixture-coven/ingredients/${id}` : null);
   return (
     <>
       <WhatToTry />
-      <IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />
+      <IngredientForm
+        workspaceId={WORKSPACE_ID}
+        duplicateHref={covenDuplicateHref}
+        onSaved={onSaved}
+      />
       {opens !== null && (
         // `output` carries the status role itself, so no `role` attribute.
         <output className="story-note">
@@ -800,6 +825,10 @@ const linkOf = ({
   forms: variants.map(({ form }) => form),
   variants: variants.map(({ id: variantId, form }) => ({ id: variantId, form, group: null })),
 });
+
+/** Where a near match links: a coven's entry page, or on the admin's page that entry's modal. */
+const covenDuplicateHref = ({ id }: { id: string }) => `/coven/fixture-coven/ingredients/${id}`;
+const compendiumDuplicateHref = ({ slug }: { slug: string }) => `/admin/compendium?edit=${slug}`;
 
 /** Where a summary links its entry on the admin's page: that entry's modal. */
 const entryHref = ({ slug }: { slug: string }) => `/admin/compendium?edit=${slug}`;
@@ -832,6 +861,7 @@ const ENTRY = {
           id: '00000000-0000-4000-8000-000000000103',
           name: 'Dried leaf',
           group: 'Plant part',
+          icon: 'botanical',
           description: null,
         },
         safetyNotes: 'Dry away from damp.',
@@ -859,6 +889,7 @@ const ENTRY = {
           id: '00000000-0000-4000-8000-000000000104',
           name: 'Whole root',
           group: 'Plant part',
+          icon: 'botanical',
           description: null,
         },
       },
@@ -955,7 +986,11 @@ export const Compendium: Story = () => {
   return (
     <>
       <WhatToTryOnTheCompendium editing={false} />
-      <IngredientForm workspaceId={null} onCancel={() => undefined} />
+      <IngredientForm
+        workspaceId={null}
+        duplicateHref={compendiumDuplicateHref}
+        onCancel={() => undefined}
+      />
     </>
   );
 };
@@ -968,6 +1003,7 @@ export const CompendiumEntry: Story = () => {
       <WhatToTryOnTheCompendium editing />
       <IngredientForm
         workspaceId={null}
+        duplicateHref={compendiumDuplicateHref}
         entry={ENTRY}
         entryHref={entryHref}
         onCancel={() => undefined}
@@ -980,7 +1016,14 @@ export const CompendiumEntry: Story = () => {
 export const CompendiumEntrySectionOpen: Story = () => {
   useCannedApi();
   useEffect(() => openSection('Correspondences'), []);
-  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={ENTRY}
+      onCancel={() => undefined}
+    />
+  );
 };
 
 /**
@@ -996,6 +1039,7 @@ export const CompendiumEntrySaveError: Story = () => {
   return (
     <IngredientForm
       workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
       entry={{
         ...ENTRY,
         // Without its links: the stand-in's ids are no ids the schema
@@ -1029,7 +1073,14 @@ export const CompendiumEntryVariantOpen: Story = () => {
     openSection('Variants');
     openDriedLeaf();
   }, []);
-  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={ENTRY}
+      onCancel={() => undefined}
+    />
+  );
 };
 
 // The open form at a phone's width, in each theme.
@@ -1047,7 +1098,14 @@ export const CompendiumEntryVariantSectionOpen: Story = () => {
     const card = openDriedLeaf();
     if (card) openSection('Correspondences', card);
   }, []);
-  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={ENTRY}
+      onCancel={() => undefined}
+    />
+  );
 };
 
 /**
@@ -1069,7 +1127,7 @@ export const VariantAdded: Story = () => {
     );
     return () => clearTimeout(timer);
   }, []);
-  return <IngredientForm workspaceId={WORKSPACE_ID} />;
+  return <IngredientForm workspaceId={WORKSPACE_ID} duplicateHref={covenDuplicateHref} />;
 };
 
 /**
@@ -1099,7 +1157,12 @@ export const CompendiumEntryCopySkipped: Story = () => {
     substitutes: [...ENTRY.values.substitutes, { value: 'Mockleaf', link: linkOf(INGREDIENTS[3]) }],
   };
   return (
-    <IngredientForm workspaceId={null} entry={{ ...ENTRY, values }} onCancel={() => undefined} />
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={{ ...ENTRY, values }}
+      onCancel={() => undefined}
+    />
   );
 };
 
@@ -1128,7 +1191,14 @@ export const CompendiumEntryEditSource: Story = () => {
     );
     return () => clearTimeout(timer);
   }, []);
-  return <IngredientForm workspaceId={null} entry={ENTRY} onCancel={() => undefined} />;
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={ENTRY}
+      onCancel={() => undefined}
+    />
+  );
 };
 
 // The edit panel at a phone's width, in each theme.
@@ -1153,6 +1223,7 @@ export const CompendiumEntrySubstituteSummary: Story = () => {
   return (
     <IngredientForm
       workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
       entry={ENTRY}
       entryHref={entryHref}
       onCancel={() => undefined}
@@ -1179,6 +1250,7 @@ export const CompendiumEntryInModal: Story = () => {
         >
           <IngredientForm
             workspaceId={null}
+            duplicateHref={compendiumDuplicateHref}
             entry={ENTRY}
             entryHref={entryHref}
             onCancel={() => undefined}
@@ -1275,3 +1347,97 @@ PhoneDark.meta = { theme: 'dark', width: 375 };
 
 export const PhoneLight: Story = () => <CompendiumEntry />;
 PhoneLight.meta = { theme: 'light', width: 375 };
+
+// Promoting a folk name (M12.1): the arrow on a saved folk name's chip, and the
+// question it always asks.
+
+/** The entry with two saved folk names, which only a saved entry has. */
+const PROMOTABLE = {
+  ...ENTRY,
+  values: {
+    ...ENTRY.values,
+    folkNames: [
+      { value: 'Hedge Fixture', id: '00000000-0000-4000-8000-000000000401' },
+      { value: 'Fixture Bane', id: '00000000-0000-4000-8000-000000000402' },
+    ],
+  },
+};
+
+/** The promotable entry's form, its Identity open, optionally with the question asked and a change made first. */
+function PromotableEntry({ asking, changed }: { asking: boolean; changed: boolean }) {
+  useCannedApi();
+  useEffect(() => {
+    openSection('Identity');
+    if (changed) {
+      const name = document.querySelector<HTMLInputElement>('input[name="name"]');
+      if (name) {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(
+          name,
+          'Testwort Edited',
+        );
+        name.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    }
+    if (asking) {
+      // Next tick, after the change is in the form's state.
+      setTimeout(
+        () =>
+          document
+            .querySelector<HTMLButtonElement>(
+              'button[aria-label="Make Hedge Fixture the Display Name"]',
+            )
+            ?.click(),
+        50,
+      );
+    }
+  }, [asking, changed]);
+  return (
+    <IngredientForm
+      workspaceId={null}
+      duplicateHref={compendiumDuplicateHref}
+      entry={PROMOTABLE}
+      entryHref={entryHref}
+      mayPromote
+      onCancel={() => undefined}
+    />
+  );
+}
+
+/** A compendium entry's folk names, each saved one with its arrow ahead of the ×. */
+export const PromoteControl: Story = () => <PromotableEntry asking={false} changed={false} />;
+
+/** The question over a form with nothing to save: Promote and Cancel. */
+export const PromoteQuestion: Story = () => <PromotableEntry asking changed={false} />;
+
+/** The question over a form with a change: Save & Promote, Discard & Promote, and Cancel. */
+export const PromoteQuestionWithChanges: Story = () => <PromotableEntry asking changed />;
+
+export const PromoteQuestionPhoneDark: Story = () => <PromotableEntry asking changed />;
+PromoteQuestionPhoneDark.meta = { theme: 'dark', width: 375 };
+
+export const PromoteQuestionPhoneLight: Story = () => <PromotableEntry asking changed />;
+PromoteQuestionPhoneLight.meta = { theme: 'light', width: 375 };
+
+/**
+ * A coven's ingredient: the question without the compendium's note that the
+ * swap is global. The coven's form does not edit yet (M8.17), so the question
+ * stands alone, open over nothing.
+ */
+export const PromoteQuestionCoven: Story = () => {
+  useCannedApi();
+  const promotion = usePromoteFolkName(WORKSPACE_ID, PROMOTABLE.id);
+  return (
+    <PromoteFolkNameQuestion
+      promotion={promotion}
+      folkName={{ id: '00000000-0000-4000-8000-000000000401', value: 'Hedge Fixture' }}
+      displayName="Testwort"
+      tier="coven"
+      dirty={false}
+      saveFirst={async () => true}
+      discardFirst={() => undefined}
+      onPromoted={() => undefined}
+      onKeep={() => undefined}
+      onRefused={() => undefined}
+    />
+  );
+};

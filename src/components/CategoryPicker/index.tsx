@@ -29,18 +29,27 @@ function optionsFor(
   categories: readonly PickerCategory[],
   picked: ReadonlySet<string>,
   text: string,
+  hideZeros: boolean,
 ): CategoryOption[] {
   return categories
-    .filter((category) => !picked.has(category.id) && matches(category.name, text))
+    .filter(
+      (category) =>
+        !picked.has(category.id) &&
+        !(hideZeros && category.count === 0) &&
+        matches(category.name, text),
+    )
     .sort((a, b) => byName(a.group, b.group) || byName(a, b))
-    .map((category) => ({
-      value: category.name,
-      note: category.description ?? undefined,
-      key: category.id,
-      heading: category.group.name,
-      colors: category.group,
-      category,
-    }));
+    .map((category) => {
+      return {
+        value: category.name,
+        note: category.description ?? undefined,
+        count: category.count,
+        key: category.id,
+        heading: category.group.name,
+        colors: category.group,
+        category,
+      };
+    });
 }
 
 const CategoryPicker = ({
@@ -57,6 +66,10 @@ const CategoryPicker = ({
   error,
   status,
   action,
+  boxName,
+  loading = false,
+  removeNoun,
+  hideZeros = false,
 }: CategoryPickerProps): ReactElement => {
   const id = useId();
   const legendId = `${id}-legend`;
@@ -79,7 +92,10 @@ const CategoryPicker = ({
     () => new Map(categories.map((category) => [category.id, category])),
     [categories],
   );
-  const options = useMemo(() => optionsFor(categories, picked, text), [categories, picked, text]);
+  const options = useMemo(
+    () => optionsFor(categories, picked, text, hideZeros),
+    [categories, picked, text, hideZeros],
+  );
 
   const add = (category: PickerCategory) => {
     onChange([...value, category.id]);
@@ -111,6 +127,9 @@ const CategoryPicker = ({
           <ComboboxEntry
             key={categoryId}
             value={category?.name ?? categoryId}
+            count={category?.count}
+            loading={loading}
+            removeNoun={removeNoun}
             // Its group after the name on the tooltip's first line, the
             // owner's call, since the colour alone cannot name it, and the
             // description beneath; both read as its x's description.
@@ -145,6 +164,7 @@ const CategoryPicker = ({
       </legend>
       <Combobox<CategoryOption>
         id={boxId}
+        name={boxName}
         label={entry}
         value={text}
         onChange={setText}

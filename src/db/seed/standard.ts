@@ -448,6 +448,7 @@ export async function seedStandardContent(
 
   const ingredientIds = await insertMissingIngredients(tx);
   await reslugIngredients(tx, [...ingredientIds.values()]);
+  await insertMissingRetiredSlugs(tx, ingredientIds);
   await insertMissingVariants(
     tx,
     COMPENDIUM_INGREDIENTS.map((entry) => ({
@@ -663,6 +664,66 @@ export async function reslugIngredients(
         );
     }
   }
+}
+
+/**
+ * The two compendium retirements `standard` holds on purpose (MB.82), one of
+ * each redirect the public entry page answers. `entry` names the entry that
+ * keeps the row, as its literal does; `name` and `canonicalName` are what the
+ * retired slug derives from, so no slug is written down beside the rule.
+ *
+ * - Rosemary: the slug it had under its older formal name. Nobody holds it, so
+ *   it redirects (308) to Rosemary's current address.
+ * - Hidcote Lavender: the slug it was first entered under, the species' own.
+ *   The species entry holds it now, so that address shows the species with a
+ *   notice that Hidcote Lavender moved away.
+ */
+const RETIRED_COMPENDIUM_SLUGS: {
+  entry: { name: string; canonicalName: string };
+  name: string;
+  canonicalName: string;
+}[] = [
+  {
+    entry: { name: 'Rosemary', canonicalName: 'Salvia rosmarinus' },
+    name: 'Rosemary',
+    canonicalName: 'Rosmarinus officinalis',
+  },
+  {
+    entry: { name: 'Hidcote Lavender', canonicalName: "Lavandula angustifolia 'Hidcote'" },
+    name: 'Lavender',
+    canonicalName: 'Lavandula angustifolia',
+  },
+];
+
+/**
+ * Writes `RETIRED_COMPENDIUM_SLUGS`, each keyed on its entry and slug, since
+ * the table's slug index is not unique and a reseed would otherwise stack
+ * copies. `retired_at` defaults to the run's instant, so the 180-day window
+ * runs from the last run that wrote the row. A compendium write hard-deletes
+ * lapsed rows, and the next reseed then writes them again; that is fine for
+ * fixtures (claude-docs/db/standard-scenario.md).
+ */
+export async function insertMissingRetiredSlugs(
+  tx: SeedTransaction,
+  ingredientIds: Map<string, string>,
+): Promise<void> {
+  const wanted = RETIRED_COMPENDIUM_SLUGS.map(({ entry, name, canonicalName }) => ({
+    ingredientId: requireFrom(
+      ingredientIds,
+      identityOf(entry),
+      () => `Compendium entry ${entry.name} was neither found nor inserted.`,
+    ),
+    slug: ingredientSlug(name, canonicalName),
+  }));
+
+  await insertMissingBy(tx, retiredIngredientSlugs, wanted, {
+    columns: ['ingredientId', 'slug'],
+    where: inArray(
+      retiredIngredientSlugs.ingredientId,
+      wanted.map((item) => item.ingredientId),
+    ),
+    toRow: ({ ingredientId, slug }) => ({ ingredientId, workspaceId: null, slug }),
+  });
 }
 
 /**

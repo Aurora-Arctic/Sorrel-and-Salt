@@ -4,7 +4,7 @@ import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { Forbidden } from '@/lib/errors';
 import { resolvePage } from '@/lib/pagination';
 import type { Session } from '@/lib/session';
-import { listWorkspaceIngredients } from '@/modules/ingredients';
+import { listWorkspaceIngredients, workspaceIngredientFacets } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
@@ -39,9 +39,10 @@ async function stock(
   workspaceId = WORKSPACE_W_ID,
   form = 'Testform',
   deleted = false,
+  quantityOnHand: string | null = null,
 ): Promise<string> {
   const variantId = await variantIdOf(sql, ingredientId, form);
-  return insertStock(sql, { workspaceId, ingredientId, variantId, deleted }, A.id);
+  return insertStock(sql, { workspaceId, ingredientId, variantId, deleted, quantityOnHand }, A.id);
 }
 
 /** Every label `session` is listed in `workspaceId` under `filter`, in the list's order. */
@@ -55,6 +56,97 @@ async function listed(
   );
   return page.edges.map(({ node }) => node.name);
 }
+
+describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
+  /** A local entry, a held compendium entry and a local one with no jar. */
+  async function seedSources(): Promise<void> {
+    await stock(await add('Covenwort', { workspaceId: WORKSPACE_W_ID }));
+    await add('Barecovenwort', { workspaceId: WORKSPACE_W_ID });
+    await stock(await add('Heldwort'));
+    await add('Unheldwort');
+    await add('Elsewort', { workspaceId: WORKSPACE_X_ID });
+  }
+
+  it('lists both sources when none is chosen, the coven only for local, the compendium only for compendium', async () => {
+    await seedSources();
+
+    expect(await listed(asUser(B))).toEqual(['Barecovenwort', 'Covenwort', 'Heldwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'local' })).toEqual([
+      'Barecovenwort',
+      'Covenwort',
+    ]);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'compendium' })).toEqual(['Heldwort']);
+  });
+
+  it('keeps an entry with any jar not at 0, and one whose only jar has no quantity', async () => {
+    const mixed = await add('Mixedwort', {
+      variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })],
+    });
+    await stock(mixed, WORKSPACE_W_ID, 'Herb', false, '0');
+    await stock(mixed, WORKSPACE_W_ID, 'Oil', false, '2');
+    await stock(await add('Unweighedwort'));
+    await stock(await add('Weighedwort'), WORKSPACE_W_ID, 'Testform', false, '3.5');
+    await stock(await add('Emptywort'), WORKSPACE_W_ID, 'Testform', false, '0');
+    const spent = await add('Spentwort', {
+      variants: [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })],
+    });
+    await stock(spent, WORKSPACE_W_ID, 'Herb', false, '0');
+    await stock(spent, WORKSPACE_W_ID, 'Oil', false, '0');
+    await add('Barecovenwort', { workspaceId: WORKSPACE_W_ID });
+    await stock(
+      await add('Covenwort', { workspaceId: WORKSPACE_W_ID }),
+      WORKSPACE_W_ID,
+      'Testform',
+      false,
+      '1',
+    );
+
+    // Why they could have been listed: without the filter every one is.
+    expect(await listed(asUser(B))).toHaveLength(7);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { inStock: true })).toEqual([
+      'Covenwort',
+      'Mixedwort',
+      'Unweighedwort',
+      'Weighedwort',
+    ]);
+  });
+
+  it("does not count a deleted jar as in stock, nor another coven's jar", async () => {
+    const entry = await add('Deletedjarwort');
+    await stock(entry, WORKSPACE_W_ID, 'Testform', false, '0');
+    await stock(entry, WORKSPACE_W_ID, 'Testform', true, '5');
+    await stock(entry, WORKSPACE_X_ID, 'Testform', false, '5');
+    await stock(await add('Livejarwort'), WORKSPACE_W_ID, 'Testform', false, '5');
+
+    expect(await listed(asUser(B))).toEqual(['Deletedjarwort', 'Livejarwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { inStock: true })).toEqual(['Livejarwort']);
+  });
+
+  it('combines source with inStock', async () => {
+    await stock(
+      await add('Covenwort', { workspaceId: WORKSPACE_W_ID }),
+      WORKSPACE_W_ID,
+      'Testform',
+      false,
+      '1',
+    );
+    await stock(await add('Heldwort'), WORKSPACE_W_ID, 'Testform', false, '1');
+    await stock(
+      await add('Emptywort', { workspaceId: WORKSPACE_W_ID }),
+      WORKSPACE_W_ID,
+      'Testform',
+      false,
+      '0',
+    );
+
+    expect(
+      await listed(asUser(B), WORKSPACE_W_ID, { source: 'compendium', inStock: true }),
+    ).toEqual(['Heldwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'local', inStock: true })).toEqual([
+      'Covenwort',
+    ]);
+  });
+});
 
 describe('listWorkspaceIngredients', () => {
   it("lists the coven's own entries and the compendium entries it holds, and nothing else", async () => {
@@ -160,6 +252,16 @@ describe('listWorkspaceIngredients', () => {
       'Oilfixture',
     ]);
     expect(await listed(asUser(B), WORKSPACE_W_ID, { forms: ['oil'] })).toEqual(['Oilfixture']);
+
+    // M8.12: Mugfixture and Oilfixture hold Protection and neither holds
+    // Cleansing, so only the mode decides whether the pair lists them.
+    const [cleansing] = await sql`
+      select id from categories where name = 'Cleansing' and deleted_at is null`;
+    const pair = [protection.id, cleansing.id];
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { categoryIds: pair })).toEqual([]);
+    expect(
+      await listed(asUser(B), WORKSPACE_W_ID, { categoryIds: pair, categoryMode: 'any' }),
+    ).toEqual(['Mugfixture', 'Oilfixture']);
   });
 
   it.each([
@@ -200,6 +302,42 @@ describe('listWorkspaceIngredients', () => {
     return page.edges.map(({ node }) => node.id);
   }
 
+  // A curator cannot delete a deity or category a compendium entry holds, but
+  // a coven's own entry keeps its link through the delete. The filter reads
+  // the row a link points to as the facets do, so the list and the count
+  // agree that the deleted value matches nothing.
+  it('lists nothing under a deleted deity or category, as the facets count it', async () => {
+    const entry = await add('Linkfixture', { workspaceId: WORKSPACE_W_ID, categories: ['Love'] });
+    const [selene] = await sql`
+      select id from deities where name = 'Selene' and deleted_at is null`;
+    const [love] = await sql`
+      select id from categories where name = 'Love' and deleted_at is null`;
+    await insertDeityLink(sql, entry, selene.id, 0, A.id);
+    const byDeity = { deityIds: [selene.id as string] };
+    const byCategory = { categoryIds: [love.id as string] };
+    const countOf = async (
+      kind: 'deities' | 'categories',
+      filter: typeof byDeity | typeof byCategory,
+      id: string,
+    ) =>
+      (await workspaceIngredientFacets(asUser(B), WORKSPACE_W_ID, filter))[kind].find(
+        ({ value }) => value === id,
+      )?.count;
+    // Why it could have listed: before the deletes, each filter lists it and counts it.
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, byDeity)).toEqual([entry]);
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, byCategory)).toEqual([entry]);
+    expect(await countOf('deities', byDeity, selene.id)).toBe(1);
+    expect(await countOf('categories', byCategory, love.id)).toBe(1);
+
+    await sql`update deities set deleted_at = now(), deleted_by = ${A.id} where id = ${selene.id}`;
+    await sql`update categories set deleted_at = now(), deleted_by = ${A.id} where id = ${love.id}`;
+
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, byDeity)).toEqual([]);
+    expect(await idsListed(asUser(B), WORKSPACE_W_ID, byCategory)).toEqual([]);
+    expect(await countOf('deities', byDeity, selene.id)).toBe(0);
+    expect(await countOf('categories', byCategory, love.id)).toBe(0);
+  });
+
   // M11.22's five facets each sit under the coven's proof: the row in W
   // matches every one of them, and so does X's, so a facet read past the
   // proof would list W's row to D, or X's row to B. Each coven also holds a
@@ -217,6 +355,7 @@ describe('listWorkspaceIngredients', () => {
         toxic: true,
         celestialBodies: ['Fixture Sun'],
         zodiacSigns: ['Fixture Ram'],
+        elements: ['fire', 'air'] as ('fire' | 'air')[],
         variants: [makeVariant({ form: 'Fixture Oil' })],
       };
       covenRow = await add('Facetfixture', { ...matching, workspaceId: WORKSPACE_W_ID });
@@ -236,6 +375,7 @@ describe('listWorkspaceIngredients', () => {
       ['deityIds', () => ({ deityIds: [hecate] })],
       ['zodiacSigns', () => ({ zodiacSigns: ['fixture ram'] })],
       ['celestialBodies', () => ({ celestialBodies: ['fixture sun'] })],
+      ['elements', () => ({ elements: ['air', 'water'] })],
       ['toxic', () => ({ toxic: 'toxic' })],
     ];
 

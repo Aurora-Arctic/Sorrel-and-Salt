@@ -274,6 +274,21 @@ describe('findCompendiumPage', () => {
         ]);
       });
 
+      it('answers one row for an entry two of whose variants both match by form', async () => {
+        await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
+        await insertVariant(sql, mugwortId, { form: 'Testoil, refined' }, A.id);
+        // The precondition: each form matches the query on its own, so a
+        // listing that did not group by entry would answer the entry twice.
+        const [scores] = await sql`
+          select word_similarity('testoil', 'Testoil') as plain,
+                 word_similarity('testoil', 'Testoil, refined') as refined`;
+        expect(scores).toEqual({ plain: 1, refined: 1 });
+
+        const page = await pageOf({ query: 'testoil' }, { first: 100 });
+
+        expect(page.edges.map((edge) => edge.node.name)).toEqual(['Fixture Mugwort']);
+      });
+
       it('matches nothing through a soft-deleted variant', async () => {
         const variantId = await insertVariant(sql, mugwortId, { form: 'Testoil' }, A.id);
         // The precondition: the live variant is found.
@@ -713,6 +728,60 @@ describe('findCompendiumPage', () => {
     });
   });
 
+  // Any (M8.12) reads the same pairs as one set: an entry matches a category
+  // filed on it or on a live form, and the mode alone changes the result.
+  describe('categoryMode', () => {
+    let protection: string;
+    let cleansing: string;
+
+    beforeAll(async () => {
+      const rows = await sql`
+        select id, name from categories
+        where name in ('Protection', 'Cleansing') and deleted_at is null`;
+      const byName = new Map(rows.map((row) => [row.name as string, row.id as string]));
+      protection = byName.get('Protection') as string;
+      cleansing = byName.get('Cleansing') as string;
+    });
+
+    beforeEach(async () => {
+      await add('Fixture Both', { categories: ['Protection', 'Cleansing'] });
+      await add('Fixture First', { categories: ['Protection'] });
+      await add('Fixture Neither');
+      const onForm = await add('Fixture On Form');
+      await insertVariant(sql, onForm, { form: 'Fixture Oil', categories: ['Cleansing'] }, A.id);
+      const dropped = await add('Fixture Dropped Form');
+      const droppedForm = await insertVariant(
+        sql,
+        dropped,
+        { form: 'Fixture Oil', categories: ['Cleansing'] },
+        A.id,
+      );
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+        where id = ${droppedForm}`;
+    });
+
+    it('keeps an entry holding either, on itself or on a live form, once each', async () => {
+      expect(await namesOf({ categoryIds: [protection, cleansing], categoryMode: 'any' })).toEqual([
+        'Fixture Both',
+        'Fixture First',
+        'Fixture On Form',
+      ]);
+    });
+
+    it('keeps only the entry holding both under all, for the same categories', async () => {
+      const both = ['Fixture Both'];
+      expect(await namesOf({ categoryIds: [protection, cleansing], categoryMode: 'all' })).toEqual(
+        both,
+      );
+      expect(await namesOf({ categoryIds: [protection, cleansing] })).toEqual(both);
+    });
+
+    it('is no filter when empty, as under all', async () => {
+      expect(await namesOf({ categoryIds: [], categoryMode: 'any' })).toHaveLength(5);
+    });
+  });
+
   // The text, on any of an entry's live forms (MB.222), any of the listed
   // forms (M11.22): an entry holding two of them is found once.
   describe('forms', () => {
@@ -930,6 +999,90 @@ describe('findCompendiumPage', () => {
 
     it('is no filter when empty', async () => {
       expect(await namesOf({ deityIds: [] })).toHaveLength(5);
+    });
+  });
+
+  // M8.13: the element filter. An entry's `elements` holds any of the five,
+  // alone or among others; any one listed matches, by array overlap.
+  describe('elements', () => {
+    beforeEach(async () => {
+      await add('Fixture Fiery', { elements: ['fire'] });
+      await add('Fixture Wet', { elements: ['water', 'fire'] });
+      await add('Fixture Airy', { elements: ['air'] });
+      await add('Fixture Bare');
+      await add('Fixture Coven', { elements: ['fire'], workspaceId: WORKSPACE_W_ID });
+      const gone = await add('Fixture Gone', { elements: ['fire'] });
+      await sql`update ingredients set deleted_at = now(), deleted_by = ${A.id} where id = ${gone}`;
+    });
+
+    it('lists the live compendium entries holding the element, alone or among others', async () => {
+      // Why the others could have been listed: the coven's and the retired row hold fire too.
+      const [{ count }] = await sql`
+        select count(*)::int as count from ingredients where 'fire' = any(elements)`;
+      expect(count).toBe(4);
+
+      expect(await namesOf({ elements: ['fire'] })).toEqual(['Fixture Fiery', 'Fixture Wet']);
+      await expect(findCompendiumCount({ elements: ['fire'] }, undefined)).resolves.toEqual({
+        totalCount: 2,
+        countBefore: null,
+      });
+    });
+
+    it('lists an entry holding either of two elements once', async () => {
+      expect(await namesOf({ elements: ['air', 'fire'] })).toEqual([
+        'Fixture Airy',
+        'Fixture Fiery',
+        'Fixture Wet',
+      ]);
+      expect(await namesOf({ elements: ['water', 'fire'] })).toEqual([
+        'Fixture Fiery',
+        'Fixture Wet',
+      ]);
+    });
+
+    // MB.215: a property true of only some forms lives on those forms, so a live
+    // form holding the element makes the entry hold it (the toxic filter's reading).
+    describe('held on a form', () => {
+      beforeEach(async () => {
+        await add('Fixture Form Fire', {
+          variants: [makeVariant(), makeVariant({ form: 'Fixture Oil', elements: ['fire'] })],
+        });
+        const retired = await add('Fixture Retired Fire', {
+          variants: [makeVariant(), makeVariant({ form: 'Fixture Oil', elements: ['fire'] })],
+        });
+        await sql`
+          update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+          where ingredient_id = ${retired} and form = 'Fixture Oil'`;
+        await add('Fixture Triple Fire', {
+          elements: ['fire'],
+          variants: [
+            makeVariant({ form: 'Fixture Oil', elements: ['fire'] }),
+            makeVariant({ form: 'Fixture Resin', elements: ['fire', 'air'] }),
+          ],
+        });
+      });
+
+      it('lists an entry whose live form holds the element, once, and not one whose retired form does', async () => {
+        // Why the retired entry could have been listed: its deleted form really holds fire.
+        const [{ count }] = await sql`
+          select count(*)::int as count from ingredient_variants v
+          join ingredients i on i.id = v.ingredient_id
+          where i.name = 'Fixture Retired Fire' and 'fire' = any(v.elements)
+            and v.deleted_at is not null`;
+        expect(count).toBe(1);
+
+        const listed = ['Fixture Fiery', 'Fixture Form Fire', 'Fixture Triple Fire', 'Fixture Wet'];
+        expect(await namesOf({ elements: ['fire'] })).toEqual(listed);
+        await expect(findCompendiumCount({ elements: ['fire'] }, undefined)).resolves.toEqual({
+          totalCount: listed.length,
+          countBefore: null,
+        });
+      });
+    });
+
+    it('combines with another filter, and an empty list is no filter', async () => {
+      expect(await namesOf({ elements: ['fire'], query: 'Wet' })).toEqual(['Fixture Wet']);
+      expect(await namesOf({ elements: [] })).toHaveLength(4);
     });
   });
 
@@ -1240,6 +1393,13 @@ describe('findCompendiumCount', () => {
 
   it('counts by category', async () => {
     await expectCountsToMatchTheWalk({ categoryIds: [protection] }, 4);
+  });
+
+  it('counts by any of several categories', async () => {
+    await expectCountsToMatchTheWalk(
+      { categoryIds: [protection, '00000000-0000-4000-8000-000000000000'], categoryMode: 'any' },
+      4,
+    );
   });
 
   it('counts by any of several forms', async () => {

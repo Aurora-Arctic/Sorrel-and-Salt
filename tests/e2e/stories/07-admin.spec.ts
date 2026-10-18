@@ -139,12 +139,19 @@ test.describe('story 17: everyone but an admin is kept from editing the compendi
       expect((await page.goto(`/coven/${coven}`))?.status()).toBe(200);
       await expect(page.getByRole('banner').getByRole('link', { name: 'Admin' })).toHaveCount(0);
 
-      // Today a non-admin meets a compendium entry nowhere but these addresses;
-      // the public compendium (M8.18, M8.19) will show them entries, and this
-      // walk extends there: the entry's page read, with no Edit or Delete on it.
+      // The edit addresses refuse a non-admin.
       await expectNotAuthorized(page, `/admin/compendium?edit=${slug}`);
       await expect(page.getByRole('textbox')).toHaveCount(0);
       await expectNotAuthorized(page, '/admin/compendium?new');
+
+      // The entry's public page shows the same non-admin its content and no way
+      // to change it: no Edit, no Delete, anywhere on it.
+      const entry = await page.goto(`/compendium/ingredients/${slug}`);
+      expect(entry?.status()).toBe(200);
+      await expect(page.getByRole('heading', { level: 1, name, exact: true })).toBeVisible();
+      await expect(page.getByRole('link', { name: /^(edit|delete)/i })).toHaveCount(0);
+      await expect(page.getByRole('button', { name: /^(edit|delete)/i })).toHaveCount(0);
+      await assertNoAccessibilityViolations(page);
 
       // The entry is as the admin left it: it still opens, under its own name.
       await signInAgainAs(page, adminId);
@@ -311,6 +318,12 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     'an admin adds a compendium entry, edits it, and deletes it, the list following each',
     { tag: '@story-18' },
     async ({ page }) => {
+      // A longer limit for this story alone, which is long: eight axe scans, two saves, a reload
+      // and a delete. In CI, beside the other stories, it took 29.7s to 31.1s, the scans alone
+      // 12s of that, and the default 30s ran out at the reloaded dialog's Close. The trace shows
+      // the app quick throughout: that dialog was gone 0.4s after Close was pressed, and every
+      // request answered in under 0.15s, so the time is the story's own work (MB.267).
+      test.setTimeout(60_000);
       await signInAs(page, 'compendium@story-18.test', ['discord'], 'admin');
       expect((await page.goto('/admin/compendium'))?.status()).toBe(200);
       const add = page.getByRole('link', { name: 'Add Ingredient' });
@@ -633,6 +646,100 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
           name: 'Cleansing & Release',
         }),
       ).toBeVisible();
+    },
+  );
+
+  test(
+    'an admin undoes and redoes edits in a category group and in a category, back to the saved values',
+    { tag: '@story-18' },
+    async ({ page }) => {
+      await signInAs(page, 'undo@story-18.test', ['discord'], 'admin');
+      expect((await page.goto('/admin/category-groups'))?.status()).toBe(200);
+      const groupRow = rowOf(page, 'Category Groups', 'Cleansing & Release');
+      await groupRow.getByRole('link', { name: 'Edit Cleansing & Release' }).click();
+      const group = page.getByRole('dialog', {
+        name: 'Edit Category Group, Cleansing & Release',
+        exact: true,
+      });
+      const name = group.getByRole('textbox', { name: 'Name', exact: true });
+      const dark = group.getByRole('textbox', { name: 'Dark Theme Colour', exact: true });
+      const save = group.getByRole('button', { name: 'Save Group' });
+      const undo = group.getByRole('button', { name: 'Undo', exact: true });
+      const redo = group.getByRole('button', { name: 'Redo', exact: true });
+      await expect(name).toBeVisible();
+      const savedName = await name.inputValue();
+      const savedDark = await dark.inputValue();
+      await expect(save).toBeDisabled();
+      await expect(undo).toBeDisabled();
+
+      await name.fill('Aaa Undone Name');
+      await dark.fill('#5b9bd5');
+      await expect(save).toBeEnabled();
+      await expect(undo).toBeEnabled();
+
+      // The last change goes first, and focus follows it.
+      await page.keyboard.press('ControlOrMeta+z');
+      await expect(dark).toHaveValue(savedDark);
+      await expect(dark).toBeFocused();
+      await expect(name).toHaveValue('Aaa Undone Name');
+      await page.keyboard.press('ControlOrMeta+z');
+      await expect(name).toHaveValue(savedName);
+      await expect(name).toBeFocused();
+      await expect(save).toBeDisabled();
+      await expect(group.getByRole('status', { name: 'Edit History' })).not.toBeEmpty();
+
+      await redo.click();
+      await expect(name).toHaveValue('Aaa Undone Name');
+      await expect(save).toBeEnabled();
+      await undo.click();
+      await expect(name).toHaveValue(savedName);
+      await expect(save).toBeDisabled();
+      await assertNoAccessibilityViolations(page);
+
+      // A drag on the hue slider is one step: the picker reports every pointer
+      // move, and one chord still takes the whole drag back.
+      const thumb = group.getByRole('slider', { name: 'Dark Theme Colour hue' });
+      await thumb.hover();
+      const at = (await thumb.boundingBox())!;
+      await page.mouse.down();
+      await page.mouse.move(at.x + at.width / 2 + 40, at.y + at.height / 2, { steps: 6 });
+      await page.mouse.up();
+      await expect(dark).not.toHaveValue(savedDark);
+      await expect(save).toBeEnabled();
+      await page.keyboard.press('ControlOrMeta+z');
+      await expect(dark).toHaveValue(savedDark);
+      await expect(save).toBeDisabled();
+
+      // Back at its starting values, closing asks nothing.
+      await group.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(group).toHaveCount(0);
+      await expect(page.getByRole('button', { name: 'Discard Changes' })).toHaveCount(0);
+
+      // A category's group, through the combobox.
+      await page.goto('/admin/categories?edit=protection');
+      const category = page.getByRole('dialog', { name: 'Edit Category, Protection', exact: true });
+      const picker = category.getByRole('combobox', { name: 'Group' });
+      const saveCategory = category.getByRole('button', { name: 'Save Category' });
+      await expect(picker).toBeVisible();
+      const savedGroup = await picker.inputValue();
+      await expect(saveCategory).toBeDisabled();
+      await picker.click();
+      await category.getByRole('option', { name: 'Cleansing & Release', exact: true }).click();
+      await expect(picker).toHaveValue('Cleansing & Release');
+      await expect(saveCategory).toBeEnabled();
+
+      await page.keyboard.press('ControlOrMeta+z');
+      await expect(picker).toHaveValue(savedGroup);
+      await expect(saveCategory).toBeDisabled();
+      await page.keyboard.press('ControlOrMeta+Shift+z');
+      await expect(picker).toHaveValue('Cleansing & Release');
+      await expect(saveCategory).toBeEnabled();
+
+      // Redone but unsaved, leaving asks; Discard Changes drops it.
+      await picker.focus();
+      await page.keyboard.press('Escape');
+      await category.getByRole('button', { name: 'Discard Changes' }).click();
+      await expect(category).toHaveCount(0);
     },
   );
 

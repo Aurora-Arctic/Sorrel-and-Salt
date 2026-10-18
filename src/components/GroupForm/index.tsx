@@ -13,11 +13,24 @@ import { capitalise, plural } from '../../lib/text';
 import type { GroupColorColumn } from '../../lib/types';
 import ChipColorField from '../ChipColorField';
 import { ComboboxSelect } from '../Combobox';
+import FormIcon from '../FormIcon';
 import { KINDS as VALUE_LIST_KINDS } from '../GroupedValueList/kinds';
 import { KINDS as GROUP_LIST_KINDS } from '../GroupList/kinds';
-import { FieldShell, FormActions, TextField, fieldDescription } from '../Field';
+import {
+  FieldShell,
+  FormActions,
+  FormHistoryButtons,
+  FormHistoryContext,
+  RadioGroupField,
+  TextField,
+  fieldDescription,
+  useFormHistory,
+} from '../Field';
+import type { RadioOption } from '../Field/types';
 import { ConfirmOverlay, ConfirmQuestion, DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
+import { z } from 'zod';
+import { FORM_GROUP_ICONS, type FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { CategoryGroupInput } from '@/modules/vocabulary/validation/category-group';
 import { DeityTraditionInput } from '@/modules/vocabulary/validation/deity-tradition';
 import { IngredientFormGroupInput } from '@/modules/vocabulary/validation/ingredient-form-group';
@@ -70,6 +83,7 @@ const CreateIngredientFormGroupDocument = graphql(`
     createIngredientFormGroup(input: $input) {
       id
       slug
+      icon
     }
   }
 `);
@@ -79,6 +93,7 @@ const UpdateIngredientFormGroupDocument = graphql(`
     updateIngredientFormGroup(id: $id, input: $input) {
       id
       slug
+      icon
     }
   }
 `);
@@ -113,10 +128,10 @@ const DeleteDeityTraditionDocument = graphql(`
   }
 `);
 
-const FIELDS = ['name', 'description', 'colorDark', 'colorLight'] as const;
+const FIELDS = ['name', 'description', 'colorDark', 'colorLight', 'icon'] as const;
 type FieldName = (typeof FIELDS)[number];
 
-const EMPTY: GroupValues = { name: '', description: '', colorDark: '', colorLight: '' };
+const EMPTY: GroupValues = { name: '', description: '', colorDark: '', colorLight: '', icon: '' };
 
 /**
  * A kind as the form uses it, from its declaration, as GroupedValueForm's
@@ -161,8 +176,14 @@ const KINDS: Record<GroupKind, GroupFormKind> = {
     moved: "Each form keeps its name and takes its new group's address.",
     // The question a form group answers: what kind of thing is it (DESIGN.md §5).
     describe: 'What kind of thing the forms in this group are',
-    // Drops the two empty colours, which a form group's input does not take.
-    schema: IngredientFormGroupInput,
+    // Drops the two empty colours, which a form group's input does not take,
+    // and reads the radio group's empty value, None, as the null that clears the icon.
+    schema: IngredientFormGroupInput.extend({
+      icon: z.preprocess(
+        (icon) => (icon === '' ? null : icon),
+        IngredientFormGroupInput.shape.icon,
+      ),
+    }),
     create: CreateIngredientFormGroupDocument,
     update: UpdateIngredientFormGroupDocument,
     remove: DeleteIngredientFormGroupDocument,
@@ -198,6 +219,16 @@ const COLORS: GroupColorField[] = [
   },
 ];
 
+/** The strip's choices: each icon by its name, then None last, the generic one. */
+const ICONS: readonly RadioOption<FormGroupIcon | ''>[] = [
+  ...FORM_GROUP_ICONS.map((icon) => ({
+    value: icon,
+    label: capitalise(icon),
+    icon: <FormIcon name={icon} />,
+  })),
+  { value: '', label: 'None', icon: <FormIcon name={null} /> },
+];
+
 const isField = (key: unknown): key is FieldName => FIELDS.includes(key as FieldName);
 
 const GroupForm = ({
@@ -221,6 +252,7 @@ const GroupForm = ({
           description: group.description,
           colorDark: group.colorDark,
           colorLight: group.colorLight,
+          icon: group.icon,
         }
       : EMPTY,
     resolver,
@@ -254,6 +286,13 @@ const GroupForm = ({
   // Cancel, and every other way out of the modal, asks first while the form
   // has changes (MB.115, the owner's call); a save or a delete does not.
   const discard = useDiscardGuard(isDirty);
+  // Undo and redo (M12.9), off while a question is up over the form: the
+  // unsaved changes', or a step of the delete.
+  const root = useRef<HTMLFormElement>(null);
+  const history = useFormHistory(methods, {
+    root,
+    enabled: !discard.asking && step.at === 'idle',
+  });
   const [moveTo, setMoveTo] = useState('');
   const [moveError, setMoveError] = useState<string>();
   const [alert, setAlert] = useState<string>();
@@ -360,7 +399,12 @@ const GroupForm = ({
               setMoveTo(value);
               setMoveError(undefined);
             }}
-            choices={others.map((each) => ({ value: each.id, label: each.name }))}
+            choices={others.map((each) => ({
+              value: each.id,
+              label: each.name,
+              // A form group with no icon shows the generic; the other kinds carry none.
+              icon: kind === 'form' ? <FormIcon name={each.icon ?? null} /> : undefined,
+            }))}
             placeholder={`Choose a ${noun}`}
             required
             {...aria}
@@ -429,89 +473,114 @@ const GroupForm = ({
 
   return (
     <FormProvider {...methods}>
-      <form className="form" onSubmit={handleSubmit((input) => send(input))} noValidate>
-        {rootError && <Notice kind="error">{rootError}</Notice>}
-        <TextField<GroupValues>
-          name="name"
-          label="Name"
-          placeholder="Add a name"
-          autoComplete="off"
-          required
-        />
-        <TextField<GroupValues>
-          name="description"
-          label="Description"
-          placeholder={spec.describe}
-          multiline
-          required
-        />
-        {kind === 'category' &&
-          COLORS.map(({ column, label, hint }) => {
-            const { aria, ...shell } = fieldDescription({
-              id: `${id}-${column}`,
-              hint,
-              error: errors[column]?.message,
-            });
-            // The shell draws the label and its mark, naming the hex box by
-            // `controlId`, but not the error: ChipColorField places that
-            // itself, between its ratio and its near-colour warning, so the
-            // shell's own would show it twice.
-            return (
-              <FieldShell
-                key={column}
-                label={label}
-                hint={hint}
-                required
-                {...shell}
-                error={undefined}
-              >
-                <Controller
-                  control={control}
-                  name={column}
-                  render={({ field }) => (
-                    <ChipColorField
-                      id={shell.controlId}
-                      label={label}
-                      column={column}
-                      placeholder="Add hex"
-                      value={field.value}
-                      onChange={(value) => {
-                        field.onChange(value);
-                        fillPartner(column, value);
-                      }}
-                      onBlur={field.onBlur}
-                      sample={typedName.trim() || 'Sample'}
-                      partner={typed[PARTNER[column]]}
-                      others={groups.flatMap((each) => {
-                        const hex = each[column];
-                        return each.id !== group?.id && hex ? [{ name: each.name, hex }] : [];
-                      })}
-                      inputRef={field.ref}
-                      error={shell.error}
-                      errorId={shell.errorId}
-                      aria-required
-                      {...aria}
-                    />
-                  )}
+      <FormHistoryContext.Provider value={history}>
+        <form
+          ref={root}
+          className="form"
+          onSubmit={handleSubmit((input) => send(input))}
+          noValidate
+        >
+          <FormHistoryButtons />
+          {rootError && <Notice kind="error">{rootError}</Notice>}
+          <TextField<GroupValues>
+            name="name"
+            label="Name"
+            placeholder="Add a name"
+            autoComplete="off"
+            required
+          />
+          <TextField<GroupValues>
+            name="description"
+            label="Description"
+            placeholder={spec.describe}
+            multiline
+            required
+          />
+          {kind === 'category' &&
+            COLORS.map(({ column, label, hint }) => {
+              const { aria, ...shell } = fieldDescription({
+                id: `${id}-${column}`,
+                hint,
+                error: errors[column]?.message,
+              });
+              // The shell draws the label and its mark, naming the hex box by
+              // `controlId`, but not the error: ChipColorField places that
+              // itself, between its ratio and its near-colour warning, so the
+              // shell's own would show it twice.
+              return (
+                <FieldShell
+                  key={column}
+                  label={label}
+                  hint={hint}
+                  required
+                  {...shell}
+                  error={undefined}
+                >
+                  <Controller
+                    control={control}
+                    name={column}
+                    render={({ field }) => (
+                      <ChipColorField
+                        id={shell.controlId}
+                        label={label}
+                        column={column}
+                        placeholder="Add hex"
+                        value={field.value}
+                        onChange={(value) => {
+                          field.onChange(value);
+                          fillPartner(column, value);
+                        }}
+                        onBlur={field.onBlur}
+                        sample={typedName.trim() || 'Sample'}
+                        partner={typed[PARTNER[column]]}
+                        others={groups.flatMap((each) => {
+                          const hex = each[column];
+                          return each.id !== group?.id && hex ? [{ name: each.name, hex }] : [];
+                        })}
+                        inputRef={field.ref}
+                        error={shell.error}
+                        errorId={shell.errorId}
+                        aria-required
+                        {...aria}
+                      />
+                    )}
+                  />
+                </FieldShell>
+              );
+            })}
+          {kind === 'form' && (
+            <Controller
+              control={control}
+              name="icon"
+              render={({ field }) => (
+                <RadioGroupField<FormGroupIcon | ''>
+                  legend="Icon"
+                  layout="strip"
+                  name={`${id}-icon`}
+                  options={ICONS}
+                  value={field.value}
+                  onChange={field.onChange}
+                  note="The icon drawn beside each form in this group. None draws the generic one."
                 />
-              </FieldShell>
-            );
-          })}
-        <FormActions
-          noun={title}
-          dirty={isDirty}
-          submitting={isSubmitting}
-          onCancel={() => discard.request(onDone)}
-          onDelete={
-            group &&
-            (() => {
-              setAlert(undefined);
-              setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
-            })
-          }
-        />
-        {question()}
-      </form>
+              )}
+            />
+          )}
+          <FormActions
+            noun={title}
+            dirty={isDirty}
+            submitting={isSubmitting}
+            onCancel={() => discard.request(onDone)}
+            onDelete={
+              group &&
+              (() => {
+                setAlert(undefined);
+                setStep(memberCount > 0 ? { at: 'choosing' } : { at: 'confirming' });
+              })
+            }
+          />
+          {question()}
+        </form>
+      </FormHistoryContext.Provider>
     </FormProvider>
   );
 };

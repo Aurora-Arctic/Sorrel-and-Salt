@@ -94,7 +94,7 @@ by name and address, the call and the landing, Stop busy and still
 focusable while pending with a second press sending nothing, and the failure
 as an alert
 with the admin kept on the page. The published height is presentation, a
-measured layout that jsdom fakes, and no test asserts it.
+measured layout that happy-dom fakes, and no test asserts it.
 `tests/app/impersonation-banner.test.tsx` covers the slot (shown only while
 the session is an impersonation) and the layout (mounted only where the gate
 is open).

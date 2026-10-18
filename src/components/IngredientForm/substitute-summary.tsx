@@ -1,10 +1,11 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { createContext, type ReactElement, useContext } from 'react';
+import { createContext, type ReactElement, type ReactNode, useContext } from 'react';
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlQuery } from '../../lib/graphql-client';
+import FormIcon from '../FormIcon';
 import type { EntrySummary } from '../Combobox/types';
 import { ELEMENT_OPTIONS, NOMENCLATURE_OPTIONS, labelOf } from './options';
 import type { EntryHref, SubstituteListEntry, SubstituteSummaryProps } from './types';
@@ -35,6 +36,11 @@ const IngredientSummaryDocument = graphql(`
       variants {
         id
         form
+        formChoice {
+          group {
+            icon
+          }
+        }
         elements
         celestialBodies
         zodiacSigns
@@ -46,8 +52,8 @@ const IngredientSummaryDocument = graphql(`
 
 /**
  * Where a summary links its entry, when the page holding the form has a page
- * for it: none by default, since a coven's ingredient page and the public
- * compendium's are not built yet.
+ * for it: none by default, and the dialogs that hold the form pass the real
+ * routes (the public compendium page, or the admin's modal).
  */
 export const EntryHrefContext = createContext<EntryHref | undefined>(undefined);
 
@@ -89,9 +95,18 @@ export function SubstituteSummary({
   const form = variantId
     ? ingredient.variants.find((variant) => variant.id === variantId)
     : undefined;
-  const facts: [string, string][] = [
+  const facts: [string, ReactNode][] = [
     ['Classification', labelOf(NOMENCLATURE_OPTIONS, ingredient.nomenclature)],
-    ...(form ? [['Form', form.form] as [string, string]] : []),
+    ...(form
+      ? [
+          [
+            'Form',
+            <>
+              <FormIcon name={form.formChoice?.group.icon ?? null} /> {form.form}
+            </>,
+          ] as [string, ReactNode],
+        ]
+      : []),
     [
       'Elements',
       joined(ingredient.elements, form?.elements)

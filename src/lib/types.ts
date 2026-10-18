@@ -193,10 +193,13 @@ export interface CitationPart {
 }
 
 /**
- * A list address's query, for `listHref`: a string is a pair, `true` a bare
- * flag (`new`, `awaiting`), and `undefined`, `false` or `''` is left out.
+ * A list address's query, for `listHref`: a string is a pair, a list one pair
+ * per value (`forms=Herb&forms=Oil`), `true` a bare flag (`new`, `awaiting`), and
+ * `undefined`, `false`, `''` or an empty list is left out.
  */
-export type ListHrefParams = Readonly<Record<string, string | boolean | undefined>>;
+export type ListHrefParams = Readonly<
+  Record<string, string | readonly string[] | boolean | undefined>
+>;
 
 /**
  * The modal a list page has open over it, by its address: `'new'` for the
@@ -245,7 +248,16 @@ export interface ShellViewer {
 
 /** One coven the viewer belongs to, as the shell's switcher and brand link need it. */
 export interface ShellWorkspace {
+  id: string;
   slug: string;
   name: string;
   canReadMembers: boolean;
+  /** The viewer’s role there may create ingredients: false lists the coven in Add Ingredient, disabled. */
+  canWrite: boolean;
+}
+
+/** The viewer and their covens together: what the shell is drawn from (`src/lib/viewer.ts`). */
+export interface ShellContext {
+  viewer: ShellViewer;
+  workspaces: ShellWorkspace[];
 }

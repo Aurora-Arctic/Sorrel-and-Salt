@@ -18,8 +18,9 @@ import {
   referencePanel,
   renderWithClient,
   waitFor,
+  duplicateHref,
 } from '../../support/ingredient-form';
-import { press, typeIn } from '../../support/interact';
+import { press, redo, typeIn, undo } from '../../support/interact';
 import { mockGraphQLError } from '../../support/msw/graphql';
 import {
   NEW_REFERENCE_ID,
@@ -94,7 +95,9 @@ function renderField() {
 function renderForm() {
   const onSaved = vi.fn();
   offerNothing();
-  renderWithClient(<IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />);
+  renderWithClient(
+    <IngredientForm duplicateHref={duplicateHref} workspaceId={WORKSPACE_ID} onSaved={onSaved} />,
+  );
   return onSaved;
 }
 
@@ -132,10 +135,10 @@ const nameBox = () => screen.getByLabelText(labelled('Name'), { selector: 'input
 /** The harness's save, or the form's, by name. */
 const saveButton = (name = 'Save Ingredient') => screen.getByRole('button', { name });
 const save = () => press(saveButton());
-/** Opens the box's list and picks its last row, New Reference…, which opens the panel. */
+/** Opens the box's list and picks its last row, New Reference, which opens the panel. */
 const newReference = () => {
   fireEvent.keyDown(box(), { key: 'ArrowDown' });
-  fireEvent.click(screen.getByRole('option', { name: 'New Reference…' }));
+  fireEvent.click(screen.getByRole('option', { name: 'New Reference' }));
 };
 /** The row's Locator, once its edit has opened the row; `short` names the row's source. */
 const locatorOf = (short: string) => {
@@ -190,7 +193,7 @@ describe('ReferencesField', () => {
       expect(calls[1]).toMatchObject({ workspaceId: WORKSPACE_ID, query: 'testwort' });
     });
 
-    it('offers each source by its citation and whose it is, in the order found, then "New Reference…" last', async () => {
+    it('offers each source by its citation and whose it is, in the order found, then "New Reference" last', async () => {
       renderField();
       const calls = offerReferences([NOTES, HERBAL]);
 
@@ -200,7 +203,7 @@ describe('ReferencesField', () => {
       expect(screen.getAllByRole('option').map((item) => item.textContent)).toEqual([
         `${NOTES.citation}This coven’s source`,
         `${HERBAL.citation}Compendium source`,
-        'New Reference…',
+        'New Reference',
       ]);
       expect(screen.queryByRole('option', { name: /Use what you typed/ })).not.toBeInTheDocument();
     });
@@ -289,30 +292,53 @@ describe('ReferencesField', () => {
       expect(inRow.getByRole('button', { name: 'About Locator' })).toBeInTheDocument();
     });
 
-    it('removes a row by its ×, keeping the focus in the box, and says so', async () => {
+    // Its × asks first, as a variant's does (the owner's call, 2026-10-16).
+    it('removes a row by its × once confirmed, keeping the focus in the box, and says so', async () => {
       renderField();
       const calls = offerReferences([HERBAL, NOTES]);
 
       await pickBoth(calls);
       press(within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` }));
 
+      expect(rows()).toHaveLength(2);
+      expect(screen.getByRole('button', { name: 'Keep It' })).toHaveFocus();
+      press(screen.getByRole('button', { name: 'Remove' }));
+
       expect(rows()).toHaveLength(1);
       expect(row(NOTES.citation)).toBeInTheDocument();
       expect(changes()).toHaveTextContent(HERBAL_SHORT);
+      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
       expect(box()).toHaveFocus();
     });
 
-    it('takes the last row on Backspace in the empty box, as every list does', async () => {
+    it('keeps a row, and the focus on its ×, when its removal is answered Keep It', async () => {
+      renderField();
+      const calls = offerReferences([HERBAL, NOTES]);
+
+      await pickBoth(calls);
+      const remove = within(references()).getByRole('button', { name: `Remove ${HERBAL_SHORT}` });
+      press(remove);
+      press(screen.getByRole('button', { name: 'Keep It' }));
+
+      expect(rows()).toHaveLength(2);
+      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+      expect(remove).toHaveFocus();
+    });
+
+    // Unlike the chip lists, the keys never take a row, asked or not: only
+    // its ×, which asks (the owner's call, 2026-10-16).
+    it('keeps every row on Backspace or Delete in the empty box, and asks nothing', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
 
       await pick(calls, 'testwort', HERBAL.citation);
-      const added = changes().textContent ?? '';
+      const said = changes().textContent;
       fireEvent.keyDown(box(), { key: 'Backspace' });
+      fireEvent.keyDown(box(), { key: 'Delete' });
 
-      expect(rows()).toHaveLength(0);
-      expect(changes()).not.toHaveTextContent(added);
-      expect(changes()).toHaveTextContent(HERBAL_SHORT);
+      expect(rows()).toHaveLength(1);
+      expect(changes()).toHaveTextContent(said ?? '');
+      expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
     });
 
     it('never submits the ingredient on Enter in the box with nothing picked', async () => {
@@ -360,10 +386,16 @@ describe('ReferencesField', () => {
   });
 
   describe('the new reference panel', () => {
+    // The panel's own Kind box looks references up as soon as it opens; a
+    // test that cares what comes back overrides this.
+    beforeEach(() => {
+      offerReferences([]);
+    });
+
     // The owner's call: asking again for a panel already open takes you
     // back to it, rather than doing nothing; that the panel then focuses
     // Kind and keeps what was typed is reference-panel.test.tsx's.
-    it('opens from the list’s last row, "New Reference…", taking you to Kind, and again while open', async () => {
+    it('opens from the list’s last row, "New Reference", taking you to Kind, and again while open', async () => {
       renderField();
       const calls = offerReferences([HERBAL]);
       noPanel();
@@ -373,7 +405,7 @@ describe('ReferencesField', () => {
       expect(kindBox()).toHaveFocus();
 
       await lookUp(calls, 'testwort');
-      fireEvent.click(await screen.findByRole('option', { name: 'New Reference…' }));
+      fireEvent.click(await screen.findByRole('option', { name: 'New Reference' }));
       expect(kindBox()).toHaveFocus();
     });
 
@@ -653,6 +685,27 @@ describe('ReferencesField', () => {
   // the mutation and clear them for the next ingredient, and route a
   // server's issue on one source to its row.
   describe('on the whole form', () => {
+    it('takes a picked source out, and gives back the text typed to find it, on one undo; a redo picks it again', async () => {
+      renderForm();
+      const calls = offerReferences([HERBAL]);
+
+      await pick(calls, 'fixture', HERBAL.citation);
+      expect(rows()).toHaveLength(1);
+      expect(box()).toHaveValue('');
+
+      undo();
+
+      expect(rows()).toHaveLength(0);
+      expect(box()).toHaveValue('fixture');
+
+      redo();
+
+      expect(rows()).toHaveLength(1);
+      expect(box()).toHaveValue('');
+      // Leaving a field validates it; let that land inside the test.
+      await act(async () => {});
+    });
+
     it('sends each source by its id with its locator as typed, and no citation text, clearing them after Save & Add Another', async () => {
       const saves = acceptCreate();
       const onSaved = renderForm();

@@ -1,7 +1,7 @@
 # Welcome
 
 `src/components/Welcome/` — the public entry page at `/`: what Sorrel & Salt
-is, that it is invite-only, and the way in. Server component
+is, that it is invite-only, the way in, and a link to the public compendium. Server component
 `src/app/page.tsx` reads the session and hands down one prop, the signed-in
 visitor's landing; this component renders the same page for everyone and
 changes only the last link.
@@ -24,7 +24,12 @@ Nothing else on the page depends on who is looking, and the page never
 redirects. Where the landing lives, and why it is not `/`, is
 [`design-decisions/mb.57-post-sign-in-landing.md`](../design-decisions/mb.57-post-sign-in-landing.md).
 
-**Both links are `next/link`.** `landing` is typed as Next's `Route`
+**Browse the Compendium** (`/compendium`, a `.btn .btn--quiet` beside the way in, so it reads as a second, lesser way on) is
+offered to everyone, signed in or not: the compendium is the one public
+surface (MB.80), and the front door was otherwise no way to it. It does not
+depend on the session.
+
+**Every link is `next/link`.** `landing` is typed as Next's `Route`
 (`signedInLanding` returns one), so `typedRoutes` checks it, now that
 `/coven` has a page. In the workshop, `next/link`
 is aliased to a plain anchor (`.ladle/UnoptimizedLink.tsx`), as Ladle's
@@ -51,10 +56,8 @@ nothing; it stays only as the hook `Backdrop` reads,
 The component's own column is a flex column with a `space(5)` gap. The
 heading and the first paragraph are a `.header`, the paragraph a `.lede`,
 as every section head is. The way in sits a further `space(2)` down, so it
-reads as the page's end. The link takes `.btn .btn--solid`, since it is the
-page's one action. It is a `.btn` on an anchor, which needs nothing of its
-own: `.btn` drops the underline and outranks the visited ink
-([`styling.md`](../styling.md), "Buttons"). Function used: `space()`.
+reads as the page's end. The way in takes `.btn .btn--solid`, the page's one primary action; the
+compendium link sits beside it as `.btn .btn--quiet`, wrapping below on a phone. Function used: `space()`.
 
 **The lede is the shared `.lede`, at body size in the muted ink**, as every
 section head's is. Before MB.116 it was 1.125rem in the body ink, a step
@@ -71,11 +74,11 @@ Render-only, no test ids, no snapshots.
 
 ## Testing
 
-`tests/components/Welcome/index.test.tsx` covers the way in: the signed-out
+`tests/components/Welcome/index.test.tsx` covers the compendium link's href for both visitors, and the way in: the signed-out
 link to `/sign-in` with no "Continue", and the signed-in link to the
 `landing` given, an admin's included, with no Sign In. What the page says is
 copy, and no test asserts it. Role and label queries only. Runs in the `dom`
-(jsdom) Vitest project — `npm run test:coverage`.
+(happy-dom) Vitest project — `npm run test:coverage`.
 `tests/app/page.test.tsx` covers the page's half, with the session mocked:
 Sign In signed out, and Continue signed in.
 

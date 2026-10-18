@@ -35,18 +35,22 @@ movable, on dnd-kit.
 | `suggestions`      | `{ options, pending }` for the text as it stands. Left out for a box with no source, which never opens, has no chevron and no status region.                                                                                                                                                   |
 | `entries`          | What a list holds, drawn inside the control ahead of the text.                                                                                                                                                                                                                                 |
 | `qualifier`        | `{ text, detail? }`: what a pick leaves out of the text, a picked form's group, in brackets after the text, muted, its detail in a tooltip. See "A qualifier".                                                                                                                                 |
+| `icon`             | A mark drawn before the text, `aria-hidden`: the type-ahead box's chosen icon, there while the box reads the chosen label (M12.7).                                                                                                                                                             |
 | `clear`            | `{ label, onClear, empty }`: a control that empties the box, "Clear Folk Names"; `empty` while there is nothing to clear, when it is hidden but keeps its room.                                                                                                                                |
+| `leading`          | A caller's own control drawn inside the control box before the text and any entries: a form's submit, say. A slot rather than a built-in, as Combobox knows nothing about forms.                                                                                                               |
+| `toggle`           | Whether a box with `suggestions` draws its chevron button; `true` unless said. Leave it out (`false`) for a free-text search that opens as you type.                                                                                                                                           |
 | `listAnchor`       | The element the open list spans and opens beside: a list field's row, its box and its Add together. The control when left out. See "Where the list opens".                                                                                                                                     |
-| `create`           | `{ label, onCreate }`: a last row that makes something new, "New Reference…", with no typed row, there with a blank box too. See "The create row".                                                                                                                                             |
+| `action`           | `{ label, onSelect }`: a last row that does something rather than picking a suggestion, in italics: "New Reference" makes something new (no typed row, there with a blank box too), "See all results." applies a search to its list. See "The action row".                                     |
 | `highlightFirst`   | The first row highlighted as the list opens and narrows, so Enter takes it: a closed set's type-ahead. Nothing is highlighted unless said.                                                                                                                                                     |
 | `noun`             | What a row is called, singular: the list's name, its chevron's and its status's count, "Tradition choices", "3 choices". "suggestion" unless said.                                                                                                                                             |
 | `placeholder`      | Shown, muted, while the box is empty, beside entries too: the prompt for the next, with room kept for it (see "Styling").                                                                                                                                                                      |
 | `required`         | `aria-required`, as the field marks it.                                                                                                                                                                                                                                                        |
 | `offerTyped`       | Whether the typed row is offered; `true` unless said. A list passes `false` for text it would refuse, a repeat (MB.174). Enter with nothing highlighted still reaches `onCommit`.                                                                                                              |
+| `empty`            | Optional: what the popup says once the lookup has settled with no rows and the text is not blank; the default is No match for “text”, and `false` says nothing. Outside the listbox, and read by the status. See "The empty message".                                                          |
 | `inputRef`, `name` | The box's, for react-hook-form.                                                                                                                                                                                                                                                                |
 | `aria-describedby` | The field's hint and error, read with the box; `aria-invalid` draws the error edge on the control.                                                                                                                                                                                             |
 
-A `ComboboxOption` is `{ value, label?, note?, curated?, heading?, key? }`: the text a
+A `ComboboxOption` is `{ value, label?, icon?, note?, curated?, heading?, key? }`: the text a
 pick writes, the row's text when it is more than the value ("Wax (Animal)"), a
 second line, which bucket it is in — `curated` for the two source buckets, or
 `heading` for a bucket the source names itself, a category's group (MB.126) —
@@ -57,6 +61,15 @@ can share all three, a compendium entry and the coven's own copy of it, and
 only the ingredient's id tells them apart (MB.131). The row's accessible name is its
 label and its note, so two same-named forms are told apart by a screen
 reader as well as by the eye, and so is who claims a value.
+
+An option's `icon` (M12.7) is a `ReactNode`, not a typed name: the box has no
+icon vocabulary of its own, and the caller, which knows its domain's, hands in
+the finished element (the Form box passes `<FormIcon>`). It is drawn before the
+label in a `combobox__icon` span that is `aria-hidden`, so it adds nothing to the
+row's name. `ComboboxProps.typedIcon` does the same for the typed-text row, and
+`ComboboxProps.icon` for the box's text: the Form box passes the picked form's
+icon there, before the name, while it holds the pick (the owner's call, M12.7).
+A qualifier carries no icon of its own.
 
 An option may also carry `colors`, a group row's `{ colorDark, colorLight }`,
 which a category's row does (the owner's call, M5.6b). The row then takes the pair inline through
@@ -76,6 +89,12 @@ colour is never the only cue.
   pick through `onPick`; Downshift's own fill-on-select is turned off in the
   state reducer, as are its select-on-blur and its emptying of a closed box on
   Escape. So a blur, Escape and Enter all keep what was typed.
+- **Escape on a closed box is left to the dialog.** Downshift would prevent
+  the key whenever the box holds text, which stops a modal around it hearing
+  its `cancel` event; the box marks it `preventDownshiftDefault` instead.
+  The one exception is the empty message: it is open content Downshift does not
+  know of, so Escape closes it alone and is prevented, as on an open list, and
+  the next Escape reaches the dialog.
 - **Leaving the box shuts its list for good.** The list is open only while
   it is wanted and has rows, so a box left while its lookup had none to show
   still wanted it, and the answer arriving later opened it, which Downshift
@@ -133,6 +152,18 @@ colour is never the only cue.
   the control's width, which matters wherever the control sizes itself, as
   in a filter row. A pressed clear hides, so its owner puts the focus back in
   the box. The multi-select's clear does the same.
+- **A `leading` control sits before the text.** It is drawn inside the control
+  box, ahead of the entries and the text, in its own wrapper that does not grow,
+  so the tab order matches the screen. A button given there takes the
+  `combobox__indicator` class, so it looks and focuses like the others. A press
+  on it counts as inside the control, so it does not close an open list or
+  empty the box, and its click still fires, so a submit goes through.
+- **Leave out the chevron (`toggle={false}`) on a free-text search.** The list
+  opens as you type, and a chevron promises a set to browse. No design system
+  surveyed puts one on a search box: React Aria's
+  [SearchField](https://react-aria.adobe.com/SearchField), Apple's Human
+  Interface Guidelines search fields, and Algolia Autocomplete, whose API
+  reference lists no toggle.
 - **The entries sit inside the control**, ahead of the text, each a chip with
   its own × — the owner's call, after react-select's multi-select — with the
   clear and the chevron on the control's right, parted by a line. Backspace or Delete in an empty box takes the last entry through `onRemoveLast`. The chip's
@@ -154,6 +185,15 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
   stylesheet caps the list at `min(20rem, that)`, which holds the eight
   seeded category groups without a scroll (M5.6, the owner's call). Its side is
   `data-placement`, "bottom-start" or "top-start".
+- **Clear of the phone's bottom bar.** The shell's fixed bottom bar
+  (`.section-nav`, phone width only) sits over the foot of the window, which
+  Floating UI cannot see. `flip`, `shift` and `size` therefore take a
+  `bottom` padding of the edge plus the bar's measured height (its safe
+  area included), read at every placement, so a field near the foot opens its
+  list above rather than behind the bar. The bar is found by its class, as
+  the shell's own stylesheets already do. Without the padding `size` shrinks
+  the list to the sliver left and `flip` then measures that shrunken list,
+  which still "fits" below, so it never flips.
 - **Followed while open, and only then.** `autoUpdate` re-places it on a
   scroll or a resize; a closed list, which Downshift keeps in the page, is
   not followed.
@@ -163,15 +203,56 @@ open list on Floating UI's `useFloating` (DESIGN.md §14):
   address in a citation, breaks anywhere (`overflow-wrap: anywhere` on the
   row, `overflow-x: hidden` on the list).
 
-jsdom lays nothing out, so the tests give the viewport, the box, the anchor
+happy-dom lays nothing out, so the tests give the viewport, the box, the anchor
 and the list the sizes Floating UI reads, as the sortable tests give the
 chips theirs.
 
-## The create row
+## The empty message
 
-A list whose entries can only be picked, the references' (MB.154), has
+**The rule: a typed box never closes for having nothing to show; it says so.**
+The message is part of the Combobox, not something a caller must remember. A
+caller that passes no `empty` gets the default, "No match for “text”" (the
+typed text in curly quotes, from `noMatch` in `popup.tsx`, the one place it
+is worded). A caller may pass a more specific sentence ("Keep typing to
+search" in the ingredient search), or `false` where saying nothing is right
+(the ingredient search before it has searched). The multi-select box says
+"Every option is already chosen" when its list is opened with nothing left to
+offer; it takes no typed text, so it has no "no match". Both draw the same
+`combobox__empty` row from `popup.tsx`, inside the same placed popup.
+
+- **`empty`** opens the popup once the lookup has settled (`pending` is
+  false), the text is not blank, the person wants the list open, and there
+  are no rows at all (the typed and action rows count as rows). The message
+  is drawn beneath the listbox, never in it: it is not an option, so a screen
+  reader must not count it as one. The status region reads the message; a
+  closed list is otherwise silent. With rows the status keeps its count and no
+  message shows. Downshift has no rows to hold here, so it still reads the
+  list as closed (`aria-expanded` is false).
+- **One placed popup.** When `empty` is passed, a `combobox__popup`
+  wrapper takes the place of the `<ul>` as the floating element (see "Where
+  the list opens"), so the listbox and message move together,
+  beneath the box or above it. The `<ul>` keeps Downshift's `getMenuProps`,
+  so its `id` and the input's `aria-controls` still agree. Every box has the popup now (only `empty={false}` goes without), and the multi-select's list sits in one too.
+  The popup is a panel and does not scroll; the `<ul>` does, in both cases,
+  because Downshift scrolls the highlighted row into view within the menu
+  element, and a scroller outside it is never moved (the Name box on
+  `/admin/compendium` once left an arrowed-to row hidden that way).
+- Styling stops at the tokens: the message takes a row's padding
+  inside the popup's surface, and the section's design review does the rest.
+
+## The action row
+
+`action` is a last row that does something rather than picking a suggestion.
+It has two users. "See all results." (M8.10, the owner's call 2026-10-16)
+ends the ingredient search's dropdown when there is another page, and applies
+the search to the list; it is reached by the arrow keys like a result, italic
+so it reads as a message and not a match, and sentence case with a full stop
+because it is one. It is no result, so the status does not count it.
+
+The references' box (MB.154) is the other. A list whose entries can only be
+picked has
 nothing to do with what was typed: a search is not a source. Its caller
-passes `create`, and the list's last row reads its label, "New
+passes `action`, and the list's last row reads its label, "New
 Reference…", with no typed row, and italic as that row is. Last since
 MB.115, the owner's call: the references' box lost its New Reference button
 to this row, so the sources found come first and making one is the way out
@@ -179,7 +260,7 @@ at the end, as an "Add new…" row ends a picker's list; it was the first
 row, "Add a reference", under MB.154. It is there whatever the box holds, a
 blank box included, so ArrowDown or the chevron opens the list even before
 any suggestion has arrived, on this row alone until one does, and ArrowUp
-opens it on this row. Picking it, by click or by Enter, calls `onCreate`
+opens it on this row. Picking it, by click or by Enter, calls `onSelect`
 and never `onPick`, and leaves the text as typed. The caller still passes an `onCommit`, a no-op for the
 references, so that Enter with nothing highlighted never reaches the form.
 
@@ -187,7 +268,7 @@ references, so that Enter with nothing highlighted never reaches the form.
 Downshift remembers the last row picked, and with `selectedItem` held at
 `null` the next pick read as that prop changing, so Downshift wrote the null
 item's text, `''`, into the box. A list empties its box on a pick anyway, so
-nothing showed it until the create row, picked twice, emptied a search. The
+nothing showed it until the action row, picked twice, emptied a search. The
 state reducer keeps the text on `ControlledPropUpdatedSelectedItem` as it
 does on a click or Enter.
 
@@ -222,15 +303,26 @@ changed form to discard (MB.115). With the list shut, Escape reaches the
 modal as ever. The Modal workshop's `WithPickers` story holds both pickers
 in a modal to try it.
 
-| Prop                 | Meaning                                                                                         |
-| -------------------- | ----------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.           |
-| `label`              | What the box is called, and its list's name, "Classification choices".                          |
-| `value`/`onChange`   | The chosen value, held by the caller.                                                           |
-| `choices`            | `{ value, label }` in order. One whose value is `''` is the choice that clears the set: "None". |
-| `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                        |
-| `required`           | `aria-required`, as the field marks it.                                                         |
-| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                              |
+| Prop                 | Meaning                                                                                                |
+| -------------------- | ------------------------------------------------------------------------------------------------------ |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                  |
+| `label`              | What the box is called, and its list's name, "Classification choices".                                 |
+| `value`/`onChange`   | The chosen value, held by the caller.                                                                  |
+| `choices`            | `{ value, label, icon? }` in order. One whose value is `''` is the choice that clears the set: "None". |
+| `placeholder`        | Shown, muted, while the value is none of the choices; never in the list.                               |
+| `required`           | `aria-required`, as the field marks it.                                                                |
+| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                     |
+
+A choice's `icon` (M12.7), a drawn, decorative node such as a form group's
+[`FormIcon`](form-icon.md), shows before its label in its row and in the closed
+value, in the same `combobox__icon` span the suggesting box uses: `aria-hidden`
+and outside the accessible name. The type-ahead box passes it on to its rows
+too; the combobox knows no icon set.
+
+A Ctrl or Cmd keydown on the closed select is not Downshift's to take: its
+handler sets `preventDownshiftDefault`, so Ctrl+Z, the form's undo
+([`field.md`](field.md#undo-and-redo)), is not read as a letter to search for
+that opens the list.
 
 The chevron is drawn inside the control and hidden from assistive
 technology, since the whole control is the one target. The control takes the
@@ -274,6 +366,11 @@ folder's index and the lint refuses an import cycle.
   and typing matches the label alone, never the qualifier. The qualifier
   shows while the box reads the chosen label as written; typed over in
   another case, the box is being typed in and shows none.
+- **A choice may carry an `icon`** (M12.7, a form group's icon): drawn
+  before its label in its row, and once chosen ahead of the text in the box,
+  in the `combobox__icon` span, `aria-hidden`, through the suggesting
+  box's `icon` prop. It shows under the qualifier's reading: while the
+  box reads the chosen label as written, and not while it is typed in.
 - **With `clearable`, a clear** sits on the control's right before the
   chevron, as a list's does, offered while the box holds text or a choice and
   hidden in its place while it does not, so the box keeps one width: it
@@ -287,17 +384,17 @@ folder's index and the lint refuses an import cycle.
   [`filter-form.md`](filter-form.md)). `onChange` still hears every change,
   typing included, for the caller's own state.
 
-| Prop                 | Meaning                                                                                                                      |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                            |
-| `label`              | What the box is called, and its list's name, "Tradition choices".                                                            |
-| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                                   |
-| `onSettle`           | Optional: the value on a pick, the clear (`''`) or leaving the box (the choice the text names, or `''`); never on typing.    |
-| `choices`            | `{ value, label, qualifier? }` in order; typing narrows them by label. A qualifier reads in the row and, chosen, in the box. |
-| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                                     |
-| `required`           | `aria-required`, as the field marks it.                                                                                      |
-| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both.       |
-| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                           |
+| Prop                 | Meaning                                                                                                                                        |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, a hidden label names it.                                                              |
+| `label`              | What the box is called, and its list's name, "Tradition choices".                                                                              |
+| `value`/`onChange`   | The chosen value, held by the caller; `''` while the text names no choice.                                                                     |
+| `onSettle`           | Optional: the value on a pick, the clear (`''`) or leaving the box (the choice the text names, or `''`); never on typing.                      |
+| `choices`            | `{ value, label, qualifier?, icon? }` in order; typing narrows them by label. A qualifier and an icon read in the row and, chosen, in the box. |
+| `placeholder`        | Shown, muted, while the box is empty; never in the list.                                                                                       |
+| `required`           | `aria-required`, as the field marks it.                                                                                                        |
+| `clearable`          | A clear, "Clear Tradition", offered while it holds text or a choice, its room kept while it does not; it empties both.                         |
+| `inputRef`, `onBlur` | The text box's, for react-hook-form, which focuses it on an error.                                                                             |
 
 ## The multi-select box
 
@@ -342,20 +439,40 @@ a second way through the chips would be a second tab model for one look.
 - **Each change is announced** in a visually hidden `<output>` named
   "Element changes", "Added Air", "Removed Air" or "Cleared Element", as a
   list field's are (WCAG 4.1.3).
+- **A choice may carry a count and be disabled** (M12.4), for a filter that
+  shows how many entries each value would leave. A row reads "Fire 9": the
+  count follows the label in its own span, small and muted with no brackets (as the facet panel's are), after a space that is a text node,
+  because an accessible name drops a space a span begins with. `hideZeros`
+  leaves out a row whose count is 0, and a choice's own `disabled` makes a
+  row that is listed but cannot be chosen. A disabled row is truly disabled (Downshift's
+  `isItemDisabled`: `aria-disabled`, skipped by the arrow keys, no choosing
+  by click or key), is listed after every row that can be chosen so the keys
+  meet those first, and keeps its text's ink rather than being dimmed. The list
+  closes once only disabled rows remain, as it does with none left; with
+  `hideZeros` and every count 0 there is nothing to list. A value
+  already chosen is a chip, never a row, so a chosen zero-count value stays
+  removable. `count`, `disabled` and `note` are the multi-select's: the
+  select-only box ignores them.
+- **A chip can carry an icon, a count, a loading mark and an outlined look**
+  (M12.4); see "An entry".
 
-| Prop                 | Meaning                                                                                   |
-| -------------------- | ----------------------------------------------------------------------------------------- |
-| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.     |
-| `label`              | What the box is called, its list's name, "Element choices", its clear's and its status's. |
-| `values`/`onChange`  | The values chosen, in order, held by the caller; every change comes as the whole list.    |
-| `choices`            | `{ value, label }` in order; the list offers those not in `values`.                       |
-| `placeholder`        | Shown, muted, while a choice is left, after the chips too; never in the list.             |
-| `required`           | `aria-required`, as the field marks it.                                                   |
-| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                        |
+| Prop                 | Meaning                                                                                                                                  |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`, `labelId`      | The box's id and its label element's; without `labelId`, `label` is its `aria-label`.                                                    |
+| `label`              | What the box is called, its list's name, "Element choices", its clear's and its status's.                                                |
+| `values`/`onChange`  | The values chosen, in order, held by the caller; every change comes as the whole list.                                                   |
+| `choices`            | `ComboboxChoice`s in order: `value`, `label`, and optionally `icon`, `count`, `disabled`, `note`; the list offers those not in `values`. |
+| `hideZeros`          | A choice whose `count` is 0 is left out of the list. Chosen values are never affected.                                                   |
+| `loading`            | The counts are still being read: each chip holds a placeholder where its count will be.                                                  |
+| `chipsOutlined`      | Draws the chips outlined, not filled (see "An entry").                                                                                   |
+| `removeNoun`         | Names each chip's x "Remove {Noun}: {Value}"; without it, "Remove {Value}".                                                              |
+| `placeholder`        | Shown, muted, while a choice is left, after the chips too; never in the list.                                                            |
+| `required`           | `aria-required`, as the field marks it.                                                                                                  |
+| `inputRef`, `onBlur` | The box's, for react-hook-form, which focuses the box on an error.                                                                       |
 
 ## An entry
 
-`ComboboxEntry({ value, errorId?, detail?, qualifier?, colors?, summary?, note?, onRemove })`, a named export beside the
+`ComboboxEntry({ value, errorId?, detail?, qualifier?, colors?, summary?, note?, icon?, count?, loading?, outlined?, removeNoun?, onRemove })`, a named export beside the
 default, is the chip a list passes in `entries`, inside a
 `ul.combobox__entries`. It is MB.133's entry moved out of `IngredientForm`
 so that every list draws the same one:
@@ -415,6 +532,27 @@ so that every list draws the same one:
   the link mark a linked entry has and this one lacks.
 - **A summary turns the text into a button** (MB.115); see "A linked
   entry's summary" below.
+- **An icon, a count, a loading mark and an outlined look** (M12.4), for the
+  filter's chips. `icon` leads the text, `aria-hidden`. `count` follows it as
+  as a small muted number, no brackets, outside the span that is cut off, so a long name loses its tail and
+  never its count, with its space a text node of the label's own so the chip
+  reads "Water 7". `loading` swaps the count for a shimmering placeholder
+  (the list skeleton's `skeleton-shimmer`, still under reduced motion),
+  `aria-hidden`, and `loading` wins over `count`. `removeNoun` names the x
+  "Remove {Noun}: {Value}" (`Remove Element: Water`) and that name is the same
+  whether or not the count has arrived, so a reader never meets a label that
+  changes under them. `outlined` draws the chip as an outline on the card
+  instead of a wash (the `outlined-chip` mixin, `_mixins.scss`); a coloured
+  chip stays filled, since its group's colour is its look.
+
+### An action on an entry
+
+An entry may carry one action button, ahead of its ×: `action`, `{ label, tip,
+icon, onClick, disabled? }` (M12.1, promoting a folk name). It is a real
+button in the tab order, named by `label` and described as the × is, with
+its `tip` shown on hover and focus by [IconTip](icon-tip.md). Its click
+removes nothing and does not touch a sortable entry's handle. A list gives
+one per row or none; the Combobox knows nothing of what it does.
 
 ## A linked entry's summary
 
@@ -487,7 +625,7 @@ standard package rather than a bespoke one, the task's preference
   it is, `columnGap` apart along a row and onto the next row once the list's
   width is used up. The row's shape, its width and gaps, is measured as a
   move starts (`shapeOf`), from the stylesheet, or from where the chips sit
-  where there is none, as in jsdom. Each chip making way, and the moved chip
+  where there is none, as in happy-dom. Each chip making way, and the moved chip
   under the keyboard, is translated to its place in that layout, never
   scaled, so what is shown while the chip is held is what the drop leaves.
 - **By keyboard**, Space or Enter lifts the focused chip, and Space or Enter
@@ -627,7 +765,13 @@ tooltip on a cut-off entry stops at `$tip-width`, capped at the window, as
 InfoTip's does (MB.115). The lengths left raw are the control's own geometry
 and say so in a comment: the 6rem the text keeps before it wraps onto a row
 of its own (beside entries, the placeholder's width instead, `--combobox-room` from `room.ts`, in `ch` and never past the row, so the prompt shows whole or wraps under the chips), the list's 20rem height, the category bar's 3px and 5px, the
-grip's half-glyph width, and the 1px edges.
+grip's half-icon width, and the 1px edges.
+
+A count is the muted ink at the label's size (`.combobox__count` in a
+row, `.combobox__entry-count` in a chip). An outlined chip is the
+`outlined-chip` mixin: the body ink on the card with a 1px edge, `is-outlined`
+on the chip. The loading placeholder is 1.75ch by 0.8em, centred on the chip's
+line, filled with the chip's own ink at low strength so it shows on any chip.
 
 ## Stories
 
@@ -637,10 +781,10 @@ grip's half-glyph width, and the 1px edges.
 `Sortable`, seven celestial bodies wrapping onto a second row, each moved by its grip
 and text, by pointer or keyboard; `NoSource`, a box that never opens; `Qualifier`, "Wax" picked under
 Substance, the group in the box and its description in a tooltip, dropped by
-an edit; `SelectOnly`, the select-only box; `Typeahead`, the type-ahead box over five
+an edit; `SelectOnly`, the select-only box; `SelectWithIcons`, the same with an icon on each choice; `Typeahead`, the type-ahead box over five
 traditions, the value shown beneath it; and
-`MultiSelect`, the multi-select box with two elements chosen;
-`CreateRow`, its list open on "New Reference…" last whatever is typed, saying beneath the
+`MultiSelect`, the multi-select box with two elements chosen (the filter's version, with counts, is `FacetCombobox`'s stories, [`facet-combobox.md`](facet-combobox.md));
+`CreateRow`, its list open on "New Reference" last whatever is typed, saying beneath the
 box each time it is picked; `PhoneDark` and `PhoneLight`, `List` at
 375px; and `QualifierInForm`, the ingredient form's Form box under a Name
 field, "Wax" picked under Substance with a detail long enough to wrap, whose
@@ -652,6 +796,8 @@ chevron on mount, as a person would (`.ladle/press.ts`).
 
 ## Testing
 
+The empty message has its own block in the same file: the message shown outside the listbox with the status reading it, none while pending, blank or unset, and the count kept once rows arrive.
+
 `tests/components/Combobox/index.test.tsx` renders the box with fixed
 suggestions and asserts: the box closed until something is typed; the rows,
 their buckets and the typed row, which echoes what was typed and comes first;
@@ -659,14 +805,15 @@ headed rows grouped under their headings in first-seen order, and two
 same-named rows under different headings told apart and counted; a row's
 accessible name carrying its label and note; picking by keyboard and by
 click, and the typed row as `null`; the list opening above the box with no
-room beneath it; the create row last with no typed row, there with a
-blank box and with no suggestions, calling `onCreate` by click or keyboard
+room beneath it; the action row last with no typed row, there with a
+blank box and with no suggestions, calling `onSelect` by click or keyboard
 and never `onPick`; the typed row withheld under `offerTyped={false}`, the
 suggestions still shown, Enter still handed to `onCommit`, and the list shut
 when it would have been the only row; Enter handed to `onCommit` with the
 list open or closed, and otherwise closing the list or reaching the form;
 Backspace and Delete handed to `onRemoveLast` only from an empty box; Escape,
-blur and a pick keeping the text; a box with no source never opening; the
+blur and a pick keeping the text, Escape prevented on the open list and on the empty message, and not on a closed box
+holding text; a box with no source never opening; the
 status region's count, and its busy and empty states; the qualifier read as
 the box's description after the field's own, a press on it putting the caret
 in the text, its detail's tooltip on hover
@@ -699,7 +846,7 @@ the chips' layout while one is held are presentation, owned by the workshop
 story and the Playwright scan. Role and label queries only, in the `dom`
 project.
 
-jsdom lays nothing out, and dnd-kit finds where a chip may go from each
+happy-dom lays nothing out, and dnd-kit finds where a chip may go from each
 chip's box, so `tests/support/sortable.ts` gives every chip one, on one
 line 100px apart, or with `wrapChips` as wide as its text and wrapped onto
 rows as the control wraps them, and drives a move: `moveByKeyboard` waits a task after
@@ -720,9 +867,11 @@ it and keeping the focus; a qualified choice read with its qualifier in the
 row, describing the chosen box by it, and matched by its label alone; and
 `onSettle`, heard on a pick, the clear and
 leaving the box, with the choice the text names or `''`, and never while
-typed. The control's width, which jsdom does not lay out,
+typed. The control's width, which happy-dom does not lay out,
 was measured in the workshop at MB.115: one width empty, mid-typing, chosen
 and cleared.
+
+`tests/components/Combobox/counts.test.tsx` covers M12.4's additions in the multi-select, the typed box and the chip: a row's and a chip's name carrying the count ("Fire 9"); `hideZeros` leaving a zero-count row out (and every row, with the box staying, when all are zero); a chosen zero-count value staying removable; the loading placeholder hidden from a reader and the x's name unchanged when the count arrives; and the icon and the outlined look on a chip.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 

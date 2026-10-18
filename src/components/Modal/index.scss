@@ -10,10 +10,6 @@ $modal-gap: clamp(#{space(4)}, 5vmin, #{space(7)});
 // width, so a column keeps the content width it had.
 $modal-padding: space(5) * 2;
 
-// The page's ground at three quarters over what lies behind: the backdrop's
-// over the page, and a question's scrim over the form it asks about (MB.115).
-$modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
-
 // Only what the native element needs beyond the `.modal` primitive: its
 // default border and padding gone, a width that fits a phone, and a backdrop.
 // Border-box, so the primitive's padding sits inside the limits rather than
@@ -89,8 +85,6 @@ $modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
 // owner to close it (FADE_LIMIT_MS there outlasts this). Compounded with
 // `.modal`, whose primitive sets its own `transition` as `body .modal`: the
 // theme's colour transitions are restated beside the fade so both run.
-$modal-fade: 150ms ease-out;
-
 .modal.modal-dialog {
   opacity: 1;
   transition:
@@ -152,11 +146,10 @@ $modal-fade: 150ms ease-out;
 // the body, which is what scrolls, the gap beneath it padding rather than
 // margin so it belongs to the header.
 //
-// A control the contents put in the header sits under the ×, its foot level
-// with the heading's, or on a phone on a line of its own under the heading,
-// at its start (the owner's calls at MB.115): between the title and the ×
-// it squeezed a phone's heading until a name broke mid-word. A heading
-// shorter than the two sinks to meet it.
+// A control the contents put in the header goes in a row of its own under the
+// heading, at every width (the owner's call at M12.10, over MB.115's place
+// under the ×): between the title and the × it squeezed a phone's heading
+// until a name broke mid-word.
 .modal-dialog__header {
   display: grid;
   flex: none;
@@ -171,15 +164,10 @@ $modal-fade: 150ms ease-out;
 // than pushing the × out, and a name with no break in it breaks anywhere
 // rather than overflow.
 .modal-dialog__heading {
-  grid-row: 1 / -1;
-  align-self: end;
+  grid-row: 1;
+  align-self: start;
   gap: space(1);
   min-width: 0;
-
-  @container modal (max-width: #{$narrow-column + $modal-padding}) {
-    grid-row: 1;
-    align-self: start;
-  }
 }
 
 .modal-dialog__title {
@@ -198,42 +186,41 @@ $modal-fade: 150ms ease-out;
   color: $text-muted;
 }
 
-// Under the ×, a control the contents put there, its foot on the heading's.
+// A toolbar row under the heading at every width, for the controls the
+// contents put in the header (the owner's call at M12.10, replacing the
+// under-the-× place MB.115 gave them): the first control at its start, a
+// form's Undo and Redo pair at its end. Stretched, so every button in it is
+// as tall as the tallest. Hidden while nothing is in it.
 .modal-dialog__header-slot {
   display: flex;
-  grid-column: 2;
-  place-self: end end;
+  grid-column: 1 / -1;
+  align-items: stretch;
+  gap: space(3);
+  margin-top: space(2);
   white-space: nowrap;
 
-  // At the width a form stacks its own row, under the heading at its start,
-  // where the column beside the name stays the ×'s alone.
-  @container modal (max-width: #{$narrow-column + $modal-padding}) {
-    grid-column: 1 / -1;
-    justify-self: start;
-    margin-top: space(2);
-
-    &:empty {
-      display: none;
-    }
+  &:empty {
+    display: none;
   }
 
-  // Held while a question is asked, as the form is, and greyed by the same
-  // scrim, so it does not look pressable while it is not.
-  &[inert] {
-    position: relative;
+  .form-history {
+    align-self: stretch;
+  }
 
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background-color: $modal-scrim;
-    }
+  // Held while a question is asked, as the form is, so its buttons take the
+  // disabled look, the owner's call: a control that cannot be used reads as
+  // one, as Undo and Redo do when they are off, rather than faded. Neither a
+  // fade, which doubled on a button already off, nor a scrim over the row,
+  // which darkened the gaps between the controls into a strip under the
+  // undimmed title. The ingredient form also disables its Close All then.
+  &[inert] .btn {
+    @include btn-disabled;
   }
 }
 
 // A 2rem × in a `$close-target` square, 2.5rem, the owner's call during M5.5,
 // in the proportion it began at: well past WCAG 2.2's 24px minimum target.
-// The glyph's 2rem is on no scale: it is the × drawn at the size of the
+// The icon's 2rem is on no scale: it is the × drawn at the size of the
 // target it sits in, not a length of the layout. Its column is its own
 // width, so a heading that wraps cannot squeeze the round target to an oval.
 .modal-dialog__close {
@@ -303,6 +290,19 @@ $modal-fade: 150ms ease-out;
 
 .confirm-overlay__question {
   margin: 0;
+}
+
+// The safe answer takes the focus by script as the card comes, and a browser
+// draws a scripted focus's ring only when the focus it replaced had one: after
+// a pointer press on Close, Cancel or the backdrop it held the focus unseen.
+// So in the card a quiet answer shows its keyboard look on any focus, not
+// `:focus-visible` alone. A click on it answers and takes the card away, so
+// the ring never lingers under the pointer (claude-docs/components/modal.md,
+// "Unsaved changes").
+.confirm-overlay__card .btn--quiet:focus {
+  background-color: $text-primary;
+  color: $text-on-color;
+  @include focus-ring;
 }
 
 // Its row stacks, full width and in order, at the width a form's own does:

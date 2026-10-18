@@ -187,4 +187,4 @@ submit refused inside it and the button back once it passes, and one started
 from `waitSeconds`; an empty field sent to the server with no native check in
 the way; a passed-in `error` as an alert on mount, and none without one; and
 no Continue while unverified. Role and label queries only. Runs in the `dom`
-(jsdom) Vitest project — `npm run test:coverage`.
+(happy-dom) Vitest project — `npm run test:coverage`.

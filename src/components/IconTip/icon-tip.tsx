@@ -52,7 +52,7 @@ const IconTip = ({ tip, children, placement = 'side' }: IconTipProps): ReactElem
         <span
           role="tooltip"
           aria-hidden="true"
-          className={`icon-tip__bubble${placement === 'below' ? ' icon-tip__bubble--below' : ''}${open ? '' : ' icon-tip__bubble--closing'}`}
+          className={`icon-tip__bubble${placement === 'side' ? '' : ` icon-tip__bubble--${placement}`}${open ? '' : ' icon-tip__bubble--closing'}`}
         >
           {tip}
         </span>

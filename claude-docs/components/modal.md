@@ -26,15 +26,16 @@ is the wrapper every admin page opens it through (below).
 
 `ModalProps` (`types.ts`):
 
-| Prop        | What it is                                                                      |
-| ----------- | ------------------------------------------------------------------------------- |
-| `title`     | The heading: what the dialog is for, or the entry an edit dialog edits          |
-| `eyebrow`   | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add |
-| `qualifier` | After the title, quieter: an ingredient's formal name, a deity's tradition      |
-| `onClose`   | Asked for by the Close button, Escape and a click outside                       |
-| `size`      | `'wide'` for a long form; absent, the default width                             |
-| `loading`   | The contents are on the way: the body is marked `aria-busy` (M9.18)             |
-| `children`  | The body: a form, a confirmation, whatever the owner puts here                  |
+| Prop          | What it is                                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `title`       | The heading: what the dialog is for, or the entry an edit dialog edits                                                                  |
+| `eyebrow`     | An edit dialog's small line over the title, "Edit Ingredient"; absent on an add                                                         |
+| `destination` | Where an add lands, "Whitethorn Coven", in the eyebrow's place over the title and spoken after it: "Add Ingredient to Whitethorn Coven" |
+| `qualifier`   | After the title, quieter: an ingredient's formal name, a deity's tradition                                                              |
+| `onClose`     | Asked for by the Close button, Escape and a click outside                                                                               |
+| `size`        | `'wide'` for a long form; absent, the default width                                                                                     |
+| `loading`     | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
+| `children`    | The body: a form, a confirmation, whatever the owner puts here                                                                          |
 
 ## Contracts
 
@@ -52,7 +53,7 @@ is the wrapper every admin page opens it through (below).
   away at once: Close, Escape and a click outside set `.is-closing`, and the
   owner is asked once the fade ends, or after `FADE_LIMIT_MS` should the end
   never be reported, once however many ways it was asked. Under reduced
-  motion, or with no `matchMedia` to ask (jsdom), nothing fades and the owner
+  motion, or with no `matchMedia` to ask, nothing fades and the owner
   is asked at once, in the event. Contents that close it themselves — a
   form's save or delete — take the modal's own close as a render prop,
   `children(close)`, so that fades too.
@@ -132,7 +133,11 @@ each form.
   as the forms' Delete questions do. Keep Editing puts it away with nothing
   lost and the focus back where it was: Cancel, which stays beneath the
   question now, the field Escape was pressed in, or the Close button. If
-  that has gone, the focus goes to the form's first field.
+  that has gone, the focus goes to the form's first field. The focus was
+  always there, but after a pointer press (Close, Cancel, the backdrop) the
+  browser drew no ring for it, since it draws a scripted focus's ring only when
+  the focus it replaced had one, so the card's quiet answer shows its keyboard
+  look on any `:focus` (M8.16, measured in Chromium).
 - **Tried again while asking, it flashes** (MB.115, the owner's call), so
   the person sees why nothing closed. Each try by Close, Escape or the
   backdrop counts in `guard.flashes`, which the card carries as
@@ -146,6 +151,7 @@ each form.
   `<output>`, a polite live region, alternating a trailing no-break space so
   a repeat is a change and is read again. Keep Editing sets the count back
   to 0.
+- **Undo can release the guard.** A form with undo and redo ([`field.md`](field.md#undo-and-redo)) that is undone back to its starting values is no longer dirty, so Cancel and the other ways out close at once again. The undo is off while the question is asked.
 - **The browser's own ways out are not covered.** Back, a reload or closing
   the tab leave without asking: no `beforeunload` handler is added, since the
   modals are opened by their address and Back is how one is left.
@@ -180,7 +186,7 @@ form's Delete question are drawn through it.
 - **The form behind is held.** As the card comes, the modal sets `inert` on
   its body and on the control beside its title, so Tab, a click and typing
   cannot reach the form until the question is answered; the scrim, the
-  page's ground at 75% as the backdrop is, dims both. The title and the Close
+  page's ground at 75% as the backdrop is, dims the body. The title and the Close
   button are not held, so Close, Escape and a click outside go through the
   form's guard as before: closing with nothing changed, asking about a change,
   or flashing a question already asked. The attribute is set on the elements
@@ -223,19 +229,21 @@ on their own (MB.115): `GroupForm`'s Delete and Move and Delete,
 Redirect & Save. A `ConfirmOverlay` holding the acting answer, a
 `BusyButton`, and the safe one, quiet, which takes the focus.
 
-| Prop           | What it is                                                                           |
-| -------------- | ------------------------------------------------------------------------------------ |
-| `question`     | The question, which names the card                                                   |
-| `asked`        | Its own question is being asked; true by default, for a form that draws it only then |
-| `guard`        | The form's `useDiscardGuard`, whose question shows in its place while it asks        |
-| `confirmLabel` | The acting answer: "Delete" by default                                               |
-| `busyLabel`    | What it says while busy: "Deleting" by default                                       |
-| `tone`         | `'destructive'` by default, `'solid'` for a save                                     |
-| `keepLabel`    | The safe answer: "Keep It" by default, "Back" for a step back                        |
-| `busy`         | The action is in flight: the acting answer busy and shut                             |
-| `onConfirm`    | The action, a promise                                                                |
-| `onKeep`       | The safe answer's                                                                    |
-| `onRefused`    | Told a refusal's sentence when `onConfirm` rejects, for the form's alert             |
+| Prop           | What it is                                                                                                                                                |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `question`     | The question, which names the card                                                                                                                        |
+| `details`      | What stands beneath the question, apart from its name: what the answer changes, and anything to weigh first (M12.1). Absent when the question says it all |
+| `asked`        | Its own question is being asked; true by default, for a form that draws it only then                                                                      |
+| `guard`        | The form's `useDiscardGuard`, whose question shows in its place while it asks                                                                             |
+| `confirmLabel` | The acting answer: "Delete" by default                                                                                                                    |
+| `busyLabel`    | What it says while busy: "Deleting" by default                                                                                                            |
+| `tone`         | `'destructive'` by default, `'solid'` for a save                                                                                                          |
+| `keepLabel`    | The safe answer: "Keep It" by default, "Back" for a step back                                                                                             |
+| `busy`         | The action is in flight: the acting answer busy and shut                                                                                                  |
+| `onConfirm`    | The action, a promise                                                                                                                                     |
+| `also`         | A second acting answer between the two, as Discard & Promote (M12.1): its label, busy label, busy state and action                                        |
+| `onKeep`       | The safe answer's                                                                                                                                         |
+| `onRefused`    | Told a refusal's sentence when `onConfirm` rejects, for the form's alert                                                                                  |
 
 - **Which question shows.** Given the form's guard, the unsaved changes'
   question shows while it asks, ahead of the form's own, since they are what
@@ -290,33 +298,44 @@ The eyebrow and title are a `.header` column, closer than its gap, which may
 shrink past its content: a long name wraps rather than pushing the × out, and
 a name with no break in it breaks anywhere.
 
-| Dialog                                    | Eyebrow                               | Qualifier   |
-| ----------------------------------------- | ------------------------------------- | ----------- |
-| `/admin/compendium?edit=`                 | Edit Ingredient                       | Formal name |
-| `/admin/categories`, `forms`              | Edit Category, Edit Form              | —           |
-| `/admin/deities`                          | Edit Deity                            | Tradition   |
-| `/admin/celestial-bodies`, `zodiac-signs` | Edit Celestial Body, Edit Zodiac Sign | —           |
-| `/admin/category-groups`, `form-groups`   | Edit Category Group, Edit Form Group  | —           |
-| `/admin/deity-traditions`                 | Edit Tradition                        | —           |
+| Dialog                                     | Eyebrow                               | Qualifier   |
+| ------------------------------------------ | ------------------------------------- | ----------- |
+| `/admin/compendium?edit=`, an entry's page | Edit Ingredient                       | Formal name |
+| `/admin/categories`, `forms`               | Edit Category, Edit Form              | —           |
+| `/admin/deities`                           | Edit Deity                            | Tradition   |
+| `/admin/celestial-bodies`, `zodiac-signs`  | Edit Celestial Body, Edit Zodiac Sign | —           |
+| `/admin/category-groups`, `form-groups`    | Edit Category Group, Edit Form Group  | —           |
+| `/admin/deity-traditions`                  | Edit Tradition                        | —           |
 
 ## A control in the header
 
 The header holds the title, with its eyebrow over it on an edit, then the ×,
-and under the × a place whose foot is level with the heading's. In a dialog
-narrower than a form's stacking width (`$narrow-column` and the padding, the
-width ConfirmOverlay's row stacks at) the place moves to a line of its own
-under the heading, at its start, and empty it takes no line. The
-modal hands that place down as an element (`HeaderSlotContext`), and its
-contents may portal one control of their own into it through
+and under them a toolbar row, full width, at every width: one layout. The row
+is stretched, so every button in it is as tall as the tallest, and a little
+space sits above it. Empty, it takes no line. The first control sits at its
+start and a form's Undo and Redo pair at its end (the pair carries
+`margin-inline-start: auto`, so a group form's lone pair lands at the end
+too). This is the owner's call at M12.10 (2026-10-17), which replaced
+MB.115's place under the ×, level with the heading's foot; MB.115 had moved
+the control off the title line, between the title and the ×, because there it
+squeezed a phone's heading until a name broke mid-word, and the row avoids
+that too.
+
+The modal hands the row down as an element (`HeaderSlotContext`), and its
+contents may portal controls of their own into it through
 `useModalHeaderSlot()`: the ingredient form's Open All / Close All, the
-owner's call at MB.115. A slot, as the guard is, since the form sits inside
-the modal's render prop, out of its owner's reach. Outside a modal the hook
-answers null and the form keeps the control in its own flow. The place sat
-between the title and the × until the owner moved it, at MB.115: there it
-squeezed a phone's heading until a name broke mid-word. Tab order follows
-the page: the ×, then the control, then the form. While a question is asked
-over the form, the place is held and dimmed with it
-(["Asking over the form"](#asking-over-the-form)).
+owner's call at MB.115, and a form's Undo and Redo buttons
+(`FormHistoryButtons`, M12.9). The context is exported from the barrel too,
+so a panel inside the form can set it to `null` and keep its own undo buttons
+out of the header (M12.10). A slot, as the guard is, since the form sits
+inside the modal's render prop, out of its owner's reach. Outside a modal the
+hook answers null and the form keeps the controls in its own flow. Tab order
+follows the page: the ×, then the controls, then the form. While a question is
+asked over the form, the row is held with it
+(["Asking over the form"](#asking-over-the-form)), and its buttons take the
+`.btn` disabled look (the `btn-disabled` mixin) rather than a fade or the
+scrim, the owner's call at M8.16; the ingredient form's Close All is
+`disabled` then too, as a form's Undo and Redo already are.
 
 ## ModalButton
 
@@ -337,6 +356,37 @@ Coven. `ModalButtonProps` (`types.ts`):
 
 The focus moves only after a close, never on the first render, so the page
 loads with the focus where the browser puts it.
+
+### Add Ingredient
+
+The shell’s Add Ingredient control (`AppShell/add-ingredient-button.tsx`,
+M8.16) opens a `Modal` holding an `IngredientForm` for one coven. A
+_destination_ is the compendium (for a viewer who can curate) or a coven the
+viewer may write to; a coven they may only read is never one. With one
+destination the control is a plain button. With two or more it is a split
+button: the main part opens the default destination, and a chevron (`Choose
+Where to Add`, `aria-haspopup="menu"`) opens a menu listing every
+destination by name, the compendium first (`add-ingredient-menu.tsx`; the
+repo had no ARIA menu, so it is written there with arrow keys, Escape and a
+press outside). The default is, on `/admin/*`, the compendium for a curator;
+otherwise the coven the address names, else the first coven they may write to.
+Choosing the compendium is a `router.push` to `/admin/compendium?new` (the
+admin layout’s route-modal provider sits below the shell, so the button cannot
+open that dialog itself, and the page draws it for a direct request); choosing
+a coven opens the modal.
+
+The modal’s head is the coven’s name in the eyebrow’s place over the title
+“Add Ingredient”, so the person always sees where the ingredient goes, and a
+screen reader hears one phrase as the dialog’s name, “Add Ingredient to
+Whitethorn Coven”: the `destination` prop is spoken after the title, joined by
+a hidden “to”, where an edit’s eyebrow is spoken before it. The compendium’s
+own add dialog is headed the same way, “Compendium” over “Add Ingredient”. The
+menu names each destination the same way, “to Compendium”, “to Whitethorn
+Coven”. The
+destination is fixed once the dialog opens: there is no Coven select. With
+nowhere to write the control is not drawn. After Save Ingredient the modal
+closes and the control leaves a status beside it, since the form’s own Saved
+notice goes with the form.
 
 ## RouteModal
 
@@ -380,7 +430,8 @@ at once, with its head over a skeleton, the way a filter shows it is loading.
 The form arrives in the same dialog.
 
 - **The provider.** `RouteModalProvider` (`route-modal-provider.tsx`) is
-  mounted once, in `src/app/(shell)/admin/layout.tsx`. It keeps the heading of the
+  mounted in `src/app/(shell)/admin/layout.tsx`, and by `IngredientEntry` when it
+  is given `edit` (M8.19; the two entry routes have no layout one). It keeps the heading of the
   modal just pressed and runs `router.push(href)` inside `useTransition`
   (a React call that marks a change as in progress until it finishes). It
   offers `loading` (that heading while the push is pending, otherwise
@@ -396,6 +447,8 @@ The form arrives in the same dialog.
   ([`icon-tip.md`](icon-tip.md)), `AddAction` (`src/app/(shell)/admin/add-action.tsx`)
   and New Invitation all use it, and so does each name on `/admin/users`, which
   opens the user's modal, `?user=<id>` (M9.19, [`user-list.md`](user-list.md)).
+  So does Edit on an ingredient's own page, which opens the edit modal over
+  that page ([`ingredient-entry.md`](ingredient-entry.md), "Edit").
 - **The heading is known before the form.** The page builds each row's
   `editHeading` on the server, with the same builder the loaded modal uses,
   and hands it to the row beside `editHref`. So the head does not change when
@@ -512,10 +565,10 @@ Open button to bring it back after Close or Escape.
 
 ## Testing
 
-`tests/components/Modal/index.test.tsx`. jsdom implements neither
-`showModal()` nor `close()`, so the test stands both in on the prototype,
-adding and removing `open` as a browser does. A click outside is told by
-where the press began and ended, jsdom laying nothing out: pressed and
+`tests/components/Modal/index.test.tsx`. happy-dom's `<dialog>` has a bare
+`showModal()` and `close()` that set and clear `open` and trap no focus, so the
+test puts spies on the prototype that do the same and can be asserted on. A click outside is told by
+where the press began and ended, happy-dom laying nothing out: pressed and
 released on the backdrop closes it; its contents, and a press inside let go
 outside, do not. Its own padding is inside its box, which only a real layout
 shows, as does the wide size. The fade asks the owner once its transition
@@ -537,7 +590,7 @@ count rising each time), the focus back on Keep Editing and the status
 speaking. The overlay's own state is asserted there too: while asking, the
 form's fields and buttons and a control beside the title are inert, and the
 question, a group, and the Close button are not; answered, all are live
-again, and the focus is back on Cancel. jsdom implements `inert`'s
+again, and the focus is back on Cancel. happy-dom implements `inert`'s
 attribute but not its effect, so the attribute is what is asserted; Playwright
 runs the real thing. Each admin form's own test asserts only its wiring,
 through `tests/support/discard-guard.tsx`: `expectGuardedWaysOut` for the

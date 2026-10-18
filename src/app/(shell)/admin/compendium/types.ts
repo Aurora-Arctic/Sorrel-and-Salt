@@ -11,13 +11,22 @@ export interface AdminCompendiumPageProps {
 
 /**
  * The page's address: every list page's name query, cursor and modal
- * (`list-page.ts`), and the compendium's own three filters, a form by its
- * text, a classification and the entries citing nothing.
+ * (`list-page.ts`), and the compendium's own filters (the table in
+ * CompendiumList/params.ts): the forms by their text, the deities by slug, the
+ * zodiac signs and planets by name, the entries citing nothing, the elements
+ * an entry holds, toxic or not, and the categories with how they combine.
+ * Every one repeats for a list.
  */
 export interface CompendiumSearchParams extends ListSearchParams {
-  form?: string | string[];
-  nomenclature?: string | string[];
+  forms?: string | string[];
   withoutReferences?: string | string[];
+  elements?: string | string[];
+  categories?: string | string[];
+  categoryMode?: string | string[];
+  deities?: string | string[];
+  zodiac?: string | string[];
+  planets?: string | string[];
+  toxic?: string | string[];
 }
 
 /** The entry an edit opens: its id, which the writes name, and its values as the form shows them. */

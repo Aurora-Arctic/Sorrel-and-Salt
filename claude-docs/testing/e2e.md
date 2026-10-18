@@ -394,6 +394,11 @@ during it, at the cost of one image pull and no CI minutes. The pieces:
   (`tests/e2e/slots.ts`'s `auditWsEndpoint`), by the rule in
   [`debugging.md`](../debugging.md): never baked into an npm script, never
   read unconditionally. Its presence alone changes nothing.
+- **The story suite runs there too**: `playwright.stories.config.ts` adds the same
+  three projects under the same flag (built by `auditProjects` in
+  `playwright.config.ts`, with no `testIgnore`), and `npm run test:stories:audit`
+  runs them. The story reporter lists one checklist line per story and counts it
+  passing only when its test passed in every project that ran.
 - **Three projects, `webkit`, `firefox` and `phone`**, exist in
   `playwright.config.ts` only under `E2E_AUDIT=1`, which without the
   endpoint throws naming the variable. The shared `use` names the Chromium

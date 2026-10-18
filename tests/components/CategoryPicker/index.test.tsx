@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { useState } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import CategoryPicker from '@/components/CategoryPicker';
@@ -227,5 +227,56 @@ describe('CategoryPicker', () => {
 
     rerender(<CategoryPicker {...PROPS} value={['c-gone']} />);
     expect(removeButton('c-gone')).toBeInTheDocument();
+  });
+
+  // The filter reads the picker with counts (M12.4): how many entries each
+  // category would leave.
+  describe('with counts', () => {
+    const counted = (): PickerCategory[] =>
+      CATEGORIES.map((c) => ({
+        ...c,
+        count: ({ 'c-tw': 4, 'c-tc': 0 } as Record<string, number>)[c.id] ?? 1,
+      }));
+
+    it('reads a row as its name and count together, and a pick the same', () => {
+      renderControlled(['c-tw'], { categories: counted() });
+
+      expect(entry('Testward')).toHaveTextContent('4');
+      open();
+      expect(screen.getByRole('option', { name: /^Testcraft 0/ })).toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /^Ablefix 1/ })).toBeInTheDocument();
+    });
+
+    it('leaves a zero-count row choosable unless asked, and leaves it out when asked', () => {
+      const { onChange } = renderPicker({ categories: counted() });
+      open();
+      fireEvent.click(screen.getByRole('option', { name: /^Testcraft 0/ }));
+      expect(onChange).toHaveBeenCalledWith(['c-tc']);
+
+      cleanup();
+      renderPicker({ categories: counted(), hideZeros: true });
+      open();
+      expect(screen.queryByRole('option', { name: /^Testcraft/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('option', { name: /^Ablefix 1/ })).toBeInTheDocument();
+    });
+
+    it('names a pick for removal by its noun, whether or not its count has arrived', () => {
+      const props = { ...PROPS, categories: counted(), value: ['c-tw'], removeNoun: 'Category' };
+      const chip = () =>
+        screen.getByRole('button', { name: 'Remove Category: Testward' }).closest('li')!;
+      const { rerender } = render(<CategoryPicker {...props} loading />);
+      expect(screen.getByRole('button', { name: 'Remove Category: Testward' })).toBeInTheDocument();
+      expect(chip()).not.toHaveTextContent('4');
+
+      rerender(<CategoryPicker {...props} />);
+      expect(screen.getByRole('button', { name: 'Remove Category: Testward' })).toBeInTheDocument();
+      expect(chip()).toHaveTextContent('4');
+    });
+
+    it('keeps a chosen zero-count pick removable', () => {
+      renderPicker({ categories: counted(), value: ['c-tc'], hideZeros: true });
+
+      expect(removeButton('Testcraft')).toBeEnabled();
+    });
   });
 });

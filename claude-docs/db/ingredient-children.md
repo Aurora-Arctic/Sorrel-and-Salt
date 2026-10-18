@@ -128,8 +128,8 @@ the check, the SQL, and the type above. `tests/modules/ingredients/loaders/`
 asserts the first two by direct id, each with its precondition, and each fails
 with its layer removed.
 
-Folk names come back as strings, flattened as §7's `folkNames: [String!]!`
-exposes them; categories come back as rows, with a soft-deleted category
+Folk names come back as `{ id, name }`, as §7's `folkNames: [FolkName!]!`
+exposes them (the id is what `promoteFolkName` names, M12.1); categories come back as rows, with a soft-deleted category
 dropped by `findManyByIds`; substitutes come back as §7's `Substitute`, the
 name each shows and the live ingredient it leads to, or null; deities come
 back as §7's `IngredientDeity`, the name and the curated deity, or null;

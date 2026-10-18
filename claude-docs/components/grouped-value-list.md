@@ -30,8 +30,9 @@ column before Edit is Updated (MB.260): who last edited the value and when
 | `position`     | `{ page, pages }`, the pager's "Page X of Y"                               |
 
 A `GroupedValueListEntry` is the value's id, name, slug and description,
-plus `groupName`, `editHref`, and `groupColors` where its group has a chip
-pair. Categories come by group then name (MB.126); forms are live forms
+plus `groupName`, `editHref`, `groupColors` where its group has a chip
+pair, and `groupIcon` for a form's group (its icon name, `null` for a group
+with none). Categories come by group then name (MB.126); forms are live forms
 under live groups, by name, as the service reads them — a form under a
 deleted group is no longer curated, so it is not listed. Deities are live
 deities under live traditions, by tradition name then name, on the same
@@ -61,8 +62,10 @@ for a rule only one kind's rows need.
 - **An entry's group is drawn in its own chip where it has a pair**, the
   owner's call: `groupColors`, the group's pair from the page's read of the
   groups, through [`GroupChip`](data-table.md), as the category picker draws
-  it. The categories page passes it; an entry without one, as every form and
-  every deity is, shows the name plain. A category's rows take more room
+  it. The categories page passes it; an entry without one, as every deity is,
+  shows the name plain. A form's group leads with its icon, a
+  [`FormIcon`](form-icon.md), through `GroupChip`'s `icon`: `groupIcon`, the
+  generic spoon where the group has none (M12.7). A category's rows take more room
   than the table primitive gives and centre their contents, as the group
   list's do, since a chip stands taller than a line of text.
 - **The filter is a GET form to the page itself** (MB.178), as the user
@@ -226,7 +229,7 @@ with no group. The filter's form, its search, Clear and the reset to the
 filter shown run as the shared filter rows (`tests/support/filter-form.tsx`,
 [`filter-form.md`](filter-form.md), "Testing"); its loading state is
 CompendiumList's, the type-ahead's narrowing Combobox's, paging Pager's, and the category chip's colours
-presentation.
+presentation. A form's group icon, or the spoon beside a group with none and none beside a deity's, is asserted by comparing the rendered `.form-icon` to `FormIcon`'s own.
 `tests/app/(shell)/admin/value-page.test.tsx` keeps the pages' half, its shape run on the categories and every other kind getting only its path and its services
 ([`layer-ownership.md`](../testing/layer-ownership.md), "The owning layer"):
 the guard refusing before any read; the first page of 25 read (26, to know of

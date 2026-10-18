@@ -11,8 +11,8 @@ import { postSignInLanding, POST_SIGN_IN_LANDING } from './sign-in';
  * front door, the email form). The role's landing, except that a member goes
  * straight into the first coven the switcher lists rather than to `/coven`,
  * which would only redirect them there and leave the browser a stop with
- * nothing on it (MB.257). The shell's own links get the same answer from the
- * list `viewerOf` already holds (`shellHome`).
+ * nothing on it (MB.257). The shell's Your Coven link gets the same answer from the
+ * list `viewerOf` already holds (`covenHome`).
  */
 export async function signedInLanding(session: Session): Promise<Route> {
   const landing = postSignInLanding(session.role);

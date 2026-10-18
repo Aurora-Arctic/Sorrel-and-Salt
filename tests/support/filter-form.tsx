@@ -17,7 +17,7 @@ import type { FilterFormCase, FilterFormSubject } from './types';
 
 const form = (subject: FilterFormSubject) => screen.getByRole('form', { name: subject.label });
 const searchbox = (subject: FilterFormSubject) =>
-  screen.getByRole('searchbox', { name: subject.searchLabel });
+  screen.getByRole(subject.searchRole ?? 'searchbox', { name: subject.searchLabel });
 
 /** The form's fields as an address query, as a native submit sends them. */
 export const sent = (filter: HTMLElement): string =>

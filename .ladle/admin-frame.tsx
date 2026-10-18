@@ -11,7 +11,7 @@ import type { AdminFrameProps, AdminTabbedFrameProps } from './types';
 // app's own `src/app/(shell)/admin/layout.tsx`, which is a server component that
 // reads the session; this is its markup alone, bar the route-modal provider,
 // which draws nothing. The layout puts the context row, "Admin" and the nav,
-// above the `.admin-layout` column that holds the page, so the frame does too,
+// above the `.page-column` column that holds the page, so the frame does too,
 // all inside the shell's `.app-shell__main`, which keeps the last row clear of
 // the phone's bottom nav (_primitives.scss).
 
@@ -25,7 +25,7 @@ const Opened = ({ at, children }: { at?: string; children: ReactNode }): ReactEl
 
 /**
  * The admin layout as it is: the context row with the nav, then the
- * `.admin-layout` column around `children`. `open` is the address the
+ * `.page-column` column around `children`. `open` is the address the
  * workshop pretends to be on (./navigation.ts), which decides the nav's
  * current page; the People page's Users tab by default. `managesPeople`
  * false draws a curator's nav, without People (M11.20).
@@ -40,7 +40,7 @@ export const AdminFrame = ({
       <ContextRow lead={<span className="context-row__name">Admin</span>}>
         <AdminNav managesPeople={managesPeople} />
       </ContextRow>
-      <div className="admin-layout">{children}</div>
+      <div className="page-column">{children}</div>
     </div>
   </Opened>
 );

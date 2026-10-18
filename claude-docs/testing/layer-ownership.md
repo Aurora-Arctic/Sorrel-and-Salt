@@ -67,7 +67,7 @@ cited by number in the PR table of the task that applies it.
    production earns one, and its comment cites the PR or the incident. A bug
    caught while building earns none, and neither does "X stays removed": the
    exact-column test already fails if a column comes back.
-4. **No presentation in jsdom.** No class name, CSS custom property, z-index,
+4. **No presentation in happy-dom.** No class name, CSS custom property, z-index,
    compiled-Sass value or faked layout (a `getBoundingClientRect` mock). The
    workshop story and the Playwright axe scan own presentation. A real browser
    measuring a layout requirement (the 375 px scroll width) and a

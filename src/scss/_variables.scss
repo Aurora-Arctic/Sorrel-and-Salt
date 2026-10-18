@@ -118,6 +118,16 @@ $badge-palettes: (
       treatment: solid,
       dark: $sorrel-bright,
       light: $sorrel-vivid,
+    ),
+  // A coven's own entry rather than the compendium's (M8.19): where the row
+  // lives, not a warning, so a tint, in the accent's inks, which spend no hue
+  // the groups need, and tinted so it never reads as last-used's pointer.
+  // Light takes the accent's hover ink: $sorrel-vivid's label on its tint
+  // was 4.42:1. Label on tint 5.60:1 dark, 6.98:1 light; edge at least 4.01:1.
+  'local': (
+      treatment: tinted,
+      dark: $sorrel-bright,
+      light: $sorrel-deep,
     )
 );
 
@@ -391,11 +401,11 @@ $pager-tight-width: 23rem;
 // 44px target. A minimum, so a list's box still grows with its entries.
 $control-height: 2.78125rem;
 
-// The admin area's column (MB.115): wider than the measure, for the tables
-// the admin pages hold, whose prose still stops at it. 80rem, the owner's
+// The wide page column's width (`.page-column`, MB.115): wider than the
+// measure, for the tables the admin pages hold, whose prose still stops at it. 80rem, the owner's
 // call at the design review: the user list's seven columns need about 77rem
 // before they stop scrolling in their frame, and the privilege ledger has
-// seven too. It was `.admin-layout`'s own 64rem in `AdminNav/index.scss`.
+// seven too. It was the admin column's own 64rem in `AdminNav/index.scss`.
 $wide-column: 80rem;
 
 // A dialog's content column, and the wide one for a form with nested panels,
@@ -404,12 +414,20 @@ $wide-column: 80rem;
 $dialog-column: 32rem;
 $dialog-column-wide: 48rem;
 
+// The page's ground at three quarters over what lies behind: a dialog's backdrop
+// over the page, and a question's scrim over the form it asks about (MB.115). The
+// Filters sheet shares it.
+$modal-scrim: color-mix(in srgb, $surface-page 75%, transparent);
+
+// How a dialog and its backdrop fade in and out (M5.5), the Filters sheet's backdrop with them.
+$modal-fade: 150ms ease-out;
+
 // A small control's square box: WCAG 2.2's 24px minimum target, around a
 // `$glyph-size` mark. InfoTip's ⓘ, Combobox's clear and chip-remove buttons
 // and the user list's icon boxes each wrote 1.5rem.
 $icon-size: 1.5rem;
 
-// The mark inside a `$icon-size` box: InfoTip's ⓘ, Combobox's glyphs, the
+// The mark inside a `$icon-size` box: InfoTip's ⓘ, Combobox's icons, the
 // user list's marks. Each wrote 1rem.
 $glyph-size: 1rem;
 
@@ -497,8 +515,10 @@ $shell-phone-width: $table-stack-width;
 
 // The width at or under which the admin section nav keeps its first pages in
 // view and tucks the rest behind More (Priority+), between the phone shape
-// and a desktop where all six fit the row.
-$shell-tablet-width: 48rem;
+// and a desktop where all six fit the row. Also the width at or under which
+// the site links leave the bar for the account panel: with the Compendium
+// link an admin's bar outran an 882px window.
+$shell-tablet-width: 56rem;
 // Under this the bar's brand is its initials: a narrow phone, since the bar
 // has room for the full name wider than that once the site links have gone.
 $shell-brand-width: 26rem;

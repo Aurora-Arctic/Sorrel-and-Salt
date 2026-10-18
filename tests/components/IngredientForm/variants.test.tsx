@@ -1,11 +1,16 @@
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, renderHook, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
-import { EMPTY_VALUES, EMPTY_VARIANT } from '@/components/IngredientForm/values';
+import { useVariantFolds } from '@/components/IngredientForm/variants';
+import {
+  EMPTY_VALUES,
+  EMPTY_VARIANT,
+  VARIANT_SECTION_KEYS,
+} from '@/components/IngredientForm/values';
 import { VARIANT_SECTIONS, openSections, openSectionsIn } from '../../support/ingredient-sections';
-import { renderWithClient, waitFor } from '../../support/ingredient-form';
-import { press } from '../../support/interact';
+import { renderWithClient, waitFor, duplicateHref } from '../../support/ingredient-form';
+import { press, redo, undo } from '../../support/interact';
 import { mockGraphQLError, mockGraphQLQuery } from '../../support/msw/graphql';
 import {
   ENTRY_ID,
@@ -37,6 +42,7 @@ const OIL: FormNode = {
   value: 'Oil',
   description: null,
   group: 'Preparation',
+  icon: null,
   curated: true,
   claimants: [],
 };
@@ -81,12 +87,17 @@ function renderForm(
   const form =
     props.workspaceId === null ? (
       <IngredientForm
+        duplicateHref={duplicateHref}
         workspaceId={null}
         onSaved={onSaved}
         entry={props.values && { id: ENTRY_ID, values: props.values }}
       />
     ) : (
-      <IngredientForm workspaceId={props.workspaceId} onSaved={onSaved} />
+      <IngredientForm
+        duplicateHref={duplicateHref}
+        workspaceId={props.workspaceId}
+        onSaved={onSaved}
+      />
     );
   renderWithClient(form);
   // An edit opens with every section closed (MB.115): its variants are what
@@ -148,13 +159,19 @@ const twoForms = (oil: Partial<IngredientFormValues['variants'][number]> = {}) =
       ...EMPTY_VARIANT,
       variantId: HERB_VARIANT_ID,
       form: 'Oil',
-      formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', description: null },
+      formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', icon: null, description: null },
       ...oil,
     },
     {
       ...EMPTY_VARIANT,
       form: 'Herb',
-      formLink: { id: HERB_FORM_ID, name: 'Herb', group: 'Plant part', description: null },
+      formLink: {
+        id: HERB_FORM_ID,
+        name: 'Herb',
+        group: 'Plant part',
+        icon: null,
+        description: null,
+      },
     },
   ],
 });
@@ -247,7 +264,13 @@ describe('IngredientForm’s variants', () => {
             ...EMPTY_VARIANT,
             variantId: HERB_VARIANT_ID,
             form: 'Oil',
-            formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', description: null },
+            formLink: {
+              id: OIL_ID,
+              name: 'Oil',
+              group: 'Preparation',
+              icon: null,
+              description: null,
+            },
           },
         ],
       },
@@ -272,7 +295,9 @@ describe('IngredientForm’s variants', () => {
     noVariant('Oyl');
   });
 
-  it('removes a variant by its own button, and sends the rest', async () => {
+  // Its × asks first, and only removes: an open card stays open until the
+  // answer, and Keep It leaves it so (the owner's call, 2026-10-16).
+  it('removes a variant by its own button once confirmed, and sends the rest', async () => {
     const calls = acceptCreate();
     renderForm({ workspaceId: WORKSPACE_ID });
 
@@ -281,11 +306,59 @@ describe('IngredientForm’s variants', () => {
     addVariant('Herb');
     fireEvent.click(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
 
+    expect(variant('Oil')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Keep It' })).toHaveFocus();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+
     noVariant('Oil');
     expect(variant('Herb')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    expect(newForm()).toHaveFocus();
     save();
     await waitFor(() => expect(calls).toHaveLength(1));
     expect(calls[0].input.variants?.map(({ form }) => form)).toEqual(['Herb']);
+  });
+
+  it('keeps a variant, open as it was, when its removal is answered Keep It', async () => {
+    renderForm({ workspaceId: WORKSPACE_ID });
+
+    addVariant('Oil');
+    const remove = within(variant('Oil')).getByRole('button', { name: 'Remove Oil' });
+    expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+    press(remove);
+    press('Keep It');
+
+    expect(variant('Oil')).toBeInTheDocument();
+    expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    expect(remove).toHaveFocus();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
+  });
+
+  it('asks one question at a time: Cancel while a removal asks shows the unsaved changes instead', async () => {
+    offerNothing();
+    renderWithClient(
+      <IngredientForm
+        duplicateHref={duplicateHref}
+        workspaceId={WORKSPACE_ID}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    addVariant('Oil');
+    press(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
+    // Outside a modal nothing holds the form inert, so Cancel is still in reach.
+    fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+    expect(screen.queryByRole('button', { name: 'Keep It' })).toBeNull();
+    press('Keep Editing');
+
+    expect(screen.getByRole('button', { name: 'Keep It' })).toBeInTheDocument();
+    expect(variant('Oil')).toBeInTheDocument();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
   });
 
   it('refuses a repeat form at Add, folded as the save folds it, adding no second fieldset', () => {
@@ -332,7 +405,13 @@ describe('IngredientForm’s variants', () => {
             ...EMPTY_VARIANT,
             variantId: HERB_VARIANT_ID,
             form: 'Oil',
-            formLink: { id: OIL_ID, name: 'Oil', group: 'Preparation', description: null },
+            formLink: {
+              id: OIL_ID,
+              name: 'Oil',
+              group: 'Preparation',
+              icon: null,
+              description: null,
+            },
             safetyNotes: 'Dilute before use.',
           },
         ],
@@ -1029,5 +1108,238 @@ describe('IngredientForm’s variants', () => {
       fireEvent.click(within(oil).getByRole('button', { name: 'Remove Fixture fern' }));
       expect(skippedNotice(oil)).toBeEmptyDOMElement();
     });
+  });
+  // Undo and redo (M12.10): the folds follow what a step restores.
+  describe('its undo and redo', () => {
+    const settle = () => act(async () => {});
+    const listedIn = (card: HTMLElement) => openIn(card);
+
+    it('takes an added variant out, and gives back the form typed for it, on one undo; a redo adds it again', async () => {
+      renderForm({ workspaceId: WORKSPACE_ID });
+      type(document.body, 'Name', 'Testwort');
+      addVariant('Oil');
+      await settle();
+      expect(variant('Oil')).toBeInTheDocument();
+      expect(newForm()).toHaveValue('');
+
+      undo();
+
+      noVariant('Oil');
+      expect(newForm()).toHaveValue('Oil');
+
+      redo();
+
+      expect(variant('Oil')).toBeInTheDocument();
+      expect(newForm()).toHaveValue('');
+      // Leaving a field validates it; let that land inside the test.
+      await act(async () => {});
+    });
+
+    it('opens the closed section an undone change was made in, and redoes it', async () => {
+      renderForm({
+        workspaceId: null,
+        values: { ...EMPTY_VALUES, name: 'Testwort', nomenclature: 'none' },
+      });
+      openSections('Correspondences');
+      type(document.body, 'Colour', 'Silver');
+      fireEvent.click(screen.getByLabelText('Add Colour', { selector: 'button' }));
+      await settle();
+      const toggle = screen.getByRole('button', { name: 'Correspondences' });
+      fireEvent.click(toggle);
+      expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      act(() => toggle.focus());
+
+      undo();
+
+      expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      expect(screen.queryByRole('button', { name: 'Remove Silver' })).toBeNull();
+
+      redo();
+
+      expect(screen.getByRole('button', { name: 'Remove Silver' })).toBeInTheDocument();
+      // Leaving a field validates it; let that land inside the test.
+      await act(async () => {});
+    });
+
+    it('opens the closed variant, and the closed section in it, that an undone change was made in', async () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+      const oil = openVariant('Oil');
+      openSectionsIn(oil, 'Details & Care');
+      type(oil, 'Description', 'Pressed from the fixture.');
+      await settle();
+      // Closed, Done and the section both, as a person tidies up after.
+      fireEvent.click(sectionOf(oil, 'Details & Care'));
+      fireEvent.click(editOf('Oil'));
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'false');
+      act(() => editOf('Oil').focus());
+
+      undo();
+
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+      expect(listedIn(variant('Oil'))).toEqual(['Details & Care']);
+      expect(control(variant('Oil'), 'Description')).toHaveValue('');
+    });
+
+    it('brings a removed variant back with the other variant/s open sections as they were', async () => {
+      renderForm({ workspaceId: null, values: twoForms() });
+      openWhole('Herb');
+      fireEvent.click(sectionOf(variant('Herb'), 'Relations'));
+      expect(openIn(variant('Herb'))).not.toContain('Relations');
+      await settle();
+      fireEvent.click(within(openVariant('Oil')).getByRole('button', { name: 'Remove Oil' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+      noVariant('Oil');
+      act(() => editOf('Herb').focus());
+
+      undo();
+
+      expect(variant('Oil')).toBeInTheDocument();
+      expect(variant('Herb')).toBeInTheDocument();
+      // The returning form is the one open; Herb keeps the sections it had open.
+      expect(editOf('Oil')).toHaveAttribute('aria-expanded', 'true');
+      expect(openIn(openVariant('Herb'))).toEqual(
+        VARIANT_SECTIONS.filter((title) => title !== 'Relations'),
+      );
+
+      redo();
+
+      noVariant('Oil');
+      expect(variant('Herb')).toBeInTheDocument();
+      // Leaving a field validates it; let that land inside the test.
+      await act(async () => {});
+    });
+
+    it('undoes nothing after an edit is saved', async () => {
+      const calls = acceptUpdate();
+      renderForm({ workspaceId: null, values: twoForms() });
+      type(openVariant('Oil'), 'Description', 'Pressed from the fixture.');
+      await settle();
+      save();
+      await waitFor(() => expect(calls).toHaveLength(1));
+      await settle();
+      act(() => editOf('Oil').focus());
+
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      undo();
+
+      expect(control(variant('Oil'), 'Description')).toHaveValue('Pressed from the fixture.');
+    });
+  });
+});
+
+// `reconcile` re-keys the folds to a restored list. The form has no control
+// that reorders variants, so the hook is driven directly here.
+describe('useVariantFolds reconcile', () => {
+  const [FIRST] = VARIANT_SECTION_KEYS;
+  const [, SECOND] = VARIANT_SECTION_KEYS;
+  const withIds = (...pairs: [string, string][]) =>
+    pairs.map(([form, variantId]) => ({ form, variantId }));
+
+  it("carries each row's folds with it when a restore only reorders", () => {
+    const { result } = renderHook(() => useVariantFolds());
+    const before = withIds(['Oil', 'a'], ['Herb', 'b']);
+    act(() => result.current.toggle(0, FIRST));
+    act(() => result.current.setCard(0));
+
+    act(() => result.current.reconcile(before, withIds(['Herb', 'b'], ['Oil', 'a'])));
+
+    expect(result.current.isOpen(1, FIRST)).toBe(true);
+    expect(result.current.isOpen(0, FIRST)).toBe(false);
+    expect(result.current.card).toBe(1);
+  });
+
+  it('closes the open card when the restore drops its row', () => {
+    const { result } = renderHook(() => useVariantFolds());
+    const before = withIds(['Oil', 'a'], ['Herb', 'b']);
+    act(() => result.current.setCard(1));
+
+    act(() => result.current.reconcile(before, withIds(['Oil', 'a'])));
+
+    expect(result.current.card).toBeNull();
+  });
+
+  it("matches two unsaved blank-form rows one to one, so the second is not given the first's folds", () => {
+    const { result } = renderHook(() => useVariantFolds());
+    const before = [{ form: '' }, { form: '' }];
+    act(() => result.current.toggle(0, FIRST));
+    act(() => result.current.toggle(1, SECOND));
+
+    act(() => result.current.reconcile(before, [{ form: '' }, { form: '' }]));
+
+    expect(result.current.isOpen(0, FIRST)).toBe(true);
+    expect(result.current.isOpen(1, FIRST)).toBe(false);
+    expect(result.current.isOpen(1, SECOND)).toBe(true);
+    expect(result.current.card).toBeNull();
+  });
+
+  it('opens the one row with no old match when its twin is matched', () => {
+    const { result } = renderHook(() => useVariantFolds());
+    act(() => result.current.reconcile([{ form: '' }], [{ form: '' }, { form: '' }]));
+
+    expect(result.current.card).toBe(1);
+    expect(result.current.isOpen(0, FIRST)).toBe(false);
+    expect(result.current.isOpen(1, FIRST)).toBe(true);
+  });
+});
+
+// Where the focus lands after an undo (M12.10): the variant a restore
+// returned, or the box of the list inside a variant that changed.
+describe('IngredientForm’s variants, undone', () => {
+  const chord = (from: HTMLElement) => {
+    act(() => from.focus());
+    fireEvent.keyDown(from, { key: 'z', ctrlKey: true });
+  };
+  const name = () => control(document.body, 'Name');
+
+  it('lands on the Form field of the variant an undo brought back', async () => {
+    renderForm({ workspaceId: WORKSPACE_ID });
+    type(document.body, 'Name', 'Testwort');
+    addVariant('Oil');
+    addVariant('Herb');
+    fireEvent.click(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    noVariant('Oil');
+
+    chord(name());
+
+    expect(control(variant('Oil'), 'Form')).toHaveFocus();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
+  });
+
+  it('lands on the New Form box after a redo that only takes a variant out', async () => {
+    renderForm({ workspaceId: WORKSPACE_ID });
+    type(document.body, 'Name', 'Testwort');
+    addVariant('Oil');
+    fireEvent.click(within(variant('Oil')).getByRole('button', { name: 'Remove Oil' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    chord(name());
+    expect(control(variant('Oil'), 'Form')).toHaveFocus();
+
+    act(() => name().focus());
+    fireEvent.keyDown(name(), { key: 'z', ctrlKey: true, shiftKey: true });
+
+    noVariant('Oil');
+    expect(newForm()).toHaveFocus();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
+  });
+
+  it('lands on the box of a list inside a variant after undoing an entry added to it', async () => {
+    renderForm({ workspaceId: WORKSPACE_ID });
+    type(document.body, 'Name', 'Testwort');
+    addVariant('Oil');
+    addVariant('Herb');
+    const herb = openWhole('Herb');
+    type(herb, 'Colour', 'Silver');
+    fireEvent.click(within(herb).getByLabelText('Add Colour', { selector: 'button' }));
+    expect(within(herb).getByLabelText('Remove Silver')).toBeInTheDocument();
+
+    chord(name());
+
+    expect(within(variant('Herb')).queryByLabelText('Remove Silver')).toBeNull();
+    expect(control(variant('Herb'), 'Colour')).toHaveFocus();
+    // Leaving a field validates it; let that land inside the test.
+    await act(async () => {});
   });
 });

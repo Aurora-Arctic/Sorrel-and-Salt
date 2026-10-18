@@ -8,7 +8,11 @@ import type { userPrivilegeChanges } from '../../modules/identity/schema/user-pr
 import type { auditColumns, users } from '../../modules/identity/schema/users';
 import type { ingredientDeities } from '../../modules/ingredients/schema/ingredient-deities';
 import type { ingredientVariants } from '../../modules/ingredients/schema/ingredient-variants';
-import type { NomenclatureKind } from '../../modules/ingredients/schema/ingredient-enums';
+import type {
+  CategoryMode,
+  IngredientElement,
+  NomenclatureKind,
+} from '../../modules/ingredients/schema/ingredient-enums';
 import type { ingredients } from '../../modules/ingredients/schema/ingredients';
 import type { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import type { referenceLinks } from '../../modules/ingredients/schema/reference-links';
@@ -19,6 +23,7 @@ import type { Curator, SiteAdmin } from '@/modules/identity';
 import type { Cursor, PageRequest } from '../../lib/types';
 import type { AuditSession, Generic } from '../types';
 import type { FlatTable, ItemTable, PickedTable } from '../vocabularies';
+import type { FormGroupIcon } from '../../modules/vocabulary/schema/form-group-icons';
 
 // The repository's types: the table shapes a finder or writer admits, the
 // options `selectFrom` reads, the writer `withAudit` hands out, and the
@@ -184,6 +189,34 @@ export interface WordMatch {
 export interface Similarity {
   orderBy: SQL[];
   limit: number;
+}
+
+/**
+ * How `selectFrom` tallies rows rather than reading them (M12.3): the
+ * `aggregate` values, one row per `groupBy` group, or one row for the whole
+ * read without a group. The read takes a list's search join and threshold
+ * from `over`, as a count does, so it tallies the rows that list's pages
+ * hold. Each value is read as the driver returns it, as a carried value is,
+ * so a count is cast in SQL rather than mapped.
+ */
+export interface Aggregate<TRow extends Record<string, unknown>> {
+  aggregate: { [K in keyof TRow]: SQL<TRow[K]> };
+  over: Pick<KeyOrder, 'join' | 'wordMatch'>;
+  /**
+   * Tables joined after the search join, in order, each ANDing its own
+   * `deleted_at IS NULL` into `on`. A right join keeps every row of its table
+   * whatever `on` says, so the `where` is where that table's own filter goes.
+   */
+  joins?: readonly AggregateJoin[];
+  groupBy?: readonly (SQL | AnyPgColumn)[];
+  orderBy?: readonly (SQL | AnyPgColumn)[];
+}
+
+/** One table an `Aggregate` read joins, and how. Alias it when the `where` reads the table too. */
+export interface AggregateJoin {
+  type: 'inner' | 'left' | 'right';
+  table: PgTable;
+  on: SQL | undefined;
 }
 
 /**
@@ -501,6 +534,37 @@ export interface AuditWriter {
    */
   lockLiveMembers(membership: Membership): Promise<(typeof workspaceMembers.$inferSelect)[]>;
   /**
+   * Takes the proof's coven's stock lock until the transaction ends (M12.8): a
+   * save that moves jars onto a local and a create that adds a jar queue on it,
+   * so neither misses the other's write. Taken first, before any read or write.
+   * Per coven: another coven's call is not held up.
+   */
+  lockCovenStock(membership: Membership): Promise<void>;
+  /**
+   * The proof's coven's live jars of live forms of the compendium entries its
+   * ingredient `localId` hides (M12.8), each with its form and entry, locked
+   * `for update` in jar-id order until the transaction ends: what a local
+   * entry's save moves onto its own forms. A read, and in the writer because
+   * the move must hold the jars it decided on. Another coven's jars are never
+   * read, and neither is a jar of a deleted form.
+   */
+  lockJarsOnHiddenEntries(membership: Membership, localId: string): Promise<HiddenJar[]>;
+  /**
+   * The live forms of the proof's coven's ingredient `ingredientId`, locked in
+   * form-id order, read in the transaction so they include the ones this write
+   * has just made. None for an ingredient that is not the coven's.
+   */
+  lockLiveVariants(membership: Membership, ingredientId: string): Promise<VariantRow[]>;
+  /** The proof's coven's live jars of its ingredient `ingredientId`, locked in jar-id order. */
+  lockJarsOfIngredient(membership: Membership, ingredientId: string): Promise<StockRow[]>;
+  /**
+   * The proof's coven's live ingredients that hide the compendium entry
+   * `entryId`, locked in id order; the caller ranks them by
+   * identity match and age, which a lock order cannot. Empty for an id that is not a
+   * compendium entry.
+   */
+  lockLocalsHiding(membership: Membership, entryId: string): Promise<IngredientRow[]>;
+  /**
    * Invite an address into the proof's workspace, with the role it names,
    * stamped from the session (M7.2; MB.202). The workspace is the proof's,
    * never the values'. The token is hashed here and only the hash is stored.
@@ -594,8 +658,10 @@ export interface SimilarityScore {
 export interface IngredientFilter {
   /** Word-similar (`<%`, at 0.5) to the label, the formal name or a live folk name, case- and accent-folded. */
   query?: string;
-  /** Every one of these, not any: an entry must carry each id listed. */
+  /** Categories an entry carries, on itself or on a live form; `categoryMode` says how many of them. */
   categoryIds?: readonly string[];
+  /** `all` (the default) needs every id in `categoryIds`; `any` needs at least one (M8.12). */
+  categoryMode?: CategoryMode;
   /**
    * Any of these forms, not every one: an entry matches when one of its live
    * variants has a form in the list, both sides trimmed and lower-cased
@@ -619,6 +685,13 @@ export interface IngredientFilter {
   /** Any of these signs, read from the entry's `zodiacSigns` as `celestialBodies` reads its list. */
   zodiacSigns?: readonly string[];
   /**
+   * Any of these elements: an entry matches when its own `elements` list, or
+   * a live variant's, holds one of them, alone or among others (M8.13, MB.157,
+   * MB.215). A soft-deleted variant's list counts for nothing. An empty list
+   * is no filter.
+   */
+  elements?: readonly IngredientElement[];
+  /**
    * Any of these curated deities: an entry matches when it holds a live link
    * to one of them, by `ingredient_deities.deity_id` (MB.167, M11.22). How a
    * deity's delete finds the entries holding it (MB.132), with a one-item
@@ -631,10 +704,64 @@ export interface IngredientFilter {
    * Absent means any (M11.22).
    */
   toxic?: 'toxic' | 'not_toxic';
+  /**
+   * A coven's list only (M9.7): `local` keeps the coven's own entries,
+   * `compendium` the compendium entries it holds. Absent keeps both. The
+   * compendium's own read ignores it.
+   */
+  source?: 'local' | 'compendium';
+  /**
+   * A coven's list only (M9.7): keep an entry when any live jar of the coven's
+   * is not at 0, a jar with no quantity counting as held. The compendium's
+   * own read ignores it.
+   */
+  inStock?: boolean;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
   nomenclature?: NomenclatureKind;
+}
+
+/** One facet value and how many entries the list would hold with it chosen (M12.3). */
+export interface FacetCount<TValue extends string = string> {
+  value: TValue;
+  count: number;
+}
+
+/**
+ * How many entries each value of each filter kind would list, under the rest
+ * of the filter (M12.3). Forms are spelled as shown, deities and categories
+ * are row ids, and the astrology kinds are the curated rows' names.
+ */
+export interface IngredientFacets {
+  forms: FacetCount[];
+  deities: FacetCount[];
+  categories: FacetCount[];
+  zodiacSigns: FacetCount[];
+  celestialBodies: FacetCount[];
+  elements: FacetCount<IngredientElement>[];
+  toxic: FacetCount<'toxic' | 'not_toxic'>[];
+}
+
+/**
+ * A coven's facets (M9.7): the seven kinds, and the two settings only a coven's
+ * list has. `source` lists both values, zeros kept, in the enum's order;
+ * `inStock` is how many entries the list would hold with the switch on.
+ * Each is counted with its own setting left out and every other kept.
+ */
+export interface WorkspaceIngredientFacets extends IngredientFacets {
+  source: FacetCount<'local' | 'compendium'>[];
+  inStock: number;
+}
+
+/**
+ * The compendium's facets, and how many entries cite no live reference under
+ * the rest of the filter: the No Refs switch's count (M12.3), the same with
+ * the switch on or off. A coven's list has no such switch, so its facets do
+ * not carry it.
+ */
+export interface CompendiumFacets extends IngredientFacets {
+  withoutReferences: number;
 }
 
 /**
@@ -688,6 +815,8 @@ export interface FormSuggestion extends VocabularySuggestion {
   id: string | null;
   /** The curated row's group, which tells two same-named forms apart; none in use. */
   group: string | null;
+  /** The curated row's group's icon name; none for a group without one and for a value in use. */
+  icon: FormGroupIcon | null;
   claimants: Claimant[];
 }
 
@@ -718,6 +847,8 @@ export interface SuggestionRow {
   value: string;
   description: string | null;
   group: string | null;
+  /** The form group's icon; none for a deity, a tradition or a value in use. */
+  icon: FormGroupIcon | null;
   fold: string;
   /** The curated row's id; an in-use value's fold, which its tier holds once. */
   tiebreak: string;
@@ -747,6 +878,19 @@ export type IngredientRow = typeof ingredients.$inferSelect;
 
 /** An `inventory_items` row — one coven's jar of one form — as a finder or a write returns it. */
 export type StockRow = typeof inventoryItems.$inferSelect;
+
+/** A form of an ingredient, as a finder or a write returns it. */
+export type VariantRow = typeof ingredientVariants.$inferSelect;
+
+/**
+ * A jar a coven holds on a compendium entry its own ingredient hides (M12.8),
+ * with the form it sits on and the entry that form belongs to.
+ */
+export interface HiddenJar {
+  jar: StockRow;
+  variant: VariantRow;
+  entry: IngredientRow;
+}
 
 /** A redirect from a slug an entry moved off: the entry, at its current slug, and when it ends. */
 export interface SlugRedirect {

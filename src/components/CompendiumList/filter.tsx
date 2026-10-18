@@ -1,83 +1,248 @@
 'use client';
 
 import { type ReactElement, useMemo, useState } from 'react';
-import { oneOf } from '@/lib/search-params';
-import { NOMENCLATURE_KINDS } from '@/modules/ingredients/schema/ingredient-enums';
-import { FilterSelectField, SearchField, SwitchField } from '../Field';
-import FilterForm, { useApplyFilter } from '../FilterForm';
-import { NOMENCLATURE_OPTIONS } from '../IngredientForm/options';
+import { INGREDIENT_ELEMENTS } from '@/modules/ingredients/schema/ingredient-enums';
+import { buildSearchSentence } from '../IngredientSearch/sentence';
+import type { SearchSentenceLabels } from '../IngredientSearch/types';
+import FacetPanel from '../FacetPanel';
+import type { FacetPanelFilter } from '../FacetPanel/types';
+import { useApplyFilter } from '../FilterForm';
+import { IngredientSearchForm, useSearchText } from '../IngredientSearch';
+import { useListNavigation } from '../ListFrame';
+import SearchSentence from '../SearchSentence';
+import { useLiveFacets } from './live-facets';
+import { editHeading } from './heading';
 import { COMPENDIUM_PATH, compendiumHref } from './href';
-import type { CompendiumListFilterProps, CompendiumPlace } from './types';
+import { COMPENDIUM_PARAMS } from './params';
+import type { CompendiumListFilter, CompendiumListFilterProps } from './types';
 
-// The compendium's filter, on the shared FilterForm (MB.178, MB.115): a name
-// search, a form, a classification and No Refs, each applying as it changes
-// rather than on a Filter button pressed after them, the owner's call at
-// MB.115's review. Classification applies on its pick and No Refs on its
-// press, each carrying the name typed but not yet searched; the form once a
-// choice settles, a pick, its clear or leaving the box, never while it is
-// typed; the name on the magnifier or Enter. Each field but the name is
-// drawn from the filter shown and holds its own value after, since the list
-// keys this by that filter and the new list draws it afresh. Once hydrated
-// the form is typed into, as the curated lists' group is, and Classification
-// is the select-only box, so the row has one dropdown look (the owner's
-// calls, MB.115); the server draws each as a native `<select>`
-// (`FilterSelectField`) and No Refs as a switch, a native checkbox valued
-// `1`, so before hydration a press on the magnifier submits natively, as
-// `query=&form=&nomenclature=` plus `withoutReferences=1` when on, which the
-// page reads as the same filter.
+// The compendium's filter row (M12.4, on IngredientSearchForm): the name search, then the
+// Filters (n) button with its Clear All link and the panel of facets it opens, and above the
+// results the search sentence that says what the list is searching for. The panel covers the
+// results, so a change in it is held and nothing applies until it shuts: Apply Filters, Escape
+// and every other close apply the held facets in one soft navigation (Back steps through,
+// reload restores), and nothing held is thrown away. While it is open its counts follow the
+// held filter (live-facets.ts); the list and the sentence do not move. Clear All, which sits
+// where the page is in view, applies at once. Before hydration the panel is drawn open
+// inside this GET form, each facet a native control under the name the parameter table
+// reads, and Apply Filters (or Enter in the search box) submits them all. Picking a name in
+// the search box's dropdown opens that entry's modal over the list as it is shown, the typed
+// text not applied (the owner's call, M8.10). The row has no Clear of its own.
+// See claude-docs/components/compendium-list.md.
 
-const CompendiumListFilter = ({ filter, forms }: CompendiumListFilterProps): ReactElement => {
-  const [draftQuery, setDraftQuery] = useState(filter.query);
+/** The facets of a filter, the part the panel shows. */
+const panelOf = (filter: CompendiumListFilter): FacetPanelFilter => ({
+  categories: filter.categories,
+  categoryMode: filter.categoryMode,
+  forms: filter.forms,
+  deities: filter.deities,
+  zodiac: filter.zodiac,
+  planets: filter.planets,
+  elements: filter.elements,
+  toxic: filter.toxic ?? '',
+  withoutReferences: filter.withoutReferences,
+});
+
+/** Nothing chosen: what Clear All holds while the unfiltered list is on its way. */
+const NO_FACETS: FacetPanelFilter = {
+  categories: [],
+  categoryMode: 'all',
+  forms: [],
+  deities: [],
+  zodiac: [],
+  planets: [],
+  elements: [],
+  toxic: '',
+  withoutReferences: false,
+};
+
+/** The address of the list under the filter shown, the panel's facets and the name typed set over it. */
+const hrefFor = (filter: CompendiumListFilter, panel: FacetPanelFilter, query: string) =>
+  compendiumHref(
+    COMPENDIUM_PARAMS.changed(
+      { ...filter, query },
+      {
+        categories: [...panel.categories],
+        forms: [...panel.forms],
+        deities: [...panel.deities],
+        zodiac: [...panel.zodiac],
+        planets: [...panel.planets],
+        elements: panel.elements.flatMap(
+          (each) => INGREDIENT_ELEMENTS.find((element) => element === each) ?? [],
+        ),
+        toxic: panel.toxic,
+        withoutReferences: panel.withoutReferences,
+        // Below two categories the mode means nothing, so the address leaves it out.
+        categoryMode: panel.categories.length >= 2 ? panel.categoryMode : 'all',
+      },
+    ),
+  );
+
+/** The facets as held in the panel, laid over the filter shown: what Apply would list. */
+const heldFilter = (
+  filter: CompendiumListFilter,
+  panel: FacetPanelFilter,
+  query: string,
+): CompendiumListFilter => ({
+  ...filter,
+  query,
+  categories: [...panel.categories],
+  forms: [...panel.forms],
+  deities: [...panel.deities],
+  zodiac: [...panel.zodiac],
+  planets: [...panel.planets],
+  elements: panel.elements.flatMap(
+    (each) => INGREDIENT_ELEMENTS.find((element) => element === each) ?? [],
+  ),
+  toxic: panel.toxic,
+  withoutReferences: panel.withoutReferences,
+  categoryMode: panel.categories.length >= 2 ? panel.categoryMode : 'all',
+});
+
+/**
+ * The panel over what the row holds. A change is held, not applied: the address, the list
+ * and the sentence stay as they were until the panel shuts, by Apply Filters or by anything
+ * else that closes it, and the counts inside follow the held filter meanwhile.
+ */
+const PanelFacets = ({
+  filter,
+  facets,
+  categories,
+  vocabulary,
+  panel,
+  onPanel,
+}: CompendiumListFilterProps & {
+  panel: FacetPanelFilter;
+  onPanel: (next: FacetPanelFilter) => void;
+}): ReactElement => {
+  const text = useSearchText();
   const apply = useApplyFilter();
-  // A form's name is its value too: the compendium filters a form by its text.
-  const choices = useMemo(() => forms.map(({ name }) => ({ value: name, label: name })), [forms]);
-
-  /** The filter shown with one field changed, the name typed carried, from the first page. */
-  const hrefWith = (change: CompendiumPlace) =>
-    compendiumHref({ ...filter, query: draftQuery.trim(), ...change });
-
+  const { pending } = useListNavigation();
+  const shown = panelOf(filter);
+  const changed = JSON.stringify(panel) !== JSON.stringify(shown);
+  const live = useLiveFacets({
+    held: heldFilter(filter, panel, text.trim()),
+    enabled: changed,
+    categories,
+    vocabulary,
+  });
   return (
-    <FilterForm
-      label="Filter the Compendium"
-      action={COMPENDIUM_PATH}
-      searchHref={() => hrefWith({})}
-      shown={[filter.query, filter.form, filter.nomenclature, filter.withoutReferences]}
-    >
-      <SearchField
-        label="Name"
-        name="query"
-        placeholder="Search names"
-        value={draftQuery}
-        onChange={setDraftQuery}
-      />
-      <FilterSelectField
-        label="Form"
-        name="form"
-        all="All Forms"
-        options={choices}
-        defaultValue={filter.form}
-        onChange={(form) => apply(hrefWith({ form }))}
-        typeahead
-      />
-      <FilterSelectField
-        label="Classification"
-        name="nomenclature"
-        all="Any"
-        options={NOMENCLATURE_OPTIONS}
-        defaultValue={filter.nomenclature}
-        onChange={(kind) =>
-          apply(hrefWith({ nomenclature: oneOf(NOMENCLATURE_KINDS, kind) ?? '' }))
-        }
-      />
-      <SwitchField
-        label="No Refs"
-        name="withoutReferences"
-        value="1"
-        defaultChecked={filter.withoutReferences}
-        onChange={(withoutReferences) => apply(hrefWith({ withoutReferences }))}
-      />
-    </FilterForm>
+    <FacetPanel
+      admin
+      facets={live.facets ?? facets}
+      filter={panel}
+      loading={pending || live.loading}
+      clearHref={COMPENDIUM_PATH}
+      className="compendium-list__panel"
+      onChange={(patch) => onPanel({ ...panel, ...patch })}
+      // Shut any other way than Apply Filters, whose submit applies the name as well: the
+      // facets held, under the name the page shows, and nothing at all when none changed.
+      onApply={() => {
+        if (changed) apply(hrefFor(filter, panel, filter.query));
+      }}
+      onClear={() => {
+        onPanel(NO_FACETS);
+        apply(COMPENDIUM_PATH);
+      }}
+    />
   );
 };
 
-export default CompendiumListFilter;
+const CompendiumListFilterRow = ({
+  filter,
+  facets,
+  categories,
+  vocabulary,
+}: CompendiumListFilterProps): ReactElement => {
+  // The panel as held: the filter shown until something in it is changed, and the filter
+  // shown again whenever a new list arrives (Back, Apply, Clear All). The row is not drawn
+  // afresh for a facet, so the open panel and the focus in it survive.
+  const shown = panelOf(filter);
+  const [panel, setPanel] = useState(shown);
+  const [seen, setSeen] = useState(JSON.stringify(shown));
+  if (seen !== JSON.stringify(shown)) {
+    setSeen(JSON.stringify(shown));
+    setPanel(shown);
+  }
+
+  return (
+    <IngredientSearchForm
+      label="Filter the Compendium"
+      action={COMPENDIUM_PATH}
+      query={filter.query}
+      shown={[]}
+      clear={false}
+      className="compendium-list__row"
+      searchHref={(query) => hrefFor(filter, panel, query)}
+      // The list as shown, the typed text not applied: the modal opens over it.
+      pickHref={(match) => compendiumHref(filter, { edit: match.slug })}
+      pickHeading={editHeading}
+    >
+      <PanelFacets
+        filter={filter}
+        facets={facets}
+        categories={categories}
+        vocabulary={vocabulary}
+        panel={panel}
+        onPanel={setPanel}
+      />
+    </IngredientSearchForm>
+  );
+};
+
+/** What each chosen value is called in the sentence: a deity by its name, a category by its name. */
+function labelsOf({
+  facets,
+  categories,
+}: Pick<CompendiumListFilterProps, 'facets' | 'categories'>): SearchSentenceLabels {
+  const named = (rows: readonly { value: string; label: string }[]) =>
+    Object.fromEntries(rows.map(({ value, label }) => [value, label]));
+  // Two gods of one name are told apart by their tradition, as the panel's groups do.
+  const sameName = (name: string) =>
+    facets.deities.filter(({ label }) => label === name).length > 1;
+  return {
+    categories: Object.fromEntries(categories.map(({ slug, name }) => [slug, name])),
+    deities: Object.fromEntries(
+      facets.deities.map(({ value, label, tradition }) => [
+        value,
+        sameName(label) ? `${label} (${tradition})` : label,
+      ]),
+    ),
+    elements: named(facets.elements),
+  };
+}
+
+const CompendiumListFilterWithSentence = ({
+  filter,
+  facets,
+  categories,
+  vocabulary,
+  total,
+}: CompendiumListFilterProps & { total: number }): ReactElement => {
+  const { pending } = useListNavigation();
+  const sentence = useMemo(
+    () =>
+      buildSearchSentence({
+        filter: { ...filter, toxic: filter.toxic || null },
+        labels: labelsOf({ facets, categories }),
+        total,
+        admin: true,
+      }),
+    [filter, facets, categories, total],
+  );
+  return (
+    <>
+      {/* Keyed by the name searched, so another one starts the box again from it. */}
+      <CompendiumListFilterRow
+        key={filter.query}
+        filter={filter}
+        facets={facets}
+        categories={categories}
+        vocabulary={vocabulary}
+      />
+      <SearchSentence sentence={sentence} query={filter.query} pending={pending} />
+    </>
+  );
+};
+
+export default CompendiumListFilterWithSentence;

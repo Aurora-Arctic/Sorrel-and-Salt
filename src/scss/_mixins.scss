@@ -104,6 +104,33 @@
   filter: grayscale(1);
 }
 
+// A button that is off: dashed and faded, the same as a disabled field, so it
+// reads as a button that is off rather than a quiet one. The `.btn` primitive's
+// disabled state, and a modal header's controls while a question holds them
+// (Modal/index.scss). `:hover`/`:focus-visible` restate every property, so
+// no colour modifier's own can compete (_primitives.scss, `.btn:disabled`).
+@mixin btn-disabled {
+  background-color: transparent;
+  border-color: $text-muted;
+  border-style: dashed;
+  color: $text-muted;
+  opacity: $opacity-disabled;
+  cursor: not-allowed;
+  box-shadow: none;
+
+  &:hover,
+  &:focus-visible {
+    background-color: transparent;
+    border-color: $text-muted;
+    color: $text-muted;
+    box-shadow: none;
+  }
+
+  svg {
+    opacity: 0.5;
+  }
+}
+
 // Defaults to the body ink, so the ring re-colours with the theme.
 @mixin focus-ring($color: $text-primary) {
   outline: 2px solid $color;
@@ -536,25 +563,34 @@
 // paints above an overlay stretched from a button, and would take the press.
 // With `$flip`, it is flipped about its horizontal edge (`rotateX`) instead of
 // turned in the plane, and the caller names the transition (`transform`).
-@mixin disclosure-chevron($open, $flip: false) {
+// A chevron's open flip, the account menu's for every chevron (the owner's
+// call, M8.16): turned over on open, eased, and still under reduced motion.
+// `$open` is the selector the flip waits on, ending in `>` for a parent;
+// `$props` are any other properties the chevron eases alongside the turn.
+@mixin chevron-flip($open, $props...) {
+  @include theme-transition(transform, $props...);
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  #{$open} & {
+    transform: rotateX(180deg);
+  }
+}
+
+@mixin disclosure-chevron($open, $props...) {
   display: inline-flex;
   flex: none;
   width: $glyph-size;
   height: $glyph-size;
   color: $text-muted;
   pointer-events: none;
+  @include chevron-flip($open, $props...);
 
   svg {
     width: 100%;
     height: 100%;
-  }
-
-  #{$open} & {
-    @if $flip {
-      transform: rotateX(180deg);
-    } @else {
-      rotate: 180deg;
-    }
   }
 }
 
@@ -627,4 +663,84 @@
 
   -webkit-font-smoothing: auto;
   -moz-osx-font-smoothing: auto;
+}
+
+// An outlined chip (M12.4): no fill, an ink border, and the text and cross in
+// the same ink; hover and focus tint the surface rather than turning it green.
+// The neutral chips of a faceted filter wear it, so a chosen value reads as
+// an applied filter and not as one of the page's coloured category chips.
+// Nest inside the chip's selector; the shape and size stay the chip's own.
+@mixin outlined-chip {
+  background-color: transparent;
+  color: $text-primary;
+  border: 1px solid $text-primary;
+
+  &:hover,
+  &:focus-within,
+  &:focus-visible {
+    background-color: $fill-quiet;
+  }
+}
+
+// A link to an entry's page: the body ink with no underline at rest, the chain
+// icon (an svg inside the link) after it saying it is a link, as colour alone
+// would not, and pointed at or focused the whole link, icon included, takes the
+// link colour while the icon alone grows a little. A transform on the icon,
+// from its inline start, so nothing around it moves; the text keeps its size.
+// Reduced motion snaps both, with no transition. Used by the admin compendium
+// list's name links and the entry page's link to the compendium.
+@mixin icon-link {
+  color: $text-primary;
+  text-decoration: none;
+  @include theme-transition(color);
+
+  svg {
+    width: 1em;
+    height: 1em;
+    margin-inline-start: space(1);
+    vertical-align: -0.125em;
+    transform-origin: left center;
+    @include theme-transition(transform);
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: $accent;
+
+    svg {
+      transform: scale(1.2);
+    }
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  &:where(:visited) {
+    color: $text-primary;
+  }
+
+  &:hover:where(:visited),
+  &:focus-visible:where(:visited) {
+    color: $accent;
+  }
+
+  @include reduced-motion {
+    transition: none;
+
+    svg {
+      transition: none;
+    }
+  }
+}
+
+// A short decorative hairline, drawn by a pseudo-element so the markup gains no
+// element: the caller makes the box it sits in `position: relative` and says
+// where, with the insets. Used by the jump menu's gap above References and the
+// entry page's gap under the Compendium Entry link.
+@mixin short-hairline {
+  content: '';
+  position: absolute;
+  inline-size: space(5);
+  border-block-start: 1px solid $hairline;
 }

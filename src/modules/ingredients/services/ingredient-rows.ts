@@ -96,9 +96,10 @@ export function ingredientColumns(fields: IngredientFields) {
  * so a service passes each on without naming them. Either tier's parse.
  */
 export function splitChildren<P extends LocalIngredientInput>(parsed: P) {
-  const { folkNames, substitutes, references, deities, variants, ...fields } = parsed;
+  const { folkNames, substitutes, references, deities, variants, jarMerges, ...fields } = parsed;
   return {
     fields,
+    jarMerges,
     lists: { folkNames, substitutes, references },
     picked: { deities: deities ?? [], variants } satisfies PickedLists,
   };
@@ -880,7 +881,7 @@ function matchVariants(variants: readonly PickedVariant[], current: readonly Var
 }
 
 /** A form as `ingredient_variants_form_unique` folds it, `lower(btrim(form))`. */
-function foldForm(form: string): string {
+export function foldForm(form: string): string {
   return form.trim().toLowerCase();
 }
 

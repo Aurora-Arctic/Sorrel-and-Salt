@@ -1,0 +1,852 @@
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { renderToString } from 'react-dom/server';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import FacetPanel from '@/components/FacetPanel';
+import type { FacetPanelFilter, FacetPanelProps } from '@/components/FacetPanel/types';
+import type { CompendiumFacetCounts } from '@/components/CompendiumList/types';
+
+// The Filters button and the panel it opens (M12.4): a dialog that slides down over the
+// results from the tablet width up and is a modal sheet below it, rendered inline and open
+// before the script runs (claude-docs/components/facet-panel.md).
+
+const GROUP = { id: 'g', name: 'Testing', colorDark: '#336699', colorLight: '#99ccff' };
+
+const FACETS: CompendiumFacetCounts = {
+  forms: [
+    { value: 'test-oil', label: 'Test Oil', count: 4, icon: null },
+    { value: 'test-leaf', label: 'Test Leaf', count: 2, icon: null },
+  ],
+  deities: [
+    { value: 'testa-fixtura', label: 'Testa', count: 3, tradition: 'Fixtura' },
+    { value: 'probus-fixtura', label: 'Probus', count: 1, tradition: 'Fixtura' },
+  ],
+  categories: [
+    { value: 'warding', label: 'Testwarding', count: 5, group: GROUP },
+    { value: 'mending', label: 'Testmending', count: 6, group: GROUP },
+  ],
+  zodiac: [{ value: 'test-ram', label: 'Test Ram', count: 2 }],
+  planets: [{ value: 'test-sun', label: 'Test Sun', count: 3 }],
+  elements: [
+    { value: 'water', label: 'Water', count: 7 },
+    { value: 'fire', label: 'Fire', count: 0 },
+  ],
+  toxic: [
+    { value: 'toxic', label: 'Toxic', count: 2 },
+    { value: 'not_toxic', label: 'Not Toxic', count: 9 },
+  ],
+  withoutReferences: 3,
+};
+
+const NONE: FacetPanelFilter = {
+  categories: [],
+  categoryMode: 'all',
+  forms: [],
+  deities: [],
+  zodiac: [],
+  planets: [],
+  elements: [],
+  toxic: '',
+  withoutReferences: false,
+};
+
+const props = (
+  filter: Partial<FacetPanelFilter> = {},
+  more: Partial<FacetPanelProps> = {},
+): FacetPanelProps => ({
+  facets: FACETS,
+  filter: { ...NONE, ...filter },
+  onChange: () => undefined,
+  clearHref: '/compendium',
+  ...more,
+});
+
+const dialog = () => document.querySelector('dialog') as HTMLDialogElement;
+const filtersButton = () => screen.getByRole('button', { name: /^Filters/ });
+
+// Stands the viewport in: wide is the tablet width and up. `listeners` collects the width query's change handlers.
+function stubViewport(wide: boolean, reduced = true) {
+  const listeners: Array<() => void> = [];
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches: query.includes('prefers-reduced-motion')
+      ? reduced
+      : query.includes('min-width')
+        ? wide
+        : false,
+    media: query,
+    addEventListener: (_type: string, listener: () => void) => {
+      if (query.includes('min-width')) listeners.push(listener);
+    },
+    removeEventListener: () => undefined,
+  }));
+  return listeners;
+}
+
+// The dialog's methods are attribute toggles in this environment; spy to learn which opened it.
+function spyDialog() {
+  const show = vi.spyOn(HTMLDialogElement.prototype, 'show');
+  const showModal = vi.spyOn(HTMLDialogElement.prototype, 'showModal');
+  return { show, showModal };
+}
+
+describe('FacetPanel', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  it('counts every chosen value on the Filters button, Toxic included and Match not', () => {
+    stubViewport(true);
+    const { rerender } = render(<FacetPanel {...props()} />);
+    expect(filtersButton()).toHaveAccessibleName('Filters');
+
+    rerender(
+      <FacetPanel
+        {...props({
+          forms: ['test-oil', 'test-leaf'],
+          categories: ['warding', 'mending'],
+          categoryMode: 'any',
+          toxic: 'toxic',
+        })}
+      />,
+    );
+    // Two forms, two categories and a Toxic setting; the Match mode adds none.
+    expect(filtersButton()).toHaveAccessibleName('Filters 5');
+  });
+
+  it('offers Clear All beside the button only while something is chosen', () => {
+    stubViewport(true);
+    const { rerender } = render(<FacetPanel {...props()} />);
+    expect(screen.queryByRole('link', { name: 'Clear All' })).toBeNull();
+
+    rerender(<FacetPanel {...props({ planets: ['test-sun'] })} />);
+    expect(screen.getByRole('link', { name: 'Clear All' })).toHaveAttribute('href', '/compendium');
+  });
+
+  it('opens over the results without a modal from the tablet width up, and focuses into the dialog', () => {
+    stubViewport(true);
+    const spies = spyDialog();
+    render(<FacetPanel {...props()} />);
+    expect(dialog()).not.toHaveAttribute('open');
+
+    fireEvent.click(filtersButton());
+
+    expect(spies.show).toHaveBeenCalledTimes(1);
+    expect(spies.showModal).not.toHaveBeenCalled();
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'true');
+    expect(dialog()).toHaveAttribute('open');
+    expect(dialog().contains(document.activeElement)).toBe(true);
+  });
+
+  it('names the dialog by its visible Filters title', () => {
+    stubViewport(true);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    expect(screen.getByRole('dialog', { name: 'Filters' })).toBe(dialog());
+  });
+
+  it('opens as a modal sheet below the tablet width', () => {
+    stubViewport(false);
+    const spies = spyDialog();
+    render(<FacetPanel {...props()} />);
+
+    fireEvent.click(filtersButton());
+
+    expect(spies.showModal).toHaveBeenCalledTimes(1);
+    expect(spies.show).not.toHaveBeenCalled();
+  });
+
+  it('closes on Escape and gives focus back to the Filters button', () => {
+    stubViewport(true);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.keyDown(dialog(), { key: 'Escape' });
+
+    expect(dialog()).not.toHaveAttribute('open');
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+    expect(filtersButton()).toHaveFocus();
+  });
+
+  it('leaves the panel open when a combobox popup consumed the Escape', () => {
+    stubViewport(true);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true });
+    event.preventDefault();
+    act(() => {
+      dialog().dispatchEvent(event);
+    });
+
+    expect(dialog()).toHaveAttribute('open');
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'true');
+  });
+
+  it('shuts and applies once on a press outside the open panel, and not on one inside it', () => {
+    stubViewport(true);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.pointerDown(screen.getByRole('heading', { name: 'Filters' }));
+    expect(dialog()).toHaveAttribute('open');
+    expect(onApply).not.toHaveBeenCalled();
+
+    fireEvent.pointerDown(document.body);
+
+    expect(dialog()).not.toHaveAttribute('open');
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('leaves a press on the Filters button to its own handler, so the panel is applied once', () => {
+    stubViewport(true);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.pointerDown(filtersButton());
+    fireEvent.click(filtersButton());
+
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('shuts the sheet on a press on its backdrop, which is the dialog itself, and not on one inside it', () => {
+    stubViewport(false);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.pointerDown(screen.getByRole('heading', { name: 'Filters' }));
+    expect(onApply).not.toHaveBeenCalled();
+
+    fireEvent.pointerDown(dialog());
+
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes at once when the viewport crosses the tablet width', () => {
+    const listeners = stubViewport(true, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+    expect(listeners.length).toBeGreaterThan(0);
+
+    act(() => listeners.forEach((listener) => listener()));
+
+    expect(dialog()).not.toHaveAttribute('open');
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('snaps shut when the browser closes the dialog itself', () => {
+    stubViewport(false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent(dialog(), new Event('close'));
+
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('keeps the panel pinned to its top when something scrolls it', () => {
+    stubViewport(true);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+    const clip = dialog().firstElementChild as HTMLElement;
+    clip.scrollTop = 40;
+
+    fireEvent.scroll(clip);
+
+    expect(clip.scrollTop).toBe(0);
+  });
+
+  it('submits every chosen value through hidden inputs under its parameter', () => {
+    stubViewport(true);
+    const { container } = render(
+      <FacetPanel
+        {...props({
+          categories: ['warding', 'mending'],
+          categoryMode: 'any',
+          forms: ['test-oil', 'test-leaf'],
+          deities: ['testa-fixtura'],
+          zodiac: ['test-ram'],
+          planets: ['test-sun'],
+          elements: ['water'],
+          toxic: 'not_toxic',
+        })}
+      />,
+    );
+    const sent = (name: string) =>
+      Array.from(container.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`))
+        .filter((input) => input.type === 'hidden' || input.checked)
+        .map((input) => input.value);
+
+    expect(sent('categories')).toEqual(['warding', 'mending']);
+    expect(sent('forms')).toEqual(['test-oil', 'test-leaf']);
+    expect(sent('deities')).toEqual(['testa-fixtura']);
+    expect(sent('zodiac')).toEqual(['test-ram']);
+    expect(sent('planets')).toEqual(['test-sun']);
+    expect(sent('elements')).toEqual(['water']);
+    expect(sent('toxic')).toEqual(['not_toxic']);
+    expect(sent('categoryMode')).toEqual(['any']);
+  });
+
+  it('keeps Match below two categories, on All, disabled and with a hint, and enables it at two', () => {
+    stubViewport(true);
+    const { rerender } = render(
+      <FacetPanel {...props({ categories: ['warding'], categoryMode: 'any' })} />,
+    );
+    fireEvent.click(filtersButton());
+    const match = () => screen.getByRole('group', { name: 'Match' });
+    // The held mode is Any, so the chip resting on All is the stuck state and not the stored value.
+    const chip = within(match()).getByRole('button', { name: /All/ });
+    expect(chip).toBeDisabled();
+    expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+    expect(within(match()).queryByRole('radio')).toBeNull();
+
+    // A stuck chip is disabled and unfocusable; the fieldset carries its hint, and hovering shows it.
+    const stuck = within(match()).getByRole('button', { name: /All/ });
+    const bubble = document.getElementById(
+      stuck.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+    );
+    fireEvent.mouseEnter(stuck);
+    expect(bubble).toHaveAttribute('aria-hidden', 'false');
+
+    rerender(
+      <FacetPanel {...props({ categories: ['warding', 'mending'], categoryMode: 'any' })} />,
+    );
+    expect(within(match()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
+    expect(within(match()).getByRole('radio', { name: 'Any' })).toBeChecked();
+  });
+
+  describe('the choice chips (M9.7)', () => {
+    const openPanel = (
+      filter: Partial<FacetPanelFilter> = {},
+      more: Partial<FacetPanelProps> = {},
+    ) => {
+      stubViewport(true);
+      const view = render(<FacetPanel {...props(filter, more)} />);
+      fireEvent.click(filtersButton());
+      return view;
+    };
+    const match = () => screen.getByRole('group', { name: 'Match' });
+    const menu = () => match().querySelector('details') as HTMLDetailsElement;
+    const summary = () => menu().querySelector('summary') as HTMLElement;
+
+    it('keeps every chip tip inside the bar its chip stands in, the box its bubble is placed against', () => {
+      // Match's tip is on the chip itself; Source's ordinary tip is the icon beside its chip.
+      openPanel({ categories: ['warding'], source: 'local' });
+      const tips = screen.getAllByRole('button', { name: /^About Source/ });
+      expect(tips.length).toBeGreaterThan(0);
+      for (const tip of tips) {
+        const bar = tip.closest('.facet-chip__bar');
+        expect(bar).not.toBeNull();
+        // The bar holds the chip too, so the tip stands beside it and not in the panel at large.
+        expect(bar?.querySelector('summary, button.facet-chip__summary')).not.toBeNull();
+      }
+    });
+
+    it('shows the enabled Match hint on hover and on focus of its summary, and not while the menu is open', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      const bubble = () =>
+        document.getElementById(
+          match().closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      fireEvent.mouseLeave(summary());
+      fireEvent.focus(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      fireEvent.click(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('draws Match as a group holding a summary that opens a menu of native radios', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      expect(menu().open).toBe(false);
+      fireEvent.click(summary());
+      expect(menu().open).toBe(true);
+      expect(
+        within(match())
+          .getAllByRole('radio')
+          .map((radio) => radio.getAttribute('value')),
+      ).toEqual(['all', 'any']);
+    });
+
+    describe('the menu side', () => {
+      const menuBox = () => menu().querySelector('.facet-chip__menu') as HTMLElement;
+      // jsdom has no layout: the chip stands at 1000px, the menu is 150px wide, and the panel's
+      // clip ends at the given edge. The clip is the first ancestor reporting overflow.
+      const layout = (clipEdge: number) => {
+        vi.spyOn(menu(), 'getBoundingClientRect').mockReturnValue({ left: 1000 } as DOMRect);
+        Object.defineProperty(menuBox(), 'offsetWidth', { configurable: true, value: 150 });
+        const clip = menu().closest('.facet-panel__inner') as HTMLElement;
+        vi.spyOn(clip, 'getBoundingClientRect').mockReturnValue({ right: clipEdge } as DOMRect);
+        const real = window.getComputedStyle.bind(window);
+        vi.spyOn(window, 'getComputedStyle').mockImplementation((el, pseudo) => {
+          const style = real(el, pseudo);
+          // jsdom reports no overflow at all; a browser says "visible" for an ancestor that does not clip.
+          return {
+            ...style,
+            overflowX: el === clip ? 'clip' : 'visible',
+            getPropertyValue: style.getPropertyValue.bind(style),
+          } as CSSStyleDeclaration;
+        });
+      };
+      afterEach(() => vi.restoreAllMocks());
+
+      it('hangs from the right edge of the chip when the left-aligned box would cross the clip', () => {
+        openPanel({ categories: ['warding', 'mending'] });
+        layout(1100);
+        fireEvent.click(summary());
+        expect(menuBox()).toHaveClass('facet-chip__menu--end');
+      });
+
+      it('stays left-aligned when the box fits', () => {
+        openPanel({ categories: ['warding', 'mending'] });
+        layout(1200);
+        fireEvent.click(summary());
+        expect(menuBox()).not.toHaveClass('facet-chip__menu--end');
+      });
+    });
+
+    it('closes on choosing, and reports the choice as a patch of only that part', () => {
+      const onChange = vi.fn();
+      openPanel({ categories: ['warding', 'mending'] }, { onChange });
+      fireEvent.click(summary());
+      fireEvent.click(within(match()).getByRole('radio', { name: 'Any' }));
+      expect(onChange).toHaveBeenLastCalledWith({ categoryMode: 'any' });
+      expect(menu().open).toBe(false);
+    });
+
+    it('closes on Escape and returns focus to the chip, leaving the panel open', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      fireEvent.click(summary());
+      fireEvent.keyDown(within(match()).getAllByRole('radio')[0], { key: 'Escape' });
+      expect(menu().open).toBe(false);
+      expect(menu().querySelector('summary')).toHaveFocus();
+      expect(dialog().open).toBe(true);
+    });
+
+    it('closes on a press outside it', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      fireEvent.click(summary());
+      expect(menu().open).toBe(true);
+      fireEvent.pointerDown(screen.getByRole('group', { name: 'Toxic' }));
+      expect(menu().open).toBe(false);
+    });
+
+    it('carries each count as its own number in the radio name, Toxic included', () => {
+      openPanel();
+      const toxic = screen.getByRole('group', { name: 'Toxic' });
+      expect(within(toxic).getByRole('radio', { name: 'Toxic 2' })).toBeInTheDocument();
+      expect(within(toxic).getByRole('radio', { name: 'Not Toxic 9' })).toBeInTheDocument();
+      expect(within(toxic).getByRole('radio', { name: 'Any' })).toBeChecked();
+    });
+
+    it('sends the held choices through the GET form even while the menus are shut', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel
+            {...props({ categories: ['warding', 'mending'], categoryMode: 'any', toxic: 'toxic' })}
+          />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('categoryMode')).toEqual(['any']);
+      expect(data.getAll('toxic')).toEqual(['toxic']);
+    });
+  });
+
+  it('shows No Refs to an admin only', () => {
+    stubViewport(true);
+    const { rerender } = render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+    expect(screen.queryByRole('switch', { name: /^No Refs/ })).toBeNull();
+
+    rerender(<FacetPanel {...props({}, { admin: true })} />);
+    expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
+  });
+
+  describe("the coven's Source and In Stock controls (M9.7)", () => {
+    const COVEN = { source: '', inStock: false } as const;
+    const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
+      stubViewport(true);
+      render(<FacetPanel {...props(filter, more)} />);
+      fireEvent.click(filtersButton());
+    };
+
+    it('shows neither on a panel whose caller passes neither', () => {
+      open();
+      expect(screen.queryByRole('group', { name: 'Source' })).toBeNull();
+      expect(screen.queryByRole('switch', { name: 'In Stock' })).toBeNull();
+    });
+
+    const counted: Partial<FacetPanelProps> = {
+      facets: {
+        ...FACETS,
+        source: [
+          { value: 'local', label: 'Local', count: 4 },
+          { value: 'compendium', label: 'Compendium', count: 2 },
+        ],
+        inStock: 3,
+      },
+    };
+
+    it('offers Source as All, Local and Compendium, on All by default', () => {
+      open(COVEN);
+      const source = screen.getByRole('group', { name: 'Source' });
+      expect(
+        within(source)
+          .getAllByRole('radio')
+          .map((radio) => radio.getAttribute('value')),
+      ).toEqual(['', 'local', 'compendium']);
+      expect(within(source).getByRole('radio', { name: 'All' })).toBeChecked();
+    });
+
+    it('carries each count in the option and switch names, All and the Toxic strip as they were', () => {
+      open(COVEN, counted);
+      const source = screen.getByRole('group', { name: 'Source' });
+      expect(within(source).getByRole('radio', { name: /^Local 4/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: /^Compendium 2/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: 'All' })).toBeInTheDocument();
+      expect(screen.getByRole('switch', { name: 'In Stock 3' })).toBeInTheDocument();
+    });
+
+    it('reports a chosen counted source and switch as a patch of only that part', () => {
+      const onChange = vi.fn();
+      open(COVEN, { ...counted, onChange });
+
+      fireEvent.click(screen.getByRole('radio', { name: /^Local/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
+      fireEvent.click(screen.getByRole('switch', { name: /^In Stock/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ inStock: true });
+    });
+
+    it('reports a chosen source and the switch as a patch of only that part', () => {
+      const onChange = vi.fn();
+      open(COVEN, { onChange });
+
+      fireEvent.click(screen.getByRole('radio', { name: /^Local/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
+      fireEvent.click(screen.getByRole('radio', { name: 'Compendium' }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'compendium' });
+
+      fireEvent.click(screen.getByRole('switch', { name: 'In Stock' }));
+      expect(onChange).toHaveBeenLastCalledWith({ inStock: true });
+    });
+
+    it('shows what is held', () => {
+      open({ source: 'local', inStock: true });
+      expect(screen.getByRole('radio', { name: /^Local/ })).toBeChecked();
+      expect(screen.getByRole('switch', { name: 'In Stock' })).toBeChecked();
+    });
+
+    it('counts a chosen source and the switch on the Filters button', () => {
+      stubViewport(true);
+      const { rerender } = render(<FacetPanel {...props(COVEN)} />);
+      expect(filtersButton()).toHaveAccessibleName('Filters');
+      rerender(<FacetPanel {...props({ source: 'compendium', inStock: true })} />);
+      expect(filtersButton()).toHaveAccessibleName('Filters 2');
+    });
+
+    it('submits through the GET form around it, as source=local and inStock=1', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel {...props({ source: 'local', inStock: true })} />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('source')).toEqual(['local']);
+      expect(data.getAll('inStock')).toEqual(['1']);
+    });
+  });
+
+  describe('the Toxic field when a count is zero', () => {
+    const withToxic = (
+      toxic: CompendiumFacetCounts['toxic'],
+      filter: Partial<FacetPanelFilter> = {},
+    ) => {
+      stubViewport(true);
+      render(<FacetPanel {...props(filter, { facets: { ...FACETS, toxic } })} />);
+      fireEvent.click(filtersButton());
+    };
+    const group = () => screen.getByRole('group', { name: /^Toxic/ });
+
+    it('rests the chip on Any, disables the group and carries a hint when Toxic is zero', () => {
+      withToxic([
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not_toxic', label: 'Not Toxic', count: 9 },
+      ]);
+      // The chip rests on Any and does not open, so it holds no radios while stuck.
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+      expect(within(group()).queryByRole('radio')).toBeNull();
+    });
+
+    it('does the same when Not Toxic is zero, even if it was the chosen value', () => {
+      withToxic(
+        [
+          { value: 'toxic', label: 'Toxic', count: 4 },
+          { value: 'not_toxic', label: 'Not Toxic', count: 0 },
+        ],
+        { toxic: 'not_toxic' },
+      );
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+    });
+
+    it('opens the hint when the pointer rests on the disabled chip itself', () => {
+      withToxic([
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not_toxic', label: 'Not Toxic', count: 9 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      const bubble = () =>
+        document.getElementById(
+          chip.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(chip);
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+    });
+
+    it('is enabled, with no hint, when both counts are above zero', () => {
+      withToxic(FACETS.toxic);
+      expect(within(group()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
+    });
+  });
+
+  describe('the Source field when a count is zero', () => {
+    const withSource = (
+      source: NonNullable<CompendiumFacetCounts['source']>,
+      filter: Partial<FacetPanelFilter> = {},
+    ) => {
+      stubViewport(true);
+      render(
+        <form method="get">
+          <FacetPanel
+            {...props({ source: '', inStock: false, ...filter }, { facets: { ...FACETS, source } })}
+          />
+        </form>,
+      );
+      fireEvent.click(filtersButton());
+    };
+    const group = () => screen.getByRole('group', { name: /^Source/ });
+    const submitted = () =>
+      new FormData(document.querySelector('form') as HTMLFormElement).getAll('source');
+
+    it('rests the chip on All, disables the group and carries a hint when Compendium is zero', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 0 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+      expect(within(group()).queryByRole('radio')).toBeNull();
+    });
+
+    it('does the same when Local is zero, and submits nothing for a held source', () => {
+      withSource(
+        [
+          { value: 'local', label: 'Local', count: 0 },
+          { value: 'compendium', label: 'Compendium', count: 4 },
+        ],
+        { source: 'local' },
+      );
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+      expect(submitted()).toEqual([]);
+    });
+
+    it('is enabled, with no hint, when both counts are above zero', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 3 },
+      ]);
+      expect(within(group()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
+    });
+
+    it('opens the hint when the pointer rests on the disabled chip itself', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 0 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      const bubble = () =>
+        document.getElementById(
+          chip.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(chip);
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+    });
+  });
+
+  it('reports a changed Toxic choice and No Refs as a patch of only that part', () => {
+    stubViewport(true);
+    const onChange = vi.fn();
+    render(<FacetPanel {...props({}, { admin: true, onChange })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(screen.getByRole('radio', { name: /^Toxic 2/ }));
+    expect(onChange).toHaveBeenLastCalledWith({ toxic: 'toxic' });
+
+    fireEvent.click(screen.getByRole('switch', { name: /^No Refs/ }));
+    expect(onChange).toHaveBeenLastCalledWith({ withoutReferences: true });
+  });
+
+  it('renders inline and open before hydration, every control present, with Filters a link to the panel', () => {
+    const markup = renderToString(<FacetPanel {...props({ forms: ['test-oil'] })} />);
+    const host = document.createElement('div');
+    host.innerHTML = markup;
+
+    const panel = host.querySelector('dialog') as HTMLDialogElement;
+    expect(panel.hasAttribute('open')).toBe(true);
+    // The class the stylesheet hides under the document's script mark until hydration takes over.
+    expect(panel.classList.contains('facet-panel--static')).toBe(true);
+    const link = host.querySelector(`a[href="#${panel.id}"]`);
+    expect(link).not.toBeNull();
+    expect(host.firstElementChild?.tagName).toBe('A');
+    expect(panel.querySelector('button[type="submit"]')).not.toBeNull();
+    expect(panel.querySelector('select[name="forms"], input[name="forms"]')).not.toBeNull();
+    expect(panel.querySelector('input[name="toxic"]')).not.toBeNull();
+  });
+});
+
+// The phone sheet slides in from the right and out to it, and waits out the slide before it
+// closes; the desktop slide and reduced motion are untouched.
+describe('FacetPanel phone sheet slide', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+  });
+
+  const transitionEnd = (propertyName: string) => {
+    const end = new Event('transitionend', { bubbles: true });
+    Object.defineProperty(end, 'propertyName', { value: propertyName });
+    fireEvent(dialog(), end);
+  };
+  const slideEnd = () => transitionEnd('transform');
+  const closeButton = () => screen.getAllByRole('button', { name: 'Close' })[0]!;
+
+  it('holds the sheet open, leaving, until the slide ends, then closes and applies once', () => {
+    stubViewport(false, false);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+    expect(dialog()).not.toHaveClass('is-closing');
+
+    fireEvent.click(closeButton());
+
+    expect(dialog()).toHaveClass('is-closing');
+    expect(dialog()).toHaveAttribute('open');
+    expect(onApply).toHaveBeenCalledTimes(1);
+
+    slideEnd();
+
+    expect(dialog()).not.toHaveAttribute('open');
+    expect(dialog()).not.toHaveClass('is-closing');
+    expect(filtersButton()).toHaveAttribute('aria-expanded', 'false');
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('applies once however many times it is asked to shut during the slide', () => {
+    stubViewport(false, false);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(closeButton());
+    fireEvent.pointerDown(dialog());
+    fireEvent.click(closeButton());
+    slideEnd();
+    fireEvent(dialog(), new Event('close'));
+
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('closes after a limit when the browser never reports the end of the slide', () => {
+    vi.useFakeTimers();
+    stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+    fireEvent.click(closeButton());
+    expect(dialog()).toHaveAttribute('open');
+
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+
+    expect(dialog()).not.toHaveAttribute('open');
+  });
+
+  // The backdrop's fade ends on the dialog too, and sooner than the sheet's slide.
+  it('stays open when only the backdrop fade ends', () => {
+    stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+    fireEvent.click(closeButton());
+
+    transitionEnd('opacity');
+
+    expect(dialog()).toHaveAttribute('open');
+    expect(dialog()).toHaveClass('is-closing');
+  });
+
+  it('takes the sheet own Escape through the slide rather than closing at once', () => {
+    stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    const cancel = new Event('cancel', { cancelable: true });
+    fireEvent(dialog(), cancel);
+
+    expect(cancel.defaultPrevented).toBe(true);
+    expect(dialog()).toHaveClass('is-closing');
+    slideEnd();
+    expect(dialog()).not.toHaveAttribute('open');
+  });
+
+  it('closes at once under reduced motion', () => {
+    stubViewport(false, true);
+    const onApply = vi.fn();
+    render(<FacetPanel {...props({}, { onApply })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(closeButton());
+
+    expect(dialog()).not.toHaveAttribute('open');
+    expect(dialog()).not.toHaveClass('is-closing');
+    expect(onApply).toHaveBeenCalledTimes(1);
+  });
+
+  it('snaps shut with no slide when the width crosses the tablet width', () => {
+    const listeners = stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    act(() => listeners.forEach((listener) => listener()));
+
+    expect(dialog()).not.toHaveAttribute('open');
+  });
+
+  it('leaves the desktop panel on its slide, never the sheet slide', () => {
+    stubViewport(true, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(filtersButton());
+
+    expect(dialog()).not.toHaveClass('is-closing');
+  });
+});

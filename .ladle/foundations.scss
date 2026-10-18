@@ -280,10 +280,10 @@ $raw-palette: (soot, soot-raised, parchment, parchment-raised, chalk, iron-gall,
     border-radius: radius('control');
   }
 
-  // The page header's box also carries `.admin-layout`, the ancestor its
+  // The page header's box also carries `.page-column`, the ancestor its
   // full-width action keys off; it keeps the other boxes' place rather than
   // the layout's centring, and its own padding outranks the layout's.
-  .fd-phone.admin-layout {
+  .fd-phone.page-column {
     margin-inline: 0;
   }
 

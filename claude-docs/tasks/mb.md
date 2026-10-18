@@ -261,14 +261,15 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.256 | An unverified account loops on the email page after a link into the shell                                                | Wave 10  | —                      |
 | MB.257 | The Coven Landing Shows a Blank Page Before Redirecting                                                                  | Bugfixes | —                      |
 | MB.258 | The Edit Source Form Leaves Blank Space and Has No Close Button                                                          | Bugfixes | —                      |
-| MB.259 | Category Chips Sometimes Show a UUID Instead of the Name                                                                 | Bugfixes | —                      |
+| MB.259 | ~~Category Chips Sometimes Show a UUID Instead of the Name~~ — **retired, not done**                                     | —        | —                      |
 | MB.260 | Admin Curated Lists Show No Updated Column                                                                               | Bugfixes | —                      |
 | MB.261 | The No Refs Switch Cannot Be Toggled With Enter                                                                          | Bugfixes | —                      |
 | MB.262 | Mail Shows Its Light Colours in Zoho Mail's Dark Mode                                                                    | Bugfixes | —                      |
 | MB.263 | The Coven Links Still Stop on a Blank Page Before the Coven                                                              | Bugfixes | —                      |
 | MB.264 | The Admin Nav Folds Two Tabs on Refresh at Desktop Width                                                                 | Bugfixes | —                      |
-| MB.265 | The Zodiac Signs Filter Test Fails Axe's Title Check Under Load                                                          | Bugfixes | —                      |
+| MB.265 | Admin Pages Fail Axe's Title Check Under Load                                                                            | Bugfixes | —                      |
 | MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
+| MB.267 | Story 18 and the Sign-In Panel Test Pass Every CI Run                                                                    | Bugfixes | —                      |
 
 **MB.206 — Repository: the two-tier read scope and the page pair, written once** · 3h
 
@@ -1358,7 +1359,26 @@ _Acceptance criteria:_
 - Closing the form saves nothing, and the form keeps the form save rules (Cancel stays quiet)
 - The component's doc and story are corrected if the fix changes them
 
-**MB.259 — Category Chips Sometimes Show a UUID Instead of the Name** · 3h
+**MB.259 — ~~Category Chips Sometimes Show a UUID Instead of the Name~~** · **RETIRED 2026-10-16, not done**
+
+> **Retired without being done.** The ID is kept because task IDs are immutable
+> and the analysis below is the record of why the glitch is tolerated.
+>
+> **Why.** The cause was found and reproduced on a production build. The
+> Categories picker names a chip only from the `categories` list, which
+> `listCategories` serves from the compendium data cache for up to an hour
+> (`COMPENDIUM_REVALIDATE_SECONDS`), while the ingredient's picked categories
+> are read live. A category written outside the app, as `db:reset` does by
+> minting new ids, is missing from the cached list, so its chip shows its id
+> until the cache refreshes or an admin edit expires the `compendium` tag.
+> In production that needs a deploy whose reference seed adds a new category
+> and files an entry under it, then an admin opening that entry's form within
+> the hour. The seed only inserts missing rows, so existing categories keep
+> their ids, and the category vocabulary rarely changes. The chip holds a real,
+> live id, so saving is unaffected; the glitch is cosmetic and clears itself.
+> The owner judged it not worth a fix (2026-10-16). The cause is
+> local-development resets, which a `db:reset` that clears the dev data cache
+> would cure if it ever becomes a nuisance.
 
 _Story:_ As a site admin, I want the categories input on an ingredient's edit form to always show category names, so that I can tell which categories an ingredient has and edit them.
 
@@ -1508,9 +1528,9 @@ _Acceptance criteria:_
 - At a phone width the first four tabs and More show as before
 - The measuring render is never painted: no frame shows the row overflowing
 
-**MB.265 — The Zodiac Signs Filter Test Fails Axe's Title Check Under Load** · 2h
+**MB.265 — Admin Pages Fail Axe's Title Check Under Load** · 3h
 
-_Story:_ As a developer running the gate suite, I want the zodiac signs filter test to pass every time, so that a red run means a real regression and not a busy machine.
+_Story:_ As a developer running the gate and story suites, I want axe's title check to pass every time on the admin pages, so that a red run means a real regression and not a busy machine.
 
 Found on 2026-10-16, locally, during M11.18's measurement runs. The gate test "an admin filters the zodiac signs by part of a name" in `tests/e2e/admin.spec.ts` failed twice with an axe-core accessibility violation, rule `document-title` (the document has no title), on `/admin/zodiac-signs?query=AR` after filtering, and passed on every other run. Both sightings were under a load average of 11 to 24, with several Playwright and Vitest runs sharing twelve cores. The page declares a static `title` in its metadata (`src/app/(shell)/admin/(astrology)/zodiac-signs/page.tsx`), so a document without a title should not be possible. One hypothesis is that under load axe runs against a streamed document whose head has not yet carried the title; that is unproven. It is a flaky test, not a broken page, so it is not a hotfix.
 
@@ -1524,12 +1544,24 @@ Steps to reproduce:
 Actual: sometimes axe reports a `document-title` violation and the test fails; the next run passes.
 Expected: the filtered page always carries its title, so axe passes and the test is stable.
 
+Found again on 2026-10-16, locally, in one full `npm run test:stories` run on M8.10's branch, which changes nothing under `src/app/(shell)/admin/users`. Story 60, "the primary admin pauses admin changes …" in `tests/e2e/stories/08-email-and-admin.spec.ts`, failed at its axe check (line 464) with the same `document-title` violation, on `/admin/users` just after the primary admin paused admin changes. Run alone, it passed. Two pages failing the same way makes a shared cause, in the harness or the shell's head, likelier than one in either page.
+
+Steps to reproduce:
+
+1. Run `npm run test:stories`, the full story suite, locally.
+2. Story 60 signs in as the primary admin and opens `/admin/users` filtered to one user.
+3. It presses Pause Admin Changes and confirms in the dialog.
+4. Once the dialog closes and the paused status shows, it runs the axe check.
+
+Actual: sometimes axe reports a `document-title` violation (the page has no non-empty `<title>`); seen once in a full run, and the story passed when run alone.
+Expected: the page always has its title after pausing, and the story passes every run.
+
 _Acceptance criteria:_
 
 - A regression test that fails before the fix: either a reproduction of the missing title (axe run against the page before hydration or during streaming), or, if the title is proved always present, a test showing the harness ran axe too early
-- The cause is established and recorded, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
+- The cause is established and recorded for both pages, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
 - The fix lives where the cause is: the page if the title is missing, `tests/e2e/axe.ts` if the harness ran early, never a retry or a skip
-- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass
+- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass, and ten consecutive runs of story 60 (`npm run test:stories -- -g "pauses admin changes"`) under load pass
 - `claude-docs/testing/e2e.md`'s "Where a run's time goes (M11.18)" section stops calling this failure unexplained once it is explained
 
 **MB.266 — Curators Reach the Admin Curated Lists Again** · 2h
@@ -1553,6 +1585,41 @@ _Acceptance criteria:_
 - The name read is guarded by `assertCurator`, returns id and name only, and refuses a coven owner (A) by direct id
 - `usersForAdmin` and the People pages stay admin-only
 - Docs: `claude-docs/components/data-table.md` names the curator-safe read
+
+**MB.267 — Story 18 and the Sign-In Panel Test Pass Every CI Run** · 3h
+
+_Story:_ As a developer opening a PR, I want story 18 and the sign-in panel's component test to pass on every run, so that a red check on my PR means my change broke something.
+
+Found on 2026-10-18 on M12.1's PR (#1063), which changes neither. Two failures, filed as one task on the owner's call. Neither is a hotfix: no user-facing page is shown broken.
+
+**Story 18 runs at its time limit in CI.** "An admin adds a compendium entry, edits it, and deletes it, the list following each" (`tests/e2e/stories/07-admin.spec.ts`, `@story-18`) has Playwright's default 30-second limit, since `playwright.stories.config.ts` sets none. In CI it took 29.7s on M12.4's passing run (39080852601), and 30.3s and 31.1s, then 30.3s and 30.0s, on M12.1's two failing runs (39081808999, 39092340049), each retry included. Locally it passed three runs of three. Each failure was "Test timeout of 30000ms exceeded" just after the reload: Close is pressed, and the dialog is still open when time runs out. The failure snapshot shows Close focused, Save disabled and no unsaved-changes question, so the form held nothing unsaved. Whether Close is slow after a reload, or the story simply runs out of time doing five axe checks and a reload, is unproven.
+
+Steps to reproduce:
+
+1. Open a PR into `staging`, so the PR gate runs the stories job.
+2. Story 18 signs in as an admin, adds an entry, edits it, saves, reloads, opens the Oil variant's Details & Care, and presses Close.
+
+Actual: the test times out at 30s waiting for the dialog to close, on the first try and the retry.
+Expected: the story passes within its time limit on every run.
+
+**The sign-in panel test warns about an uncached snapshot.** `tests/components/SignInPanel/index.test.tsx` intermittently fails on React's console error "The result of getSnapshot should be cached to avoid an infinite loop", which the harness turns into a failure. In CI run 39092340049 it failed "marks the last-used provider in its button's accessible name…". Locally, on M12.1's branch and on M12.4's head (`158361cc`) alike, it failed "surfaces a failing signIn.social result in the same alert region". Earlier CI runs passed it. The panel reads Better Auth's `getLastUsedLoginMethod` through `useSyncExternalStore` (`src/components/SignInPanel/index.tsx`), which parses `document.cookie` on every call. A string or null compares equal across calls, so the warning implies the cookie changes between React's reads, as the test's helpers write or clear it. That is unproven. M11.25's happy-dom pin is the last change to the test environment.
+
+Steps to reproduce:
+
+1. Run `npx vitest run tests/components/SignInPanel` (with `env -u CLAUDECODE` to see the console).
+2. Repeat until a test fails.
+
+Actual: a test fails on the getSnapshot console error; which test varies.
+Expected: every test passes on every run, with no console error.
+
+The getSnapshot warning does not reach story 18: it appears in neither story run's log, the sign-in panel is not on the compendium page, and every external store that page uses returns a stable value.
+
+_Acceptance criteria:_
+
+- Story 18's slow step is named from a CI trace, and the story passes on three consecutive PR-gate runs; a longer time limit is set only for the story, with a comment saying why, if the time is proved to be the story's own work and not the app's
+- If Close is slow after a reload, that is fixed in the app, with a regression test that fails before the fix
+- A regression test reproduces the sign-in panel's getSnapshot warning before the fix, and the panel's test passes twenty consecutive runs with none
+- Docs: `claude-docs/components/sign-in-panel.md`, "Last used", says how the read stays stable
 
 **MB.1 — Fix prefers-reduced-motion facet swap in ThemeToggle** · 2h
 
@@ -3286,9 +3353,11 @@ _Acceptance criteria:_
 
 _Story 63 — As a visitor who is not signed in, I want the compendium pages to open without a redirect and to offer me the way in, so that I can read the reference and know how to join._
 
-Lands after M8.17 and before M8.18, which composes it. `PUBLIC_ROUTES` in `src/proxy.ts` gains `/compendium`, `/compendium/*`, `/robots.txt` and `/sitemap.xml`, and `tests/proxy.test.ts` moves `/compendium` from the lookalike list to the public list and pins the two crawler files as passed through. A public frame for the two compendium pages: the site name, Sign in, and nothing workspace-shaped, in the same minimal shape as `/`. The signed-in affordances — the `AppShell` chrome and the Add to my ingredients slot — are one client island that asks `/api/graphql` `me` after hydration and renders a sign-in link for a null session, so the page itself reads no cookies or headers and stays static. Off production the proxy sets `X-Robots-Tag: noindex` on every response, because `staging.sorrelandsalt.com` is a public URL.
+Lands before M8.18, which composes it; M8.17 is not a prerequisite. `PUBLIC_ROUTES` in `src/proxy.ts` gains `/compendium`, `/compendium/*`, `/robots.txt` and `/sitemap.xml`, and `tests/proxy.test.ts` moves `/compendium` from the lookalike list to the public list and pins the two crawler files as passed through. A public frame for the two compendium pages: the site name, Sign in, and nothing workspace-shaped, in the same minimal shape as `/`. The signed-in affordances — the `AppShell` chrome and the Add to my ingredients slot — are one client island that asks `/api/graphql` `me` after hydration and renders a sign-in link for a null session, so the page itself reads no cookies or headers and stays static. Off production the proxy sets `X-Robots-Tag: noindex` on every response, because `staging.sorrelandsalt.com` is a public URL.
 
 **Amended by the Wave 12 review (2026-10-16):** the public pages are dynamic over the cached reads, the owner's call ([`design-decisions/mb.80-public-compendium.md`](../design-decisions/mb.80-public-compendium.md)). There is no client island and no `me` call. The public frame is a `(public)` route group whose layout reads the session when there is one and renders the signed-in or signed-out chrome on the server, with a skip link, a `<nav>` and `<main id="main">`. The pages themselves stay sessionless and read through `cachedCompendiumRead`. `AppShell` gains a Compendium link for everyone, replacing the "No Compendium link yet" comment in `src/components/AppShell/index.tsx`. `PUBLIC_ROUTES` also gains `/llms.txt`, `/.well-known/*` and the asset paths (favicon, icons, manifest) that M11.16 will fill, so a favicon request never redirects to sign-in; no such file exists yet, so the paths are listed ahead of it. The `X-Robots-Tag` rule stays here. Re-estimated from 2h for the route group and the shell change.
+
+**Owner asks during the build (2026-10-17):** the bar's brand links to `/` for every signed-in viewer, the coven link reads Your Covens for more than one coven, the entry page `/` offers Browse the Compendium as a quiet button, the public Sign In takes `.btn--medium`, and `$shell-tablet-width` rises to 56rem so an admin's bar with the Compendium link fits.
 
 _Acceptance criteria:_
 
@@ -3306,6 +3375,8 @@ _Story:_ As the owner, I want search engines to find and correctly title every c
 Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` allows `/compendium` and `/compendium/*`, disallows everything else and points at the sitemap; under a `VERCEL_ENV` other than `production` it disallows all. `src/app/sitemap.ts` lists `/compendium` and one `/compendium/ingredients/<slug>` per current entry. `generateMetadata` on the list page, the public detail page and the in-app detail page: a title from the name and the site, a description from the entry, and `alternates.canonical` set to the public URL on every route. Filtered list views carry canonical `/compendium` and `noindex`, so category combinations are not a crawl trap. An unknown slug is a real 404; a retired slug inside its window answers `permanentRedirect()` to the current one, and a test pins that the redirect carries no `max-age`, `Expires` or `Last-Modified`.
 
 **Amended by the Wave 12 review (2026-10-16):** four changes. (1) The sitemap needs a read of every current slug, and none is cached today: `src/modules/ingredients/services/compendium.ts` wraps only the page and count reads. This task adds a sessionless one, `cachedCompendiumRead('compendium-slugs', …)` from `src/lib/compendium-cache.ts`, which M12.2's `llms.txt` reuses. (2) `lastModified` comes from MB.106's one definition of "changed", so the sitemap does not report a no-op save. MB.106 therefore lands before this task. (3) The title is built from the name and the site, with no form, because the form is a variant beneath the ingredient (MB.215) and a page is the ingredient. Two entries sharing a label are still told apart by the formal name. (4) There is no Open Graph image: M11.16 (Wave 15) adds it, and until then the page carries no `og:image`. `src/app/robots.ts` is written so that M12.2 can add its two paths (`/llms.txt` and `/.well-known/ai-catalog.json`) without restructuring it. Re-estimated from 3h for the new read.
+
+**Amended by MB.155 (2026-10-17), at the owner's ask:** both entry pages already title themselves `Name (Formal Name)` whenever the entry has a formal name that differs from its name, and the name alone otherwise, through `pageTitleOf` in `src/components/IngredientEntry/page-title.ts`. That meets the criterion that two entries sharing a label are told apart by the formal name. This task adds the site to that title and keeps the helper, rather than building the title again.
 
 _Acceptance criteria:_
 
@@ -4001,7 +4072,7 @@ _Story:_ As a coven member, I want the ingredients page to make stock easy to sc
 
 Minted during M5.4. Reviews the coven's one ingredients page (M9.6) once its flows land — editing a jar from its row (M9.9), last-edited-by on its rows (M6.18, moved here from MB.119 when it moved to Wave 12 on 2026-10-12), deletion with confirmation (M9.10), the empty state (M9.11) and the add-from-compendium flow (M9.12) — over the search and cards MB.120 has reviewed.
 
-**Amended by the Wave 12 review (2026-10-16):** the page is a card per ingredient with a jar line per held form (`IngredientCard`, M8.14), not a table, so the list is no longer a `StackTable`. The scope gains the in-stock and low-stock filters and the stock badges (M9.7, M9.8), `StockFields` (M9.9), the edit flow for a local (M8.17), M9.12's add dialog, the Edit control (M12.5), the folk-name control (M12.1), M12.7's glyphs on the jar lines, and the coven home's Contents. Re-estimated from 2h.
+**Amended by the Wave 12 review (2026-10-16):** the page is a card per ingredient with a jar line per held form (`IngredientCard`, M8.14), not a table, so the list is no longer a `StackTable`. The scope gains the in-stock and low-stock filters and the stock badges (M9.7, M9.8), `StockFields` (M9.9), the edit flow for a local (M8.17), M9.12's add dialog, the Edit control (M12.5), the folk-name control (M12.1), M12.7's icons on the jar lines, and the coven home's Contents. Re-estimated from 2h.
 
 A section review designs what the section's building tasks left at the tokens and mixins. It looks at every page and component in the section as built — in the workshop and the running app, in both themes, at desktop and at phone width (375px) — proposes the design as workshop stories and screenshots, and builds what the owner signs off, within the tokens, mixins and primitives MB.114 settles: a value that is not there becomes a token, never a raw hue or size (`styling.md`). Behaviour does not change; a defect found on the way is fixed if it is sub-hour and minted if not.
 
@@ -4521,7 +4592,7 @@ _Acceptance criteria:_
 - A Locator's tip says what a locator is and that several places go in one
 - The field's story and `claude-docs/components/ingredient-form.md` cover it
 
-**MB.155 — References section on the ingredient page** · 1.5h
+**MB.155 — References section on the ingredient page** · 4h
 
 _Story 64 — As a reader of the compendium, I want to see where an entry's information came from, so that I can judge a claim and read further._
 
@@ -4531,15 +4602,19 @@ A References section on M8.19's page, on both its routes: beneath the substitute
 
 **Amended by MB.215 (2026-10-11):** a form's own references are listed in its section of the page, beneath the ingredient's, in the same Chicago form ([`design-decisions/mb.215-ingredient-variants.md`](../design-decisions/mb.215-ingredient-variants.md)).
 
+**Amended by the owner (2026-10-17), after a first build:** the references move out of the side column and out of each form into one section of their own at the very bottom of the centre column, beneath the forms and above the notes slot, in Chicago's notes-and-bibliography form rather than a bibliography alone. Each section the entry's references support (the ingredient's details, and each form with references of its own) ends with its superscript note numbers on a line of their own beneath a small References label, each number a link to its note (the label the owner's addition, 2026-10-17; a label rather than a heading, so the page keeps one References heading). The References section holds **Notes**, numbered in order of first appearance down the page, one per link (a reference and its locator in one section), each in Chicago short form from `renderShortCitation` (`src/lib/short-citation.ts`) with its locator, a link back to the number it answers and a link on to its full entry; and beneath them the **Bibliography**, every reference once, alphabetical, in full form from `renderCitation`, each entry linking back to the notes that cite it. A number marks a section rather than a sentence, because a reference links an ingredient or a variant, not a claim. The jump menu gains References beside Details and Forms. DESIGN.md §5 and the routes table are corrected in this PR, recorded in `design-decisions/mb.155-notes-and-bibliography.md`. Re-estimated from 1.5h.
+
 _Acceptance criteria:_
 
-- Every reference renders in Chicago form through MB.153's one renderer, `renderCitation`, on `/compendium/ingredients/[slug]` and `/coven/[slug]/ingredients/[id]` alike (the coven route since the Wave 12 review, 2026-10-16)
-- The order is alphabetical, which holds from the loader already (it sorts with `byCitation`), asserted here
-- A locator renders beside its citation and a `url` as a link to the source
-- The empty state reads as intentional, not broken
-- The section sits above the notes slot and the page's structure is unchanged for it
-- axe clean; the `@story-64` flow in `02-compendium.spec.ts` passes
-- A variant's own references are listed in its section, beneath the ingredient's (MB.215)
+- One References section at the bottom of the centre column on `/compendium/ingredients/[slug]` and `/coven/[slug]/ingredients/[id]` alike, beneath the forms and above the notes slot; no references remain in the side column or inside a form's section
+- Each section with references ends with its superscript note numbers beneath a small References label, each linking to its note, and each note links back to its number
+- Notes are numbered in page order, one per link, in Chicago short form through `renderShortCitation`, each with its locator where one was given
+- Each note links to its reference's entry in the Bibliography, and each Bibliography entry links back to every note citing it
+- The Bibliography lists each reference once, in full Chicago form through `renderCitation`, alphabetical (the loader's `byCitation` order, asserted), italic parts in `<cite>` and a `url` a link to the source, `rel="noopener"`
+- An entry with no references shows a deliberate empty state in the section
+- The jump menu lists References
+- DESIGN.md §5 and the routes table corrected, with the decision recorded
+- axe clean; the `@story-64` flow in `02-compendium.spec.ts` walks a number to its note, the note to its entry and back, and passes
 
 **MB.156 — Seed the curated vocabularies' sources** · 6h
 

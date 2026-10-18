@@ -17,7 +17,10 @@ import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { celestialBodies, zodiacSigns } from '../../modules/vocabulary/schema/astrology';
 import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
-import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
+import {
+  ingredientFormGroups,
+  ingredientForms,
+} from '../../modules/vocabulary/schema/ingredient-forms';
 import { TWO_TIER, type GroupTable, type PickedTable, type TwoTierPair } from '../vocabularies';
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
@@ -442,6 +445,7 @@ export async function findVocabularySuggestions(
       ${vocabulary.id}::text as id, ${vocabulary.name} as value,
       ${vocabulary.description} as description,
       ${grouping ? grouping.groups.name : sql`null`} as group_name,
+      ${claimed ? sql`${ingredientFormGroups.icon}::text` : sql`null`} as group_icon,
       lower(${vocabulary.name}) as fold, ${tiebreak} as tiebreak
     from ${curatedRows}
     where ${and(live, query ? or(byName, sql`${query} <% ${vocabulary.description}`) : undefined)}`;
@@ -450,7 +454,7 @@ export async function findVocabularySuggestions(
   // by the order it is given, so the choice is stable.
   const uncurated = sql`
     select 2 as tier, null as id, mode() within group (order by btrim(${inUse})) as value,
-      null as description, null as group_name, ${inUseFold} as fold, ${inUseFold} as tiebreak
+      null as description, null as group_name, null as group_icon, ${inUseFold} as fold, ${inUseFold} as tiebreak
     from ${inUseFrom}
     where ${and(
       inScope,
@@ -474,10 +478,10 @@ export async function findVocabularySuggestions(
     : suggestions;
 
   const rows = await readSuggestionPage(source, page, { claimed });
-  return rows.map(({ cursor, node: { tier, id, value, description, group, claimants } }) => {
+  return rows.map(({ cursor, node: { tier, id, value, description, group, icon, claimants } }) => {
     const suggestion = { value, description, curated: tier !== 2 };
     // A form and a deity record the row a member picks, so theirs carry its id.
-    if (claimed) return { cursor, node: { ...suggestion, id, group, claimants } };
+    if (claimed) return { cursor, node: { ...suggestion, id, group, icon, claimants } };
     if (grouping) return { cursor, node: { ...suggestion, id, tradition: group } };
     return { cursor, node: suggestion };
   });

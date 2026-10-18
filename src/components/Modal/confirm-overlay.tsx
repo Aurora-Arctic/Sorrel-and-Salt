@@ -62,7 +62,19 @@ function Card({
     const scope = layer?.body.current ?? self.current?.closest('form') ?? null;
     const release = layer?.hold();
     safe.current?.focus({ preventScroll: true });
+    // Again after the browser's own turn: the event that opened the question
+    // (a pointer press on the backdrop or Close, Escape's close request) may
+    // still move the focus once its handler returns, after this commit. A
+    // question still up that has lost the focus takes it back, so Keep Editing
+    // has it every time, whichever way the question was opened.
+    const again = requestAnimationFrame(() => {
+      const card = self.current;
+      if (card && !card.contains(card.ownerDocument.activeElement)) {
+        safe.current?.focus({ preventScroll: true });
+      }
+    });
     return () => {
+      cancelAnimationFrame(again);
       release?.();
       if (canFocus(returnTo)) returnTo.focus();
       else scope?.querySelector<HTMLElement>(FIRST_FIELD)?.focus();

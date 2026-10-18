@@ -155,6 +155,14 @@ React re-renders with the cookie's value straight after. The mark arrives
 just after hydration, not in the first HTML. The subscription is a no-op:
 only a callback writes the cookie, and a callback is a navigation away.
 
+The snapshot is not Better Auth's raw read but a roster id or `null`. React
+reads a snapshot twice in one render and warns if the two reads differ. The raw
+read gives `''` for a cookie that is present but empty and `null` for none, and
+a cookie being expired can look like either, depending on the instant it is
+read. None of those names a provider, so all of them must read the same: the
+wrapper returns the roster provider whose id matches, else `null`. Strings
+compare by value, so a real provider id is stable too.
+
 ## Error state
 
 One `message` field covers both sources: the server-rendered callback error
@@ -238,10 +246,10 @@ test ids, no snapshots.
 
 `tests/components/SignInPanel/index.test.tsx` mocks `signIn` from
 `src/lib/auth-client.ts` — Better Auth's client performs the OAuth hop by
-assigning `window.location.href`, which jsdom cannot follow
+assigning `window.location.href`, which happy-dom cannot follow
 (`tests/lib/auth-client.test.ts` stubs `fetch` instead and calls the real
 client). The rest of the module is the real one, so the last-used read is the
-client plugin's own, against jsdom's `document.cookie`. Covers: every roster
+client plugin's own, against happy-dom's `document.cookie`. Covers: every roster
 provider offered by accessible name; a click calls
 `signIn.social` with the right `provider`/`callbackURL`/`errorCallbackURL`,
 with the `NO_RETURN_PATH` flag when there is no `next` and without it for an
@@ -253,10 +261,10 @@ described by its note, still lacks `disabled`, and its click never reaches
 accessible name, and no cookie or an unknown provider marks none; and
 `renderToString` carries no mark while `hydrateRoot` adds it without a
 recoverable error. That last test fails with the client read as the server
-snapshot, since jsdom has a `document` even under `renderToString`. Role and
+snapshot, since happy-dom has a `document` even under `renderToString`. Role and
 label queries only.
 
-Runs in the `dom` (jsdom) Vitest project — `npm run test:coverage`. Real
+Runs in the `dom` (happy-dom) Vitest project — `npm run test:coverage`. Real
 keyboard reachability and the axe scans are asserted in Playwright, per
 CLAUDE.md's "Accessibility is asserted in Playwright", once per provider
 state — each state has a surface the other lacks, so neither scan stands in

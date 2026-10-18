@@ -81,3 +81,19 @@ export const Loading: Story = () => <Stateful categories={[]} pending />;
 export const CouldNotLoad: Story = () => (
   <Stateful categories={[]} status="The categories could not be loaded." />
 );
+
+// The filter's reading (M12.4): each row and chip carries how many entries it
+// would leave, a zero row is left out, and a chip whose count is
+// still on its way holds a placeholder.
+const counted = CATEGORIES.map((category, index) => ({
+  ...category,
+  count: index % 3 === 0 ? 0 : index * 2,
+}));
+
+export const WithCounts: Story = () => (
+  <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" hideZeros />
+);
+
+export const CountsLoading: Story = () => (
+  <Stateful categories={counted} initial={[counted[1].id]} removeNoun="Category" loading />
+);

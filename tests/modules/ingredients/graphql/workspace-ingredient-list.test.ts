@@ -37,6 +37,7 @@ useTestDatabase((client) => {
 interface ListNode {
   id: string;
   name: string;
+  isGlobal: boolean;
   categories: { name: string }[];
   stock: { id: string; variant: { form: string } }[];
 }
@@ -53,11 +54,15 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
       $workspaceId: ID!
       $query: String
       $categoryIds: [ID!]
+      $categoryMode: CategoryMode
       $forms: [String!]
       $deityIds: [ID!]
       $zodiacSigns: [String!]
       $celestialBodies: [String!]
+      $elements: [IngredientElement!]
       $toxic: ToxicFilter
+      $source: IngredientSource
+      $inStock: Boolean
       $first: Int
       $after: String
     ) {
@@ -65,18 +70,22 @@ function run(session: Session | null, variables: Record<string, unknown> = {}) {
         workspaceId: $workspaceId
         query: $query
         categoryIds: $categoryIds
+        categoryMode: $categoryMode
         forms: $forms
         deityIds: $deityIds
         zodiacSigns: $zodiacSigns
         celestialBodies: $celestialBodies
+        elements: $elements
         toxic: $toxic
+        source: $source
+        inStock: $inStock
         first: $first
         after: $after
       ) {
         edges {
           cursor
           node {
-            id name categories { name }
+            id name isGlobal categories { name }
             stock(workspaceId: $workspaceId) { id variant { form } }
           }
         }
@@ -116,6 +125,7 @@ beforeEach(async () => {
       categories: ['Protection'],
       zodiacSigns: ['Fixture Ram'],
       celestialBodies: ['Fixture Sun'],
+      elements: ['fire'],
     }),
     A.id,
   );
@@ -156,14 +166,39 @@ describe('workspaceIngredients', () => {
       (connection) => connection?.edges.map((edge) => edge.node) ?? [],
     );
     expect(nodes).toEqual([
-      { id: own, name: 'Covenwort', categories: [{ name: 'Protection' }], stock: [] },
+      {
+        id: own,
+        name: 'Covenwort',
+        isGlobal: false,
+        categories: [{ name: 'Protection' }],
+        stock: [],
+      },
       {
         id: held,
         name: 'Heldwort',
+        isGlobal: true,
         categories: [{ name: 'Protection' }],
         stock: [{ id: jar, variant: { form: 'Oil' } }],
       },
     ]);
+  });
+
+  // M8.12: both entries hold Protection and neither Cleansing, so only the
+  // mode decides whether the pair lists them.
+  it('takes a categoryMode, all by default, and refuses a mode that is neither', async () => {
+    const rows = await sql`
+      select id, name from categories where name in ('Protection', 'Cleansing') and deleted_at is null`;
+    const ids = rows.map((row) => row.id);
+    expect(await names({ categoryIds: ids })).toEqual([]);
+
+    expect(await names({ categoryIds: ids, categoryMode: 'all' })).toEqual([]);
+    expect(await names({ categoryIds: ids, categoryMode: 'any' })).toEqual([
+      'Covenwort',
+      'Heldwort',
+    ]);
+
+    const refused = await run(asUser(B), { categoryIds: ids, categoryMode: 'some' });
+    expect(refused.errors).toHaveLength(1);
   });
 
   it('passes the search, category and facet arguments to the read', async () => {
@@ -178,9 +213,36 @@ describe('workspaceIngredients', () => {
     expect(await names({ deityIds: [hecate] })).toEqual(['Covenwort']);
     expect(await names({ zodiacSigns: ['fixture ram'] })).toEqual(['Covenwort']);
     expect(await names({ celestialBodies: ['fixture sun'] })).toEqual(['Covenwort']);
+    expect(await names({ elements: ['fire', 'air'] })).toEqual(['Covenwort']);
+    expect(await names({ elements: ['air'] })).toEqual([]);
     expect(await names({ toxic: 'toxic' })).toEqual(['Heldwort']);
     expect(await names({ toxic: 'not_toxic' })).toEqual(['Covenwort']);
     expect(await names({ toxic: 'any' })).toEqual(['Covenwort', 'Heldwort']);
+  });
+
+  it('takes a source and inStock, and badges the local entry in every state', async () => {
+    const badges = async (variables: Record<string, unknown>) => {
+      const result = await run(asUser(B), variables);
+      expect(result.errors).toBeUndefined();
+      return result.data?.workspaceIngredients.edges.map(({ node }) => [node.name, node.isGlobal]);
+    };
+
+    // Why each could have answered both: both entries are listed unfiltered.
+    expect(await badges({})).toEqual([
+      ['Covenwort', false],
+      ['Heldwort', true],
+    ]);
+    expect(await badges({ source: 'local' })).toEqual([['Covenwort', false]]);
+    expect(await badges({ source: 'compendium' })).toEqual([['Heldwort', true]]);
+    // The local entry has no jar; the held one's has no quantity, so is held.
+    expect(await badges({ inStock: true })).toEqual([['Heldwort', true]]);
+    expect(await badges({ inStock: false })).toHaveLength(2);
+
+    await sql`update inventory_items set quantity_on_hand = 0 where id = ${jar}`;
+    expect(await names({ inStock: true })).toEqual([]);
+
+    const refused = await run(asUser(B), { source: 'both' });
+    expect(refused.errors).toHaveLength(1);
   });
 
   it("resolves a page's stock, its jars' forms and its categories in one read each", async () => {

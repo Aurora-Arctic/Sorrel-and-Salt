@@ -188,4 +188,4 @@ variant switching the theme as the corner does. The facets' animation
 presentation, and no test asserts it. All queries are by role and accessible
 name.
 
-Runs in the `dom` (jsdom) Vitest project — `npm run test:coverage`.
+Runs in the `dom` (happy-dom) Vitest project — `npm run test:coverage`.

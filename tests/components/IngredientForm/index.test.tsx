@@ -18,9 +18,18 @@ import type {
 } from '@/gql/graphql';
 import { DEBOUNCE_MS } from '@/lib/debounce';
 import { LocalIngredientInput } from '@/modules/ingredients/validation/ingredient';
-import { box, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
-import { choose, press, type } from '../../support/interact';
-import { graphqlLink, mockGraphQLError } from '../../support/msw/graphql';
+import {
+  box,
+  chooseKind,
+  inPanel,
+  renderWithClient,
+  textbox,
+  waitFor,
+  duplicateHref,
+} from '../../support/ingredient-form';
+import { layOutChips, moveByKeyboard } from '../../support/sortable';
+import { choose, press, redo, type, typeIn, undo } from '../../support/interact';
+import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
 import {
   WORKSPACE_ID,
   acceptCreate,
@@ -51,7 +60,9 @@ function renderForm({ categories = [] }: { categories?: CategoryNode[] | 'refuse
   const onSaved = vi.fn();
   offerNothing();
   offerCategories(categories);
-  renderWithClient(<IngredientForm workspaceId={WORKSPACE_ID} onSaved={onSaved} />);
+  renderWithClient(
+    <IngredientForm duplicateHref={duplicateHref} workspaceId={WORKSPACE_ID} onSaved={onSaved} />,
+  );
   return onSaved;
 }
 
@@ -75,6 +86,9 @@ const addEntry = (entry: string, value: string) => {
 };
 const removeButton = (value: string) =>
   screen.getByLabelText(`Remove ${value}`, { selector: 'button' });
+
+/** Lets the step a change opened close, as the gap between two real actions does. */
+const settle = () => act(async () => {});
 
 /** The control is flagged invalid and described, the error read with it. */
 function expectErrorOn(control: HTMLElement) {
@@ -148,7 +162,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
           'open',
         ),
       );
@@ -223,7 +237,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
           'open',
         ),
       );
@@ -244,7 +258,7 @@ describe('IngredientForm', () => {
         'Save & Add Another',
       ]);
       type('Name', 'Testwort');
-      // A submit with no button pressed, as implicit submission from a field is in jsdom.
+      // A submit with no button pressed, as implicit submission from a field is in happy-dom.
       fireEvent.submit(textbox('Name').closest('form') as HTMLFormElement);
 
       await waitFor(() => expect(onSaved).toHaveBeenCalledWith(expect.anything(), 'open'));
@@ -267,7 +281,7 @@ describe('IngredientForm', () => {
 
       await waitFor(() =>
         expect(onSaved).toHaveBeenCalledWith(
-          { id: 'saved-1', name: 'Testwort', slug: 'saved' },
+          { id: 'saved-1', name: 'Testwort', slug: 'saved', stock: [] },
           'another',
         ),
       );
@@ -345,6 +359,103 @@ describe('IngredientForm', () => {
       type('Name', 'Testwort');
 
       await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
+    });
+
+    // Story 31: errors show on leaving a field, not only on submit.
+    describe('on leaving a field', () => {
+      // A field's error waits for it to be left after the person has edited it,
+      // even if the edit put it back to its default.
+      it('flags an edited value that is invalid once the field is left, before any submit', async () => {
+        const calls = acceptCreate();
+        renderForm();
+
+        type('Name', '   ');
+        fireEvent.blur(textbox('Name'));
+
+        await waitFor(() => expectErrorOn(textbox('Name')));
+        expect(calls).toHaveLength(0);
+      });
+
+      it('clears the error as the field is corrected, without leaving it again', async () => {
+        renderForm();
+
+        type('Name', '   ');
+        fireEvent.blur(textbox('Name'));
+        await waitFor(() => expect(textbox('Name')).toBeInvalid());
+        type('Name', 'Testwort');
+
+        await waitFor(() => expect(textbox('Name')).not.toBeInvalid());
+      });
+
+      it('flags a required field typed into, emptied and left, before any submit', async () => {
+        renderForm();
+
+        fireEvent.focus(textbox('Name'));
+        type('Name', 'Testwort');
+        type('Name', '');
+        fireEvent.blur(textbox('Name'));
+
+        await waitFor(() => expectErrorOn(textbox('Name')));
+      });
+
+      it('leaves a required field quiet when it is left without an edit', async () => {
+        renderForm();
+
+        fireEvent.focus(textbox('Name'));
+        fireEvent.blur(textbox('Name'));
+        await settle();
+
+        expect(textbox('Name')).not.toBeInvalid();
+      });
+
+      it('flags the formal name once it is left, after the classification asked for one', async () => {
+        renderForm();
+
+        type('Name', 'Testwort');
+        choose('Classification', 'Botanical');
+        fireEvent.blur(select('Classification'));
+        await settle();
+        expect(textbox('Formal Name')).not.toBeInvalid();
+
+        fireEvent.focus(textbox('Formal Name'));
+        type('Formal Name', 'x');
+        type('Formal Name', '');
+        fireEvent.blur(textbox('Formal Name'));
+
+        await waitFor(() => expectErrorOn(textbox('Formal Name')));
+      });
+
+      it('does not flag the formal name when only the classification changed', async () => {
+        renderForm();
+
+        type('Name', 'Testwort');
+        choose('Classification', 'Botanical');
+        // Leaving the picker is what lets its change revalidate Formal Name.
+        fireEvent.blur(select('Classification'));
+        await settle();
+
+        expect(textbox('Formal Name')).not.toBeInvalid();
+      });
+
+      it('says nothing of an empty required field that was never touched', async () => {
+        renderForm();
+
+        fireEvent.focus(textbox('Description'));
+        fireEvent.blur(textbox('Description'));
+        await settle();
+
+        expect(textbox('Name')).not.toBeInvalid();
+      });
+
+      it('still flags every field on submit', async () => {
+        acceptCreate();
+        renderForm();
+
+        type('Description', 'An entry with no name.');
+        save();
+
+        await waitFor(() => expectErrorOn(textbox('Name')));
+      });
     });
   });
 
@@ -710,6 +821,195 @@ describe('IngredientForm', () => {
     });
   });
 
+  // Undo and redo (M12.10): the hook is tested in tests/components/Field; this
+  // is its wiring in the form.
+  describe('its undo and redo', () => {
+    it('undoes the text typed in Folk Names after a click on Classification, then on a blank spot', async () => {
+      renderForm();
+      addEntry('Folk Name', 'Hedge Fixture');
+      await settle();
+      act(() => box('Folk Name').focus());
+      type('Folk Name', 'Lane Fixt');
+      await settle();
+      expect(box('Folk Name')).toHaveValue('Lane Fixt');
+
+      act(() => select('Classification').focus());
+      fireEvent.click(select('Classification'));
+      expect(select('Classification')).toHaveAttribute('aria-expanded', 'true');
+      undo({ meta: true });
+
+      expect(box('Folk Name')).toHaveValue('');
+      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
+
+      // And from a blank spot of the dialog, where the focus is on the page itself.
+      act(() => box('Folk Name').focus());
+      type('Folk Name', 'Fixture Bane');
+      await settle();
+      act(() => box('Folk Name').blur());
+      expect(document.body).toHaveFocus();
+      undo({ meta: true });
+
+      expect(box('Folk Name')).toHaveValue('');
+    });
+
+    it('undoes a classification pick together with the formal name it emptied, focusing Classification, and redoes both', async () => {
+      renderForm();
+      type('Name', 'Testwort');
+      type('Formal Name', 'Fixtura testalis');
+      await settle();
+      choose('Classification', 'None');
+      expect(textbox('Formal Name')).toHaveValue('');
+      act(() => textbox('Name').focus());
+      // Leaving Formal Name validates it.
+      await settle();
+
+      undo();
+
+      expect(textbox('Formal Name')).toHaveValue('Fixtura testalis');
+      expect(textbox('Formal Name')).toBeEnabled();
+      expect(select('Classification')).toHaveFocus();
+
+      redo();
+
+      expect(textbox('Formal Name')).toHaveValue('');
+      expect(textbox('Formal Name')).toBeDisabled();
+      // Leaving a field validates it; let that land inside the test.
+      await settle();
+    });
+
+    it('undoes a chip removal and redoes it', async () => {
+      renderForm();
+      addEntry('Celestial Body', 'Mercury');
+      addEntry('Celestial Body', 'Venus');
+      await settle();
+      fireEvent.click(removeButton('Mercury'));
+      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
+
+      undo();
+
+      expect(removeButton('Mercury')).toBeInTheDocument();
+      expect(removeButton('Venus')).toBeInTheDocument();
+
+      redo();
+
+      expect(screen.queryByRole('button', { name: 'Remove Mercury' })).toBeNull();
+      expect(removeButton('Venus')).toBeInTheDocument();
+    });
+
+    it('undoes a keyboard reorder of an ordered list and redoes it', async () => {
+      layOutChips();
+      renderForm();
+      for (const colour of ['Silver', 'Green', 'Amber']) addEntry('Colour', colour);
+      await settle();
+      const order = () =>
+        within(screen.getByRole('group', { name: 'Colours' }))
+          .getAllByRole('button', { name: /^Remove / })
+          .map((button) => button.getAttribute('aria-label'));
+      const inOrder = ['Remove Silver', 'Remove Green', 'Remove Amber'];
+      await moveByKeyboard(
+        screen.getByRole('button', { name: 'Move Amber' }),
+        'ArrowLeft',
+        'ArrowLeft',
+      );
+      const moved = ['Remove Amber', 'Remove Silver', 'Remove Green'];
+      expect(order()).toEqual(moved);
+
+      undo();
+      expect(order()).toEqual(inOrder);
+
+      redo();
+      expect(order()).toEqual(moved);
+      vi.restoreAllMocks();
+    });
+
+    it('undoes a folk name removed by its x and redoes it', async () => {
+      renderForm();
+      addEntry('Folk Name', 'Hedge Fixture');
+      addEntry('Folk Name', 'Lane Fixture');
+      await settle();
+      fireEvent.click(removeButton('Hedge Fixture'));
+
+      undo();
+
+      expect(removeButton('Hedge Fixture')).toBeInTheDocument();
+      expect(removeButton('Lane Fixture')).toBeInTheDocument();
+
+      redo();
+
+      expect(screen.queryByRole('button', { name: 'Remove Hedge Fixture' })).toBeNull();
+    });
+
+    it('undoes nothing after Save & Add Another has cleared the form', async () => {
+      acceptCreate();
+      const onSaved = renderForm();
+      type('Name', 'Testwort');
+      saveAnother();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
+
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      undo();
+
+      expect(textbox('Name')).toHaveValue('');
+    });
+
+    it('changes nothing while a save is in flight, and has nothing to undo once it lands', async () => {
+      let finish: () => void = () => {};
+      const gate = new Promise<void>((resolve) => (finish = resolve));
+      server.use(
+        graphqlLink.mutation('CreateWorkspaceIngredient', async ({ variables }) => {
+          await gate;
+          const { name } = (variables as { input: { name: string } }).input;
+          return HttpResponse.json({
+            data: { createWorkspaceIngredient: { id: 'saved-1', name, slug: 'saved', stock: [] } },
+          });
+        }),
+      );
+      const onSaved = renderForm();
+      type('Name', 'Testwort');
+      await settle();
+      type('Name', 'Testwort Two');
+      await settle();
+      saveAnother();
+      // The mutation is held, so the form stays mid-save.
+      await settle();
+      act(() => textbox('Name').focus());
+
+      undo();
+      fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+
+      expect(textbox('Name')).toHaveValue('Testwort Two');
+
+      finish();
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      await settle();
+      await waitFor(() => expect(textbox('Name')).toHaveValue(''));
+      expect(screen.getByRole('button', { name: 'Undo' })).toBeDisabled();
+      undo();
+
+      expect(textbox('Name')).toHaveValue('');
+    });
+
+    it('reads a chord inside the new reference panel as the panel\u2019s own, leaving the form\u2019s history alone', async () => {
+      renderForm();
+      type('Name', 'Testwort');
+      await settle();
+      fireEvent.click(box('Reference'));
+      fireEvent.click(await screen.findByRole('option', { name: 'New Reference' }));
+      chooseKind('Book');
+      const title = inPanel('Title');
+      act(() => title.focus());
+      await settle();
+      typeIn(title, 'Fixture Notes');
+      expect(title).toHaveValue('Fixture Notes');
+
+      undo();
+
+      expect(inPanel('Title')).toHaveValue('');
+      expect(textbox('Name')).toHaveValue('Testwort');
+    });
+  });
+
   // Story 16's warning, as only the whole form holds it: the form asks its
   // `check` before it sends and moves the focus to Create Anyway. What the
   // warning says and when it asks is duplicates.test.tsx's.
@@ -829,6 +1129,7 @@ describe('IngredientForm', () => {
           value: 'Wax',
           description: null,
           group: 'Substance',
+          icon: null,
           curated: true,
           claimants: [],
         },
@@ -977,6 +1278,31 @@ describe('IngredientForm', () => {
     });
   });
 
+  // M12.8 moves a coven's jars onto the local entry it hides; the save's
+  // result carries them for the dialog's status to name (M8.16).
+  it('hands onSaved the jars the new entry holds', async () => {
+    mockGraphQLMutation<
+      CreateWorkspaceIngredientMutation,
+      CreateWorkspaceIngredientMutationVariables
+    >('CreateWorkspaceIngredient', (variables) => ({
+      createWorkspaceIngredient: {
+        id: 'saved-1',
+        name: variables.input.name,
+        slug: 'saved',
+        stock: [{ quantityOnHand: 30, unit: 'g', variant: { form: 'Dried' } }],
+      },
+    }));
+    const onSaved = renderForm();
+
+    type('Name', 'Testwort');
+    save();
+
+    await waitFor(() => expect(onSaved).toHaveBeenCalled());
+    expect(onSaved.mock.calls[0]![0].stock).toEqual([
+      { quantityOnHand: 30, unit: 'g', variant: { form: 'Dried' } },
+    ]);
+  });
+
   it.each([{ pressed: 'Save Ingredient', other: 'Save & Add Another' }])(
     'holds both saves down while one is in flight, $pressed busy',
     async ({ pressed, other }) => {
@@ -996,6 +1322,7 @@ describe('IngredientForm', () => {
                 id: 'saved-1',
                 name: variables.input.name,
                 slug: 'saved',
+                stock: [],
               },
             },
           });
@@ -1022,4 +1349,42 @@ describe('IngredientForm', () => {
       expect(submit).not.toHaveAttribute('aria-busy');
     },
   );
+});
+
+// Where the focus lands after an undo (M12.10): a list's rows are not inputs,
+// only its typing box is, so the box is where a change to the list is shown.
+describe('IngredientForm undo focus', () => {
+  const undoFrom = (from: HTMLElement) => {
+    act(() => from.focus());
+    fireEvent.keyDown(from, { key: 'z', ctrlKey: true });
+  };
+
+  it('lands on a list’s box after undoing an entry added to it', async () => {
+    renderForm();
+    addEntry('Folk Name', 'Hedge Fixture');
+    expect(screen.getByLabelText('Remove Hedge Fixture')).toBeInTheDocument();
+
+    undoFrom(textbox('Name'));
+
+    expect(screen.queryByLabelText('Remove Hedge Fixture')).toBeNull();
+    expect(box('Folk Name')).toHaveFocus();
+    // Leaving a field validates it, a step that ends after the assertions.
+    await settle();
+  });
+
+  it('lands on a list’s box after undoing the removal of an entry, and after redoing it', async () => {
+    renderForm();
+    addEntry('Colour', 'Silver');
+    fireEvent.click(removeButton('Silver'));
+
+    undoFrom(textbox('Name'));
+    expect(removeButton('Silver')).toBeInTheDocument();
+    expect(box('Colour')).toHaveFocus();
+
+    act(() => textbox('Name').focus());
+    fireEvent.keyDown(textbox('Name'), { key: 'z', ctrlKey: true, shiftKey: true });
+    expect(screen.queryByLabelText('Remove Silver')).toBeNull();
+    expect(box('Colour')).toHaveFocus();
+    await settle();
+  });
 });

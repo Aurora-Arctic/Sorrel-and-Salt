@@ -1,7 +1,9 @@
 import type { Story } from '@ladle/react';
 import { type ReactElement, type ReactNode, useId, useState } from 'react';
 import { usePressOnMount } from '../../../.ladle/press';
+import FormIcon from '../FormIcon';
 import { FieldShell, fieldDescription } from '../Field';
+import { MagnifierIcon } from '../Field/icons';
 import Combobox, {
   ComboboxEntry,
   ComboboxMultiSelect,
@@ -44,18 +46,52 @@ const FORMS: ComboboxOption[] = [
   {
     value: 'Wax',
     label: 'Wax (Animal)',
+    icon: <FormIcon name="animal" />,
     note: 'Used by Testwort (Fixtura testalis)',
     curated: true,
   },
-  { value: 'Wax', label: 'Wax (Substance)', note: 'Candle and poppet wax.', curated: true },
+  {
+    value: 'Wax',
+    label: 'Wax (Substance)',
+    icon: <FormIcon name="substance" />,
+    note: 'Candle and poppet wax.',
+    curated: true,
+  },
   { value: 'Ointment', label: 'Ointment (Preparation)', note: 'A salve or balm.', curated: true },
-  { value: 'wax shavings', note: 'Used by Mockleaf', curated: false },
+  {
+    value: 'wax shavings',
+    icon: <FormIcon name={null} />,
+    note: 'Used by Mockleaf',
+    curated: false,
+  },
 ];
 
 const NAMES: ComboboxOption[] = [
   { value: 'Hedge Fixture', note: 'Used by Testwort (Fixtura testalis)' },
   { value: 'Fixture Bane', note: 'Used by Mockleaf, Fixturewort' },
 ];
+
+/** A lookup that settled with no rows: the popup opens and says so, outside the list. */
+export const EmptyMessage: Story = () => {
+  const [value, setValue] = useState('zzz');
+  usePressOnMount('Show Name suggestions');
+  return (
+    <Labelled label="Name">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Name"
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          offerTyped={false}
+          suggestions={{ options: [], pending: false }}
+          empty="No Matches"
+        />
+      )}
+    </Labelled>
+  );
+};
 
 /** A field whose suggestions come in two buckets: the vocabulary, then values in use outside it. */
 export const TwoBuckets: Story = () => {
@@ -228,7 +264,7 @@ export const Sortable: Story = () => {
 
 /**
  * A list whose entries can only be picked, the references' (MB.154): its last
- * row makes something new, "New Reference…", whatever is typed, in place of
+ * row makes something new, "New Reference", whatever is typed, in place of
  * the typed row. Picking it says so beneath the box.
  */
 export const CreateRow: Story = () => {
@@ -247,10 +283,10 @@ export const CreateRow: Story = () => {
             onChange={setValue}
             onPick={setValue}
             suggestions={{ options: NAMES, pending: false }}
-            create={{ label: 'New Reference…', onCreate: () => setMade((count) => count + 1) }}
+            action={{ label: 'New Reference', onSelect: () => setMade((count) => count + 1) }}
             placeholder="Search references"
           />
-          {made > 0 && <output className="story-note">New Reference… picked {made}×.</output>}
+          {made > 0 && <output className="story-note">New Reference picked {made}×.</output>}
         </>
       )}
     </Labelled>
@@ -293,6 +329,29 @@ export const SelectOnly: Story = () => {
           onChange={setValue}
           choices={KINDS}
           placeholder="Choose a classification"
+        />
+      )}
+    </Labelled>
+  );
+};
+
+/** The select-only box with an icon on each choice, in its list and in its closed value: the group picker of a form. */
+export const SelectWithIcons: Story = () => {
+  const [value, setValue] = useState('');
+  return (
+    <Labelled label="Group">
+      {(ids) => (
+        <ComboboxSelect
+          {...ids}
+          label="Group"
+          value={value}
+          onChange={setValue}
+          choices={[
+            { value: 'mineral', label: 'Fixture Mineral', icon: <FormIcon name="mineral" /> },
+            { value: 'animal', label: 'Fixture Animal', icon: <FormIcon name="animal" /> },
+            { value: 'none', label: 'Fixture Plain', icon: <FormIcon name={null} /> },
+          ]}
+          placeholder="Choose a group"
         />
       )}
     </Labelled>
@@ -404,3 +463,28 @@ export const QualifierInForm: Story = () => <QualifiedField />;
 // At a phone's width, where the tooltip's cap at 60% of the box shows.
 export const QualifierInFormPhone: Story = () => <QualifiedField />;
 QualifierInFormPhone.meta = { width: 375 };
+
+/** A caller's own control at the box's start, inside the control: a form's submit. Typing opens the list, and `toggle={false}` leaves the chevron out. */
+export const Leading: Story = () => {
+  const [value, setValue] = useState('');
+  return (
+    <Labelled label="Name">
+      {(ids) => (
+        <Combobox
+          {...ids}
+          label="Name"
+          value={value}
+          onChange={setValue}
+          onPick={setValue}
+          placeholder="Search names"
+          toggle={false}
+          leading={
+            <button type="button" className="combobox__indicator" aria-label="Search">
+              <MagnifierIcon />
+            </button>
+          }
+        />
+      )}
+    </Labelled>
+  );
+};

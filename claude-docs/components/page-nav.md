@@ -1,8 +1,8 @@
 # PageNav
 
 `src/components/PageNav/` — a menu of jump links to the sections of one page,
-which marks the section in view. The account page is its first user and the coven
-index (`/coven/[slug]`) its second.
+which marks the section in view. The account page is its first user, the coven
+index (`/coven/[slug]`) its second, and the ingredient page (M8.19) its third.
 
 ## Purpose
 
@@ -15,7 +15,20 @@ The account page's sections are panels; the coven index's are plain
 ## Props
 
 - `label`: the landmark's accessible name ("On this page").
-- `entries`: `{ href: '#id', label }[]`, one per section, in page order.
+- `entries`: `{ href: '#id', label, group?, apart? }[]`, one per section, in page order.
+  `apart` (MB.155) sets a top-level entry off from those above it: a group
+  entry's size and the break a group label takes (`space(5)` above), for an
+  ingredient's closing References entry, with or without forms before it, and
+  a short `$hairline` rule (the shared `short-hairline` mixin, a pseudo-element, not an element) a quarter of that
+  break above the entry, at the entries' inset: on the start edge, the end edge where the menu
+  is right-aligned.
+  `group` is optional and the account page and coven index leave it out.
+  Consecutive entries naming the same `group` are drawn as one nested list
+  under a label: `<li><span class="page-nav__group">Forms</span><ul>…</ul></li>`.
+  The label is text, not a link, and names its list (`aria-labelledby`, an id
+  from `useId`), so the ingredient page's forms are a `list` named **Forms**,
+  apart from its **Details**. The entries stay one flat array, so the observer
+  watches a grouped entry's section like any other.
 
 ## Behaviour
 
@@ -40,8 +53,23 @@ The account page's sections are panels; the coven index's are plain
   the bar is on the left edge, in a muted mix of the accent and the card
   surface, echoing the bottom bar's rule.
 - The current entry is also weight 500, so hue is never the only sign.
-- Where the column goes is the page's, and both pages take it from the one
-  class, `.page-with-nav` in `_primitives.scss` ("Where it stands", below).
+- A group's label is set as `.eyebrow` is (`overline` size, weight 500,
+  uppercase, letter-spaced) but in the body ink, `$text-primary`, darker
+  than the muted entries under it, padded as an entry is, a `space(5)` step
+  below the entry above and `space(2)` above its first entry (the owner's
+  calls at M8.19). Its entries are not stepped
+  in from it at any width: the label alone sets them apart (the owner's call
+  at M8.19: a step in read as too much room to their left on a phone, and on
+  a wide screen, where the text is right-aligned, pushed them off the
+  column's edge).
+- When any entry has a group the nav carries `.page-nav--grouped`, and its
+  top-level entries are set at 1.125rem, a step above body copy, so the page's
+  own section reads apart from the grouped ones. A nav without groups is
+  unchanged.
+- Where the column goes is the page's. The account page and the coven index take
+  it from the one class, `.page-with-nav` in `_primitives.scss` ("Where it
+  stands", below); the ingredient page has its own wide layout with the same
+  menu column, breakpoint and sticky offset (`ingredient-entry.md`, "Layout").
 
 ## Where it stands
 
@@ -60,13 +88,15 @@ cannot drift, and the account page's layout was checked unchanged at four widths
 
 ## Stories
 
-[`index.stories.tsx`](../../src/components/PageNav/index.stories.tsx): `Default`, the column on a wide screen with the bar on the right edge and the text right-aligned; `Phone`, at 375px, with the bar on the left and the text left-aligned; `PhoneDark` and `PhoneLight`, the same at 375px in each theme.
+[`index.stories.tsx`](../../src/components/PageNav/index.stories.tsx): `Default`, the column on a wide screen with the bar on the right edge and the text right-aligned; `Grouped` and `GroupedPhone`, a top-level entry and three under a Forms label, wide and at 375px; `Phone`, at 375px, with the bar on the left and the text left-aligned; `PhoneDark` and `PhoneLight`, the same at 375px in each theme.
 
 ## Tests
 
 `tests/components/PageNav/index.test.tsx`: the navigation landmark, the entries
 as links with their hrefs, and that the observer's callback moves
-`aria-current`. The scroll itself is real-browser behaviour, walked in
+`aria-current`; that no entry naming a group draws one flat list; and that a
+run sharing a group is a nested list named by the group, holding only its
+entries, the label no link, and the observer reaching an entry inside it. The scroll itself is real-browser behaviour, walked in
 `tests/e2e/account.spec.ts`, which also checks that the current entry is drawn
 differently from the others. The marker's rules match the attribute's value,
 `location`, so a value the component stopped setting would leave the bar

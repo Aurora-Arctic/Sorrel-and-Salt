@@ -1,16 +1,33 @@
 import type { z } from 'zod';
-import type { IngredientRow, ReferenceRow, StockRow } from '../../db/repository';
+import type {
+  CompendiumFacets,
+  FacetCount,
+  IngredientFacets,
+  IngredientRow,
+  ReferenceRow,
+  StockRow,
+  WorkspaceIngredientFacets,
+} from '../../db/repository';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
 import type { CompendiumIngredientInput, LocalIngredientInput } from './validation/ingredient';
 import type { ReferenceInput } from './validation/reference';
-import type { StockInput } from './validation/stock';
+import type { JarMerge, StockInput } from './validation/stock';
 import type { DeityEntry, ReferenceLinkEntry, SubstituteEntry } from './validation/types';
 import type { ValidationIssue } from '../../lib/types';
-import type { CategoryRow, DeityRow } from '@/modules/vocabulary';
+import type { CategoryGroupRow, CategoryRow, DeityRow } from '@/modules/vocabulary';
+import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
 // The repository's own, rather than a second `typeof …$inferSelect`.
-export type { IngredientRow, ReferenceRow, StockRow };
+export type {
+  CompendiumFacets,
+  FacetCount,
+  IngredientFacets,
+  IngredientRow,
+  ReferenceRow,
+  StockRow,
+  WorkspaceIngredientFacets,
+};
 
 // The vocabulary's own, which a category's loader answers with.
 export type { CategoryRow };
@@ -57,7 +74,7 @@ export type VariantRecord = typeof ingredientVariants.$inferSelect;
 /** The parsed input without its child rows; both tiers' variants parse to this shape. */
 export type IngredientFields = Omit<
   LocalIngredientInput,
-  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants'
+  'folkNames' | 'substitutes' | 'deities' | 'references' | 'variants' | 'jarMerges'
 >;
 
 /** Where in the input an issue lands — `['variants', 1]` — as `ValidationIssue` paths it. */
@@ -146,6 +163,12 @@ export interface IngredientChildren extends Pick<
  * and the curated deity picked, null on a typed name and once that deity or
  * its tradition is retired, when the row reads as its name.
  */
+/** One live folk name as `Ingredient.folkNames` reads it: the row's id, so it can be promoted, and its text. */
+export interface FolkNameRow {
+  id: string;
+  name: string;
+}
+
 export interface IngredientDeityRow {
   name: string;
   deity: DeityRow | null;
@@ -200,3 +223,92 @@ export type CompendiumAddress =
       movedAway: IngredientRow | null;
     }
   | { kind: 'moved'; slug: string };
+
+/**
+ * A category as the entry page shows it (M8.19): the row, and the group whose
+ * colours its chip takes, read with it so the page needs no second lookup.
+ */
+export interface CategoryDetail {
+  category: CategoryRow;
+  group: CategoryGroupRow;
+}
+
+/**
+ * A deity as the entry page shows it: its name, and the tradition the curated
+ * deity sits in, null for a typed name and once the deity or its tradition
+ * is retired.
+ */
+export interface DeityDetail {
+  name: string;
+  tradition: string | null;
+}
+
+/**
+ * A substitute as the entry page shows it: the name, the ingredient to link
+ * (null on typed text and on a deleted link, when the name is plain text),
+ * and the form the link names, null when it names the ingredient whole.
+ */
+export interface SubstituteDetail {
+  name: string;
+  ingredient: Pick<IngredientRow, 'id' | 'slug' | 'workspaceId'> | null;
+  form: string | null;
+}
+
+/**
+ * One form of an ingredient as its page shows it (MB.215): the variant's row,
+ * the icon of the curated form's group (null on an uncurated form), and the
+ * lists that are the form's own, its references included.
+ */
+export interface VariantDetail {
+  variant: IngredientVariantRow;
+  icon: FormGroupIcon | null;
+  categories: CategoryDetail[];
+  substitutes: SubstituteDetail[];
+  /** The form's own sources, alphabetical by citation; never its ingredient's. */
+  references: CitedReference[];
+}
+
+/**
+ * An ingredient as its page shows it (M8.19): the row, the child lists that
+ * are the ingredient's own, and one detail per live variant in form order.
+ * Both routes render this one shape; the public one reads it from the cache.
+ */
+export interface IngredientDetail {
+  entry: IngredientRow;
+  /** Names only: the page displays them and promotes none. */
+  folkNames: string[];
+  categories: CategoryDetail[];
+  deities: DeityDetail[];
+  substitutes: SubstituteDetail[];
+  /** The sources the ingredient cites, alphabetical by citation (the loader's sort). */
+  references: CitedReference[];
+  variants: VariantDetail[];
+}
+
+/** What the public entry route reads: the detail at an address, or the slug it moved to. */
+export type CompendiumEntryPage =
+  | {
+      kind: 'entry';
+      detail: IngredientDetail;
+      /** The entry that moved off this address, while its redirect's window is open. */
+      movedAway: Pick<IngredientRow, 'name' | 'slug'> | null;
+    }
+  | { kind: 'moved'; slug: string };
+
+/**
+ * The amount a save chooses for a jar it merges into another (M12.8): the
+ * moving jar's id and the figure the merged jar takes.
+ */
+export type JarMergeChoice = z.output<typeof JarMerge>;
+
+/**
+ * Two jars of one form that cannot be added because their units differ
+ * (M12.8): the jar the coven's local ingredient holds, or is about to, and the
+ * jar of a compendium form that is moving onto it. The whole row of each, so
+ * a caller can show both amounts without a second read.
+ */
+export interface JarConflict {
+  reason: 'units';
+  localJar: StockRow;
+  movingJar: StockRow;
+}

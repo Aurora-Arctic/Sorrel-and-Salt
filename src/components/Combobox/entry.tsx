@@ -5,6 +5,7 @@ import { type ReactElement, useId, useLayoutEffect, useRef } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { GripIcon, LinkIcon } from './icons';
 import { useEntrySummary } from './summary';
+import IconTip from '../IconTip';
 import { useTip } from '../InfoTip/use-tip';
 import type { ComboboxEntryProps, EntryHandleProps } from './types';
 
@@ -65,7 +66,13 @@ export function ComboboxEntry({
   colors,
   summary: summarised,
   note,
+  icon,
+  count,
+  loading,
+  outlined,
+  removeNoun,
   onRemove,
+  action,
   sortable,
 }: ComboboxEntryProps): ReactElement {
   const text = useRef<HTMLSpanElement | null>(null);
@@ -105,6 +112,23 @@ export function ComboboxEntry({
       {value}
     </span>
   );
+  // After the text, outside the span that is cut off, so a long name loses
+  // its tail and never its count. Read with the chip's text; the placeholder
+  // is for the eye alone. The space is a text node outside the span, so the
+  // chip reads "Water 7" (a name computation drops a span's own leading one).
+  const countMark = loading ? (
+    <span className="combobox__entry-count is-pending" aria-hidden="true" />
+  ) : count !== undefined ? (
+    <>
+      {' '}
+      <span className="combobox__entry-count">{count}</span>
+    </>
+  ) : null;
+  const iconMark = icon ? (
+    <span className="combobox__entry-icon" aria-hidden="true">
+      {icon}
+    </span>
+  ) : null;
   // What the x reads after its name, and the handle before how it moves: the
   // error, the qualifier, then the detail.
   const describedBy =
@@ -116,6 +140,8 @@ export function ComboboxEntry({
       className={[
         'combobox__entry',
         colors && 'is-coloured',
+        // A group's fill is its own: outlined chips are the neutral ones.
+        outlined && !colors && 'is-outlined',
         errorId && 'is-invalid',
         sortable?.isDragging && 'is-dragging',
       ]
@@ -135,6 +161,7 @@ export function ComboboxEntry({
       {/* Hover on a wrapper holding the tooltip as well as the text, so the
           pointer can move onto the tooltip without closing it. */}
       <span className="combobox__entry-label" onMouseEnter={show} onMouseLeave={hideSoon}>
+        {iconMark}
         {summary ? (
           // Named by its text, as the x is, and read as the x is; it says
           // it opens a dialog, and whether that is open.
@@ -170,6 +197,7 @@ export function ComboboxEntry({
         ) : (
           textSpan
         )}
+        {countMark}
         {/* In the page while closed, faded out and aria-hidden, so it fades
             both ways as InfoTip's does. */}
         <span
@@ -214,6 +242,22 @@ export function ComboboxEntry({
           {summary.content()}
         </dialog>
       )}
+      {/* An action on the entry, ahead of the x, in the tab order and named
+          for its entry as the x is; its tip is decoration (IconTip). */}
+      {action && (
+        <IconTip tip={action.tip} placement="above">
+          <button
+            type="button"
+            className="combobox__entry-action"
+            aria-label={action.label}
+            aria-describedby={describedBy}
+            disabled={action.disabled}
+            onClick={action.onClick}
+          >
+            {action.icon}
+          </button>
+        </IconTip>
+      )}
       {/* Named for its entry: a column of bare "Remove"s is no help to a
           screen reader. In the tab order, a 24px target, and described by
           the list's error when the error names this entry, then by the
@@ -221,7 +265,7 @@ export function ComboboxEntry({
       <button
         type="button"
         className="combobox__entry-remove"
-        aria-label={`Remove ${value}`}
+        aria-label={removeNoun ? `Remove ${removeNoun}: ${value}` : `Remove ${value}`}
         aria-describedby={describedBy}
         onFocus={show}
         onBlur={hide}

@@ -6,6 +6,7 @@ import { failureOf, useTestDatabase } from '../../../support/db/database';
 import { AUDIT_COLUMNS, tableFacts } from '../../../support/db/table-metadata';
 import { FLAT, TWO_TIER } from '@/db/vocabularies';
 import { categoryGroups } from '@/modules/vocabulary/schema/categories';
+import { formGroupIcon, ingredientFormGroups } from '@/modules/vocabulary/schema/ingredient-forms';
 import { FIXTURE_USERS } from '@/db/seed/standard';
 import type { Row } from './types';
 
@@ -23,17 +24,26 @@ const COLOURS = { color_dark: '#c9a66b', color_light: '#7a5a1f' };
 
 const nameOf = (table: PgTable) => getTableConfig(table).name;
 
+// What a group carries beside the shared columns, and what an insert of one
+// needs, which are not the same list: a category group's two colours are NOT
+// NULL, a form group's icon (M12.6) is nullable, so an insert needs no value.
+const GROUP_EXTRAS = new Map<PgTable, { own: string[]; values: Row }>([
+  [categoryGroups, { own: Object.keys(COLOURS), values: COLOURS }],
+  [ingredientFormGroups, { own: ['icon'], values: {} }],
+]);
+
 const PAIRS = Object.values(TWO_TIER).map((pair) => ({
   items: nameOf(pair.items),
   groups: nameOf(pair.groups),
   groupColumn: pair.column.name,
-  groupExtra: pair.groups === categoryGroups ? COLOURS : {},
+  groupOwn: GROUP_EXTRAS.get(pair.groups)?.own ?? [],
+  groupExtra: GROUP_EXTRAS.get(pair.groups)?.values ?? {},
 }));
 
 /** Every vocabulary table, with what it carries beside the shared columns. */
 const TABLES = [
-  ...PAIRS.flatMap(({ items, groups, groupColumn, groupExtra }) => [
-    { table: groups, own: Object.keys(groupExtra), parent: undefined },
+  ...PAIRS.flatMap(({ items, groups, groupColumn, groupOwn, groupExtra }) => [
+    { table: groups, own: groupOwn, parent: undefined },
     { table: items, own: [groupColumn], parent: { groups, groupColumn, groupExtra } },
   ]),
   ...Object.values(FLAT).map((table) => ({ table: nameOf(table), own: [], parent: undefined })),
@@ -140,6 +150,22 @@ describe.each(PAIRS)('$items under $groups', ({ items, groups, groupColumn, grou
       where name = ${name} and deleted_at is null
     `;
     expect(rows.map((row) => row.group_id).sort()).toEqual([first, second].sort());
+  });
+});
+
+// The icon standing for a form group (M12.6): a closed list, so an enum, and
+// nullable, since NULL is the generic icon rather than a missing answer.
+describe('ingredient_form_groups.icon', () => {
+  it('is a nullable form_group_icon holding exactly the six icons, as the code declares them', async () => {
+    const [column] = await sql`
+      select is_nullable, udt_name from information_schema.columns
+      where table_name = 'ingredient_form_groups' and column_name = 'icon'
+    `;
+    const [range] = await sql`select enum_range(null::form_group_icon)::text[] as icons`;
+
+    expect({ ...column }).toEqual({ is_nullable: 'YES', udt_name: 'form_group_icon' });
+    expect(range.icons).toEqual(['botanical', 'animal', 'mineral', 'substance', 'fluid', 'curio']);
+    expect(formGroupIcon.enumValues).toEqual(range.icons);
   });
 });
 
