@@ -56,19 +56,34 @@ export interface IngredientEntryProps {
   movedAway?: { name: string; href: Route };
   /**
    * The side column's "In the Compendium" block (M12.12). For a coven's own
-   * entry, the compendium entries it replaces: up to three links, each titled
+   * entry, the compendium entries of the same formal name: up to three links, each titled
    * "Name (Formal Name)" (or the name alone) and going to the entry's public
    * page. For a compendium entry, itself: one link to its public page. `tip`
    * is the sentence in the ⓘ beside the heading, chosen by the page. `total`
-   * is how many are replaced in all; past the links shown, "See All" goes to
+   * is how many are found in all; past the links shown, "See All" goes to
    * `allHref`, the compendium search for the entry's label. `allHref` is left
-   * out where nothing is hidden, and then no See All shows. The block is left
-   * out for a local replacing nothing.
+   * out where nothing matches, and then no See All shows. The block is left
+   * out for a local with no match.
    */
   replaces?: {
     tip: string;
     entries: { title: string; href: Route }[];
     total: number;
     allHref?: Route;
+  };
+  /**
+   * The side column's "Similar in the Compendium" block (M12.22), for an own
+   * entry that declares no formal name: the compendium entries sharing its
+   * label, three then See All, in the shape `replaces` has. `convert` is
+   * left out for a role that may not convert (a viewer), and then no
+   * **This Is It** shows; given, each entry names the coven's page for it,
+   * where a successful conversion goes.
+   */
+  similar?: {
+    tip: string;
+    entries: { title: string; href: Route; id: string; thenHref: Route }[];
+    total: number;
+    allHref?: Route;
+    convert?: { workspaceId: string; localId: string };
   };
 }
