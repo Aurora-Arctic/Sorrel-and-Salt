@@ -58,9 +58,14 @@ async function stock(
   form = 'Testform',
   deleted = false,
   quantityOnHand: string | null = null,
+  lowStockThreshold: string | null = null,
 ): Promise<string> {
   const variantId = await variantIdOf(sql, ingredientId, form);
-  return insertStock(sql, { workspaceId, ingredientId, variantId, deleted, quantityOnHand }, A.id);
+  return insertStock(
+    sql,
+    { workspaceId, ingredientId, variantId, deleted, quantityOnHand, lowStockThreshold },
+    A.id,
+  );
 }
 
 /** Every label `session` is listed in `workspaceId` under `filter`, in the list's order. */
@@ -174,6 +179,93 @@ describe('listWorkspaceIngredients under source and inStock (M9.7)', () => {
     ).toEqual(['Heldwort']);
     expect(await listed(asUser(B), WORKSPACE_W_ID, { source: 'local', inStock: true })).toEqual([
       'Covenwort',
+    ]);
+  });
+});
+
+describe('listWorkspaceIngredients under lowStockOnly (M9.8)', () => {
+  /** A held entry with one jar of `quantity` against `threshold`. */
+  async function jarred(
+    name: string,
+    quantity: string | null,
+    threshold: string | null,
+  ): Promise<string> {
+    const id = await held(name);
+    await stock(id, WORKSPACE_W_ID, 'Testform', false, quantity, threshold);
+    return id;
+  }
+
+  it('keeps an entry with a jar badged Low Stock or Out of Stock, row by row', async () => {
+    await jarred('Outwort', '0', '10');
+    await jarred('Outzerowort', '0', '0');
+    await jarred('Outnothresholdwort', '0', null);
+    await jarred('Lowwort', '2', '3');
+    await jarred('Edgewort', '3', '3');
+    await jarred('Abovewort', '4', '3');
+    await jarred('Zerothresholdwort', '1', '0');
+    await jarred('Nothresholdwort', '1', null);
+    await jarred('Unweighedwort', null, '3');
+    await add('Barewort', { workspaceId: WORKSPACE_W_ID });
+
+    // Why they could have been listed: without the filter every one is.
+    expect(await listed(asUser(B))).toHaveLength(10);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { lowStockOnly: true })).toEqual([
+      'Edgewort',
+      'Lowwort',
+      'Outnothresholdwort',
+      'Outwort',
+      'Outzerowort',
+    ]);
+  });
+
+  it('keeps an entry when any one of its jars is badged', async () => {
+    const forms = [makeVariant({ form: 'Herb' }), makeVariant({ form: 'Oil' })];
+    const mixed = await held('Mixedwort', { variants: forms });
+    await stock(mixed, WORKSPACE_W_ID, 'Herb', false, '50', '10');
+    await stock(mixed, WORKSPACE_W_ID, 'Oil', false, '1', '3');
+    const full = await held('Fullwort', { variants: forms });
+    await stock(full, WORKSPACE_W_ID, 'Herb', false, '50', '10');
+    await stock(full, WORKSPACE_W_ID, 'Oil', false, '40', '3');
+
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { lowStockOnly: true })).toEqual(['Mixedwort']);
+  });
+
+  it("does not count a deleted jar, nor another coven's jar", async () => {
+    const entry = await held('Deletedjarwort');
+    await stock(entry, WORKSPACE_W_ID, 'Testform', true, '0', '3');
+    await stock(entry, WORKSPACE_W_ID, 'Testform', false, '50', '3');
+    await stock(entry, WORKSPACE_X_ID, 'Testform', false, '0', '3');
+    await jarred('Livejarwort', '1', '3');
+
+    expect(await listed(asUser(B))).toEqual(['Deletedjarwort', 'Livejarwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { lowStockOnly: true })).toEqual([
+      'Livejarwort',
+    ]);
+    // Why X's jar could have counted: X lists the entry too, and its own jar is out.
+    await hold(entry, WORKSPACE_X_ID);
+    expect(await listed(asUser(D), WORKSPACE_X_ID, { lowStockOnly: true })).toEqual([
+      'Deletedjarwort',
+    ]);
+  });
+
+  it('combines with source and inStock', async () => {
+    await jarred('Lowheldwort', '1', '3');
+    await jarred('Outheldwort', '0', '3');
+    await stock(
+      await add('Lowcovenwort', { workspaceId: WORKSPACE_W_ID }),
+      WORKSPACE_W_ID,
+      'Testform',
+      false,
+      '1',
+      '3',
+    );
+
+    expect(
+      await listed(asUser(B), WORKSPACE_W_ID, { lowStockOnly: true, source: 'local' }),
+    ).toEqual(['Lowcovenwort']);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { lowStockOnly: true, inStock: true })).toEqual([
+      'Lowcovenwort',
+      'Lowheldwort',
     ]);
   });
 });

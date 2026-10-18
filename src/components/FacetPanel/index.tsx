@@ -156,7 +156,8 @@ export default function FacetPanel({
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
     (filter.source ? 1 : 0) +
-    (filter.inStock ? 1 : 0);
+    (filter.inStock ? 1 : 0) +
+    (filter.lowStockOnly ? 1 : 0);
 
   const matchStuck = filter.categories.length < 2;
   const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
@@ -502,6 +503,15 @@ export default function FacetPanel({
                       name="inStock"
                       checked={filter.inStock}
                       onChange={(inStock) => onChange({ inStock })}
+                    />
+                  )}
+                  {filter.lowStockOnly !== undefined && (
+                    <FacetSwitch
+                      label="Low Stock Only"
+                      count={facets.lowStockOnly}
+                      name="lowStockOnly"
+                      checked={filter.lowStockOnly}
+                      onChange={(lowStockOnly) => onChange({ lowStockOnly })}
                     />
                   )}
                   {admin && (

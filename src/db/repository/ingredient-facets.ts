@@ -82,7 +82,7 @@ export async function findWorkspaceIngredientFacets(
   const readable = readableInTiers([membership], ingredients);
   // The seven kinds and the switch count under the filter's own source and
   // jars; the source strip under its jars only, and the switch under its source.
-  const [facets, source, inStock] = await Promise.all([
+  const [facets, source, inStock, lowStockOnly] = await Promise.all([
     readFacets(filter, and(readable, workspaceListScope(membership, filter)), membership),
     sourceFacet(filter, membership, (value) =>
       and(readable, workspaceListScope(membership, { ...filter, source: value })),
@@ -92,8 +92,13 @@ export async function findWorkspaceIngredientFacets(
       and(readable, workspaceListScope(membership, { ...filter, inStock: true })),
       membership,
     ),
+    totalUnder(
+      filter,
+      and(readable, workspaceListScope(membership, { ...filter, lowStockOnly: true })),
+      membership,
+    ),
   ]);
-  return { ...facets, source, inStock };
+  return { ...facets, source, inStock, lowStockOnly };
 }
 
 /**

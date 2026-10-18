@@ -2,8 +2,10 @@ import {
   and,
   arrayOverlaps,
   eq,
+  gt,
   inArray,
   isNull,
+  lte,
   ne,
   not,
   or,
@@ -340,13 +342,13 @@ export async function findWorkspaceIngredientPage(
  * `EXISTS` on the row's `(workspace_id, ingredient_id)` unique. A jar does
  * not decide it, and an own entry sharing a compendium entry's name leaves
  * both listed: the coven chose both. The page and the facets (M12.3) both read
- * it, so they hold the same rows. The coven-only `source` and `inStock`
- * settings (M9.7) are read here, not in `compendiumList`, which the
+ * it, so they hold the same rows. The coven-only `source`, `inStock` and
+ * `lowStockOnly` settings (M9.7, M9.8) are read here, not in `compendiumList`, which the
  * compendium's page and count share and where a coven's jars mean nothing.
  */
 export function workspaceListScope(
   membership: Membership,
-  filter: Pick<IngredientFilter, 'source' | 'inStock'> = {},
+  filter: Pick<IngredientFilter, 'source' | 'inStock' | 'lowStockOnly'> = {},
 ): SQL | undefined {
   return and(
     or(
@@ -365,6 +367,7 @@ export function workspaceListScope(
     filter.source === 'local' ? scopedTo(membership, ingredients) : undefined,
     filter.source === 'compendium' ? inCompendium(ingredients) : undefined,
     filter.inStock ? holdsJarInStock(membership) : undefined,
+    filter.lowStockOnly ? holdsJarLowOrOut(membership) : undefined,
   );
 }
 
@@ -383,6 +386,32 @@ function holdsJarInStock(membership: Membership): SQL {
       eq(inventoryItems.ingredientId, ingredients.id),
       scopedTo(membership, inventoryItems),
       or(isNull(inventoryItems.quantityOnHand), ne(inventoryItems.quantityOnHand, '0')),
+      existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
+    ),
+  );
+}
+
+/**
+ * The `lowStockOnly` filter (M9.8): the coven holds a live jar of the row, of
+ * a live form, badged Out of Stock (at 0, whatever its threshold) or Low Stock
+ * (above 0 and at or below a threshold above 0). A jar with no quantity is held
+ * unweighed and never matches, as SQL comparisons against null already read.
+ * The same rule as `stockState` in `src/components/StockBadge/stock-state.ts`.
+ */
+function holdsJarLowOrOut(membership: Membership): SQL {
+  return existsIn(
+    inventoryItems,
+    and(
+      eq(inventoryItems.ingredientId, ingredients.id),
+      scopedTo(membership, inventoryItems),
+      or(
+        eq(inventoryItems.quantityOnHand, '0'),
+        and(
+          gt(inventoryItems.lowStockThreshold, '0'),
+          gt(inventoryItems.quantityOnHand, '0'),
+          lte(inventoryItems.quantityOnHand, inventoryItems.lowStockThreshold),
+        ),
+      ),
       existsIn(ingredientVariants, eq(ingredientVariants.id, inventoryItems.variantId)),
     ),
   );

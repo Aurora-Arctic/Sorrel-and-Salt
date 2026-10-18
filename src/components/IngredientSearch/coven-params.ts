@@ -22,4 +22,12 @@ export const COVEN_PARAMS = defineSearchParams({
     write: (on: boolean) => (on ? '1' : undefined),
     toVariable: (on) => on || undefined,
   }),
+  // Only entries with a jar badged Low Stock or Out of Stock (M9.8). Written `1`, as inStock is.
+  lowStockOnly: searchParam({
+    name: 'lowStockOnly',
+    variable: 'lowStockOnly',
+    read: (raw) => single(raw) === '1',
+    write: (on: boolean) => (on ? '1' : undefined),
+    toVariable: (on) => on || undefined,
+  }),
 });
