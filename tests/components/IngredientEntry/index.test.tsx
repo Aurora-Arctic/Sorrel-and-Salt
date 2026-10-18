@@ -557,6 +557,42 @@ describe('IngredientEntry', () => {
     });
   });
 
+  describe('a coven entry with no formal name', () => {
+    const similar = (convert?: {
+      workspaceId: string;
+      localId: string;
+    }): NonNullable<IngredientEntryProps['similar']> => ({
+      tip: 'Fixture reason the entries are shown.',
+      entries: [1, 2, 3].map((at) => ({
+        id: 'id-' + at,
+        title: 'Fixture Similar ' + at,
+        href: `/compendium/ingredients/fixture-similar-${at}` as Route,
+        thenHref: `/coven/fixture-coven/ingredients/id-${at}` as Route,
+      })),
+      total: 5,
+      allHref: '/compendium?query=Fixture%20Wort' as Route,
+      convert,
+    });
+    const list = () => screen.getByRole('list', { name: 'Similar in the Compendium' });
+
+    it('heads a Similar block with a ⓘ, three entries and See All, and a This Is It for each when it may convert', () => {
+      renderEntry({ similar: similar({ workspaceId: 'w', localId: 'l' }) });
+
+      expect(within(list()).getAllByRole('link')).toHaveLength(3);
+      expect(within(list()).getAllByRole('button')).toHaveLength(3);
+      expect(screen.getByRole('button', { name: 'About Similar in the Compendium' })).toBeVisible();
+      expect(screen.getByRole('link', { name: /^See All 5/ })).toBeInTheDocument();
+      expect(screen.queryByRole('heading', { name: 'In the Compendium' })).toBeNull();
+    });
+
+    it('shows a viewer the entries and no This Is It', () => {
+      renderEntry({ similar: similar() });
+
+      expect(within(list()).getAllByRole('link')).toHaveLength(3);
+      expect(screen.queryByRole('button', { name: /This Is It/ })).toBeNull();
+    });
+  });
+
   it('links the entry that moved off this address to where it is now', () => {
     const href = '/compendium/ingredients/fixture-movedwort' as Route;
     const { unmount } = renderEntry();
@@ -908,5 +944,82 @@ describe('IngredientEntry edit', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fixture Delete' }));
 
     expect(router.replace).toHaveBeenCalledWith('/compendium');
+  });
+});
+
+// The three kinds of entry on a coven's page (M12.16): the coven's own, the
+// compendium's held in its cupboard, and the compendium's not held.
+describe('IngredientEntry on a coven page', () => {
+  const held = (overrides: Partial<NonNullable<IngredientDetail['cupboardEntry']>> = {}) =>
+    ({
+      id: nextId(),
+      workspaceId: COVEN,
+      ingredientId: '00000000-0000-4000-8000-000000000001',
+      label: null,
+      description: null,
+      safetyNotes: null,
+      elements: null,
+      celestialBodies: null,
+      zodiacSigns: null,
+      colors: null,
+      ...STAMPS,
+      ...overrides,
+    }) as NonNullable<IngredientDetail['cupboardEntry']>;
+
+  /** What a correspondence row lists: the definition beside its term. */
+  const rowOf = (term: string): string =>
+    screen.getByText(term, { selector: 'dt' }).nextElementSibling!.textContent!;
+
+  it('shows the merged values of an annotated compendium entry, marked from the compendium', () => {
+    renderEntry({
+      detail: detail({
+        cupboardEntry: held({
+          label: 'Hedgewort',
+          elements: ['water'],
+          celestialBodies: [],
+        }),
+      }),
+    });
+
+    // A set label heads the page, and the compendium's name stays beneath it.
+    expect(screen.getByRole('heading', { level: 1, name: 'Hedgewort' })).toBeInTheDocument();
+    expect(screen.getByText('Testwort', { exact: true })).toBeInTheDocument();
+    // A null description falls back to the compendium's.
+    expect(screen.getByText('A fixture herb.')).toBeInTheDocument();
+    // A set list stands over the compendium's; an empty one shows as cleared.
+    expect(rowOf('Elements')).toBe('Water');
+    expect(rowOf('Planets')).not.toBe('Fixture Moon');
+    expect(screen.queryByText('Fixture Moon')).not.toBeInTheDocument();
+    // The marks are statuses; a compendium entry is never Local.
+    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual([
+      'From the Compendium',
+      'Annotated',
+    ]);
+    expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
+  });
+
+  it('marks a compendium entry held with no override, but not annotated or relabelled', () => {
+    renderEntry({ detail: detail({ cupboardEntry: held() }) });
+
+    expect(screen.getByRole('heading', { level: 1, name: 'Testwort' })).toBeInTheDocument();
+    expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual([
+      'From the Compendium',
+    ]);
+    expect(screen.getAllByText('Testwort')).toHaveLength(1);
+    expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
+  });
+
+  it('renders a compendium entry the coven does not hold with neither mark', () => {
+    renderEntry();
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
+  });
+
+  it("leaves a coven's own entry Local and unmarked as the compendium's", () => {
+    renderEntry({ detail: detail({ entry: entryRow({ workspaceId: COVEN }) }) });
+
+    expect(screen.getByText('Local', { exact: true })).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

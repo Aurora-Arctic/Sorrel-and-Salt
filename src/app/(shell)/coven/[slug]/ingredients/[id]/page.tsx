@@ -10,7 +10,9 @@ import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import {
-  compendiumEntriesReplacedBy,
+  applyCupboardEntry,
+  compendiumMatchesOf,
+  getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
 } from '@/modules/ingredients';
@@ -31,8 +33,9 @@ import type { CovenIngredientParams } from './types';
 
 // The ⓘ sentence beside "In the Compendium", one for each case.
 const COMPENDIUM_TIP = 'This entry is the compendium’s. Its public page is linked here.';
-const LOCAL_TIP =
-  'Your coven’s entry is offered in their place when you pick a substitute. Compare them here.';
+const SAME_TIP = 'This is the compendium entry that names the same thing. Compare them here.';
+const SIMILAR_TIP =
+  'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. If one of them is the same thing, This Is It moves your jars and spell layers to it and removes this entry.';
 
 const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -49,29 +52,44 @@ const entryOf = cache(async (slug: string, id: string) => {
   }
 });
 
+// The coven's cupboard entry for a compendium entry, read once per request for
+// the metadata and the page both; none for a coven's own entry.
+const cupboardOf = cache(async (slug: string, id: string) => {
+  const { workspace, session, entry } = await entryOf(slug, id);
+  return entry.workspaceId === null ? getCupboardEntry(session, workspace.id, entry.id) : null;
+});
+
 // A compendium entry names its public page as canonical, since that is the
 // address a search engine should index. The path is relative: the origin
 // varies by deployment, and MB.84 owns the public page's metadata.
 export async function generateMetadata({ params }: CovenIngredientParams): Promise<Metadata> {
   const { slug, id } = await params;
   const { entry } = await entryOf(slug, id);
-  const title = pageTitleOf(entry);
-  return entry.workspaceId === null
-    ? { title, alternates: { canonical: publicAddress(entry.slug) } }
-    : { title };
+  if (entry.workspaceId !== null) return { title: pageTitleOf(entry) };
+  // The tab says what the page heading says: the coven's label when its
+  // cupboard entry sets one (M12.16). The canonical address stays the
+  // compendium's public page, whatever the coven calls the entry.
+  return {
+    title: pageTitleOf(applyCupboardEntry(entry, await cupboardOf(slug, id))),
+    alternates: { canonical: publicAddress(entry.slug) },
+  };
 }
 
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
   const { slug, id } = await params;
   const { workspace, session, entry } = await entryOf(slug, id);
-  // A coven's own entry also links the compendium entries it hides (M12.12),
+  // A coven's own entry also links the compendium entries it is, or may be (M12.22),
   // read here for this one page and never through GraphQL; none for a
   // compendium entry. The compendium is public, so the links reveal nothing.
-  const [detail, { viewer }, replaced] = await Promise.all([
-    ingredientDetailOf(session, entry, workspace.id),
+  // The detail is read without the coven so it does not read the cupboard
+  // entry again; the one the metadata shares is laid in.
+  const [read, { viewer }, matches, cupboardEntry] = await Promise.all([
+    ingredientDetailOf(session, entry),
     viewerOf(),
-    compendiumEntriesReplacedBy(session, entry),
+    compendiumMatchesOf(session, entry),
+    cupboardOf(slug, id),
   ]);
+  const detail = { ...read, cupboardEntry };
   const inCompendium = entry.workspaceId === null;
 
   // A compendium entry offers Edit to a curator, opening the compendium's edit modal
@@ -116,19 +134,40 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 entries: [{ title: pageTitleOf(entry), href: publicAddress(entry.slug) }],
                 total: 1,
               }
-            : replaced.entries.length > 0
+            : matches.kind === 'same' && matches.entries.length > 0
               ? {
-                  tip: LOCAL_TIP,
-                  entries: replaced.entries.map((hidden) => ({
-                    title: pageTitleOf(hidden),
-                    href: publicAddress(hidden.slug),
+                  tip: SAME_TIP,
+                  entries: matches.entries.map((match) => ({
+                    title: pageTitleOf(match),
+                    href: publicAddress(match.slug),
                   })),
-                  total: replaced.total,
-                  // See All opens the compendium search for this entry's label,
+                  total: matches.total,
+                  // See All opens the compendium search for this entry's formal name,
                   // written through the search's own parameter table.
-                  allHref: COMPENDIUM_PARAMS.href('/compendium', { query: entry.name }),
+                  allHref: COMPENDIUM_PARAMS.href('/compendium', {
+                    query: entry.canonicalName ?? entry.name,
+                  }),
                 }
               : undefined
+        }
+        similar={
+          matches.kind === 'similar' && matches.entries.length > 0
+            ? {
+                tip: SIMILAR_TIP,
+                entries: matches.entries.map((match) => ({
+                  id: match.id,
+                  title: pageTitleOf(match),
+                  href: publicAddress(match.slug),
+                  // The coven's page for the compendium entry, which a convert lands on.
+                  thenHref: `/coven/${workspace.slug}/ingredients/${match.id}` as Route,
+                })),
+                total: matches.total,
+                allHref: COMPENDIUM_PARAMS.href('/compendium', { query: entry.name }),
+                convert: matches.canConvert
+                  ? { workspaceId: workspace.id, localId: entry.id }
+                  : undefined,
+              }
+            : undefined
         }
       />
     </main>

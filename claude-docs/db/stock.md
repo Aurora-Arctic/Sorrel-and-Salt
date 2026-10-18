@@ -223,6 +223,11 @@ stock.
   a deleted form, or a form of a deleted ingredient is `NotFound`. The
   composite foreign key alone would accept another coven's form, since it holds
   only the variant to its ingredient.
+- **A jar of a compendium form lists the entry (M12.15).** `createStock` also
+  inserts the coven's cupboard row for the entry when it has none, in the same
+  transaction and after the hidden-entry redirect has decided the jar stays on
+  the compendium form. A second jar of another form adds no second row
+  ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Writing it").
 - **A form the coven holds is refused.** `createStock` throws a
   `ValidationError` beside `variantId` and writes nothing. It neither
   returns the held jar nor adds the input's amount to it: either would
@@ -319,4 +324,4 @@ The condition is shared rather than copied, so a count and the list cannot disag
 rows are the coven's. Unlike the compendium's, it is never cached: what it
 counts differs from coven to coven (CLAUDE.md rule 6).
 
-**A save never moves a jar** (M12.27). Saving a coven's own entry, whether a create, an update or a folk name promoted to the label, leaves every jar of the coven where it is, even when the save makes the entry hide a compendium entry the coven holds a jar of. The save-time follow of M12.8 (`carryJarsToLocal`, `JarMergeNeeded`, the `jarMerges` input and the jar merge) is gone; the only part of M12.8 that remains is the `createStock` redirect, which stores a new jar of a hidden entry's form on the local's form (made if missing), until M12.28 replaces it. The three saves no longer take the per-coven advisory lock (`lockCovenStock`) or assert `inventory: update`; both were added by M12.8 for the carry alone, and `createStock` still takes the lock. The repository methods `lockJarsOnHiddenEntries`, `lockJarsOfIngredient` and `lockLiveVariants`, and the `HiddenJar` type, are uncalled until M12.28 removes them. The retired design is recorded in [`m12.8-jar-follows-local.md`](../design-decisions/m12.8-jar-follows-local.md).
+**A save never moves a jar** (M12.27). Saving a coven's own entry, whether a create, an update or a folk name promoted to the label, leaves every jar of the coven where it is, even when the save makes the entry hide a compendium entry the coven holds a jar of. The save-time follow of M12.8 (`carryJarsToLocal`, `JarMergeNeeded`, the `jarMerges` input and the jar merge) is gone; the only part of M12.8 that remains is the `createStock` redirect, which stores a new jar of a hidden entry's form on the local's form (made if missing), until M12.28 replaces it. The three saves no longer take the per-coven advisory lock (`lockCovenStock`) or assert `inventory: update`; both were added by M12.8 for the carry alone. The lock now has three callers: `createStock`, `removeCupboardEntry` (M12.15), which counts jars under it, and `convertLocalToCompendiumEntry` (M12.21), which moves an own entry's jars and spell layers onto a compendium entry's forms ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Converting an own entry"). The convert also calls `lockJarsOfIngredient` and `lockLiveVariants`, so those two stay when M12.28 removes `lockJarsOnHiddenEntries`, `lockLocalsHiding` and the `HiddenJar` type. The retired design is recorded in [`m12.8-jar-follows-local.md`](../design-decisions/m12.8-jar-follows-local.md).

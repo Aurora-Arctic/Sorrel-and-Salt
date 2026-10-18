@@ -44,6 +44,7 @@ type Documents = {
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": typeof types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": typeof types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": typeof types.DeleteZodiacSignDocument,
+    "\n  mutation ConvertLocalToCompendiumEntry($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {\n    convertLocalToCompendiumEntry(\n      workspaceId: $workspaceId\n      localId: $localId\n      compendiumId: $compendiumId\n    ) {\n      entry {\n        id\n      }\n    }\n  }\n": typeof types.ConvertLocalToCompendiumEntryDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": typeof types.PickerCategoriesDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": typeof types.PossibleDuplicatesDocument,
     "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n      stock(workspaceId: $workspaceId) {\n        quantityOnHand\n        unit\n        variant {\n          form\n        }\n      }\n    }\n  }\n": typeof types.CreateWorkspaceIngredientDocument,
@@ -113,6 +114,7 @@ const documents: Documents = {
     "\n  mutation CreateZodiacSign($input: ZodiacSignInput!) {\n    createZodiacSign(input: $input) {\n      id\n    }\n  }\n": types.CreateZodiacSignDocument,
     "\n  mutation UpdateZodiacSign($id: ID!, $input: ZodiacSignInput!) {\n    updateZodiacSign(id: $id, input: $input) {\n      id\n    }\n  }\n": types.UpdateZodiacSignDocument,
     "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n": types.DeleteZodiacSignDocument,
+    "\n  mutation ConvertLocalToCompendiumEntry($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {\n    convertLocalToCompendiumEntry(\n      workspaceId: $workspaceId\n      localId: $localId\n      compendiumId: $compendiumId\n    ) {\n      entry {\n        id\n      }\n    }\n  }\n": types.ConvertLocalToCompendiumEntryDocument,
     "\n  query PickerCategories {\n    categories(first: 100) {\n      edges {\n        node {\n          id\n          name\n          description\n          group {\n            id\n            name\n            colorDark\n            colorLight\n          }\n        }\n      }\n    }\n  }\n": types.PickerCategoriesDocument,
     "\n  query PossibleDuplicates($workspaceId: ID, $name: String!, $first: Int) {\n    possibleDuplicates(workspaceId: $workspaceId, name: $name, first: $first) {\n      edges {\n        node {\n          id\n          name\n          canonicalName\n          slug\n        }\n      }\n    }\n  }\n": types.PossibleDuplicatesDocument,
     "\n  mutation CreateWorkspaceIngredient($workspaceId: ID!, $input: IngredientInput!) {\n    createWorkspaceIngredient(workspaceId: $workspaceId, input: $input) {\n      id\n      name\n      slug\n      stock(workspaceId: $workspaceId) {\n        quantityOnHand\n        unit\n        variant {\n          form\n        }\n      }\n    }\n  }\n": types.CreateWorkspaceIngredientDocument,
@@ -286,6 +288,10 @@ export function graphql(source: "\n  mutation UpdateZodiacSign($id: ID!, $input:
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"): (typeof documents)["\n  mutation DeleteZodiacSign($id: ID!) {\n    deleteZodiacSign(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ConvertLocalToCompendiumEntry($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {\n    convertLocalToCompendiumEntry(\n      workspaceId: $workspaceId\n      localId: $localId\n      compendiumId: $compendiumId\n    ) {\n      entry {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation ConvertLocalToCompendiumEntry($workspaceId: ID!, $localId: ID!, $compendiumId: ID!) {\n    convertLocalToCompendiumEntry(\n      workspaceId: $workspaceId\n      localId: $localId\n      compendiumId: $compendiumId\n    ) {\n      entry {\n        id\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

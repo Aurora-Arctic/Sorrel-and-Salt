@@ -148,6 +148,24 @@ const DREAMS = category('Testdreams', '#c79bd8', '#6d3d82');
 
 const MOCKROOT = { id: nextId(), slug: 'fixture-mockroot', workspaceId: null };
 
+/** A coven's cupboard row over FULL's entry; every override null unless given. */
+const cupboardEntry = (
+  overrides: Partial<NonNullable<IngredientDetail['cupboardEntry']>> = {},
+): NonNullable<IngredientDetail['cupboardEntry']> => ({
+  id: nextId(),
+  workspaceId: '00000000-0000-4000-8000-0000000000c1',
+  ingredientId: '00000000-0000-4000-8000-000000000001',
+  label: null,
+  description: null,
+  safetyNotes: null,
+  elements: null,
+  celestialBodies: null,
+  zodiacSigns: null,
+  colors: null,
+  ...STAMPS,
+  ...overrides,
+});
+
 const FULL: IngredientDetail = {
   entry: entryRow(),
   cupboardEntry: null,
@@ -202,7 +220,10 @@ const COMPENDIUM_CASE: NonNullable<IngredientEntryProps['replaces']> = {
 };
 
 const LOCAL_TIP =
-  'Your coven’s entry is offered in their place when you pick a substitute. Compare them here.';
+  'The compendium holds an entry with this same formal name. Your coven’s entry and it stay separate; compare them here.';
+
+const SIMILAR_TIP =
+  'Your entry has no formal name, so these compendium entries only share its name. If one is the same ingredient, This Is It makes yours that entry.';
 
 const Page = ({ children }: { children: ReactNode }) => (
   <main className="page-column">{children}</main>
@@ -278,6 +299,28 @@ export const NothingRecorded: Story = () => (
   />
 );
 
+// A compendium entry this coven holds in its cupboard, with nothing changed
+// (M12.16): marked From the Compendium, and no Local badge.
+export const FromTheCompendium: Story = () => (
+  <Entry detail={{ ...FULL, cupboardEntry: cupboardEntry() }} />
+);
+
+// The same, annotated: the coven's label heads the page with the compendium's
+// name beneath it, its own description stands, the planets are cleared on
+// purpose, and the rest is the compendium's.
+export const Annotated: Story = () => (
+  <Entry
+    detail={{
+      ...FULL,
+      cupboardEntry: cupboardEntry({
+        label: 'Hedgewort',
+        description: 'What our coven makes of it.',
+        celestialBodies: [],
+      }),
+    }}
+  />
+);
+
 // A coven's own entry, badged Local. Its Edit is M8.17's, so none yet.
 export const CovenEntry: Story = () => (
   <Entry
@@ -306,7 +349,7 @@ export const CompendiumEntryForCurator: Story = () => (
 // itself once, with no See All.
 export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_CASE} />;
 
-// A coven's own entry that hides a compendium entry by its formal name: the
+// A coven's own entry whose formal name a compendium entry shares: the
 // "In the Compendium" block with its one link and the ⓘ saying why it is shown.
 export const LocalReplacingCompendiumEntry: Story = () => (
   <Entry
@@ -324,8 +367,28 @@ export const LocalReplacingCompendiumEntry: Story = () => (
   />
 );
 
-// A label match hides four compendium entries: the first three, then See All
-// to the compendium search for the label.
+// Four compendium entries share the formal name: the first three, then See All
+// to the compendium search.
+// An own entry with no formal name: the Similar block, a This Is It button
+// beside each entry.
+export const SimilarInTheCompendium: Story = () => (
+  <Entry
+    similar={{
+      tip: SIMILAR_TIP,
+      entries: [
+        {
+          title: 'Testwort (Fixtura testalis)',
+          href: '/compendium/ingredients/testwort-fixtura-testalis' as Route,
+          id: 'c1',
+          thenHref: '/coven/fixture-coven/ingredients/c1' as Route,
+        },
+      ],
+      total: 1,
+      convert: { workspaceId: 'w1', localId: 'l1' },
+    }}
+  />
+);
+
 export const LocalReplacingSeveral: Story = () => (
   <Entry
     replaces={{

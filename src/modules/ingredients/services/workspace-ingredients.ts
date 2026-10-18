@@ -11,6 +11,7 @@ import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { ingredients } from '../schema/ingredients';
 import { ingredientSlug } from '../../../lib/slugify';
+import { refuseCupboardLabelAsName } from './cupboard-entries';
 import { LocalIngredientInput } from '../validation/ingredient';
 import {
   heldDeities,
@@ -42,7 +43,8 @@ type NameFields = Pick<IngredientFields, 'name' | 'canonicalName'>;
  * @throws {Forbidden} the caller may not write this coven's ingredients or
  * its stock.
  * @throws {ValidationError} the input breaks `LocalIngredientInput`,
- * collides with another of the coven's ingredients, picks a form or deity no
+ * collides with another of the coven's ingredients or a label it gave a
+ * compendium entry, picks a form or deity no
  * curated row holds, files it under no live category, links a substitute
  * or cites a reference outside the compendium and this coven.
  */
@@ -60,6 +62,7 @@ export async function createWorkspaceIngredient(
   const { fields } = picks;
 
   const columns = ingredientColumns(fields);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
     const [row] = await write.insertInWorkspace(membership, ingredients, columns);
@@ -106,6 +109,7 @@ export async function updateWorkspaceIngredient(
   const { fields } = picks;
 
   const columns = ingredientColumns(fields);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
     const [row] = await write.updateByIdInWorkspace(membership, ingredients, id, columns);
@@ -151,6 +155,7 @@ export async function promoteWorkspaceFolkName(
 
   const fields = { name: promoted.name, canonicalName: current.canonicalName };
   const slug = ingredientSlug(fields.name, fields.canonicalName);
+  await refuseCupboardLabelAsName(membership, fields.name);
 
   return withAudit(session, async (write) => {
     await swapFolkName(write, id, promoted.id, current.name, others);

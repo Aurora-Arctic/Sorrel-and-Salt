@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactElement, ReactNode } from 'react';
 import FormIcon from '../FormIcon';
@@ -26,9 +27,11 @@ import type {
   SubstituteDetail,
   VariantDetail,
 } from '@/modules/ingredients';
+import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import EditButton from './edit-button';
 import { DETAILS, NoteMarks, ReferencesSection, referenceNotes } from './references';
 import EntryDialog from './entry-dialog';
+import ThisIsIt from './this-is-it';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
 
@@ -358,16 +361,26 @@ function FormSection({
 // paragraph after the list, not an item in it, since it is not an entry.
 function ReplacesBlock({
   replaces,
+  heading = 'In the Compendium',
+  convert,
 }: {
-  replaces: NonNullable<IngredientEntryProps['replaces']>;
+  replaces: {
+    tip: string;
+    entries: { title: string; href: Route; id?: string; thenHref?: Route }[];
+    total: number;
+    allHref?: Route;
+  };
+  heading?: string;
+  /** Given for "Similar in the Compendium" to a role that may convert: This Is It beside each entry. */
+  convert?: { workspaceId: string; localId: string };
 }): ReactElement {
-  const block = blockOf('details', 'compendium');
+  const block = blockOf('details', heading === 'In the Compendium' ? 'compendium' : 'similar');
   const whyId = `${block.id}-why`;
   return (
     <div className="ingredient-entry__block ingredient-entry__replaces">
       <div className="ingredient-entry__heading-row">
-        <h3 id={block.id}>In the Compendium</h3>
-        <InfoTip id={whyId} label="In the Compendium">
+        <h3 id={block.id}>{heading}</h3>
+        <InfoTip id={whyId} label={heading}>
           {replaces.tip}
         </InfoTip>
       </div>
@@ -376,13 +389,22 @@ function ReplacesBlock({
         aria-labelledby={block.id}
         aria-describedby={whyId}
       >
-        {replaces.entries.map(({ title, href }) => (
+        {replaces.entries.map(({ title, href, id, thenHref }) => (
           <li key={href}>
             <Link href={href}>
               {title}
               <LinkIcon />
               <LinkHint />
             </Link>
+            {convert && id && thenHref && (
+              <ThisIsIt
+                workspaceId={convert.workspaceId}
+                localId={convert.localId}
+                compendiumId={id}
+                thenHref={thenHref}
+                name={title}
+              />
+            )}
           </li>
         ))}
       </ul>
@@ -404,9 +426,18 @@ const IngredientEntry = ({
   edit,
   movedAway,
   replaces,
+  similar,
 }: IngredientEntryProps): ReactElement => {
-  const { entry, folkNames, categories, deities, substitutes, variants } = detail;
+  const { cupboardEntry, folkNames, categories, deities, substitutes, variants } = detail;
+  // `entry` is the row as the compendium has it, which edit and identity use;
+  // `shown` lays the coven's cupboard entry over it for what the page says.
+  // Three kinds: ours (a coven's row, Local), the compendium's held in this
+  // cupboard (the marks), and the compendium's not held (neither).
+  const { entry } = detail;
+  const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
+  const held = !local && cupboardEntry != null;
+  const relabelled = held && shown.name !== entry.name;
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
   const anchors = formAnchors(variants);
   const notes = referenceNotes(
@@ -432,12 +463,22 @@ const IngredientEntry = ({
       <header className="ingredient-entry__head">
         <FormalName entry={entry} />
         <PageHeader
-          title={entry.name}
+          title={shown.name}
           action={edit && <EditButton href={edit.href} entry={editable} />}
         />
-        {(local || toxic) && (
+        {relabelled && (
+          <p className="ingredient-entry__compendium-name">
+            Called <span>{entry.name}</span> in the Compendium
+          </p>
+        )}
+        {(local || held || toxic) && (
           <div className="badges">
             {local && <span className="badge badge--local">Local</span>}
+            {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
+            {held && <output className="badge badge--low-stock">From the Compendium</output>}
+            {held && isAnnotated(cupboardEntry) && (
+              <output className="badge badge--low-stock">Annotated</output>
+            )}
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}
@@ -470,21 +511,28 @@ const IngredientEntry = ({
       <section id="details" className="ingredient-entry__section" aria-labelledby="details-heading">
         <h2 id="details-heading">Details</h2>
         <div className="ingredient-entry__text">
-          {said(entry.description) ? (
-            <p className="ingredient-entry__description">{entry.description}</p>
+          {said(shown.description) ? (
+            <p className="ingredient-entry__description">{shown.description}</p>
           ) : (
             <p className="ingredient-entry__empty">No description recorded.</p>
           )}
-          <SafetyNote safetyNotes={entry.safetyNotes} level={3} />
+          <SafetyNote safetyNotes={shown.safetyNotes} level={3} />
           <NoteMarks section={DETAILS} numbers={notes.numbersOf(DETAILS)} />
         </div>
         {/* A plain div, not an aside: one complementary landmark per section
             would be noise, and each block is already headed and labelled. */}
         <div className="ingredient-entry__side">
           {replaces && <ReplacesBlock replaces={replaces} />}
+          {similar && (
+            <ReplacesBlock
+              replaces={similar}
+              heading="Similar in the Compendium"
+              convert={similar.convert}
+            />
+          )}
           <CorrespondenceBlock
             block={blockOf('details', 'correspondences')}
-            rows={correspondences(entry, deities)}
+            rows={correspondences(shown, deities)}
             level={3}
           />
           <ListBlock

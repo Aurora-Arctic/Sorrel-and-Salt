@@ -84,3 +84,44 @@ export function findCompendiumMatchesByName(name: string): Promise<IngredientRow
     ),
   );
 }
+
+/**
+ * The proof's live cupboard entry labelled `label`, case folded, or
+ * `undefined`: the row a label the coven is about to take would collide with
+ * (M12.15). It does not join the compendium entry: the label index does not,
+ * so a row naming an entry the compendium has since deleted still holds its
+ * label.
+ */
+export function findCupboardEntryByLabel(
+  membership: Membership,
+  label: string,
+): Promise<CupboardEntryRow | undefined> {
+  return selectOne(
+    workspaceCompendiumEntries,
+    and(
+      scopedTo(membership, workspaceCompendiumEntries),
+      notSoftDeleted(workspaceCompendiumEntries),
+      // `lower` has no builder.
+      eq(sql`lower(${workspaceCompendiumEntries.label})`, sql`lower(${label})`),
+    ),
+  );
+}
+
+/**
+ * The proof's live own ingredient named `name`, case folded, or `undefined`:
+ * the other side of the label rule, which `ingredients_workspace_label_unique`
+ * covers for own rows alone (M12.15).
+ */
+export function findWorkspaceIngredientByName(
+  membership: Membership,
+  name: string,
+): Promise<IngredientRow | undefined> {
+  return selectOne(
+    ingredients,
+    and(
+      scopedTo(membership, ingredients),
+      notSoftDeleted(ingredients),
+      eq(sql`lower(${ingredients.name})`, sql`lower(${name})`),
+    ),
+  );
+}

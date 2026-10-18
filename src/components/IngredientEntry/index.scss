@@ -355,6 +355,12 @@ $jump-link-line: 1.25;
   color: $text-muted;
 }
 
+// The compendium's own name beneath a coven's label for it.
+.ingredient-entry__compendium-name {
+  margin: 0;
+  color: $text-muted;
+}
+
 // A short hairline under "In the Compendium", for a coven's own entry and for a
 // compendium entry alike, between its last line (the
 // last link, or See All when it is there) and the Correspondences heading,
@@ -390,6 +396,15 @@ $jump-link-line: 1.25;
 // The links under it are the entry page's links to the compendium.
 .ingredient-entry__replaced a {
   @include icon-link;
+}
+
+// An entry of "Similar in the Compendium" carries its This Is It beside the
+// link, and a refusal beneath; the row wraps on a narrow column.
+.ingredient-entry__replaced li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(2);
 }
 
 // "See All N" is the way on to the rest, not one of the entries: a step
