@@ -167,3 +167,12 @@ export const ToxicStuck: Story = () => (
 
 // The admin list also has the No Refs switch.
 export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferences: true }} />;
+
+// The coven's list also has a Source group and the In Stock Only switch, on a row of their own
+// above the foot. Their values count on the Filters button, so the two chosen here make 2.
+export const Coven: Story = () => <Panel start={{ ...NONE, source: 'local', inStockOnly: true }} />;
+
+// The coven's controls with nothing chosen: Source rests on All and the switch is off.
+export const CovenEmpty: Story = () => (
+  <Panel start={{ ...NONE, source: '', inStockOnly: false }} />
+);

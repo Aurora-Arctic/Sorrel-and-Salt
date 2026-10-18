@@ -13,7 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
+import type { CategoryMode, IngredientSource } from '@/modules/ingredients/schema/ingredient-enums';
 import { useHydrated } from '../../lib/hydrated';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useSlide } from '../../lib/use-slide';
@@ -48,6 +48,12 @@ const fadesAreOff = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const WIDE = '(min-width: 56rem)';
+
+const SOURCE_OPTIONS: ReadonlyArray<{ value: '' | IngredientSource; label: string }> = [
+  { value: '', label: 'All' },
+  { value: 'local', label: 'Local' },
+  { value: 'compendium', label: 'Compendium' },
+];
 
 const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
   { value: 'all', label: 'All' },
@@ -132,7 +138,11 @@ export default function FacetPanel({
     filter.elements,
   ].reduce((total, list) => total + list.length, 0);
   const count =
-    chosen + (filter.toxic === '' ? 0 : 1) + (admin && filter.withoutReferences ? 1 : 0);
+    chosen +
+    (filter.toxic === '' ? 0 : 1) +
+    (admin && filter.withoutReferences ? 1 : 0) +
+    (filter.source ? 1 : 0) +
+    (filter.inStockOnly ? 1 : 0);
 
   const matchStuck = filter.categories.length < 2;
   const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
@@ -509,6 +519,31 @@ export default function FacetPanel({
                   />
                 </div>
               </div>
+
+              {(filter.source !== undefined || filter.inStockOnly !== undefined) && (
+                <div className="facet-panel__line">
+                  {filter.source !== undefined && (
+                    <RadioGroupField
+                      legend="Source"
+                      name="source"
+                      layout="segmented"
+                      hint="Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium."
+                      options={SOURCE_OPTIONS}
+                      value={filter.source}
+                      onChange={(source) => onChange({ source })}
+                    />
+                  )}
+                  {filter.inStockOnly !== undefined && (
+                    <SwitchField
+                      label="In Stock Only"
+                      name="inStockOnly"
+                      value="1"
+                      checked={filter.inStockOnly}
+                      onChange={(inStockOnly) => onChange({ inStockOnly })}
+                    />
+                  )}
+                </div>
+              )}
 
               <div className="facet-panel__foot">
                 <button type="submit" className="btn btn--solid" onClick={closeOnSubmit}>

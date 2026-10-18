@@ -1,4 +1,4 @@
-import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
+import type { CategoryMode, IngredientSource } from '@/modules/ingredients/schema/ingredient-enums';
 import type { CompendiumFacetCounts } from '../CompendiumList/types';
 
 /**
@@ -19,6 +19,13 @@ export interface FacetPanelFilter {
   toxic: '' | 'toxic' | 'not_toxic';
   /** Show only the entries that cite no reference (admin). */
   withoutReferences: boolean;
+  /**
+   * The coven's Source control (M9.7), shown only when this is set: `''` for both,
+   * as the address leaves it blank. The compendium's panel leaves it out.
+   */
+  source?: '' | IngredientSource;
+  /** The coven's In Stock Only switch, shown only when this is set. */
+  inStockOnly?: boolean;
 }
 
 export interface FacetPanelProps {
