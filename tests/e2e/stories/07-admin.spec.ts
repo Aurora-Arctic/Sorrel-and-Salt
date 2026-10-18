@@ -318,6 +318,12 @@ test.describe('story 18: an admin adds, edits and soft-deletes what the compendi
     'an admin adds a compendium entry, edits it, and deletes it, the list following each',
     { tag: '@story-18' },
     async ({ page }) => {
+      // A longer limit for this story alone, which is long: eight axe scans, two saves, a reload
+      // and a delete. In CI, beside the other stories, it took 29.7s to 31.1s, the scans alone
+      // 12s of that, and the default 30s ran out at the reloaded dialog's Close. The trace shows
+      // the app quick throughout: that dialog was gone 0.4s after Close was pressed, and every
+      // request answered in under 0.15s, so the time is the story's own work (MB.267).
+      test.setTimeout(60_000);
       await signInAs(page, 'compendium@story-18.test', ['discord'], 'admin');
       expect((await page.goto('/admin/compendium'))?.status()).toBe(200);
       const add = page.getByRole('link', { name: 'Add Ingredient' });

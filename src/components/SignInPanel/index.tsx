@@ -15,6 +15,18 @@ import './index.scss';
 // writes this one: there is nothing to subscribe to.
 const noSubscription = () => () => {};
 
+// The raw read is not passed to `useSyncExternalStore` as it is: it returns
+// `''` for a cookie that is present but empty (or mid-expiry) and `null` for
+// none, and React, which reads a snapshot twice per render and warns when the
+// two differ, would see two answers to one question. The snapshot is the roster
+// id the cookie names, or `null`: anything else is the same "none", and
+// strings compare by value, so a provider id is stable too
+// (claude-docs/components/sign-in-panel.md, "Last used").
+const getLastUsedProvider = (): ProviderId | null => {
+  const value = getLastUsedLoginMethod();
+  return SOCIAL_PROVIDERS.find((provider) => provider.id === value)?.id ?? null;
+};
+
 const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElement => {
   // Seeded from the server-rendered callback error, then replaced by a
   // pre-redirect failure (signIn.social's own `{ error }` result) — the two
@@ -23,7 +35,7 @@ const SignInPanel = ({ next, error, configured }: SignInPanelProps): ReactElemen
   // Better Auth's documented read, taken after hydration: the server has no
   // `document`, so rendering the mark there and here would disagree
   // (claude-docs/components/sign-in-panel.md, "Last used").
-  const lastUsed = useSyncExternalStore(noSubscription, getLastUsedLoginMethod, () => null);
+  const lastUsed = useSyncExternalStore(noSubscription, getLastUsedProvider, () => null);
 
   const handleClick = async (providerId: ProviderId): Promise<void> => {
     if (!configured.includes(providerId)) return;
