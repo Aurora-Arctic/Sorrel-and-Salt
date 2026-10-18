@@ -19,6 +19,7 @@ export * from './services/cupboard-entries';
 export * from './loaders/ingredient-children';
 export * from './loaders/ingredients-by-id';
 export * from './loaders/stock';
+export * from './loaders/cupboard-entries';
 export * from './graphql/common-names';
 export * from './graphql/duplicates';
 export * from './graphql/ingredient-suggestions';
@@ -30,6 +31,7 @@ export * from './graphql/references';
 export * from './graphql/workspace-ingredients';
 export * from './graphql/workspace-ingredient-list';
 export * from './graphql/stock';
+export * from './graphql/cupboard-entries';
 export { unitConvert } from './units/convert';
 export type { ConversionRefusal, UnitConversion } from './units/types';
 export type {
