@@ -30,7 +30,14 @@ import type {
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
 import CupboardActions from './cupboard-actions';
 import EditButton from './edit-button';
-import { DETAILS, NoteMarks, ReferencesSection, referenceNotes } from './references';
+import {
+  BIBLIOGRAPHY_ID,
+  DETAILS,
+  NOTES_ID,
+  NoteMarks,
+  ReferencesSection,
+  referenceNotes,
+} from './references';
 import EntryDialog from './entry-dialog';
 import ThisIsIt from './this-is-it';
 import type { IngredientEntryProps } from './types';
@@ -543,8 +550,27 @@ const IngredientEntry = ({
               href: `#${anchors[at]}` as const,
               label: capitalise(variant.form),
               group: 'Forms',
+              // The forms take the line References takes, so each part of
+              // the menu opens the same way.
+              apart: at === 0,
             })),
-            { href: '#references', label: 'References', apart: true },
+            // With notes the section has two blocks to list; with none it has
+            // nothing to list, so it is one link.
+            ...(notes.notes.length > 0
+              ? [
+                  {
+                    href: `#${NOTES_ID}` as const,
+                    label: 'Notes',
+                    group: 'References',
+                    apart: true,
+                  },
+                  {
+                    href: `#${BIBLIOGRAPHY_ID}` as const,
+                    label: 'Bibliography',
+                    group: 'References',
+                  },
+                ]
+              : [{ href: '#references' as const, label: 'References', apart: true }]),
           ]}
         />
       )}

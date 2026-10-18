@@ -7,7 +7,9 @@ import './index.scss';
 // A menu of jump links to a page's own sections, marking the one in view
 // (claude-docs/components/page-nav.md). The anchors do the jumping, so the
 // menu works before the script loads; the script only moves `aria-current`.
-// The server render marks the first entry.
+// The server render marks the first entry. A group is set apart when its
+// first entry is: the entries are one flat array, so the group has no field
+// of its own to carry it.
 
 function itemsOf(entries: readonly PageNavEntry[]): PageNavItem[] {
   const items: PageNavItem[] = [];
@@ -51,8 +53,10 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
     return () => observer.disconnect();
   }, [entries]);
 
-  const link = (entry: PageNavEntry) => (
-    <li key={entry.href} className={entry.apart ? 'page-nav__apart' : undefined}>
+  // `apart` is drawn by whatever stands at the top level: the entry's own item,
+  // or for a group its item, never the entry again inside the group.
+  const link = (entry: PageNavEntry, apart = entry.apart) => (
+    <li key={entry.href} className={apart ? 'page-nav__apart' : undefined}>
       <a href={entry.href} aria-current={entry.href === current ? 'location' : undefined}>
         {entry.label}
       </a>
@@ -75,11 +79,16 @@ export default function PageNav({ label, entries }: PageNavProps): ReactElement 
           item.kind === 'entry' ? (
             link(item.entry)
           ) : (
-            <li key={`group-${at}`}>
+            <li
+              key={`group-${at}`}
+              className={item.entries[0]?.apart ? 'page-nav__apart' : undefined}
+            >
               <span className="page-nav__group" id={`${groupId}-${at}`}>
                 {item.label}
               </span>
-              <ul aria-labelledby={`${groupId}-${at}`}>{item.entries.map(link)}</ul>
+              <ul aria-labelledby={`${groupId}-${at}`}>
+                {item.entries.map((entry) => link(entry, false))}
+              </ul>
             </li>
           ),
         )}

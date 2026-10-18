@@ -849,14 +849,39 @@ describe('IngredientEntry references', () => {
     expect(noteMarks(document.body)).toHaveLength(0);
   });
 
-  it('adds References to the jump menu, after Details and the forms', () => {
+  it('lists Notes and Bibliography under a References group in the jump menu, after Details and the forms', () => {
     sample();
-    const links = within(screen.getByRole('navigation', { name: 'On this page' })).getAllByRole(
-      'link',
+    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const links = within(nav).getAllByRole('link');
+    const group = within(nav).getByRole('list', { name: 'References' });
+
+    expect(links[0]).toHaveAttribute('href', '#details');
+    expect(
+      within(group)
+        .getAllByRole('link')
+        .map((link) => link.getAttribute('href')),
+    ).toEqual(['#notes', '#bibliography']);
+    expect(links.slice(-2)).toEqual(within(group).getAllByRole('link'));
+    // The group has the two blocks to jump to, and no link of its own.
+    expect(within(nav).queryByRole('link', { name: 'References' })).not.toBeInTheDocument();
+    expect(document.getElementById('notes')).toContainElement(
+      screen.getByRole('heading', { name: 'Notes' }),
     );
+    expect(document.getElementById('bibliography')).toContainElement(
+      screen.getByRole('heading', { name: 'Bibliography' }),
+    );
+  });
+
+  it('keeps References a single link when no source is recorded, as there is nothing under it', () => {
+    renderEntry({ detail: detail({ references: [], variants: [variantRow('testoil')] }) });
+    const nav = screen.getByRole('navigation', { name: 'On this page' });
+    const links = within(nav).getAllByRole('link');
 
     expect(links[links.length - 1]).toHaveAttribute('href', '#references');
-    expect(links[0]).toHaveAttribute('href', '#details');
+    expect(within(nav).getByRole('link', { name: 'References' })).toBeInTheDocument();
+    expect(within(nav).queryByRole('list', { name: 'References' })).not.toBeInTheDocument();
+    expect(within(nav).queryByRole('link', { name: 'Notes' })).not.toBeInTheDocument();
+    expect(within(nav).queryByRole('link', { name: 'Bibliography' })).not.toBeInTheDocument();
   });
 });
 

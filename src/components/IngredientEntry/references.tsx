@@ -105,6 +105,14 @@ const endNote = (text: string): string => (/[?!.]$/.test(text) ? text : `${text}
 /** The id of a number's link, which its note's way back targets. */
 const markId = (number: number) => `note-ref-${number}`;
 const noteId = (number: number) => `note-${number}`;
+/**
+ * The two blocks of the References section, as the jump menu's subsections
+ * reach them. Bare words: every other id here carries a prefix and a number
+ * (`note-3`, `ref-<uuid>`, `form-oil`), so none can equal these.
+ */
+export const NOTES_ID = 'notes';
+export const BIBLIOGRAPHY_ID = 'bibliography';
+
 const entryId = (reference: ReferenceRow) => `ref-${reference.id}`;
 
 /**
@@ -210,7 +218,7 @@ export function ReferencesSection({ model }: { model: ReferenceNotes }): ReactEl
         <p className="ingredient-entry__empty">No sources recorded.</p>
       ) : (
         <>
-          <div className="ingredient-entry__block">
+          <div id={NOTES_ID} className="ingredient-entry__block">
             <h3 id="notes-heading">Notes</h3>
             <ol className="ingredient-entry__notes" aria-labelledby="notes-heading">
               {notes.map((note) => (
@@ -218,7 +226,7 @@ export function ReferencesSection({ model }: { model: ReferenceNotes }): ReactEl
               ))}
             </ol>
           </div>
-          <div className="ingredient-entry__block">
+          <div id={BIBLIOGRAPHY_ID} className="ingredient-entry__block">
             <h3 id="bibliography-heading">Bibliography</h3>
             <ul className="ingredient-entry__list" aria-labelledby="bibliography-heading">
               {bibliography.map((entry) => (

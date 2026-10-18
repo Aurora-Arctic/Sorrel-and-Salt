@@ -2,12 +2,12 @@ name: PR Gate
 
 # The run's title in the Actions list. The default is the PR's title alone,
 # under which an edit's run and a close's run — both of which stand down in
-# `changes` — look like the gate they queue behind, and a gate cancelled by
-# hand to let one through leaves its commit ungated. The group keys on
+# `changes`, the edit's unless its commit is ungated — look like the gate they
+# queue behind. The group keys on
 # `github.workflow`, the name above, which this does not touch.
 run-name: >-
   ${{ github.event.pull_request.title }}${{
-  github.event.action == 'edited' && ' · edit: waits, then cancels itself unless retargeted'
+  github.event.action == 'edited' && ' · edit: waits, then cancels itself unless retargeted or the commit is ungated'
   || github.event.action == 'closed' && ' · close: cancels the runs for this PR, then itself'
   || '' }}
 
@@ -24,7 +24,10 @@ run-name: >-
 # against the new one. Every other edit — a title or a description —
 # changes nothing the gate checks, so its run must not cancel the run in
 # flight: the group's cancel excludes `edited`, the run waits its turn, and
-# `changes` cancels it unless the payload carries `changes.base`.
+# `changes` cancels it unless the payload carries `changes.base` or no other
+# run of this gate has tested the PR's head commit. That second case is a
+# push's run that was still waiting when the edit came: GitHub holds one
+# pending run per group, so the edit's run replaced it before it started.
 # `closed` is there so closing a PR cancels its runs: the close starts a run
 # in the PR's group below, which cancels the rest, and then cancels itself in
 # `changes`. GitHub fires `edited` on a closed PR too, and that run cancels
@@ -46,7 +49,7 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
   # An edit joins the group without cancelling; GitHub holds one pending run
-  # per group, a later edit replacing an earlier one.
+  # per group, a later run replacing an earlier one — a push's run included.
   cancel-in-progress: ${{ github.event.action != 'edited' }}
 
 permissions:
@@ -79,12 +82,33 @@ jobs:
     steps:
       # A step-level `if:`, so the header's rule holds. Every other job needs
       # this one, so nothing else starts. `changes.base` is in the payload only
-      # when the edit retargeted the PR; that run goes on to gate.
-      - name: Cancel this run if the PR is closed, or was edited without a retarget
+      # when the edit retargeted the PR; that run goes on to gate. An edit's
+      # run also gates when no other run of this gate for this PR has tested
+      # the head commit — finished other than cancelled or skipped, or still
+      # going — since that commit's own run was replaced while it waited (see
+      # the header). A run whose `pull_requests` comes back empty counts as
+      # not covering, so the doubt costs a run rather than an untested commit.
+      - name: Cancel this run if the PR is closed, or was edited without a retarget and its commit is gated
         if: github.event.pull_request.state == 'closed' || (github.event.action == 'edited' && github.event.changes.base == null)
         env:
           GH_TOKEN: ${{ github.token }}
+          CLOSED: ${{ github.event.pull_request.state == 'closed' }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
+          if [ "$CLOSED" != true ]; then
+            workflow_id=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --jq .workflow_id)
+            covering=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow_id/runs?head_sha=$HEAD_SHA&event=pull_request&per_page=100" \
+              --jq "[.workflow_runs[]
+                | select(.id != $GITHUB_RUN_ID)
+                | select(any(.pull_requests[]; .number == $PR_NUMBER))
+                | select(.status != \"completed\" or (.conclusion != \"cancelled\" and .conclusion != \"skipped\"))
+              ] | length")
+            if [ "$covering" = 0 ]; then
+              echo "No run of this gate has tested $HEAD_SHA, so this edit's run gates it."
+              exit 0
+            fi
+          fi
           gh run cancel "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY"
           # The cancel is asynchronous; the sleep is killed when it lands,
           # usually in seconds, so this job never finishes and hands the check
