@@ -14,13 +14,14 @@ import { REPO_ROOT } from '../support/paths';
 const REPOSITORY = 'src/db/repository';
 const INDEX = `${REPOSITORY}/index.ts`;
 
-/** Every exported finder allowed to skip a filter, each saying so in its name (M5.3, MB.138, MB.10). */
+/** Every exported finder allowed to skip a filter, each saying so in its name (M5.3, MB.138, MB.10, M12.24). */
 const ESCAPE_HATCHES = [
   'findManyIncludingSoftDeleted',
   'findIngredientsInSpellsIncludingSoftDeleted',
   'findManyOfSpellIngredientsIncludingSoftDeleted',
   'findSubstitutesIncludingSoftDeleted',
   'findCoMemberNamesIncludingSoftDeleted',
+  'findCupboardEntryIncludingSoftDeleted',
 ];
 
 const source = (file: string) => readFileSync(join(REPO_ROOT, file), 'utf8');

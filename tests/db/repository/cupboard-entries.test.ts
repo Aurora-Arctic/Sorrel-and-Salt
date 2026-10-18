@@ -4,6 +4,8 @@ import {
   findCompendiumMatchesByName,
   findCupboardEntriesOf,
   findCupboardEntry,
+  findCupboardEntryIncludingSoftDeleted,
+  findManyOfIngredients,
 } from '@/db/repository';
 import { WORKSPACE_W_ID, WORKSPACE_X_ID } from '@/db/seed/standard';
 import { assertMembership } from '@/modules/coven';
@@ -12,6 +14,7 @@ import { useTestDatabase } from '../../support/db/database';
 import { insertCupboardEntry } from '../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import { makeIngredient } from '../../support/fixtures';
+import { ingredientFolkNames } from '@/modules/ingredients/schema/ingredient-folk-names';
 
 // The reads over M12.13's table (M12.14): a coven's cupboard entry for a
 // compendium entry, one or a batch under the coven's proof, and the
@@ -116,6 +119,86 @@ describe('findCupboardEntriesOf', () => {
 
   it('reads nothing for no ids', async () => {
     await expect(findCupboardEntriesOf(await w(), [])).resolves.toEqual([]);
+  });
+});
+
+/** Soft-deletes the ingredient, as a curator's delete or a coven's own does. */
+async function softDelete(id: string) {
+  await sql`update ingredients set deleted_at = now(), deleted_by = ${E.id} where id = ${id}`;
+}
+
+describe('findCupboardEntryIncludingSoftDeleted (M12.24)', () => {
+  it('reads a retired compendium entry beside the live cupboard entry naming it', async () => {
+    const entry = await compendiumEntry('Testwort', 'Fixtura testalis');
+    const id = await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: entry },
+      A.id,
+    );
+    await softDelete(entry);
+    // Why the hatch is needed: the filtered read no longer answers.
+    expect(await findCupboardEntry(await w(), entry)).toBeUndefined();
+
+    const held = await findCupboardEntryIncludingSoftDeleted(await w(), entry);
+
+    expect(held?.entry.id).toBe(entry);
+    expect(held?.entry.deletedAt).not.toBeNull();
+    expect(held?.cupboardEntry.id).toBe(id);
+  });
+
+  it("reads nothing for another coven's row, a removed row, or a coven's own ingredient", async () => {
+    const entry = await compendiumEntry('Testwort', 'Fixtura testalis');
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_X_ID, ingredientId: entry }, D.id);
+    const removed = await compendiumEntry('Mockleaf');
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: WORKSPACE_W_ID, ingredientId: removed, deleted: true },
+      A.id,
+    );
+    const own = await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Mockroot', nomenclature: 'none', workspaceId: WORKSPACE_X_ID }),
+      D.id,
+    );
+    // A row the table does not refuse: W's cupboard naming X's own ingredient.
+    await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: own }, A.id);
+    for (const id of [entry, removed, own]) await softDelete(id);
+    // Why it could have read: X's proof reads X's row.
+    expect(await findCupboardEntryIncludingSoftDeleted(await x(), entry)).toBeDefined();
+
+    for (const id of [entry, removed, own]) {
+      expect(await findCupboardEntryIncludingSoftDeleted(await w(), id)).toBeUndefined();
+    }
+  });
+
+  it("admits a held parent's children only for a compendium entry the coven's cupboard names", async () => {
+    const entry = await insertIngredient(
+      sql,
+      makeIngredient({ folkNames: ['Fixture Bane'] }),
+      E.id,
+    );
+    const own = await insertIngredient(
+      sql,
+      makeIngredient({
+        name: 'Mockroot',
+        nomenclature: 'none',
+        workspaceId: WORKSPACE_X_ID,
+        folkNames: ['Fixture Hush'],
+      }),
+      D.id,
+    );
+    for (const id of [entry, own]) {
+      await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: id }, A.id);
+      await softDelete(id);
+    }
+    const names = async (heldBy?: Awaited<ReturnType<typeof w>>) =>
+      (await findManyOfIngredients([await w()], ingredientFolkNames, [entry, own], heldBy)).map(
+        ({ name }) => name,
+      );
+    // Without the proof of use, neither deleted parent admits its children.
+    expect(await names()).toEqual([]);
+
+    expect(await names(await w())).toEqual(['Fixture Bane']);
   });
 });
 

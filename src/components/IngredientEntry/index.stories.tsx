@@ -150,6 +150,7 @@ const MOCKROOT = { id: nextId(), slug: 'fixture-mockroot', workspaceId: null };
 
 const FULL: IngredientDetail = {
   entry: entryRow(),
+  retired: false,
   cupboardEntry: null,
   folkNames: ['Fixture Bane', 'Grey Testing Weed'],
   categories: [WARDING, DREAMS],

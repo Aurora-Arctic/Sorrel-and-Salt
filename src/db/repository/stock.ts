@@ -4,7 +4,7 @@ import { ingredientVariants } from '../../modules/ingredients/schema/ingredient-
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { inventoryItems } from '../../modules/ingredients/schema/inventory-items';
 import type { Membership } from '@/modules/coven';
-import { readableVariantParent } from './ingredient-parent';
+import { inUseVariantParent } from './ingredient-parent';
 import { hides } from './ingredients';
 import { inCompendium, notSoftDeleted, scopedTo } from './predicates';
 import { existsIn, selectFrom } from './select';
@@ -35,14 +35,19 @@ export function findStockOfIngredients(
   return findManyStock(membership, inArray(inventoryItems.ingredientId, [...ingredientIds]));
 }
 
-/** The coven's live jars under `where`, each of a live form of an ingredient the proof may read. */
+/**
+ * The coven's live jars under `where`, each of a live form of an ingredient
+ * the proof may read, or of a retired compendium entry its cupboard still
+ * names (`inUseVariantParent`, M12.24), so the coven goes on reading, changing
+ * and emptying the jars of an entry it uses.
+ */
 function findManyStock(membership: Membership, where: SQL): Promise<StockRow[]> {
   return selectFrom(
     inventoryItems,
     and(
       scopedTo(membership, inventoryItems),
       notSoftDeleted(inventoryItems),
-      readableVariantParent([membership], inventoryItems.variantId),
+      inUseVariantParent([membership], inventoryItems.variantId, membership),
       where,
     ),
   );

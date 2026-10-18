@@ -294,6 +294,12 @@ export interface VariantDetail {
 export interface IngredientDetail {
   entry: IngredientRow;
   /**
+   * `entry` is a compendium entry the curators have retired, read because
+   * the coven's cupboard names it (M12.24): marked "No Longer in the
+   * Compendium". Always false on the public page, which reads no retired entry.
+   */
+  retired: boolean;
+  /**
    * The cupboard entry of the coven the page is read in, for a compendium
    * entry that coven holds (M12.14); null on the public page, for a coven's
    * own entry, and for one the coven does not hold. `entry` is the

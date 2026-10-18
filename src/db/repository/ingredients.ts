@@ -32,7 +32,11 @@ import {
 import type { Membership } from '@/modules/coven';
 import type { Cursor, PageCount, PageEntry, PageRequest } from '../../lib/types';
 import { findPageCountInTiers, findPageInTiers } from './finders';
-import { readableIngredientParent, readableVariantParent } from './ingredient-parent';
+import {
+  inUseIngredientParent,
+  inUseVariantParent,
+  readableIngredientParent,
+} from './ingredient-parent';
 import {
   fold,
   foldedWordMatch,
@@ -71,7 +75,8 @@ import type {
  * compendium alone. No such table carries a `workspace_id`, so the correlated
  * `EXISTS` over the parent is where the tier comes from, and a caller naming
  * another coven's ingredient gets no rows rather than a filter applied after
- * the fetch (rule 7).
+ * the fetch (rule 7). With `heldBy`, a retired compendium entry that coven's
+ * cupboard names is read too (`inUseIngredientParent`, M12.24).
  */
 export function findManyOfIngredients<
   TTable extends PgTable & IngredientScoped & Unscoped & NotSpellScoped,
@@ -79,6 +84,7 @@ export function findManyOfIngredients<
   memberships: readonly Membership[],
   table: TTable,
   ingredientIds: readonly string[],
+  heldBy?: Membership,
 ): Promise<TTable['$inferSelect'][]> {
   if (ingredientIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -87,7 +93,7 @@ export function findManyOfIngredients<
       notSoftDeleted(table),
       ownedByIngredient(table),
       inArray(table.ingredientId, [...ingredientIds]),
-      readableIngredientParent(memberships, table.ingredientId),
+      inUseIngredientParent(memberships, table.ingredientId, heldBy),
     ),
   );
 }
@@ -95,7 +101,9 @@ export function findManyOfIngredients<
 /**
  * The live variant with this id, while its ingredient is live and in the
  * compendium or a coven one of `memberships` proves: the form a jar may name
- * (M9.3), so another coven's form is no form at all here.
+ * (M9.3), so another coven's form is no form at all here. Never a retired
+ * compendium entry's, even for a coven whose cupboard names it: a retired
+ * entry takes no new jar (M12.24), so this takes no `heldBy`.
  */
 export function findReadableVariant(
   memberships: readonly Membership[],
@@ -117,6 +125,7 @@ export function findReadableVariant(
  * ingredient live and in the compendium or a coven one of `memberships`
  * proves (`readableVariantParent`, MB.218). Never by a bare id: a variant has
  * no `workspace_id`, so its ingredient's tier is the only scope it has.
+ * With `heldBy`, as `findManyOfIngredients` reads with it.
  */
 export function findManyOfVariants<
   TTable extends PgTable & VariantScoped & IngredientScoped & Unscoped & NotSpellScoped,
@@ -124,6 +133,7 @@ export function findManyOfVariants<
   memberships: readonly Membership[],
   table: TTable,
   variantIds: readonly string[],
+  heldBy?: Membership,
 ): Promise<TTable['$inferSelect'][]> {
   if (variantIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -131,7 +141,7 @@ export function findManyOfVariants<
     and(
       notSoftDeleted(table),
       inArray(table.variantId, [...variantIds]),
-      readableVariantParent(memberships, table.variantId),
+      inUseVariantParent(memberships, table.variantId, heldBy),
     ),
   );
 }
@@ -142,12 +152,13 @@ export function findManyOfVariants<
  * and null for a typed name or a deity since retired, which reads as the name
  * the row holds. Not an escape hatch: the retired deity is filtered, as
  * any finder filters it, and the row kept. Readable exactly when the parent
- * is, as `findManyOfIngredients` reads it. Unordered; a caller sorts by
- * `position`.
+ * is, as `findManyOfIngredients` reads it, `heldBy` included. Unordered; a
+ * caller sorts by `position`.
  */
 export function findDeitiesOfIngredients(
   memberships: readonly Membership[],
   ingredientIds: readonly string[],
+  heldBy?: Membership,
 ): Promise<JoinedRow<typeof ingredientDeities.$inferSelect, typeof deities.$inferSelect>[]> {
   if (ingredientIds.length === 0) return Promise.resolve([]);
   return selectFrom(
@@ -155,7 +166,7 @@ export function findDeitiesOfIngredients(
     and(
       notSoftDeleted(ingredientDeities),
       inArray(ingredientDeities.ingredientId, [...ingredientIds]),
-      readableIngredientParent(memberships, ingredientDeities.ingredientId),
+      inUseIngredientParent(memberships, ingredientDeities.ingredientId, heldBy),
     ),
     {
       leftJoin: deities,
@@ -179,12 +190,14 @@ export function findDeitiesOfIngredients(
  * parent's own coven — so a row written past the service's tier rule shows
  * nothing. One statement for the whole batch: the linked ingredient is a left
  * join, under an alias, since the parent's correlated subquery reads
- * `ingredients` itself.
+ * `ingredients` itself. With `heldBy`, a retired compendium entry's, as
+ * `findManyOfIngredients` reads with it.
  */
 export function findSubstitutesIncludingSoftDeleted(
   memberships: readonly Membership[],
   of: 'ingredient' | 'variant',
   ids: readonly string[],
+  heldBy?: Membership,
 ): Promise<JoinedRow<typeof ingredientSubstitutes.$inferSelect, IngredientRow>[]> {
   if (ids.length === 0) return Promise.resolve([]);
   const linked = alias(ingredients, 'linked');
@@ -201,11 +214,16 @@ export function findSubstitutesIncludingSoftDeleted(
         ? [
             ownedByIngredient(ingredientSubstitutes),
             inArray(ingredientSubstitutes.ingredientId, [...ids]),
-            readableIngredientParent(memberships, ingredientSubstitutes.ingredientId, linkReadable),
+            inUseIngredientParent(
+              memberships,
+              ingredientSubstitutes.ingredientId,
+              heldBy,
+              linkReadable,
+            ),
           ]
         : [
             inArray(ingredientSubstitutes.variantId, [...ids]),
-            readableVariantParent(memberships, ingredientSubstitutes.variantId, linkReadable),
+            inUseVariantParent(memberships, ingredientSubstitutes.variantId, heldBy, linkReadable),
           ]),
     ),
     { leftJoin: linked, on: eq(linked.id, ingredientSubstitutes.substituteId) },
