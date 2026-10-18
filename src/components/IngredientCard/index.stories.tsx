@@ -153,3 +153,35 @@ export const ManyFormsPhone: Story = () => (
   </IngredientCard>
 );
 ManyFormsPhone.meta = { theme: 'light', width: 375 };
+
+// Retired, Annotated, Caution and Toxic together: the badges wrap and every row
+// hugs the right edge.
+export const AllMarks: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="cupboard"
+    annotated
+    retired
+    safetyNotes="Keep away from open flame."
+  >
+    <Jars />
+  </IngredientCard>
+);
+AllMarks.meta = { theme: 'dark', width: 300 };
+
+// A long name and a long formal name with all four top badges: the name block
+// and the badges cannot sit side by side, so the badges wrap beneath.
+export const LongName: Story = () => (
+  <IngredientCard
+    {...BASE}
+    kind="cupboard"
+    annotated
+    retired
+    label="Testwort Longer Nameicanicusmus"
+    formalName="Fixtura testalis longissimanicusmus"
+    safetyNotes="Keep away from open flame."
+  >
+    <Jars />
+  </IngredientCard>
+);
+LongName.meta = { theme: 'dark', width: 300 };
