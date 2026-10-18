@@ -396,7 +396,8 @@ function holdsJarInStock(membership: Membership): SQL {
  * a live form, badged Out of Stock (at 0, whatever its threshold) or Low Stock
  * (above 0 and at or below a threshold above 0). A jar with no quantity is held
  * unweighed and never matches, as SQL comparisons against null already read.
- * The same rule as `stockState` in `src/components/StockBadge/stock-state.ts`.
+ * The same rule as `stockState` in `src/components/StockBadge/stock-state.ts`;
+ * `tests/support/jar-states.ts` is the shared list both are tested against.
  */
 function holdsJarLowOrOut(membership: Membership): SQL {
   return existsIn(

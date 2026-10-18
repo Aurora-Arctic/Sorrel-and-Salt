@@ -1,9 +1,10 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { StockBadge, ThresholdReadout, stockState } from '@/components/StockBadge';
+import { JAR_STATES } from '../../support/jar-states';
 
-// M9.8, story 23 (claude-docs/components/stock-badge.md): each row of the
-// badge table gives its badge, proven by the badge's presence or absence per
+// M9.8, story 23 (claude-docs/components/stock-badge.md): the shared jar
+// states (tests/support/jar-states.ts) give their badge, proven by the badge's presence or absence per
 // state. The words are found by role-free text only because a badge is plain
 // text with no role; what is asserted is which of the two shows, never copy
 // around them.
@@ -11,20 +12,15 @@ import { StockBadge, ThresholdReadout, stockState } from '@/components/StockBadg
 const out = () => screen.queryByText('Out of Stock');
 const low = () => screen.queryByText('Low Stock');
 
-describe('stockState: the table, row by row', () => {
-  it.each([
-    ['zero, whatever the threshold', 0, 10, 'out'],
-    ['zero with a threshold of zero', 0, 0, 'out'],
-    ['zero with no threshold', 0, null, 'out'],
-    ['above zero and below the threshold', 6, 10, 'low'],
-    ['exactly at the threshold', 10, 10, 'low'],
-    ['above the threshold', 11, 10, 'ok'],
-    ['above zero with a threshold of zero', 5, 0, 'ok'],
-    ['above zero with no threshold', 5, null, 'ok'],
-    ['held but not weighed', null, 10, 'ok'],
-    ['not weighed and no threshold', undefined, undefined, 'ok'],
-  ] as const)('%s', (_label, quantity, threshold, expected) => {
+describe('stockState: the shared table of jar states', () => {
+  it.each(JAR_STATES)('$label', ({ quantity, threshold, expected }) => {
     expect(stockState(quantity, threshold)).toBe(expected);
+  });
+
+  // Not in the shared list, which is also written to the database, where a
+  // missing value is null: a caller may pass undefined for a field not loaded.
+  it('reads undefined as null', () => {
+    expect(stockState(undefined, undefined)).toBe('ok');
   });
 });
 

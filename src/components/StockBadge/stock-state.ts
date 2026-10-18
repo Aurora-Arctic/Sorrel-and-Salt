@@ -3,7 +3,8 @@ import type { StockState } from './types';
 // The one place the badge table is written (M9.8). The server's `lowStockOnly`
 // filter says the same thing in SQL (`holdsJarLowOrOut` in the ingredients
 // repository), so a change here is a change there. Pure, so a test can walk
-// every row of the table without rendering.
+// every row of the table without rendering. tests/support/jar-states.ts holds the
+// shared list of jar states that both copies are tested against.
 // claude-docs/components/stock-badge.md, "The table".
 export function stockState(
   quantity: number | null | undefined,

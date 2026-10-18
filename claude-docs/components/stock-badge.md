@@ -36,7 +36,9 @@ place this table is written in code:
 
 The server's `lowStockOnly` filter says the same thing in SQL
 (`holdsJarLowOrOut` in `src/db/repository/ingredients.ts`; see
-[`../db/stock.md`](../db/stock.md)). A change to the table is a change to both.
+[`../db/stock.md`](../db/stock.md)). A change to the table is a change to both, and
+[`tests/support/jar-states.ts`](../../tests/support/jar-states.ts) holds one list of
+jar states that both are tested against, so a change to one copy alone fails.
 
 ## Contracts
 
@@ -70,9 +72,9 @@ trimmed by the extra border so the two badges stand the same height.
 
 ## Testing
 
-`tests/components/StockBadge/index.test.tsx` walks every row of the table through
+`tests/components/StockBadge/index.test.tsx` walks the shared jar states through
 `stockState`, checks which of the two badges shows (and that the other does not),
 that a zero threshold still reads Out of Stock at 0, that the two states differ in
 their drawing, and the readout's three cases. The `lowStockOnly` filter is proved
-on the rows in `tests/modules/ingredients/services/workspace-ingredient-list.test.ts`
+on the same jar states, one entry each, in `tests/modules/ingredients/services/workspace-ingredient-list.test.ts`
 and its count in `tests/modules/ingredients/services/ingredient-facets.test.ts`.

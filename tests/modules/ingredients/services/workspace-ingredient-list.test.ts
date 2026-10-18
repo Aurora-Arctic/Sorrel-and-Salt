@@ -14,6 +14,7 @@ import { insertStock } from '../../../support/db/insert-stock';
 import { variantIdOf } from '../../../support/db/read-variants';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { Overrides } from '../../../support/fixtures';
+import { JAR_STATES } from '../../../support/jar-states';
 
 // Story 14's list (M9.4, M12.18): a coven's ingredients are its own entries and
 // the compendium entries its cupboard names, one live
@@ -195,27 +196,23 @@ describe('listWorkspaceIngredients under lowStockOnly (M9.8)', () => {
     return id;
   }
 
-  it('keeps an entry with a jar badged Low Stock or Out of Stock, row by row', async () => {
-    await jarred('Outwort', '0', '10');
-    await jarred('Outzerowort', '0', '0');
-    await jarred('Outnothresholdwort', '0', null);
-    await jarred('Lowwort', '2', '3');
-    await jarred('Edgewort', '3', '3');
-    await jarred('Abovewort', '4', '3');
-    await jarred('Zerothresholdwort', '1', '0');
-    await jarred('Nothresholdwort', '1', null);
-    await jarred('Unweighedwort', null, '3');
+  it('keeps exactly the entries whose jar the badge rule flags, over the shared jar states', async () => {
+    for (const state of JAR_STATES) {
+      await jarred(
+        state.name,
+        state.quantity?.toString() ?? null,
+        state.threshold?.toString() ?? null,
+      );
+    }
     await add('Barewort', { workspaceId: WORKSPACE_W_ID });
 
     // Why they could have been listed: without the filter every one is.
-    expect(await listed(asUser(B))).toHaveLength(10);
-    expect(await listed(asUser(B), WORKSPACE_W_ID, { lowStockOnly: true })).toEqual([
-      'Edgewort',
-      'Lowwort',
-      'Outnothresholdwort',
-      'Outwort',
-      'Outzerowort',
-    ]);
+    expect(await listed(asUser(B))).toHaveLength(JAR_STATES.length + 1);
+    expect(await listed(asUser(B), WORKSPACE_W_ID, { lowStockOnly: true })).toEqual(
+      JAR_STATES.filter((state) => state.expected !== 'ok')
+        .map((state) => state.name)
+        .sort(),
+    );
   });
 
   it('keeps an entry when any one of its jars is badged', async () => {
