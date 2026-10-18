@@ -4,6 +4,7 @@ import {
   type IngredientRow,
   findCupboardEntriesOf,
   findCupboardEntry,
+  findCompendiumMatchPage,
   findCupboardEntryByLabel,
   findOneIngredient,
   findStockOfIngredients,
@@ -12,6 +13,7 @@ import {
 } from '../../../db/repository';
 import { Forbidden, NotFound, ValidationError } from '../../../lib/errors';
 import type { Session } from '../../../lib/session';
+import type { PageEntry, PageRequest } from '../../../lib/types';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { RowId, parseInput } from '../../../lib/validation';
 import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entries';
@@ -113,6 +115,28 @@ async function entriesOf(
     throw error;
   }
   return findCupboardEntriesOf(membership, ingredientIds);
+}
+
+/**
+ * One page of the compendium entries whose name or formal name is exactly
+ * `name` but for case: the Add flow's question, "The compendium has Rosemary"
+ * (M12.20). A near spelling is `findPossibleDuplicates`', not this. The
+ * entries are public, so the coven is named for the member check alone, which
+ * a reader of its ingredients passes; whether it holds each is
+ * `Ingredient.inCupboard`'s, through the cupboard-entry loader.
+ *
+ * @throws {Forbidden} the caller may not read this coven's ingredients.
+ */
+export async function findCompendiumMatches(
+  session: Session,
+  workspaceId: string,
+  name: string,
+  page: PageRequest,
+): Promise<PageEntry<IngredientRow, {}>[]> {
+  await assertMembership(session, workspaceId, { ingredient: ['read'] });
+  const trimmed = name.trim();
+  if (!trimmed) return [];
+  return findCompendiumMatchPage(trimmed, page);
 }
 
 // The three writes (M12.15). Each opens with the coven's own check and writes

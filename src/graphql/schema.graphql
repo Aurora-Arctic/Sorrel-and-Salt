@@ -320,6 +320,11 @@ type Ingredient {
   elements: [IngredientElement!]
   folkNames: [FolkName!]!
   id: ID!
+
+  """
+  Whether the coven's cupboard names this compendium entry: false for one it does not hold and for a coven's own ingredient, and with no coven named.
+  """
+  inCupboard(workspaceId: ID): Boolean!
   isGlobal: Boolean!
   name: String!
   nomenclature: Nomenclature!
@@ -1036,6 +1041,11 @@ type Query {
   ): CompendiumFacets!
 
   """
+  The compendium entries whose name or formal name is exactly the typed one, case aside: what the Add Ingredient form asks about before it makes a second copy.
+  """
+  compendiumMatches(after: String, before: String, first: Int, last: Int, name: String!, workspaceId: ID!): QueryCompendiumMatchesConnection!
+
+  """
   The curated deities, each under a live tradition, by the tradition's name and then their own: those whose name holds `query`, case-insensitively, and those filed under `traditionId`, when given.
   """
   deities(after: String, before: String, first: Int, last: Int, query: String, traditionId: ID): QueryDeitiesConnection!
@@ -1265,6 +1275,16 @@ type QueryCompendiumConnectionEdge {
   The search's rank, 0 to 1: the query's word similarity to each matched field — label, formal name, folk name, variant form or description — times that field's weight, the best kept. Null without a query.
   """
   score: Float
+}
+
+type QueryCompendiumMatchesConnection {
+  edges: [QueryCompendiumMatchesConnectionEdge!]!
+  pageInfo: PageInfo!
+}
+
+type QueryCompendiumMatchesConnectionEdge {
+  cursor: String!
+  node: Ingredient!
 }
 
 type QueryDeitiesConnection {

@@ -6,6 +6,7 @@ import type { ingredientsById } from '../loaders/ingredients-by-id';
 import { type cupboardEntryByIngredient, clearCupboardEntry } from '../loaders/cupboard-entries';
 import {
   addCupboardEntry,
+  findCompendiumMatches,
   annotateCupboardEntry,
   removeCupboardEntry,
 } from '../services/cupboard-entries';
@@ -68,6 +69,29 @@ builder.objectField(IngredientRef, 'cupboardEntry', (t) =>
       });
       return entry && { ...entry, compendiumName: row.name };
     },
+  }),
+);
+
+builder.objectField(IngredientRef, 'inCupboard', (t) =>
+  t.boolean({
+    description:
+      "Whether the coven's cupboard names this compendium entry: false for one it does not hold and for a coven's own ingredient, and with no coven named.",
+    args: { workspaceId: t.arg.id({ required: false }) },
+    resolve: async (row, { workspaceId }, { loaders }) =>
+      workspaceId != null &&
+      (await loaders.cupboardEntryByIngredient.load({ ingredientId: row.id, workspaceId })) != null,
+  }),
+);
+
+// The Add flow's question (M12.20): the exact matches, a page at a time.
+builder.queryField('compendiumMatches', (t) =>
+  t.pagedConnection({
+    type: IngredientRef,
+    description:
+      'The compendium entries whose name or formal name is exactly the typed one, case aside: what the Add Ingredient form asks about before it makes a second copy.',
+    args: { workspaceId: t.arg.id({ required: true }), name: t.arg.string({ required: true }) },
+    resolve: (_query, { workspaceId, name }, page, context) =>
+      findCompendiumMatches(sessionOf(context), workspaceId, name, page),
   }),
 );
 
