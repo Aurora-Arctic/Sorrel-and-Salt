@@ -39,7 +39,7 @@
   }
 }
 
-// InfoTip's bubble, above the badge from its left edge.
+// InfoTip's bubble, placed by `useTip` above the badge.
 .stock-badge__tip {
   @include tip-above;
 }

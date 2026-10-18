@@ -16,11 +16,11 @@ import type { HistoryLinkProps } from './types';
 // assistive technology while closed, as InfoTip's is
 // (claude-docs/components/user-list.md).
 const HistoryLink = ({ email, name }: HistoryLinkProps): ReactElement => {
-  const { open, show, hide, hideSoon } = useTip();
+  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip();
 
   return (
     // Hover on the wrapper, which holds the tip as well as the link.
-    <span className="user-list__history" onMouseEnter={show} onMouseLeave={hideSoon}>
+    <span ref={anchor} className="user-list__history" onMouseEnter={show} onMouseLeave={hideSoon}>
       <a
         className="user-list__history-link"
         href={privilegeLedgerHref({ query: email.toLowerCase() })}
@@ -31,9 +31,11 @@ const HistoryLink = ({ email, name }: HistoryLinkProps): ReactElement => {
         <HistoryIcon />
       </a>
       <span
+        ref={bubble}
         role="tooltip"
         className={open ? 'user-list__history-tip is-open' : 'user-list__history-tip'}
         aria-hidden={!open}
+        style={bubbleStyle}
       >
         Privilege Changes
       </span>

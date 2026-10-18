@@ -342,25 +342,23 @@
   color: $text-primary;
 }
 
-// A tip's bubble above its anchor, from the anchor's `start` or `end` edge or
-// its `center` (any other `$align` is taken as the left offset). `$layer` is
-// its z-index. `$capped` keeps it to `$tip-width` and the window, so it never
-// runs off a phone. The caller's anchor is the nearest positioned ancestor.
-@mixin tip-above($align: start, $layer: 1, $capped: true) {
-  position: absolute;
-  bottom: 100%;
-
-  @if $align == start {
-    left: 0;
-  } @else if $align == end {
-    right: 0;
-  } @else if $align == center {
-    left: 50%;
-    translate: -50% 0;
-  } @else {
-    left: $align;
-  }
-
+// A tip's bubble: the surface, layer and width cap. Where it sits is not CSS's
+// to say: `useTip` places it when it opens, inline, on Floating UI, so it stays
+// on the screen whatever the control's position (InfoTip/use-tip.ts,
+// claude-docs/components/info-tip.md, "Placement"). `position: fixed` at the
+// origin is the rest state: out of the flow, so a closed bubble takes no room
+// in its anchor, and unclipped by a scrolling ancestor. `$layer` is its
+// z-index. `$capped` keeps it to `$tip-width` and the window.
+//
+// `$align` (`start`, `end`, `center`, or a left offset) is the old way, a bubble
+// pinned to one edge of its anchor, which runs off the screen wherever the
+// anchor moves. Nothing new takes it; it stays only for EntryMarks and
+// IngredientCard until they adopt `useTip`'s placement, and goes with them
+// (tests/guards/tip-placement.test.ts, `PENDING`).
+@mixin tip-above($layer: 1, $capped: true, $align: null) {
+  position: fixed;
+  top: 0;
+  left: 0;
   z-index: $layer;
   width: max-content;
 
@@ -368,7 +366,24 @@
     max-width: min($tip-width, calc(100vw - #{space(6)}));
   }
 
-  margin-bottom: space(1);
+  @if $align != null {
+    position: absolute;
+    top: auto;
+    bottom: 100%;
+    margin-bottom: space(1);
+
+    @if $align == start {
+      left: 0;
+    } @else if $align == end {
+      left: auto;
+      right: 0;
+    } @else if $align == center {
+      left: 50%;
+      translate: -50% 0;
+    } @else {
+      left: $align;
+    }
+  }
 
   @include tip-bubble;
 }

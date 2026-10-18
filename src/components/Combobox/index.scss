@@ -192,29 +192,17 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // The qualifier's detail, in InfoTip's bubble and its fade, above the control
 // with its left edge on the qualifier's (the owner's call at M6.16's review,
 // 2026-10-12, over MB.115's right edge), so the detail reads as the
-// qualifier's own, and never past the control's right edge. Positioned on
-// `.combobox`, so the percentages are the control's width; where the
-// qualifier starts is measured as the tip opens (`--combobox-qualifier-x`,
-// index.tsx), since CSS alone cannot place a box by one element and bound it
-// by another. On a phone it is centred over the control instead, as wide as
-// the control at most, and wraps (the owner's call): from the qualifier
-// there was too little room left to read. Not beneath the box: the list
-// opens there.
+// qualifier's own. Placed by `useTip` against the qualifier, and kept on the
+// screen: on a phone it is shifted back inside the window rather than centred
+// over the control, as it was before the shared placement. It wraps within
+// the measure. Not beneath the box: the list opens there.
 .combobox__qualifier-tip {
-  @include tip-above(start, 1, false);
+  @include tip-above(1, false);
 
-  // The fallback is a length with a unit on purpose: `calc()` refuses a bare 0.
-  left: var(--combobox-qualifier-x, 0);
   box-sizing: border-box;
-  max-width: calc(100% - var(--combobox-qualifier-x, 0px));
+  max-width: min($tip-width, calc(100vw - #{space(6)}));
   white-space: normal;
   overflow-wrap: anywhere;
-
-  @media (max-width: $shell-phone-width) {
-    left: 50%;
-    max-width: 100%;
-    translate: -50% 0;
-  }
 }
 
 // The clear and the separator with nothing to clear: hidden, but holding
@@ -841,11 +829,10 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
 // A cut-off entry's whole text, in InfoTip's bubble and its fade, above the
 // chip from its left edge, as wide as its words up to InfoTip's own measure,
 // past the chip and the control alike, the owner's call during MB.126: only
-// being cut off is wrong. The entry shifts it left as it opens by however far
-// it would run off the screen. An unbroken text breaks anywhere to stay
-// inside the measure.
+// being cut off is wrong. `useTip` shifts it back onto the screen. An unbroken
+// text breaks anywhere to stay inside the measure.
 .combobox__entry-tip {
-  @include tip-above(var(--entry-tip-shift, 0));
+  @include tip-above;
 
   // Border-box, so the padding sits inside the measure rather than past it.
   box-sizing: border-box;

@@ -20,11 +20,12 @@
 // as a note beside the label rather than as another field, faded in and out.
 // Its ground is an opaque mix, so the control beneath it does not show through.
 //
-// Placed against the nearest positioned ancestor rather than the button, from
-// its left edge: a form's label row, which starts at the column's edge, so a
-// tip no wider than `$tip-width` (18rem) never runs off a phone the way one hung off an icon
-// at the end of a long label would. Above the row, not below it: the tip
-// opens while its field has focus, and below it would cover what is typed.
+// Placed by `useTip` when it opens, above the ⓘ where there is room and kept
+// on the screen: the bubble is as wide as its text up to `$tip-width` (18rem),
+// and shifted along the line until it is inside the window. Above, not below,
+// by default: the tip opens while its field has focus, and below it would
+// cover what is typed. A region may ask for another side with
+// `--tip-placement`.
 .info-tip__bubble {
   @include tip-above;
 }

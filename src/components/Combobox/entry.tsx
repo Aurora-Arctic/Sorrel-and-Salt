@@ -1,7 +1,7 @@
 'use client';
 
 import { CSS } from '@dnd-kit/utilities';
-import { type ReactElement, useId, useLayoutEffect, useRef } from 'react';
+import { type ReactElement, useId, useRef } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import { GripIcon, LinkIcon } from './icons';
 import { useEntrySummary } from './summary';
@@ -55,9 +55,6 @@ function EntryHandle({
   );
 }
 
-/** How close to the screen's edge a tooltip may come: the page's gutter. */
-const TIP_SCREEN_MARGIN_PX = 16;
-
 export function ComboboxEntry({
   value,
   errorId,
@@ -82,7 +79,7 @@ export function ComboboxEntry({
   const summary = sortable ? undefined : summarised;
   const opens = useEntrySummary();
   // Asked as the tooltip opens: an open summary keeps it shut, saying more.
-  const { open, show, hide, hideSoon } = useTip(() => {
+  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(() => {
     const element = text.current;
     return (
       !opens.open &&
@@ -90,23 +87,10 @@ export function ComboboxEntry({
         Boolean(qualifier) ||
         (element !== null && element.scrollWidth > element.clientWidth))
     );
-  });
+  }, 'top-start');
 
   // The tooltip runs as wide as its words, past the chip and the control, the
-  // owner's call: only being cut off is wrong. Shifted left as it opens by
-  // however far it would run off the screen, as far as its own left edge
-  // allows, in a layout effect so the move lands in the commit that shows it.
-  const tip = useRef<HTMLSpanElement | null>(null);
-  useLayoutEffect(() => {
-    const bubble = tip.current;
-    if (!open || !bubble) return;
-    bubble.style.setProperty('--entry-tip-shift', '0px');
-    const { left, right } = bubble.getBoundingClientRect();
-    const over = right - (document.documentElement.clientWidth - TIP_SCREEN_MARGIN_PX);
-    const shift = Math.min(Math.max(over, 0), Math.max(left - TIP_SCREEN_MARGIN_PX, 0));
-    bubble.style.setProperty('--entry-tip-shift', `${-shift}px`);
-  }, [open]);
-
+  // owner's call: only being cut off is wrong. `useTip` keeps it on the screen.
   const textSpan = (
     <span ref={text} className="combobox__entry-text">
       {value}
@@ -160,7 +144,12 @@ export function ComboboxEntry({
     >
       {/* Hover on a wrapper holding the tooltip as well as the text, so the
           pointer can move onto the tooltip without closing it. */}
-      <span className="combobox__entry-label" onMouseEnter={show} onMouseLeave={hideSoon}>
+      <span
+        ref={anchor}
+        className="combobox__entry-label"
+        onMouseEnter={show}
+        onMouseLeave={hideSoon}
+      >
         {iconMark}
         {summary ? (
           // Named by its text, as the x is, and read as the x is; it says
@@ -201,8 +190,9 @@ export function ComboboxEntry({
         {/* In the page while closed, faded out and aria-hidden, so it fades
             both ways as InfoTip's does. */}
         <span
-          ref={tip}
+          ref={bubble}
           role="tooltip"
+          style={bubbleStyle}
           className={open ? 'combobox__entry-tip is-open' : 'combobox__entry-tip'}
           aria-hidden={!open}
         >

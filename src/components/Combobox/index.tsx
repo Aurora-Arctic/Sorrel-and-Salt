@@ -206,16 +206,8 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
   // It gets out of the way of typing (MB.115): the first printable key and the
   // list opening both close it, and focus or a hover opens it again. The
   // detail stays in the box's description, so a screen reader still hears it.
-  const tip = useTip(() => Boolean(detail));
+  const tip = useTip(() => Boolean(detail), 'top-start');
   const hideTip = tip.hide;
-  // Where the qualifier starts in the control, measured as its tip opens, so
-  // the tip's left edge is the qualifier's and its width what is left of the
-  // control (index.scss). Before paint, so the tip never shows elsewhere first.
-  const qualifierRef = useRef<HTMLSpanElement>(null);
-  useLayoutEffect(() => {
-    const span = qualifierRef.current;
-    if (tip.open && span) span.style.setProperty('--combobox-qualifier-x', `${span.offsetLeft}px`);
-  }, [tip.open]);
   // Whether the list would be open had it rows: it opens as they arrive.
   const [wantsOpen, setWantsOpen] = useState(false);
   const hasSource = suggestions !== undefined;
@@ -478,7 +470,7 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
             // Hover on a wrapper holding the tooltip as well as the text, so
             // the pointer can move onto the tooltip without closing it.
             <span
-              ref={qualifierRef}
+              ref={tip.anchor}
               className="combobox__qualifier"
               onMouseEnter={tip.show}
               onMouseLeave={tip.hideSoon}
@@ -489,11 +481,13 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                   entry's is, and read through the box's description. */}
               {detail && (
                 <span
+                  ref={tip.bubble}
                   role="tooltip"
                   className={
                     tip.open ? 'combobox__qualifier-tip is-open' : 'combobox__qualifier-tip'
                   }
                   aria-hidden={!tip.open}
+                  style={tip.bubbleStyle}
                 >
                   <span id={`${qualifierId}-detail`}>{detail}</span>
                 </span>

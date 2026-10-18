@@ -3,6 +3,9 @@
 import { type ReactElement, useEffect, useState } from 'react';
 import { useTip } from '../InfoTip/use-tip';
 import type { IconTipProps } from './types';
+
+// The side each placement prefers; `useTip` flips it where there is no room.
+const SIDES = { side: 'left', above: 'top', below: 'bottom-end' } as const;
 import './index.scss';
 
 // A word above an icon control, "Edit" over a pencil, for a sighted user who
@@ -14,13 +17,16 @@ import './index.scss';
 // the tip is `aria-hidden` and describes nothing, which would read the word
 // twice. Mounted while open and for the length of its fade after closing,
 // so an open tip is one in the page and a closed one fades rather than
-// vanishing (claude-docs/components/icon-tip.md).
+// vanishing. Placed by `useTip`, on the side its placement prefers, (claude-docs/components/icon-tip.md).
 
 // `$tip-fade` (_variables.scss): how long the closed tip stays for its fade.
 const TIP_FADE_MS = 500;
 
 const IconTip = ({ tip, children, placement = 'side' }: IconTipProps): ReactElement => {
-  const { open, show, hide, hideSoon } = useTip();
+  const { open, show, hide, hideSoon, anchor, bubble, bubbleStyle } = useTip(
+    undefined,
+    SIDES[placement],
+  );
   // Closing: no longer open, still in the page for the fade. Set as `open`
   // is seen to drop, during the render that sees it, and cleared by the
   // timer below.
@@ -41,7 +47,8 @@ const IconTip = ({ tip, children, placement = 'side' }: IconTipProps): ReactElem
     // the pointer can move onto the tip without closing it; focus heard here
     // too, as it bubbles from the control.
     <span
-      className="icon-tip"
+      ref={anchor}
+      className={`icon-tip icon-tip--${placement}`}
       onMouseEnter={show}
       onMouseLeave={hideSoon}
       onFocus={show}
@@ -50,9 +57,11 @@ const IconTip = ({ tip, children, placement = 'side' }: IconTipProps): ReactElem
       {children}
       {(open || closing) && (
         <span
+          ref={bubble}
           role="tooltip"
+          style={bubbleStyle}
           aria-hidden="true"
-          className={`icon-tip__bubble${placement === 'side' ? '' : ` icon-tip__bubble--${placement}`}${open ? '' : ' icon-tip__bubble--closing'}`}
+          className={open ? 'icon-tip__bubble' : 'icon-tip__bubble icon-tip__bubble--closing'}
         >
           {tip}
         </span>
