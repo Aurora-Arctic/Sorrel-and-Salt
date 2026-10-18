@@ -93,6 +93,11 @@ const PROBES: Record<string, ScopeProbe> = {
     source: '{ compendiumFacets { forms { value count } } }',
     outcome: 'answers',
   },
+  // A curator's count (M12.25): the scope refuses a null session before the id is read.
+  compendiumEntryUsers: {
+    source: `{ compendiumEntryUsers(id: "${NOWHERE}") }`,
+    outcome: 'refuses',
+  },
   ingredient: {
     source: 'query ($id: ID!) { ingredient(id: $id) { id } }',
     get variables() {

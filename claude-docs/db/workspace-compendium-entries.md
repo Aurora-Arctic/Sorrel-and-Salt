@@ -54,6 +54,10 @@ The joined row rides on each page entry as `cupboardEntry`, and the list's resol
 
 `tests/modules/ingredients/services/workspace-ingredient-list.test.ts` holds the list's cases and `tests/modules/ingredients/services/ingredient-facets.test.ts` the counts, each seeding another coven's row beside the one that must count.
 
+### Counting covens
+
+M12.25 adds **`countCovensUsing(curator, ingredientId)`** to `cupboard-entries.ts`. It answers how many distinct live covens have a live row naming the entry, as one `count(distinct workspace_id)`. It is unscoped by design: it takes the `Curator` proof where the other finders take a `Membership`, and it returns a number, so no coven name or id leaves the database layer. A soft-deleted row, a soft-deleted coven, and a row naming a coven's own ingredient are not counted. The `ingredients` service `countCompendiumEntryUsers(session, id)` in `services/compendium.ts` checks `assertCurator`, then `NotFound` for an id that is not a live compendium entry, and the delete confirm reads it through `Query.compendiumEntryUsers` ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations"). It sits in `compendium.ts` because that file holds the compendium tier's curator reads and `deleteCompendiumEntry`, whereas `cupboard-entries.ts` services act for a coven under a membership.
+
 ### When the compendium retires the entry
 
 A curator's delete soft-deletes the `ingredients` row alone: its forms stay live, and so does every cupboard row naming it. M12.24 decides what those covens see. The entry leaves the compendium at once, and a coven whose cupboard names it goes on reading it, marked, until the coven removes its own row. A coven that never added it reads nothing, even if it has a jar of one of its forms. The record is [`m12.24-retired-entry-stays-readable.md`](../design-decisions/m12.24-retired-entry-stays-readable.md).

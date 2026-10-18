@@ -50,6 +50,7 @@ export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredien
 export {
   findCompendiumMatchPage,
   findCompendiumMatchesByName,
+  countCovensUsing,
   findCupboardEntriesOf,
   findCupboardEntry,
   findCupboardEntryByLabel,

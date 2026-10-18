@@ -1,6 +1,7 @@
 import { builder } from '../../../graphql/builder';
 import { sessionOf } from '../../../graphql/context-helpers';
 import {
+  countCompendiumEntryUsers,
   createCompendiumEntry,
   deleteCompendiumEntry,
   updateCompendiumEntry,
@@ -82,5 +83,17 @@ builder.mutationField('deleteCompendiumIngredient', (t) =>
       await deleteCompendiumEntry(sessionOf(context), id);
       return id;
     },
+  }),
+);
+
+// The delete confirm's number (M12.25): a read, curator-scoped here and
+// refused again by the service. A count only, so no coven is named.
+builder.queryField('compendiumEntryUsers', (t) =>
+  t.int({
+    description:
+      'How many covens hold this compendium entry in their cupboard; a count, never who. Curators and admins only.',
+    args: { id: t.arg.id({ required: true }) },
+    authScopes: { curator: true },
+    resolve: (_root, { id }, context) => countCompendiumEntryUsers(sessionOf(context), id),
   }),
 );

@@ -47,6 +47,7 @@ import {
   acceptUpdate,
   offerCompendium,
   offerDuplicates,
+  offerEntryUsers,
   offerForms,
   offerNames,
   offerNothing,
@@ -540,6 +541,20 @@ describe('IngredientForm on the compendium', () => {
 
       await waitFor(() => expect(calls).toHaveLength(1));
       expect(calls[0]).toMatchObject({ id: ENTRY_ID, endRedirect: true });
+    });
+
+    it('shows how many covens use the entry once the count has arrived, never before', async () => {
+      renderEntry();
+      const asked = offerEntryUsers(2);
+
+      fireEvent.click(button('Delete Ingredient'));
+      // The question is up and the count has not come: no status stands in its place.
+      expect(button('Delete')).toBeVisible();
+      const question = screen.getByRole('group', { name: /Delete/ });
+      expect(within(question).queryByRole('status')).not.toBeInTheDocument();
+
+      expect(await within(question).findByRole('status')).toHaveTextContent('2');
+      expect(asked).toEqual([{ id: ENTRY_ID }]);
     });
 
     it('deletes it once confirmed, keeping it on Keep It, and says why when the delete is refused', async () => {

@@ -1,6 +1,8 @@
 import type {
   CommonNameSuggestionsQuery,
   CommonNameSuggestionsQueryVariables,
+  CompendiumEntryUsersQuery,
+  CompendiumEntryUsersQueryVariables,
   CompendiumSubstitutesQuery,
   CompendiumSubstitutesQueryVariables,
   CreateCompendiumIngredientMutation,
@@ -268,8 +270,22 @@ export function offerCategories(nodes: CategoryNode[] | 'refused') {
  * Every lookup the form asks, in either tier, answered empty, each one's asks
  * recorded; the categories are read as the form opens, and recorded by none.
  */
+/** Answers `CompendiumEntryUsers` with this many covens, recording the ids it was asked about. */
+export function offerEntryUsers(covens: number) {
+  const asked: CompendiumEntryUsersQueryVariables[] = [];
+  mockGraphQLQuery<CompendiumEntryUsersQuery, CompendiumEntryUsersQueryVariables>(
+    'CompendiumEntryUsers',
+    (variables) => {
+      asked.push(variables);
+      return { compendiumEntryUsers: covens };
+    },
+  );
+  return asked;
+}
+
 export function offerNothing() {
   offerCategories([]);
+  offerEntryUsers(0);
   return {
     forms: offerForms([]),
     names: offerNames([]),
