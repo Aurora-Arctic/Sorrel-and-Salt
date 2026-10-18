@@ -11,6 +11,7 @@ import {
   findOneByIdInWorkspace,
   findOneIngredient,
   findStockOfIngredients,
+  findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByName,
   withAudit,
 } from '../../../db/repository';
@@ -19,15 +20,22 @@ import type { Session } from '../../../lib/session';
 import { violatedUniqueIndex } from '../../../lib/unique-violation';
 import { citationText } from '../../../lib/citation';
 import { RowId, parseInput } from '../../../lib/validation';
+import { ingredientSubstitutes } from '../schema/ingredient-substitutes';
 import { ingredientVariants } from '../schema/ingredient-variants';
 import { ingredients } from '../schema/ingredients';
 import { inventoryItems } from '../schema/inventory-items';
 import { workspaceCompendiumEntries } from '../schema/workspace-compendium-entries';
 import { CupboardEntryInput, type CupboardEntryValues } from '../validation/cupboard-entry';
+import { applyCupboardEntry } from '../validation/cupboard-merge';
+import { LocalIngredientInput } from '../validation/ingredient';
+import type { SubstituteFields } from '../validation/types';
 import type {
+  CitedReference,
+  ConvertedCompendium,
   ConvertedLocal,
   CupboardEntryKey,
   DroppedOnConvert,
+  IngredientValues,
   VariantKey,
   VariantRecord,
 } from '../types';
@@ -40,9 +48,18 @@ import {
   referencesOfVariants,
   substitutesOf,
   substitutesOfVariants,
+  variantsOf,
 } from './ingredient-children';
-import { foldForm } from './ingredient-rows';
+import {
+  foldForm,
+  ingredientColumns,
+  refuseCollision,
+  resolvePicks,
+  splitChildren,
+  writeChildren,
+} from './ingredient-rows';
 import { type Membership, assertMembership } from '@/modules/coven';
+import { curatedNames } from '@/modules/vocabulary';
 
 // A compendium entry in a coven's cupboard (M12.14): the coven's row naming
 // it, read by anyone in the coven, and the merge that lays the row's seven
@@ -599,5 +616,282 @@ export async function convertLocalToCompendiumEntry(
     return { entry: row, dropped: { forms: sortedNames(droppedForms), ...lost } };
   } catch (error) {
     return refuseRace(error);
+  }
+}
+
+// Making a compendium entry the coven holds into the coven's own (M12.23),
+// the other way round: a new own entry is written from what the coven reads
+// — the compendium's values with the cupboard row's overrides over them — and
+// copies of the entry's children, the coven's jars and spell layers move to
+// its forms, and the cupboard row is soft-deleted. The compendium entry is
+// never written (claude-docs/db/workspace-compendium-entries.md, "Converting
+// a compendium entry into our own").
+
+/**
+ * What making a compendium entry the coven's own asks of a role: it creates
+ * an ingredient, removes a cupboard entry and moves jars. Exported so the
+ * entry page offers Make It Ours on exactly the permission the service then
+ * checks, never on a role.
+ */
+export const MAKE_IT_OURS_PERMISSION = {
+  ingredient: ['create', 'delete'],
+  inventory: ['update'],
+} as const;
+
+/** A substitute of the entry naming the entry itself, whose link the copy points at itself. */
+interface SelfLink {
+  variantId: string | null;
+  substituteVariantId: string | null;
+}
+
+/**
+ * The entry as a coven write's input, read through the readers the entry
+ * page uses, so a retired entry reads through `heldBy` as the page reads it.
+ * A form keeps its curated pick while the curated form is live and still
+ * spelt as the form is, and a deity its pick while the deity is live; any
+ * other is kept as its text. A substitute linking a live ingredient keeps
+ * the link, and the form it names while that form is live; one whose
+ * ingredient is gone is kept as the name it reads as; and one linking the
+ * entry itself is left out, to be written against the copy once it exists.
+ * A folk name the new name takes is left out, and listed.
+ */
+async function ownValuesOf(
+  session: Session,
+  merged: IngredientRow,
+  heldBy: Membership | undefined,
+): Promise<{ values: IngredientValues; selfLinks: SelfLink[]; folkNamesLost: string[] }> {
+  const refs = [{ id: merged.id, workspaceId: null }];
+  const forms = answered(await variantsOf(session, refs, heldBy));
+  const formRefs: VariantKey[] = forms.map((form) => ({
+    id: form.id,
+    ingredientId: merged.id,
+    workspaceId: null,
+  }));
+  const [
+    folkNames,
+    substitutes,
+    formSubstitutes,
+    categories,
+    formCategories,
+    references,
+    formReferences,
+    deities,
+    curatedForms,
+  ] = await Promise.all([
+    folkNamesOf(session, refs, heldBy),
+    findSubstitutesIncludingSoftDeleted([], 'ingredient', [merged.id], heldBy),
+    findSubstitutesIncludingSoftDeleted(
+      [],
+      'variant',
+      forms.map((form) => form.id),
+      heldBy,
+    ),
+    categoriesOf(session, refs, heldBy),
+    categoriesOfVariants(session, formRefs, heldBy),
+    referencesOf(session, refs, heldBy),
+    referencesOfVariants(session, formRefs, heldBy),
+    deitiesOf(session, refs, heldBy),
+    curatedNames(
+      'form',
+      forms.flatMap((form) => form.formId ?? []),
+    ),
+  ]);
+  const linkedForms = new Set(
+    (
+      await findManyOfIngredients([], ingredientVariants, [
+        ...new Set(
+          [...substitutes, ...formSubstitutes].flatMap(({ row, joined }) =>
+            joined?.deletedAt === null && row.substituteId !== merged.id ? [joined.id] : [],
+          ),
+        ),
+      ])
+    ).map((form) => form.id),
+  );
+
+  const selfLinks: SelfLink[] = [];
+  const copied = (rows: typeof substitutes): SubstituteFields[] => {
+    const typed = new Set<string>();
+    return rows.flatMap<SubstituteFields>(({ row, joined: linked }) => {
+      if (row.substituteId === merged.id) {
+        selfLinks.push({ variantId: row.variantId, substituteVariantId: row.substituteVariantId });
+        return [];
+      }
+      if (linked && linked.deletedAt === null) {
+        const form = row.substituteVariantId;
+        return [
+          {
+            ingredientId: linked.id,
+            substituteVariantId: form !== null && linkedForms.has(form) ? form : null,
+          },
+        ];
+      }
+      // A typed name, or a link whose ingredient is gone, which reads as its last name.
+      const name = linked?.name ?? row.name ?? '';
+      if (typed.has(name.toLowerCase())) return [];
+      typed.add(name.toLowerCase());
+      return [{ name }];
+    });
+  };
+  const cited = (rows: CitedReference[]) =>
+    rows.map(({ reference, locator }) => ({ referenceId: reference.id, locator }));
+  const filed = (rows: readonly { id: string }[]) => rows.map((category) => category.id);
+  const ownedBy = <T>(rows: readonly (T[] | Forbidden)[], index: number) => answered([rows[index]]);
+
+  const nameKey = merged.name.toLowerCase();
+  const allFolkNames = answered(folkNames).map((row) => row.name);
+  const values: IngredientValues = {
+    name: merged.name,
+    canonicalName: merged.canonicalName,
+    nomenclature: merged.nomenclature,
+    description: merged.description,
+    safetyNotes: merged.safetyNotes,
+    toxic: merged.toxic,
+    elements: merged.elements,
+    celestialBodies: merged.celestialBodies,
+    zodiacSigns: merged.zodiacSigns,
+    colors: merged.colors,
+    folkNames: allFolkNames.filter((name) => name.toLowerCase() !== nameKey),
+    substitutes: copied(substitutes),
+    deities: answered(deities).map(({ name, deity }) => (deity ? { deityId: deity.id } : { name })),
+    references: cited(answered(references)),
+    categoryIds: filed(answered(categories)),
+    variants: forms.map((form, index) => {
+      const curated = form.formId === null ? undefined : curatedForms.get(form.formId);
+      return {
+        form: form.form,
+        formId:
+          curated !== undefined && foldForm(curated) === foldForm(form.form) ? form.formId! : '',
+        description: form.description ?? '',
+        safetyNotes: form.safetyNotes ?? '',
+        toxic: form.toxic,
+        elements: form.elements ?? [],
+        celestialBodies: form.celestialBodies ?? [],
+        zodiacSigns: form.zodiacSigns ?? [],
+        colors: form.colors ?? [],
+        categoryIds: filed(ownedBy(formCategories, index)),
+        substitutes: copied(formSubstitutes.filter(({ row }) => row.variantId === form.id)),
+        references: cited(ownedBy(formReferences, index)),
+      };
+    }),
+  };
+  return {
+    values,
+    selfLinks,
+    folkNamesLost: sortedNames(allFolkNames.filter((name) => name.toLowerCase() === nameKey)),
+  };
+}
+
+/**
+ * Makes the compendium entry `ingredientId`, which this coven holds, the
+ * coven's own, in one transaction: a new own entry carrying the label as its
+ * name, the compendium's formal name and nomenclature, the coven's overrides
+ * over the rest, and copies of the entry's forms, folk names, substitutes,
+ * categories, references and deities. Each of the coven's jars and spell
+ * layers of a form moves to the copy's form of the same folded name, ids and
+ * amounts unchanged; the cupboard row is soft-deleted. A retired entry the
+ * coven still holds converts the same way. The compendium entry is not
+ * written, and another coven's cupboard is untouched.
+ *
+ * @throws {Forbidden} the caller may not create and delete this coven's
+ * ingredients and update its stock.
+ * @throws {NotFound} this coven holds no cupboard entry for this id.
+ * @throws {ValidationError} another entry of the coven already uses the
+ * label, beside `label`; or the coven already has its own entry of this
+ * formal name, beside `canonicalName`, or of this name, beside `name`.
+ */
+export async function convertCompendiumEntryToLocal(
+  session: Session,
+  workspaceId: string,
+  ingredientId: string,
+): Promise<ConvertedCompendium> {
+  const membership = await assertMembership(session, workspaceId, MAKE_IT_OURS_PERMISSION);
+  const held = await heldCompendiumEntry(membership, ingredientId);
+  if (!held) throw new NotFound(NO_ROW);
+  const { entry, cupboardEntry } = held;
+  const heldBy = isRetired(entry) ? membership : undefined;
+  const { values, selfLinks, folkNamesLost } = await ownValuesOf(
+    session,
+    applyCupboardEntry(entry, cupboardEntry),
+    heldBy,
+  );
+  const { fields: parsed, lists, picked } = splitChildren(parseInput(LocalIngredientInput, values));
+  const picks = await resolvePicks('coven', parsed, picked, []);
+  if (picks.issues.length > 0) throw new ValidationError(picks.issues);
+  const { fields } = picks;
+  const columns = ingredientColumns(fields);
+  // The cupboard row's own label is the one the new entry takes over.
+  await refuseLabelTaken(membership, fields.name, cupboardEntry.id);
+  const entryForms = answered(await variantsOf(session, [entry], heldBy));
+
+  try {
+    const row = await withAudit(session, async (write) => {
+      // The lock `createStock` takes, so no jar of the entry appears between
+      // the read below and the moves.
+      await write.lockCovenStock(membership);
+      const [own] = await write.insertInWorkspace(membership, ingredients, columns);
+      await writeChildren(write, [membership], own.id, { ...lists, ...picks.children }, 'add');
+      const forms = await write.lockLiveVariants(membership, own.id);
+      const copyOf = new Map(
+        entryForms.flatMap((form) => {
+          const copy = forms.find((candidate) => foldForm(candidate.form) === foldForm(form.form));
+          return copy ? [[form.id, copy.id] as const] : [];
+        }),
+      );
+
+      for (const link of selfLinks) {
+        const variantId = link.variantId === null ? null : copyOf.get(link.variantId);
+        const substituteVariantId =
+          link.substituteVariantId === null ? null : copyOf.get(link.substituteVariantId);
+        // A link from or to a form that was not copied has no copy to name.
+        if (variantId === undefined || substituteVariantId === undefined) continue;
+        await write.insert(ingredientSubstitutes, {
+          ingredientId: own.id,
+          variantId,
+          substituteId: own.id,
+          substituteVariantId,
+          name: null,
+        });
+      }
+
+      // A jar of a form deleted since is in no read and has nowhere to go.
+      const jars = (await write.lockJarsOfIngredient(membership, entry.id)).filter((jar) =>
+        copyOf.has(jar.variantId),
+      );
+      for (const jar of jars) {
+        await write.updateByIdInWorkspace(membership, inventoryItems, jar.id, {
+          ingredientId: own.id,
+          variantId: copyOf.get(jar.variantId)!,
+        });
+      }
+      const layers = await write.lockLayersOfVariants(membership, [...copyOf.keys()]);
+      for (const [formId, copy] of copyOf) {
+        await write.moveLayers(
+          membership,
+          layers.filter((layer) => layer.variantId === formId).map((layer) => layer.id),
+          { ingredientId: own.id, variantId: copy },
+        );
+      }
+
+      const [removed] = await write.softDeleteByIdInWorkspace(
+        membership,
+        workspaceCompendiumEntries,
+        cupboardEntry.id,
+      );
+      if (!removed) throw new NotFound(NO_ROW);
+      return own;
+    });
+    return {
+      entry: row,
+      dropped: {
+        forms: [],
+        folkNames: folkNamesLost,
+        substitutes: [],
+        categories: [],
+        references: [],
+        deities: [],
+      },
+    };
+  } catch (error) {
+    return refuseCollision(error, membership, fields, columns.slug, undefined);
   }
 }
