@@ -403,8 +403,11 @@ variants"); ["On the compendium"](#on-the-compendium) says how.
 
 A substitute row is the ingredient's label and formal name, "Mockwort
 (Fixtura vulgaris)", and a second line saying whose it is, "Compendium entry"
-or "This coven’s entry". The rows keep the search's ranking, best match
-first, so the tier is a note and not a heading, which would reorder them. Each
+or "This coven’s entry". The rows are the search's two groups (M12.19), under the headings
+"Your Ingredients", the coven's cupboard, then "Compendium", each in the
+search's order, best match first; the heading comes from the edge's `group`,
+and a form ranking never lifts a compendium row above a cupboard one. A held
+entry reads under the label the coven gave it. Each
 row carries its ingredient's id as its key, since a compendium entry and a
 coven's copy of it read alike until M8.3 suppresses the one shadowed, and as
 its `link`: picking one adds an entry linked to that ingredient, reading as
