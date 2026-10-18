@@ -16,6 +16,7 @@ const LEAF = {
   toxic: false,
 };
 const OIL = { form: 'testoil', safetyNotes: 'Fixture oil caution.', toxic: false };
+const ROOT = { form: 'testroot', safetyNotes: '', toxic: false };
 const BASE = { href: HREF, label: 'Fixture Testwort', kind: 'compendium' as const };
 
 const toxicMark = () => screen.queryByText('Toxic', { exact: true });
@@ -42,11 +43,11 @@ describe('IngredientCard', () => {
   // The icon before each form is aria-hidden, so the role tree cannot see it;
   // FormIcon's own tests cover which icon draws.
   it('shows the formal name and every form on the secondary line', () => {
-    render(<IngredientCard {...BASE} formalName="Fixtura testalis" variants={[LEAF, OIL]} />);
+    render(<IngredientCard {...BASE} formalName="Fixtura testalis" variants={[LEAF, ROOT]} />);
 
     expect(screen.getByText('Fixtura testalis')).toBeInTheDocument();
     expect(screen.getByText('Testleaf')).toBeInTheDocument();
-    expect(screen.getByText('Testoil')).toBeInTheDocument();
+    expect(screen.getByText('Testroot')).toBeInTheDocument();
   });
 
   it('shows no formal name and no forms for an entry with neither', () => {
