@@ -39,13 +39,20 @@ const BASE = {
   variants: VARIANTS,
 };
 
+// A stand-in for M9.6’s jar lines: the form, a dot hidden from assistive
+// technology (as on the forms line), then the quantity and the stock badge,
+// centred on one line with the same token gap.
+const JAR_LINE = { display: 'flex', alignItems: 'center', gap: '0.25rem' } as const;
+
 const Jars = () => (
   <ul>
-    <li>
-      Dried leaf, 6 g <StockBadge quantity={6} threshold={10} unit="g" />
+    <li style={JAR_LINE}>
+      Dried leaf <span aria-hidden="true">·</span> 6 g{' '}
+      <StockBadge quantity={6} threshold={10} unit="g" />
     </li>
-    <li>
-      Oil, 0 ml <StockBadge quantity={0} threshold={10} unit="ml" />
+    <li style={JAR_LINE}>
+      Oil <span aria-hidden="true">·</span> 0 ml{' '}
+      <StockBadge quantity={0} threshold={10} unit="ml" />
     </li>
   </ul>
 );
