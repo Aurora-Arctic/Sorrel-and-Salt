@@ -782,6 +782,14 @@ export interface CompendiumScore {
   score: number | null;
 }
 
+/** Which of the substitute picker's two groups an entry is listed in (M12.19). */
+export type SuggestionGroup = 'yours' | 'compendium';
+
+/** What each row of the substitute picker carries beside its entry. */
+export interface SuggestionGroupTag {
+  group: SuggestionGroup;
+}
+
 /**
  * What an entry of a coven's ingredient list carries beside its rank: the
  * coven's live cupboard row for it, read by the list's own join, so
