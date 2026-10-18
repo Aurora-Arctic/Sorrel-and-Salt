@@ -544,8 +544,36 @@ describe('LookupListField', () => {
     // Told apart by whose entry each is.
     expect(rows[0]).not.toHaveAccessibleName(rows[1].textContent ?? '');
     expect(rows[2]).toHaveTextContent('Mockwort Tea');
-    // One ranked list: a tier is a note, never a heading that reorders it.
-    expect(screen.queryByRole('group', { name: 'From Compendium' })).not.toBeInTheDocument();
+    // All of one group here, so the list shows no heading at all.
+    expect(
+      within(
+        screen.getByRole('listbox', { name: 'Substitute Ingredient suggestions' }),
+      ).queryByRole('group'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('lists the coven’s cupboard under Your Ingredients and the rest under Compendium', async () => {
+    renderList(SUBSTITUTES);
+    const calls = offerIngredients([
+      { ...MOCKWORT_COVEN, group: 'yours' },
+      { ...MOCKWORT_COMPENDIUM, group: 'compendium' },
+      { ...MOCKWORT_TEA, group: 'compendium' },
+    ]);
+
+    await lookUp('Substitute Ingredient', calls, 'mockwort');
+
+    await screen.findByRole('option', { name: /^Mockwort Tea/ });
+    const listbox = screen.getByRole('listbox', { name: 'Substitute Ingredient suggestions' });
+    const yours = within(listbox).getByRole('group', { name: 'Your Ingredients' });
+    const compendium = within(listbox).getByRole('group', { name: 'Compendium' });
+    expect(within(yours).getAllByRole('option')).toHaveLength(1);
+    expect(within(yours).getByRole('option')).toHaveTextContent('Mockwort (Fixtura vulgaris)');
+    expect(within(compendium).getAllByRole('option')).toHaveLength(2);
+    expect(within(compendium).getByRole('option', { name: /^Mockwort Tea/ })).toBeInTheDocument();
+    // Yours comes first.
+    expect(
+      yours.compareDocumentPosition(compendium) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
   });
 
   it('saves a picked ingredient as a link, its entry reading as that ingredient', async () => {
