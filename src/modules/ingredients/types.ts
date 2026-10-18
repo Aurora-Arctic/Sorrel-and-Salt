@@ -6,6 +6,7 @@ import type {
   IngredientRow,
   ReferenceRow,
   StockRow,
+  WorkspaceIngredientFacets,
 } from '../../db/repository';
 import type { ingredientDeities } from './schema/ingredient-deities';
 import type { ingredientVariants } from './schema/ingredient-variants';
@@ -25,6 +26,7 @@ export type {
   IngredientRow,
   ReferenceRow,
   StockRow,
+  WorkspaceIngredientFacets,
 };
 
 // The vocabulary's own, which a category's loader answers with.

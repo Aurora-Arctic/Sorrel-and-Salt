@@ -49,13 +49,20 @@ function writeControls(page: Page): Locator {
     .or(main.getByRole('link', { name: WRITE_VERB }));
 }
 
-/** A field a member edits stock or a spell's visibility with; a viewer is offered none. */
+/**
+ * A field a member edits stock or a spell's visibility with; a viewer is offered none.
+ * The filter form, FilterForm's `search` landmark, is left out: its In Stock switch and
+ * the like change nothing stored, so a viewer gets them too (M9.7). `:not(search *)` leaves
+ * out anything inside it and still counts the same field anywhere else in `main`.
+ */
 function editingFields(page: Page): Locator {
   const main = page.getByRole('main');
+  const outsideFilter = page.locator(':not(search *)');
   return main
     .getByRole('spinbutton')
-    .or(main.getByRole('switch'))
-    .or(main.getByLabel('Visibility'));
+    .and(outsideFilter)
+    .or(main.getByRole('switch').and(outsideFilter))
+    .or(main.getByLabel('Visibility').and(outsideFilter));
 }
 
 test.fixme(

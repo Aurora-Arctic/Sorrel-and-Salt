@@ -48,8 +48,8 @@ describe('FacetCombobox', () => {
     render(<FacetCombobox {...PROPS} onChange={onChange} />);
 
     open();
-    expect(screen.getByRole('option', { name: 'Testfire (9)' })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole('option', { name: 'Testfire (9)' }));
+    expect(screen.getByRole('option', { name: 'Testfire 9' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('option', { name: 'Testfire 9' }));
 
     expect(onChange).toHaveBeenCalledWith(['fire']);
   });
@@ -64,7 +64,7 @@ describe('FacetCombobox', () => {
 
     render(<FacetCombobox {...PROPS} hideZeros={false} />);
     open();
-    expect(screen.getByRole('option', { name: /^Testearth \(0\)/ })).toHaveAttribute(
+    expect(screen.getByRole('option', { name: /^Testearth 0/ })).toHaveAttribute(
       'aria-disabled',
       'false',
     );
@@ -108,8 +108,8 @@ describe('FacetCombobox', () => {
     expect(hidden(container)).toEqual([]);
 
     open();
-    fireEvent.click(screen.getByRole('option', { name: 'Testwater (7)' }));
-    fireEvent.click(screen.getByRole('option', { name: 'Testair (3)' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Testwater 7' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Testair 3' }));
 
     expect(hidden(container)).toEqual(['water', 'air']);
   });
@@ -119,10 +119,10 @@ describe('FacetCombobox', () => {
     const chip = () =>
       screen.getByRole('button', { name: 'Remove Element: Testfire' }).closest('li')!;
 
-    expect(chip()).not.toHaveTextContent('(9)');
+    expect(chip()).not.toHaveTextContent('9');
 
     rerender(<Controlled initial={['fire']} />);
-    expect(chip()).toHaveTextContent('(9)');
+    expect(chip()).toHaveTextContent('9');
   });
 
   it('removes a value by its cross and empties by its clear, each reaching the hidden inputs', () => {
@@ -152,15 +152,15 @@ describe('FacetCombobox', () => {
     const select = within(host).getByRole('listbox', { name: 'Elements' });
     expect(select).toHaveAttribute('name', 'elements');
     expect(select).toHaveAttribute('multiple');
-    expect(within(select).getByRole('option', { name: 'Testfire (9)' })).toHaveProperty(
+    expect(within(select).getByRole('option', { name: 'Testfire 9' })).toHaveProperty(
       'selected',
       true,
     );
-    expect(within(select).getByRole('option', { name: 'Testair (3)' })).toHaveProperty(
+    expect(within(select).getByRole('option', { name: 'Testair 3' })).toHaveProperty(
       'selected',
       false,
     );
-    expect(within(select).queryByRole('option', { name: 'Testearth (0)' })).not.toBeInTheDocument();
+    expect(within(select).queryByRole('option', { name: 'Testearth 0' })).not.toBeInTheDocument();
     host.remove();
   });
 
@@ -172,7 +172,7 @@ describe('FacetCombobox', () => {
 
       typeInto('wat');
       expect(screen.getAllByRole('option')).toHaveLength(1);
-      fireEvent.click(screen.getByRole('option', { name: 'Testwater (7)' }));
+      fireEvent.click(screen.getByRole('option', { name: 'Testwater 7' }));
 
       expect(hidden(container)).toEqual(['water']);
       expect(box()).toHaveValue('');
@@ -183,7 +183,7 @@ describe('FacetCombobox', () => {
 
       open();
       const rows = screen.getAllByRole('option');
-      expect(rows.map((row) => row.textContent)).not.toContain('Testfire (9)');
+      expect(rows.map((row) => row.textContent)).not.toContain('Testfire 9');
       expect(rows.map((row) => row.textContent).join()).not.toContain('Testearth');
     });
 
@@ -202,7 +202,7 @@ describe('FacetCombobox', () => {
 
       expect(
         screen.getByRole('button', { name: 'Remove Element: Testfire' }).closest('li'),
-      ).not.toHaveTextContent('(9)');
+      ).not.toHaveTextContent('9');
     });
   });
 
@@ -221,10 +221,10 @@ describe('FacetCombobox', () => {
       expect(within(classical).getAllByRole('option')).toHaveLength(2);
       expect(
         within(screen.getByRole('group', { name: 'Other' })).getByRole('option', {
-          name: 'Testspirit (1)',
+          name: 'Testspirit 1',
         }),
       ).toBeInTheDocument();
-      fireEvent.click(screen.getByRole('option', { name: 'Testspirit (1)' }));
+      fireEvent.click(screen.getByRole('option', { name: 'Testspirit 1' }));
 
       expect(hidden(container)).toEqual(['spirit']);
     });

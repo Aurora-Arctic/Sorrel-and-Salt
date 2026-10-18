@@ -742,8 +742,12 @@ Story 14's list (M9.4), registered by `ingredients` in
 ([`db/stock.md`](../db/stock.md), "The workspace ingredient list"): a coven's
 own entries and the compendium entries it holds a jar of, a page at a time,
 as a `t.pagedConnection` of `Ingredient`. It takes the coven as `workspaceId`,
-and `query`, `categoryIds`, `forms`, `deityIds`, `zodiacSigns`, `celestialBodies` and `toxic` (M11.22), which filter as `compendium`'s do, still under the coven's membership check. A
-coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
+and `query`, `categoryIds`, `forms`, `deityIds`, `zodiacSigns`, `celestialBodies` and `toxic` (M11.22), which filter as `compendium`'s do, still under the coven's membership check.
+Two more arguments are the coven's alone (M9.7), left out of `compendium`: `source`, an
+`IngredientSource` of `local` (the coven's own entries) or `compendium` (the
+compendium entries it holds), where leaving it out lists both; and `inStock`, which keeps an
+entry only when one of the coven's jars of it is not at 0, a jar with no quantity counting as
+held, so a local entry with no jar leaves. A coven the caller is not in answers `FORBIDDEN`; any member, viewers included,
 may read it. An entry's jars are its `stock` field, below, so a page reads its
 stock in one batch whatever its length.
 
@@ -761,8 +765,8 @@ exactly `compendium`'s filter arguments (`query`, `categoryIds`,
 `categoryMode`, the six facet arguments, `withoutReferences` and
 `nomenclature`), with no page. `workspaceIngredientFacets` sits in
 `graphql/workspace-ingredient-list.ts` and takes `workspaceIngredients`'
-(`workspaceId`, `query`, the category arguments and the six facet
-arguments). Each resolver hands its arguments to its service,
+(`workspaceId`, `query`, the category arguments, the six facet
+arguments, and the coven-only `source` and `inStock`), so a count agrees with the list under the same filter. Each resolver hands its arguments to its service,
 `compendiumFacets` or `workspaceIngredientFacets` in
 `services/ingredient-facets.ts`, and checks nothing itself. How each value
 is counted is [`db/compendium-read.md`](../db/compendium-read.md),
@@ -781,6 +785,15 @@ reference under the rest of the filter, the same whether the switch is on or
 off; a coven's list has no such switch. The seven shared fields are written
 once, in `facetFields`, which both types spread.
 
+A coven's `IngredientFacets` also carries two counts that a compendium list has no
+switch for (M9.7), so the two answers are two types and the fields are non-null on
+the coven's alone. `source` is a `SourceFacetCount` list (`value` is `local` or
+`compendium`, `count` an `Int!`) that always holds both values, zeros kept, each
+counted with the Source setting blanked and everything else, In Stock
+included, kept. `inStock` is one `Int!`: how many entries the list would
+hold with the switch on, under the rest of the filter and the chosen Source. A
+count equals the list's `totalCount` under the same filter.
+
 ```graphql
 type CompendiumFacets {
   # the seven fields of IngredientFacets, then:
@@ -788,6 +801,7 @@ type CompendiumFacets {
 }
 
 type IngredientFacets {
+  # a coven's also has source: [SourceFacetCount!]! and inStock: Int!
   forms: [NameFacetCount!]!
   deities: [IdFacetCount!]!
   categories: [IdFacetCount!]!

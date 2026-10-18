@@ -704,6 +704,18 @@ export interface IngredientFilter {
    * Absent means any (M11.22).
    */
   toxic?: 'toxic' | 'not_toxic';
+  /**
+   * A coven's list only (M9.7): `local` keeps the coven's own entries,
+   * `compendium` the compendium entries it holds. Absent keeps both. The
+   * compendium's own read ignores it.
+   */
+  source?: 'local' | 'compendium';
+  /**
+   * A coven's list only (M9.7): keep an entry when any live jar of the coven's
+   * is not at 0, a jar with no quantity counting as held. The compendium's
+   * own read ignores it.
+   */
+  inStock?: boolean;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
@@ -729,6 +741,17 @@ export interface IngredientFacets {
   celestialBodies: FacetCount[];
   elements: FacetCount<IngredientElement>[];
   toxic: FacetCount<'toxic' | 'not_toxic'>[];
+}
+
+/**
+ * A coven's facets (M9.7): the seven kinds, and the two settings only a coven's
+ * list has. `source` lists both values, zeros kept, in the enum's order;
+ * `inStock` is how many entries the list would hold with the switch on.
+ * Each is counted with its own setting left out and every other kept.
+ */
+export interface WorkspaceIngredientFacets extends IngredientFacets {
+  source: FacetCount<'local' | 'compendium'>[];
+  inStock: number;
 }
 
 /**

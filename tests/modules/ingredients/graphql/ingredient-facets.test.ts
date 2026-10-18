@@ -5,6 +5,7 @@ import type { Session } from '@/lib/session';
 import { A, B, D, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
 import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
+import { insertStock } from '../../../support/db/insert-stock';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { Overrides } from '../../../support/fixtures';
@@ -101,10 +102,22 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
 }
 
 function workspaceFacets(session: Session, variables: Record<string, unknown> = {}) {
-  return runOperation<{ workspaceIngredientFacets: Facets }>(
+  return runOperation<{
+    workspaceIngredientFacets: Facets & { source: FacetCount[]; inStock: number };
+  }>(
     session,
-    `query ($workspaceId: ID!, $forms: [String!]) {
-      workspaceIngredientFacets(workspaceId: $workspaceId, forms: $forms) ${SELECTION}
+    `query (
+      $workspaceId: ID!
+      $forms: [String!]
+      $source: IngredientSource
+      $inStock: Boolean
+    ) {
+      workspaceIngredientFacets(
+        workspaceId: $workspaceId
+        forms: $forms
+        source: $source
+        inStock: $inStock
+      ) ${SELECTION.slice(0, -1)} source { value count } inStock }
     }`,
     { workspaceId: WORKSPACE_W_ID, ...variables },
   );
@@ -193,6 +206,59 @@ describe('workspaceIngredientFacets', () => {
       { value: 'toxic', count: 0 },
       { value: 'not_toxic', count: 0 },
     ]);
+  });
+
+  it('takes a source and inStock, counting the coven under each', async () => {
+    const forms = async (variables: Record<string, unknown>) => {
+      const result = await workspaceFacets(asUser(B), variables);
+      expect(result.errors).toBeUndefined();
+      return result.data?.workspaceIngredientFacets.forms;
+    };
+    const covenform = [{ value: 'Covenform', count: 1 }];
+
+    // Why each could have answered the same: the unfiltered count holds Covenform.
+    expect(await forms({})).toEqual(covenform);
+    expect(await forms({ source: 'local' })).toEqual(covenform);
+    expect(await forms({ source: 'compendium' })).toEqual([]);
+    // Covenwort has no jar, so it is out of stock.
+    expect(await forms({ inStock: true })).toEqual([]);
+    expect(await forms({ inStock: false })).toEqual(covenform);
+  });
+
+  it("answers the coven's Source and In Stock counts, zeros kept", async () => {
+    const result = await workspaceFacets(asUser(B));
+
+    expect(result.errors).toBeUndefined();
+    // Covenwort is W's own and has no jar; W holds no compendium entry.
+    expect(result.data?.workspaceIngredientFacets.source).toEqual([
+      { value: 'local', count: 1 },
+      { value: 'compendium', count: 0 },
+    ]);
+    expect(result.data?.workspaceIngredientFacets.inStock).toBe(0);
+
+    const [{ id: ingredientId }] = await sql`select id from ingredients where name = 'Covenwort'`;
+    const [{ id: variantId }] = await sql`
+      select id from ingredient_variants where ingredient_id = ${ingredientId as string}`;
+    await insertStock(
+      sql,
+      {
+        workspaceId: WORKSPACE_W_ID,
+        ingredientId: ingredientId as string,
+        variantId: variantId as string,
+        quantityOnHand: '3',
+      },
+      A.id,
+    );
+    // The compendium source empties the list, yet the counts leave their own setting out.
+    const chosen = await workspaceFacets(asUser(B), { source: 'compendium' });
+    expect(chosen.errors).toBeUndefined();
+    expect(chosen.data?.workspaceIngredientFacets.source).toEqual([
+      { value: 'local', count: 1 },
+      { value: 'compendium', count: 0 },
+    ]);
+    expect(chosen.data?.workspaceIngredientFacets.inStock).toBe(0);
+    const local = await workspaceFacets(asUser(B), { source: 'local' });
+    expect(local.data?.workspaceIngredientFacets.inStock).toBe(1);
   });
 
   it('is FORBIDDEN to a caller naming by id a coven they are not in', async () => {

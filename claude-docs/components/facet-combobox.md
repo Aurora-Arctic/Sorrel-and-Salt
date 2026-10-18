@@ -42,8 +42,8 @@ box's state.
   The switch is `useHydrated` (`src/lib/hydrated.ts`), which is false on the
   server and true on the client's first render. The native select applies
   nothing on change, since no script runs.
-- **A row reads as its name and count together**, "Fire (9)", and a chip the
-  same, "Fire (9)", with the x named "Remove Element: Fire". The x's name does
+- **A row reads as its name and count together**, "Fire 9", and a chip the
+  same, "Fire 9", with the x named "Remove Element: Fire". The x's name does
   not change when the count arrives: a placeholder is `aria-hidden`.
 - **A value with nothing behind it is left out** of the list (the owner's call,
   M12.4: choosing it would leave an empty list, and a row that cannot be

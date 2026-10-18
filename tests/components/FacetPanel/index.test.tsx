@@ -110,7 +110,7 @@ describe('FacetPanel', () => {
       />,
     );
     // Two forms, two categories and a Toxic setting; the Match mode adds none.
-    expect(filtersButton()).toHaveAccessibleName('Filters (5)');
+    expect(filtersButton()).toHaveAccessibleName('Filters 5');
   });
 
   it('offers Clear All beside the button only while something is chosen', () => {
@@ -299,16 +299,166 @@ describe('FacetPanel', () => {
     );
     fireEvent.click(filtersButton());
     const match = () => screen.getByRole('group', { name: 'Match' });
-    // The held mode is Any, so All being checked is the stuck state and not the stored value.
-    expect(within(match()).getByRole('radio', { name: 'All' })).toBeChecked();
-    expect(match()).toBeDisabled();
-    expect(match()).toHaveAccessibleDescription();
+    // The held mode is Any, so the chip resting on All is the stuck state and not the stored value.
+    const chip = within(match()).getByRole('button', { name: /All/ });
+    expect(chip).toBeDisabled();
+    expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+    expect(within(match()).queryByRole('radio')).toBeNull();
+
+    // A stuck chip is disabled and unfocusable; the fieldset carries its hint, and hovering shows it.
+    const stuck = within(match()).getByRole('button', { name: /All/ });
+    const bubble = document.getElementById(
+      stuck.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+    );
+    fireEvent.mouseEnter(stuck);
+    expect(bubble).toHaveAttribute('aria-hidden', 'false');
 
     rerender(
       <FacetPanel {...props({ categories: ['warding', 'mending'], categoryMode: 'any' })} />,
     );
-    expect(match()).toBeEnabled();
+    expect(within(match()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
     expect(within(match()).getByRole('radio', { name: 'Any' })).toBeChecked();
+  });
+
+  describe('the choice chips (M9.7)', () => {
+    const openPanel = (
+      filter: Partial<FacetPanelFilter> = {},
+      more: Partial<FacetPanelProps> = {},
+    ) => {
+      stubViewport(true);
+      const view = render(<FacetPanel {...props(filter, more)} />);
+      fireEvent.click(filtersButton());
+      return view;
+    };
+    const match = () => screen.getByRole('group', { name: 'Match' });
+    const menu = () => match().querySelector('details') as HTMLDetailsElement;
+    const summary = () => menu().querySelector('summary') as HTMLElement;
+
+    it('keeps every chip tip inside the bar its chip stands in, the box its bubble is placed against', () => {
+      // Match's tip is on the chip itself; Source's ordinary tip is the icon beside its chip.
+      openPanel({ categories: ['warding'], source: 'local' });
+      const tips = screen.getAllByRole('button', { name: /^About Source/ });
+      expect(tips.length).toBeGreaterThan(0);
+      for (const tip of tips) {
+        const bar = tip.closest('.facet-chip__bar');
+        expect(bar).not.toBeNull();
+        // The bar holds the chip too, so the tip stands beside it and not in the panel at large.
+        expect(bar?.querySelector('summary, button.facet-chip__summary')).not.toBeNull();
+      }
+    });
+
+    it('shows the enabled Match hint on hover and on focus of its summary, and not while the menu is open', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      const bubble = () =>
+        document.getElementById(
+          match().closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      fireEvent.mouseLeave(summary());
+      fireEvent.focus(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
+      fireEvent.click(summary());
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+    });
+
+    it('draws Match as a group holding a summary that opens a menu of native radios', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      expect(menu().open).toBe(false);
+      fireEvent.click(summary());
+      expect(menu().open).toBe(true);
+      expect(
+        within(match())
+          .getAllByRole('radio')
+          .map((radio) => radio.getAttribute('value')),
+      ).toEqual(['all', 'any']);
+    });
+
+    describe('the menu side', () => {
+      const menuBox = () => menu().querySelector('.facet-chip__menu') as HTMLElement;
+      // jsdom has no layout: the chip stands at 1000px, the menu is 150px wide, and the panel's
+      // clip ends at the given edge. The clip is the first ancestor reporting overflow.
+      const layout = (clipEdge: number) => {
+        vi.spyOn(menu(), 'getBoundingClientRect').mockReturnValue({ left: 1000 } as DOMRect);
+        Object.defineProperty(menuBox(), 'offsetWidth', { configurable: true, value: 150 });
+        const clip = menu().closest('.facet-panel__inner') as HTMLElement;
+        vi.spyOn(clip, 'getBoundingClientRect').mockReturnValue({ right: clipEdge } as DOMRect);
+        const real = window.getComputedStyle.bind(window);
+        vi.spyOn(window, 'getComputedStyle').mockImplementation((el, pseudo) => {
+          const style = real(el, pseudo);
+          // jsdom reports no overflow at all; a browser says "visible" for an ancestor that does not clip.
+          return {
+            ...style,
+            overflowX: el === clip ? 'clip' : 'visible',
+            getPropertyValue: style.getPropertyValue.bind(style),
+          } as CSSStyleDeclaration;
+        });
+      };
+      afterEach(() => vi.restoreAllMocks());
+
+      it('hangs from the right edge of the chip when the left-aligned box would cross the clip', () => {
+        openPanel({ categories: ['warding', 'mending'] });
+        layout(1100);
+        fireEvent.click(summary());
+        expect(menuBox()).toHaveClass('facet-chip__menu--end');
+      });
+
+      it('stays left-aligned when the box fits', () => {
+        openPanel({ categories: ['warding', 'mending'] });
+        layout(1200);
+        fireEvent.click(summary());
+        expect(menuBox()).not.toHaveClass('facet-chip__menu--end');
+      });
+    });
+
+    it('closes on choosing, and reports the choice as a patch of only that part', () => {
+      const onChange = vi.fn();
+      openPanel({ categories: ['warding', 'mending'] }, { onChange });
+      fireEvent.click(summary());
+      fireEvent.click(within(match()).getByRole('radio', { name: 'Any' }));
+      expect(onChange).toHaveBeenLastCalledWith({ categoryMode: 'any' });
+      expect(menu().open).toBe(false);
+    });
+
+    it('closes on Escape and returns focus to the chip, leaving the panel open', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      fireEvent.click(summary());
+      fireEvent.keyDown(within(match()).getAllByRole('radio')[0], { key: 'Escape' });
+      expect(menu().open).toBe(false);
+      expect(menu().querySelector('summary')).toHaveFocus();
+      expect(dialog().open).toBe(true);
+    });
+
+    it('closes on a press outside it', () => {
+      openPanel({ categories: ['warding', 'mending'] });
+      fireEvent.click(summary());
+      expect(menu().open).toBe(true);
+      fireEvent.pointerDown(screen.getByRole('group', { name: 'Toxic' }));
+      expect(menu().open).toBe(false);
+    });
+
+    it('carries each count as its own number in the radio name, Toxic included', () => {
+      openPanel();
+      const toxic = screen.getByRole('group', { name: 'Toxic' });
+      expect(within(toxic).getByRole('radio', { name: 'Toxic 2' })).toBeInTheDocument();
+      expect(within(toxic).getByRole('radio', { name: 'Not Toxic 9' })).toBeInTheDocument();
+      expect(within(toxic).getByRole('radio', { name: 'Any' })).toBeChecked();
+    });
+
+    it('sends the held choices through the GET form even while the menus are shut', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel
+            {...props({ categories: ['warding', 'mending'], categoryMode: 'any', toxic: 'toxic' })}
+          />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('categoryMode')).toEqual(['any']);
+      expect(data.getAll('toxic')).toEqual(['toxic']);
+    });
   });
 
   it('shows No Refs to an admin only', () => {
@@ -320,6 +470,102 @@ describe('FacetPanel', () => {
     rerender(<FacetPanel {...props({}, { admin: true })} />);
     expect(screen.getByRole('switch', { name: /^No Refs/ })).toBeInTheDocument();
   });
+
+  describe("the coven's Source and In Stock controls (M9.7)", () => {
+    const COVEN = { source: '', inStock: false } as const;
+    const open = (filter: Partial<FacetPanelFilter> = {}, more: Partial<FacetPanelProps> = {}) => {
+      stubViewport(true);
+      render(<FacetPanel {...props(filter, more)} />);
+      fireEvent.click(filtersButton());
+    };
+
+    it('shows neither on a panel whose caller passes neither', () => {
+      open();
+      expect(screen.queryByRole('group', { name: 'Source' })).toBeNull();
+      expect(screen.queryByRole('switch', { name: 'In Stock' })).toBeNull();
+    });
+
+    const counted: Partial<FacetPanelProps> = {
+      facets: {
+        ...FACETS,
+        source: [
+          { value: 'local', label: 'Local', count: 4 },
+          { value: 'compendium', label: 'Compendium', count: 2 },
+        ],
+        inStock: 3,
+      },
+    };
+
+    it('offers Source as All, Local and Compendium, on All by default', () => {
+      open(COVEN);
+      const source = screen.getByRole('group', { name: 'Source' });
+      expect(
+        within(source)
+          .getAllByRole('radio')
+          .map((radio) => radio.getAttribute('value')),
+      ).toEqual(['', 'local', 'compendium']);
+      expect(within(source).getByRole('radio', { name: 'All' })).toBeChecked();
+    });
+
+    it('carries each count in the option and switch names, All and the Toxic strip as they were', () => {
+      open(COVEN, counted);
+      const source = screen.getByRole('group', { name: 'Source' });
+      expect(within(source).getByRole('radio', { name: /^Local 4/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: /^Compendium 2/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: 'All' })).toBeInTheDocument();
+      expect(screen.getByRole('switch', { name: 'In Stock 3' })).toBeInTheDocument();
+    });
+
+    it('reports a chosen counted source and switch as a patch of only that part', () => {
+      const onChange = vi.fn();
+      open(COVEN, { ...counted, onChange });
+
+      fireEvent.click(screen.getByRole('radio', { name: /^Local/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
+      fireEvent.click(screen.getByRole('switch', { name: /^In Stock/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ inStock: true });
+    });
+
+    it('reports a chosen source and the switch as a patch of only that part', () => {
+      const onChange = vi.fn();
+      open(COVEN, { onChange });
+
+      fireEvent.click(screen.getByRole('radio', { name: /^Local/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
+      fireEvent.click(screen.getByRole('radio', { name: 'Compendium' }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'compendium' });
+
+      fireEvent.click(screen.getByRole('switch', { name: 'In Stock' }));
+      expect(onChange).toHaveBeenLastCalledWith({ inStock: true });
+    });
+
+    it('shows what is held', () => {
+      open({ source: 'local', inStock: true });
+      expect(screen.getByRole('radio', { name: /^Local/ })).toBeChecked();
+      expect(screen.getByRole('switch', { name: 'In Stock' })).toBeChecked();
+    });
+
+    it('counts a chosen source and the switch on the Filters button', () => {
+      stubViewport(true);
+      const { rerender } = render(<FacetPanel {...props(COVEN)} />);
+      expect(filtersButton()).toHaveAccessibleName('Filters');
+      rerender(<FacetPanel {...props({ source: 'compendium', inStock: true })} />);
+      expect(filtersButton()).toHaveAccessibleName('Filters 2');
+    });
+
+    it('submits through the GET form around it, as source=local and inStock=1', () => {
+      stubViewport(true);
+      const { container } = render(
+        <form method="get">
+          <FacetPanel {...props({ source: 'local', inStock: true })} />
+        </form>,
+      );
+      const data = new FormData(container.querySelector('form') as HTMLFormElement);
+      expect(data.getAll('source')).toEqual(['local']);
+      expect(data.getAll('inStock')).toEqual(['1']);
+    });
+  });
+
   describe('the Toxic field when a count is zero', () => {
     const withToxic = (
       toxic: CompendiumFacetCounts['toxic'],
@@ -331,16 +577,16 @@ describe('FacetPanel', () => {
     };
     const group = () => screen.getByRole('group', { name: /^Toxic/ });
 
-    it('keeps all three segments, disables the group on Any and carries a hint when Toxic is zero', () => {
+    it('rests the chip on Any, disables the group and carries a hint when Toxic is zero', () => {
       withToxic([
         { value: 'toxic', label: 'Toxic', count: 0 },
         { value: 'not_toxic', label: 'Not Toxic', count: 9 },
       ]);
-      expect(within(group()).getAllByRole('radio')).toHaveLength(3);
-      expect(screen.getByRole('radio', { name: /^Toxic \(0\)/ })).toBeInTheDocument();
-      expect(within(group()).getByRole('radio', { name: /^Any/ })).toBeChecked();
-      expect(group()).toBeDisabled();
-      expect(group()).toHaveAccessibleDescription();
+      // The chip rests on Any and does not open, so it holds no radios while stuck.
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+      expect(within(group()).queryByRole('radio')).toBeNull();
     });
 
     it('does the same when Not Toxic is zero, even if it was the chosen value', () => {
@@ -351,15 +597,97 @@ describe('FacetPanel', () => {
         ],
         { toxic: 'not_toxic' },
       );
-      expect(screen.getByRole('radio', { name: /^Not Toxic \(0\)/ })).toBeInTheDocument();
-      expect(within(group()).getByRole('radio', { name: /^Any/ })).toBeChecked();
-      expect(group()).toBeDisabled();
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+    });
+
+    it('opens the hint when the pointer rests on the disabled chip itself', () => {
+      withToxic([
+        { value: 'toxic', label: 'Toxic', count: 0 },
+        { value: 'not_toxic', label: 'Not Toxic', count: 9 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /Any/ });
+      const bubble = () =>
+        document.getElementById(
+          chip.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(chip);
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
     });
 
     it('is enabled, with no hint, when both counts are above zero', () => {
       withToxic(FACETS.toxic);
-      expect(group()).toBeEnabled();
-      expect(group()).not.toHaveAccessibleDescription();
+      expect(within(group()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
+    });
+  });
+
+  describe('the Source field when a count is zero', () => {
+    const withSource = (
+      source: NonNullable<CompendiumFacetCounts['source']>,
+      filter: Partial<FacetPanelFilter> = {},
+    ) => {
+      stubViewport(true);
+      render(
+        <form method="get">
+          <FacetPanel
+            {...props({ source: '', inStock: false, ...filter }, { facets: { ...FACETS, source } })}
+          />
+        </form>,
+      );
+      fireEvent.click(filtersButton());
+    };
+    const group = () => screen.getByRole('group', { name: /^Source/ });
+    const submitted = () =>
+      new FormData(document.querySelector('form') as HTMLFormElement).getAll('source');
+
+    it('rests the chip on All, disables the group and carries a hint when Compendium is zero', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 0 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+      expect(within(group()).queryByRole('radio')).toBeNull();
+    });
+
+    it('does the same when Local is zero, and submits nothing for a held source', () => {
+      withSource(
+        [
+          { value: 'local', label: 'Local', count: 0 },
+          { value: 'compendium', label: 'Compendium', count: 4 },
+        ],
+        { source: 'local' },
+      );
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      expect(chip).toBeDisabled();
+      expect(chip.closest('fieldset')).toHaveAccessibleDescription();
+      expect(submitted()).toEqual([]);
+    });
+
+    it('is enabled, with no hint, when both counts are above zero', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 3 },
+      ]);
+      expect(within(group()).queryByRole('button', { name: /(Any|All)/ })).toBeNull();
+    });
+
+    it('opens the hint when the pointer rests on the disabled chip itself', () => {
+      withSource([
+        { value: 'local', label: 'Local', count: 6 },
+        { value: 'compendium', label: 'Compendium', count: 0 },
+      ]);
+      const chip = within(group()).getByRole('button', { name: /All/ });
+      const bubble = () =>
+        document.getElementById(
+          chip.closest('fieldset')?.getAttribute('aria-describedby') ?? '',
+        ) as HTMLElement;
+      expect(bubble()).toHaveAttribute('aria-hidden', 'true');
+      fireEvent.mouseEnter(chip);
+      expect(bubble()).toHaveAttribute('aria-hidden', 'false');
     });
   });
 
@@ -369,7 +697,7 @@ describe('FacetPanel', () => {
     render(<FacetPanel {...props({}, { admin: true, onChange })} />);
     fireEvent.click(filtersButton());
 
-    fireEvent.click(screen.getByRole('radio', { name: /^Toxic \(2\)/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Toxic 2/ }));
     expect(onChange).toHaveBeenLastCalledWith({ toxic: 'toxic' });
 
     fireEvent.click(screen.getByRole('switch', { name: /^No Refs/ }));
@@ -394,23 +722,24 @@ describe('FacetPanel', () => {
   });
 });
 
-// The phone sheet fades in and out as every dialog does, and waits out the fade before it
+// The phone sheet slides in from the right and out to it, and waits out the slide before it
 // closes; the desktop slide and reduced motion are untouched.
-describe('FacetPanel phone sheet fade', () => {
+describe('FacetPanel phone sheet slide', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
   });
 
-  const fadeEnd = () => {
+  const transitionEnd = (propertyName: string) => {
     const end = new Event('transitionend', { bubbles: true });
-    Object.defineProperty(end, 'propertyName', { value: 'opacity' });
+    Object.defineProperty(end, 'propertyName', { value: propertyName });
     fireEvent(dialog(), end);
   };
+  const slideEnd = () => transitionEnd('transform');
   const closeButton = () => screen.getAllByRole('button', { name: 'Close' })[0]!;
 
-  it('holds the sheet open, leaving, until the fade ends, then closes and applies once', () => {
+  it('holds the sheet open, leaving, until the slide ends, then closes and applies once', () => {
     stubViewport(false, false);
     const onApply = vi.fn();
     render(<FacetPanel {...props({}, { onApply })} />);
@@ -423,7 +752,7 @@ describe('FacetPanel phone sheet fade', () => {
     expect(dialog()).toHaveAttribute('open');
     expect(onApply).toHaveBeenCalledTimes(1);
 
-    fadeEnd();
+    slideEnd();
 
     expect(dialog()).not.toHaveAttribute('open');
     expect(dialog()).not.toHaveClass('is-closing');
@@ -431,7 +760,7 @@ describe('FacetPanel phone sheet fade', () => {
     expect(onApply).toHaveBeenCalledTimes(1);
   });
 
-  it('applies once however many times it is asked to shut during the fade', () => {
+  it('applies once however many times it is asked to shut during the slide', () => {
     stubViewport(false, false);
     const onApply = vi.fn();
     render(<FacetPanel {...props({}, { onApply })} />);
@@ -440,13 +769,13 @@ describe('FacetPanel phone sheet fade', () => {
     fireEvent.click(closeButton());
     fireEvent.pointerDown(dialog());
     fireEvent.click(closeButton());
-    fadeEnd();
+    slideEnd();
     fireEvent(dialog(), new Event('close'));
 
     expect(onApply).toHaveBeenCalledTimes(1);
   });
 
-  it('closes after a limit when the browser never reports the end of the fade', () => {
+  it('closes after a limit when the browser never reports the end of the slide', () => {
     vi.useFakeTimers();
     stubViewport(false, false);
     render(<FacetPanel {...props()} />);
@@ -461,7 +790,20 @@ describe('FacetPanel phone sheet fade', () => {
     expect(dialog()).not.toHaveAttribute('open');
   });
 
-  it('takes the sheet own Escape through the fade rather than closing at once', () => {
+  // The backdrop's fade ends on the dialog too, and sooner than the sheet's slide.
+  it('stays open when only the backdrop fade ends', () => {
+    stubViewport(false, false);
+    render(<FacetPanel {...props()} />);
+    fireEvent.click(filtersButton());
+    fireEvent.click(closeButton());
+
+    transitionEnd('opacity');
+
+    expect(dialog()).toHaveAttribute('open');
+    expect(dialog()).toHaveClass('is-closing');
+  });
+
+  it('takes the sheet own Escape through the slide rather than closing at once', () => {
     stubViewport(false, false);
     render(<FacetPanel {...props()} />);
     fireEvent.click(filtersButton());
@@ -471,7 +813,7 @@ describe('FacetPanel phone sheet fade', () => {
 
     expect(cancel.defaultPrevented).toBe(true);
     expect(dialog()).toHaveClass('is-closing');
-    fadeEnd();
+    slideEnd();
     expect(dialog()).not.toHaveAttribute('open');
   });
 
@@ -488,7 +830,7 @@ describe('FacetPanel phone sheet fade', () => {
     expect(onApply).toHaveBeenCalledTimes(1);
   });
 
-  it('snaps shut with no fade when the width crosses the tablet width', () => {
+  it('snaps shut with no slide when the width crosses the tablet width', () => {
     const listeners = stubViewport(false, false);
     render(<FacetPanel {...props()} />);
     fireEvent.click(filtersButton());
@@ -498,7 +840,7 @@ describe('FacetPanel phone sheet fade', () => {
     expect(dialog()).not.toHaveAttribute('open');
   });
 
-  it('leaves the desktop panel on its slide, never the sheet fade', () => {
+  it('leaves the desktop panel on its slide, never the sheet slide', () => {
     stubViewport(true, false);
     render(<FacetPanel {...props()} />);
     fireEvent.click(filtersButton());

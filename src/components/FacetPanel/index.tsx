@@ -13,7 +13,7 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { CategoryMode } from '@/modules/ingredients/schema/ingredient-enums';
+import type { CategoryMode, IngredientSource } from '@/modules/ingredients/schema/ingredient-enums';
 import { useHydrated } from '../../lib/hydrated';
 import { opensElsewhere } from '../../lib/opens-elsewhere';
 import { useSlide } from '../../lib/use-slide';
@@ -21,9 +21,11 @@ import CategoryPicker from '../CategoryPicker';
 import FacetCombobox from '../FacetCombobox';
 import { fieldDescription } from '../Field/description';
 import { FieldShell } from '../Field/shell';
-import { RadioGroupField } from '../Field/radio-group-field';
-import { SwitchField } from '../Field/switch-field';
 import FormIcon from '../FormIcon';
+import type { CompendiumFacetCounts } from '../CompendiumList/types';
+import { ChoiceChip, fadesAreOff } from './choice-chip';
+import { FacetCount } from './facet-count';
+import { FacetSwitch } from './facet-switch';
 import type { FacetPanelProps } from './types';
 import './index.scss';
 
@@ -37,17 +39,35 @@ import './index.scss';
 
 /** The shell's tablet width (`$shell-tablet-width`), where the panel stops being a sheet. */
 /**
- * How long a leaving sheet waits for its fade to end before it closes anyway: longer than the
- * fade (`$modal-fade`), for a browser that never reports its end. Modal waits the same.
+ * How long a leaving sheet waits for its slide out to end before it closes anyway: longer than
+ * the slide (`$sheet-slide` in index.scss), for a browser that never reports its end.
  */
-const FADE_LIMIT_MS = 400;
-
-/** Motion turned down, or no way to ask, so a close is not held for a fade. */
-const fadesAreOff = (): boolean =>
-  typeof window.matchMedia !== 'function' ||
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const LEAVE_LIMIT_MS = 400;
 
 const WIDE = '(min-width: 56rem)';
+
+const SOURCE_LABELS: Record<IngredientSource, string> = {
+  local: 'Local',
+  compendium: 'Compendium',
+};
+
+/**
+ * The Source chip's choices: All, then Local and Compendium. The two always show, each with
+ * its count once the coven's counts are read, as Toxic's do; All has none, as Toxic's Any has
+ * none.
+ */
+function sourceOptions(
+  counts: CompendiumFacetCounts['source'],
+): { value: '' | IngredientSource; label: string; count?: number }[] {
+  return [
+    { value: '', label: 'All' },
+    ...(['local', 'compendium'] as const).map((value) => ({
+      value,
+      label: SOURCE_LABELS[value],
+      count: counts?.find((choice) => choice.value === value)?.count,
+    })),
+  ];
+}
 
 const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
   { value: 'all', label: 'All' },
@@ -89,7 +109,7 @@ function NativeCategories({
               .filter((category) => category.count > 0 || values.includes(category.value))
               .map((category) => (
                 <option key={category.value} value={category.value}>
-                  {category.label} ({category.count})
+                  {category.label} {category.count}
                 </option>
               ))}
           </optgroup>
@@ -118,7 +138,7 @@ export default function FacetPanel({
   // Whether this opening is the modal sheet, fixed when it opens.
   const modal = useRef(false);
   const slide = useSlide('facet-panel__clip');
-  // The sheet fading out: it stays open, with `is-closing` on it, until the fade ends.
+  // The sheet sliding out: it stays open, with `is-closing` on it, until the slide ends.
   const [leaving, setLeaving] = useState(false);
 
   // Every chosen value counts, so two categories and two forms read 4. Match is a mode
@@ -132,10 +152,18 @@ export default function FacetPanel({
     filter.elements,
   ].reduce((total, list) => total + list.length, 0);
   const count =
-    chosen + (filter.toxic === '' ? 0 : 1) + (admin && filter.withoutReferences ? 1 : 0);
+    chosen +
+    (filter.toxic === '' ? 0 : 1) +
+    (admin && filter.withoutReferences ? 1 : 0) +
+    (filter.source ? 1 : 0) +
+    (filter.inStock ? 1 : 0);
 
   const matchStuck = filter.categories.length < 2;
   const toxicStuck = facets.toxic.some((choice) => choice.count === 0);
+  // The Source chip is stuck the same way: a source with nothing behind it means every
+  // matching entry comes from the other, so the filter cannot narrow. Counts not yet read
+  // (`facets.source` unset) leave it free.
+  const sourceStuck = facets.source?.some((choice) => choice.count === 0) ?? false;
 
   // Focus goes back to the button when it was inside the panel, so that a closing panel
   // never leaves it on a control that is about to disappear.
@@ -146,8 +174,8 @@ export default function FacetPanel({
   // The panel shuts, and what was changed in it is applied once: whichever way it shuts, the
   // Filters button, Escape, Close, the sheet's own Escape or the width changing under it.
   // Nothing happens when it is already shut, so a close that follows a close applies nothing twice.
-  // `snap` shuts with no motion at all; otherwise the sheet fades out and the panel slides up.
-  // The sheet fades out before it closes, as a Modal does; the panel slides, and motion turned
+  // `snap` shuts with no motion at all; otherwise the sheet slides out right and the panel slides up.
+  // The sheet slides out before it closes, as a Modal waits out its fade; the panel slides, and motion turned
   // down, or no way to ask, closes either at once.
   const leave = () => {
     if (!modal.current || fadesAreOff()) {
@@ -203,10 +231,10 @@ export default function FacetPanel({
     }
   });
 
-  // The net for a fade whose end the browser never reports.
+  // The net for a slide whose end the browser never reports.
   useEffect(() => {
     if (!leaving) return undefined;
-    const limit = setTimeout(finishLeaving, FADE_LIMIT_MS);
+    const limit = setTimeout(finishLeaving, LEAVE_LIMIT_MS);
     return () => clearTimeout(limit);
   });
 
@@ -233,15 +261,15 @@ export default function FacetPanel({
 
   // The sheet's backdrop belongs to the dialog itself, so a press that lands on the dialog and
   // not on anything in it is a press on the backdrop.
-  // The sheet's own Escape would close it at once; it goes through the fade instead.
+  // The sheet's own Escape would close it at once; it goes through the slide instead.
   const onCancel = (event: SyntheticEvent<HTMLDialogElement>) => {
     if (!modal.current) return;
     event.preventDefault();
     dismiss();
   };
 
-  const onFadeEnd = (event: TransitionEvent<HTMLDialogElement>) => {
-    if (leaving && event.target === event.currentTarget && event.propertyName === 'opacity') {
+  const onSlideEnd = (event: TransitionEvent<HTMLDialogElement>) => {
+    if (leaving && event.target === event.currentTarget && event.propertyName === 'transform') {
       finishLeaving();
     }
   };
@@ -281,7 +309,12 @@ export default function FacetPanel({
     event.currentTarget.scrollTop = 0;
   };
 
-  const filtersLabel = count > 0 ? `Filters (${count})` : 'Filters';
+  const filtersLabel = (
+    <>
+      Filters
+      {count > 0 && <FacetCount count={count} />}
+    </>
+  );
   const clip = hydrated ? slide.className : 'facet-panel__clip facet-panel__clip--open';
 
   return (
@@ -311,7 +344,7 @@ export default function FacetPanel({
         ref={dialogRef}
         id={id}
         className={
-          `facet-panel${hydrated ? '' : ' facet-panel--static'}` +
+          `facet-panel facet-panel--compact${hydrated ? '' : ' facet-panel--static'}` +
           (leaving ? ' is-closing' : '') +
           (className ? ` ${className}` : '')
         }
@@ -321,7 +354,7 @@ export default function FacetPanel({
         onKeyDown={onKeyDown}
         onPointerDown={onPointerDown}
         onCancel={onCancel}
-        onTransitionEnd={onFadeEnd}
+        onTransitionEnd={onSlideEnd}
         onClose={() => shut(true)}
       >
         <div
@@ -375,12 +408,17 @@ export default function FacetPanel({
                 {/* Match stays below two categories so the row does not shift as categories are
                     picked: it rests on All, disabled, and says when it applies. The held mode is
                     kept (it still reads All here, and the address drops it, M8.12). */}
-                <div className="facet-panel__pair">
-                  <RadioGroupField
+                <div
+                  className={
+                    hydrated
+                      ? 'facet-panel__quick facet-panel__quick--picker'
+                      : 'facet-panel__quick'
+                  }
+                >
+                  <ChoiceChip
                     legend="Match"
                     name="categoryMode"
-                    layout="segmented"
-                    hint={
+                    chipHint={
                       matchStuck
                         ? 'Match applies once two or more categories are chosen.'
                         : 'All: an ingredient must be in every chosen category. Any: in at least one of them.'
@@ -390,21 +428,10 @@ export default function FacetPanel({
                     disabled={matchStuck}
                     onChange={(categoryMode) => onChange({ categoryMode })}
                   />
-                  {admin && (
-                    <div className="facet-panel__no-refs">
-                      <SwitchField
-                        label={`No Refs (${facets.withoutReferences})`}
-                        name="withoutReferences"
-                        value="1"
-                        checked={filter.withoutReferences}
-                        onChange={(withoutReferences) => onChange({ withoutReferences })}
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
 
-              <div className="facet-panel__line facet-panel__line--forms">
+              <div className="facet-panel__line">
                 <div className="facet-panel__grow">
                   <FacetCombobox
                     label="Forms"
@@ -423,30 +450,70 @@ export default function FacetPanel({
                     onChange={(forms) => onChange({ forms })}
                   />
                 </div>
-                <RadioGroupField
-                  legend="Toxic"
-                  name="toxic"
-                  layout="segmented"
-                  options={[
-                    { value: '', label: 'Any' },
-                    ...facets.toxic.map((choice) => ({
-                      value: choice.value,
-                      label: choice.label,
-                      count: choice.count,
-                    })),
-                  ]}
-                  // Toxic is the one facet that keeps a zero-count value: all three
-                  // segments always show. With either side empty, every matching entry
-                  // shares one toxicity, so the field rests on Any and cannot narrow.
-                  value={toxicStuck ? '' : filter.toxic}
-                  disabled={toxicStuck}
-                  hint={
-                    toxicStuck
-                      ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
-                      : undefined
-                  }
-                  onChange={(toxic) => onChange({ toxic })}
-                />
+                <div className="facet-panel__quick">
+                  <ChoiceChip
+                    legend="Toxic"
+                    name="toxic"
+                    options={[
+                      { value: '', label: 'Any' },
+                      ...facets.toxic.map((choice) => ({
+                        value: choice.value,
+                        label: choice.label,
+                        count: choice.count,
+                      })),
+                    ]}
+                    // Toxic is the one facet that keeps a zero-count value: all three
+                    // choices always show. With either side empty, every matching entry
+                    // shares one toxicity, so the chip rests on Any and cannot narrow.
+                    value={toxicStuck ? '' : filter.toxic}
+                    disabled={toxicStuck}
+                    chipHint={
+                      toxicStuck
+                        ? 'Every matching entry shares the same toxicity, so this filter cannot narrow further.'
+                        : undefined
+                    }
+                    onChange={(toxic) => onChange({ toxic })}
+                  />
+                  {filter.source !== undefined && (
+                    <ChoiceChip
+                      legend="Source"
+                      name="source"
+                      hint={
+                        sourceStuck
+                          ? undefined
+                          : 'Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium.'
+                      }
+                      chipHint={
+                        sourceStuck
+                          ? 'Every matching entry comes from the same source, so this filter cannot narrow further.'
+                          : undefined
+                      }
+                      options={sourceOptions(facets.source)}
+                      // Rests on All while stuck and submits nothing, as Toxic rests on Any.
+                      value={sourceStuck ? '' : filter.source}
+                      disabled={sourceStuck}
+                      onChange={(source) => onChange({ source })}
+                    />
+                  )}
+                  {filter.inStock !== undefined && (
+                    <FacetSwitch
+                      label="In Stock"
+                      count={facets.inStock}
+                      name="inStock"
+                      checked={filter.inStock}
+                      onChange={(inStock) => onChange({ inStock })}
+                    />
+                  )}
+                  {admin && (
+                    <FacetSwitch
+                      label="No Refs"
+                      count={facets.withoutReferences}
+                      name="withoutReferences"
+                      checked={filter.withoutReferences}
+                      onChange={(withoutReferences) => onChange({ withoutReferences })}
+                    />
+                  )}
+                </div>
               </div>
 
               <div className="facet-panel__line">

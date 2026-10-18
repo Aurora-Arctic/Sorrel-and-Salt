@@ -440,8 +440,8 @@ a second way through the chips would be a second tab model for one look.
   "Element changes", "Added Air", "Removed Air" or "Cleared Element", as a
   list field's are (WCAG 4.1.3).
 - **A choice may carry a count and be disabled** (M12.4), for a filter that
-  shows how many entries each value would leave. A row reads "Fire (9)": the
-  count follows the label in its own span, after a space that is a text node,
+  shows how many entries each value would leave. A row reads "Fire 9": the
+  count follows the label in its own span, small and muted with no brackets (as the facet panel's are), after a space that is a text node,
   because an accessible name drops a space a span begins with. `hideZeros`
   leaves out a row whose count is 0, and a choice's own `disabled` makes a
   row that is listed but cannot be chosen. A disabled row is truly disabled (Downshift's
@@ -534,9 +534,9 @@ so that every list draws the same one:
   entry's summary" below.
 - **An icon, a count, a loading mark and an outlined look** (M12.4), for the
   filter's chips. `icon` leads the text, `aria-hidden`. `count` follows it as
-  "(12)" outside the span that is cut off, so a long name loses its tail and
+  as a small muted number, no brackets, outside the span that is cut off, so a long name loses its tail and
   never its count, with its space a text node of the label's own so the chip
-  reads "Water (7)". `loading` swaps the count for a shimmering placeholder
+  reads "Water 7". `loading` swaps the count for a shimmering placeholder
   (the list skeleton's `skeleton-shimmer`, still under reduced motion),
   `aria-hidden`, and `loading` wins over `count`. `removeNoun` names the x
   "Remove {Noun}: {Value}" (`Remove Element: Water`) and that name is the same
@@ -871,7 +871,7 @@ typed. The control's width, which happy-dom does not lay out,
 was measured in the workshop at MB.115: one width empty, mid-typing, chosen
 and cleared.
 
-`tests/components/Combobox/counts.test.tsx` covers M12.4's additions in the multi-select, the typed box and the chip: a row's and a chip's name carrying the count ("Fire (9)"); `hideZeros` leaving a zero-count row out (and every row, with the box staying, when all are zero); a chosen zero-count value staying removable; the loading placeholder hidden from a reader and the x's name unchanged when the count arrives; and the icon and the outlined look on a chip.
+`tests/components/Combobox/counts.test.tsx` covers M12.4's additions in the multi-select, the typed box and the chip: a row's and a chip's name carrying the count ("Fire 9"); `hideZeros` leaving a zero-count row out (and every row, with the box staying, when all are zero); a chosen zero-count value staying removable; the loading placeholder hidden from a reader and the x's name unchanged when the count arrives; and the icon and the outlined look on a chip.
 
 `tests/lib/debounce.test.tsx` covers the hook with fake timers.
 

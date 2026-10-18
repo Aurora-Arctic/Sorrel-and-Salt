@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { compendiumFacetCounts, type FacetVocabularies } from '@/components/CompendiumList/facets';
+import {
+  compendiumFacetCounts,
+  covenFacetCounts,
+  type FacetVocabularies,
+} from '@/components/CompendiumList/facets';
 import type { CompendiumCategoryChoice } from '@/components/CompendiumList/types';
-import type { CompendiumFacets } from '@/modules/ingredients';
+import type { CompendiumFacets, WorkspaceIngredientFacets } from '@/modules/ingredients';
 
 // The service's counts name a deity or a category by id and a form by its
 // spelling; the list's props name them by what the address and a chip carry
@@ -186,5 +190,36 @@ describe('the facet counts as the list takes them', () => {
       ['not_toxic', 4],
     ]);
     expect(counts.withoutReferences).toBe(7);
+  });
+});
+
+describe("a coven's facet counts as its panel takes them (M9.7)", () => {
+  const covenCounts: WorkspaceIngredientFacets = {
+    ...EMPTY,
+    source: [
+      { value: 'local', count: 4 },
+      { value: 'compendium', count: 0 },
+    ],
+    inStock: 3,
+  };
+
+  it('carries both Source values, zero kept, and the In Stock count beside the shared kinds', () => {
+    const counts = covenFacetCounts(
+      { ...covenCounts, toxic: [{ value: 'toxic', count: 2 }] },
+      VOCABULARIES,
+    );
+
+    expect(counts.source?.map(({ value, count }) => [value, count])).toEqual([
+      ['local', 4],
+      ['compendium', 0],
+    ]);
+    expect(counts.inStock).toBe(3);
+    expect(counts.toxic.map(({ value, count }) => [value, count])).toEqual([['toxic', 2]]);
+  });
+
+  it("leaves both off the compendium's counts, which have no source or jars", () => {
+    const counts = compendiumFacetCounts(EMPTY, VOCABULARIES);
+    expect(counts).not.toHaveProperty('source');
+    expect(counts).not.toHaveProperty('inStock');
   });
 });

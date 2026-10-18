@@ -107,38 +107,13 @@
   margin: 0;
 }
 
-// One row per pair of facets: a combobox takes the spare width and the compact control
-// beside it (Match, No Refs, the Toxic strip) keeps its own. Below the tablet width every
-// control stacks, in the same order as the source.
+// One row per pair of facets: a combobox takes the spare width and the compact controls
+// beside it (the chips and switches, in `.facet-panel__quick`) keep their own. Below the
+// tablet width every control stacks, in the same order as the source.
 .facet-panel__line {
   display: flex;
   flex-direction: column;
   gap: space(4);
-
-  // The group's own vertical margin (set for a group among prose) would push the strip
-  // below its neighbour's label; the row's gap is the spacing.
-  .fieldset.radio-group {
-    margin-block: 0;
-  }
-
-  // Match's legend carries an InfoTip, whose button is taller than the text, so the legend
-  // stood 6px taller than Categories' and its strip sat lower. The label row is held to one
-  // line (the button overflows it, centred) and the gap is Categories' own (space 3), so the
-  // two fields share a label and a control top.
-  .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
-    margin-bottom: space(3);
-
-    .field__label-row {
-      block-size: 1lh;
-    }
-  }
-
-  // The Forms row's combobox sits a space 2 gap under its label, not Categories' space 3, so
-  // the Toxic legend keeps the plain gap with or without its hint: its strip then shares
-  // Forms' control top in both states (measured: 4px low with the hint before this).
-  &--forms > .fieldset.radio-group .fieldset__legend:has(.field__label-row) {
-    margin-bottom: space(2);
-  }
 
   // Stacked, a combobox is as tall as it is, not the row-wise basis.
   > .facet-panel__grow {
@@ -158,30 +133,153 @@
   }
 }
 
-// Match and No Refs share one line on the phone sheet, tops level, instead of stacking full
-// width; from the tablet width the row is already a row, so the pair dissolves into it.
-.facet-panel__pair {
+// The chips and switches of a row, side by side and wrapping on a phone. Each stands where a
+// labelled field would, tops level: the chip's spacer is the height of a label.
+.facet-panel__quick {
   display: flex;
-  gap: space(4);
+  flex-wrap: wrap;
   align-items: flex-start;
+  gap: space(3) space(4);
+}
 
-  @media (min-width: $shell-tablet-width) {
-    display: contents;
+// Beside the category picker, whose legend sits a step higher above its box than a field's
+// label does (space 3 against 2): the chip steps down by the difference. Before the script the
+// categories are a plain field, with no difference.
+.facet-panel__quick--picker {
+  padding-block-start: space(1);
+}
+
+// A count after a name (Filters, an option, a switch): small, in the muted ink, the same font,
+// with no brackets round it.
+.facet-panel__count {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+// A choice chip (ChoiceChip): "Match: All" and a caret, opening a menu of radios. A
+// `<details>`, so it opens before the script runs; once the script has run the menu fades as
+// other dropdowns do, and stays in the page until the fade ends.
+.facet-chip__bar {
+  // The tip bubble is placed against the nearest positioned ancestor; this is the chip and its icon.
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: space(1);
+}
+
+.facet-chip__group {
+  margin: 0;
+}
+
+.facet-chip__details {
+  position: relative;
+}
+
+.facet-chip__summary {
+  @include field-box;
+
+  display: inline-flex;
+  align-items: center;
+  gap: space(2);
+  min-height: var(--facet-control, #{$control-height});
+  padding-block: 0;
+  border-radius: radius('pill');
+  font: inherit;
+  white-space: nowrap;
+  cursor: pointer;
+  list-style: none;
+  @include theme-transition(background-color);
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &:hover {
+    background-color: color-mix(in srgb, $accent 12%, $surface-card);
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+
+  // A chip that cannot change rests dashed and dim, as a shut field does.
+  &:disabled {
+    // Off, so a hover lands on the bar around it, which shows the hint.
+    pointer-events: none;
+    border-style: dashed;
+    background-color: transparent;
+    color: $text-muted;
+    cursor: default;
   }
 }
 
-// The switch sits centred under its label.
-.facet-panel__no-refs {
-  width: fit-content;
+.facet-chip__details[open] > .facet-chip__summary {
+  border-color: $accent;
+}
 
-  .field__label {
-    text-align: center;
+// The name is the quieter half of the chip: the caption size the counts use, in the muted ink,
+// so the value beside it is what reads. The chip's height is the summary's own minimum.
+.facet-chip__name {
+  color: $text-muted;
+  font-size: type-size('caption');
+}
+
+.facet-chip__value {
+  font-weight: 500;
+}
+
+.facet-chip__caret {
+  inline-size: 0.625rem;
+  block-size: 0.375rem;
+  color: $text-muted;
+}
+
+.facet-chip__menu {
+  @include floating-panel;
+
+  position: absolute;
+  inset-block-start: calc(100% + #{space(1)});
+  inset-inline-start: 0;
+  z-index: layer('floating');
+  min-inline-size: 100%;
+  padding: space(1) space(3);
+  white-space: nowrap;
+}
+
+// A chip at the end of a row would open a menu wider than itself past the panel's right edge,
+// where the slide's clip cuts it. choice-chip.tsx measures on open and adds this class when
+// that would happen; the menu then hangs from the chip's right edge and opens leftward. Which
+// chip ends a row varies (Match, Toxic, No Refs, Source), so the CSS alone cannot say.
+.facet-chip__menu--end {
+  inset-inline: auto 0;
+}
+
+// With the script on, the menu is always in the page while open and fades by opacity and
+// visibility, the way a tip bubble does; without it, an open `<details>` shows it whole.
+.facet-chip--script > .facet-chip__menu {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity $modal-fade,
+    visibility 0s linear 150ms;
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition:
+      opacity $modal-fade,
+      visibility 0s;
   }
 
-  .switch__control {
-    display: flex;
-    justify-content: center;
+  @include reduced-motion {
+    transition: none;
   }
+}
+
+.facet-chip__option {
+  align-items: center;
+  min-block-size: 2rem;
+  padding-block: space(1);
 }
 
 .facet-panel__foot {
@@ -210,10 +308,17 @@
   display: none;
 }
 
-// The modal sheet below the tablet width: a full-height drawer with no slide. Its foot
+// How long the phone sheet takes to slide in or out: longer than a dialog's fade, since it
+// travels its own width. index.tsx waits up to LEAVE_LIMIT_MS for it, which must stay longer.
+$sheet-slide: 250ms ease-out;
+
+// The modal sheet below the tablet width: a full-height drawer from the right. Its foot
 // sticks to the bottom, and the sheet scrolls with room kept above it so that a focused
 // control is never hidden behind it (WCAG 2.4.11).
 .facet-panel:modal {
+  // Fixed, as a modal dialog is by default, not the overlay's absolute: an absolute box
+  // translated past the right edge widens the page, which then scrolled sideways after it.
+  position: fixed;
   inset: 0;
   display: flex;
   flex-direction: column;
@@ -225,15 +330,16 @@
   overflow-y: auto;
   scroll-padding-block-end: 6rem;
 
-  // It fades in and out, sheet and backdrop together, as a Modal does (M5.5): in is CSS alone,
-  // from `@starting-style` as `showModal()` shows it; out is `.is-closing`, which the
-  // component sets and waits on before it closes the dialog.
-  opacity: 1;
-  transition: opacity $modal-fade;
+  // It slides in from the right edge and back out to it, while the backdrop fades as a
+  // Modal's does (M5.5): in is CSS alone, from `@starting-style` as `showModal()` shows it;
+  // out is `.is-closing`, which the component sets and waits on (the sheet's `transform`)
+  // before it closes the dialog. A slide rather than a fade: a drawer comes from its edge.
+  transform: none;
+  transition: transform $sheet-slide;
 
-  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without fading in
+  // stylelint-disable-next-line plugin/use-baseline -- enhancement: the sheet appears without sliding in
   @starting-style {
-    opacity: 0;
+    transform: translateX(100%);
   }
 
   &::backdrop {
@@ -247,7 +353,10 @@
     }
   }
 
-  &.is-closing,
+  &.is-closing {
+    transform: translateX(100%);
+  }
+
   &.is-closing::backdrop {
     opacity: 0;
   }
@@ -306,6 +415,16 @@
   margin-block: space(1) 0;
 }
 
+// Below the tablet width a chip that is not first on its line (Source after Toxic) hangs its
+// tip from the icon's right edge, as the wide panel does, so that it opens leftward instead of
+// running past the sheet's right edge. A first chip (Match, Toxic) starts at the sheet's left.
+@media (max-width: #{$shell-tablet-width - 0.0625rem}) {
+  .facet-panel .facet-chip:not(:first-child) .info-tip__bubble {
+    right: 0;
+    left: auto;
+  }
+}
+
 // On the wide panel Match stands at the right-hand end of its row, so a tip hung from the
 // label's left edge ran past the panel's right edge and was cut. It hangs from the icon's
 // right edge there and opens leftward. On the sheet, Match starts at the left, as the tip does.
@@ -313,5 +432,42 @@
   .facet-panel .info-tip__bubble {
     right: 0;
     left: auto;
+  }
+}
+
+// The compact scale (M9.7): every input in the panel is a step shorter than the app's forms
+// (`$control-height`), so the panel takes less room. Scoped here: the primitives, Field and
+// Combobox stay as the ingredient form draws them. Only heights and the strip's side padding
+// change; type stays at the body and small sizes, and colours and focus rings are the
+// primitives' own. The height is a custom property so the workshop can compare scales.
+// Chips are left at their own size: they already fit inside a box this tall.
+$compact-control: 2.5rem;
+
+.facet-panel--compact {
+  --facet-control: #{$compact-control};
+  --facet-text: calc(var(--facet-control) - 2px - #{2 * space(1)});
+
+  // A native select, a typed box and a combobox's box.
+  .input,
+  .select {
+    min-height: var(--facet-control);
+  }
+
+  .combobox__value {
+    min-height: var(--facet-text);
+    line-height: var(--facet-text);
+  }
+
+  .combobox__input {
+    min-height: var(--facet-text);
+  }
+
+  .switch .switch__control {
+    min-height: var(--facet-control);
+  }
+
+  .facet-panel__pad,
+  .facet-panel__line {
+    gap: space(3);
   }
 }

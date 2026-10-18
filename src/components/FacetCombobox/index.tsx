@@ -83,7 +83,7 @@ export default function FacetCombobox({
   const nativeOption = (choice: (typeof choices)[number]) => (
     <option key={choice.value} value={choice.value} disabled={choice.disabled}>
       {choice.label}
-      {choice.count !== undefined && ` (${choice.count})`}
+      {choice.count !== undefined && ` ${choice.count}`}
     </option>
   );
   // Values with nothing behind them are left out, unless chosen, as the box leaves them out.

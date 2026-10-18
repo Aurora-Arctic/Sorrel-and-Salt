@@ -54,15 +54,15 @@ describe('the multi-select box with counts', () => {
     render(<Harness />);
     fireEvent.click(box());
 
-    expect(screen.getByRole('option', { name: 'Fire (9)' })).toBeInTheDocument();
-    expect(screen.getByRole('option', { name: 'Earth (4)' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Fire 9' })).toBeInTheDocument();
+    expect(screen.getByRole('option', { name: 'Earth 4' })).toBeInTheDocument();
   });
 
   it('leaves zero-count options chooseable and in place unless asked', () => {
     render(<Harness />);
     fireEvent.click(box());
 
-    expect(names().map((text) => text?.split(' (')[0])).toEqual([
+    expect(names().map((text) => text?.replace(/ \d+$/, ''))).toEqual([
       'Earth',
       'Air',
       'Fire',
@@ -81,7 +81,11 @@ describe('the multi-select box with counts', () => {
 
       // Why they could have been listed: Air and Water are in the choices, at 0.
       expect(ELEMENTS.filter((choice) => choice.count === 0)).toHaveLength(2);
-      expect(names().map((text) => text?.split(' (')[0])).toEqual(['Earth', 'Fire', 'Spirit']);
+      expect(names().map((text) => text?.replace(/ \d+$/, ''))).toEqual([
+        'Earth',
+        'Fire',
+        'Spirit',
+      ]);
       expect(screen.queryByRole('option', { name: /^Air/ })).not.toBeInTheDocument();
     });
 
@@ -131,7 +135,7 @@ describe('a chip in the multi-select', () => {
     );
 
     const chip = screen.getByRole('listitem');
-    expect(chip).toHaveTextContent('Fire (9)');
+    expect(chip).toHaveTextContent('Fire 9');
     expect(chip.querySelector('[data-icon]')?.closest('[aria-hidden="true"]')).not.toBeNull();
     expect(screen.getByRole('button', { name: 'Remove Element: Fire' })).toBeInTheDocument();
   });
@@ -168,7 +172,7 @@ describe('a standalone entry', () => {
       </ul>,
     );
 
-    expect(screen.getByRole('listitem')).toHaveTextContent('Water (7)');
+    expect(screen.getByRole('listitem')).toHaveTextContent('Water 7');
     fireEvent.click(screen.getByRole('button', { name: 'Remove Element: Water' }));
     expect(onRemove).toHaveBeenCalledOnce();
   });
@@ -223,7 +227,7 @@ describe('the suggesting box with counts', () => {
     fireEvent.click(disabled);
     expect(onPick).not.toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('option', { name: 'Testward (3)' }));
+    fireEvent.click(screen.getByRole('option', { name: 'Testward 3' }));
     expect(onPick).toHaveBeenCalledWith('Testward', expect.objectContaining({ count: 3 }));
   });
 });

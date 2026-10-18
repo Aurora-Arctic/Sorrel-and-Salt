@@ -57,4 +57,5 @@ export type {
   SubstituteRow,
   VariantDetail,
   VariantKey,
+  WorkspaceIngredientFacets,
 } from './types';

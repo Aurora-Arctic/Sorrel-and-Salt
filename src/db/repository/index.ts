@@ -117,6 +117,7 @@ export type {
   FormSuggestion,
   GroupFilter,
   IngredientFacets,
+  WorkspaceIngredientFacets,
   IngredientFilter,
   IngredientFormValueFilter,
   IngredientIdentity,
