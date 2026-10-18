@@ -28,6 +28,7 @@ import type {
   VariantDetail,
 } from '@/modules/ingredients';
 import { applyCupboardEntry, isAnnotated } from '@/modules/ingredients/validation/cupboard-merge';
+import CupboardActions from './cupboard-actions';
 import EditButton from './edit-button';
 import { DETAILS, NoteMarks, ReferencesSection, referenceNotes } from './references';
 import EntryDialog from './entry-dialog';
@@ -427,6 +428,8 @@ const IngredientEntry = ({
   movedAway,
   replaces,
   similar,
+
+  cupboard,
 }: IngredientEntryProps): ReactElement => {
   const { cupboardEntry, folkNames, categories, deities, substitutes, variants } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use;
@@ -464,7 +467,38 @@ const IngredientEntry = ({
         <FormalName entry={entry} />
         <PageHeader
           title={shown.name}
-          action={edit && <EditButton href={edit.href} entry={editable} />}
+          action={
+            (edit || cupboard) && (
+              <>
+                {edit && <EditButton href={edit.href} entry={editable} />}
+                {cupboard && !local && (
+                  <CupboardActions
+                    {...cupboard}
+                    ingredientId={entry.id}
+                    held={held}
+                    compendium={{
+                      name: entry.name,
+                      description: entry.description,
+                      safetyNotes: entry.safetyNotes,
+                      elements: entry.elements ?? [],
+                      celestialBodies: entry.celestialBodies ?? [],
+                      zodiacSigns: entry.zodiacSigns ?? [],
+                      colors: entry.colors ?? [],
+                    }}
+                    overrides={{
+                      label: cupboardEntry?.label ?? null,
+                      description: cupboardEntry?.description ?? null,
+                      safetyNotes: cupboardEntry?.safetyNotes ?? null,
+                      elements: cupboardEntry?.elements ?? null,
+                      celestialBodies: cupboardEntry?.celestialBodies ?? null,
+                      zodiacSigns: cupboardEntry?.zodiacSigns ?? null,
+                      colors: cupboardEntry?.colors ?? null,
+                    }}
+                  />
+                )}
+              </>
+            )
+          }
         />
         {relabelled && (
           <p className="ingredient-entry__compendium-name">

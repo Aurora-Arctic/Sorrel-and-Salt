@@ -1,6 +1,8 @@
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { Forbidden, NotFound } from '@/lib/errors';
+import { makeQueryClient } from '@/lib/graphql-client';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
 import { entryDetail } from '../../../support/entry-detail';
 
@@ -69,7 +71,13 @@ const open = async (
   getIngredient.mockResolvedValue(row);
   ingredientDetailOf.mockResolvedValue({ ...entryDetail(), entry: row });
   viewerOf.mockResolvedValue({ viewer: { name: 'Fixture Member', canCurate }, workspaces: [] });
-  render(await Page(params(ID, search)));
+  // The cupboard buttons the page draws for a member (M12.17) read a query
+  // client, as the browser gives them one.
+  render(
+    <QueryClientProvider client={makeQueryClient()}>
+      {await Page(params(ID, search))}
+    </QueryClientProvider>,
+  );
 };
 
 beforeEach(() => {
