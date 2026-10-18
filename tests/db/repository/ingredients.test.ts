@@ -144,6 +144,30 @@ describe('findCompendiumPage', () => {
     expect(page.edges).toHaveLength(3);
   });
 
+  // M8.14: the card declares no sort of its own. Rows sharing a label keep a
+  // stable order because the id breaks the tie, across page boundaries too.
+  it('keeps rows sharing a label in id order, a page of one apart', async () => {
+    for (const canonicalName of ['Fixtura una', 'Fixtura duo', 'Fixtura tres']) {
+      await add('Fixture Cat Claw', { nomenclature: 'botanical', canonicalName });
+    }
+    const expected = await expectedOrder();
+    // The precondition: three rows, one label, so only the id can order them.
+    const [{ labels }] = await sql`
+      select count(distinct name)::int as labels from ingredients where workspace_id is null`;
+    expect(labels).toBe(1);
+    expect(expected).toHaveLength(3);
+
+    const ids: string[] = [];
+    let after: string | undefined;
+    for (let step = 0; step < 3; step += 1) {
+      const page = await pageOf({}, { first: 1, after });
+      ids.push(...page.edges.map((edge) => edge.node.id));
+      after = page.edges[page.edges.length - 1]?.cursor;
+    }
+
+    expect(ids).toEqual(expected);
+  });
+
   describe('search', () => {
     beforeEach(async () => {
       // No forms: the search reaches a form too (MB.218), and the fixture's

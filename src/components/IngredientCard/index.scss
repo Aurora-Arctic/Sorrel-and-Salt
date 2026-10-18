@@ -1,0 +1,30 @@
+@use '../../scss/variables' as *;
+
+// Layout only: the surface is `.panel`, the badges are the shared primitives,
+// and the caution and stock treatments keep their own components' styling.
+// Past the tokens only after the section's design review (MB.84).
+.ingredient-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: space(3);
+}
+
+.ingredient-card__name {
+  margin: 0;
+}
+
+// The formal name, then each form with its icon, wrapping on a narrow screen.
+.ingredient-card__secondary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: space(1) space(4);
+  margin: 0;
+}
+
+.ingredient-card__form {
+  display: inline-flex;
+  align-items: center;
+  gap: space(1);
+}

@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import type { ReactElement, ReactNode } from 'react';
+import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
@@ -513,20 +514,11 @@ const IngredientEntry = ({
         )}
         {(local || held || toxic || retired) && (
           <div className="badges">
-            {local && <span className="badge badge--local">Local</span>}
-            {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
-            {held && !retired && (
-              <output className="badge badge--low-stock">From the Compendium</output>
-            )}
-            {held && isAnnotated(cupboardEntry) && (
-              <output className="badge badge--low-stock">Annotated</output>
-            )}
-            {/* A compendium entry the curators retired, read because this
-                coven's cupboard names it (M12.24). An `output`, so it carries
-                the status role: on the page from the start, never announced. */}
-            {retired && (
-              <output className="badge badge--retired">No Longer in the Compendium</output>
-            )}
+            <EntryMarks
+              kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
+              annotated={held && isAnnotated(cupboardEntry)}
+              retired={retired}
+            />
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
         )}
