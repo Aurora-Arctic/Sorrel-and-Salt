@@ -223,6 +223,11 @@ stock.
   a deleted form, or a form of a deleted ingredient is `NotFound`. The
   composite foreign key alone would accept another coven's form, since it holds
   only the variant to its ingredient.
+- **A jar of a compendium form lists the entry (M12.15).** `createStock` also
+  inserts the coven's cupboard row for the entry when it has none, in the same
+  transaction and after the hidden-entry redirect has decided the jar stays on
+  the compendium form. A second jar of another form adds no second row
+  ([`workspace-compendium-entries.md`](workspace-compendium-entries.md), "Writing it").
 - **A form the coven holds is refused.** `createStock` throws a
   `ValidationError` beside `variantId` and writes nothing. It neither
   returns the held jar nor adds the input's amount to it: either would

@@ -367,6 +367,17 @@ const MUTATION_PROBES: Record<string, ScopeProbe> = {
   deleteStock: write(
     `mutation { deleteStock(workspaceId: "${WORKSPACE_W_ID}", id: "${NOWHERE}") }`,
   ),
+  // Ids naming no compendium entry, so a caller past the scope is refused by
+  // the service before anything is written.
+  addCupboardEntry: write(
+    `mutation { addCupboardEntry(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}") { id } }`,
+  ),
+  annotateCupboardEntry: write(
+    `mutation { annotateCupboardEntry(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}", input: {}) { id } }`,
+  ),
+  removeCupboardEntry: write(
+    `mutation { removeCupboardEntry(workspaceId: "${WORKSPACE_W_ID}", ingredientId: "${NOWHERE}") }`,
+  ),
   createCompendiumIngredient: write(
     'mutation { createCompendiumIngredient(input: { name: "Testwort", nomenclature: none, variants: [] }) { id } }',
   ),
@@ -540,6 +551,9 @@ const OPEN_WRITES = [
   'addIngredientToWorkspace',
   'updateStock',
   'deleteStock',
+  'addCupboardEntry',
+  'annotateCupboardEntry',
+  'removeCupboardEntry',
   'createReference',
   'updateReference',
   'promoteFolkName',

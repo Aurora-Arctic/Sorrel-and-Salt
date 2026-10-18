@@ -8,6 +8,7 @@ import { createLoaders } from '@/graphql/loaders';
 import { schema } from '@/graphql/schema';
 import { A, B, asUser } from '../support/as-user';
 import { insertIngredient } from '../support/db/insert-ingredient';
+import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
 import { insertReference } from '../support/db/insert-reference';
 import { insertStock } from '../support/db/insert-stock';
 import { variantIdOf } from '../support/db/read-variants';
@@ -48,6 +49,12 @@ let referenceId: string;
 let unheldVariantId: string;
 let jarId: string;
 let deletableJarId: string;
+// Three compendium entries: the add probe takes the first into W's cupboard,
+// the annotate probe relabels the second W holds, and the remove probe removes
+// the third, so no admitted call depends on another having run.
+let unheldEntryId: string;
+let heldEntryId: string;
+let removableEntryId: string;
 
 beforeAll(async () => {
   const sql = postgres(process.env.DATABASE_URL as string);
@@ -98,6 +105,17 @@ beforeAll(async () => {
     );
   jarId = await jarOf('Herb');
   deletableJarId = await jarOf('Oil');
+  const compendiumEntry = (name: string) =>
+    insertIngredient(sql, makeIngredient({ name, nomenclature: 'none' }), A.id);
+  unheldEntryId = await compendiumEntry('Fixture Unheld Entry');
+  heldEntryId = await compendiumEntry('Fixture Held Entry');
+  removableEntryId = await compendiumEntry('Fixture Removable Entry');
+  await insertCupboardEntry(sql, { workspaceId: WORKSPACE_W_ID, ingredientId: heldEntryId }, A.id);
+  await insertCupboardEntry(
+    sql,
+    { workspaceId: WORKSPACE_W_ID, ingredientId: removableEntryId },
+    A.id,
+  );
   const insertCoven = async (name: string) => {
     const [coven] = await sql`
       insert into workspaces ${sql({ ...workspaceColumns(makeWorkspace({ name })), created_by: A.id, updated_by: A.id })}
@@ -279,6 +297,24 @@ const PROBES: Record<string, WorkspaceIdProbe> = {
     source:
       'mutation ($workspaceId: ID!, $id: ID!) { deleteStock(workspaceId: $workspaceId, id: $id) }',
     variables: () => ({ id: deletableJarId }),
+  },
+  addCupboardEntry: {
+    source: `mutation ($workspaceId: ID!, $ingredientId: ID!) {
+      addCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId) { id }
+    }`,
+    variables: () => ({ ingredientId: unheldEntryId }),
+  },
+  annotateCupboardEntry: {
+    source: `mutation ($workspaceId: ID!, $ingredientId: ID!) {
+      annotateCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId, input: { label: "Fixture Relabel" }) { id }
+    }`,
+    variables: () => ({ ingredientId: heldEntryId }),
+  },
+  removeCupboardEntry: {
+    source: `mutation ($workspaceId: ID!, $ingredientId: ID!) {
+      removeCupboardEntry(workspaceId: $workspaceId, ingredientId: $ingredientId)
+    }`,
+    variables: () => ({ ingredientId: removableEntryId }),
   },
 };
 
