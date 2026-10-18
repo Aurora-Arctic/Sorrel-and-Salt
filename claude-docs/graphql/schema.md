@@ -342,6 +342,20 @@ type DeitySuggestion {
 `suggestions.test.ts` holds, with each curated row's `id` and `tradition`;
 the rules are `services/deity-suggestions.test.ts`'s.
 
+### `compendiumMatches`
+
+M12.20's question before a duplicate: `compendiumMatches(workspaceId, name)`
+lists the compendium entries whose name or formal name is exactly the typed
+one, folded to lower case, and no other tier, so no coven's own entry is ever
+offered. `findCompendiumMatches` asserts read membership of the coven first,
+so a viewer is answered and a non-member is `FORBIDDEN` by direct id. It is
+paged (`t.pagedConnection`, ordered by name, the form asks for five), and a
+blank name answers empty. Its node is the `Ingredient`, whose
+`inCupboard(workspaceId)` says whether that coven's cupboard holds it
+(through the batched `cupboardEntryByIngredient` loader, so a page is one
+read); `possibleDuplicates` nodes carry it too. `workspaceId` is nullable
+there, answering false, so the admin's call shares the document.
+
 ### `possibleDuplicates`
 
 Story 16's "did you mean" (MB.11), registered by `ingredients` over M4.7's

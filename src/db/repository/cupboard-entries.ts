@@ -72,7 +72,7 @@ function inCupboard(membership: Membership): SQL | undefined {
  * rather than fuzzy: a near spelling is `findSimilarIngredients`'.
  */
 export function findCompendiumMatchesByName(name: string): Promise<IngredientRow[]> {
-  return selectFrom(ingredients, compendiumNamed(name));
+  return selectFrom(ingredients, and(compendiumNamed(name), notSoftDeleted(ingredients)));
 }
 
 /**
@@ -83,17 +83,22 @@ export function findCompendiumMatchesByName(name: string): Promise<IngredientRow
 export function findCompendiumMatchPage(
   name: string,
   page: PageRequest,
-): Promise<PageEntry<IngredientRow, {}>[]> {
-  return findPageInTiers([], ingredients, [ingredients.name], page, compendiumNamed(name));
+): Promise<PageEntry<IngredientRow, object>[]> {
+  return findPageInTiers(
+    [],
+    ingredients,
+    [ingredients.name],
+    page,
+    and(compendiumNamed(name), notSoftDeleted(ingredients)),
+  );
 }
 
-/** A live compendium entry whose label or formal name is `name`, exactly but for case. */
+/** A compendium entry whose label or formal name is `name`, exactly but for case; the finders add the soft-delete filter. */
 function compendiumNamed(name: string): SQL | undefined {
   // `lower` has no builder.
   const folded = sql`lower(${name})`;
   return and(
     inCompendium(ingredients),
-    notSoftDeleted(ingredients),
     or(
       eq(sql`lower(${ingredients.name})`, folded),
       eq(sql`lower(${ingredients.canonicalName})`, folded),
