@@ -615,10 +615,10 @@ test.fixme(
     const cards = list.getByRole('listitem');
     await expect(cards).toHaveCount(4);
 
-    // M9.7's three states as a radio group, All, Local and Compendium, and
-    // in-stock-only as a switch, as the admin's Without References is
-    // (claude-docs/components/compendium-list.md). The names are this spec's choice.
-    const source = filterOf(page).getByRole('radiogroup', { name: 'Source' });
+    // M9.7's three states as RadioGroupField's fieldset, a `group` by role, All,
+    // Local and Compendium, and in-stock-only as a switch, as the admin's Without
+    // References is (claude-docs/components/compendium-list.md).
+    const source = filterOf(page).getByRole('group', { name: 'Source' });
     const inStockOnly = filterOf(page).getByRole('switch', { name: 'In Stock Only' });
 
     await test.step('local only: the two local entries, badged', async () => {
