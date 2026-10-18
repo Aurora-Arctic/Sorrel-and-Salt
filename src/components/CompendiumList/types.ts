@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import type {
   IngredientElement,
+  IngredientSource,
   NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
 import type { PickerCategory } from '../CategoryPicker/types';
@@ -119,6 +120,14 @@ export interface CompendiumFacetCounts {
   toxic: FacetChoice<'toxic' | 'not_toxic'>[];
   /** How many entries cite no live reference, the No Refs switch's count; the same with it on or off. */
   withoutReferences: number;
+  /**
+   * The coven's Source strip (M9.7): Local, then Compendium, zeros kept, each counted with
+   * the strip's own choice left out. Left off by the public and admin lists, which have no
+   * source, and by a coven panel whose counts have not been read.
+   */
+  source?: FacetChoice<IngredientSource>[];
+  /** The coven's In Stock Only switch's count, the same with it on or off. Left off with `source`. */
+  inStockOnly?: number;
 }
 
 /**

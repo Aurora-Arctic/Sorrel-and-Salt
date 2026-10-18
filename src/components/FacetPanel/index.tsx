@@ -24,6 +24,7 @@ import { FieldShell } from '../Field/shell';
 import { RadioGroupField } from '../Field/radio-group-field';
 import { SwitchField } from '../Field/switch-field';
 import FormIcon from '../FormIcon';
+import type { CompendiumFacetCounts } from '../CompendiumList/types';
 import type { FacetPanelProps } from './types';
 import './index.scss';
 
@@ -49,11 +50,28 @@ const fadesAreOff = (): boolean =>
 
 const WIDE = '(min-width: 56rem)';
 
-const SOURCE_OPTIONS: ReadonlyArray<{ value: '' | IngredientSource; label: string }> = [
-  { value: '', label: 'All' },
-  { value: 'local', label: 'Local' },
-  { value: 'compendium', label: 'Compendium' },
-];
+const SOURCE_LABELS: Record<IngredientSource, string> = {
+  local: 'Local',
+  compendium: 'Compendium',
+};
+
+/**
+ * The Source strip's choices: All, then Local and Compendium. The two always show, each with
+ * its count once the coven's counts are read, as Toxic's do; All has none, as Toxic's Any has
+ * none.
+ */
+function sourceOptions(
+  counts: CompendiumFacetCounts['source'],
+): { value: '' | IngredientSource; label: string; count?: number }[] {
+  return [
+    { value: '', label: 'All' },
+    ...(['local', 'compendium'] as const).map((value) => ({
+      value,
+      label: SOURCE_LABELS[value],
+      count: counts?.find((choice) => choice.value === value)?.count,
+    })),
+  ];
+}
 
 const MATCH_OPTIONS: ReadonlyArray<{ value: CategoryMode; label: string }> = [
   { value: 'all', label: 'All' },
@@ -432,14 +450,18 @@ export default function FacetPanel({
                     name="source"
                     layout="segmented"
                     hint="Local: entries your coven added itself. Compendium: entries your coven holds a jar of from the compendium."
-                    options={SOURCE_OPTIONS}
+                    options={sourceOptions(facets.source)}
                     value={filter.source}
                     onChange={(source) => onChange({ source })}
                   />
                 )}
                 {filter.inStockOnly !== undefined && (
                   <SwitchField
-                    label="In Stock Only"
+                    label={
+                      facets.inStockOnly === undefined
+                        ? 'In Stock Only'
+                        : `In Stock Only (${facets.inStockOnly})`
+                    }
                     name="inStockOnly"
                     value="1"
                     checked={filter.inStockOnly}

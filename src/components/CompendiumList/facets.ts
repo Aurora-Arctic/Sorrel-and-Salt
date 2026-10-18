@@ -1,4 +1,8 @@
-import type { CompendiumFacets, FacetCount } from '@/modules/ingredients';
+import type {
+  CompendiumFacets,
+  FacetCount,
+  WorkspaceIngredientFacets,
+} from '@/modules/ingredients';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 import { capitalise } from '../../lib/text';
 import type {
@@ -31,6 +35,9 @@ export interface FacetVocabularies {
   categories: ReadonlyMap<string, CompendiumCategoryChoice>;
 }
 
+/** The Source strip's two values as the facets name them, and what each says. */
+const SOURCE_LABELS = { local: 'Local', compendium: 'Compendium' } as const;
+
 /** The toxic strip's two settings as the facets name them, and what each says. */
 const TOXIC_LABELS = { toxic: 'Toxic', not_toxic: 'Not Toxic' } as const;
 
@@ -40,6 +47,27 @@ const byCountThenLabel = (a: FacetChoice, b: FacetChoice): number =>
 
 /** Counts that carry no vocabulary of their own: the value is the label. */
 const named = ({ value, count }: FacetCount): FacetChoice => ({ value, label: value, count });
+
+/**
+ * A coven's counts as the props its panel takes (M9.7): the compendium's kinds mapped as
+ * `compendiumFacetCounts` maps them, and the Source strip and In Stock Only switch beside
+ * them. A coven has no No Refs switch, so that count reads zero and nothing shows it. Not yet
+ * called by a page: M9.6 builds the coven's list and reads `workspaceIngredientFacets` here.
+ */
+export function covenFacetCounts(
+  facets: WorkspaceIngredientFacets,
+  vocabularies: FacetVocabularies,
+): CompendiumFacetCounts {
+  return {
+    ...compendiumFacetCounts({ ...facets, withoutReferences: 0 }, vocabularies),
+    source: facets.source.map(({ value, count }) => ({
+      value,
+      label: SOURCE_LABELS[value],
+      count,
+    })),
+    inStockOnly: facets.inStockOnly,
+  };
+}
 
 /**
  * The service's counts as the props the compendium list takes (M12.4). A

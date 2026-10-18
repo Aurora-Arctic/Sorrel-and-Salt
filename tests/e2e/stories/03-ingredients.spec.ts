@@ -619,10 +619,10 @@ test.fixme(
     // Local and Compendium, and in-stock-only as a switch, as the admin's Without
     // References is (claude-docs/components/compendium-list.md).
     const source = filterOf(page).getByRole('group', { name: 'Source' });
-    const inStockOnly = filterOf(page).getByRole('switch', { name: 'In Stock Only' });
+    const inStockOnly = filterOf(page).getByRole('switch', { name: /^In Stock Only/ });
 
     await test.step('local only: the two local entries, badged', async () => {
-      await source.getByRole('radio', { name: 'Local' }).check();
+      await source.getByRole('radio', { name: /^Local/ }).check();
       await expect(cards).toHaveCount(2);
       for (const name of ['Testwort', 'Fixture Emptywort']) {
         await expect(localBadge(rowOf(list, name))).toBeVisible();
@@ -630,11 +630,11 @@ test.fixme(
       expect(new URL(page.url()).search).not.toBe('');
       await page.reload();
       await expect(cards).toHaveCount(2);
-      await expect(source.getByRole('radio', { name: 'Local' })).toBeChecked();
+      await expect(source.getByRole('radio', { name: /^Local/ })).toBeChecked();
     });
 
     await test.step('compendium only: the two jars, unbadged', async () => {
-      await source.getByRole('radio', { name: 'Compendium' }).check();
+      await source.getByRole('radio', { name: /^Compendium/ }).check();
       await expect(cards).toHaveCount(2);
       for (const name of ['Rosemary', 'Selenite']) {
         await expect(rowOf(list, name)).toBeVisible();
@@ -653,13 +653,13 @@ test.fixme(
     });
 
     await test.step('local and in stock together, kept by a reload, and Back steps out of each', async () => {
-      await source.getByRole('radio', { name: 'Local' }).check();
+      await source.getByRole('radio', { name: /^Local/ }).check();
       await expect(cards).toHaveCount(1);
       await expect(localBadge(rowOf(list, 'Testwort'))).toBeVisible();
       await page.reload();
       await expect(cards).toHaveCount(1);
       await expect(inStockOnly).toBeChecked();
-      await expect(source.getByRole('radio', { name: 'Local' })).toBeChecked();
+      await expect(source.getByRole('radio', { name: /^Local/ })).toBeChecked();
 
       await page.goBack();
       await expect(cards).toHaveCount(2);

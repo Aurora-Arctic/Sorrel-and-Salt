@@ -56,6 +56,16 @@ const FACETS: CompendiumFacetCounts = {
   withoutReferences: 7,
 };
 
+// The coven's counts: Source's two values, one at zero as Toxic's may be, and the In Stock Only count.
+const COVEN_FACETS: CompendiumFacetCounts = {
+  ...FACETS,
+  source: [
+    { value: 'local', label: 'Local', count: 18 },
+    { value: 'compendium', label: 'Compendium', count: 0 },
+  ],
+  inStockOnly: 9,
+};
+
 const NONE: FacetPanelFilter = {
   categories: [],
   categoryMode: 'all',
@@ -124,7 +134,8 @@ function Panel({
 // Nothing chosen: Filters alone, no Clear All.
 export const Empty: Story = () => <Panel open={false} />;
 
-// The public compendium's panel: no Source, no In Stock Only, no No Refs. Open on desktop.
+// The public compendium's panel: no Source, no In Stock Only, no No Refs, and no counts for them.
+// Open on desktop.
 export const Public: Story = () => <Panel />;
 
 // Chosen values: the count on the button (every chosen value, so seven here; Match counts
@@ -186,22 +197,25 @@ export const Admin: Story = () => <Panel admin start={{ ...NONE, withoutReferenc
 
 // The coven's list also has a Source group and the In Stock Only switch, on a row of their own
 // above the foot. Their values count on the Filters button, so the two chosen here make 2.
-export const Coven: Story = () => <Panel start={{ ...NONE, source: 'local', inStockOnly: true }} />;
+export const Coven: Story = () => (
+  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStockOnly: true }} />
+);
 
 // The coven's controls with nothing chosen: Source rests on All and the switch is off.
 export const CovenEmpty: Story = () => (
-  <Panel start={{ ...NONE, source: '', inStockOnly: false }} />
+  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: '', inStockOnly: false }} />
 );
 
 // Temporary comparison for the owner (M9.7): the Coven panel at each control height. Removed
 // once the height is chosen.
 export const Compact2Point5Rem: Story = () => (
-  <Panel start={{ ...NONE, source: 'local', inStockOnly: true }} />
+  <Panel facets={COVEN_FACETS} start={{ ...NONE, source: 'local', inStockOnly: true }} />
 );
 
 export const Compact2Point75Rem: Story = () => (
   <Panel
     className="facet-panel--control-275"
+    facets={COVEN_FACETS}
     start={{ ...NONE, source: 'local', inStockOnly: true }}
   />
 );

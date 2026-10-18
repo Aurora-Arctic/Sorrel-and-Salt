@@ -335,6 +335,17 @@ describe('FacetPanel', () => {
       expect(screen.queryByRole('switch', { name: 'In Stock Only' })).toBeNull();
     });
 
+    const counted: Partial<FacetPanelProps> = {
+      facets: {
+        ...FACETS,
+        source: [
+          { value: 'local', label: 'Local', count: 4 },
+          { value: 'compendium', label: 'Compendium', count: 0 },
+        ],
+        inStockOnly: 3,
+      },
+    };
+
     it('offers Source as All, Local and Compendium, on All by default', () => {
       open(COVEN);
       const source = screen.getByRole('group', { name: 'Source' });
@@ -346,11 +357,30 @@ describe('FacetPanel', () => {
       expect(within(source).getByRole('radio', { name: 'All' })).toBeChecked();
     });
 
+    it('carries each count in the option and switch names, zero kept, All and the Toxic strip as they were', () => {
+      open(COVEN, counted);
+      const source = screen.getByRole('group', { name: 'Source' });
+      expect(within(source).getByRole('radio', { name: /^Local \(4\)/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: /^Compendium \(0\)/ })).toBeInTheDocument();
+      expect(within(source).getByRole('radio', { name: 'All' })).toBeInTheDocument();
+      expect(screen.getByRole('switch', { name: /^In Stock Only \(3\)/ })).toBeInTheDocument();
+    });
+
+    it('reports a chosen counted source and switch as a patch of only that part', () => {
+      const onChange = vi.fn();
+      open(COVEN, { ...counted, onChange });
+
+      fireEvent.click(screen.getByRole('radio', { name: /^Local/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
+      fireEvent.click(screen.getByRole('switch', { name: /^In Stock Only/ }));
+      expect(onChange).toHaveBeenLastCalledWith({ inStockOnly: true });
+    });
+
     it('reports a chosen source and the switch as a patch of only that part', () => {
       const onChange = vi.fn();
       open(COVEN, { onChange });
 
-      fireEvent.click(screen.getByRole('radio', { name: 'Local' }));
+      fireEvent.click(screen.getByRole('radio', { name: /^Local/ }));
       expect(onChange).toHaveBeenLastCalledWith({ source: 'local' });
       fireEvent.click(screen.getByRole('radio', { name: 'Compendium' }));
       expect(onChange).toHaveBeenLastCalledWith({ source: 'compendium' });
@@ -361,7 +391,7 @@ describe('FacetPanel', () => {
 
     it('shows what is held', () => {
       open({ source: 'local', inStockOnly: true });
-      expect(screen.getByRole('radio', { name: 'Local' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: /^Local/ })).toBeChecked();
       expect(screen.getByRole('switch', { name: 'In Stock Only' })).toBeChecked();
     });
 
