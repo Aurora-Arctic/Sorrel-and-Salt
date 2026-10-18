@@ -11,6 +11,8 @@ import type {
 } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES, ingredientResolver } from '@/components/IngredientForm/values';
 import type {
+  AddCupboardEntryFromFormMutation,
+  AddCupboardEntryFromFormMutationVariables,
   CreateWorkspaceIngredientMutation,
   CreateWorkspaceIngredientMutationVariables,
   PossibleDuplicatesQuery,
@@ -34,6 +36,7 @@ import {
   WORKSPACE_ID,
   acceptCreate,
   offerCategories,
+  offerCompendiumMatches,
   offerDeities,
   offerDuplicates,
   offerForms,
@@ -1098,6 +1101,76 @@ describe('IngredientForm', () => {
       await waitFor(() => expect(textbox('Formal Name')).toHaveFocus());
       expect(createAnyway()).not.toHaveFocus();
       expect(saves).toHaveLength(0);
+    });
+  });
+
+  // M12.20: Use It, as only the whole form sends it.
+  describe('using a compendium entry of the name typed', () => {
+    const CLAW: DuplicateNode = {
+      id: 'claw-1',
+      name: "Cat's Claw",
+      canonicalName: 'Uncaria tomentosa',
+      slug: 'cats-claw-uncaria-tomentosa',
+      isGlobal: true,
+    };
+    const accept = () => {
+      const adds: AddCupboardEntryFromFormMutationVariables[] = [];
+      mockGraphQLMutation<
+        AddCupboardEntryFromFormMutation,
+        AddCupboardEntryFromFormMutationVariables
+      >('AddCupboardEntryFromForm', (variables) => {
+        adds.push(variables);
+        return { addCupboardEntry: { id: 'cupboard-1' } };
+      });
+      return adds;
+    };
+
+    beforeEach(() => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('puts the entry in the cupboard under the typed label and description, creates nothing, and opens it', async () => {
+      const creates = acceptCreate();
+      const adds = accept();
+      const onSaved = renderForm();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([CLAW]);
+
+      type('Name', 'Porch Claw');
+      type('Description', 'Dried from the porch.');
+      save();
+      fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(adds).toEqual([
+        {
+          workspaceId: WORKSPACE_ID,
+          ingredientId: 'claw-1',
+          input: expect.objectContaining({
+            label: 'Porch Claw',
+            description: 'Dried from the porch.',
+          }),
+        },
+      ]);
+      expect(onSaved.mock.calls[0]).toEqual([expect.objectContaining({ id: 'claw-1' }), 'open']);
+      expect(creates).toHaveLength(0);
+    });
+
+    it("sends no label when the typed name differs from the entry's only in case", async () => {
+      const adds = accept();
+      const onSaved = renderForm();
+      offerDuplicates([CLAW]);
+      offerCompendiumMatches([CLAW]);
+
+      type('Name', "  cat's claw ");
+      save();
+      fireEvent.click(await screen.findByRole('button', { name: /^Use It/ }));
+
+      await waitFor(() => expect(onSaved).toHaveBeenCalled());
+      expect(adds[0].input?.label).toBeUndefined();
     });
   });
 

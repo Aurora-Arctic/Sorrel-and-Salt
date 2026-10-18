@@ -136,6 +136,13 @@ const PROBES: Record<string, ScopeProbe> = {
     variables: { workspaceId: WORKSPACE_W_ID },
     outcome: 'refuses',
   },
+  compendiumMatches: {
+    source: `query ($workspaceId: ID!) {
+      compendiumMatches(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: WORKSPACE_W_ID },
+    outcome: 'refuses',
+  },
   possibleDuplicates: {
     source: `query ($workspaceId: ID!) {
       possibleDuplicates(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
@@ -228,6 +235,14 @@ const NULL_WORKSPACE_PROBES: Record<string, ScopeProbe> = {
       'query ($workspaceId: ID, $id: ID!) { reference(workspaceId: $workspaceId, id: $id) { id } }',
     variables: { workspaceId: null, id: NOWHERE },
     outcome: 'refuses',
+  },
+  // The question the add form asks is always asked in some coven (M12.20).
+  compendiumMatches: {
+    source: `query ($workspaceId: ID!) {
+      compendiumMatches(workspaceId: $workspaceId, name: "Testwort", first: 1) { edges { node { id } } }
+    }`,
+    variables: { workspaceId: null },
+    outcome: 'invalid',
   },
   // The substitute picker always has a coven, so the SDL takes no null.
   ingredientSuggestions: {

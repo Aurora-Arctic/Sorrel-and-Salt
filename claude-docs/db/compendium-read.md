@@ -36,7 +36,8 @@ on the second:
   wrapper's volatility and the fold (MB.184, MB.226). The matches are a `UNION ALL`, the
   shape ["Fuzzy matching"](fuzzy-matching.md) argues for over an `OR` beside
   the scope, of five arms, one per field: the entry's label, its formal name,
-  its folk names, its variants' forms and its variants' descriptions. Each arm
+  its folk names, its variants' forms and its variants' descriptions (and a
+  sixth, the coven's label, under a coven's proof; below). Each arm
   scores what it matched as the word similarity, or 1
   where the field holds the query verbatim, times the field's weight (the
   next bullet). A word in a form matches every entry
@@ -137,6 +138,22 @@ on the second:
   scan. When it was written the ranked page
   ran in about 7 ms against the unranked shape's 5 ms; the test that printed
   those timings asserted only that they were positive, and went with MB.184.
+
+- **Under a coven's proof the rank is the score alone, whatever the kind
+  (M12.18).** The coven's list (`findWorkspaceIngredientPage`) and the
+  substitute picker pass `compendiumList` the proof, and three things change.
+  The match gains a sixth arm, the label the coven's cupboard row gives a
+  compendium entry, weighted as the name is (M12.19), so a relabelled entry is
+  found by that label and by the compendium's own name, and ranks at the
+  better of the two, since the score is already the best arm per entry. The
+  statement left-joins the coven's cupboard row, so the name part of the key
+  is `coalesce(label, name)`, and the cursor is built from the same
+  expression. And nothing else enters the key: there is no part for the
+  entry's kind, so a coven's own entry and a compendium entry each rank by
+  score as every other row does, and the `source` filter (M9.7) narrows the
+  list by kind but never lifts one kind above the other. A coven's own entry
+  and a compendium entry of the same name and match tie on score and
+  position and sort side by side by name, then id.
 
 - **A keyset, not a capped top-N or pg_trgm's `<<->`.** A top-N would leave
   every match past the cap unreachable and give a search a different shape
@@ -351,10 +368,10 @@ of the proof's workspace, never another, so it is on
 [the tier seam](../modules.md#the-tier-seam).
 
 - **It is `findCompendiumPage` under a wider scope.** It takes the same
-  private `compendiumList({ query })`, so the match is the compendium
+  private `compendiumList({ query }, membership)` as the coven's list, so the match is the compendium
   search's: word similarity at 0.5 against the label, the formal name, the
   live folk names and the live variants' forms and descriptions, accent-folded, best match first, under the compendium's weights, with a blank query
-  listing by `(name, id)`. The service parses the query through
+  listing by `(coalesce(label, name), id)`, the coven's label where it gave one. The service parses the query through
   `CompendiumFilter`, so a query under `MIN_QUERY_LENGTH` is a blank one here
   too. Only the scope differs: the proof's workspace or the compendium, split
   into the two groups below.
@@ -390,8 +407,8 @@ of the proof's workspace, never another, so it is on
   groups. The predicate is a `NOT EXISTS` over the coven's live rows
   (DESIGN.md §5): a compendium row is hidden when a live local row has the
   same `identity_key`, or, only when that local row declares no formal name,
-  the same label with case folded. M9.4's `workspaceIngredients` still
-  applies it until M12.28.
+  the same label with case folded. No list applies it
+  since M12.18, when the coven's list stopped too; M12.28 removes it.
 - **A `form` ranks, and filters nothing.** A non-blank `form` puts a rank
   first in the sort: 0 for an entry holding a live variant of that form
   (folded), 1 for one holding a form of the same curated group (a variant
