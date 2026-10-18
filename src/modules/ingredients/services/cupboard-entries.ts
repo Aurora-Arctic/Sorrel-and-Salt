@@ -7,6 +7,7 @@ import {
   findCupboardEntry,
   findCompendiumMatchPage,
   findCupboardEntryByLabel,
+  findCupboardEntryIncludingSoftDeleted,
   findManyOfIngredients,
   findOneByIdInWorkspace,
   findOneIngredient,
@@ -51,6 +52,32 @@ import { type Membership, assertMembership } from '@/modules/coven';
 // references and `toxic` are never overridden, so they always read as the
 // compendium has them (claude-docs/db/workspace-compendium-entries.md,
 // "Reading it").
+
+/**
+ * Whether `row` is a compendium entry the curators have retired (M12.24):
+ * soft-deleted, and still read by the covens whose cupboard names it. A
+ * coven's own ingredient once deleted is gone, not retired.
+ */
+export function isRetired(row: Pick<IngredientRow, 'workspaceId' | 'deletedAt'>): boolean {
+  return row.workspaceId === null && row.deletedAt !== null;
+}
+
+/**
+ * The compendium entry with this id, retired or not, and `membership`'s
+ * coven's live cupboard entry naming it, or `undefined` when that cupboard
+ * names no such entry: how a coven goes on reading an entry the compendium
+ * has retired (claude-docs/db/workspace-compendium-entries.md, "When the
+ * compendium retires the entry"). The caller has checked the proof's
+ * permission.
+ */
+export async function heldCompendiumEntry(
+  membership: Membership,
+  ingredientId: string,
+): Promise<{ entry: IngredientRow; cupboardEntry: CupboardEntryRow } | undefined> {
+  // An id that is not a uuid names nothing, and would be a driver error at the comparison.
+  if (!RowId.safeParse(ingredientId).success) return undefined;
+  return findCupboardEntryIncludingSoftDeleted(membership, ingredientId);
+}
 
 /**
  * The coven's live cupboard entry for this compendium entry, or null: none

@@ -1,4 +1,4 @@
-import { and, eq, inArray, or, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, or, sql, type SQL } from 'drizzle-orm';
 import { ingredients } from '../../modules/ingredients/schema/ingredients';
 import { workspaceCompendiumEntries } from '../../modules/ingredients/schema/workspace-compendium-entries';
 import type { Membership } from '@/modules/coven';
@@ -50,9 +50,45 @@ export function findCupboardEntriesOf(
 }
 
 /**
+ * The compendium entry with this id, soft-deleted or not, beside the proof's
+ * live cupboard entry naming it, or `undefined` when the proof's coven has no
+ * such row. The sixth escape hatch (M12.24): a compendium entry the curators
+ * retire stays readable to exactly the covens whose cupboard names it, and
+ * reads as gone to every other reader (claude-docs/db/workspace-compendium-entries.md,
+ * "When the compendium retires the entry"). It skips the entry's own filter
+ * and no other: the cupboard row's tombstone filters, the proof scopes it, and
+ * the entry must be the compendium's, so a row naming a coven's own
+ * ingredient reads as none. One statement: the cupboard row is a left join
+ * read as an inner one, which is what lets the entry's tombstone go unread.
+ */
+export async function findCupboardEntryIncludingSoftDeleted(
+  membership: Membership,
+  ingredientId: string,
+): Promise<{ entry: IngredientRow; cupboardEntry: CupboardEntryRow } | undefined> {
+  const [found] = await selectFrom(
+    ingredients,
+    and(
+      eq(ingredients.id, ingredientId),
+      inCompendium(ingredients),
+      isNotNull(workspaceCompendiumEntries.id),
+    ),
+    {
+      leftJoin: workspaceCompendiumEntries,
+      on: and(
+        eq(workspaceCompendiumEntries.ingredientId, ingredients.id),
+        scopedTo(membership, workspaceCompendiumEntries),
+        notSoftDeleted(workspaceCompendiumEntries),
+      ) as SQL,
+    },
+  );
+  return found?.joined ? { entry: found.row, cupboardEntry: found.joined } : undefined;
+}
+
+/**
  * The proof's rows that name a live compendium entry. `existsIn` ANDs the
  * entry's own tombstone filter, so the row of an entry the compendium has
- * deleted reads as no row until M12.24's hatch. The row's own tombstone
+ * deleted reads as no row here: `findCupboardEntryIncludingSoftDeleted` reads
+ * it. The row's own tombstone
  * filter stays in each finder, where the soft-delete guard reads it.
  */
 function inCupboard(membership: Membership): SQL | undefined {

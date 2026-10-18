@@ -181,6 +181,7 @@ const LINKED_HREF = '/compendium/ingredients/fixture-mockroot' as Route;
 function detail(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
   return {
     entry: entryRow(),
+    retired: false,
     cupboardEntry: null,
     folkNames: ['Fixture Bane', 'Testing Weed'],
     categories: [category('Testwards'), category('Mockcraft')],
@@ -296,6 +297,15 @@ describe('IngredientEntry', () => {
 
     renderEntry();
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
+  });
+
+  it('marks a retired entry with a status in its head, and a live one with none', () => {
+    const { unmount } = renderEntry();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    unmount();
+
+    renderEntry({ detail: detail({ retired: true }) });
+    expect(screen.getByRole('status').closest('header')).not.toBeNull();
   });
 
   it('marks the entry Toxic when a form is, though the ingredient is not', () => {

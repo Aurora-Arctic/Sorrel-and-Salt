@@ -438,7 +438,7 @@ const IngredientEntry = ({
 
   cupboard,
 }: IngredientEntryProps): ReactElement => {
-  const { cupboardEntry, folkNames, categories, deities, substitutes, variants } = detail;
+  const { cupboardEntry, folkNames, categories, deities, substitutes, variants, retired } = detail;
   // `entry` is the row as the compendium has it, which edit and identity use;
   // `shown` lays the coven's cupboard entry over it for what the page says.
   // Three kinds: ours (a coven's row, Local), the compendium's held in this
@@ -512,13 +512,19 @@ const IngredientEntry = ({
             Called <span>{entry.name}</span> in the Compendium
           </p>
         )}
-        {(local || held || toxic) && (
+        {(local || held || toxic || retired) && (
           <div className="badges">
             {local && <span className="badge badge--local">Local</span>}
             {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
             {held && <output className="badge badge--low-stock">From the Compendium</output>}
             {held && isAnnotated(cupboardEntry) && (
               <output className="badge badge--low-stock">Annotated</output>
+            )}
+            {/* A compendium entry the curators retired, read because this
+                coven's cupboard names it (M12.24). An `output`, so it carries
+                the status role: on the page from the start, never announced. */}
+            {retired && (
+              <output className="badge badge--retired">No Longer in the Compendium</output>
             )}
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>

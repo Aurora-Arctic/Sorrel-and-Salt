@@ -168,6 +168,7 @@ const cupboardEntry = (
 
 const FULL: IngredientDetail = {
   entry: entryRow(),
+  retired: false,
   cupboardEntry: null,
   folkNames: ['Fixture Bane', 'Grey Testing Weed'],
   categories: [WARDING, DREAMS],
@@ -367,6 +368,11 @@ export const CompendiumEntryForCurator: Story = () => (
 // A compendium entry seen from a coven: the same block, listing the entry
 // itself once, with no See All.
 export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_CASE} />;
+
+// A compendium entry the curators retired, read on a coven's route because the
+// coven's cupboard still names it (M12.24): marked, and with neither the
+// public link nor Edit, since the compendium no longer holds it.
+export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
 
 // A coven's own entry whose formal name a compendium entry shares: the
 // "In the Compendium" block with its one link and the ⓘ saying why it is shown.

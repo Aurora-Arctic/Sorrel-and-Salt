@@ -7,6 +7,7 @@ import {
   NOMENCLATURE_KINDS,
   TOXIC_FILTERS,
 } from '../schema/ingredient-enums';
+import { isRetired } from '../services/cupboard-entries';
 import { ReferenceLinkRef } from './references';
 import { CategoryRef, DeityRef, IngredientFormValueRef } from '@/modules/vocabulary';
 import type {
@@ -192,6 +193,11 @@ IngredientRef.implement({
       description: 'Whether the ingredient is toxic. Each form carries its own flag.',
     }),
     isGlobal: t.boolean({ resolve: (row) => row.workspaceId === null }),
+    retired: t.boolean({
+      description:
+        'A compendium entry the curators have retired, read by a coven whose cupboard still names it (M12.24).',
+      resolve: (row) => isRetired(row),
+    }),
     // The row is the loaders' key: they read `workspaceId` off it to know
     // which coven to check, and cache by `id`.
     folkNames: t.field({

@@ -926,6 +926,18 @@ The field answers the row beside the entry rather than merged into it, so
 true for a compendium entry. Forms, folk names, substitutes, categories,
 references and `toxic` have no override and always read from the compendium.
 
+**`Ingredient.retired: Boolean!`** (M12.24) is true for a compendium entry
+the curators have retired, which `ingredient(id, workspaceId)` still answers
+to a member of a coven whose cupboard names it, and false for every other
+entry. It resolves through the service's `isRetired` off the row. The
+entry's child fields read through the loaders, whose keys carry no reading
+coven, so they answer nothing for a retired entry yet; the entry page reads
+them through `ingredientDetailOf` instead
+([`db/workspace-compendium-entries.md`](../db/workspace-compendium-entries.md),
+"When the compendium retires the entry").
+`tests/modules/ingredients/graphql/ingredient.test.ts` holds its transport
+half.
+
 `tests/modules/ingredients/graphql/cupboard-entries.test.ts` holds the
 transport's half: the answer and its `annotated`, a viewer answered, the
 refusal at the field, the nulls, and one repository read for a page of entries,

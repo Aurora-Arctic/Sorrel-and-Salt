@@ -40,8 +40,9 @@ import type {
 export async function categoriesOf(
   session: Session | null,
   refs: readonly IngredientKey[],
+  heldBy?: Membership,
 ): Promise<(CategoryRow[] | Forbidden)[]> {
-  const { admitted, answer } = await admit(session, refs);
+  const { admitted, answer } = await admit(session, refs, heldBy);
   const filed = await filedUnder(await admitted(ingredientCategories));
 
   return answer((id) => filed((link) => link.ingredientId === id));
@@ -58,9 +59,12 @@ export async function categoriesOf(
 export async function categoriesOfVariants(
   session: Session | null,
   refs: readonly VariantKey[],
+  heldBy?: Membership,
 ): Promise<(CategoryRow[] | Forbidden)[]> {
-  const { memberships, ids, answer } = await admit(session, refs);
-  const filed = await filedUnder(await findManyOfVariants(memberships, ingredientCategories, ids));
+  const { memberships, ids, answer } = await admit(session, refs, heldBy);
+  const filed = await filedUnder(
+    await findManyOfVariants(memberships, ingredientCategories, ids, heldBy),
+  );
 
   return answer((id) => filed((link) => link.variantId === id));
 }
@@ -74,8 +78,9 @@ export async function categoriesOfVariants(
 export async function folkNamesOf(
   session: Session | null,
   refs: readonly IngredientKey[],
+  heldBy?: Membership,
 ): Promise<(FolkNameRow[] | Forbidden)[]> {
-  const { admitted, answer } = await admit(session, refs);
+  const { admitted, answer } = await admit(session, refs, heldBy);
   const rows = await admitted(ingredientFolkNames);
 
   return answer((id) =>
@@ -98,9 +103,10 @@ export async function folkNamesOf(
 export async function substitutesOf(
   session: Session | null,
   refs: readonly IngredientKey[],
+  heldBy?: Membership,
 ): Promise<(SubstituteRow[] | Forbidden)[]> {
-  const { memberships, ids, answer } = await admit(session, refs);
-  const rows = await findSubstitutesIncludingSoftDeleted(memberships, 'ingredient', ids);
+  const { memberships, ids, answer } = await admit(session, refs, heldBy);
+  const rows = await findSubstitutesIncludingSoftDeleted(memberships, 'ingredient', ids, heldBy);
 
   return answer((id) => substitutesShown(rows.filter(({ row }) => row.ingredientId === id)));
 }
@@ -115,9 +121,10 @@ export async function substitutesOf(
 export async function substitutesOfVariants(
   session: Session | null,
   refs: readonly VariantKey[],
+  heldBy?: Membership,
 ): Promise<(SubstituteRow[] | Forbidden)[]> {
-  const { memberships, ids, answer } = await admit(session, refs);
-  const rows = await findSubstitutesIncludingSoftDeleted(memberships, 'variant', ids);
+  const { memberships, ids, answer } = await admit(session, refs, heldBy);
+  const rows = await findSubstitutesIncludingSoftDeleted(memberships, 'variant', ids, heldBy);
 
   return answer((id) => substitutesShown(rows.filter(({ row }) => row.variantId === id)));
 }
@@ -134,9 +141,10 @@ export async function substitutesOfVariants(
 export async function referencesOf(
   session: Session | null,
   refs: readonly IngredientKey[],
+  heldBy?: Membership,
 ): Promise<(CitedReference[] | Forbidden)[]> {
-  const { memberships, ids, answer } = await admit(session, refs);
-  const cited = citedBy(await findReferencesOf(memberships, 'ingredientId', ids));
+  const { memberships, ids, answer } = await admit(session, refs, heldBy);
+  const cited = citedBy(await findReferencesOf(memberships, 'ingredientId', ids, heldBy));
 
   return answer((id) => cited((link) => link.ingredientId === id));
 }
@@ -150,9 +158,10 @@ export async function referencesOf(
 export async function referencesOfVariants(
   session: Session | null,
   refs: readonly VariantKey[],
+  heldBy?: Membership,
 ): Promise<(CitedReference[] | Forbidden)[]> {
-  const { memberships, ids, answer } = await admit(session, refs);
-  const cited = citedBy(await findReferencesOf(memberships, 'ingredientVariantId', ids));
+  const { memberships, ids, answer } = await admit(session, refs, heldBy);
+  const cited = citedBy(await findReferencesOf(memberships, 'ingredientVariantId', ids, heldBy));
 
   return answer((id) => cited((link) => link.ingredientVariantId === id));
 }
@@ -168,9 +177,10 @@ export async function referencesOfVariants(
 export async function deitiesOf(
   session: Session | null,
   refs: readonly IngredientKey[],
+  heldBy?: Membership,
 ): Promise<(IngredientDeityRow[] | Forbidden)[]> {
-  const { memberships, ids, answer } = await admit(session, refs);
-  const rows = await findDeitiesOfIngredients(memberships, ids);
+  const { memberships, ids, answer } = await admit(session, refs, heldBy);
+  const rows = await findDeitiesOfIngredients(memberships, ids, heldBy);
 
   return answer((id) =>
     rows
@@ -190,8 +200,9 @@ export async function deitiesOf(
 export async function variantsOf(
   session: Session | null,
   refs: readonly IngredientKey[],
+  heldBy?: Membership,
 ): Promise<(IngredientVariantRow[] | Forbidden)[]> {
-  const { admitted, answer } = await admit(session, refs);
+  const { admitted, answer } = await admit(session, refs, heldBy);
   const rows = await admitted(ingredientVariants);
 
   return answer((id, { workspaceId }) =>
@@ -206,11 +217,15 @@ export async function variantsOf(
  * The check the reads share, over ingredients or their variants alike: a
  * proof for every coven the refs name that this session may read, and a `Forbidden` for each that it may not. `admitted`
  * reads a child table for the refs that passed, whose `ids` and proofs a read
- * of its own takes; `answer` lays the result out in ref order.
+ * of its own takes; `answer` lays the result out in ref order. `heldBy` is
+ * the reading coven's proof for a retired compendium entry its cupboard names
+ * (M12.24), which every read passes on so the entry's children read too; the
+ * caller has read the entry through the hatch first.
  */
 async function admit<K extends IngredientKey | VariantKey>(
   session: Session | null,
   refs: readonly K[],
+  heldBy: Membership | undefined,
 ) {
   const covens = [...new Set(refs.flatMap((ref) => ref.workspaceId ?? []))];
   const proofs = await Promise.all(covens.map((workspaceId) => proofFor(session, workspaceId)));
@@ -228,7 +243,7 @@ async function admit<K extends IngredientKey | VariantKey>(
         typeof ingredientCategories | typeof ingredientFolkNames | typeof ingredientVariants,
     >(
       table: TTable,
-    ) => findManyOfIngredients(memberships, table, ids),
+    ) => findManyOfIngredients(memberships, table, ids, heldBy),
     answer: <T>(childrenOf: (id: string, ref: K) => T) =>
       refs.map((ref) => (isRefused(ref) ? new Forbidden() : childrenOf(ref.id, ref))),
   };
