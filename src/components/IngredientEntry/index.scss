@@ -355,6 +355,12 @@ $jump-link-line: 1.25;
   color: $text-muted;
 }
 
+// The compendium's own name beneath a coven's label for it.
+.ingredient-entry__compendium-name {
+  margin: 0;
+  color: $text-muted;
+}
+
 // A short hairline under "In the Compendium", for a coven's own entry and for a
 // compendium entry alike, between its last line (the
 // last link, or See All when it is there) and the Correspondences heading,

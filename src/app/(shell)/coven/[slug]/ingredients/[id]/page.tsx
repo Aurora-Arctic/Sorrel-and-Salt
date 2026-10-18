@@ -10,7 +10,9 @@ import { viewerOf } from '../../../../../../lib/viewer';
 import { COMPENDIUM_PARAMS } from '@/components/CompendiumList/params';
 import { entryValues } from '@/app/(shell)/admin/compendium/entry-values';
 import {
+  applyCupboardEntry,
   compendiumEntriesReplacedBy,
+  getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
 } from '@/modules/ingredients';
@@ -54,11 +56,16 @@ const entryOf = cache(async (slug: string, id: string) => {
 // varies by deployment, and MB.84 owns the public page's metadata.
 export async function generateMetadata({ params }: CovenIngredientParams): Promise<Metadata> {
   const { slug, id } = await params;
-  const { entry } = await entryOf(slug, id);
-  const title = pageTitleOf(entry);
-  return entry.workspaceId === null
-    ? { title, alternates: { canonical: publicAddress(entry.slug) } }
-    : { title };
+  const { workspace, session, entry } = await entryOf(slug, id);
+  if (entry.workspaceId !== null) return { title: pageTitleOf(entry) };
+  // The tab says what the page heading says: the coven's label when its
+  // cupboard entry sets one (M12.16). The canonical address stays the
+  // compendium's public page, whatever the coven calls the entry.
+  const cupboardEntry = await getCupboardEntry(session, workspace.id, entry.id);
+  return {
+    title: pageTitleOf(applyCupboardEntry(entry, cupboardEntry)),
+    alternates: { canonical: publicAddress(entry.slug) },
+  };
 }
 
 export default async function CovenIngredientPage({ params, searchParams }: CovenIngredientParams) {
