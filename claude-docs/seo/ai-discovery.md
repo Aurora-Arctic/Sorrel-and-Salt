@@ -3,7 +3,7 @@
 The compendium is the one public surface (MB.80). Three small files describe
 it to a crawler or an AI agent: `/llms.txt`, and one catalog served at both
 `/.well-known/ai-catalog.json` and `/.well-known/ard.json` (M12.2). Each is a
-route handler that answers a public file and carries no application data, as
+route handler that answers a public file, takes no session and serves only what the public compendium already shows, as
 `/robots.txt` and `/sitemap.xml` do, so none is a third access path (CLAUDE.md
 rule 1; lint's `sorrel/route-allowlist` names the three paths). The code is `src/app/ai-discovery.ts` (the two builders) and the
 handlers beside the paths.

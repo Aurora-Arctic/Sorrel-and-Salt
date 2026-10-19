@@ -1,7 +1,7 @@
 import { CATALOG_MEDIA_TYPE, buildAiCatalog } from '../../ai-discovery';
 import { listCompendiumSlugs } from '@/modules/ingredients';
 
-// A public file with no session and no application data, so not a third
+// A public file with no session that serves only what the public compendium already shows, so not a third
 // access path (CLAUDE.md rule 1). Served at both `/.well-known/ai-catalog.json`
 // (the AI Catalog draft) and `/.well-known/ard.json` (ARD v0.91, which tells
 // consumers to fetch this one), from the same builder. Cached through the

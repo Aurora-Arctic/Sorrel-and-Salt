@@ -42,7 +42,7 @@ resolve: async (_query, { workspaceId }, { session }) =>
   this one and `/api/auth/*`
   ([`auth/graphql-only-exception.md`](../auth/graphql-only-exception.md)); the
   three public files `/llms.txt`, `/.well-known/ai-catalog.json` and
-  `/.well-known/ard.json` (M12.2) carry no application data and are named in
+  `/.well-known/ard.json` (M12.2) take no session, serve only what the public compendium already shows and are named in
   lint's allowlist, one by one
   ([`seo/ai-discovery.md`](../seo/ai-discovery.md)); and lint's `sorrel/route-allowlist` fails any other `route` file under
   `src/app/`, by its path: a file is not an import either.
