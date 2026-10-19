@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ReactElement, ReactNode } from 'react';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
+import HeldMark from './held-mark';
 // From its own client file: the Modal index re-exports modules a server
 // component cannot import.
 import { RouteModalProvider } from '../Modal/route-modal-provider';
@@ -444,6 +445,7 @@ const IngredientEntry = ({
   hrefOf,
   edit,
   movedAway,
+  back,
   replaces,
   similar,
   cupboard,
@@ -485,9 +487,25 @@ const IngredientEntry = ({
       }
     >
       <header className="ingredient-entry__head">
+        {back && (
+          <Link className="ingredient-entry__back" href={back.href}>
+            <svg viewBox="0 0 16 16" width="1em" height="1em" aria-hidden="true" focusable="false">
+              <path
+                d="M10 3.5L5.5 8l4.5 4.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Back to {back.label} <LinkHint />
+          </Link>
+        )}
         <FormalName entry={entry} />
         <PageHeader
           title={shown.name}
+          lead={(local || held) && <HeldMark />}
           action={
             (edit || cupboard) && (
               <>
@@ -522,10 +540,11 @@ const IngredientEntry = ({
             )
           }
         />
-        {(local || held || caution || toxic || retired) && (
+        {(local || held || cupboard || caution || toxic || retired) && (
           <div className="badges">
             <EntryMarks
               kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
+              inCoven={cupboard !== undefined}
               annotated={held && isAnnotated(cupboardEntry)}
               retired={retired}
             />

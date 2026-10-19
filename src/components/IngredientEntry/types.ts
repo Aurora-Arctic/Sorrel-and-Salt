@@ -51,6 +51,13 @@ export interface IngredientEntryProps {
    */
   edit?: IngredientEntryEdit;
   /**
+   * A quiet way back to the list this page belongs to, at the head's top
+   * left: the Compendium for the public page, the coven's Ingredients for
+   * its own. Left out, no link shows. `label` is the destination alone
+   * ("Compendium"); the link reads "Back to" it.
+   */
+  back?: { href: Route; label: string };
+  /**
    * The entry that moved off this address while its redirect's window is
    * open (MB.82): its name, and its page now.
    */

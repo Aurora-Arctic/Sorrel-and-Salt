@@ -13,15 +13,17 @@ const EntryMarks = ({
   kind,
   annotated = false,
   retired = false,
+  inCoven = false,
 }: EntryMarksProps): ReactElement => {
   const held = kind === 'cupboard';
   return (
     <>
       {kind === 'own' && <span className="badge badge--local">Local</span>}
-      {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning. */}
-      {/* Annotated says the entry is from the Compendium and changed, so it takes
-          Compendium's place; an unannotated entry shows Compendium, bare. */}
-      {held && !retired && !annotated && (
+      {/* Where the row lives, as Local is, and in a neutral tint: neither is a warning.
+          Every compendium entry in a coven wears it, held or not (the owner's call,
+          2026-10-19), and Annotated sits beside it; the page's shelf mark says which
+          the cupboard holds. On the public compendium every entry is one, so none does. */}
+      {(held || (kind === 'compendium' && inCoven)) && !retired && (
         <output className="badge badge--low-stock">Compendium</output>
       )}
       {/* A compendium entry the curators retired, read because this coven's

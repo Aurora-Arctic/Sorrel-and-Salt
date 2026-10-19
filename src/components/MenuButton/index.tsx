@@ -43,8 +43,15 @@ const fadesAreOff = (): boolean =>
   typeof window.matchMedia !== 'function' ||
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const itemClass = (item: MenuButtonItem): string =>
-  item.destructive ? 'menu-button__item menu-button__item--destructive' : 'menu-button__item';
+const itemClass = (item: MenuButtonItem, chosen: boolean): string =>
+  [
+    'menu-button__item',
+    item.destructive && 'menu-button__item--destructive',
+    item.constructive && 'menu-button__item--constructive',
+    chosen && 'is-chosen',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
 export default function MenuButton({
   label,
@@ -57,6 +64,10 @@ export default function MenuButton({
   const [open, setOpenState] = useState(false);
   // Still drawn: open, or fading out.
   const [drawn, setDrawn] = useState(false);
+  // The item just chosen, which keeps its hover look while the menu fades: a
+  // closing menu is inert, which drops the hover and would drain the fill in
+  // front of the eye (index.scss).
+  const [chosen, setChosen] = useState<string>();
   const root = useRef<HTMLSpanElement>(null);
   const toggle = useRef<HTMLButtonElement | null>(null);
   const menuId = useId();
@@ -64,8 +75,10 @@ export default function MenuButton({
   const setOpen = (next: boolean | ((was: boolean) => boolean)): void => {
     setOpenState((was) => {
       const now = typeof next === 'function' ? next(was) : next;
-      if (now) setDrawn(true);
-      else if (fadesAreOff()) setDrawn(false);
+      if (now) {
+        setDrawn(true);
+        setChosen(undefined);
+      } else if (fadesAreOff()) setDrawn(false);
       return now;
     });
   };
@@ -155,8 +168,9 @@ export default function MenuButton({
                 href={item.href}
                 role="menuitem"
                 tabIndex={-1}
-                className={itemClass(item)}
+                className={itemClass(item, chosen === item.key)}
                 onClick={(event) => {
+                  setChosen(item.key);
                   setOpen(false);
                   item.onClick?.(event);
                 }}
@@ -169,8 +183,9 @@ export default function MenuButton({
                 type="button"
                 role="menuitem"
                 tabIndex={-1}
-                className={itemClass(item)}
+                className={itemClass(item, chosen === item.key)}
                 onClick={() => {
+                  setChosen(item.key);
                   setOpen(false);
                   item.onSelect();
                 }}

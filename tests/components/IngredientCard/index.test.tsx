@@ -249,7 +249,7 @@ describe('IngredientCard', () => {
       expect(screen.queryAllByRole('status')).toHaveLength(0);
     });
 
-    it('shows the held mark, and Annotated in its place once a field is overridden', () => {
+    it('shows the held mark, and Annotated beside it once a field is overridden', () => {
       const held = render(<IngredientCard {...BASE} kind="cupboard" />);
       expect(heldMark()).toBeInTheDocument();
       expect(screen.getAllByRole('status')).toHaveLength(1);
@@ -257,8 +257,8 @@ describe('IngredientCard', () => {
 
       render(<IngredientCard {...BASE} kind="cupboard" annotated />);
       expect(screen.getByRole('button', { name: 'Annotated' })).toBeInTheDocument();
-      expect(heldMark()).toBeNull();
-      expect(screen.queryAllByRole('status')).toHaveLength(0);
+      expect(heldMark()).toBeInTheDocument();
+      expect(screen.getAllByRole('status')).toHaveLength(1);
     });
 
     it('shows the retired mark in place of the held one', () => {

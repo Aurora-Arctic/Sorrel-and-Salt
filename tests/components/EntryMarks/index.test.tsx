@@ -30,12 +30,20 @@ describe('EntryMarks', () => {
     expect(annotated()).toBeNull();
   });
 
-  it('shows Annotated in place of Compendium once the cupboard row overrides a field', () => {
+  it('shows Annotated beside Compendium once the cupboard row overrides a field', () => {
     render(<EntryMarks kind="cupboard" annotated />);
 
     expect(annotated()).toBeInTheDocument();
-    expect(held()).toBeNull();
-    expect(statuses()).toHaveLength(0);
+    expect(held()).toBeInTheDocument();
+    expect(statuses()).toHaveLength(1);
+  });
+
+  it('marks a compendium entry the cupboard does not hold when read in a coven', () => {
+    render(<EntryMarks kind="compendium" inCoven />);
+
+    expect(held()).toBeInTheDocument();
+    expect(statuses()).toHaveLength(1);
+    expect(annotated()).toBeNull();
   });
 
   it('shows the retired mark in place of the held one, and Annotated beside it, each a button', () => {

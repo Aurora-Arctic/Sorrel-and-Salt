@@ -53,7 +53,7 @@ const entryRead = (movedAway: { name: string; slug: string } | null = null) => (
 
 const show = async (search: Record<string, string> = {}) =>
   render(await Page(params(SLUG, search)));
-const dialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
 const edits = () => screen.queryAllByRole('link', { name: /edit/i });
 
 beforeEach(() => {

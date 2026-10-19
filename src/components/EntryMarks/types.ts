@@ -13,4 +13,10 @@ export interface EntryMarksProps {
   annotated?: boolean;
   /** The curators retired the entry (M12.24); it shows in place of Compendium. */
   retired?: boolean;
+  /**
+   * Read inside a coven, where Compendium tells a compendium entry from the
+   * coven's own: a `compendium` entry shows it there. On the public compendium
+   * every entry is one, so it shows nothing.
+   */
+  inCoven?: boolean;
 }
