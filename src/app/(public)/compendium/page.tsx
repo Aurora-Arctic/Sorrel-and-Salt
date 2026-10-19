@@ -1,10 +1,14 @@
 import type { Metadata } from 'next';
+import { redirect } from 'next/navigation';
 import CompendiumCards from '../../../components/CompendiumCards';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
+import { editHeading } from '../../../components/CompendiumList/heading';
 import { compendiumFacetCounts } from '../../../components/CompendiumList/facets';
 import { PUBLIC_COMPENDIUM_PATH, compendiumHref } from '../../../components/CompendiumList/href';
 import { COMPENDIUM_PARAMS } from '../../../components/CompendiumList/params';
 import type { CompendiumListFilter } from '../../../components/CompendiumList/types';
+import { EDIT_ENTRY_EYEBROW } from '../../../components/IngredientEntry/edit-heading';
+import { RouteModalProvider } from '../../../components/Modal/route-modal-provider';
 import PageHeader from '../../../components/PageHeader';
 import { listJsonLd } from '../../../lib/json-ld';
 import { publicPageMetadata } from '../../../lib/page-metadata';
@@ -12,7 +16,12 @@ import { entryRecency } from '../../../lib/entry-recency';
 import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../lib/pagination';
+import { single } from '../../../lib/search-params';
 import { viewerIfSignedIn } from '../../../lib/viewer';
+import CompendiumDialog from '../../(shell)/admin/compendium/compendium-dialog';
+import { readCompendiumEntry } from '../../(shell)/admin/compendium/read-entry';
+import { readEditPlace } from '../../(shell)/admin/list-page';
+import MissingNotice from '../../(shell)/admin/missing-notice';
 import {
   readCardCategories,
   readCategories,
@@ -27,6 +36,12 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 // layout owns `<main>`, so this renders none. The list is drawn per request, over the cached
 // reads (`readCompendium` and the rest take no session), so every card and every link is in
 // the server HTML. The viewer is asked only for the foot of each card, and never redirects.
+//
+// A curator (`canCurate`) also gets Edit on each card, which opens the compendium's edit dialog
+// over the results from `?edit=<slug>`, the admin Compendium's, and closes back to the same
+// search (M8.17). Only once the viewer is known to curate is `?edit=` read at all: for anyone
+// else it opens nothing and reads nothing. The list's reads stay the cached, sessionless ones,
+// keyed by the address alone, whoever asks (rule 6).
 //
 // The address carries the admin list's filters, bar two: No Refs and No Form are the curators'
 // to-do lists, so `?withoutReferences=1` and `?withoutForms=1` are dropped before the table
@@ -80,6 +95,16 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     readFormIcons(),
     viewerIfSignedIn(),
   ]);
+  // After the viewer, so an address with `?edit=` reads nothing for anyone who cannot curate.
+  const canEdit = viewer?.viewer.canCurate === true;
+  const { edited, missing } = canEdit
+    ? await readEditPlace({ adding: false, editSlug: single(params.edit) }, readCompendiumEntry)
+    : { edited: undefined, missing: false };
+  const here = { ...filter, after, before };
+  const hereWith = (edit: string) => compendiumHref(here, { edit }, PUBLIC_COMPENDIUM_PATH);
+  // An old address opens the entry at its new one, keeping the search (MB.82).
+  if (edited?.kind === 'moved') redirect(hereWith(edited.slug));
+  const editing = edited?.kind === 'entry' ? edited : undefined;
   const chips = await readCardCategories(page.edges.map(({ node }) => node.id));
   const facets = compendiumFacetCounts(counts, {
     formIcons,
@@ -97,6 +122,10 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
     toxic: node.toxic,
     safetyNotes: node.safetyNotes,
     recency: entryRecency(node.createdAt, node.updatedAt),
+    ...(canEdit && {
+      editHref: hereWith(node.slug),
+      editHeading: editHeading(node, EDIT_ENTRY_EYEBROW),
+    }),
   }));
 
   // Who may add: a role that may create an ingredient and stock it (`canWrite`, set in
@@ -105,7 +134,8 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
   const action = viewer?.workspaces.some(({ canWrite }) => canWrite) ? 'add' : 'none';
 
   return (
-    <>
+    // Holds a pressed Edit's opening, as the admin layout does; a plain wrapper for anyone else.
+    <RouteModalProvider>
       {!isFiltered(params) && (
         <script
           type="application/ld+json"
@@ -114,6 +144,7 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         />
       )}
       <PageHeader title="Compendium" />
+      {missing && <MissingNotice noun="compendium entry" />}
       <CompendiumCards
         entries={entries}
         filter={filter}
@@ -127,6 +158,19 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
           compendiumHref({ ...filter, ...cursor }, undefined, PUBLIC_COMPENDIUM_PATH),
         )}
       />
-    </>
+      {canEdit && (
+        // Rendered for a curator whatever the address opens, so Edit opens it at once (M9.18).
+        <CompendiumDialog
+          place={here}
+          path={PUBLIC_COMPENDIUM_PATH}
+          opened={
+            editing && {
+              heading: editHeading(editing.values, EDIT_ENTRY_EYEBROW),
+              entry: { id: editing.id, values: editing.values },
+            }
+          }
+        />
+      )}
+    </RouteModalProvider>
   );
 }

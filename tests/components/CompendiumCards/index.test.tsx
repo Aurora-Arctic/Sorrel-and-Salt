@@ -1,4 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
+import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -130,6 +131,30 @@ describe('CompendiumCards', () => {
     const buttons = screen.getAllByRole('button', { name: 'Add to My Ingredients' });
     expect(buttons).toHaveLength(ENTRIES.length);
     for (const button of buttons) expect(button).toBeDisabled();
+  });
+
+  // M8.17: a curator's Edit, named for the entry, beside Add where the account can add too.
+  it('draws Edit, named for the entry, on each card the page gives an edit address', () => {
+    const editable = ENTRIES.map((one) => ({
+      ...one,
+      editHref: `/compendium?edit=${one.slug}` as Route,
+      editHeading: { eyebrow: 'Edit Compendium Entry', title: one.name },
+    }));
+    render(<Cards {...props({ entries: editable, action: 'add' })} />);
+    const hrefs = screen
+      .getAllByRole('link', { name: /^Edit / })
+      .map((link) => link.getAttribute('href'));
+    expect(hrefs).toEqual(editable.map(({ editHref }) => editHref));
+    expect(
+      screen.getByRole('link', { name: 'Edit Testwort, Fixtura alteralis' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Edit Fixture Salt' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button', { name: 'Add to My Ingredients' })).toHaveLength(3);
+  });
+
+  it('draws no Edit where the page gives none', () => {
+    render(<Cards {...props()} />);
+    expect(screen.queryAllByRole('link', { name: /^Edit / })).toHaveLength(0);
   });
 
   it('holds neither for an account that only views', () => {

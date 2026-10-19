@@ -17,7 +17,6 @@ import PageHeader from '../../../../components/PageHeader';
 import { allPages, resolveNumberedPage } from '../../../../lib/pagination';
 import { editorStamps } from '../editors';
 import { requireCuratorSession } from '../../../../lib/request-session';
-import { resolveCompendiumSlug } from '@/modules/ingredients';
 import {
   readCategories,
   readCompendium,
@@ -31,25 +30,11 @@ import { pagerHrefs } from '../../../../lib/list-href';
 import { readEditPlace, readListPlace } from '../list-page';
 import MissingNotice from '../missing-notice';
 import CompendiumDialog from './compendium-dialog';
-import { entryValues } from '@/app/entry-values';
+import { readCompendiumEntry } from './read-entry';
 import type { AdminCompendiumPageProps, CompendiumSearchParams } from './types';
 
 export const metadata: Metadata = {
   title: 'Compendium',
-};
-
-/**
- * What `?edit=` names: the entry there, its values read for the form, or the
- * address it moved to while its old one still redirects, or nothing.
- */
-const readEntry = async (slug: string) => {
-  const address = await resolveCompendiumSlug(slug);
-  if (address.kind === 'moved') return address;
-  return {
-    kind: 'entry' as const,
-    id: address.entry.id,
-    values: await entryValues(address.entry, null),
-  };
 };
 
 /** The button that opens the add dialog. */
@@ -87,7 +72,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     readCompendium(variables, after, before),
     readFacets(variables),
     readFormIcons(),
-    readEditPlace(place, readEntry),
+    readEditPlace(place, readCompendiumEntry),
   ]);
   const facets = compendiumFacetCounts(counts, {
     formIcons,

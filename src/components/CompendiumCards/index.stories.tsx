@@ -1,4 +1,5 @@
 import type { Story } from '@ladle/react';
+import type { Route } from 'next';
 import CompendiumCards from '.';
 import type { CompendiumCardEntry, CompendiumCardsProps } from './types';
 import type { CompendiumFacetCounts, CompendiumListFilter } from '../CompendiumList/types';
@@ -74,6 +75,18 @@ export const CanAdd: Story = () => <CompendiumCards {...BASE} action="add" />;
 
 // An account that only views, or a visitor with no account (who signs in through the header):
 // nothing beneath the card.
+/** A curator's cards, each with Edit, which opens the compendium's edit dialog (M8.17). */
+export const CuratorCanEdit: Story = () => (
+  <CompendiumCards
+    {...BASE}
+    entries={ENTRIES.map((entry) => ({
+      ...entry,
+      editHref: `/compendium?edit=${entry.slug}` as Route,
+      editHeading: { eyebrow: 'Edit Compendium Entry', title: entry.name },
+    }))}
+  />
+);
+
 export const ViewerOnly: Story = () => <CompendiumCards {...BASE} />;
 
 // A page with a neighbour on each side.
