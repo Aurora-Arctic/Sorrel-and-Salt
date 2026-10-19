@@ -5,7 +5,7 @@ import { ingredientLinkTarget } from '../AppShell/site-target';
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { type ReactElement, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
@@ -80,10 +80,11 @@ export default function CupboardActions({
   // the address's instead (`annotate.opened`), as the curator's Edit is.
   const [asking, setAsking] = useState<'remove' | 'own'>();
   // The menu's button, or the one plain button: where the focus goes back to
-  // once a question is cancelled or the dialog closes, since what took it is gone.
+  // once a question or the dialog closes, since the menu item that opened it
+  // is gone with the menu. Modal gives it there itself.
   const trigger = useRef<HTMLButtonElement>(null);
   const link = useRef<HTMLAnchorElement>(null);
-  const returning = useRef(false);
+  const back = () => trigger.current ?? link.current;
   const openEdit = useOpenModalClick(
     edit?.href ?? ('' as Route),
     editHeading(
@@ -94,29 +95,11 @@ export default function CupboardActions({
 
   const openAnnotate = useOpenModalClick(annotate.href, ANNOTATE_HEADING);
 
-  useEffect(() => {
-    if (asking === undefined && returning.current) {
-      returning.current = false;
-      (trigger.current ?? link.current)?.focus();
-    }
-  }, [asking]);
-
-  // The Annotate dialog closes by the address dropping `?annotate`, so the
-  // focus goes back once `opened` turns off, not when a question clears.
-  const wasOpened = useRef(annotate.opened);
-  useEffect(() => {
-    if (wasOpened.current && !annotate.opened) (trigger.current ?? link.current)?.focus();
-    wasOpened.current = annotate.opened;
-  }, [annotate.opened]);
-
   // Edit's press shows its skeleton here too; this place leaves that one to it.
   const loading = useRouteModalOpener()?.loading;
   const annotating = annotate.opened || loading?.title === ANNOTATE_HEADING.title;
 
-  const settle = (): void => {
-    returning.current = true;
-    setAsking(undefined);
-  };
+  const settle = (): void => setAsking(undefined);
 
   const add = useMutation({
     mutationFn: () => graphqlRequest(AddCupboardEntryDocument, { workspaceId, ingredientId }),
@@ -231,7 +214,7 @@ export default function CupboardActions({
       {asking === 'own' && (
         // Asked in a modal over the page, as Leave Coven asks (the owner's
         // call, 2026-10-19), rather than in the title's row.
-        <Modal title="Make It Ours" onClose={settle}>
+        <Modal title="Make It Ours" onClose={settle} returnTo={back}>
           {(close) => (
             <>
               <p>
@@ -265,7 +248,7 @@ export default function CupboardActions({
         </Modal>
       )}
       {asking === 'remove' && (
-        <Modal title="Remove from Cupboard" onClose={settle}>
+        <Modal title="Remove from Cupboard" onClose={settle} returnTo={back}>
           {(close) => (
             <>
               <p>
@@ -297,6 +280,7 @@ export default function CupboardActions({
       {annotating && (
         <RouteModal
           closeHref={annotate.closeHref}
+          returnTo={back}
           content={
             annotate.opened
               ? {

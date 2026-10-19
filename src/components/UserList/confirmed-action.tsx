@@ -47,20 +47,11 @@ const ConfirmedAction = ({
   const confirmRef = useRef<HTMLButtonElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
   const openRef = useRef<HTMLButtonElement>(null);
-  // Set by Cancel only, so the first render takes no focus.
-  const returning = useRef(false);
-
-  // Focus follows the step: to the modal's action when asked, back to the
-  // row's on Cancel.
-  // In a modal, the overlay puts the focus on Cancel, its safe answer, and
-  // gives it back itself.
+  // The focus goes to the modal's action when asked; Modal gives it back to
+  // the row's as it closes. In a modal, the overlay puts the focus on Cancel,
+  // its safe answer, and gives it back itself.
   useEffect(() => {
-    if (inModal) return;
-    if (step === 'confirming') confirmRef.current?.focus();
-    if (step === 'idle' && returning.current) {
-      returning.current = false;
-      openRef.current?.focus();
-    }
+    if (!inModal && step === 'confirming') confirmRef.current?.focus();
   }, [step, inModal]);
 
   // A caller that shows the refusal itself (the members page, above its table)
@@ -92,7 +83,6 @@ const ConfirmedAction = ({
   }
 
   function cancel() {
-    returning.current = true;
     setStep('idle');
   }
 
@@ -157,7 +147,7 @@ const ConfirmedAction = ({
             <Answers {...answerProps} onCancel={cancel} />
           </ConfirmOverlay>
         ) : (
-          <Modal title={title} onClose={cancel}>
+          <Modal title={title} onClose={cancel} returnTo={() => openRef.current}>
             {(close) => (
               <>
                 <p>{question}</p>
