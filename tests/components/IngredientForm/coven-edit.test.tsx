@@ -3,15 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import IngredientForm from '@/components/IngredientForm';
 import type { IngredientFormValues } from '@/components/IngredientForm/types';
 import { EMPTY_VALUES } from '@/components/IngredientForm/values';
-import type {
-  UpdateWorkspaceIngredientMutation,
-  UpdateWorkspaceIngredientMutationVariables,
-} from '@/gql/graphql';
-import { mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
+import { mockGraphQLError } from '../../support/msw/graphql';
 import { duplicateHref, renderWithClient, textbox, waitFor } from '../../support/ingredient-form';
 import { openSections } from '../../support/ingredient-sections';
 import { press, type } from '../../support/interact';
-import { ENTRY_ID, WORKSPACE_ID, offerNothing } from '../../support/msw/ingredient-lookups';
+import {
+  ENTRY_ID,
+  WORKSPACE_ID,
+  acceptCovenUpdate,
+  offerNothing,
+} from '../../support/msw/ingredient-lookups';
 
 // The form editing a coven's own entry (M8.17): what an edit changes on the
 // coven tier, written once here. What an edit does in either tier — one save,
@@ -28,24 +29,6 @@ const TESTWORT: IngredientFormValues = {
   canonicalName: 'Fixtura testalis',
   folkNames: [{ value: 'Hedge Fixture', id: FOLK_ID }],
 };
-
-function acceptCovenUpdate() {
-  const calls: UpdateWorkspaceIngredientMutationVariables[] = [];
-  mockGraphQLMutation<
-    UpdateWorkspaceIngredientMutation,
-    UpdateWorkspaceIngredientMutationVariables
-  >('UpdateWorkspaceIngredient', (variables) => {
-    calls.push(variables);
-    return {
-      updateIngredient: {
-        id: String(variables.id),
-        name: variables.input.name,
-        slug: 'mockwort-fixtura-testalis',
-      },
-    };
-  });
-  return calls;
-}
 
 function renderEdit(props: { mayPromote?: boolean } = {}) {
   const onSaved = vi.fn();

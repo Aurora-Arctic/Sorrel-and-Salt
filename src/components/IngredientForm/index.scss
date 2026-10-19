@@ -977,3 +977,11 @@ $skeleton-fade: 300ms;
   padding-top: space(4);
   border-top: 1px solid $hairline;
 }
+
+// A renamed form's Use and Keep, beneath its Form box (M8.17).
+.ingredient-form__renamed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(1);
+  margin-top: space(1);
+}

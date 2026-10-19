@@ -25,6 +25,7 @@ import type {
   NounedField,
   ReferenceLink,
   ReferenceListEntry,
+  RenamedFormHolder,
   RestoredSections,
   SectionKey,
   SubstituteForm,
@@ -470,6 +471,16 @@ function placeIn(
 export const fold = (text: string): string => text.trim().toLowerCase();
 
 /**
+ * The name a variant's picked form now goes by, when an admin has renamed it
+ * since the coven picked it: the text no longer folds to the pick's name
+ * (M5.6a). Undefined for a pick still named as typed, and for typed text.
+ * Only a coven's variant can hold one, since a rename rewrites the
+ * compendium's own (MB.162); the member settles it (M8.17).
+ */
+export const renamedTo = ({ form, formLink }: RenamedFormHolder): string | undefined =>
+  formLink && fold(formLink.name) !== fold(form) ? formLink.name : undefined;
+
+/**
  * Why `text` cannot be a list's next entry, or undefined when it can: a
  * suggestion's, with what it links, or what the box holds. On the schema's
  * keys, so the box refuses what a save would (MB.174): a link by its id, and
@@ -651,9 +662,10 @@ function boxIssues(
 }
 
 /**
- * One variant's issues: the schema's, placed; its boxes'; and, on the
- * compendium, a form typed rather than picked, which the compendium refuses,
- * a curated pick being all it holds (MB.162).
+ * One variant's issues: the schema's, placed; its boxes'; on the compendium,
+ * a form typed rather than picked, which the compendium refuses, a curated
+ * pick being all it holds (MB.162); and a pick an admin has since renamed,
+ * until the member settles it (M8.17).
  */
 function variantIssues(
   raw: Issues | undefined,
@@ -665,6 +677,14 @@ function variantIssues(
   if (drafts) errors.drafts = drafts;
   if (pickOnly && !errors.form && variant.form.trim() !== '' && variant.formLink === null) {
     errors.form = { type: 'unpicked', message: 'Pick a form from the list' };
+  }
+  // The stale pair is never sent: MB.167 would refuse it at `form` anyway.
+  const renamed = renamedTo(variant);
+  if (!errors.form && renamed !== undefined) {
+    errors.form = {
+      type: 'renamed',
+      message: `Use "${renamed}" or keep "${variant.form.trim()}" before saving`,
+    };
   }
   return Object.keys(errors).length > 0 ? errors : undefined;
 }

@@ -209,6 +209,9 @@ export interface ListOption extends ComboboxOption {
  * was picked as, which the text must stay for the pick to hold, and the group
  * and description the box shows beside the text.
  */
+/** What `renamedTo` reads of a variant: its text, and the pick beside it. */
+export type RenamedFormHolder = Pick<VariantFormValues, 'form' | 'formLink'>;
+
 export interface FormLink {
   id: string;
   name: string;
@@ -380,6 +383,8 @@ export interface SuggestFieldProps<O extends ComboboxOption = ComboboxOption> ex
   offerTyped?: boolean;
   /** The mark on the typed row: a form's is the generic. */
   typedIcon?: ReactNode;
+  /** Drawn beneath the field's error: a renamed form's two answers. */
+  after?: ReactNode;
 }
 
 export interface ListFieldProps {
