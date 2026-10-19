@@ -36,8 +36,13 @@ story flow proves is deleted, not kept beside it. The story suite shares the
 gate suite's ports (8001 and up) and its lock, `/tmp/sorrel-e2e.lock`, so the
 two never run at once on one machine.
 
-**`assertNoAccessibilityViolations(page)` does not wait** (`tests/e2e/axe.ts`):
-it scans whatever the page holds at that instant. So the last web-first
+**`assertNoAccessibilityViolations(page)` waits for a non-empty title and for
+transitions to finish, and for nothing else** (`tests/e2e/axe.ts`): it scans
+whatever the page holds at that instant. The title wait is there because a soft
+navigation (a filter, a router refresh) removes the `<title>` for a moment and
+puts the next one back, while the new rows are already in the page; measured at
+about 4 ms on a quiet machine and 150 to 360 ms with the CPU throttled 20 to 40
+times (MB.265). So the last web-first
 assertion before each scan must be one that waits for the state being
 scanned — a dialog visible, a Save enabled, a status shown, a URL reached —
 never a negative such as `toHaveCount(0)` on something that was never there,
@@ -477,9 +482,11 @@ time: other sessions' runs shared the cores (load average 9 to 16, and every
 run waited 85 to 123 s for the lock), so these figures run slower than the
 table above and compare with each other, not with it. The warm series also
 included one failure, an axe scan that found a page with no `<title>` on
-`admin.spec.ts`'s zodiac filter test. That test passed in the other five runs
-and the stories run was green, but it was not rerun or investigated, so the
-cause is unknown.
+`admin.spec.ts`'s zodiac filter test. MB.265 explained it: a soft navigation
+leaves the document without a `<title>` for a moment, and a loaded machine let
+the scan run inside that gap. The scan now waits for a title. The same failure
+once seen in story 60 was not reproduced, so its cause is unproven; the same
+wait covers it.
 
 | Wall time, three runs  | Cold (the run builds and boots) | Warm (servers up)             |
 | ---------------------- | ------------------------------- | ----------------------------- |

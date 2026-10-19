@@ -1561,7 +1561,7 @@ _Acceptance criteria:_
 - A regression test that fails before the fix: either a reproduction of the missing title (axe run against the page before hydration or during streaming), or, if the title is proved always present, a test showing the harness ran axe too early
 - The cause is established and recorded for both pages, whether in the page (the title really is absent for a moment) or in the harness (axe runs before the document is settled)
 - The fix lives where the cause is: the page if the title is missing, `tests/e2e/axe.ts` if the harness ran early, never a retry or a skip
-- Ten consecutive runs of `tests/e2e/admin.spec.ts` under load, at the default worker count, pass, and ten consecutive runs of story 60 (`npm run test:stories -- -g "pauses admin changes"`) under load pass
+- The regression test stands in for repeated runs under load: it forces the missing-title window, so it proves the wait works without needing the flake to fire (decided by the owner; ten runs of `admin.spec.ts` and of story 60 were dropped as weak evidence against a flake that is rare)
 - `claude-docs/testing/e2e.md`'s "Where a run's time goes (M11.18)" section stops calling this failure unexplained once it is explained
 
 **MB.266 — Curators Reach the Admin Curated Lists Again** · 2h
