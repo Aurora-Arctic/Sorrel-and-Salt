@@ -14,14 +14,16 @@ it directly.
 
 `PageHeaderProps` (`types.ts`):
 
-| Prop     | What it is                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------- |
-| `title`  | The `h1`, title case                                                                                          |
-| `action` | Optional: the one primary action, an Add link as `<Link className="btn btn--solid">`, or a control of its own |
+| Prop     | What it is                                                                                                      |
+| -------- | --------------------------------------------------------------------------------------------------------------- |
+| `title`  | The `h1`, title case                                                                                            |
+| `lead`   | Optional: a mark before the heading, on its line and outside the `h1` (the entry page’s In Your Cupboard shelf) |
+| `action` | Optional: the one primary action, an Add link as `<Link className="btn btn--solid">`, or a control of its own   |
 
 ## Contracts
 
 - **One `h1` per page, and this is it** on every page that renders it.
+- **A `lead` stays out of the heading.** With one, the `h1` and the lead share a `.page-header__title` row, so the heading reads as the title alone and the lead keeps its own name; the row takes the place the bare `h1` takes in the header’s layout.
 - **The action is the caller's element**: an Add link to the page's `?new`
   address (the admin lists' `AddAction`, which opens its modal at once), or a client component of its own. A page with no action leaves it
   out and keeps the same heading.

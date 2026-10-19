@@ -37,6 +37,13 @@ async function stampsOf(table: string, column: string, value: string) {
   return row;
 }
 
+async function updatedByOf(id: string): Promise<string> {
+  const [{ updated_by }] = await sql<
+    { updated_by: string }[]
+  >`select updated_by from users where id = ${id}`;
+  return updated_by;
+}
+
 async function insertUser(id = randomUUID(), overrides = ''): Promise<string> {
   await sql.unsafe(
     `insert into users (id, name, email, created_by, updated_by${overrides ? ', created_at, updated_at' : ''})
@@ -202,6 +209,90 @@ describe('the updated_at trigger', () => {
     });
   });
 
+  // MB.106: a statement that changes nothing leaves the stamps alone, so
+  // `updated_at` says when the row last changed (migration 0079).
+  describe('an update that changes nothing', () => {
+    const session = { userId: AUTHOR };
+
+    it('leaves updated_at and updated_by where they were, whatever the statement sets them to', async () => {
+      const id = await insertUser(randomUUID(), THE_MILLENNIUM);
+      const other = await insertUser();
+      const before = await stampsOf('users', 'id', id);
+
+      await sql`update users set name = name, updated_by = ${other} where id = ${id}`;
+
+      expect(await stampsOf('users', 'id', id)).toEqual(before);
+      expect(await updatedByOf(id)).toBe(AUTHOR);
+    });
+
+    it('keeps updated_by when a different user re-saves the row unchanged', async () => {
+      const id = await insertUser(randomUUID(), THE_MILLENNIUM);
+      const other = await insertUser();
+      // Why updated_by could have moved: the writer is not the row's last editor.
+      expect(other).not.toBe(await updatedByOf(id));
+
+      const [returned] = await withAudit({ userId: other }, (write) =>
+        write.update(users, { name: 'Author' }, eq(users.id, id)),
+      );
+
+      expect(returned.updatedBy).toBe(AUTHOR);
+      expect(await updatedByOf(id)).toBe(AUTHOR);
+    });
+
+    it('takes updated_by with updated_at when a column really changes', async () => {
+      const id = await insertUser(randomUUID(), THE_MILLENNIUM);
+      const other = await insertUser();
+
+      await withAudit({ userId: other }, (write) =>
+        write.update(users, { name: 'Changed' }, eq(users.id, id)),
+      );
+
+      expect(await updatedByOf(id)).toBe(other);
+    });
+
+    it('leaves updated_at although withAudit sends fresh ones, as every save does', async () => {
+      const id = await insertUser(randomUUID(), THE_MILLENNIUM);
+      const before = await stampsOf('users', 'id', id);
+      // Why the stamps could have moved: the writer sends a new updatedAt.
+      const [returned] = await withAudit(session, (write) =>
+        write.update(users, { name: 'Author' }, eq(users.id, id)),
+      );
+
+      expect(returned.updatedAt).toEqual(before.updated_at);
+    });
+
+    it('moves updated_at when a column really changes', async () => {
+      const id = await insertUser(randomUUID(), THE_MILLENNIUM);
+
+      await sql`update users set name = 'Changed' where id = ${id}`;
+
+      expect((await stampsOf('users', 'id', id)).updated_at.getFullYear()).not.toBe(2000);
+    });
+
+    it('moves updated_at when the statement is a deliberate touch', async () => {
+      const id = await insertUser(randomUUID(), THE_MILLENNIUM);
+
+      await sql.begin(async (tx) => {
+        await tx`select set_config('app.touch_row', 'on', true)`;
+        await tx`update users set name = name where id = ${id}`;
+      });
+
+      expect((await stampsOf('users', 'id', id)).updated_at.getFullYear()).not.toBe(2000);
+    });
+
+    it('is a plain no-op again once the touch setting is back off', async () => {
+      const id = await insertUser(randomUUID(), THE_MILLENNIUM);
+
+      await sql.begin(async (tx) => {
+        await tx`select set_config('app.touch_row', 'on', true)`;
+        await tx`select set_config('app.touch_row', '', true)`;
+        await tx`update users set name = name where id = ${id}`;
+      });
+
+      expect((await stampsOf('users', 'id', id)).updated_at.getFullYear()).toBe(2000);
+    });
+  });
+
   // The hard-deleted join tables carry no `deleted_at`, so the function has to reach a row
   // it can never soft-delete.
   describe('a join table carrying only the four stamps', () => {
@@ -212,8 +303,10 @@ describe('the updated_at trigger', () => {
       `;
       const before = await databaseNow();
 
+      const other = await insertUser();
+      // A column the row holds that really changes: a save of the stamps alone is a no-op.
       await sql`
-        update spell_categories set updated_by = ${AUTHOR}
+        update spell_categories set created_by = ${other}
         where spell_id = ${SPELL} and category_id = ${CATEGORY}
       `;
 

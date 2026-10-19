@@ -9,6 +9,8 @@ export type MenuButtonItem = {
   label: string;
   /** Drawn in the destructive colour, as a `.btn--destructive` would be. */
   destructive?: boolean;
+  /** Drawn in the accent green, for what adds something: "Add to Cupboard". */
+  constructive?: boolean;
 } & (
   | {
       href: Route;

@@ -61,6 +61,7 @@ const CompendiumCards = ({
             toxic={entry.toxic}
             safetyNotes={entry.safetyNotes}
             kind="compendium"
+            recency={entry.recency}
             actions={
               action === 'add' ? (
                 // Disabled until M9.12 builds the dialog it opens.

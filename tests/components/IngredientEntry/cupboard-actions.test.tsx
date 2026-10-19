@@ -5,7 +5,11 @@ import type { Route } from 'next';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import CupboardActions from '@/components/IngredientEntry/cupboard-actions';
 import type { CupboardActionsProps } from '@/components/IngredientEntry/types';
-import type { AddCupboardEntryMutation, MakeItOursMutation } from '@/gql/graphql';
+import type {
+  AddCupboardEntryMutation,
+  MakeItOursMutation,
+  RemoveCupboardEntryMutation,
+} from '@/gql/graphql';
 import { makeQueryClient } from '@/lib/graphql-client';
 import { press } from '../../support/interact';
 import { graphqlLink, mockGraphQLError, mockGraphQLMutation } from '../../support/msw/graphql';
@@ -94,7 +98,7 @@ describe('CupboardActions', () => {
     expect(choices()).toEqual(['Annotate', 'Make It Ours', 'Remove']);
   });
 
-  it("puts a curator's Edit Entry first in the menu, a link to the page's edit address", () => {
+  it("puts a curator's Edit Compendium Entry first in the menu, a link to the page's edit address", () => {
     renderActions({
       edit: {
         href: '/coven/fixture-coven/ingredients/fixture?edit' as Route,
@@ -102,8 +106,8 @@ describe('CupboardActions', () => {
       },
     });
 
-    expect(choices()).toEqual(['Edit Entry', 'Add to Cupboard']);
-    expect(screen.getByRole('menuitem', { name: 'Edit Entry' })).toHaveAttribute(
+    expect(choices()).toEqual(['Edit Compendium Entry', 'Add to Cupboard']);
+    expect(screen.getByRole('menuitem', { name: 'Edit Compendium Entry' })).toHaveAttribute(
       'href',
       '/coven/fixture-coven/ingredients/fixture?edit',
     );
@@ -215,6 +219,20 @@ describe('CupboardActions', () => {
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     await waitFor(() => expect(button('Edit')).toHaveFocus());
+  });
+
+  it('closes the question and reads the page again once the entry is removed', async () => {
+    mockGraphQLMutation<RemoveCupboardEntryMutation, Record<string, unknown>>(
+      'RemoveCupboardEntry',
+      () => ({ removeCupboardEntry: BASE.ingredientId }),
+    );
+    renderActions({ held: true });
+
+    choose('Remove');
+    press(within(screen.getByRole('dialog')).getByRole('button', { name: 'Remove' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(router.refresh).toHaveBeenCalled();
   });
 
   it("shows the service's refusal when a jar is still held", async () => {

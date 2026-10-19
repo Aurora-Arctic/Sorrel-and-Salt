@@ -55,6 +55,17 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       .where(and(notSoftDeleted(table), where))
       .returning() as never;
 
+  // An UPDATE that changes nothing keeps its stamps (the `set_updated_at()`
+  // trigger, MB.106); a touch is the one that must move them, and says so for
+  // its own statement through `app.touch_row`, then clears it so no later
+  // write in the transaction reads it.
+  const touch = async (table: PgTable, where: SQL | undefined) => {
+    await tx.execute(sql`select set_config('app.touch_row', 'on', true)`);
+    const touched = await update(table, {}, where);
+    await tx.execute(sql`select set_config('app.touch_row', '', true)`);
+    return touched;
+  };
+
   const inWorkspaceById = (
     membership: Membership,
     table: PgTable & WorkspaceScoped & Identified,
@@ -95,6 +106,10 @@ function writerFor(tx: Transaction, session: AuditSession): AuditWriter {
       insert(table, { ...values, workspaceId: null }),
     updateByIdInCompendium: (_curator, table, id, values) =>
       update(table, values, inCompendiumById(table, id)),
+    touchByIdInCompendium: (_curator, table, id) =>
+      touch(table, inCompendiumById(table, id)) as never,
+    touchByIdInWorkspace: (membership, table, id) =>
+      touch(table, inWorkspaceById(membership, table, id)) as never,
     softDeleteByIdInCompendium: (_curator, table, id) =>
       softDelete(table, inCompendiumById(table, id)),
     deleteLapsedSlugRetirements: (_curator, at) =>

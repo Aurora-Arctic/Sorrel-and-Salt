@@ -12,6 +12,7 @@ import {
   PROVIDER_CREDENTIALS,
 } from '../support/oauth';
 import type { Message, ProviderId } from '@/lib/types';
+import { asTouch } from '../support/db/touch-row';
 import { importAuth } from '../support/auth-module';
 import type { AuthInstance, Profile } from '../support/types';
 
@@ -83,7 +84,10 @@ async function userRow(email: string) {
  * that `updated_by` is the user's own id would pass with no update hook at all.
  */
 async function restamp(email: string): Promise<void> {
-  await sql`update users set updated_by = ${BOOTSTRAP_USER_ID} where email = ${email}`;
+  await asTouch(
+    sql,
+    (tx) => tx`update users set updated_by = ${BOOTSTRAP_USER_ID} where email = ${email}`,
+  );
 }
 
 /** The link in the one verification mail sent so far. */

@@ -71,8 +71,14 @@
   @include theme-transition(background-color);
 
   &:hover,
-  &:focus-visible {
+  &:focus-visible,
+  .is-closing &.is-chosen {
     background-color: $fill-quiet;
+  }
+
+  // Held, not faded: the menu's own fade-out is the only motion on the way out.
+  .is-closing & {
+    transition: none;
   }
 
   @include reduced-motion {
@@ -98,8 +104,28 @@
   }
 
   &:hover,
-  &:focus-visible {
+  &:focus-visible,
+  .is-closing &.is-chosen {
     background-color: $secondary;
+    color: $text-on-color;
+  }
+}
+
+// What adds something, in the accent green and filled on hover and focus as
+// the destructive item is, so the two read as a pair (the owner's call,
+// 2026-10-19).
+.menu-button__item--constructive {
+  color: $accent;
+  @include theme-transition(background-color, color);
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  &:hover,
+  &:focus-visible,
+  .is-closing &.is-chosen {
+    background-color: $accent;
     color: $text-on-color;
   }
 }

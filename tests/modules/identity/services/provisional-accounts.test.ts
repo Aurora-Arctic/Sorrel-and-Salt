@@ -12,6 +12,7 @@ import {
 import type { Message, ProviderId } from '@/lib/types';
 import { importAuth } from '../../../support/auth-module';
 import { asManualFix } from '../../../support/db/privileges';
+import { asTouch } from '../../../support/db/touch-row';
 import type { AuthInstance, Profile } from '../../../support/types';
 import type { ProvisionalUserRow } from './types';
 
@@ -57,7 +58,7 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   const mine = sql`select id from users where email like ${`%${DOMAIN}`}`;
-  await sql`update users set updated_by = id where updated_by in (${mine})`;
+  await asTouch(sql, (tx) => tx`update users set updated_by = id where updated_by in (${mine})`);
   // The ledger goes before the users its rows name, and by truncate, since
   // `forbid_rewrite` refuses a delete.
   await sql`truncate user_privilege_changes`;
@@ -215,7 +216,10 @@ describe('Story 58: what the sweep removes', () => {
     const squatter = await squat(OWNER);
     await backdate(squatter.row.id, EXPIRED);
     // A row that names the squatter makes its delete a foreign-key violation.
-    await sql`update users set updated_by = ${squatter.row.id} where id = ${BOOTSTRAP_USER_ID}`;
+    await asTouch(
+      sql,
+      (tx) => tx`update users set updated_by = ${squatter.row.id} where id = ${BOOTSTRAP_USER_ID}`,
+    );
     const error = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const response = await signIn('google', { sub: 'g-by', email: BYSTANDER, verified: true });
@@ -311,7 +315,10 @@ describe('Story 58: a resend restarts the window', () => {
     const response = await signIn('microsoft', { sub: 'ms-owner', email: OWNER, verified: true });
     expectSignedIn(response);
     const { id } = (await userRow(OWNER))!;
-    await sql`update users set updated_by = ${BOOTSTRAP_USER_ID} where id = ${id}`;
+    await asTouch(
+      sql,
+      (tx) => tx`update users set updated_by = ${BOOTSTRAP_USER_ID} where id = ${id}`,
+    );
     await backdate(id, EXPIRED);
     const before = (await userRow(OWNER))!;
     expect(before).toMatchObject({ email_verified: false, updated_by: BOOTSTRAP_USER_ID });
