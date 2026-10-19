@@ -76,8 +76,10 @@ in the filter slot to carry.
   PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
   above, cancelled at rest by an equal negative margin so the page lays out as
   before, and `space(2)` below, real space between the row and the cards with no
-  cancelling margin (changed 2026-10-19, back to what it was); the tray hangs from the form inside, so the padding never moves it
-  from the input. While stuck the row wears `$shadow-floating`, faded in and out
+  cancelling margin (changed 2026-10-19, back to what it was). The search sentence
+  under the row takes that `space(2)` back from the frame's gap, so it sits a gap
+  from the input as the cards sit a gap from it. The tray hangs from the form
+  inside, so the padding never moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
   with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
   child, watches a one-pixel sentinel at the row's resting place with an
   IntersectionObserver (no scroll listener) and sets `data-stuck` on the row.
