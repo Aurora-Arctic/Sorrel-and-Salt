@@ -105,7 +105,11 @@ layout and page both read from the database.
    this when the store is busy and the target's region is `coven`.
 3. The **destination section's** skeleton takes its place, inside a `<main>`
    of its own, because the pages draw their own `<main>` and the landmark
-   would otherwise vanish during the wait. The switcher works out the shape
+   would otherwise vanish during the wait. That `<main>` also holds a visually
+   hidden `<h1>Loading</h1>`, because the skeleton replaced the page's `h1` and
+   axe's page-has-heading-one rule failed during every wait; `MainBody` does
+   the same. **Pending the owner's view:** a screen reader now hears both the
+   heading and the skeleton's "Loading" status. The switcher works out the shape
    with `covenSectionShape` (`src/lib/coven-path.ts`): cards for Ingredients,
    a table for Members and Invitations, and a page for anything else,
    including the coven home. Choosing Create Coven aims at the `main` region
