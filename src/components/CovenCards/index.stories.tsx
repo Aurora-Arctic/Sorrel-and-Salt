@@ -104,3 +104,19 @@ export const MidList: Story = () => (
 );
 
 export const Empty: Story = () => <CovenCards {...BASE} entries={[]} total={0} />;
+
+// A member's view: Edit in the foot of the coven's own entry, none on the compendium's (M8.17).
+export const WithEdit: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) =>
+      shown.kind === 'own'
+        ? {
+            ...shown,
+            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
+            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
+          }
+        : shown,
+    )}
+  />
+);

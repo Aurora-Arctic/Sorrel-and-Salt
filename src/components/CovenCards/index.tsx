@@ -2,6 +2,7 @@ import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
 import { emptyText } from '../CompendiumList';
+import { EditLink } from '../IconTip';
 import IngredientCard from '../IngredientCard';
 import IngredientCardList from '../IngredientCardList';
 import IngredientSearch from '../IngredientSearch';
@@ -12,8 +13,9 @@ import '../CompendiumList/index.scss';
 // A coven's Ingredients list (M9.6), the twin of CompendiumCards: the filter row in its coven
 // mode, one compact card per entry of the cupboard, and the pager. Render-only: the page reads
 // one page and hands it here. Each card links to the entry's page inside the coven, shows the
-// coven's own label, and holds its jars beneath the forms. The foot of a card (Edit, Delete)
-// stays empty until M8.17 and M9.10 fill it. An empty list is plain text until M9.11 builds
+// coven's own label, and holds its jars beneath the forms. The foot of a card holds Edit where
+// the page gives the entry an edit address (M8.17): the coven's own entries, for a role that
+// may update them; Delete waits for M9.10. An empty list is plain text until M9.11 builds
 // its empty state. claude-docs/components/coven-cards.md.
 
 const CovenCards = ({
@@ -65,6 +67,18 @@ const CovenCards = ({
             kind={entry.kind}
             annotated={entry.annotated}
             retired={entry.retired}
+            actions={
+              entry.editHref && entry.editHeading ? (
+                // Named with the formal name too, as two entries can share a label.
+                <EditLink
+                  href={entry.editHref}
+                  heading={entry.editHeading}
+                  name={
+                    entry.canonicalName ? `${entry.label}, ${entry.canonicalName}` : entry.label
+                  }
+                />
+              ) : undefined
+            }
           >
             {entry.jars.length > 0 && <JarLines jars={entry.jars} />}
           </IngredientCard>

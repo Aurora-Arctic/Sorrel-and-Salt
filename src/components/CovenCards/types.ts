@@ -1,7 +1,9 @@
+import type { Route } from 'next';
 import type { CompendiumListFilterProps, CompendiumListProps } from '../CompendiumList/types';
 import type { EntryKind } from '../EntryMarks/types';
 import type { CardCategory } from '../IngredientCard/types';
 import type { JarLine } from '../JarLines/types';
+import type { ModalHeading } from '../Modal/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 
@@ -26,6 +28,14 @@ export interface CovenCardEntry {
   retired: boolean;
   /** The coven's jars of it, one per form held. */
   jars: readonly JarLine[];
+  /**
+   * The list's own address with `?edit=<id>`, where the card's Edit opens the
+   * coven's edit dialog over the list (M8.17). Left out, no Edit shows: a
+   * compendium entry, or a role that may not update.
+   */
+  editHref?: Route;
+  /** The head of the dialog Edit opens, shown at once over a skeleton while the form loads (M9.18). */
+  editHeading?: ModalHeading;
 }
 
 export interface CovenCardsProps extends Pick<

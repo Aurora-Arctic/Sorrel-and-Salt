@@ -15,7 +15,7 @@ const router = vi.hoisted(() => ({ push: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router }));
 
 // A coven's Ingredients list (M9.6): a link per entry inside the coven, the coven's own label,
-// the jars beneath the forms, nothing in the foot, and a filter with the coven's three extra
+// the jars beneath the forms, Edit in the foot where an entry has an edit address, and a filter with the coven's three extra
 // choices (claude-docs/components/coven-cards.md).
 
 const client = makeQueryClient();
@@ -121,6 +121,30 @@ describe('CovenCards', () => {
   it('draws a jar line for each jar an entry holds', () => {
     render(<Cards {...props()} />);
     expect(screen.getAllByText(/Fixture Herb/)).toHaveLength(1);
+  });
+
+  it('draws Edit on a card only when it is given an edit address, named for the entry', () => {
+    const editHref = '/coven/fixture-coven/ingredients?edit=e1' as Route;
+    render(
+      <Cards
+        {...props({
+          entries: [
+            {
+              ...ENTRIES[0]!,
+              canonicalName: 'Fixtura testalis',
+              editHref,
+              editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
+            },
+            ENTRIES[1]!,
+          ],
+        })}
+      />,
+    );
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    const edits = within(list).getAllByRole('link', { name: /^Edit/ });
+    expect(edits).toHaveLength(1);
+    expect(edits[0]).toHaveAccessibleName('Edit Testwort, Fixtura testalis');
+    expect(edits[0]).toHaveAttribute('href', editHref);
   });
 
   it('holds no button on a card', () => {
