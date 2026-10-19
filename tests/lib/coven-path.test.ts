@@ -75,7 +75,12 @@ describe('covenTarget', () => {
   );
 
   it('draws the coven\x27s home as a page with its contents menu', () => {
-    expect(covenTarget('/coven/a')).toEqual({ region: 'coven', shape: 'page', frame: 'with-nav' });
+    expect(covenTarget('/coven/a')).toEqual({
+      region: 'coven',
+      shape: 'page',
+      frame: 'with-nav',
+      head: 'eyebrow',
+    });
   });
 
   it('draws a section it does not name as a plain page', () => {

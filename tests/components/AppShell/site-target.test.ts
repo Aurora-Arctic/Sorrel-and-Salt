@@ -23,6 +23,7 @@ describe('siteLinkTarget', () => {
     expect(siteLinkTarget('/coven', '/coven/fixture-coven')).toMatchObject({
       shape: 'page',
       frame: 'with-nav',
+      head: 'eyebrow',
     });
   });
 

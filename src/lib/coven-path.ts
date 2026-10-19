@@ -79,6 +79,7 @@ const PARTS_OF_SECTION: Record<string, Omit<NavigationTarget, 'region'>> = {
 export function covenTarget(pathname: string): NavigationTarget {
   const slug = covenSlugOf(pathname);
   const section = slug ? pathname.split('/')[3] : undefined;
-  if (slug && !section) return { region: 'coven', shape: 'page', frame: 'with-nav' };
+  if (slug && !section)
+    return { region: 'coven', shape: 'page', frame: 'with-nav', head: 'eyebrow' };
   return { region: 'coven', ...((section && PARTS_OF_SECTION[section]) || { shape: 'page' }) };
 }

@@ -35,6 +35,7 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
         tabs={target.tabs}
         filter={target.filter}
         menu={target.frame === 'with-nav'}
+        head={target.head}
       />
     );
     return (
