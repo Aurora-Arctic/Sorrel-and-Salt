@@ -10,7 +10,7 @@ area's section nav beside it (MB.7). A server component of two slots.
   admin layout a `PendingLink` to `/admin` reading "Admin", with
   `context-row__name`, so the area's name is its home as the switcher is the
   coven's (M8.16, the owner's call). It names the `main` region and the `page`
-  shape as its `navigationTarget`, so a press on it draws a page skeleton while
+  shape as its `navigationTarget`, and holds a `LinkHint` after "Admin", so a press on it draws a page skeleton and the dot while
   the index is on its way ([`loading.md`](../loading.md)).
 - `children`: the section nav (`CovenNav`, `AdminNav`).
 

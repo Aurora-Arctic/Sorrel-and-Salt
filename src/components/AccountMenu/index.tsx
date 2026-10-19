@@ -7,6 +7,7 @@ import { PendingLink } from '../../lib/navigation';
 import { siteLinkTarget } from '../AppShell/site-target';
 import { ACCOUNT_INVITATIONS_PATH, ACCOUNT_PATH } from '../../lib/sign-in';
 import IconTip from '../IconTip';
+import LinkHint from '../LinkHint';
 import SignOutButton from './sign-out-button';
 import { initialsOf } from './initials';
 import type { AccountMenuProps } from './types';
@@ -112,7 +113,7 @@ const AccountMenu = ({
               }
               onClick={close}
             >
-              Your Account
+              Your Account <LinkHint />
             </PendingLink>
             {/* A link of its own beside Your Account, not inside it: a press on
                 the count opens the invitations, a press on the rest of the row
@@ -144,7 +145,7 @@ const AccountMenu = ({
                 onClick={close}
                 aria-current={isAtPath(pathname, base) ? 'page' : undefined}
               >
-                {label}
+                {label} <LinkHint />
               </PendingLink>
             </li>
           ))}

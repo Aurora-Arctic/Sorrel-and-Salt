@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import AdminNav from '../../../components/AdminNav';
+import LinkHint from '../../../components/LinkHint';
 import { PendingLink } from '../../../lib/navigation';
 import ContextRow from '../../../components/ContextRow';
 // From its own client file: the Modal index re-exports modules a server
@@ -36,7 +37,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
             className="context-row__name"
             navigationTarget={{ region: 'main', shape: 'page' }}
           >
-            Admin
+            Admin <LinkHint />
           </PendingLink>
         }
       >
