@@ -192,6 +192,50 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     const placeholder = mixed(toHex(tokens['--text-muted'], theme), card, 0.85);
     row('the placeholder on the field', placeholder, card, 4.5);
 
+    // A notice (`.notice`, _primitives.scss): a bar down its start edge and a
+    // tint of the bar's colour, `--notice-tint` of it over whatever holds the
+    // notice, the page or a card. The bar and the warning's triangle are
+    // marks, so 3:1 against the ground and the tint; the text is text, so
+    // 4.5:1 on the tint: the error's and the success's in the hover shade of
+    // their own colour, over that colour's tint, and the body ink in the plain
+    // notice's accent and the warning's ochre (the owner's look, and the hover
+    // shades and the tint the owner's pick, 2026-10-19). The error's triangle
+    // is drawn in its text colour, so its text row covers it.
+    const tint = parseFloat(tokens['--notice-tint']) / 100;
+    expect(tint).toBeGreaterThan(0);
+    const warning = toHex(tokens['--warning'], theme);
+    const ink = toHex(tokens['--text-primary'], theme);
+    const waxText = toHex(tokens['--secondary-hover'], theme);
+    const accentText = toHex(tokens['--accent-hover'], theme);
+    for (const [ground, under] of [
+      ['page', page],
+      ['card', card],
+    ] as const) {
+      row(`the warning's bar on the ${ground}`, warning, under, 3);
+      row(
+        `the warning's triangle on its tint on the ${ground}`,
+        warning,
+        mixed(warning, under, tint),
+        3,
+      );
+      row(`the plain notice's bar on the ${ground}`, accent, under, 3);
+      row(`the error's bar on the ${ground}`, wax, under, 3);
+      row(`a warning's text on its tint on the ${ground}`, ink, mixed(warning, under, tint), 4.5);
+      row(
+        `a plain notice's text on its tint on the ${ground}`,
+        ink,
+        mixed(accent, under, tint),
+        4.5,
+      );
+      row(`an error's text on its tint on the ${ground}`, waxText, mixed(wax, under, tint), 4.5);
+      row(
+        `a success's text on its tint on the ${ground}`,
+        accentText,
+        mixed(accent, under, tint),
+        4.5,
+      );
+    }
+
     expect(table.filter((entry) => entry.ratio < entry.floor)).toEqual([]);
   });
 });

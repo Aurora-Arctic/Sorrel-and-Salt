@@ -1064,8 +1064,8 @@ below threshold" is an empty answer; the form adds no threshold of its own.
 Unlike the lookups it needs no focus gate: an empty form has no name to send.
 The form owns the hook, since its save waits on it, and `NameField` draws it.
 
-The warning sits beneath the field, a `.notice--warn`, the plain box with
-the red triangle: "Did you mean one of these?" and a list beneath it, one
+The warning sits beneath the field, a `.notice--warn`, the ochre bar and
+tint with the ochre triangle: "Did you mean one of these?" and a list beneath it, one
 match a row (`.ingredient-form__matches`), then a Create Anyway button,
 medium-sized and in the accent outline (`.btn.btn--medium`; the owner's call of
 2026-10-18, which took it off MB.115's quiet style). The rows' title links
@@ -1389,7 +1389,11 @@ site admin's, through the compendium mutations
   and nor does a coven's edit. The wording is the owner's (2026-10-19), and
   `COMPENDIUM_EDIT_NOTICE` in
   `src/components/IngredientForm/compendium-notice.ts` is the one place it
-  lives.
+  lives. Its layout class, `.ingredient-form__notice`, sets it apart from
+  the dialog's head and close to the form (the owner's call, 2026-10-19):
+  `space(5)` above it, the form's gap between sections, made of its own
+  `space(2)` on top of the head's `space(4)` padding, which a dialog with
+  no notice keeps; and `space(4)` below it, down to the first section's rule.
 
 - **The classification is required.** `compendiumResolver` validates with
   `CompendiumIngredientInput`, whose `nomenclature` has no default, since

@@ -51,6 +51,13 @@ $wax-glow: color.adjust(
 $wax-vivid: color.adjust($wax, $saturation: 30%, $lightness: 4%); // light secondary
 $wax-deep: color.adjust($wax-vivid, $lightness: -6%); // light secondary, hover
 
+// The warning ochre: a notice that cautions without blocking, its bar, tint and
+// triangle. Picked rather than derived, the owner's call (2026-10-19), so it
+// reads apart from both the sorrel and the wax. A mark, held to 3:1 on both of
+// its theme's surfaces: 4.89:1 and 5.44:1 light, 8.32:1 and 7.55:1 dark.
+$ochre-deep: #8a5a00; // light warning
+$ochre-bright: #d9a441; // dark warning
+
 // Body ink at lower strength rather than a separate grey, so it still clears
 // 4.5:1. Dark mixes the ink into the ground, which lowers its chroma with its
 // strength; darkening it in HSL kept the saturation and turned it gold.
@@ -352,6 +359,7 @@ $accent-hover: var(--accent-hover);
 $accent-solid-hover: var(--accent-solid-hover);
 $secondary: var(--secondary);
 $secondary-hover: var(--secondary-hover);
+$warning: var(--warning);
 $shadow-elevated: var(--shadow-elevated);
 $shadow-floating: var(--shadow-floating);
 $shadow-lifted: var(--shadow-lifted);

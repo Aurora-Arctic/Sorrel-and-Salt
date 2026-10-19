@@ -45,9 +45,40 @@ MB.116, once the same markup had been written by hand in twenty-two files.
 
 ## Styling
 
-None of its own: the primitive draws all four kinds, so the directory has no
-`index.scss`. A caller's `className` is for its layout only, such as a row's
-full-width line, never a colour.
+None of its own: the `.notice` primitive in `_primitives.scss` draws every
+kind, so the directory has no `index.scss`. A caller's `className` is for
+its layout only, such as a row's full-width line, never a colour.
+
+The look is the owner's, 2026-10-19. There is no box: a 3px bar runs down
+the start edge, and behind the text sits a tint of the bar's colour, mixed
+with transparent so it reads the same on the page and on a card. The tint's
+strength is `--notice-tint`, set per theme in `_mixins.scss`: 7% on light,
+8% on dark, where the same strength reads fainter. The tint is the owner's
+call too, 2026-10-19, lowered from 10% and 12% for a lighter ground. The padding is
+`space(2)` by `space(3)`, the type `small` at weight 400.
+
+| Kind      | Bar and tint (`--notice-bar`) | Triangle (`--notice-icon`) | Text               |
+| --------- | ----------------------------- | -------------------------- | ------------------ |
+| `plain`   | `$accent`                     | none                       | body ink           |
+| `error`   | `$secondary`                  | the text's colour          | `$secondary-hover` |
+| `warn`    | `$warning`, the ochre         | `$warning`                 | body ink           |
+| `success` | `$accent`                     | none                       | `$accent-hover`    |
+
+An error's and a success's text take the hover shade of their colour, the
+darker one on light and the brighter on dark, rather than the colour itself:
+the plain wax and sorrel fell short of 4.5:1 over their own tint (4.12:1 for
+the dark error on a card, 4.34:1 and 4.09:1 for the light error and success
+on the page). The hover shades are the owner's pick, 2026-10-19, over body
+ink, which would have kept the colour to the bar and tint alone. As drawn, the
+lowest text is the dark error on a card, at 5.62:1, and the lowest mark the
+light warning's triangle over its tint on the page, at 4.47:1.
+
+**Another kind is a few lines**: a modifier class that sets `--notice-bar`
+and, if it leads with the triangle, `--notice-icon`, joined to the triangle's
+selector; then its role in `index.tsx` and a row in the table above. The
+contrast floors each kind must clear, its bar at 3:1 as a graphic and its text
+at 4.5:1 over its own tint on the page and on a card, are rows in
+`tests/scss/tokens.test.ts`.
 
 ## Stories
 

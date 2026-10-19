@@ -574,7 +574,11 @@ const IngredientForm = ({
               <EntryHrefContext.Provider value={entryHref}>
                 {/* An edit of the compendium says so above the form (M8.17), drawn
           here so every dialog that opens it shows it once. */}
-                {compendium && editing && <Notice kind="plain">{COMPENDIUM_EDIT_NOTICE}</Notice>}
+                {compendium && editing && (
+                  <Notice kind="plain" className="ingredient-form__notice">
+                    {COMPENDIUM_EDIT_NOTICE}
+                  </Notice>
+                )}
                 {/* `noValidate`: every refusal is the schema's, worded and placed like
           the rest, rather than the browser's own bubble. */}
                 <form

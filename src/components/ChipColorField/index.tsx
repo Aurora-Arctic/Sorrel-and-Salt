@@ -346,7 +346,7 @@ const ChipColorField = ({
           {error}
         </p>
       )}
-      {/* The site's warning notice: the plain box with the red triangle, seen
+      {/* The site's warning notice: the ochre bar, tint and triangle, seen
           but short of an error, since the save still goes through (the
           owner's call). Quiet, so an `<output>`: always present, empty and
           hidden when there is nothing to say, so a warning that appears is

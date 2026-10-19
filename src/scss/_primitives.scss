@@ -982,63 +982,83 @@
   // A sentence about the whole view rather than one field: a form's root
   // error, a sent confirmation. The role (`alert`, or `<output>`'s status)
   // is the markup's, since only it knows whether the text arrived late.
+  //
+  // No box: a 3px bar down the start edge and a tint of the bar's colour,
+  // `--notice-tint` of it over whatever holds the notice (7% light, 8% dark,
+  // _mixins.scss), so it sits on the page and on a card alike. The owner's
+  // look and tint, 2026-10-19. Each kind sets only `--notice-bar`, the bar and tint,
+  // and `--notice-icon`, the triangle's colour, plus its text colour where
+  // the text takes the kind's colour; another kind is a few lines.
+  // claude-docs/components/notice.md.
   .notice {
+    --notice-bar: #{$accent};
+    --notice-icon: currentColor;
+
     display: block;
     max-width: $measure;
     margin: 0;
-    padding: space(3) space(4);
-    border: 1px solid $text-muted;
-    border-radius: radius('control');
+    padding: space(2) space(3);
+    border-inline-start: 3px solid var(--notice-bar);
+    background-color: color-mix(in srgb, var(--notice-bar) var(--notice-tint), transparent);
     color: $text-primary;
     font-size: type-size('small');
     // A step over the 300 body weight: coloured text at this size thins out.
     font-weight: 400;
-    @include theme-transition(border-color, color);
+    @include theme-transition(border-color, background-color, color);
 
     @include reduced-motion {
       transition: none;
     }
   }
 
+  // Plain: the sorrel bar, the body ink. The default above.
+
+  // Error: bar and tint in the wax, with the triangle; the text in the
+  // wax's hover shade, the darker in light and the brighter in dark, since
+  // the plain wax falls short of 4.5:1 on the tint (the owner's pick,
+  // 2026-10-19).
   .notice--error {
+    --notice-bar: #{$secondary};
+
     margin-bottom: 1rem;
-    border-color: $secondary;
-    color: $secondary;
+    color: $secondary-hover;
+  }
+
+  // Warning: bar, tint and triangle in the ochre, the text in the body ink,
+  // for what deserves attention but does not block, such as a colour too near
+  // another group's. The ochre is the owner's pick (2026-10-19).
+  .notice--warn {
+    --notice-bar: #{$warning};
+    --notice-icon: #{$warning};
+  }
+
+  // Success: bar and tint in the accent, the text in its hover shade, as
+  // the error's is.
+  .notice--success {
+    color: $accent-hover;
   }
 
   // The warning triangle before an error or a warning, the owner's call: in
   // the notice's padding rather than in a flex row, so a link in the
-  // notice's text stays inline. Drawn by mask, so it takes the notice's ink,
-  // or the error red on a warning.
+  // notice's text stays inline. Drawn by mask in `--notice-icon`.
   .notice--error,
   .notice--warn {
     position: relative;
-    padding-inline-start: calc(#{space(4)} + 1.0125rem + #{space(2)});
+    padding-inline-start: calc(#{space(3)} + 1.0125rem + #{space(2)});
 
     &::before {
       content: '';
       position: absolute;
-      // On the first line of text (the owner's call).
-      inset-block-start: 0.8rem;
-      inset-inline-start: space(4);
+      // On the first line of text (the owner's call): the top padding and
+      // half the line's room over the triangle.
+      inset-block-start: calc(#{space(2)} + 0.05rem);
+      inset-inline-start: space(3);
       inline-size: 1.0125rem;
       block-size: 1.0125rem;
-      background-color: currentColor;
+      background-color: var(--notice-icon);
       mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.75 15 14.25H1Z' fill='none' stroke='black' stroke-width='1.5' stroke-linejoin='round'/%3E%3Cpath d='M8 6.25v4' stroke='black' stroke-width='1.5' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='12.1' r='0.85'/%3E%3C/svg%3E")
         center / contain no-repeat;
     }
-  }
-
-  // A warning: the plain notice's box and ink, its triangle in the error red,
-  // for what deserves attention but does not block, such as a colour too near
-  // another group's (the owner's call).
-  .notice--warn::before {
-    background-color: $secondary;
-  }
-
-  .notice--success {
-    border-color: $accent;
-    color: $accent;
   }
 
   // ---------------------------------------------------------------------------
