@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactElement, useId, useState } from 'react';
+import { type ReactElement, useEffect, useId, useState } from 'react';
 import { linkSocial, signOut, unlinkAccount } from '../../lib/auth-client';
 import { GENERIC_FAILURE } from '../../lib/graphql-failure';
 import {
@@ -46,19 +46,36 @@ const SignInMethods = ({
   const [linking, setLinking] = useState<ProviderId>();
   const [signingOut, setSigningOut] = useState(false);
   const [signOutFailed, setSignOutFailed] = useState(false);
+  // The page is left for the provider's own, so on success `linking` stays set
+  // until the browser goes; a return from the back-forward cache (the page
+  // restored as it was left) clears it, as on /sign-in.
+  useEffect(() => {
+    const restored = (event: PageTransitionEvent) => {
+      if (event.persisted) setLinking(undefined);
+    };
+    window.addEventListener('pageshow', restored);
+    return () => window.removeEventListener('pageshow', restored);
+  }, []);
 
   const handleAdd = async (providerId: ProviderId): Promise<void> => {
     if (!configured.includes(providerId)) return;
     setAlert(undefined);
     setRemoved(undefined);
     setLinking(providerId);
-    const result = await linkSocial({
-      provider: providerId,
-      callbackURL: ACCOUNT_PATH,
-      // The provider rides back on the failure, so the page can put the
-      // sentence in this row (claude-docs/components/sign-in-methods.md).
-      errorCallbackURL: `${ACCOUNT_PATH}?provider=${providerId}`,
-    });
+    // A dropped connection throws rather than answering `error`; both say so.
+    const result = await (async () => {
+      try {
+        return await linkSocial({
+          provider: providerId,
+          callbackURL: ACCOUNT_PATH,
+          // The provider rides back on the failure, so the page can put the
+          // sentence in this row (claude-docs/components/sign-in-methods.md).
+          errorCallbackURL: `${ACCOUNT_PATH}?provider=${providerId}`,
+        });
+      } catch (thrown) {
+        return { error: thrown };
+      }
+    })();
     if (result?.error) {
       setAlert({ providerId, message: GENERIC_LINK_ERROR });
       setLinking(undefined);

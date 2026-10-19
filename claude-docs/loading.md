@@ -78,8 +78,8 @@ as a click on a brand link, and so that every navigation, including a slow
 Under `prefers-reduced-motion: reduce` the spinner, the shimmer and the bar
 all become **one slow opacity pulse** (`loading-pulse`, `$pulse-duration`,
 2s), never a still mark. A wait that stops moving looks finished, so it
-never goes still. One exception is kept on purpose: the `LinkHint` dot stays
-still (see the decision record).
+never goes still. That includes the `LinkHint` dot, which pulses too (the
+owner's call, 2026-10-19; see the decision record).
 
 The reason it pulses rather than stops: reduced motion asks to remove or
 replace motion that can unsettle a person, and MDN's own example replaces a
@@ -108,8 +108,8 @@ layout and page both read from the database.
    would otherwise vanish during the wait. That `<main>` also holds a visually
    hidden `<h1>Loading</h1>`, because the skeleton replaced the page's `h1` and
    axe's page-has-heading-one rule failed during every wait; `MainBody` does
-   the same. **Pending the owner's view:** a screen reader now hears both the
-   heading and the skeleton's "Loading" status. The switcher works out the shape
+   the same. The owner decided on 2026-10-19 to keep it, so a screen
+   reader hears both the heading and the skeleton's "Loading" status. The switcher works out the shape
    with `covenSectionShape` (`src/lib/coven-path.ts`): cards for Ingredients,
    a table for Members and Invitations, and a page for anything else,
    including the coven home. Choosing Create Coven aims at the `main` region

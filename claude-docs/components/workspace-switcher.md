@@ -46,8 +46,11 @@ with a Create Coven choice (M9.16). It defaults to false.
     coven's data;
   - the page bar shows under the global bar;
   - when the new coven renders, focus returns to the switcher. The `[slug]`
-    layout remounts, so a module-level flag set when the switch starts is read
-    once by the next switcher to mount; a refused switch clears it. That focus
+    layout remounts, so a module-level slug set when the switch starts is read
+    once by the next switcher to mount, which takes focus only if the address
+    is that coven's. A refused switch clears it, and so does a superseded one:
+    the next switcher to mount elsewhere finds a slug that is not its coven's
+    and drops it. That focus
     returns here is a judgement, checked in the design review;
   - choosing Create Coven aims at the `main` region with a `form` shape, since
     that page sits outside a coven, and does not set the focus flag.
@@ -100,9 +103,11 @@ a spinner after the delay), until the navigation settles. Create Coven targets
 `{ region: 'main', shape: 'form' }`.
 
 Focus: the `[slug]` layout remounts on a switch, so the box that held the
-focus is gone. A module-level flag, set when another coven is picked and read
-once by the next switcher to mount, focuses the new box. A switcher that is
-still mounted when the move ends (a failure) clears it instead.
+focus is gone. A module-level slug, set when another coven is picked and read
+once by the next switcher to mount, focuses the new box when the address is
+that coven's. A switcher that is still mounted when the move ends (a failure)
+clears it instead, and one that mounts at any other address drops it unused, so
+a switch superseded by another click cannot steal focus later.
 
 ## Stories
 

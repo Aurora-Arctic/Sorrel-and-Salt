@@ -24,8 +24,8 @@ the class and its styling are unchanged.
   axe's one-main rule would fail.
 - **It holds a visually hidden `<h1>Loading</h1>`.** The skeleton replaced the
   page's own `h1`, and axe's page-has-heading-one rule failed during every
-  wait. Pending the owner's view: a screen reader now hears both this heading
-  and the skeleton's `<output>` "Loading" status.
+  wait. The owner decided on 2026-10-19 to keep it, so a screen reader hears
+  both this heading and the skeleton's `<output>` "Loading" status.
 - A `loading.tsx` would be wrong here: a route boundary turns the guards'
   404, 403 and 308 responses into 200s, so the wait is read from the
   navigation store instead (`navigation-bar.md`).

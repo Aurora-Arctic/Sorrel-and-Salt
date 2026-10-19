@@ -13,6 +13,7 @@ export default function LinkHint(): ReactElement {
   const { pending: byLink } = useLinkStatus();
   // A `PendingLink` navigates through the shared hook, which `useLinkStatus`
   // cannot see, so it reports its own state through a context.
-  const pending = byLink || useEnclosingLinkPending();
+  const byPendingLink = useEnclosingLinkPending();
+  const pending = byLink || byPendingLink;
   return <span aria-hidden="true" className={pending ? 'link-hint is-pending' : 'link-hint'} />;
 }
