@@ -59,7 +59,7 @@ Inside a form, the lists are named by the form's name and then the heading — "
   | `mineral`, `chemical`               | Mineral / Chemical Name              | The name, upright                             |
   | `unknown` with a name               | Formal Name                          | The name, upright, then "(unconfirmed)" muted |
   | `unknown` with none                 | Formal Name                          | "Not yet looked up", muted                    |
-  | `none`                              | Formal Name                          | "None — no naming system names it", muted     |
+  | `none`                              | Formal Name                          | "None", muted; the tip says why               |
 
   A `<dl>` rather than a labelled `<p>`: a screen reader announces the label as the term and the name as its value, the same way it reads the Correspondences list beneath, rather than running label and name together as one sentence. Italics only for a binomial, since they follow a settled classification: the kinds are `BINOMIAL_KINDS` in `src/modules/ingredients/schema/ingredient-enums.ts`, shared with the compendium list's edit-dialog heading. `<i>` rather than `<em>`, because a taxonomic name is set apart, not stressed.
 

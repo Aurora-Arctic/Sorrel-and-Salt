@@ -112,8 +112,8 @@ function correspondences(source: Correspondences, deities?: readonly DeityDetail
 
 /**
  * The formal name beside the label, never blank (MB.161): italics only for a
- * binomial; an unsettled kind's name upright and marked unconfirmed; and a
- * sentence where there is none, saying why.
+ * binomial; an unsettled kind's name upright and marked unconfirmed; and
+ * "None" where there is none, the tip beside it saying why.
  */
 function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
   const formal = (entry.canonicalName ?? '').trim();
@@ -124,7 +124,7 @@ function FormalName({ entry }: { entry: IngredientRow }): ReactElement {
       : (NAME_TIPS[entry.nomenclature] ?? FORMAL_NAME_TIP);
   let value: ReactNode;
   if (entry.nomenclature === NAMELESS_KIND) {
-    value = <span className="ingredient-entry__empty">None — no naming system names it</span>;
+    value = <span className="ingredient-entry__empty">None</span>;
   } else if (formal === '') {
     value = <span className="ingredient-entry__empty">Not yet looked up</span>;
   } else if (isBinomial(entry.nomenclature)) {
