@@ -240,7 +240,9 @@
 .category-more__panel {
   @include modal-surface($shadow-floating);
   position: absolute;
-  z-index: 1;
+  // A step above the foot's actions (z-index 1, later in the card), which the panel hangs
+  // over; the chip row sets no z-index, so the two meet in the card's own context.
+  z-index: 2;
   inset-inline: 0;
   // The row is the containing block (the wrapper is static), so this clears its bottom:
   // the panel hangs below the chips, over the forms and jar lines (the owner's call).
