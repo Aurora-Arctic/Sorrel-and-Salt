@@ -6,7 +6,11 @@ import { useFocusFirstInvalid, useOnEachSubmit } from './on-submit';
 import { createPortal, flushSync } from 'react-dom';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
-import type { CompendiumIngredientInput, CompendiumIngredientUpdateInput } from '../../gql/graphql';
+import type {
+  CompendiumIngredientInput,
+  CompendiumIngredientUpdateInput,
+  IngredientUpdateInput,
+} from '../../gql/graphql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { placeServerIssues } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
@@ -83,8 +87,8 @@ import './index.scss';
 // Every property of an ingredient, validated by the shared schema before the
 // mutation is sent, and by the service again after. An error from either side
 // lands beside the field its path names, through the same element; one naming
-// no field lands above them all. A coven's new ingredient, or a compendium
-// entry, new or given to edit (M5.5).
+// no field lands above them all. A coven's ingredient, new or its own given to
+// edit (M8.17), or a compendium entry, new or given to edit (M5.5).
 // See claude-docs/components/ingredient-form.md.
 
 const CreateWorkspaceIngredientDocument = graphql(`
@@ -100,6 +104,19 @@ const CreateWorkspaceIngredientDocument = graphql(`
           form
         }
       }
+    }
+  }
+`);
+
+// A coven's own entry saved over (M8.17). The update takes the whole entry,
+// every field present (MB.159), and reads back what the create does but the
+// jars, which a save has not moved since M12.27.
+const UpdateWorkspaceIngredientDocument = graphql(`
+  mutation UpdateWorkspaceIngredient($workspaceId: ID!, $id: ID!, $input: IngredientUpdateInput!) {
+    updateIngredient(workspaceId: $workspaceId, id: $id, input: $input) {
+      id
+      name
+      slug
     }
   }
 `);
@@ -364,6 +381,16 @@ const IngredientForm = ({
 
   const mutation = useMutation({
     mutationFn: async ({ input, endRedirect }: IngredientSend): Promise<SavedIngredient> => {
+      if (workspaceId !== null && entry) {
+        // A saved entry always holds a classification, and the select offers no
+        // way back to none, so the whole input the update needs is what is sent.
+        const answer = await graphqlRequest(UpdateWorkspaceIngredientDocument, {
+          workspaceId,
+          id: entry.id,
+          input: input as IngredientUpdateInput,
+        });
+        return answer.updateIngredient;
+      }
       if (workspaceId !== null) {
         const answer = await graphqlRequest(CreateWorkspaceIngredientDocument, {
           workspaceId,
@@ -782,7 +809,8 @@ const IngredientForm = ({
               default Enter presses, opens what it made; Save & Add Another
               clears the form for the next. The one pressed says so, the
               owner's call during MB.131. An edit has the first alone, and
-              Delete apart at the far end. */}
+              on the compendium Delete apart at the far end: a coven's own
+              entry is deleted from its page (M9.10). */}
                   <FormActions
                     noun="Ingredient"
                     dirty={isDirty}
@@ -791,7 +819,7 @@ const IngredientForm = ({
                     saveValue="open"
                     onCancel={onCancel && (() => discard.request(onCancel))}
                     onDelete={
-                      editing
+                      editing && compendium
                         ? () => {
                             setRefusal(undefined);
                             setDeleting(true);
