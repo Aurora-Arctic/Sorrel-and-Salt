@@ -114,3 +114,36 @@ describe('browserUrl', () => {
     expect(slots.browserUrl(8001)).toBe('http://localhost:8001');
   });
 });
+
+describe('the e2e port block', () => {
+  async function ports(base: string | undefined) {
+    vi.resetModules();
+    vi.stubEnv('E2E_PORT_BASE', base);
+    return import('./e2e/slots');
+  }
+
+  it('starts at 8001 with the providers server on 8100 and the cache server on 8101', async () => {
+    const slots = await ports(undefined);
+    expect(slots.slotPort(0)).toBe(8001);
+    expect(slots.slotPort(3)).toBe(8004);
+    expect(slots.CONFIGURED_PROVIDERS_PORT).toBe(8100);
+    expect(slots.COMPENDIUM_CACHE_PORT).toBe(8101);
+  });
+
+  it('moves all three together when E2E_PORT_BASE moves', async () => {
+    const slots = await ports('8401');
+    expect(slots.slotPort(0)).toBe(8401);
+    expect(slots.slotPort(2)).toBe(8403);
+    expect(slots.CONFIGURED_PROVIDERS_PORT).toBe(8500);
+    expect(slots.COMPENDIUM_CACHE_PORT).toBe(8501);
+  });
+
+  it.each(['abc', '80.5', '', '1023', '0', '65436'])('refuses %j', async (base) => {
+    await expect(ports(base)).rejects.toThrow(/E2E_PORT_BASE/);
+  });
+
+  it('accepts the highest base whose cache server still fits under 65535', async () => {
+    const slots = await ports('65435');
+    expect(slots.COMPENDIUM_CACHE_PORT).toBe(65535);
+  });
+});
