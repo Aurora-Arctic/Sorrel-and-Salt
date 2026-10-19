@@ -103,3 +103,24 @@ export function CopyIcon(): ReactElement {
     </svg>
   );
 }
+
+/**
+ * A sticky note with its corner folded: Annotate (M8.17), which writes the
+ * coven's notes over a compendium entry rather than changing it, so not
+ * Edit's pencil. A placeholder until the owner picks the icon; every
+ * Annotate control draws this one function, so the swap is here alone.
+ */
+export function AnnotateIcon(): ReactElement {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path
+        d="M2.5 2.5h11v7l-4 4h-7zM13.5 9.5h-4v4M5 6h6M5 8.5h3"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

@@ -4,25 +4,47 @@ import Link from 'next/link';
 import type { ReactElement } from 'react';
 import { useOpenModalClick } from '../Modal';
 import IconTip from './icon-tip';
-import { PencilIcon } from './icons';
+import { AnnotateIcon, PencilIcon } from './icons';
 import type { EditLinkProps } from './types';
 
 /**
- * A list row's Edit: the pencil alone, at the larger size a row takes, with
- * its tip. Named "Edit" and the row's own name in hidden text, as the word
- * link it replaced was, since a column of bare "Edit"s is no help to a
- * screen reader. A press opens the row's modal at once under `heading`, its
- * form arriving with the navigation (M9.18); a link still, so a new tab, or a
- * press before the script loads, opens the address.
+ * A list row's icon link into a dialog: the icon alone, at the larger size a
+ * row takes, with its tip. Named by its verb and the row's own name in hidden
+ * text, as the word link it replaced was, since a column of bare verbs is no
+ * help to a screen reader. A press opens the row's modal at once under
+ * `heading`, its form arriving with the navigation (M9.18); a link still, so a
+ * new tab, or a press before the script loads, opens the address.
  */
-export const EditLink = ({ href, name, heading }: EditLinkProps): ReactElement => {
+const IconLink = ({
+  href,
+  name,
+  heading,
+  verb,
+  icon,
+}: EditLinkProps & { verb: string; icon: ReactElement }): ReactElement => {
   const onClick = useOpenModalClick(href, heading);
   return (
-    <IconTip tip="Edit">
+    <IconTip tip={verb}>
       <Link className="icon-tip__edit" href={href} onClick={onClick}>
-        <PencilIcon />
-        <span className="visually-hidden">Edit {name}</span>
+        {icon}
+        <span className="visually-hidden">
+          {verb} {name}
+        </span>
       </Link>
     </IconTip>
   );
 };
+
+/** A row's Edit: the pencil. */
+export const EditLink = (props: EditLinkProps): ReactElement => (
+  <IconLink {...props} verb="Edit" icon={<PencilIcon />} />
+);
+
+/**
+ * A compendium entry's Annotate in a coven's list (M8.17): `AnnotateIcon`, not
+ * Edit's pencil, since it writes the coven's notes over the entry
+ * rather than changing the entry.
+ */
+export const AnnotateLink = (props: EditLinkProps): ReactElement => (
+  <IconLink {...props} verb="Annotate" icon={<AnnotateIcon />} />
+);

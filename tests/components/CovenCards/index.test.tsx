@@ -147,6 +147,26 @@ describe('CovenCards', () => {
     expect(edits[0]).toHaveAttribute('href', editHref);
   });
 
+  it('draws Annotate on a card only when it is given an annotate address, named for the entry', () => {
+    const annotateHref = '/coven/fixture-coven/ingredients?annotate=e2' as Route;
+    render(
+      <Cards
+        {...props({
+          entries: [
+            ENTRIES[0]!,
+            { ...ENTRIES[1]!, canonicalName: 'Fixtura annotata', annotateHref },
+          ],
+        })}
+      />,
+    );
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    const annotates = within(list).getAllByRole('link', { name: /^Annotate/ });
+    expect(annotates).toHaveLength(1);
+    expect(annotates[0]).toHaveAccessibleName(`Annotate ${ENTRIES[1]!.label}, Fixtura annotata`);
+    expect(annotates[0]).toHaveAttribute('href', annotateHref);
+    expect(within(list).queryAllByRole('link', { name: /^Edit/ })).toHaveLength(0);
+  });
+
   it('holds no button on a card', () => {
     render(<Cards {...props()} />);
     const list = screen.getByRole('list', { name: 'Ingredients' });

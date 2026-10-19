@@ -120,3 +120,20 @@ export const WithEdit: Story = () => (
     )}
   />
 );
+
+// A member's view of compendium entries the cupboard holds: Annotate, with its own icon, in
+// each one's foot, and Edit on the coven's own (M8.17).
+export const WithAnnotate: Story = () => (
+  <CovenCards
+    {...BASE}
+    entries={ENTRIES.map((shown) =>
+      shown.kind === 'own'
+        ? {
+            ...shown,
+            editHref: `/coven/fixture-coven/ingredients?edit=${shown.id}`,
+            editHeading: { eyebrow: 'Edit Ingredient', title: shown.label },
+          }
+        : { ...shown, annotateHref: `/coven/fixture-coven/ingredients?annotate=${shown.id}` },
+    )}
+  />
+);

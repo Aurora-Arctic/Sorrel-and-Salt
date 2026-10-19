@@ -36,6 +36,12 @@ export interface CovenCardEntry {
   editHref?: Route;
   /** The head of the dialog Edit opens, shown at once over a skeleton while the form loads (M9.18). */
   editHeading?: ModalHeading;
+  /**
+   * The list's own address with `?annotate=<id>`, where the card's Annotate
+   * opens the coven's Annotate dialog over the list (M8.17). Left out, no
+   * Annotate shows: the coven's own entry, or a role that may not update.
+   */
+  annotateHref?: Route;
 }
 
 export interface CovenCardsProps extends Pick<
