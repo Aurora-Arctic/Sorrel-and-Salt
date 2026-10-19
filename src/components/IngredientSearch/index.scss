@@ -15,23 +15,57 @@
 // button, Clear All and the tray, which opens inside the form and so travels with it. The
 // sticky box is the `<search>`, whose parent `.list-frame` spans the results; the form
 // inside would stop at its own end. `--sticky-top` is set by the frame (AppShell, PublicFrame).
-// Opaque so the cards do not show through; the padding below covers the gap to them.
+// Opaque so the cards do not show through. The padding above and below is the row's own air
+// when stuck; the negative margins of the same size cancel it at rest, so the page lays out
+// as without it. The tray is anchored to the form inside, not to this box, so the padding
+// never moves it from the input. While stuck (`data-stuck`, set by StuckMark) the row wears
+// the floating shadow, faded in and out.
+$stuck-pad: space(4);
+
+.ingredient-search {
+  // The sentinel's anchor.
+  position: relative;
+}
+
 .ingredient-search > search {
   position: sticky;
   // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
   top: var(--sticky-top, 0px);
   z-index: layer('sticky-row');
-  padding-block-end: space(2);
+  margin-block: calc(-1 * #{$stuck-pad});
+  padding-block: $stuck-pad;
   background-color: $surface-page;
+  transition: box-shadow $modal-fade;
+
+  @include reduced-motion {
+    transition: none;
+  }
+
+  &[data-stuck] {
+    box-shadow: $shadow-floating;
+  }
+}
+
+// One pixel at the row's resting place, which StuckMark watches.
+.ingredient-search__mark {
+  position: absolute;
+  inset-block-start: calc(-1 * #{$stuck-pad});
+  inset-inline-start: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
 }
 
 // A focus or a jump that scrolls a control into view lands it below the stuck row, not
 // under it: the bar (the shell's alone), the row's own height, and a step of air. The root
 // is the scroll container, which cannot read the frames' `--sticky-top`, set below it.
 html:has(.app-shell .ingredient-search) {
-  scroll-padding-top: calc(#{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{space(4)});
+  scroll-padding-top: calc(
+    #{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{$stuck-pad} + #{$stuck-pad} +
+      #{space(4)}
+  );
 }
 
 html:has(.public-frame .ingredient-search) {
-  scroll-padding-top: calc(#{$control-height} + #{space(4)});
+  scroll-padding-top: calc(#{$control-height} + #{$stuck-pad} + #{$stuck-pad} + #{space(4)});
 }

@@ -1,6 +1,7 @@
 import type { ReactElement } from 'react';
 import ListFrame, { ListBody } from '../ListFrame';
 import Pager from '../Pager';
+import StuckMark from './stuck-mark';
 import type { IngredientSearchProps } from './types';
 import './index.scss';
 
@@ -25,6 +26,7 @@ const IngredientSearch = ({
   shape,
 }: IngredientSearchProps): ReactElement => (
   <ListFrame className={className ? `ingredient-search ${className}` : 'ingredient-search'}>
+    <StuckMark />
     {search}
     {action && <div className="ingredient-search__action">{action}</div>}
 

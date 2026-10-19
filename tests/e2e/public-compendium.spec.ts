@@ -192,7 +192,9 @@ test('the page is accessible and holds at 375px', async ({ page }) => {
 // The search row sticks to the top once scrolled to (the owner's call, 2026-10-19): the box,
 // the Filters button and Clear All stay in view while the cards go by, and the tray they open
 // stays in view with them.
-const searchRow = (page: Page) => page.getByRole('search').locator('form');
+// The sticky box is the `<search>` landmark; the form inside is the controls alone.
+const searchRow = (page: Page) => page.getByRole('search');
+const searchForm = (page: Page) => searchRow(page).locator('form');
 
 async function expectStuckRow(page: Page, offset: () => Promise<number>) {
   await page.goto('/compendium');
@@ -215,7 +217,7 @@ async function expectStuckRow(page: Page, offset: () => Promise<number>) {
     .toBeGreaterThan(0);
   const viewport = page.viewportSize();
   const settled = await tray.boundingBox();
-  const rowBottom = (await searchRow(page).boundingBox())!;
+  const rowBottom = (await searchForm(page).boundingBox())!;
   expect(settled!.y).toBeGreaterThanOrEqual(rowBottom.y + rowBottom.height - 1);
   expect(settled!.y + settled!.height).toBeLessThanOrEqual(viewport!.height + 1);
 }
@@ -250,4 +252,46 @@ test('the stuck row holds at 375px without a sideways scroll or an axe violation
   expect(row?.y).toBeCloseTo(0, 0);
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
+});
+
+test('the stuck row wears a shadow that is gone at the top, and the tray stays as near the input as before', async ({
+  page,
+}) => {
+  await page.goto('/compendium');
+  await expect(cardsOf(page).first()).toBeVisible();
+  const row = searchRow(page);
+  const shadow = () => row.evaluate((el) => getComputedStyle(el).boxShadow);
+
+  await expect(row).not.toHaveAttribute('data-stuck', /.*/);
+  expect(await shadow()).toBe('none');
+
+  // The gap between the controls and the tray, read at the top of the page.
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  const tray = page.getByRole('dialog', { name: 'Filters' });
+  await expect(tray).toBeVisible();
+  const gapAt = async () => {
+    const form = (await searchForm(page).boundingBox())!;
+    const box = (await tray.boundingBox())!;
+    return box.y - (form.y + form.height);
+  };
+  await expect.poll(gapAt).toBeGreaterThanOrEqual(0);
+  const gapAtTop = await gapAt();
+  expect(gapAtTop).toBeLessThanOrEqual(12);
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  await expect(tray).toBeHidden();
+
+  await page.evaluate(() => window.scrollTo(0, 1500));
+  await expect(row).toHaveAttribute('data-stuck', 'true');
+  // The shadow fades in, so it is read once the transition has run.
+  await expect.poll(shadow).not.toBe('none');
+
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  await expect(tray).toBeVisible();
+  await expect.poll(gapAt).toBeCloseTo(gapAtTop, 0);
+
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  await expect(tray).toBeHidden();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(row).not.toHaveAttribute('data-stuck', /.*/);
+  await expect.poll(shadow).toBe('none');
 });

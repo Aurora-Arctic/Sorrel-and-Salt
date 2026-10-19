@@ -304,7 +304,7 @@
     // the window's top: taller than the room below it, it scrolls inside itself rather than
     // running off the window. Only once open, so the slide's short box never scrolls.
     .facet-panel__clip--open > .facet-panel__inner {
-      max-height: calc(100dvh - var(--sticky-top, 0px) - #{$control-height} - #{space(6)});
+      max-height: calc(100dvh - var(--sticky-top, 0px) - #{$control-height} - #{space(8)});
       overflow: auto;
     }
   }

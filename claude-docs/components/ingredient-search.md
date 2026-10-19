@@ -73,9 +73,16 @@ in the filter slot to carry.
   results), with an opaque page background and the `sticky-row` layer, above the
   cards and below the bar, tips and dialogs. The offset is one custom property,
   `--sticky-top`, set by the frame: AppShell sets it to the bar's bottom, and
-  PublicFrame, whose header scrolls away, to 0. There is no scroll listener. The
-  root's `scroll-padding-top` leaves room for the stuck row when a focus or a jump
-  scrolls a control into view. The admin compendium list shares the row, so it
+  PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
+  above and below, cancelled at rest by equal negative margins so the page lays out
+  as before; the tray hangs from the form inside, so the padding never moves it
+  from the input. While stuck the row wears `$shadow-floating`, faded in and out
+  with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
+  child, watches a one-pixel sentinel at the row's resting place with an
+  IntersectionObserver (no scroll listener) and sets `data-stuck` on the row.
+  Without the API (past the browser floor) the row simply has no shadow. The
+  root's `scroll-padding-top` leaves room for the stuck row, padding included,
+  when a focus or a jump scrolls a control into view. The admin compendium list shares the row, so it
   sticks too. The phone sheet is unchanged.
 - **Nothing is asked until the box is focused**, nor while the text is under
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
