@@ -11,8 +11,10 @@ import { categories } from '../../modules/vocabulary/schema/categories';
 import { deities } from '../../modules/vocabulary/schema/deities';
 import { ingredientForms } from '../../modules/vocabulary/schema/ingredient-forms';
 import {
+  citesNowhere,
   compendiumList,
   elementArm,
+  hasNoForm,
   listColumns,
   listHolds,
   pairIsLive,
@@ -37,7 +39,7 @@ import type {
 // is counted under the list's own filter minus that kind's own choice, read
 // through the list's own arms, so a facet cannot match differently from the
 // list it narrows. One grouped read per kind, the seven run side by side,
-// and for the compendium an eighth, its No Refs count
+// and for the compendium an eighth, its two switch counts (No Refs and No Form)
 // (claude-docs/db/compendium-read.md).
 
 /**
@@ -57,16 +59,15 @@ import type {
  * themselves or a live form, under the rest of the filter: the filter's own
  * `withoutReferences` is set to true for it, so the count is the same whether
  * the switch is on or off. `withoutForms` is the same for the No Form switch:
- * how many entries have no live form (M12.30).
+ * how many entries have no live form (M12.30). Both come from one read.
  */
 export async function findCompendiumFacets(filter: IngredientFilter): Promise<CompendiumFacets> {
   const scope = readableInTiers([], ingredients);
-  const [facets, withoutReferences, withoutForms] = await Promise.all([
+  const [facets, switches] = await Promise.all([
     readFacets(filter, scope),
-    unsourcedCount(filter, scope),
-    formlessCount(filter, scope),
+    switchCounts(filter, scope),
   ]);
-  return { ...facets, withoutReferences, withoutForms };
+  return { ...facets, ...switches };
 }
 
 /**
@@ -364,14 +365,33 @@ async function toxicFacet(
   ];
 }
 
-/** How many entries the list holds with the No Refs switch on, through `citesNowhere`. */
-function unsourcedCount(filter: IngredientFilter, scope: SQL | undefined): Promise<number> {
-  return totalUnder({ ...filter, withoutReferences: true }, scope);
-}
-
-/** How many entries the list holds with the No Form switch on, through `hasNoForm`. */
-function formlessCount(filter: IngredientFilter, scope: SQL | undefined): Promise<number> {
-  return totalUnder({ ...filter, withoutForms: true }, scope);
+/**
+ * How many entries the list holds with the No Refs switch on, and with the No
+ * Form switch on, each under the rest of the filter, in one pass. The pass
+ * reads the list with both switches off and counts each arm beside the other
+ * switch's own setting, so a switch the filter has on narrows the other's
+ * count as it narrows the list.
+ */
+async function switchCounts(
+  filter: IngredientFilter,
+  scope: SQL | undefined,
+): Promise<Pick<CompendiumFacets, 'withoutReferences' | 'withoutForms'>> {
+  const { where, over } = listed(
+    { ...filter, withoutReferences: false, withoutForms: false },
+    scope,
+  );
+  const [row] = await selectFrom(ingredients, where, {
+    aggregate: {
+      withoutReferences: countWhere(
+        and(citesNowhere(), filter.withoutForms ? hasNoForm() : undefined),
+      ),
+      withoutForms: countWhere(
+        and(hasNoForm(), filter.withoutReferences ? citesNowhere() : undefined),
+      ),
+    },
+    over,
+  });
+  return row;
 }
 
 /** How many of the read's rows `arm` holds. `filter` has no builder. */

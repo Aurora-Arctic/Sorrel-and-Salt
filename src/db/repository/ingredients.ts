@@ -808,7 +808,7 @@ function searchMatch(
  * admin's to-do list (M5.5). An entry whose only source is on its oil is
  * sourced, under the union rule (MB.215, MB.218), so it is not on the list.
  */
-function citesNowhere(): SQL | undefined {
+export function citesNowhere(): SQL | undefined {
   return and(
     citesNothing('ingredientId'),
     not(
@@ -825,7 +825,7 @@ function citesNowhere(): SQL | undefined {
  * stock or put in a spell yet (MB.215, M12.30). A soft-deleted variant is none,
  * through `existsIn`.
  */
-function hasNoForm(): SQL {
+export function hasNoForm(): SQL {
   return not(existsIn(ingredientVariants, eq(ingredientVariants.ingredientId, ingredients.id)));
 }
 
