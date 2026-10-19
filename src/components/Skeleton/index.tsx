@@ -80,6 +80,49 @@ const EntrySections = (): ReactElement => (
   </>
 );
 
+// The coven home below its head, as the page lays it: Contents, a list of
+// links each with its line beneath, then the membership and delete sections,
+// each a heading and a button. Bare bars on the page, no card surface.
+const CovenSections = (): ReactElement => (
+  <>
+    <div className="page-frame__section">
+      <span className="skeleton__heading" />
+      <div className="skeleton__list">
+        {Array.from({ length: 2 }, (_, at) => (
+          <div key={at} className="skeleton__entry">
+            <span />
+            <span />
+          </div>
+        ))}
+      </div>
+    </div>
+    {[false, true].map((described) => (
+      <div key={String(described)} className="page-frame__section">
+        <span className="skeleton__heading" />
+        {described && <span className="skeleton__line-bar" />}
+        <span className="skeleton__button" />
+      </div>
+    ))}
+  </>
+);
+
+// The account page below its title: four panels as the page draws them, each
+// a heading and a line over a field and its button.
+const AccountPanels = (): ReactElement => (
+  <>
+    {Array.from({ length: 4 }, (_, at) => (
+      <div key={at} className="page-frame__section panel">
+        <div className="header">
+          <span className="skeleton__heading" />
+          <span className="skeleton__line-bar" />
+        </div>
+        <span className="skeleton__box" />
+        <span className="skeleton__button" />
+      </div>
+    ))}
+  </>
+);
+
 const Skeleton = ({
   shape,
   filter = false,
@@ -181,6 +224,12 @@ const Skeleton = ({
             )}
             {entry ? (
               <EntrySections />
+            ) : menu ? (
+              head === 'title' ? (
+                <AccountPanels />
+              ) : (
+                <CovenSections />
+              )
             ) : (
               Array.from({ length: many }, (_, block) => (
                 <div key={block} className="skeleton__block">

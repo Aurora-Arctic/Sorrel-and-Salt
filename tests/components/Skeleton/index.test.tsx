@@ -112,7 +112,9 @@ describe('Skeleton tabs and menu', () => {
     expect(kids[0]?.classList.contains('skeleton__intro')).toBe(true);
     expect(kids[1]?.classList.contains('page-nav')).toBe(true);
     expect(kids[1]?.classList.contains('skeleton__menu')).toBe(true);
-    expect(kids.slice(2).every((node) => node.classList.contains('skeleton__block'))).toBe(true);
+    expect(kids.slice(2).every((node) => node.classList.contains('page-frame__section'))).toBe(
+      true,
+    );
   });
 
   // An ingredient's entry fills the wide column beside its menu
@@ -221,9 +223,36 @@ describe('Skeleton for an ingredient entry', () => {
     expect(container.querySelector('.skeleton__block')).toBeNull();
   });
 
-  it('keeps the card blocks for the other pages', () => {
-    const { container } = render(<Skeleton shape="page" menu />);
+  it('keeps the card blocks for a page without a menu', () => {
+    const { container } = render(<Skeleton shape="page" />);
     expect(container.querySelector('.skeleton__block')).not.toBeNull();
     expect(container.querySelector('.skeleton__entry-section')).toBeNull();
+  });
+});
+
+// The wait for a page with a jump menu (the coven home, the account page)
+// draws the page's sections as bare bars, or as the account's panels, and
+// never the card blocks, which neither page has (owner's report, 2026-10-19).
+describe('Skeleton page with a menu', () => {
+  it('draws the coven home as headed sections, with no card blocks', () => {
+    const { container } = render(<Skeleton shape="page" menu head="eyebrow" />);
+    expect(container.querySelector('.skeleton__block')).toBeNull();
+    const sections = container.querySelectorAll('.page-with-nav > .page-frame__section');
+    expect(sections.length).toBeGreaterThan(1);
+    sections.forEach((section) => {
+      expect(section.querySelector('.skeleton__heading')).not.toBeNull();
+    });
+    expect(container.querySelectorAll('.skeleton__entry').length).toBeGreaterThan(1);
+    expect(container.querySelector('.panel')).toBeNull();
+  });
+
+  it('draws the account as headed panels, with no card blocks', () => {
+    const { container } = render(<Skeleton shape="page" menu head="title" />);
+    expect(container.querySelector('.skeleton__block')).toBeNull();
+    const panels = container.querySelectorAll('.page-with-nav > .page-frame__section.panel');
+    expect(panels).toHaveLength(4);
+    panels.forEach((panel) => {
+      expect(panel.querySelector('.skeleton__heading')).not.toBeNull();
+    });
   });
 });

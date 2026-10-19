@@ -452,3 +452,17 @@
 .skeleton__shapes .skeleton__intro--loose > .skeleton__title {
   margin-block-end: space(2);
 }
+
+// A jump-menu page below its head (the coven home's sections, the account's
+// panels): the page's own `.page-frame__section` and `.panel` lay them out;
+// only the bars are drawn here. A section's line is one body line tall, a
+// button is a control tall.
+.skeleton__shapes .skeleton__line-bar {
+  width: 70%;
+  max-width: $measure;
+}
+
+.skeleton__shapes .skeleton__button {
+  width: 8rem;
+  height: $control-height;
+}
