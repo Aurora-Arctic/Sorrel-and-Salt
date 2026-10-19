@@ -1,0 +1,107 @@
+@use '../../scss/variables' as *;
+@use '../../scss/mixins' as *;
+
+// Chip text one step under the caption it takes elsewhere, in a card or a table cell alike.
+.category-chips .chip {
+  font-size: type-size('overline');
+}
+
+// The primitives position every chip-row item; this one is left static.
+.category-chips > .category-more-item {
+  position: static;
+}
+
+.category-more__button {
+  // Above the card's stretched link, so the button keeps its own click.
+  position: relative;
+  z-index: 1;
+  @include chip($dark: $text-primary, $light: $text-primary, $state: quiet);
+  border-color: $hairline;
+  font-size: type-size('overline');
+  cursor: pointer;
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background-color: $hairline;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// The panel is fixed and placed by Floating UI (category-more.tsx), so no table frame's
+// overflow clips it and it never changes its row's height. Its position and width come
+// inline; this is its look and its fade.
+.category-more__panel {
+  @include modal-surface($shadow-floating);
+  // Above the rows beneath and their Edit pencils; inside a card it meets only the card's
+  // own context, which the lift below raises over its neighbours.
+  z-index: layer('floating');
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  box-sizing: border-box;
+  max-inline-size: calc(100vw - #{space(4)});
+  padding: space(3);
+  opacity: 0;
+  visibility: hidden;
+  // Visibility waits for the fade-out, so the panel is gone from the page once it is clear.
+  transition:
+    opacity $tip-fade ease-out,
+    visibility 0s linear $tip-fade;
+
+  // Bridges over the gap on either side, so the pointer can cross from the button into the
+  // panel whichever way it opened (it flips above near the window's foot).
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    block-size: space(2);
+  }
+
+  &::before {
+    inset-block-end: 100%;
+  }
+
+  &::after {
+    inset-block-start: 100%;
+  }
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// The compact size (the admin table's, 2026-10-19): tighter padding and gap through the
+// `chip()` mixin's `$size`, at the card's font size, with the same wash, border and label
+// mix, so the contrast figures in styling.md hold. The +N button's visible pill is as short,
+// and its hit area is grown to 24px (WCAG 2.5.8) by a transparent pseudo-element.
+.category-chips--compact {
+  gap: space(1);
+
+  .chip {
+    @include chip($size: compact);
+  }
+
+  .category-more__button {
+    @include chip($dark: $text-primary, $light: $text-primary, $state: quiet, $size: compact);
+    border-color: $hairline;
+    position: relative;
+
+    // The hit area: at least 24px tall and wide around the pill, drawn nothing.
+    &::after {
+      content: '';
+      position: absolute;
+      inset-block: calc(50% - 0.75rem);
+      inset-inline: 0;
+    }
+  }
+}

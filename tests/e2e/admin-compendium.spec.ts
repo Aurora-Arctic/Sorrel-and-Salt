@@ -7,6 +7,7 @@ import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
 import { insertDeityLink, insertIngredient } from '../support/db/insert-ingredient';
 import { e2eDatabaseUrl, recreateE2eDatabase } from './database';
 import { signInAs } from './session';
+import { withSql } from './stories/coven-ingredients';
 import { deitySlug, ingredientSlug } from '@/lib/slugify';
 
 // M5.5: the admin's compendium form's presentation — IngredientForm on
@@ -1670,3 +1671,141 @@ for (const [label, width, height] of [
     void info;
   });
 }
+
+// The Categories column draws the card's chips: the first two and a +N button, whose panel
+// floats over the rows beneath. A component test cannot measure where it opens, or that the
+// table frame does not clip it or the row grow. No seeded entry has more than three
+// categories, so Amethyst is filed under three more first.
+for (const [name, viewport] of [
+  ['a desktop table', { width: 1280, height: 900 }],
+  ['a phone card', { width: 375, height: 800 }],
+] as const) {
+  test(`the +N panel in the Categories column opens below the chips over ${name}, and the row keeps its height`, async ({
+    page,
+  }) => {
+    await withSql(
+      (sql) => sql`
+        insert into ingredient_categories (ingredient_id, category_id, created_by, updated_by)
+        select link.ingredient_id, c.id, link.created_by, link.updated_by
+        from (
+          select ingredient_id, created_by, updated_by from ingredient_categories
+          where ingredient_id = (
+            select id from ingredients
+            where name = 'Amethyst' and workspace_id is null and deleted_at is null)
+          limit 1
+        ) link
+        cross join (
+          select id from categories
+          where deleted_at is null
+            and name in ('Binding', 'Healing', 'Strength')
+            and id not in (
+              select category_id from ingredient_categories ic
+              join ingredients i on i.id = ic.ingredient_id
+              where i.name = 'Amethyst' and i.workspace_id is null)
+        ) c
+        on conflict do nothing`,
+    );
+    await page.setViewportSize(viewport);
+    await signInAs(page, `chips-${viewport.width}@admin-compendium.test`, ['discord'], 'admin');
+    await page.goto('/admin/compendium');
+    const more = page.getByRole('button', { name: /more categories? for Amethyst/i }).first();
+    await expect(more).toBeVisible();
+    const row = page.getByRole('row').filter({ has: more });
+    const chips = row.getByRole('list', { name: 'Categories' });
+
+    // Why the panel could have gone wrong: the table frame scrolls, and there are rows below.
+    expect(await page.getByRole('row').count()).toBeGreaterThan(3);
+    // Centred, so the panel has room to open below.
+    await more.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+    const rowBefore = (await row.boundingBox())!.height;
+    await more.click();
+    await expect(more).toHaveAttribute('aria-expanded', 'true');
+    const panel = row.getByRole('group', { name: /^More categories for Amethyst/ });
+    await expect(panel).toBeVisible();
+
+    const panelBox = (await panel.boundingBox())!;
+    const chipsBox = (await chips.boundingBox())!;
+    // Below the chip row, not over it, and the row no taller.
+    expect(panelBox.y).toBeGreaterThanOrEqual(chipsBox.y + chipsBox.height);
+    expect((await row.boundingBox())!.height).toBe(rowBefore);
+    // On top of what is beneath: the point at the panel's centre belongs to the panel,
+    // whatever row or Edit pencil lies under it.
+    const onTop = await panel.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2);
+      return el.contains(hit);
+    });
+    expect(onTop).toBe(true);
+    // The fixed panel adds nothing to the page's width.
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+
+    await page.keyboard.press('Escape');
+    await expect(more).toHaveAttribute('aria-expanded', 'false');
+    await expect(more).toBeFocused();
+  });
+}
+
+test('the Edit column stays pinned at the frame edge while the table scrolls sideways, and its link still opens', async ({
+  page,
+}) => {
+  // Wide enough to be a table (above the stacking width), narrow enough that it scrolls.
+  await page.setViewportSize({ width: 700, height: 900 });
+  await signInAs(page, 'pinned-edit@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+  const frame = page.locator('.data-table-frame');
+  const scrollable = await frame.evaluate((el) => el.scrollWidth > el.clientWidth);
+  // Why the pin could have failed: the table does overflow its frame.
+  expect(scrollable).toBe(true);
+
+  await frame.evaluate((el) => {
+    el.scrollTo({ left: el.scrollWidth });
+  });
+  const edit = page.getByRole('link', { name: /^Edit / }).first();
+  const frameBox = (await frame.boundingBox())!;
+  const editBox = (await edit.boundingBox())!;
+  expect(editBox.x + editBox.width).toBeLessThanOrEqual(frameBox.x + frameBox.width);
+  // Scrolled back to the start it is still inside the frame: pinned, not merely scrolled to.
+  await frame.evaluate((el) => {
+    el.scrollTo({ left: 0 });
+  });
+  const startBox = (await edit.boundingBox())!;
+  expect(startBox.x + startBox.width).toBeLessThanOrEqual(frameBox.x + frameBox.width);
+  await edit.click();
+  await expect(page).toHaveURL(/[?&]edit=/);
+});
+
+test('a wide table keeps the first two categories and +N on one line, and the dot between forms is level with the icon', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1600, height: 900 });
+  await signInAs(page, 'wide-chips@admin-compendium.test', ['discord'], 'admin');
+  await page.goto('/admin/compendium');
+
+  const chips = page.locator('.category-chips--compact', {
+    has: page.locator('.category-more__button'),
+  });
+  const tops = await chips
+    .first()
+    .locator(':scope > li')
+    .evaluateAll((items) => items.map((item) => Math.round(item.getBoundingClientRect().top)));
+  expect(tops.length).toBeGreaterThanOrEqual(3);
+  expect(new Set(tops).size).toBe(1);
+
+  // The dot is drawn in CSS, so read where it sits from its item and its resolved margins.
+  const { dot, icon } = await page.evaluate(() => {
+    const second = [...document.querySelectorAll('.compendium-list__item')].find((el) =>
+      el.previousElementSibling?.matches('.compendium-list__item'),
+    )!;
+    const box = second.getBoundingClientRect();
+    const style = getComputedStyle(second, '::before');
+    const dotTop = box.top + parseFloat(style.top) + parseFloat(style.marginTop);
+    const svg = second.querySelector('svg')!.getBoundingClientRect();
+    return {
+      dot: dotTop + parseFloat(style.height) / 2,
+      icon: svg.top + svg.height / 2,
+    };
+  });
+  expect(Math.abs(dot - icon)).toBeLessThanOrEqual(1);
+});

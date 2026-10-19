@@ -95,10 +95,6 @@
   // element carries its row's pair, from chipColors() in a component.
   .chip {
     @include chip;
-
-    &.is-selected {
-      @include chip($state: selected);
-    }
   }
 
   // modal-surface() leaves width/padding/position to the owner; this adds only

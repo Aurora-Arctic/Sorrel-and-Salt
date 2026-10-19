@@ -27,6 +27,12 @@
   }
 }
 
+// The top edge a sticky row of a page (IngredientSearch's search row) holds at: just under
+// this bar. PublicFrame sets the same property to 0, its header not being sticky.
+.app-shell {
+  --sticky-top: calc(#{$top-inset} + #{$shell-bar-height});
+}
+
 .app-shell__bar {
   position: sticky;
   // Below the impersonation banner where it takes room in the flow (touch).

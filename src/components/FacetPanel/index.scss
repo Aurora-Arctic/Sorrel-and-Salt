@@ -299,6 +299,14 @@
     .facet-panel__phone-only {
       display: none;
     }
+
+    // The search row sticks (IngredientSearch), so the tray opens under a row that may be at
+    // the window's top: taller than the room below it, it scrolls inside itself rather than
+    // running off the window. Only once open, so the slide's short box never scrolls.
+    .facet-panel__clip--open > .facet-panel__inner {
+      max-height: calc(100dvh - var(--sticky-top, 0px) - #{$control-height} - #{space(6)});
+      overflow: auto;
+    }
   }
 }
 

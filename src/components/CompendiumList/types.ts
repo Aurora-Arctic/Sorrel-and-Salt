@@ -5,6 +5,7 @@ import type {
   IngredientSource,
   NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
+import type { CardCategory } from '../CategoryChips/types';
 import type { PickerCategory } from '../CategoryPicker/types';
 import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
 import type { COMPENDIUM_PARAMS } from './params';
@@ -26,6 +27,8 @@ export interface CompendiumListEntry extends UpdatedStamp {
   canonicalName: string | null;
   /** Its live forms, in form order: `[]` for an entry with none. */
   forms: CompendiumListForm[];
+  /** Its categories, each with its group's colours: `[]` for an entry with none. */
+  categories: readonly CardCategory[];
   editHref: Route;
   /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
   editHeading: ModalHeading;
@@ -149,4 +152,12 @@ export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor;
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,
   'filter' | 'facets' | 'categories' | 'vocabulary'
->;
+> & {
+  /**
+   * Who the filter is for. The admin's (the default) opens an entry's edit modal on a pick, offers
+   * No Refs, and submits to `/admin/compendium`; the public one (M8.18) links a pick to the entry's
+   * page, has no No Refs, and submits to `/compendium`. A flag, not functions, since the filter is
+   * a client component its server page passes props to.
+   */
+  audience?: 'admin' | 'public';
+};

@@ -22,12 +22,13 @@ export async function readNumberedPage<T>(
   { after, before }: { after?: string; before?: string },
   fetch: (request: PageRequest) => Promise<PageEntry<T>[]>,
   count: (start: Cursor | undefined) => Promise<PageCount>,
-): Promise<Page<T> & { position: PagePosition }> {
+  size?: number,
+): Promise<Page<T> & { position: PagePosition; totalCount: number }> {
   try {
-    return await resolveNumberedPage({ after, before }, fetch, count);
+    return await resolveNumberedPage({ after, before }, fetch, count, size);
   } catch (error) {
     if (error instanceof InvalidCursor && (after || before)) {
-      return resolveNumberedPage({}, fetch, count);
+      return resolveNumberedPage({}, fetch, count, size);
     }
     throw error;
   }

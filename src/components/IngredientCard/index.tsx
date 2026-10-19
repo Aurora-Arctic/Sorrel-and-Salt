@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import type { ReactElement } from 'react';
-import { chipColors } from '../../lib/chip-colors';
+import { Fragment, type ReactElement } from 'react';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
+import CategoryChips from '../CategoryChips';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
 import { CautionMark, ToxicMark } from '../SafetyNote';
@@ -76,29 +76,27 @@ const IngredientCard = ({
           </div>
         )}
       </div>
-      {categories.length > 0 && (
-        <ul className="specimen__chips" aria-label="Categories">
-          {categories.map(({ category, group }) => (
-            <li key={category.id}>
-              <span className="chip" style={chipColors(group)}>
-                {category.name}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <CategoryChips categories={categories} label={label} />
       {variants.length > 0 && (
         <p className="ingredient-card__forms">
           {variants.map((variant, at) => (
-            <span key={variant.form} className="ingredient-card__item">
-              {/* The eye gets a dot drawn in CSS (it is not text, so it is never
-                  announced, and it can be clipped at the start of a wrapped line);
-                  a screen reader gets this word break. */}
-              {at > 0 && <span className="spoken-separator">,</span>}
-              <span className="ingredient-card__form">
-                <FormIcon name={variant.formChoice?.group.icon ?? null} /> {formLabel(variant.form)}
+            <Fragment key={variant.form}>
+              {at > 0 && ' '}
+              <span className="ingredient-card__item">
+                <span className="ingredient-card__form">
+                  <FormIcon name={variant.formChoice?.group.icon ?? null} />
+                  {/* The eye gets a dot drawn in CSS (it is not text, so it is never
+                      announced, and it can be clipped at the start of a wrapped line);
+                      a screen reader gets this comma. Inside the label's own inline span,
+                      not a flex child: Chrome sets a flex child apart with spaces, which
+                      read "Herb , Oil". */}
+                  <span>
+                    {formLabel(variant.form)}
+                    {at < variants.length - 1 && <span className="spoken-separator">,</span>}
+                  </span>
+                </span>
               </span>
-            </span>
+            </Fragment>
           ))}
         </p>
       )}
@@ -115,4 +113,4 @@ const IngredientCard = ({
 };
 
 export default IngredientCard;
-export type { IngredientCardProps } from './types';
+export type { IngredientCardProps, CardCategory } from './types';

@@ -1,14 +1,11 @@
 import type { Route } from 'next';
 import type { ReactNode } from 'react';
-import type { GroupColors } from '../../lib/types';
+import type { CardCategory } from '../CategoryChips/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
 import type { EntryKind } from '../EntryMarks/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 
-export interface CardCategory {
-  category: { id: string; name: string };
-  group: GroupColors;
-}
+export type { CardCategory };
 
 export interface IngredientCardProps {
   /** The entry's page (M8.19); the name links to it, and it is the card's one link. */

@@ -1,7 +1,10 @@
 ## Pagination
 
 Every list query paginates through one helper (CLAUDE.md rule 8): cursor-based,
-25 rows by default, and never more than 100. A client asking for more gets 100,
+25 rows by default, and never more than 100. A page of cards is the one exception
+in the app's own reads: `CARD_PAGE_SIZE` (24) divides by one to four columns, so the
+grid ends on a full row. `resolveNumberedPage` takes the size as its last argument,
+and "Page X of Y" is counted with it. The admin tables and GraphQL's default stay at 25. A client asking for more gets 100,
 with no error, whether it wrote `first: 1000` or `first: $n`. Each later task
 that adds a list query adopts it in its own PR, and the guard below makes
 forgetting fail in that PR.

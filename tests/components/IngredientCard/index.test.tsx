@@ -1,7 +1,8 @@
 import type { Route } from 'next';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import IngredientCard from '@/components/IngredientCard';
+import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
 import { StockBadge } from '@/components/StockBadge';
 
 // M8.14 (claude-docs/components/ingredient-card.md): the card is presentational,
@@ -150,6 +151,19 @@ describe('IngredientCard', () => {
 
       expect(screen.queryByRole('list', { name: 'Categories' })).toBeNull();
     });
+  });
+
+  // The chip row and its +N toggletip are CategoryChips', tested in
+  // tests/components/CategoryChips; the card only has to hand it the categories.
+  it('puts the categories past the limit behind a +N button', () => {
+    const group = { colorDark: '#112233', colorLight: '#445566' };
+    const categories = Array.from({ length: CATEGORY_CHIP_LIMIT + 3 }, (_, i) => ({
+      category: { id: `c${i}`, name: `Fixture Category ${i + 1}` },
+      group,
+    }));
+    render(<IngredientCard {...BASE} categories={categories} />);
+
+    expect(screen.getByRole('button', { name: /3 more categories for/i })).toHaveTextContent('+3');
   });
 
   describe('safety', () => {

@@ -314,20 +314,15 @@ const ChipColorField = ({
           </div>
         </ColorPicker.Content>
       </ColorPicker.Root>
-      {/* On the colour's own ground whatever the page's theme, both chip states. */}
+      {/* On the colour's own ground whatever the page's theme, both chip levels. */}
       <div
         className={`chip-color-field__ground chip-color-field__ground--${theme}`}
         aria-hidden="true"
       >
         {colors ? (
-          <>
-            <span className="chip" style={colors}>
-              {sample}
-            </span>
-            <span className="chip is-selected" style={colors}>
-              {sample}
-            </span>
-          </>
+          <span className="chip" style={colors}>
+            {sample}
+          </span>
         ) : (
           <span className="chip-color-field__empty">{sample}</span>
         )}

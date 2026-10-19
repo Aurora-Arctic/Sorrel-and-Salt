@@ -119,33 +119,19 @@
   margin: 0;
 }
 
-// The forms line: one wrapping row, each item a flex row so the icon and name
-// share a centre line. The dot between two forms is not text but a circle drawn
-// on the item after the first, in the margin to its left, and the line is
-// clipped by that margin (`clip-path`, with a matching negative margin so
-// nothing shifts). A dot that would lead a wrapped line therefore falls in the
-// clipped band and is never seen, and no line ends in one, since each dot
-// belongs to the form after it. CSS cannot tell which item starts a wrapped
-// line, so a rule on the item cannot do this. A screen reader gets the
-// `.spoken-separator` in each item instead, as the circle is announced as nothing.
+// The forms line: one wrapping row, a dot between forms (the `dotted-row` mixin), each item a
+// flex row so the icon and name share a centre line.
 .ingredient-card__forms {
-  --forms-gap: #{space(5)};
+  @include dotted-row('.ingredient-card__item');
 
   // Body down to small; the icons are in em, so they follow.
   font-size: type-size('small');
-  --forms-dot: #{space(1)};
-
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   // Wrapped lines sit close: they are one list of forms, not separate rows.
   row-gap: space(1);
   // Air above, the chips to the forms the same as the forms to the rule below
   // (the stock section's `margin-top` is this token too, each beside the
   // specimen's own 12px gap), so the two read as equal.
   margin-block-start: $ingredient-card-forms-air;
-  margin-inline-start: calc(-1 * var(--forms-gap));
-  clip-path: inset(0 0 0 var(--forms-gap));
 }
 
 .ingredient-card__item,
@@ -153,26 +139,6 @@
   display: inline-flex;
   align-items: center;
   gap: space(1);
-}
-
-.ingredient-card__item {
-  position: relative;
-  margin-inline-start: var(--forms-gap);
-
-  // Out of the flex flow so it adds no gap beside the form; still read aloud.
-  > .spoken-separator {
-    position: absolute;
-  }
-
-  + .ingredient-card__item::before {
-    content: '';
-    position: absolute;
-    inset-inline-start: calc(-0.5 * (var(--forms-gap) + var(--forms-dot)));
-    inline-size: var(--forms-dot);
-    block-size: var(--forms-dot);
-    border-radius: 50%;
-    background-color: currentcolor;
-  }
 }
 
 // Out of Stock takes Low's weight on the card: the word and the icon still tell
@@ -191,17 +157,16 @@
   z-index: 1;
 }
 
-// Chip text on the card, one step under the caption it takes elsewhere, and the badges
-// (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
-// badge size, which holds them 24px tall.
-.ingredient-card {
-  .chip {
-    font-size: type-size('overline');
-  }
+// The badges (the marks, Caution, Toxic, Low and Out of Stock are all `.badge`) at the medium
+// badge size, which holds them 24px tall. The chips and their +N button are CategoryChips'.
+.ingredient-card .badge {
+  @include badge-size('medium');
+}
 
-  .badge {
-    @include badge-size('medium');
-  }
+// Above the cards beside it while a category panel is open, as the tips are, lifted by
+// z-index and not a transform; the panel itself is fixed (CategoryChips).
+.ingredient-card:has(.category-more__panel.is-open) {
+  z-index: 1;
 }
 
 // The compact look, wherever an ancestor says `data-density="compact"`.

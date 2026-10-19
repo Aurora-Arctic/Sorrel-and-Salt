@@ -5,6 +5,14 @@
 // visitor who signs in meets the same bar; tokens only, until the section's
 // design review. claude-docs/components/public-frame.md.
 
+// Where a page's sticky row holds (the shell sets the same property under its bar): this
+// header scrolls away, so the row sticks at the window's top.
+.public-frame {
+  // A length with its unit: the offset sits inside calc() sums, where a bare 0 is invalid.
+  /* stylelint-disable-next-line length-zero-no-unit */
+  --sticky-top: 0px;
+}
+
 .public-frame__bar {
   box-sizing: border-box;
   height: $shell-bar-height;
