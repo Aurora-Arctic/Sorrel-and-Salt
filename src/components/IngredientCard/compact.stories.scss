@@ -29,8 +29,9 @@
   }
 
   .specimen__top {
+    // One step, 8px both ways, so a wrapped badge row sits 8px under the name as it does
+    // above the chips (it was 4px under the name).
     gap: space(2);
-    row-gap: space(1);
   }
 
   // Badges: the sides tighten and the gaps close. The height stays at 24px,
