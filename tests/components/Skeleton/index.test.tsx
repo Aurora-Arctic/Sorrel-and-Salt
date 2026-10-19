@@ -114,6 +114,18 @@ describe('Skeleton tabs and menu', () => {
     expect(kids[1]?.classList.contains('skeleton__menu')).toBe(true);
     expect(kids.slice(2).every((node) => node.classList.contains('skeleton__block'))).toBe(true);
   });
+
+  // An ingredient's entry fills the wide column beside its menu
+  // (`.ingredient-entry--with-nav`), not the narrow column of the coven
+  // home's `.page-with-nav`: the wait uses the entry's own grid.
+  it("lays an entry out with the entry's own grid class, not the narrow page's", () => {
+    const { container } = render(<Skeleton shape="page" menu entry />);
+    const grid = container.querySelector('.ingredient-entry--with-nav');
+    expect(grid).not.toBeNull();
+    expect(container.querySelector('.page-with-nav')).toBeNull();
+    const kids = [...(grid?.children ?? [])];
+    expect(kids[1]?.classList.contains('page-nav')).toBe(true);
+  });
 });
 
 // The wait for a page of linked sections (the admin index) draws what that

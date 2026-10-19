@@ -286,6 +286,21 @@
   }
 }
 
+// An ingredient's entry fills the wide column beside its menu, not the coven
+// home's narrow one: the entry's own grid (the mixin both share), so the wait
+// is as wide as the page. Written here as well as in IngredientEntry's
+// stylesheet, since a route loads a component's stylesheet only when it draws
+// the component.
+.skeleton__shapes .ingredient-entry--with-nav {
+  @include stack(6);
+  @include entry-nav-grid;
+
+  > * {
+    box-sizing: border-box;
+    margin-block: 0;
+  }
+}
+
 // The contents shape: sections of a heading over a list, each entry a link
 // bar over a shorter line, as `.admin-contents` spaces them.
 .skeleton__section {

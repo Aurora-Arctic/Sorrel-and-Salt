@@ -21,6 +21,7 @@ import Skeleton from '../Skeleton';
 const FRAME_CLASS = {
   wide: 'page-column',
   'with-nav': 'page-column',
+  entry: 'page-column',
   narrow: 'page-frame page-frame--narrow skeleton-frame',
 } as const;
 
@@ -34,7 +35,8 @@ const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
         action={target.action}
         tabs={target.tabs}
         filter={target.filter}
-        menu={target.frame === 'with-nav'}
+        menu={target.frame === 'with-nav' || target.frame === 'entry'}
+        entry={target.frame === 'entry'}
       />
     );
     return (

@@ -12,10 +12,10 @@ export type NavigationTarget = {
   tabs?: boolean;
   /**
    * The frame the destination sits in, so a `main` wait is drawn in it: `wide`
-   * (the page column), `narrow` (a forms column) or `with-nav` (the wide column
-   * with a side menu drawn, on a `page`). None is the standard centred frame.
+   * (the page column), `narrow` (a forms column) or `with-nav` (the narrow column
+   * with a side menu drawn, on a `page`) or `entry` (the wide column with a side menu, an ingredient's page). None is the standard centred frame.
    */
-  frame?: 'wide' | 'narrow' | 'with-nav';
+  frame?: 'wide' | 'narrow' | 'with-nav' | 'entry';
 };
 
 /** What `navigate` takes beyond the address. */

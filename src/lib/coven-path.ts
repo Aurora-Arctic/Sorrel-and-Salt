@@ -83,7 +83,7 @@ export function covenTarget(pathname: string): NavigationTarget {
   const section = slug ? pathname.split('/')[3] : undefined;
   const beneath = slug ? pathname.split('/')[4] : undefined;
   if (slug && (!section || (section === 'ingredients' && beneath))) {
-    return { region: 'coven', shape: 'page', frame: 'with-nav' };
+    return { region: 'coven', shape: 'page', frame: section ? 'entry' : 'with-nav' };
   }
   return { region: 'coven', ...((section && PARTS_OF_SECTION[section]) || { shape: 'page' }) };
 }

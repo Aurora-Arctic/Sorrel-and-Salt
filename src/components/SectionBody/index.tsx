@@ -33,7 +33,8 @@ export default function SectionBody({
             action={target.action}
             tabs={target.tabs}
             filter={target.filter}
-            menu={target.frame === 'with-nav'}
+            menu={target.frame === 'with-nav' || target.frame === 'entry'}
+            entry={target.frame === 'entry'}
           />
         </main>
       ) : (

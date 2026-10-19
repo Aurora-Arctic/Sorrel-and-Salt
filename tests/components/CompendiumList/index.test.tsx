@@ -296,7 +296,7 @@ describe('CompendiumList', () => {
     });
 
     expect(router.push.mock.calls[0]?.[0]).toBe('/compendium/ingredients/fixture-salt');
-    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'with-nav' });
+    expect(target).toEqual({ region: 'main', shape: 'page', frame: 'entry' });
     await act(async () => arrive());
   });
 

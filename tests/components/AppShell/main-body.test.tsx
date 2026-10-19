@@ -101,6 +101,13 @@ describe('MainBody', () => {
       expect(main.querySelector('.skeleton__menu')).not.toBeNull();
     });
 
+    it('draws an ingredient\x27s entry in the page column, with the entry\x27s own menu grid', async () => {
+      const main = await frameOf({ region: 'main', shape: 'page', frame: 'entry' });
+      expect(main).toHaveClass('page-column');
+      expect(main.querySelector('.ingredient-entry--with-nav .skeleton__menu')).not.toBeNull();
+      expect(main.querySelector('.page-with-nav')).toBeNull();
+    });
+
     it('keeps the standard frame for a target that names none', async () => {
       const main = await frameOf({ region: 'main', shape: 'page' });
       expect(main).toHaveClass('page-frame');

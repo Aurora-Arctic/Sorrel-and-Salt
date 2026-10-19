@@ -16,6 +16,8 @@ export interface SkeletonProps {
   tabs?: boolean;
   /** A `page` skeleton draws a side menu beside its heading and blocks, for a page with a jump or contents menu. */
   menu?: boolean;
+  /** With `menu`: the content fills the wide column beside the menu, as an ingredient's entry does, not the narrow column of the coven home. */
+  entry?: boolean;
   /** How many rows, cards, fields or blocks it draws; each shape has its own default. */
   count?: number;
 }

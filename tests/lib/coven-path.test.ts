@@ -82,7 +82,7 @@ describe('covenTarget', () => {
     expect(covenTarget('/coven/a/ingredients/some-id')).toEqual({
       region: 'coven',
       shape: 'page',
-      frame: 'with-nav',
+      frame: 'entry',
     });
   });
 

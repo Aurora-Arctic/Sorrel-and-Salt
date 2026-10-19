@@ -40,24 +40,11 @@ $jump-link-line: 1.25;
 // goes narrower than its longest label. The children are the head,
 // the menu, Details, the forms and References; the menu spans the last
 // three rows, so it sticks for the length of the page.
-@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
-  .ingredient-entry--with-nav {
-    display: grid;
-    grid-template-columns:
-      minmax(min-content, min(calc(#{space(8)} * 3), calc(100% - #{space(8)} * 15)))
-      minmax(0, 1fr);
-    align-content: start;
+.ingredient-entry--with-nav {
+  @include entry-nav-grid;
 
-    > :not(.page-nav) {
-      grid-column: 2;
-    }
-
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
     > .page-nav {
-      position: sticky;
-      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
-      grid-column: 1;
-      grid-row: 2 / span 3;
-      align-self: start;
       // The menu's first link ("Details") level with the Details h2 beside it:
       // the menu starts on the h2's top, so it drops by half of what the h2's
       // line (its size and `_typography.scss`'s 1.15) has over the link's (its

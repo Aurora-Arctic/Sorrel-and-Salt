@@ -242,8 +242,8 @@ with the value already put back.
   and the Contents on the coven home name the `coven` target `covenTarget` gives for the section's address.
 - Every link into an ingredient's page names the page it draws through
   `ingredientLinkTarget(href, fromCoven?)` (`site-target.ts`): a Compendium
-  entry is a `main` `page` with its jump menu (`with-nav`); a coven's own
-  entry is the `coven` region's `page` with its jump menu (`covenTarget`
+  entry is a `main` `page` with its jump menu (`entry`); a coven's own
+  entry is the `coven` region's `page` with its jump menu (`entry`) (`covenTarget`
   knows an address with an id beneath `ingredients`), or, from outside the
   coven (the admin shell's Add Ingredient), the `main` region's; the
   Compendium list is `siteLinkTarget('/compendium')`. The sources are the
@@ -263,10 +263,10 @@ with the value already put back.
 answers a `main` target by replacing everything inside `#main` with one
 `<main>` holding the skeleton, so the page frame is replaced as well as the
 page's content. The `<main>` takes the frame the target names, top-aligned
-and never centred in the window: `wide` and `with-nav` use `page-column`,
+and never centred in the window: `wide`, `with-nav` and `entry` use `page-column`,
 `narrow` uses `page-frame page-frame--narrow`, and no frame the standard
 `page-frame`. A narrow `form` sits on a `panel`, as the real form does.
-`with-nav` also draws the side menu beside a `page`, in the page's own `.page-with-nav` grid, and the admin index is the `contents` shape (sections of links), and `tabs` draws
+`with-nav` also draws the side menu beside a `page`, in the page's own `.page-with-nav` grid (the narrow column), and `entry` the same menu in `.ingredient-entry--with-nav`, the wide column an ingredient's page fills, from the one `entry-nav-grid` mixin the page shares, and the admin index is the `contents` shape (sections of links), and `tabs` draws
 the tab track in the heading row. A navigation with no target, such as a
 refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBody`'s.
 

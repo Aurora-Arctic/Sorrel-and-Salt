@@ -366,6 +366,36 @@
   gap: space($step);
 }
 
+// The grid of a page whose jump menu stands to the left of content that fills
+// the rest of the wide column (an ingredient's entry), from a tablet up. The
+// children are the head, the menu, then the sections; the menu spans the last
+// three rows and sticks under the shell bar. The breakpoint and offset are
+// `.page-with-nav`'s (_primitives.scss). One mixin for the page and for its
+// wait (Skeleton), so the two cannot differ in width. The menu's width is that
+// layout's 12rem while the article is wide; below that the content keeps 60rem
+// and the menu gives way first, but never goes narrower than its longest label.
+@mixin entry-nav-grid {
+  @media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+    display: grid;
+    grid-template-columns:
+      minmax(min-content, min(calc(#{space(8)} * 3), calc(100% - #{space(8)} * 15)))
+      minmax(0, 1fr);
+    align-content: start;
+
+    > :not(.page-nav) {
+      grid-column: 2;
+    }
+
+    > .page-nav {
+      position: sticky;
+      top: calc(#{$top-inset} + #{$shell-bar-height} + #{space(4)});
+      grid-column: 1;
+      grid-row: 2 / span 3;
+      align-self: start;
+    }
+  }
+}
+
 // The look of a box that floats over the page, the combobox's list and a
 // linked entry's summary: the card surface and the floating shadow, edged in
 // the muted ink.

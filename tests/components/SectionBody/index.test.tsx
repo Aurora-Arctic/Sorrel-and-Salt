@@ -45,6 +45,7 @@ function renderBody() {
       <Go name="Admin" target={{ region: 'admin', shape: 'table' }} />
       <Go name="Filter" />
       <Go name="Home" target={{ region: 'coven', shape: 'page', frame: 'with-nav' }} />
+      <Go name="Entry" target={{ region: 'coven', shape: 'page', frame: 'entry' }} />
       <Go name="People" target={{ region: 'coven', shape: 'table', title: true, tabs: true }} />
       <SectionBody region="coven" className="coven-layout">
         <main>
@@ -104,6 +105,15 @@ describe('SectionBody', () => {
     const { container } = renderBody();
     await press('Home');
     expect(container.querySelector('.skeleton__menu')).not.toBeNull();
+  });
+
+  // An ingredient's entry fills the wide column, so its wait is the entry's
+  // own menu grid, not the coven home's narrow `.page-with-nav`.
+  it("draws an ingredient's entry in the entry's own grid", async () => {
+    const { container } = renderBody();
+    await press('Entry');
+    expect(container.querySelector('.ingredient-entry--with-nav .skeleton__menu')).not.toBeNull();
+    expect(container.querySelector('.page-with-nav')).toBeNull();
   });
 
   it('draws the tab row for a tabbed page, and no menu', async () => {

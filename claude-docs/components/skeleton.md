@@ -8,19 +8,20 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
 
 `SkeletonProps` (`types.ts`).
 
-| Prop     | What it is                                                                                                                                                           |
-| -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `shape`  | `table`, `cards`, `form`, `page`, `contents` or `line`                                                                                                               |
-| `filter` | Optional, `table` and `cards` only: a filter row above the list                                                                                                      |
-| `title`  | Optional, `table` and `cards` only: the page's heading row above everything else, a heading bar (`skeleton__title`) laid out by `.page-header`                       |
-| `tabs`   | Optional, with `title`: a tab track between the heading and the action, for a page with a tab row (`skeleton__tabs`)                                                 |
-| `menu`   | Optional, `page` only: a side menu beside the page (`skeleton__menu`), laid out by the page's own `.page-with-nav` and `.page-nav`, so it sits as the real menu does |
-| `action` | Optional, with `title`: a button-sized block at the heading's end, for a page with an Add                                                                            |
-| `count`  | Optional: how many rows, cards, fields or blocks (6, 6, 4 and 3 otherwise)                                                                                           |
+| Prop     | What it is                                                                                                                                                                          |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shape`  | `table`, `cards`, `form`, `page`, `contents` or `line`                                                                                                                              |
+| `filter` | Optional, `table` and `cards` only: a filter row above the list                                                                                                                     |
+| `title`  | Optional, `table` and `cards` only: the page's heading row above everything else, a heading bar (`skeleton__title`) laid out by `.page-header`                                      |
+| `tabs`   | Optional, with `title`: a tab track between the heading and the action, for a page with a tab row (`skeleton__tabs`)                                                                |
+| `menu`   | Optional, `page` only: a side menu beside the page (`skeleton__menu`), laid out by the page's own `.page-with-nav` and `.page-nav`, so it sits as the real menu does                |
+| `entry`  | Optional, with `menu`: the content fills the wide column beside the menu, in the entry's own `.ingredient-entry--with-nav` grid (`entry-nav-grid`), not the narrow `.page-with-nav` |
+| `action` | Optional, with `title`: a button-sized block at the heading's end, for a page with an Add                                                                                           |
+| `count`  | Optional: how many rows, cards, fields or blocks (6, 6, 4 and 3 otherwise)                                                                                                          |
 
 ## Contracts
 
-- **A `page` draws the side menu when its frame is `with-nav`**, which is what an ingredient's page uses (a Compendium entry in the `main` region, a coven's own entry in the `coven` region): the menu column beside the title, the lede and the blocks. It is built only from the existing pieces.
+- **A `page` draws the side menu when its frame is `with-nav` (the coven home, the narrow column) or `entry` (an ingredient's page, the wide column: a Compendium entry in the `main` region, a coven's own entry in the `coven` region)**: the menu column beside the title, the lede and the blocks. It is built only from the existing pieces.
 
 - **Exactly one `<output>`, "Loading"**, visually hidden, so a screen reader
   hears one announcement whatever the shape. The drawn shapes are

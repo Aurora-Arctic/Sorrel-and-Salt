@@ -45,7 +45,7 @@ describe('ingredientLinkTarget', () => {
     expect(ingredientLinkTarget('/compendium/ingredients/fixture-testwort')).toEqual({
       region: 'main',
       shape: 'page',
-      frame: 'with-nav',
+      frame: 'entry',
     });
   });
 
@@ -53,7 +53,7 @@ describe('ingredientLinkTarget', () => {
     expect(ingredientLinkTarget('/coven/fixture-coven/ingredients/some-id')).toEqual({
       region: 'coven',
       shape: 'page',
-      frame: 'with-nav',
+      frame: 'entry',
     });
   });
 
@@ -61,7 +61,7 @@ describe('ingredientLinkTarget', () => {
     expect(ingredientLinkTarget('/coven/fixture-coven/ingredients/some-id', false)).toMatchObject({
       region: 'main',
       shape: 'page',
-      frame: 'with-nav',
+      frame: 'entry',
     });
   });
 

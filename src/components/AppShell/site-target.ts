@@ -37,7 +37,7 @@ export const ingredientLinkTarget = (
 ): NavigationTarget | undefined => {
   const path = href.split(/[?#]/)[0] ?? href;
   if (path.startsWith('/compendium/ingredients/')) {
-    return { region: 'main', shape: 'page', frame: 'with-nav' };
+    return { region: 'main', shape: 'page', frame: 'entry' };
   }
   if (path === '/compendium') return siteLinkTarget('/compendium');
   if (covenSlugOf(path) === null) return undefined;

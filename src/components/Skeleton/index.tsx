@@ -39,6 +39,7 @@ const Skeleton = ({
   action = false,
   tabs = false,
   menu = false,
+  entry = false,
   count,
 }: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
@@ -100,7 +101,15 @@ const Skeleton = ({
           // The page's own grid when it has a menu (`.page-with-nav`), its
           // children in the page's order: head, menu, then the sections, so
           // the menu stands where the real one does at every width.
-          <div className={menu ? 'page-with-nav' : 'skeleton__plain'}>
+          <div
+            className={
+              menu
+                ? entry
+                  ? 'ingredient-entry ingredient-entry--with-nav'
+                  : 'page-with-nav'
+                : 'skeleton__plain'
+            }
+          >
             <div className="skeleton__intro">
               <span className="skeleton__title" />
               <span className="skeleton__lede" />
