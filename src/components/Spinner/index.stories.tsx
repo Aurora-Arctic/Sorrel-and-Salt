@@ -5,7 +5,7 @@ import Spinner from '.';
 // controls that hold it assert their busy state. It shows after 100ms, so a
 // story reload shows it appear.
 export default {
-  title: 'Feedback / Spinner',
+  title: 'Feedback / Loading / Spinner',
 };
 
 export const Default: Story = () => (

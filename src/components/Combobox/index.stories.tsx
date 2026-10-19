@@ -490,7 +490,7 @@ export const Leading: Story = () => {
 };
 
 /** A lookup under way (M12.33): the box is `aria-busy` and the ring turns in the indicator strip, beside the chevron. */
-export const Searching: Story = () => {
+export const LoadingSearch: Story = () => {
   const [value, setValue] = useState('moon');
   return (
     <Labelled label="Name">
@@ -510,7 +510,7 @@ export const Searching: Story = () => {
 };
 
 /** The select-only box while its change is on its way (M12.33): the choice made stays shown, the box is `aria-busy` and carries the ring. */
-export const SelectBusy: Story = () => {
+export const LoadingSelect: Story = () => {
   const [value, setValue] = useState('fungal');
   return (
     <Labelled label="Classification">

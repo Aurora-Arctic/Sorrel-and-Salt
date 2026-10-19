@@ -79,7 +79,11 @@ export function SubstituteSummary({
   });
 
   if (isPending || (error && isRefetching)) {
-    return <Skeleton shape="line" />;
+    return (
+      <div className="entry-summary__loading">
+        <Skeleton shape="line" />
+      </div>
+    );
   }
   if (error) {
     return (

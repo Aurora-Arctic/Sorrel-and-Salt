@@ -26,7 +26,7 @@ it; nothing else should draw its own.
 
 ## Stories
 
-`Feedback / Spinner`: `Default` and `Larger`.
+`Feedback / Loading / Spinner`: `Default` and `Larger`.
 
 ## Testing
 

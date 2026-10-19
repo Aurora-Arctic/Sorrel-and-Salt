@@ -14,7 +14,7 @@ import { ShellFrame } from './shell-frame';
 // the OS "reduce motion" setting, or emulate `prefers-reduced-motion: reduce`
 // in devtools (Rendering tab). The theme follows the workshop's toolbar switch.
 export default {
-  title: 'Feedback / Navigation Bar',
+  title: 'Feedback / Loading / Navigation Bar',
 };
 
 export const Shown: Story = () => (

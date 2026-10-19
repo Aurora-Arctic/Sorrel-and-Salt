@@ -1451,7 +1451,7 @@ export const PromoteQuestionCoven: Story = () => {
  * stands where the facts will be. The ingredient's id is fresh each time, so a
  * summary another story already read cannot answer from the cache.
  */
-export const SubstituteSummaryLoading: Story = () => {
+export const LoadingSubstituteSummary: Story = () => {
   useHangingFetch('/api/graphql');
   const id = useId();
   useEffect(() => {

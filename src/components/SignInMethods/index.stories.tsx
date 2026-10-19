@@ -162,7 +162,7 @@ PhoneLight.meta = { theme: 'light', width: 375 };
 // Add pressed on Google, as a person would, with the link request left
 // unanswered: the row's button reads "Adding" and waits, as it does while the
 // browser is on its way to the provider (M12.33).
-export const Adding: Story = () => {
+export const LoadingAdd: Story = () => {
   usePressOnMount('Add Google');
   return <Page linked={[DISCORD]} configured={ALL_PROVIDERS} />;
 };

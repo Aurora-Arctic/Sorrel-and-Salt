@@ -31,7 +31,7 @@ The stylesheet is imported where the app's other global sheets are
 
 ## Stories
 
-`Feedback / Navigation Bar` (`.ladle/navigation-bar.stories.tsx`), each inside
+`Feedback / Loading / Navigation Bar` (`.ladle/navigation-bar.stories.tsx`), each inside
 the shell frame so the bar sits under the global bar as it does in the app:
 `Shown`, `Leaving`, and `Navigating`, which loops a whole navigation on the
 story's own timer (idle, the 100ms hold-back, the bar for 2.5s, the fade, idle)

@@ -502,7 +502,6 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
         </div>
         {(clear || (hasSource && toggle) || busy) && (
           <div className="combobox__indicators">
-            {busy && <Spinner />}
             {/* Always drawn once the caller has a clear, and hidden while
                 there is nothing to clear, rather than left out: its room,
                 and the separator's, stay in the control, so typing,
@@ -520,6 +519,9 @@ function Combobox<O extends ComboboxOption = ComboboxOption>({
                 <ClearIcon />
               </button>
             )}
+            {/* After the clear, as react-select draws it, so the spinner
+                sits by the chevron rather than across the clear's held room. */}
+            {busy && <Spinner />}
             {clear && hasSource && toggle && (
               <span
                 className={clear.empty ? 'combobox__separator is-empty' : 'combobox__separator'}

@@ -476,7 +476,9 @@ links. In both substitute lists, the ingredient's and each variant's:
   query already reads an entry by id in the compendium's tier, or a coven's
   own and the compendium's, and never another coven's, so no new query was
   needed. TanStack Query keeps the answer, so a second opening is instant.
-  While it reads, the panel says Loading…; a failed read shows the server's
+  While it reads, the panel shows a one-line skeleton at a tip's width
+  (`entry-summary__loading`), since a panel sized to its content would
+  otherwise collapse around it; a failed read shows the server's
   sentence, or the generic one, as an alert, with Try Again.
 - **It links the entry's page where the form is given one** (`entryHref`),
   in a new tab, so the form and its unsaved changes stay where they are. The

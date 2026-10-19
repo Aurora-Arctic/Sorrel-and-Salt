@@ -20,7 +20,7 @@ import { defineConfig } from 'vite';
 // (M12.33). The window's own `fetch` cannot be replaced for them: Better Auth's
 // client takes hold of `fetch` once, when it is created, so a story's stand-in
 // is never called. Every other story still gets the workshop's plain 404.
-const WAITING_ON_AUTH = /[?&]story=[a-z-]+--(adding|signing-in)(&|$)/;
+const WAITING_ON_AUTH = /[?&]story=[a-z-]+--(loading-add|loading-sign-in)(&|$)/;
 
 export default defineConfig({
   plugins: [

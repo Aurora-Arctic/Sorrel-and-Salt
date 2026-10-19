@@ -142,7 +142,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   gap: space(1);
 }
 
-// A lookup in flight: the shared spinner, muted, ahead of the clear and chevron.
+// A lookup in flight: the shared spinner, muted, between the clear and the chevron.
 .combobox__indicators > .spinner {
   color: $text-muted;
 }

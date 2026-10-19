@@ -4,7 +4,7 @@ import Skeleton from '.';
 // Render-only; the skeleton announces itself once, as a status, and the shapes
 // are hidden from assistive technology. Each story is one shape.
 export default {
-  title: 'Feedback / Skeleton',
+  title: 'Feedback / Loading / Skeleton',
 };
 
 export const Table: Story = () => <Skeleton shape="table" />;
