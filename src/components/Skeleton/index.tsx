@@ -35,8 +35,17 @@ const Bars = ({ of: length, className }: { of: number; className: string }): Rea
 // A page's head at the size of the real one, so what is under it does not
 // jump on arrival: an eyebrow bar where the page has an eyebrow, the title,
 // and a lede that wraps to two lines unless the page has none.
-const PageHead = ({ head, loose }: { head: SkeletonHead; loose?: boolean }): ReactElement => (
+const PageHead = ({
+  head,
+  loose,
+  back,
+}: {
+  head: SkeletonHead;
+  loose?: boolean;
+  back?: boolean;
+}): ReactElement => (
   <div className={loose ? 'skeleton__intro skeleton__intro--loose' : 'skeleton__intro'}>
+    {back && <span className="skeleton__entry-bar" />}
     {head === 'eyebrow' && <span className="skeleton__eyebrow" />}
     <span className="skeleton__title" />
     {head !== 'title' && (
@@ -213,7 +222,7 @@ const Skeleton = ({
                 : 'skeleton__plain'
             }
           >
-            <PageHead head={head} />
+            <PageHead head={head} back={entry} />
             {menu && (
               <div className="page-nav skeleton__menu">
                 <span />

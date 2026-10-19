@@ -305,6 +305,16 @@
   margin-block: calc((type-size('overline') * 1.65 - type-size('overline')) / 2);
 }
 
+// The way back an ingredient's page shows above its heading (both the
+// Compendium's and a coven's always do): a short bar in the line of its small
+// text, then the room the real row's bottom margin adds to the head's gap.
+.skeleton__shapes .skeleton__entry-bar {
+  width: 12%;
+  height: type-size('small');
+  margin-block: calc((type-size('small') * 1.65 - type-size('small')) / 2)
+    calc(space(3) + (type-size('small') * 1.65 - type-size('small')) / 2);
+}
+
 // A page with a side menu (the account's jump menu, the coven home's
 // contents) is laid out by the page's own `.page-with-nav` and `.page-nav`
 // (_primitives.scss): the menu beside the sections from a tablet up, held

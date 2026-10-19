@@ -218,6 +218,21 @@ describe('Skeleton for an ingredient entry', () => {
     expect(section?.querySelectorAll('.skeleton__entry-side > *').length).toBeGreaterThan(1);
   });
 
+  // Both ingredient pages (the Compendium's and a coven's) always show the way
+  // back above the heading, so the wait holds a bar for it, ahead of the eyebrow.
+  it("draws a bar for the way back above the head's eyebrow", () => {
+    const { container } = render(<Skeleton shape="page" menu entry head="eyebrow" />);
+    const intro = container.querySelector('.skeleton__intro');
+    const bar = intro?.querySelector('.skeleton__entry-bar');
+    expect(bar).not.toBeNull();
+    expect(intro?.firstElementChild).toBe(bar);
+  });
+
+  it('draws no bar for the way back on a page that is not an entry', () => {
+    const { container } = render(<Skeleton shape="page" menu head="eyebrow" />);
+    expect(container.querySelector('.skeleton__entry-bar')).toBeNull();
+  });
+
   it('draws no card blocks', () => {
     const { container } = render(<Skeleton shape="page" menu entry />);
     expect(container.querySelector('.skeleton__block')).toBeNull();
