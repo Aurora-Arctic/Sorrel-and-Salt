@@ -13,8 +13,6 @@ const count = (html: string, pattern: RegExp): number => [...html.matchAll(patte
 const titleOf = (html: string): string => /<title>([^<]*)<\/title>/.exec(html)?.[1] ?? '';
 const descriptionOf = (html: string): string =>
   /<meta name="description" content="([^"]*)"/.exec(html)?.[1] ?? '';
-/** The part of the page before </head>: where a reader that skips the body looks. */
-const headOf = (html: string): string => html.slice(0, html.indexOf('</head>'));
 const canonicalOf = (html: string): string =>
   /<link rel="canonical" href="([^"]*)"/.exec(html)?.[1] ?? '';
 
@@ -42,8 +40,6 @@ test('each public page has one H1, a language, and a title and description of it
     expect(html).toMatch(/<html lang="en"/);
     expect(titleOf(html)).not.toBe('');
     expect(descriptionOf(html)).not.toBe('');
-    // In the head, not streamed into the body: Lighthouse reads `head meta` only.
-    expect(descriptionOf(headOf(html))).not.toBe('');
   }
   const titles = Object.values(pages).map(titleOf);
   const descriptions = Object.values(pages).map(descriptionOf);

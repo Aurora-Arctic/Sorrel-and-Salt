@@ -31,7 +31,9 @@ The fix is a `lighthouse-chrome` service on the `audit` profile (`make lighthous
 
 ## Metadata in the head
 
-Next 16 streams a page's metadata into `<body>` for any visitor not on its HTML-limited bot list (`htmlLimitedBots`) when `generateMetadata` is not ready as the shell is sent (Next docs, "Streaming metadata"). On the production build this happened on about one request in forty for an entry page, at random (a first read after the data cache went cold): the same entry had its description in `<head>` on the next request. Lighthouse's `meta-description` audit reads `head meta` only (`core/gather/gatherers/meta-elements.js`), so a streamed tag fails it, and a Lighthouse run on the lemon entry reported no description. `next.config.ts` sets `htmlLimitedBots: /.*/`, the option Next's docs give for turning streaming metadata off, so metadata always blocks and lands in the head. The cost is a little time to first byte on the public pages, which are the ones that need it. `tests/e2e/seo.spec.ts` asserts the description sits before `</head>`. The failed run itself was not reproduced afterwards (nine of nine audits passed on lemon), so the link between that one failure and streaming is the best account, not a capture.
+Next 16 streams a page's metadata into `<body>` for ordinary browsers when `generateMetadata` is not ready as the first part of the page is sent (Next docs, "Streaming metadata": `node_modules/next/dist/docs/01-app/03-api-reference/04-functions/generate-metadata.md`). Visitors on Next's default `htmlLimitedBots` list get the metadata in `<head>` instead, because the page waits for it. That list covers Bingbot, DuckDuckBot, Yandex, Baidu, Applebot, Chrome-Lighthouse and the link-preview bots (`node_modules/next/dist/shared/lib/router/utils/html-bots.js`). Googlebot runs JavaScript and reads the streamed tags.
+
+So the default is kept. Setting `htmlLimitedBots: /.*/` (every visitor gets blocking metadata) was tried and dropped: it delays the first byte on every page, site-wide, for almost no gain in search results.
 
 ## Sources
 
