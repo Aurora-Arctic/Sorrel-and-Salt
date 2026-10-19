@@ -13,13 +13,38 @@ import Skeleton from '../Skeleton';
 // hidden one: a page without a level-one heading fails the accessibility scan.
 // A client part, since the state is the browser's.
 // claude-docs/components/app-shell.md
+// The frame the destination sits in, so the wait is the page's width and
+// place rather than the standard centred `.page-frame` (66ch, drawn down the
+// window): the wide column for the wide pages and the menu pages, the forms'
+// column for the narrow ones. The standard frame stays for a target that names
+// none (the brand link's). A `skeleton-frame` is top-aligned, never centred.
+const FRAME_CLASS = {
+  wide: 'page-column',
+  'with-nav': 'page-column',
+  narrow: 'page-frame page-frame--narrow skeleton-frame',
+} as const;
+
 const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
   const { busy, target } = useNavigationState();
   if (busy && target?.region === 'main') {
+    const skeleton = (
+      <Skeleton
+        shape={target.shape}
+        title={target.title}
+        action={target.action}
+        tabs={target.tabs}
+        filter={target.filter}
+        menu={target.frame === 'with-nav'}
+      />
+    );
     return (
-      <main className="page-frame">
+      <main className={target.frame ? FRAME_CLASS[target.frame] : 'page-frame skeleton-frame'}>
         <h1 className="visually-hidden">Loading</h1>
-        <Skeleton shape={target.shape} />
+        {target.shape === 'form' && target.frame === 'narrow' ? (
+          <div className="page-frame__section panel">{skeleton}</div>
+        ) : (
+          skeleton
+        )}
       </main>
     );
   }

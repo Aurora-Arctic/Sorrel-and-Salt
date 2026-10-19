@@ -28,13 +28,28 @@ const Bars = ({ of: length, className }: { of: number; className: string }): Rea
   </>
 );
 
-const Skeleton = ({ shape, filter = false, count }: SkeletonProps): ReactElement => {
+const Skeleton = ({
+  shape,
+  filter = false,
+  title = false,
+  action = false,
+  tabs = false,
+  menu = false,
+  count,
+}: SkeletonProps): ReactElement => {
   const many = count ?? DEFAULT_COUNT[shape];
   const listed = shape === 'table' || shape === 'cards';
   return (
     <div className={`skeleton skeleton--${shape}`}>
       <output className="visually-hidden">Loading</output>
       <div className="skeleton__shapes" aria-hidden="true">
+        {listed && title && (
+          <div className="page-header skeleton__header">
+            <span className="skeleton__title" />
+            {tabs && <span className="skeleton__tabs" />}
+            {action && <span className="skeleton__action" />}
+          </div>
+        )}
         {listed && filter && (
           <div className="skeleton__filter">
             <span className="skeleton__field" />
@@ -78,9 +93,17 @@ const Skeleton = ({ shape, filter = false, count }: SkeletonProps): ReactElement
         )}
         {shape === 'line' && <span className="skeleton__line" />}
         {shape === 'page' && (
-          <>
+          <div className={menu ? 'skeleton__with-menu' : 'skeleton__plain'}>
             <span className="skeleton__title" />
             <span className="skeleton__lede" />
+            {menu && (
+              <div className="skeleton__menu">
+                <span />
+                <span />
+                <span />
+                <span />
+              </div>
+            )}
             <div className="skeleton__blocks">
               {Array.from({ length: many }, (_, block) => (
                 <div key={block} className="skeleton__block">
@@ -90,7 +113,7 @@ const Skeleton = ({ shape, filter = false, count }: SkeletonProps): ReactElement
                 </div>
               ))}
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

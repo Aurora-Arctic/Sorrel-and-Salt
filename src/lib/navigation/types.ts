@@ -2,6 +2,20 @@
 export type NavigationTarget = {
   region: 'coven' | 'admin' | 'main';
   shape: 'table' | 'cards' | 'form' | 'page';
+  /** A `table` or `cards` wait draws the page's heading row above the list. */
+  title?: boolean;
+  /** With `title`: the page has an action (Add) at the heading's end. */
+  action?: boolean;
+  /** A `table` or `cards` wait draws the page's filter row. */
+  filter?: boolean;
+  /** With `title`: the page has a tab row between its heading and its action. */
+  tabs?: boolean;
+  /**
+   * The frame the destination sits in, so a `main` wait is drawn in it: `wide`
+   * (the page column), `narrow` (a forms column) or `with-nav` (the wide column
+   * with a side menu drawn, on a `page`). None is the standard centred frame.
+   */
+  frame?: 'wide' | 'narrow' | 'with-nav';
 };
 
 /** What `navigate` takes beyond the address. */

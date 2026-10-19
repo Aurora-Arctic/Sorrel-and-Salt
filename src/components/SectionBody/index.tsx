@@ -27,7 +27,14 @@ export default function SectionBody({
       {busy && target?.region === region ? (
         <main>
           <h1 className="visually-hidden">Loading</h1>
-          <Skeleton shape={target.shape} />
+          <Skeleton
+            shape={target.shape}
+            title={target.title}
+            action={target.action}
+            tabs={target.tabs}
+            filter={target.filter}
+            menu={target.frame === 'with-nav'}
+          />
         </main>
       ) : (
         children

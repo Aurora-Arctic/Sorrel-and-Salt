@@ -24,7 +24,7 @@ const SiteNav = ({ links }: SiteNavProps): ReactElement => {
           <li key={label}>
             <PendingLink
               href={href}
-              navigationTarget={siteLinkTarget(base)}
+              navigationTarget={siteLinkTarget(base, href)}
               aria-current={isAtPath(pathname, base) ? 'page' : undefined}
             >
               {label}

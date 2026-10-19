@@ -54,7 +54,7 @@ The region is the part of the page that is about to change. While it changes,
 the old content is taken away and the [`Skeleton`](components/skeleton.md) of
 the new content stands in its place. The skeleton has five shapes: `table`,
 `cards`, `form` and `page` for a whole page, and `line` for one line of text
-that is still being fetched. When the real content arrives, it fades in over
+that is still being fetched. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives. When the real content arrives, it fades in over
 the skeleton for 200ms (`arrived`).
 
 A skeleton shows **at once**, with no wait, because the press has already
@@ -112,10 +112,11 @@ layout and page both read from the database.
    hidden `<h1>Loading</h1>`, because the skeleton replaced the page's `h1` and
    axe's page-has-heading-one rule failed during every wait; `MainBody` does
    the same. The owner decided on 2026-10-19 to keep it, so a screen
-   reader hears both the heading and the skeleton's "Loading" status. The switcher works out the shape
-   with `covenSectionShape` (`src/lib/coven-path.ts`): cards for Ingredients,
-   a table for Members and Invitations, and a page for anything else,
-   including the coven home. Choosing Create Coven aims at the `main` region
+   reader hears both the heading and the skeleton's "Loading" status. The switcher works out the target
+   with `covenTarget` (`src/lib/coven-path.ts`): cards under a title and a
+   filter for Ingredients, a table under a title and a tab row for Members and
+   Invitations, a page with its contents menu for the coven home, and a plain
+   page for anything else. Choosing Create Coven aims at the `main` region
    with a `form` shape instead, since that page is not inside a coven.
 4. When the new coven renders, the content fades in, and focus returns to the
    switcher. The `[slug]` layout remounts on a switch, so focus would
@@ -200,7 +201,7 @@ exported from its `index.ts`.
   router sees options **only when a caller gives some**, so a plain call is a
   plain `push(href)`.
 - `target` says where the page is headed:
-  `{ region: 'coven' | 'admin' | 'main', shape }`. Whatever draws the region's skeleton
+  `{ region: 'coven' | 'admin' | 'main', shape, title?, action?, filter? }`. Whatever draws the region's skeleton
   reads it from the store. On `PendingLink` the same thing is the prop
   `navigationTarget`, because an anchor's own `target="_blank"` keeps its name.
 
@@ -225,23 +226,31 @@ with the value already put back.
 **Where the pieces are used.** The links that draw a skeleton name a target:
 
 - The site bar's links, and their copies in the account menu, use
-  `siteLinkTarget` (`src/components/AppShell/site-target.ts`): the `main`
-  region, `cards` for `/compendium` and `page` otherwise.
+  `siteLinkTarget(base, href)` (`src/components/AppShell/site-target.ts`): the
+  `main` region, each in the frame its page sits in. `/compendium` is cards
+  under a title and a filter in the wide column; `/coven` is a page in the
+  narrow column, or, when the link goes straight to a lone coven's home
+  (`href` differs from `base`), a page with its contents menu; `/admin` is a
+  wide page. The account links are a page with the jump menu.
 - The admin navigation, and the `Admin` lead in the admin context row, use
   `adminTarget` (`src/components/AdminNav/target.ts`), the `admin` region, so
   the row and its nav stay while the page changes: `page` for `/admin`, `cards` for `/admin/compendium`, and `table` for the
   rest.
 - The coven's section links (each carries a `target` in `SectionNav`'s props)
-  and the Contents on the coven home name a `coven` target whose shape is
-  `covenSectionShape` of the section's address.
+  and the Contents on the coven home name the `coven` target `covenTarget` gives for the section's address.
 - A pager or filter in a `ListFrame`, a tab, and the route modal's
   provider navigate through the hook directly; they keep their own
   skeletons.
 
 **What `MainBody` replaces.** `MainBody` (`src/components/AppShell/main-body.tsx`)
 answers a `main` target by replacing everything inside `#main` with one
-`<main className="page-frame">` holding the skeleton, so the page frame is
-replaced as well as the page's content. A navigation with no target, such as a
+`<main>` holding the skeleton, so the page frame is replaced as well as the
+page's content. The `<main>` takes the frame the target names, top-aligned
+and never centred in the window: `wide` and `with-nav` use `page-column`,
+`narrow` uses `page-frame page-frame--narrow`, and no frame the standard
+`page-frame`. A narrow `form` sits on a `panel`, as the real form does.
+`with-nav` also draws the side menu column beside a `page`, and `tabs` draws
+the tab track in the heading row. A navigation with no target, such as a
 refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBody`'s.
 
 **The dot inside a `PendingLink`.** `LinkHint` reads Next's `useLinkStatus`,

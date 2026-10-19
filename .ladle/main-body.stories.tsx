@@ -12,14 +12,55 @@ export default {
   title: 'Feedback / Loading / Main Body',
 };
 
+// One link per destination frame, each named for the frame its wait is drawn in.
 const Page = (): ReactElement => (
   <main className="page-frame">
     <h1>Your Account</h1>
-    <p>
-      <PendingLink href="/compendium" navigationTarget={{ region: 'main', shape: 'page' }}>
-        Compendium
-      </PendingLink>
-    </p>
+    <ul>
+      <li>
+        <PendingLink href="/compendium" navigationTarget={{ region: 'main', shape: 'page' }}>
+          Compendium
+        </PendingLink>
+      </li>
+      <li>
+        <PendingLink
+          href="/compendium"
+          navigationTarget={{
+            region: 'main',
+            shape: 'cards',
+            frame: 'wide',
+            title: true,
+            filter: true,
+          }}
+        >
+          Wide
+        </PendingLink>
+      </li>
+      <li>
+        <PendingLink
+          href="/coven"
+          navigationTarget={{ region: 'main', shape: 'page', frame: 'narrow' }}
+        >
+          Narrow
+        </PendingLink>
+      </li>
+      <li>
+        <PendingLink
+          href="/account"
+          navigationTarget={{ region: 'main', shape: 'page', frame: 'with-nav' }}
+        >
+          With Menu
+        </PendingLink>
+      </li>
+      <li>
+        <PendingLink
+          href="/coven/new"
+          navigationTarget={{ region: 'main', shape: 'form', frame: 'narrow' }}
+        >
+          Form
+        </PendingLink>
+      </li>
+    </ul>
   </main>
 );
 
@@ -36,6 +77,42 @@ export const AtRest: Story = () => (
 // the skeleton stands in a `main` of its own, under the page bar.
 export const LoadingPage: Story = () => (
   <Navigating bar press="Compendium">
+    <ShellFrame area="none">
+      <Page />
+    </ShellFrame>
+  </Navigating>
+);
+
+// The wait is drawn in the destination's own frame, top-aligned, never
+// centred down the window: the wide column of the Compendium's cards, the forms'
+// column of the coven index, the account's jump menu beside its sections, and
+// Create Coven's form on its panel.
+export const LoadingWide: Story = () => (
+  <Navigating bar press="Wide">
+    <ShellFrame area="none">
+      <Page />
+    </ShellFrame>
+  </Navigating>
+);
+
+export const LoadingNarrow: Story = () => (
+  <Navigating bar press="Narrow">
+    <ShellFrame area="none">
+      <Page />
+    </ShellFrame>
+  </Navigating>
+);
+
+export const LoadingWithMenu: Story = () => (
+  <Navigating bar press="With Menu">
+    <ShellFrame area="none">
+      <Page />
+    </ShellFrame>
+  </Navigating>
+);
+
+export const LoadingForm: Story = () => (
+  <Navigating bar press="Form">
     <ShellFrame area="none">
       <Page />
     </ShellFrame>

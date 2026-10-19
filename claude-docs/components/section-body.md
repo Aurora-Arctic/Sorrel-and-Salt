@@ -22,7 +22,7 @@ section's page.
 - **At rest, or while a navigation aimed at another region or at no region
   is on its way, it renders the children as they were.**
 - **While a navigation aimed at its own region is on its way, the page is
-  taken away at once** and `<Skeleton shape={target.shape} />` stands in its place,
+  taken away at once** and `<Skeleton>` of the target's shape, with its `title`, `action` and `filter` parts, stands in its place,
   with no dimming. Nobody can act on the wrong coven's data in the wait. The
   shape is the destination's. In the coven it is the section's (`cards` for
   Ingredients, `table` for the people pages, `page` for the home), worked out
@@ -54,4 +54,4 @@ switcher to mount, which focuses its box. See `workspace-switcher.md`.
 
 ## Stories
 
-`Shell / Section Body`: `AtRest`.
+`Shell / Section Body`: `AtRest`, `LoadingList`, `LoadingTabs` and `LoadingWithMenu`. The loading stories draw the wait with a title and filter, with the tab row, and with the contents menu.

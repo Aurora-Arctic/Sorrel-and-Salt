@@ -44,6 +44,8 @@ function renderBody() {
       <Go name="Leave" target={{ region: 'main', shape: 'page' }} />
       <Go name="Admin" target={{ region: 'admin', shape: 'table' }} />
       <Go name="Filter" />
+      <Go name="Home" target={{ region: 'coven', shape: 'page', frame: 'with-nav' }} />
+      <Go name="People" target={{ region: 'coven', shape: 'table', title: true, tabs: true }} />
       <SectionBody region="coven" className="coven-layout">
         <main>
           <ul aria-label="Ingredients">
@@ -95,6 +97,20 @@ describe('SectionBody', () => {
 
     expect(oldPage()).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  // The destination's own parts are drawn: a home's contents menu, a tabbed page's tab row.
+  it('draws the side menu for a page that has one', async () => {
+    const { container } = renderBody();
+    await press('Home');
+    expect(container.querySelector('.skeleton__menu')).not.toBeNull();
+  });
+
+  it('draws the tab row for a tabbed page, and no menu', async () => {
+    const { container } = renderBody();
+    await press('People');
+    expect(container.querySelector('.skeleton__tabs')).not.toBeNull();
+    expect(container.querySelector('.skeleton__menu')).toBeNull();
   });
 
   // Admin: another section's, whose own body answers it.

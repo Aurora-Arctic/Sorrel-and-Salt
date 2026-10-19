@@ -8,6 +8,14 @@ export interface SkeletonProps {
   shape: SkeletonShape;
   /** Whether a `table` or `cards` skeleton draws a filter row above the list. */
   filter?: boolean;
+  /** Whether a `table` or `cards` skeleton draws the page's heading row above everything else. */
+  title?: boolean;
+  /** With `title`: a button-sized block at the heading's end, for a page with an Add. */
+  action?: boolean;
+  /** With `title`: a tab track between the heading and the action, for a tabbed page. */
+  tabs?: boolean;
+  /** A `page` skeleton draws a side menu beside its heading and blocks, for a page with a jump or contents menu. */
+  menu?: boolean;
   /** How many rows, cards, fields or blocks it draws; each shape has its own default. */
   count?: number;
 }

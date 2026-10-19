@@ -1,5 +1,6 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { NavigationTarget } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -12,10 +13,7 @@ const { default: MainBody } = await import('@/components/AppShell/main-body');
 // way to one status inside a main landmark; any other navigation leaves it.
 
 let arrive = () => {};
-let go: (target?: {
-  region: 'coven' | 'admin' | 'main';
-  shape: 'page' | 'table';
-}) => void = () => {};
+let go: (target?: NavigationTarget) => void = () => {};
 
 function Starter() {
   const { navigate } = usePendingNavigation();
@@ -76,5 +74,48 @@ describe('MainBody', () => {
     await act(async () => go({ region: 'main', shape: 'page' }));
     await act(async () => arrive());
     expect(await screen.findByText('The old page')).toBeTruthy();
+  });
+
+  // The wait is drawn in the destination's own frame, never centred down the window.
+  describe('frames', () => {
+    const frameOf = async (target: NavigationTarget) => {
+      renderBody();
+      await act(async () => go(target));
+      return screen.getByRole('main');
+    };
+
+    it('draws a wide destination in the page column', async () => {
+      const main = await frameOf({ region: 'main', shape: 'cards', frame: 'wide' });
+      expect(main).toHaveClass('page-column');
+      expect(main).not.toHaveClass('page-frame');
+    });
+
+    it('draws a narrow destination in the forms\x27 column', async () => {
+      const main = await frameOf({ region: 'main', shape: 'page', frame: 'narrow' });
+      expect(main).toHaveClass('page-frame', 'page-frame--narrow');
+    });
+
+    it('draws a menu page in the page column with its side menu', async () => {
+      const main = await frameOf({ region: 'main', shape: 'page', frame: 'with-nav' });
+      expect(main).toHaveClass('page-column');
+      expect(main.querySelector('.skeleton__menu')).not.toBeNull();
+    });
+
+    it('keeps the standard frame for a target that names none', async () => {
+      const main = await frameOf({ region: 'main', shape: 'page' });
+      expect(main).toHaveClass('page-frame');
+      expect(main).not.toHaveClass('page-frame--narrow');
+    });
+
+    it('puts a narrow form on the panel the form sits on', async () => {
+      const main = await frameOf({ region: 'main', shape: 'form', frame: 'narrow' });
+      expect(main.querySelector('.panel .skeleton')).not.toBeNull();
+    });
+
+    it('keeps the landmark, the hidden heading and the one status', async () => {
+      const main = await frameOf({ region: 'main', shape: 'page', frame: 'wide' });
+      expect(within(main).getByRole('heading', { level: 1 })).toBeTruthy();
+      expect(screen.getAllByRole('status')).toHaveLength(1);
+    });
   });
 });

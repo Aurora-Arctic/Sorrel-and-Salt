@@ -25,7 +25,7 @@ A section is `{ label, href, icon, exact?, matches?, apart? }`:
   Groups tab's address).
 - `target` says what the page draws while it is on its way: a region and a
   shape (M12.33), handed on to each link as its `navigationTarget`. The
-  wrappers set it: the coven's sections with `covenSectionShape`, the admin's
+  wrappers set it: the coven's sections with `covenTarget`, the admin's
   with `adminTarget`. See [`loading.md`](../loading.md), "Where the pieces are
   used".
 - `apart` starts a new group: the row draws a hairline before it and the More

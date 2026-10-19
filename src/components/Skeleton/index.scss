@@ -17,6 +17,15 @@
   @include arrived($motion-short);
 }
 
+// A `main` wait in the standard or the forms' frame (MainBody): the frame's
+// centring and window-tall minimum are for a page that fills the window, and a
+// placeholder is drawn from the top. Outranks the primitives' frame rules,
+// the context row's `:has()` one included.
+.app-shell__main main.page-frame.skeleton-frame {
+  justify-content: flex-start;
+  min-height: 0;
+}
+
 // The filter row, the table and the pager, spaced as the panel spaces a list.
 .skeleton__shapes {
   @include stack;
@@ -25,6 +34,38 @@
 // Every shape: a rounded bar, the shimmer passing across it.
 .skeleton__shapes span {
   @include skeleton-shape;
+}
+
+// A list page's heading row, laid out by `.page-header` as the page lays its
+// own: the heading bar, and where the page has an Add a button-sized block at
+// the end (the title bar is the page shape's). `.page-header` brings every
+// child but the h1 down 0.25rem for a button; the heading bar sits level.
+.skeleton__header > .skeleton__title {
+  top: 0;
+}
+
+.skeleton__shapes .skeleton__action {
+  width: 8rem;
+  height: $control-height;
+}
+
+// A tabbed page's heading row: the tab track follows the heading, as
+// `.tabbed-page` lays it, and the action is pushed to the end. The track is
+// the pill height of TabbedPage's own, cancelling the header's nudge as its
+// track does.
+.skeleton__header:has(> .skeleton__tabs) {
+  justify-content: flex-start;
+
+  > .skeleton__action {
+    margin-inline-start: auto;
+  }
+}
+
+.skeleton__shapes .skeleton__tabs {
+  top: 0;
+  width: 11rem;
+  height: 2.25rem;
+  border-radius: radius('pill');
 }
 
 // The filter row: the search box and a narrower select, a control's height
@@ -214,6 +255,45 @@
 
 .skeleton__blocks {
   @include stack;
+}
+
+.skeleton__plain,
+.skeleton__with-menu {
+  @include stack;
+}
+
+// A page with a side menu (the account's jump menu, the coven home's
+// contents): the page's own pair of columns, the menu's beside the heading,
+// lede and blocks, when the skeleton is wide enough for both, as
+// `.page-with-nav` lays them. Narrower, they stack in the reading order.
+.skeleton__menu {
+  @include stack(3);
+
+  padding: space(3) 0;
+
+  > span {
+    width: 80%;
+    height: 1.25rem;
+  }
+}
+
+@container skeleton (min-width: #{calc($narrow-column + space(8) * 3 + space(6))}) {
+  .skeleton__with-menu {
+    display: grid;
+    grid-template-columns: calc(#{space(8)} * 3) minmax(0, $narrow-column);
+    place-content: start center;
+    gap: space(5) space(6);
+  }
+
+  .skeleton__with-menu > :not(.skeleton__menu) {
+    grid-column: 2;
+  }
+
+  .skeleton__with-menu > .skeleton__menu {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    align-self: start;
+  }
 }
 
 .skeleton__block {

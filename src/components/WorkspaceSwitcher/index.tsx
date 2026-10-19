@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { type ReactElement, useEffect, useId, useRef, useState } from 'react';
-import { NEW_COVEN_PATH, covenSectionShape, covenSlugOf, pathInCoven } from '../../lib/coven-path';
+import { NEW_COVEN_PATH, covenTarget, covenSlugOf, pathInCoven } from '../../lib/coven-path';
 import { usePendingNavigation } from '../../lib/navigation';
 import type { NavigationTarget } from '../../lib/navigation';
 import { ComboboxSelect } from '../Combobox';
@@ -23,8 +23,8 @@ import './index.scss';
 const CREATE = { value: NEW_COVEN_PATH, label: 'Create Coven', create: true };
 
 function targetOf(path: string): NavigationTarget {
-  if (path === NEW_COVEN_PATH) return { region: 'main', shape: 'form' };
-  return { region: 'coven', shape: covenSectionShape(path) };
+  if (path === NEW_COVEN_PATH) return { region: 'main', shape: 'form', frame: 'narrow' };
+  return covenTarget(path);
 }
 
 // Set when a switch to another coven starts, read once by the next switcher to

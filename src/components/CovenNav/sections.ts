@@ -1,5 +1,5 @@
 import type { Route } from 'next';
-import { covenSectionShape } from '../../lib/coven-path';
+import { covenTarget } from '../../lib/coven-path';
 import type { SectionNavItem } from '../SectionNav/types';
 
 // `Route<T>` checks a dynamic address against the built routes only when `T`
@@ -22,8 +22,8 @@ const route = <T extends string>(href: Route<T>): Route => href as Route;
 export const covenSections = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] =>
   sectionsOf(slug, canReadMembers).map((section) => ({
     ...section,
-    // The coven's body draws the wait (M12.33), in the shape of the page it is going to.
-    target: { region: 'coven', shape: covenSectionShape(section.href) } as const,
+    // The coven's body draws the wait (M12.33), as the page it is going to.
+    target: covenTarget(section.href),
   }));
 
 const sectionsOf = (slug: string, canReadMembers: boolean): readonly SectionNavItem[] => [
