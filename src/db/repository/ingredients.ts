@@ -337,6 +337,27 @@ export async function findWorkspaceIngredientPage(
 }
 
 /**
+ * How many rows a coven's ingredient list holds under `filter`, and how many
+ * of them come before `start` in its pages' order: the twin of
+ * `findCompendiumCount` over the same arms and the coven's scope, so the
+ * count and the page cannot disagree (M9.6).
+ */
+export function findWorkspaceIngredientCount(
+  membership: Membership,
+  filter: IngredientFilter,
+  start: Cursor | undefined,
+): Promise<PageCount> {
+  const list = compendiumList(filter, membership);
+  return findPageCountInTiers(
+    [membership],
+    ingredients,
+    list.order,
+    start,
+    and(list.arms, workspaceListScope(membership, filter)),
+  );
+}
+
+/**
  * Which readable rows a coven's ingredient list holds (M9.4, M12.18): its
  * own, and the compendium entries a live cupboard row of its names, one keyed
  * `EXISTS` on the row's `(workspace_id, ingredient_id)` unique. A jar does

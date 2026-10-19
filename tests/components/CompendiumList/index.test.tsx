@@ -3,6 +3,8 @@ import { type ReactElement, useState } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClientProvider } from '@tanstack/react-query';
 import CompendiumListBase from '@/components/CompendiumList';
+import IngredientSearch from '@/components/IngredientSearch';
+import AudienceFilter from '@/components/CompendiumList/filter';
 import FormIcon from '@/components/FormIcon';
 import { compendiumHref } from '@/components/CompendiumList/href';
 import type {
@@ -405,6 +407,34 @@ describe('CompendiumList filter', () => {
       },
     }));
   beforeEach(() => answerCounts(0));
+
+  it('draws no Compact switch in the admin list', () => {
+    render(<CompendiumList {...props()} />);
+    expect(screen.queryByRole('switch', { name: 'Compact' })).toBeNull();
+  });
+
+  it('draws no Compact switch in the public list', () => {
+    const { filter, facets, categories, vocabulary, total } = props();
+    render(
+      <QueryClientProvider client={client}>
+        <IngredientSearch
+          search={
+            <AudienceFilter
+              audience="public"
+              filter={filter}
+              facets={facets}
+              categories={categories}
+              vocabulary={vocabulary}
+              total={total}
+            />
+          }
+        >
+          {null}
+        </IngredientSearch>
+      </QueryClientProvider>,
+    );
+    expect(screen.queryByRole('switch', { name: 'Compact' })).toBeNull();
+  });
 
   it('counts the chosen values on the Filters button, not the name typed', () => {
     const { rerender } = render(

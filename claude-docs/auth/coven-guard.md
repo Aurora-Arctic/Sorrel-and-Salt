@@ -72,14 +72,13 @@ Ingredients by M9.6 and Grimoire by M10.11.
 
 | Section           | Shown to                                   | Holds                                                       |
 | ----------------- | ------------------------------------------ | ----------------------------------------------------------- |
-| Contents          | Roles that can reach a page it lists       | A link to each such page, with a line saying what it is for |
+| Contents          | Every role                                 | A link to each such page, with a line saying what it is for |
 | Your Membership   | Every role                                 | Leave Coven (M6.15; M6.16's guided exit for the only owner) |
 | Delete This Coven | Roles holding `workspace: delete` (owners) | Delete Coven (M6.14's confirmation), under one sentence     |
 
 Contents lists a page only if the caller can open it, so a link is never a
-404: today that is Members, for roles holding `member: read`. A viewer has none
-and so no Contents section and no menu entry for it, until the ingredients and
-grimoire pages (MB.121) give every role something to open. One `ActionFailure`
+404: Ingredients (M9.6) for every role, viewers included, and Members for roles holding
+`member: read`. One `ActionFailure`
 wraps the two buttons' sections, so a refusal is said once above them. Leave
 and Delete are in sections of their own so the button that ends a seat is never
 beside the one that ends a coven.

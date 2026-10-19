@@ -43,6 +43,7 @@ export {
   findSimilarIngredients,
   findSubstitutesIncludingSoftDeleted,
   findWorkspaceIngredientByIdentity,
+  findWorkspaceIngredientCount,
   findWorkspaceIngredientPage,
 } from './ingredients';
 export { findCompendiumFacets, findWorkspaceIngredientFacets } from './ingredient-facets';

@@ -395,3 +395,16 @@ test("the dot between a card's forms is level with the forms' icons", async ({ p
   });
   expect(Math.abs(dot - icon)).toBeLessThanOrEqual(1);
 });
+
+test("a click on a card's forms line opens its entry", async ({ page }) => {
+  await page.goto('/compendium');
+  // The forms line is the card’s last paragraph, after the formal name’s.
+  const card = cardsOf(page).first();
+  const href = await card.locator('a[href^="/compendium/ingredients/"]').getAttribute('href');
+  const forms = card.getByRole('article').getByRole('paragraph').last();
+  await expect(forms).toBeVisible();
+  // Forced: the line lets the pointer through, so Playwright’s own hit test would wait on it
+  // for ever. The click is still a real mouse press at the line’s centre.
+  await forms.click({ force: true });
+  await expect(page).toHaveURL(new RegExp(`${href}$`));
+});

@@ -42,6 +42,26 @@ describe('CovenNav', () => {
     expect(index).not.toHaveAttribute('aria-current');
   });
 
+  it.each([true, false])('links the ingredients page, with canReadMembers %s', (canReadMembers) => {
+    render(<CovenNav slug={SLUG} canReadMembers={canReadMembers} />);
+    expect(within(nav()).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
+      'href',
+      `/coven/${SLUG}/ingredients`,
+    );
+  });
+
+  it('marks ingredients current on a page beneath it, and the index not', () => {
+    pathname.mockReturnValue(`/coven/${SLUG}/ingredients/some-id`);
+    render(<CovenNav slug={SLUG} canReadMembers />);
+    expect(within(nav()).getByRole('link', { name: 'Ingredients' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(within(nav()).getByRole('link', { name: 'Overview' })).not.toHaveAttribute(
+      'aria-current',
+    );
+  });
+
   it('links the members page for a caller who may read members', () => {
     render(<CovenNav slug={SLUG} canReadMembers />);
     expect(within(nav()).getByRole('link', { name: 'Members' })).toHaveAttribute(

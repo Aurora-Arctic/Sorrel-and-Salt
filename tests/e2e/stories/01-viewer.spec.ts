@@ -4,6 +4,7 @@ import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
 import { signInAgainAs } from '../session';
 import {
+  cardsIn,
   compendiumVariant,
   editedAt,
   graphqlFromPage,
@@ -104,7 +105,7 @@ test.fixme(
       // pages offer a member their writes, so their absence is the role's.
       await signInAgainAs(page, B);
       await page.goto(ingredientsPath);
-      await expect(ingredientList(page).getByRole('listitem')).toHaveCount(2);
+      await expect(cardsIn(ingredientList(page))).toHaveCount(2);
       await expect(rowOf(ingredientList(page), 'Testwort')).toBeVisible();
       await expect(rowOf(ingredientList(page), 'Rosemary')).toBeVisible();
       await expect(writeControls(page).first()).toBeVisible();
@@ -123,7 +124,7 @@ test.fixme(
 
       const ingredients = await page.goto(ingredientsPath);
       expect(ingredients?.status()).toBe(200);
-      await expect(ingredientList(page).getByRole('listitem')).toHaveCount(2);
+      await expect(cardsIn(ingredientList(page))).toHaveCount(2);
       await expect(rowOf(ingredientList(page), 'Testwort')).toBeVisible();
       await expect(rowOf(ingredientList(page), 'Rosemary')).toBeVisible();
       await expect(writeControls(page)).toHaveCount(0);

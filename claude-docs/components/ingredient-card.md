@@ -32,7 +32,7 @@ The card owns layout and nothing else. Each treatment is used as it is and never
 restyled here:
 
 - the name, an `h2` holding the card's **one link**, so the card is reached by
-  keyboard through it alone;
+  keyboard through it alone. The link ends with a `LinkHint` ([`link-hint.md`](link-hint.md)), a dot that pulses while the entry page loads: the entry pages cannot have a route `loading.tsx`, so the click needs its own sign that it took. The dot is `aria-hidden`, so the link is still named by the label alone;
 - the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the category chips, the forms line (a `FormIcon` before each form, a dot between: "Herb · Oil"; it tells two entries sharing a label apart), and the jar lines;
 - the marks, through `EntryMarks`, then `CautionMark`, then `ToxicMark` last, in `.specimen__badges`;
 - no caution block: the notes live on the entry page, and the card carries only the Caution badge, a word with no tip, so Toxic stays the one solid badge;
@@ -65,9 +65,9 @@ The owner asked for smaller type, about half way to the compact look, with the s
 
 ### Compact
 
-The same card in a tighter look, for a long list. It is not a prop. The look must be switchable before React runs (M9.6 stores the choice and a script sets an attribute before the first paint), and a prop fixes the look at render, which would then disagree with the server's markup on hydration. So the look is a Sass mixin, `ingredient-card-compact` (`_compact.scss`), applied in `index.scss` under `[data-density='compact']`: it applies wherever an ancestor carries that attribute. `IngredientCardList` sets it from its `density` prop; a card on its own is wrapped in an element that carries it (stories `Compact`, `Compact Long Name`).
+The same card in a tighter look, for a long list. It is not a prop. The look must be switchable before React runs (M9.6 stores the choice and a script sets an attribute before the first paint), and a prop fixes the look at render, which would then disagree with the server's markup on hydration. So the look is a Sass mixin, `ingredient-card-compact` (`_compact.scss`), applied in `index.scss` under `[data-density='compact']:not(:root[data-card-density='regular'] *)`: it applies wherever an ancestor carries the first attribute, unless `<html>` carries `data-card-density="regular"`, which the pre-paint script sets from the stored Compact choice (`card-density-switch.md`). `IngredientCardList` sets it from its `density` prop; a card on its own is wrapped in an element that carries it (stories `Compact`, `Compact Long Name`).
 
-What it changes: card padding `space(3) space(4)`, the card's gap `space(2)`, the name `heading-size(4)`, the formal name, chips and badges at overline, badges at the `small` size, tighter gaps between and inside the chips, the forms line at `small` with a `space(4)` dot gap, and `space(2)` above the foot and the jar lines. What it keeps: the content, the order, the hover lift, and every target at 24px or more. Each rule is one class deeper than the rule it overrides, which is how it wins. The regular card is used by the compendium (M8.18); the Ingredients page (M9.6) defaults to compact. M8.14 makes compact a real option and builds no switch.
+What it changes: card padding `space(3) space(4)`, the card's gap `space(2)`, the name `heading-size(4)`, the formal name, chips and badges at overline, badges at the `small` size, tighter gaps between and inside the chips, the forms line at `small` with a `space(4)` dot gap, and `space(2)` above the foot and the jar lines. What it keeps: the content, the order, the hover lift, and every target at 24px or more. Each rule is one class deeper than the rule it overrides, which is how it wins. The regular card is used by the compendium (M8.18); the Ingredients page (M9.6) defaults to compact, with the Compact switch ([`card-density-switch.md`](card-density-switch.md)) to turn it off.
 
 ### Jar-section spacing
 
@@ -86,7 +86,7 @@ is not wrapped in an `<a>`: a screen reader would read the whole card as the
 link's name, and a link cannot hold the Low badge's button. So the accessible name
 stays the ingredient's name and the card has exactly one link. The Low badge's tip
 anchor sits above the overlay (`z-index: 1`) and keeps its own hover, focus and
-click. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
+click. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines need no such rule: nothing in them is positioned above the overlay but the badge. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
 pointer, and the focus ring is drawn on the overlay,
 round the card. Under the pointer, or with focus inside it, the card lightens
 (`$surface-card-hover`: a step lighter in dark, brighter in light) and rises 2px
@@ -115,7 +115,7 @@ the `(name, id)` keyset the list pages on
 
 Hyphenation is the browser's dictionary alone (owner's ruling, 2026-10-18): `hyphens: auto` with `overflow-wrap: anywhere` as the fallback where the dictionary has no word. No library and no soft hyphens.
 
-Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture, so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
+Foundations (`.ladle/foundations.tsx`, "An Ingredient Card") renders this component itself, from invented sample data and the shared `Jars` story fixture (which draws [`JarLines`](jar-lines.md)), so its look cannot drift from the card's. The `.specimen*` classes are still the card's styling source, in `_primitives.scss`.
 
 ## Accessibility
 

@@ -95,6 +95,14 @@ in the filter slot to carry.
   show; once anything is typed it says "Keep typing to search" instead, at once
   and announced by the status region, so one character is not met by silence
   (the owner, 2026-10-16). It is a message rather than a label, so sentence case.
+- **Given a `workspaceId`, the type-ahead suggests from the cupboard, not the
+  compendium.** `IngredientSearchForm` and the box take it as an optional prop
+  (M9.6). The box then asks `workspaceIngredients(workspaceId:, query:, first: 25)`
+  (the `IngredientSearchCupboardMatches` document) and never the compendium
+  query; without it, the reverse. Both answers become the same
+  `IngredientSearchMatch`, and where the coven's cupboard entry sets a label
+  (`cupboardEntry(workspaceId:)`), the label is the row's name. Everything
+  else about the box, the floor, the 25 rows and See all results., is the same.
 - **The dropdown shows at most 25 rows, the first page, in the server's
   order.** It never asks for a second. When there is another page, a last row, See all results., ends the
   listbox and applies the debounced text to the list. It is selectable like
@@ -110,7 +118,7 @@ in the filter slot to carry.
   through the list frame's transition, which would grey the list and swap it
   for a skeleton. The heading is opt-in so a consumer whose pick is a page
   (M8.18) does not show a loading modal.
-- **The source is the compendium only.** M9.6 adds the workspace source.
+- **The source is the compendium, or the coven’s cupboard.** Given a `workspaceId` the box reads the cupboard (above); the coven Ingredients page does so.
 
 ## The parameter table
 
@@ -271,7 +279,7 @@ true. Types are in `types.ts` (`SearchSentenceFilter`, `SearchSentenceFragment`)
 It leads with the count (`No ingredients`, `1 ingredient`, `3 ingredients`; `noun`
 swaps the pair), then one clause per kind, always in this order whatever order
 the address holds them: text query, categories, forms, deities, zodiac, planets,
-elements, toxic, then the admin-only nomenclature and No Refs. Clauses are
+elements, toxic, then a coven list's source, in stock and low stock (M9.6), then the admin-only nomenclature and No Refs. Clauses are
 separated by a comma. An example with every kind:
 
 > 3 ingredients, matching “rue”, in the Protection and Healing categories, in the
@@ -287,6 +295,13 @@ separated by a comma. An example with every kind:
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
   planets, which belongs to the linked value ("the Sun").
 - **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
+- **Source, In Stock and Low Stock Only** belong to a coven's list and are named
+  whenever the filter holds them. `source` (`local` or `compendium`) reads "from
+  the Local source" or "from the Compendium source"; `inStock` reads "in stock";
+  `lowStockOnly` reads "low or out of stock", the two badges it keeps. A false flag
+  or a null source says nothing. Their fragments carry the facets `source`,
+  `inStock` and `lowStockOnly` (`value` `true` for the two flags), so the component's
+  link away drops just that one. The coven's list passes `noun` as it likes.
 - **Nomenclature, No Refs and No Form** ("without forms") are named only when `admin` is true; otherwise
   they are ignored and do not count as a chosen filter.
 - **A value with no label** is named by its raw value, so a stale link still reads.
