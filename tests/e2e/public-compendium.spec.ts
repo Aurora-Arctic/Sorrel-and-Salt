@@ -141,8 +141,8 @@ test('a filtered view is noindex with the unfiltered page as its canonical addre
 
   expect(filtered).toMatch(/<meta name="robots" content="noindex/);
   expect(filtered).toMatch(/<link rel="canonical" href="[^"]*\/compendium"/);
-  // Without a filter the page asks nothing of the sort.
-  expect(plain).not.toContain('rel="canonical"');
+  // Without a filter the page is indexable, and names the same address as its canonical.
+  expect(plain).toMatch(/<link rel="canonical" href="[^"?]*\/compendium"/);
   expect(plain).not.toMatch(/<meta name="robots" content="noindex/);
 });
 
