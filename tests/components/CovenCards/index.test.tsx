@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import type { ReactElement } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -161,7 +162,7 @@ describe('CovenCards', () => {
     render(
       <Cards
         {...props({
-          previousHref: '/coven/fixture-coven/ingredients?before=a',
+          previousHref: '/coven/fixture-coven/ingredients?before=a' as Route,
           position: { page: 2, pages: 2 },
         })}
       />,
