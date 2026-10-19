@@ -305,14 +305,38 @@
   margin-block: calc((type-size('overline') * 1.65 - type-size('overline')) / 2);
 }
 
+// An ingredient's head as the page sets it (.ingredient-entry__head): the same
+// padding above and the same gap between its rows, so the title lands where
+// the real one does.
+.skeleton__intro--entry {
+  @include stack(3);
+
+  padding-block-start: space(4);
+}
+
+// Under the title the real head holds one row of badges, as tall as a tip's
+// button, not a lede of two lines.
+.skeleton__intro--entry > .skeleton__lede {
+  padding-block: calc((#{$icon-size} - 1rem) / 2);
+}
+
 // The way back an ingredient's page shows above its heading (both the
 // Compendium's and a coven's always do): a short bar in the line of its small
-// text, then the room the real row's bottom margin adds to the head's gap.
+// text (1.3, as the real row's line), lifted by the head's padding as the real
+// row is, then the room that row's bottom margin adds to the head's gap.
 .skeleton__shapes .skeleton__entry-bar {
+  position: relative;
+  top: calc(-1 * #{space(4)});
   width: 12%;
   height: type-size('small');
-  margin-block: calc((type-size('small') * 1.65 - type-size('small')) / 2)
-    calc(space(3) + (type-size('small') * 1.65 - type-size('small')) / 2);
+  margin-block: calc((type-size('small') * 1.3 - type-size('small')) / 2)
+    calc(space(3) + (type-size('small') * 1.3 - type-size('small')) / 2);
+}
+
+// The formal name's eyebrow sits in a line as tall as the tip's button beside
+// it (`$icon-size`), which is what sets the real row's height.
+.skeleton__shapes .skeleton__intro--entry > .skeleton__eyebrow {
+  margin-block: calc((#{$icon-size} - type-size('overline')) / 2);
 }
 
 // A page with a side menu (the account's jump menu, the coven home's

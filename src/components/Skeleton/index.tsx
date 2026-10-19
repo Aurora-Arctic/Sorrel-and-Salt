@@ -44,14 +44,22 @@ const PageHead = ({
   loose?: boolean;
   back?: boolean;
 }): ReactElement => (
-  <div className={loose ? 'skeleton__intro skeleton__intro--loose' : 'skeleton__intro'}>
+  <div
+    className={
+      loose
+        ? 'skeleton__intro skeleton__intro--loose'
+        : back
+          ? 'skeleton__intro skeleton__intro--entry'
+          : 'skeleton__intro'
+    }
+  >
     {back && <span className="skeleton__entry-bar" />}
     {head === 'eyebrow' && <span className="skeleton__eyebrow" />}
     <span className="skeleton__title" />
     {head !== 'title' && (
       <div className="skeleton__lede">
         <span />
-        <span />
+        {!back && <span />}
       </div>
     )}
   </div>

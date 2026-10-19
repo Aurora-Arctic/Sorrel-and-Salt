@@ -228,6 +228,18 @@ describe('Skeleton for an ingredient entry', () => {
     expect(intro?.firstElementChild).toBe(bar);
   });
 
+  // The real head has its own padding above and its own gap between rows, so
+  // the entry's wait takes the class that sets the same, or the title lands higher.
+  it("sets the entry's head with the entry's own head class", () => {
+    const { container } = render(<Skeleton shape="page" menu entry head="eyebrow" />);
+    expect(container.querySelector('.skeleton__intro--entry')).not.toBeNull();
+  });
+
+  it('keeps the plain head for a page that is not an entry', () => {
+    const { container } = render(<Skeleton shape="page" menu head="eyebrow" />);
+    expect(container.querySelector('.skeleton__intro--entry')).toBeNull();
+  });
+
   it('draws no bar for the way back on a page that is not an entry', () => {
     const { container } = render(<Skeleton shape="page" menu head="eyebrow" />);
     expect(container.querySelector('.skeleton__entry-bar')).toBeNull();
