@@ -40,6 +40,8 @@ vi.mock('@/modules/ingredients', () => ({
   isRetired,
   // The permission Make It Ours is offered on, as the service asserts it (M12.23).
   MAKE_IT_OURS_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
+  // The permission Link to the Compendium is offered on, as the service asserts it (M12.21).
+  CONVERT_PERMISSION: { ingredient: ['create', 'delete'], inventory: ['update'] },
   // The pure merge: no cupboard entry, nothing laid over.
   applyCupboardEntry: (entry: unknown) => entry,
   isAnnotated: () => false,
@@ -48,6 +50,12 @@ vi.mock('@/modules/ingredients', () => ({
 // The form is its own tests'; here only that the dialog holds one.
 vi.mock('@/components/IngredientForm', () => ({
   default: () => <form aria-label="Fixture Form" />,
+}));
+
+// Link to the Compendium's search is its own tests' (link-search.test.tsx);
+// here only that the page offers it, by the entry it names.
+vi.mock('@/components/IngredientEntry/link-search', () => ({
+  default: ({ localId }: { localId: string }) => <section aria-label={`Link ${localId}`} />,
 }));
 
 const entryValues = vi.fn();
@@ -95,6 +103,12 @@ const HELD_ROW = {
 };
 
 const dialog = () => screen.queryByRole('dialog', { name: /Edit Compendium Entry/ });
+const ownDialog = () => screen.queryByRole('dialog', { name: /Edit Ingredient/ });
+const asRole = (role: string) =>
+  requireCovenMembership.mockResolvedValue({
+    workspace: WORKSPACE,
+    membership: { workspaceId: WORKSPACE.id, userId: SESSION.userId, role },
+  });
 
 const open = async (
   row: ReturnType<typeof compendiumRow>,
@@ -204,11 +218,24 @@ describe('the coven ingredient page', () => {
     expect(entryValues).not.toHaveBeenCalled();
   });
 
-  it("gives the coven's own entry neither the public link nor Edit, even to a curator", async () => {
-    await open(covenRow(), true);
+  it("gives the coven's own entry no public link, and a member Edit on this very page with no dialog until asked", async () => {
+    await open(covenRow());
 
     expect(screen.getByText('Local')).toBeVisible();
     expect(screen.queryByRole('list', { name: 'In the Compendium' })).toBeNull();
+    const [edit] = edits();
+    const target = new URL(edit!.getAttribute('href')!, 'http://fixture.test');
+    expect(target.pathname).toBe(`/coven/${WORKSPACE.slug}/ingredients/${ID}`);
+    expect(target.searchParams.has('edit')).toBe(true);
+    expect(ownDialog()).not.toBeInTheDocument();
+    expect(entryValues).not.toHaveBeenCalled();
+  });
+
+  it("gives a viewer no Edit on the coven's own entry", async () => {
+    asRole('viewer');
+    await open(covenRow());
+
+    expect(screen.getByText('Local')).toBeVisible();
     expect(edits()).toHaveLength(0);
   });
 
@@ -267,10 +294,26 @@ describe('the coven ingredient page', () => {
     expect(screen.getByRole('dialog', { name: 'Annotate This Entry' })).toBeInTheDocument();
   });
 
-  it("opens no dialog on the coven's own entry, even for a curator who asks for one", async () => {
-    await open(covenRow(), true, { edit: '' });
+  it("opens the coven's edit dialog on its own entry for a member who asks with ?edit, reading the values as that member", async () => {
+    await open(covenRow(), false, { edit: '' });
 
+    expect(ownDialog()).toBeInTheDocument();
     expect(dialog()).not.toBeInTheDocument();
+    expect(entryValues).toHaveBeenCalledWith(expect.objectContaining({ id: ID }), SESSION);
+  });
+
+  it('offers Link to the Compendium beneath the form to a member whose role may convert', async () => {
+    await open(covenRow(), false, { edit: '' });
+
+    expect(within(ownDialog()!).getByRole('region', { name: `Link ${ID}` })).toBeInTheDocument();
+  });
+
+  it("opens no dialog on the coven's own entry, and reads nothing for it, for a viewer who asks for one", async () => {
+    // Why it could have opened: the same ask from a member opens it (above).
+    asRole('viewer');
+    await open(covenRow(), false, { edit: '' });
+
+    expect(ownDialog()).not.toBeInTheDocument();
     expect(entryValues).not.toHaveBeenCalled();
   });
 });

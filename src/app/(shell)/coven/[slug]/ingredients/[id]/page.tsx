@@ -15,6 +15,7 @@ import { rolePermits } from '@/modules/coven';
 import {
   applyCupboardEntry,
   compendiumMatchesOf,
+  CONVERT_PERMISSION,
   getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
@@ -123,14 +124,20 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
   // `cupboardEntry` reads live entries only.
   const held = entry.workspaceId === null && detail.cupboardEntry != null;
 
-  // A compendium entry offers Edit to a curator, opening the compendium's edit modal
-  // over this page (M8.19). A coven's own entry gets no Edit until M8.17's modal. The form's values are
-  // read only for a curator who asks for them with a bare `?edit`.
+  // Edit opens a dialog over this page from a bare `?edit`, and the form's
+  // values are read only when it is asked for. A compendium entry offers it
+  // to a curator, as the compendium's edit (M8.19); the coven's own entry to
+  // a member whose role may update it, as the coven's (M8.17), its values
+  // read as that member so the coven's proof is checked.
   const own = `/coven/${workspace.slug}/ingredients/${entry.id}` as Route;
-  const canEdit = inCompendium && viewer.canCurate;
+  const ingredientsHref = `/coven/${workspace.slug}/ingredients` as Route;
+  const isOwn = entry.workspaceId !== null;
+  const canEdit = isOwn
+    ? rolePermits(role, { ingredient: ['update'] })
+    : inCompendium && viewer.canCurate;
   const opened =
     canEdit && 'edit' in (await searchParams)
-      ? { id: entry.id, values: await entryValues(entry, null) }
+      ? { id: entry.id, values: await entryValues(entry, isOwn ? session : null) }
       : undefined;
 
   // Annotate opens its dialog from the address the same way, but only for a
@@ -150,20 +157,38 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
       <IngredientEntry
         detail={detail}
         hrefOf={hrefOf}
-        back={{ href: `/coven/${workspace.slug}/ingredients` as Route, label: 'Ingredients' }}
+        back={{ href: ingredientsHref, label: 'Ingredients' }}
         edit={
-          canEdit
+          canEdit && isOwn
             ? {
                 href: `${own}?edit` as Route,
                 closeHref: own,
-                // The coven has no ingredients list yet, and this entry is a
-                // compendium one, so a delete leaves to the compendium's.
-                deletedHref: '/compendium' as Route,
-                // The address names the entry's id, which a save leaves be.
-                savedHref: `${own}?edit` as Route,
+                // The coven's dialog has no Delete (M9.10's), so this is
+                // never reached; the list is where a gone entry would leave to.
+                deletedHref: ingredientsHref,
+                // A save closes the dialog back onto this page, whose address
+                // names the id a save leaves be.
+                savedHref: own,
                 opened,
+                coven: {
+                  workspaceId: workspace.id,
+                  ingredientsHref,
+                  mayPromote: rolePermits(role, { ingredient: ['update'] }),
+                  // Link to the Compendium, on the permission the conversion asserts.
+                  mayLink: rolePermits(role, CONVERT_PERMISSION),
+                },
               }
-            : undefined
+            : canEdit
+              ? {
+                  href: `${own}?edit` as Route,
+                  closeHref: own,
+                  // A compendium entry's delete leaves to the compendium's list.
+                  deletedHref: '/compendium' as Route,
+                  // The address names the entry's id, which a save leaves be.
+                  savedHref: `${own}?edit` as Route,
+                  opened,
+                }
+              : undefined
         }
         // The buttons a member's role permits over a compendium entry; the
         // services refuse the rest whatever is drawn (M12.17). A retired one
