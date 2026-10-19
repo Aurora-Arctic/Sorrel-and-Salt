@@ -1117,3 +1117,12 @@ export interface LinkedProvider {
   userId: string;
   providerId: string;
 }
+
+/** One live compendium entry's address, as the sitemap and `llms.txt` list it (MB.84). */
+export interface CompendiumSlugEntry {
+  slug: string;
+  name: string;
+  canonicalName: string | null;
+  /** When the entry last really changed: its `updated_at` (MB.106). */
+  lastModified: Date;
+}

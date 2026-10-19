@@ -4,7 +4,7 @@ import { retiredIngredientSlugs } from '../../modules/ingredients/schema/retired
 import { findOneIngredient } from './ingredients';
 import { inCompendium, notSoftDeleted } from './predicates';
 import { existsIn, selectFrom, selectOne } from './select';
-import type { IngredientRow, SlugRedirect } from './types';
+import type { CompendiumSlugEntry, IngredientRow, SlugRedirect } from './types';
 
 // A compendium entry's addresses (claude-docs/db/ingredient-slugs.md, "Ingredient slugs"): the
 // slug it holds, and the slugs it moved off, each redirecting to it until the
@@ -63,4 +63,25 @@ export async function findCompendiumSlugRedirect(
   // deleted in between answers nothing.
   const entry = await findOneIngredient([], latest.ingredientId);
   return entry && { entry, expiresAt: latest.expiresAt };
+}
+
+/**
+ * Every live compendium entry's address, by name: what the sitemap and
+ * `llms.txt` list. `lastModified` is the row's `updated_at`, which since MB.106
+ * moves only on a real change (claude-docs/db/updated-at.md). Soft-deleted
+ * entries and every coven's rows are left out here, in SQL.
+ */
+export async function findCompendiumSlugs(): Promise<CompendiumSlugEntry[]> {
+  const rows = await selectFrom(
+    ingredients,
+    and(inCompendium(ingredients), notSoftDeleted(ingredients)),
+  );
+  return rows
+    .map(({ slug, name, canonicalName, updatedAt }) => ({
+      slug,
+      name,
+      canonicalName,
+      lastModified: updatedAt,
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name) || a.slug.localeCompare(b.slug));
 }
