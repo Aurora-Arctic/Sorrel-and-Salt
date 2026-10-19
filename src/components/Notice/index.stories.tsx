@@ -23,17 +23,24 @@ export const QuietWarning: Story = () => (
   </Notice>
 );
 
+export const Caution: Story = () => (
+  <Notice kind="caution">
+    Testwort is out of stock, so this spell cannot be made from the cupboard as it stands.
+  </Notice>
+);
+
 export const Success: Story = () => <Notice kind="success">Your name was saved.</Notice>;
 
 export const Plain: Story = () => (
   <Notice kind="plain">Nothing has changed since you last saved.</Notice>
 );
 
-// All four at a phone's width, in each theme.
+// All five at a phone's width, in each theme.
 const AllKinds = () => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
     <Failure />
     <Warning />
+    <Caution />
     <Success />
     <Plain />
   </div>

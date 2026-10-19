@@ -1032,17 +1032,26 @@
     --notice-icon: #{$warning};
   }
 
+  // Caution: a quieter warning, for what is worth knowing but asks nothing
+  // of the reader. The bar and tint in the muted ink, the triangle still the
+  // ochre, the text in the body ink (the owner's call, 2026-10-19).
+  .notice--caution {
+    --notice-bar: #{$text-muted};
+    --notice-icon: #{$warning};
+  }
+
   // Success: bar and tint in the accent, the text in its hover shade, as
   // the error's is.
   .notice--success {
     color: $accent-hover;
   }
 
-  // The warning triangle before an error or a warning, the owner's call: in
+  // The warning triangle before an error, a warning or a caution, the owner's call: in
   // the notice's padding rather than in a flex row, so a link in the
   // notice's text stays inline. Drawn by mask in `--notice-icon`.
   .notice--error,
-  .notice--warn {
+  .notice--warn,
+  .notice--caution {
     position: relative;
     padding-inline-start: calc(#{space(3)} + 1.0125rem + #{space(2)});
 

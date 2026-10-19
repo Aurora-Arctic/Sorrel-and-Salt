@@ -198,13 +198,14 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
     // marks, so 3:1 against the ground and the tint; the text is text, so
     // 4.5:1 on the tint: the error's and the success's in the hover shade of
     // their own colour, over that colour's tint, and the body ink in the plain
-    // notice's accent and the warning's ochre (the owner's look, and the hover
+    // notice's accent, the warning's ochre and the caution's muted ink (the owner's look, and the hover
     // shades and the tint the owner's pick, 2026-10-19). The error's triangle
     // is drawn in its text colour, so its text row covers it.
     const tint = parseFloat(tokens['--notice-tint']) / 100;
     expect(tint).toBeGreaterThan(0);
     const warning = toHex(tokens['--warning'], theme);
     const ink = toHex(tokens['--text-primary'], theme);
+    const muted = toHex(tokens['--text-muted'], theme);
     const waxText = toHex(tokens['--secondary-hover'], theme);
     const accentText = toHex(tokens['--accent-hover'], theme);
     for (const [ground, under] of [
@@ -220,6 +221,14 @@ describe('MB.116, MB.115: the brand and text colours clear their floors on the p
       );
       row(`the plain notice's bar on the ${ground}`, accent, under, 3);
       row(`the error's bar on the ${ground}`, wax, under, 3);
+      row(`the caution's bar on the ${ground}`, muted, under, 3);
+      row(
+        `the caution's triangle on its tint on the ${ground}`,
+        warning,
+        mixed(muted, under, tint),
+        3,
+      );
+      row(`a caution's text on its tint on the ${ground}`, ink, mixed(muted, under, tint), 4.5);
       row(`a warning's text on its tint on the ${ground}`, ink, mixed(warning, under, tint), 4.5);
       row(
         `a plain notice's text on its tint on the ${ground}`,
