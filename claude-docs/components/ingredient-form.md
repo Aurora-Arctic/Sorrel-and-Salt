@@ -1382,6 +1382,15 @@ With a null `workspaceId` the form writes a compendium entry (M5.5), the
 site admin's, through the compendium mutations
 ([`graphql/schema.md`](../graphql/schema.md), "The compendium mutations").
 
+- **An edit says so above the form** (M8.17). Editing a compendium entry,
+  wherever the form opens (the admin Compendium, an entry's page, the public
+  search for a curator), the form draws a plain `Notice` above its fields
+  saying it edits the compendium, which every coven reads. An add carries
+  none, and nor does a coven's edit. The wording is a placeholder until the
+  owner words it: `COMPENDIUM_EDIT_NOTICE` in
+  `src/components/IngredientForm/compendium-notice.ts` is the one place it
+  lives.
+
 - **The classification is required.** `compendiumResolver` validates with
   `CompendiumIngredientInput`, whose `nomenclature` has no default, since
   every compendium entry declares one (DESIGN.md §5), and the select is
