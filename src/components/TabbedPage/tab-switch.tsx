@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { type ReactElement, createContext, useContext, useState, useTransition } from 'react';
-import SwapPanel from './swap-panel';
+import SwapPanel from '../Skeleton/swap-panel';
 import type {
   PageTab,
   TabActionProps,
