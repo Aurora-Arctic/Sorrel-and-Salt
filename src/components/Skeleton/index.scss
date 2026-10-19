@@ -17,6 +17,15 @@
   @include arrived($motion-short);
 }
 
+// A `main` wait in the standard or the forms' frame (MainBody): the frame's
+// centring and window-tall minimum are for a page that fills the window, and a
+// placeholder is drawn from the top. Outranks the primitives' frame rules,
+// the context row's `:has()` one included.
+.app-shell__main main.page-frame.skeleton-frame {
+  justify-content: flex-start;
+  min-height: 0;
+}
+
 // The filter row, the table and the pager, spaced as the panel spaces a list.
 .skeleton__shapes {
   @include stack;
