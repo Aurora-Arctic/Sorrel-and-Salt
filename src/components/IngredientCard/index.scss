@@ -132,6 +132,11 @@
   // (the stock section's `margin-top` is this token too, each beside the
   // specimen's own 12px gap), so the two read as equal.
   margin-block-start: $ingredient-card-forms-air;
+  // A click passes through to the name link’s stretched `::after` beneath. The mixin’s
+  // `clip-path` and relative items paint above that overlay, so the line swallowed the click. Not
+  // a higher `z-index` on the overlay: that would cover the Low badge, the marks and the
+  // actions, which must stay above it. The line holds no button, tip or link.
+  pointer-events: none;
 }
 
 .ingredient-card__item,

@@ -86,7 +86,7 @@ is not wrapped in an `<a>`: a screen reader would read the whole card as the
 link's name, and a link cannot hold the Low badge's button. So the accessible name
 stays the ingredient's name and the card has exactly one link. The Low badge's tip
 anchor sits above the overlay (`z-index: 1`) and keeps its own hover, focus and
-click. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
+click. The forms line has `pointer-events: none`, so a click on it reaches the overlay: its `dotted-row` mixin (`clip-path`, relative items) paints above the overlay, and raising the overlay instead would cover the badge, marks and actions. The jar lines need no such rule: nothing in them is positioned above the overlay but the badge. The name is `$text-primary` with no underline, at rest or on hover; the card shows the
 pointer, and the focus ring is drawn on the overlay,
 round the card. Under the pointer, or with focus inside it, the card lightens
 (`$surface-card-hover`: a step lighter in dark, brighter in light) and rises 2px
