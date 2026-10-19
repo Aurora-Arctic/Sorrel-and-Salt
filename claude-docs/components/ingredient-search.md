@@ -93,6 +93,14 @@ in the filter slot to carry.
   show; once anything is typed it says "Keep typing to search" instead, at once
   and announced by the status region, so one character is not met by silence
   (the owner, 2026-10-16). It is a message rather than a label, so sentence case.
+- **Given a `workspaceId`, the type-ahead suggests from the cupboard, not the
+  compendium.** `IngredientSearchForm` and the box take it as an optional prop
+  (M9.6). The box then asks `workspaceIngredients(workspaceId:, query:, first: 25)`
+  (the `IngredientSearchCupboardMatches` document) and never the compendium
+  query; without it, the reverse. Both answers become the same
+  `IngredientSearchMatch`, and where the coven's cupboard entry sets a label
+  (`cupboardEntry(workspaceId:)`), the label is the row's name. Everything
+  else about the box, the floor, the 25 rows and See all results., is the same.
 - **The dropdown shows at most 25 rows, the first page, in the server's
   order.** It never asks for a second. When there is another page, a last row, See all results., ends the
   listbox and applies the debounced text to the list. It is selectable like
