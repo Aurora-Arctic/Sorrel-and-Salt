@@ -46,6 +46,10 @@ follows `href` as before.
 - **The admin lists' Edit**: `GroupList`, `GroupedValueList` (every value
   page: categories, forms, deities, celestial bodies, zodiac signs) and
   `CompendiumList`, each through `EditLink`.
+- **Annotate on a coven's list** (`CovenCards`), through `AnnotateLink`:
+  `AnnotateIcon`, an open book with a filled pencil,
+  drawn at stroke width 1.25 rather than the set's 1.5, the owner's call
+  (M8.17, 2026-10-19).
 - **The ingredient form's three Edit buttons**, each wrapped in `IconTip`
   around its existing button: a variant's pencil and a reference row's
   pencil ("Edit"), and an open reference row's Edit Source ("Edit Source"),

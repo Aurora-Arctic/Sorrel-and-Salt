@@ -105,21 +105,30 @@ export function CopyIcon(): ReactElement {
 }
 
 /**
- * A sticky note with its corner folded: Annotate (M8.17), which writes the
- * coven's notes over a compendium entry rather than changing it, so not
- * Edit's pencil. A placeholder until the owner picks the icon; every
- * Annotate control draws this one function, so the swap is here alone.
+ * An open book with lines on its left page and a pencil over its right:
+ * Annotate (M8.17), which writes the coven's notes over a compendium entry
+ * rather than changing it, so not Edit's bare pencil. The owner's choice
+ * (2026-10-19), drawn at stroke width 1.25 rather than the set's usual 1.5,
+ * also the owner's call, so the book's lines sit apart at 16px; the pencil
+ * is filled, with no stroke. Every Annotate control draws this one function.
  */
 export function AnnotateIcon(): ReactElement {
   return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M8 4.5C6.5 3.5 4.5 3 1.5 3v9.5c3 0 5 .5 6.5 1.5 1.5-1 3.5-1.5 6.5-1.5V9.5M8 4.5V14M3.75 6.5h2.5M3.75 9h2.5" />
       <path
-        d="M2.5 2.5h11v7l-4 4h-7zM13.5 9.5h-4v4M5 6h6M5 8.5h3"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        fill="currentColor"
+        stroke="none"
+        d="M9.71 9.04L11.61 8.46 15.83 4.24 14.51 2.92 10.29 7.14z"
       />
     </svg>
   );

@@ -1384,10 +1384,10 @@ site admin's, through the compendium mutations
 
 - **An edit says so above the form** (M8.17). Editing a compendium entry,
   wherever the form opens (the admin Compendium, an entry's page, the public
-  search for a curator), the form draws a plain `Notice` above its fields
-  saying it edits the compendium, which every coven reads. An add carries
-  none, and nor does a coven's edit. The wording is a placeholder until the
-  owner words it: `COMPENDIUM_EDIT_NOTICE` in
+  search for a curator), the form draws a plain `Notice` above its fields:
+  "Changes are made to the Compendium, for everyone." An add carries none,
+  and nor does a coven's edit. The wording is the owner's (2026-10-19), and
+  `COMPENDIUM_EDIT_NOTICE` in
   `src/components/IngredientForm/compendium-notice.ts` is the one place it
   lives.
 
