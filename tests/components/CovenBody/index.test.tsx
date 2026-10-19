@@ -1,5 +1,6 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { NavigationTarget } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
@@ -8,18 +9,8 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/coven/fixture-coven/ingredients',
 }));
 
-// M12.33 scaffold: lane A builds `@/lib/navigation` and lane C
-// `@/components/CovenBody`. Until both have, the modules are loaded by
-// specifiers neither the type checker nor Vite resolves, so this file
-// compiles and its suite is skipped. Lane C makes each import a plain
-// `await import('…')` of the path below and unskips the
-// `describe.skip` here (grep "M12.33 scaffold").
-const scaffoldNavigation: string = '@/lib/navigation';
-const { usePendingNavigation } = await import(/* @vite-ignore */ scaffoldNavigation).catch(
-  () => ({}),
-);
-const scaffoldBody: string = '@/components/CovenBody';
-const { default: CovenBody } = await import(/* @vite-ignore */ scaffoldBody).catch(() => ({}));
+const { usePendingNavigation } = await import('@/lib/navigation');
+const { default: CovenBody } = await import('@/components/CovenBody');
 
 // The coven's page under its context row (M12.33): while a navigation whose
 // target is the coven region is on its way, the old coven's page is taken
@@ -29,7 +20,7 @@ const { default: CovenBody } = await import(/* @vite-ignore */ scaffoldBody).cat
 // stylesheet's, so it is not read here.
 
 /** A control that starts a navigation with the given target, as the switcher and section nav do. */
-function Go({ name, target }: { name: string; target?: Record<string, string> }) {
+function Go({ name, target }: { name: string; target?: NavigationTarget }) {
   const { navigate } = usePendingNavigation();
   return (
     <button
@@ -77,7 +68,7 @@ afterEach(async () => {
   await act(async () => arrive());
 });
 
-describe.skip('CovenBody', () => {
+describe('CovenBody', () => {
   it('shows its page, and no status, while nothing is on its way', () => {
     renderBody();
 

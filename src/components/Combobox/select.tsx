@@ -3,6 +3,7 @@
 import { useSelect } from 'downshift';
 import { keepEscapeInList } from './escape';
 import type { KeyboardEvent, ReactElement } from 'react';
+import Spinner from '../Spinner';
 import { ChevronIcon, PlusIcon } from './icons';
 import { useListPosition } from './position';
 import type { ComboboxChoice, ComboboxSelectProps } from './types';
@@ -25,6 +26,7 @@ export function ComboboxSelect({
   placeholder,
   required,
   inputRef,
+  busy,
   'aria-describedby': describedBy,
   'aria-invalid': invalid,
 }: ComboboxSelectProps): ReactElement {
@@ -71,6 +73,7 @@ export function ComboboxSelect({
           'aria-describedby': describedBy,
           'aria-invalid': invalid,
           'aria-required': required,
+          'aria-busy': busy ? true : undefined,
         })}
       >
         <div className="combobox__values">
@@ -88,6 +91,9 @@ export function ComboboxSelect({
           )}
         </div>
         <div className="combobox__indicators">
+          {/* Decorative; the box's `aria-busy` is what is announced. The
+              spinner shows itself only after its own delay. */}
+          {busy && <Spinner />}
           <span className="combobox__indicator" aria-hidden="true">
             <ChevronIcon />
           </span>
