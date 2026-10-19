@@ -54,3 +54,8 @@ export const LoadingTabs: Story = () => (
 export const LoadingWithMenu: Story = () => (
   <Waiting name="Overview" target={{ region: 'coven', shape: 'page', frame: 'with-nav' }} />
 );
+
+// The admin index: its heading and line, then titled lists of links (no cards).
+export const LoadingContents: Story = () => (
+  <Waiting name="Admin" target={{ region: 'admin', shape: 'contents' }} />
+);

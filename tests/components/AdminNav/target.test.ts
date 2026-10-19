@@ -11,8 +11,8 @@ describe('adminTarget', () => {
     for (const href of ['/admin', ...linked]) expect(adminTarget(href).region).toBe('admin');
   });
 
-  it('draws the index as a page, which carries its own heading', () => {
-    expect(adminTarget('/admin')).toMatchObject({ shape: 'page' });
+  it('draws the index as sections of links, which carries its own heading and has no cards', () => {
+    expect(adminTarget('/admin')).toMatchObject({ shape: 'contents' });
     expect(adminTarget('/admin').title).toBeFalsy();
   });
 

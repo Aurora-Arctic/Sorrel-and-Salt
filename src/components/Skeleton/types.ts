@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
 
 /** What a skeleton stands in for. */
-export type SkeletonShape = 'table' | 'cards' | 'form' | 'page' | 'line';
+export type SkeletonShape = 'table' | 'cards' | 'form' | 'page' | 'contents' | 'line';
 
 export interface SkeletonProps {
-  /** `table` (a tabbed list), `cards` (the Ingredients cards), `form` (a form's fields and buttons) `page` (a heading and blocks) or `line` (one line of text, for a sentence that loads in place). */
+  /** `table` (a tabbed list), `cards` (the Ingredients cards), `form` (a form's fields and buttons) `page` (a heading and blocks), `contents` (a heading and titled lists of links, the admin index) or `line` (one line of text, for a sentence that loads in place). */
   shape: SkeletonShape;
   /** Whether a `table` or `cards` skeleton draws a filter row above the list. */
   filter?: boolean;

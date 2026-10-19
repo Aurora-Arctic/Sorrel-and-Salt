@@ -24,3 +24,7 @@ export const Line: Story = () => <Skeleton shape="line" />;
 export const TableWithTitleAndFilter: Story = () => <Skeleton shape="table" title action filter />;
 
 export const CardsWithTitleAndFilter: Story = () => <Skeleton shape="cards" title action filter />;
+
+export const Contents: Story = () => <Skeleton shape="contents" />;
+
+export const PageWithMenu: Story = () => <Skeleton shape="page" menu />;

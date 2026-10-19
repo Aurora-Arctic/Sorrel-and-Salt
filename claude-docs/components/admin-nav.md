@@ -74,7 +74,7 @@ only too.
   from marking it. `/admin` itself, the index, is in no section and marks
   none. `usePathname()` reads the address, which is why the links are a
   client component (MB.115).
-- **The wait draws the tab row** (M12.33). `adminTarget` sets `tabs` for the tabbed pages (Categories, Forms, Deities, Celestial Bodies, Users) and not for the Compendium or the index.
+- **The wait draws the tab row** (M12.33). The index is the `contents` shape, drawn in every route into `/admin` (the lead link, the bar and account menu links, `AdminNav`). `adminTarget` sets `tabs` for the tabbed pages (Categories, Forms, Deities, Celestial Bodies, Users) and not for the Compendium or the index.
 - **A curator sees five tabs, not six** (M11.20). `AdminNav` and `AdminContents` both take `managesPeople`, so the nav and the index leave People out together. The rule below describes the admin's six.
 - **Six tabs, then More, then a bar** (MB.7, the owner's call at the
   navigation review, over the earlier wrapping row and `<details>` jump

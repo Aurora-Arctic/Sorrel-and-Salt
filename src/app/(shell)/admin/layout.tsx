@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import AdminNav from '../../../components/AdminNav';
+import { adminTarget } from '../../../components/AdminNav/target';
 import { PendingLink } from '../../../lib/navigation';
 import ContextRow from '../../../components/ContextRow';
 import SectionBody from '../../../components/SectionBody';
@@ -35,7 +36,7 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
           <PendingLink
             href="/admin"
             className="context-row__name"
-            navigationTarget={{ region: 'admin', shape: 'page' }}
+            navigationTarget={adminTarget('/admin')}
           >
             Admin
           </PendingLink>

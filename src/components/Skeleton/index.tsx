@@ -13,8 +13,12 @@ const DEFAULT_COUNT: Record<SkeletonShape, number> = {
   cards: 6,
   form: 4,
   page: 3,
+  contents: 2,
   line: 1,
 };
+
+// The admin index's two sections: Compendium's five pages and People's one.
+const CONTENTS_ENTRIES = [5, 1];
 
 const Bars = ({ of: length, className }: { of: number; className: string }): ReactElement => (
   <>
@@ -93,26 +97,50 @@ const Skeleton = ({
         )}
         {shape === 'line' && <span className="skeleton__line" />}
         {shape === 'page' && (
-          <div className={menu ? 'skeleton__with-menu' : 'skeleton__plain'}>
-            <span className="skeleton__title" />
-            <span className="skeleton__lede" />
+          // The page's own grid when it has a menu (`.page-with-nav`), its
+          // children in the page's order: head, menu, then the sections, so
+          // the menu stands where the real one does at every width.
+          <div className={menu ? 'page-with-nav' : 'skeleton__plain'}>
+            <div className="skeleton__intro">
+              <span className="skeleton__title" />
+              <span className="skeleton__lede" />
+            </div>
             {menu && (
-              <div className="skeleton__menu">
+              <div className="page-nav skeleton__menu">
                 <span />
                 <span />
                 <span />
                 <span />
               </div>
             )}
-            <div className="skeleton__blocks">
-              {Array.from({ length: many }, (_, block) => (
-                <div key={block} className="skeleton__block">
-                  <span />
-                  <span />
-                  <span />
+            {Array.from({ length: many }, (_, block) => (
+              <div key={block} className="skeleton__block">
+                <span />
+                <span />
+                <span />
+              </div>
+            ))}
+          </div>
+        )}
+        {shape === 'contents' && (
+          // The admin index: a heading and a line, then titled lists of
+          // links each with its one line beneath, as `AdminContents` lays them.
+          <div className="skeleton__plain">
+            <span className="skeleton__title" />
+            <span className="skeleton__lede" />
+            {CONTENTS_ENTRIES.map((entries, section) => (
+              <div key={section} className="skeleton__section">
+                <span className="skeleton__label" />
+                <div className="skeleton__list">
+                  {Array.from({ length: entries }, (_, entry) => (
+                    <div key={entry} className="skeleton__entry">
+                      <span />
+                      <span />
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
       </div>

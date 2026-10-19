@@ -190,7 +190,7 @@ exported from its `index.ts`.
 | `usePendingNavigation()` | Returns `{ pending, navigate(href, options), refresh() }`. Use it for any navigation that is not a link: a button that pushes, a redirect after a save, a refresh. `pending` is true while this caller's navigation is the one showing; the site-wide state carries it for the rest.                                                                 |
 | `reportLeaving()`        | For a wait that ends with the browser leaving the page, such as redirecting to a sign-in provider: it keeps the page bar up until the browser unloads.                                                                                                                                                                                               |
 | `NavigationBar`          | The bar. Mounted once in `src/app/providers.tsx`; a developer does not render it again.                                                                                                                                                                                                                                                              |
-| `Skeleton`               | The region. `shape` is `table`, `cards`, `form`, `page` or `line`; see [`skeleton.md`](components/skeleton.md).                                                                                                                                                                                                                                      |
+| `Skeleton`               | The region. `shape` is `table`, `cards`, `form`, `page`, `contents` or `line`; see [`skeleton.md`](components/skeleton.md).                                                                                                                                                                                                                          |
 | `Spinner`                | The control's ring, inside a button or field; see [`spinner.md`](components/spinner.md).                                                                                                                                                                                                                                                             |
 | `loading-motion`         | The Sass mixin for any new piece that moves to say something is loading; it brings the reduced-motion pulse and the optional 100ms wait with it.                                                                                                                                                                                                     |
 
@@ -249,7 +249,7 @@ page's content. The `<main>` takes the frame the target names, top-aligned
 and never centred in the window: `wide` and `with-nav` use `page-column`,
 `narrow` uses `page-frame page-frame--narrow`, and no frame the standard
 `page-frame`. A narrow `form` sits on a `panel`, as the real form does.
-`with-nav` also draws the side menu column beside a `page`, and `tabs` draws
+`with-nav` also draws the side menu beside a `page`, in the page's own `.page-with-nav` grid, and the admin index is the `contents` shape (sections of links), and `tabs` draws
 the tab track in the heading row. A navigation with no target, such as a
 refresh, leaves the page standing, and a `coven` or `admin` target is `SectionBody`'s.
 

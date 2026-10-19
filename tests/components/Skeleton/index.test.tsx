@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import Skeleton from '@/components/Skeleton';
 import type { SkeletonShape } from '@/components/Skeleton/types';
 
-const SHAPES: SkeletonShape[] = ['table', 'cards', 'form', 'page', 'line'];
+const SHAPES: SkeletonShape[] = ['table', 'cards', 'form', 'page', 'contents', 'line'];
 
 // A skeleton is announced once, as a status, whatever it draws; the shapes
 // are for the eye and add nothing to the accessibility tree.
@@ -91,12 +91,42 @@ describe('Skeleton tabs and menu', () => {
     const { container, rerender } = render(<Skeleton shape="page" />);
     expect(container.querySelector('.skeleton__menu')).toBeNull();
     rerender(<Skeleton shape="page" menu />);
-    expect(container.querySelector('.skeleton__with-menu .skeleton__menu')).not.toBeNull();
+    expect(container.querySelector('.page-with-nav .skeleton__menu')).not.toBeNull();
   });
 
   it('keeps the menu out of other shapes and still announces once', () => {
     const { container } = render(<Skeleton shape="table" menu />);
     expect(container.querySelector('.skeleton__menu')).toBeNull();
+    expect(screen.getAllByRole('status')).toHaveLength(1);
+  });
+
+  // The menu sits where the real page puts it: the page's own
+  // `.page-with-nav` grid, its children the head, the menu, then the
+  // sections, so the menu is in the same column and rows as the page that
+  // arrives.
+  it("lays the page out with the page's own grid classes", () => {
+    const { container } = render(<Skeleton shape="page" menu />);
+    const grid = container.querySelector('.page-with-nav');
+    expect(grid).not.toBeNull();
+    const kids = [...(grid?.children ?? [])];
+    expect(kids[0]?.classList.contains('skeleton__intro')).toBe(true);
+    expect(kids[1]?.classList.contains('page-nav')).toBe(true);
+    expect(kids[1]?.classList.contains('skeleton__menu')).toBe(true);
+    expect(kids.slice(2).every((node) => node.classList.contains('skeleton__block'))).toBe(true);
+  });
+});
+
+// The wait for a page of linked sections (the admin index) draws what that
+// page is: a heading, a line, then titled lists of links each with a line
+// beneath, and no card blocks, which that page does not have.
+describe('Skeleton contents', () => {
+  it('draws sections of links and their lines, and no blocks', () => {
+    const { container } = render(<Skeleton shape="contents" />);
+    expect(container.querySelector('.skeleton__title')).not.toBeNull();
+    expect(container.querySelector('.skeleton__lede')).not.toBeNull();
+    expect(container.querySelectorAll('.skeleton__section').length).toBeGreaterThan(1);
+    expect(container.querySelectorAll('.skeleton__entry').length).toBeGreaterThan(1);
+    expect(container.querySelector('.skeleton__block')).toBeNull();
     expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 });

@@ -253,19 +253,22 @@
   width: 65%;
 }
 
-.skeleton__blocks {
+.skeleton__plain {
   @include stack;
 }
 
-.skeleton__plain,
-.skeleton__with-menu {
-  @include stack;
+// A page's head, the heading bar and the line, closer than the sections, as
+// the pages' `.header` column holds them.
+.skeleton__intro {
+  @include stack(2);
 }
 
 // A page with a side menu (the account's jump menu, the coven home's
-// contents): the page's own pair of columns, the menu's beside the heading,
-// lede and blocks, when the skeleton is wide enough for both, as
-// `.page-with-nav` lays them. Narrower, they stack in the reading order.
+// contents) is laid out by the page's own `.page-with-nav` and `.page-nav`
+// (_primitives.scss): the menu beside the sections from a tablet up, held
+// under the bar, and stacked after the head at a phone's width. Only its
+// bars are drawn here. The real menu's entries are set to the end of its
+// column from a tablet up.
 .skeleton__menu {
   @include stack(3);
 
@@ -277,22 +280,36 @@
   }
 }
 
-@container skeleton (min-width: #{calc($narrow-column + space(8) * 3 + space(6))}) {
-  .skeleton__with-menu {
-    display: grid;
-    grid-template-columns: calc(#{space(8)} * 3) minmax(0, $narrow-column);
-    place-content: start center;
-    gap: space(5) space(6);
+@media (min-width: calc(#{$shell-phone-width} + 0.01rem)) {
+  .skeleton__menu > span {
+    margin-inline-start: auto;
+  }
+}
+
+// The contents shape: sections of a heading over a list, each entry a link
+// bar over a shorter line, as `.admin-contents` spaces them.
+.skeleton__section {
+  @include stack(3);
+}
+
+.skeleton__section > .skeleton__label {
+  height: 1.25rem;
+}
+
+.skeleton__list {
+  @include stack(3);
+}
+
+.skeleton__entry {
+  @include stack(1);
+
+  > span:nth-child(1) {
+    width: 12rem;
+    max-width: 50%;
   }
 
-  .skeleton__with-menu > :not(.skeleton__menu) {
-    grid-column: 2;
-  }
-
-  .skeleton__with-menu > .skeleton__menu {
-    grid-column: 1;
-    grid-row: 1 / span 4;
-    align-self: start;
+  > span:nth-child(2) {
+    width: 55%;
   }
 }
 

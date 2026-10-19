@@ -11,12 +11,12 @@ const CURATED: Parts = { shape: 'table', title: true, tabs: true, action: true, 
  * its own body under its context row, so every wait is the `admin` region's
  * and the row with its nav stays. The wait is the page that arrives: its
  * heading, the action at the heading's end, its filter row, then the list.
- * The index is a page and draws its own heading. A tabbed page draws its tab
+ * The index is sections of links and draws its own heading. A tabbed page draws its tab
  * row between the heading and the action; the Compendium has one tab and so
  * no row.
  */
 const PARTS: Record<string, Parts> = {
-  '/admin': { shape: 'page' },
+  '/admin': { shape: 'contents' },
   '/admin/compendium': { shape: 'cards', title: true, action: true, filter: true },
   '/admin/categories': CURATED,
   '/admin/forms': CURATED,

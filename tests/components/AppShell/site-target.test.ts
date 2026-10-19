@@ -26,8 +26,8 @@ describe('siteLinkTarget', () => {
     });
   });
 
-  it('draws the admin index as a wide page', () => {
-    expect(siteLinkTarget('/admin', '/admin')).toMatchObject({ shape: 'page', frame: 'wide' });
+  it('draws the admin index as wide sections of links', () => {
+    expect(siteLinkTarget('/admin', '/admin')).toMatchObject({ shape: 'contents', frame: 'wide' });
   });
 
   it('waits in the main region for every link', () => {
