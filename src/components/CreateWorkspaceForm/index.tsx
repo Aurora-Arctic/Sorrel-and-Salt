@@ -1,11 +1,11 @@
 'use client';
 
 import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { type FormEvent, type ReactElement, useId, useState } from 'react';
 import { graphql } from '../../gql';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import { graphqlRequest } from '../../lib/graphql-client';
+import { usePendingNavigation } from '../../lib/navigation';
 import { FieldShell, FormActions, fieldDescription } from '../Field';
 import Notice from '../Notice';
 
@@ -34,7 +34,7 @@ const NAME_HINT =
   'What the coven is called. Its address is made from it, and everyone you invite sees it.';
 
 const CreateWorkspaceForm = (): ReactElement => {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   const [value, setValue] = useState('');
   const [alert, setAlert] = useState<string>();
   const [fieldError, setFieldError] = useState<string>();
@@ -47,10 +47,11 @@ const CreateWorkspaceForm = (): ReactElement => {
     mutationFn: (name: string) => graphqlRequest(CreateWorkspaceDocument, { name }),
     onSuccess: ({ createWorkspace: { slug } }) => {
       setLeaving(true);
-      router.push(`/coven/${slug}`);
+      // The new coven's page replaces the whole of this one, not only a coven body.
+      navigate(`/coven/${slug}`, { target: { region: 'main', shape: 'page' } });
       // The shell's switcher lists the viewer's covens from the layout, which
       // a client-side push does not re-run: refresh brings the new one in.
-      router.refresh();
+      refresh();
     },
     onError: (failure) => {
       const { field, alert: message } = readGraphqlFailure(failure, ['name']);

@@ -34,10 +34,6 @@ const BASELINE: Record<string, { calls: number; reason: string }> = {
     calls: 2,
     reason: 'closes a route modal with replace and refresh',
   },
-  'src/components/WorkspaceSwitcher/index.tsx': {
-    calls: 1,
-    reason: 'coven switch; moves onto the hook with the coven target',
-  },
   'src/components/AppShell/add-ingredient-button.tsx': {
     calls: 3,
     reason: 'bare pushes after choosing a destination',
@@ -59,10 +55,6 @@ const BASELINE: Record<string, { calls: number; reason: string }> = {
     reason: 'push after linking an entry',
   },
   'src/components/CupboardEntryForm/index.tsx': { calls: 1, reason: 'refresh after a save' },
-  'src/components/CreateWorkspaceForm/index.tsx': {
-    calls: 2,
-    reason: 'push and refresh after creating a coven',
-  },
   'src/components/DeleteWorkspaceButton/index.tsx': {
     calls: 2,
     reason: 'replace and refresh after a delete',

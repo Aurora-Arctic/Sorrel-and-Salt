@@ -73,6 +73,21 @@ is outweighed by one more class, so no Combobox variant was needed.
   (`ComboboxChoice`): its row is set off by a hairline rule and led by a plus.
   Create Coven is the only choice that sets it.
 
+## While a switch is on its way (M12.33)
+
+The switcher goes through `usePendingNavigation` with the target
+`{ region: 'coven', shape }`, the shape being the destination section's
+(`cards` Ingredients, `table` the people pages, `page` the home); `CovenBody`
+draws that skeleton in place of the old page (`coven-body.md`). The pick is
+held in state and shown as the value, and the box is `busy` (`aria-busy`, and
+a spinner after the delay), until the navigation settles. Create Coven targets
+`{ region: 'main', shape: 'form' }`.
+
+Focus: the `[slug]` layout remounts on a switch, so the box that held the
+focus is gone. A module-level flag, set when another coven is picked and read
+once by the next switcher to mount, focuses the new box. A switcher that is
+still mounted when the move ends (a failure) clears it instead.
+
 ## Stories
 
 `index.stories.tsx`, titled "Coven / Coven Switcher": `InWorkspace`, `OutsideWorkspace`, `CanCreate`, `Phone`. The workshop's

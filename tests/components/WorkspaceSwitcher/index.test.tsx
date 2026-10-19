@@ -128,9 +128,7 @@ describe('WorkspaceSwitcher', () => {
     });
   });
 
-  // M12.33 scaffold: lane C puts the switcher on usePendingNavigation and
-  // gives ComboboxSelect its `busy`; that lane unskips this block.
-  describe.skip('while the switch is on its way (M12.33)', () => {
+  describe('while the switch is on its way (M12.33)', () => {
     let arrive = () => {};
     afterEach(async () => {
       await act(async () => arrive());

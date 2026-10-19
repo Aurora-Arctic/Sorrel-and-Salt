@@ -162,40 +162,38 @@ function runningAnimations(page: Page) {
   );
 }
 
-test.fixme(
-  'a coven switch takes the old coven away at once, marks the switcher busy, and gives the focus back once the new coven renders',
-  { annotation: { type: 'fixme', description: 'M12.33 scaffold: lanes A, B and C' } },
-  async ({ page }) => {
-    await openIngredients(page, hollow, HOLLOW_ENTRY);
-    const server = await holdServerAnswers(page);
-    // Why the switch could go: A is a member of both, and the switcher is idle.
-    await expect(switcher(page)).toHaveText(HOLLOW);
-    await expect(switcher(page)).not.toHaveAttribute('aria-busy', 'true');
+test('a coven switch takes the old coven away at once, marks the switcher busy, and gives the focus back once the new coven renders', async ({
+  page,
+}) => {
+  await openIngredients(page, hollow, HOLLOW_ENTRY);
+  const server = await holdServerAnswers(page);
+  // Why the switch could go: A is a member of both, and the switcher is idle.
+  await expect(switcher(page)).toHaveText(HOLLOW);
+  await expect(switcher(page)).not.toHaveAttribute('aria-busy', 'true');
 
-    server.hold();
-    await pickCoven(page, WILLOW);
-    await expect.poll(server.navigations).toBeGreaterThan(0);
+  server.hold();
+  await pickCoven(page, WILLOW);
+  await expect.poll(server.navigations).toBeGreaterThan(0);
 
-    // Control: busy, showing the pick.
-    await expect(switcher(page)).toHaveAttribute('aria-busy', 'true');
-    await expect(switcher(page)).toHaveText(WILLOW);
-    // Region: the old coven's cards are gone, one status in their place.
-    await expect(cardsIn(ingredientList(page))).toHaveCount(0);
-    await expect(statuses(page)).toHaveCount(1);
-    // Still the old address: the new coven has not rendered.
-    expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
-    await assertNoAccessibilityViolations(page);
+  // Control: busy, showing the pick.
+  await expect(switcher(page)).toHaveAttribute('aria-busy', 'true');
+  await expect(switcher(page)).toHaveText(WILLOW);
+  // Region: the old coven's cards are gone, one status in their place.
+  await expect(cardsIn(ingredientList(page))).toHaveCount(0);
+  await expect(statuses(page)).toHaveCount(1);
+  // Still the old address: the new coven has not rendered.
+  expect(new URL(page.url()).pathname).toBe(`/coven/${hollow.slug}/ingredients`);
+  await assertNoAccessibilityViolations(page);
 
-    await server.release();
+  await server.release();
 
-    await expect(page).toHaveURL(`/coven/${willow.slug}/ingredients`);
-    await expect(rowOf(ingredientList(page), WILLOW_ENTRY)).toHaveCount(1);
-    await expect(rowOf(ingredientList(page), HOLLOW_ENTRY)).toHaveCount(0);
-    await expect(switcher(page)).not.toHaveAttribute('aria-busy', 'true');
-    await expect(switcher(page)).toHaveText(WILLOW);
-    await expect(switcher(page)).toBeFocused();
-  },
-);
+  await expect(page).toHaveURL(`/coven/${willow.slug}/ingredients`);
+  await expect(rowOf(ingredientList(page), WILLOW_ENTRY)).toHaveCount(1);
+  await expect(rowOf(ingredientList(page), HOLLOW_ENTRY)).toHaveCount(0);
+  await expect(switcher(page)).not.toHaveAttribute('aria-busy', 'true');
+  await expect(switcher(page)).toHaveText(WILLOW);
+  await expect(switcher(page)).toBeFocused();
+});
 
 test.fixme(
   "a section link takes the coven's page away at once and puts one status in its place",

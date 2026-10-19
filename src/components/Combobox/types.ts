@@ -394,6 +394,8 @@ export interface ComboboxSelectProps {
   required?: boolean;
   /** The box, which takes the focus: a `div`, since nothing is typed into it. */
   inputRef?: Ref<HTMLDivElement>;
+  /** A change this box started is on its way (M12.33): the box is `aria-busy` and carries a spinner. */
+  busy?: boolean;
   'aria-describedby'?: string;
   'aria-invalid'?: boolean;
 }
