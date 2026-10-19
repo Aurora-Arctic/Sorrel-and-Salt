@@ -50,7 +50,13 @@ parts, and the table passes through them from the server.
     `scroll-padding-top`, which the search row sets so a scrolled-to element
     lands under the stuck row. The scroll is a plain `scrollIntoView({ block:
 'start' })`, so the site's smooth scrolling and its reduced-motion rule
-    apply; a list start already in view scrolls nothing. The filter's
+    apply; a list start already in view scrolls nothing. While the page is
+    pending the skeleton's wrapper takes a `min-height` of the body's height
+    at the press (`heldHeight` on the navigation, through `SwapPanel`'s
+    `loadingMinHeight`), because a skeleton far shorter than a page of cards
+    would shrink the document and make the browser pull the scroll position
+    up. The new page renders without it, so a short last page is not padded.
+    Filters and tab panels hold nothing. The filter's
     `soft` keeps Next's own scroll.
   - `full` is `window.location.assign`, a whole page load, a plain pager
     end's, which runs the admin layout's guard again. It has no transition to wait on, so a flag

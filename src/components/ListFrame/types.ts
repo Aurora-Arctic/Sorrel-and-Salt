@@ -15,6 +15,8 @@ export interface ListNavigation {
   pending: boolean;
   /** Opens another page of the list, filtered or paged, the way `kind` says; nothing while one is pending. */
   go: (href: string, kind: ListNavigationKind) => void;
+  /** A pager end's press: the height in pixels the body had then, which its skeleton keeps (`index.tsx`). */
+  heldHeight?: number;
 }
 
 export interface ListFrameProps {

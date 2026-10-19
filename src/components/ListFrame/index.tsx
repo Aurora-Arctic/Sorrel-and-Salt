@@ -49,6 +49,7 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const pending = moving || leaving;
   const root = useRef<HTMLDivElement>(null);
   const keepPlace = useRef(false);
+  const [heldHeight, setHeldHeight] = useState<number>();
 
   // A pager end's page: once the transition ends the new page has rendered, so
   // bring the start of the list to the line the stuck search row leaves, if it
@@ -56,7 +57,9 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   // and its reduced-motion rule apply, and the reader lands on the new page's
   // first entries rather than the top of the page.
   useEffect(() => {
-    if (moving || !keepPlace.current) return;
+    if (moving) return;
+    setHeldHeight(undefined);
+    if (!keepPlace.current) return;
     keepPlace.current = false;
     const body = root.current?.querySelector('.list-frame__body');
     if (!body) return;
@@ -75,6 +78,7 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
 
   const value: ListNavigation = outer ?? {
     pending,
+    heldHeight,
     go: (href, kind) => {
       if (pending) return;
       if (kind === 'full') {
@@ -85,6 +89,16 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
       // A pager end keeps the reader at the list rather than Next's scroll to
       // the page top, which would bring the admin section menu back into view.
       keepPlace.current = kind === 'page';
+      // The skeleton is far shorter than a page of cards, and a shorter
+      // document makes the browser pull the scroll position up (the section
+      // menu comes into view, then the list glides back down). So the body
+      // keeps the height it had at the press while the page is on its way;
+      // the new page renders without it, so a short last page is not padded.
+      setHeldHeight(
+        kind === 'page'
+          ? root.current?.querySelector('.list-frame__body')?.getBoundingClientRect().height
+          : undefined,
+      );
       startMoving(() =>
         kind === 'page'
           ? router.push(href as Route, { scroll: false })
@@ -114,9 +128,14 @@ export function useListNavigation(): ListNavigation {
  * panel is (`TabbedPage/swap-panel.tsx`).
  */
 export const ListBody = ({ shape, children }: ListBodyProps): ReactElement => {
-  const { pending } = useListNavigation();
+  const { pending, heldHeight } = useListNavigation();
   return (
-    <SwapPanel pending={pending} className="list-frame__body" shape={shape}>
+    <SwapPanel
+      pending={pending}
+      className="list-frame__body"
+      shape={shape}
+      loadingMinHeight={heldHeight}
+    >
       {children}
     </SwapPanel>
   );
