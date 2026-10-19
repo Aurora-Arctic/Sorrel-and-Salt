@@ -544,7 +544,9 @@ one cold run the same day took 99 s for 50 stories (15 more are `fixme`),
 233 s of test work whose even spread on 6 workers would be 39 s, with
 `07-admin.spec.ts` 78 s on one worker and `08-email-and-admin.spec.ts` 60 s
 on another. It writes no HTML report locally, so its per-file sums are read
-from the list reporter's `(2.6s)` suffixes instead; CI's figures for it are
+from the list reporter's `(2.6s)` suffixes instead — run it with
+`PW_REPORTER=list`, because under Claude Code (`CLAUDECODE`) the story config
+prints dots (M12.37); CI's figures for it are
 the runner budget's `stories` row.
 
 **After the serial rule was dropped** (the plan's lever 2, this task's second
