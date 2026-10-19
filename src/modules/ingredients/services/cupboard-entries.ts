@@ -192,7 +192,7 @@ export async function findCompendiumMatches(
 /**
  * What converting an own entry asks of a role (M12.21): it deletes the own
  * entry, writes a cupboard entry and moves jars. Exported so the entry page
- * offers This Is It on exactly the permission the service then checks.
+ * offers Link to Selected on exactly the permission the service then checks.
  */
 export const CONVERT_PERMISSION = {
   ingredient: ['create', 'delete'],

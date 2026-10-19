@@ -5,6 +5,7 @@ import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { type FieldPath, useFormContext, useFormState, useWatch } from 'react-hook-form';
 import { plural } from '@/lib/text';
+import IconTip, { CopyIcon } from '../IconTip';
 import { RemoveIcon } from './icons';
 import { FIELD_NOUNS, entryText, fold } from './values';
 import type {
@@ -185,16 +186,18 @@ export function CopyFromIngredient({
     <>
       {/* Named for its field, the visible words first, so the eight in an
         open variant are told apart. A button, never the form's submit. */}
-      <button
-        ref={buttonRef}
-        type="button"
-        className="btn btn--small btn--quiet ingredient-form__copy"
-        aria-label={`Copy From Ingredient: ${FIELD_NOUNS[field].label}`}
-        disabled={empty}
-        onClick={copy}
-      >
-        Copy From Ingredient
-      </button>
+      <IconTip tip="Copy From Ingredient" placement="below">
+        <button
+          ref={buttonRef}
+          type="button"
+          className="field__label-action"
+          aria-label={`Copy From Ingredient: ${FIELD_NOUNS[field].label}`}
+          disabled={empty}
+          onClick={copy}
+        >
+          <CopyIcon />
+        </button>
+      </IconTip>
       {announce === undefined && (
         <output className="visually-hidden" aria-label={`${FIELD_NOUNS[field].label} copy`}>
           {news}

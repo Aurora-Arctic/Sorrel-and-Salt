@@ -145,6 +145,8 @@ test(
         await page.goto(path);
         await expect(shellAddIngredient(page)).toBeEnabled();
         const dialog = await openAddIngredient(page);
+        // Opened by the address, so a reload keeps it and Back leaves it.
+        await expect(page).toHaveURL(/\?new$/);
         // In one coven, so there is nothing to choose: no chevron, and the
         // dialog names the coven it adds to.
         await expect(destinationMenu(page).toggle).toHaveCount(0);
@@ -165,6 +167,7 @@ test(
         // Untouched, so Escape closes at once, and the focus goes back to the button.
         await page.keyboard.press('Escape');
         await expect(dialog).toHaveCount(0);
+        await expect(page).not.toHaveURL(/[?&]new/);
         await expect(shellAddIngredient(page)).toBeFocused();
       }
     });
@@ -298,7 +301,7 @@ test(
     });
 
     // M12.20: a name the compendium already bears is a question, not a copy.
-    await test.step("a name the compendium bears asks first: Add Our Own saves the coven's own, Use It puts the entry in the cupboard with the typed label", async () => {
+    await test.step("a name the compendium bears asks first: Create Anyway saves the coven's own, Use It puts the entry in the cupboard with the typed label", async () => {
       await withSql(async (sql) => {
         for (const name of ['Ostrelvine', 'Kaelmoss']) {
           await insertIngredient(
@@ -317,7 +320,7 @@ test(
       await nameField(dialog).fill('Ostrelvine');
       await saveIngredient(dialog).click();
 
-      const own = dialog.getByRole('button', { name: 'Add Our Own', exact: true });
+      const own = dialog.getByRole('button', { name: 'Create Anyway', exact: true });
       await expect(own).toBeVisible();
       await expect(dialog.getByRole('button', { name: /^Use It/ })).toBeVisible();
       // The save waits on the question: nothing was written.

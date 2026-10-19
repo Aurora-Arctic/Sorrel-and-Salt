@@ -1,8 +1,8 @@
 'use client';
 
 import type { Route } from 'next';
-import { usePathname, useRouter } from 'next/navigation';
-import { type ReactElement, useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { type ReactElement, Suspense, useEffect, useRef, useState } from 'react';
 import { covenSlugOf } from '../../lib/coven-path';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
 import type { ShellWorkspace } from '../../lib/types';
@@ -17,9 +17,20 @@ import type { AddDestination, AddIngredientButtonProps } from './types';
 // to. One place is a plain button; two or more make it a split button, the
 // main part opening the default place and the chevron a menu of them all. The
 // dialog for a coven names it in its head and cannot change it.
+//
+// A coven's dialog is opened by the page's address, as the admin pages' are
+// (the owner's call, 2026-10-18): `?new` on any page in the shell opens the
+// default coven's, `?new=<slug>` a named one's, so a reload keeps it, Back
+// leaves it and the address can be shared. The press writes the address with
+// the browser's own `pushState`, which Next's router follows, rather than a
+// navigation: nothing on the server needs re-reading to draw the form. On an
+// admin page `?new` is the page's own compendium dialog, so a coven chosen
+// there is a navigation to that coven's index with `?new`.
 // claude-docs/components/modal.md, "Add Ingredient".
 
 const LABEL = 'Add Ingredient';
+/** The address parameter that opens a coven's dialog. */
+const NEW = 'new';
 // The solid green at the medium size (the owner's call, M8.16): the bar's one
 // action, taller than a small button and shorter than a field.
 const CLASSES = 'btn btn--solid btn--medium app-shell__add';
@@ -99,18 +110,53 @@ function destinationsOf(
   return { all, initial: onAdmin ? compendium[0] : (named ?? covens[0] ?? compendium[0]) };
 }
 
+/** The address with `?new`, or `?new=<slug>` for a coven other than the default, over its other parameters. */
+function openHref(pathname: string, params: URLSearchParams, slug?: string): string {
+  const rest = new URLSearchParams(params);
+  rest.delete(NEW);
+  const lead = rest.toString();
+  return `${pathname}?${lead ? `${lead}&` : ''}${NEW}${slug ? `=${encodeURIComponent(slug)}` : ''}`;
+}
+
+/** The address with `?new` dropped. */
+function closedHref(pathname: string, params: URLSearchParams): string {
+  const rest = new URLSearchParams(params);
+  rest.delete(NEW);
+  const lead = rest.toString();
+  return lead ? `${pathname}?${lead}` : pathname;
+}
+
 const AddIngredientButton = ({
   viewer,
   workspaces,
 }: AddIngredientButtonProps): ReactElement | null => {
   const pathname = usePathname();
+  const params = useSearchParams();
   const router = useRouter();
   const [saved, setSaved] = useState<string | null>(null);
-  // The coven whose dialog is open; the destination is fixed once it opens.
-  const [adding, setAdding] = useState<ShellWorkspace | null>(null);
   const main = useRef<HTMLButtonElement>(null);
-  // Set by a close only, so the first render takes no focus.
+  // Set by a close only, so Back and a first render take no focus.
   const returning = useRef(false);
+  // Set by a save that opens the new entry's page: the dialog then closes on
+  // that navigation, and the close must not write the address under it.
+  const leaving = useRef(false);
+
+  const { all, initial } = destinationsOf(viewer, workspaces, pathname);
+  const onAdmin = pathname.startsWith('/admin');
+  // The coven whose dialog the address opens: `?new` the default coven,
+  // `?new=<slug>` that coven, and nothing for a slug the viewer cannot write
+  // to. An admin page's `?new` is its own dialog, never this one.
+  const asked = onAdmin ? null : params.get(NEW);
+  const defaultCoven = initial?.kind === 'coven' ? initial.workspace : undefined;
+  const adding =
+    asked === null
+      ? null
+      : asked === ''
+        ? (defaultCoven ?? null)
+        : (all.find(
+            (d): d is Extract<AddDestination, { kind: 'coven' }> =>
+              d.kind === 'coven' && d.workspace.slug === asked,
+          )?.workspace ?? null);
 
   useEffect(() => {
     if (!adding && returning.current) {
@@ -120,15 +166,32 @@ const AddIngredientButton = ({
   }, [adding]);
 
   if (!viewer.verified) return null;
-  const { all, initial } = destinationsOf(viewer, workspaces, pathname);
   if (!initial) return null;
 
   const go = (destination: AddDestination): void => {
     // The compendium's dialog is the admin page's own, drawn for a direct
     // request: the route-modal provider that would open it at once sits below
     // the shell.
-    if (destination.kind === 'compendium') router.push('/admin/compendium?new');
-    else setAdding(destination.workspace);
+    if (destination.kind === 'compendium') {
+      router.push('/admin/compendium?new');
+    } else if (onAdmin) {
+      router.push(`/coven/${destination.workspace.slug}?${NEW}` as Route);
+    } else {
+      const slug =
+        destination.workspace.id === defaultCoven?.id ? undefined : destination.workspace.slug;
+      leaving.current = false;
+      window.history.pushState(null, '', openHref(pathname, params, slug));
+    }
+  };
+
+  const close = () => {
+    returning.current = true;
+    // Replacing, so Back does not open it again, as RouteModal closes. A save
+    // is on its way to the new entry's page, and a replace here would land
+    // under that push and keep the page where it was.
+    if (!leaving.current && params.has(NEW)) {
+      window.history.replaceState(null, '', closedHref(pathname, params));
+    }
   };
 
   return (
@@ -144,22 +207,23 @@ const AddIngredientButton = ({
       </span>
       {adding && (
         <Modal
+          // Another coven's address is another form.
+          key={adding.id}
           // The coven over the action, and named "Add Ingredient to
           // Whitethorn Coven".
           destination={adding.name}
           title={LABEL}
-          onClose={() => {
-            returning.current = true;
-            setAdding(null);
-          }}
+          onClose={close}
         >
-          {(close) => (
+          {(done) => (
             <AddIngredientBody
               workspace={adding}
-              close={close}
+              close={done}
               onSaved={(ingredient) => {
                 setSaved(savedMessage(ingredient));
-                // Save Ingredient opens the new ingredient's page.
+                // Save Ingredient opens the new ingredient's page, an address
+                // without `?new`, which closes the dialog.
+                leaving.current = true;
                 router.push(`/coven/${adding.slug}/ingredients/${ingredient.id}` as Route);
               }}
             />
@@ -170,4 +234,11 @@ const AddIngredientButton = ({
   );
 };
 
-export default AddIngredientButton;
+/** In a Suspense boundary, as reading the address asks for. */
+const AddIngredientButtonAtAddress = (props: AddIngredientButtonProps): ReactElement => (
+  <Suspense fallback={null}>
+    <AddIngredientButton {...props} />
+  </Suspense>
+);
+
+export default AddIngredientButtonAtAddress;

@@ -77,8 +77,8 @@ export interface IngredientEntryProps {
    * entry that declares no formal name: the compendium entries sharing its
    * label, three then See All, in the shape `replaces` has. `convert` is
    * left out for a role that may not convert (a viewer), and then no
-   * **This Is It** shows; given, each entry names the coven's page for it,
-   * where a successful conversion goes.
+   * radios and **Link to Selected** show; given, each entry names the coven's
+   * page for it, where a successful conversion goes.
    */
   similar?: {
     tip: string;
@@ -114,6 +114,14 @@ export interface CupboardProps {
    * retired one included.
    */
   canMakeOurs: boolean;
+  /**
+   * Annotate opens its dialog from the address, as the curator's Edit does:
+   * the link and the `?annotate` it names, where closing goes back to, and
+   * whether the address asks for it now. Only set `opened` for a member who
+   * may annotate and a coven that holds the entry; otherwise the page ignores
+   * the parameter.
+   */
+  annotate: { href: Route; closeHref: Route; opened: boolean };
 }
 
 /** What the client buttons need to draw: the props above, and the entry's two sides for the form. */
@@ -123,4 +131,6 @@ export interface CupboardActionsProps extends CupboardProps {
   held: boolean;
   compendium: CompendiumValues;
   overrides: CupboardOverrides;
+  /** Edit, for a curator: joins the cupboard's choices in the one Edit menu. */
+  edit?: { href: Route; entry: EditableEntry };
 }

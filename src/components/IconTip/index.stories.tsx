@@ -3,7 +3,7 @@ import type { ReactElement } from 'react';
 import StackTable from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
 import ListFrame, { ListBody } from '../ListFrame';
-import { EditLink } from '.';
+import { CopyIcon, EditLink, LinkIcon, PencilIcon, PlusIcon, RedoIcon, UndoIcon } from '.';
 
 // Render-only; behaviour is asserted in tests/components/IconTip. Hover or
 // focus a pencil to open its tip; Escape closes it. The rows are a list's
@@ -45,6 +45,17 @@ const Rows = (): ReactElement => (
       />
     </ListBody>
   </ListFrame>
+);
+
+// Every glyph the wrapper's icons file draws, at the icon button's glyph size:
+// the history pair, Restore Original and Copy From Ingredient use undo, redo
+// and copy.
+export const Glyphs: Story = () => (
+  <p style={{ display: 'flex', gap: '1rem', fontSize: '1rem' }}>
+    {[CopyIcon, LinkIcon, PencilIcon, PlusIcon, RedoIcon, UndoIcon].map((Glyph, at) => (
+      <Glyph key={at} />
+    ))}
+  </p>
 );
 
 export const InAListRow: Story = () => <Rows />;

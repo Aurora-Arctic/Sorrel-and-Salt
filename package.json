@@ -40,6 +40,7 @@
     "db:seed:compendium": "tsx scripts/db-seed.ts compendium",
     "db:drop": "tsx scripts/db-seed.ts drop",
     "db:reset": "npm run db:drop && npm run db:migrate && npm run db:seed",
+    "db:reset:demo": "SEED_SCENARIO=demo npm run db:reset",
     "db:studio": "drizzle-kit studio --host 0.0.0.0 --port 4983",
     "library:text": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/library-text.ts",
     "codegen": "graphql-codegen --config codegen.ts",

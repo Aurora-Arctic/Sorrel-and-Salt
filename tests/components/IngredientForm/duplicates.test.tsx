@@ -82,6 +82,14 @@ const type = (value: string) => typeIn(name(), value);
 const save = () => press('Save Ingredient');
 const warning = () => screen.getByRole('status', { name: 'Possible duplicates' });
 const createAnyway = () => screen.queryByRole('button', { name: 'Create Anyway' });
+/**
+ * The region once its last rows have faded: they leave on the slide's net,
+ * and the notice with them.
+ */
+const emptied = async () => {
+  await act(() => vi.advanceTimersByTimeAsync(600));
+  expect(warning()).toHaveTextContent('');
+};
 /** Lets a save that may have started reach its end. */
 const settleSave = () => act(() => vi.advanceTimersByTimeAsync(0));
 
@@ -108,6 +116,19 @@ describe('NameField, with useDuplicateWarning', () => {
     expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, name: 'Cats Claw', first: 3 });
   });
 
+  it('marks the name busy while its answer is out, and no longer once it lands', async () => {
+    renderName();
+    offerDuplicates([TOMENTOSA]);
+    expect(name()).not.toHaveAttribute('aria-busy');
+
+    type('Cats Claw');
+    settle();
+    await waitFor(() => expect(name()).toHaveAttribute('aria-busy', 'true'));
+
+    await within(warning()).findByRole('link');
+    expect(name()).not.toHaveAttribute('aria-busy');
+  });
+
   it('asks nothing for a blank name, and drops the warning the last name had', async () => {
     renderName();
     const calls = offerDuplicates([TOMENTOSA]);
@@ -118,9 +139,25 @@ describe('NameField, with useDuplicateWarning', () => {
     type('   ');
     settle();
 
-    expect(warning()).toBeEmptyDOMElement();
+    await emptied();
     await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
     expect(calls).toHaveLength(1);
+  });
+
+  it('asks nothing for a single letter, and asks once a second is typed', async () => {
+    renderName();
+    const calls = offerDuplicates([TOMENTOSA]);
+    type('C');
+    settle();
+    await act(() => vi.advanceTimersByTimeAsync(DEBOUNCE_MS));
+    expect(calls).toHaveLength(0);
+    await emptied();
+
+    type('Ca');
+    settle();
+    await within(warning()).findByRole('link');
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toEqual({ workspaceId: WORKSPACE_ID, name: 'Ca', first: 3 });
   });
 
   // MB.115, the owner's call: an edit that leaves the name alone asks nothing.
@@ -134,7 +171,7 @@ describe('NameField, with useDuplicateWarning', () => {
     await settleSave();
 
     expect(calls).toHaveLength(0);
-    expect(warning()).toBeEmptyDOMElement();
+    await emptied();
     expect(sent).toHaveBeenCalledWith("Cat's Claw");
   });
 
@@ -195,7 +232,7 @@ describe('NameField, with useDuplicateWarning', () => {
     settle();
     await waitFor(() => expect(calls).toHaveLength(1));
 
-    expect(warning()).toBeEmptyDOMElement();
+    await emptied();
     expect(createAnyway()).not.toBeInTheDocument();
     save();
     await waitFor(() => expect(sent).toHaveBeenCalledWith('Fixture Nothingalike'));
@@ -271,7 +308,7 @@ describe('NameField, with useDuplicateWarning', () => {
     await waitFor(() => expect(name()).toBeInvalid());
     fireEvent.click(createAnyway() as HTMLElement);
 
-    expect(warning()).toBeEmptyDOMElement();
+    await emptied();
     expect(name()).toHaveFocus();
     expect(name()).not.toBeInvalid();
     save();
@@ -292,7 +329,7 @@ describe('NameField, with useDuplicateWarning', () => {
     type("Cat's Claws");
     settle();
     await waitFor(() => expect(again).toHaveLength(1));
-    expect(warning()).toBeEmptyDOMElement();
+    await emptied();
 
     // One it has not been asked about.
     offerDuplicates([TOMENTOSA, FELIS]);
@@ -314,14 +351,14 @@ describe('NameField, with useDuplicateWarning', () => {
     save();
 
     await waitFor(() => expect(sent).toHaveBeenCalledWith("Cat's Claw"));
-    expect(warning()).toBeEmptyDOMElement();
+    await emptied();
   });
 
-  // M12.20: an exact compendium name is a question, a near one a list.
+  // M12.20: an exact compendium name is a question, a near one a list, Use It on both.
   describe('a compendium entry of the very name typed', () => {
     const CLAW = { ...TOMENTOSA, isGlobal: true };
 
-    it('holds the save on a question, with Use It for the entry and Add Our Own', async () => {
+    it('holds the save on a question, a row per entry with its link and Use It, and Create Anyway', async () => {
       const sent = renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
@@ -329,9 +366,10 @@ describe('NameField, with useDuplicateWarning', () => {
       type("Cat's Claw");
       save();
 
-      expect(await screen.findByRole('button', { name: /^Use It/ })).toBeInTheDocument();
-      expect(screen.getByRole('button', { name: 'Add Our Own' })).toBeInTheDocument();
-      expect(createAnyway()).not.toBeInTheDocument();
+      const row = await within(warning()).findByRole('listitem');
+      expect(within(row).getByRole('link')).toHaveAttribute('href', duplicateHref(CLAW));
+      expect(within(row).getByRole('button', { name: /^Use It/ })).toBeInTheDocument();
+      expect(createAnyway()).toBeInTheDocument();
       expect(sent).not.toHaveBeenCalled();
     });
 
@@ -348,13 +386,13 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(sent).not.toHaveBeenCalled();
     });
 
-    it('lets the next save go once Add Our Own is pressed', async () => {
+    it("lets the next save go once the question's Create Anyway is pressed", async () => {
       const sent = renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([CLAW]);
       type("Cat's Claw");
       save();
-      press(await screen.findByRole('button', { name: 'Add Our Own' }));
+      press(await screen.findByRole('button', { name: 'Create Anyway' }));
 
       save();
       await settleSave();
@@ -377,15 +415,20 @@ describe('NameField, with useDuplicateWarning', () => {
       expect(screen.queryByRole('button', { name: /^Use It/ })).not.toBeInTheDocument();
     });
 
-    it('lists a near match with Use It and asks no question', async () => {
+    it('lists a near compendium match as a row with its link and Use It, and asks no question', async () => {
       renderName();
       offerDuplicates([CLAW]);
       offerCompendiumMatches([]);
       type('Cats Claw');
       settle();
 
-      expect(await screen.findByRole('button', { name: /^Use It/ })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Add Our Own' })).not.toBeInTheDocument();
+      const row = await within(warning()).findByRole('listitem');
+      expect(within(row).getByRole('link', { name: /^Cat/ })).toHaveAttribute(
+        'href',
+        duplicateHref(CLAW),
+      );
+      expect(within(row).getByRole('button', { name: /^Use It/ })).toBeInTheDocument();
+      expect(name()).not.toBeInvalid();
       expect(await screen.findByRole('button', { name: 'Create Anyway' })).toBeInTheDocument();
     });
 

@@ -65,7 +65,13 @@ test('a member sees a held compendium entry with the coven’s label and marks, 
     page.getByRole('heading', { level: 1, name: 'Fixture Our Hedgewort' }),
   ).toBeVisible();
   await expect(page.getByText('What our coven makes of it.')).toBeVisible();
-  await expect(page.getByText('Fixture Reference Wort', { exact: true }).first()).toBeVisible();
+  // The compendium's own name is no longer a 'Called ... in the Compendium' line (13d8bff3);
+  // it is the link in the In the Compendium list, named with its formal name.
+  await expect(
+    page
+      .getByRole('list', { name: /^In the Compendium/ })
+      .getByRole('link', { name: /^Fixture Reference Wort/ }),
+  ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Annotated' })).toBeVisible();
   await expect(page.getByRole('status').filter({ hasText: /^Compendium$/ })).toHaveCount(0);
   await expect(page.getByText('Local', { exact: true })).toHaveCount(0);

@@ -200,6 +200,12 @@ function detail(overrides: Partial<IngredientDetail> = {}): IngredientDetail {
   };
 }
 
+/** The Caution badge in the page's head, apart from the Caution notes in the text. */
+const headCaution = () =>
+  within(screen.getByRole('heading', { level: 1 }).closest('header')!).queryByText('Caution', {
+    exact: true,
+  });
+
 const hrefOf: IngredientEntryProps['hrefOf'] = (ingredient) =>
   ingredient.id === LINKED.id ? LINKED_HREF : undefined;
 
@@ -321,6 +327,23 @@ describe('IngredientEntry', () => {
 
     renderEntry();
     expect(outsideForms()).toHaveLength(1);
+  });
+
+  it('marks the entry Caution in its head when a form has notes, and not for none or blank ones', () => {
+    const { unmount } = render(
+      <IngredientEntry
+        detail={detail({
+          variants: [variantRow('testroot'), variantRow('testoil', { safetyNotes: '  ' })],
+        })}
+        hrefOf={hrefOf}
+      />,
+    );
+    expect(headCaution()).toBeNull();
+    unmount();
+
+    // Why it can show: the oil form has notes, and the entry has none of its own.
+    renderEntry();
+    expect(headCaution()).not.toBeNull();
   });
 
   it('names its folk names, categories and substitutes lists, one item each', () => {
@@ -585,21 +608,36 @@ describe('IngredientEntry', () => {
     });
     const list = () => screen.getByRole('list', { name: 'Similar in the Compendium' });
 
-    it('heads a Similar block with a ⓘ, three entries and See All, and a This Is It for each when it may convert', () => {
+    it('heads a Similar block with a ⓘ, three entries and See All, and a radio for each with Link to Selected when it may convert', () => {
       renderEntry({ similar: similar({ workspaceId: 'w', localId: 'l' }) });
 
       expect(within(list()).getAllByRole('link')).toHaveLength(3);
-      expect(within(list()).getAllByRole('button')).toHaveLength(3);
+      expect(within(list()).getAllByRole('radio')).toHaveLength(3);
+      expect(screen.getByRole('button', { name: 'Link to Selected' })).toBeDisabled();
       expect(screen.getByRole('button', { name: 'About Similar in the Compendium' })).toBeVisible();
       expect(screen.getByRole('link', { name: /^See All 5/ })).toBeInTheDocument();
       expect(screen.queryByRole('heading', { name: 'In the Compendium' })).toBeNull();
     });
 
-    it('shows a viewer the entries and no This Is It', () => {
+    it('puts See All directly under the list, before Link to Selected', () => {
+      renderEntry({ similar: similar({ workspaceId: 'w', localId: 'l' }) });
+
+      const seeAll = screen.getByRole('link', { name: /^See All 5/ });
+      const linkTo = screen.getByRole('button', { name: 'Link to Selected' });
+      expect(
+        list().compareDocumentPosition(seeAll) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+      expect(
+        seeAll.compareDocumentPosition(linkTo) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('shows a viewer the entries, no radios and no Link to Selected', () => {
       renderEntry({ similar: similar() });
 
       expect(within(list()).getAllByRole('link')).toHaveLength(3);
-      expect(screen.queryByRole('button', { name: /This Is It/ })).toBeNull();
+      expect(screen.queryByRole('radio')).toBeNull();
+      expect(screen.queryByRole('button', { name: 'Link to Selected' })).toBeNull();
     });
   });
 
@@ -1016,9 +1054,10 @@ describe('IngredientEntry on a coven page', () => {
       }),
     });
 
-    // A set label heads the page, and the compendium's name stays beneath it.
+    // A set label heads the page; the compendium's name is not repeated
+    // beneath it, as In the Compendium links the entry by it.
     expect(screen.getByRole('heading', { level: 1, name: 'Hedgewort' })).toBeInTheDocument();
-    expect(screen.getByText('Testwort', { exact: true })).toBeInTheDocument();
+    expect(screen.queryByText('Testwort', { exact: true })).not.toBeInTheDocument();
     // A null description falls back to the compendium's.
     expect(screen.getByText('A fixture herb.')).toBeInTheDocument();
     // A set list stands over the compendium's; an empty one shows as cleared.
@@ -1038,6 +1077,18 @@ describe('IngredientEntry on a coven page', () => {
     expect(screen.getAllByRole('status').map((mark) => mark.textContent)).toEqual(['Compendium']);
     expect(screen.getAllByText('Testwort')).toHaveLength(1);
     expect(screen.queryByText('Local', { exact: true })).not.toBeInTheDocument();
+  });
+
+  it("marks Caution for the coven's own notes on a compendium entry that has none", () => {
+    const quiet = { variants: [variantRow('testroot')] };
+    const { unmount } = renderEntry({ detail: detail({ ...quiet, cupboardEntry: held() }) });
+    expect(headCaution()).toBeNull();
+    unmount();
+
+    renderEntry({
+      detail: detail({ ...quiet, cupboardEntry: held({ safetyNotes: 'Fixture coven caution.' }) }),
+    });
+    expect(headCaution()).not.toBeNull();
   });
 
   it('renders a compendium entry the coven does not hold with neither mark', () => {
