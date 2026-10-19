@@ -3,10 +3,13 @@ import { test, expect } from './fixtures';
 import { assertNoAccessibilityViolations, assertNoSidewaysScroll } from './axe';
 import { recreateE2eDatabase } from './database';
 import { signInAgainAs } from './session';
-import { makeVariant } from '../support/fixtures/ingredient';
+import { makeIngredient, makeVariant } from '../support/fixtures/ingredient';
+import { insertCupboardEntry } from '../support/db/insert-cupboard-entry';
+import { insertIngredient } from '../support/db/insert-ingredient';
 import {
   type Coven,
   cardsIn,
+  compendiumList,
   compendiumVariant,
   ingredientList,
   insertStock,
@@ -25,7 +28,8 @@ import {
 // the pager holds its place and its filter, the Compact switch is the default
 // and its opposite is in place before the page is drawn, the type-ahead offers
 // this coven's cupboard and nothing else, each jar line carries its form's
-// icon and M9.8's badge, and the page passes axe at both densities and at a
+// icon and M9.8's badge, a retired compendium entry the coven holds keeps
+// its forms and categories, and the page passes axe at both densities and at a
 // phone's width.
 
 // The cards page by 24 (`CARD_PAGE_SIZE`), so 26 entries make two pages.
@@ -74,6 +78,9 @@ test('a non-member is told the page does not exist, at the address a member read
     D: 'owner',
   });
 
+  // An entry, so the member's page draws its list (an empty cupboard draws none).
+  await withSql((sql) => localIngredient(sql, ours.id, ours.users.A));
+
   // Why the page could have been served: the coven exists, live, and a member reads it.
   const [row] = await withSql(
     (sql) =>
@@ -84,7 +91,7 @@ test('a non-member is told the page does not exist, at the address a member read
   await signInAgainAs(page, ours.users.A);
   const member = await page.goto(listPath(ours));
   expect(member?.status()).toBe(200);
-  await expect(ingredientList(page)).toBeVisible();
+  await expect(cardsIn(ingredientList(page))).toHaveCount(1);
 
   // D is signed in and reads a coven of D's own, so the refusal is about membership alone.
   await signInAgainAs(page, theirs.users.D);
@@ -267,7 +274,8 @@ test("the type-ahead offers this coven's cupboard alone", async ({ page }) => {
   expect(await offered(page, 'Rosemary')).toContainEqual(expect.stringMatching(/^Rosemary\b/));
   expect(await offered(page, 'Mugwort')).toEqual([]);
 
-  await offered(page, 'Cronewort');
+  // Typed again, the answer may come from the client's cache, with no request to wait on.
+  await nameSearch(page).fill('Cronewort');
   await page.getByRole('option', { name: 'Fixture Mirrorwort (Fixtura nostra)' }).click();
   await expect(page).toHaveURL(new RegExp(`/coven/${ours.slug}/ingredients/${own.ingredientId}$`));
 });
@@ -364,3 +372,61 @@ test('the page passes axe at both densities and holds at a phone width', async (
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
+
+test.fixme(
+  'a retired compendium entry the coven still holds keeps its forms and categories on its card',
+  {
+    annotation: {
+      type: 'fixme',
+      description:
+        'the coven list pages live rows only (readableInTiers), so a retired held entry never draws a card',
+    },
+  },
+  async ({ page }) => {
+    const coven = await seedCoven(page, 'Fixture Coven Gate Retired', 'gate-retired.test', {
+      A: 'owner',
+    });
+    const A = coven.users.A;
+    const retiring = await withSql(async (sql) => {
+      const ingredientId = await insertIngredient(
+        sql,
+        makeIngredient({
+          name: 'Fixture Retiredwort',
+          canonicalName: 'Fixtura emerita',
+          variants: [makeVariant({ form: 'Herb' })],
+          categories: ['Protection'],
+        }),
+        A,
+      );
+      await insertCupboardEntry(sql, { workspaceId: coven.id, ingredientId }, A);
+      return ingredientId;
+    });
+    const onCompendium = async () => {
+      await page.goto('/compendium');
+      await nameSearch(page).fill('Fixture Retiredwort');
+      await nameSearch(page).press('Enter');
+      await expect(page).toHaveURL(/Retiredwort/);
+      return rowOf(compendiumList(page), 'Fixture Retiredwort');
+    };
+
+    // Live, the entry is the compendium's like any other.
+    await expect(await onCompendium()).toHaveCount(1);
+
+    await withSql((sql) =>
+      sql.begin(async (tx) => {
+        await tx`select set_config('app.current_user_id', ${A}, true)`;
+        await tx`update ingredients set deleted_at = now(), deleted_by = ${A} where id = ${retiring}`;
+      }),
+    );
+
+    // Why the forms and categories could have gone missing: retired, the entry
+    // is gone from the compendium, so a read that filters retired rows finds none.
+    await expect(await onCompendium()).toHaveCount(0);
+
+    await page.goto(listPath(coven));
+    const card = rowOf(ingredientList(page), 'Fixture Retiredwort');
+    await expect(card).toHaveCount(1);
+    await expect(card).toContainText('Herb');
+    await expect(card.getByRole('listitem').filter({ hasText: 'Protection' })).toHaveCount(1);
+  },
+);
