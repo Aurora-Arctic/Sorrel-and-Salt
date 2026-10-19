@@ -48,6 +48,38 @@ const PageHead = ({ head, loose }: { head: SkeletonHead; loose?: boolean }): Rea
   </div>
 );
 
+// An ingredient's page below its head, as IngredientEntry lays it: Details,
+// its text beside a side column of headed lists, then Forms with a form's
+// section laid the same way. Bare bars on the page, with no card surface.
+const EntryPart = (): ReactElement => (
+  <div className="skeleton__entry-section">
+    <span className="skeleton__heading" />
+    <div className="skeleton__entry-text">
+      <span />
+      <span />
+      <span />
+    </div>
+    <div className="skeleton__entry-side">
+      {Array.from({ length: 4 }, (_, at) => (
+        <div key={at} className="skeleton__entry-block">
+          <span />
+          <span />
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+const EntrySections = (): ReactElement => (
+  <>
+    <EntryPart />
+    <div className="skeleton__entry-forms">
+      <span className="skeleton__heading" />
+      <EntryPart />
+    </div>
+  </>
+);
+
 const Skeleton = ({
   shape,
   filter = false,
@@ -75,7 +107,18 @@ const Skeleton = ({
         {listed && filter && (
           <div className="skeleton__filter">
             <span className="skeleton__field" />
-            <span className="skeleton__field skeleton__field--short" />
+            <span
+              className={
+                shape === 'cards'
+                  ? 'skeleton__field skeleton__field--button'
+                  : 'skeleton__field skeleton__field--short'
+              }
+            />
+          </div>
+        )}
+        {shape === 'cards' && filter && (
+          <div className="skeleton__count">
+            <span />
           </div>
         )}
         {shape === 'cards' && (
@@ -136,13 +179,17 @@ const Skeleton = ({
                 <span />
               </div>
             )}
-            {Array.from({ length: many }, (_, block) => (
-              <div key={block} className="skeleton__block">
-                <span />
-                <span />
-                <span />
-              </div>
-            ))}
+            {entry ? (
+              <EntrySections />
+            ) : (
+              Array.from({ length: many }, (_, block) => (
+                <div key={block} className="skeleton__block">
+                  <span />
+                  <span />
+                  <span />
+                </div>
+              ))
+            )}
           </div>
         )}
         {shape === 'contents' && (

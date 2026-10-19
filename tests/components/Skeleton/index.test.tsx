@@ -171,3 +171,59 @@ describe('Skeleton contents', () => {
     expect(screen.getAllByRole('status')).toHaveLength(1);
   });
 });
+
+// A card list's wait: the filter row is the search box and a Filters button, and
+// the count line ("9 ingredients") stands between the row and the cards, as
+// they do on the real list (IngredientSearch), so the cards start where they do.
+describe('Skeleton for a card list', () => {
+  it('draws the count line between the filter row and the cards', () => {
+    const { container } = render(<Skeleton shape="cards" title filter />);
+    const order = [
+      ...container.querySelectorAll(
+        '.skeleton__header, .skeleton__filter, .skeleton__count, .skeleton__cards',
+      ),
+    ];
+    expect(order.map((node) => node.className.split(' ')[0])).toEqual([
+      'page-header',
+      'skeleton__filter',
+      'skeleton__count',
+      'skeleton__cards',
+    ]);
+  });
+
+  it("sizes the filter row's second control as the Filters button, not a select", () => {
+    const { container } = render(<Skeleton shape="cards" filter />);
+    expect(container.querySelector('.skeleton__filter .skeleton__field--button')).not.toBeNull();
+    expect(container.querySelector('.skeleton__filter .skeleton__field--short')).toBeNull();
+  });
+
+  it('keeps the table skeleton with its select and no count line', () => {
+    const { container } = render(<Skeleton shape="table" filter />);
+    expect(container.querySelector('.skeleton__filter .skeleton__field--short')).not.toBeNull();
+    expect(container.querySelector('.skeleton__count')).toBeNull();
+  });
+});
+
+// An ingredient's page, below its head: a Details section of text beside a side
+// column of headed lists, as the entry lays it, and a Forms section; never the
+// card-surface blocks the other pages' skeletons draw.
+describe('Skeleton for an ingredient entry', () => {
+  it('draws the text beside a side column, in a section of its own', () => {
+    const { container } = render(<Skeleton shape="page" menu entry />);
+    const section = container.querySelector('.ingredient-entry .skeleton__entry-section');
+    expect(section).not.toBeNull();
+    expect(section?.querySelector('.skeleton__entry-text')).not.toBeNull();
+    expect(section?.querySelectorAll('.skeleton__entry-side > *').length).toBeGreaterThan(1);
+  });
+
+  it('draws no card blocks', () => {
+    const { container } = render(<Skeleton shape="page" menu entry />);
+    expect(container.querySelector('.skeleton__block')).toBeNull();
+  });
+
+  it('keeps the card blocks for the other pages', () => {
+    const { container } = render(<Skeleton shape="page" menu />);
+    expect(container.querySelector('.skeleton__block')).not.toBeNull();
+    expect(container.querySelector('.skeleton__entry-section')).toBeNull();
+  });
+});
