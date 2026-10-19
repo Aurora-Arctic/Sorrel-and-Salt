@@ -56,8 +56,7 @@ The region is the part of the page that is about to change. While it changes,
 the old content is taken away and the [`Skeleton`](components/skeleton.md) of
 the new content stands in its place. The skeleton has five shapes: `table`,
 `cards`, `form` and `page` for a whole page, and `line` for one line of text
-that is still being fetched. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives. When the real content arrives, it fades in over
-the skeleton for 200ms (`arrived`).
+that is still being fetched. A `table` or `cards` skeleton can also draw the page's heading row and filter row, so the wait looks like the page that arrives. When the real content arrives, the skeleton does not vanish: the shell's bodies keep the last one over the arrived page, `aria-hidden` and out of layout, and it fades out over 200ms (`$arrive-duration`) while the page shows through ([`SkeletonFade`](components/skeleton-fade.md)). A navigation that drew no skeleton (a refresh) fades nothing, a new wait mid-fade takes the skeleton back at once, and under reduced motion the page shows at once, as `arrived` does.
 
 A skeleton shows **at once**, with no wait, because the press has already
 removed the old content: holding the skeleton back would leave an empty panel

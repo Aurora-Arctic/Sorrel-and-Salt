@@ -1,5 +1,5 @@
 import { act, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { NavigationTarget } from '@/lib/navigation';
 import { Navigating } from '../../support/navigating';
 
@@ -123,6 +123,41 @@ describe('MainBody', () => {
       const main = await frameOf({ region: 'main', shape: 'page', frame: 'wide' });
       expect(within(main).getByRole('heading', { level: 1 })).toBeTruthy();
       expect(screen.getAllByRole('status')).toHaveLength(1);
+    });
+  });
+
+  // The skeleton stays over the arrived page for the fade (M12.33), out of reach
+  // of assistive technology and the pointer, and leaves with no layout of its own.
+  describe('when the page arrives', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('shows the page at once, keeps the skeleton hidden over it, then drops it', async () => {
+      const { container } = renderBody();
+      await act(async () => go({ region: 'main', shape: 'page', frame: 'wide' }));
+      await act(async () => arrive());
+
+      expect(screen.getByText('The old page')).toBeTruthy();
+      const overlay = container.querySelector('.skeleton-fade');
+      expect(overlay?.getAttribute('aria-hidden')).toBe('true');
+      expect(screen.queryByRole('status')).toBeNull();
+      expect(screen.getAllByRole('main')).toHaveLength(1);
+      expect(screen.queryByRole('heading', { level: 1 })).toBeNull();
+
+      await act(async () => vi.advanceTimersByTime(200));
+      expect(container.querySelector('.skeleton-fade')).toBeNull();
+      expect(screen.getByText('The old page')).toBeTruthy();
+    });
+
+    it('has no skeleton to fade after a navigation that drew none', async () => {
+      const { container } = renderBody();
+      await act(async () => go());
+      await act(async () => arrive());
+      expect(container.querySelector('.skeleton-fade')).toBeNull();
     });
   });
 });

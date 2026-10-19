@@ -19,6 +19,8 @@ section's page.
 
 ## Contracts
 
+- **When the wait ends, the skeleton fades out over the arrived page** rather than vanishing: it is kept for 200ms as an `aria-hidden`, absolutely placed overlay on the section frame (which takes the `skeleton-fade-host` class), then unmounts. See [`SkeletonFade`](skeleton-fade.md).
+
 - **At rest, or while a navigation aimed at another region or at no region
   is on its way, it renders the children as they were.**
 - **While a navigation aimed at its own region is on its way, the page is

@@ -3,6 +3,7 @@
 import type { ReactElement, ReactNode } from 'react';
 import { useNavigationState } from '../../lib/navigation';
 import Skeleton from '../Skeleton';
+import { SkeletonOverlay, skeletonFadeHost, useLeavingSkeleton } from '../SkeletonFade';
 
 // The shell's body while a site-level navigation is on its way (M12.33): the
 // page that was there gives way to one skeleton, in a `main` of its own so the
@@ -27,31 +28,46 @@ const FRAME_CLASS = {
 
 const MainBody = ({ children }: { children: ReactNode }): ReactElement => {
   const { busy, target } = useNavigationState();
-  if (busy && target?.region === 'main') {
+  const waiting = busy && target?.region === 'main' ? target : null;
+  let frame: ReactElement | null = null;
+  let className = '';
+  if (waiting) {
     const skeleton = (
       <Skeleton
-        shape={target.shape}
-        title={target.title}
-        action={target.action}
-        tabs={target.tabs}
-        filter={target.filter}
-        menu={target.frame === 'with-nav' || target.frame === 'entry'}
-        entry={target.frame === 'entry'}
-        head={target.head}
+        shape={waiting.shape}
+        title={waiting.title}
+        action={waiting.action}
+        tabs={waiting.tabs}
+        filter={waiting.filter}
+        menu={waiting.frame === 'with-nav' || waiting.frame === 'entry'}
+        entry={waiting.frame === 'entry'}
+        head={waiting.head}
       />
     );
-    return (
-      <main className={target.frame ? FRAME_CLASS[target.frame] : 'page-frame skeleton-frame'}>
-        <h1 className="visually-hidden">Loading</h1>
-        {target.shape === 'form' && target.frame === 'narrow' ? (
-          <div className="page-frame__section panel">{skeleton}</div>
-        ) : (
-          skeleton
-        )}
-      </main>
-    );
+    className = waiting.frame ? FRAME_CLASS[waiting.frame] : 'page-frame skeleton-frame';
+    frame =
+      waiting.shape === 'form' && waiting.frame === 'narrow' ? (
+        <div className="page-frame__section panel">{skeleton}</div>
+      ) : (
+        skeleton
+      );
   }
-  return <>{children}</>;
+  // What stays over the arrived page while it fades: the frame without the
+  // hidden heading, since the page has its own.
+  const leaving = useLeavingSkeleton(frame ? <main className={className}>{frame}</main> : null);
+  return (
+    <div className={skeletonFadeHost(leaving !== null)}>
+      {frame ? (
+        <main className={className}>
+          <h1 className="visually-hidden">Loading</h1>
+          {frame}
+        </main>
+      ) : (
+        children
+      )}
+      {leaving && <SkeletonOverlay>{leaving}</SkeletonOverlay>}
+    </div>
+  );
 };
 
 export default MainBody;

@@ -8,3 +8,6 @@ export const LOADING_DELAY_MS = 100;
 
 /** How long the bar fades out after the navigation settles. */
 export const BAR_FADE_MS = 150;
+
+/** How long a skeleton stays and fades out over the page that arrives (`$arrive-duration`, the same 200ms `arrived` fades content in). */
+export const ARRIVE_MS = 200;

@@ -27,6 +27,7 @@ way (M12.33). It was the tab panel's skeleton (MB.115) and the route modal's
 - **Exactly one `<output>`, "Loading"**, visually hidden, so a screen reader
   hears one announcement whatever the shape. The drawn shapes are
   `aria-hidden`.
+- **It leaves by fading**: the shell's bodies keep the last skeleton over the arrived page for 200ms, and it fades out ([`SkeletonFade`](skeleton-fade.md)). The skeleton itself knows nothing of it; its own fade-in is switched off in the overlay.
 - **It shows at once**, with the short `$motion-short` fade (`arrived`): the
   press has already taken the old content away, and holding the skeleton back
   would leave a blank panel. Only the spinner waits for `$loading-delay`.

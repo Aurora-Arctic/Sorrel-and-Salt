@@ -181,4 +181,50 @@ describe('SectionBody for the admin area', () => {
 
     expect(screen.getByRole('list', { name: 'Categories' })).toBeInTheDocument();
   });
+
+  // The skeleton does not vanish when the page arrives: it stays over it, out of
+  // the way of assistive technology and the pointer, for the length of the fade
+  // (200ms, \`arrived\`), then goes (M12.33).
+  describe('when the page arrives', () => {
+    beforeEach(() => {
+      vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
+    });
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    const overlay = (container: HTMLElement) => container.querySelector('.skeleton-fade');
+
+    it('shows the page at once and keeps the skeleton over it, hidden from assistive technology, until the fade is done', async () => {
+      const { container } = renderBody();
+      await press('Home');
+      expect(overlay(container)).toBeNull();
+
+      await act(async () => arrive());
+
+      expect(oldPage()).toBeInTheDocument();
+      const fading = overlay(container);
+      expect(fading).not.toBeNull();
+      expect(fading).toHaveAttribute('aria-hidden', 'true');
+      expect(fading?.querySelector('.skeleton__menu')).not.toBeNull();
+      // Nothing of it is announced or reachable as a second heading, landmark or status.
+      expect(screen.queryByRole('status')).not.toBeInTheDocument();
+      expect(screen.queryByRole('heading', { level: 1 })).not.toBeInTheDocument();
+      expect(screen.getAllByRole('main')).toHaveLength(1);
+
+      await act(async () => vi.advanceTimersByTime(199));
+      expect(overlay(container)).not.toBeNull();
+      await act(async () => vi.advanceTimersByTime(1));
+      expect(overlay(container)).toBeNull();
+      expect(oldPage()).toBeInTheDocument();
+    });
+
+    it('leaves nothing to fade for a navigation that drew no skeleton', async () => {
+      const { container } = renderBody();
+      await press('Filter');
+      await act(async () => arrive());
+      expect(overlay(container)).toBeNull();
+      expect(oldPage()).toBeInTheDocument();
+    });
+  });
 });
