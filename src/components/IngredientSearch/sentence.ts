@@ -12,7 +12,7 @@ import type {
 // component turns each `value` into a link to the same filter without that value.
 // Clauses always come in this order, whatever order the address holds them:
 // text query, categories, forms, deities, zodiac, planets, elements, toxic,
-// then the admin-only nomenclature and No Refs
+// then a coven's source, in stock and low stock, then the admin-only nomenclature and No Refs
 // (claude-docs/components/ingredient-search.md, "The search sentence").
 
 // `Intl.ListFormat` is Baseline Widely Available, so no guard line is needed.
@@ -143,6 +143,29 @@ export function buildSearchSentence({
       text: filter.toxic === 'toxic' ? 'toxic' : 'not toxic',
       facet: 'toxic',
       value: filter.toxic,
+    });
+  }
+
+  if (filter.source === 'local' || filter.source === 'compendium') {
+    clause(text('from the '), {
+      kind: 'value',
+      text: filter.source === 'local' ? 'Local' : 'Compendium',
+      facet: 'source',
+      value: filter.source,
+    });
+    parts.push(text(' source'));
+  }
+
+  if (filter.inStock) {
+    clause({ kind: 'value', text: 'in stock', facet: 'inStock', value: 'true' });
+  }
+
+  if (filter.lowStockOnly) {
+    clause({
+      kind: 'value',
+      text: 'low or out of stock',
+      facet: 'lowStockOnly',
+      value: 'true',
     });
   }
 

@@ -91,6 +91,9 @@ export type SearchSentenceFacet =
   | 'planets'
   | 'elements'
   | 'toxic'
+  | 'source'
+  | 'inStock'
+  | 'lowStockOnly'
   | 'nomenclature'
   | 'withoutReferences';
 
@@ -109,6 +112,12 @@ export interface SearchSentenceFilter {
   elements?: readonly string[];
   /** The address's own choice: `toxic`, `not_toxic`, or `any` / left out for either. */
   toxic?: ToxicFilter | null;
+  /** A coven's list only: where the entry came from, `local` or `compendium`; left out for both. */
+  source?: 'local' | 'compendium' | null;
+  /** A coven's list only: entries with a jar not at 0. */
+  inStock?: boolean;
+  /** A coven's list only: entries with a jar badged Low Stock or Out of Stock. */
+  lowStockOnly?: boolean;
   /** Admin lists only. */
   nomenclature?: string | null;
   /** Admin lists only. */
