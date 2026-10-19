@@ -44,12 +44,20 @@ only too.
   the privilege ledger, the history of what was done to them (MB.200), share
   People. Two sections, Compendium and People. The grouping and the tabs are
   the owner's, at MB.115's design review.
-- **`<Link>`, now that every route exists.** `typedRoutes` refuses an `href`
+- **A link, now that every route exists.** `typedRoutes` refuses an `href`
   for a route the build does not contain, so the list was plain anchors until
   each of its pages had landed. M5.6b's two group pages were the last, and
-  it switched the list to `<Link>`. A soft navigation does not re-run the
+  it switched the list to links; they are now `PendingLink`s, which wrap
+  `next/link` ([`loading.md`](../loading.md)). A soft navigation does not re-run the
   layout, so the layout's guard does not run on a click either, which is why
   every page under `/admin` runs the guard itself.
+- **Each link names what its page draws on the way** (M12.33). `target.ts`
+  holds `adminTarget(href)`, which gives the `main` region and a shape: `page`
+  for `/admin`, `cards` for `/admin/compendium` and `table` for every other
+  page. `index.tsx` sets it on each section from the page's first tab, and
+  `AdminContents` passes the same function for its links. The `Admin` lead in
+  the context row is a `PendingLink` to `/admin` that names `main` and `page`
+  directly. What a target does is [`loading.md`](../loading.md)'s.
 - **The page you are on is marked.** Its link carries `aria-current="page"`,
   which a screen reader announces, and no other link does. A page is current
   on any of its tabs, so Categories is current on `/admin/category-groups`,

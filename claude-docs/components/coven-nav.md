@@ -34,6 +34,16 @@ a member see all three sections and a viewer sees Overview and Ingredients.
 entry a `SectionNavItem` ([`section-nav.md`](section-nav.md)). `index.tsx`
 draws `SectionNav` with it and stays a server component.
 
+Each entry also carries a `target`, which says what the page draws while it is
+on its way: `{ region: 'coven', shape: covenSectionShape(href) }`. The coven
+region is the coven's own body, not the whole page, so a press on a section
+replaces only that body with a skeleton. `covenSectionShape`
+(`src/lib/coven-path.ts`) picks the shape from the section the address names:
+cards for Ingredients, a table for Members and Invitations, and a page for
+Overview or any section it does not name. The switcher and the home's Contents
+use the same mapping. What the target does is
+[`loading.md`](../loading.md)'s, "Where the pieces are used".
+
 ## Contracts
 
 - **Each later section is added by the task that builds its page.**

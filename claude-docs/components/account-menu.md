@@ -28,6 +28,13 @@ panel it opens (MB.7). It is a client component.
   while open.
 - **The name is said once**, on the button. The avatar disc (up to two
   initials, from the first and last words of the name) is `aria-hidden`.
+- **Every link in the panel is a `PendingLink`** ([`loading.md`](../loading.md)):
+  it starts the navigation through the shared hook and sets `aria-busy` while it
+  runs. Your Account and the invitations count both name the `main` region and
+  the `page` shape, since both lead to the account page. The site links name
+  `main` by the same rule as `siteLinkTarget` (`AppShell/site-target.ts`),
+  written out in the component: cards for `/compendium` and a page for the
+  rest.
 - **The panel lists**: Your Account (a link to `/account`, always, not for an
   unverified viewer), at or under `$shell-tablet-width` the site links, then Sign Out
   (`sign-out-button.tsx`, below). **The theme switch is not in the panel.** It stays in the
