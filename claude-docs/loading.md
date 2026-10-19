@@ -32,8 +32,7 @@ register, so the control moves first.
   place, gains a [`Spinner`](components/spinner.md), swaps its label for a
   busy one, and carries `aria-busy="true"`.
 - A **link** shows the [`LinkHint`](components/link-hint.md) dot after its
-  text, as the bar's text links and the account menu's items do; the brand
-  link and the section tabs have none. A link that is a tab moves its pill at once
+  text. A link that is a tab moves its pill at once
   ([`TabbedPage`](components/tabbed-page.md)).
 - The **coven switcher** shows the picked coven's name with a spinner
   ([`WorkspaceSwitcher`](components/workspace-switcher.md)).

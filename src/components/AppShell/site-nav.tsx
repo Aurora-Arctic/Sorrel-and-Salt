@@ -4,7 +4,6 @@ import { usePathname } from 'next/navigation';
 import type { ReactElement } from 'react';
 import { isAtPath } from '../../lib/at-path';
 import { PendingLink } from '../../lib/navigation';
-import LinkHint from '../LinkHint';
 import { siteLinkTarget } from './site-target';
 import type { SiteNavProps } from './types';
 
@@ -28,7 +27,7 @@ const SiteNav = ({ links }: SiteNavProps): ReactElement => {
               navigationTarget={siteLinkTarget(base)}
               aria-current={isAtPath(pathname, base) ? 'page' : undefined}
             >
-              {label} <LinkHint />
+              {label}
             </PendingLink>
           </li>
         ))}

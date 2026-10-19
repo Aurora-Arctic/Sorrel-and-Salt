@@ -34,9 +34,6 @@ panel it opens (MB.7). It is a client component.
   the `page` shape, since both lead to the account page. The site links name
   `main` through `siteLinkTarget` (`AppShell/site-target.ts`), the one rule the
   bar's links share: cards for `/compendium` and a page for the rest.
-  Each of those text links, and Your Account, holds a `LinkHint` after its
-  label, so the dot shows while its navigation is pending (the owner's call,
-  2026-10-19). The invitations count is a mark, not text, and has none.
 - **The panel lists**: Your Account (a link to `/account`, always, not for an
   unverified viewer), at or under `$shell-tablet-width` the site links, then Sign Out
   (`sign-out-button.tsx`, below). **The theme switch is not in the panel.** It stays in the
