@@ -43,6 +43,14 @@ export interface ModalProps extends ModalHeading {
    */
   onClose: () => void;
   /**
+   * Where the focus goes as the modal closes when what opened it is gone, or
+   * nothing held the focus as it opened: a click in WebKit focuses no button.
+   * Handed what opened it, already out of the page, or null. The modal gives
+   * the focus back to its opener itself whenever the opener is still there
+   * (claude-docs/components/modal.md, "Giving the focus back").
+   */
+  returnTo?: (gone: Element | null) => HTMLElement | null | undefined;
+  /**
    * The width: 32rem by default, for a short form or a confirmation; `wide`,
    * 48rem, for a long form such as the compendium entry's (M5.5).
    */

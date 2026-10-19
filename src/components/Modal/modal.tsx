@@ -43,12 +43,26 @@ function isOutside(dialog: HTMLDialogElement, { clientX, clientY }: MouseEvent):
   return clientX < box.left || clientX > box.right || clientY < box.top || clientY > box.bottom;
 }
 
+/**
+ * Back to what opened the modal, if it is still in the page, or else to where
+ * the owner says; and only if nothing has taken the focus meanwhile, as a page
+ * a save opens may. The dialog is already out of the page, so a focus that was
+ * in it is on the body.
+ */
+function giveFocusBack(opener: Element | null, returnTo: ModalProps['returnTo']): void {
+  const now = document.activeElement;
+  if (now && now !== document.body) return;
+  const target = opener instanceof HTMLElement && opener.isConnected ? opener : returnTo?.(opener);
+  target?.focus();
+}
+
 const Modal = ({
   title,
   eyebrow,
   destination,
   qualifier,
   onClose,
+  returnTo,
   size,
   loading = false,
   children,
@@ -57,6 +71,17 @@ const Modal = ({
   const titleId = useId();
   const eyebrowId = useId();
   const body = useRef<HTMLDivElement>(null);
+  // What held the focus as it opened, taken once, before showModal() moves
+  // it: the focus goes back there as it closes (APG, "Dialog (Modal)"). The
+  // modal does it, rather than each owner, because the owner closes it by
+  // unmounting it, so the dialog element never closes in place and the
+  // browser's own return never runs.
+  const opener = useRef<Element | null>(null);
+  const taken = useRef(false);
+  const fallback = useRef(returnTo);
+  useEffect(() => {
+    fallback.current = returnTo;
+  });
 
   useEffect(() => {
     const dialog = ref.current;
@@ -64,6 +89,11 @@ const Modal = ({
     // Guarded: Strict Mode runs the effect twice, and an open dialog refuses a second showModal().
     let cancelled = false;
     if (!dialog.open) {
+      if (!taken.current) {
+        taken.current = true;
+        const active = document.activeElement;
+        opener.current = active === document.body ? null : active;
+      }
       dialog.showModal();
       // showModal() puts the focus on the first thing that takes it, which is
       // Close, in the header; the person opened the dialog to fill it in, so
@@ -84,6 +114,9 @@ const Modal = ({
     return () => {
       cancelled = true;
       dialog.close();
+      // Strict Mode's rehearsal leaves the dialog in the page; only a real
+      // unmount takes it out, and only that gives the focus back.
+      if (!dialog.isConnected) giveFocusBack(opener.current, fallback.current);
     };
   }, []);
 

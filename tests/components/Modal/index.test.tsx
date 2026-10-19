@@ -187,6 +187,134 @@ describe('Modal', () => {
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 
+  // The focus goes back to what opened the dialog, however it closes, unless
+  // that is gone: then to where the owner says (claude-docs/components/modal.md,
+  // "Giving the focus back"; the owner's call, 2026-10-19).
+  describe('giving the focus back', () => {
+    /** A page with an opener button and the modal its state opens. */
+    function Page({ returnTo }: { returnTo?: () => HTMLElement | null }): ReactElement {
+      const [open, setOpen] = useState(false);
+      const [opener, setOpener] = useState(true);
+      return (
+        <>
+          {opener && (
+            <button type="button" onClick={() => setOpen(true)}>
+              Open
+            </button>
+          )}
+          <button type="button">Elsewhere</button>
+          {open && (
+            <Modal title="Edit Category" onClose={() => setOpen(false)} returnTo={returnTo}>
+              {(done) => (
+                <>
+                  <label>
+                    Name <input />
+                  </label>
+                  <button type="button" onClick={() => setOpener(false)}>
+                    Drop Opener
+                  </button>
+                  <button type="button" onClick={done}>
+                    Cancel
+                  </button>
+                </>
+              )}
+            </Modal>
+          )}
+        </>
+      );
+    }
+    const button = (name: string) => screen.getByRole('button', { name });
+    const openFrom = async (name = 'Open') => {
+      button(name).focus();
+      fireEvent.click(button(name));
+      await settle();
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+    };
+
+    it('gives the focus back to its opener on Escape', async () => {
+      render(<Page />);
+      await openFrom();
+
+      fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(button('Open')).toHaveFocus();
+    });
+
+    it('gives the focus back to its opener on Cancel', async () => {
+      render(<Page />);
+      await openFrom();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(button('Open')).toHaveFocus();
+    });
+
+    // A modal opened by its address is shut by the address changing, the
+    // owner unmounting it with no close of its own.
+    it('gives the focus back to its opener when its owner unmounts it', async () => {
+      function Owned({ open }: { open: boolean }): ReactElement {
+        return (
+          <>
+            <button type="button">Open</button>
+            {open && (
+              <Modal title="Edit Category" onClose={vi.fn()}>
+                <label>
+                  Name <input />
+                </label>
+              </Modal>
+            )}
+          </>
+        );
+      }
+      const view = render(<Owned open={false} />);
+      button('Open').focus();
+      view.rerender(<Owned open />);
+      await settle();
+      expect(screen.getByRole('textbox', { name: 'Name' })).toHaveFocus();
+
+      view.rerender(<Owned open={false} />);
+
+      expect(button('Open')).toHaveFocus();
+    });
+
+    it('gives the focus to where its owner says once its opener is gone', async () => {
+      render(<Page returnTo={() => button('Elsewhere')} />);
+      await openFrom();
+
+      fireEvent.click(button('Drop Opener'));
+      fireEvent.click(button('Cancel'));
+
+      expect(screen.queryByRole('button', { name: 'Open' })).toBeNull();
+      expect(button('Elsewhere')).toHaveFocus();
+    });
+
+    // A click on a button in WebKit leaves the focus on the page, so nothing opened it.
+    it('gives the focus to where its owner says when nothing held the focus as it opened', async () => {
+      render(<Page returnTo={() => button('Elsewhere')} />);
+      fireEvent.click(button('Open'));
+      await settle();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(button('Elsewhere')).toHaveFocus();
+    });
+
+    it('gives the focus back to its opener through a Strict Mode remount', async () => {
+      render(
+        <StrictMode>
+          <Page returnTo={() => button('Elsewhere')} />
+        </StrictMode>,
+      );
+      await openFrom();
+
+      fireEvent.click(button('Cancel'));
+
+      expect(button('Open')).toHaveFocus();
+    });
+  });
+
   // The owner's call during M5.5: it fades in and out. In is CSS alone. Out
   // is the modal's: it fades, then asks its owner to close, since the owner's
   // unmount would take it away at once. The dom project draws no transition, so its end
