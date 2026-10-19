@@ -3,7 +3,7 @@
 
 // The compact look of the card, as a mixin so a page can switch to it from its own
 // selector. The card takes no density prop: the look must be switchable before React
-// runs (M9.6 stores the choice and sets an attribute in a pre-paint script), and a prop
+// runs (M9.6 stores the choice and a pre-paint script sets `data-card-density="regular"` on <html>, which the `:not()` on the selectors honours), and a prop
 // would fix it at render and mismatch on hydration. index.scss applies it under
 // `[data-density='compact']`, which `IngredientCardList` sets; every rule is one class
 // deeper than the one it overrides, so it wins wherever it is included.
