@@ -31,7 +31,8 @@ export const PRIMARY_ADMIN_EMAIL = 'placeholder@admin-bootstrap.invalid';
  */
 async function holdSession(page: Page, value: string): Promise<void> {
   if (!plainSessionCookie) {
-    await page.setExtraHTTPHeaders({ cookie: `${SESSION_COOKIE}=${value}` });
+    // On the context, so a tab the page opens (a link with target=_blank) is signed in too.
+    await page.context().setExtraHTTPHeaders({ cookie: `${SESSION_COOKIE}=${value}` });
     return;
   }
   await page.context().addCookies([
