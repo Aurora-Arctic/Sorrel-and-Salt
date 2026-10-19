@@ -101,6 +101,7 @@ describe('public routes', () => {
     '/sitemap.xml',
     '/llms.txt',
     '/.well-known/ai-catalog.json',
+    '/.well-known/ard.json',
     '/favicon.ico',
     '/manifest.webmanifest',
   ])('lets a signed-out request to %s through', async (path) => {
@@ -144,14 +145,19 @@ describe('X-Robots-Tag', () => {
     vi.unstubAllEnvs();
   });
 
-  it.each(['/', '/compendium', '/robots.txt', '/coven/hearth'])(
-    'is noindex off production on %s, a redirect included',
-    async (path) => {
-      vi.stubEnv('VERCEL_ENV', 'preview');
+  it.each([
+    '/',
+    '/compendium',
+    '/robots.txt',
+    '/llms.txt',
+    '/.well-known/ai-catalog.json',
+    '/.well-known/ard.json',
+    '/coven/hearth',
+  ])('is noindex off production on %s, a redirect included', async (path) => {
+    vi.stubEnv('VERCEL_ENV', 'preview');
 
-      expect((await proxy(request(path))).headers.get('x-robots-tag')).toBe('noindex');
-    },
-  );
+    expect((await proxy(request(path))).headers.get('x-robots-tag')).toBe('noindex');
+  });
 
   it('is noindex when VERCEL_ENV is unset, as on a dev server', async () => {
     vi.stubEnv('VERCEL_ENV', '');

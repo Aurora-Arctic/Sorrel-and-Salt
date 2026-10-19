@@ -2,16 +2,24 @@ import type { MetadataRoute } from 'next';
 import { siteUrl } from '@/lib/site';
 
 // The only paths a crawler may fetch: the home page and the public compendium
-// (MB.80). Everything else is behind sign-in or is workspace data. A flat list,
-// so M12.2 adds its files by appending entries. `Allow` wins over `Disallow: /`
-// by being the longer match (RFC 9309, 2.2.2).
+// (MB.80), and the three public files that describe it (M12.2). Everything else
+// is behind sign-in or is workspace data. A flat list, so a new public file is
+// one entry. `Allow` wins over `Disallow: /` by being the longer match (RFC 9309,
+// 2.2.2).
 //
 // `/$` and not `/`: a path rule matches by prefix, so a bare `/` would allow
 // every path. `$` ends the pattern (RFC 9309, 2.2.3), so `/$` matches the root
 // alone; Google documents it as "matches only the root" (robots.txt spec, "URL
 // matching based on path values"). The home page has to be crawlable for Google
 // to read a site name from it (Google, "Provide a site name to Google Search").
-export const CRAWLABLE_PATHS = ['/$', '/compendium', '/compendium/'];
+export const CRAWLABLE_PATHS = [
+  '/$',
+  '/compendium',
+  '/compendium/',
+  '/llms.txt',
+  '/.well-known/ai-catalog.json',
+  '/.well-known/ard.json',
+];
 
 // `VERCEL_ENV`, not `NODE_ENV`, which is `production` on every deploy; unset
 // locally, so a dev server disallows all, as `src/proxy.ts` marks it noindex

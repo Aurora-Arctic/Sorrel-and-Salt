@@ -45,6 +45,7 @@ describe('MB.84: listCompendiumSlugs', () => {
       slug: expect.any(String),
       name: 'Fixture Alpha',
       canonicalName: expect.any(String),
+      description: null,
       lastModified: expect.any(Date),
     });
     expect(entries[1].canonicalName).toBeNull();

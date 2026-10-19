@@ -20,6 +20,14 @@ describe('MB.84: robots', () => {
       rules: { userAgent: '*', allow: CRAWLABLE_PATHS, disallow: '/' },
       sitemap: 'https://sorrelandsalt.com/sitemap.xml',
     });
+    expect(CRAWLABLE_PATHS).toEqual([
+      '/$',
+      '/compendium',
+      '/compendium/',
+      '/llms.txt',
+      '/.well-known/ai-catalog.json',
+      '/.well-known/ard.json',
+    ]);
   });
 
   // The matching a crawler does (RFC 9309, 2.2.2 and 2.2.3): the longest matching
@@ -35,6 +43,10 @@ describe('MB.84: robots', () => {
     ['/', true],
     ['/compendium', true],
     ['/compendium/ingredients/testwort', true],
+    ['/llms.txt', true],
+    ['/.well-known/ai-catalog.json', true],
+    ['/.well-known/ard.json', true],
+    ['/.well-known/other.json', false],
     ['/coven/fixture-coven', false],
     ['/coven', false],
     ['/admin', false],
