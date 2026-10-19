@@ -619,9 +619,11 @@
     }
 
     // Its heading's hairline red too, where every other column's is the muted
-    // ink; scoped past the primitive's own `thead th` rule. Drawn as a shadow over the
-    // collapsed border, which stays put as the columns scroll, as the left hairline is.
+    // ink; scoped past the primitive's own `thead th` rule. Drawn as a shadow, which travels
+    // with the cell as the left hairline does; the collapsed grey border beneath it, which stays
+    // put as the columns scroll, is made transparent so only the red shows.
     @at-root .data-table thead th#{&} {
+      border-bottom-color: transparent;
       box-shadow:
         inset 1px 0 0 $secondary,
         inset 0 -1px 0 $secondary;
