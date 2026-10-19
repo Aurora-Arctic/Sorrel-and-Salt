@@ -305,7 +305,7 @@ describe('findCompendiumFacets', () => {
       return logged.filter(({ query }) => !/set_config/.test(query));
     }
 
-    it('sends at most eight reads for the compendium and eleven for a coven, with a search or without', async () => {
+    it('sends at most nine reads for the compendium and eleven for a coven, with a search or without', async () => {
       await seedEntries();
       const inW = await assertMembership(asUser(B), WORKSPACE_W_ID, { ingredient: ['read'] });
       const browse: IngredientFilter = { zodiacSigns: ['leo'] };
@@ -323,7 +323,7 @@ describe('findCompendiumFacets', () => {
       // Why the bound could have been missed: each kind is read, so a read per
       // value would send far more than eight.
       expect(compendium[0].length).toBeGreaterThan(0);
-      for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(8);
+      for (const reads of compendium) expect(reads.length).toBeLessThanOrEqual(9);
       for (const reads of coven) expect(reads.length).toBeLessThanOrEqual(11);
     });
   });
@@ -389,6 +389,39 @@ describe('findCompendiumFacets', () => {
       await sql`update "references" set deleted_at = now(), deleted_by = ${A.id} where id = ${book}`;
 
       expect((await findCompendiumFacets({})).withoutReferences).toBe(1);
+    });
+  });
+
+  describe('the No Form count', () => {
+    it('counts the entries with no live form as the list reads them, the switch on or off', async () => {
+      await add('Alphawort', { variants: [], zodiacSigns: ['Leo'] });
+      await add('Betawort', { variants: [], zodiacSigns: ['Leo'] });
+      await add('Gammawort', { variants: [makeVariant({ form: 'Resin' })], zodiacSigns: ['Leo'] });
+      await add('Deltawort', { variants: [], zodiacSigns: ['Aries'] });
+      const base: IngredientFilter = { zodiacSigns: ['leo'] };
+      const { totalCount } = await findCompendiumCount({ ...base, withoutForms: true }, undefined);
+      // Why it could have counted otherwise: three entries lack a form, two fit the rest.
+      expect(totalCount).toBe(2);
+
+      for (const withoutForms of [undefined, false, true]) {
+        const facets = await findCompendiumFacets({ ...base, withoutForms });
+        expect({ withoutForms, count: facets.withoutForms }).toEqual({
+          withoutForms,
+          count: totalCount,
+        });
+      }
+    });
+
+    it('counts an entry whose only form is soft-deleted as having none', async () => {
+      const entry = await add('Alphawort', { variants: [makeVariant({ form: 'Resin' })] });
+      // Why it could have been left out: while the form is live, it is.
+      expect((await findCompendiumFacets({})).withoutForms).toBe(0);
+
+      await sql`
+        update ingredient_variants set deleted_at = now(), deleted_by = ${A.id}
+        where ingredient_id = ${entry}`;
+
+      expect((await findCompendiumFacets({})).withoutForms).toBe(1);
     });
   });
 

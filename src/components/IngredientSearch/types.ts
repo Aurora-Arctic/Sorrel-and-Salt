@@ -85,7 +85,8 @@ export type SearchSentenceFacet =
   | 'elements'
   | 'toxic'
   | 'nomenclature'
-  | 'withoutReferences';
+  | 'withoutReferences'
+  | 'withoutForms';
 
 /** The filter as the address holds it: the chosen values of each kind. Anything left out is not chosen. */
 export interface SearchSentenceFilter {
@@ -106,6 +107,8 @@ export interface SearchSentenceFilter {
   nomenclature?: string | null;
   /** Admin lists only. */
   withoutReferences?: boolean;
+  /** Admin lists only. */
+  withoutForms?: boolean;
 }
 
 /** The kinds that choose from a vocabulary, and so take display labels. */

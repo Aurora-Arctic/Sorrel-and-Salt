@@ -123,6 +123,8 @@ export interface CompendiumFacetCounts {
   toxic: FacetChoice<'toxic' | 'not_toxic'>[];
   /** How many entries cite no live reference, the No Refs switch's count; the same with it on or off. */
   withoutReferences: number;
+  /** How many entries have no live form, the No Form switch's count; the same with it on or off. */
+  withoutForms: number;
   /**
    * The coven's Source strip (M9.7): Local, then Compendium, zeros kept, each counted with
    * the strip's own choice left out. Left off by the public and admin lists, which have no

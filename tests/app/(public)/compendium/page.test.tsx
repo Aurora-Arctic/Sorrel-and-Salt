@@ -151,6 +151,21 @@ describe('the public compendium page metadata', () => {
     expect(result.robots).toBeUndefined();
   });
 
+  it('reads the same list with ?withoutForms=1 as without it', async () => {
+    await renderPage();
+    const unfiltered = readCompendium.mock.lastCall![0];
+    readCompendium.mockClear();
+    document.body.innerHTML = '';
+    await renderPage({ withoutForms: '1' });
+    expect(readCompendium.mock.lastCall![0]).toBe(unfiltered);
+    expect(variablesRead()).not.toHaveProperty('withoutForms');
+  });
+
+  it('keeps ?withoutForms=1 indexable too, as it filters nothing', async () => {
+    const result = await metadata({ withoutForms: '1' });
+    expect(result.robots).toBeUndefined();
+  });
+
   it('keeps ?withoutReferences=1 indexable too, as it filters nothing', async () => {
     const result = await metadata({ withoutReferences: '1' });
     expect(result.robots).toBeUndefined();

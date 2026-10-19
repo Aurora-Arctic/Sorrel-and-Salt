@@ -172,6 +172,7 @@ address cannot reject it the way `listParam` rejects a word outside its set.
 | `query`             | text                   | `query`             |                                            |
 | `forms`             | text list              | `forms`             | The compendium read folds the case         |
 | `withoutReferences` | on or off              | `withoutReferences` | Written `1`                                |
+| `withoutForms`      | on or off              | `withoutForms`      | Written `1` (M12.30)                       |
 | `elements`          | list of elements       | `elements`          | Dropped when outside `INGREDIENT_ELEMENTS` |
 | `categories`        | slug list              | `categoryIds`       | Through the `categories` lookup            |
 | `categoryMode`      | `all` or `any`         | `categoryMode`      | Written only for `any`                     |
@@ -284,7 +285,7 @@ separated by a comma. An example with every kind:
 - **No article before a vocabulary word**, except "the" before Sun and Moon among
   planets, which belongs to the linked value ("the Sun").
 - **Toxic** takes the address's own choice, `toxic` or `not_toxic`, and says "that are toxic" or "that are not toxic"; `any` or nothing says nothing. The linked fragment's `value` is that same string.
-- **Nomenclature and No Refs** are named only when `admin` is true; otherwise
+- **Nomenclature, No Refs and No Form** ("without forms") are named only when `admin` is true; otherwise
   they are ignored and do not count as a chosen filter.
 - **A value with no label** is named by its raw value, so a stale link still reads.
   Blank values and empty lists are not chosen.

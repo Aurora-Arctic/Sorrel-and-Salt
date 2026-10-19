@@ -632,6 +632,7 @@ export function compendiumList(
       deityArm(filter.deityIds),
       toxicArm(filter.toxic),
       filter.withoutReferences ? citesNowhere() : undefined,
+      filter.withoutForms ? hasNoForm() : undefined,
       filter.nomenclature ? eq(ingredients.nomenclature, filter.nomenclature) : undefined,
     ),
     order: match
@@ -817,6 +818,15 @@ function citesNowhere(): SQL | undefined {
       ),
     ),
   );
+}
+
+/**
+ * The entry has no live form: the admin's to-do list of entries nobody can
+ * stock or put in a spell yet (MB.215, M12.30). A soft-deleted variant is none,
+ * through `existsIn`.
+ */
+function hasNoForm(): SQL {
+  return not(existsIn(ingredientVariants, eq(ingredientVariants.ingredientId, ingredients.id)));
 }
 
 /**

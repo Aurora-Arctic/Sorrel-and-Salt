@@ -30,6 +30,7 @@ const NO_FILTER: CompendiumListFilter = {
   query: '',
   forms: [],
   withoutReferences: false,
+  withoutForms: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -48,6 +49,7 @@ const FACETS: CompendiumFacetCounts = {
   elements: [],
   toxic: [],
   withoutReferences: 4,
+  withoutForms: 0,
 };
 
 const entry = (

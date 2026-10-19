@@ -120,6 +120,19 @@ test('?withoutReferences=1 lists what the unfiltered page lists, and stays index
   expect(asked).not.toContain('rel="canonical"');
 });
 
+test('?withoutForms=1 lists what the unfiltered page lists, and offers no No Form control', async ({
+  page,
+  request,
+}) => {
+  const plain = await (await request.get('/compendium')).text();
+  const asked = await (await request.get('/compendium?withoutForms=1')).text();
+
+  expect(entryLinks(asked)).toEqual(entryLinks(plain));
+  expect(asked).not.toContain('rel="canonical"');
+  await page.goto('/compendium?withoutForms=1');
+  await expect(page.getByRole('switch', { name: /^No Form/ })).toHaveCount(0);
+});
+
 test('a filtered view is noindex with the unfiltered page as its canonical address', async ({
   request,
 }) => {

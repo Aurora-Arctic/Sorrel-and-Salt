@@ -1809,3 +1809,66 @@ test('a wide table keeps the first two categories and +N on one line, and the do
   });
   expect(Math.abs(dot - icon)).toBeLessThanOrEqual(1);
 });
+
+// M12.30: the No Form to-do filter lists the entries with no live form. Formlesswort A and B
+// hold none; Formlesswort C holds one, so the filter must leave it out.
+async function seedFormlessworts(userId: string) {
+  const sql = postgres(e2eDatabaseUrl(), { onnotice: () => {} });
+  try {
+    const [seeded] = await sql`select 1 from ingredients where name = 'Formlesswort A' limit 1`;
+    if (seeded) return;
+    const add = (letter: string, variants: ReturnType<typeof makeVariant>[]) =>
+      insertIngredient(
+        sql,
+        makeIngredient({ name: `Formlesswort ${letter}`, nomenclature: 'none', variants }),
+        userId,
+      );
+    await add('A', []);
+    await add('B', []);
+    await add('C', [makeVariant({ form: 'Formlessform Alpha' })]);
+  } finally {
+    await sql.end();
+  }
+}
+
+test('No Form lists the entries with no form, counts them, and lives in the address', async ({
+  page,
+}) => {
+  const { userId } = await signInAs(page, 'no-form@admin-compendium.test', ['discord'], 'admin');
+  await seedFormlessworts(userId);
+  const shownNames = async () =>
+    (
+      await page
+        .getByRole('link', { name: /^Edit Formlesswort / })
+        .evaluateAll((links) =>
+          links.map((link) => (link.getAttribute('aria-label') ?? link.textContent ?? '').trim()),
+        )
+    )
+      .map((label) => label.slice(-1))
+      .sort()
+      .join('');
+
+  await page.goto('/admin/compendium?query=Formlesswort');
+  // Why the filter could have mattered: all three are listed before it.
+  await expect.poll(shownNames).toBe('ABC');
+  const panel = await openFilters(page);
+  const noForm = panel.getByRole('switch', { name: /^No Form/ });
+  const shown = countIn(
+    await noForm.evaluate((el) => (el as HTMLInputElement).labels?.[0]?.textContent ?? ''),
+  );
+  expect(shown).toBe(2);
+  await noForm.click();
+  await applyFilters(page);
+
+  await expect(page).toHaveURL(/[?&]withoutForms=1(&|$)/);
+  await expect.poll(shownNames).toBe('AB');
+
+  // A link opens it, and Back keeps the page before it.
+  await page.goto('/admin/compendium?query=Formlesswort&withoutForms=1');
+  await expect.poll(shownNames).toBe('AB');
+  await openFilters(page);
+  await expect(page.getByRole('switch', { name: /^No Form/ })).toBeChecked();
+  await assertNoAccessibilityViolations(page);
+  await page.goBack();
+  await expect(page).not.toHaveURL(/withoutForms/);
+});

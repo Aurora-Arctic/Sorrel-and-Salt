@@ -341,3 +341,30 @@ describe('compendium(withoutReferences)', () => {
     });
   });
 });
+
+describe('compendium(withoutForms)', () => {
+  it('lists the entries with no live form, signed out, and counts them', async () => {
+    await insertIngredient(sql, makeIngredient({ name: 'Formed', nomenclature: 'none' }), A.id);
+    await insertIngredient(
+      sql,
+      makeIngredient({ name: 'Formless', nomenclature: 'none', variants: [] }),
+      A.id,
+    );
+
+    const result = await run<{
+      compendium: { totalCount: number; edges: { node: { name: string } }[] };
+    }>(null, `{ compendium(withoutForms: true) { totalCount edges { node { name } } } }`);
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.compendium).toEqual({
+      totalCount: 1,
+      edges: [{ node: { name: 'Formless' } }],
+    });
+    const all = await run<{ compendium: { totalCount: number } }>(
+      null,
+      `{ compendium { totalCount } }`,
+    );
+    // Why the filter could have mattered: unfiltered, both are listed.
+    expect(all.data?.compendium.totalCount).toBe(2);
+  });
+});

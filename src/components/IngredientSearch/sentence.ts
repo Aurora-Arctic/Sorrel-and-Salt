@@ -164,5 +164,14 @@ export function buildSearchSentence({
     });
   }
 
+  if (admin && filter.withoutForms) {
+    clause({
+      kind: 'value',
+      text: 'without forms',
+      facet: 'withoutForms',
+      value: 'true',
+    });
+  }
+
   return { fragments: merge(parts), hasFilter };
 }

@@ -89,6 +89,11 @@ export const CompendiumFilter = z.object({
     .boolean()
     .nullish()
     .transform((only) => (only === true ? true : undefined)),
+  // The admin's other to-do list: entries with no live form (M12.30). False is no filter.
+  withoutForms: z
+    .boolean()
+    .nullish()
+    .transform((only) => (only === true ? true : undefined)),
   // How the entries are classified; `unknown` is the formal names still to look up (M5.5).
   nomenclature: z
     .enum(NOMENCLATURE_KINDS)

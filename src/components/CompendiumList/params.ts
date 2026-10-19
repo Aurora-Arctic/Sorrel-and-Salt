@@ -43,6 +43,15 @@ export const COMPENDIUM_PARAMS = defineSearchParams({
     write: (on: boolean) => (on ? '1' : undefined),
     toVariable: (on) => on || undefined,
   }),
+  // Entries with no live form, `?withoutForms=1`, as withoutReferences is written (M12.30).
+  // Only the admin list offers it.
+  withoutForms: searchParam({
+    name: 'withoutForms',
+    variable: 'withoutForms',
+    read: (raw) => single(raw) === '1',
+    write: (on: boolean) => (on ? '1' : undefined),
+    toVariable: (on) => on || undefined,
+  }),
   // Entries holding any of these, `?elements=fire&elements=earth`.
   elements: listParam('elements', INGREDIENT_ELEMENTS, 'elements'),
   // Entries filed under all of these categories, or any of them under

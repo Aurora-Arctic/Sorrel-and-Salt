@@ -15,7 +15,7 @@
 
 - Each card is a plain link to `/compendium/ingredients/<slug>`, with no modal. Two entries sharing a label are told apart by the formal-name line the card draws.
 - The list is regular density, never compact, and sits in `ListFrame` through `IngredientSearch shape="cards"`, so a page on its way draws `ListBody shape="cards"`.
-- The filter is `CompendiumListFilter audience="public"`: no Classification facet and no No Refs control. Those are the curators' to-do lists ([`compendium-list.md`](compendium-list.md)).
+- The filter is `CompendiumListFilter audience="public"`: no Classification facet and no No Refs or No Form control. Those are the curators' to-do lists ([`compendium-list.md`](compendium-list.md)).
 - The foot of a card is chosen by the page, from the visitor:
   - `add` is a real `<button>` named Add to My Ingredients, **disabled** until M9.12 builds the dialog it opens (the owner's call, 2026-10-19). It is for a signed-in owner or member of at least one coven.
   - `none` draws nothing, for an account that only views and for a visitor with no account, who signs in through the header (the owner's call, 2026-10-19).
@@ -25,7 +25,7 @@
 
 `src/app/(public)/compendium/page.tsx` draws it per request over the cached reads in `src/app/compendium-reads.ts`, which the admin page shares. The reads take no session, so every card and link is in the server HTML. The page asks for the viewer only to choose `action`: `add` when any of the viewer's coven memberships `canWrite` (the per-role statement in `viewerFor`, never a comparison of role names), `none` otherwise, with no session included.
 
-`?withoutReferences=1` is dropped before the address is read, so it lists what the unfiltered page lists. `generateMetadata` marks a filtered view `noindex` with the canonical address `/compendium`; the unfiltered list and its pages stay indexable.
+`?withoutReferences=1` and `?withoutForms=1` are dropped before the address is read, so it lists what the unfiltered page lists. `generateMetadata` marks a filtered view `noindex` with the canonical address `/compendium`; the unfiltered list and its pages stay indexable.
 
 ## Stories and tests
 

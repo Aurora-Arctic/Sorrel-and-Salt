@@ -25,6 +25,7 @@ const CompendiumFacetCountsDocument = graphql(`
     $query: String
     $forms: [String!]
     $withoutReferences: Boolean
+    $withoutForms: Boolean
     $elements: [IngredientElement!]
     $categoryIds: [ID!]
     $categoryMode: CategoryMode
@@ -37,6 +38,7 @@ const CompendiumFacetCountsDocument = graphql(`
       query: $query
       forms: $forms
       withoutReferences: $withoutReferences
+      withoutForms: $withoutForms
       elements: $elements
       categoryIds: $categoryIds
       categoryMode: $categoryMode
@@ -74,6 +76,7 @@ const CompendiumFacetCountsDocument = graphql(`
         count
       }
       withoutReferences
+      withoutForms
     }
   }
 `);

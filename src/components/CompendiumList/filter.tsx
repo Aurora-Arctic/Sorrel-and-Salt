@@ -42,6 +42,7 @@ const panelOf = (filter: CompendiumListFilter): FacetPanelFilter => ({
   elements: filter.elements,
   toxic: filter.toxic ?? '',
   withoutReferences: filter.withoutReferences,
+  withoutForms: filter.withoutForms,
 });
 
 /** Nothing chosen: what Clear All holds while the unfiltered list is on its way. */
@@ -55,6 +56,7 @@ const NO_FACETS: FacetPanelFilter = {
   elements: [],
   toxic: '',
   withoutReferences: false,
+  withoutForms: false,
 };
 
 /** The address of the list under the filter shown, the panel's facets and the name typed set over it. */
@@ -78,6 +80,7 @@ const hrefFor = (
         ),
         toxic: panel.toxic,
         withoutReferences: panel.withoutReferences,
+        withoutForms: panel.withoutForms,
         // Below two categories the mode means nothing, so the address leaves it out.
         categoryMode: panel.categories.length >= 2 ? panel.categoryMode : 'all',
       },
@@ -104,6 +107,7 @@ const heldFilter = (
   ),
   toxic: panel.toxic,
   withoutReferences: panel.withoutReferences,
+  withoutForms: panel.withoutForms,
   categoryMode: panel.categories.length >= 2 ? panel.categoryMode : 'all',
 });
 

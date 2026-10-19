@@ -91,6 +91,7 @@ const NO_FILTER: CompendiumListFilter = {
   query: '',
   forms: [],
   withoutReferences: false,
+  withoutForms: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -105,6 +106,7 @@ const SHOWN: CompendiumListFilter = {
   query: 'test',
   forms: ['Fixture Oil'],
   withoutReferences: true,
+  withoutForms: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -141,6 +143,7 @@ const FACETS: CompendiumFacetCounts = {
   elements: [],
   toxic: [],
   withoutReferences: 0,
+  withoutForms: 0,
 };
 
 const props = (overrides: Partial<CompendiumListProps> = {}): CompendiumListProps => ({
@@ -375,6 +378,7 @@ describe('CompendiumList filter', () => {
         elements: [],
         toxic: [],
         withoutReferences,
+        withoutForms: 0,
       },
     }));
   beforeEach(() => answerCounts(0));
@@ -500,6 +504,26 @@ describe('CompendiumList filter', () => {
     fireEvent.click(unsourcedSwitch());
     escape();
     expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?query=test&forms=Fixture+Oil');
+  });
+
+  it('writes No Form as 1 beside No Refs, and the toggle off by leaving it out', () => {
+    const { unmount } = render(
+      <CompendiumList {...props({ facets: { ...FACETS, withoutForms: 3 } })} />,
+    );
+    openPanel();
+    const formless = screen.getByRole('switch', { name: 'No Form 3' });
+    fireEvent.click(formless);
+    escape();
+    expect(router.push).toHaveBeenLastCalledWith('/admin/compendium?withoutForms=1');
+    unmount();
+
+    render(<CompendiumList {...props({ filter: { ...SHOWN, withoutForms: true } })} />);
+    openPanel();
+    fireEvent.click(screen.getByRole('switch', { name: /^No Form/ }));
+    escape();
+    expect(router.push).toHaveBeenLastCalledWith(
+      '/admin/compendium?query=test&forms=Fixture+Oil&withoutReferences=1',
+    );
   });
 
   // Counts stay live while the panel is open: each change asks the server what the held

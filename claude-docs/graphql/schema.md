@@ -470,8 +470,10 @@ type QueryCompendiumConnectionEdge {
   entries citing no live compendium reference, so an entry whose one link is
   unlinked, or cites a soft-deleted reference, is on it, as its bibliography
   reads empty; and `nomenclature` (M5.5), only the entries so classified, so
-  `unknown` is the formal names still to look up. Either left out, or
-  `withoutReferences: false`, is no filter, and `totalCount` counts under
+  `unknown` is the formal names still to look up. A third, `withoutForms: true`
+  (M12.30), keeps only the entries with no live form, so one whose forms are all
+  soft-deleted is on it, and it is public as the rest of the query is (MB.80).
+  Any left out, or `withoutReferences: false` or `withoutForms: false`, is no filter, and `totalCount` counts under
   the same filter.
 - **A search is ranked, best match first.** It pages
   `(score DESC, name, id)`, and each edge carries `score`, its rank: the
@@ -774,7 +776,7 @@ The numbers beside each choice in the search's filter panel (M12.3): for
 every value of every filter, how many entries the list would hold with that
 value picked. `compendiumFacets` sits in `graphql/compendium.ts` and takes
 exactly `compendium`'s filter arguments (`query`, `categoryIds`,
-`categoryMode`, the six facet arguments, `withoutReferences` and
+`categoryMode`, the six facet arguments, `withoutReferences`, `withoutForms` and
 `nomenclature`), with no page. `workspaceIngredientFacets` sits in
 `graphql/workspace-ingredient-list.ts` and takes `workspaceIngredients`'
 (`workspaceId`, `query`, the category arguments, the six facet
@@ -793,7 +795,7 @@ vocabularies and by the forms, deities and categories the counted entries
 carry. Each item's `value` has the type of the argument it would be sent
 back as, so a client can put a picked value straight into the next query.
 `CompendiumFacets` adds `withoutReferences`, how many entries cite no live
-reference under the rest of the filter, the same whether the switch is on or
+reference under the rest of the filter, and `withoutForms`, how many have no live form, each the same whether its switch is on or
 off; a coven's list has no such switch. The seven shared fields are written
 once, in `facetFields`, which both types spread.
 
@@ -810,6 +812,7 @@ count equals the list's `totalCount` under the same filter.
 type CompendiumFacets {
   # the seven fields of IngredientFacets, then:
   withoutReferences: Int!
+  withoutForms: Int!
 }
 
 type IngredientFacets {

@@ -135,6 +135,7 @@ export function emptyText(
     planets,
     toxic,
     withoutReferences,
+    withoutForms,
     elements,
     categories,
     categoryMode,
@@ -162,6 +163,7 @@ export function emptyText(
     planets.length > 0 && `the ${planets.length === 1 ? 'planet' : 'planets'} ${quoted(planets)}`,
     toxicLabel && `the toxic setting ${toxicLabel}`,
     withoutReferences && 'No Refs',
+    withoutForms && 'No Form',
     elements.length > 0 &&
       `the ${elements.length === 1 ? 'element' : 'elements'} ${elements.map((each) => labelOf(ELEMENT_OPTIONS, each)).join(' or ')}`,
     named.length > 0 &&

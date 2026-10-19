@@ -56,15 +56,17 @@ import type {
  * `withoutReferences` is how many entries cite no live reference, on
  * themselves or a live form, under the rest of the filter: the filter's own
  * `withoutReferences` is set to true for it, so the count is the same whether
- * the switch is on or off.
+ * the switch is on or off. `withoutForms` is the same for the No Form switch:
+ * how many entries have no live form (M12.30).
  */
 export async function findCompendiumFacets(filter: IngredientFilter): Promise<CompendiumFacets> {
   const scope = readableInTiers([], ingredients);
-  const [facets, withoutReferences] = await Promise.all([
+  const [facets, withoutReferences, withoutForms] = await Promise.all([
     readFacets(filter, scope),
     unsourcedCount(filter, scope),
+    formlessCount(filter, scope),
   ]);
-  return { ...facets, withoutReferences };
+  return { ...facets, withoutReferences, withoutForms };
 }
 
 /**
@@ -365,6 +367,11 @@ async function toxicFacet(
 /** How many entries the list holds with the No Refs switch on, through `citesNowhere`. */
 function unsourcedCount(filter: IngredientFilter, scope: SQL | undefined): Promise<number> {
   return totalUnder({ ...filter, withoutReferences: true }, scope);
+}
+
+/** How many entries the list holds with the No Form switch on, through `hasNoForm`. */
+function formlessCount(filter: IngredientFilter, scope: SQL | undefined): Promise<number> {
+  return totalUnder({ ...filter, withoutForms: true }, scope);
 }
 
 /** How many of the read's rows `arm` holds. `filter` has no builder. */

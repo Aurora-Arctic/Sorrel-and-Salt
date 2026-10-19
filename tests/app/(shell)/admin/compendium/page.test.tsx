@@ -176,6 +176,7 @@ const NO_FACETS = {
   elements: [],
   toxic: [],
   withoutReferences: 0,
+  withoutForms: 0,
 };
 const FORM_COUNTS = [
   { value: 'Fixture Oil', count: 2 },
@@ -433,6 +434,21 @@ describe('the /admin/compendium filter', () => {
     expect(lastFilter()).toEqual(NO_FILTER);
     openPanel();
     expect(screen.getByRole('switch', { name: /^No Refs/ })).not.toBeChecked();
+  });
+
+  it('reads ?withoutForms=1 into the list and its count, and nothing else as on', async () => {
+    await renderPage({ withoutForms: '1' });
+    expect(lastFilter()).toEqual({ ...NO_FILTER, withoutForms: true });
+    openPanel();
+    expect(screen.getByRole('switch', { name: /^No Form/ })).toBeChecked();
+  });
+
+  it('reads ?withoutForms= other than 1 as every entry', async () => {
+    await renderPage({ withoutForms: 'true' });
+
+    expect(lastFilter()).toEqual(NO_FILTER);
+    openPanel();
+    expect(screen.getByRole('switch', { name: /^No Form/ })).not.toBeChecked();
   });
 
   it('turns ?categories= slugs into the ids of the live categories, for the list and its count', async () => {

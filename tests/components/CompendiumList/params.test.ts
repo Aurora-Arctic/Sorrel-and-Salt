@@ -160,6 +160,27 @@ describe('the toxic parameter', () => {
   });
 });
 
+describe('the No Form parameter (M12.30)', () => {
+  it('reads 1 as on and anything else as off, and writes only the on', () => {
+    expect(COMPENDIUM_PARAMS.read({ withoutForms: '1' }).withoutForms).toBe(true);
+    expect(COMPENDIUM_PARAMS.read({ withoutForms: 'true' }).withoutForms).toBe(false);
+    expect(COMPENDIUM_PARAMS.read({}).withoutForms).toBe(false);
+    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { withoutForms: true })).toBe(
+      '/admin/compendium?withoutForms=1',
+    );
+    expect(COMPENDIUM_PARAMS.href('/admin/compendium', { withoutForms: false })).toBe(
+      '/admin/compendium',
+    );
+  });
+
+  it('becomes the query variable only when on', () => {
+    const on = COMPENDIUM_PARAMS.variables(COMPENDIUM_PARAMS.read({ withoutForms: '1' }));
+    const off = COMPENDIUM_PARAMS.variables(COMPENDIUM_PARAMS.read({}));
+    expect(on).toMatchObject({ withoutForms: true });
+    expect(off.withoutForms).toBeUndefined();
+  });
+});
+
 describe('the classification parameter', () => {
   it('has left the table, so the address no longer reads or writes it', () => {
     expect(Object.keys(entries)).not.toContain('nomenclature');
@@ -176,6 +197,7 @@ describe('the whole table', () => {
       query: '',
       forms: [],
       withoutReferences: false,
+      withoutForms: false,
       elements: [],
       categories: [],
       categoryMode: 'all',

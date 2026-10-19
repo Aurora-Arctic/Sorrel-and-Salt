@@ -155,6 +155,7 @@ export default function FacetPanel({
     chosen +
     (filter.toxic === '' ? 0 : 1) +
     (admin && filter.withoutReferences ? 1 : 0) +
+    (admin && filter.withoutForms ? 1 : 0) +
     (filter.source ? 1 : 0) +
     (filter.inStock ? 1 : 0) +
     (filter.lowStockOnly ? 1 : 0);
@@ -522,6 +523,15 @@ export default function FacetPanel({
                       name="withoutReferences"
                       checked={filter.withoutReferences}
                       onChange={(withoutReferences) => onChange({ withoutReferences })}
+                    />
+                  )}
+                  {admin && (
+                    <FacetSwitch
+                      label="No Form"
+                      count={facets.withoutForms}
+                      name="withoutForms"
+                      checked={filter.withoutForms}
+                      onChange={(withoutForms) => onChange({ withoutForms })}
                     />
                   )}
                 </div>

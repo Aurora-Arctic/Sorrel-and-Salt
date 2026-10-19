@@ -35,6 +35,7 @@ const FACETS: CompendiumFacetCounts = {
     { value: 'not_toxic', label: 'Not Toxic', count: 9 },
   ],
   withoutReferences: 3,
+  withoutForms: 2,
 };
 
 const NONE: FacetPanelFilter = {
@@ -47,6 +48,7 @@ const NONE: FacetPanelFilter = {
   elements: [],
   toxic: '',
   withoutReferences: false,
+  withoutForms: false,
 };
 
 const props = (
@@ -713,6 +715,21 @@ describe('FacetPanel', () => {
 
     fireEvent.click(screen.getByRole('switch', { name: /^No Refs/ }));
     expect(onChange).toHaveBeenLastCalledWith({ withoutReferences: true });
+  });
+
+  it('offers No Form with its count to an admin only, and reports it as a patch of its own', () => {
+    stubViewport(true);
+    const onChange = vi.fn();
+    const { unmount } = render(<FacetPanel {...props({}, { admin: true, onChange })} />);
+    fireEvent.click(filtersButton());
+
+    fireEvent.click(screen.getByRole('switch', { name: /^No Form 2/ }));
+    expect(onChange).toHaveBeenLastCalledWith({ withoutForms: true });
+    unmount();
+
+    render(<FacetPanel {...props({})} />);
+    fireEvent.click(filtersButton());
+    expect(screen.queryByRole('switch', { name: /^No Form/ })).toBeNull();
   });
 
   it('renders inline and open before hydration, every control present, with Filters a link to the panel', () => {

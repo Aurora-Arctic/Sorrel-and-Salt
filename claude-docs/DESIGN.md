@@ -794,6 +794,7 @@ type Query {
     celestialBodies: [String!] # entries holding any one of these planets (M11.22)
     toxic: ToxicFilter # any, toxic or not_toxic: the entry or any live form flagged (M11.22)
     withoutReferences: Boolean # the admin's to-do list: live entries with no live link (§5, M5.5)
+    withoutForms: Boolean # the admin's second to-do list: live entries with no live variant (M12.30)
     nomenclature: Nomenclature # the other to-do list: unknown is the formal names still to look up (M5.5)
     first: Int
     after: String

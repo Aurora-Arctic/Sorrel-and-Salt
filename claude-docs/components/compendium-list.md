@@ -22,7 +22,7 @@ resolves through, rather than one read per row.
 | Prop           | What it is                                                                                                                                                                                                     |
 | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `entries`      | This page's `CompendiumListEntry` rows, in the service's order                                                                                                                                                 |
-| `filter`       | `{ query, forms, withoutReferences, elements, categories, categoryMode, deities, zodiac, planets, toxic }`, as asked                                                                                           |
+| `filter`       | `{ query, forms, withoutReferences, withoutForms, elements, categories, categoryMode, deities, zodiac, planets, toxic }`, as asked                                                                             |
 | `categories`   | Every live category the Categories picker offers, `{ id, slug, name, group }` each                                                                                                                             |
 | `facets`       | `CompendiumFacetCounts`: each facet's choices as `{ value, label, count }`, under the filter shown (`facets.ts`)                                                                                               |
 | `vocabulary`   | `{ deities, formIcons }`: every live deity with its id, slug, name and tradition, and each curated form's group icon by folded name. The open panel needs them to turn a live answer back into labelled counts |
@@ -55,7 +55,7 @@ different groups, so the page offers each name once, whatever its case.
   type-ahead (`query`, [`ingredient-search.md`](ingredient-search.md)) with its own Search
   submit, then [`FacetPanel`](facet-panel.md) (M12.4) with `admin` on: the Filters (n)
   button, a quiet Clear All link beside it while any facet is in use, and the dialog of
-  facets (categories with Match, No Refs, forms, toxic, planets, zodiac, deities,
+  facets (categories with Match, No Refs, No Form, forms, toxic, planets, zodiac, deities,
   elements). Above the results, outside the form, sits [`SearchSentence`](search-sentence.md).
   The compendium search has no Classification filter (the column stays in the table); the
   `FilterForm` Clear link is turned off (`clear={false}`), since the panel carries Clear
@@ -68,7 +68,7 @@ different groups, so the page offers each name once, whatever its case.
   builds the address from the filter shown with the name typed (trimmed) and every facet
   set over it (`hrefFor`, through `COMPENDIUM_PARAMS.changed`, which drops the cursor).
   The lists are repeated parameters, categories and deities are slugs, No Refs is
-  `withoutReferences=1`, and `categoryMode` is written only from two categories up.
+  `withoutReferences=1`, No Form (M12.30, the entries with no live form) is `withoutForms=1`, and `categoryMode` is written only from two categories up.
   Picking a name in the dropdown instead opens that entry's `?edit=` modal over the filter
   as shown, the text typed not applied (the owner's call, M8.10).
 - **Before hydration** the dialog is drawn open inside the form, each facet a native

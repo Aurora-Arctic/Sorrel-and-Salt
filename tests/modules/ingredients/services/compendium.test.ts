@@ -5,7 +5,11 @@ import { Forbidden, NotFound, ValidationError } from '@/lib/errors';
 import { countCompendium, getIngredient, listCompendium } from '@/modules/ingredients';
 import { A, B, C, D, E, asUser } from '../../../support/as-user';
 import { useTestDatabase } from '../../../support/db/database';
-import { insertDeityLink, insertIngredient } from '../../../support/db/insert-ingredient';
+import {
+  insertDeityLink,
+  insertIngredient,
+  insertVariant,
+} from '../../../support/db/insert-ingredient';
 import { insertReference, insertReferenceLink } from '../../../support/db/insert-reference';
 import { type IngredientFixture, makeIngredient, makeVariant } from '../../../support/fixtures';
 import type { PageRequest } from '@/lib/types';
@@ -105,6 +109,56 @@ describe('listCompendium', () => {
       'Fixture Unsettled Cited',
     ]);
     expect(await names({ nomenclature: 'botanical' })).toEqual([]);
+  });
+
+  // M12.30's to-do list of entries nobody can stock yet: no live variant.
+  // Entries are seeded with no variant, the fixture's default one left off.
+  const seedFormless = (name: string, workspaceId: string | null = null) =>
+    insertIngredient(
+      sql,
+      makeIngredient({ name, nomenclature: 'none', workspaceId, variants: [] }),
+      A.id,
+    );
+
+  it('narrows to the entries with no live form, with the search and the other to-do filter beside it', async () => {
+    const book = await insertReference(sql, {}, E.id);
+    await seedFormless('Fixture Formless');
+    const cited = await seedFormless('Fixture Formless Cited');
+    await insertReferenceLink(sql, cited, book, E.id);
+    const withForm = await seedFormless('Fixture Formed');
+    await insertVariant(sql, withForm, { form: 'Oil' }, A.id);
+    const retired = await seedFormless('Fixture Retired Forms');
+    const resin = await insertVariant(sql, retired, { form: 'Resin' }, A.id);
+    await sql`update ingredient_variants set deleted_at = now(), deleted_by = ${A.id} where id = ${resin}`;
+    await seedFormless('Fixture Formless Here', WORKSPACE_W_ID);
+    // The preconditions: the retired entry does hold a variant row, and no live one.
+    const [{ rows, live }] = await sql`
+      select count(*)::int as rows, (count(*) filter (where deleted_at is null))::int as live
+      from ingredient_variants where ingredient_id = ${retired}`;
+    expect({ rows, live }).toEqual({ rows: 1, live: 0 });
+
+    const names = async (filter: Parameters<typeof listCompendium>[0]) =>
+      (await listCompendium(filter, PAGE)).map((entry) => entry.node.name).sort();
+
+    // Why the narrowing below is the filter's: without it, the formed entry lists too.
+    expect(await names({})).toEqual([
+      'Fixture Formed',
+      'Fixture Formless',
+      'Fixture Formless Cited',
+      'Fixture Retired Forms',
+    ]);
+    expect(await names({ withoutForms: true })).toEqual([
+      'Fixture Formless',
+      'Fixture Formless Cited',
+      'Fixture Retired Forms',
+    ]);
+    expect(await names({ withoutForms: false })).toHaveLength(4);
+    expect(await names({ withoutForms: true, query: 'Cited' })).toEqual(['Fixture Formless Cited']);
+    expect(await names({ withoutForms: true, withoutReferences: true })).toEqual([
+      'Fixture Formless',
+      'Fixture Retired Forms',
+    ]);
+    expect((await countCompendium({ withoutForms: true }, undefined)).totalCount).toBe(3);
   });
 
   it('refuses a nomenclature it does not know, before any read', async () => {

@@ -740,6 +740,8 @@ export interface IngredientFilter {
   lowStockOnly?: boolean;
   /** Only entries citing no live compendium reference: the admin's to-do list (MB.153). */
   withoutReferences?: boolean;
+  /** Only entries with no live form: the admin's other to-do list, entries nobody can stock yet (M12.30). */
+  withoutForms?: boolean;
   /** Only entries declaring this nomenclature (M5.5). */
   nomenclature?: NomenclatureKind;
 }
@@ -781,11 +783,13 @@ export interface WorkspaceIngredientFacets extends IngredientFacets {
 /**
  * The compendium's facets, and how many entries cite no live reference under
  * the rest of the filter: the No Refs switch's count (M12.3), the same with
- * the switch on or off. A coven's list has no such switch, so its facets do
- * not carry it.
+ * the switch on or off. `withoutForms` is the same for entries with no live
+ * form (M12.30). A coven's list has neither switch, so its facets do not carry
+ * them.
  */
 export interface CompendiumFacets extends IngredientFacets {
   withoutReferences: number;
+  withoutForms: number;
 }
 
 /**
