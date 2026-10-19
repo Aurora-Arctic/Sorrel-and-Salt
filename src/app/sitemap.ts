@@ -8,12 +8,13 @@ import { siteUrl } from '@/lib/site';
 // an hour at most), so a crawl costs no query.
 export const dynamic = 'force-dynamic';
 
-// The list page and every current entry, never a retired slug (the read lists
-// live entries only). The list page has no `lastModified`: it changes
+// The home page, the list page and every current entry, never a retired slug (the read
+// lists live entries only). The first two have no `lastModified`: the list changes
 // whenever any entry does, and a date that is always today tells a crawler nothing.
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries = await listCompendiumSlugs();
   return [
+    { url: siteUrl('/') },
     { url: siteUrl('/compendium') },
     ...entries.map(({ slug, lastModified }) => ({
       url: siteUrl(`/compendium/ingredients/${slug}`),

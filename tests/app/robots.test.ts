@@ -14,7 +14,29 @@ describe('MB.84: robots', () => {
       rules: { userAgent: '*', allow: CRAWLABLE_PATHS, disallow: '/' },
       sitemap: 'https://sorrelandsalt.com/sitemap.xml',
     });
-    expect(CRAWLABLE_PATHS).toEqual(['/compendium', '/compendium/']);
+  });
+
+  // The matching a crawler does (RFC 9309, 2.2.2 and 2.2.3): the longest matching
+  // rule wins, an allow beating an equal disallow, and `$` ends a pattern.
+  const allowed = (path: string) => {
+    const matches = (rule: string) =>
+      rule.endsWith('$') ? path === rule.slice(0, -1) : path.startsWith(rule);
+    const best = Math.max(0, ...CRAWLABLE_PATHS.filter(matches).map((rule) => rule.length));
+    return best >= 1;
+  };
+
+  it.each([
+    ['/', true],
+    ['/compendium', true],
+    ['/compendium/ingredients/testwort', true],
+    ['/coven/fixture-coven', false],
+    ['/coven', false],
+    ['/admin', false],
+    ['/account', false],
+    ['/sign-in', false],
+    ['/api/graphql', false],
+  ])('treats %s as crawlable: %s', (path, expected) => {
+    expect(allowed(path)).toBe(expected);
   });
 
   it.each(['preview', 'development', undefined])('disallows everything under %s', (env) => {

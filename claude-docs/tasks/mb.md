@@ -3368,7 +3368,7 @@ _Acceptance criteria:_
 - Off production every response carries `X-Robots-Tag: noindex`
 - axe clean signed out at 375px
 
-**MB.84 — robots, sitemap, page metadata and noindex off production** · 4h
+**MB.84 — robots, sitemap, page metadata and noindex off production** · 7h
 
 _Story:_ As the owner, I want search engines to find and correctly title every compendium page, and to find nothing on staging, so that the public reference is indexed once at its canonical address.
 
@@ -3378,6 +3378,8 @@ Lands after M8.19, since both pages must exist to describe. `src/app/robots.ts` 
 
 **Amended by MB.155 (2026-10-17), at the owner's ask:** both entry pages already title themselves `Name (Formal Name)` whenever the entry has a formal name that differs from its name, and the name alone otherwise, through `pageTitleOf` in `src/components/IngredientEntry/page-title.ts`. That meets the criterion that two entries sharing a label are told apart by the formal name. This task adds the site to that title and keeps the helper, rather than building the title again.
 
+**Amended at the owner's call (2026-10-19):** structured data and the home page are folded in; re-estimated from 4h to 7h (2h for the JSON-LD and the Open Graph and Twitter tags, 1h for the home page, its robots rule and its markup). (1) Each public page carries schema.org JSON-LD rendered into the server HTML through one serialiser, `src/lib/json-ld.ts`, which escapes `<`: an entry page is a `DefinedTerm` (name, the formal and folk names as `alternateName`, description, URL, `inDefinedTermSet`) with a `BreadcrumbList` back to the compendium; the list page is a `CollectionPage` whose `mainEntity` is a `DefinedTermSet`. Filtered list views and the in-app detail page carry none. Entry sources are not marked up as citations. This supersedes MB.80's "no structured data beyond WebPage" line. (2) Every page's title takes the template `%s | Sorrel & Salt` from the root layout, and the public pages carry `og:title`, `og:description`, `og:url`, `og:site_name`, `og:type` `website` and a `summary` Twitter card, with no image (M11.16's). (3) The home page `/` becomes crawlable on production so Google can read a site name from it: robots allows it with `/$`, because a bare `/` would match every path (RFC 9309, 2.2.3 ends a pattern at `$`; Google's robots.txt page documents `/$` as matching only the root). The home page carries the site name alone as an absolute, untemplated title, a description, canonical `/`, and `WebSite` JSON-LD (`name`, `url`) shown to a signed-out visitor only, and the sitemap lists it.
+
 _Acceptance criteria:_
 
 - `/robots.txt` and `/sitemap.xml` answer 200 with the shapes above; the sitemap carries every current slug and no retired one
@@ -3386,7 +3388,11 @@ _Acceptance criteria:_
 - Every compendium page carries a title, description and canonical; two entries sharing a label are distinguished in the title by the formal name
 - A filtered list view is `noindex` with canonical `/compendium`
 - An unknown slug is 404; a retired slug is 308 to the current one, with no browser-cacheable freshness headers
-- A Lighthouse SEO audit passes on both public pages signed out
+- A Lighthouse SEO audit passes on the home page and both compendium pages signed out
+- Robots allows `/` alone with `/$`: `/coven/…`, `/admin` and `/account` stay disallowed, asserted by test
+- The home page carries an absolute untemplated title, a description, canonical `/` and `WebSite` JSON-LD when signed out, and the sitemap lists `/`
+- An entry page carries `DefinedTerm` and `BreadcrumbList` JSON-LD and the list page `CollectionPage`, in the server HTML, with `<` escaped; a filtered list and the in-app page carry none
+- Every page title ends with the site name through the root template, and the public pages carry Open Graph and Twitter text tags and no image
 
 **MB.85 — Story 63: a visitor reads the compendium without signing in** · 2h
 

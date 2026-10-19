@@ -4,7 +4,7 @@
 // ("</script>") would end it early. The escape for it is the same character to a JSON
 // reader and not a tag to an HTML one.
 
-import { siteUrl } from './site';
+import { SITE_NAME, siteUrl } from './site';
 
 /** `data` as JSON safe to place inside a script element. */
 export function jsonLd(data: Record<string, unknown>): string {
@@ -49,6 +49,15 @@ export function entryJsonLd(entry: {
       ],
     },
   ]);
+}
+
+/**
+ * The home page's `WebSite`, which Google reads to choose the site name it shows
+ * in results: only the home page, with `name` and `url` required. No
+ * `alternateName`: nothing sourced gives the site another name.
+ */
+export function websiteJsonLd(): string {
+  return jsonLd({ '@type': 'WebSite', name: SITE_NAME, url: siteUrl('/') });
 }
 
 /** The list page: a collection whose subject is the compendium's term set. */
