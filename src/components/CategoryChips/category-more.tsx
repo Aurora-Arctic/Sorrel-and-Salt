@@ -1,8 +1,14 @@
 'use client';
 
+import { autoUpdate, flip, offset, shift, size, useFloating } from '@floating-ui/react-dom';
 import { type ReactElement, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { chipColors } from '../../lib/chip-colors';
 import type { CardCategory } from './types';
+
+/** The least width the panel takes when the chip row is narrower. */
+const PANEL_MIN_PX = 192;
+/** Space kept between the panel and the window's edge. */
+const EDGE_PX = 8;
 
 // The card's +N button and the panel of categories behind it: a toggletip, so the card's
 // height never changes (the panel floats over the chip row). Hover and focus open it; a
@@ -30,6 +36,35 @@ const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement =>
   // Set while Escape puts focus back on the button, which must not reopen the panel.
   const returning = useRef(false);
   const panelId = useId();
+  // The chip row the panel hangs from, found from the button once it is mounted.
+  const [row, setRow] = useState<HTMLElement | null>(null);
+
+  const { refs, elements, floatingStyles, update } = useFloating({
+    open,
+    elements: { reference: row },
+    placement: 'bottom-start',
+    strategy: 'fixed',
+    middleware: [
+      offset(8),
+      flip({ padding: EDGE_PX }),
+      shift({ padding: EDGE_PX }),
+      size({
+        padding: EDGE_PX,
+        // As wide as the row, or the least width, and never wider than the window.
+        apply({ rects, elements: { floating } }) {
+          floating.style.width = `${Math.max(rects.reference.width, PANEL_MIN_PX)}px`;
+        },
+      }),
+    ],
+  });
+  const { floating } = elements;
+  useEffect(() => {
+    if (!open || !row || !floating) return;
+    return autoUpdate(row, floating, update);
+  }, [open, row, floating, update]);
+  useEffect(() => {
+    setRow(wrapper.current?.closest('ul') ?? null);
+  }, []);
 
   const close = useCallback(() => {
     clearTimeout(timer.current);
@@ -107,6 +142,8 @@ const CategoryMore = ({ categories, label }: CategoryMoreProps): ReactElement =>
       </button>
       <span
         id={panelId}
+        ref={refs.setFloating}
+        style={floatingStyles}
         // oxlint-disable-next-line jsx-a11y/prefer-tag-over-role -- a fieldset or details would add a legend or a disclosure; this is a plain labelled group
         role="group"
         aria-label={`More categories for ${label}`}

@@ -122,11 +122,15 @@ const ICONS: Record<string, FormGroupIcon> = {
   Powder: 'substance',
 };
 
+const GROUP = { colorDark: '#7aa7d9', colorLight: '#1f4f8a' };
+const CATEGORY_NAMES = ['Protection', 'Clarity', 'Cleansing', 'Prosperity'];
+
 const entry = (
   name: string,
   nomenclature: NomenclatureKind,
   canonicalName: string | null,
   forms: string[],
+  categoryCount = 0,
 ): CompendiumListEntry => {
   const slug = slugify(canonicalName ? `${name} ${canonicalName}` : name);
   return {
@@ -136,6 +140,10 @@ const entry = (
     nomenclature,
     canonicalName,
     forms: forms.map((name) => ({ name, icon: ICONS[name] ?? null })),
+    categories: CATEGORY_NAMES.slice(0, categoryCount).map((name, i) => ({
+      category: { id: `${slug}-${i}`, name },
+      group: GROUP,
+    })),
     updatedBy: 'Fixture Editor',
     updatedAt: new Date('2026-05-06T10:00:00Z'),
     editHref: compendiumHref({}, { edit: slug }),
@@ -144,8 +152,8 @@ const entry = (
 };
 
 const ENTRIES = [
-  entry('Testwort', 'botanical', 'Fixtura testalis', ['Dried', 'Oil']),
-  entry('Testwort', 'botanical', 'Fixtura alteralis', ['Dried']),
+  entry('Testwort', 'botanical', 'Fixtura testalis', ['Dried', 'Oil'], 4),
+  entry('Testwort', 'botanical', 'Fixtura alteralis', ['Dried'], 1),
   entry('Fixture Salt', 'unknown', null, []),
   entry('Mockroot', 'none', null, ['Powder']),
 ];

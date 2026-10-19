@@ -95,12 +95,6 @@
   // element carries its row's pair, from chipColors() in a component.
   .chip {
     @include chip;
-
-    // The quiet level, for a control rather than a category: the card's +N button and the
-    // colour field's preview (claude-docs/styling.md, "Category chips").
-    &.chip--quiet {
-      @include chip($state: quiet);
-    }
   }
 
   // modal-surface() leaves width/padding/position to the owner; this adds only

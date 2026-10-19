@@ -1,0 +1,96 @@
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
+import CategoryChips from '@/components/CategoryChips';
+import { CATEGORY_CHIP_LIMIT } from '@/components/CategoryChips/constants';
+
+// The chip row the ingredient card and the admin compendium list share: the first few
+// chips, the rest behind a +N toggletip (claude-docs/components/category-chips.md). The
+// row measures nothing, so jsdom is enough for what is tested here; where the panel
+// lands is proved in a browser (tests/e2e/admin-compendium.spec.ts).
+
+const GROUP = { colorDark: '#112233', colorLight: '#445566' };
+const many = (n: number) =>
+  Array.from({ length: n }, (_, i) => ({
+    category: { id: `c${i}`, name: `Fixture Category ${i + 1}` },
+    group: GROUP,
+  }));
+const more = () => screen.queryByRole('button', { name: /more categories?/i });
+const panel = () => screen.queryByRole('group', { name: /more categories/i });
+const chips = () =>
+  within(screen.getByRole('list', { name: 'Categories' }))
+    .getAllByRole('listitem')
+    .filter((item) => item.querySelector('.chip') && !item.querySelector('button'));
+
+describe('CategoryChips', () => {
+  it('lists each category as plain text, not a link or a button', () => {
+    render(<CategoryChips categories={many(2)} label="Testwort" />);
+
+    const list = screen.getByRole('list', { name: 'Categories' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(list).getByText('Fixture Category 1')).toBeInTheDocument();
+    expect(within(list).queryByRole('link')).toBeNull();
+    expect(within(list).queryByRole('button')).toBeNull();
+  });
+
+  it('draws no row for an entry with none', () => {
+    render(<CategoryChips categories={[]} label="Testwort" />);
+
+    expect(screen.queryByRole('list', { name: 'Categories' })).toBeNull();
+  });
+
+  it('shows the first few chips and counts the rest on the button', () => {
+    render(<CategoryChips categories={many(8)} label="Testwort" />);
+
+    expect(chips()).toHaveLength(CATEGORY_CHIP_LIMIT);
+    expect(more()).toHaveTextContent(`+${8 - CATEGORY_CHIP_LIMIT}`);
+    expect(more()).toHaveAccessibleName(`${8 - CATEGORY_CHIP_LIMIT} more categories for Testwort`);
+    expect(more()).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('has no button when every chip is within the limit', () => {
+    render(<CategoryChips categories={many(CATEGORY_CHIP_LIMIT)} label="Testwort" />);
+
+    expect(more()).toBeNull();
+    expect(chips()).toHaveLength(CATEGORY_CHIP_LIMIT);
+  });
+
+  it('keeps the rest out of reach until the button is used, then lists them', () => {
+    render(<CategoryChips categories={many(CATEGORY_CHIP_LIMIT + 2)} label="Testwort" />);
+
+    expect(panel()).toBeNull();
+    fireEvent.click(more()!);
+
+    const open = screen.getByRole('group', { name: /more categories/i });
+    expect(more()).toHaveAttribute('aria-expanded', 'true');
+    expect(more()).toHaveAttribute('aria-controls', open.id);
+    expect(within(open).getByText(`Fixture Category ${CATEGORY_CHIP_LIMIT + 1}`)).toBeVisible();
+    expect(within(open).getByText(`Fixture Category ${CATEGORY_CHIP_LIMIT + 2}`)).toBeVisible();
+    expect(within(open).queryByText(`Fixture Category ${CATEGORY_CHIP_LIMIT}`)).toBeNull();
+  });
+
+  it('closes on a second click, and on Escape with focus back on the button', () => {
+    render(<CategoryChips categories={many(CATEGORY_CHIP_LIMIT + 2)} label="Testwort" />);
+
+    fireEvent.click(more()!);
+    fireEvent.click(more()!);
+    expect(panel()).toBeNull();
+
+    fireEvent.click(more()!);
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(panel()).toBeNull();
+    expect(more()).toHaveFocus();
+  });
+
+  it('opens on hover and on focus, and a press elsewhere closes it', () => {
+    render(<CategoryChips categories={many(CATEGORY_CHIP_LIMIT + 2)} label="Testwort" />);
+
+    fireEvent.mouseEnter(more()!);
+    expect(more()).toHaveAttribute('aria-expanded', 'true');
+    fireEvent.click(more()!);
+    fireEvent.pointerDown(document.body);
+    expect(more()).toHaveAttribute('aria-expanded', 'false');
+
+    fireEvent.focus(more()!);
+    expect(more()).toHaveAttribute('aria-expanded', 'true');
+  });
+});
