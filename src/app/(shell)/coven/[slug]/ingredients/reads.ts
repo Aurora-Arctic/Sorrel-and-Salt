@@ -2,13 +2,16 @@ import 'server-only';
 import { cache } from 'react';
 import { readCardCategoriesOf, readFormIcons } from '../../../../compendium-reads';
 import type { SafetyVariant } from '../../../../../components/SafetyNote/types';
+import { Forbidden, NotFound } from '../../../../../lib/errors';
 import { readNumberedPage } from '../../../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../../../lib/pagination';
 import { requireSession } from '../../../../../lib/request-session';
 import type { CovenIngredientPage } from './types';
+import { entryValues } from '@/app/entry-values';
 import type { CovenMembership } from '@/modules/coven';
 import {
   countWorkspaceIngredients,
+  getIngredient,
   listWorkspaceIngredients,
   stockOf,
   variantsOf,
@@ -94,3 +97,22 @@ export const readCovenFacets = cache(async (workspaceId: string, variables: stri
   const filter: Filter = JSON.parse(variables);
   return workspaceIngredientFacets(session, workspaceId, filter);
 });
+
+/**
+ * The coven's own entry `?edit=<id>` names, with its values for the edit form (M8.17), read
+ * as the signed-in member. Nothing for an id the coven cannot reach, or for a compendium entry
+ * it names, which a coven does not edit: the list then opens no dialog (the plan's D8). Any
+ * other failure of the read is let through rather than called no entry.
+ */
+export async function readEditedEntry(workspaceId: string, id: string) {
+  const session = await requireSession();
+  let entry: Awaited<ReturnType<typeof getIngredient>>;
+  try {
+    entry = await getIngredient(session, id, workspaceId);
+  } catch (error) {
+    if (error instanceof NotFound || error instanceof Forbidden) return undefined;
+    throw error;
+  }
+  if (entry.workspaceId !== workspaceId) return undefined;
+  return { entry, values: await entryValues(entry, session) };
+}

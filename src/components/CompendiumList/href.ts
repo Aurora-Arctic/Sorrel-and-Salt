@@ -33,13 +33,18 @@ export function compendiumHref(
 export const covenIngredientsPath = (covenSlug: string): Route =>
   `/coven/${covenSlug}/ingredients` as Route;
 
-/** The coven list under a filter, at a page: the coven's twin of `compendiumHref`, with no modal. */
+/**
+ * The coven list under a filter, at a page, with its own entry's edit dialog open
+ * over it or not (M8.17): the coven's twin of `compendiumHref`.
+ */
 export function covenIngredientsHref(
   covenSlug: string,
   place: Partial<CovenListFilter> & SearchCursor,
+  dialog?: { edit: string },
 ): Route {
   return COVEN_PARAMS.href(covenIngredientsPath(covenSlug), place, {
     after: place.after,
     before: place.before,
+    ...dialogParams(dialog),
   });
 }

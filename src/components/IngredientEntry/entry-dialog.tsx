@@ -22,7 +22,9 @@ import type { EditableEntry, IngredientEntryEdit } from './types';
 // A coven's own entry (M8.17) takes the same dialog with the coven's form: a
 // save closes it, back on the page fetched again; near matches open in the
 // coven; and, when the role may, Link to the Compendium sits beneath the
-// form, outside it, since it saves nothing of the form's.
+// form, outside it, since it saves nothing of the form's. The coven's list
+// renders the same dialog over its rows, with no entry until `?edit=<id>`
+// names one.
 
 /** A compendium entry's public page: also where a near match or a linked substitute is opened. */
 const publicAddress = (slug: string): Route => `/compendium/ingredients/${slug}` as Route;
@@ -31,7 +33,8 @@ export default function EntryDialog({
   entry,
   edit,
 }: {
-  entry: EditableEntry;
+  /** The entry being edited; the list leaves it out until its address names one. */
+  entry?: EditableEntry;
   edit: IngredientEntryEdit;
 }): ReactElement | null {
   const { navigate, refresh } = usePendingNavigation();
@@ -43,7 +46,8 @@ export default function EntryDialog({
     <RouteModal
       closeHref={closeHref}
       content={
-        opened && {
+        opened &&
+        entry && {
           heading: editHeading(entry, editEyebrow(edit)),
           body: (done) =>
             coven ? (
