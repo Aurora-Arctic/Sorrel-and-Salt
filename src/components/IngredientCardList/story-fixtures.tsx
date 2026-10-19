@@ -3,6 +3,7 @@ import { StockBadge } from '../StockBadge';
 import type { EntryKind } from '../EntryMarks/types';
 import type { SafetyVariant } from '../SafetyNote/types';
 import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+import { formLabel } from '@/modules/ingredients/validation/form-label';
 import { Dot } from '../IngredientCard/story-jars';
 import type { CardCategory } from '../IngredientCard/types';
 
@@ -188,14 +189,12 @@ export const ENTRIES: FixtureEntry[] = [
   },
 ];
 
-const titleCase = (s: string) => s.replace(/\b\w/g, (c) => c.toUpperCase());
-
 export const JarLines = ({ jars }: { jars: Jar[] }): ReactNode => (
   <ul>
     {jars.map((j) => (
       <li key={j.form}>
         <span>
-          {titleCase(j.form)} <Dot /> {j.quantity} {j.unit}
+          {formLabel(j.form)} <Dot /> {j.quantity} {j.unit}
         </span>
         <StockBadge quantity={j.quantity} threshold={j.threshold} unit={j.unit} />
       </li>
