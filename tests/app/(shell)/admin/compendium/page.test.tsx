@@ -18,7 +18,7 @@ import { sent } from '../../../../support/filter-form';
 // `?edit=` an entry by slug, an old slug sent on to the new one. The guard,
 // the services and the entry's values are mocked: what they decide is
 // tests/lib/request-session.test.ts's, the compendium services' tests', and
-// tests/db/admin-compendium-entry-values.test.ts's.
+// tests/db/entry-values.test.ts's.
 
 const requireCuratorSession = vi.fn();
 vi.mock('@/lib/request-session', () => ({ requireCuratorSession }));
