@@ -52,12 +52,31 @@ in the filter slot to carry.
   name, and the other filters the consumer carries in `searchHref` stay.
 - **The magnifier Search button is the form's one submit.** It sits inside
   the box at its start (Combobox's `leading` slot), with the clear alone at the
-  end: `[magnifier  Search names…  x]`. There is no chevron (`toggle={false}`),
+  end: `[magnifier  Search names, forms & descriptions  x]`. There is no chevron (`toggle={false}`),
   since typing opens the dropdown already. This is the owner's call of
   2026-10-16, after a survey of design systems; Nielsen Norman Group's
   [magnifying-glass article](https://www.nngroup.com/articles/magnifying-glass-icon/)
   says a magnifier must submit when clicked. Without JavaScript the box is a
   plain GET form to `action`, sending its text as `query`.
+- **The box has no visible label, and its placeholder says what the search reads**
+  (the owner, 2026-10-19): "Search names, forms & descriptions", the fields the
+  ranked search matches (label, formal name, folk names, forms and descriptions;
+  [`compendium-read.md`](../db/compendium-read.md)). The accessible name is still
+  "Name": the box is drawn without `FieldShell`, and Combobox draws its own
+  visually hidden label, so no second hide mechanism exists. The clear keeps its
+  name, "Clear Name", and the status region "Name results".
+- **The search row sticks once scrolled to** (the owner, 2026-10-19), holding the
+  box, the Filters button and Clear All with it, and the Filters tray, which opens
+  inside the form and travels with it. `IngredientSearch` marks its root
+  `.ingredient-search`, and its `<search>` is `position: sticky` there (the form
+  inside would stop at its own end; the sticky box's parent must span the
+  results), with an opaque page background and the `sticky-row` layer, above the
+  cards and below the bar, tips and dialogs. The offset is one custom property,
+  `--sticky-top`, set by the frame: AppShell sets it to the bar's bottom, and
+  PublicFrame, whose header scrolls away, to 0. There is no scroll listener. The
+  root's `scroll-padding-top` leaves room for the stuck row when a focus or a jump
+  scrolls a control into view. The admin compendium list shares the row, so it
+  sticks too. The phone sheet is unchanged.
 - **Nothing is asked until the box is focused**, nor while the text is under
   `MIN_QUERY_LENGTH` (2) characters. The floor is the service's own, exported
   by `src/modules/ingredients/validation/compendium-filter.ts`, a zod-only file

@@ -24,7 +24,7 @@ const IngredientSearch = ({
   className,
   shape,
 }: IngredientSearchProps): ReactElement => (
-  <ListFrame className={className}>
+  <ListFrame className={className ? `ingredient-search ${className}` : 'ingredient-search'}>
     {search}
     {action && <div className="ingredient-search__action">{action}</div>}
 

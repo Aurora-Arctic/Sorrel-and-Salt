@@ -30,6 +30,12 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
 
 ## Contracts
 
+- **Under a stuck row (2026-10-19).** The search row sticks to the top once scrolled to
+  ([`ingredient-search.md`](ingredient-search.md)), and the panel opens inside its form, so it
+  travels with the row and always opens under it. At the tablet width and up, an open panel
+  taller than the room below the row is capped at the window's height less the offset and the
+  row, and scrolls inside itself. The phone sheet is full height already and is unchanged.
+
 - **Count.** `n` is the number of chosen values: every category, form, deity, zodiac
   sign, planet and element counts one, plus one for a Toxic setting other than Any and
   one for No Refs when on. Two categories and two forms read 4. Match counts nothing:

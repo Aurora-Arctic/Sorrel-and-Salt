@@ -10,3 +10,28 @@
   justify-content: flex-end;
   margin-block-end: space(3);
 }
+
+// The search row sticks once scrolled to (the owner's call, 2026-10-19), with the Filters
+// button, Clear All and the tray, which opens inside the form and so travels with it. The
+// sticky box is the `<search>`, whose parent `.list-frame` spans the results; the form
+// inside would stop at its own end. `--sticky-top` is set by the frame (AppShell, PublicFrame).
+// Opaque so the cards do not show through; the padding below covers the gap to them.
+.ingredient-search > search {
+  position: sticky;
+  // stylelint-disable-next-line length-zero-no-unit -- a bare 0 is invalid in the calc() sums
+  top: var(--sticky-top, 0px);
+  z-index: layer('sticky-row');
+  padding-block-end: space(2);
+  background-color: $surface-page;
+}
+
+// A focus or a jump that scrolls a control into view lands it below the stuck row, not
+// under it: the bar (the shell's alone), the row's own height, and a step of air. The root
+// is the scroll container, which cannot read the frames' `--sticky-top`, set below it.
+html:has(.app-shell .ingredient-search) {
+  scroll-padding-top: calc(#{$top-inset} + #{$shell-bar-height} + #{$control-height} + #{space(4)});
+}
+
+html:has(.public-frame .ingredient-search) {
+  scroll-padding-top: calc(#{$control-height} + #{space(4)});
+}

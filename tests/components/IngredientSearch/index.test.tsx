@@ -110,6 +110,14 @@ describe('IngredientSearch', () => {
     expect(screen.getByRole('link', { name: /Next/ })).toHaveAttribute('href', `${PATH}?after=x`);
   });
 
+  it('names the box without a visible label and says in its placeholder what the search reads', () => {
+    renderSearch();
+
+    expect(box()).toHaveAttribute('placeholder', 'Search names, forms & descriptions');
+    expect(screen.getAllByText('Name', { selector: 'label' })).toHaveLength(1);
+    expect(box()).toHaveAccessibleName('Name');
+  });
+
   it('works before hydration as a GET form to the page, the box sending its text as query', () => {
     renderSearch('wort');
 

@@ -188,3 +188,66 @@ test('the page is accessible and holds at 375px', async ({ page }) => {
   await assertNoAccessibilityViolations(page);
   await assertNoSidewaysScroll(page);
 });
+
+// The search row sticks to the top once scrolled to (the owner's call, 2026-10-19): the box,
+// the Filters button and Clear All stay in view while the cards go by, and the tray they open
+// stays in view with them.
+const searchRow = (page: Page) => page.getByRole('search').locator('form');
+
+async function expectStuckRow(page: Page, offset: () => Promise<number>) {
+  await page.goto('/compendium');
+  await expect(cardsOf(page).first()).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 1500));
+  // Scrolled well past the row's place in the page.
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1000);
+  const row = await searchRow(page).boundingBox();
+  expect(row?.y).toBeCloseTo(await offset(), 0);
+
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  const tray = page.getByRole('dialog', { name: 'Filters' });
+  await expect(tray).toBeVisible();
+  // The slide settles before the tray's box is read.
+  await expect
+    .poll(async () => {
+      const box = await tray.boundingBox();
+      return box ? Math.round(box.y + box.height) : 0;
+    })
+    .toBeGreaterThan(0);
+  const viewport = page.viewportSize();
+  const settled = await tray.boundingBox();
+  const rowBottom = (await searchRow(page).boundingBox())!;
+  expect(settled!.y).toBeGreaterThanOrEqual(rowBottom.y + rowBottom.height - 1);
+  expect(settled!.y + settled!.height).toBeLessThanOrEqual(viewport!.height + 1);
+}
+
+test('signed out, the search row sticks to the top of the window and its tray stays in view', async ({
+  page,
+}) => {
+  await expectStuckRow(page, async () => 0);
+});
+
+test('signed in, the search row sticks under the top bar and its tray stays in view', async ({
+  page,
+}) => {
+  const coven = await seedCoven(page, 'Fixture Coven Sticky Row', 'sticky-row.test', {
+    A: 'owner',
+  });
+  await signInAgainAs(page, coven.users.A);
+  await expectStuckRow(page, async () => {
+    const bar = await page.locator('.app-shell__bar').boundingBox();
+    return bar!.y + bar!.height;
+  });
+});
+
+test('the stuck row holds at 375px without a sideways scroll or an axe violation', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 375, height: 700 });
+  await page.goto('/compendium');
+  await expect(cardsOf(page).first()).toBeVisible();
+  await page.evaluate(() => window.scrollTo(0, 1500));
+  const row = await searchRow(page).boundingBox();
+  expect(row?.y).toBeCloseTo(0, 0);
+  await assertNoAccessibilityViolations(page);
+  await assertNoSidewaysScroll(page);
+});
