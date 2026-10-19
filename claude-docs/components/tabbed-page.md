@@ -24,8 +24,8 @@ Inside, `tab-switch.tsx` holds the client parts the tab row, the action and
 the content area share: `TabSwitchProvider`, `TabAction` (the action's
 wrapper), `TabPanel` (the content area) and `useTabSwitch`.
 `Skeleton/swap-panel.tsx` is `SwapPanel`, the keyed swap of content for skeleton that
-`TabPanel` and a list's `ListBody` share. `panel-loading.tsx` is `TabPanelLoading`, the skeleton the content area
-shows while a pressed tab is on its way. A tab's `filtered`, set in
+`TabPanel` and a list's `ListBody` share. `panel-loading.tsx` is `TabPanelLoading`, a thin user of the
+shared [`Skeleton`](skeleton.md) that the content area shows while a pressed tab is on its way. A tab's `filtered`, set in
 `ADMIN_PAGES` on every tab whose list opens with a filter, tells it whether
 to draw a filter row. A list reuses it, with no filter row, while a filter
 or a pager press is on its way ([`list-frame.md`](list-frame.md)), so it
@@ -77,12 +77,13 @@ it renders.
   tabs gets the heading, the tabs and the tab's content in the first
   response, with no loading state streamed ahead of them. So the route
   groups have no `loading.tsx`, and the tabbed pages add no other
-  `<Suspense>` boundary.
+  `<Suspense>` boundary (the argument is in [`../loading.md`](../loading.md)).
 - **A pressed tab greys the row and shows the loading state** (the owner's
   call). A plain left click on a tab other than the open one is the tab
   row's own: `tab-links.tsx` stops the browser following the link and
-  calls `router.push` inside a React transition (`useTransition`) the row
-  and the content area share. Next runs its navigation inside the caller's
+  navigates through `usePendingNavigation` (`src/lib/navigation/`), which
+  runs `router.push` inside a React transition the row
+  and the content area share, and puts up the page bar as well. Next runs its navigation inside the caller's
   transition, so it stays pending until the new tab has rendered. Until
   then the content area shows the pressed tab's skeleton, `TabPanelLoading`,
   in place of the old tab's content, every tab is `aria-disabled` and ignores a press, and the
@@ -222,10 +223,12 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
 - **Its fill** is the muted ink 18% into the card surface, as the combobox's
   quiet fills are, so both themes carry it on the page and on a card; its
   shimmer, a band 7% into the card surface, passes across every shape every
-  1.4s. The fill is the `$fill-quiet` token; the shimmer is the shared
-  `skeleton-shape` mixin (`src/scss/_mixins.scss`, keyframes
-  `skeleton-shimmer` in `_primitives.scss`; M9.18 moved it there, for the
-  modal's skeleton to share), a `color-mix` of existing tokens, and no text sits on either. The filter's
+  `$shimmer-duration` (1.4s). The shapes, fill and shimmer now live in the
+  shared [`Skeleton`](skeleton.md) (`Skeleton/index.scss`): the fill is the
+  `$fill-quiet` token; the shimmer is the shared `skeleton-shape` mixin
+  (`src/scss/_mixins.scss`, keyframes `skeleton-shimmer` in
+  `_primitives.scss`), which takes its motion from `loading-motion`; a
+  `color-mix` of existing tokens, and no text sits on either. The filter's
   bars and the pager's stand at `$control-height`, and the filter's fields
   at `$filter-choice-width`, so the skeleton is as tall and wide as the
   controls that replace it.
@@ -236,8 +239,9 @@ reduce` it jumps. The server draws the pill on the open link itself, so it
   shown at once rather than held back a moment, as the spinner it replaced
   was: the press has already removed the old content, so a held-back
   skeleton would leave the panel blank, which is the snap it is there to
-  avoid. Under `prefers-reduced-motion: reduce` there is no shimmer and no
-  fade, only the still shapes.
+  avoid. Under `prefers-reduced-motion: reduce` the shimmer becomes the
+  loading standard's one slow opacity pulse, never still shapes
+  ([`../loading.md`](../loading.md)).
 - **What a screen reader hears.** The shapes are `aria-hidden`. The one
   status is a visually hidden `<output>`, a status by its tag, saying the
   tab is loading, which the shapes already say to the eye.

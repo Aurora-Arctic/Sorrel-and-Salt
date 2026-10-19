@@ -37,6 +37,10 @@ among them, and two more.
 - **A list's navigation is not a BusyButton either.** A filter's Filter and a
   pager's end put the list's loading state up instead, the tabs' skeleton in
   place of the list ([`list-frame.md`](list-frame.md)).
+- **A wait that ends with the browser leaving** is still a `BusyButton`: a
+  sign-in provider's button calls `reportLeaving()` from `src/lib/navigation/`
+  so the page bar stays up until the browser unloads. See
+  [`../loading.md`](../loading.md).
 
 ## Styling
 

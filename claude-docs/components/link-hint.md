@@ -33,8 +33,21 @@ it never shows.
   moves nothing.
 - When pending it appears after a 100ms delay, so a fast navigation never
   flashes it, then fades in and pulses.
+- Its delay is the `$loading-delay` token (100ms), the same hold-back the
+  spinner and the page bar use.
 - Under `prefers-reduced-motion` it shows as a still dot after the same delay:
-  no fade, no pulse.
+  no fade, no pulse. This is the one exception to the loading standard's rule
+  that reduced motion pulses and never stops (the owner's call; see
+  [`../design-decisions/m12.33-loading-standard.md`](../design-decisions/m12.33-loading-standard.md)).
+
+## In the loading standard
+
+The dot is the link's part of the standard's first part, the control
+([`../loading.md`](../loading.md)). A link that navigates is a `PendingLink`
+from `src/lib/navigation/`, which also puts up the page bar and, when given a
+`navigationTarget`, the destination's skeleton; the dot stays inside it as
+before. `useLinkStatus` reports only its own link, so the dot says nothing
+about a navigation another control started.
 
 ## Accessibility
 

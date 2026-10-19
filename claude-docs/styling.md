@@ -1123,7 +1123,9 @@ heavier than the reverse; light reverts to the browser default.
 - `src/scss/_variables.scss` — base colour palette, badge tokens, the brand
   colours and `brand-color()`, `$narrow-column`, `$pager-tight-width` (the
   width under which the pager closes up to stay on one line), the `$font-body` / `$font-heading` / `$font-mono` stacks, the
-  `$measure`, and the four scales with their accessors — `type-size()`,
+  `$measure`, the loading tokens (`$loading-delay` 100ms, `$spin-duration`
+  0.8s, `$shimmer-duration` 1.4s, `$pulse-duration` 2s, `$arrive-duration`
+  200ms; see [`loading.md`](loading.md)), and the four scales with their accessors — `type-size()`,
   `heading-size()`, `space()` and `radius()` — a component `@use`s directly.
 - `src/scss/_mixins.scss` — `modal-surface`, `chip`, `badge`, `tip-bubble`,
   `icon-button` and `icon-button-edit` (an icon control's square box, and
@@ -1153,7 +1155,13 @@ heavier than the reverse; light reverts to the browser default.
   (the card surface, floating shadow and muted edge a list or summary
   floats on); `field-box` (the edge, ground and height a field and the
   admin menu's summary share); `arrived` (the fade a list or tab's new
-  content comes in with, the one `list-frame-fade-in` keyframe); and
+  content comes in with, the one `list-frame-fade-in` keyframe,
+  `$arrive-duration` by default); `loading-motion($animation, $delay)`
+  (applies a loading animation and, under `reduced-motion`, swaps it for the
+  `loading-pulse` keyframe at `$pulse-duration`: the one slow opacity pulse
+  every wait falls back to; a `$delay` adds `loading-appear`, which holds
+  `visibility: hidden` until then and so survives the pulse; both keyframes
+  are in `_primitives.scss`); and
   `data-table-roomy` and `data-table-nowrap` (a table's taller, centred
   rows; its one-line cells, wrapping again as cards), each emitted once by
   `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`
