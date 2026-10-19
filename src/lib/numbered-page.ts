@@ -18,12 +18,12 @@ export const DEFAULT_PAGE_KEYS: PageKeys = { after: 'after', before: 'before' };
  * this list's key will not cast, as a cursor copied from another list is.
  * Any other failure is still thrown.
  */
-export async function readNumberedPage<T>(
+export async function readNumberedPage<T, Edge extends object = {}>(
   { after, before }: { after?: string; before?: string },
-  fetch: (request: PageRequest) => Promise<PageEntry<T>[]>,
+  fetch: (request: PageRequest) => Promise<PageEntry<T, Edge>[]>,
   count: (start: Cursor | undefined) => Promise<PageCount>,
   size?: number,
-): Promise<Page<T> & { position: PagePosition; totalCount: number }> {
+): Promise<Page<T, Edge> & { position: PagePosition; totalCount: number }> {
   try {
     return await resolveNumberedPage({ after, before }, fetch, count, size);
   } catch (error) {

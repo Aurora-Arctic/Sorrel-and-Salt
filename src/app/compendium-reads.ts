@@ -8,6 +8,7 @@ import type { CardCategory } from '../components/IngredientCard/types';
 import type { SafetyVariant } from '../components/SafetyNote/types';
 import { readNumberedPage } from '../lib/numbered-page';
 import { DEFAULT_PAGE_SIZE, allPages } from '../lib/pagination';
+import type { Session } from '../lib/session';
 
 import {
   compendiumFacets,
@@ -25,6 +26,7 @@ import {
   listDeityTraditions,
   listIngredientFormValues,
 } from '@/modules/vocabulary';
+import type { IngredientKey } from '@/modules/ingredients';
 import type { FormGroupIcon } from '@/modules/vocabulary/schema/form-group-icons';
 
 // The reads the compendium's two list pages share: the admin's table
@@ -188,16 +190,14 @@ export const readFacets = cache(async (variables: string) => {
 /**
  * The categories each of a page's entries is filed under, as a card's chips: one batch for the
  * page, each with its group's colours from `readCategories`. A category whose group has gone, a
- * race with a delete, is left out. Public reference data, so no session (MB.80).
+ * race with a delete, is left out. Read for `session`, or with none for the public compendium
+ * (MB.80); a ref naming a coven the session is not in throws its `Forbidden`.
  */
-export async function readCardCategories(ids: readonly string[]): Promise<CardCategory[][]> {
-  const [answers, known] = await Promise.all([
-    categoriesOf(
-      null,
-      ids.map((id) => ({ id, workspaceId: null })),
-    ),
-    readCategories(),
-  ]);
+export async function readCardCategoriesOf(
+  session: Session | null,
+  refs: readonly IngredientKey[],
+): Promise<CardCategory[][]> {
+  const [answers, known] = await Promise.all([categoriesOf(session, refs), readCategories()]);
   const byId = new Map(known.map((category) => [category.id, category]));
   return answers.map((answer) => {
     if (answer instanceof Error) throw answer;
@@ -206,4 +206,12 @@ export async function readCardCategories(ids: readonly string[]): Promise<CardCa
       return category ? [{ category: { id, name: category.name }, group: category.group }] : [];
     });
   });
+}
+
+/** `readCardCategoriesOf` for compendium entries by id, signed out: public reference data. */
+export function readCardCategories(ids: readonly string[]): Promise<CardCategory[][]> {
+  return readCardCategoriesOf(
+    null,
+    ids.map((id) => ({ id, workspaceId: null })),
+  );
 }
