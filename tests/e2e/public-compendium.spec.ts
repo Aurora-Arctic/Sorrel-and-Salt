@@ -84,7 +84,7 @@ test('the server HTML holds the unfiltered list, every card and every link', asy
   expect(links[0]).toBe(`/compendium/ingredients/${first.slug}`);
 });
 
-test('?withoutReferences=1 lists what the unfiltered page lists, and stays indexable', async ({
+test('?withoutReferences=1 lists what the unfiltered page lists, with the unfiltered page as its canonical address', async ({
   page,
   request,
 }) => {
@@ -117,7 +117,8 @@ test('?withoutReferences=1 lists what the unfiltered page lists, and stays index
   expect(unsourced[0].count).not.toBe(await seededCount());
 
   expect(entryLinks(asked)).toEqual(entryLinks(plain));
-  expect(asked).not.toContain('rel="canonical"');
+  // The page ignores the filter, so its canonical address is the unfiltered page.
+  expect(asked).toMatch(/<link rel="canonical" href="[^"?]*\/compendium"/);
 });
 
 test('?withoutForms=1 lists what the unfiltered page lists, and offers no No Form control', async ({
@@ -128,7 +129,8 @@ test('?withoutForms=1 lists what the unfiltered page lists, and offers no No For
   const asked = await (await request.get('/compendium?withoutForms=1')).text();
 
   expect(entryLinks(asked)).toEqual(entryLinks(plain));
-  expect(asked).not.toContain('rel="canonical"');
+  // The page ignores the filter, so its canonical address is the unfiltered page.
+  expect(asked).toMatch(/<link rel="canonical" href="[^"?]*\/compendium"/);
   await page.goto('/compendium?withoutForms=1');
   await expect(page.getByRole('switch', { name: /^No Form/ })).toHaveCount(0);
 });
