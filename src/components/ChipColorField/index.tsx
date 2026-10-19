@@ -320,14 +320,9 @@ const ChipColorField = ({
         aria-hidden="true"
       >
         {colors ? (
-          <>
-            <span className="chip" style={colors}>
-              {sample}
-            </span>
-            <span className="chip chip--quiet" style={colors}>
-              {sample}
-            </span>
-          </>
+          <span className="chip" style={colors}>
+            {sample}
+          </span>
         ) : (
           <span className="chip-color-field__empty">{sample}</span>
         )}

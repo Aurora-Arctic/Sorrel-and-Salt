@@ -38,6 +38,12 @@ const CompendiumList = (listProps: CompendiumListProps): ReactElement => (
   </QueryClientProvider>
 );
 
+const WARDS = {
+  id: 'g-ward',
+  name: 'Fixture Wards',
+  colorDark: '#4e8bc2',
+  colorLight: '#0c5393',
+};
 const ENTRIES: CompendiumListEntry[] = [
   {
     id: 'i1',
@@ -51,6 +57,11 @@ const ENTRIES: CompendiumListEntry[] = [
       { name: 'Fixture Herb', icon: 'botanical' },
       { name: 'Fixture Oil', icon: null },
     ],
+    categories: [
+      { category: { id: 'c-tw', name: 'Testward' }, group: WARDS },
+      { category: { id: 'c-tc', name: 'Testcraft' }, group: WARDS },
+      { category: { id: 'c-tb', name: 'Testbane' }, group: WARDS },
+    ],
     editHref: compendiumHref({}, { edit: 'testwort' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Testwort' },
   },
@@ -63,6 +74,7 @@ const ENTRIES: CompendiumListEntry[] = [
     nomenclature: 'unknown',
     canonicalName: null,
     forms: [],
+    categories: [],
     editHref: compendiumHref({}, { edit: 'fixture-salt' }),
     editHeading: { eyebrow: 'Edit Ingredient', title: 'Fixture Salt' },
   },
@@ -103,12 +115,6 @@ const SHOWN: CompendiumListFilter = {
 };
 
 /** The categories the Categories box offers, each with the slug the address carries. */
-const WARDS = {
-  id: 'g-ward',
-  name: 'Fixture Wards',
-  colorDark: '#4e8bc2',
-  colorLight: '#0c5393',
-};
 const CATEGORIES = [
   { id: 'c-tw', slug: 'testward', name: 'Testward', group: WARDS },
   { id: 'c-tc', slug: 'testcraft', name: 'Testcraft', group: WARDS },
@@ -159,6 +165,49 @@ describe('CompendiumList', () => {
       within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' }),
     ).toBeInTheDocument();
     expect(within(rows[2]).getByRole('cell', { name: 'Fixture Salt' })).toBeInTheDocument();
+  });
+
+  // The dot between two forms is drawn in CSS; a reader still hears a list, and the visible
+  // text carries no comma of its own.
+  it('separates the forms without a drawn comma, and with a spoken one', () => {
+    render(<CompendiumList {...props()} />);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    const cell = within(rows[1]).getByRole('cell', { name: 'Fixture Herb, Fixture Oil' });
+    const separators = cell.querySelectorAll('.spoken-separator');
+    expect(separators).toHaveLength(1);
+    expect(separators[0]).toHaveTextContent(',');
+    expect(separators[0].parentElement?.firstChild?.textContent).toBe('Fixture Herb');
+  });
+
+  // Categories column: the card's chips, the first few shown and the rest behind +N.
+  it("shows each entry's categories as chips, the rest behind a +N button", () => {
+    render(<CompendiumList {...props()} />);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
+    expect(heads.indexOf('Categories')).toBe(heads.indexOf('Form') + 1);
+    expect(heads.indexOf('Updated')).toBe(heads.indexOf('Categories') + 1);
+    const list = within(rows[1]).getByRole('list', { name: 'Categories' });
+    expect(within(list).getByText('Testward')).toBeInTheDocument();
+    expect(within(list).getByText('Testcraft')).toBeInTheDocument();
+    // The category past the limit waits in the +N button's panel, hidden until it opens.
+    const more = within(list).getByRole('button', { name: '1 more category for Testwort' });
+    expect(more).toHaveTextContent('+1');
+    const panel = document.getElementById(more.getAttribute('aria-controls') ?? '');
+    expect(panel).toHaveAttribute('aria-hidden', 'true');
+    fireEvent.click(more);
+    expect(panel).toHaveAttribute('aria-hidden', 'false');
+  });
+
+  it('shows a dash for an entry with no categories', () => {
+    render(<CompendiumList {...props()} />);
+
+    const rows = within(screen.getByRole('table')).getAllByRole('row');
+    expect(within(rows[2]).queryByRole('list', { name: 'Categories' })).toBeNull();
+    const heads = screen.getAllByRole('columnheader').map((head) => head.textContent);
+    const cells = within(rows[2]).getAllByRole('cell');
+    expect(cells[heads.indexOf('Categories')]).toHaveTextContent('—');
   });
 
   // M12.7: each form wears its group's icon; a form with none wears the spoon.
