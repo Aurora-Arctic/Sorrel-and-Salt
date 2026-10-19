@@ -360,3 +360,25 @@ test('the category chips and the +N button share one line, and opening the panel
   await expect(more).toHaveAttribute('aria-expanded', 'false');
   await expect(more).toBeFocused();
 });
+
+test("the dot between a card's forms is level with the forms' icons", async ({ page }) => {
+  await page.goto('/compendium');
+  // The dot is drawn in CSS, so read where it sits from its item and its resolved margins.
+  const { dot, icon } = await page.evaluate(() => {
+    const second = [...document.querySelectorAll('.ingredient-card__item')].find((el) =>
+      el.previousElementSibling?.matches('.ingredient-card__item'),
+    )!;
+    const box = second.getBoundingClientRect();
+    const style = getComputedStyle(second, '::before');
+    const svg = second.querySelector('svg')!.getBoundingClientRect();
+    return {
+      dot:
+        box.top +
+        parseFloat(style.top) +
+        parseFloat(style.marginTop) +
+        parseFloat(style.height) / 2,
+      icon: svg.top + svg.height / 2,
+    };
+  });
+  expect(Math.abs(dot - icon)).toBeLessThanOrEqual(1);
+});

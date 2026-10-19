@@ -334,15 +334,21 @@ read against them, and `prefers-contrast: more` removes the ornaments entirely
 ## Category chips
 
 Amended 2026-10-19; this replaced the `selected` and `unselected` states. `chip()` draws a pill in one
-of two emphasis levels, both leading with a 6px dot in the group colour (`chip-dot()`):
+of two emphasis levels. Neither draws a dot: the group colour sits on the full level's wash, border and label (the owner dropped the dot, 2026-10-19):
 
 - **`full`**: the category chip, everywhere a category shows (the card, the entry page,
   pickers, filters, admin tables, the Combobox's chosen entries). A wash of the group colour
   (5% over `$surface-card`; 14% at first, lowered twice the same day on the owner's call — the ratios below were measured at 14%, and a lighter wash only raises them), a border at 35%, and the label in the group colour with 30% of
   `$text-primary` stirred in (`chip-wash()`, which the Combobox entry reuses as it keeps its
   own shape).
-- **`quiet`**: neutral ink and a `$hairline` border, the colour kept to the dot. For a control
-  rather than a category: the card's +N button (and the colour field's preview, which shows both).
+- **`quiet`**: neutral ink and a `$hairline` border, no group colour. It is the +N control's look, not a category chip. For a control
+  rather than a category: the +N button, its one user. The colour field's preview shows `full` only.
+
+**Size (2026-10-19).** `chip()` takes `$size: regular | compact`, alongside `$state`. Regular is the shape above. **Compact** is for a table cell (the admin Compendium's Categories column): no block padding and 7px inline (was 3px and 11px), and the card's `overline` text size. The wash, the 1px border and the label's colour mix are unchanged, so the contrast figures below hold. A compact chip measures about 18.8px tall in Chromium. The shared chip row takes it as `compact` (`category-chips--compact`: `claude-docs/components/category-chips.md`); a compact +N button keeps a 24px hit area through a transparent pseudo-element (WCAG 2.5.8) without growing its pill.
+
+## Dotted lists
+
+`dotted-row($item, $gap, $dot)` (`_mixins.scss`) lays a wrapping row of items with a dot between each pair: the card's forms line and the admin Compendium's Form cell. The dot is a circle drawn on every item after the first, in the margin to its left, and the row is clipped by that margin (`clip-path`, with a matching negative margin so nothing shifts), so a dot that would lead a wrapped line is never seen and none ends one. CSS cannot tell which item starts a line, so a rule on the item cannot do this. Each item holds a `.spoken-separator` comma, so a screen reader hears a list. `$item` is the class of the row's direct children.
 
 **Why the ink is stirred in.** The old rule below says a wash of a group's own colour cannot
 hold 4.5:1, and it was right for the colour as text: with the pure colour on a 14% wash, the
@@ -1153,8 +1159,9 @@ heavier than the reverse; light reverts to the browser default.
   `_primitives.scss` as the `.data-table--roomy` and `.data-table--nowrap`
   modifiers a table takes by class; `value-and-control` (a cell's value on
   the left and the control that changes it on the right); and
-  `row-action-column($layer)` (a stacking table's red, sticky row-action
-  column, Impersonate or Remove, and its card placement).
+  `sticky-action-column($layer)` (a stacking table's pinned row-action
+  column on a neutral `$hairline` rule: the Compendium's Edit, and its card placement) and
+  `row-action-column($layer)` (the same column in red, over a `@content` block: Impersonate or Remove).
 - **Three `*-base` mixins**, each emitting nothing on its own `@use` and
   `@include`d at exactly one site, `globals.scss`'s `body`:
   - `_typography.scss` → `typography-base` — headings, body copy capped at

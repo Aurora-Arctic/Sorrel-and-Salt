@@ -5,6 +5,7 @@ import type {
   IngredientSource,
   NomenclatureKind,
 } from '@/modules/ingredients/schema/ingredient-enums';
+import type { CardCategory } from '../CategoryChips/types';
 import type { PickerCategory } from '../CategoryPicker/types';
 import type { SearchCursor, SearchFilter } from '../../lib/search-param-table';
 import type { COMPENDIUM_PARAMS } from './params';
@@ -26,6 +27,8 @@ export interface CompendiumListEntry extends UpdatedStamp {
   canonicalName: string | null;
   /** Its live forms, in form order: `[]` for an entry with none. */
   forms: CompendiumListForm[];
+  /** Its categories, each with its group's colours: `[]` for an entry with none. */
+  categories: readonly CardCategory[];
   editHref: Route;
   /** The head of its edit modal, which a press shows at once while the form loads (M9.18). */
   editHeading: ModalHeading;

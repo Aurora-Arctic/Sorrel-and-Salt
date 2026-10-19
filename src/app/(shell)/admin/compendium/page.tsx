@@ -25,6 +25,7 @@ import {
   readFacets,
   readFormIcons,
 } from '../../../compendium-reads';
+import { readCardCategories } from '../../../compendium-reads';
 import AddAction from '../add-action';
 import { pagerHrefs } from '../../../../lib/list-href';
 import { readEditPlace, readListPlace } from '../list-page';
@@ -103,6 +104,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     session,
     page.edges.map(({ node }) => node),
   );
+  const chipRows = await readCardCategories(page.edges.map(({ node }) => node.id));
   const entries = page.edges.map(({ node }, i): CompendiumListEntry => ({
     ...stamps[i],
     id: node.id,
@@ -111,6 +113,7 @@ export default async function AdminCompendiumPage({ searchParams }: AdminCompend
     nomenclature: node.nomenclature,
     canonicalName: node.canonicalName,
     forms: page.forms[i],
+    categories: chipRows[i],
     editHref: compendiumHref(here, { edit: node.slug }),
     editHeading: editHeading(node),
   }));

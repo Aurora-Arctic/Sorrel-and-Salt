@@ -176,20 +176,6 @@
   }
 }
 
-// The group-colour dot a chip of any emphasis level can lead with.
-@mixin chip-dot($color) {
-  gap: space(2);
-
-  &::before {
-    content: '';
-    flex: none;
-    inline-size: 0.375rem;
-    block-size: 0.375rem;
-    border-radius: 50%;
-    background-color: $color;
-  }
-}
-
 // The full level's three colours, for a chip of any shape. The category chip everywhere
 // (2026-10-19): an 8% wash of the group colour (14% at first; the owner asked for more
 // transparency), a border at 35%, and the label in the colour with 30% of the body ink
@@ -204,11 +190,11 @@
 }
 
 // A pill in its group's colours, at one of two emphasis levels: `full` (a wash, the
-// category chip everywhere) and `quiet` (neutral, for a control). The pair is the group
+// category chip everywhere) and `quiet` (neutral: the +N control's look, not a category chip). The pair is the group
 // row's `colorDark` and `colorLight`, by default read from the element, where chipColors()
 // sets them; `light-dark()` picks one off the theme's `color-scheme`, since a group an
 // admin adds has no build-time token. claude-docs/styling.md, "Category chips".
-@mixin chip($dark: var(--chip-dark), $light: var(--chip-light), $state: full) {
+@mixin chip($dark: var(--chip-dark), $light: var(--chip-light), $state: full, $size: regular) {
   @each $color in ($dark, $light) {
     @if meta.type-of($color) != color and string.index('#{$color}', 'var(') != 1 {
       @error 'chip() takes a colour pair, dark then light, not "#{$color}": a group\'s ' +
@@ -220,11 +206,18 @@
 
   display: inline-flex;
   align-items: center;
-  padding: 0.1875rem 0.6875rem;
   border: 1px solid $color;
   border-radius: radius('pill');
   font-family: $font-body;
-  font-size: type-size('caption');
+
+  // `@if` rather than Sass's `if()` function, which Dart Sass deprecates.
+  @if $size == compact {
+    padding: 0 0.4375rem;
+    font-size: type-size('overline');
+  } @else {
+    padding: 0.1875rem 0.6875rem;
+    font-size: type-size('caption');
+  }
   // A step over Lexend's 300, so the label holds its colour at chip size.
   font-weight: 500;
   line-height: 1.4;
@@ -232,16 +225,19 @@
 
   @if $state == full {
     @include chip-wash($color);
-    @include chip-dot($color);
   } @else if $state == quiet {
-    // The quiet level (2026-10-19): neutral ink and a hairline, the group's colour kept to a
-    // small dot. Only the card's +N control wears it; a category is always full.
+    // The quiet level: neutral ink and a hairline, no group colour at all. Only the card's +N
+    // control wears it; a category is always full. The group colour sits on the full level's
+    // wash, border and label, with no dot (the owner's call, 2026-10-19).
     background-color: transparent;
     border-color: $hairline;
     color: $text-primary;
-    @include chip-dot($color);
   } @else {
     @error 'Unknown chip state "#{$state}". Expected full or quiet.';
+  }
+
+  @if $size != regular and $size != compact {
+    @error 'Unknown chip size "#{$size}". Expected regular or compact.';
   }
 
   @include theme-transition(background-color, border-color, color);
@@ -438,6 +434,45 @@
   @include tip-bubble;
 }
 
+// A wrapping row of items with a dot between each pair, for the card's forms line and the
+// Compendium table's Form cell. The dot is not text but a circle drawn on every item after the
+// first, in the margin to its left, and the row is clipped by that margin (`clip-path`, with a
+// matching negative margin so nothing shifts). A dot that would lead a wrapped line falls in the
+// clipped band and is never seen, and no line ends in one, since each dot belongs to the item
+// after it. CSS cannot tell which item starts a wrapped line, so a rule on the item cannot do
+// this. A screen reader gets a `.spoken-separator` comma at the end of each item but the last,
+// inside the label's inline span (a flex child would be read with spaces round it), as the
+// circle is announced as nothing. Include it on the row; `$item` is the class of its direct children.
+// claude-docs/styling.md, "Dotted lists".
+@mixin dotted-row($item, $gap: space(5), $dot: space(1)) {
+  --dots-gap: #{$gap};
+  --dots-dot: #{$dot};
+
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-inline-start: calc(-1 * var(--dots-gap));
+  clip-path: inset(0 0 0 var(--dots-gap));
+
+  > #{$item} {
+    position: relative;
+    margin-inline-start: var(--dots-gap);
+  }
+
+  > #{$item} + #{$item}::before {
+    content: '';
+    position: absolute;
+    inset-inline-start: calc(-0.5 * (var(--dots-gap) + var(--dots-dot)));
+    // Centred on the item's own box, the line its icon and name share, with no offset to tune.
+    inset-block: 0;
+    margin-block: auto;
+    inline-size: var(--dots-dot);
+    block-size: var(--dots-dot);
+    border-radius: 50%;
+    background-color: currentcolor;
+  }
+}
+
 // The new content of a list or tab, faded in as it replaces the skeleton
 // that stood in for it (`list-frame-fade-in`, _primitives.scss, the one
 // keyframe); under reduced motion it shows at once.
@@ -522,41 +557,35 @@
   gap: space(2) space(3);
 }
 
-// A stacking table's dangerous row action as a column of its own, Impersonate
-// or Remove (MB.115, the owner's call): a red hairline down its left, a faded
-// red tint and red text, since it acts on someone else. It stays at the
-// table's right edge while the other columns scroll beneath it, so its ground
-// is opaque: the tint mixed into the band it sits on, the page or a banded
-// row's card. `$layer` is its z-index. At phone width the cell gives up its
-// sticky place and stands at the card's top right on the card's own ground,
-// placed by the grid (`StackColumn.action: 'corner'`). Include it in the
-// class given to the column as both `className` and `headingClassName`.
-// claude-docs/styling.md, "Tables at phone width".
-@mixin row-action-column($layer: 1) {
+// A stacking table's row action as a column of its own, pinned to the table's right edge while
+// the other columns scroll beneath it (the admin People table's Impersonate, the Compendium
+// table's Edit). Its ground is opaque and follows the row it sits in, the page or a banded row's
+// card, so scrolled text never shows through, and a `$hairline` rule runs down its left. `$layer`
+// is its z-index. At phone width the cell gives up its sticky place and stands at the card's top
+// right on the card's own ground, placed by the grid (`StackColumn.action: 'corner'`). Include it
+// in the class given to the column as both `className` and `headingClassName`. A caller adds a
+// tone through the content block, which lands before the stacked resets so the resets win in a
+// card (`row-action-column` is the red one). claude-docs/styling.md, "Tables at phone width".
+@mixin sticky-action-column($layer: 1) {
   position: sticky;
   right: 0;
   z-index: $layer;
-  // A hairline, as the headings' rule is: the red marks it, not the weight.
-  border-left: 1px solid $secondary;
-  background-color: color-mix(in srgb, $secondary 6%, $surface-page);
-  color: $secondary;
+  // The hairline is an inset shadow, not a border: the table collapses its borders, and a
+  // collapsed border is the table's to paint, so it stays where the cell began and the
+  // scrolling columns slide over it. A shadow belongs to the cell and travels with it.
+  box-shadow: inset 1px 0 0 $hairline;
+  background-color: $surface-page;
 
   @at-root .data-table tbody tr:nth-child(even) #{&} {
-    // 5% rather than 6%: the dark card is lighter, and at 6% the wax label
-    // falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
-    background-color: color-mix(in srgb, $secondary 5%, $surface-card);
+    background-color: $surface-card;
   }
 
-  // Its heading's hairline red too, where every other column's is the muted
-  // ink; scoped past the primitive's own `thead th` rule.
-  @at-root .data-table thead th#{&} {
-    border-bottom-color: $secondary;
-  }
+  @content;
 
   @container data-table (max-width: #{$table-stack-width}) {
     @at-root .data-table--stack > tbody > tr > #{&} {
       position: static;
-      border-left: 0;
+      box-shadow: none;
       background-color: transparent;
     }
 
@@ -568,6 +597,36 @@
     // Past the banded row's rule above, so the card's ground wins.
     @at-root .data-table--stack tbody tr:nth-child(even) #{&} {
       background-color: transparent;
+    }
+  }
+}
+
+// A stacking table's dangerous row action as a column of its own, Impersonate or Remove (MB.115,
+// the owner's call): the pinned column of `sticky-action-column` in red, a red hairline down its
+// left, a faded red tint and red text, since it acts on someone else. The tint is mixed into the
+// band it sits on, so it stays opaque.
+@mixin row-action-column($layer: 1) {
+  @include sticky-action-column($layer) {
+    // A hairline, as the headings' rule is: the red marks it, not the weight.
+    box-shadow: inset 1px 0 0 $secondary;
+    background-color: color-mix(in srgb, $secondary 6%, $surface-page);
+    color: $secondary;
+
+    @at-root .data-table tbody tr:nth-child(even) #{&} {
+      // 5% rather than 6%: the dark card is lighter, and at 6% the wax label
+      // falls to 4.48:1, under the text floor (tests/scss/tokens.test.ts).
+      background-color: color-mix(in srgb, $secondary 5%, $surface-card);
+    }
+
+    // Its heading's hairline red too, where every other column's is the muted
+    // ink; scoped past the primitive's own `thead th` rule. Drawn as a shadow, which travels
+    // with the cell as the left hairline does; the collapsed grey border beneath it, which stays
+    // put as the columns scroll, is made transparent so only the red shows.
+    @at-root .data-table thead th#{&} {
+      border-bottom-color: transparent;
+      box-shadow:
+        inset 1px 0 0 $secondary,
+        inset 0 -1px 0 $secondary;
     }
   }
 }

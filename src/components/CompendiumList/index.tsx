@@ -3,6 +3,7 @@ import type { Route } from 'next';
 import { EditLink, LinkIcon } from '../IconTip';
 import LinkHint from '../LinkHint';
 import { Fragment, type ReactElement } from 'react';
+import CategoryChips from '../CategoryChips';
 import FormIcon from '../FormIcon';
 import StackTable, { updatedColumn } from '../DataTable';
 import type { StackColumn } from '../DataTable/types';
@@ -57,27 +58,45 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
   },
   {
     heading: 'Form',
-    // Each form led by its group's icon, the generic where it has none, the
-    // two held together as one unit that never wraps apart: the icon close
-    // to its name and the next form farther off (the owner's call,
-    // 2026-10-16). The forms sit in one wrapping row whose gap sets them
-    // apart, so a form that wraps starts its line at the cell's edge. The
-    // comma stays, on the name before it, so a screen reader hears a list; the
-    // space between two forms draws nothing in a flex row, and keeps the
-    // cell's name reading "Herb, Oil" and not "Herb,Oil".
+    // Each form led by its group's icon, the generic where it has none, the two held
+    // together as one unit that never wraps apart: the icon close to its name and the
+    // next form farther off (the owner's call, 2026-10-16). A dot is drawn between two
+    // forms by the `dotted-row` mixin, the card's mechanism, so a form that wraps
+    // starts its line at the cell's edge. The spoken comma ends the form before the
+    // dot and a space parts the two, which draws nothing in a flex row, so the cell's
+    // name reads "Herb, Oil" and a screen reader hears a list.
     cell: (entry) =>
       entry.forms.length ? (
         <span className="compendium-list__forms">
           {entry.forms.map(({ name, icon }, i) => (
             <Fragment key={name}>
               {i > 0 && ' '}
-              <span className="compendium-list__form">
-                <FormIcon name={icon} />
-                {i < entry.forms.length - 1 ? `${formLabel(name)},` : formLabel(name)}
+              <span className="compendium-list__item">
+                <span className="compendium-list__form">
+                  <FormIcon name={icon} />
+                  {/* The comma inside the label's inline span, not a flex child: Chrome
+                      sets a flex child apart with spaces, which read "Herb , Oil". */}
+                  <span>
+                    {formLabel(name)}
+                    {i < entry.forms.length - 1 && <span className="spoken-separator">,</span>}
+                  </span>
+                </span>
               </span>
             </Fragment>
           ))}
         </span>
+      ) : (
+        NONE
+      ),
+  },
+  {
+    heading: 'Categories',
+    className: 'compendium-list__categories',
+    headingClassName: 'compendium-list__categories',
+    // The card's chips: the first two, the rest behind +N (CategoryChips).
+    cell: (entry) =>
+      entry.categories.length ? (
+        <CategoryChips categories={entry.categories} label={entry.name} compact />
       ) : (
         NONE
       ),
@@ -87,6 +106,8 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
     heading: 'Edit',
     hiddenHeading: true,
     action: 'corner',
+    className: 'compendium-list__edit',
+    headingClassName: 'compendium-list__edit',
     // Named with the formal name too, as two entries can share a label but
     // never a formal name.
     cell: (entry) => (
