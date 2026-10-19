@@ -1,7 +1,8 @@
 import type { Route } from 'next';
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import IngredientCard from '@/components/IngredientCard';
+import { CATEGORY_CHIP_LIMIT } from '@/components/IngredientCard/constants';
 import { StockBadge } from '@/components/StockBadge';
 
 // M8.14 (claude-docs/components/ingredient-card.md): the card is presentational,
@@ -149,6 +150,81 @@ describe('IngredientCard', () => {
       render(<IngredientCard {...BASE} categories={[]} />);
 
       expect(screen.queryByRole('list', { name: 'Categories' })).toBeNull();
+    });
+  });
+
+  // The row measures itself in a browser; jsdom has no layout, so these tests give the
+  // row a width and every chip 80px, 6px apart, and the +N button 40px.
+  describe('the category chips, capped', () => {
+    const GROUP = { colorDark: '#112233', colorLight: '#445566' };
+    const many = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        category: { id: `c${i}`, name: `Fixture Category ${i + 1}` },
+        group: GROUP,
+      }));
+    const more = () => screen.queryByRole('button', { name: /more categories?/i });
+    const chips = () =>
+      within(screen.getByRole('list', { name: 'Categories' }))
+        .getAllByRole('listitem')
+        .filter((item) => item.querySelector('.chip') && !item.querySelector('button'));
+
+    it('shows the first few chips and counts the rest on the button', () => {
+      render(<IngredientCard {...BASE} categories={many(8)} />);
+
+      expect(chips()).toHaveLength(CATEGORY_CHIP_LIMIT);
+      expect(more()).toHaveTextContent(`+${8 - CATEGORY_CHIP_LIMIT}`);
+      expect(more()).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('has no button when every chip is within the limit', () => {
+      render(<IngredientCard {...BASE} categories={many(CATEGORY_CHIP_LIMIT)} />);
+
+      expect(more()).toBeNull();
+      expect(chips()).toHaveLength(CATEGORY_CHIP_LIMIT);
+    });
+
+    it('keeps the rest out of reach until the button is used, then lists them', () => {
+      render(<IngredientCard {...BASE} categories={many(CATEGORY_CHIP_LIMIT + 2)} />);
+
+      expect(screen.queryByRole('group', { name: /more categories/i })).toBeNull();
+      fireEvent.click(more()!);
+
+      const panel = screen.getByRole('group', { name: /more categories/i });
+      expect(more()).toHaveAttribute('aria-expanded', 'true');
+      expect(more()).toHaveAttribute('aria-controls', panel.id);
+      expect(
+        within(panel).getByText(`Fixture Category ${CATEGORY_CHIP_LIMIT + 1}`),
+      ).toBeInTheDocument();
+      expect(
+        within(panel).getByText(`Fixture Category ${CATEGORY_CHIP_LIMIT + 2}`),
+      ).toBeInTheDocument();
+      expect(within(panel).queryByText(`Fixture Category ${CATEGORY_CHIP_LIMIT}`)).toBeNull();
+    });
+
+    it('closes on a second click, and on Escape with focus back on the button', () => {
+      render(<IngredientCard {...BASE} categories={many(CATEGORY_CHIP_LIMIT + 2)} />);
+
+      fireEvent.click(more()!);
+      fireEvent.click(more()!);
+      expect(screen.queryByRole('group', { name: /more categories/i })).toBeNull();
+
+      fireEvent.click(more()!);
+      fireEvent.keyDown(document.body, { key: 'Escape' });
+      expect(screen.queryByRole('group', { name: /more categories/i })).toBeNull();
+      expect(more()).toHaveFocus();
+    });
+
+    it('opens on hover and on focus, and a press elsewhere closes it', () => {
+      render(<IngredientCard {...BASE} categories={many(CATEGORY_CHIP_LIMIT + 2)} />);
+
+      fireEvent.mouseEnter(more()!);
+      expect(more()).toHaveAttribute('aria-expanded', 'true');
+      fireEvent.click(more()!);
+      fireEvent.pointerDown(document.body);
+      expect(more()).toHaveAttribute('aria-expanded', 'false');
+
+      fireEvent.focus(more()!);
+      expect(more()).toHaveAttribute('aria-expanded', 'true');
     });
   });
 

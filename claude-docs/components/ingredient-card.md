@@ -9,22 +9,22 @@ nothing from the data.
 
 `IngredientCardProps` (`types.ts`):
 
-| Prop           | What it is                                                                                                                           |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| `href`         | The entry's page (M8.19). The name links to it                                                                                       |
-| `label`        | The label to show, already merged by the caller (`applyCupboardEntry`)                                                               |
-| `formalName`   | The formal name, a caption beneath the name                                                                                          |
-| `nomenclature` | Decides its italics: only a binomial kind (`isBinomial`, shared with the entry page) is italic; mineral, chemical or none is upright |
-| `categories`   | The entry's categories with their groups; chips in the group colours, plain not links, no row when empty                             |
-| `variants`     | The entry's live forms: an icon and the name each on the secondary line; their notes and flags feed the Caution and Toxic marks      |
-| `toxic`        | The ingredient's own flag                                                                                                            |
-| `safetyNotes`  | The ingredient's own safety notes; notes here or on a listed form show the Caution badge. The notes themselves are never drawn       |
-| `kind`         | `own`, `cupboard` or `compendium`; see [`entry-marks.md`](entry-marks.md)                                                            |
-| `annotated`    | The cupboard row overrides a field                                                                                                   |
-| `retired`      | The curators retired the entry                                                                                                       |
-| `level`        | The name's heading level, 2 to 5; Defaults to 2                                                                                      |
-| `children`     | The jar-line slot, last (see the slot’s contract)                                                                                    |
-| `actions`      | Buttons for the card's foot, right-aligned beneath the jar lines; they sit above the stretched link, so they press on their own      |
+| Prop           | What it is                                                                                                                                                                                                             |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `href`         | The entry's page (M8.19). The name links to it                                                                                                                                                                         |
+| `label`        | The label to show, already merged by the caller (`applyCupboardEntry`)                                                                                                                                                 |
+| `formalName`   | The formal name, a caption beneath the name                                                                                                                                                                            |
+| `nomenclature` | Decides its italics: only a binomial kind (`isBinomial`, shared with the entry page) is italic; mineral, chemical or none is upright                                                                                   |
+| `categories`   | The entry's categories with their groups; quiet chips (neutral ink, hairline, a dot in the group colour), the first `CATEGORY_CHIP_LIMIT` shown and the rest behind a +N toggletip, plain not links, no row when empty |
+| `variants`     | The entry's live forms: an icon and the name each on the secondary line; their notes and flags feed the Caution and Toxic marks                                                                                        |
+| `toxic`        | The ingredient's own flag                                                                                                                                                                                              |
+| `safetyNotes`  | The ingredient's own safety notes; notes here or on a listed form show the Caution badge. The notes themselves are never drawn                                                                                         |
+| `kind`         | `own`, `cupboard` or `compendium`; see [`entry-marks.md`](entry-marks.md)                                                                                                                                              |
+| `annotated`    | The cupboard row overrides a field                                                                                                                                                                                     |
+| `retired`      | The curators retired the entry                                                                                                                                                                                         |
+| `level`        | The name's heading level, 2 to 5; Defaults to 2                                                                                                                                                                        |
+| `children`     | The jar-line slot, last (see the slot’s contract)                                                                                                                                                                      |
+| `actions`      | Buttons for the card's foot, right-aligned beneath the jar lines; they sit above the stretched link, so they press on their own                                                                                        |
 
 ## What it is made of
 
@@ -39,6 +39,8 @@ restyled here:
 - the **jar-line slot**. M9.6 fills it with a line per jar (the form's icon, the
   form, quantity and unit, M9.8's `StockBadge`, M9.9's and M9.10's actions). The
   public compendium leaves it empty.
+
+**The category chips (2026-10-19).** The owner found a full grid of coloured chips too loud, and chose quiet chips capped with a toggletip. Chips are one family with two emphasis levels sharing a group-colour dot: the card uses the quiet level (`chip--quiet`, the `quiet` state of the `chip` mixin: neutral ink, `$hairline` border, a 6px dot from `chipColors(group)`); a fuller level, a tinted wash behind coloured text, is for the entry page, pickers, filters and admin tables, and is another task. The card shows the first `CATEGORY_CHIP_LIMIT` chips (2, `constants.ts`): with two, and the +N button, one line holds on the regular card at its 20rem width with typical seeded names (median nine letters; three never fit). A narrower card, or longer names, wrap the row to a second line. The rest sit behind a +N button (`category-more.tsx`, a client child; the card stays server-compatible). Hover or focus opens a panel of the remaining chips, a click pins it and a second click closes it; Escape closes it and returns focus to the button, and a press outside or leaving (after a 120ms grace, WCAG 1.4.13) closes it too. The panel floats over the chip row, so the card's height never changes, and it fades at `$tip-fade` (500ms, the tips' pace; dropped under `reduced-motion`). The card rises above its neighbours while the panel is open, with `isolation` and `z-index` and no transform, as for the tips. The button's name carries the count (`3 more categories for Testwort`).
 
 The surface is `modal-surface($shadow-floating)`, not `.panel`. Order is top row, chips, forms, stock (changed 2026-10-18): the chips sit under the name and the forms line leads into the jar lines it describes, with the stock line last under its rule.
 

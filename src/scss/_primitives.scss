@@ -99,6 +99,10 @@
     &.is-selected {
       @include chip($state: selected);
     }
+
+    &.chip--quiet {
+      @include chip($state: quiet);
+    }
   }
 
   // modal-surface() leaves width/padding/position to the owner; this adds only

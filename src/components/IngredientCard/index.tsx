@@ -1,11 +1,13 @@
 import Link from 'next/link';
 import type { ReactElement } from 'react';
-import { chipColors } from '../../lib/chip-colors';
 import { formLabel } from '@/modules/ingredients/validation/form-label';
+import { chipColors } from '../../lib/chip-colors';
 import EntryMarks from '../EntryMarks';
 import FormIcon from '../FormIcon';
 import { CautionMark, ToxicMark } from '../SafetyNote';
 import { isBinomial } from '@/modules/ingredients/schema/ingredient-enums';
+import CategoryMore from './category-more';
+import { CATEGORY_CHIP_LIMIT } from './constants';
 import type { IngredientCardProps } from './types';
 import './index.scss';
 
@@ -78,13 +80,18 @@ const IngredientCard = ({
       </div>
       {categories.length > 0 && (
         <ul className="specimen__chips" aria-label="Categories">
-          {categories.map(({ category, group }) => (
+          {categories.slice(0, CATEGORY_CHIP_LIMIT).map(({ category, group }) => (
             <li key={category.id}>
-              <span className="chip" style={chipColors(group)}>
+              <span className="chip chip--quiet" style={chipColors(group)}>
                 {category.name}
               </span>
             </li>
           ))}
+          {categories.length > CATEGORY_CHIP_LIMIT && (
+            <li className="category-more-item">
+              <CategoryMore categories={categories.slice(CATEGORY_CHIP_LIMIT)} label={label} />
+            </li>
+          )}
         </ul>
       )}
       {variants.length > 0 && (

@@ -160,6 +160,22 @@ export const WithActions: Story = () => (
   </IngredientCard>
 );
 
+// More categories than the card's chip limit: the first two show and the rest sit behind +N,
+// at the card's narrowest width (20rem). Hover, focus or click the button to see the panel.
+export const ManyCategories: Story = () => (
+  <div style={{ inlineSize: '20rem' }}>
+    <IngredientCard
+      {...BASE}
+      categories={['Binding', 'Clarity', 'Healing', 'Protection', 'Sleep', 'Strength'].map(
+        (name) => ({
+          category: { id: name, name },
+          group: CATEGORIES[0].group,
+        }),
+      )}
+    />
+  </div>
+);
+
 // The compact look, which the coven's Ingredients page can choose (M9.6). The card has no
 // density prop: an ancestor's `data-density` switches it, as `IngredientCardList` sets it.
 export const Compact: Story = () => (

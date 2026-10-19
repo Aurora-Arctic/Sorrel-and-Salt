@@ -295,3 +295,68 @@ test('the stuck row wears a shadow that is gone at the top, and the tray stays a
   await expect(row).not.toHaveAttribute('data-stuck', /.*/);
   await expect.poll(shadow).toBe('none');
 });
+
+// The first chips and the +N button share one line at full card width. Opening the panel
+// floats it over the card, so the card and its grid row do not change height; a component
+// test cannot measure either. No seeded entry has more than three categories, so the test
+// files Amethyst under three more first, and holds the card at the grid's narrowest, 20rem.
+test('the category chips and the +N button share one line, and opening the panel does not change the card height', async ({
+  page,
+}) => {
+  await withSql(
+    (sql) => sql`
+      insert into ingredient_categories (ingredient_id, category_id, created_by, updated_by)
+      select link.ingredient_id, c.id, link.created_by, link.updated_by
+      from (
+        select ingredient_id, created_by, updated_by from ingredient_categories
+        where ingredient_id = (
+          select id from ingredients
+          where name = 'Amethyst' and workspace_id is null and deleted_at is null)
+        limit 1
+      ) link
+      cross join (
+        select id from categories
+        where deleted_at is null
+          and name in ('Binding', 'Healing', 'Strength')
+          and id not in (
+            select category_id from ingredient_categories ic
+            join ingredients i on i.id = ic.ingredient_id
+            where i.name = 'Amethyst' and i.workspace_id is null)
+      ) c`,
+  );
+  await page.goto('/compendium');
+  const search = page.getByPlaceholder(/^Search names/);
+  await search.fill('Amethyst');
+  await search.press('Enter');
+  await expect(page).toHaveURL(/query=/);
+  const card = cardsOf(page)
+    .filter({ has: page.getByRole('button', { name: /more categories? for/i }) })
+    .first();
+  await expect(card).toBeVisible();
+  await card.evaluate((el) => {
+    el.style.width = '20rem';
+  });
+  const more = card.getByRole('button', { name: /more categories? for/i });
+  await expect(more).toBeVisible();
+
+  // The chips shown plus the count behind +N are all six; at the grid's narrowest card
+  // width (20rem) the shown chips and the button sit on one line.
+  const chips = card
+    .getByRole('list', { name: 'Categories' })
+    .locator('li:has(.chip):not(:has(button))');
+  const count = Number(/\d+/.exec((await more.textContent()) ?? '')![0]);
+  expect((await chips.count()) + count).toBe(6);
+  const tops = await chips.evaluateAll((els) => els.map((el) => el.getBoundingClientRect().top));
+  tops.push((await more.boundingBox())!.y);
+  expect(new Set(tops.map(Math.round)).size).toBe(1);
+
+  const before = (await card.boundingBox())!.height;
+  await more.click();
+  await expect(more).toHaveAttribute('aria-expanded', 'true');
+  await expect(card.getByRole('group', { name: /^More categories for/ })).toBeVisible();
+  expect((await card.boundingBox())!.height).toBe(before);
+
+  await page.keyboard.press('Escape');
+  await expect(more).toHaveAttribute('aria-expanded', 'false');
+  await expect(more).toBeFocused();
+});
