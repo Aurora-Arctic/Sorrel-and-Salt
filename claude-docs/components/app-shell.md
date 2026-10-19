@@ -82,6 +82,7 @@ one's own id) throws.
   Out alone, and the theme disc, a site nav holding the Compendium alone, and no Add Ingredient. (The
   theme disc stays because the root's corner toggle is hidden on shell pages;
   without it the viewer could not change the theme.)
+- **The body** (`#main`) is wrapped in `main-body.tsx`, a client part (M12.33). While a navigation aimed at the `main` region is pending ([loading](../loading.md)), it swaps the page for one `Skeleton` of the target's shape inside a `main`, so the landmark survives the wait. A `coven` target is `CovenBody`'s, and a navigation with no target (a refresh) leaves the page standing.
 - **The skip link** ("Skip to Content") is the first element and targets
   `#main`, a wrapper around the page's children, since each page owns its own
   `main`.

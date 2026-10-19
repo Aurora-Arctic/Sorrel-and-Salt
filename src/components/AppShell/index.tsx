@@ -4,6 +4,7 @@ import { covenHome } from '../../lib/shell-home';
 import AccountMenu from '../AccountMenu';
 import ThemeToggle from '../ThemeToggle';
 import AddIngredientButton from './add-ingredient-button';
+import MainBody from './main-body';
 import SiteNav from './site-nav';
 import type { AppShellProps, SiteLink } from './types';
 import './index.scss';
@@ -83,7 +84,7 @@ const AppShell = ({ viewer, workspaces, children }: AppShellProps): ReactElement
           own `main` and there is no one place a page could be asked to put an
           id. Focusable by script only, so the link moves focus here. */}
       <div id="main" className="app-shell__main" tabIndex={-1}>
-        {children}
+        <MainBody>{children}</MainBody>
       </div>
     </div>
   );
