@@ -31,9 +31,12 @@ register, so the control moves first.
 - A **button** is a [`BusyButton`](components/busy-button.md): it keeps its
   place, gains a [`Spinner`](components/spinner.md), swaps its label for a
   busy one, and carries `aria-busy="true"`.
-- A **link** shows the [`LinkHint`](components/link-hint.md) dot after its
-  text. A link that is a tab moves its pill at once
-  ([`TabbedPage`](components/tabbed-page.md)).
+- A **link** in the page shows the [`LinkHint`](components/link-hint.md) dot
+  after its text. A link that is a tab moves its pill at once
+  ([`TabbedPage`](components/tabbed-page.md)). The site's menu links (the
+  global bar's links, the admin pages' lead link and the account menu's items)
+  show no dot: the page bar and the skeleton answer for them (the owner's call,
+  2026-10-19). Each still carries `aria-busy` while its navigation is pending.
 - The **coven switcher** shows the picked coven's name with a spinner
   ([`WorkspaceSwitcher`](components/workspace-switcher.md)).
 - A **field** that is searching shows a spinner inside the input. In a
@@ -264,7 +267,7 @@ fails.
 ### Adding a wait: the steps
 
 1. A **link** that navigates: `PendingLink`, with a `LinkHint` inside if it is
-   a text link.
+   a text link in the page (not a menu link, which takes none).
 2. A **button** whose action is slow: `BusyButton` with a `busyLabel`.
 3. A navigation from code: `usePendingNavigation`, and a `target`
    when a skeleton should follow.
