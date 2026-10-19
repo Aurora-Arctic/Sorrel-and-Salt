@@ -1,3 +1,4 @@
+import type { Route } from 'next';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Navigating } from '../../support/navigating';
@@ -13,6 +14,7 @@ const { default: LinkHint } = await import('@/components/LinkHint');
 // shared hook, so the bar and the destination's skeleton follow; a press the
 // browser means for a new tab or window is left to the browser.
 
+const MEMBERS = '/coven/fixture-coven/members' as Route;
 const COVEN_TABLE = { region: 'coven', shape: 'table' } as const;
 
 let state: { busy: boolean; target?: unknown } | undefined;
@@ -28,7 +30,7 @@ function renderLink(props: Record<string, unknown> = {}) {
   });
   return render(
     <Navigating push={router.push} arrives={arrives}>
-      <PendingLink href="/coven/fixture-coven/members" {...props}>
+      <PendingLink href={MEMBERS} {...props}>
         Members
       </PendingLink>
       <Probe />
@@ -58,7 +60,7 @@ describe('PendingLink', () => {
   it('answers the press at once: busy while it waits, with the hint inside shown pending', async () => {
     const { container } = render(
       <Navigating push={router.push} arrives={new Promise<void>((resolve) => (arrive = resolve))}>
-        <PendingLink href="/coven/fixture-coven/members">
+        <PendingLink href={MEMBERS}>
           Members <LinkHint />
         </PendingLink>
       </Navigating>,
