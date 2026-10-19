@@ -20,6 +20,7 @@ export interface AdminCompendiumPageProps {
 export interface CompendiumSearchParams extends ListSearchParams {
   forms?: string | string[];
   withoutReferences?: string | string[];
+  withoutForms?: string | string[];
   elements?: string | string[];
   categories?: string | string[];
   categoryMode?: string | string[];

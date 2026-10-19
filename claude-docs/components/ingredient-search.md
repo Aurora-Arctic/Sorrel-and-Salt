@@ -76,8 +76,10 @@ in the filter slot to carry.
   PublicFrame, whose header scrolls away, to 0. The row has `space(4)` of padding
   above, cancelled at rest by an equal negative margin so the page lays out as
   before, and `space(2)` below, real space between the row and the cards with no
-  cancelling margin (changed 2026-10-19, back to what it was); the tray hangs from the form inside, so the padding never moves it
-  from the input. While stuck the row wears `$shadow-floating`, faded in and out
+  cancelling margin (changed 2026-10-19, back to what it was). The search sentence
+  under the row takes that `space(2)` back from the frame's gap, so it sits a gap
+  from the input as the cards sit a gap from it. The tray hangs from the form
+  inside, so the padding never moves it from the input. While stuck the row wears `$shadow-floating`, faded in and out
   with `$modal-fade` (none under reduced motion): `StuckMark`, a small client
   child, watches a one-pixel sentinel at the row's resting place with an
   IntersectionObserver (no scroll listener) and sets `data-stuck` on the row.
@@ -180,6 +182,7 @@ address cannot reject it the way `listParam` rejects a word outside its set.
 | `query`             | text                   | `query`             |                                            |
 | `forms`             | text list              | `forms`             | The compendium read folds the case         |
 | `withoutReferences` | on or off              | `withoutReferences` | Written `1`                                |
+| `withoutForms`      | on or off              | `withoutForms`      | Written `1` (M12.30)                       |
 | `elements`          | list of elements       | `elements`          | Dropped when outside `INGREDIENT_ELEMENTS` |
 | `categories`        | slug list              | `categoryIds`       | Through the `categories` lookup            |
 | `categoryMode`      | `all` or `any`         | `categoryMode`      | Written only for `any`                     |
@@ -299,7 +302,7 @@ separated by a comma. An example with every kind:
   or a null source says nothing. Their fragments carry the facets `source`,
   `inStock` and `lowStockOnly` (`value` `true` for the two flags), so the component's
   link away drops just that one. The coven's list passes `noun` as it likes.
-- **Nomenclature and No Refs** are named only when `admin` is true; otherwise
+- **Nomenclature, No Refs and No Form** ("without forms") are named only when `admin` is true; otherwise
   they are ignored and do not count as a chosen filter.
 - **A value with no label** is named by its raw value, so a stale link still reads.
   Blank values and empty lists are not chosen.

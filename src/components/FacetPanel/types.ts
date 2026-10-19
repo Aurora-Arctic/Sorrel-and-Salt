@@ -19,6 +19,8 @@ export interface FacetPanelFilter {
   toxic: '' | 'toxic' | 'not_toxic';
   /** Show only the entries that cite no reference (admin). */
   withoutReferences: boolean;
+  /** Show only the entries that have no live form (admin; M12.30). */
+  withoutForms: boolean;
   /**
    * The coven's Source control (M9.7), shown only when this is set: `''` for both,
    * as the address leaves it blank. The compendium's panel leaves it out.

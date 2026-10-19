@@ -166,5 +166,9 @@ export const CompendiumFacetsRef = builder
         description:
           'How many entries cite no live reference, on themselves or a live form, under the rest of the filter: the same whether withoutReferences is chosen or not.',
       }),
+      withoutForms: t.exposeInt('withoutForms', {
+        description:
+          'How many entries have no live form, under the rest of the filter: the same whether withoutForms is chosen or not.',
+      }),
     }),
   });

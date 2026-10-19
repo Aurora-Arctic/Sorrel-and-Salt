@@ -156,6 +156,13 @@
   font-size: type-size('caption');
 }
 
+// In the Filters button, a hover or a focus fills the button with the accent: the count takes
+// the button's ink then, since the muted ink is unreadable on it.
+.facet-panel__button:hover .facet-panel__count,
+.facet-panel__button:focus-visible .facet-panel__count {
+  color: inherit;
+}
+
 // A choice chip (ChoiceChip): "Match: All" and a caret, opening a menu of radios. A
 // `<details>`, so it opens before the script runs; once the script has run the menu fades as
 // other dropdowns do, and stays in the page until the fade ends.

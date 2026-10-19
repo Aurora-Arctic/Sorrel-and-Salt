@@ -54,6 +54,7 @@ const FACETS: CompendiumFacetCounts = {
     { value: 'not_toxic', label: 'Not Toxic', count: 21 },
   ],
   withoutReferences: 7,
+  withoutForms: 4,
 };
 
 // The coven's counts: Source's two values, one at zero as Toxic's may be, the In Stock count and the Low Stock Only count.
@@ -77,6 +78,7 @@ const NONE: FacetPanelFilter = {
   elements: [],
   toxic: '',
   withoutReferences: false,
+  withoutForms: false,
 };
 
 function Panel({

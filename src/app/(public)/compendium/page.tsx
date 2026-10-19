@@ -25,13 +25,13 @@ import type { PublicCompendiumPageProps, PublicCompendiumSearchParams } from './
 // reads (`readCompendium` and the rest take no session), so every card and every link is in
 // the server HTML. The viewer is asked only for the foot of each card, and never redirects.
 //
-// The address carries the admin list's filters, bar one: No Refs is the curators' to-do list,
-// so `?withoutReferences=1` is dropped before the table reads it, and lists what the
-// unfiltered page lists.
+// The address carries the admin list's filters, bar two: No Refs and No Form are the curators'
+// to-do lists, so `?withoutReferences=1` and `?withoutForms=1` are dropped before the table
+// reads them, and list what the unfiltered page lists.
 
 /** The address as the table reads it: with the curators' own filter taken out. */
 const publicParams = (params: PublicCompendiumSearchParams): PublicCompendiumSearchParams => {
-  const { withoutReferences: _dropped, ...rest } = params;
+  const { withoutReferences: _refs, withoutForms: _forms, ...rest } = params;
   return rest;
 };
 

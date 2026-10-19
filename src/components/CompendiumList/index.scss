@@ -2,7 +2,7 @@
 @use '../../scss/mixins' as *;
 @use 'layers' as *;
 
-// The forms in the Form column, one wrapping row with a dot between forms (the card's
+// The forms in the Form column, one row (wrapping only as a card) with a dot between forms (the card's
 // `dotted-row` mixin). A gap rather than a margin on each form, so a form that wraps starts
 // its line at the cell's edge. `vertical-align: top` because an inline-flex box sits on its
 // first item's baseline, and the icon's svg has none, so its bottom edge would sit on the line
@@ -14,6 +14,13 @@
   display: inline-flex;
   vertical-align: top;
   row-gap: space(1);
+
+  // A table row stays one line (the table scrolls in its frame); only a card wraps the forms.
+  flex-wrap: nowrap;
+
+  @container data-table (max-width: #{$table-stack-width}) {
+    flex-wrap: wrap;
+  }
 }
 
 // A form's wrapper is a flex box so it is exactly as tall as the form inside it. As a plain
@@ -56,12 +63,34 @@
 // Chromium at a 16px root with the final compact, dot-less chips: Aspen's Ancestor Work and
 // Communication with its +8 button and the row's 4px gaps, 266px (16.625rem), rounded up to
 // the next 0.25rem. The cell's own inset is added each side. Only where the table is wide:
-// below that the chips may wrap, and as a card (under `$table-stack-width`) it never applies.
+// below that the table scrolls rather than wraps its chips, so the floor keeps the column from
+// being squeezed under them; as a card (under `$table-stack-width`) it never applies and the
+// chips wrap.
 $categories-floor: 16.75rem;
 $categories-wide: 75rem;
 
 .compendium-list__categories {
+  // The chips stay on one line while this is a table; a card wraps them (the shared
+  // `.specimen__chips` row wraps).
+  .category-chips {
+    flex-wrap: nowrap;
+
+    @container data-table (max-width: #{$table-stack-width}) {
+      flex-wrap: wrap;
+    }
+  }
+
   @container data-table (min-width: #{$categories-wide}) {
     min-inline-size: calc(#{$categories-floor} + 2 * #{$table-cell-inset});
+  }
+}
+
+// The empty sentence: muted as a whole, its filter values bold in the same ink, like the
+// search sentence's values (claude-docs/components/compendium-list.md).
+.compendium-list__empty {
+  color: $text-muted;
+
+  strong {
+    font-weight: 700;
   }
 }

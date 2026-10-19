@@ -71,6 +71,7 @@ const panelOf = (filter: Held, coven: boolean): FacetPanelFilter => ({
   elements: filter.elements,
   toxic: filter.toxic ?? '',
   withoutReferences: filter.withoutReferences,
+  withoutForms: filter.withoutForms,
   ...(coven && {
     source: filter.source ?? '',
     inStock: filter.inStock ?? false,
@@ -89,6 +90,7 @@ const noFacets = (coven: boolean): FacetPanelFilter => ({
   elements: [],
   toxic: '',
   withoutReferences: false,
+  withoutForms: false,
   ...(coven && { source: '', inStock: false, lowStockOnly: false }),
 });
 
@@ -104,6 +106,7 @@ const changeOf = (panel: FacetPanelFilter) => ({
   ),
   toxic: panel.toxic,
   withoutReferences: panel.withoutReferences,
+  withoutForms: panel.withoutForms,
   // Below two categories the mode means nothing, so the address leaves it out.
   categoryMode: panel.categories.length >= 2 ? panel.categoryMode : ('all' as const),
 });

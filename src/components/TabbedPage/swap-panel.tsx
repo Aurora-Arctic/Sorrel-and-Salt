@@ -15,12 +15,17 @@ const SwapPanel = ({
   className,
   filter,
   shape,
+  loadingMinHeight,
   children,
 }: SwapPanelProps): ReactElement => {
   const [swapped, setSwapped] = useState(false);
   if (pending && !swapped) setSwapped(true);
   return pending ? (
-    <div key="loading" className={className}>
+    <div
+      key="loading"
+      className={className}
+      style={loadingMinHeight ? { minHeight: loadingMinHeight } : undefined}
+    >
       <TabPanelLoading filter={filter} shape={shape} />
     </div>
   ) : (

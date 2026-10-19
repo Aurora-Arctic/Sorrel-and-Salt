@@ -184,6 +184,19 @@ describe('buildSearchSentence', () => {
     expect(buildSearchSentence({ filter, total: 2, admin: true }).hasFilter).toBe(true);
   });
 
+  it('names No Form only for an admin list, and carries the facet that removes it', () => {
+    const filter: SearchSentenceFilter = { withoutForms: true };
+    expect(text(filter, 2)).toBe('2 ingredients');
+    expect(text(filter, 2, { admin: true })).toBe('2 ingredients, without forms');
+    const { fragments } = buildSearchSentence({ filter, total: 2, admin: true });
+    expect(fragments).toContainEqual({
+      kind: 'value',
+      text: 'without forms',
+      facet: 'withoutForms',
+      value: 'true',
+    });
+  });
+
   it('carries on each value fragment the facet and value that remove it', () => {
     const labels = { forms: { oil: 'Oil' }, planets: { sun: 'Sun' } };
     const { fragments, hasFilter } = buildSearchSentence({

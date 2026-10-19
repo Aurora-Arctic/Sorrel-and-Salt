@@ -51,6 +51,7 @@ const NO_FILTER: CompendiumListFilter = {
   query: '',
   forms: [],
   withoutReferences: false,
+  withoutForms: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -102,6 +103,7 @@ const FACETS: CompendiumFacetCounts = {
     { value: 'not_toxic', label: 'Not Toxic', count: 5 },
   ],
   withoutReferences: 2,
+  withoutForms: 3,
 };
 
 // What the open panel reads its live counts through.

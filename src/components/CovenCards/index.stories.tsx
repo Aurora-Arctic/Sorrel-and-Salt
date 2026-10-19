@@ -13,6 +13,7 @@ const NO_FILTER: CovenCardsProps['filter'] = {
   query: '',
   forms: [],
   withoutReferences: false,
+  withoutForms: false,
   elements: [],
   categories: [],
   categoryMode: 'all',
@@ -34,6 +35,7 @@ const NO_FACETS: CompendiumFacetCounts = {
   elements: [],
   toxic: [],
   withoutReferences: 0,
+  withoutForms: 0,
   source: [
     { value: 'local', label: 'Local', count: 2 },
     { value: 'compendium', label: 'Compendium', count: 1 },

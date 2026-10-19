@@ -46,6 +46,7 @@ const EMPTY: CompendiumFacets = {
   elements: [],
   toxic: [],
   withoutReferences: 0,
+  withoutForms: 0,
 };
 
 describe('the facet counts as the list takes them', () => {
@@ -178,6 +179,7 @@ describe('the facet counts as the list takes them', () => {
           { value: 'not_toxic', count: 4 },
         ],
         withoutReferences: 7,
+        withoutForms: 5,
       },
       VOCABULARIES,
     );
@@ -190,6 +192,7 @@ describe('the facet counts as the list takes them', () => {
       ['not_toxic', 4],
     ]);
     expect(counts.withoutReferences).toBe(7);
+    expect(counts.withoutForms).toBe(5);
   });
 });
 

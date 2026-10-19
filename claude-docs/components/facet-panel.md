@@ -3,7 +3,7 @@
 `src/components/FacetPanel/` — the Filters button and the panel of facets it opens
 (M12.4). The button reads "Filters (3)" once something is chosen, with a quiet Clear
 All link beside it. The panel holds every facet of the compendium search: categories,
-forms, planets, zodiac, deities, elements, toxic, and for an admin the No Refs switch.
+forms, planets, zodiac, deities, elements, toxic, and for an admin the No Refs and No Form switches.
 A client component. The layout was signed off in
 [`m12.4-filter-layout`](../design-decisions/m12.4-filter-layout.md).
 
@@ -11,17 +11,17 @@ A client component. The layout was signed off in
 
 `FacetPanelProps` (`types.ts`):
 
-| Prop        | What it is                                                                                                                                                                     |
-| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `facets`    | The `CompendiumFacetCounts`: every facet's choices with their counts                                                                                                           |
-| `filter`    | A `FacetPanelFilter`: the chosen values per facet, `categoryMode`, `toxic` (`''` for either) and `withoutReferences`, and for a coven `source`, `inStock` and `lowStockOnly`   |
-| `onChange`  | Called once hydrated, on every change, with a patch of only the part that changed. The caller holds it; the panel applies nothing itself                                       |
-| `onApply`   | Called once when the panel shuts, by any route: the Filters button, Escape, Close, the sheet's own Escape or the width changing. The caller applies what it holds, if anything |
-| `onClear`   | Called by either Clear All link instead of following it, once hydrated. The caller clears what it holds and applies at once; the panel shuts if it was open                    |
-| `admin`     | Shows the No Refs switch. The public and coven lists leave it off                                                                                                              |
-| `loading`   | A search is on its way: every chosen chip holds a placeholder where its count will be                                                                                          |
-| `clearHref` | Where both Clear All links go: the list with nothing chosen                                                                                                                    |
-| `className` | Added to the dialog's own class                                                                                                                                                |
+| Prop        | What it is                                                                                                                                                                                   |
+| ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `facets`    | The `CompendiumFacetCounts`: every facet's choices with their counts                                                                                                                         |
+| `filter`    | A `FacetPanelFilter`: the chosen values per facet, `categoryMode`, `toxic` (`''` for either), `withoutReferences` and `withoutForms`, and for a coven `source`, `inStock` and `lowStockOnly` |
+| `onChange`  | Called once hydrated, on every change, with a patch of only the part that changed. The caller holds it; the panel applies nothing itself                                                     |
+| `onApply`   | Called once when the panel shuts, by any route: the Filters button, Escape, Close, the sheet's own Escape or the width changing. The caller applies what it holds, if anything               |
+| `onClear`   | Called by either Clear All link instead of following it, once hydrated. The caller clears what it holds and applies at once; the panel shuts if it was open                                  |
+| `admin`     | Shows the No Refs and No Form switches. The public and coven lists leave it off                                                                                                              |
+| `loading`   | A search is on its way: every chosen chip holds a placeholder where its count will be                                                                                                        |
+| `clearHref` | Where both Clear All links go: the list with nothing chosen                                                                                                                                  |
+| `className` | Added to the dialog's own class                                                                                                                                                              |
 
 The component returns a fragment: the Filters control, the Clear All link and the
 dialog. The parent lays the first two out and must be `position: relative`, because
@@ -38,7 +38,7 @@ fields and hidden inputs only, and its Apply Filters button is the form's submit
 
 - **Count.** `n` is the number of chosen values: every category, form, deity, zodiac
   sign, planet and element counts one, plus one for a Toxic setting other than Any and
-  one for No Refs when on. Two categories and two forms read 4. Match counts nothing:
+  one each for No Refs and No Form when on. Two categories and two forms read 4. Match counts nothing:
   it is a mode of the categories, not a filter (owner, 2026-10-17).
 - **Two ways to open.** The width is read when the button is pressed, against the
   shell's tablet width (`56rem`, the same as `$shell-tablet-width`). At that width and

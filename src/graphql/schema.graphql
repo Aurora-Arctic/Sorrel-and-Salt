@@ -99,6 +99,11 @@ type CompendiumFacets {
   toxic: [ToxicFacetCount!]!
 
   """
+  How many entries have no live form, under the rest of the filter: the same whether withoutForms is chosen or not.
+  """
+  withoutForms: Int!
+
+  """
   How many entries cite no live reference, on themselves or a live form, under the rest of the filter: the same whether withoutReferences is chosen or not.
   """
   withoutReferences: Int!
@@ -1048,6 +1053,7 @@ type Query {
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
     """
     toxic: ToxicFilter
+    withoutForms: Boolean
     withoutReferences: Boolean
 
     """Keeps entries listing any one of these zodiac signs, ignoring case."""
@@ -1094,6 +1100,7 @@ type Query {
     Keeps toxic entries, or entries that are not toxic; any, or leaving it out, keeps both.
     """
     toxic: ToxicFilter
+    withoutForms: Boolean
     withoutReferences: Boolean
 
     """Keeps entries listing any one of these zodiac signs, ignoring case."""

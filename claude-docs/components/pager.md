@@ -48,7 +48,9 @@ cursor helper (rule 8), so every list that shows its pages shows them here.
   plain left click opens the end's page through it, as the filter does, so
   the list's body, this pager included, is the tabs' skeleton and the filter
   row is off until the page renders. A soft end is `next/link`, so Next
-  still prefetches its page; a plain end is a bare anchor. How each
+  still prefetches its page, and it pushes without Next's scroll to the page
+  top, bringing the start of the list into view instead (the frame's `page`
+  kind); a plain end is a bare anchor. How each
   navigates, and how Back after a full load avoids a skeleton, is the
   frame's ([`list-frame.md`](list-frame.md#contracts)). A
   modified or middle click opens the page elsewhere and leaves the list as

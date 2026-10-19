@@ -76,7 +76,9 @@ function add(name: string, overrides: Overrides<IngredientFixture> = {}): Promis
 }
 
 function compendiumFacets(variables: Record<string, unknown> = {}) {
-  return runOperation<{ compendiumFacets: Facets & { withoutReferences: number } }>(
+  return runOperation<{
+    compendiumFacets: Facets & { withoutReferences: number; withoutForms: number };
+  }>(
     null,
     `query (
       $query: String
@@ -86,6 +88,7 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
       $toxic: ToxicFilter
       $nomenclature: Nomenclature
       $withoutReferences: Boolean
+      $withoutForms: Boolean
     ) {
       compendiumFacets(
         query: $query
@@ -95,7 +98,8 @@ function compendiumFacets(variables: Record<string, unknown> = {}) {
         toxic: $toxic
         nomenclature: $nomenclature
         withoutReferences: $withoutReferences
-      ) ${SELECTION.slice(0, -1)} withoutReferences }
+        withoutForms: $withoutForms
+      ) ${SELECTION.slice(0, -1)} withoutReferences withoutForms }
     }`,
     variables,
   );
@@ -158,6 +162,23 @@ describe('compendiumFacets', () => {
       expect(result.errors).toBeUndefined();
       // Betawort alone: Alphawort cites the book, and Covenwort is a coven's.
       expect(result.data?.compendiumFacets.withoutReferences).toBe(1);
+    }
+  });
+
+  it('counts the entries with no live form, the No Form switch on or off, signed out', async () => {
+    await add('Gammawort', { variants: [] });
+    const withoutForms = async (variables: Record<string, unknown>) => {
+      const result = await compendiumFacets(variables);
+      expect(result.errors).toBeUndefined();
+      return result.data?.compendiumFacets.withoutForms;
+    };
+
+    // Why it could have counted more: Alphawort and Betawort hold live forms
+    // and Covenwort is a coven's, so Gammawort is the only one without.
+    expect(await withoutForms({ query: 'alphawort' })).toBe(0);
+    expect(await withoutForms({})).toBe(1);
+    for (const switchOn of [null, true]) {
+      expect(await withoutForms({ withoutForms: switchOn })).toBe(1);
     }
   });
 
