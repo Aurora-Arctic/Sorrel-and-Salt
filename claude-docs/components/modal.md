@@ -10,7 +10,7 @@ is the wrapper every admin page opens it through (below).
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
 | `modal.tsx`                | `Modal`, the default export                                                                     |
 | `route-modal.tsx`          | `RouteModal`                                                                                    |
-| `modal-button.tsx`         | `ModalButton`: a button that opens a modal and takes the focus back when it closes              |
+| `modal-button.tsx`         | `ModalButton`: a button that opens a modal, named as where the focus goes back when it closes   |
 | `route-modal-provider.tsx` | `RouteModalProvider`, `useOpenModalClick`: a press opens the modal at once ("Opening at once")  |
 | `loading.tsx`              | `ModalLoading`, a thin user of the shared `Skeleton` (`form` shape) a modal shows while loading |
 | `index.tsx`                | The exports; two files, since `RouteModal` renders `Modal`                                      |
@@ -36,6 +36,7 @@ is the wrapper every admin page opens it through (below).
 | `size`        | `'wide'` for a long form; absent, the default width                                                                                     |
 | `loading`     | The contents are on the way: the body is marked `aria-busy` (M9.18)                                                                     |
 | `children`    | The body: a form, a confirmation, whatever the owner puts here                                                                          |
+| `returnTo`    | Where the focus goes as it closes when what opened it is gone: a function of that gone element, returning the place                     |
 
 ## Contracts
 
@@ -89,13 +90,53 @@ is the wrapper every admin page opens it through (below).
   and let go over the backdrop keeps the form. A stray click outside a
   half-filled form, the cost M5.6 weighed, now asks before throwing it away
   (["Unsaved changes"](#unsaved-changes)).
-- **Modal does not give the focus back itself.** Its owner closes it by
-  unmounting it, so the `<dialog>` is never closed in place and the
-  browser's own return to the opener never runs. A modal a button opens is
-  drawn with `ModalButton` ([below](#modalbutton)), which sends the focus
-  back to that button however the modal closes (MB.119). A modal opened by
-  its address is `RouteModal`'s: its trigger is a link the navigation
-  re-renders.
+- **Modal gives the focus back itself**, however it closes: Close, Escape,
+  a click outside, Cancel, a save, or its owner unmounting it (M8.17;
+  ["Giving the focus back"](#giving-the-focus-back)).
+
+## Giving the focus back
+
+When a modal closes, the focus goes back to what opened it, so a keyboard
+user carries on from where they were rather than from the top of the page.
+The browser does this by itself only when a `<dialog>` is closed in place,
+and a Modal's owner closes it by unmounting it, so Modal does it instead
+(M8.17; the owner's call of 2026-10-19, option B,
+[`m8.17-plan.md`](../design-decisions/m8.17-plan.md#giving-the-focus-back-owner-2026-10-19)).
+
+1. **Before it opens**, Modal notes the focused element, the opener.
+2. **As it unmounts**, if the focus is on nothing (the page's body), it
+   focuses the opener again, if the opener is still on the page.
+3. **If the opener is gone**, it asks its owner's `returnTo` for a place.
+   An owner whose opener sits in a menu that closed, or is drawn afresh,
+   names its trigger there: `ModalButton` its button, Add Ingredient the
+   page's main area, `CupboardActions` its menu's button.
+
+A modal that left the focus somewhere else, on a page it navigated to, say,
+is left alone: the return never steals the focus. An owner never calls
+`.focus()` to bring the focus back itself.
+`tests/guards/focus-return.test.ts` fails a file that draws a dialog and
+does, bar three named exceptions: the Filters panel (`FacetPanel`), a
+dialog of its own; the question asked over a modal's form
+(`ConfirmOverlay`), which gives the focus back inside the modal that stays
+open; and the confirm a `ConfirmedAction` question focuses as it opens,
+the focus going in rather than back.
+
+`RouteModal` adds what a modal opened by the page's address needs, since
+its close is a navigation that may draw the page afresh. When the opener is
+gone it tries, in order:
+
+1. **A link to the address the modal opened**, outside any dialog: the same
+   Edit link, drawn again. The address comes from the gone link, or from
+   the provider, which notes it on a press (so it is known in WebKit too,
+   where a click focuses no link).
+2. **Its owner's `returnTo`**, if one is given.
+3. **The page's `<h1>`**, given `tabindex="-1"` by script so it can take
+   the focus without becoming a Tab stop. This is where a modal reached by a
+   pasted address or a reload lands, since nothing on the page opened it.
+
+Back closes a route modal too, and the focus goes to the link the same way.
+`tests/e2e/route-modal-focus.spec.ts` walks both of those closes in a
+browser.
 
 ## Unsaved changes
 
@@ -354,8 +395,9 @@ Coven. `ModalButtonProps` (`types.ts`):
 | `size`      | As `Modal`'s                                                             |
 | `children`  | A function of the modal's close, so a form can close it once it has sent |
 
-The focus moves only after a close, never on the first render, so the page
-loads with the focus where the browser puts it.
+It gives the focus back through Modal's own return
+([above](#giving-the-focus-back)), naming its button as `returnTo` for
+WebKit, where a click focuses no button.
 
 ### Add Ingredient
 
@@ -421,6 +463,7 @@ skipped the fade.
 | `closeHref` | The page it opened over, its modal parameter dropped                                                                                                                                                           |
 | `size`      | As `Modal`'s                                                                                                                                                                                                   |
 | `content`   | Absent unless the address opens a modal: `{ heading, body }`, the head (`ModalHeading`: title, eyebrow, qualifier) and `body`, a function of `done`, the modal's own close: `(done) => <Form onDone={done} />` |
+| `returnTo`  | Where the focus goes when neither its opener nor a link to its address is left: its owner's trigger; absent, the page's heading ([above](#giving-the-focus-back))                                              |
 
 - **Closing is a navigation back.** Close, Escape, a click outside and
   `done` all fade the modal out, then `navigate(closeHref, { replace: true })`,
