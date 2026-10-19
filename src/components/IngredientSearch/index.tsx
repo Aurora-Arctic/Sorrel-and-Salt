@@ -22,12 +22,13 @@ const IngredientSearch = ({
   nextHref,
   position,
   className,
+  shape,
 }: IngredientSearchProps): ReactElement => (
   <ListFrame className={className}>
     {search}
     {action && <div className="ingredient-search__action">{action}</div>}
 
-    <ListBody>
+    <ListBody shape={shape}>
       {children}
 
       <Pager previousHref={previousHref} nextHref={nextHref} position={position} soft />

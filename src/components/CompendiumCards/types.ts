@@ -1,0 +1,48 @@
+import type { Route } from 'next';
+import type { CompendiumListProps, CompendiumListFilter } from '../CompendiumList/types';
+import type { CardCategory } from '../IngredientCard/types';
+import type { SafetyVariant } from '../SafetyNote/types';
+import type { NomenclatureKind } from '@/modules/ingredients/schema/ingredient-enums';
+
+/** One compendium entry as its card shows it. */
+export interface CompendiumCardEntry {
+  id: string;
+  /** What the compendium calls it. */
+  name: string;
+  slug: string;
+  /** The formal name, null for none; it tells two entries of one name apart. */
+  canonicalName: string | null;
+  nomenclature: NomenclatureKind;
+  categories: readonly CardCategory[];
+  /** Its live forms, each with its group's icon. */
+  variants: readonly SafetyVariant[];
+  toxic: boolean;
+  safetyNotes: string | null;
+}
+
+/**
+ * What the foot of each card holds (M8.18): `add` is Add to My Ingredients, for a signed-in
+ * owner or member of a coven; `sign-in` is a Sign In link, for a signed-out visitor;
+ * `none` is nothing, for an account that only views.
+ */
+export type CompendiumCardsAction = 'add' | 'sign-in' | 'none';
+
+export interface CompendiumCardsProps extends Pick<
+  CompendiumListProps,
+  | 'filter'
+  | 'facets'
+  | 'categories'
+  | 'vocabulary'
+  | 'previousHref'
+  | 'nextHref'
+  | 'position'
+  | 'total'
+> {
+  entries: readonly CompendiumCardEntry[];
+  /** What the foot of each card holds. */
+  action: CompendiumCardsAction;
+  /** Where the Sign In link goes, back to this page; read when `action` is `sign-in`. */
+  signInHref?: Route;
+}
+
+export type { CompendiumListFilter };

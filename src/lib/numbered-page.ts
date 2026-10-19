@@ -22,7 +22,7 @@ export async function readNumberedPage<T>(
   { after, before }: { after?: string; before?: string },
   fetch: (request: PageRequest) => Promise<PageEntry<T>[]>,
   count: (start: Cursor | undefined) => Promise<PageCount>,
-): Promise<Page<T> & { position: PagePosition }> {
+): Promise<Page<T> & { position: PagePosition; totalCount: number }> {
   try {
     return await resolveNumberedPage({ after, before }, fetch, count);
   } catch (error) {

@@ -1,0 +1,156 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, within } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { makeQueryClient } from '@/lib/graphql-client';
+
+// The public compendium page (M8.18; MB.80). The reads and the viewer are mocked, since what
+// they decide is their own tests' (the admin page's test runs the reads). Here: what the
+// address becomes in the read, which foot each kind of visitor gets, and when the page asks
+// to be kept out of search results.
+
+const router = { push: vi.fn(), replace: vi.fn(), refresh: vi.fn() };
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+
+const viewerIfSignedIn = vi.fn();
+vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
+
+const readCompendium = vi.fn();
+const readFacets = vi.fn();
+vi.mock('@/app/compendium-reads', () => ({
+  readCompendium,
+  readFacets,
+  readFormIcons: async () => new Map(),
+  readDeities: async () => [],
+  readCategories: async () => [],
+  readCardCategories: async (ids: readonly string[]) => ids.map(() => []),
+}));
+
+const { default: Page, generateMetadata } = await import('@/app/(public)/compendium/page');
+
+const NODE = {
+  id: '3f0d6a52-8c1e-4b7a-9e25-6d4c2b1a0f93',
+  name: 'Testwort',
+  slug: 'testwort-fixtura-testalis',
+  canonicalName: 'Fixtura testalis',
+  nomenclature: 'botanical',
+  toxic: false,
+  safetyNotes: null,
+};
+
+const NO_FACETS = {
+  forms: [],
+  deities: [],
+  categories: [],
+  zodiacSigns: [],
+  celestialBodies: [],
+  elements: [],
+  toxic: [],
+  withoutReferences: 0,
+};
+
+const shellOf = (...canWrite: boolean[]) => ({
+  viewer: { name: 'Fixture Member' },
+  workspaces: canWrite.map((write, i) => ({
+    id: `w${i}`,
+    slug: `coven-${i}`,
+    name: `Coven ${i}`,
+    canReadMembers: true,
+    canWrite: write,
+  })),
+});
+
+async function renderPage(params: Record<string, string | string[]> = {}) {
+  const page = await Page({ searchParams: Promise.resolve(params) });
+  render(<QueryClientProvider client={makeQueryClient()}>{page}</QueryClientProvider>);
+}
+
+const variablesRead = () => JSON.parse(readCompendium.mock.lastCall![0] as string);
+
+beforeEach(() => {
+  readCompendium.mockReset();
+  readCompendium.mockResolvedValue({
+    edges: [{ node: NODE, cursor: 'c' }],
+    pageInfo: { hasNextPage: false, hasPreviousPage: false },
+    position: { page: 1, pages: 1 },
+    totalCount: 1,
+    variants: [[{ form: 'Fixture Herb', formChoice: null }]],
+    forms: [[]],
+  });
+  readFacets.mockReset();
+  readFacets.mockResolvedValue(NO_FACETS);
+  viewerIfSignedIn.mockReset();
+  viewerIfSignedIn.mockResolvedValue(null);
+});
+
+describe('the public compendium page', () => {
+  it('lists the entry as a link to its own page for a visitor with no account', async () => {
+    await renderPage();
+    const list = screen.getByRole('list', { name: 'Ingredients' });
+    expect(within(list).getByRole('link', { name: /Testwort/ })).toHaveAttribute(
+      'href',
+      `/compendium/ingredients/${NODE.slug}`,
+    );
+  });
+
+  it('reads the same list with ?withoutReferences=1 as without it', async () => {
+    await renderPage();
+    const unfiltered = readCompendium.mock.lastCall![0];
+    readCompendium.mockClear();
+    document.body.innerHTML = '';
+    await renderPage({ withoutReferences: '1' });
+    expect(readCompendium.mock.lastCall![0]).toBe(unfiltered);
+    expect(variablesRead()).not.toHaveProperty('withoutReferences');
+  });
+
+  it('sends a visitor with no account to sign in and back to the filtered page', async () => {
+    await renderPage({ forms: 'Fixture Herb' });
+    const link = screen.getByRole('link', { name: 'Sign In' });
+    const next = new URL(link.getAttribute('href')!, 'http://localhost').searchParams.get('next');
+    expect(next).toBe('/compendium?forms=Fixture+Herb');
+  });
+
+  it.each([
+    ['a member of one coven', [true], 1],
+    ['an owner beside a coven that only views', [false, true], 1],
+    ['someone who only views', [false], 0],
+    ['someone in no coven', [], 0],
+  ] as const)(
+    'offers Add to My Ingredients to %s only as the role allows',
+    async (_who, writes, buttons) => {
+      viewerIfSignedIn.mockResolvedValue(shellOf(...writes));
+      await renderPage();
+      const add = screen.queryAllByRole('button', { name: 'Add to My Ingredients' });
+      expect(add).toHaveLength(buttons);
+      for (const button of add) expect(button).toBeDisabled();
+      expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
+    },
+  );
+});
+
+describe('the public compendium page metadata', () => {
+  const metadata = (params: Record<string, string | string[]>) =>
+    generateMetadata({ searchParams: Promise.resolve(params) });
+
+  it('keeps the unfiltered page indexable', async () => {
+    const result = await metadata({});
+    expect(result.robots).toBeUndefined();
+  });
+
+  it('keeps ?withoutReferences=1 indexable too, as it filters nothing', async () => {
+    const result = await metadata({ withoutReferences: '1' });
+    expect(result.robots).toBeUndefined();
+  });
+
+  it.each<Record<string, string>>([
+    { query: 'wort' },
+    { forms: 'Fixture Herb' },
+    { toxic: 'toxic' },
+  ])(
+    'keeps a filtered view (%o) out of search results, canonical to the unfiltered page',
+    async (params) => {
+      const result = await metadata(params);
+      expect(result.robots).toMatchObject({ index: false });
+      expect(result.alternates?.canonical).toBe('/compendium');
+    },
+  );
+});
