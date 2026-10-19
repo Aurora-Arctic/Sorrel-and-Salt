@@ -17,7 +17,7 @@
 - **Every list view names `/compendium` as its canonical**, query string dropped, not only a filtered one. A filtered view is also `noindex, follow`, so category combinations are not a crawl trap while links on them are still followed.
 - **Canonical addresses are built on `SITE_ORIGIN`** (`src/lib/site.ts`), never on the request host, so staging and hotfix deploys point at production instead of indexing themselves.
 - **A retired slug answers 308**, permanent because a temporary status tells a crawler the old address is still canonical. Next sends `Cache-Control: private, no-cache, no-store, max-age=0, must-revalidate`, which a browser cannot keep; the test pins `no-store`, no positive `max-age`, no `Expires` and no `Last-Modified`. An unknown slug is a 404.
-- **Robots is built at deploy time.** `robots.ts` is prerendered at build, so `VERCEL_ENV` must be set when the build runs for production to get its rules; a build without it disallows everything. The sitemap is `force-dynamic` so a new entry shows without a deploy. Off production the proxy also adds `X-Robots-Tag: noindex` (MB.80).
+- **Robots is read per request.** Next runs a metadata route once at build and keeps the answer unless the route opts out, which would freeze `VERCEL_ENV` at build time. `robots.ts` and `sitemap.ts` both export `dynamic = 'force-dynamic'` (the supported option, per the Next.js `robots` and `sitemap` file-convention docs and the caching guide), so the runtime's `VERCEL_ENV` decides, as the proxy's `X-Robots-Tag: noindex` already does (MB.80), and no build setting matters. The sitemap's read underneath is the data cache's, so a crawl costs no query.
 
 ## Not done here
 

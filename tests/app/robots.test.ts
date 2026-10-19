@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import robots, { CRAWLABLE_PATHS } from '@/app/robots';
+import robots, { CRAWLABLE_PATHS, dynamic } from '@/app/robots';
 
 // MB.84: a crawler is let into the public compendium on production and
 // nowhere else; every other deploy asks to be left alone.
@@ -7,6 +7,12 @@ import robots, { CRAWLABLE_PATHS } from '@/app/robots';
 afterEach(() => vi.unstubAllEnvs());
 
 describe('MB.84: robots', () => {
+  // Next runs a metadata route once at build and keeps the answer unless it opts out, which
+  // would freeze `VERCEL_ENV` at build time. Per request, the runtime's value decides.
+  it('is read per request, so the runtime VERCEL_ENV decides and not the build', () => {
+    expect(dynamic).toBe('force-dynamic');
+  });
+
   it('allows the compendium and nothing else on production, and names the sitemap', () => {
     vi.stubEnv('VERCEL_ENV', 'production');
 

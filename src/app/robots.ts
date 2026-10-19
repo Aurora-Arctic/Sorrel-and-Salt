@@ -15,8 +15,11 @@ export const CRAWLABLE_PATHS = ['/$', '/compendium', '/compendium/'];
 
 // `VERCEL_ENV`, not `NODE_ENV`, which is `production` on every deploy; unset
 // locally, so a dev server disallows all, as `src/proxy.ts` marks it noindex
-// (MB.83). Read per call, and the file is built once per deploy, so a
-// staging build can never carry production's rules.
+// (MB.83). Read per request, as the proxy reads it: Next would otherwise run
+// this file once at build and keep the answer, so the rules would follow the
+// build's environment and not the runtime's.
+export const dynamic = 'force-dynamic';
+
 export default function robots(): MetadataRoute.Robots {
   const production = process.env.VERCEL_ENV === 'production';
   return {
