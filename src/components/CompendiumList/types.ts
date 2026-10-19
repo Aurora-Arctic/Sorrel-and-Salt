@@ -149,4 +149,12 @@ export type CompendiumPlace = Partial<CompendiumListFilter> & SearchCursor;
 export type CompendiumListFilterProps = Pick<
   CompendiumListProps,
   'filter' | 'facets' | 'categories' | 'vocabulary'
->;
+> & {
+  /**
+   * Who the filter is for. The admin's (the default) opens an entry's edit modal on a pick, offers
+   * No Refs, and submits to `/admin/compendium`; the public one (M8.18) links a pick to the entry's
+   * page, has no No Refs, and submits to `/compendium`. A flag, not functions, since the filter is
+   * a client component its server page passes props to.
+   */
+  audience?: 'admin' | 'public';
+};

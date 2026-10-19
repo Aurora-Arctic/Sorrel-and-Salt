@@ -1,5 +1,6 @@
 'use client';
 
+import type { Route } from 'next';
 import { type ReactElement, useMemo, useState } from 'react';
 import { INGREDIENT_ELEMENTS } from '@/modules/ingredients/schema/ingredient-enums';
 import { buildSearchSentence } from '../IngredientSearch/sentence';
@@ -12,7 +13,7 @@ import { useListNavigation } from '../ListFrame';
 import SearchSentence from '../SearchSentence';
 import { useLiveFacets } from './live-facets';
 import { editHeading } from './heading';
-import { COMPENDIUM_PATH, compendiumHref } from './href';
+import { COMPENDIUM_PATH, PUBLIC_COMPENDIUM_PATH, compendiumHref } from './href';
 import { COMPENDIUM_PARAMS } from './params';
 import type { CompendiumListFilter, CompendiumListFilterProps } from './types';
 
@@ -57,7 +58,12 @@ const NO_FACETS: FacetPanelFilter = {
 };
 
 /** The address of the list under the filter shown, the panel's facets and the name typed set over it. */
-const hrefFor = (filter: CompendiumListFilter, panel: FacetPanelFilter, query: string) =>
+const hrefFor = (
+  filter: CompendiumListFilter,
+  panel: FacetPanelFilter,
+  query: string,
+  path = COMPENDIUM_PATH,
+) =>
   compendiumHref(
     COMPENDIUM_PARAMS.changed(
       { ...filter, query },
@@ -76,6 +82,8 @@ const hrefFor = (filter: CompendiumListFilter, panel: FacetPanelFilter, query: s
         categoryMode: panel.categories.length >= 2 ? panel.categoryMode : 'all',
       },
     ),
+    undefined,
+    path,
   );
 
 /** The facets as held in the panel, laid over the filter shown: what Apply would list. */
@@ -109,6 +117,7 @@ const PanelFacets = ({
   facets,
   categories,
   vocabulary,
+  audience = 'admin',
   panel,
   onPanel,
 }: CompendiumListFilterProps & {
@@ -118,6 +127,7 @@ const PanelFacets = ({
   const text = useSearchText();
   const apply = useApplyFilter();
   const { pending } = useListNavigation();
+  const path = audience === 'admin' ? COMPENDIUM_PATH : PUBLIC_COMPENDIUM_PATH;
   const shown = panelOf(filter);
   const changed = JSON.stringify(panel) !== JSON.stringify(shown);
   const live = useLiveFacets({
@@ -128,21 +138,21 @@ const PanelFacets = ({
   });
   return (
     <FacetPanel
-      admin
+      admin={audience === 'admin'}
       facets={live.facets ?? facets}
       filter={panel}
       loading={pending || live.loading}
-      clearHref={COMPENDIUM_PATH}
+      clearHref={path}
       className="compendium-list__panel"
       onChange={(patch) => onPanel({ ...panel, ...patch })}
       // Shut any other way than Apply Filters, whose submit applies the name as well: the
       // facets held, under the name the page shows, and nothing at all when none changed.
       onApply={() => {
-        if (changed) apply(hrefFor(filter, panel, filter.query));
+        if (changed) apply(hrefFor(filter, panel, filter.query, path));
       }}
       onClear={() => {
         onPanel(NO_FACETS);
-        apply(COMPENDIUM_PATH);
+        apply(path);
       }}
     />
   );
@@ -153,7 +163,9 @@ const CompendiumListFilterRow = ({
   facets,
   categories,
   vocabulary,
+  audience = 'admin',
 }: CompendiumListFilterProps): ReactElement => {
+  const path = audience === 'admin' ? COMPENDIUM_PATH : PUBLIC_COMPENDIUM_PATH;
   // The panel as held: the filter shown until something in it is changed, and the filter
   // shown again whenever a new list arrives (Back, Apply, Clear All). The row is not drawn
   // afresh for a facet, so the open panel and the focus in it survive.
@@ -168,21 +180,26 @@ const CompendiumListFilterRow = ({
   return (
     <IngredientSearchForm
       label="Filter the Compendium"
-      action={COMPENDIUM_PATH}
+      action={path}
       query={filter.query}
       shown={[]}
       clear={false}
       className="compendium-list__row"
-      searchHref={(query) => hrefFor(filter, panel, query)}
+      searchHref={(query) => hrefFor(filter, panel, query, path)}
       // The list as shown, the typed text not applied: the modal opens over it.
-      pickHref={(match) => compendiumHref(filter, { edit: match.slug })}
-      pickHeading={editHeading}
+      pickHref={(match) =>
+        audience === 'admin'
+          ? compendiumHref(filter, { edit: match.slug })
+          : (`/compendium/ingredients/${match.slug}` as Route)
+      }
+      pickHeading={audience === 'admin' ? editHeading : undefined}
     >
       <PanelFacets
         filter={filter}
         facets={facets}
         categories={categories}
         vocabulary={vocabulary}
+        audience={audience}
         panel={panel}
         onPanel={setPanel}
       />
@@ -217,6 +234,7 @@ const CompendiumListFilterWithSentence = ({
   facets,
   categories,
   vocabulary,
+  audience = 'admin',
   total,
 }: CompendiumListFilterProps & { total: number }): ReactElement => {
   const { pending } = useListNavigation();
@@ -226,9 +244,9 @@ const CompendiumListFilterWithSentence = ({
         filter: { ...filter, toxic: filter.toxic || null },
         labels: labelsOf({ facets, categories }),
         total,
-        admin: true,
+        admin: audience === 'admin',
       }),
-    [filter, facets, categories, total],
+    [filter, facets, categories, total, audience],
   );
   return (
     <>
@@ -239,6 +257,7 @@ const CompendiumListFilterWithSentence = ({
         facets={facets}
         categories={categories}
         vocabulary={vocabulary}
+        audience={audience}
       />
       <SearchSentence sentence={sentence} query={filter.query} pending={pending} />
     </>

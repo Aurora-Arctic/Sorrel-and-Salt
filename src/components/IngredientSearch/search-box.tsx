@@ -9,8 +9,6 @@ import { useDebouncedValue } from '../../lib/debounce';
 import { graphqlQuery } from '../../lib/graphql-client';
 import Combobox from '../Combobox';
 import { MagnifierIcon } from '../Field/icons';
-import { fieldDescription } from '../Field/description';
-import { FieldShell } from '../Field/shell';
 import { useApplyFilter } from '../FilterForm';
 import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import type { IngredientSearchBoxProps, IngredientSearchOption } from './types';
@@ -55,7 +53,7 @@ const IngredientSearchBox = ({
   pickHref,
   pickHeading,
 }: IngredientSearchBoxProps): ReactElement => {
-  const field = fieldDescription({ id: useId() });
+  const controlId = useId();
   const input = useRef<HTMLInputElement>(null);
   const apply = useApplyFilter();
   const router = useRouter();
@@ -108,58 +106,57 @@ const IngredientSearchBox = ({
   }
 
   return (
-    <FieldShell label="Name" {...field}>
-      <Combobox<IngredientSearchOption>
-        id={field.controlId}
-        label="Name"
-        labelId={field.labelId}
-        name="query"
-        value={text}
-        onChange={onText}
-        onFocus={() => setActive(true)}
-        onPick={pick}
-        // Enter with the dropdown open and no row highlighted would only
-        // close it; it applies the text, as a closed box does through the form.
-        onCommit={(value) => apply(searchHref(value.trim()))}
-        suggestions={{
-          options,
-          pending: !belowFloor && (text.trim() !== query || isFetching),
-        }}
-        empty={belowFloor ? 'Keep typing to search' : searchesNow ? undefined : false}
-        // The last row of the listbox, reached by the arrows like a result and
-        // set in italics so it reads as the message it is, not a match.
-        action={
-          hasMore ? { label: 'See all results.', onSelect: () => apply(seeAllHref) } : undefined
-        }
-        offerTyped={false}
-        noun="result"
-        placeholder="Search names"
-        inputRef={input}
-        // The clear empties the box and applies the empty search (the owner's
-        // call), so the list drops its name filter and keeps the others.
-        clear={{
-          label: 'Clear Name',
-          onClear: () => {
-            onText('');
-            input.current?.focus();
-            apply(searchHref(''));
-          },
-          empty: text === '',
-        }}
-        // No chevron: a free-text search opens as you type, and the magnifier submits,
-        // as a search field's does.
-        toggle={false}
-        leading={
-          // The form's one submit, as SearchField's was, at the start of the box:
-          // Enter in the closed box reaches it too, and before hydration it
-          // sends the whole form. Its own id lets FilterForm give it the focus back.
-          <button id={`${field.controlId}-submit`} type="submit" className="combobox__indicator">
-            <MagnifierIcon />
-            <span className="visually-hidden">Search</span>
-          </button>
-        }
-      />
-    </FieldShell>
+    // No visible label: the placeholder says what the search reads, and the combobox draws its
+    // own visually hidden label (the owner's call, 2026-10-19), so no FieldShell here.
+    <Combobox<IngredientSearchOption>
+      id={controlId}
+      label="Name"
+      name="query"
+      value={text}
+      onChange={onText}
+      onFocus={() => setActive(true)}
+      onPick={pick}
+      // Enter with the dropdown open and no row highlighted would only
+      // close it; it applies the text, as a closed box does through the form.
+      onCommit={(value) => apply(searchHref(value.trim()))}
+      suggestions={{
+        options,
+        pending: !belowFloor && (text.trim() !== query || isFetching),
+      }}
+      empty={belowFloor ? 'Keep typing to search' : searchesNow ? undefined : false}
+      // The last row of the listbox, reached by the arrows like a result and
+      // set in italics so it reads as the message it is, not a match.
+      action={
+        hasMore ? { label: 'See all results.', onSelect: () => apply(seeAllHref) } : undefined
+      }
+      offerTyped={false}
+      noun="result"
+      placeholder="Search names, forms & descriptions"
+      inputRef={input}
+      // The clear empties the box and applies the empty search (the owner's
+      // call), so the list drops its name filter and keeps the others.
+      clear={{
+        label: 'Clear Name',
+        onClear: () => {
+          onText('');
+          input.current?.focus();
+          apply(searchHref(''));
+        },
+        empty: text === '',
+      }}
+      // No chevron: a free-text search opens as you type, and the magnifier submits,
+      // as a search field's does.
+      toggle={false}
+      leading={
+        // The form's one submit, as SearchField's was, at the start of the box:
+        // Enter in the closed box reaches it too, and before hydration it
+        // sends the whole form. Its own id lets FilterForm give it the focus back.
+        <button id={`${controlId}-submit`} type="submit" className="combobox__indicator">
+          <MagnifierIcon />
+          <span className="visually-hidden">Search</span>
+        </button>
+      }
+    />
   );
 };
 

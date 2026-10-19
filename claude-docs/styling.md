@@ -34,9 +34,9 @@ to.
 - **The seeded group colours live only in `src/db/seed/category-groups.ts`.**
   No Sass token restates them, and retuning one takes a data migration as well
   as the seed edit, because the seed never overwrites a row it finds (M5.6b).
-- **Never wash a chip or badge ground with its own group colour.** The eight
+- **Never wash a chip or badge ground with its own group colour and leave the label in that colour.** The eight
   group hues are tuned to sit just above 4.5:1, so a visible wash drops them
-  under; solid is the only treatment that holds.
+  under; solid holds, and so does a wash with the body ink stirred into the label ("Category chips").
 - **A badge palette declares `solid` or `tinted` and emits only that treatment's
   parts.** `badge-token('safety', 'bg')` failing to compile is deliberate, not
   an oversight. A ninth palette picks its treatment first — solid needs 4.5:1
@@ -331,19 +331,45 @@ same 400ms as every other colour. Decorative, so no contrast table: nothing is
 read against them, and `prefers-contrast: more` removes the ornaments entirely
 ([`components/backdrop.md`](components/backdrop.md)).
 
+## Category chips
+
+Amended 2026-10-19; this replaced the `selected` and `unselected` states. `chip()` draws a pill in one
+of two emphasis levels, both leading with a 6px dot in the group colour (`chip-dot()`):
+
+- **`full`**: the category chip, everywhere a category shows (the card, the entry page,
+  pickers, filters, admin tables, the Combobox's chosen entries). A wash of the group colour
+  (5% over `$surface-card`; 14% at first, lowered twice the same day on the owner's call — the ratios below were measured at 14%, and a lighter wash only raises them), a border at 35%, and the label in the group colour with 30% of
+  `$text-primary` stirred in (`chip-wash()`, which the Combobox entry reuses as it keeps its
+  own shape).
+- **`quiet`**: neutral ink and a `$hairline` border, the colour kept to the dot. For a control
+  rather than a category: the card's +N button (and the colour field's preview, which shows both).
+
+**Why the ink is stirred in.** The old rule below says a wash of a group's own colour cannot
+hold 4.5:1, and it was right for the colour as text: with the pure colour on a 14% wash, the
+worst of the eight seeded groups (Mind & Spirit, light theme, on the parchment page) reads
+3.56:1. Mixing 30% of the body ink into the label lifts it. Checked with a node script against all
+eight seeded pairs on both surfaces of each theme, the lowest ratio in each is:
+
+| Theme | Surface          | Lowest | Group            |
+| ----- | ---------------- | ------ | ---------------- |
+| Dark  | card (`#1f1c16`) | 5.51:1 | Practice & Place |
+| Dark  | page (`#14120e`) | 6.16:1 | Practice & Place |
+| Light | card (`#f9f5ea`) | 5.92:1 | Mind & Spirit    |
+| Light | page (`#efe9da`) | 5.37:1 | Mind & Spirit    |
+
+A group an admin adds is held to 4.5:1 for its colour alone (M5.6b), a looser test than the
+eight seeded ones passed; the stirred label is checked against the seeded eight only, so a very
+pale or very dark admin colour is worth a look in the colour field's preview.
+
 ## Chips, badges and the solid-fill rule
 
-`chip()` draws a pill, always edged in its group's colour, in one of two states:
-`unselected` leaves the ground transparent and lets the label wear the colour;
-`selected` fills solid and inverts the label onto `$text-on-color`. Both states
-carry the same 1px edge and the same padding, so a row can mix them without the
-selected ones jumping half a pixel out of rhythm.
+The two levels above replaced `selected` and `unselected`; the badge palettes still declare
+`solid` or `tinted`.
 
-**Solid is not decoration.** The obvious loud treatment — the group colour as a
-low-opacity wash behind a coloured label — cannot hold 4.5:1: the eight hues were
-tuned to land just above the floor, so washing the ground with the same colour
-closes exactly the gap they were tuned for. A solid fill sidesteps it and needs
-no new arithmetic, per `$text-on-color` above.
+**Solid is not decoration for a badge.** The obvious loud treatment, the group colour as a
+low-opacity wash behind a label wearing the same colour, cannot hold 4.5:1: the eight hues
+were tuned to land just above the floor. A solid fill sidesteps it; the chip's answer is to
+move the label towards the body ink (above).
 
 **The colour comes from the row, on the element.** `chip($dark, $light, $state)`
 takes the pair rather than a slug, and by default reads it from the element's

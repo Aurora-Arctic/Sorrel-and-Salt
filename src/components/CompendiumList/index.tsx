@@ -105,7 +105,7 @@ const COLUMNS: readonly StackColumn<CompendiumListEntry>[] = [
  * the element Fire. Change or clear the filter to see more." With no
  * filter, the compendium itself is empty, and says how to begin it.
  */
-function emptyText(
+export function emptyText(
   {
     query,
     forms,
@@ -120,6 +120,8 @@ function emptyText(
   }: Filter,
   known: readonly CompendiumCategoryChoice[],
   facets: CompendiumFacetCounts,
+  /** What an unfiltered empty list says: the admin's tells how to begin it. */
+  whenEmpty = 'The compendium is empty. Add the first entry with Add Ingredient.',
 ): string {
   // A deity by its name and tradition, the pair that tells two of one name apart.
   const deityNames = deities.flatMap((slug) => {
@@ -144,11 +146,7 @@ function emptyText(
     named.length > 0 &&
       `the ${named.length === 1 ? 'category' : 'categories'} ${named.join(categoryMode === 'any' ? ' or ' : ' and ')}`,
   ].filter((filter): filter is string => Boolean(filter));
-  return noMatchText(
-    'entries',
-    filters,
-    'The compendium is empty. Add the first entry with Add Ingredient.',
-  );
+  return noMatchText('entries', filters, whenEmpty);
 }
 
 const CompendiumList = ({

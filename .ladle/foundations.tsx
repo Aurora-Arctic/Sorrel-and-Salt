@@ -776,8 +776,9 @@ export default function Foundations(): ReactElement {
           Not a foundation to sign off: each group’s colour pair lives on its{' '}
           <code>category_groups</code> row, which an admin edits, contrast-checked on write. These
           are the eight the seed writes — one rotation of <code>$sorrel</code> offset by half a
-          step, so none lands on the accent or secondary hue — as <code>chip()</code>’s two states,
-          each wearing its pair inline as a page’s chip does, the theme picking one.
+          step, so none lands on the accent or secondary hue — at <code>chip()</code>’s two levels,
+          each wearing its pair inline as a page’s chip does, the theme picking one. Full is the
+          category chip wherever a category shows; quiet is for a control, such as the card’s +N.
         </SectionHead>
         <div className="panel fd-groups">
           {CATEGORY_GROUPS.map((group) => (
@@ -785,7 +786,7 @@ export default function Foundations(): ReactElement {
               <span className="chip" style={chipColors(group)}>
                 {group.name}
               </span>
-              <span className="chip is-selected" style={chipColors(group)}>
+              <span className="chip chip--quiet" style={chipColors(group)}>
                 {group.name}
               </span>
               <code className="fd-group-pair">

@@ -641,8 +641,10 @@ $add-below-width: 21.875rem;
 // context (a combobox's list over its field) keeps a small local index; these
 // are the layers that meet each other at the window. `floating` is a popover
 // or list opened from the shell, over the bars; `dialog` is a non-native
-// overlay, since a <dialog> sits in the browser's top layer above every one.
+// overlay, since a <dialog> sits in the browser's top layer above every one. `sticky-row` is a
+// page's own row stuck under the bar: above the cards, below the bar and everything opened from it.
 $layers: (
+  'sticky-row': 5,
   'shell': 10,
   'banner': 11,
   'toggle': 12,

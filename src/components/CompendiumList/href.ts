@@ -12,8 +12,15 @@ import type { CompendiumPlace } from './types';
 /** The page itself, unfiltered: where the filter submits, and what Clear opens. */
 export const COMPENDIUM_PATH: Route = '/admin/compendium';
 
-export function compendiumHref(place: CompendiumPlace, dialog?: ListDialog): Route {
-  return COMPENDIUM_PARAMS.href(COMPENDIUM_PATH, place, {
+/** The public compendium (M8.18): the same filter and cursor, no modal. */
+export const PUBLIC_COMPENDIUM_PATH: Route = '/compendium';
+
+export function compendiumHref(
+  place: CompendiumPlace,
+  dialog?: ListDialog,
+  path: Route = COMPENDIUM_PATH,
+): Route {
+  return COMPENDIUM_PARAMS.href(path, place, {
     after: place.after,
     before: place.before,
     ...dialogParams(dialog),

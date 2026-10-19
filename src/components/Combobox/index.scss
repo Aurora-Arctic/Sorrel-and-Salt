@@ -496,15 +496,15 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     content: none;
   }
 
-  // In its group's colours (MB.126): the solid fill `chip()` draws selected,
-  // the pair read from the element where chipColors() sets it, since a wash
-  // of the colour cannot hold 4.5:1 (claude-docs/styling.md, "Chips, badges
-  // and the solid-fill rule"). Not the mixin itself, which draws a pill: the
-  // shape, padding and x stay the plain chip's, so a row mixes the two
-  // without a jump, and only the inks change.
+  // In its group's colours, the full level (2026-10-19): the wash chip() draws, read from
+  // the pair chipColors() sets (claude-docs/styling.md, "Category chips"). Not the mixin
+  // itself, which draws a pill: the shape, padding and x stay the plain chip's, so a row
+  // mixes the two without a jump. The entry has no border, so the edge is an inset ring.
   &.is-coloured {
-    background-color: light-dark(var(--chip-light), var(--chip-dark));
-    color: $text-on-color;
+    $group: light-dark(var(--chip-light), var(--chip-dark));
+
+    @include chip-wash($group);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, $group 35%, $surface-card);
   }
 
   // The neutral chips of a faceted filter (M12.4): no fill, an ink border. A
@@ -610,7 +610,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     color: inherit;
 
     &:focus-visible {
-      outline-color: $text-on-color;
+      outline-color: currentcolor;
     }
   }
 }
@@ -643,7 +643,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
   // The ring sits on a coloured chip's fill, where only the inverted ink is
   // checked; `:where` keeps the held chip's rule above it.
   :where(.is-coloured) &:focus-visible {
-    outline-color: $text-on-color;
+    outline-color: currentcolor;
   }
 
   // Held, the chip's accent edge marks it, so the ring around the text
@@ -716,7 +716,7 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     }
 
     &:focus-visible {
-      outline-color: $text-on-color;
+      outline-color: currentcolor;
     }
   }
 

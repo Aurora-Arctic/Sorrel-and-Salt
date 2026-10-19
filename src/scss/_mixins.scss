@@ -176,13 +176,39 @@
   }
 }
 
-// A pill edged in its group's colour; `selected` fills solid and inverts the
-// label, since a wash cannot hold 4.5:1. Both states share edge and padding.
-// The pair is the group row's `colorDark` and `colorLight`, by default read
-// from the element, where chipColors() sets them; `light-dark()` picks one off
-// the theme's `color-scheme`, since a group an admin adds has no build-time
-// token. claude-docs/styling.md, "Chips, badges and the solid-fill rule".
-@mixin chip($dark: var(--chip-dark), $light: var(--chip-light), $state: unselected) {
+// The group-colour dot a chip of any emphasis level can lead with.
+@mixin chip-dot($color) {
+  gap: space(2);
+
+  &::before {
+    content: '';
+    flex: none;
+    inline-size: 0.375rem;
+    block-size: 0.375rem;
+    border-radius: 50%;
+    background-color: $color;
+  }
+}
+
+// The full level's three colours, for a chip of any shape. The category chip everywhere
+// (2026-10-19): an 8% wash of the group colour (14% at first; the owner asked for more
+// transparency), a border at 35%, and the label in the colour with 30% of the body ink
+// stirred in. The pure colour on its own wash falls under
+// 4.5:1 for some groups (Mind & Spirit, light: 3.56); with the ink it holds at least
+// 5.37:1 for all eight seeded groups on both surfaces of both themes (styling.md,
+// "Category chips"). The mix is of the pair's members, so a group an admin adds gets it too.
+@mixin chip-wash($color) {
+  background-color: color-mix(in srgb, $color 5%, $surface-card);
+  border-color: color-mix(in srgb, $color 35%, $surface-card);
+  color: color-mix(in srgb, $text-primary 30%, $color);
+}
+
+// A pill in its group's colours, at one of two emphasis levels: `full` (a wash, the
+// category chip everywhere) and `quiet` (neutral, for a control). The pair is the group
+// row's `colorDark` and `colorLight`, by default read from the element, where chipColors()
+// sets them; `light-dark()` picks one off the theme's `color-scheme`, since a group an
+// admin adds has no build-time token. claude-docs/styling.md, "Category chips".
+@mixin chip($dark: var(--chip-dark), $light: var(--chip-light), $state: full) {
   @each $color in ($dark, $light) {
     @if meta.type-of($color) != color and string.index('#{$color}', 'var(') != 1 {
       @error 'chip() takes a colour pair, dark then light, not "#{$color}": a group\'s ' +
@@ -204,14 +230,18 @@
   line-height: 1.4;
   white-space: nowrap;
 
-  @if $state == selected {
-    background-color: $color;
-    color: $text-on-color;
-  } @else if $state == unselected {
+  @if $state == full {
+    @include chip-wash($color);
+    @include chip-dot($color);
+  } @else if $state == quiet {
+    // The quiet level (2026-10-19): neutral ink and a hairline, the group's colour kept to a
+    // small dot. Only the card's +N control wears it; a category is always full.
     background-color: transparent;
-    color: $color;
+    border-color: $hairline;
+    color: $text-primary;
+    @include chip-dot($color);
   } @else {
-    @error 'Unknown chip state "#{$state}". Expected selected or unselected.';
+    @error 'Unknown chip state "#{$state}". Expected full or quiet.';
   }
 
   @include theme-transition(background-color, border-color, color);

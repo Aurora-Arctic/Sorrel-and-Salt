@@ -34,6 +34,8 @@ export interface IngredientSearchProps extends Partial<PagerHrefs<Route>> {
   position?: PagePosition;
   /** The list's own root class, beside `list-frame`. */
   className?: string;
+  /** The shape the results take while a page loads: a table (the default) or cards. */
+  shape?: 'table' | 'cards';
 }
 
 export interface IngredientSearchFormProps {

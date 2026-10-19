@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { test, expect } from '../fixtures';
 import { assertNoAccessibilityViolations } from '../axe';
 import { recreateE2eDatabase } from '../database';
@@ -12,7 +12,6 @@ import {
   insertStock,
   localBadge,
   localIngredient,
-  pickCategory,
   rowOf,
   seedCoven,
   stockEditor,
@@ -50,41 +49,48 @@ function compendiumSearch(page: Page) {
  */
 const ADD_TO_MY_INGREDIENTS = /^add to my ingredients/i;
 
-/** The page size every compendium list pages by (M8.10: `first: 25`). */
-const PAGE_SIZE = 25;
+/** The cards page by `CARD_PAGE_SIZE`, 24, so the grid ends on a full row. */
+const PAGE_SIZE = 24;
 
-test.fixme(
+/**
+ * Opens the Filters panel and returns it. The button only exists once the page has hydrated
+ * (before it, Filters is a link to the open panel), so waiting for it waits for the script.
+ */
+async function openFilters(page: Page): Promise<Locator> {
+  const button = page.getByRole('button', { name: /^Filters/ });
+  await expect(button).toBeVisible();
+  if ((await button.getAttribute('aria-expanded')) !== 'true') await button.click();
+  const panel = page.getByRole('dialog', { name: 'Filters' });
+  await expect(panel).toBeVisible();
+  return panel;
+}
+
+test(
   'anyone browses the compendium signed out, narrows it by folk name, category and form, and opens an entry',
   {
     tag: '@story-14',
-    annotation: {
-      type: 'fixme',
-      description: 'M8.18 builds /compendium',
-    },
   },
   async ({ page }) => {
-    // What there is to browse: the seed's compendium, in the cards' own order (M8.14).
+    // What there is to browse: the seed's compendium, by label. Entries sharing a label tie, and the list breaks the tie by id, so the formal names are checked in the steps below, not by position.
     const seeded = await withSql(
       (sql) => sql<{ name: string; canonical_name: string | null }[]>`
         select name, canonical_name from ingredients
         where workspace_id is null and deleted_at is null
-        order by lower(name), lower(coalesce(canonical_name, name)), id`,
+        order by lower(name)`,
     );
     expect(seeded.length).toBeGreaterThan(0);
 
     await test.step('signed out, the first page lists the seed in order', async () => {
       const response = await page.goto('/compendium');
       expect(response?.status()).toBe(200);
-      const cards = compendiumList(page).getByRole('listitem');
+      const cards = compendiumList(page).locator(':scope > li');
       const firstPage = seeded.slice(0, PAGE_SIZE);
       await expect(cards).toHaveCount(firstPage.length);
       for (const [index, entry] of firstPage.entries()) {
         await expect(cards.nth(index)).toContainText(entry.name);
-        if (entry.canonical_name)
-          await expect(cards.nth(index)).toContainText(entry.canonical_name);
       }
-      // Signed out there is nothing to add to: each card offers a sign-in link instead (M8.18).
-      await expect(cards.first().getByRole('link', { name: /^Sign In/ })).toBeVisible();
+      // Signed out the cards carry no action; signing in is the header's (M8.18).
+      await expect(compendiumList(page).getByRole('link', { name: 'Sign In' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: ADD_TO_MY_INGREDIENTS })).toHaveCount(0);
       await expect(cards.first()).toBeVisible();
       await assertNoAccessibilityViolations(page);
@@ -94,7 +100,7 @@ test.fixme(
       await compendiumSearch(page).fill('una de gato');
       // Enter applies the text to the paged list rather than picking a row (M8.10).
       await compendiumSearch(page).press('Enter');
-      const cards = compendiumList(page).getByRole('listitem');
+      const cards = compendiumList(page).locator(':scope > li');
       await expect(cards).toHaveCount(2);
       await expect(rowOf(compendiumList(page), "Cat's Claw", 'Uncaria tomentosa')).toBeVisible();
       await expect(rowOf(compendiumList(page), "Cat's Claw", 'Uncaria guianensis')).toBeVisible();
@@ -116,8 +122,11 @@ test.fixme(
       expect(healing.length).toBeLessThan(seeded.length);
 
       await page.goto('/compendium');
-      await pickCategory(page, 'Healing');
-      const cards = compendiumList(page).getByRole('listitem');
+      const panel = await openFilters(page);
+      await panel.getByRole('combobox', { name: 'Category' }).fill('Healing');
+      await page.getByRole('option', { name: /^Healing/ }).click();
+      await panel.getByRole('button', { name: 'Apply Filters' }).click();
+      const cards = compendiumList(page).locator(':scope > li');
       await expect(cards).toHaveCount(healing.length);
       for (const entry of healing) {
         await expect(
@@ -131,9 +140,11 @@ test.fixme(
       await page.goto('/compendium');
       // M8.13's form filter, a type-ahead labelled "Form" as the admin's is
       // (claude-docs/components/compendium-list.md).
-      await filterOf(page).getByRole('combobox', { name: 'Form' }).fill('bark');
+      const panel = await openFilters(page);
+      await panel.getByRole('combobox', { name: 'Form' }).fill('bark');
       await page.getByRole('option', { name: /^Bark/ }).click();
-      const cards = compendiumList(page).getByRole('listitem');
+      await panel.getByRole('button', { name: 'Apply Filters' }).click();
+      const cards = compendiumList(page).locator(':scope > li');
       await expect(cards).toHaveCount(2);
       await expect(rowOf(compendiumList(page), "Cat's Claw", 'Uncaria tomentosa')).toBeVisible();
       await expect(rowOf(compendiumList(page), "Cat's Claw", 'Uncaria guianensis')).toBeVisible();

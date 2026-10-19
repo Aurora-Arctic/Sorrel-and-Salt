@@ -96,8 +96,10 @@
   .chip {
     @include chip;
 
-    &.is-selected {
-      @include chip($state: selected);
+    // The quiet level, for a control rather than a category: the card's +N button and the
+    // colour field's preview (claude-docs/styling.md, "Category chips").
+    &.chip--quiet {
+      @include chip($state: quiet);
     }
   }
 

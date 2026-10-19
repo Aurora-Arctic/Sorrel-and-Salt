@@ -19,7 +19,10 @@ test.describe('without script', () => {
   test('the signed-out chrome is in the HTML as served', async ({ page }) => {
     await page.goto('/compendium');
 
-    await expect(page.getByRole('link', { name: 'Sign In' })).toHaveAttribute('href', '/sign-in');
+    await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toHaveAttribute(
+      'href',
+      '/sign-in',
+    );
     await expect(page.getByRole('link', { name: 'Skip to Content' })).toHaveAttribute(
       'href',
       '#main',

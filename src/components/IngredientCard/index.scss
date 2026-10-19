@@ -204,6 +204,90 @@
   }
 }
 
+// The +N toggletip (category-more.tsx). The panel hangs from the chip row, not the button,
+// so it can span the card instead of running off its edge, and it floats over the card, so
+// the card's height never changes. The row may wrap on a narrow card.
+.ingredient-card .specimen__chips {
+  position: relative;
+}
+
+// The primitives position every chip-row item; this one is left static, so the panel hangs
+// from the row rather than from the button's own item.
+.ingredient-card .specimen__chips > .category-more-item {
+  position: static;
+}
+
+.category-more__button {
+  // Above the card's stretched link, so the button keeps its own click. The wrapper stays
+  // unpositioned so the panel hangs from the chip row, not from the button.
+  position: relative;
+  z-index: 1;
+  @include chip($dark: $text-primary, $light: $text-primary, $state: quiet);
+  border-color: $hairline;
+  font-size: type-size('overline');
+  cursor: pointer;
+
+  // No dot: the button stands for no group (the owner's call, 2026-10-19).
+  &::before {
+    content: none;
+  }
+
+  &:hover,
+  &[aria-expanded='true'] {
+    background-color: $hairline;
+  }
+
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+.category-more__panel {
+  @include modal-surface($shadow-floating);
+  position: absolute;
+  // A step above the foot's actions (z-index 1, later in the card), which the panel hangs
+  // over; the chip row sets no z-index, so the two meet in the card's own context.
+  z-index: 2;
+  inset-inline: 0;
+  // The row is the containing block (the wrapper is static), so this clears its bottom:
+  // the panel hangs below the chips, over the forms and jar lines (the owner's call).
+  inset-block-start: calc(100% + #{space(2)});
+  display: flex;
+  flex-wrap: wrap;
+  gap: space(2);
+  padding: space(3);
+  opacity: 0;
+  visibility: hidden;
+  // Visibility waits for the fade-out, so the panel is gone from the page once it is clear.
+  transition:
+    opacity $tip-fade ease-out,
+    visibility 0s linear $tip-fade;
+
+  // A bridge over the gap, so the pointer can cross from the button into the panel.
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    inset-block-start: 100%;
+    block-size: space(2);
+  }
+
+  &.is-open {
+    opacity: 1;
+    visibility: visible;
+    transition-delay: 0s;
+  }
+
+  @include reduced-motion {
+    transition: none;
+  }
+}
+
+// Above the cards beside it while open, as the tips are, lifted by z-index and not a transform.
+.ingredient-card:has(.category-more__panel.is-open) {
+  z-index: 1;
+}
+
 // The compact look, wherever an ancestor says `data-density="compact"`.
 [data-density='compact'] {
   @include ingredient-card-compact;
