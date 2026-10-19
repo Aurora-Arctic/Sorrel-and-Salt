@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import { type ReactElement, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -62,7 +62,7 @@ const PAUSE_QUESTION =
 const NOT_PRIMARY = 'Only the primary admin can pause or resume admin changes.';
 
 const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement => {
-  const router = useRouter();
+  const { refresh } = usePendingNavigation();
   const copy = STATES[paused ? 'paused' : 'open'];
   const [sending, setSending] = useState(false);
   const [failure, setFailure] = useState<string>();
@@ -73,7 +73,7 @@ const PauseControl = ({ paused, canToggle }: PauseControlProps): ReactElement =>
     try {
       await copy.send();
       // Busy until the re-read page states the other state.
-      router.refresh();
+      refresh();
     } catch (error) {
       setSending(false);
       setFailure(readGraphqlFailure(error).alert);

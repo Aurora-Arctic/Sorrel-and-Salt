@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { usePendingNavigation } from '../../lib/navigation';
 import type { ReactElement } from 'react';
 import { graphql } from '../../gql';
 import { COVEN_LANDING_PATH } from '../../lib/coven-path';
@@ -27,7 +27,7 @@ const DeleteWorkspaceButton = ({
   inModal,
   onlyOwner = false,
 }: DeleteWorkspaceButtonProps): ReactElement => {
-  const router = useRouter();
+  const { navigate, refresh } = usePendingNavigation();
   // Said above the page's buttons when it gives a place for that.
   const failure = useActionFailure();
   return (
@@ -52,8 +52,8 @@ const DeleteWorkspaceButton = ({
       // replace it with the landing, and refresh so the shell's switcher stops
       // listing it (a client-side replace does not re-run the layout).
       onSent={() => {
-        router.replace(COVEN_LANDING_PATH);
-        router.refresh();
+        navigate(COVEN_LANDING_PATH, { replace: true });
+        refresh();
       }}
     />
   );

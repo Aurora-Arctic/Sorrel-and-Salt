@@ -1,7 +1,7 @@
 'use client';
 
+import { usePendingNavigation } from '../../lib/navigation';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { type ReactElement, useId, useMemo, useRef, useState } from 'react';
 import { MIN_QUERY_LENGTH } from '@/modules/ingredients/validation/compendium-filter';
 import { graphql } from '../../gql';
@@ -83,7 +83,7 @@ const IngredientSearchBox = ({
   const controlId = useId();
   const input = useRef<HTMLInputElement>(null);
   const apply = useApplyFilter();
-  const router = useRouter();
+  const { navigate } = usePendingNavigation();
   const modal = useRouteModalOpener();
   // Nothing is asked until the box has been focused, so opening the page
   // sends nothing.
@@ -153,8 +153,8 @@ const IngredientSearchBox = ({
   const seeAllHref = searchHref(query);
 
   // A pick opens the entry over the list as it stands, so the list is
-  // neither applied to nor greyed: `router.push` outside the frame's
-  // transition leaves the frame's `pending` false, where the frame's own
+  // neither applied to nor greyed: the hook's own transition, outside the
+  // frame's, leaves the frame's `pending` false, where the frame's own
   // `go` would swap the list for its skeleton. Given a heading, the route
   // modal's opener shows the dialog at once while its page loads, as the
   // list's Edit link does.
@@ -162,7 +162,7 @@ const IngredientSearchBox = ({
     if (!option) return;
     const href = pickHref(option.match);
     if (modal && pickHeading) modal.open(href, pickHeading(option.match));
-    else router.push(href);
+    else navigate(href);
   }
 
   return (

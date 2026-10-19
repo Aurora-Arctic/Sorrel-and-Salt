@@ -1,7 +1,7 @@
 'use client';
 
+import { usePendingNavigation } from '../../lib/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
 import { type ReactElement, useId, useRef, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { graphql } from '../../gql';
@@ -95,7 +95,7 @@ const CupboardEntryForm = ({
   onDone,
 }: CupboardEntryFormProps): ReactElement => {
   const id = useId();
-  const router = useRouter();
+  const { refresh } = usePendingNavigation();
   const form = useRef<HTMLFormElement>(null);
   const baseline = baselineOf(compendium);
   const methods = useForm<CupboardFormValues>({
@@ -141,7 +141,7 @@ const CupboardEntryForm = ({
     const sent = changesOf(fromForm(settled), baseline, overrides, handed);
     try {
       await save.mutateAsync(sent);
-      router.refresh();
+      refresh();
       onDone();
     } catch (error) {
       const unplaced: string[] = [];

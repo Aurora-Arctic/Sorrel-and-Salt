@@ -1,8 +1,8 @@
 'use client';
 
+import { usePendingNavigation } from '../../lib/navigation';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { type ReactElement, type ReactNode, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
@@ -65,7 +65,7 @@ export default function LinkToCompendium({
   /** The block's See All, drawn directly under the list and above Link to Selected (the owner's call, 2026-10-19: it belongs to the list). */
   seeAll?: ReactNode;
 }): ReactElement {
-  const router = useRouter();
+  const { navigate } = usePendingNavigation();
   const [chosenId, setChosenId] = useState<string>();
   const [asking, setAsking] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -78,7 +78,7 @@ export default function LinkToCompendium({
     try {
       await graphqlRequest(ConvertLocalDocument, { workspaceId, localId, compendiumId: target.id });
       // Busy until the page is left; the own entry no longer exists.
-      router.push(target.thenHref);
+      navigate(target.thenHref);
     } catch (error) {
       setFailure(
         readGraphqlIssues(error)
