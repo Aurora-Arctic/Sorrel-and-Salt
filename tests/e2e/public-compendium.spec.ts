@@ -50,16 +50,16 @@ test('signed out, the page opens without a redirect and every card links to its 
 
   const cards = cardsOf(page);
   await expect(cards).toHaveCount(PAGE_SIZE);
-  // Each card is one link to its entry's page, the only link in it bar Sign In.
+  // Each card is one link to its entry's page, the only link in it.
   for (const card of await cards.all()) {
     await expect(card.locator('a[href^="/compendium/ingredients/"]')).toHaveCount(1);
   }
   await expect(page.getByRole('button', { name: ADD })).toHaveCount(0);
-  // A visitor with no account is offered Sign In on each card, back to this page.
-  const signIn = cards.first().getByRole('link', { name: 'Sign In' });
-  await expect(signIn).toHaveAttribute(
+  // A visitor with no account has no action on the cards: Sign In is the header's alone.
+  await expect(compendiumList(page).getByRole('link', { name: 'Sign In' })).toHaveCount(0);
+  await expect(page.getByRole('banner').getByRole('link', { name: 'Sign In' })).toHaveAttribute(
     'href',
-    `/sign-in?next=${encodeURIComponent('/compendium')}`,
+    '/sign-in',
   );
 });
 

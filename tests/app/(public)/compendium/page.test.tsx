@@ -102,11 +102,11 @@ describe('the public compendium page', () => {
     expect(variablesRead()).not.toHaveProperty('withoutReferences');
   });
 
-  it('sends a visitor with no account to sign in and back to the filtered page', async () => {
-    await renderPage({ forms: 'Fixture Herb' });
-    const link = screen.getByRole('link', { name: 'Sign In' });
-    const next = new URL(link.getAttribute('href')!, 'http://localhost').searchParams.get('next');
-    expect(next).toBe('/compendium?forms=Fixture+Herb');
+  it('leaves a visitor with no account no action on the cards, and no second Sign In', async () => {
+    await renderPage();
+    expect(screen.getAllByRole('link', { name: 'Testwort' }).length).toBeGreaterThan(0);
+    expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Sign In' })).toBeNull();
   });
 
   it.each([

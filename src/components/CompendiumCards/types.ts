@@ -1,4 +1,3 @@
-import type { Route } from 'next';
 import type { CompendiumListProps, CompendiumListFilter } from '../CompendiumList/types';
 import type { CardCategory } from '../IngredientCard/types';
 import type { SafetyVariant } from '../SafetyNote/types';
@@ -22,10 +21,10 @@ export interface CompendiumCardEntry {
 
 /**
  * What the foot of each card holds (M8.18): `add` is Add to My Ingredients, for a signed-in
- * owner or member of a coven; `sign-in` is a Sign In link, for a signed-out visitor;
- * `none` is nothing, for an account that only views.
+ * owner or member of a coven; `none` is nothing, for an account that only views and for a
+ * signed-out visitor, who signs in through the header.
  */
-export type CompendiumCardsAction = 'add' | 'sign-in' | 'none';
+export type CompendiumCardsAction = 'add' | 'none';
 
 export interface CompendiumCardsProps extends Pick<
   CompendiumListProps,
@@ -41,8 +40,6 @@ export interface CompendiumCardsProps extends Pick<
   entries: readonly CompendiumCardEntry[];
   /** What the foot of each card holds. */
   action: CompendiumCardsAction;
-  /** Where the Sign In link goes, back to this page; read when `action` is `sign-in`. */
-  signInHref?: Route;
 }
 
 export type { CompendiumListFilter };

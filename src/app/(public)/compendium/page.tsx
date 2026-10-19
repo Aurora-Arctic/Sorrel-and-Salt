@@ -1,4 +1,4 @@
-import type { Metadata, Route } from 'next';
+import type { Metadata } from 'next';
 import CompendiumCards from '../../../components/CompendiumCards';
 import type { CompendiumCardEntry } from '../../../components/CompendiumCards/types';
 import { compendiumFacetCounts } from '../../../components/CompendiumList/facets';
@@ -8,7 +8,6 @@ import type { CompendiumListFilter } from '../../../components/CompendiumList/ty
 import PageHeader from '../../../components/PageHeader';
 import { pagerHrefs } from '../../../lib/list-href';
 import { readPageCursors } from '../../../lib/numbered-page';
-import { signInPath } from '../../../lib/sign-in';
 import { viewerIfSignedIn } from '../../../lib/viewer';
 import {
   readCardCategories,
@@ -91,13 +90,8 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
 
   // Who may add: a role that may create an ingredient and stock it (`canWrite`, set in
   // `viewerFor` from the per-role statement), in at least one coven. A viewer-only account has
-  // none, and a visitor with no account is sent to sign in and back here.
-  const here = compendiumHref({ ...filter, after, before }, undefined, PUBLIC_COMPENDIUM_PATH);
-  const action = !viewer
-    ? 'sign-in'
-    : viewer.workspaces.some(({ canWrite }) => canWrite)
-      ? 'add'
-      : 'none';
+  // none, and neither has a visitor with no account, who signs in through the header.
+  const action = viewer?.workspaces.some(({ canWrite }) => canWrite) ? 'add' : 'none';
 
   return (
     <>
@@ -111,7 +105,6 @@ export default async function CompendiumPage({ searchParams }: PublicCompendiumP
         position={page.position}
         total={page.totalCount}
         action={action}
-        signInHref={signInPath(here) as Route}
         {...pagerHrefs(page.pageInfo, (cursor) =>
           compendiumHref({ ...filter, ...cursor }, undefined, PUBLIC_COMPENDIUM_PATH),
         )}

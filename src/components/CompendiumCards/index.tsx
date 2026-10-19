@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import type { Route } from 'next';
 import type { ReactElement } from 'react';
 import CompendiumListFilter from '../CompendiumList/filter';
@@ -13,8 +12,8 @@ import '../CompendiumList/index.scss';
 // the pager. Render-only, like the admin's table (CompendiumList): the page reads one page
 // under the address's filter and hands it here. Each card is a plain link to the entry's
 // page, no modal. The foot of a card holds Add to My Ingredients for someone who can add,
-// which stays disabled until M9.12 builds its dialog (the owner's call, 2026-10-19), or a
-// Sign In link for a visitor with no account. claude-docs/components/compendium-cards.md.
+// which stays disabled until M9.12 builds its dialog (the owner's call, 2026-10-19). A visitor
+// with no account sees no action on the cards and signs in through the header. claude-docs/components/compendium-cards.md.
 
 const entryHref = ({ slug }: CompendiumCardEntry) => `/compendium/ingredients/${slug}` as Route;
 
@@ -29,7 +28,6 @@ const CompendiumCards = ({
   position,
   total,
   action,
-  signInHref,
 }: CompendiumCardsProps): ReactElement => (
   <IngredientSearch
     shape="cards"
@@ -69,10 +67,6 @@ const CompendiumCards = ({
                 <button type="button" className="btn btn--small" disabled>
                   Add to My Ingredients
                 </button>
-              ) : action === 'sign-in' && signInHref ? (
-                <Link className="btn btn--small" href={signInHref}>
-                  Sign In
-                </Link>
               ) : undefined
             }
           />

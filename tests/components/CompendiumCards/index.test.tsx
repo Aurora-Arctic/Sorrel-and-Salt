@@ -129,14 +129,6 @@ describe('CompendiumCards', () => {
     for (const button of buttons) expect(button).toBeDisabled();
   });
 
-  it('holds a Sign In link back to the page for a visitor with no account', () => {
-    render(<Cards {...props({ action: 'sign-in', signInHref: '/sign-in?next=%2Fcompendium' })} />);
-    const links = screen.getAllByRole('link', { name: 'Sign In' });
-    expect(links).toHaveLength(ENTRIES.length);
-    for (const link of links) expect(link).toHaveAttribute('href', '/sign-in?next=%2Fcompendium');
-    expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();
-  });
-
   it('holds neither for an account that only views', () => {
     render(<Cards {...props({ action: 'none' })} />);
     expect(screen.queryByRole('button', { name: 'Add to My Ingredients' })).toBeNull();

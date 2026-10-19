@@ -89,8 +89,8 @@ test(
       for (const [index, entry] of firstPage.entries()) {
         await expect(cards.nth(index)).toContainText(entry.name);
       }
-      // Signed out there is nothing to add to: each card offers a sign-in link instead (M8.18).
-      await expect(cards.first().getByRole('link', { name: /^Sign In/ })).toBeVisible();
+      // Signed out the cards carry no action; signing in is the header's (M8.18).
+      await expect(compendiumList(page).getByRole('link', { name: 'Sign In' })).toHaveCount(0);
       await expect(page.getByRole('button', { name: ADD_TO_MY_INGREDIENTS })).toHaveCount(0);
       await expect(cards.first()).toBeVisible();
       await assertNoAccessibilityViolations(page);

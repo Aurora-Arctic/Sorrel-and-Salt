@@ -70,12 +70,8 @@ const BASE: CompendiumCardsProps = {
 // Someone who can add: the button is disabled until M9.12 builds its dialog.
 export const CanAdd: Story = () => <CompendiumCards {...BASE} action="add" />;
 
-// A visitor with no account: a Sign In link in the button's place.
-export const SignedOut: Story = () => (
-  <CompendiumCards {...BASE} action="sign-in" signInHref="/sign-in?next=%2Fcompendium" />
-);
-
-// An account that only views: nothing beneath the card.
+// An account that only views, or a visitor with no account (who signs in through the header):
+// nothing beneath the card.
 export const ViewerOnly: Story = () => <CompendiumCards {...BASE} />;
 
 // A page with a neighbour on each side.
