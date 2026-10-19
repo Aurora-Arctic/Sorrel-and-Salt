@@ -5,15 +5,7 @@ import { Navigating } from '../../support/navigating';
 const router = vi.hoisted(() => ({ push: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({ useRouter: () => router, usePathname: () => '/here' }));
 
-// M12.33 scaffold: lane A builds `@/lib/navigation`. Until it does, the module is
-// loaded by a specifier neither the type checker nor Vite resolves, so this
-// file compiles and its suites are skipped. That lane makes the import a
-// plain `await import('…')` of the path below and unskips every
-// `describe.skip` here (grep "M12.33 scaffold").
-const scaffold: string = '@/lib/navigation';
-const { NavigationBar, reportLeaving, usePendingNavigation } = await import(
-  /* @vite-ignore */ scaffold
-).catch(() => ({}));
+const { NavigationBar, reportLeaving, usePendingNavigation } = await import('@/lib/navigation');
 
 // The page part of every wait (M12.33): a bar that shows once a navigation
 // has lasted 100ms, so a fast one never flashes it, and goes when the
@@ -75,7 +67,7 @@ afterEach(async () => {
   vi.useRealTimers();
 });
 
-describe.skip('NavigationBar', () => {
+describe('NavigationBar', () => {
   it('is not shown while nothing is on its way', async () => {
     renderBar();
 
