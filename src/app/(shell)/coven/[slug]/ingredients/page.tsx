@@ -29,7 +29,7 @@ export default async function CovenIngredientsPage({
   searchParams,
 }: CovenIngredientsParams) {
   const { slug } = await params;
-  const { workspace } = await requireCovenMembership(slug);
+  const { workspace, membership } = await requireCovenMembership(slug);
   const query = await searchParams;
   const filter: CovenListFilter = COVEN_PARAMS.read(query);
   const { after, before } = readPageCursors(query);
@@ -42,7 +42,7 @@ export default async function CovenIngredientsPage({
   };
   const variables = JSON.stringify(COVEN_PARAMS.variables(filter, lookups));
   const [page, counts, formIcons] = await Promise.all([
-    readCovenIngredients(workspace.id, variables, after, before),
+    readCovenIngredients(workspace.id, variables, after, before, membership),
     readCovenFacets(workspace.id, variables),
     readFormIcons(),
   ]);

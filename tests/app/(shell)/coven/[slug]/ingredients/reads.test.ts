@@ -6,6 +6,7 @@ import { CARD_PAGE_SIZE } from '@/lib/pagination';
 // jars, and what each edge keeps for the card.
 
 const COVEN = '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44';
+const membership = { workspaceId: '5b8f4a10-2d6e-4c19-8a37-0e9d1c2b3a44', role: 'member' } as never;
 const session = { user: { id: 'fixture-user' } };
 vi.mock('@/lib/request-session', () => ({ requireSession: async () => session }));
 
@@ -53,7 +54,7 @@ beforeEach(() => {
 
 describe('readCovenIngredients', () => {
   it('reads one page of the card size, counted, for the signed-in session and the coven', async () => {
-    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined);
+    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
 
     expect(CARD_PAGE_SIZE).toBe(24);
     expect(listWorkspaceIngredients).toHaveBeenCalledWith(
@@ -67,7 +68,7 @@ describe('readCovenIngredients', () => {
   });
 
   it('reads every jar of the page in one stock call, and its forms and categories in one each', async () => {
-    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined);
+    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
 
     expect(stockOf).toHaveBeenCalledTimes(1);
     expect(stockOf).toHaveBeenCalledWith(session, [
@@ -76,12 +77,13 @@ describe('readCovenIngredients', () => {
     ]);
     expect(variantsOf).toHaveBeenCalledTimes(1);
     expect(readCardCategoriesOf).toHaveBeenCalledTimes(1);
-    expect(variantsOf).toHaveBeenCalledWith(session, [own, held]);
+    expect(variantsOf).toHaveBeenCalledWith(session, [own, held], membership);
+    expect(readCardCategoriesOf).toHaveBeenCalledWith(session, [own, held], membership);
     expect(page.jars).toEqual([[{ id: 'j1' }], []]);
   });
 
   it("keeps each edge's cupboard entry, and draws a form's icon by its name", async () => {
-    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined);
+    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
 
     expect(page.edges.map(({ cupboardEntry }) => cupboardEntry)).toEqual([null, { label: 'Ours' }]);
     expect(page.variants[0][0].formChoice).toEqual({ group: { icon: 'leaf' } });
@@ -89,13 +91,19 @@ describe('readCovenIngredients', () => {
   });
 
   it('names the form of every variant on the page, so a jar can say which form it holds', async () => {
-    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined);
+    const page = await readCovenIngredients(COVEN, '{}', undefined, undefined, membership);
 
     expect(Object.fromEntries(page.formOf)).toEqual({ v1: 'Fixture Herb', v2: 'Fixture Oil' });
   });
 
   it('passes the address variables to the list as the filter', async () => {
-    await readCovenIngredients(COVEN, '{"source":"local","inStock":true}', undefined, undefined);
+    await readCovenIngredients(
+      COVEN,
+      '{"source":"local","inStock":true}',
+      undefined,
+      undefined,
+      membership,
+    );
 
     expect(listWorkspaceIngredients.mock.calls[0][2]).toEqual({ source: 'local', inStock: true });
     expect(countWorkspaceIngredients.mock.calls[0][2]).toEqual({ source: 'local', inStock: true });
@@ -104,7 +112,9 @@ describe('readCovenIngredients', () => {
   it('throws a refusal in a batch rather than draw a card without its jars', async () => {
     stockOf.mockResolvedValue([new Error('Forbidden'), []]);
 
-    await expect(readCovenIngredients(COVEN, '{}', undefined, undefined)).rejects.toThrow();
+    await expect(
+      readCovenIngredients(COVEN, '{}', undefined, undefined, membership),
+    ).rejects.toThrow();
   });
 });
 

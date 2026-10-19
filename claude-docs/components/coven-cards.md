@@ -24,6 +24,8 @@
 
 `src/app/(shell)/coven/[slug]/ingredients/page.tsx` draws it per request. It first calls `requireCovenMembership`, which sends a non-member to a 404, then reads through `reads.ts`. Nothing here is cached: a cupboard is workspace-scoped.
 
+The page hands the `Membership` that guard returns to `readCovenIngredients`, which passes it as `heldBy` to the forms and categories reads (the entry page's rule, M12.24). That is what lets a card for a retired compendium entry the coven still holds show its forms and category chips: without the proof the services refuse a retired parent. The proof admits a retired entry only where this coven's live cupboard row names it. The read is wrapped in React's `cache`, keyed by the coven id, the filter, the cursors and the `Membership` object itself, which is the same object all request because `requireCovenMembership` is cached per slug.
+
 ## Stories and tests
 
 Stories: `Default`, `Mid List`, `Empty`. Tests: `tests/components/CovenCards/index.test.tsx` and `tests/app/(shell)/coven/[slug]/ingredients/page.test.tsx`.

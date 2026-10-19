@@ -6,6 +6,7 @@ import { readNumberedPage } from '../../../../../lib/numbered-page';
 import { CARD_PAGE_SIZE } from '../../../../../lib/pagination';
 import { requireSession } from '../../../../../lib/request-session';
 import type { CovenIngredientPage } from './types';
+import type { CovenMembership } from '@/modules/coven';
 import {
   countWorkspaceIngredients,
   listWorkspaceIngredients,
@@ -18,8 +19,11 @@ import {
 // The data is the coven's, so each read goes through the services for the signed-in
 // session, which asserts membership, and none is held in the data cache (CLAUDE.md
 // rule 6). React's `cache` keeps a second call in one request to one read, so each is
-// keyed by primitives: the coven's id and the filter as the parameter table's
-// variables, written as JSON.
+// keyed by primitives, the coven's id and the filter as the parameter table's
+// variables written as JSON, and for the page read, the coven's `Membership` last. That
+// one is an object, so `cache` keys it by identity: `requireCovenMembership` is cached
+// per slug per request, so the page passes the same object each time and a second call
+// still hits. A fresh object would only miss, never read wrongly.
 
 type Filter = Parameters<typeof listWorkspaceIngredients>[2];
 
@@ -36,6 +40,10 @@ export const readCovenIngredients = cache(
     variables: string,
     after: string | undefined,
     before: string | undefined,
+    // The coven's proof, handed to every child read as `heldBy`: a retired compendium entry
+    // the coven's live cupboard row still names reads its forms and categories on it
+    // (M12.24), the entry page's rule. The page holds it; nothing here builds one.
+    heldBy: CovenMembership['membership'],
   ): Promise<CovenIngredientPage> => {
     const session = await requireSession();
     // Written by the page from its parameter table, and checked again by the service.
@@ -49,8 +57,8 @@ export const readCovenIngredients = cache(
     // Each ref names the entry's own tier (null for the compendium), as GraphQL's loaders do.
     const refs = page.edges.map(({ node }) => ({ id: node.id, workspaceId: node.workspaceId }));
     const [forms, categories, jars, formIcons] = await Promise.all([
-      variantsOf(session, refs),
-      readCardCategoriesOf(session, refs),
+      variantsOf(session, refs, heldBy),
+      readCardCategoriesOf(session, refs, heldBy),
       stockOf(
         session,
         page.edges.map(({ node }) => ({ ingredientId: node.id, workspaceId })),

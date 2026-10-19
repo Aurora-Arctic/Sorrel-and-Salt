@@ -122,6 +122,12 @@ describe('the coven Ingredients page', () => {
     expect(requireCovenMembership).toHaveBeenCalledWith('fixture-coven');
   });
 
+  it("reads the forms on the coven's proof, so a retired entry it holds still has them", async () => {
+    await renderPage();
+    const { membership } = await requireCovenMembership.mock.results[0].value;
+    expect(variantsOf.mock.calls[0][2]).toBe(membership);
+  });
+
   it('does not read anything for a non-member, whom the guard refuses', async () => {
     requireCovenMembership.mockRejectedValue(new Error('NEXT_NOT_FOUND'));
     await expect(renderPage()).rejects.toThrow('NEXT_NOT_FOUND');
