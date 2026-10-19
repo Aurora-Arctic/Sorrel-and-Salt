@@ -33,6 +33,8 @@ Hence the order M8.10, M8.13, M8.11, M8.12, M12.3, M12.4, M8.13a, M9.7, M9.8, M8
 
 **M12.29 follows M9.9**, minted 2026-10-19 from the owner's review of the entry page: it puts the coven's jars on the entry page, and each jar line there opens M9.9's Edit Stock dialog and reuses its `StockFields` for Add Stock.
 
+**M12.31 is a scoping task**, minted 2026-10-19 from the owner’s review of the entry page, and sits after M12.29 because it needs nothing built first: it decides how a failure from a control with no form around it is said (Add to Cupboard’s error shows to the right of its button today), and any build task it names is for the owner to approve and mint afterwards.
+
 **M6.18 follows M9.9**, moved here from Wave 9 on 2026-10-12, the owner's call. It shows who last edited a row, but the rows it annotates are built here: the card (M8.14) and the ingredients page (M9.6), over `workspaceIngredients` and `Ingredient.stock`, which M9.3 and M9.4 land in Wave 11. A compendium entry reaches a coven only as a stock row the coven owns, so the editor to show is that row's, a member of the coven, and never the compendium entry's own, which an admin last edited. A local entry with no stock row shows the local ingredient's editor.
 
 **M12.5 follows M9.12 and precedes M12.1** (minted 2026-10-16 on the owner's backlog): a name in the coven Ingredients list (M9.6) and the admin Compendium list opens the detail page's content in a modal, with an Edit button into M8.17's modal where the viewer may edit. It lands after M9.12 so the modal opens the finished ingredient form, and before M12.1 so the promote control M12.1 adds is in the form it opens. The public `/compendium` list (M8.18) opens no modal, to stay crawlable.
