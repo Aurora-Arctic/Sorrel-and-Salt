@@ -32,7 +32,7 @@ The card owns layout and nothing else. Each treatment is used as it is and never
 restyled here:
 
 - the name, an `h2` holding the card's **one link**, so the card is reached by
-  keyboard through it alone;
+  keyboard through it alone. The link ends with a `LinkHint` ([`link-hint.md`](link-hint.md)), a dot that pulses while the entry page loads: the entry pages cannot have a route `loading.tsx`, so the click needs its own sign that it took. The dot is `aria-hidden`, so the link is still named by the label alone;
 - the Foundations specimen layout (`.specimen` primitives): the name and formal name on the left, the marks on the right, then the category chips, the forms line (a `FormIcon` before each form, a dot between: "Herb · Oil"; it tells two entries sharing a label apart), and the jar lines;
 - the marks, through `EntryMarks`, then `CautionMark`, then `ToxicMark` last, in `.specimen__badges`;
 - no caution block: the notes live on the entry page, and the card carries only the Caution badge, a word with no tip, so Toxic stays the one solid badge;
