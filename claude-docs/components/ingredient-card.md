@@ -90,7 +90,15 @@ round the card. Under the pointer, or with focus inside it, the card lightens
 (`$surface-card-hover`: a step lighter in dark, brighter in light) and rises 2px
 with a stronger shadow (`$shadow-lifted`, between floating and elevated), over 150ms.
 Under reduced motion the move and the fade go and the colour and shadow change
-stay. It uses `:focus-within`, not `:has()`, so a click's focus lifts it too.
+stay. The lift moves `inset-block-start`, never `transform`: a transformed ancestor becomes the
+containing block of the `position: fixed` tip bubbles inside the card, and Floating UI does not
+re-place a bubble when an ancestor's transform starts or ends, so a quick move between cards left
+a bubble in the wrong place. Keep `transform`, `filter`, `will-change`, `contain` and
+`backdrop-filter` off the card for the same reason. Each card is `isolation: isolate`, so its raised
+actions and tips stay inside it, and the card under the pointer or with focus inside it (or with
+one of its tips still open, through `:has()`, since a tip lingers about 150ms after the pointer
+leaves) takes `z-index: 1`, so its tips paint over the cards before and after it. The lift uses
+`:focus-within`, so a click's focus lifts it too.
 Muted jar text on the hovered card measures 7.99:1 dark and 6.95:1 light. A cost accepted: text in the card is harder to select, since a
 drag starts on the overlay.
 

@@ -13,6 +13,9 @@
   padding: space(4);
   // The containing block for the name link's stretched `::after` below.
   position: relative;
+  // Its own stacking context at rest, so the raised actions and tips inside it
+  // (z-index 1 above) stay inside the card instead of painting over the next card.
+  isolation: isolate;
   cursor: pointer;
 }
 
@@ -46,12 +49,17 @@
   }
 }
 
-// Under the pointer, or with the link focused, the card lightens and rises. No
+// Under the pointer, or with the link focused, the card lightens and rises. The lift needs no
 // `:has()`: `:focus-within` catches the link's focus, and also a click's, which
 // is harmless; only `:focus-visible` on the link itself draws the ring.
 .ingredient-card {
+  // The lift moves `inset-block-start`, not `transform`: a transformed ancestor becomes
+  // the containing block of a `position: fixed` tip bubble inside it (the Low badge's,
+  // the marks'), and Floating UI does not re-place a bubble when an ancestor's transform
+  // starts or ends, so a quick move between cards left a bubble in the wrong place.
+  inset-block-start: 0;
   transition:
-    transform 150ms ease,
+    inset-block-start 150ms ease,
     box-shadow 150ms ease,
     background-color 150ms ease,
     color $theme-transition-duration $theme-transition-easing;
@@ -60,7 +68,16 @@
   &:focus-within {
     background-color: $surface-card-hover;
     box-shadow: $shadow-lifted;
-    transform: translateY(-2px);
+    inset-block-start: -2px;
+    // Above its neighbours while a tip may be open (hover or keyboard focus), so a
+    // tip that spills over the card above is not painted under that card's buttons.
+    z-index: 1;
+  }
+
+  // A tip outlives the hover (it stays open a moment after the pointer leaves), so the
+  // card stays raised while one of its tips is open.
+  &:has([role='tooltip'].is-open) {
+    z-index: 1;
   }
 
   // The colour and shadow change stay; the movement and the fade go.
@@ -69,7 +86,7 @@
 
     &:hover,
     &:focus-within {
-      transform: none;
+      inset-block-start: 0;
     }
   }
 }
