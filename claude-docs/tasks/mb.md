@@ -271,6 +271,7 @@ Work that was not in the original breakdown. `MB.*` exists so a defect or a miss
 | MB.265 | Admin Pages Fail Axe's Title Check Under Load                                                                            | Bugfixes | —                      |
 | MB.266 | Curators Reach the Admin Curated Lists Again                                                                             | Bugfixes | —                      |
 | MB.267 | Story 18 and the Sign-In Panel Test Pass Every CI Run                                                                    | Bugfixes | —                      |
+| MB.268 | Seeded Users Are Verified                                                                                                | Bugfixes | —                      |
 | MB.270 | The Search Sentence Types a Changed Term                                                                                 | Bugfixes | —                      |
 | MB.271 | The Back Link Returns to the Same Results and Place                                                                      | Bugfixes | —                      |
 | MB.272 | A Click Anywhere on an Ingredient Card Opens Its Entry                                                                   | Bugfixes | —                      |
@@ -1683,6 +1684,31 @@ _Acceptance criteria:_
 - If Close is slow after a reload, that is fixed in the app, with a regression test that fails before the fix
 - A regression test reproduces the sign-in panel's getSnapshot warning before the fix, and the panel's test passes twenty consecutive runs with none
 - Docs: `claude-docs/components/sign-in-panel.md`, "Last used", says how the read stays stable
+
+**MB.268 — Seeded Users Are Verified** · 1h
+
+_Story:_ As a developer checking the dev site, I want the seeded users to start with verified email addresses, so that I can browse the site signed in as one of them without being sent to the email page.
+
+None of the seeded users has a verified email address, because the seed never sets `email_verified` and it defaults to false. That covers fixture users A–F in `src/db/seed/standard.ts`, the minimal scenario's user in `src/db/seed/minimal.ts` and the bootstrap admin in `src/db/seed/bootstrap-admin.ts`. An unverified account can reach no page but `/account/email`, because `requireSession()` sends it there from every other page. So no developer or agent can check a signed-in page as a seeded user. The e2e tests aren't affected, because `tests/e2e/session.ts` creates its own verified users.
+
+Verifying the seeded users doesn't change which accounts get deleted. The sweep of unverified accounts only deletes ones that hold a provider sign-in, and seeded users have none.
+
+Found on 2026-10-19, during M12.33's browser checks. Not a hotfix: no live page is affected, only the dev seed. Steps to reproduce:
+
+1. Run `npm run db:reset` with `SEED_SCENARIO=standard`.
+2. Sign in to the dev site as the seeded admin, Fixture E, using the storage-state method.
+3. Open `/admin/compendium`.
+
+Actual: every page sends you to `/account/email`.
+Expected: the seeded users are verified, so the signed-in pages load.
+
+_Acceptance criteria:_
+
+- A regression test in `tests/db/seed/` that fails before the fix: after seeding, every seeded user has `email_verified` set to true
+- The standard scenario's fixture users A–F, the minimal scenario's user and the bootstrap admin are seeded as verified
+- Seeding twice in a row leaves the users verified, and the seed still makes no other change on the second run
+- Any database test that relied on a seeded user being unverified creates its own unverified user instead
+- Docs: `claude-docs/db/standard-scenario.md`, and any seed doc that describes the users, says they are seeded verified
 
 **MB.270 — The Search Sentence Types a Changed Term** · 1.5h
 
