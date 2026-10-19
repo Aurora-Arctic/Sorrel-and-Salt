@@ -31,9 +31,9 @@ import { slugify } from '@/lib/slugify';
 
 // Stories 14, 15 and 16: the compendium as anyone browses it, an entry added
 // from it to a coven, a coven's own ingredient, and the warning that a new
-// name resembles one already there. Scaffolds: /compendium (M8.18) and the add
-// modal (M8.16) are not built yet, and the task in each annotation turns its
-// `fixme` into `test`. The entry pages (M8.19) are built.
+// name resembles one already there. /compendium (M8.18), the add modal (M8.16)
+// and the entry pages (M8.19) are built, so 15 and 16 run; the scaffold still
+// marked `fixme` waits on the task its annotation names.
 
 test.beforeAll(async () => {
   await recreateE2eDatabase();
@@ -315,16 +315,9 @@ test.fixme(
 
 const INGREDIENT_QUERY = 'query ($id: ID!, $w: ID) { ingredient(id: $id, workspaceId: $w) { id } }';
 
-test.fixme(
+test(
   'a member creates an ingredient local to the coven from its add form, which the coven reads and no other coven sees',
-  {
-    tag: '@story-15',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M8.16 opens the Add Ingredient modal from the shell and M9.6 builds /coven/[slug]/ingredients',
-    },
-  },
+  { tag: '@story-15' },
   async ({ page }) => {
     const elsewhere = await seedCoven(page, 'Fixture Coven Elsewhere', 'story-15-x.test', {
       D: 'owner',
@@ -444,16 +437,9 @@ const CATS_CLAWS = [
   'Uncaria tomentosa',
 ];
 
-test.fixme(
+test(
   'typing a name like existing entries warns of each by its formal name, a name like none warns of nothing, and the save goes through',
-  {
-    tag: '@story-16',
-    annotation: {
-      type: 'fixme',
-      description:
-        'M8.16 opens the Add Ingredient modal on M9.6’s /coven/[slug]/ingredients, where the warning is asked of the coven',
-    },
-  },
+  { tag: '@story-16' },
   async ({ page, context }) => {
     const coven = await seedCoven(page, 'Fixture Coven Sixteen', 'story-16.test', {
       A: 'owner',
