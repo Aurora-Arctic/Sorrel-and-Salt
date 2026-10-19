@@ -2,6 +2,7 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import postgres from 'postgres';
 import { slugify } from '@/lib/slugify';
 import { makeIngredient, makeVariant } from '../../support/fixtures/ingredient';
+import { insertCupboardEntry } from '../../support/db/insert-cupboard-entry';
 import { insertIngredient } from '../../support/db/insert-ingredient';
 import type { IngredientFixture, Overrides } from '../../support/fixtures/types';
 import { e2eDatabaseUrl } from '../database';
@@ -147,7 +148,9 @@ export interface Stock {
 /**
  * A stock row, the coven's jar of `held`, written by `author` as M9.3's
  * `createStock` would write it: the threshold stated on the row, never left to
- * a constant read later (M9.8).
+ * a constant read later (M9.8), and a jar of a compendium entry putting the
+ * entry in the coven's cupboard first when it is not there already (M12.15),
+ * since the coven's list holds only what its cupboard names.
  */
 export async function insertStock(
   sql: postgres.Sql,
@@ -156,6 +159,19 @@ export async function insertStock(
   { quantity, unit, threshold }: Stock,
   author: string,
 ): Promise<string> {
+  const [cupboard] = await sql<{ needed: boolean }[]>`
+    select i.workspace_id is null and not exists (
+      select 1 from workspace_compendium_entries e
+      where e.workspace_id = ${covenId} and e.ingredient_id = i.id and e.deleted_at is null
+    ) as needed
+    from ingredients i where i.id = ${held.ingredientId}`;
+  if (cupboard.needed) {
+    await insertCupboardEntry(
+      sql,
+      { workspaceId: covenId, ingredientId: held.ingredientId },
+      author,
+    );
+  }
   return sql.begin(async (tx) => {
     await tx`select set_config('app.current_user_id', ${author}, true)`;
     const [row] = await tx<{ id: string }[]>`
