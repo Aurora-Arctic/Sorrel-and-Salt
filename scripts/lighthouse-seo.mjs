@@ -115,7 +115,8 @@ try {
     );
     for (const audit of failures) {
       failed = true;
-      console.log(`  FAIL ${audit.id}: ${audit.title}`);
+      const why = [audit.explanation, audit.displayValue].filter(Boolean).join(' | ');
+      console.log(`  FAIL ${audit.id}: ${audit.title}${why ? ` (${why})` : ''}`);
     }
   }
 } finally {

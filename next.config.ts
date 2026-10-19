@@ -22,6 +22,13 @@ const nextConfig: NextConfig = {
   // the last spec wrote. The compendium-cache server keeps it
   // (claude-docs/db/compendium-cache.md, "In tests").
   ...(process.env.NEXT_DATA_CACHE === 'off' && { cacheMaxMemorySize: 0 }),
+  // Metadata blocks the page and lands in <head> for every visitor. By default
+  // Next streams it into <body> for anyone not on its bot list whenever the
+  // page's data is not ready when the shell is sent, and a reader that looks
+  // only in <head> (Lighthouse's meta-description audit) then sees none. This
+  // costs a little time to first byte on the public pages
+  // (claude-docs/design-decisions/mb.84-page-metadata.md, "Metadata in the head").
+  htmlLimitedBots: /.*/,
   experimental: {
     // Server Fast Refresh re-runs an edited module and its importers but not
     // the GraphQL builder they register on, so an edited GraphQL module adds
