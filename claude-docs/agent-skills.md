@@ -73,8 +73,8 @@ and an empty skill shell would add indirection without content.
 
 `CLAUDE.md` loads on every turn, so it carries only what every task obeys: the
 vocabulary, ten commands, the ten architecture rules cut to their binding
-sentences, the domain invariants, the testing and convention rules, and a
-summary of task tracking. It stays within 20 KB. The long forms are
+sentences, the domain invariants, the testing and convention rules, a
+summary of task tracking, and the token-spending rules. It stays within 20 KB. The long forms are
 `.claude/rules/<area>.md`, one per area:
 
 | Rule file       | Loads for                                                                                  | Carries                                                                                                    |

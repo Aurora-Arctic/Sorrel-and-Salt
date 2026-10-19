@@ -124,6 +124,16 @@ The issues of `Aurora-Arctic/Sorrel-and-Salt`, under the org Project **Sorrel & 
 - **A PR body opens with `Closes #N`**, or `Refs #N` for a PR that does not finish the task.
 - **Comments name, never carry values**: an env var, a file or a provider, but never a value, token, connection string, address or dashboard URL.
 
+## Spending tokens
+
+- A passing run prints only its verdict; on a failure read the failing part (`tail`, `grep`, `jq`). Read a file over ~300 lines by section.
+- Never mask an exit code with a pipe: log to `.reports/<name>.log`, print `exit $?`, then tail the log.
+- Verify once: one spec while iterating, the full suites at task end.
+- At a task boundary, suggest `/clear` to the owner.
+- Each rule gives way when the owner asks otherwise, or when following it would thin a test.
+
+Long form: claude-docs/token-efficiency.md.
+
 ## Out of scope for v1
 
 Do not build, and do not leave hooks for beyond what the design doc names: the **entire notes subsystem** (stories 35–46; §13), edit history, viewer spell approval, compendium/category suggestions, duplicate merge tooling, bulk add from the compendium, GraphQL response caching, passkeys and every other first-party credential (email/password sign-in included), note moderation, subscription billing, help and FAQ articles (§13; MB.175).

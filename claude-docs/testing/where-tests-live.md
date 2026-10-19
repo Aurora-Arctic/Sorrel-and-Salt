@@ -426,5 +426,6 @@ shell sets, switches the test reporter to `dot`, the coverage reporter to
 of passing tests — a green run printed ~12,000 lines of pg notices and React
 warnings, against ~200 for the coverage table. A failure still prints in full,
 with its console output, and the per-file numbers are read from
-`.reports/coverage/coverage-summary.json`. The host and CI see everything as
+`.reports/coverage/coverage-summary.json`. To see everything under Claude Code, run
+`env -u CLAUDECODE npx vitest run <file>`, which also shows `act()` warnings. The host and CI see everything as
 before — CI's own `--reporter` flags replace the config's list either way.
