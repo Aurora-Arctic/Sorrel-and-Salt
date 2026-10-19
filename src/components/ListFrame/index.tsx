@@ -7,6 +7,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   useTransition,
 } from 'react';
@@ -46,6 +47,22 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
   const [moving, startMoving] = useTransition();
   const [leaving, setLeaving] = useState(false);
   const pending = moving || leaving;
+  const root = useRef<HTMLDivElement>(null);
+  const keepPlace = useRef(false);
+
+  // A pager end's page: once the transition ends the new page has rendered, so
+  // bring the start of the list to the line the stuck search row leaves, if it
+  // is above that now. A plain `scrollIntoView`, so the site's smooth scroll
+  // and its reduced-motion rule apply, and the reader lands on the new page's
+  // first entries rather than the top of the page.
+  useEffect(() => {
+    if (moving || !keepPlace.current) return;
+    keepPlace.current = false;
+    const body = root.current?.querySelector('.list-frame__body');
+    if (!body) return;
+    const line = parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+    if (body.getBoundingClientRect().top < line) body.scrollIntoView({ block: 'start' });
+  }, [moving]);
 
   useEffect(() => {
     if (!leaving) return;
@@ -65,12 +82,21 @@ const ListFrame = ({ className, children }: ListFrameProps): ReactElement => {
         window.location.assign(href);
         return;
       }
-      startMoving(() => router.push(href as Route));
+      // A pager end keeps the reader at the list rather than Next's scroll to
+      // the page top, which would bring the admin section menu back into view.
+      keepPlace.current = kind === 'page';
+      startMoving(() =>
+        kind === 'page'
+          ? router.push(href as Route, { scroll: false })
+          : router.push(href as Route),
+      );
     },
   };
   return (
     <ListNavigationContext.Provider value={value}>
-      <div className={className ? `list-frame ${className}` : 'list-frame'}>{children}</div>
+      <div ref={root} className={className ? `list-frame ${className}` : 'list-frame'}>
+        {children}
+      </div>
     </ListNavigationContext.Provider>
   );
 };

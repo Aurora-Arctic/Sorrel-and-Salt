@@ -2,10 +2,12 @@ import type { ReactNode } from 'react';
 
 /**
  * How a list moves to another of its pages: `soft`, a client-side navigation
- * inside a transition, or `full`, a whole page load, which runs the admin
- * layout's guard again (claude-docs/components/pager.md).
+ * inside a transition; `page`, a soft one for a pager end, which keeps the
+ * reader at the list instead of scrolling to the page top; or `full`, a whole
+ * page load, which runs the admin layout's guard again
+ * (claude-docs/components/pager.md).
  */
-export type ListNavigationKind = 'soft' | 'full';
+export type ListNavigationKind = 'soft' | 'page' | 'full';
 
 /** A list's page on its way, shared by its filter, its pager and its body (`index.tsx`). */
 export interface ListNavigation {
