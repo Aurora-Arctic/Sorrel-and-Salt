@@ -16,6 +16,7 @@ import {
   getCupboardEntry,
   getIngredient,
   ingredientDetailOf,
+  isAnnotated,
   isRetired,
   MAKE_IT_OURS_PERMISSION,
 } from '@/modules/ingredients';
@@ -34,11 +35,16 @@ import type { CovenIngredientParams } from './types';
 // carries its own wide layout (the jump menu and the side columns), so
 // `<main>` stays plain.
 
-// The ⓘ sentence beside "In the Compendium", one for each case.
-const COMPENDIUM_TIP = 'This entry is the compendium’s. Its public page is linked here.';
+// The ⓘ sentence beside "In the Compendium", one for each case. A compendium
+// entry the coven has annotated says the page is that entry with the coven's
+// annotations over it, and the link the entry as the compendium has it (the
+// owner's ask, 2026-10-19).
+const COMPENDIUM_TIP = 'This is the compendium’s entry. The link opens its public page.';
+const ANNOTATED_TIP =
+  'This page is an annotated version of the compendium’s page. The link opens the original version.';
 const SAME_TIP = 'This is the compendium entry that names the same thing. Compare them here.';
 const SIMILAR_TIP =
-  'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. If one of them is the same thing, This Is It moves your jars and spell layers to it and removes this entry.';
+  'These compendium entries share this entry\u2019s name, and it declares no formal name to tell them apart. If one of them is the same thing, Link to Selected moves your jars and spell layers to it and removes this entry.';
 
 const publicAddress = (slug: string) => `/compendium/ingredients/${slug}` as Route;
 
@@ -114,6 +120,13 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
       ? { id: entry.id, values: await entryValues(entry) }
       : undefined;
 
+  // Annotate opens its dialog from the address the same way, but only for a
+  // member who may annotate in a coven that holds the entry; any other asking
+  // for `?annotate` is ignored.
+  const mayAnnotate =
+    inCompendium && cupboardEntry != null && rolePermits(role, { ingredient: ['update'] });
+  const annotating = mayAnnotate && 'annotate' in (await searchParams);
+
   const hrefOf = ({ id, slug, workspaceId }: LinkedIngredient): Route | undefined => {
     if (workspaceId === null) return publicAddress(slug);
     if (workspaceId === workspace.id) return `/coven/${workspace.slug}/ingredients/${id}` as Route;
@@ -153,13 +166,17 @@ export default async function CovenIngredientPage({ params, searchParams }: Cove
                 canAnnotate: inCompendium && rolePermits(role, { ingredient: ['update'] }),
                 canRemove: inCompendium && rolePermits(role, { ingredient: ['delete'] }),
                 canMakeOurs: rolePermits(role, MAKE_IT_OURS_PERMISSION),
+                annotate: { href: `${own}?annotate` as Route, closeHref: own, opened: annotating },
               }
             : undefined
         }
         replaces={
           inCompendium
             ? {
-                tip: COMPENDIUM_TIP,
+                tip:
+                  detail.cupboardEntry && isAnnotated(detail.cupboardEntry)
+                    ? ANNOTATED_TIP
+                    : COMPENDIUM_TIP,
                 entries: [{ title: pageTitleOf(entry), href: publicAddress(entry.slug) }],
                 total: 1,
               }

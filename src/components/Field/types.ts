@@ -81,6 +81,8 @@ export interface TextFieldProps<V extends FieldValues = FieldValues> extends Fie
   invalid?: boolean;
   /** Drawn beneath the field, after its error: the name's duplicate warning. */
   after?: ReactNode;
+  /** Its text is being looked up: a spinner at the input's right end, and the input `aria-busy`. A single line only. */
+  busy?: boolean;
   /** At the right end of the label row: a variant's Copy From Ingredient. */
   action?: ReactNode;
   /** How the text is tidied as the field is left: a reference's fields, as the server will store them. */

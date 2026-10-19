@@ -177,6 +177,8 @@ without a page routed to it.
   unless a story wraps itself in `WorkshopPathname` with another address, so
   AdminNav's stories show the current-page marker on People, and a tabbed
   page's story can open any tab (MB.115).
+  Its `useSearchParams` answers an empty query, so the shell's Add Ingredient
+  button, which opens its dialog on `?new` (M8.16), draws closed in a story.
   Its `useRouter` reports a `push` or `replace` to a story that wraps itself in
   `WorkshopNavigation` and goes nowhere otherwise: a `RouteModal` closes by
   navigating, so without it a story's modal stays mounted as a native modal

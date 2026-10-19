@@ -210,7 +210,7 @@ const hrefOf: IngredientEntryProps['hrefOf'] = (ingredient) =>
 
 /** A page's main, as the routes give it. */
 const COMPENDIUM_CASE: NonNullable<IngredientEntryProps['replaces']> = {
-  tip: 'This entry is the compendium’s. Its public page is linked here.',
+  tip: 'This is the compendium’s entry. The link opens its public page.',
   entries: [
     {
       title: 'Testwort (Fixtura testalis)',
@@ -224,7 +224,7 @@ const LOCAL_TIP =
   'The compendium holds an entry with this same formal name. Your coven’s entry and it stay separate; compare them here.';
 
 const SIMILAR_TIP =
-  'Your entry has no formal name, so these compendium entries only share its name. If one is the same ingredient, This Is It makes yours that entry.';
+  'Your entry has no formal name, so these compendium entries only share its name. If one is the same ingredient, Link to Selected makes yours that entry.';
 
 const Page = ({ children }: { children: ReactNode }) => (
   <main className="page-column">{children}</main>
@@ -322,10 +322,10 @@ export const Annotated: Story = () => (
   />
 );
 
-// The cupboard buttons beside the title (M12.17). The workshop has no API, so
+// The cupboard choices beside the title (M12.17). The workshop has no API, so
 // a press answers with the generic error. A member sees Add to Cupboard while
-// the coven does not hold the entry; Annotate This Entry, Make It Ours
-// (M12.23) and Remove from Cupboard once it does; a viewer sees none.
+// the coven does not hold the entry; an Edit menu of Annotate, Make It Ours
+// (M12.23) and Remove once it does; a viewer sees none.
 const CUPBOARD = {
   workspaceId: nextId(),
   covenSlug: 'fixture-coven',
@@ -333,6 +333,11 @@ const CUPBOARD = {
   canAnnotate: true,
   canRemove: true,
   canMakeOurs: true,
+  annotate: {
+    href: '/coven/fixture-coven/ingredients/fixture?annotate' as Route,
+    closeHref: '/coven/fixture-coven/ingredients/fixture' as Route,
+    opened: false,
+  },
 };
 
 export const AddToCupboard: Story = () => <Entry cupboard={CUPBOARD} />;
@@ -387,7 +392,7 @@ export const CompendiumEntryInCoven: Story = () => <Entry replaces={COMPENDIUM_C
 // public link nor Edit, since the compendium no longer holds it.
 export const RetiredInCoven: Story = () => <Entry detail={{ ...FULL, retired: true }} />;
 
-// The same, to a member: Make It Ours is the one cupboard button left
+// The same, to a member: Make It Ours is the one cupboard choice left, a plain button
 // (M12.23), since the cupboard services no longer find the entry.
 export const RetiredOffersMakeItOurs: Story = () => (
   <Entry
@@ -416,8 +421,10 @@ export const LocalReplacingCompendiumEntry: Story = () => (
 
 // Four compendium entries share the formal name: the first three, then See All
 // to the compendium search.
-// An own entry with no formal name: the Similar block, a This Is It button
-// beside each entry.
+// An own entry with no formal name: the Similar block, a radio and title in a
+// label beside each entry's chain icon (the link), and one Link to Selected
+// button. The second title is long, to show it wrapping beside its radio with
+// the icon never alone on a line.
 export const SimilarInTheCompendium: Story = () => (
   <Entry
     similar={{
@@ -429,8 +436,15 @@ export const SimilarInTheCompendium: Story = () => (
           id: 'c1',
           thenHref: '/coven/fixture-coven/ingredients/c1' as Route,
         },
+        {
+          title: 'Fixture Wort of the Long Name (Fixtura longissima nominis extensissimi)',
+          href: '/compendium/ingredients/fixture-wort-long' as Route,
+          id: 'c2',
+          thenHref: '/coven/fixture-coven/ingredients/c2' as Route,
+        },
       ],
-      total: 1,
+      total: 5,
+      allHref: '/compendium?query=Fixture%20Wort' as Route,
       convert: { workspaceId: 'w1', localId: 'l1' },
     }}
   />

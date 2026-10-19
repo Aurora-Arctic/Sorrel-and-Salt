@@ -2,25 +2,34 @@
 
 import { useMutation } from '@tanstack/react-query';
 import type { Route } from 'next';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { type ReactElement, useState } from 'react';
+import { type ReactElement, useEffect, useRef, useState } from 'react';
 import { graphql } from '../../gql';
 import { graphqlRequest } from '../../lib/graphql-client';
 import { readGraphqlFailure } from '../../lib/graphql-failure';
 import BusyButton from '../BusyButton';
 import CupboardEntryForm from '../CupboardEntryForm';
-import { ModalButton } from '../Modal';
+import { editHeading } from '../CompendiumList/heading';
+import MenuButton from '../MenuButton';
+import type { MenuButtonItem } from '../MenuButton/types';
+import Modal, { RouteModal, useOpenModalClick } from '../Modal';
+import { useRouteModalOpener } from '../Modal/route-modal-provider';
 import Notice from '../Notice';
+import { ANNOTATE_HEADING } from './annotate-heading';
+import EditButton from './edit-button';
 import type { CupboardActionsProps } from './types';
 
-// The buttons a compendium entry offers a coven's member beside its title
-// (M12.17): Add to Cupboard while the coven does not hold it; Annotate This
-// Entry, Remove from Cupboard and Make It Ours (M12.23) once it does. Make It
-// Ours leads to the own entry it writes, since the compendium entry's page is
-// no longer the coven's; every other write reads the page again, so the marks
-// and the buttons follow the cupboard. Which buttons show is the page's, from
-// the member's permissions; each is only the door, and the service is the
-// guard. Every write goes through /api/graphql.
+// What a compendium entry offers a coven's member beside its title (M12.17):
+// Add to Cupboard while the coven does not hold it; Annotate, Make It Ours
+// (M12.23) and Remove once it does; and a curator's Edit Entry. Two or more
+// share one Edit menu, the owner's call of 2026-10-19, so the title keeps its
+// line; one alone is a plain button. Make It Ours leads to the own entry it
+// writes, since the compendium entry's page is no longer the coven's; every
+// other write reads the page again, so the marks and the choices follow the
+// cupboard. Which choices show is the page's, from the member's permissions;
+// each is only the door, and the service is the guard. Every write goes
+// through /api/graphql.
 
 const AddCupboardEntryDocument = graphql(`
   mutation AddCupboardEntry($workspaceId: ID!, $ingredientId: ID!) {
@@ -46,6 +55,8 @@ const MakeItOursDocument = graphql(`
   }
 `);
 
+const PLAIN = 'btn btn--quiet btn--medium';
+
 export default function CupboardActions({
   workspaceId,
   covenSlug,
@@ -57,11 +68,49 @@ export default function CupboardActions({
   canMakeOurs,
   compendium,
   overrides,
+  annotate,
+  edit,
 }: CupboardActionsProps): ReactElement | null {
   const router = useRouter();
   const [alert, setAlert] = useState<string>();
-  // Which of the two confirms is open: one asks at a time.
+  // Which of the two questions is open, one at a time. The Annotate dialog is
+  // the address's instead (`annotate.opened`), as the curator's Edit is.
   const [asking, setAsking] = useState<'remove' | 'own'>();
+  // The menu's button, or the one plain button: where the focus goes back to
+  // once a question is cancelled or the dialog closes, since what took it is gone.
+  const trigger = useRef<HTMLButtonElement>(null);
+  const link = useRef<HTMLAnchorElement>(null);
+  const returning = useRef(false);
+  const openEdit = useOpenModalClick(
+    edit?.href ?? ('' as Route),
+    editHeading(edit?.entry ?? { name: '', canonicalName: null, nomenclature: 'unknown' }),
+  );
+
+  const openAnnotate = useOpenModalClick(annotate.href, ANNOTATE_HEADING);
+
+  useEffect(() => {
+    if (asking === undefined && returning.current) {
+      returning.current = false;
+      (trigger.current ?? link.current)?.focus();
+    }
+  }, [asking]);
+
+  // The Annotate dialog closes by the address dropping `?annotate`, so the
+  // focus goes back once `opened` turns off, not when a question clears.
+  const wasOpened = useRef(annotate.opened);
+  useEffect(() => {
+    if (wasOpened.current && !annotate.opened) (trigger.current ?? link.current)?.focus();
+    wasOpened.current = annotate.opened;
+  }, [annotate.opened]);
+
+  // Edit's press shows its skeleton here too; this place leaves that one to it.
+  const loading = useRouteModalOpener()?.loading;
+  const annotating = annotate.opened || loading?.title === ANNOTATE_HEADING.title;
+
+  const settle = (): void => {
+    returning.current = true;
+    setAsking(undefined);
+  };
 
   const add = useMutation({
     mutationFn: () => graphqlRequest(AddCupboardEntryDocument, { workspaceId, ingredientId }),
@@ -73,7 +122,7 @@ export default function CupboardActions({
     onSuccess: () => router.refresh(),
     onError: (error) => {
       // The jar refusal names its remedy, so it is shown as the service wrote it.
-      setAsking(undefined);
+      settle();
       setAlert(readGraphqlFailure(error).alert);
     },
   });
@@ -83,118 +132,168 @@ export default function CupboardActions({
       router.push(`/coven/${covenSlug}/ingredients/${entry.id}` as Route),
     onError: (error) => {
       // A refusal names the own entry in the way, so it is shown as the service wrote it.
-      setAsking(undefined);
+      settle();
       setAlert(readGraphqlFailure(error).alert);
     },
   });
 
-  if (!held && !canAdd) return null;
-  if (held && !canAnnotate && !canRemove && !canMakeOurs) return null;
+  // The entry as the coven calls it, for the two questions.
+  const name = overrides.label ?? compendium.name;
+  const ask = (what: 'remove' | 'own') => () => {
+    setAlert(undefined);
+    setAsking(what);
+  };
+  const items: MenuButtonItem[] = [
+    ...(edit ? [{ key: 'edit', label: 'Edit Entry', href: edit.href, onClick: openEdit }] : []),
+    ...(!held && canAdd
+      ? [
+          {
+            key: 'add',
+            label: 'Add to Cupboard',
+            onSelect: () => {
+              setAlert(undefined);
+              add.mutate();
+            },
+          },
+        ]
+      : []),
+    ...(held && canAnnotate
+      ? [{ key: 'annotate', label: 'Annotate', href: annotate.href, onClick: openAnnotate }]
+      : []),
+    ...(held && canMakeOurs ? [{ key: 'own', label: 'Make It Ours', onSelect: ask('own') }] : []),
+    ...(held && canRemove
+      ? [{ key: 'remove', label: 'Remove', destructive: true, onSelect: ask('remove') }]
+      : []),
+  ];
+  if (items.length === 0) return null;
+
+  // One choice is a plain button, as Add Ingredient is with one place to go.
+  const only = items.length === 1 ? items[0] : undefined;
 
   return (
     <div className="ingredient-entry__cupboard">
-      {!held && (
+      {only === undefined ? (
+        <MenuButton
+          ref={trigger}
+          label="Edit"
+          className={PLAIN}
+          items={items}
+          busy={add.isPending}
+          busyLabel="Adding"
+        />
+      ) : only.key === 'edit' && edit ? (
+        <EditButton href={edit.href} entry={edit.entry} />
+      ) : only.key === 'add' ? (
         <BusyButton
+          ref={trigger}
           className="btn btn--solid btn--medium"
           busy={add.isPending}
           busyLabel="Adding"
           disabled={add.isPending}
-          onClick={() => {
-            setAlert(undefined);
-            add.mutate();
-          }}
+          onClick={() => only.href === undefined && only.onSelect()}
         >
-          Add to Cupboard
+          {only.label}
         </BusyButton>
-      )}
-      {held && canAnnotate && (
-        <ModalButton
-          label="Annotate This Entry"
-          className="btn btn--quiet btn--medium"
-          title="Annotate This Entry"
+      ) : only.key === 'annotate' ? (
+        <Link ref={link} className={PLAIN} href={annotate.href} onClick={openAnnotate}>
+          {only.label}
+        </Link>
+      ) : (
+        <button
+          ref={trigger}
+          type="button"
+          className={only.destructive ? 'btn btn--destructive btn--medium' : PLAIN}
+          onClick={() => only.href === undefined && only.onSelect()}
         >
+          {only.label}
+        </button>
+      )}
+      {asking === 'own' && (
+        // Asked in a modal over the page, as Leave Coven asks (the owner's
+        // call, 2026-10-19), rather than in the title's row.
+        <Modal title="Make It Ours" onClose={settle}>
           {(close) => (
-            <CupboardEntryForm
-              workspaceId={workspaceId}
-              ingredientId={ingredientId}
-              compendium={compendium}
-              overrides={overrides}
-              onDone={close}
-            />
+            <>
+              <p>
+                Make <strong>{name}</strong> your coven's own?
+              </p>
+              <p>
+                You get a copy with your annotations. Your jars and spells move to the copy. Updates
+                in the Compendium won't affect it.
+              </p>
+              <div className="modal__actions">
+                <BusyButton
+                  className="btn btn--solid"
+                  busy={makeOurs.isPending}
+                  busyLabel="Making It Ours"
+                  disabled={makeOurs.isPending}
+                  onClick={() => makeOurs.mutate()}
+                >
+                  Make It Ours
+                </BusyButton>
+                <button
+                  type="button"
+                  className="btn btn--quiet"
+                  disabled={makeOurs.isPending}
+                  onClick={close}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
           )}
-        </ModalButton>
+        </Modal>
       )}
-      {held && canMakeOurs && asking !== 'own' && (
-        <button
-          type="button"
-          className="btn btn--quiet btn--medium"
-          onClick={() => {
-            setAlert(undefined);
-            setAsking('own');
-          }}
-        >
-          Make It Ours
-        </button>
+      {asking === 'remove' && (
+        <Modal title="Remove from Cupboard" onClose={settle}>
+          {(close) => (
+            <>
+              <p>
+                Remove <strong>{name}</strong> from your cupboard? Your annotations get deleted too.
+              </p>
+              <div className="modal__actions">
+                <BusyButton
+                  className="btn btn--destructive"
+                  busy={remove.isPending}
+                  busyLabel="Removing"
+                  disabled={remove.isPending}
+                  onClick={() => remove.mutate()}
+                >
+                  Remove
+                </BusyButton>
+                <button
+                  type="button"
+                  className="btn btn--quiet"
+                  disabled={remove.isPending}
+                  onClick={close}
+                >
+                  Cancel
+                </button>
+              </div>
+            </>
+          )}
+        </Modal>
       )}
-      {held && canMakeOurs && asking === 'own' && (
-        <span role="group" aria-label="Make It Ours" className="ingredient-entry__ask">
-          <span>
-            Make this entry your coven's own? It takes a copy of the compendium's entry with your
-            annotations, and your jars and spells move to it. Later compendium changes no longer
-            reach it.
-          </span>
-          <BusyButton
-            className="btn btn--solid btn--medium"
-            busy={makeOurs.isPending}
-            busyLabel="Making It Ours"
-            disabled={makeOurs.isPending}
-            onClick={() => makeOurs.mutate()}
-          >
-            Make It Ours
-          </BusyButton>
-          <button
-            type="button"
-            className="btn btn--quiet btn--medium"
-            disabled={makeOurs.isPending}
-            onClick={() => setAsking(undefined)}
-          >
-            Cancel
-          </button>
-        </span>
-      )}
-      {held && canRemove && asking !== 'remove' && (
-        <button
-          type="button"
-          className="btn btn--destructive btn--medium"
-          onClick={() => {
-            setAlert(undefined);
-            setAsking('remove');
-          }}
-        >
-          Remove from Cupboard
-        </button>
-      )}
-      {held && canRemove && asking === 'remove' && (
-        <span role="group" aria-label="Remove from Cupboard" className="ingredient-entry__ask">
-          <span>Remove this entry from your cupboard? Your annotations go with it.</span>
-          <BusyButton
-            className="btn btn--destructive btn--medium"
-            busy={remove.isPending}
-            busyLabel="Removing"
-            disabled={remove.isPending}
-            onClick={() => remove.mutate()}
-          >
-            Remove
-          </BusyButton>
-          <button
-            type="button"
-            className="btn btn--quiet btn--medium"
-            disabled={remove.isPending}
-            onClick={() => setAsking(undefined)}
-          >
-            Cancel
-          </button>
-        </span>
+      {annotating && (
+        <RouteModal
+          closeHref={annotate.closeHref}
+          content={
+            annotate.opened
+              ? {
+                  heading: ANNOTATE_HEADING,
+                  body: (done) => (
+                    <CupboardEntryForm
+                      workspaceId={workspaceId}
+                      ingredientId={ingredientId}
+                      compendium={compendium}
+                      overrides={overrides}
+                      onDone={done}
+                    />
+                  ),
+                }
+              : undefined
+          }
+        />
       )}
       {alert && <Notice kind="error">{alert}</Notice>}
     </div>

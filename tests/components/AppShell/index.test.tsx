@@ -6,6 +6,7 @@ const pathname = vi.fn<() => string>();
 vi.mock('next/navigation', () => ({
   usePathname: () => pathname(),
   useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 

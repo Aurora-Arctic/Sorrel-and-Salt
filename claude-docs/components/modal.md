@@ -372,8 +372,18 @@ press outside). The default is, on `/admin/*`, the compendium for a curator;
 otherwise the coven the address names, else the first coven they may write to.
 Choosing the compendium is a `router.push` to `/admin/compendium?new` (the
 admin layout’s route-modal provider sits below the shell, so the button cannot
-open that dialog itself, and the page draws it for a direct request); choosing
-a coven opens the modal.
+open that dialog itself, and the page draws it for a direct request). A coven’s
+dialog is opened by the page’s address too (the owner’s call, 2026-10-18):
+`?new` on any page in the shell opens the default coven’s, `?new=<slug>` a
+named one’s, so a reload keeps it, Back leaves it and the address can be
+shared. The press writes the address with the browser’s own `pushState`,
+which Next’s router follows, rather than a navigation, since nothing on the
+server is needed to draw the form; closing replaces the address without
+`?new`, as `RouteModal` does, so Back does not open it again; a save’s move
+to the new entry’s page closes it by leaving the address. On an admin page
+`?new` is the page’s own compendium dialog, so a coven chosen there is a
+navigation to that coven’s index with `?new`. A slug the viewer cannot write
+to opens nothing.
 
 The modal’s head is the coven’s name in the eyebrow’s place over the title
 “Add Ingredient”, so the person always sees where the ingredient goes, and a

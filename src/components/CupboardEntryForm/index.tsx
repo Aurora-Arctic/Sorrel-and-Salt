@@ -22,6 +22,7 @@ import {
   useZodiacSuggestions,
 } from '../IngredientForm/suggestions';
 import { ELEMENT_OPTIONS } from '../IngredientForm/options';
+import IconTip, { UndoIcon } from '../IconTip';
 import { DiscardQuestion, useDiscardGuard } from '../Modal';
 import Notice from '../Notice';
 import { FIELDS, differs, baselineOf, changesOf, isOwn, openingValues } from './changes';
@@ -33,10 +34,11 @@ import type {
   ListFieldName,
   TextField,
 } from './types';
+import './index.scss';
 
 // The coven's override form for a compendium entry it holds (M12.17): seven
 // fields, each showing the coven's own value or the compendium's, each with
-// a "Use the Compendium's" that hands the field back. On react-hook-form,
+// a "Restore Original" that hands the field back. On react-hook-form,
 // with the four lists the own-entry form's own fields and its undo and redo;
 // null (the compendium's) and an empty list (cleared) are told apart in
 // `changes.ts`, not by the library (claude-docs/components/cupboard-entry-form.md).
@@ -161,17 +163,19 @@ const CupboardEntryForm = ({
     }
   });
 
-  /** "Use the Compendium's", at the end of a field's label row while the coven says its own. */
+  /** "Restore Original", at the end of a field's label row while the coven says its own. */
   const useCompendium = (field: CupboardField, label: string): ReactElement | undefined =>
     isOwn(field, values, baseline, overrides, handed) ? (
-      <button
-        type="button"
-        className="btn btn--quiet btn--small cupboard-form__reset"
-        aria-label={`Use the Compendium's ${label}`}
-        onClick={() => handBack(field)}
-      >
-        Use the Compendium&apos;s
-      </button>
+      <IconTip tip="Restore Original" placement="below">
+        <button
+          type="button"
+          className="field__label-action"
+          aria-label={`Restore Original: ${label}`}
+          onClick={() => handBack(field)}
+        >
+          <UndoIcon />
+        </button>
+      </IconTip>
     ) : undefined;
 
   const textField = (field: TextField, multiline: boolean): ReactElement => {
@@ -204,13 +208,18 @@ const CupboardEntryForm = ({
     );
   };
 
-  /** A list's legend row carries "Use the Compendium's" beside its info tip. */
+  /** A list's legend row carries "Restore Original" beside its info tip. */
   const handBackAction = (field: CupboardField, label: string) => () => useCompendium(field, label);
 
   return (
     <FormProvider {...methods}>
       <FormHistoryContext.Provider value={history}>
-        <form ref={form} className="form" onSubmit={(event) => void submit(event)} noValidate>
+        <form
+          ref={form}
+          className="form cupboard-form"
+          onSubmit={(event) => void submit(event)}
+          noValidate
+        >
           {alert && <Notice kind="error">{alert}</Notice>}
           <FormHistoryButtons />
           {textField('label', false)}

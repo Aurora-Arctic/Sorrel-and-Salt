@@ -12,7 +12,7 @@ import PageNav from '../PageNav';
 import InfoTip from '../InfoTip';
 import { LinkIcon } from '../IconTip';
 import LinkHint from '../LinkHint';
-import SafetyNote, { ToxicMark } from '../SafetyNote';
+import SafetyNote, { CautionMark, ToxicMark } from '../SafetyNote';
 import { chipColors } from '../../lib/chip-colors';
 import { slugify } from '../../lib/slugify';
 import { capitalise } from '../../lib/text';
@@ -41,7 +41,7 @@ import {
   referenceNotes,
 } from './references';
 import EntryDialog from './entry-dialog';
-import ThisIsIt from './this-is-it';
+import LinkToCompendium from './link-to-compendium';
 import type { IngredientEntryProps } from './types';
 import './index.scss';
 
@@ -381,11 +381,24 @@ function ReplacesBlock({
     allHref?: Route;
   };
   heading?: string;
-  /** Given for "Similar in the Compendium" to a role that may convert: This Is It beside each entry. */
-  convert?: { workspaceId: string; localId: string };
+  /** Given for "Similar in the Compendium" to a role that may convert: a radio beside each entry and Link to Selected. `name` is the own entry's, for the question. */
+  convert?: { workspaceId: string; localId: string; name: string };
 }): ReactElement {
   const block = blockOf('details', heading === 'In the Compendium' ? 'compendium' : 'similar');
   const whyId = `${block.id}-why`;
+  // The entries a conversion can name: those with an id and a page in the coven.
+  const convertible = replaces.entries.flatMap(({ title, href, id, thenHref }) =>
+    id && thenHref ? [{ title, href, id, thenHref }] : [],
+  );
+  // Directly under the list, before Link to Selected, in both blocks (the owner's call, 2026-10-19).
+  const seeAll = replaces.allHref && replaces.total > replaces.entries.length && (
+    <p className="ingredient-entry__see-all">
+      <Link href={replaces.allHref}>
+        See All {replaces.total}
+        <LinkHint />
+      </Link>
+    </p>
+  );
   return (
     <div className="ingredient-entry__block ingredient-entry__replaces">
       <div className="ingredient-entry__heading-row">
@@ -394,38 +407,34 @@ function ReplacesBlock({
           {replaces.tip}
         </InfoTip>
       </div>
-      <ul
-        className="ingredient-entry__list ingredient-entry__replaced"
-        aria-labelledby={block.id}
-        aria-describedby={whyId}
-      >
-        {replaces.entries.map(({ title, href, id, thenHref }) => (
-          <li key={href}>
-            <Link href={href}>
-              {title}
-              <LinkIcon />
-              <LinkHint />
-            </Link>
-            {convert && id && thenHref && (
-              <ThisIsIt
-                workspaceId={convert.workspaceId}
-                localId={convert.localId}
-                compendiumId={id}
-                thenHref={thenHref}
-                name={title}
-              />
-            )}
-          </li>
-        ))}
-      </ul>
-      {replaces.allHref && replaces.total > replaces.entries.length && (
-        <p className="ingredient-entry__see-all">
-          <Link href={replaces.allHref}>
-            See All {replaces.total}
-            <LinkHint />
-          </Link>
-        </p>
+      {convert ? (
+        <LinkToCompendium
+          workspaceId={convert.workspaceId}
+          localId={convert.localId}
+          name={convert.name}
+          entries={convertible}
+          labelledBy={block.id}
+          describedBy={whyId}
+          seeAll={seeAll}
+        />
+      ) : (
+        <ul
+          className="ingredient-entry__list ingredient-entry__replaced"
+          aria-labelledby={block.id}
+          aria-describedby={whyId}
+        >
+          {replaces.entries.map(({ title, href }) => (
+            <li key={href}>
+              <Link href={href}>
+                <span className="ingredient-entry__entry-title">{title}</span>
+                <LinkIcon />
+                <LinkHint />
+              </Link>
+            </li>
+          ))}
+        </ul>
       )}
+      {convert ? null : seeAll}
     </div>
   );
 }
@@ -448,8 +457,12 @@ const IngredientEntry = ({
   const shown = applyCupboardEntry(entry, cupboardEntry);
   const local = entry.workspaceId !== null;
   const held = !local && cupboardEntry != null;
-  const relabelled = held && shown.name !== entry.name;
   const toxic = entry.toxic || variants.some(({ variant }) => variant.toxic);
+  // Caution as the card counts it (M8.14): notes on the entry, as this coven
+  // reads them, or on any form (the owner's call, 2026-10-19).
+  const caution = [shown.safetyNotes, ...variants.map(({ variant }) => variant.safetyNotes)].some(
+    (notes) => said(notes),
+  );
   const anchors = formAnchors(variants);
   const notes = referenceNotes(
     detail,
@@ -478,10 +491,11 @@ const IngredientEntry = ({
           action={
             (edit || cupboard) && (
               <>
-                {edit && <EditButton href={edit.href} entry={editable} />}
+                {edit && !(cupboard && !local) && <EditButton href={edit.href} entry={editable} />}
                 {cupboard && !local && (
                   <CupboardActions
                     {...cupboard}
+                    edit={edit ? { href: edit.href, entry: editable } : undefined}
                     ingredientId={entry.id}
                     held={held}
                     compendium={{
@@ -508,17 +522,16 @@ const IngredientEntry = ({
             )
           }
         />
-        {relabelled && (
-          <p className="ingredient-entry__compendium-name">
-            Called <span>{entry.name}</span> in the Compendium
-          </p>
-        )}
-        {(local || held || toxic || retired) && (
+        {(local || held || caution || toxic || retired) && (
           <div className="badges">
             <EntryMarks
               kind={local ? 'own' : held ? 'cupboard' : 'compendium'}
               annotated={held && isAnnotated(cupboardEntry)}
               retired={retired}
+            />
+            <CautionMark
+              safetyNotes={shown.safetyNotes}
+              variants={variants.map(({ variant }) => variant)}
             />
             <ToxicMark toxic={entry.toxic} variants={variants.map(({ variant }) => variant)} />
           </div>
@@ -587,7 +600,7 @@ const IngredientEntry = ({
             <ReplacesBlock
               replaces={similar}
               heading="Similar in the Compendium"
-              convert={similar.convert}
+              convert={similar.convert && { ...similar.convert, name: shown.name }}
             />
           )}
           <CorrespondenceBlock
@@ -651,11 +664,11 @@ const IngredientEntry = ({
   // The provider holds a pressed Edit on its way, shared by the link and the
   // dialog (M9.18). The admin layout has one above its pages; these two routes
   // have none, and a provider already above is kept, so this one is safe
-  // beneath any. Only an entry that can be edited needs it.
-  return edit ? (
+  // beneath any. An entry that can be edited, or annotated from a coven, needs it.
+  return edit || cupboard ? (
     <RouteModalProvider>
       {page}
-      <EntryDialog entry={editable} edit={edit} />
+      {edit && <EntryDialog entry={editable} edit={edit} />}
     </RouteModalProvider>
   ) : (
     page

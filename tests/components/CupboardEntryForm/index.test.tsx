@@ -103,10 +103,10 @@ describe('CupboardEntryForm', () => {
     const calls = captureSaves();
     const onDone = renderForm({ label: 'Fixture Wort', description: 'The coven’s own.' });
 
-    press("Use the Compendium's Label");
+    press('Restore Original: Label');
     expect(label()).toHaveValue('');
     expect(
-      screen.queryByRole('button', { name: "Use the Compendium's Label" }),
+      screen.queryByRole('button', { name: 'Restore Original: Label' }),
     ).not.toBeInTheDocument();
     press(save());
 

@@ -584,6 +584,8 @@ export interface DuplicateWarning {
   shown: Duplicate[];
   /** A save is held on them: the warning is an error on the name. */
   blocking: boolean;
+  /** Another name's answer is on its way, and the list shown is the last name's. */
+  pending: boolean;
   /** The compendium entries named exactly as the held save's name: the question's, empty when none. */
   exact: Duplicate[];
   /** Asks about the name a save is sending, and holds it, answering true, when a match is not dismissed. */

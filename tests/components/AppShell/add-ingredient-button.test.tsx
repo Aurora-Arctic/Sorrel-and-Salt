@@ -4,8 +4,20 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ShellViewer, ShellWorkspace } from '@/lib/types';
 
 const pathname = vi.fn<() => string>();
-const push = vi.fn();
-vi.mock('next/navigation', () => ({ usePathname: () => pathname(), useRouter: () => ({ push }) }));
+// A push moves the address as the router's would, so a save's navigation
+// to the new entry's page closes the dialog here as it does in the app.
+const push = vi.fn((href: string) => {
+  window.history.pushState(null, '', href);
+  pathname.mockReturnValue(new URL(href, window.location.origin).pathname);
+});
+// The address is the window's: the dialog is opened and closed by `?new`
+// through the history API, which Next's router follows in the app and the
+// test follows by drawing again (`sync`).
+vi.mock('next/navigation', () => ({
+  usePathname: () => pathname(),
+  useSearchParams: () => new URLSearchParams(window.location.search),
+  useRouter: () => ({ push }),
+}));
 // The form is Lane B's and tested on its own: a stub that shows which coven it
 // writes to and saves on request, in either way.
 vi.mock('@/components/IngredientForm', () => ({
@@ -87,13 +99,28 @@ const FIXTURE = coven('fixture-coven');
 const TESTWORT = coven('testwort-circle');
 const VIEW_ONLY = coven('testwort-circle', false);
 
-const draw = (viewer: ShellViewer, workspaces: ShellWorkspace[]) =>
-  render(<AddIngredientButton viewer={viewer} workspaces={workspaces} />);
-const open = () => fireEvent.click(screen.getByRole('button', { name: 'Add Ingredient' }));
+let sync = () => {};
+const draw = (viewer: ShellViewer, workspaces: ShellWorkspace[]) => {
+  const view = render(<AddIngredientButton viewer={viewer} workspaces={workspaces} />);
+  sync = () => view.rerender(<AddIngredientButton viewer={viewer} workspaces={workspaces} />);
+  return view;
+};
+const press = (element: HTMLElement) => {
+  fireEvent.click(element);
+  sync();
+};
+const open = () => press(screen.getByRole('button', { name: 'Add Ingredient' }));
+/** The dialog gone, once its close has moved the address on. */
+const closed = () =>
+  waitFor(() => {
+    sync();
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
 const target = () => screen.getByRole('form', { name: 'Ingredient Form' }).dataset.workspace;
 
 beforeEach(() => {
   pathname.mockReturnValue('/coven/fixture-coven');
+  window.history.replaceState(null, '', '/coven/fixture-coven');
   push.mockClear();
 });
 
@@ -133,7 +160,7 @@ describe('AddIngredientButton', () => {
     const chevron = () => screen.getByRole('button', { name: 'Choose Where to Add' });
     const menuOf = () => screen.getByRole('menu');
 
-    it('lists the compendium then the coven for a curator, and opens the coven chosen', () => {
+    it('lists the compendium then the coven for a curator, and a coven chosen on an admin page is a navigation to it', () => {
       pathname.mockReturnValue('/admin/users');
       draw(ADMIN, [FIXTURE]);
       expect(chevron()).toHaveAttribute('aria-haspopup', 'menu');
@@ -144,19 +171,31 @@ describe('AddIngredientButton', () => {
       const items = within(menuOf()).getAllByRole('menuitem');
       expect(items.map((item) => item.textContent)).toEqual(['to Compendium', 'to Fixture Coven']);
 
-      fireEvent.click(items[1]!);
+      // An admin page's `?new` is its own dialog, so the coven's opens at the
+      // coven: a navigation there, where the address opens its dialog.
+      press(items[1]!);
       expect(screen.queryByRole('menu')).toBeNull();
-      expect(
-        screen.getByRole('dialog', { name: 'Add Ingredient to Fixture Coven' }),
-      ).toBeInTheDocument();
+      expect(push).toHaveBeenCalledExactlyOnceWith('/coven/fixture-coven?new');
       expect(target()).toBe('id-fixture-coven');
+    });
+
+    it('opens the coven chosen off the admin pages, naming it on the address when it is not the default', () => {
+      draw(MEMBER, [FIXTURE, TESTWORT]);
+      fireEvent.click(chevron());
+      press(within(menuOf()).getByRole('menuitem', { name: 'to Testwort Circle' }));
+
+      expect(window.location.search).toBe('?new=testwort-circle');
+      expect(
+        screen.getByRole('dialog', { name: 'Add Ingredient to Testwort Circle' }),
+      ).toBeInTheDocument();
+      expect(target()).toBe('id-testwort-circle');
       expect(push).not.toHaveBeenCalled();
     });
 
     it('sends the compendium choice to its add dialog', () => {
       draw(ADMIN, [FIXTURE]);
       fireEvent.click(chevron());
-      fireEvent.click(within(menuOf()).getByRole('menuitem', { name: 'to Compendium' }));
+      press(within(menuOf()).getByRole('menuitem', { name: 'to Compendium' }));
 
       expect(push).toHaveBeenCalledWith('/admin/compendium?new');
       expect(screen.queryByRole('dialog')).toBeNull();
@@ -230,6 +269,53 @@ describe('AddIngredientButton', () => {
     });
   });
 
+  describe('by its address', () => {
+    it('writes ?new onto the address when pressed, over the parameters already there', () => {
+      window.history.replaceState(null, '', '/coven/fixture-coven?query=rose');
+      draw(MEMBER, [FIXTURE]);
+      open();
+
+      expect(window.location.search).toBe('?query=rose&new');
+      expect(screen.getByRole('dialog')).toBeInTheDocument();
+    });
+
+    it('opens from the address alone, for the default coven and for a named one', () => {
+      window.history.replaceState(null, '', '/coven/fixture-coven?new');
+      const view = draw(MEMBER, [FIXTURE, TESTWORT]);
+      expect(target()).toBe('id-fixture-coven');
+      view.unmount();
+
+      window.history.replaceState(null, '', '/coven/fixture-coven?new=testwort-circle');
+      draw(MEMBER, [FIXTURE, TESTWORT]);
+      expect(target()).toBe('id-testwort-circle');
+    });
+
+    it('opens nothing for a coven the viewer cannot write to, or on an admin page', () => {
+      window.history.replaceState(null, '', '/coven/fixture-coven?new=testwort-circle');
+      const view = draw(MEMBER, [FIXTURE, VIEW_ONLY]);
+      expect(screen.queryByRole('dialog')).toBeNull();
+      view.unmount();
+
+      pathname.mockReturnValue('/admin/users');
+      window.history.replaceState(null, '', '/admin/users?new');
+      draw(ADMIN, [FIXTURE]);
+      expect(screen.queryByRole('dialog')).toBeNull();
+    });
+
+    it('drops ?new from the address on close, keeping the rest, and the focus returns to the button', async () => {
+      window.history.replaceState(null, '', '/coven/fixture-coven?query=rose');
+      draw(MEMBER, [FIXTURE]);
+      open();
+
+      // Escape, as the dialog element reports it.
+      fireEvent(screen.getByRole('dialog'), new Event('cancel', { cancelable: true }));
+      await closed();
+
+      expect(window.location.search).toBe('?query=rose');
+      expect(screen.getByRole('button', { name: 'Add Ingredient' })).toHaveFocus();
+    });
+  });
+
   it('renders nothing when no coven can be written to', () => {
     const { container } = draw(MEMBER, [VIEW_ONLY]);
 
@@ -249,7 +335,7 @@ describe('AddIngredientButton', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await closed();
     expect(screen.getByRole('status')).toBeInTheDocument();
   });
 
@@ -259,8 +345,10 @@ describe('AddIngredientButton', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Save Ingredient' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await closed();
     expect(push).toHaveBeenCalledExactlyOnceWith(`/coven/${FIXTURE.slug}/ingredients/saved-id`);
+    // The address is the push's to move: a replace under it would hold the page where it was.
+    expect(window.location.pathname).toBe(`/coven/${FIXTURE.slug}/ingredients/saved-id`);
   });
 
   it('links a near match to the coven’s page for it, and a compendium substitute to its public page', () => {
@@ -284,7 +372,7 @@ describe('AddIngredientButton', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Save With Jars' }));
 
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    await closed();
     expect(screen.getByRole('status')).toHaveTextContent(/Dried.*Fresh/);
   });
 

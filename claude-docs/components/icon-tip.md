@@ -7,11 +7,11 @@ with a "Edit" tooltip. Make it larger outside the form though." The directory
 also holds what every Edit control shares: the pencil, and the list rows'
 Edit link.
 
-| File            | What it holds                                                                                                                       |
-| --------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
-| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                     |
-| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip                                                        |
-| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, and `LinkIcon` |
+| File            | What it holds                                                                                                                                                                                                                                 |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `icon-tip.tsx`  | `IconTip`, the default export: a wrapper that gives the one control in it a tip                                                                                                                                                               |
+| `edit-link.tsx` | `EditLink`, a list row's Edit: the larger pencil, as a link, wearing the tip                                                                                                                                                                  |
+| `icons.tsx`     | `PencilIcon`, the pencil every Edit control draws, the ingredient form's as well, `PlusIcon`, the shared Add's plus, `LinkIcon`, `UndoIcon` and `RedoIcon` (the history buttons' and Restore Original), and `CopyIcon` (Copy From Ingredient) |
 
 ## The props contract
 

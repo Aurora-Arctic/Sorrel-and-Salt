@@ -28,24 +28,24 @@ It has five ways in:
 `MultiSelectField` and `ListField`, stay in `IngredientForm/fields.tsx` on
 the same shell until its design review (MB.120).
 
-| File                       | What it holds                                                                         |
-| -------------------------- | ------------------------------------------------------------------------------------- |
-| `index.tsx`                | The exports, below                                                                    |
-| `shell.tsx`                | `FieldShell`, `FieldError`, `Required`: no hook, so a server component may use them   |
-| `description.ts`           | `fieldDescription`                                                                    |
-| `use-field.ts`             | `useField`, `fieldDescription` over a react-hook-form field's own error               |
-| `text-field.tsx`           | `TextField`                                                                           |
-| `select-field.tsx`         | `SelectField`                                                                         |
-| `radio-group-field.tsx`    | `RadioGroupField`                                                                     |
-| `switch-field.tsx`         | `SwitchField`                                                                         |
-| `search-field.tsx`         | `SearchField`                                                                         |
-| `filter-select-field.tsx`  | `FilterSelectField`                                                                   |
-| `icons.tsx`                | `MagnifierIcon`, the search's mark; `UndoIcon` and `RedoIcon`, the history buttons'   |
-| `form-history.ts`          | The history's reducer: what a step is, when two edits join, the 100-step cap          |
-| `use-form-history.ts`      | `useFormHistory`: records a form's changes, puts them back, owns focus and the chords |
-| `form-history-context.ts`  | `FormHistoryContext` and `useFormHistoryContext`                                      |
-| `form-history-buttons.tsx` | `FormHistoryButtons`: Undo, Redo and the live region                                  |
-| `types.ts`                 | The props, and `SelectOption`                                                         |
+| File                       | What it holds                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------------ |
+| `index.tsx`                | The exports, below                                                                         |
+| `shell.tsx`                | `FieldShell`, `FieldError`, `Required`: no hook, so a server component may use them        |
+| `description.ts`           | `fieldDescription`                                                                         |
+| `use-field.ts`             | `useField`, `fieldDescription` over a react-hook-form field's own error                    |
+| `text-field.tsx`           | `TextField`                                                                                |
+| `select-field.tsx`         | `SelectField`                                                                              |
+| `radio-group-field.tsx`    | `RadioGroupField`                                                                          |
+| `switch-field.tsx`         | `SwitchField`                                                                              |
+| `search-field.tsx`         | `SearchField`                                                                              |
+| `filter-select-field.tsx`  | `FilterSelectField`                                                                        |
+| `icons.tsx`                | `MagnifierIcon`, the search's mark (`UndoIcon` and `RedoIcon` live in `IconTip/icons.tsx`) |
+| `form-history.ts`          | The history's reducer: what a step is, when two edits join, the 100-step cap               |
+| `use-form-history.ts`      | `useFormHistory`: records a form's changes, puts them back, owns focus and the chords      |
+| `form-history-context.ts`  | `FormHistoryContext` and `useFormHistoryContext`                                           |
+| `form-history-buttons.tsx` | `FormHistoryButtons`: Undo, Redo and the live region                                       |
+| `types.ts`                 | The props, and `SelectOption`                                                              |
 
 ## The exports
 
@@ -153,7 +153,10 @@ const { aria, ...field } = fieldDescription({ id: useId(), error });
 
 `TextField` adds `name`, `placeholder`, `multiline`, `rows` (a textarea's height in lines, where its prose outgrows the primitive's 6rem: the compendium's Description and each variant's take 7), `type` (`text`, `date`, `url`),
 `disabled`, `deps`, `describedBy`, `invalid`, `after`, `action`, `format` (a tidy run
-as the field is left) and `autoComplete`. `SelectField` adds `name`,
+as the field is left), `autoComplete` and `busy` (its text is being looked up: the
+`.spinner` inside the box at its right end, faded in after 200ms so a quick answer
+never flashes it, and the input `aria-busy`; the name's duplicate check, the owner's
+call of 2026-10-18). `SelectField` adds `name`,
 `options`, `placeholder`, `typeahead`, `deps` and `onChange`; `typeahead`
 draws the set on Combobox's type-ahead box, typed into to narrow it, for a
 set long enough to want a search: `GroupedValueForm`'s group, a category's or

@@ -54,6 +54,13 @@ export const Required: Story = () => (
   </Form>
 );
 
+/** Its text being looked up: the spinner inside the box at its right end. */
+export const Busy: Story = () => (
+  <Form>
+    <TextField<Values> name="name" label="Name" autoComplete="off" busy />
+  </Form>
+);
+
 export const WithHint: Story = () => (
   <Form>
     <TextField<Values>

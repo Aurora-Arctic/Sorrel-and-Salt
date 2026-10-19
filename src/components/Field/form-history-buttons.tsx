@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import IconTip from '../IconTip';
 import { useModalHeaderSlot } from '../Modal/header-slot';
 import { useFormHistoryContext } from './form-history-context';
-import { RedoIcon, UndoIcon } from './icons';
+import { RedoIcon, UndoIcon } from '../IconTip';
 
 /**
  * A form's Undo and Redo buttons, and the live region that says what each

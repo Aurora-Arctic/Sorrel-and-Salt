@@ -11,6 +11,7 @@ vi.mock('@/lib/viewer', () => ({ viewerIfSignedIn }));
 vi.mock('next/navigation', () => ({
   usePathname: () => '/compendium',
   useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock('@/lib/auth-client', () => ({ signOut: vi.fn() }));
 

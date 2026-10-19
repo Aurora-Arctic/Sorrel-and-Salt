@@ -49,10 +49,11 @@ const Shown = ({ overrides }: { overrides: CupboardOverrides }) => (
 );
 
 // Nothing annotated yet: every field shows the Compendium's value, and no
-// Use the Compendium's control.
+// Restore Original control.
 export const Unannotated: Story = () => <Shown overrides={NONE} />;
 
-// The coven's own label and description, and its planets cleared on purpose.
+// The coven's own label and description, and its planets cleared on purpose:
+// each changed field shows the Restore Original icon button at its label's end.
 export const Annotated: Story = () => (
   <Shown
     overrides={{

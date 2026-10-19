@@ -560,7 +560,8 @@ one per row or none; the Combobox knows nothing of what it does.
 gives one to each substitute that links an ingredient
 ([`ingredient-form.md`](ingredient-form.md), "A linked substitute's
 summary"). The chip's text becomes a button, `.combobox__entry-open`, led by
-a link mark (`LinkIcon`) in the accent and underlined in the body ink, both
+a link mark (`LinkIcon`) in the accent, the text in the body ink with no underline at rest (underlined
+while its summary is open; the owner's call, 2026-10-19), both
 in the accent's hover when pointed at; it is named by the text, described as
 the × is, and says it opens a dialog and whether it is open
 (`aria-haspopup="dialog"`, `aria-expanded`, `aria-controls` while open).
@@ -730,8 +731,8 @@ a 22% wash of the accent on the card. A bucket's heading is muted small
 capitals with a step of space above it, the owner's call during MB.131. A chip is a filled, square-cornered
 rectangle in an 18% wash of the muted ink, react-select's shape, and its ×
 hovers in the warning's wash and ink. A linked entry's text is a button
-led by a link mark in the accent, underlined in the body ink, both in the
-accent's hover when pointed at; the accent clears only the 3:1 a mark needs
+led by a link mark in the accent, the text in the body ink and not underlined
+at rest, both in the accent's hover when pointed at; the accent clears only the 3:1 a mark needs
 on the chip's wash, so the text keeps the body ink (`tests/scss/tokens.test.ts`).
 Its summary is the list's floating surface and edge. A box stands at `$control-height`, level with a text field and a button
 (MB.154): its text line, `$text-height`, is the control's height less its

@@ -699,11 +699,6 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     color: $accent;
   }
 
-  .combobox__entry-text {
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
-  }
-
   &:hover,
   &:hover .combobox__entry-mark {
     color: $accent-hover;
@@ -725,9 +720,13 @@ $room: min(100%, max(6rem, var(--combobox-room, 0px)));
     }
   }
 
-  // Open, the underline thickens: the panel beneath is this chip's.
+  // No underline at rest: the link mark ahead of the text is what tells a
+  // linked chip from a typed one (the owner's call, 2026-10-19). Open, the text
+  // is underlined: the panel beneath is this chip's.
   &[aria-expanded='true'] .combobox__entry-text {
+    text-decoration: underline;
     text-decoration-thickness: $rule-medium;
+    text-underline-offset: 0.2em;
   }
 
   @include reduced-motion {

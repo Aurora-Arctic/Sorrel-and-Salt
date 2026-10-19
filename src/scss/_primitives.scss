@@ -1152,6 +1152,33 @@
     gap: space(1);
   }
 
+  // A small icon action at the right end of a label row or legend, in its
+  // IconTip: Restore Original (an undo arrow) in the annotate form, Copy From
+  // Ingredient (two sheets) in the ingredient form. It is icon-only, with no
+  // box (the owner's call, 2026-10-19), the size the other icon buttons take.
+  // It comes and goes (or is disabled) as the field changes, so it must never
+  // change the row's height: its margin is more negative than its size, so
+  // the row is as tall as the label alone, and the row's centring keeps the
+  // icon level with the label. Never wrapped beneath the label.
+  .icon-tip:has(> .field__label-action) {
+    flex-shrink: 0;
+    margin-left: auto;
+    margin-block: -#{$icon-size};
+  }
+
+  .field__label-action {
+    @include icon-button;
+
+    &:focus-visible {
+      @include focus-ring;
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+
   // The asterisk on a label whose field a save will ask for, in the error
   // red. The markup hides it from a screen reader, which hears `aria-required`
   // on the control instead. Written five times as each form's own `__required`
@@ -1539,6 +1566,34 @@
     }
   }
 
+  // A text field looking its text up (TextField's `busy`): the `.spinner`
+  // inside the box at its right end, in the muted ink, the text kept clear of
+  // it. It fades in after a short wait, as the duplicate warning's shapes do,
+  // so an answer back sooner never flashes it; the turn is the primitive's.
+  .field__control {
+    position: relative;
+    display: block;
+  }
+
+  .field__busy {
+    position: absolute;
+    top: 50%;
+    right: space(3);
+    color: $text-muted;
+    translate: 0 -50%;
+    animation:
+      spinner-turn 0.8s linear infinite,
+      list-frame-fade-in 300ms ease 200ms both;
+
+    @include reduced-motion {
+      animation: spinner-turn 2.4s linear infinite;
+    }
+  }
+
+  .input[aria-busy='true'] {
+    padding-inline-end: calc(space(3) + 1em + space(2));
+  }
+
   // A radio group (RadioGroupField): a choice of one, each option a native
   // radio drawn as a small ring, its centre dot in the accent green growing
   // in as it is chosen, over the same short ease the switch uses. The ring
@@ -1558,8 +1613,6 @@
   }
 
   .radio {
-    $radio-size: 1.125rem;
-
     display: flex;
     align-items: flex-start;
     gap: space(3);
